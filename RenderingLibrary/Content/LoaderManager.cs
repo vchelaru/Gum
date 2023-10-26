@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 using System.IO;
 using RenderingLibrary.Graphics;
 using Microsoft.Xna.Framework.Content;
 using ToolsUtilities;
+using Color = System.Drawing.Color;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace RenderingLibrary.Content
 {

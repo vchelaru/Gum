@@ -1,27 +1,24 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using XnaAndWinforms;
-using Microsoft.Xna.Framework;
 using System.Windows.Forms;
 using RenderingLibrary.Math.Geometry;
 using RenderingLibrary.Graphics;
 using RenderingLibrary;
 using Gum.DataTypes;
-using Gum.ToolStates;
-using Gum.Input;
 using RenderingLibrary.Content;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using Gum.ToolCommands;
 using System.ComponentModel.Composition;
 using FlatRedBall.AnimationEditorForms.Controls;
-using Gum.Debug;
 using Microsoft.Xna.Framework.Graphics;
 
 using WinCursor = System.Windows.Forms.Cursor;
 using Gum.Plugins;
+
+using Color = System.Drawing.Color;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace Gum.Wireframe
 {
@@ -305,7 +302,7 @@ namespace Gum.Wireframe
         {
             if (mHasInitialized)
             {
-                Color backgroundColor = new Color();
+                var backgroundColor = new Microsoft.Xna.Framework.Color();
                 if(ProjectManager.Self.GeneralSettingsFile != null)
                 {
                     backgroundColor.R = ProjectManager.Self.GeneralSettingsFile.CheckerColor1R;

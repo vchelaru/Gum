@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Gum.DataTypes;
 using Gum.ToolStates;
 using Gum.DataTypes.Variables;
 using System.Windows.Forms;
 using Gum.Plugins;
-using ToolsUtilities;
 using Gum.Managers;
 
 namespace Gum.Logic

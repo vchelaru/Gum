@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Xml.Serialization;
 using System.Collections;
 using ToolsUtilities;
-using Microsoft.Xna.Framework;
+using Vector2 = System.Numerics.Vector2;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace Gum.DataTypes.Variables
 {
@@ -47,7 +45,7 @@ namespace Gum.DataTypes.Variables
             get;
             set;
         }
-        
+
         public bool IsFile
         {
             get;
@@ -112,7 +110,7 @@ namespace Gum.DataTypes.Variables
             }
             set
             {
-                Value = (List < T > )value;
+                Value = (List<T>)value;
             }
         }
 
@@ -121,17 +119,17 @@ namespace Gum.DataTypes.Variables
             get;
             set;
         }
-        
+
         public new VariableListSave<T> Clone()
         {
             return FileManager.CloneSaveObject<VariableListSave<T>>(this);
         }
-        
+
         public VariableListSave()
         {
             Value = new List<T>();
         }
-        
+
         public override string ToString()
         {
             string returnValue = Type + " " + Name;

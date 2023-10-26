@@ -1,17 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using ColorPicker.Models;
 using WpfDataUi;
 using WpfDataUi.DataTypes;
 
@@ -126,10 +118,10 @@ namespace Gum.Controls.DataUi
                 if (mInstancePropertyType == typeof(Microsoft.Xna.Framework.Color))
                 {
                     Microsoft.Xna.Framework.Color colorToReturn = new Microsoft.Xna.Framework.Color(
-                        ColorPicker.SelectedColor.Value.R,
-                        ColorPicker.SelectedColor.Value.G,
-                        ColorPicker.SelectedColor.Value.B,
-                        ColorPicker.SelectedColor.Value.A);
+                        ColorPicker.SelectedColor.R,
+                        ColorPicker.SelectedColor.G,
+                        ColorPicker.SelectedColor.B,
+                        ColorPicker.SelectedColor.A);
 
                     result = ApplyValueResult.Success;
 
@@ -154,12 +146,17 @@ namespace Gum.Controls.DataUi
             }
         }
 
-        private void HandleColorChange(object sender, RoutedPropertyChangedEventArgs<Color?> e)
-        {
+        private void HandleColorChange(object sender, RoutedEventArgs e) {
+            if (!(e is ColorRoutedEventArgs colorArgs)) return;
+
+            var prevColor = (Microsoft.Xna.Framework.Color)InstanceMember.Value;
+
+            var colorPack = (uint)(colorArgs.Color.R | (colorArgs.Color.G << 8) | (colorArgs.Color.B << 16) | (colorArgs.Color.A << 24));
+            if (colorPack == prevColor.PackedValue) return;
+
             var settingResult = this.TrySetValueOnInstance();
 
-            if (settingResult == ApplyValueResult.NotSupported)
-            {
+            if (settingResult == ApplyValueResult.NotSupported) {
                 this.IsEnabled = false;
             }
         }

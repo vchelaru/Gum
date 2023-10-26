@@ -1,15 +1,40 @@
-﻿using Gum.Wireframe;
-using SkiaGum.GueDeriving;
+﻿using SkiaGum.GueDeriving;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Text;
 
 namespace RenderingLibrary.Graphics
 {
     public class Renderer
     {
+        /// <summary>
+        /// Use the custom effect for rendering. This setting takes priority if
+        /// both UseCustomEffectRendering and UseBasicEffectRendering are enabled.
+        /// </summary>
+        public static bool UseCustomEffectRendering { get; set; } = false;
         public static bool UseBasicEffectRendering { get; set; } = true;
+        public static bool UsingEffect { get { return UseCustomEffectRendering || UseBasicEffectRendering; } }
+
+        public static Renderer Self
+        {
+            get
+            {
+                // Why is this using a singleton instead of system managers default? This seems bad...
+
+                //if (mSelf == null)
+                //{
+                //    mSelf = new Renderer();
+                //}
+                //return mSelf;
+                if(SystemManagers.Default == null)
+                {
+                    throw new InvalidOperationException(
+                        "The SystemManagers.Default is null. You must either specify the default SystemManagers, or use a custom SystemsManager if your app has multiple SystemManagers.");
+                }
+                return SystemManagers.Default.Renderer;
+
+            }
+        }
 
         public Camera Camera { get; private set; }
         public bool ClearsCanvas { get; set; } = true;

@@ -1,23 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using InputLibrary;
 using Gum.Managers;
 using Gum.ToolStates;
 using Gum.DataTypes;
-using Gum.ToolCommands;
 using RenderingLibrary;
-using RenderingLibrary.Graphics;
 using Gum.DataTypes.Variables;
 using Gum.Converters;
 using Gum.Events;
-using Gum.Input;
 using Gum.RenderingLibrary;
-using RenderingLibrary.Math;
-using Microsoft.Xna.Framework;
 using Gum.PropertyGridHelpers;
-using Gum.Plugins;
 using GumRuntime;
 
 namespace Gum.Wireframe

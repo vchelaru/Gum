@@ -8,10 +8,8 @@ using Gum.Responses;
 using Gum.ToolCommands;
 using Gum.ToolStates;
 using StateAnimationPlugin.Views;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using ToolsUtilities;
 

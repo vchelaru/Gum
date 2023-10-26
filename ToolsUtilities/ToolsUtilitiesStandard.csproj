@@ -18,9 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Page Include="Network\ContentDialog1.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
+    <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
   </ItemGroup>
 
 </Project>

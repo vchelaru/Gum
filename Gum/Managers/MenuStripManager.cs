@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using Gum.ToolStates;
 using Gum.DataTypes;
 using Gum.Wireframe;
 using Gum.Undo;
 using Gum.Gui.Forms;
-using Gum.Commands;
 
 namespace Gum.Managers
 {

@@ -1,11 +1,8 @@
 ﻿using Gum.DataTypes;
 using Gum.ToolStates;
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Text;
 
 namespace Gum.PropertyGridHelpers.Converters
 {

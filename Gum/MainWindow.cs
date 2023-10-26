@@ -1,27 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using Gum.Managers;
 using Gum.ToolStates;
-using Gum.ToolCommands;
 using Gum.Plugins;
 using Gum.Reflection;
 using Gum.Wireframe;
-using Gum.Gui.Forms;
-using Gum.Undo;
-using Gum.Debug;
 using Gum.PropertyGridHelpers;
 using System.Windows.Forms.Integration;
-using Gum.DataTypes;
 using Gum.Controls;
 using Gum.Logic.FileWatch;
-using Gum.Commands;
-using Microsoft.AppCenter;
 using Microsoft.AppCenter.Crashes;
 
 namespace Gum
@@ -101,7 +90,7 @@ namespace Gum
             // State Tree ViewManager needs init before MenuStripManager
             StateTreeViewManager.Self.Initialize(this.stateView.TreeView, this.stateView.StateContextMenuStrip);
             // ProperGridManager before MenuStripManager
-            PropertyGridManager.Self.Initialize();
+            PropertyGridManager.Self.InitializeEarly();
             // menu strip manager needs to be initialized before plugins:
             MenuStripManager.Self.Initialize(this);
 

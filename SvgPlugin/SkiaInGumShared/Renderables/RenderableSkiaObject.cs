@@ -1,21 +1,18 @@
-﻿using Gum.Converters;
-using Gum.DataTypes;
+﻿using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Wireframe;
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using SkiaSharp;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Numerics;
 using System.Runtime.InteropServices;
-using System.Security.Policy;
-using System.Text;
-using System.Threading.Tasks;
+using ToolsUtilitiesStandard.Helpers;
+using Point = System.Drawing.Point;
+using Color = System.Drawing.Color;
+using Rectangle = System.Drawing.Rectangle;
+using Matrix = System.Numerics.Matrix4x4;
 
 #if FAST_GL_SKIA_RENDERING
 using SkiaMonoGameRendering;
@@ -170,7 +167,7 @@ namespace SkiaGum.Renderables
             get => Color.R;
             set
             {
-                Color.R = (byte)value;
+                Color = Color.WithRed((byte)value);
                 needsUpdate = true;
             }
         }
@@ -180,7 +177,7 @@ namespace SkiaGum.Renderables
             get => Color.G;
             set
             {
-                Color.G = (byte)value;
+                Color = Color.WithGreen((byte)value);
                 needsUpdate = true;
             }
         }
@@ -190,7 +187,7 @@ namespace SkiaGum.Renderables
             get => Color.B;
             set
             {
-                Color.B = (byte)value;
+                Color = Color.WithBlue((byte)value);
                 needsUpdate = true;
             }
         }
@@ -202,7 +199,7 @@ namespace SkiaGum.Renderables
             get => Color.A;
             set
             {
-                Color.A = (byte)value;
+                Color = Color.WithAlpha((byte)value);
                 needsUpdate = true;
             }
         }
@@ -542,7 +539,7 @@ namespace SkiaGum.Renderables
             get => DropshadowColor.A;
             set
             {
-                DropshadowColor.A = (byte)value;
+                DropshadowColor = DropshadowColor.WithAlpha((byte)value);
                 needsUpdate = true;
             }
         }
@@ -552,7 +549,7 @@ namespace SkiaGum.Renderables
             get => DropshadowColor.R;
             set
             {
-                DropshadowColor.R = (byte)value;
+                DropshadowColor = DropshadowColor.WithRed((byte)value);
                 needsUpdate = true;
             }
         }
@@ -562,7 +559,7 @@ namespace SkiaGum.Renderables
             get => DropshadowColor.G;
             set
             {
-                DropshadowColor.G = (byte)value;
+                DropshadowColor = DropshadowColor.WithGreen((byte)value);
                 needsUpdate = true;
             }
         }
@@ -572,7 +569,7 @@ namespace SkiaGum.Renderables
             get => DropshadowColor.B;
             set
             {
-                DropshadowColor.B = (byte)value;
+                DropshadowColor = DropshadowColor.WithBlue((byte)value);
                 needsUpdate = true;
             }
         }

@@ -1,16 +1,6 @@
-﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using RenderingLibrary;
-using RenderingLibrary.Content;
+﻿using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using SkiaSharp;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using ToolsUtilities;
 
 namespace SkiaGum.Renderables

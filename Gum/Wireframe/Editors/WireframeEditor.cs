@@ -4,20 +4,19 @@ using Gum.DataTypes.Variables;
 using Gum.Plugins;
 using Gum.ToolStates;
 using Gum.Undo;
-using Microsoft.Xna.Framework;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
+using Vector2 = System.Numerics.Vector2;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace Gum.Wireframe
 {
     public abstract class WireframeEditor
     {
-        protected GrabbedInitialState grabbedInitialState = new GrabbedInitialState();
+        protected GrabbedState grabbedState = new GrabbedState();
 
         protected bool mHasChangedAnythingSinceLastPush = false;
 
@@ -68,15 +67,50 @@ namespace Gum.Wireframe
             var selectedObject = WireframeObjectManager.Self.GetSelectedRepresentation();
             if(selectedObject?.Parent != null)
             {
-                var parentRotation = MathHelper.ToRadians( selectedObject.Parent.GetAbsoluteRotation() );
+                var parentRotationDegrees = selectedObject.Parent.GetAbsoluteRotation();
+                if(parentRotationDegrees != 0)
+                {
+                    var parentRotation = MathHelper.ToRadians(parentRotationDegrees);
 
-                global::RenderingLibrary.Math.MathFunctions.RotateVector(ref vector2, parentRotation);
+                    global::RenderingLibrary.Math.MathFunctions.RotateVector(ref vector2, parentRotation);
 
-                xToMoveBy = vector2.X;
-                yToMoveBy = vector2.Y;
+                    xToMoveBy = vector2.X;
+                    yToMoveBy = vector2.Y;
+                }
             }
 
-            var didMove = EditingManager.Self.MoveSelectedObjectsBy(xToMoveBy, yToMoveBy);
+            grabbedState.AccumulatedXOffset += xToMoveBy;
+            grabbedState.AccumulatedYOffset += yToMoveBy;
+
+            var shouldSnapX = GumState.Self.SelectedState.SelectedIpsos.Any(item => item.XUnits.GetIsPixelBased());
+            var shouldSnapY = GumState.Self.SelectedState.SelectedIpsos.Any(item => item.YUnits.GetIsPixelBased());
+
+            var effectiveXToMoveBy = xToMoveBy;
+            var effectiveYToMoveBy = yToMoveBy;
+
+            if(shouldSnapX)
+            {
+                var accumulatedXAsInt = (int)grabbedState.AccumulatedXOffset;
+                effectiveXToMoveBy = 0;
+                if(accumulatedXAsInt != 0)
+                {
+                    effectiveXToMoveBy = accumulatedXAsInt;
+                    grabbedState.AccumulatedXOffset -= accumulatedXAsInt;
+                }
+            }
+            if(shouldSnapY)
+            {
+                var accumulatedYAsInt = (int)grabbedState.AccumulatedYOffset;
+                effectiveYToMoveBy = 0;
+                if(accumulatedYAsInt != 0)
+                {
+                    effectiveYToMoveBy = accumulatedYAsInt;
+                    grabbedState.AccumulatedYOffset -= accumulatedYAsInt;
+                }
+            }
+
+
+            var didMove = EditingManager.Self.MoveSelectedObjectsBy(effectiveXToMoveBy, effectiveYToMoveBy);
 
             bool isShiftDown = InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift) ||
                 InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.RightShift);
@@ -87,20 +121,20 @@ namespace Gum.Wireframe
             {
                 if (isShiftDown)
                 {
-                    var xOrY = grabbedInitialState.AxisMovedFurthestAlong;
+                    var xOrY = grabbedState.AxisMovedFurthestAlong;
 
                     if (xOrY == XOrY.X)
                     {
                         var gue = WireframeObjectManager.Self.GetRepresentation(SelectedState.Self.SelectedElement);
 
-                        gue.Y = grabbedInitialState.ComponentPosition.Y;
+                        gue.Y = grabbedState.ComponentPosition.Y;
                     }
                     else
                     {
 
                         var gue = WireframeObjectManager.Self.GetRepresentation(SelectedState.Self.SelectedElement);
 
-                        gue.X = grabbedInitialState.ComponentPosition.X;
+                        gue.X = grabbedState.ComponentPosition.X;
                     }
                 }
             }
@@ -113,20 +147,20 @@ namespace Gum.Wireframe
                     foreach (InstanceSave instance in selectedInstances)
                     {
 
-                        var xOrY = grabbedInitialState.AxisMovedFurthestAlong;
+                        var xOrY = grabbedState.AxisMovedFurthestAlong;
 
                         if (xOrY == XOrY.X)
                         {
                             var gue = WireframeObjectManager.Self.GetRepresentation(instance);
 
-                            gue.Y = grabbedInitialState.InstancePositions[instance].Y;
+                            gue.Y = grabbedState.InstancePositions[instance].Y;
                         }
                         else
                         {
 
                             var gue = WireframeObjectManager.Self.GetRepresentation(instance);
 
-                            gue.X = grabbedInitialState.InstancePositions[instance].X;
+                            gue.X = grabbedState.InstancePositions[instance].X;
                         }
 
                     }
@@ -154,7 +188,7 @@ namespace Gum.Wireframe
 
             foreach (var newVariable in stateSave.Variables.ToList())
             {
-                var oldValue = grabbedInitialState.StateSave.GetValue(newVariable.Name);
+                var oldValue = grabbedState.StateSave.GetValue(newVariable.Name);
 
                 if (DoValuesDiffer(stateSave, newVariable.Name, oldValue))
                 {

@@ -1,13 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ToolsUtilities;
 using RenderingLibrary.Content;
 using System.Collections.ObjectModel;
 using RenderingLibrary.Math;
+using ToolsUtilitiesStandard.Helpers;
+using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
+using Vector2 = System.Numerics.Vector2;
+using Vector3 = System.Numerics.Vector3;
+using Rectangle = System.Drawing.Rectangle;
+using Color = System.Drawing.Color;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace RenderingLibrary.Graphics
 {
@@ -59,7 +63,7 @@ namespace RenderingLibrary.Graphics
             {
                 if (value != Color.A)
                 {
-                    Color = new Color(Color.R, Color.G, Color.B, value);
+                    Color = Color.WithAlpha((byte)value);
                 }
             }
         }
@@ -74,7 +78,7 @@ namespace RenderingLibrary.Graphics
             {
                 if (value != Color.R)
                 {
-                    Color = new Color(value, Color.G, Color.B, Color.A);
+                    Color = Color.WithRed((byte)value);
                 }
             }
         }
@@ -89,7 +93,7 @@ namespace RenderingLibrary.Graphics
             {
                 if (value != Color.G)
                 {
-                    Color = new Color(Color.R, value, Color.B, Color.A);
+                    Color = Color.WithGreen((byte)value);
                 }
             }
         }
@@ -104,7 +108,7 @@ namespace RenderingLibrary.Graphics
             {
                 if (value != Color.B)
                 {
-                    Color = new Color(Color.R, Color.G, value, Color.A);
+                    Color = Color.WithBlue((byte)value);
                 }
             }
         }
@@ -183,6 +187,12 @@ namespace RenderingLibrary.Graphics
             {
                 Height = value;
             }
+        }
+
+        public float? CustomFrameTextureCoordinateWidth
+        {
+            get;
+            set;
         }
 
         public Texture2D TopLeftTexture 
@@ -408,27 +418,27 @@ namespace RenderingLibrary.Graphics
                     // invert it to match how rotation works with the CreateRotationZ method:
                     quarterRotationsAsInt = 4 - quarterRotationsAsInt;
 
-                    right = Vector3.Right;
-                    up = Vector3.Up;
+                    right = Vector3Extensions.Right;
+                    up = Vector3Extensions.Up;
 
                     switch (quarterRotationsAsInt)
                     {
                         case 0:
-                            right = Vector3.Right;
-                            up = Vector3.Up;
+                            right = Vector3Extensions.Right;
+                            up = Vector3Extensions.Up;
                             break;
                         case 1:
-                            right = Vector3.Up;
-                            up = Vector3.Left;
+                            right = Vector3Extensions.Up;
+                            up = Vector3Extensions.Left;
                             break;
                         case 2:
-                            right = Vector3.Left;
-                            up = Vector3.Down;
+                            right = Vector3Extensions.Left;
+                            up = Vector3Extensions.Down;
                             break;
 
                         case 3:
-                            right = Vector3.Down;
-                            up = Vector3.Right;
+                            right = Vector3Extensions.Down;
+                            up = Vector3Extensions.Right;
                             break;
                     }
 
@@ -438,8 +448,8 @@ namespace RenderingLibrary.Graphics
                 {
                     var matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(rotationInDegrees));
 
-                    right = matrix.Right;
-                    up = matrix.Up;
+                    right = matrix.Right();
+                    up = matrix.Up();
                 }
 
                 mSprites[(int)NineSliceSections.TopLeft].X = x + offsetX * right.X + offsetY * up.X;
@@ -669,10 +679,19 @@ namespace RenderingLibrary.Graphics
                 int usedWidth = rightCoordinate - leftCoordinate;
                 int usedHeight = bottomCoordinate - topCoordinate;
 
-                mFullOutsideWidth = (usedWidth + 1) / 3;
-                mFullInsideWidth = usedWidth - (mFullOutsideWidth * 2);
+                if(CustomFrameTextureCoordinateWidth != null)
+                {
+                    mFullOutsideWidth = MathFunctions.RoundToInt( CustomFrameTextureCoordinateWidth.Value);
+                    mFullOutsideHeight = mFullOutsideWidth;
 
-                mFullOutsideHeight = (usedHeight + 1) / 3;
+                }
+                else
+                {
+                    mFullOutsideWidth = (usedWidth + 1) / 3;
+                    mFullOutsideHeight = (usedHeight + 1) / 3;
+                }
+
+                mFullInsideWidth = usedWidth - (mFullOutsideWidth * 2);
                 mFullInsideHeight = usedHeight - (mFullOutsideHeight * 2);
 
                 int outsideWidth = System.Math.Min(mFullOutsideWidth, RenderingLibrary.Math.MathFunctions.RoundToInt(Width / 2)); ;

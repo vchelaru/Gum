@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Text;
 using System.Windows;
 using System.Windows.Forms;
-using System.Windows.Media;
 
 namespace Gum.Extensions
 {

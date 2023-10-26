@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using Gum.Input;
 using RenderingLibrary;
 using FlatRedBall.AnimationEditorForms.Controls;
 using RenderingLibrary.Graphics;
@@ -37,7 +32,6 @@ namespace Gum.Wireframe
         {
             float worldX, worldY;
             Camera.ScreenToWorld(e.X, e.Y, out worldX, out worldY);
-
             float differenceX = Camera.X - worldX;
             float differenceY = Camera.Y - worldY;
 
@@ -59,6 +53,12 @@ namespace Gum.Wireframe
             Camera.Y = worldY + newDifferenceY;
 
             CameraChanged?.Invoke();
+
+            var asHandleable = e as HandledMouseEventArgs;
+            if (asHandleable != null)
+            {
+                asHandleable.Handled = true;
+            }
         }
 
         internal void HandleMouseDown(object sender, MouseEventArgs e)

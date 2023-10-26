@@ -1,17 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Gum.ToolStates;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace Gum.Plugins.Behaviors
 {
@@ -34,6 +23,11 @@ namespace Gum.Plugins.Behaviors
 
         private void HandleEditClick(object sender, RoutedEventArgs e)
         {
+            var component = GumState.Self.SelectedState.SelectedComponent;
+            if(component != null)
+            {
+                ViewModel.UpdateTo(component);
+            }
             ViewModel.IsEditing = true;
         }
 

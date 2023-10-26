@@ -1,25 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using RenderingLibrary;
 using Gum.DataTypes;
 using Gum.Managers;
 using RenderingLibrary.Graphics;
-using RenderingLibrary.Content;
 using Gum.DataTypes.Variables;
-using RenderingLibrary.Math.Geometry;
-using Gum.DataTypes;
-using Gum.RenderingLibrary;
 using Gum.ToolStates;
-using RenderingLibrary.Graphics.Fonts;
-using System.Collections;
-using ToolsUtilities;
-using Microsoft.Xna.Framework;
-using Gum.Converters;
 using Gum.PropertyGridHelpers.Converters;
 using GumRuntime;
-using Microsoft.Xna.Framework.Graphics;
 using Gum.Plugins;
 
 namespace Gum.Wireframe
@@ -413,20 +402,12 @@ namespace Gum.Wireframe
 
             if(graphicalElement != null)
             {
-
                 if (baseElement != null)
                 {
                     graphicalElement.ElementSave = baseElement;
-                    foreach (var exposedVariable in baseElement.DefaultState.Variables.Where(item => !string.IsNullOrEmpty(item.ExposedAsName)))
-                    {
-                        graphicalElement.AddExposedVariable(exposedVariable.ExposedAsName, exposedVariable.Name);
-                    }
-
-
-
                 }
 
-
+                graphicalElement.AddExposedVariablesRecursively(baseElement);
 
                 var selectedState = SelectedState.Self.SelectedStateSave;
                 if (selectedState == null)

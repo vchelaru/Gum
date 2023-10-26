@@ -1,13 +1,10 @@
-﻿using Microsoft.Xna.Framework;
-using RenderingLibrary;
+﻿using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math.Geometry;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Xceed.Wpf.DataGrid;
+using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
+using Vector2 = System.Numerics.Vector2;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace Gum.Wireframe
 {
@@ -219,8 +216,7 @@ namespace Gum.Wireframe
 
             endLine1.SetPosition(endAbsolute);
             endLine2.SetPosition(endAbsolute);
-            var normalizedBack = (startAbsolute - endAbsolute);
-            normalizedBack.Normalize();
+            var normalizedBack = Vector2.Normalize(startAbsolute - endAbsolute);
 
             float arrowPointLineLength = 8 / zoom;
 
@@ -269,8 +265,7 @@ namespace Gum.Wireframe
         {
             if (vector.X != 0 || vector.Y != 0)
             {
-                vector.Normalize();
-                return vector;
+                return Vector2.Normalize(vector);
             }
             else
             {

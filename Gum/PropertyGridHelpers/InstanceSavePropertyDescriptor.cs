@@ -1,12 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.ComponentModel;
-using Gum.DataTypes.Variables;
-using Gum.ToolStates;
-using GumRuntime;
-using Gum.Managers;
 
 namespace Gum.DataTypes.ComponentModel
 {
@@ -113,5 +106,6 @@ namespace Gum.DataTypes.ComponentModel
             }
         }
 
+        public override string ToString() => $"{Name} ({PropertyType})";
     }
 }

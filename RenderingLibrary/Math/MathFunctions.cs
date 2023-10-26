@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Microsoft.Xna.Framework;
+using Vector2 = System.Numerics.Vector2;
+using Vector3 = System.Numerics.Vector3;
+using Point = System.Drawing.Point;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace RenderingLibrary.Math
 {
@@ -19,6 +19,12 @@ namespace RenderingLibrary.Math
 
         public static int RoundToInt(float floatToRound)
         {
+#if DEBUG
+            if(float.IsNaN(floatToRound))
+            {
+                throw new ArgumentException("floatToRound cannot be NaN");
+            }
+#endif
             // System.Math.Round should give us a number very close to the decimal
             // Of course, it may give us something like 3.99999, which would become
             // 3 when converted to an int.  We want that to be 4, so we add a small amount
@@ -34,6 +40,12 @@ namespace RenderingLibrary.Math
             // see the other RoundToInt for information on why we add .5
             return (int)(System.Math.Round(doubleToRound) + (System.Math.Sign(doubleToRound) * .5f));
 
+        }
+
+        public static int RoundToInt(decimal decimalToRound)
+        {
+            // see the other RoundToInt for information on why we add .5
+            return (int)(System.Math.Round(decimalToRound) + (System.Math.Sign(decimalToRound) * .5m));
         }
 
         /// <summary>
@@ -79,9 +91,32 @@ namespace RenderingLibrary.Math
 
         }
 
+        public static void RotatePointAroundPoint(Vector2 basePoint, ref Vector2 pointToRotate, float radiansToChangeBy)
+        {
+            double xDistance = pointToRotate.X - basePoint.X;
+            double yDistance = pointToRotate.Y - basePoint.Y;
+            if (xDistance == 0 && yDistance == 0)
+                return;
+
+            double distance = xDistance * xDistance + yDistance * yDistance;
+            distance = (float)System.Math.Pow(distance, .5);
+
+            double angle = System.Math.Atan2(yDistance, xDistance);
+            angle += radiansToChangeBy;
+
+            pointToRotate.X = (float)(System.Math.Cos(angle) * distance + basePoint.X);
+            pointToRotate.Y = (float)(System.Math.Sin(angle) * distance + basePoint.Y);
+
+        }
+
         public static float RoundFloat(float valueToRound, float multipleOf)
         {
             return ((int)(System.Math.Sign(valueToRound) * .5f + valueToRound / multipleOf)) * multipleOf;
+        }
+
+        public static decimal RoundDecimal(decimal valueToRound, decimal multipleOf)
+        {
+            return ((int)(System.Math.Sign(valueToRound) * .5m + valueToRound / multipleOf)) * multipleOf;
         }
 
         /// <summary>

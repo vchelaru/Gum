@@ -1,17 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using WpfDataUi.DataTypes;
 
 namespace WpfDataUi.Controls
@@ -173,6 +164,8 @@ namespace WpfDataUi.Controls
 
             mTextBoxLogic = new TextBoxDisplayLogic(this, this.TextBox);
 
+            this.RefreshContextMenu(MainGrid.ContextMenu);
+
             // do we have to refresh the context menu? We do in the TextBoxDisplay
         }
 
@@ -281,6 +274,9 @@ namespace WpfDataUi.Controls
             }
 
             this.Label.Content = InstanceMember.DisplayName;
+
+            this.RefreshContextMenu(MainGrid.ContextMenu);
+
             SuppressSettingProperty = false;
         }
 
@@ -401,9 +397,21 @@ namespace WpfDataUi.Controls
                     //int angleAsInt = (int)(angleToSet + .5f);
 
                     decimal newAngle = (decimal)angleToSet;
-                    if(SnappingInterval != null)
+
+                    var effectiveSnappingInterval = SnappingInterval;
+
+                    if(Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
                     {
-                        newAngle = RoundDecimal((decimal)angleToSet, SnappingInterval.Value);
+                        // this will snap to 15 pixels:
+                        if(effectiveSnappingInterval == null || effectiveSnappingInterval < 15)
+                        {
+                            effectiveSnappingInterval = 15;
+                        }
+                    }
+
+                    if(effectiveSnappingInterval != null)
+                    {
+                        newAngle = RoundDecimal((decimal)angleToSet, effectiveSnappingInterval.Value);
                     }
 
                     // We need snapping

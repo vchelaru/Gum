@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -14,11 +14,93 @@
 
   <ItemGroup>
     <Compile Include="..\GumRuntime\GraphicalUiElement.cs" Link="GraphicalUiElement.cs" />
+    <Compile Include="..\Gum\DataTypes\BehaviorSaveExtensionMethods.cs">
+      <Link>DataTypes\BehaviorSaveExtensionMethods.cs</Link>
+    </Compile>
+    <Compile Include="..\Gum\DataTypes\ComponentSaveExtensionMethods.cs">
+      <Link>DataTypes\ComponentSaveExtensionMethods.cs</Link>
+    </Compile>
+    <Compile Include="..\Gum\DataTypes\ElementSaveExtensionMethods.cs">
+      <Link>DataTypes\ElementSaveExtensionMethods.cs</Link>
+    </Compile>
+    <Compile Include="..\Gum\DataTypes\GumProjectSaveExtensionMethods.cs">
+      <Link>DataTypes\GumProjectSaveExtensionMethods.cs</Link>
+    </Compile>
+    <Compile Include="..\Gum\DataTypes\InstanceSaveExtensionMethods.cs">
+      <Link>DataTypes\InstanceSaveExtensionMethods.cs</Link>
+    </Compile>
+    <Compile Include="..\Gum\DataTypes\PluginSettingsSave.cs">
+      <Link>DataTypes\PluginSettingsSave.cs</Link>
+    </Compile>
+    <Compile Include="..\Gum\DataTypes\RecursiveVariableFinder.cs">
+      <Link>DataTypes\RecursiveVariableFinder.cs</Link>
+    </Compile>
+    <Compile Include="..\Gum\DataTypes\StateSaveExtensionMethods.cs">
+      <Link>DataTypes\StateSaveExtensionMethods.cs</Link>
+    </Compile>
+    <Compile Include="..\Gum\DataTypes\VariableListSaveExtensionMethods.cs">
+      <Link>DataTypes\VariableListSaveExtensionMethods.cs</Link>
+    </Compile>
+    <Compile Include="..\Gum\DataTypes\VariableSaveExtensionMethods.cs">
+      <Link>DataTypes\VariableSaveExtensionMethods.cs</Link>
+    </Compile>
+    <Compile Include="..\Gum\Graphics\Animation\AnimationFrame.cs">
+      <Link>Graphics\Animation\AnimationFrame.cs</Link>
+    </Compile>
+    <Compile Include="..\Gum\Managers\StandardElementsManager.cs" Link="Managers\StandardElementsManager.cs" />
+    <Compile Include="..\Gum\RenderingLibrary\Blend.cs">
+      <Link>RenderingLibrary\Blend.cs</Link>
+    </Compile>
+    <Compile Include="..\Gum\RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs">
+      <Link>RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs</Link>
+    </Compile>
+    <Compile Include="..\Gum\Wireframe\ElementWithState.cs">
+      <Link>Wireframe\ElementWithState.cs</Link>
+    </Compile>
+    <Compile Include="..\RenderingLibrary\Camera.cs">
+      <Link>RenderingLibrary\Camera.cs</Link>
+    </Compile>
+    <Compile Include="..\RenderingLibrary\Content\IContentLoader.cs">
+      <Link>Content\IContentLoader.cs</Link>
+    </Compile>
+    <Compile Include="..\RenderingLibrary\Graphics\GradientType.cs">
+      <Link>Graphics\GradientType.cs</Link>
+    </Compile>
+    <Compile Include="..\RenderingLibrary\Graphics\HorizontalAlignment.cs">
+      <Link>Graphics\HorizontalAlignment.cs</Link>
+    </Compile>
+    <Compile Include="..\RenderingLibrary\Graphics\IAspectRatio.cs">
+      <Link>Graphics\IAspectRatio.cs</Link>
+    </Compile>
+    <Compile Include="..\RenderingLibrary\Graphics\IRenderableIpso.cs">
+      <Link>IRenderableIpso.cs</Link>
+    </Compile>
+    <Compile Include="..\RenderingLibrary\Graphics\IVisible.cs">
+      <Link>IVisible.cs</Link>
+    </Compile>
+    <Compile Include="..\RenderingLibrary\Graphics\Layer.cs">
+      <Link>RenderingLibrary\Layer.cs</Link>
+    </Compile>
+    <Compile Include="..\RenderingLibrary\Graphics\LayerCameraSettings.cs">
+      <Link>Graphics\LayerCameraSettings.cs</Link>
+    </Compile>
+    <Compile Include="..\RenderingLibrary\Graphics\SortableLayer.cs">
+      <Link>Graphics\SortableLayer.cs</Link>
+    </Compile>
     <Compile Include="..\RenderingLibrary\Graphics\TextOverflowMode.cs" Link="Graphics\TextOverflowMode.cs" />
+    <Compile Include="..\RenderingLibrary\Graphics\VerticalAlignment.cs">
+      <Link>Graphics\VerticalAlignment.cs</Link>
+    </Compile>
+    <Compile Include="..\RenderingLibrary\IPositionedSizedObject.cs">
+      <Link>IPositionedSizedObject.cs</Link>
+    </Compile>
+    <Compile Include="..\RenderingLibrary\Math\MathFunctions.cs">
+      <Link>RenderingLibrary\MathFunctions.cs</Link>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="SkiaSharp" Version="2.88.2" />
+    <PackageReference Include="SkiaSharp" Version="2.88.6" />
     <PackageReference Include="SkiaSharp.Extended" Version="1.60.0" />
     <PackageReference Include="SkiaSharp.Skottie" Version="2.88.2" />
     <PackageReference Include="Svg.Skia" Version="0.5.18" />
@@ -26,6 +108,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\GumDataTypes\GumDataTypesNet6.csproj" />
     <ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
   </ItemGroup>
 

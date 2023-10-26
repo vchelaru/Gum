@@ -1,11 +1,8 @@
 ﻿using Gum.DataTypes;
 using Gum.Managers;
 using RenderingLibrary.Graphics;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using static WpfDataUi.Controls.ToggleButtonOptionDisplay;
 

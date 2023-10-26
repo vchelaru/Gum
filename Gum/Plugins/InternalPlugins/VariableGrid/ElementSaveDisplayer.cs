@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.ComponentModel;
 using Gum.DataTypes.Variables;
 using Gum.DataTypes;
@@ -9,17 +8,12 @@ using Gum.ToolStates;
 using Gum.DataTypes.ComponentModel;
 using Gum.Managers;
 using Gum.PropertyGridHelpers.Converters;
-using System.Drawing.Design;
 using Gum.Plugins;
 using Gum.Logic;
-using System.Management.Instrumentation;
 using WpfDataUi.DataTypes;
 using Gum.Wireframe;
-using Newtonsoft.Json.Linq;
 using WpfDataUi.Controls;
-using static System.Resources.ResXFileRef;
 using GumRuntime;
-using Svg;
 
 namespace Gum.PropertyGridHelpers
 {
@@ -225,7 +219,7 @@ namespace Gum.PropertyGridHelpers
                     //bool shouldRemove = SelectedState.Self.SelectedInstance != null ||
                     //    SelectedState.Self.SelectedStateSave != SelectedState.Self.SelectedElement.DefaultState;
                     // Also, don't remove it if it's an exposed variable, this un-exposes things
-                    bool shouldRemove = string.IsNullOrEmpty(variable.ExposedAsName) && !isPartOfCategory;
+                    bool shouldRemove = string.IsNullOrEmpty(variable.ExposedAsName) && !isPartOfCategory && !variable.IsCustomVariable;
 
                     // Update October 7, 2019
                     // Actually, we can remove any variable so long as the current state isn't the "base definition" for it

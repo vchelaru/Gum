@@ -5,10 +5,6 @@ using Microsoft.Xna.Framework.Graphics;
 #if SKIA
 using SkiaGum.Xna;
 #endif
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Gum.RenderingLibrary
 {
@@ -40,7 +36,7 @@ namespace Gum.RenderingLibrary
         }
 #endif
 
-#if MONOGAME || SKIA
+#if MONOGAME || SKIA || FNA
 
         public static Blend ToBlend(this BlendState blendState)
         {

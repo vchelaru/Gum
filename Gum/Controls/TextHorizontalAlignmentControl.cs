@@ -1,7 +1,4 @@
-﻿using System;
-using System.Windows.Media.Imaging;
-using WpfDataUi;
-using WpfDataUi.Controls;
+﻿using System.Windows.Media.Imaging;
 using static WpfDataUi.Controls.ToggleButtonOptionDisplay;
 
 namespace Gum.Controls

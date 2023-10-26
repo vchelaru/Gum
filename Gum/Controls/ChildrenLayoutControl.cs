@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Media.Imaging;
-using static WpfDataUi.Controls.ToggleButtonOptionDisplay;
+﻿using static WpfDataUi.Controls.ToggleButtonOptionDisplay;
 
 namespace Gum.Controls
 {
@@ -16,9 +10,13 @@ namespace Gum.Controls
         {
             if (cachedOptions == null)
             {
-                BitmapImage regularBitmap = CreateBitmapFromFile("Content/Icons/ChildrenLayout/Regular.png");
-                BitmapImage topToBottomBitmap = CreateBitmapFromFile("Content/Icons/ChildrenLayout/TopToBottom.png");
-                BitmapImage leftToRightBitmap = CreateBitmapFromFile("Content/Icons/ChildrenLayout/LeftToRight.png");
+                var regularBitmap = CreateBitmapFromFile("Content/Icons/ChildrenLayout/Regular.png");
+                var topToBottomBitmap = CreateBitmapFromFile("Content/Icons/ChildrenLayout/TopToBottom.png");
+                var leftToRightBitmap = CreateBitmapFromFile("Content/Icons/ChildrenLayout/LeftToRight.png");
+
+                var autoGridHorizontal = CreateBitmapFromFile("Content/Icons/ChildrenLayout/AutoGridHorizontal.png");
+                var autoGridVertical = CreateBitmapFromFile("Content/Icons/ChildrenLayout/AutoGridVertical.png");
+
 
                 cachedOptions = new Option[]
                 {
@@ -41,6 +39,18 @@ namespace Gum.Controls
                         Value = Gum.Managers.ChildrenLayout.LeftToRightStack,
                         Image = leftToRightBitmap
                     },
+                    new Option
+                    {
+                        Name = "Auto Grid Horizontal",
+                        Value = Gum.Managers.ChildrenLayout.AutoGridHorizontal,
+                        Image = autoGridHorizontal
+                    },
+                    new Option
+                    {
+                        Name = "Auto Grid Vertical",
+                        Value = Gum.Managers.ChildrenLayout.AutoGridVertical,
+                        Image = autoGridVertical
+                    }
                 };
             }
 

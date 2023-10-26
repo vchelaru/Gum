@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Microsoft.Xna.Framework.Input;
-using Microsoft.Xna.Framework.Graphics;
 using System.Windows.Forms;
 using WinCursor = System.Windows.Forms.Cursor;
 
@@ -130,6 +126,9 @@ namespace InputLibrary
             private set;
         }
 
+        /// <summary>
+        /// Whether the user has pushed the secondary button (right click) this frame.
+        /// </summary>
         public bool SecondaryPush
         {
             get
@@ -139,6 +138,10 @@ namespace InputLibrary
             }
         }
 
+
+        /// <summary>
+        /// Returns the screen space (in pixels) change on the X axis since the last frame.
+        /// </summary>
         public float XChange
         {
             get
@@ -147,6 +150,9 @@ namespace InputLibrary
             }
         }
 
+        /// <summary>
+        /// Returns the screen space (in pixel) change on the Y axis since the last frame.
+        /// </summary>
         public float YChange
         {
             get

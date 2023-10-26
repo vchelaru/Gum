@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Xml.Serialization;
 using ToolsUtilities;
 
@@ -258,17 +257,17 @@ namespace Gum.DataTypes
                 fileName = FileManager.MakeAbsolute(fileName);
             }
 
-            if(!System.IO.File.Exists(fileName))
-            {
-                result.ErrorMessage = $"Could not find main project file {fileName}";
-                return null;
-            }
 
             GumProjectSave gps = null;
 
 #if ANDROID || IOS || WINDOWS_8
             gps = LoadFromTitleStorage(fileName, linkLoadingPreference, result);
 #else
+            if(!System.IO.File.Exists(fileName))
+            {
+                result.ErrorMessage = $"Could not find main project file {fileName}";
+                return null;
+            }
             try
             {
                 gps = FileManager.XmlDeserialize<GumProjectSave>(fileName);
@@ -299,6 +298,10 @@ namespace Gum.DataTypes
 			using (System.IO.Stream stream = Microsoft.Xna.Framework.TitleContainer.OpenStream(fileName))
 			{
 				GumProjectSave gps = FileManager.XmlDeserializeFromStream<GumProjectSave>(stream);
+
+				string projectRootDirectory = FileManager.GetDirectory(fileName);
+
+				gps.PopulateElementSavesFromReferences(projectRootDirectory, linkLoadingPreference, result);
 
 				gps.FullFileName = fileName;
 

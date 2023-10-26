@@ -1,26 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using CommonFormsAndControls;
 using System.Windows.Forms;
 using Gum.DataTypes;
 using Gum.ToolStates;
 using Gum.DataTypes.Variables;
 using System.IO;
-using Gum.Debug;
 using ToolsUtilities;
 using Gum.Events;
 using Gum.Wireframe;
 using Gum.DataTypes.Behaviors;
 using Gum.Plugins;
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
 //using System.Windows.Controls;
 //using System.Windows;
 using Grid = System.Windows.Controls.Grid;
 using Gum.Mvvm;
-using Microsoft.Xna.Framework.Media;
 using Gum.Plugins.InternalPlugins.TreeView;
 using Gum.Plugins.InternalPlugins.TreeView.ViewModels;
 
@@ -1383,6 +1379,7 @@ namespace Gum.Managers
             // so we don't want double-selections. Suppressing and explicitly calling 
             // RefreshUi
             PropertyGridManager.Self.ObjectsSuppressingRefresh.Add(this);
+            try
             {
                 if (selectedObject == null)
                 {
@@ -1407,7 +1404,10 @@ namespace Gum.Managers
                 PluginManager.Self.TreeNodeSelected(selectedTreeNode);
 
             }
-            PropertyGridManager.Self.ObjectsSuppressingRefresh.Remove(this);
+            finally
+            {
+                PropertyGridManager.Self.ObjectsSuppressingRefresh.Remove(this);
+            }
 
             PropertyGridManager.Self.RefreshUI();
         }

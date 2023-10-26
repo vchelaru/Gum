@@ -1,7 +1,6 @@
 ﻿using Gum.Converters;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
-using Gum.Graphics.Animation;
 using Gum.Managers;
 using Gum.RenderingLibrary;
 using GumDataTypes.Variables;
@@ -9,9 +8,9 @@ using GumRuntime;
 
 #if MONOGAME || XNA4
 using RenderingLibrary.Math.Geometry;
+using Gum.Graphics.Animation;
 #endif
 
-using Microsoft.Xna.Framework;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math;
@@ -19,7 +18,6 @@ using RenderingLibrary.Math;
 #if SKIA
 using SkiaGum;
 using SkiaGum.GueDeriving;
-using SkiaGum.Managers;
 using SkiaGum.Renderables;
 using SkiaSharp;
 #endif
@@ -29,8 +27,14 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Diagnostics.CodeAnalysis;
 using System.ComponentModel;
+using ToolsUtilitiesStandard.Helpers;
+using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
+using Vector2 = System.Numerics.Vector2;
+using Vector3 = System.Numerics.Vector3;
+using Color = System.Drawing.Color;
+using Rectangle = System.Drawing.Rectangle;
+using Matrix = System.Numerics.Matrix4x4;
 #if UWP
 using System.Reflection;
 #endif
@@ -592,7 +596,14 @@ namespace Gum.Wireframe
             {
                 if (mHeightUnit != value)
                 {
-                    mHeightUnit = value; UpdateLayout();
+                    mHeightUnit = value; 
+
+                    if(mContainedObjectAsIpso is Text)
+                    {
+                        RefreshTextOverflowVerrticalMode();
+                    }
+
+                    UpdateLayout();
                 }
             }
         }
@@ -625,6 +636,35 @@ namespace Gum.Wireframe
                 }
             }
         }
+
+        int autoGridHorizontalCells = 4;
+        public int AutoGridHorizontalCells
+        {
+            get => autoGridHorizontalCells;
+            set
+            {
+                if(autoGridHorizontalCells != value)
+                {
+                    autoGridHorizontalCells = value; UpdateLayout();
+                }
+            }
+        }
+
+        int autoGridVerticalCells = 4;
+        public int AutoGridVerticalCells
+        {
+            get => autoGridVerticalCells;
+            set
+            {
+                if (autoGridVerticalCells != value)
+                {
+                    autoGridVerticalCells = value; UpdateLayout();
+                }
+            }
+        }
+
+        // we have to store this locally because we are going to effectively assign the overflow mode based on the height units and this value
+        TextOverflowVerticalMode textOverflowVerticalMode = TextOverflowVerticalMode.SpillOver;
 
         float stackSpacing;
         /// <summary>
@@ -2410,8 +2450,21 @@ namespace Gum.Wireframe
 
             if (this.Parent != null)
             {
-                parentWidth = Parent.Width;
-                parentHeight = Parent.Height;
+                if(Parent is GraphicalUiElement parentGue && (parentGue.ChildrenLayout == ChildrenLayout.AutoGridVertical || parentGue.ChildrenLayout == ChildrenLayout.AutoGridHorizontal ))
+                {
+                    var horizontalCells = parentGue.AutoGridHorizontalCells;
+                    if (horizontalCells < 1) horizontalCells = 1;
+                    var verticalCells = parentGue.AutoGridVerticalCells;
+                    if(verticalCells < 1) verticalCells = 1;
+
+                    parentWidth = parentGue.GetAbsoluteWidth() / horizontalCells;
+                    parentHeight = parentGue.GetAbsoluteHeight() / verticalCells;
+                }
+                else
+                {
+                    parentWidth = Parent.Width;
+                    parentHeight = Parent.Height;
+                }
             }
             else if (this.ElementGueContainingThis != null && this.ElementGueContainingThis.mContainedObjectAsIpso != null)
             {
@@ -2493,7 +2546,7 @@ namespace Gum.Wireframe
 #endif
                         break;
                     case TextureAddress.Custom:
-                        sprite.SourceRectangle = new Microsoft.Xna.Framework.Rectangle(
+                        sprite.SourceRectangle = new Rectangle(
                             mTextureLeft,
                             mTextureTop,
                             mTextureWidth,
@@ -2519,7 +2572,7 @@ namespace Gum.Wireframe
                         nineSlice.SourceRectangle = null;
                         break;
                     case TextureAddress.Custom:
-                        nineSlice.SourceRectangle = new Microsoft.Xna.Framework.Rectangle(
+                        nineSlice.SourceRectangle = new Rectangle(
                             mTextureLeft,
                             mTextureTop,
                             mTextureWidth,
@@ -2691,7 +2744,7 @@ namespace Gum.Wireframe
             parentOriginOffsetX = 0;
             parentOriginOffsetY = 0;
 
-            TryAdjustOffsetsByParentLayoutType(canWrap, shouldWrap, ref parentOriginOffsetX, ref parentOriginOffsetY, out wasHandledX, out wasHandledY);
+            TryAdjustOffsetsByParentLayoutType(canWrap, shouldWrap, ref parentOriginOffsetX, ref parentOriginOffsetY);
 
             wasHandledX = false;
             wasHandledY = false;
@@ -2701,12 +2754,9 @@ namespace Gum.Wireframe
 
         }
 
-        private void TryAdjustOffsetsByParentLayoutType(bool canWrap, bool shouldWrap, ref float unitOffsetX, ref float unitOffsetY,
-            out bool wasHandledX, out bool wasHandledY)
+        private void TryAdjustOffsetsByParentLayoutType(bool canWrap, bool shouldWrap, ref float unitOffsetX, ref float unitOffsetY)
         {
 
-            wasHandledX = false;
-            wasHandledY = false;
 
             if (GetIfParentStacks())
             {
@@ -2730,23 +2780,18 @@ namespace Gum.Wireframe
                             if (canWrap)
                             {
                                 xRelativeTo = whatToStackAfterX;
-                                wasHandledX = true;
                             }
 
                             yRelativeTo = whatToStackAfterY;
-                            wasHandledY = true;
-
 
                             break;
                         case Gum.Managers.ChildrenLayout.LeftToRightStack:
 
                             xRelativeTo = whatToStackAfterX;
-                            wasHandledX = true;
 
                             if (canWrap)
                             {
                                 yRelativeTo = whatToStackAfterY;
-                                wasHandledY = true;
                             }
                             break;
                         default:
@@ -2757,11 +2802,76 @@ namespace Gum.Wireframe
                 unitOffsetX += xRelativeTo;
                 unitOffsetY += yRelativeTo;
             }
+            else if(GetIfParentIsAutoGrid())
+            {
+                var indexInSiblingList = this.GetIndexInSiblings();
+                int xIndex, yIndex;
+                float cellWidth, cellHeight;
+                GetCellDimensions(indexInSiblingList, out xIndex, out yIndex, out cellWidth, out cellHeight);
+
+                unitOffsetX += cellWidth * xIndex;
+                unitOffsetY += cellHeight * yIndex;
+            }
+        }
+
+        private void GetCellDimensions(int indexInSiblingList, out int xIndex, out int yIndex, out float cellWidth, out float cellHeight)
+        {
+            var xRows = this.EffectiveParentGue.AutoGridHorizontalCells;
+            var yRows = this.EffectiveParentGue.AutoGridVerticalCells;
+            if (xRows < 1) xRows = 1;
+            if (yRows < 1) yRows = 1;
+
+
+            xIndex = indexInSiblingList % xRows;
+            yIndex = indexInSiblingList / xRows;
+            var parentWidth = this.EffectiveParentGue.GetAbsoluteWidth();
+            var parentHeight = this.EffectiveParentGue.GetAbsoluteHeight();
+
+            cellWidth = parentWidth / xRows;
+            cellHeight = parentHeight / yRows;
+        }
+
+        private int GetIndexInSiblings()
+        {
+            System.Collections.IList siblings = null;
+
+            if (this.Parent == null)
+            {
+                siblings = this.ElementGueContainingThis.mWhatThisContains;
+            }
+            else if (this.Parent is GraphicalUiElement)
+            {
+                siblings = ((GraphicalUiElement)Parent).Children as System.Collections.IList;
+            }
+
+            var thisIndex = 0;
+            for(int i = 0; i < siblings.Count; i++)
+            {
+                if (siblings[i] == this)
+                {
+                    break;
+                }
+                if ((siblings[i] as IVisible).Visible)
+                {
+                    thisIndex++;
+                }
+            }
+
+            return thisIndex;
         }
 
         private bool GetIfParentStacks()
         {
-            return this.EffectiveParentGue != null && this.EffectiveParentGue.ChildrenLayout != Gum.Managers.ChildrenLayout.Regular;
+            return this.EffectiveParentGue != null &&
+                (this.EffectiveParentGue.ChildrenLayout == ChildrenLayout.TopToBottomStack ||
+                this.EffectiveParentGue.ChildrenLayout == ChildrenLayout.LeftToRightStack);
+        }
+                
+        private bool GetIfParentIsAutoGrid()
+        {             
+            return this.EffectiveParentGue != null &&
+                (this.EffectiveParentGue.ChildrenLayout == ChildrenLayout.AutoGridHorizontal ||
+                this.EffectiveParentGue.ChildrenLayout == ChildrenLayout.AutoGridVertical);
         }
 
         private GraphicalUiElement GetWhatToStackAfter(bool canWrap, bool shouldWrap, out float whatToStackAfterX, out float whatToStackAfterY)
@@ -2969,35 +3079,35 @@ namespace Gum.Wireframe
                 // invert it to match how rotation works with the CreateRotationZ method:
                 quarterRotationsAsInt = 4 - quarterRotationsAsInt;
 
-                right = Vector3.Right;
-                up = Vector3.Up;
+                right = Vector3Extensions.Right;
+                up = Vector3Extensions.Up;
 
                 switch (quarterRotationsAsInt)
                 {
                     case 0:
-                        right = Vector3.Right;
-                        up = Vector3.Up;
+                        right = Vector3Extensions.Right;
+                        up = Vector3Extensions.Up;
                         break;
                     case 1:
-                        right = Vector3.Up;
-                        up = Vector3.Left;
+                        right = Vector3Extensions.Up;
+                        up = Vector3Extensions.Left;
                         break;
                     case 2:
-                        right = Vector3.Left;
-                        up = Vector3.Down;
+                        right = Vector3Extensions.Left;
+                        up = Vector3Extensions.Down;
                         break;
 
                     case 3:
-                        right = Vector3.Down;
-                        up = Vector3.Right;
+                        right = Vector3Extensions.Down;
+                        up = Vector3Extensions.Right;
                         break;
                 }
             }
             else
             {
                 var matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(rotationInDegrees));
-                right = matrix.Right;
-                up = matrix.Up;
+                right = matrix.Right();
+                up = matrix.Up();
             }
 
         }
@@ -3005,50 +3115,74 @@ namespace Gum.Wireframe
         private void AdjustParentOriginOffsetsByUnits(float parentWidth, float parentHeight, bool isParentFlippedHorizontally,
             ref float unitOffsetX, ref float unitOffsetY, ref bool wasHandledX, ref bool wasHandledY)
         {
+
+            var shouldAdd = Parent is GraphicalUiElement parentGue && 
+                (parentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.AutoGridVertical || parentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.AutoGridHorizontal);
+
             if (!wasHandledX)
             {
                 var units = isParentFlippedHorizontally ? mXUnits.Flip() : mXUnits;
 
+                var value = 0f;
                 if (units == GeneralUnitType.PixelsFromLarge)
                 {
-                    unitOffsetX = parentWidth;
+                    value = parentWidth;
                     wasHandledX = true;
                 }
                 else if (units == GeneralUnitType.PixelsFromMiddle)
                 {
-                    unitOffsetX = parentWidth / 2.0f;
+                    value = parentWidth / 2.0f;
                     wasHandledX = true;
                 }
                 else if (units == GeneralUnitType.PixelsFromSmall)
                 {
                     // no need to do anything
                 }
+
+                if(shouldAdd)
+                {
+                    unitOffsetX += value;
+                }
+                else if(mXUnits != GeneralUnitType.PixelsFromSmall)
+                {
+                    unitOffsetX = value;
+                }
             }
 
             if (!wasHandledY)
             {
+                var value = 0f;
                 if (mYUnits == GeneralUnitType.PixelsFromLarge)
                 {
-                    unitOffsetY = parentHeight;
+                    value = parentHeight;
                     wasHandledY = true;
                 }
                 else if (mYUnits == GeneralUnitType.PixelsFromMiddle || mYUnits == GeneralUnitType.PixelsFromMiddleInverted)
                 {
-                    unitOffsetY = parentHeight / 2.0f;
+                    value = parentHeight / 2.0f;
                     wasHandledY = true;
                 }
                 else if (mYUnits == GeneralUnitType.PixelsFromBaseline)
                 {
                     if (Parent is GraphicalUiElement gue && gue.RenderableComponent is Text text)
                     {
-                        unitOffsetY = parentHeight - text.DescenderHeight;
+                        value = parentHeight - text.DescenderHeight;
                     }
                     else
                     {
                         // use the bottom as baseline:
-                        unitOffsetY = parentHeight;
+                        value = parentHeight;
                     }
                     wasHandledY = true;
+                }
+
+                if (shouldAdd)
+                {
+                    unitOffsetY += value;
+                }
+                else if(mYUnits != GeneralUnitType.PixelsFromSmall)
+                {
+                    unitOffsetY = value;
                 }
             }
         }
@@ -3477,70 +3611,77 @@ namespace Gum.Wireframe
             #region Ratio
             else if (mHeightUnit == DimensionUnitType.Ratio)
             {
-                var heightToSplit = parentHeight;
-
-                var numberOfVisibleChildren = 0;
-
-                if (mParent != null)
+                if(this.Height == 0)
                 {
-                    for(int i = 0; i < mParent.Children.Count; i++)
-                    {
-                        var child = mParent.Children[i];
-                        if (child != this && child is GraphicalUiElement gue)
-                        {
-                            if (gue.HeightUnits == DimensionUnitType.Absolute || gue.HeightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
-                            {
-                                heightToSplit -= gue.Height;
-                            }
-                            else if (gue.HeightUnits == DimensionUnitType.RelativeToContainer)
-                            {
-                                var childAbsoluteWidth = parentHeight - gue.Height;
-                                heightToSplit -= childAbsoluteWidth;
-                            }
-                            else if (gue.HeightUnits == DimensionUnitType.Percentage)
-                            {
-                                var childAbsoluteWidth = parentHeight * gue.Height;
-                                heightToSplit -= childAbsoluteWidth;
-                            }
-                            // this depends on the sibling being updated before this:
-                            else if (gue.HeightUnits == DimensionUnitType.RelativeToChildren)
-                            {
-                                var childAbsoluteWidth = gue.GetAbsoluteHeight();
-                                heightToSplit -= childAbsoluteWidth;
-                            }
-                            if (gue.Visible)
-                            {
-                                numberOfVisibleChildren++;
-                            }
-                        }
-                    }
-                }
-
-                if(mParent is GraphicalUiElement parentGue && parentGue.ChildrenLayout == ChildrenLayout.TopToBottomStack && parentGue.StackSpacing != 0)
-                {
-                    var numberOfSpaces = numberOfVisibleChildren;
-                    heightToSplit -= numberOfSpaces * parentGue.StackSpacing;
-                }
-
-                float totalRatio = 0;
-                if (mParent != null)
-                {
-                    for(int i = 0; i < mParent.Children.Count; i++)
-                    {
-                        var child = mParent.Children[i];
-                        if (child is GraphicalUiElement gue && gue.HeightUnits == DimensionUnitType.Ratio && gue.Visible)
-                        {
-                            totalRatio += gue.Height;
-                        }
-                    }
-                }
-                if (totalRatio > 0)
-                {
-                    heightToSet = heightToSplit * (this.Height / totalRatio);
+                    heightToSet = 0;
                 }
                 else
                 {
-                    heightToSet = heightToSplit;
+                    var heightToSplit = parentHeight;
+
+                    var numberOfVisibleChildren = 0;
+
+                    if (mParent != null)
+                    {
+                        for(int i = 0; i < mParent.Children.Count; i++)
+                        {
+                            var child = mParent.Children[i];
+                            if (child != this && child is GraphicalUiElement gue)
+                            {
+                                if (gue.HeightUnits == DimensionUnitType.Absolute || gue.HeightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
+                                {
+                                    heightToSplit -= gue.Height;
+                                }
+                                else if (gue.HeightUnits == DimensionUnitType.RelativeToContainer)
+                                {
+                                    var childAbsoluteWidth = parentHeight - gue.Height;
+                                    heightToSplit -= childAbsoluteWidth;
+                                }
+                                else if (gue.HeightUnits == DimensionUnitType.Percentage)
+                                {
+                                    var childAbsoluteWidth = parentHeight * gue.Height;
+                                    heightToSplit -= childAbsoluteWidth;
+                                }
+                                // this depends on the sibling being updated before this:
+                                else if (gue.HeightUnits == DimensionUnitType.RelativeToChildren)
+                                {
+                                    var childAbsoluteWidth = gue.GetAbsoluteHeight();
+                                    heightToSplit -= childAbsoluteWidth;
+                                }
+                                if (gue.Visible)
+                                {
+                                    numberOfVisibleChildren++;
+                                }
+                            }
+                        }
+                    }
+
+                    if(mParent is GraphicalUiElement parentGue && parentGue.ChildrenLayout == ChildrenLayout.TopToBottomStack && parentGue.StackSpacing != 0)
+                    {
+                        var numberOfSpaces = numberOfVisibleChildren;
+                        heightToSplit -= numberOfSpaces * parentGue.StackSpacing;
+                    }
+
+                    float totalRatio = 0;
+                    if (mParent != null)
+                    {
+                        for(int i = 0; i < mParent.Children.Count; i++)
+                        {
+                            var child = mParent.Children[i];
+                            if (child is GraphicalUiElement gue && gue.HeightUnits == DimensionUnitType.Ratio && gue.Visible)
+                            {
+                                totalRatio += gue.Height;
+                            }
+                        }
+                    }
+                    if (totalRatio > 0)
+                    {
+                        heightToSet = heightToSplit * (this.Height / totalRatio);
+                    }
+                    else
+                    {
+                        heightToSet = heightToSplit;
+                    }
                 }
             }
             #endregion
@@ -3841,73 +3982,80 @@ namespace Gum.Wireframe
 
             else if (mWidthUnit == DimensionUnitType.Ratio)
             {
-                var widthToSplit = parentWidth;
-
-                var numberOfVisibleChildren = 0;
-
-                if (mParent != null)
+                if(this.Width == 0)
                 {
-                    for(int i = 0; i < mParent.Children.Count; i++)
-                    {
-                        var child = mParent.Children[i];
-                        if (child != this && child is GraphicalUiElement gue)
-                        {
-                            if (gue.WidthUnits == DimensionUnitType.Absolute || gue.WidthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
-                            {
-                                widthToSplit -= gue.Width;
-                            }
-                            else if (gue.WidthUnits == DimensionUnitType.RelativeToContainer)
-                            {
-                                var childAbsoluteWidth = parentWidth - gue.Width;
-                                widthToSplit -= childAbsoluteWidth;
-                            }
-                            else if (gue.WidthUnits == DimensionUnitType.Percentage)
-                            {
-                                var childAbsoluteWidth = parentWidth * gue.Width;
-                                widthToSplit -= childAbsoluteWidth;
-                            }
-                            // this depends on the sibling being updated before this:
-                            else if(gue.WidthUnits == DimensionUnitType.RelativeToChildren)
-                            {
-                                var childAbsoluteWidth = gue.GetAbsoluteWidth();
-                                widthToSplit -= childAbsoluteWidth;
-                            }
-
-                            if(gue.Visible)
-                            {
-                                numberOfVisibleChildren++;
-                            }
-                        }
-                    }
-                }
-
-                if (mParent is GraphicalUiElement parentGue && parentGue.ChildrenLayout == ChildrenLayout.LeftToRightStack && parentGue.StackSpacing != 0)
-                {
-                    var numberOfSpaces = numberOfVisibleChildren;
-
-                    widthToSplit -= numberOfSpaces * parentGue.StackSpacing;
-                }
-
-                float totalRatio = 0;
-                if (mParent != null)
-                {
-                    for(int i = 0; i < mParent.Children.Count; i++)
-                    {
-                        var child = mParent.Children[i];
-                        if (child is GraphicalUiElement gue && gue.WidthUnits == DimensionUnitType.Ratio && gue.Visible)
-                        {
-                            totalRatio += gue.Width;
-                        }
-                    }
-                }
-                if (totalRatio > 0)
-                {
-                    widthToSet = widthToSplit * (this.Width / totalRatio);
-
+                    widthToSet = 0;
                 }
                 else
                 {
-                    widthToSet = widthToSplit;
+                    var widthToSplit = parentWidth;
+
+                    var numberOfVisibleChildren = 0;
+
+                    if (mParent != null)
+                    {
+                        for(int i = 0; i < mParent.Children.Count; i++)
+                        {
+                            var child = mParent.Children[i];
+                            if (child != this && child is GraphicalUiElement gue)
+                            {
+                                if (gue.WidthUnits == DimensionUnitType.Absolute || gue.WidthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale)
+                                {
+                                    widthToSplit -= gue.Width;
+                                }
+                                else if (gue.WidthUnits == DimensionUnitType.RelativeToContainer)
+                                {
+                                    var childAbsoluteWidth = parentWidth - gue.Width;
+                                    widthToSplit -= childAbsoluteWidth;
+                                }
+                                else if (gue.WidthUnits == DimensionUnitType.Percentage)
+                                {
+                                    var childAbsoluteWidth = parentWidth * gue.Width;
+                                    widthToSplit -= childAbsoluteWidth;
+                                }
+                                // this depends on the sibling being updated before this:
+                                else if(gue.WidthUnits == DimensionUnitType.RelativeToChildren)
+                                {
+                                    var childAbsoluteWidth = gue.GetAbsoluteWidth();
+                                    widthToSplit -= childAbsoluteWidth;
+                                }
+
+                                if(gue.Visible)
+                                {
+                                    numberOfVisibleChildren++;
+                                }
+                            }
+                        }
+                    }
+
+                    if (mParent is GraphicalUiElement parentGue && parentGue.ChildrenLayout == ChildrenLayout.LeftToRightStack && parentGue.StackSpacing != 0)
+                    {
+                        var numberOfSpaces = numberOfVisibleChildren;
+
+                        widthToSplit -= numberOfSpaces * parentGue.StackSpacing;
+                    }
+
+                    float totalRatio = 0;
+                    if (mParent != null)
+                    {
+                        for(int i = 0; i < mParent.Children.Count; i++)
+                        {
+                            var child = mParent.Children[i];
+                            if (child is GraphicalUiElement gue && gue.WidthUnits == DimensionUnitType.Ratio && gue.Visible)
+                            {
+                                totalRatio += gue.Width;
+                            }
+                        }
+                    }
+                    if (totalRatio > 0)
+                    {
+                        widthToSet = widthToSplit * (this.Width / totalRatio);
+
+                    }
+                    else
+                    {
+                        widthToSet = widthToSplit;
+                    }
                 }
             }
 
@@ -4626,6 +4774,12 @@ namespace Gum.Wireframe
                         this.Animate = (bool)value;
                         break;
 #endif
+                    case "AutoGridHorizontalCells":
+                        this.AutoGridHorizontalCells = (int)value;
+                        break;
+                    case "AutoGridVerticalCells":
+                        this.AutoGridVerticalCells = (int)value;
+                        break;
                     case "Children Layout":
                         this.ChildrenLayout = (ChildrenLayout)value;
                         toReturn = true;
@@ -4800,6 +4954,15 @@ namespace Gum.Wireframe
                 // There could be some rogue value set to the incorrect type, or maybe
                 // a new type or plugin initialized the default to the wrong type. We don't
                 // want to blow up if this happens
+                // Update October 12, 2023
+                // This swallowed exception caused
+                // problems for myself and arcnor. I 
+                // am concerned there may be other exceptions
+                // being swallowed, but maybe we should push those
+                // errors up and let the callers handle it.
+#if DEBUG
+                throw new InvalidCastException($"Trying to set property {propertyName} to a value of {value} of type {value?.GetType()} on {Name}");
+#endif
             }
             return toReturn;
         }
@@ -5030,6 +5193,14 @@ namespace Gum.Wireframe
 
                     handled = true;
                 }
+                else if(propertyName == nameof(NineSlice.CustomFrameTextureCoordinateWidth))
+                {
+                    var asFloat = value as float?;
+
+                    nineSlice.CustomFrameTextureCoordinateWidth = asFloat;
+
+                    handled = true;
+                }
             }
 #endif
 
@@ -5070,7 +5241,7 @@ namespace Gum.Wireframe
 
                 var color =
                     ((LinePolygon)mContainedObjectAsIpso).Color;
-                color.A = (byte)valueAsInt;
+                color = color.WithAlpha((byte)valueAsInt);
 
                 ((LinePolygon)mContainedObjectAsIpso).Color = color;
                 handled = true;
@@ -5082,7 +5253,7 @@ namespace Gum.Wireframe
 
                 var color =
                     ((LinePolygon)mContainedObjectAsIpso).Color;
-                color.R = (byte)valueAsInt;
+                color = color.WithRed((byte)valueAsInt);
 
                 ((LinePolygon)mContainedObjectAsIpso).Color = color;
                 handled = true;
@@ -5094,7 +5265,7 @@ namespace Gum.Wireframe
 
                 var color =
                     ((LinePolygon)mContainedObjectAsIpso).Color;
-                color.G = (byte)valueAsInt;
+                color = color.WithGreen((byte)valueAsInt);
 
                 ((LinePolygon)mContainedObjectAsIpso).Color = color;
                 handled = true;
@@ -5106,7 +5277,7 @@ namespace Gum.Wireframe
 
                 var color =
                     ((LinePolygon)mContainedObjectAsIpso).Color;
-                color.B = (byte)valueAsInt;
+                color = color.WithBlue((byte)valueAsInt);
 
                 ((LinePolygon)mContainedObjectAsIpso).Color = color;
                 handled = true;
@@ -5141,7 +5312,7 @@ namespace Gum.Wireframe
 
                 var color =
                     ((LineRectangle)mContainedObjectAsIpso).Color;
-                color.A = (byte)valueAsInt;
+                color = color.WithAlpha((byte)valueAsInt);
 
                 ((LineRectangle)mContainedObjectAsIpso).Color = color;
                 handled = true;
@@ -5153,7 +5324,7 @@ namespace Gum.Wireframe
 
                 var color =
                     ((LineRectangle)mContainedObjectAsIpso).Color;
-                color.R = (byte)valueAsInt;
+                color = color.WithRed((byte)valueAsInt);
 
                 ((LineRectangle)mContainedObjectAsIpso).Color = color;
                 handled = true;
@@ -5165,7 +5336,7 @@ namespace Gum.Wireframe
 
                 var color =
                     ((LineRectangle)mContainedObjectAsIpso).Color;
-                color.G = (byte)valueAsInt;
+                color = color.WithGreen((byte)valueAsInt);
 
                 ((LineRectangle)mContainedObjectAsIpso).Color = color;
                 handled = true;
@@ -5177,7 +5348,7 @@ namespace Gum.Wireframe
 
                 var color =
                     ((LineRectangle)mContainedObjectAsIpso).Color;
-                color.B = (byte)valueAsInt;
+                color = color.WithBlue((byte)valueAsInt);
 
                 ((LineRectangle)mContainedObjectAsIpso).Color = color;
                 handled = true;
@@ -5202,7 +5373,7 @@ namespace Gum.Wireframe
 
                 var color =
                     ((LineCircle)mContainedObjectAsIpso).Color;
-                color.A = (byte)valueAsInt;
+                color = color.WithAlpha((byte)valueAsInt);
 
                 ((LineCircle)mContainedObjectAsIpso).Color = color;
                 handled = true;
@@ -5214,7 +5385,7 @@ namespace Gum.Wireframe
 
                 var color =
                     ((LineCircle)mContainedObjectAsIpso).Color;
-                color.R = (byte)valueAsInt;
+                color = color.WithRed((byte)valueAsInt);
 
                 ((LineCircle)mContainedObjectAsIpso).Color = color;
                 handled = true;
@@ -5226,7 +5397,7 @@ namespace Gum.Wireframe
 
                 var color =
                     ((LineCircle)mContainedObjectAsIpso).Color;
-                color.G = (byte)valueAsInt;
+                color = color.WithGreen((byte)valueAsInt);
 
                 ((LineCircle)mContainedObjectAsIpso).Color = color;
                 handled = true;
@@ -5238,7 +5409,7 @@ namespace Gum.Wireframe
 
                 var color =
                     ((LineCircle)mContainedObjectAsIpso).Color;
-                color.B = (byte)valueAsInt;
+                color = color.WithBlue((byte)valueAsInt);
 
                 ((LineCircle)mContainedObjectAsIpso).Color = color;
                 handled = true;
@@ -5339,7 +5510,7 @@ namespace Gum.Wireframe
                     {
                         sprite.Texture = loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(value);
                     }
-                    catch (System.IO.FileNotFoundException)
+                    catch (Exception ex) when (ex is System.IO.FileNotFoundException || ex is System.IO.DirectoryNotFoundException)
                     {
                         if (MissingFileBehavior == MissingFileBehavior.ThrowException)
                         {
@@ -5446,6 +5617,11 @@ namespace Gum.Wireframe
                 IsBold = (bool)value;
                 ReactToFontValueChange();
             }
+            else if(propertyName == "LineHeightMultiplier")
+            {
+                var asText = ((Text)mContainedObjectAsIpso);
+                asText.LineHeightMultiplier = (float)value;
+            }
             else if (propertyName == nameof(UseFontSmoothing))
             {
                 useFontSmoothing = (bool)value;
@@ -5531,15 +5707,30 @@ namespace Gum.Wireframe
             }
             else if (propertyName == nameof(TextOverflowVerticalMode))
             {
-                var textOverflowMode = (TextOverflowVerticalMode)value;
+                textOverflowVerticalMode = (TextOverflowVerticalMode)value;
 #if MONOGAME || XNA4
-
-                ((Text)mContainedObjectAsIpso).TextOverflowVerticalMode = textOverflowMode;
+                RefreshTextOverflowVerrticalMode();
 #endif
 
             }
 
             return handled;
+        }
+
+        private void RefreshTextOverflowVerrticalMode()
+        {
+#if MONOGAME || XNA4
+
+            // we want to let it spill over if it is sized by its children:
+            if (this.HeightUnits == DimensionUnitType.RelativeToChildren)
+            {
+                ((Text)mContainedObjectAsIpso).TextOverflowVerticalMode = TextOverflowVerticalMode.SpillOver;
+            }
+            else
+            {
+                ((Text)mContainedObjectAsIpso).TextOverflowVerticalMode = textOverflowVerticalMode;
+            }
+#endif
         }
 
         bool useCustomFont;
@@ -6217,7 +6408,7 @@ namespace Gum.Wireframe
             }
         }
 #endif
-        #endregion
+#endregion
 
 
 #if SKIA
@@ -6236,7 +6427,7 @@ namespace Gum.Wireframe
         }
 #endif
 
-        #endregion
+#endregion
     }
 
     // additional interfaces, added here to make it easier to manage multiple projects.

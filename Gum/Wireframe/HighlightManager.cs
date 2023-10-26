@@ -1,13 +1,12 @@
-﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math.Geometry;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using ToolsUtilitiesStandard.Helpers;
+using Vector2 = System.Numerics.Vector2;
+using Color = System.Drawing.Color;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace Gum.Wireframe
 {
@@ -80,8 +79,7 @@ namespace Gum.Wireframe
 
             mOverlaySolidRectangle = new SolidRectangle();
             mOverlaySolidRectangle.Name = "Overlay SolidRectangle";
-            mOverlaySolidRectangle.Color = Color.LightGreen;
-            mOverlaySolidRectangle.Color.A = 100;
+            mOverlaySolidRectangle.Color = Color.LightGreen.WithAlpha(100);
             mOverlaySolidRectangle.Visible = false;
             ShapeManager.Self.Add(mOverlaySolidRectangle, layer);
 

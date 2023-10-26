@@ -3,11 +3,7 @@ using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.ToolStates;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Gum.Logic
 {
@@ -54,7 +50,7 @@ namespace Gum.Logic
                     rootElementSave = ObjectFinder.Self.GetRootStandardElementSave(container);
                 }
 
-                shouldInclude = GetShouldIncludeBasedOnBaseType(defaultVariable, container, currentInstance, rootElementSave);
+                shouldInclude = defaultVariable.IsCustomVariable || GetShouldIncludeBasedOnBaseType(defaultVariable, container, currentInstance, rootElementSave);
             }
 
             if (shouldInclude)

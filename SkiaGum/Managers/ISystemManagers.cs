@@ -1,9 +1,4 @@
-﻿using RenderingLibrary;
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace SkiaGum.Managers
+﻿namespace SkiaGum.Managers
 {
     public interface ISystemManagers
     {

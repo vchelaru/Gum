@@ -8,17 +8,13 @@ using Gum.Plugins;
 using Gum.Reflection;
 using Gum.ToolStates;
 using Gum.Wireframe;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using System.Windows.Forms;
 using WpfDataUi.Controls;
 using WpfDataUi.DataTypes;
-using Xceed.Wpf.Toolkit.Primitives;
 
 namespace Gum.PropertyGridHelpers
 {
@@ -244,7 +240,7 @@ namespace Gum.PropertyGridHelpers
             }
             else
             {
-                this.CustomSetEvent += HandleCustomSet;
+                this.CustomSetPropertyEvent += HandleCustomSet;
             }
             this.CustomGetEvent += HandleCustomGet;
             this.CustomGetTypeEvent += HandleCustomGetType;
@@ -275,6 +271,8 @@ namespace Gum.PropertyGridHelpers
             TryAddExposeVariableMenuOptions(instanceSave);
 
             TryAddCopyVariableReferenceMenuOptions();
+
+            TryAddEditVariableOption();
 
             // This could be slow since we have to check it for every variable in an object.
             // Maybe we'll want to pass this in to the function?
@@ -396,6 +394,18 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
+        private void TryAddEditVariableOption()
+        {
+            var variable = this.VariableSave;
+            if (variable != null)
+            {
+                ContextMenuEvents.Add("Edit Variable", (sender, e) =>
+                {
+                    GumCommands.Self.GuiCommands.ShowEditVariableWindow(variable);
+                });
+            }
+        }
+
         private void TryAddCopyVariableReferenceMenuOptions()
         {
             if(this.mVariableName != null)
@@ -427,6 +437,20 @@ namespace Gum.PropertyGridHelpers
 
                     Clipboard.SetText(qualifiedName);
 
+                });
+            }
+
+            if(this.VariableSave?.IsCustomVariable == true)
+            {
+                ContextMenuEvents.Add("Delete Variable", (sender, e) =>
+                {
+                    if(ElementSave?.DefaultState.Variables.Contains(this.VariableSave) == true)
+                    {
+                        ElementSave.DefaultState.Variables.Remove(this.VariableSave);
+
+                        GumCommands.Self.FileCommands.TryAutoSaveElement(ElementSave);
+                        GumCommands.Self.GuiCommands.RefreshPropertyGrid(force:true);
+                    }
                 });
             }
         }
@@ -603,19 +627,25 @@ namespace Gum.PropertyGridHelpers
 
                 if (toReturn == null)
                 {
-                    toReturn = mStateSave.GetValueRecursive(mVariableName);
+                    var effectiveVariableName = VariableSave?.Name ?? mVariableName;
+                    toReturn = mStateSave.GetValueRecursive(effectiveVariableName);
                 }
 
                 return toReturn;
             }
             else
             {
-                return mStateSave.GetValue(mVariableName);
+                // October 8, 2023 - why wasn't this recursive?
+                //return mStateSave.GetValue(mVariableName);
+                var effectiveVariableName = VariableSave?.Name ?? mVariableName;
+
+                return mStateSave.GetValueRecursive(effectiveVariableName);
             }
         }
 
-        private void HandleCustomSet(object gumElementOrInstanceSaveAsObject, object newValue)
+        private void HandleCustomSet(object gumElementOrInstanceSaveAsObject, SetPropertyArgs setPropertyArgs)
         {
+            object newValue = setPropertyArgs.Value;
             if (mPropertyDescriptor != null)
             {
                 object oldValue = base.Value;
@@ -670,7 +700,7 @@ namespace Gum.PropertyGridHelpers
                     stateSave.SetValue(Name, newValue, instanceSave, variableType);
                 }
 
-                NotifyVariableLogic(gumElementOrInstanceSaveAsObject);
+                NotifyVariableLogic(gumElementOrInstanceSaveAsObject, trySave:setPropertyArgs.CommitType == SetPropertyCommitType.Full);
             }
             else
             {
@@ -679,7 +709,7 @@ namespace Gum.PropertyGridHelpers
             // set the value
         }
 
-        public void NotifyVariableLogic(object gumElementOrInstanceSaveAsObject, bool? forceRefresh = null)
+        public void NotifyVariableLogic(object gumElementOrInstanceSaveAsObject, bool? forceRefresh = null, bool trySave = true)
         {
             string name = RootVariableName;
 
@@ -716,7 +746,8 @@ namespace Gum.PropertyGridHelpers
 
             if (!handledByExposedVariable)
             {
-                SetVariableLogic.Self.PropertyValueChanged(name, LastOldValue, gumElementOrInstanceSaveAsObject as InstanceSave, refresh: effectiveRefresh, recordUndo: effectiveRecordUndo);
+                SetVariableLogic.Self.PropertyValueChanged(name, LastOldValue, gumElementOrInstanceSaveAsObject as InstanceSave, refresh: effectiveRefresh, recordUndo: effectiveRecordUndo,
+                    trySave:trySave);
             }
         }
 

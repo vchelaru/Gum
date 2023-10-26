@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.ComponentModel;
 using System.Xml.Serialization;
 
@@ -150,6 +148,9 @@ namespace Gum.DataTypes.Variables
         {
             return IsHiddenInPropertyGrid == true;
         }
+
+        public bool IsCustomVariable { get; set; }
+        public bool ShouldSerializeIsCustomVariable() => IsCustomVariable;
 
         [XmlIgnore]
         public List<object> ExcludedValuesForEnum

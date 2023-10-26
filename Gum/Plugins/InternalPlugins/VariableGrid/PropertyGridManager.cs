@@ -1,33 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Windows.Forms;
 using Gum.ToolStates;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.PropertyGridHelpers;
-using Gum.Wireframe;
-using RenderingLibrary.Graphics.Fonts;
-using CommonFormsAndControls;
-using Gum.ToolCommands;
-using RenderingLibrary;
-using Gum.Converters;
-using Gum.Plugins;
-using Gum.RenderingLibrary;
-using RenderingLibrary.Content;
 using WpfDataUi.DataTypes;
-using Gum.DataTypes.ComponentModel;
-using System.Threading.Tasks;
-using System.Threading;
 using System.Collections.ObjectModel;
-using WpfDataUi;
 using Gum.Plugins.VariableGrid;
 using Gum.DataTypes.Behaviors;
 using Gum.Controls;
-using WpfDataUi.Controls;
-using System.ComponentModel;
-using System.Windows.Controls;
 using System.Windows.Media;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using RenderingLibrary.Graphics;
@@ -39,7 +21,7 @@ namespace Gum.Managers
         #region Fields
 
         WpfDataUi.DataUiGrid mVariablesDataGrid;
-        TestWpfControl mainControl;
+        MainPropertyGrid mainControl;
 
         static PropertyGridManager mPropertyGridManager;
 
@@ -57,7 +39,9 @@ namespace Gum.Managers
         StateSaveCategory mLastCategory;
         BehaviorSave mLastBehaviorSave;
 
-        MainControlViewModel variableViewModel;
+        // Making this public allows the plugin to access it. Eventually we will want to migrate
+        // this whole class to a plugin to work more like Glue, but that will take time
+        public MainControlViewModel VariableViewModel { get; private set; }
 
         /// <summary>
         /// This is a list of objects which callers can add themselves to. By doing so, property grid
@@ -88,31 +72,35 @@ namespace Gum.Managers
         {
             get
             {
-                return this.variableViewModel.EffectiveSelectedBehaviorVariable;
+                return this.VariableViewModel.EffectiveSelectedBehaviorVariable;
             }
             set
             {
-                this.variableViewModel.SelectedBehaviorVariable = value;
+                this.VariableViewModel.SelectedBehaviorVariable = value;
             }
         }
 
         #endregion
 
-
-        public void Initialize()
+        // Normally plugins will initialize through the PluginManager. This needs to happen earlier (see where it's called for info)
+        // so some of it will happen here:
+        public void InitializeEarly()
         {
-            mainControl = new Gum.TestWpfControl();
+            mainControl = new Gum.MainPropertyGrid();
 
             GumCommands.Self.GuiCommands.AddControl(mainControl, "Variables", TabLocation.CenterBottom);
 
             mVariablesDataGrid = mainControl.DataGrid;
-            variableViewModel = new Plugins.VariableGrid.MainControlViewModel();
-            mainControl.DataContext = variableViewModel;
+            VariableViewModel = new Plugins.VariableGrid.MainControlViewModel();
+            VariableViewModel.AddVariableButtonVisibility = System.Windows.Visibility.Collapsed;
+            mainControl.DataContext = VariableViewModel;
             mainControl.SelectedBehaviorVariableChanged += HandleBehaviorVariableSelected;
             mainControl.AddVariableClicked += HandleAddVariable;
 
             InitializeRightClickMenu();
         }
+
+
 
         private void HandleBehaviorVariableSelected(object sender, EventArgs e)
         {
@@ -121,36 +109,7 @@ namespace Gum.Managers
 
         private void HandleAddVariable(object sender, EventArgs e)
         {
-            var window = new AddVariableWindow();
-
-            var result = window.ShowDialog();
-
-            if(result == true)
-            {
-                var type = window.SelectedType;
-                var name = window.EnteredName;
-
-                string whyNotValid;
-                bool isValid = NameVerifier.Self.IsVariableNameValid(
-                    name, out whyNotValid);
-
-                if(!isValid)
-                {
-                    MessageBox.Show(whyNotValid);
-                }
-                else
-                {
-                    var behavior = SelectedState.Self.SelectedBehavior;
-
-                    var newVariable = new VariableSave();
-                    newVariable.Name = name;
-                    newVariable.Type = type;
-
-                    behavior.RequiredVariables.Variables.Add(newVariable);
-                    GumCommands.Self.GuiCommands.RefreshPropertyGrid();
-                    GumCommands.Self.FileCommands.TryAutoSaveBehavior(behavior);
-                }
-            }
+            GumCommands.Self.GuiCommands.ShowAddVariableWindow();
         }
 
         bool isInRefresh = false;
@@ -174,7 +133,7 @@ namespace Gum.Managers
                 (SelectedState.Self.SelectedElement != null ||
                 SelectedState.Self.SelectedInstance != null) && 
                 SelectedState.Self.CustomCurrentStateSave == null;
-            variableViewModel.ShowVariableGrid = showVariableGrid ?
+            VariableViewModel.ShowVariableGrid = showVariableGrid ?
                 System.Windows.Visibility.Visible : System.Windows.Visibility.Hidden;
 
             //if (SelectedState.Self.SelectedInstances.GetCount() > 1)
@@ -435,28 +394,28 @@ namespace Gum.Managers
         {
             if(element == null)
             {
-                variableViewModel.HasStateInformation = System.Windows.Visibility.Collapsed;
+                VariableViewModel.HasStateInformation = System.Windows.Visibility.Collapsed;
             }
             else if(state == element.DefaultState || state == null)
             {
-                variableViewModel.HasStateInformation = System.Windows.Visibility.Collapsed;
+                VariableViewModel.HasStateInformation = System.Windows.Visibility.Collapsed;
             }
             else if(SelectedState.Self.CustomCurrentStateSave != null)
             {
-                variableViewModel.HasStateInformation = System.Windows.Visibility.Visible;
-                variableViewModel.StateInformation = $"Displaying custom (animated) state";
-                variableViewModel.StateBackground = Brushes.Pink;
+                VariableViewModel.HasStateInformation = System.Windows.Visibility.Visible;
+                VariableViewModel.StateInformation = $"Displaying custom (animated) state";
+                VariableViewModel.StateBackground = Brushes.Pink;
             }
             else
             {
-                variableViewModel.StateBackground = Brushes.Yellow;
-                variableViewModel.HasStateInformation = System.Windows.Visibility.Visible;
+                VariableViewModel.StateBackground = Brushes.Yellow;
+                VariableViewModel.HasStateInformation = System.Windows.Visibility.Visible;
                 string stateName = state.Name;
                 if(category != null)
                 {
                     stateName = category.Name + "/" + stateName;
                 }
-                variableViewModel.StateInformation = $"Editing state {stateName}";
+                VariableViewModel.StateInformation = $"Editing state {stateName}";
             }
         }
 
@@ -468,14 +427,14 @@ namespace Gum.Managers
         private void RefreshBehaviorUi(BehaviorSave behaviorSave, StateSave state, StateSaveCategory category)
         {
 
-            this.variableViewModel.BehaviorVariables.Clear();
+            this.VariableViewModel.BehaviorVariables.Clear();
             if(behaviorSave != null)
             {
-                this.variableViewModel.BehaviorVariables.AddRange(behaviorSave.RequiredVariables.Variables);
+                this.VariableViewModel.BehaviorVariables.AddRange(behaviorSave.RequiredVariables.Variables);
             }
 
 
-            this.variableViewModel.ShowBehaviorUi = behaviorSave != null ?
+            this.VariableViewModel.ShowBehaviorUi = behaviorSave != null ?
                 System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
 
             if(behaviorSave != null)
@@ -537,12 +496,12 @@ namespace Gum.Managers
                 }
 
                 bool showError = !string.IsNullOrEmpty(message);
-                this.variableViewModel.HasErrors = showError ?
+                this.VariableViewModel.HasErrors = showError ?
                     System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
 
 
 
-                this.variableViewModel.ErrorInformation = message;
+                this.VariableViewModel.ErrorInformation = message;
             }
         }
 

@@ -1,21 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO.Packaging;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Markup;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
 using WpfDataUi.DataTypes;
 
 namespace WpfDataUi.Controls
@@ -32,6 +24,8 @@ namespace WpfDataUi.Controls
         InstanceMember mInstanceMember;
 
         ApplyValueResult? lastApplyValueResult = null;
+
+        public decimal? LabelDragValueRounding { get; set; } = 1;
 
         #endregion
 
@@ -156,6 +150,16 @@ namespace WpfDataUi.Controls
                 RefreshIsEnabled();
 
                 SuppressSettingProperty = false;
+
+                if(mTextBoxLogic.IsNumeric)
+                {
+                    this.Label.Cursor = Cursors.ScrollWE;
+                }
+                else
+                {
+                    this.Label.Cursor = null;
+                }
+
             }
         }
 
@@ -258,5 +262,81 @@ namespace WpfDataUi.Controls
             RefreshPlaceholderText();
         }
 
+        double? currentDownX;
+        private double unroundedValue;
+
+        [DllImport("User32.dll")]
+        private static extern bool SetCursorPos(int X, int Y);
+
+        private void Label_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (mTextBoxLogic.IsNumeric)
+            {
+                currentDownX = e.GetPosition(this).X;
+
+                System.Windows.Input.Mouse.Capture(Label);
+
+                var getValueStatus = TryGetValueOnUi(out object valueOnInstance);
+
+                if (getValueStatus == ApplyValueResult.Success)
+                {
+                    var converter = TypeDescriptor.GetConverter(mTextBoxLogic.InstancePropertyType);
+                    unroundedValue = (double)converter.ConvertTo(valueOnInstance, typeof(double));
+                }
+            }
+        }
+
+        private void Label_MouseMove(object sender, MouseEventArgs e)
+        {
+            if(currentDownX != null)
+            {
+                var newX = e.GetPosition(this).X;
+                var difference = newX - currentDownX.Value;
+                currentDownX = newX;
+
+                if(difference != 0)
+                {
+                    unroundedValue += difference;
+                    var rounded = unroundedValue;
+                    if(LabelDragValueRounding != null)
+                    {
+                        var isInt = Math.Abs(LabelDragValueRounding.Value - (int)LabelDragValueRounding.Value) < .0001m;
+
+                        rounded = RoundDouble(unroundedValue, (double)LabelDragValueRounding.Value);
+
+                        if(isInt)
+                        {
+                            rounded = (int)(System.Math.Round(rounded) + (System.Math.Sign(rounded) * .5f));
+                        }
+                    }
+
+                    var getValueStatus = TryGetValueOnUi(out object valueOnInstance);
+
+                    if(getValueStatus == ApplyValueResult.Success)
+                    {
+                        var newValue = mTextBoxLogic.GetValueInDirection(difference, rounded);
+                        TrySetValueOnUi(newValue);
+                        lastApplyValueResult = mTextBoxLogic.TryApplyToInstance(SetPropertyCommitType.Intermediate);
+                    }
+                }
+
+            }
+        }
+
+        private void Label_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (mTextBoxLogic.IsNumeric && currentDownX != 0)
+            {
+                lastApplyValueResult = mTextBoxLogic.TryApplyToInstance(SetPropertyCommitType.Full);
+
+                currentDownX = null;
+                System.Windows.Input.Mouse.Capture(null);
+            }
+        }
+
+        public double RoundDouble(double valueToRound, double multipleOf)
+        {
+            return ((int)(System.Math.Sign(valueToRound) * .5f + valueToRound / multipleOf)) * multipleOf;
+        }
     }
 }

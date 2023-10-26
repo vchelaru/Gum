@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.ComponentModel.Composition;
 using System.Reflection;
 using System.ComponentModel.Composition.Hosting;
-using System.CodeDom.Compiler;
 using System.IO;
 using System.Windows.Forms;
 using Gum.Plugins.BaseClasses;
@@ -19,7 +17,6 @@ using RenderingLibrary.Graphics;
 using Gum.Responses;
 using System.Runtime.CompilerServices;
 using Gum.Wireframe;
-using System.Linq.Expressions;
 
 namespace Gum.Plugins
 {
@@ -880,12 +877,12 @@ namespace Gum.Plugins
             {
                 PluginContainer container = this.PluginContainers[plugin];
 
-                if (container.Plugin is PluginBase)
+                if (container.Plugin is PluginBase pluginBase)
                 {
 
                     try
                     {
-                        shouldExclude |= ((PluginBase)container.Plugin).GetIfVariableIsExcluded(defaultVariable, rvf);
+                        shouldExclude |= pluginBase.GetIfVariableIsExcluded(defaultVariable, rvf);
                     }
                     catch (Exception e)
                     {

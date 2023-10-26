@@ -11,13 +11,13 @@ using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Math;
 using RenderingLibrary.Math.Geometry;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TextureCoordinateSelectionPlugin.ViewModels;
 using TextureCoordinateSelectionPlugin.Views;
+using Vector2 = System.Numerics.Vector2;
+using Vector3 = System.Numerics.Vector3;
+using Color = System.Drawing.Color;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace TextureCoordinateSelectionPlugin.Logic
 {
@@ -32,6 +32,12 @@ namespace TextureCoordinateSelectionPlugin.Logic
         LineRectangle textureOutlineRectangle = null;
 
         MainControlViewModel ViewModel;
+
+        // [0] - left vertical line
+        // [1] - right vertical line
+        // [2] - top horizontal line
+        // [3] - bottom horizontal line
+        Line[] nineSliceGuideLines = new Line[4];
 
         LineGrid lineGrid;
 
@@ -94,7 +100,28 @@ namespace TextureCoordinateSelectionPlugin.Logic
 
             CreateLineRectangle();
 
+            CreateNineSliceLines();
+
             RefreshLineGrid();
+        }
+
+        private void CreateNineSliceLines()
+        {
+            for(int i = 0; i < 4; i++)
+            {
+                nineSliceGuideLines[i] = new Line(mainControl.InnerControl.SystemManagers);
+                nineSliceGuideLines[i].Visible = false;
+                nineSliceGuideLines[i].Z = 1;
+                nineSliceGuideLines[i].Color = Color.White;
+                nineSliceGuideLines[i].IsDotted = true;
+
+                var alpha = (int)(0.6f * 0xFF);
+
+                nineSliceGuideLines[i].Color = 
+                    Color.FromArgb(alpha, alpha, alpha, alpha);
+
+                mainControl.InnerControl.SystemManagers.Renderer.MainLayer.Add(nineSliceGuideLines[i]);
+            }
         }
 
         private void CreateLineRectangle()
@@ -109,10 +136,10 @@ namespace TextureCoordinateSelectionPlugin.Logic
             lineGrid.Visible = true;
             lineGrid.Z = 1;
 
-            var alpha = .2f;
+            var alpha = (int)(.2f * 0xFF);
 
             // premultiplied
-            lineGrid.Color = new Microsoft.Xna.Framework.Color(alpha, alpha, alpha, alpha);
+            lineGrid.Color = Color.FromArgb(alpha, alpha, alpha, alpha);
 
             mainControl.InnerControl.SystemManagers.Renderer.MainLayer.Add(lineGrid);
         }
@@ -145,8 +172,12 @@ namespace TextureCoordinateSelectionPlugin.Logic
             }
         }
 
-        internal void Refresh(Texture2D textureToAssign)
+        bool showNineSliceGuides;
+        float? customFrameTextureCoordinateWidth;
+        internal void Refresh(Texture2D textureToAssign, bool showNineSliceGuides, float? customFrameTextureCoordinateWidth)
         {
+            this.showNineSliceGuides = showNineSliceGuides;
+            this.customFrameTextureCoordinateWidth = customFrameTextureCoordinateWidth;
             mainControl.InnerControl.CurrentTexture = textureToAssign;
 
             RefreshSelector(Logic.RefreshType.OnlyIfGrabbed);
@@ -154,6 +185,71 @@ namespace TextureCoordinateSelectionPlugin.Logic
             RefreshOutline(mainControl.InnerControl, ref textureOutlineRectangle);
 
             RefreshLineGrid();
+
+            RefreshNineSliceGuides();
+        }
+
+        private void RefreshNineSliceGuides()
+        {
+            for(int i = 0; i < 4; i++)
+            {
+                nineSliceGuideLines[i].Visible = showNineSliceGuides;
+            }
+
+            // todo - this hasn't been tested extensively to make sure it aligns
+            // pixel-perfect with how NineSlices work, but it's a good initial guess
+            if(showNineSliceGuides && CurrentTexture != null && mainControl?.InnerControl?.RectangleSelector != null)
+            {
+                var texture = CurrentTexture;
+
+                var textureWidth = texture.Width;
+                var textureHeight = texture.Height;
+
+                var control = mainControl.InnerControl;
+                var selector = control.RectangleSelector;
+
+                var left = selector.Left;
+                var right = selector.Right;
+                var top = selector.Top;
+                var bottom = selector.Bottom;
+
+                var guideLeft = selector.Left + selector.Width / 3.0f;
+                var guideRight = selector.Left + selector.Width * 2.0f / 3.0f;
+                var guideTop = selector.Top + selector.Height / 3.0f;
+                var guideBottom = selector.Top + selector.Height * 2.0f / 3.0f;
+
+                if(customFrameTextureCoordinateWidth != null)
+                {
+                    guideLeft = left + customFrameTextureCoordinateWidth.Value;
+                    guideRight = right - customFrameTextureCoordinateWidth.Value;
+                    guideTop = top + customFrameTextureCoordinateWidth.Value;
+                    guideBottom = bottom - customFrameTextureCoordinateWidth.Value;
+                }
+
+                var leftLine = nineSliceGuideLines[0];
+                leftLine.X = guideLeft;
+                leftLine.Y = top;
+                leftLine.RelativePoint.X = 0;
+                leftLine.RelativePoint.Y = bottom - top;
+
+                var rightLine = nineSliceGuideLines[1];
+                rightLine.X = guideRight;
+                rightLine.Y = top;
+                rightLine.RelativePoint.X = 0;
+                rightLine.RelativePoint.Y = bottom - top;
+
+                var topLine = nineSliceGuideLines[2];
+                topLine.X = left;
+                topLine.Y = guideTop;
+                topLine.RelativePoint.X = right - left;
+                topLine.RelativePoint.Y = 0;
+
+                var bottomLine = nineSliceGuideLines[3];
+                bottomLine.X = left;
+                bottomLine.Y = guideBottom;
+                bottomLine.RelativePoint.X = right - left;
+                bottomLine.RelativePoint.Y = 0;
+            }
         }
 
         private void RefreshLineGrid()
@@ -215,11 +311,11 @@ namespace TextureCoordinateSelectionPlugin.Logic
                 int width = right - left;
                 int height = bottom - top;
 
-                graphicalUiElement.TextureLeft = MathFunctions.RoundToInt(left);
-                graphicalUiElement.TextureTop = MathFunctions.RoundToInt(top);
+                graphicalUiElement.TextureLeft = left;
+                graphicalUiElement.TextureTop = top;
 
-                graphicalUiElement.TextureWidth = MathFunctions.RoundToInt(width);
-                graphicalUiElement.TextureHeight = MathFunctions.RoundToInt(height);
+                graphicalUiElement.TextureWidth = width;
+                graphicalUiElement.TextureHeight = height;
 
                 state.SetValue($"{instancePrefix}Texture Left", left, "int");
                 state.SetValue($"{instancePrefix}Texture Top", top, "int");
@@ -289,6 +385,8 @@ namespace TextureCoordinateSelectionPlugin.Logic
                 
                 GumCommands.Self.GuiCommands.RefreshPropertyGridValues();
             }
+
+            RefreshNineSliceGuides();
         }
 
         private void HandleEndRegionChanged(object sender, EventArgs e)
@@ -325,7 +423,7 @@ namespace TextureCoordinateSelectionPlugin.Logic
                 {
                     textureOutlineRectangle = new LineRectangle(control.SystemManagers);
                     textureOutlineRectangle.IsDotted = false;
-                    textureOutlineRectangle.Color = new Microsoft.Xna.Framework.Color(255, 255, 255, 128);
+                    textureOutlineRectangle.Color = Color.FromArgb(128, 255, 255, 255);
                     control.SystemManagers.ShapeManager.Add(textureOutlineRectangle);
                 }
                 textureOutlineRectangle.Width = control.CurrentTexture.Width;

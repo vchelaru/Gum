@@ -1,13 +1,10 @@
-﻿using Microsoft.Xna.Framework;
-using RenderingLibrary;
+﻿using RenderingLibrary;
 using RenderingLibrary.Graphics;
-using RenderingLibrary.Math;
 using RenderingLibrary.Math.Geometry;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using ToolsUtilitiesStandard.Helpers;
+using Vector2 = System.Numerics.Vector2;
+using Color = System.Drawing.Color;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace Gum.Wireframe.Editors
 {
@@ -103,10 +100,10 @@ namespace Gum.Wireframe.Editors
             dimensionDisplayText.FontScale = 1/Zoom;
 
             var rotationMatrix = asIpso.GetAbsoluteRotationMatrix();
-            var rotatedLeftDirection = new Vector2(rotationMatrix.Left.X, rotationMatrix.Left.Y);
-            var rotatedRightDirection = new Vector2(rotationMatrix.Right.X, rotationMatrix.Right.Y);
-            var rotatedUpDirection = new Vector2(rotationMatrix.Down.X, rotationMatrix.Down.Y);
-            var rotatedDownDirection = new Vector2(rotationMatrix.Up.X, rotationMatrix.Up.Y);
+            var rotatedLeftDirection = new Vector2(rotationMatrix.Left().X, rotationMatrix.Left().Y);
+            var rotatedRightDirection = new Vector2(rotationMatrix.Right().X, rotationMatrix.Right().Y);
+            var rotatedUpDirection = new Vector2(rotationMatrix.Down().X, rotationMatrix.Down().Y);
+            var rotatedDownDirection = new Vector2(rotationMatrix.Up().X, rotationMatrix.Up().Y);
             var extraTextOffset = 4;
 
             if(widthOrHeight == WidthOrHeight.Width)

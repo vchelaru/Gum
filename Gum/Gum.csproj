@@ -238,6 +238,8 @@
       <DependentUpon>FlatSearchListBox.xaml</DependentUpon>
     </Compile>
     <Compile Include="Plugins\InternalPlugins\TreeView\ViewModels\SearchItemViewModel.cs" />
+    <Compile Include="Plugins\InternalPlugins\VariableGrid\ExclusionsPlugin.cs" />
+    <Compile Include="Plugins\InternalPlugins\VariableGrid\MainVariableGridPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\VariableGrid\StateSaveCategoryDisplayer.cs" />
     <Compile Include="Plugins\PluginTab.cs" />
     <Compile Include="Plugins\InternalPlugins\ProjectPropertiesWindowPlugin\MainPlugin.cs" />
@@ -379,8 +381,8 @@
     <Compile Include="RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs" />
     <Compile Include="Responses\DeleteResponse.cs" />
     <Compile Include="Settings\GeneralSettingsFile.cs" />
-    <Compile Include="Plugins\InternalPlugins\VariableGrid\TestWpfControl.xaml.cs">
-      <DependentUpon>TestWpfControl.xaml</DependentUpon>
+    <Compile Include="Plugins\InternalPlugins\VariableGrid\MainPropertyGrid.xaml.cs">
+      <DependentUpon>MainPropertyGrid.xaml</DependentUpon>
     </Compile>
     <Compile Include="ToolCommands\ElementCommands.cs" />
     <Compile Include="ToolCommands\GuiCommands.cs" />
@@ -401,10 +403,9 @@
     <Compile Include="Wireframe\Editors\DimensionDisplay.cs" />
     <Compile Include="Wireframe\Editors\PolygonWireframeEditor.cs" />
     <Compile Include="Wireframe\ElementWithState.cs" />
-    <Compile Include="Wireframe\GrabbedInitialState.cs" />
+    <Compile Include="Wireframe\GrabbedState.cs" />
     <Compile Include="Wireframe\GraphicalOutline.cs" />
     <Compile Include="Wireframe\HighlightManager.cs" />
-    <Compile Include="Wireframe\InterpolatingColor.cs" />
     <Compile Include="Wireframe\OriginDisplay.cs" />
     <Compile Include="Wireframe\PlatformDetails.cs" />
     <Compile Include="Wireframe\ResizeHandles.cs" />
@@ -656,6 +657,12 @@
     <None Include="Content\Icons\HeightUnits\AbsoluteHeightMulitpliedByFontScale.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Content\Icons\ChildrenLayout\AutoGridVertical.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Icons\ChildrenLayout\AutoGridHorizontal.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <Content Include="Content\Icons\Origins\Baseline.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -789,7 +796,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Plugins\InternalPlugins\VariableGrid\TestWpfControl.xaml">
+    <Page Include="Plugins\InternalPlugins\VariableGrid\MainPropertyGrid.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -799,6 +806,9 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="DynamicExpresso.Core">
+      <Version>2.16.1</Version>
+    </PackageReference>
     <PackageReference Include="Microsoft.AppCenter.Analytics">
       <Version>4.2.0</Version>
     </PackageReference>
@@ -808,8 +818,11 @@
     <PackageReference Include="Newtonsoft.Json">
       <Version>13.0.1</Version>
     </PackageReference>
+    <PackageReference Include="PixiEditor.ColorPicker">
+      <Version>3.4.1</Version>
+    </PackageReference>
     <PackageReference Include="SkiaSharp">
-      <Version>2.88.2</Version>
+      <Version>2.88.6</Version>
     </PackageReference>
     <PackageReference Include="SkiaSharp.Extended">
       <Version>1.60.0</Version>

@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using RenderingLibrary.Math.Geometry;
 using InputLibrary;
 using RenderingLibrary;
 using Cursors = System.Windows.Forms.Cursors;
 using WinCursor = System.Windows.Forms.Cursor;
-using Microsoft.Xna.Framework;
 using RenderingLibrary.Math;
 
 namespace FlatRedBall.SpecializedXnaControls.RegionSelection

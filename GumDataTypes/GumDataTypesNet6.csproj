@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-	  <TargetFramework>net6.0-windows</TargetFramework>
+	  <TargetFramework>net6.0</TargetFramework>
 	  <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
 	<GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
 	<GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
@@ -20,10 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.8.0.13" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <Folder Include="Extensions\" />
     <Folder Include="Properties\" />
   </ItemGroup>
 

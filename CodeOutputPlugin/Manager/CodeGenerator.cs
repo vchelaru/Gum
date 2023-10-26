@@ -5,6 +5,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.ToolStates;
+using GumDataTypes.Variables;
 using Newtonsoft.Json.Linq;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math;
@@ -45,6 +46,7 @@ namespace CodeOutputPlugin.Manager
         public string ThisPrefix { get; set; }
         public InstanceSave Instance { get; set; }
         public ElementSave Element { get; set; }
+        public StringBuilder StringBuilder { get; set; }
 
         public CodeOutputProjectSettings CodeOutputProjectSettings { get; set; }
 
@@ -117,6 +119,13 @@ namespace CodeOutputPlugin.Manager
 
     public static class CodeGenerator
     {
+        enum BindingBehavior
+        {
+            NoBinding,
+            BindablePropertyWithEventAssignment,
+            BindablePropertyWithBoundInstance
+        }
+
         #region Fields/Properties
 
         public static int CanvasWidth { get; set; } = 480;
@@ -279,11 +288,11 @@ namespace CodeOutputPlugin.Manager
             var isVariableOwnerAbsoluteLayout = false;
             if (context.Instance != null)
             {
-                isVariableOwnerAbsoluteLayout = context.Instance.BaseType?.EndsWith("/AbsoluteLayout") == true;
+                isVariableOwnerAbsoluteLayout = IsOfXamarinFormsType(context.Instance, "AbsoluteLayout");
             }
             else
             {
-                isVariableOwnerAbsoluteLayout = context.Element.BaseType?.EndsWith("/AbsoluteLayout") == true;
+                isVariableOwnerAbsoluteLayout = IsOfXamarinFormsType(context.Element, "AbsoluteLayout");
             }
             var isContainedInStackLayout = parentBaseType?.EndsWith("/StackLayout") == true;
 
@@ -344,6 +353,15 @@ namespace CodeOutputPlugin.Manager
                     $"{codePrefix}.WidthRequest = {width.ToString(CultureInfo.InvariantCulture)}f * {multiple};");
             }
 
+            // In MAUI it seems like we need to -1 the WidthRequest if we are going to depend on the container and use margins:
+            if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Maui)
+            {
+                if (widthUnits == DimensionUnitType.RelativeToContainer)
+                {
+                    stringBuilder.AppendLine($"{codePrefix}.WidthRequest = -1;");
+                }
+            }
+
             #endregion
 
             #region Apply HeightUnits
@@ -372,8 +390,16 @@ namespace CodeOutputPlugin.Manager
                 }
             }
 
+            if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Maui)
+            {
+                if (heightUnits == DimensionUnitType.RelativeToContainer)
+                {
+                    stringBuilder.AppendLine($"{codePrefix}.HeightRequest = -1;");
+                }
+            }
+
             // If it's in a stack layout and it uses a height request of RelativeToParent, generate a compile error. This is not allowed!
-            if(heightUnits == DimensionUnitType.RelativeToContainer && isContainedInStackLayout)
+            if (heightUnits == DimensionUnitType.RelativeToContainer && isContainedInStackLayout)
             {
                 stringBuilder.AppendLine(context.Tabs + 
                     $"Intentional compile error - the object {context.Instance?.Name ?? context.Element.Name} has a parent which is not an absolute layout, but its height is RelativeToContainer. This is not allowed in Xamarin Forms. The parent should be an Absolute layout in this case.");
@@ -589,15 +615,38 @@ namespace CodeOutputPlugin.Manager
 
             if (isVariableOwnerSkiaGumCanvasView)
             {
+                var generateAfterAutoSizeChanged = false;
                 if (heightUnits == DimensionUnitType.RelativeToChildren)
                 {
                     stringBuilder.AppendLine(
                         $"{codePrefix}.AutoSizeHeightAccordingToContents = true;");
+
+                    if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Maui)
+                    {
+                        // In maui if it's not at least 1 pixel height, it won't ever call its update call so it never gets resized
+                        // We may want to have some kind of explicit call that resizes it outside of rendering, but this hooks into the
+                        // existing system, so let's just do that:
+                        stringBuilder.AppendLine($"{codePrefix}.HeightRequest = 1;");
+
+                        // On IOS there's a bug where the page needs to be forcefully refreshed to handle the resize. This is a workaround. Not sure if we'll ever test this in the future to see  if it's fixed:
+                        // This is Tula-specific so this will have to be generalized if anyone else uses this:
+                        generateAfterAutoSizeChanged = true;
+                    }
                 }
                 if (widthUnits == DimensionUnitType.RelativeToChildren)
                 {
                     stringBuilder.AppendLine(
                         $"{codePrefix}.AutoSizeWidthAccordingToContents = true;");
+                    if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Maui)
+                    {
+                        stringBuilder.Append($"{codePrefix}.WidthRequest = 1;");
+                        generateAfterAutoSizeChanged = true;
+
+                    }
+                }
+                if(generateAfterAutoSizeChanged)
+                {
+                    stringBuilder.AppendLine($"{codePrefix}.AfterAutoSizeChanged += () => (BioCheck.DependencyInjection.DiCommon.TryGet<BioCheck.Managers.BioCheckNavigation>().NavigationStack.LastOrDefault() as BioCheck.Pages.BioCheckPage).CallInvalidateMeasure();");
                 }
             }
         }
@@ -630,11 +679,11 @@ namespace CodeOutputPlugin.Manager
             var isVariableOwnerAbsoluteLayout = false;
             if (context.Instance != null)
             {
-                isVariableOwnerAbsoluteLayout = context.Instance.BaseType?.EndsWith("/AbsoluteLayout") == true;
+                isVariableOwnerAbsoluteLayout = IsOfXamarinFormsType( context.Instance, "AbsoluteLayout");
             }
             else
             {
-                isVariableOwnerAbsoluteLayout = context.Element.BaseType?.EndsWith("/AbsoluteLayout") == true;
+                isVariableOwnerAbsoluteLayout = IsOfXamarinFormsType(context.Element, "AbsoluteLayout");
             }
 
             #region Get recursive values for position and size
@@ -1091,10 +1140,12 @@ namespace CodeOutputPlugin.Manager
                 }
             }
 
-
+            string rectangleName = context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.XamarinForms
+                ? "Rectangle"
+                : "Rect";
 
             string boundsText =
-                $"{ToTabs(context.TabCount)}AbsoluteLayout.SetLayoutBounds({context.CodePrefixNoTabs}, new Rectangle({xString}, {yString}, {widthString}, {heightString} ));";
+                $"{ToTabs(context.TabCount)}AbsoluteLayout.SetLayoutBounds({context.CodePrefixNoTabs}, new {rectangleName}({xString}, {yString}, {widthString}, {heightString} ));";
             string flagsText = null;
 
             if (proportionalFlags.Count == 0)
@@ -1191,15 +1242,44 @@ namespace CodeOutputPlugin.Manager
 
             if (isVariableOwnerSkiaGumCanvasView)
             {
+                var generateAfterAutoSizeChanged = false;
                 if (heightUnits == DimensionUnitType.RelativeToChildren)
                 {
                     stringBuilder.AppendLine(
                         $"{codePrefix}.AutoSizeHeightAccordingToContents = true;");
+                    if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Maui)
+                    {
+                        stringBuilder.AppendLine($"{codePrefix}.HeightRequest = 1;");
+                        generateAfterAutoSizeChanged = true;
+                    }
                 }
                 if (widthUnits == DimensionUnitType.RelativeToChildren)
                 {
                     stringBuilder.AppendLine(
                         $"{codePrefix}.AutoSizeWidthAccordingToContents = true;");
+                    if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Maui)
+                    {
+                        stringBuilder.AppendLine($"{codePrefix}.HeightRequest = 1;");
+                        generateAfterAutoSizeChanged = true;
+                    }
+                }
+
+                if (generateAfterAutoSizeChanged)
+                {
+                    stringBuilder.AppendLine($"{codePrefix}.AfterAutoSizeChanged += () => (BioCheck.DependencyInjection.DiCommon.TryGet<BioCheck.Managers.BioCheckNavigation>().NavigationStack.LastOrDefault() as BioCheck.Pages.BioCheckPage).CallInvalidateMeasure();");
+                }
+            }
+
+            // In MAUI it seems like we need to -1 the WidthRequest if we are going to depend on the container and use margins:
+            if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Maui)
+            {
+                if (widthUnits == DimensionUnitType.RelativeToContainer)
+                {
+                    stringBuilder.AppendLine($"{codePrefix}.WidthRequest = -1;");
+                }
+                if(heightUnits == DimensionUnitType.RelativeToContainer)
+                {
+                    stringBuilder.AppendLine($"{codePrefix}.HeightRequest = -1;");
                 }
             }
         }
@@ -1329,7 +1409,7 @@ namespace CodeOutputPlugin.Manager
 
         #region Parent
 
-        private static void FillWithParentAssignments(InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount = 0)
+        private static void FillWithParentAssignments(InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount, CodeOutputProjectSettings projectSettings)
         {
             // Some history on this:
             // Initially parent assignment
@@ -1361,6 +1441,7 @@ namespace CodeOutputPlugin.Manager
             var context = new CodeGenerationContext();
             context.Element = container;
             context.Instance = instance;
+            context.CodeOutputProjectSettings = projectSettings;
 
             var parentValue = parentVariable?.Value as string;
             var parentInstance = parentValue != null
@@ -1453,7 +1534,7 @@ namespace CodeOutputPlugin.Manager
 
             foreach (var instance in element.Instances)
             {
-                FillWithParentAssignments(instance, element, stringBuilder, tabCount);
+                FillWithParentAssignments(instance, element, stringBuilder, tabCount, projectSettings);
             }
 
             tabCount--;
@@ -1549,6 +1630,9 @@ namespace CodeOutputPlugin.Manager
             else // xamarin forms
             {
                 #region Constructor Header
+
+                string baseCall = null;
+
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"public {elementName}(bool fullInstantiation = true)");
 
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
@@ -1564,25 +1648,9 @@ namespace CodeOutputPlugin.Manager
                 var elementBaseType = element?.BaseType;
                 var baseElements = ObjectFinder.Self.GetBaseElements(element);
 
-                var isThisAbsoluteLayout = elementBaseType?.EndsWith("/AbsoluteLayout") == true;
-                if (!isThisAbsoluteLayout)
-                {
-                    isThisAbsoluteLayout = baseElements.Any(item => item.BaseType?.EndsWith("/AbsoluteLayout") == true);
-                }
-
-
-                var isStackLayout = elementBaseType?.EndsWith("/StackLayout") == true;
-                if (!isStackLayout)
-                {
-                    isStackLayout = baseElements.Any(item => item.BaseType?.EndsWith("/StackLayout") == true);
-                }
-
-                var isSkiaCanvasView = elementBaseType?.EndsWith("/SkiaGumCanvasView") == true;
-                if (!isSkiaCanvasView)
-                {
-                    // see if this inherits from a skia gum canvas view
-                    isSkiaCanvasView = baseElements.Any(item => item.BaseType?.EndsWith("/SkiaGumCanvasView") == true);
-                }
+                var isThisAbsoluteLayout = element != null && IsOfXamarinFormsType(element, "AbsoluteLayout");
+                var isStackLayout = element != null && IsOfXamarinFormsType(element, "StackLayout");
+                var isSkiaCanvasView = element != null && IsOfXamarinFormsType(element, "SkiaGumCanvasView");
 
                 if (isThisAbsoluteLayout)
                 {
@@ -1608,6 +1676,7 @@ namespace CodeOutputPlugin.Manager
             context.Element = element;
             context.TabCount = tabCount;
             context.CodeOutputProjectSettings = projectSettings;
+            context.StringBuilder = stringBuilder;
             FillWithVariableAssignments(visualApi, stringBuilder, context);
 
             stringBuilder.AppendLine();
@@ -1661,22 +1730,50 @@ namespace CodeOutputPlugin.Manager
 
             }
 
+            DoInitialSizeUpdates(context);
+
 
             tabCount--;
             stringBuilder.AppendLine(ToTabs(tabCount) + "}");
         }
 
+        private static void DoInitialSizeUpdates(CodeGenerationContext context)
+        {
+            var element = context.Element;
+
+            foreach(var instance in element.Instances)
+            {
+                var isSkiaSharpCanvasView = IsOfXamarinFormsType(instance, "SkiaGumCanvasView");
+
+                if(isSkiaSharpCanvasView)
+                {
+                    var variableFinder = new RecursiveVariableFinder(instance, element);
+
+                    // See if its width or height units depend on children:
+                    var heightUnits = variableFinder.GetValue<DimensionUnitType>("Height Units");
+                    var widthUnits = variableFinder.GetValue<DimensionUnitType>("Width Units");
+
+                    if (heightUnits == DimensionUnitType.RelativeToChildren || widthUnits == DimensionUnitType.RelativeToChildren)
+                    {
+                        context.StringBuilder.AppendLine("// This hurts performance a little but it's needed because of an iOS MAUI bug where these do not behave the same as in Android");
+                        context.StringBuilder.AppendLine(context.Tabs + instance.Name + ".ForceGumLayout();");
+                        context.StringBuilder.AppendLine(context.Tabs + instance.Name + ".UpdateDimensionsFromAutoSize();");
+                    }
+                }
+            }
+        }
+
         private static bool GetIfShouldAddMainLayout(ElementSave element, CodeOutputProjectSettings projectSettings)
         {
             var elementBaseType = element?.BaseType;
-            var isThisAbsoluteLayout = elementBaseType?.EndsWith("/AbsoluteLayout") == true;
-            var isThisStackLayout = elementBaseType?.EndsWith("/StackLayout") == true;
-
-            var isSkiaCanvasView = elementBaseType?.EndsWith("/SkiaGumCanvasView") == true;
+            var isThisAbsoluteLayout = IsOfXamarinFormsType(element, "AbsoluteLayout");
+            var isThisStackLayout =  IsOfXamarinFormsType(element, "StackLayout");
+            var isSkiaCanvasView = IsOfXamarinFormsType(element, "SkiaGumCanvasView");
 
             var isContainer = elementBaseType == "Container";
 
-            var shouldAddMainLayout = !isSkiaCanvasView && !isContainer && !isThisStackLayout && projectSettings.OutputLibrary == OutputLibrary.XamarinForms;
+            var shouldAddMainLayout = !isSkiaCanvasView && !isContainer && !isThisStackLayout && 
+                (projectSettings.OutputLibrary == OutputLibrary.XamarinForms || projectSettings.OutputLibrary == OutputLibrary.Maui);
             if (shouldAddMainLayout && element is ScreenSave && !string.IsNullOrEmpty(element.BaseType) && !projectSettings.BaseTypesNotCodeGenerated.Contains(element.BaseType))
             {
                 shouldAddMainLayout = false;
@@ -1684,6 +1781,7 @@ namespace CodeOutputPlugin.Manager
 
             return shouldAddMainLayout;
         }
+
 
         #endregion
 
@@ -1882,42 +1980,7 @@ namespace CodeOutputPlugin.Manager
 
         #endregion
 
-        private static void GenerateApplyDefaultVariables(CodeGenerationContext context, StringBuilder stringBuilder)
-        {
-            var line = "private void ApplyDefaultVariables()";
-            stringBuilder.AppendLine(context.Tabs + line);
-            stringBuilder.AppendLine(context.Tabs + "{");
-            context.TabCount++;
-
-            foreach (var instance in context.Element.Instances)
-            {
-                context.Instance = instance;
-
-                FillWithNonParentVariableAssignments(context, stringBuilder);
-
-                TryGenerateApplyLocalizationForInstance(context, stringBuilder, instance);
-
-                var instanceApi = GetVisualApiForInstance(instance, context.Element);
-                var screenOrComponent = context.Element is ScreenSave
-                    ? "ScreenSave"
-                    : "ComponentSave";
-                if(instanceApi == VisualApi.Gum && context.CodeOutputProjectSettings.GenerateGumDataTypes)
-                {
-                    stringBuilder.AppendLine(context.Tabs + $"if({screenOrComponent}?.DefaultState != null);");
-                    context.TabCount++;
-                    stringBuilder.AppendLine(context.Tabs + $"GumRuntime.ElementSaveExtensions.ApplyVariableReferences({instance.Name}, {screenOrComponent}.DefaultState);");
-                    context.TabCount--;
-
-                }
-
-                stringBuilder.AppendLine();
-            }
-
-            context.TabCount--;
-            stringBuilder.AppendLine(context.Tabs + "}");
-
-        }
-
+        #region Assign Gum References (this.ComponentSave = ...)
         private static void GenerateAssignGumReferences(ElementSave element, VisualApi visualApi, int tabCount, StringBuilder stringBuilder)
         {
             var line = "private void AssignGumReferences()";
@@ -1957,6 +2020,7 @@ namespace CodeOutputPlugin.Manager
             tabCount--;
             stringBuilder.AppendLine(ToTabs(tabCount) + "}");
         }
+        #endregion
 
         public static string GetElementNamespace(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
         {
@@ -2023,19 +2087,15 @@ namespace CodeOutputPlugin.Manager
 
         }
 
-        static bool IsStackLayout(InstanceSave instance) => IsOfXamarinFormsType(instance, "StackLayout");
-
         static bool IsOfXamarinFormsType(InstanceSave instance, string xamarinFormsType)
         {
             var element = ObjectFinder.Self.GetElementSave(instance);
             return IsOfXamarinFormsType(element, xamarinFormsType);
         }
 
-
-
         private static bool IsOfXamarinFormsType(ElementSave element, string xamarinFormsType)
         {
-            bool isRightType = element.Name.EndsWith("/" + xamarinFormsType);
+            bool isRightType = element?.Name.EndsWith("/" + xamarinFormsType) == true;
             if (!isRightType)
             {
                 var elementBaseType = element?.BaseType;
@@ -2075,8 +2135,6 @@ namespace CodeOutputPlugin.Manager
                 }
             }
         }
-
-
 
         private static void TryGenerateApplyLocalizationForInstance(CodeGenerationContext context, StringBuilder stringBuilder, InstanceSave instance)
         {
@@ -2633,13 +2691,6 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-        enum BindingBehavior
-        {
-            NoBinding,
-            BindablePropertyWithEventAssignment,
-            BindablePropertyWithBoundInstance
-        }
-
         private static BindingBehavior GetBindingBehavior(ElementSave container, string instanceName)
         {
             var isContainerXamarinForms = (container.DefaultState.GetValueRecursive("IsXamarinFormsControl") as bool?) ?? false;
@@ -2674,13 +2725,11 @@ namespace CodeOutputPlugin.Manager
 
             FillWithNonParentVariableAssignments(context, stringBuilder);
 
-            FillWithParentAssignments(instance, element, stringBuilder);
+            FillWithParentAssignments(instance, element, stringBuilder, 0, codeOutputProjectSettings);
 
             var code = stringBuilder.ToString();
             return code;
         }
-
-
 
         private static void FillWithInstanceInstantiation(InstanceSave instance, ElementSave element, StringBuilder stringBuilder, int tabCount = 0)
         {
@@ -2892,7 +2941,7 @@ namespace CodeOutputPlugin.Manager
                 }
                 else
                 {
-                    return $"{context.CodePrefixNoTabs}.{GetXamarinFormsVariableName(variable)} = {VariableValueToXamarinFormsCodeValue(variable, container)};";
+                    return $"{context.CodePrefixNoTabs}.{GetXamarinFormsVariableName(variable)} = {VariableValueToXamarinFormsCodeValue(variable, container, context)};";
                 }
 
             }
@@ -2933,7 +2982,7 @@ namespace CodeOutputPlugin.Manager
                     //var variableName = GetXamarinFormsVariableName(variable);
                     var variableName = variable.Name;
 
-                    return $"{context.CodePrefix}.{variableName} = {VariableValueToXamarinFormsCodeValue(variable, context.Element)};";
+                    return $"{context.CodePrefix}.{variableName} = {VariableValueToXamarinFormsCodeValue(variable, context.Element, context)};";
                 }
 
             }
@@ -3004,7 +3053,7 @@ namespace CodeOutputPlugin.Manager
                 }
                 else
                 {
-                    return value.GetType().Name + "." + value.ToString();
+                    return value.GetType().FullName + "." + value.ToString();
                 }
             }
             else
@@ -3013,7 +3062,7 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-        private static string VariableValueToXamarinFormsCodeValue(object value, string rootName, bool isState, ElementSave categoryContainer, StateSaveCategory category)
+        private static string VariableValueToXamarinFormsCodeValue(object value, string rootName, bool isState, ElementSave categoryContainer, StateSaveCategory category, CodeGenerationContext context)
         {
             if (value is float asFloat)
             {
@@ -3093,6 +3142,13 @@ namespace CodeOutputPlugin.Manager
             }
             else if (value.GetType().IsEnum)
             {
+                var textAlignmentPrefix = "Xamarin.Forms";
+
+                if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Maui)
+                {
+                    textAlignmentPrefix = "Microsoft.Maui";
+                }
+
                 var type = value.GetType();
                 if (type == typeof(PositionUnitType))
                 {
@@ -3104,11 +3160,11 @@ namespace CodeOutputPlugin.Manager
                     switch ((HorizontalAlignment)value)
                     {
                         case HorizontalAlignment.Left:
-                            return "Xamarin.Forms.TextAlignment.Start";
+                            return $"{textAlignmentPrefix}.TextAlignment.Start";
                         case HorizontalAlignment.Center:
-                            return "Xamarin.Forms.TextAlignment.Center";
+                            return $"{textAlignmentPrefix}.TextAlignment.Center";
                         case HorizontalAlignment.Right:
-                            return "Xamarin.Forms.TextAlignment.End";
+                            return $"{textAlignmentPrefix}.TextAlignment.End";
                         default:
                             return "";
                     }
@@ -3118,11 +3174,11 @@ namespace CodeOutputPlugin.Manager
                     switch ((VerticalAlignment)value)
                     {
                         case VerticalAlignment.Top:
-                            return "Xamarin.Forms.TextAlignment.Start";
+                            return $"{textAlignmentPrefix}.TextAlignment.Start";
                         case VerticalAlignment.Center:
-                            return "Xamarin.Forms.TextAlignment.Center";
+                            return $"{textAlignmentPrefix}.TextAlignment.Center";
                         case VerticalAlignment.Bottom:
-                            return "Xamarin.Forms.TextAlignment.End";
+                            return $"{textAlignmentPrefix}.TextAlignment.End";
                         default:
                             return "";
                     }
@@ -3134,6 +3190,204 @@ namespace CodeOutputPlugin.Manager
             }
 
             return value?.ToString();
+        }
+
+
+        private static string TryGetFullXamarinFormsLineReplacement(InstanceSave instance, ElementSave container, VariableSave variable, StateSave state, CodeGenerationContext context)
+        {
+            var rootVariableName = variable.GetRootName();
+
+            #region Handle all variables that have no direct translation in Xamarin forms
+
+            if (
+                rootVariableName == "Clips Children" ||
+                rootVariableName == "ExposeChildrenEvents" ||
+                rootVariableName == "FlipHorizontal" ||
+                rootVariableName == "HasEvents" ||
+
+                rootVariableName == "IsXamarinFormsControl" ||
+                rootVariableName == "IsOverrideInCodeGen" ||
+                rootVariableName == "Name" ||
+                rootVariableName == "Wraps Children" ||
+                rootVariableName == "X Origin" ||
+                rootVariableName == "XOrigin" ||
+                rootVariableName == "Y Origin" ||
+                rootVariableName == "YOrigin"
+                )
+            {
+                return " "; // Don't do anything with these variables::
+            }
+
+            #endregion
+
+            #region Parent
+
+            else if (rootVariableName == "Parent")
+            {
+                var parentName = variable.Value as string;
+
+                var hasContent = false;
+
+
+                var parentInstance = container.GetInstance(parentName);
+                if (parentName?.Contains(".") == true)
+                {
+                    var parentNameBeforeDot = parentName.Substring(0, parentName.IndexOf("."));
+                    parentInstance = container.GetInstance(parentNameBeforeDot);
+                }
+
+                if (parentInstance != null)
+                {
+                    // traverse the inheritance chain - we don't want to go to the very base because 
+                    // Glue has base types like Container for all components, and that's not what we want.
+                    // Actually we should go one above the inheritance:
+
+                    var instanceElement = ObjectFinder.Self.GetElementSave(parentInstance?.BaseType);
+
+                    if (instanceElement != null)
+                    {
+                        var baseElements = ObjectFinder.Self.GetBaseElements(instanceElement);
+                        string componentType = null;
+                        if (baseElements.Count > 1)
+                        {
+                            // don't do the "Last" because that will be container, so take all but the last:
+                            var baseBeforeContainer = baseElements.Take(baseElements.Count - 1).LastOrDefault();
+                            componentType = baseBeforeContainer?.Name;
+                        }
+                        else if (baseElements.Count == 1)
+                        {
+                            // this inherits from Container, so just use it's own base type:
+                            componentType = instanceElement.Name;
+                        }
+                        else
+                        {
+                            // All XamForms objects are components, so all must inherit from something. This should never happen...
+                        }
+                        hasContent = DoesTypeHaveContent(componentType);
+                    }
+
+                    // Certain types of views don't support Children.Add - they only have
+                    // a single content. In the future we may want to formalize the way we
+                    // handle standard XamarinForms controls, but for now we'll hardcode some
+                    // checks:
+                    if (IsTabControl(parentInstance))
+                    {
+                        var stringBuilder = new StringBuilder();
+                        var tabs = "";
+                        stringBuilder.AppendLine($"{tabs}{{");
+                        tabs += new String(' ', 4);
+
+                        var tabViewType = "Xamarin.CommunityToolkit.UI.Views.TabViewItem";
+                        var textProperty = "Text";
+                        var tabItemsProperty = "TabItems";
+
+                        if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Maui)
+                        {
+                            // There's no community toolkit tabview, so we'll assume it is using a TabViewItem, maybe from DevExpress:
+                            tabViewType = "TabViewItem";
+                            textProperty = "HeaderText";
+                            tabItemsProperty = "Items";
+                        }
+
+                        
+
+                        stringBuilder.AppendLine($"{tabs}var tabItem = new {tabViewType}();");
+                        stringBuilder.AppendLine($"{tabs}tabItem.{textProperty} = \"Tab Text\";");
+                        stringBuilder.AppendLine($"{tabs}tabItem.Content = {context.Instance.Name};");
+                        stringBuilder.AppendLine($"{tabs}{parentInstance.Name}.{tabItemsProperty}.Add(tabItem);");
+                        tabs = tabs.Substring(4);
+                        stringBuilder.AppendLine($"{tabs}}}");
+                        return stringBuilder.ToString();
+                    }
+                    else if (hasContent)
+                    {
+                        return $"{parentName}.Content = {context.Instance.Name};";
+                    }
+                    else
+                    {
+                        return $"{parentName}.Children.Add({context.Instance.Name});";
+                    }
+                }
+                // parent instance is null, so attach to "this" top level object
+                else
+                {
+                    // Couldn't find anything, so don't return anything
+
+                }
+
+            }
+
+            #endregion
+
+            #region Font
+
+            else if (rootVariableName == "Font")
+            {
+                return $"{context.CodePrefixNoTabs}.SetFont(CustomFont.{variable.Value?.ToString()?.Replace(" ", "_")});";
+            }
+
+            #endregion
+
+            #region Children Layout
+
+            else if (rootVariableName == "Children Layout" && variable.Value is ChildrenLayout valueAsChildrenLayout)
+            {
+                var isInstanceStackLayout = instance != null && IsOfXamarinFormsType(instance, "StackLayout");
+
+                if (isInstanceStackLayout)
+                {
+                    if (valueAsChildrenLayout == ChildrenLayout.LeftToRightStack)
+                    {
+                        return $"{context.CodePrefix}.Orientation = StackOrientation.Horizontal;";
+                    }
+                    else
+                    {
+                        return $"{context.CodePrefix}.Orientation = StackOrientation.Vertical;";
+                    }
+                }
+                else if (instance == null && IsOfXamarinFormsType(container, "StackLayout"))
+                {
+                    if (valueAsChildrenLayout == ChildrenLayout.LeftToRightStack)
+                    {
+                        return $"{context.CodePrefix}.Orientation = StackOrientation.Horizontal;";
+                    }
+                    else
+                    {
+                        return $"{context.CodePrefix}.Orientation = StackOrientation.Vertical;";
+                    }
+                }
+                else if (valueAsChildrenLayout != ChildrenLayout.Regular)
+                {
+                    var message = $"Error: The object {instance?.Name ?? container.Name} cannot have a layout of {valueAsChildrenLayout}.";
+
+                    if (instance != null && instance.BaseType?.EndsWith("/SkiaGumCanvasView") == true)
+                    {
+                        message += $"\nTo stack objects in a Skia canvas, add a Container which has its ChildrenLayout set to {valueAsChildrenLayout}";
+                    }
+                    else
+                    {
+                        message += $"\nIt should probably inherit from StackLayout to be a top-to-bottom stack";
+                    }
+
+                    return message;
+                }
+                else
+                {
+                    // it's regular, so we just ignore it
+                    return string.Empty;
+                }
+            }
+
+            #endregion
+
+            else if (GetIsShouldBeLocalized(variable, context.Element.DefaultState))
+            {
+                string assignment = GetLocaliedLine(instance, variable, context);
+
+                return assignment;
+            }
+
+            return null;
         }
 
 
@@ -3226,6 +3480,42 @@ namespace CodeOutputPlugin.Manager
             return null;
         }
 
+        private static void GenerateApplyDefaultVariables(CodeGenerationContext context, StringBuilder stringBuilder)
+        {
+            var line = "private void ApplyDefaultVariables()";
+            stringBuilder.AppendLine(context.Tabs + line);
+            stringBuilder.AppendLine(context.Tabs + "{");
+            context.TabCount++;
+
+            foreach (var instance in context.Element.Instances)
+            {
+                context.Instance = instance;
+
+                FillWithNonParentVariableAssignments(context, stringBuilder);
+
+                TryGenerateApplyLocalizationForInstance(context, stringBuilder, instance);
+
+                var instanceApi = GetVisualApiForInstance(instance, context.Element);
+                var screenOrComponent = context.Element is ScreenSave
+                    ? "ScreenSave"
+                    : "ComponentSave";
+                if (instanceApi == VisualApi.Gum && context.CodeOutputProjectSettings.GenerateGumDataTypes)
+                {
+                    stringBuilder.AppendLine(context.Tabs + $"if({screenOrComponent}?.DefaultState != null);");
+                    context.TabCount++;
+                    stringBuilder.AppendLine(context.Tabs + $"GumRuntime.ElementSaveExtensions.ApplyVariableReferences({instance.Name}, {screenOrComponent}.DefaultState);");
+                    context.TabCount--;
+
+                }
+
+                stringBuilder.AppendLine();
+            }
+
+            context.TabCount--;
+            stringBuilder.AppendLine(context.Tabs + "}");
+
+        }
+
         #endregion
 
         private static void ProcessVariableGroups(List<VariableSave> variablesToConsider, StateSave defaultState, VisualApi visualApi, StringBuilder stringBuilder, CodeGenerationContext context)
@@ -3261,13 +3551,19 @@ namespace CodeOutputPlugin.Manager
                 // Update - not all controls support this, so we need to check:
                 if (context.Instance != null)
                 {
-                    var isOfRightType =
+                    var canClipToBounds =
                         IsOfXamarinFormsType(context.Instance, "StackLayout") ||
                         IsOfXamarinFormsType(context.Instance, "AbsoluteLayout") ||
                         IsOfXamarinFormsType(context.Instance, "Frame");
                     ;
 
-                    if (isOfRightType)
+                    if (canClipToBounds &&
+                        IsOfXamarinFormsType(context.Instance, "TabView"))
+                    {
+                        canClipToBounds = false;
+                    }
+
+                    if (canClipToBounds)
                     {
                         var rfv = new RecursiveVariableFinder(defaultState);
 
@@ -3318,7 +3614,16 @@ namespace CodeOutputPlugin.Manager
 
             if (isBold)
             {
-                stringBuilder.AppendLine($"{context.CodePrefix}.FontAttributes = Xamarin.Forms.FontAttributes.Bold;");
+                string prefix = "";
+                if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.XamarinForms)
+                {
+                    prefix = "Xamarin.Forms";
+                }
+                else if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Maui)
+                {
+                    prefix = "Microsoft.Maui.Controls";
+                }
+                stringBuilder.AppendLine($"{context.CodePrefix}.FontAttributes = {prefix}.FontAttributes.Bold;");
 
             }
 
@@ -3422,189 +3727,6 @@ namespace CodeOutputPlugin.Manager
         public static string StringIdPrefix = "T_";
         public static string FormattedLocalizationCode = "Strings.Get(\"{0}\")";
 
-        private static string TryGetFullXamarinFormsLineReplacement(InstanceSave instance, ElementSave container, VariableSave variable, StateSave state, CodeGenerationContext context)
-        {
-            var rootVariableName = variable.GetRootName();
-
-            #region Handle all variables that have no direct translation in Xamarin forms
-
-            if (
-                rootVariableName == "Clips Children" ||
-                rootVariableName == "ExposeChildrenEvents" ||
-                rootVariableName == "FlipHorizontal" ||
-                rootVariableName == "HasEvents" ||
-
-                rootVariableName == "IsXamarinFormsControl" ||
-                rootVariableName == "IsOverrideInCodeGen" ||
-                rootVariableName == "Name" ||
-                rootVariableName == "Wraps Children" ||
-                rootVariableName == "X Origin" ||
-                rootVariableName == "XOrigin" ||
-                rootVariableName == "Y Origin" ||
-                rootVariableName == "YOrigin"
-                )
-            {
-                return " "; // Don't do anything with these variables::
-            }
-
-            #endregion
-
-            #region Parent
-
-            else if (rootVariableName == "Parent")
-            {
-                var parentName = variable.Value as string;
-
-                var hasContent = false;
-
-
-                var parentInstance = container.GetInstance(parentName);
-                if(parentName?.Contains(".") == true)
-                {
-                    var parentNameBeforeDot = parentName.Substring(0, parentName.IndexOf("."));
-                    parentInstance = container.GetInstance(parentNameBeforeDot);
-                }
-
-                if (parentInstance != null)
-                {
-                    // traverse the inheritance chain - we don't want to go to the very base because 
-                    // Glue has base types like Container for all components, and that's not what we want.
-                    // Actually we should go one above the inheritance:
-
-                    var instanceElement = ObjectFinder.Self.GetElementSave(parentInstance?.BaseType);
-
-                    if (instanceElement != null)
-                    {
-                        var baseElements = ObjectFinder.Self.GetBaseElements(instanceElement);
-                        string componentType = null;
-                        if (baseElements.Count > 1)
-                        {
-                            // don't do the "Last" because that will be container, so take all but the last:
-                            var baseBeforeContainer = baseElements.Take(baseElements.Count - 1).LastOrDefault();
-                            componentType = baseBeforeContainer?.Name;
-                        }
-                        else if (baseElements.Count == 1)
-                        {
-                            // this inherits from Container, so just use it's own base type:
-                            componentType = instanceElement.Name;
-                        }
-                        else
-                        {
-                            // All XamForms objects are components, so all must inherit from something. This should never happen...
-                        }
-                        hasContent = DoesTypeHaveContent(componentType);
-                    }
-
-                    // Certain types of views don't support Children.Add - they only have
-                    // a single content. In the future we may want to formalize the way we
-                    // handle standard XamarinForms controls, but for now we'll hardcode some
-                    // checks:
-                    if(IsTabControl(parentInstance))
-                    {
-                        var stringBuilder = new StringBuilder();
-                        var tabs = "";
-                        stringBuilder.AppendLine($"{tabs}{{");
-                        tabs += new String(' ', 4);
-
-                        stringBuilder.AppendLine($"{tabs}var tabItem = new Xamarin.CommunityToolkit.UI.Views.TabViewItem();");
-                        stringBuilder.AppendLine($"{tabs}tabItem.Text = \"Tab Text\";");
-                        stringBuilder.AppendLine($"{tabs}tabItem.Content = {context.Instance.Name};");
-                        stringBuilder.AppendLine($"{tabs}{parentInstance.Name}.TabItems.Add(tabItem);");
-                        tabs = tabs.Substring(4);
-                        stringBuilder.AppendLine($"{tabs}}}");
-                        return stringBuilder.ToString();
-                    }
-                    else if (hasContent)
-                    {
-                        return $"{parentName}.Content = {context.Instance.Name};";
-                    }
-                    else
-                    {
-                        return $"{parentName}.Children.Add({context.Instance.Name});";
-                    }
-                }
-                // parent instance is null, so attach to "this" top level object
-                else
-                {
-                    // Couldn't find anything, so don't return anything
-
-                }
-
-            }
-
-            #endregion
-
-            #region Font
-
-            else if(rootVariableName == "Font")
-            {
-                return $"{context.CodePrefixNoTabs}.SetFont(CustomFont.{variable.Value?.ToString()?.Replace(" ", "_")});";
-            }
-
-            #endregion
-
-
-            #region Children Layout
-
-            else if (rootVariableName == "Children Layout" && variable.Value is ChildrenLayout valueAsChildrenLayout)
-            {
-                var isInstanceStackLayout = instance != null && IsOfXamarinFormsType(instance, "StackLayout");
-
-                if (isInstanceStackLayout)
-                {
-                    if (valueAsChildrenLayout == ChildrenLayout.LeftToRightStack)
-                    {
-                        return $"{context.CodePrefix}.Orientation = StackOrientation.Horizontal;";
-                    }
-                    else
-                    {
-                        return $"{context.CodePrefix}.Orientation = StackOrientation.Vertical;";
-                    }
-                }
-                else if (instance == null && IsOfXamarinFormsType(container, "StackLayout"))
-                {
-                    if (valueAsChildrenLayout == ChildrenLayout.LeftToRightStack)
-                    {
-                        return $"{context.CodePrefix}.Orientation = StackOrientation.Horizontal;";
-                    }
-                    else
-                    {
-                        return $"{context.CodePrefix}.Orientation = StackOrientation.Vertical;";
-                    }
-                }
-                else if (valueAsChildrenLayout != ChildrenLayout.Regular)
-                {
-                    var message = $"Error: The object {instance?.Name ?? container.Name} cannot have a layout of {valueAsChildrenLayout}.";
-
-                    if (instance != null && instance.BaseType?.EndsWith("/SkiaGumCanvasView") == true)
-                    {
-                        message += $"\nTo stack objects in a Skia canvas, add a Container which has its ChildrenLayout set to {valueAsChildrenLayout}";
-                    }
-                    else
-                    {
-                        message += $"\nIt should probably inherit from StackLayout to be a top-to-bottom stack";
-                    }
-
-                    return message;
-                }
-                else
-                {
-                    // it's regular, so we just ignore it
-                    return string.Empty;
-                }
-            }
-
-            #endregion
-            else if (GetIsShouldBeLocalized(variable, context.Element.DefaultState))
-            {
-                string assignment = GetLocaliedLine(instance, variable, context);
-
-                return assignment;
-            }
-
-            return null;
-        }
-
         public static bool DoesTypeHaveContent(string type)
         {
             return type?.EndsWith("/ScrollView") == true ||
@@ -3667,20 +3789,20 @@ namespace CodeOutputPlugin.Manager
 
 
 
-        private static string VariableValueToXamarinFormsCodeValue(VariableSave variable, ElementSave container)
+        private static string VariableValueToXamarinFormsCodeValue(VariableSave variable, ElementSave container, CodeGenerationContext context)
         {
             var value = variable.Value;
             var rootName = variable.GetRootName();
             var isState = variable.IsState(container, out ElementSave categoryContainer, out StateSaveCategory category);
-            return VariableValueToXamarinFormsCodeValue(value, rootName, isState, categoryContainer, category);
+            return VariableValueToXamarinFormsCodeValue(value, rootName, isState, categoryContainer, category, context);
         }
 
-        private static string VariableValueToXamarinFormsCodeValue(VariableListSave variable, ElementSave container)
+        private static string VariableValueToXamarinFormsCodeValue(VariableListSave variable, ElementSave container, CodeGenerationContext context)
         {
             var value = variable.ValueAsIList;
             var rootName = variable.GetRootName();
             var isState = false;
-            return VariableValueToXamarinFormsCodeValue(value, rootName, isState, null, null);
+            return VariableValueToXamarinFormsCodeValue(value, rootName, isState, null, null, context);
         }
 
 
@@ -3759,9 +3881,10 @@ namespace CodeOutputPlugin.Manager
 
         private static bool IsTabControl(InstanceSave instance)
         {
-            // for now we'll hardcode to StyledTabView, but it would be good to expand this for projects that don't use the "Styled" convention
             var baseType = instance.BaseType;
-            return baseType?.EndsWith("/StyledTabView") == true;
+            return 
+                baseType?.EndsWith("/StyledTabView") == true ||
+                baseType?.EndsWith("/TabView") == true;
         }
 
         private static string ToTabs(int tabCount) => new string(' ', tabCount * 4);

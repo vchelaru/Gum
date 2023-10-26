@@ -1,8 +1,6 @@
 ﻿using RenderingLibrary.Content;
 using SkiaSharp;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using SKSvg = Svg.Skia.SKSvg;
 
 namespace SkiaGum.Content

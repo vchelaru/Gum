@@ -1,10 +1,6 @@
 ﻿using Gum.DataTypes;
-using Gum.Wireframe;
 using SkiaSharp;
 using Svg.Skia;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace SkiaGum.GueDeriving
 {

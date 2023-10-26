@@ -4,12 +4,9 @@ using Gum.Managers;
 using Gum.Plugins;
 using Gum.ToolStates;
 using Gum.Wireframe;
-using RenderingLibrary;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using Gum.RenderingLibrary;
 using Gum.Converters;
@@ -20,8 +17,6 @@ using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Graphics;
 using Gum.Logic;
 using GumRuntime;
-using System.Xml.Linq;
-using ExCSS;
 
 namespace Gum.PropertyGridHelpers
 {
@@ -34,6 +29,8 @@ namespace Gum.PropertyGridHelpers
         {
             "Animate",
             "Alpha",
+            "AutoGridHorizontalCells",
+            "AutoGridVerticalCells",
             "Blue",
             "CurrentChainName",
             "Children Layout",
@@ -51,8 +48,8 @@ namespace Gum.PropertyGridHelpers
             "StackSpacing",
             "Text",
             "Texture Address",
+            "TextOverflowVerticalMode",
             "VerticalAlignment",
-
             "Visible",
             "Width",
             "Width Units",
@@ -73,7 +70,8 @@ namespace Gum.PropertyGridHelpers
         }
 
         // added instance property so we can change values even if a tree view is selected
-        public void PropertyValueChanged(string unqualifiedMemberName, object oldValue, InstanceSave instance, bool refresh = true, bool recordUndo = true)
+        public void PropertyValueChanged(string unqualifiedMemberName, object oldValue, InstanceSave instance, bool refresh = true, bool recordUndo = true,
+            bool trySave = true)
         {
             var selectedStateSave = SelectedState.Self.SelectedStateSave;
 
@@ -92,7 +90,7 @@ namespace Gum.PropertyGridHelpers
                     SelectedState.Self.SelectedVariableSave = SelectedState.Self.SelectedStateSave.GetVariableSave(unqualifiedMemberName);
                 }
             }
-            ReactToPropertyValueChanged(unqualifiedMemberName, oldValue, parentElement, instance, selectedStateSave, refresh, recordUndo: recordUndo);
+            ReactToPropertyValueChanged(unqualifiedMemberName, oldValue, parentElement, instance, selectedStateSave, refresh, recordUndo: recordUndo, trySave:trySave);
         }
 
         /// <summary>
@@ -103,7 +101,8 @@ namespace Gum.PropertyGridHelpers
         /// <param name="parentElement"></param>
         /// <param name="instance"></param>
         /// <param name="refresh"></param>
-        public void ReactToPropertyValueChanged(string unqualifiedMember, object oldValue, ElementSave parentElement, InstanceSave instance, StateSave stateSave, bool refresh, bool recordUndo = true)
+        public void ReactToPropertyValueChanged(string unqualifiedMember, object oldValue, ElementSave parentElement, 
+            InstanceSave instance, StateSave stateSave, bool refresh, bool recordUndo = true, bool trySave = true)
         {
             if (parentElement != null)
             {
@@ -135,7 +134,7 @@ namespace Gum.PropertyGridHelpers
                     RefreshInResponseToVariableChange(unqualifiedMember, oldValue, parentElement, instance, qualifiedName, 
                         // if a deep reference is set, then this is more complicated than a single variable assignment, so we should
                         // force everything. This makes debugging a little more difficult, but it keeps the wireframe accurate without having to track individual assignments.
-                        forceWireframeRefresh:didSetDeepReference);
+                        forceWireframeRefresh:didSetDeepReference, trySave:trySave);
                 }
             }
         }
@@ -269,7 +268,8 @@ namespace Gum.PropertyGridHelpers
 
         }
 
-        public void RefreshInResponseToVariableChange(string unqualifiedMember, object oldValue, ElementSave parentElement, InstanceSave instance, string qualifiedName, bool forceWireframeRefresh = false)
+        public void RefreshInResponseToVariableChange(string unqualifiedMember, object oldValue, ElementSave parentElement, 
+            InstanceSave instance, string qualifiedName, bool forceWireframeRefresh = false, bool trySave = true)
         {
             // These properties may require some changes to the grid, so we refresh the tree view
             // and entire grid.
@@ -300,11 +300,19 @@ namespace Gum.PropertyGridHelpers
                 areSame = value.Equals(oldValue);
             }
 
+            // This used to only check if values have changed. However, this can cause problems
+            // because an intermediary value may change the value, then it gets a full commit. On
+            // the full commit it doesn't save, so we need to save if this is true. 
+            if (trySave)
+            {
+                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+            }
+
             // If the values are the same they may have been set to be the same by a plugin that
             // didn't allow the assignment, so don't go through the work of saving and refreshing
             if (!areSame)
             {
-                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+
 
                 // Inefficient but let's do this for now - we can make it more efficient later
                 // November 19, 2019
@@ -949,13 +957,18 @@ namespace Gum.PropertyGridHelpers
             var rightSide = split[0]; // there is no left side, just right side
             var afterDot = rightSide.Substring(rightSide.LastIndexOf('.') + 1);
 
-            var withoutVariable = rightSide.Substring(0, rightSide.LastIndexOf('.'));
+            if(rightSide.Contains("."))
+            {
+                // TODO: This is unused?
+                var withoutVariable = rightSide.Substring(0, rightSide.LastIndexOf('.'));
 
-            asList[i] = $"{afterDot} = {rightSide}";
+                asList[i] = $"{afterDot} = {rightSide}";
 
-            split = asList[i]
-                .Split(equalsArray, StringSplitOptions.RemoveEmptyEntries)
-                .Select(stringItem => stringItem.Trim()).ToArray();
+                split = asList[i]
+                    .Split(equalsArray, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(stringItem => stringItem.Trim()).ToArray();
+
+            }
             return split;
         }
 

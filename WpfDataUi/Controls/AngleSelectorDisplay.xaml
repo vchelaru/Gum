@@ -5,7 +5,10 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:decorators="clr-namespace:WpfDataUiCore.Decorators"
              mc:Ignorable="d" 
              >
-    <Grid DragOver="Grid_DragOver_1">
+    <Grid DragOver="Grid_DragOver_1" x:Name="MainGrid">
+        <Grid.ContextMenu>
+            <ContextMenu></ContextMenu>
+        </Grid.ContextMenu>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"></ColumnDefinition>
             <ColumnDefinition Width="Auto"></ColumnDefinition>

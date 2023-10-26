@@ -6,20 +6,10 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using WpfDataUi.Controls;
 using WpfDataUi.DataTypes;
 using WpfDataUi.EventArguments;
 
@@ -528,16 +518,58 @@ namespace WpfDataUi
 
         public void Refresh()
         {
-            foreach (var item in InternalControl.Items)
+
+            // might this be faster?
+            for (int i = 0; i < InternalControl.Items.Count; i++)
             {
-                MemberCategory memberCategory = item as MemberCategory;
+                var uiElement =
+                    InternalControl.ItemContainerGenerator.ContainerFromIndex(i);
 
-                foreach (var instanceMember in memberCategory.Members)
+                bool handledByRefresh = false;
+
+                if(uiElement is ContentPresenter contentPresenter && VisualTreeHelper.GetChildrenCount(contentPresenter) > 0 && VisualTreeHelper.GetChild(contentPresenter, 0) is Expander expander)
                 {
-                    instanceMember.SimulateValueChanged();
+                    var itemsInExpander = expander.Content as ItemsControl;
 
+                    if(itemsInExpander != null)
+                    {
+                        for(int j = 0; j < itemsInExpander.Items.Count; j++)
+                        {
+                            var innerUiElement =
+                                itemsInExpander.ItemContainerGenerator.ContainerFromIndex(j) as ContentPresenter;
+
+                            if(VisualTreeHelper.GetChildrenCount(innerUiElement) > 0 && VisualTreeHelper.GetChild(innerUiElement, 0) is SingleDataUiContainer singleDataUiContainer)
+                            {
+                                (singleDataUiContainer.UserControl as IDataUi)?.Refresh();
+                                handledByRefresh = true;
+                            }
+                        }
+                    }
                 }
+                
+                if(!handledByRefresh)
+                {
+                    MemberCategory memberCategory = InternalControl.Items[i] as MemberCategory;
+
+                    foreach (var instanceMember in memberCategory.Members)
+                    {
+                        instanceMember.SimulateValueChanged();
+
+                    }
+                }
+
             }
+
+            //foreach (var item in InternalControl.Items)
+            //{
+            //    MemberCategory memberCategory = item as MemberCategory;
+
+            //    foreach (var instanceMember in memberCategory.Members)
+            //    {
+            //        instanceMember.SimulateValueChanged();
+
+            //    }
+            //}
 
         }
 

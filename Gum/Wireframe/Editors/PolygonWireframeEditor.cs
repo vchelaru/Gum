@@ -1,19 +1,18 @@
 ﻿using Gum.DataTypes.Variables;
 using Gum.Input;
 using Gum.ToolStates;
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math.Geometry;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using ToolsUtilities;
+using Vector2 = System.Numerics.Vector2;
+using Color = System.Drawing.Color;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace Gum.Wireframe.Editors
 {
@@ -290,14 +289,14 @@ namespace Gum.Wireframe.Editors
                     // fall through to the next part, to grab the point automatically
 
 
-                    grabbedInitialState.HandlePush();
+                    grabbedState.HandlePush();
 
                     hasGrabbedBodyOrPoint = true;
                     grabbedIndex = newIndex;
                 }
                 else
                 {
-                    grabbedInitialState.HandlePush();
+                    grabbedState.HandlePush();
 
                     hasGrabbedBodyOrPoint = HasCursorOver;
                     grabbedIndex = GetIndexOver(x, y);
@@ -421,7 +420,7 @@ namespace Gum.Wireframe.Editors
         {
             var cursor = InputLibrary.Cursor.Self;
             if (cursor.PrimaryDown && hasGrabbedBodyOrPoint &&
-                grabbedInitialState.HasMovedEnough && grabbedIndex == null)
+                grabbedState.HasMovedEnough && grabbedIndex == null)
             {
                 ApplyCursorMovement(cursor);
             }

@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Gum.DataTypes.Variables;
 using Gum.Wireframe;
 using GumDataTypes.Variables;
-using System.Collections.ObjectModel;
 
 namespace Gum.DataTypes
 {
@@ -60,7 +58,19 @@ namespace Gum.DataTypes
 
             mInstanceSave = instanceSave;
 
-            ElementStack = new List<ElementWithState>() { new ElementWithState(container) };
+            // October 11, 2023
+            // Vic asks - if the RFV is for an instance in a container, should the instance name be set on the
+            // elementWithState? The GetVariable method seems to expect that, so let's try that:
+            // Update - the reason this works this way is - if the ElementWithState has an instance, then the name
+            // of the instance is automatically used on the variable. In other words, if this is assigned, and we want
+            // the X value on the instance, then we sould ask the RecursiveVariableFinder for "X".
+            // If no instance is assigned, then we would ask for "InstanceName.X". However, since the
+            // constructor here explicitly assigns an instance, I think it's proper to assign the instance
+            // internally and let the user only pass "X"
+
+            var elementWithState = new ElementWithState(container);
+            elementWithState.InstanceName = instanceSave?.Name;
+            ElementStack = new List<ElementWithState>() { elementWithState };
         }
 
         public RecursiveVariableFinder(InstanceSave instanceSave, List<ElementWithState> elementStack)
@@ -177,6 +187,9 @@ namespace Gum.DataTypes
                     string instanceName = null;
                     if (ElementStack.Count != 0)
                     {
+                        // October 11, 2023
+                        // This is intentionally using the stack and not the InstanceName on the RFV. What's the difference?
+                        // I'm going to rely on the stack since this code is old and I'm going to modify the constructor.
                         instanceName = ElementStack.Last().InstanceName;
                     }
 

@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using CommonFormsAndControls;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using System.Windows.Forms;
 using Gum.ToolStates;
-using Gum.Wireframe;
-using Gum.Undo;
 using Gum.Plugins;
 
 namespace Gum.Managers

@@ -3,13 +3,14 @@ using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using Gum.DataTypes;
 using Gum.Plugins;
 using Gum.Controls;
 using Gum.Extensions;
 using Gum.DataTypes.Behaviors;
+using Gum.DataTypes.Variables;
+using Gum.Plugins.VariableGrid;
 
 namespace Gum.Commands
 {
@@ -201,6 +202,194 @@ namespace Gum.Commands
             window.ShiftWindowOntoScreen();
         }
 
+        public void ShowAddVariableWindow()
+        {
+            var canShow = SelectedState.Self.SelectedBehavior != null || SelectedState.Self.SelectedElement != null;
+
+            /////////////// Early Out///////////////
+            if (!canShow)
+            {
+                return;
+            }
+            //////////////End Early Out/////////////
+
+            var window = new AddVariableWindow();
+
+            var result = window.ShowDialog();
+
+            if (result == true)
+            {
+                var type = window.SelectedType;
+                if (type == null)
+                {
+                    throw new InvalidOperationException("Type cannot be null");
+                }
+                var name = window.EnteredName;
+
+                string whyNotValid;
+                bool isValid = NameVerifier.Self.IsVariableNameValid(
+                    name, out whyNotValid);
+
+                if (!isValid)
+                {
+                    MessageBox.Show(whyNotValid);
+                }
+                else
+                {
+                    var behavior = SelectedState.Self.SelectedBehavior;
+
+                    var newVariable = new VariableSave();
+                    
+                    newVariable.Name = name;
+                    newVariable.Type = type;
+                    if (behavior != null)
+                    {
+                        behavior.RequiredVariables.Variables.Add(newVariable);
+                        GumCommands.Self.FileCommands.TryAutoSaveBehavior(behavior);
+                    }
+                    else if (SelectedState.Self.SelectedElement != null)
+                    {
+                        var element = SelectedState.Self.SelectedElement;
+                        newVariable.IsCustomVariable = true;
+                        element.DefaultState.Variables.Add(newVariable);
+                        GumCommands.Self.FileCommands.TryAutoSaveElement(element);
+                    }
+                    GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
+
+                }
+            }
+        }
+
+        public void ShowEditVariableWindow(VariableSave variable)
+        {
+
+            var window = new AddVariableWindow();
+
+            window.SelectedType = variable.Type;
+            window.EnteredName = variable.Name;
+
+            var result = window.ShowDialog();
+
+            if (result == true)
+            {
+                var type = window.SelectedType;
+                if (type == null)
+                {
+                    throw new InvalidOperationException("Type cannot be null");
+                }
+                var newName = window.EnteredName;
+
+                string whyNotValid;
+                bool isValid = NameVerifier.Self.IsVariableNameValid(
+                    newName, out whyNotValid);
+
+                if (!isValid)
+                {
+                    MessageBox.Show(whyNotValid);
+                }
+                else
+                {
+                    var behavior = SelectedState.Self.SelectedBehavior;
+
+
+                    if (behavior != null)
+                    {
+                        var changedType = variable.Type != type;
+                        if(changedType)
+                        {
+                            // todo - need to fix this by converting?
+                            variable.Value = null;
+                        }
+                        variable.Name = newName;
+                        variable.Type = type;
+
+                        GumCommands.Self.FileCommands.TryAutoSaveBehavior(behavior);
+                    }
+                    else if (SelectedState.Self.SelectedElement != null)
+                    {
+                        var oldName = variable.Name;
+                        var element = SelectedState.Self.SelectedElement;
+                        if(ApplyEditVariableOnElement(element, oldName, newName, type))
+                        {
+                            GumCommands.Self.FileCommands.TryAutoSaveElement(element);
+                        }
+
+                        ApplyChangesToInstances(element, oldName, newName, type);
+
+                        var derivedElements = ObjectFinder.Self.GetElementsInheritingFrom(element);
+                        foreach(var derived in derivedElements)
+                        {
+                            if(ApplyEditVariableOnElement(derived, oldName, newName, type))
+                            {
+                                GumCommands.Self.FileCommands.TryAutoSaveElement(derived);
+                            }
+
+                            ApplyChangesToInstances(derived, oldName, newName, type);
+                        }
+                    }
+                    GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
+                }
+            }
+        }
+
+        private void ApplyChangesToInstances(ElementSave element, string oldName, string newName, string type)
+        {
+            var references = ObjectFinder.Self.GetElementReferences(element)
+                .Where(item => item.ReferenceType == ReferenceType.InstanceOfType)
+                .ToArray();
+
+            ////////////////////////// Early Out ///////////////////////////
+            if (references.Length == 0) return;
+            /////////////////////// End Early Out /////////////////////////
+
+            HashSet<ElementSave> elementsToSave = new HashSet<ElementSave>();
+
+            foreach(var reference in references)
+            {
+                var instance = reference.ReferencingObject as InstanceSave;
+
+                var oldFullName = instance.Name + "." + oldName;
+                var newFullName = instance.Name + "." + newName;
+
+                if(ApplyEditVariableOnElement(reference.OwnerOfReferencingObject, oldFullName, newFullName, type ))
+                {
+                    elementsToSave.Add(reference.OwnerOfReferencingObject);
+                }
+            }
+
+            foreach(var elementToSave in elementsToSave)
+            {
+                GumCommands.Self.FileCommands.TryAutoSaveElement(elementToSave);
+            }
+        }
+
+        private bool ApplyEditVariableOnElement(ElementSave element, string oldName, string newName, string type)
+        {
+            var changed = false;
+            var allStates = element.AllStates;
+
+            foreach(var state in allStates)
+            {
+                foreach(var variable in state.Variables)
+                {
+                    if(variable.Name == oldName)
+                    {
+                        variable.Name = newName;
+                        if(variable.Type != type)
+                        {
+                            variable.Type = type;
+                            // todo - convert:
+                            variable.Value = null;
+                        }
+                        changed = true;
+                    }
+                }
+            }
+
+
+
+            return changed;
+        }
 
         public void DoOnUiThread(Action action)
         {

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
-using System.Text;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
@@ -740,14 +738,16 @@ namespace Gum.Managers
             return instance;
         }
 
-        public string GetDefaultChildName(InstanceSave targetInstance, StateSave stateSave)
+        public string GetDefaultChildName(InstanceSave targetInstance, StateSave stateSave = null)
         {
             string defaultChild = null;
             // check if the target instance is a ComponentSave. If so, use the RecursiveVariableFinder to get its DefaultChildContainer property
             var targetInstanceComponent = ObjectFinder.Self.GetComponent(targetInstance);
             if (targetInstanceComponent != null)
             {
-                var recursiveVariableFinder = new RecursiveVariableFinder(stateSave);
+                var instanceContainer = ObjectFinder.Self.GetContainerOf(targetInstance);
+
+                var recursiveVariableFinder = new RecursiveVariableFinder(stateSave ?? instanceContainer?.DefaultState);
                 defaultChild = recursiveVariableFinder.GetValue<string>($"{targetInstance.Name}.{nameof(ComponentSave.DefaultChildContainer)}");
 
                 if (defaultChild != null)

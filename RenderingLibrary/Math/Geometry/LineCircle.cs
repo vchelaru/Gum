@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using RenderingLibrary.Math.Geometry;
-using Microsoft.Xna.Framework;
-using RenderingLibrary.Graphics;
+﻿using RenderingLibrary.Graphics;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.ObjectModel;
+using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
+using Color = System.Drawing.Color;
+using Matrix = System.Numerics.Matrix4x4;
+using static ToolsUtilitiesStandard.Helpers.Matrix4x4Extensions;
 
 namespace RenderingLibrary.Math.Geometry
 {
@@ -210,7 +208,7 @@ namespace RenderingLibrary.Math.Geometry
                 {
                     Matrix matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(rotation));
 
-                    var vector = Radius * matrix.Right + Radius * matrix.Up;
+                    var vector = Radius * matrix.Right() + Radius * matrix.Up();
 
                     mLinePrimitive.Shift(vector.X, vector.Y);
 

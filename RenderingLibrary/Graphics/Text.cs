@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using RenderingLibrary.Content;
-using Microsoft.Xna.Framework;
 using RenderingLibrary.Math.Geometry;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.ObjectModel;
-using System.Threading;
+using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
+using Vector2 = System.Numerics.Vector2;
+using Vector3 = System.Numerics.Vector3;
+using Color = System.Drawing.Color;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace RenderingLibrary.Graphics
 {
@@ -62,7 +63,7 @@ namespace RenderingLibrary.Graphics
         {
             get
             {
-                return new Color(mRed, mGreen, mBlue, mAlpha);
+                return Color.FromArgb(mAlpha, mRed, mGreen, mBlue);
             }
             set
             {
@@ -562,6 +563,9 @@ namespace RenderingLibrary.Graphics
 
         public float DescenderHeight => BitmapFont?.DescenderHeight ?? 0;
 
+        public float LineHeightMultiplier { get; set; } = 1;
+
+
         #endregion
 
         #region Methods
@@ -958,9 +962,7 @@ namespace RenderingLibrary.Graphics
             {
                 widths.Clear();
                 int requiredWidth;
-                int requiredHeight;
-                fontToUse.GetRequiredWidthAndHeight(WrappedText, out requiredWidth, out requiredHeight, widths);
-
+                fontToUse.GetRequiredWidthAndHeight(WrappedText, out requiredWidth, out int _, widths);
                 UpdateIpsoForRendering();
 
                 var absoluteLeft = mTempForRendering.GetAbsoluteLeft();
@@ -972,7 +974,7 @@ namespace RenderingLibrary.Graphics
                     requiredWidth, widths, spriteRenderer, Color,
                     absoluteLeft,
                     absoluteTop, 
-                    this.GetAbsoluteRotation(), FontScale, FontScale, MaxLettersToShow, OverrideTextRenderingPositionMode);
+                    this.GetAbsoluteRotation(), FontScale, FontScale, MaxLettersToShow, OverrideTextRenderingPositionMode, lineHeightMultiplier:LineHeightMultiplier);
             }
         }
 
@@ -983,12 +985,12 @@ namespace RenderingLibrary.Graphics
             if (mBitmapFont?.AtlasedTexture != null)
             {
                 mBitmapFont.RenderAtlasedTextureToScreen(WrappedText, this.HorizontalAlignment, mTextureToRender.Height,
-                    new Color(mRed, mGreen, mBlue, mAlpha), Rotation, mFontScale, managers, spriteRenderer, this);
+                    Color.FromArgb(mAlpha, mRed, mGreen, mBlue), Rotation, mFontScale, managers, spriteRenderer, this);
             }
             else
             {
                 Sprite.Render(managers, spriteRenderer, mTempForRendering, mTextureToRender,
-                    new Color(mRed, mGreen, mBlue, mAlpha), null, false, Rotation, 
+                    Color.FromArgb(mAlpha, mRed, mGreen, mBlue), null, false, Rotation, 
                     treat0AsFullDimensions: false,
                     objectCausingRendering: this);
 
@@ -1162,7 +1164,7 @@ namespace RenderingLibrary.Graphics
                 }
 
                 mPreRenderWidth = (int)(requiredWidth + .5f);
-                mPreRenderHeight = (int)(requiredHeight + .5f);
+                mPreRenderHeight = (int)(requiredHeight * LineHeightMultiplier + .5f);
             }
         }
         #endregion

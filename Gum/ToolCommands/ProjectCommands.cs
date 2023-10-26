@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.DataTypes.Behaviors;
@@ -9,7 +6,6 @@ using Gum.ToolStates;
 using ToolsUtilities;
 using CommonFormsAndControls;
 using System.Windows.Forms;
-using Gum.DataTypes.Variables;
 
 namespace Gum.ToolCommands
 {
