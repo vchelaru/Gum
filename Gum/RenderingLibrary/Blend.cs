@@ -36,7 +36,7 @@ namespace Gum.RenderingLibrary
         }
 #endif
 
-#if MONOGAME || SKIA
+#if MONOGAME || SKIA || FNA
 
         public static Blend ToBlend(this BlendState blendState)
         {
