@@ -15,16 +15,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\FlatRedBall\Engines\FlatRedBallXNA\3rd Party Libraries\FNA\FNA.Core.csproj" />
     <ProjectReference Include="..\..\..\FlatRedBall\Engines\FlatRedBallXNA\FlatRedBall.FNA\FlatRedBall.FNA.csproj" />
     <ProjectReference Include="..\..\GumCore\GumCoreXnaPc\GumCore.FNA\GumCore.FNA.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Rendering\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\FlatRedBall\Engines\FlatRedBallXNA\3rd Party Libraries\FNA-2310\FNA\FNA.Core.csproj" />
   </ItemGroup>
 
 </Project>
