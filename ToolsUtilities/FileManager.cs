@@ -29,7 +29,7 @@ namespace ToolsUtilities
 #if UWP
             "./";
 #else
-            Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).ToLower().Replace("/", "\\") + "\\";
+            Path.GetDirectoryName(AppContext.BaseDirectory).ToLower().Replace("/", "\\") + "\\";
 #endif
         static Dictionary<Type, XmlSerializer> mXmlSerializers = new Dictionary<Type, XmlSerializer>();
 
