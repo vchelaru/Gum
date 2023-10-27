@@ -847,7 +847,6 @@ namespace ToolsUtilities
             return bytesToReturn;
 
         }
-        #region XML Docs
         /// <summary>
         /// Returns a List containing all files which match the fileType argument which are 
         /// in the directory argument or a subfolder.  This recurs, returning all files.
@@ -858,14 +857,12 @@ namespace ToolsUtilities
         /// can either have a period or not.  That is ".jpg" and "jpg" are both valid fileType arguments.  An empty
         /// or null value for this parameter will return all files regardless of file type.</param>
         /// <returns>A list containing all of the files found which match the fileType.</returns>
-        #endregion
         public static List<string> GetAllFilesInDirectory(string directory, string fileType)
         {
             return GetAllFilesInDirectory(directory, fileType, int.MaxValue);
 
         }
 
-        #region XML Docs
         /// <summary>
         /// Returns a List containing all files which match the fileType argument which are within
         /// the depthToSearch folder range relative to the directory argument.
@@ -876,9 +873,8 @@ namespace ToolsUtilities
         /// can either have a period or not.  That is ".jpg" and "jpg" are both valid fileType arguments.  An empty
         /// or null value for this parameter will return all files regardless of file type.</param>
         /// <param name="depthToSearch">The depth to search through.  If the depthToSearch
-        /// is 0, only the argument directory will be searched.</param>
+        /// is 0, only the argument directory will be searched. To search infinte depth, use int.MaxValue</param>
         /// <returns>A list containing all of the files found which match the fileType.</returns>
-        #endregion
         public static List<string> GetAllFilesInDirectory(string directory, string fileType, int depthToSearch)
         {
             List<string> arrayToReturn = new List<string>();
