@@ -1756,8 +1756,11 @@ namespace CodeOutputPlugin.Manager
                     if (heightUnits == DimensionUnitType.RelativeToChildren || widthUnits == DimensionUnitType.RelativeToChildren)
                     {
                         context.StringBuilder.AppendLine("// This hurts performance a little but it's needed because of an iOS MAUI bug where these do not behave the same as in Android");
-                        context.StringBuilder.AppendLine(context.Tabs + instance.Name + ".ForceGumLayout();");
-                        context.StringBuilder.AppendLine(context.Tabs + instance.Name + ".UpdateDimensionsFromAutoSize();");
+                        if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Maui)
+                        {
+                            context.StringBuilder.AppendLine(context.Tabs + instance.Name + ".ForceGumLayout();");
+                            context.StringBuilder.AppendLine(context.Tabs + instance.Name + ".UpdateDimensionsFromAutoSize();");
+                        }
                     }
                 }
             }
