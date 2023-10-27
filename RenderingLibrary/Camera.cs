@@ -298,7 +298,7 @@ namespace RenderingLibrary
         // renders?  Hard to say.
         internal void UpdateClient()
         {
-#if MONOGAME
+#if MONOGAME || FNA
             if (Renderer.GraphicsDevice != null)
             {
                 ClientWidth = Renderer.GraphicsDevice.Viewport.Width;

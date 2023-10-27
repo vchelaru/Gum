@@ -79,7 +79,7 @@ namespace GumRuntime
         {
             bool handledAsBaseType = true;
             containedObject = null;
-#if MONOGAME
+#if MONOGAME || FNA
             switch (baseType)
             {
 
