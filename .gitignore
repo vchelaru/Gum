@@ -81,3 +81,5 @@ GumCommon/bin/*
 GumCommon/obj/*
 Samples/SkiaGumWpfSample/SkiaGumWpfSample/bin/*
 Samples/SkiaGumWpfSample/SkiaGumWpfSample/obj/*
+GumCore/GumCoreXnaPc/GumCore.FNA/bin/*
+GumCore/GumCoreXnaPc/GumCore.FNA/obj/*

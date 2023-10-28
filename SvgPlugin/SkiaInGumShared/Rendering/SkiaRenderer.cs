@@ -85,8 +85,10 @@ namespace SkiaMonoGameRendering
                     return SurfaceFormat.Rgba64;
                 case SKColorType.Alpha8:
                     return SurfaceFormat.Alpha8;
-                case SKColorType.Bgra8888:
-                    return SurfaceFormat.Bgra32;
+#if !FNA
+                 case SKColorType.Bgra8888:
+                     return SurfaceFormat.Bgra32;
+#endif
                 case SKColorType.Rg1616:
                     return SurfaceFormat.Rg32;
                 default: // If no better match found use the default MonoGame format
