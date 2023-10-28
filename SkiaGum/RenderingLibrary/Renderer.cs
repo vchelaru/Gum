@@ -3,6 +3,7 @@ using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Reflection.Emit;
 
 namespace RenderingLibrary.Graphics
@@ -19,6 +20,10 @@ namespace RenderingLibrary.Graphics
                 return mLayersReadOnly;
             }
         }
+
+        public Layer MainLayer => 
+            // Not sure if we have any layers in skia so do a FirstOrDefault
+            mLayers.FirstOrDefault();
 
         /// <summary>
         /// Whether renderable objects should call Render
