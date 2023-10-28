@@ -13,8 +13,9 @@ namespace Gum.Wireframe
     public static class RuntimeObjectCreator
     {
 
-        public static IRenderable TryHandleAsBaseType(string baseType, SystemManagers systemManagers)
+        public static IRenderable TryHandleAsBaseType(string baseType, ISystemManagers managers)
         {
+            var systemManagers = managers as SystemManagers;
             IRenderable containedObject = null;
             switch (baseType)
             {

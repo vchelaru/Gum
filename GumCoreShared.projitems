@@ -46,6 +46,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Gum\Managers\ObjectFinder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Gum\Managers\StandardElementsManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Gum\RenderingLibrary\Blend.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gum\RenderingLibrary\BlendExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Gum\Wireframe\ElementWithState.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Gum\Wireframe\RuntimeObjectCreator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Gum\Wireframe\TimeManager.cs" />
