@@ -21,8 +21,20 @@ namespace RenderingLibrary.Graphics
 
         int mCurrentChainIndex;
         protected int mCurrentFrameIndex;
+        public int CurrentFrameIndex
+        {
+            get => mCurrentFrameIndex;
+            set => mCurrentFrameIndex = value;
+        }
+
         protected float mAnimationSpeed = 1;
         protected double mTimeIntoAnimation;
+
+        public double TimeIntoAnimation
+        {
+            get => mTimeIntoAnimation;
+            set => mTimeIntoAnimation = value;
+        }
 
         AnimationChainList mAnimationChains;
         public AnimationChainList AnimationChains
