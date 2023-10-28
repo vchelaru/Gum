@@ -14,5 +14,7 @@ namespace RenderingLibrary.Graphics
         void RenderLayer(ISystemManagers managers, Layer layer, bool prerender = true);
 
         ReadOnlyCollection<Layer> Layers { get; }
+
+        Layer MainLayer { get; }
     }
 }
