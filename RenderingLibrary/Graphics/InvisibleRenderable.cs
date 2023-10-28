@@ -22,7 +22,7 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        public BlendState BlendState => Renderer.NormalBlendState;
+        public BlendState BlendState => BlendState.NonPremultiplied;
 
         ObservableCollection<IRenderableIpso> children = new ObservableCollection<IRenderableIpso>();
         public ObservableCollection<IRenderableIpso> Children => children;

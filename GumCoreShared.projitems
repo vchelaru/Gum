@@ -47,6 +47,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Gum\Managers\StandardElementsManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Gum\RenderingLibrary\Blend.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Gum\Wireframe\ElementWithState.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gum\Wireframe\RuntimeObjectCreator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Gum\Wireframe\TimeManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MonoGameIntegration\RuntimeLogic.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Camera.cs" />

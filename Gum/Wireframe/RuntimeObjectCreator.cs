@@ -16,9 +16,9 @@ namespace Gum.Wireframe
         public static IRenderable TryHandleAsBaseType(string baseType, SystemManagers systemManagers)
         {
             IRenderable containedObject = null;
-#if MONOGAME || FNA
             switch (baseType)
             {
+#if MONOGAME || FNA
 
                 case "Container":
                 case "Component": // this should never be set in Gum, but there could be XML errors or someone could have used an old Gum...
@@ -81,8 +81,20 @@ namespace Gum.Wireframe
                         containedObject = text;
                     }
                     break;
-            }
 #endif
+
+#if SKIA
+                case  "Arc":
+                    return new SkiaGum.Renderables.RenderableArc();
+                case  "ColoredCircle":
+                    return new SkiaGum.Renderables.RenderableCircle();
+                case  "RoundedRectangle":
+                    return new SkiaGum.Renderables.RenderableRoundedRectangle();
+
+#endif
+
+
+            }
             return containedObject;
         }
 
