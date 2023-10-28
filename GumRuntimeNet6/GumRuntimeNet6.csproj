@@ -30,7 +30,7 @@
     <Compile Include="..\RenderingLibrary\Graphics\NineSliceExtensions.cs" Link="NineSliceExtensions.cs" />
     <Compile Include="..\RenderingLibrary\Graphics\TextOverflowMode.cs" Link="TextOverflowMode.cs" />
     <Compile Include="..\RenderingLibrary\Graphics\VerticalAlignment.cs" Link="VerticalAlignment.cs" />
-    <Compile Include="..\SkiaGum\Xna\BlendState.cs" Link="BlendState.cs" />
+    <Compile Include="..\ToolsUtilities\Common\BlendState.cs" Link="BlendState.cs" />
   </ItemGroup>
 
 	<ItemGroup>

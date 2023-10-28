@@ -38,20 +38,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\GumRuntime\GraphicalUiElement.cs" Link="GraphicalUiElement.cs" />
-    <Compile Include="..\RenderingLibrary\Camera.cs" Link="RenderingLibrary_Linked\Camera.cs" />
-    <Compile Include="..\RenderingLibrary\Content\IContentLoader.cs" Link="RenderingLibrary_Linked\Content\IContentLoader.cs" />
-    <Compile Include="..\RenderingLibrary\Graphics\IAspectRatio.cs" Link="RenderingLibrary_Linked\Graphics\IAspectRatio.cs" />
-    <Compile Include="..\RenderingLibrary\Graphics\IRenderableIpso.cs" Link="RenderingLibrary_Linked\IRenderableIpso.cs" />
-    <Compile Include="..\RenderingLibrary\Graphics\IVisible.cs" Link="RenderingLibrary_Linked\IVisible.cs" />
-    <Compile Include="..\RenderingLibrary\Graphics\Layer.cs" Link="RenderingLibrary_Linked\Layer.cs" />
-    <Compile Include="..\RenderingLibrary\Graphics\LayerCameraSettings.cs" Link="RenderingLibrary_Linked\Graphics\LayerCameraSettings.cs" />
-    <Compile Include="..\RenderingLibrary\Graphics\SortableLayer.cs" Link="RenderingLibrary_Linked\Graphics\SortableLayer.cs" />
-    <Compile Include="..\RenderingLibrary\IPositionedSizedObject.cs" Link="RenderingLibrary_Linked\IPositionedSizedObject.cs" />
-    <Compile Include="..\RenderingLibrary\Math\MathFunctions.cs" Link="Math_Linked\MathFunctions.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="SkiaSharp" Version="2.88.6" />
     <PackageReference Include="SkiaSharp.Extended" Version="1.60.0" />
     <PackageReference Include="SkiaSharp.Skottie" Version="2.88.2" />
@@ -60,15 +46,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\GumCommon\GumCommon.csproj" />
     <ProjectReference Include="..\GumDataTypes\GumDataTypesNet6.csproj" />
-    <ProjectReference Include="..\GumRuntimeNet6\GumRuntimeNet6.csproj" />
     <ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Math_Linked\" />
-    <Folder Include="RenderingLibrary_Linked\Graphics\" />
-    <Folder Include="RenderingLibrary_Linked\Content\" />
   </ItemGroup>
 
 </Project>
