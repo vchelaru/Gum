@@ -124,7 +124,7 @@ namespace Gum.Wireframe
         internal static void TryHandleAsBaseType(string baseType, SystemManagers systemManagers, out IRenderable containedObject)
         {
             containedObject = null;
-#if MONOGAME
+#if MONOGAME || FNA
             switch (baseType)
             {
 
