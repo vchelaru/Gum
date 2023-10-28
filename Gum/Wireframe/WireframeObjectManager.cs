@@ -107,7 +107,7 @@ namespace Gum.Wireframe
 
             IRenderable containedObject = null;
 
-            TryHandleAsBaseType(type, systemManagers as SystemManagers, out containedObject);
+            containedObject = RuntimeObjectCreator.TryHandleAsBaseType(type, systemManagers as SystemManagers);
 
 #if GUM
             if (containedObject == null)
@@ -118,79 +118,6 @@ namespace Gum.Wireframe
 #endif
 
             return containedObject;
-        }
-
-
-        internal static void TryHandleAsBaseType(string baseType, SystemManagers systemManagers, out IRenderable containedObject)
-        {
-            containedObject = null;
-#if MONOGAME || FNA
-            switch (baseType)
-            {
-
-                case "Container":
-                case "Component": // this should never be set in Gum, but there could be XML errors or someone could have used an old Gum...
-                    if (GraphicalUiElement.ShowLineRectangles)
-                    {
-                        LineRectangle lineRectangle = new LineRectangle(systemManagers);
-                        lineRectangle.Color = System.Drawing.Color.FromArgb(
-#if GUM
-                            255,
-                            Gum.ToolStates.GumState.Self.ProjectState.GeneralSettings.OutlineColorR,
-                            Gum.ToolStates.GumState.Self.ProjectState.GeneralSettings.OutlineColorG,
-                            Gum.ToolStates.GumState.Self.ProjectState.GeneralSettings.OutlineColorB
-#else
-                        255,255,255,255
-#endif
-                            );
-
-                        containedObject = lineRectangle;
-                    }
-                    else
-                    {
-                        containedObject = new InvisibleRenderable();
-                    }
-                    break;
-
-                case "Rectangle":
-                    LineRectangle rectangle = new LineRectangle(systemManagers);
-                    rectangle.IsDotted = false;
-                    containedObject = rectangle;
-                    break;
-                case "Circle":
-                    LineCircle circle = new LineCircle(systemManagers);
-                    circle.CircleOrigin = CircleOrigin.TopLeft;
-                    containedObject = circle;
-                    break;
-                case "Polygon":
-                    LinePolygon polygon = new LinePolygon(systemManagers);
-                    containedObject = polygon;
-                    break;
-                case "ColoredRectangle":
-                    SolidRectangle solidRectangle = new SolidRectangle();
-                    containedObject = solidRectangle;
-                    break;
-                case "Sprite":
-                    Texture2D texture = null;
-
-                    Sprite sprite = new Sprite(texture);
-                    containedObject = sprite;
-
-                    break;
-                case "NineSlice":
-                    {
-                        NineSlice nineSlice = new NineSlice();
-                        containedObject = nineSlice;
-                    }
-                    break;
-                case "Text":
-                    {
-                        Text text = new Text(systemManagers, "");
-                        containedObject = text;
-                    }
-                    break;
-            }
-#endif
         }
 
         #endregion
