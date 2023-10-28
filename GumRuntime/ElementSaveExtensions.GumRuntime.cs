@@ -410,7 +410,7 @@ namespace GumRuntime
 
             toReturn.AddExposedVariablesRecursively(elementSave);
 
-            CreateChildrenRecursively(toReturn, elementSave, systemManagers);
+            toReturn.CreateChildrenRecursively(elementSave, systemManagers);
 
             toReturn.Tag = elementSave;
 

@@ -1325,6 +1325,25 @@ namespace Gum.Wireframe
             }
         }
 
+        public virtual void CreateChildrenRecursively(ElementSave elementSave, ISystemManagers systemManagers)
+        {
+            bool isScreen = elementSave is ScreenSave;
+
+            foreach (var instance in elementSave.Instances)
+            {
+                var childGue = instance.ToGraphicalUiElement(systemManagers);
+
+                if (childGue != null)
+                {
+                    if (!isScreen)
+                    {
+                        childGue.Parent = this;
+                    }
+                    childGue.ElementGueContainingThis = this;
+                }
+            }
+        }
+
         #endregion
 
         #region Methods
