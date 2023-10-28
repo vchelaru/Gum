@@ -55,8 +55,6 @@ namespace SkiaGum.Renderables
                 }
 
                 canvas.DrawPath(path, paint);
-
-                canvas.Restore();
             }
         }
 

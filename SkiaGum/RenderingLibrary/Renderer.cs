@@ -78,20 +78,20 @@ namespace RenderingLibrary.Graphics
             Draw(whatToRender, managers, true);
         }
 
-        void Draw(IList<IRenderableIpso> whatToRender, SystemManagers managers, bool clear = false)
+        void Draw(IList<IRenderableIpso> whatToRender, SystemManagers managers, bool isTopLevelDraw = false)
         { 
-            if (ClearsCanvas && clear)
+            if (ClearsCanvas && isTopLevelDraw)
             {
                 managers.Canvas.Clear();
-            }
             
-            if (Camera.Zoom != 1)
-            {
-                managers.Canvas.Scale(Camera.Zoom);
-            }
-            if(Camera.X != 0 || Camera.Y != 0)
-            {
-                managers.Canvas.Translate(-Camera.X, -Camera.Y);
+                if (Camera.Zoom != 1)
+                {
+                    managers.Canvas.Scale(Camera.Zoom);
+                }
+                if(Camera.X != 0 || Camera.Y != 0)
+                {
+                    managers.Canvas.Translate(-Camera.X, -Camera.Y);
+                }
             }
 
             PreRender(whatToRender);
