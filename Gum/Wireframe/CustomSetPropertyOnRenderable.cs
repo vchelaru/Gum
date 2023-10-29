@@ -12,7 +12,6 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Documents;
 using ToolsUtilitiesStandard.Helpers;
 
 namespace Gum.Wireframe
@@ -29,7 +28,7 @@ namespace Gum.Wireframe
             {
                 handled = TrySetPropertyOnText(mContainedObjectAsIpso, graphicalUiElement, propertyName, value);
             }
-#if MONOGAME || XNA4
+#if MONOGAME || XNA4 || FNA
             else if (mContainedObjectAsIpso is LineCircle)
             {
                 handled = TrySetPropertyOnLineCircle(mContainedObjectAsIpso, graphicalUiElement, propertyName, value);
@@ -317,7 +316,7 @@ namespace Gum.Wireframe
 
                 ReactToFontValueChange();
             }
-#if MONOGAME || XNA4
+#if MONOGAME || XNA4 || FNA
             else if (propertyName == nameof(graphicalUiElement.UseCustomFont))
             {
                 graphicalUiElement.UseCustomFont = (bool)value;
@@ -363,7 +362,7 @@ namespace Gum.Wireframe
             }
             else if (propertyName == nameof(Blend))
             {
-#if MONOGAME || XNA4
+#if MONOGAME || XNA4 || FNA
                 var valueAsGumBlend = (RenderingLibrary.Blend)value;
 
                 var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
@@ -375,7 +374,7 @@ namespace Gum.Wireframe
             }
             else if (propertyName == "Alpha")
             {
-#if MONOGAME || XNA4
+#if MONOGAME || XNA4 || FNA
                 int valueAsInt = (int)value;
                 ((Text)mContainedObjectAsIpso).Alpha = valueAsInt;
                 handled = true;
@@ -401,7 +400,7 @@ namespace Gum.Wireframe
             }
             else if (propertyName == "Color")
             {
-#if MONOGAME || XNA4
+#if MONOGAME || XNA4 || FNA
                 var valueAsColor = (Color)value;
                 ((Text)mContainedObjectAsIpso).Color = valueAsColor;
                 handled = true;
@@ -420,7 +419,7 @@ namespace Gum.Wireframe
             }
             else if (propertyName == "MaxLettersToShow")
             {
-#if MONOGAME || XNA4
+#if MONOGAME || XNA4 || FNA
                 ((Text)mContainedObjectAsIpso).MaxLettersToShow = (int?)value;
                 handled = true;
 #endif
