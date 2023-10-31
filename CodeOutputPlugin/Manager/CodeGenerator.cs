@@ -3056,7 +3056,7 @@ namespace CodeOutputPlugin.Manager
                 }
                 else
                 {
-                    return value.GetType().FullName + "." + value.ToString();
+                    return $"global::{value.GetType().FullName}.{value}";
                 }
             }
             else
