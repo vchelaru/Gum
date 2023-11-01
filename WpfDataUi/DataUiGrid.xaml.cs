@@ -31,7 +31,6 @@ namespace WpfDataUi
         #region Fields
 
         //object mInstance;
-        StackPanel templateStackPanel;
 
         List<IDataUi> mDataUi = new List<IDataUi>();
 

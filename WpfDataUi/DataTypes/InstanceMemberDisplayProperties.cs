@@ -7,7 +7,6 @@ namespace WpfDataUi.DataTypes
         #region Fields
 
         string mCustomDisplay;
-        bool mSetIsHidden;
 
         #endregion
 
@@ -77,7 +76,7 @@ namespace WpfDataUi.DataTypes
             }
             else
             {
-                return mSetIsHidden;
+                return false;
             }
         }
 

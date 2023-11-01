@@ -14,7 +14,6 @@ namespace WpfDataUi
     public partial class SingleDataUiContainer : UserControl
     {
         #region Fields
-        KeyValuePair<Func<Type, bool>, Type> kvp;
 
         static List<KeyValuePair<Func<Type, bool>, Type>> mTypeDisplayerAssociation = new List<KeyValuePair<Func<Type, bool>, Type>>();
 
