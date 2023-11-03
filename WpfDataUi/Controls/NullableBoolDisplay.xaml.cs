@@ -107,9 +107,9 @@ namespace WpfDataUi.Controls
                 case null:
                     NullRadioButton.IsChecked = true;
                     return ApplyValueResult.Success;
+                default:
+                    return ApplyValueResult.NotSupported;
             }
-
-            return ApplyValueResult.UnknownError;
         }
 
         public ApplyValueResult TryGetValueOnUi(out object value)
