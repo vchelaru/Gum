@@ -183,11 +183,11 @@ namespace SkiaGum
                 var scaleX = this.Width / textureWidth;
                 var scaleY = this.Height / textureHeight;
 
-                SKMatrix scaleMatrix = SKMatrix.MakeScale(scaleX, scaleY);
+                SKMatrix scaleMatrix = SKMatrix.CreateScale(scaleX, scaleY);
                 // Gum uses counter clockwise rotation, Skia uses clockwise, so invert:
-                SKMatrix rotationMatrix = SKMatrix.MakeRotationDegrees(-Rotation);
-                SKMatrix translateMatrix = SKMatrix.MakeTranslation(this.GetAbsoluteX(), this.GetAbsoluteY());
-                SKMatrix result = SKMatrix.MakeIdentity();
+                SKMatrix rotationMatrix = SKMatrix.CreateRotationDegrees(-Rotation);
+                SKMatrix translateMatrix = SKMatrix.CreateTranslation(this.GetAbsoluteX(), this.GetAbsoluteY());
+                SKMatrix result = SKMatrix.CreateIdentity();
 
                 SKMatrix.Concat(
                     ref result, rotationMatrix, scaleMatrix);
