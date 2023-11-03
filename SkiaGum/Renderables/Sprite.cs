@@ -2,6 +2,7 @@
 using SkiaSharp;
 using Rectangle = System.Drawing.Rectangle;
 using Matrix = System.Numerics.Matrix4x4;
+using System;
 
 namespace SkiaGum.Renderables
 {
@@ -56,8 +57,47 @@ namespace SkiaGum.Renderables
 
             if(EffectiveRectangle != null)
             {
-                var skRect = new SKRect(EffectiveRectangle.Value.Left, EffectiveRectangle.Value.Top, EffectiveRectangle.Value.Right, EffectiveRectangle.Value.Bottom);
-                canvas.DrawBitmap(Texture, skRect, boundingRect);
+
+                var sourceRectangle = new SKRect(EffectiveRectangle.Value.Left, EffectiveRectangle.Value.Top, EffectiveRectangle.Value.Right, EffectiveRectangle.Value.Bottom);
+
+                var isFlippedHorizontal =
+                    sourceRectangle.Left > sourceRectangle.Right;
+
+                var isFlippedVertical = 
+                    sourceRectangle.Top > sourceRectangle.Bottom;
+
+                if (isFlippedHorizontal || isFlippedVertical)
+                {
+                    using (new SKAutoCanvasRestore(canvas, true))
+                    {
+                        var imageWidth = sourceRectangle.Left - sourceRectangle.Right;
+                        var imageHeight = sourceRectangle.Top - sourceRectangle.Bottom;
+                        canvas.Scale(
+                            isFlippedHorizontal ? -1 : 1, 
+                            isFlippedVertical ? -1 : 1, 
+                            isFlippedHorizontal ? imageWidth : 0, 
+                            isFlippedVertical ? imageHeight : 0);
+
+                        var left = Math.Min(EffectiveRectangle.Value.Left, EffectiveRectangle.Value.Right);
+                        var right = Math.Max(EffectiveRectangle.Value.Left, EffectiveRectangle.Value.Right);
+                        var top = Math.Min(EffectiveRectangle.Value.Top, EffectiveRectangle.Value.Bottom);
+                        var bottom = Math.Max(EffectiveRectangle.Value.Top, EffectiveRectangle.Value.Bottom);
+
+                        sourceRectangle = new SKRect(
+                            left, 
+                            top, 
+                            right, 
+                            bottom);
+                        canvas.DrawBitmap(Texture, sourceRectangle, boundingRect);
+                    }
+
+                }
+                else
+                {
+
+                    canvas.DrawBitmap(Texture, sourceRectangle, boundingRect);
+                }
+
             }
             else
             {
