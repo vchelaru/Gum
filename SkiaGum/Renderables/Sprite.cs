@@ -78,13 +78,13 @@ namespace SkiaGum.Renderables
                 {
                     using (new SKAutoCanvasRestore(canvas, true))
                     {
-                        var imageWidth = sourceRectangle.Left - sourceRectangle.Right;
-                        var imageHeight = sourceRectangle.Top - sourceRectangle.Bottom;
+                        var imageWidth = System.Math.Abs(sourceRectangle.Left - sourceRectangle.Right);
+                        var imageHeight = System.Math.Abs(sourceRectangle.Top - sourceRectangle.Bottom);
                         canvas.Scale(
                             isFlippedHorizontal ? -1 : 1, 
                             isFlippedVertical ? -1 : 1, 
-                            isFlippedHorizontal ? imageWidth : 0, 
-                            isFlippedVertical ? imageHeight : 0);
+                            isFlippedHorizontal ? 0 : 0, 
+                            isFlippedVertical ? imageHeight/2f : 0);
 
                         var left = Math.Min(EffectiveRectangle.Value.Left, EffectiveRectangle.Value.Right);
                         var right = Math.Max(EffectiveRectangle.Value.Left, EffectiveRectangle.Value.Right);
