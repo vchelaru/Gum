@@ -5012,6 +5012,9 @@ namespace Gum.Wireframe
 
         public void UpdateTextureValuesFrom(ITextureCoordinate asSprite)
         {
+            // suspend layouts while we do this so that previou values don't apply:
+            var isSuspended = this.IsLayoutSuspended;
+            this.SuspendLayout();
             this.TextureLeft = asSprite.SourceRectangle.Value.Left;
             this.TextureWidth = asSprite.SourceRectangle.Value.Width;
 
@@ -5022,6 +5025,10 @@ namespace Gum.Wireframe
             if (this.TextureAddress == TextureAddress.EntireTexture)
             {
                 this.TextureAddress = TextureAddress.Custom; // If it's not custom, then the animation chain won't apply. I think we should force this.
+            }
+            if(isSuspended == false)
+            {
+                this.ResumeLayout();
             }
         }
 
