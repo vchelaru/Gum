@@ -88,16 +88,24 @@ namespace Gum.Controls.DataUi
 
         public ApplyValueResult TrySetValueOnUi(object valueOnInstance)
         {
-            if (valueOnInstance is Microsoft.Xna.Framework.Color)
+            if (valueOnInstance is Microsoft.Xna.Framework.Color color)
             {
-                Microsoft.Xna.Framework.Color color =
-                    (Microsoft.Xna.Framework.Color)valueOnInstance;
-
                 var windowsColor = new Color();
                 windowsColor.A = color.A;
                 windowsColor.R = color.R;
                 windowsColor.G = color.G;
                 windowsColor.B = color.B;
+
+                this.ColorPicker.SelectedColor = windowsColor;
+                return ApplyValueResult.Success;
+            }
+            else if(valueOnInstance is System.Drawing.Color drawingColor)
+            {
+                var windowsColor = new Color();
+                windowsColor.A = drawingColor.A;
+                windowsColor.R = drawingColor.R;
+                windowsColor.G = drawingColor.G;
+                windowsColor.B = drawingColor.B;
 
                 this.ColorPicker.SelectedColor = windowsColor;
                 return ApplyValueResult.Success;
@@ -127,6 +135,19 @@ namespace Gum.Controls.DataUi
 
                     value = colorToReturn;
                 }
+                else if(mInstancePropertyType == typeof(System.Drawing.Color))
+                {
+                    var toReturn = System.Drawing.Color.FromArgb(
+                        ColorPicker.SelectedColor.A,
+                        ColorPicker.SelectedColor.R, 
+                        ColorPicker.SelectedColor.G, 
+                        ColorPicker.SelectedColor.B 
+                        );
+
+                    result = ApplyValueResult.Success;
+
+                    value = toReturn;
+                }
                 else
                 {
                     result = ApplyValueResult.NotSupported;
@@ -146,13 +167,31 @@ namespace Gum.Controls.DataUi
             }
         }
 
-        private void HandleColorChange(object sender, RoutedEventArgs e) {
+        private void HandleColorChange(object sender, RoutedEventArgs e) 
+        {
             if (!(e is ColorRoutedEventArgs colorArgs)) return;
 
-            var prevColor = (Microsoft.Xna.Framework.Color)InstanceMember.Value;
 
-            var colorPack = (uint)(colorArgs.Color.R | (colorArgs.Color.G << 8) | (colorArgs.Color.B << 16) | (colorArgs.Color.A << 24));
-            if (colorPack == prevColor.PackedValue) return;
+            var isColorSame = false;
+
+            if(mInstancePropertyType == typeof(Microsoft.Xna.Framework.Color))
+            {
+                var colorPack = (uint)(colorArgs.Color.R | (colorArgs.Color.G << 8) | (colorArgs.Color.B << 16) | (colorArgs.Color.A << 24));
+                var prevColor = (Microsoft.Xna.Framework.Color)InstanceMember.Value;
+                isColorSame = colorPack == prevColor.PackedValue;
+            }
+            else if(mInstancePropertyType == typeof(System.Drawing.Color))
+            {
+                var prevColor = (System.Drawing.Color) InstanceMember.Value;
+                var newColor = colorArgs.Color;
+
+                isColorSame = newColor.A == prevColor.A &&
+                    newColor.R == prevColor.R &&
+                    newColor.G == prevColor.G &&
+                    newColor.B == prevColor.B;
+            }
+
+            if(isColorSame) return;
 
             var settingResult = this.TrySetValueOnInstance();
 
