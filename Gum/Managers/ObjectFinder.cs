@@ -897,6 +897,55 @@ namespace Gum.Managers
             return references;
         }
 
+        /// <summary>
+        /// Returns the root variable (defined on the standard element usually) for the argument instance.
+        /// </summary>
+        /// <param name="name">The name, including the period such as "InstanceName.X"</param>
+        /// <param name="instance">The instance, which should match the instance in the variable name.</param>
+        /// <returns>The root VariableSave</returns>
+        public VariableSave GetRootVariable(string name, InstanceSave instance)
+        {
+            var instanceElement = GetElementSave(instance.BaseType);
+            var afterDot = name.Substring(name.IndexOf('.') + 1);
+
+            return GetRootVariable(afterDot, instanceElement);
+        }
+
+        public VariableSave GetRootVariable(string name, ElementSave element)
+        {
+            var exposedVariable = element.DefaultState.Variables.FirstOrDefault(item => item.ExposedAsName == name);
+
+            var effectiveName = exposedVariable?.Name ?? name;
+
+            VariableSave toReturn = null;
+
+            if(effectiveName.Contains('.'))
+            {
+                var beforeDot = effectiveName.Substring(0, effectiveName.IndexOf('.'));
+                var instance = element.GetInstance(beforeDot);
+
+                if(instance != null)
+                {
+                    return GetRootVariable(effectiveName, instance);
+                }
+                // this has a dot, but no instance, so it's a bad variable...
+            }
+            else
+            {
+                var baseElement = GetElementSave(element.BaseType);
+
+                if(baseElement != null)
+                {
+                    toReturn = GetRootVariable(effectiveName, baseElement);
+                }
+                else
+                {
+                    toReturn = element.DefaultState.Variables.FirstOrDefault(item => item.Name == effectiveName);
+                }
+            }
+
+            return toReturn;
+        }
 
         public ElementSave GetContainerOf(StateSave stateSave)
         {

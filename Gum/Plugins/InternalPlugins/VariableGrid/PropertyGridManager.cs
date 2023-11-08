@@ -756,28 +756,81 @@ namespace Gum.Managers
 
                     foreach (var variable in membersBefore)
                     {
-                        if(variable.Name.Contains("Red"))
+                        VariableSave rootVariable = null;
+                        if(instance != null)
                         {
-                            var indexOfRed = variable.Name.IndexOf("Red");
-                            var before = variable.Name.Substring(0, indexOfRed);
-                            var after = variable.Name.Substring(indexOfRed + "Red".Length);
+                            rootVariable = ObjectFinder.Self.GetRootVariable(variable.Name, instance);
+                        }
+                        else
+                        {
+                            rootVariable = ObjectFinder.Self.GetRootVariable(variable.Name, element);
+                        }
 
-                            var redVariableName = variable.Name;
-                            var greenVariableName = before + "Green" + after;
-                            var blueVariableName = before + "Blue" + after;
+                        if(rootVariable?.Name == "Red")
+                        {
 
+                            //var indexOfRed = variable.Name.IndexOf("Red");
+                            //var before = variable.Name.Substring(0, indexOfRed);
+                            //var after = variable.Name.Substring(indexOfRed + "Red".Length);
+
+                            //var redVariableName = variable.Name;
+                            //var greenVariableName = before + "Green" + after;
+                            //var blueVariableName = before + "Blue" + after;
+
+                            //var redVariable = variable;
+                            //var greenVariable = category.Members.FirstOrDefault(item => item.Name == greenVariableName);
+                            //var blueVariable = category.Members.FirstOrDefault(item => item.Name == blueVariableName);
                             var redVariable = variable;
-                            var greenVariable = category.Members.FirstOrDefault(item => item.Name == greenVariableName);
-                            var blueVariable = category.Members.FirstOrDefault(item => item.Name == blueVariableName);
+
+                            InstanceMember greenVariable = null;
+                            InstanceMember blueVariable = null;
+
+                            if(instance != null)
+                            {
+                                greenVariable = category.Members.FirstOrDefault(item =>
+                                {
+                                    return 
+                                        ObjectFinder.Self.GetRootVariable(item.Name, instance)?.Name == "Green";
+                                });
+                                blueVariable = category.Members.FirstOrDefault(item =>
+                                {
+                                    return
+                                        ObjectFinder.Self.GetRootVariable(item.Name, instance)?.Name == "Blue";
+                                });
+                            }
+                            else
+                            {
+                                greenVariable = category.Members.FirstOrDefault(item =>
+                                {
+                                    return
+                                        ObjectFinder.Self.GetRootVariable(item.Name, element)?.Name == "Green";
+                                });
+                                blueVariable = category.Members.FirstOrDefault(item =>
+                                {
+                                    return
+                                        ObjectFinder.Self.GetRootVariable(item.Name, element)?.Name == "Blue";
+                                });
+                            }
 
                             if(greenVariable != null && blueVariable != null) 
                             {
-                                var beforeWithoutDot = before;
-                                if(beforeWithoutDot.Contains("."))
+                                var redVariableName = variable.Name;
+                                var greenVariableName = greenVariable.Name;
+                                var blueVariableName = blueVariable.Name;
+
+                                var rootName = variable.DisplayName;
+
+                                var beforeRed = "";
+                                var afterRed = "";
+                                if(rootName.Contains("Red"))
                                 {
-                                    beforeWithoutDot = before.Substring(beforeWithoutDot.IndexOf(".") + 1); 
+                                    beforeRed = rootName.Substring(0, rootName.IndexOf("Red"));
+                                    afterRed = rootName.Substring(rootName.IndexOf("Red") + "Red".Length);
                                 }
-                                InstanceMember instanceMember = new InstanceMember( $"{beforeWithoutDot}Color{after}", null);
+
+
+
+                                InstanceMember instanceMember = new InstanceMember( $"{beforeRed}Color{afterRed}", null);
                                 instanceMember.PreferredDisplayer = typeof(Gum.Controls.DataUi.ColorDisplay);
                                 instanceMember.CustomGetTypeEvent += (arg) => typeof(Microsoft.Xna.Framework.Color);
                                 instanceMember.CustomGetEvent += (notUsed) => GetCurrentColor(redVariableName, greenVariableName, blueVariableName);
