@@ -362,16 +362,10 @@
     <Compile Include="PropertyGridHelpers\Converters\StringOptionsTypeConverter.cs" />
     <Compile Include="PropertyGridHelpers\Converters\VariableListConverter.cs" />
     <Compile Include="Plugins\InternalPlugins\VariableGrid\ElementSaveDisplayer.cs" />
-    <Compile Include="PropertyGridHelpers\EventInstanceMember.cs" />
     <Compile Include="PropertyGridHelpers\Excluders\SpritePropertyGridVariableExcluder.cs" />
     <Compile Include="PropertyGridHelpers\Excluders\TextPropertyGridVariableExcluder.cs" />
-    <Compile Include="PropertyGridHelpers\GumProjectSavePropertyGridDisplayer.cs" />
-    <Compile Include="PropertyGridHelpers\InstanceSavePropertyDescriptor.cs" />
-    <Compile Include="PropertyGridHelpers\GuideRectanglePropertyGridDisplayer.cs" />
+    <Compile Include="Plugins\InternalPlugins\VariableGrid\InstanceSavePropertyDescriptor.cs" />
     <Compile Include="PropertyGridHelpers\PropertyDescriptorHelper.cs" />
-    <Compile Include="PropertyGridHelpers\PropertyGridDisplayer.cs" />
-    <Compile Include="PropertyGridHelpers\ReflectingParameterDescriptor.cs" />
-    <Compile Include="PropertyGridHelpers\ReflectingPropertyDescriptorHelper.cs" />
     <Compile Include="PropertyGridHelpers\SetVariableLogic.cs" />
     <Compile Include="Plugins\InternalPlugins\VariableGrid\StateReferencingInstanceMember.cs" />
     <Compile Include="PropertyGridHelpers\UiTypeConverters\ModalTypeConverter.cs" />
