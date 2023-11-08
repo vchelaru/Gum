@@ -570,16 +570,16 @@ namespace Gum.Managers
             }
 
             ReorganizeCategories(categories);
-            CustomizeVariables(categories, stateSave, instance);
+            CustomizeVariables(categories, stateSave, element, instance);
         }
 
-        private void CustomizeVariables(List<MemberCategory> categories, StateSave stateSave, InstanceSave instance)
+        private void CustomizeVariables(List<MemberCategory> categories, StateSave stateSave, ElementSave element, InstanceSave instance)
         {
             // Hack! I would like to have this set by variables, but that's going to require a ton
             // of refatoring. We need to move off of the intermediate PropertyDescriptor class.
             AdjustTextPreferredDisplayer(categories, stateSave, instance);
 
-            UpdateColorCategory(categories);
+            UpdateColorCategory(categories, element, instance);
 
             SetDisplayerForAlignment(categories);
 
@@ -746,7 +746,7 @@ namespace Gum.Managers
             }
         }
 
-        private void UpdateColorCategory(List<MemberCategory> categories)
+        private void UpdateColorCategory(List<MemberCategory> categories, ElementSave element, InstanceSave instance)
         {
             foreach(var category in categories)
             {
