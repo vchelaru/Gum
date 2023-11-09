@@ -25,6 +25,8 @@ namespace ToolsUtilities
         static string mRelativeDirectory =
 #if UWP
             "./";
+#elif ANDROID || IOS
+            Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).ToLower().Replace("/", "\\") + "\\";
 #else
             Path.GetDirectoryName(AppContext.BaseDirectory).ToLower().Replace("/", "\\") + "\\";
 #endif
