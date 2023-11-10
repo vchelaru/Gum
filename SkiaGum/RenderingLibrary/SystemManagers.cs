@@ -22,7 +22,7 @@ namespace RenderingLibrary
         public RenderingLibrary.Graphics.Renderer Renderer { get; private set; }
         public bool EnableTouchEvents { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
 
-        IRenderer ISystemManagers.Renderer => throw new System.NotImplementedException();
+        IRenderer ISystemManagers.Renderer => Renderer;
 
         public void Initialize()
         {
