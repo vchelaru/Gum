@@ -666,7 +666,7 @@ namespace Gum.PropertyGridHelpers
                     // See if this is relative to the project
                     var shouldAskToCopy = !FileManager.IsRelativeTo(
                         filePath.FullPath,
-                        ProjectState.Self.ProjectDirectory);
+                        ProjectState.Self.ProjectDirectory) && !FileManager.IsUrl(variable.Value as string);
 
                     if (shouldAskToCopy &&
                         !string.IsNullOrEmpty(ProjectState.Self.GumProjectSave?.ParentProjectRoot) &&
@@ -698,10 +698,19 @@ namespace Gum.PropertyGridHelpers
 
         private string GetWhySourcefileIsInvalid(string value, ElementSave parentElement, InstanceSave instance, string changedMember)
         {
+
+            ////////////////early out//////////////////////
+            var isUrl = FileManager.IsUrl(value);
+            if(isUrl)
+            {
+                // extension can be anything...
+                return null;
+            }
+            //////////////end early out///////////////////
+
             string whyInvalid = null;
 
             var extension = FileManager.GetExtension(value);
-
             bool isValidExtension = extension == "gif" ||
                 extension == "jpg" ||
                 extension == "png" ||

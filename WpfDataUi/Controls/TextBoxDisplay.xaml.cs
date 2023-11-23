@@ -230,7 +230,12 @@ namespace WpfDataUi.Controls
         {
             RefreshPlaceholderText();
 
-            lastApplyValueResult = mTextBoxLogic.TryApplyToInstance();
+            if(this.TextBox.Text != mTextBoxLogic.TextAtStartOfEditing)
+            {
+                // Check if the text has actually changed. If it hasn't, we don't
+                // want to forcefully set the text on a lost focus.
+                lastApplyValueResult = mTextBoxLogic.TryApplyToInstance();
+            }
 
             RefreshIsEnabled();
         }
