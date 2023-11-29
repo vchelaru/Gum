@@ -1,4 +1,6 @@
 ﻿using Gum.DataTypes;
+using Gum.Managers;
+using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -31,6 +33,32 @@ namespace Gum.PropertyGridHelpers.Converters
                 //if (element == null || element.IsOfType(componentSave.Name) == false || element.Name == instance?.BaseType)
                 {
                     values.Add(componentSave.Name);
+                }
+            }
+
+            var instance = GumState.Self.SelectedState.SelectedInstance;
+            if(instance != null)
+            {
+                var instanceName = instance.Name;
+                var currentElement = GumState.Self.SelectedState.SelectedElement;
+
+                foreach(var otherInstance in currentElement.Instances)
+                {
+                    var parentVariableName = $"{otherInstance.Name}.Parent";
+
+                    var variable = currentElement.DefaultState.Variables.Find(item => item.Name == parentVariableName);
+
+                    if(variable != null && variable.Value is string asString && asString == instanceName)
+                    {
+                        // this instance is a child of the current instance, so let's get that type:
+                        var otherInstanceElement = ObjectFinder.Self.GetElementSave(otherInstance);
+
+                        if(otherInstanceElement != null && values.Contains(otherInstanceElement.Name))
+                        {
+                            values.Remove(otherInstanceElement.Name);
+                            values.Insert(0, otherInstanceElement.Name);
+                        }
+                    }
                 }
             }
 
