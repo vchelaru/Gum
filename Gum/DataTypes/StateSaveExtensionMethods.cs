@@ -97,11 +97,11 @@ namespace Gum.DataTypes.Variables
 
                         if (instanceType != null)
                         {
-                            // This is heavy code, so let's just do a for loop instead of a LINQ query
-                            //var statesSetOnThisInstance = stateSave.Variables.Where(item => item.IsState(parent) && item.SourceObject == sourceObjectName && item.SetsValue)
-                            //    .ToArray();
-                            for(int i = 0; i < stateSave.Variables.Count; i++)
-                            //foreach (var instanceStateVariable in statesSetOnThisInstance)
+                            // Calling matchingState.GetValueRecursive will always return a value, so the first state will return true.
+                            // Therefore, we shouldn't do a recrusive call here, at least not initially. We should do non-recursive. If we 
+                            // don't find something in the non-recursive, then we should do a recursive call.
+
+                            for (int i = 0; i < stateSave.Variables.Count; i++)
                             {
                                 var instanceStateVariable = stateSave.Variables[i];
                                 if (instanceStateVariable.SourceObject == sourceObjectName && instanceStateVariable.SetsValue &&
@@ -112,11 +112,36 @@ namespace Gum.DataTypes.Variables
 
                                     if (matchingState != null)
                                     {
-                                        value = matchingState.GetValueRecursive(nameInBase);
+                                        value = matchingState.GetValue(nameInBase);
                                         wasFound = value != null;
                                         if (wasFound)
                                         {
                                             break;
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Now that we did non-recursive (top level only), then let's do recursive:
+                            if(!wasFound)
+                            {
+                                for (int i = 0; i < stateSave.Variables.Count; i++)
+                                {
+                                    var instanceStateVariable = stateSave.Variables[i];
+                                    if (instanceStateVariable.SourceObject == sourceObjectName && instanceStateVariable.SetsValue &&
+                                        // check this last since it's the slowest:
+                                        instanceStateVariable.IsState(elementContainingState))
+                                    {
+                                        var matchingState = instanceType.AllStates.FirstOrDefault(item => item.Name == (string)instanceStateVariable.Value);
+
+                                        if (matchingState != null)
+                                        {
+                                            value = matchingState.GetValueRecursive(nameInBase);
+                                            wasFound = value != null;
+                                            if (wasFound)
+                                            {
+                                                break;
+                                            }
                                         }
                                     }
                                 }

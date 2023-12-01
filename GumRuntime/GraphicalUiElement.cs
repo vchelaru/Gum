@@ -4161,7 +4161,10 @@ namespace Gum.Wireframe
 
             if (recursive)
             {
-                ResumeLayoutUpdateIfDirtyRecursive();
+                if(!IsAllLayoutSuspended)
+                {
+                    ResumeLayoutUpdateIfDirtyRecursive();
+                }
             }
             else
             {
