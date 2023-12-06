@@ -291,7 +291,7 @@ namespace Gum.Wireframe
                         RootGue.UpdateFontRecursive();
                         RootGue.UpdateLayout();
 
-
+                        gueManager.Add(RootGue);
                         // what about fonts?
                         // We recreate missing fonts on startup, so do we need to bother here?
                         // I'm not sure, but if we do we would call:

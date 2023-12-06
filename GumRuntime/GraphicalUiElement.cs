@@ -4969,10 +4969,16 @@ namespace Gum.Wireframe
             var asAnimatable = mContainedObjectAsIpso as IAnimatable;
             //////////////////Early Out/////////////////////
             // Check mContainedObjectAsIVisible - if it's null, then this is a Screen and we should animate it
-            if(asSprite== null || asAnimatable == null)
-            {
-                return;
-            }
+
+            // December 6, 2023 - Not sure why this was added here
+            // but by checking if this is null, we skip animating screens
+            // which breaks recursive animations. We need to early out only
+            // if the contained object is not null.
+            //if(asSprite== null || asAnimatable == null)
+            //{
+            //    return;
+            //}
+
             if (mContainedObjectAsIVisible != null && Visible == false)
             {
                 return;
@@ -4980,7 +4986,7 @@ namespace Gum.Wireframe
             ////////////////End Early Out///////////////////
 
 
-            var didSpriteUpdate = asAnimatable.AnimateSelf(secondDifference);
+            var didSpriteUpdate = asAnimatable?.AnimateSelf(secondDifference) ?? false;
 
             if(didSpriteUpdate)
             {
