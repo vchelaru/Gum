@@ -1221,6 +1221,10 @@ namespace Gum.Wireframe
             }
         }
 
+        /// <summary>
+        /// Whether contained children should wrap. This only applies if ChildrenLayout is set to 
+        /// ChildrenLayout.LeftToRightStack or ChildrenLayout.TopToBottomStack.
+        /// </summary>
         public bool WrapsChildren
         {
             get { return mWrapsChildren; }
@@ -1233,6 +1237,10 @@ namespace Gum.Wireframe
             }
         }
 
+        /// <summary>
+        /// Whether the rendering of this object's children should be clipped to the bounds of this object. If false
+        /// then children can render outside of the bounds of this object.
+        /// </summary>
         public bool ClipsChildren
         {
             get;
