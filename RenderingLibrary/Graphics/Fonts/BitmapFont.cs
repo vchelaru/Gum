@@ -569,7 +569,7 @@ namespace RenderingLibrary.Graphics
             return renderTarget;
         }
 
-        public void DrawTextLines(List<string> lines, HorizontalAlignment horizontalAlignment, 
+        public FloatRectangle DrawTextLines(List<string> lines, HorizontalAlignment horizontalAlignment, 
             object objectRequestingChange, int requiredWidth, List<int> widths, 
             SpriteRenderer spriteRenderer, 
             Color color,
@@ -579,10 +579,12 @@ namespace RenderingLibrary.Graphics
             ///////////Early Out////////////////
             if(numberOfLettersToRender == 0)
             {
-                return;
+                return default(FloatRectangle);
             }
             /////////End Early Out//////////////
-            
+
+            FloatRectangle toReturn = new FloatRectangle();
+
             var point = new Vector2();
 
             int lineNumber = 0;
@@ -641,6 +643,14 @@ namespace RenderingLibrary.Graphics
                     int pageIndex;
                     var sourceRect = GetCharacterRect(c, lineNumber, ref point, out destRect, out pageIndex, scaleX, lineHeightMultiplier: lineHeightMultiplier);
 
+                    var unrotatedX = destRect.X + xOffset;
+                    var unrotatedY = destRect.Y + yOffset;
+                    toReturn.X = System.Math.Min(toReturn.X, unrotatedX);
+                    toReturn.Y = System.Math.Min(toReturn.Y, unrotatedY);
+                    toReturn.Width = System.Math.Max(toReturn.Width, point.X + xOffset);
+                    toReturn.Height = System.Math.Max(toReturn.Height, point.Y + yOffset);
+
+
                     var finalPosition = destRect.X * xAxis + destRect.Y * yAxis;
 
                     finalPosition.X += xOffset;
@@ -685,6 +695,7 @@ namespace RenderingLibrary.Graphics
                     break;
                 }
             }
+            return toReturn;
         }
 
         /// <summary>
@@ -760,6 +771,8 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        public float EffectiveLineHeight(float fontScale = 1, float lineHeightMultiplier = 1) => mLineHeightInPixels * lineHeightMultiplier * fontScale;
+
         public Rectangle GetCharacterRect(char c, int lineNumber, ref Vector2 point, out FloatRectangle destinationRectangle,
             out int pageIndex, float fontScale = 1, float lineHeightMultiplier = 1)
         {
@@ -770,13 +783,13 @@ namespace RenderingLibrary.Graphics
             int sourceWidth = characterInfo.GetPixelRight(Texture) - sourceLeft;
             int sourceHeight = characterInfo.GetPixelBottom(Texture) - sourceTop;
 
-            int distanceFromTop = characterInfo.GetPixelDistanceFromTop(LineHeightInPixels);
+            int distanceFromTop = characterInfo.GetPixelDistanceFromTop(mLineHeightInPixels);
 
             // There could be some offset for this character
-            int xOffset = characterInfo.GetPixelXOffset(LineHeightInPixels);
+            int xOffset = characterInfo.GetPixelXOffset(mLineHeightInPixels);
             point.X += xOffset * fontScale;
 
-            point.Y = (lineNumber * LineHeightInPixels * lineHeightMultiplier + distanceFromTop) * fontScale;
+            point.Y = lineNumber * EffectiveLineHeight(fontScale, lineHeightMultiplier) + distanceFromTop * fontScale;
 
             var sourceRectangle = new Rectangle(sourceLeft, sourceTop, sourceWidth, sourceHeight);
 
@@ -785,7 +798,7 @@ namespace RenderingLibrary.Graphics
             destinationRectangle = new FloatRectangle(point.X, point.Y, sourceWidth * fontScale, sourceHeight * fontScale);
 
             point.X -= xOffset * fontScale;
-            point.X += characterInfo.GetXAdvanceInPixels(LineHeightInPixels) * fontScale;
+            point.X += characterInfo.GetXAdvanceInPixels(mLineHeightInPixels) * fontScale;
 
             return sourceRectangle;
         }

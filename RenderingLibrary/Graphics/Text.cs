@@ -10,6 +10,8 @@ using Vector2 = System.Numerics.Vector2;
 using Vector3 = System.Numerics.Vector3;
 using Color = System.Drawing.Color;
 using Matrix = System.Numerics.Matrix4x4;
+using System.Linq;
+using System.Data.SqlTypes;
 
 namespace RenderingLibrary.Graphics
 {
@@ -33,6 +35,17 @@ namespace RenderingLibrary.Graphics
 
     #endregion
 
+    #region InlineVariable
+
+    public class  InlineVariable
+    {
+        public string VariableName;
+        public int StartIndex;
+        public int CharacterCount;
+        public object Value;
+    }
+
+    #endregion
 
     public class Text : IRenderableIpso, IVisible, IText
     {
@@ -81,7 +94,7 @@ namespace RenderingLibrary.Graphics
         float mHeight = 200;
         LinePrimitive mBounds;
 
-
+        public List<InlineVariable> InlineVariables { get; private set; } = new List<InlineVariable>();
 
         BitmapFont mBitmapFont;
         Texture2D mTextureToRender;
@@ -968,17 +981,207 @@ namespace RenderingLibrary.Graphics
                 fontToUse.GetRequiredWidthAndHeight(WrappedText, out requiredWidth, out int _, widths);
                 UpdateIpsoForRendering();
 
-                var absoluteLeft = mTempForRendering.GetAbsoluteLeft();
-                var absoluteTop = mTempForRendering.GetAbsoluteTop();
 
+                if(InlineVariables.Count > 0)
+                {
+                    DrawWithInlineVariables(fontToUse, requiredWidth, spriteRenderer);
+                }
+                else
+                {
+                    var absoluteLeft = mTempForRendering.GetAbsoluteLeft();
+                    var absoluteTop = mTempForRendering.GetAbsoluteTop();
+                    fontToUse.DrawTextLines(WrappedText, HorizontalAlignment, 
+                        this,
+                        requiredWidth, widths, spriteRenderer, Color,
+                        absoluteLeft,
+                        absoluteTop, 
+                        this.GetAbsoluteRotation(), mFontScale, mFontScale, maxLettersToShow, OverrideTextRenderingPositionMode, lineHeightMultiplier:LineHeightMultiplier);
+                }
 
-                fontToUse.DrawTextLines(WrappedText, HorizontalAlignment, 
-                    this,
-                    requiredWidth, widths, spriteRenderer, Color,
-                    absoluteLeft,
-                    absoluteTop, 
-                    this.GetAbsoluteRotation(), FontScale, FontScale, MaxLettersToShow, OverrideTextRenderingPositionMode, lineHeightMultiplier:LineHeightMultiplier);
             }
+        }
+
+        List<string> lineByLineList = new List<string>() { "" };
+
+        class StyledSubstring
+        {
+            public List<InlineVariable> Variables = new List<InlineVariable>();
+            public string Substring;
+            public int StartIndex;
+
+            public override string ToString()
+            {
+                var toReturn = Substring ?? "<null>";
+
+                foreach(var variable in Variables)
+                {
+                    toReturn += $" {variable.VariableName} = {variable.Value}";
+                }
+                return toReturn;
+            }
+        }
+
+        private void DrawWithInlineVariables(BitmapFont fontToUse, int requiredWidth, SpriteRenderer spriteRenderer)
+        {
+            var absoluteTop = mTempForRendering.GetAbsoluteTop();
+
+            int startOfLineIndex = 0;
+
+            var rotation = this.GetAbsoluteRotation();
+
+            for (int i = 0; i < WrappedText.Count; i++)
+            {
+                var absoluteLeft = mTempForRendering.GetAbsoluteLeft();
+                var lineOfText = WrappedText[i];
+
+                var topOfLine = absoluteTop + i * fontToUse.EffectiveLineHeight(mFontScale, mFontScale);
+                var color = Color;
+
+                var substrings = GetStyledSubstrings(startOfLineIndex, lineOfText, color);
+
+                if(substrings.Count == 0)
+                {
+                    lineByLineList[0] = lineOfText;
+                    fontToUse.DrawTextLines(lineByLineList, HorizontalAlignment,
+                        this,
+                        requiredWidth, widths, spriteRenderer, color,
+                        absoluteLeft,
+                        topOfLine,
+                        this.GetAbsoluteRotation(), mFontScale, mFontScale, maxLettersToShow, OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier);
+
+
+                }
+
+                var lineHeight = fontToUse.EffectiveLineHeight(mFontScale, mFontScale);
+                var defaultBaseline = fontToUse.BaselineY;
+
+
+
+                foreach (var substring in substrings)
+                {
+                    lineByLineList[0] = substring.Substring;
+                    color = Color;
+                    var fontScale = mFontScale;
+                    var effectiveFont = fontToUse;
+                    for (int variableIndex = 0; variableIndex < substring.Variables.Count; variableIndex++)
+                    {
+                        var variable = substring.Variables[variableIndex];
+                        if(variable.VariableName == nameof(Color))
+                        {
+                            color = (System.Drawing.Color)variable.Value;
+                        }
+                        else if(variable.VariableName == nameof(FontScale))
+                        {
+                            fontScale = (float)variable.Value;
+                        }
+                        else if(variable.VariableName == nameof(BitmapFont))
+                        {
+                            effectiveFont = (BitmapFont)variable.Value;
+                        }
+                    }
+
+                    var effectiveTopOfLine = topOfLine;
+
+                    if(fontToUse != effectiveFont)
+                    {
+                        var baselineDifference = fontToUse.BaselineY - effectiveFont.BaselineY;
+                        effectiveTopOfLine += baselineDifference * fontScale;
+                    }
+
+                    var rect = effectiveFont.DrawTextLines(lineByLineList, HorizontalAlignment,
+                        this,
+                        requiredWidth, widths, spriteRenderer, color,
+                        absoluteLeft,
+                        effectiveTopOfLine,
+                        rotation, fontScale, fontScale, maxLettersToShow, OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier);
+
+                    absoluteLeft = rect.Width + rect.X;
+
+                }
+                startOfLineIndex += lineOfText.Length;
+            }
+        }
+
+        private List<StyledSubstring> GetStyledSubstrings(int startOfLineIndex, string lineOfText, Color color)
+        {
+            List<StyledSubstring> substrings = new List<StyledSubstring>();
+            int currentSubstringStart = 0;
+
+            List<InlineVariable> currentlyActiveInlines = new List<InlineVariable>();
+            List<InlineVariable> inlinesForThisCharacter = new List<InlineVariable>();
+
+            for (int letter = 0; letter < lineOfText.Length; letter++)
+            {
+                inlinesForThisCharacter.Clear();
+                var absoluteIndex = startOfLineIndex + letter;
+
+                var startNewRun = false;
+                var endLastRun = false;
+                foreach (var variable in InlineVariables)
+                {
+
+                    if (absoluteIndex >= variable.StartIndex && absoluteIndex < variable.StartIndex + variable.CharacterCount)
+                    {
+                        if(currentlyActiveInlines.Contains(variable) == false)
+                        {
+                            startNewRun = true;
+                        }
+                        inlinesForThisCharacter.Add(variable);
+                    }
+                }
+
+                foreach(var variable in currentlyActiveInlines)
+                {
+                    if(absoluteIndex > variable.StartIndex + variable.CharacterCount)
+                    {
+                        startNewRun = true;
+                    }
+                }
+
+                if(letter == lineOfText.Length-1 && substrings.Count > 0 && substrings.Last().StartIndex != absoluteIndex)
+                {
+                    endLastRun = true;
+                }
+
+                if (startNewRun || endLastRun)
+                {
+                    var lastSubstring = substrings.LastOrDefault();
+                    if (lastSubstring != null)
+                    {
+                        lastSubstring.Substring = lineOfText.Substring(currentSubstringStart, letter - currentSubstringStart);
+                    }
+                    
+                    if(lastSubstring == null && substrings.Count == 0 && absoluteIndex != startOfLineIndex)
+                    {
+                        var styledSubstring = new StyledSubstring();
+                        // no styles
+                        styledSubstring.Substring = lineOfText.Substring(0, letter);
+                        styledSubstring.StartIndex = startOfLineIndex;
+                        substrings.Add(styledSubstring);
+                    }
+                }
+
+                if(startNewRun)
+                { 
+                    currentSubstringStart = letter;
+
+                    var styledSubstring = new StyledSubstring();
+                    styledSubstring.Variables.AddRange(inlinesForThisCharacter);
+                    styledSubstring.StartIndex = letter;
+
+                    if(letter == lineOfText.Length - 1)
+                    {
+                        styledSubstring.Substring = lineOfText.Substring(currentSubstringStart);
+                    }
+
+                    substrings.Add(styledSubstring);
+
+                    currentlyActiveInlines.Clear();
+                    currentlyActiveInlines.AddRange(inlinesForThisCharacter);
+                }
+            }
+
+            return substrings;
         }
 
         private void RenderUsingBitmapFont(SpriteRenderer spriteRenderer, SystemManagers managers)
