@@ -1625,17 +1625,19 @@ namespace Gum.Managers
 
         private void HandleSelectedSearchNode(SearchItemViewModel vm)
         {
-            var backingObject = vm.BackingObject;
+            var backingObject = vm?.BackingObject;
+            if(backingObject != null)
+            {
+                if (backingObject is ScreenSave asScreen)
+                    GumState.Self.SelectedState.SelectedElement = asScreen;
+                else if (backingObject is ComponentSave asComponent)
+                    GumState.Self.SelectedState.SelectedElement = asComponent;
+                else if (backingObject is StandardElementSave asStandard)
+                    GumState.Self.SelectedState.SelectedElement = asStandard;
 
-            if (backingObject is ScreenSave asScreen)
-                GumState.Self.SelectedState.SelectedElement = asScreen;
-            else if (backingObject is ComponentSave asComponent)
-                GumState.Self.SelectedState.SelectedElement = asComponent;
-            else if (backingObject is StandardElementSave asStandard)
-                GumState.Self.SelectedState.SelectedElement = asStandard;
-
-            searchTextBox.Text = null;
-            FilterText = null;
+                searchTextBox.Text = null;
+                FilterText = null;
+            }
         }
 
 
