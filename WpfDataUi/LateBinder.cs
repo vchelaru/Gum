@@ -539,6 +539,12 @@ namespace FlatRedBall.Instructions.Reflection
             {
                 ValidateGetter(ref propertyName);
 
+#if DEBUG
+                if(mPropertieSet.Contains(propertyName) == false)
+                {
+                    throw new Exception("The property " + propertyName + " does not exist in the type " + typeof(T).Name);
+                }
+#endif
                 GetHandler getHandler = mPropertyGet[propertyName];
 
                 // getter may throw an exception.  We don't want the grid to blow up in that case, so we'll return null:

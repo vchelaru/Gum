@@ -449,7 +449,10 @@ namespace WpfDataUi
                 PropertyChangedArgs args = new PropertyChangedArgs();
                 args.Owner = this.Instance;
 
-                args.NewValue = LateBinder.GetValueStatic(this.Instance, ((InstanceMember)sender).Name);
+                // This assumes reflection, which is bad...
+                //args.NewValue = LateBinder.GetValueStatic(this.Instance, ((InstanceMember)sender).Name);
+
+                args.NewValue = ((InstanceMember)sender).Value;
                 args.PropertyName = ((InstanceMember)sender).Name;
 
                 PropertyChange(((InstanceMember)sender).Name, args);
