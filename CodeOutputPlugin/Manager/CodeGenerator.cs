@@ -1928,12 +1928,17 @@ namespace CodeOutputPlugin.Manager
             string message = string.Empty;
 
             var codeDirectory = generatedFileName.GetDirectoryContainingThis();
+
+            var hasDirectory = true;
+
             if (!System.IO.Directory.Exists(codeDirectory.FullPath))
             {
+                hasDirectory = false;
                 try
                 {
                     GumCommands.Self.TryMultipleTimes(() =>
                         System.IO.Directory.CreateDirectory(codeDirectory.FullPath));
+                    hasDirectory = true;
                 }
                 catch (Exception e)
                 {
@@ -1941,43 +1946,47 @@ namespace CodeOutputPlugin.Manager
                 }
             }
 
-            GumCommands.Self.TryMultipleTimes(() => System.IO.File.WriteAllText(generatedFileName.FullPath, contents));
-
-            // show a message somewhere?
-            message += $"Generated code to {FileManager.RemovePath(generatedFileName.FullPath)}";
-
-            if (!string.IsNullOrEmpty(codeOutputProjectSettings.CodeProjectRoot))
+            if(hasDirectory)
             {
+                GumCommands.Self.TryMultipleTimes(() => System.IO.File.WriteAllText(generatedFileName.FullPath, contents));
 
-                // nope! This strips out periods in folders. We don't want to do that:
-                //var splitFileWithoutGenerated = generatedFileName.Split('.').ToArray();
-                //var customCodeFileName = string.Join("\\", splitFileWithoutGenerated.Take(splitFileWithoutGenerated.Length - 2)) + ".cs";
-                // Instead, just strip it off the end:
-                var fullPath = generatedFileName.FullPath;
-                var customCodeFileName = fullPath.Substring(0, fullPath.Length - ".Generated.cs".Length) + ".cs";
+                // show a message somewhere?
+                message += $"Generated code to {FileManager.RemovePath(generatedFileName.FullPath)}";
 
-                // todo - only save this if it doesn't already exist
-                if (!System.IO.File.Exists(customCodeFileName))
+                if (!string.IsNullOrEmpty(codeOutputProjectSettings.CodeProjectRoot))
                 {
-                    var directory = FileManager.GetDirectory(customCodeFileName);
-                    if (!System.IO.Directory.Exists(directory))
+
+                    // nope! This strips out periods in folders. We don't want to do that:
+                    //var splitFileWithoutGenerated = generatedFileName.Split('.').ToArray();
+                    //var customCodeFileName = string.Join("\\", splitFileWithoutGenerated.Take(splitFileWithoutGenerated.Length - 2)) + ".cs";
+                    // Instead, just strip it off the end:
+                    var fullPath = generatedFileName.FullPath;
+                    var customCodeFileName = fullPath.Substring(0, fullPath.Length - ".Generated.cs".Length) + ".cs";
+
+                    // todo - only save this if it doesn't already exist
+                    if (!System.IO.File.Exists(customCodeFileName))
                     {
-                        System.IO.Directory.CreateDirectory(directory);
+                        var directory = FileManager.GetDirectory(customCodeFileName);
+                        if (!System.IO.Directory.Exists(directory))
+                        {
+                            System.IO.Directory.CreateDirectory(directory);
+                        }
+                        var customCodeContents = CustomCodeGenerator.GetCustomCodeForElement(selectedElement, elementSettings, codeOutputProjectSettings);
+                        System.IO.File.WriteAllText(customCodeFileName, customCodeContents);
                     }
-                    var customCodeContents = CustomCodeGenerator.GetCustomCodeForElement(selectedElement, elementSettings, codeOutputProjectSettings);
-                    System.IO.File.WriteAllText(customCodeFileName, customCodeContents);
+                }
+
+
+                if (showPopups)
+                {
+                    GumCommands.Self.GuiCommands.ShowMessage(message);
+                }
+                else
+                {
+                    GumCommands.Self.GuiCommands.PrintOutput(message);
                 }
             }
 
-
-            if (showPopups)
-            {
-                GumCommands.Self.GuiCommands.ShowMessage(message);
-            }
-            else
-            {
-                GumCommands.Self.GuiCommands.PrintOutput(message);
-            }
 
         }
 
