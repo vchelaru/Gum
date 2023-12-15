@@ -1111,7 +1111,7 @@ namespace RenderingLibrary.Graphics
                             effectiveTopOfLine,
                             rotation, fontScale, fontScale, maxLettersToShow, OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier);
 
-                        absoluteLeft = rect.Width + rect.X;
+                        absoluteLeft += rect.Width;
 
                     }
                 }
@@ -1127,12 +1127,13 @@ namespace RenderingLibrary.Graphics
             List<InlineVariable> currentlyActiveInlines = new List<InlineVariable>();
             List<InlineVariable> inlinesForThisCharacter = new List<InlineVariable>();
 
-            for (int letter = 0; letter < lineOfText.Length; letter++)
+            int relativeLetterIndex = 0;
+            for (; relativeLetterIndex < lineOfText.Length; relativeLetterIndex++)
             {
                 inlinesForThisCharacter.Clear();
-                var absoluteIndex = startOfLineIndex + letter;
+                var absoluteIndex = startOfLineIndex + relativeLetterIndex;
 
-                var startNewRun = letter == 0;
+                var startNewRun = relativeLetterIndex == 0;
                 var endLastRun = false;
                 foreach (var variable in InlineVariables)
                 {
@@ -1142,6 +1143,7 @@ namespace RenderingLibrary.Graphics
                         if (currentlyActiveInlines.Contains(variable) == false)
                         {
                             startNewRun = true;
+                            endLastRun = true;
                         }
                         inlinesForThisCharacter.Add(variable);
                     }
@@ -1152,41 +1154,25 @@ namespace RenderingLibrary.Graphics
                     if (absoluteIndex >= variable.StartIndex + variable.CharacterCount)
                     {
                         startNewRun = true;
+                        endLastRun = true;
                     }
                 }
 
-                if (letter == lineOfText.Length - 1 && substrings.Count > 0 && substrings.Last().StartIndex != absoluteIndex)
+                if(endLastRun && substrings.Count > 0)
                 {
-                    endLastRun = true;
-                }
-
-                if (startNewRun || endLastRun)
-                {
-                    var lastSubstring = substrings.LastOrDefault();
-                    if (lastSubstring != null)
-                    {
-                        lastSubstring.Substring = lineOfText.Substring(currentSubstringStart, letter - currentSubstringStart);
-                    }
-
-                    if (endLastRun && lastSubstring == null && substrings.Count == 0 && absoluteIndex != startOfLineIndex)
-                    {
-                        var styledSubstring = new StyledSubstring();
-                        // no styles
-                        styledSubstring.Substring = lineOfText.Substring(0, letter);
-                        styledSubstring.StartIndex = startOfLineIndex;
-                        substrings.Add(styledSubstring);
-                    }
+                    var lastSubstring = substrings.Last();
+                    lastSubstring.Substring = lineOfText.Substring(currentSubstringStart, relativeLetterIndex - currentSubstringStart);
                 }
 
                 if (startNewRun)
                 {
-                    currentSubstringStart = letter;
+                    currentSubstringStart = relativeLetterIndex;
 
                     var styledSubstring = new StyledSubstring();
                     styledSubstring.Variables.AddRange(inlinesForThisCharacter);
-                    styledSubstring.StartIndex = letter;
+                    styledSubstring.StartIndex = relativeLetterIndex;
 
-                    if (letter == lineOfText.Length - 1)
+                    if (relativeLetterIndex == lineOfText.Length - 1)
                     {
                         styledSubstring.Substring = lineOfText.Substring(currentSubstringStart);
                     }
@@ -1197,6 +1183,21 @@ namespace RenderingLibrary.Graphics
                     currentlyActiveInlines.AddRange(inlinesForThisCharacter);
                 }
             }
+
+            var endSubstring = substrings.LastOrDefault();
+            if (endSubstring != null)
+            {
+                endSubstring.Substring = lineOfText.Substring(currentSubstringStart, relativeLetterIndex - currentSubstringStart);
+            }
+
+            //if (lastSubstring == null && substrings.Count == 0 )
+            //{
+            //    var styledSubstring = new StyledSubstring();
+            //    // no styles
+            //    styledSubstring.Substring = lineOfText.Substring(0, letter);
+            //    styledSubstring.StartIndex = startOfLineIndex;
+            //    substrings.Add(styledSubstring);
+            //}
 
             return substrings;
         }

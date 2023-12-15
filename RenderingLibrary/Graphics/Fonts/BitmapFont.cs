@@ -647,8 +647,8 @@ namespace RenderingLibrary.Graphics
                     var unrotatedY = destRect.Y + yOffset;
                     toReturn.X = System.Math.Min(toReturn.X, unrotatedX);
                     toReturn.Y = System.Math.Min(toReturn.Y, unrotatedY);
-                    toReturn.Width = System.Math.Max(toReturn.Width, point.X + xOffset);
-                    toReturn.Height = System.Math.Max(toReturn.Height, point.Y + yOffset);
+                    toReturn.Width = System.Math.Max(toReturn.Width, point.X);
+                    toReturn.Height = System.Math.Max(toReturn.Height, point.Y);
 
 
                     var finalPosition = destRect.X * xAxis + destRect.Y * yAxis;

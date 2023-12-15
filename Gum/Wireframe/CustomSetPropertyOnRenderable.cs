@@ -292,7 +292,9 @@ namespace Gum.Wireframe
 
                 var valueAsString = value as string;
 
-                if(valueAsString?.Contains("[") == true)
+
+                asText.InlineVariables.Clear();
+                if (valueAsString?.Contains("[") == true)
                 {
                     SetBbCodeText(asText, graphicalUiElement, valueAsString);
                 }
@@ -520,13 +522,15 @@ namespace Gum.Wireframe
 
                 }
 
-                asText.InlineVariables.Add(new InlineVariable
+                var inlineVariable = new InlineVariable
                 {
                     CharacterCount = item.Close.StartStrippedIndex - item.Open.StartStrippedIndex,
                     StartIndex = item.Open.StartStrippedIndex,
                     VariableName = convertedName,
                     Value = castedValue
-                });
+                };
+
+                asText.InlineVariables.Add(inlineVariable);
             }
 
 
