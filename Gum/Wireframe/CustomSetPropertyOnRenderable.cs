@@ -7,11 +7,14 @@ using RenderingLibrary.Math.Geometry;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Numerics;
+using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Data;
 using ToolsUtilitiesStandard.Helpers;
 
 namespace Gum.Wireframe
@@ -287,7 +290,16 @@ namespace Gum.Wireframe
                     asText.Width = 0;
                 }
 
-                asText.RawText = value as string;
+                var valueAsString = value as string;
+
+                if(valueAsString?.Contains("[") == true)
+                {
+                    SetBbCodeText(asText, graphicalUiElement, valueAsString);
+                }
+                else
+                {
+                    asText.RawText = valueAsString;
+                }
                 // we want to update if the text's size is based on its "children" (the letters it contains)
                 if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren ||
                     // If height is relative to children, it could be in a stack
@@ -446,6 +458,78 @@ namespace Gum.Wireframe
             }
 
             return handled;
+        }
+
+        private static void SetBbCodeText(global::RenderingLibrary.Graphics.Text asText, GraphicalUiElement graphicalUiElement, string bbcode)
+        {
+            var tags = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase) { "red", "blue", "green", "color", "font" };
+
+            var results = BbCodeParser.Parse(tags, bbcode);
+            var strippedText = BbCodeParser.RemoveTags(bbcode, results);
+            asText.RawText = strippedText;
+
+            foreach (var item in results)
+            {
+                object castedValue = item.Open.Argument;
+                string convertedName = item.Name;
+                switch (item.Name)
+                {
+                    case "Red":
+                    case "Green":
+                    case "Blue":
+                        castedValue = byte.Parse(item.Open.Argument);
+                        break;
+                    case "Color":
+                        {
+                            int result;
+
+                            if (item.Open.Argument?.StartsWith("0x") == true && int.TryParse(item.Open.Argument.Substring(2),
+                                                                                NumberStyles.AllowHexSpecifier,
+                                                                                null,
+                                                                                out result))
+                            {
+                                castedValue = result;
+                                castedValue = System.Drawing.Color.FromArgb(result);
+                            }
+                            else
+                            {
+                                castedValue = System.Drawing.Color.FromName(item.Open.Argument);
+                            }
+                        }
+                        break;
+                    case "Font":
+                        {
+                            convertedName = "BitmapFont";
+                            string fontName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
+                            graphicalUiElement.FontSize,
+                            item.Open.Argument,
+                            graphicalUiElement.OutlineThickness,
+                            graphicalUiElement.UseFontSmoothing,
+                                graphicalUiElement.IsItalic,
+                                graphicalUiElement.IsBold);
+
+                            string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, false, true);
+#if ANDROID || IOS
+                            fullFileName = fullFileName.ToLowerInvariant();
+#endif
+                            var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+                            var contentLoader = loaderManager.ContentLoader;
+                            castedValue = contentLoader.TryGetCachedDisposable<BitmapFont>(fullFileName);
+                        }
+                        break;
+
+                }
+
+                asText.InlineVariables.Add(new InlineVariable
+                {
+                    CharacterCount = item.Close.StartStrippedIndex - item.Open.StartStrippedIndex,
+                    StartIndex = item.Open.StartStrippedIndex,
+                    VariableName = convertedName,
+                    Value = castedValue
+                });
+            }
+
+
         }
 
         private static bool TrySetPropertyOnLineRectangle(IRenderableIpso mContainedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)

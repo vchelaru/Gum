@@ -32,6 +32,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\Variables\StateSaveCategory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\Variables\VariableListSave.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\Variables\VariableSave.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)gumruntime\BbCodeParser.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumRuntime\ElementSaveExtensions.GumRuntime.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumRuntime\GraphicalUiElement.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumRuntime\InstanceSaveExtensionMethods.GumRuntime.cs" />

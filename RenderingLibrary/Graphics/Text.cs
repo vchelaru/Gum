@@ -12,6 +12,7 @@ using Color = System.Drawing.Color;
 using Matrix = System.Numerics.Matrix4x4;
 using System.Linq;
 using System.Data.SqlTypes;
+using ToolsUtilitiesStandard.Helpers;
 
 namespace RenderingLibrary.Graphics
 {
@@ -37,7 +38,7 @@ namespace RenderingLibrary.Graphics
 
     #region InlineVariable
 
-    public class  InlineVariable
+    public class InlineVariable
     {
         public string VariableName;
         public int StartIndex;
@@ -207,10 +208,10 @@ namespace RenderingLibrary.Graphics
         int? maxNumberOfLines;
         public int? MaxNumberOfLines
         {
-            get => maxNumberOfLines; 
+            get => maxNumberOfLines;
             set
             {
-                if(maxNumberOfLines  != value)
+                if (maxNumberOfLines != value)
                 {
                     maxNumberOfLines = value;
                     UpdateWrappedText();
@@ -220,7 +221,7 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        public bool IsTruncatingWithEllipsisOnLastLine { get; set; } 
+        public bool IsTruncatingWithEllipsisOnLastLine { get; set; }
             // temp:
             = true;
 
@@ -274,7 +275,7 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        public bool FlipHorizontal { get; set;}
+        public bool FlipHorizontal { get; set; }
 
         public float Rotation { get; set; }
 
@@ -286,7 +287,7 @@ namespace RenderingLibrary.Graphics
             }
             set
             {
-                if(mWidth != value)
+                if (mWidth != value)
                 {
                     mWidth = value;
                     UpdateWrappedText();
@@ -305,11 +306,11 @@ namespace RenderingLibrary.Graphics
             }
             set
             {
-                if(mHeight != value)
+                if (mHeight != value)
                 {
                     mHeight = value;
 
-                    if(TextOverflowVerticalMode != TextOverflowVerticalMode.SpillOver)
+                    if (TextOverflowVerticalMode != TextOverflowVerticalMode.SpillOver)
                     {
                         UpdateWrappedText();
                     }
@@ -442,7 +443,7 @@ namespace RenderingLibrary.Graphics
             get => textOverflowVerticalMode;
             set
             {
-                if(textOverflowVerticalMode != value)
+                if (textOverflowVerticalMode != value)
                 {
                     textOverflowVerticalMode = value;
                     UpdateWrappedText();
@@ -511,7 +512,7 @@ namespace RenderingLibrary.Graphics
             {
                 var newValue = System.Math.Max(0, value);
 
-                if(newValue != mFontScale)
+                if (newValue != mFontScale)
                 {
                     mFontScale = newValue;
                     UpdateWrappedText();
@@ -632,11 +633,11 @@ namespace RenderingLibrary.Graphics
 
             var effectiveMaxNumberOfLines = MaxNumberOfLines;
 
-            if(TextOverflowVerticalMode == TextOverflowVerticalMode.TruncateLine)
+            if (TextOverflowVerticalMode == TextOverflowVerticalMode.TruncateLine)
             {
 
                 var maxLinesFromHeight = (int)(Height / BitmapFont.LineHeightInPixels);
-                if(maxLinesFromHeight < effectiveMaxNumberOfLines || effectiveMaxNumberOfLines == null)
+                if (maxLinesFromHeight < effectiveMaxNumberOfLines || effectiveMaxNumberOfLines == null)
                 {
                     effectiveMaxNumberOfLines = maxLinesFromHeight;
                 }
@@ -676,7 +677,7 @@ namespace RenderingLibrary.Graphics
 
             float ellipsisWidth = 0;
             const string ellipsis = "...";
-            if(effectiveMaxNumberOfLines > 0 && IsTruncatingWithEllipsisOnLastLine)
+            if (effectiveMaxNumberOfLines > 0 && IsTruncatingWithEllipsisOnLastLine)
             {
                 ellipsisWidth = MeasureString(ellipsis);
             }
@@ -692,7 +693,7 @@ namespace RenderingLibrary.Graphics
 
                 bool containsNewline = false;
 
-                if ( ToolsUtilities.StringFunctions.ContainsNoAlloc( word, '\n'))
+                if (ToolsUtilities.StringFunctions.ContainsNoAlloc(word, '\n'))
                 {
                     word = word.Substring(0, word.IndexOf('\n'));
                     containsNewline = true;
@@ -700,26 +701,26 @@ namespace RenderingLibrary.Graphics
 
                 // If it's not the last word, we show ellipsis, and the last word plus ellipsis won't fit, then we need
                 // to include part of the word:
-                
+
                 float linePlusWordWidth = MeasureString(line + word);
 
                 var shouldAddEllipsis =
-                    IsTruncatingWithEllipsisOnLastLine && 
-                    isLastLine && 
+                    IsTruncatingWithEllipsisOnLastLine &&
+                    isLastLine &&
                     // If it's the last word, then we don't care if the ellipsis fit, we only want to see if the last word fits...
                     ((isLastWord && linePlusWordWidth > wrappingWidth) ||
-                    // it's not the last word so we need to see if ellipsis fit
+                     // it's not the last word so we need to see if ellipsis fit
                      (!isLastWord && linePlusWordWidth + ellipsisWidth >= wrappingWidth));
-                if (shouldAddEllipsis )
+                if (shouldAddEllipsis)
                 {
                     var addedEllipsis = false;
-                    for(int i = 1; i < word.Length; i++)
+                    for (int i = 1; i < word.Length; i++)
                     {
                         var substringEnd = word.SubstringEnd(i);
 
                         float linePlusWordSub = MeasureString(line + substringEnd);
 
-                        if(linePlusWordSub + ellipsisWidth <= wrappingWidth)
+                        if (linePlusWordSub + ellipsisWidth <= wrappingWidth)
                         {
                             mWrappedText.Add(line + substringEnd + ellipsis);
                             addedEllipsis = true;
@@ -727,9 +728,9 @@ namespace RenderingLibrary.Graphics
                         }
                     }
 
-                    if(!addedEllipsis && line.EndsWith(" "))
+                    if (!addedEllipsis && line.EndsWith(" "))
                     {
-                        mWrappedText.Add(line.SubstringEnd(1) +  ellipsis);
+                        mWrappedText.Add(line.SubstringEnd(1) + ellipsis);
 
                     }
                     break;
@@ -755,7 +756,7 @@ namespace RenderingLibrary.Graphics
                 // update - but this prevents the word from sarting 
                 //if ((!string.IsNullOrEmpty(word) || !string.IsNullOrEmpty(line)))
                 {
-                    if(wordArray.Count > 1 || word == "")
+                    if (wordArray.Count > 1 || word == "")
                     {
                         line = line + word + ' ';
                     }
@@ -770,7 +771,7 @@ namespace RenderingLibrary.Graphics
                 if (containsNewline)
                 {
                     mWrappedText.Add(line);
-                    if(mWrappedText.Count == effectiveMaxNumberOfLines)
+                    if (mWrappedText.Count == effectiveMaxNumberOfLines)
                     {
                         didTruncate = true;
 
@@ -782,7 +783,7 @@ namespace RenderingLibrary.Graphics
                 }
             }
 
-            if(effectiveMaxNumberOfLines == null || mWrappedText.Count < effectiveMaxNumberOfLines)
+            if (effectiveMaxNumberOfLines == null || mWrappedText.Count < effectiveMaxNumberOfLines)
             {
                 mWrappedText.Add(line);
             }
@@ -818,7 +819,7 @@ namespace RenderingLibrary.Graphics
             //}
             //else
             {
-               mNeedsBitmapFontRefresh = true;
+                mNeedsBitmapFontRefresh = true;
             }
         }
 
@@ -848,7 +849,7 @@ namespace RenderingLibrary.Graphics
         {
             if (mNeedsBitmapFontRefresh)
             {
-               UpdateTextureToRender();
+                UpdateTextureToRender();
             }
         }
 
@@ -945,7 +946,7 @@ namespace RenderingLibrary.Graphics
                     LineRectangle.RenderLinePrimitive(mBounds, spriteRenderer, this, systemManagers, false);
                 }
 
-                if(TextRenderingMode == TextRenderingMode.CharacterByCharacter)
+                if (TextRenderingMode == TextRenderingMode.CharacterByCharacter)
                 {
                     RenderCharacterByCharacter(spriteRenderer);
                 }
@@ -982,7 +983,7 @@ namespace RenderingLibrary.Graphics
                 UpdateIpsoForRendering();
 
 
-                if(InlineVariables.Count > 0)
+                if (InlineVariables.Count > 0)
                 {
                     DrawWithInlineVariables(fontToUse, requiredWidth, spriteRenderer);
                 }
@@ -990,12 +991,12 @@ namespace RenderingLibrary.Graphics
                 {
                     var absoluteLeft = mTempForRendering.GetAbsoluteLeft();
                     var absoluteTop = mTempForRendering.GetAbsoluteTop();
-                    fontToUse.DrawTextLines(WrappedText, HorizontalAlignment, 
+                    fontToUse.DrawTextLines(WrappedText, HorizontalAlignment,
                         this,
                         requiredWidth, widths, spriteRenderer, Color,
                         absoluteLeft,
-                        absoluteTop, 
-                        this.GetAbsoluteRotation(), mFontScale, mFontScale, maxLettersToShow, OverrideTextRenderingPositionMode, lineHeightMultiplier:LineHeightMultiplier);
+                        absoluteTop,
+                        this.GetAbsoluteRotation(), mFontScale, mFontScale, maxLettersToShow, OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier);
                 }
 
             }
@@ -1013,7 +1014,7 @@ namespace RenderingLibrary.Graphics
             {
                 var toReturn = Substring ?? "<null>";
 
-                foreach(var variable in Variables)
+                foreach (var variable in Variables)
                 {
                     toReturn += $" {variable.VariableName} = {variable.Value}";
                 }
@@ -1039,7 +1040,7 @@ namespace RenderingLibrary.Graphics
 
                 var substrings = GetStyledSubstrings(startOfLineIndex, lineOfText, color);
 
-                if(substrings.Count == 0)
+                if (substrings.Count == 0)
                 {
                     lineByLineList[0] = lineOfText;
                     fontToUse.DrawTextLines(lineByLineList, HorizontalAlignment,
@@ -1051,52 +1052,68 @@ namespace RenderingLibrary.Graphics
 
 
                 }
-
-                var lineHeight = fontToUse.EffectiveLineHeight(mFontScale, mFontScale);
-                var defaultBaseline = fontToUse.BaselineY;
-
-
-
-                foreach (var substring in substrings)
+                else
                 {
-                    lineByLineList[0] = substring.Substring;
-                    color = Color;
-                    var fontScale = mFontScale;
-                    var effectiveFont = fontToUse;
-                    for (int variableIndex = 0; variableIndex < substring.Variables.Count; variableIndex++)
+
+                    var lineHeight = fontToUse.EffectiveLineHeight(mFontScale, mFontScale);
+                    var defaultBaseline = fontToUse.BaselineY;
+
+
+
+                    foreach (var substring in substrings)
                     {
-                        var variable = substring.Variables[variableIndex];
-                        if(variable.VariableName == nameof(Color))
+                        lineByLineList[0] = substring.Substring;
+                        color = Color;
+                        var fontScale = mFontScale;
+                        var effectiveFont = fontToUse;
+                        for (int variableIndex = 0; variableIndex < substring.Variables.Count; variableIndex++)
                         {
-                            color = (System.Drawing.Color)variable.Value;
+                            var variable = substring.Variables[variableIndex];
+                            if (variable.VariableName == nameof(Color))
+                            {
+                                color = (System.Drawing.Color)variable.Value;
+                            }
+                            else if (variable.VariableName == nameof(FontScale))
+                            {
+                                fontScale = (float)variable.Value;
+                            }
+                            else if (variable.VariableName == nameof(BitmapFont))
+                            {
+                                effectiveFont = (BitmapFont)variable.Value;
+                            }
+                            else if (variable.VariableName == nameof(Red))
+                            {
+                                color = color.WithRed((byte)variable.Value);
+                            }
+                            else if (variable.VariableName == nameof(Green))
+                            {
+                                color = color.WithGreen((byte)variable.Value);
+                            }
+                            else if (variable.VariableName == nameof(Blue))
+                            {
+                                color = color.WithBlue((byte)variable.Value);
+                            }
+
                         }
-                        else if(variable.VariableName == nameof(FontScale))
+
+                        var effectiveTopOfLine = topOfLine;
+
+                        if (fontToUse != effectiveFont)
                         {
-                            fontScale = (float)variable.Value;
+                            var baselineDifference = fontToUse.BaselineY - effectiveFont.BaselineY;
+                            effectiveTopOfLine += baselineDifference * fontScale;
                         }
-                        else if(variable.VariableName == nameof(BitmapFont))
-                        {
-                            effectiveFont = (BitmapFont)variable.Value;
-                        }
+
+                        var rect = effectiveFont.DrawTextLines(lineByLineList, HorizontalAlignment,
+                            this,
+                            requiredWidth, widths, spriteRenderer, color,
+                            absoluteLeft,
+                            effectiveTopOfLine,
+                            rotation, fontScale, fontScale, maxLettersToShow, OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier);
+
+                        absoluteLeft = rect.Width + rect.X;
+
                     }
-
-                    var effectiveTopOfLine = topOfLine;
-
-                    if(fontToUse != effectiveFont)
-                    {
-                        var baselineDifference = fontToUse.BaselineY - effectiveFont.BaselineY;
-                        effectiveTopOfLine += baselineDifference * fontScale;
-                    }
-
-                    var rect = effectiveFont.DrawTextLines(lineByLineList, HorizontalAlignment,
-                        this,
-                        requiredWidth, widths, spriteRenderer, color,
-                        absoluteLeft,
-                        effectiveTopOfLine,
-                        rotation, fontScale, fontScale, maxLettersToShow, OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier);
-
-                    absoluteLeft = rect.Width + rect.X;
-
                 }
                 startOfLineIndex += lineOfText.Length;
             }
@@ -1115,14 +1132,14 @@ namespace RenderingLibrary.Graphics
                 inlinesForThisCharacter.Clear();
                 var absoluteIndex = startOfLineIndex + letter;
 
-                var startNewRun = false;
+                var startNewRun = letter == 0;
                 var endLastRun = false;
                 foreach (var variable in InlineVariables)
                 {
 
                     if (absoluteIndex >= variable.StartIndex && absoluteIndex < variable.StartIndex + variable.CharacterCount)
                     {
-                        if(currentlyActiveInlines.Contains(variable) == false)
+                        if (currentlyActiveInlines.Contains(variable) == false)
                         {
                             startNewRun = true;
                         }
@@ -1130,15 +1147,15 @@ namespace RenderingLibrary.Graphics
                     }
                 }
 
-                foreach(var variable in currentlyActiveInlines)
+                foreach (var variable in currentlyActiveInlines)
                 {
-                    if(absoluteIndex > variable.StartIndex + variable.CharacterCount)
+                    if (absoluteIndex >= variable.StartIndex + variable.CharacterCount)
                     {
                         startNewRun = true;
                     }
                 }
 
-                if(letter == lineOfText.Length-1 && substrings.Count > 0 && substrings.Last().StartIndex != absoluteIndex)
+                if (letter == lineOfText.Length - 1 && substrings.Count > 0 && substrings.Last().StartIndex != absoluteIndex)
                 {
                     endLastRun = true;
                 }
@@ -1150,8 +1167,8 @@ namespace RenderingLibrary.Graphics
                     {
                         lastSubstring.Substring = lineOfText.Substring(currentSubstringStart, letter - currentSubstringStart);
                     }
-                    
-                    if(lastSubstring == null && substrings.Count == 0 && absoluteIndex != startOfLineIndex)
+
+                    if (endLastRun && lastSubstring == null && substrings.Count == 0 && absoluteIndex != startOfLineIndex)
                     {
                         var styledSubstring = new StyledSubstring();
                         // no styles
@@ -1161,15 +1178,15 @@ namespace RenderingLibrary.Graphics
                     }
                 }
 
-                if(startNewRun)
-                { 
+                if (startNewRun)
+                {
                     currentSubstringStart = letter;
 
                     var styledSubstring = new StyledSubstring();
                     styledSubstring.Variables.AddRange(inlinesForThisCharacter);
                     styledSubstring.StartIndex = letter;
 
-                    if(letter == lineOfText.Length - 1)
+                    if (letter == lineOfText.Length - 1)
                     {
                         styledSubstring.Substring = lineOfText.Substring(currentSubstringStart);
                     }
@@ -1196,7 +1213,7 @@ namespace RenderingLibrary.Graphics
             else
             {
                 Sprite.Render(managers, spriteRenderer, mTempForRendering, mTextureToRender,
-                    Color.FromArgb(mAlpha, mRed, mGreen, mBlue), null, false, Rotation, 
+                    Color.FromArgb(mAlpha, mRed, mGreen, mBlue), null, false, Rotation,
                     treat0AsFullDimensions: false,
                     objectCausingRendering: this);
 
@@ -1251,7 +1268,7 @@ namespace RenderingLibrary.Graphics
             }
 
             var absoluteRotation = this.GetAbsoluteRotation();
-            if(absoluteRotation != 0)
+            if (absoluteRotation != 0)
             {
                 var matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(absoluteRotation));
 

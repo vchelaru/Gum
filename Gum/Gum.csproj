@@ -125,6 +125,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\GumRuntime\BbCodeParser.cs">
+      <Link>Wireframe\BbCodeParser.cs</Link>
+    </Compile>
     <Compile Include="..\GumRuntime\ElementSaveExtensions.GumRuntime.cs">
       <Link>Wireframe\ElementSaveExtensions.GumRuntime.cs</Link>
     </Compile>

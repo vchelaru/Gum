@@ -1271,6 +1271,18 @@ namespace Gum.Wireframe
             }
         }
 
+        public static Action<IText, GraphicalUiElement> UpdateFontFromProperties;
+        public static Action<GraphicalUiElement> ThrowExceptionsForMissingFiles;
+        public static Action<IRenderableIpso, ISystemManagers> RemoveRenderableFromManagers;
+        public static Action<IRenderableIpso, ISystemManagers, Layer> AddRenderableToManagers;
+        public static Action<string, GraphicalUiElement> ApplyMarkup;
+
+        public static Action<IRenderableIpso, GraphicalUiElement, string, object> SetPropertyOnRenderable =
+            // This is the default fallback to make Gum work. Specific rendering libraries can change this to provide 
+            // better performance.
+            SetPropertyThroughReflection;
+
+
         #endregion
 
         #region Constructor
@@ -4347,10 +4359,6 @@ namespace Gum.Wireframe
         }
 
 
-        public static Action<IRenderableIpso, GraphicalUiElement, string, object> SetPropertyOnRenderable =
-            // This is the default fallback to make Gum work. Specific rendering libraries can change this to provide 
-            // better performance.
-            SetPropertyThroughReflection;
         static void SetPropertyThroughReflection(IRenderableIpso mContainedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
         {
             System.Reflection.PropertyInfo propertyInfo = mContainedObjectAsIpso.GetType().GetProperty(propertyName);
@@ -4365,11 +4373,6 @@ namespace Gum.Wireframe
                 propertyInfo.SetValue(mContainedObjectAsIpso, value, null);
             }
         }
-
-        public static Action<IText, GraphicalUiElement> UpdateFontFromProperties;
-        public static Action<GraphicalUiElement> ThrowExceptionsForMissingFiles;
-        public static Action<IRenderableIpso, ISystemManagers> RemoveRenderableFromManagers;
-        public static Action<IRenderableIpso, ISystemManagers, Layer> AddRenderableToManagers;
 
 
         /// <summary>
