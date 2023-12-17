@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using RenderingLibrary.Graphics;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Math.Geometry;
+using Gum.Wireframe;
+using Microsoft.Xna.Framework;
 
 namespace RenderingLibrary
 {
@@ -103,7 +105,7 @@ namespace RenderingLibrary
             Renderer.Draw(this, layers);
         }
 
-        public void Initialize(GraphicsDevice graphicsDevice)
+        public void Initialize(GraphicsDevice graphicsDevice, bool assignStandardGueEvents = false)
         {
 #if WINDOWS_8 || UWP
             mPrimaryThreadId = Environment.CurrentManagedThreadId;
@@ -120,9 +122,23 @@ namespace RenderingLibrary
 
             TextManager = new TextManager();
 
+            GraphicalUiElement.CanvasWidth = graphicsDevice.Viewport.Width;
+            GraphicalUiElement.CanvasHeight = graphicsDevice.Viewport.Height;
+
             SpriteManager.Managers = this;
             ShapeManager.Managers = this;
             TextManager.Managers = this;
+
+            if(assignStandardGueEvents)
+            {
+                GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
+                GraphicalUiElement.UpdateFontFromProperties = CustomSetPropertyOnRenderable.UpdateToFontValues;
+                GraphicalUiElement.ThrowExceptionsForMissingFiles = CustomSetPropertyOnRenderable.ThrowExceptionsForMissingFiles;
+
+                GraphicalUiElement.AddRenderableToManagers = CustomSetPropertyOnRenderable.AddRenderableToManagers;
+                GraphicalUiElement.RemoveRenderableFromManagers = CustomSetPropertyOnRenderable.RemoveRenderableFromManagers;
+                Renderer.ApplyCameraZoomOnWorldTranslation = true;
+            }
         }
 
 

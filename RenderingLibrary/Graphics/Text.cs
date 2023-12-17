@@ -52,6 +52,21 @@ namespace RenderingLibrary.Graphics
     {
         #region Fields
 
+        static SpriteFont mDefaultSpriteFont;
+        static BitmapFont mDefaultBitmapFont;
+
+        public static SpriteFont DefaultFont
+        {
+            get { return mDefaultSpriteFont; }
+            set { mDefaultSpriteFont = value; }
+        }
+
+        public static BitmapFont DefaultBitmapFont
+        {
+            get { return mDefaultBitmapFont; }
+            set {  mDefaultBitmapFont = value; }
+        }
+
         /// <summary>
         /// Stores the width of the text object's texture before it has had a chance to render, not including
         /// the FontScale.
@@ -612,9 +627,9 @@ namespace RenderingLibrary.Graphics
             VerticalAlignment = Graphics.VerticalAlignment.Top;
 
 #if !TEST
-            if (LoaderManager.Self.DefaultBitmapFont != null)
+            if (DefaultBitmapFont != null)
             {
-                this.BitmapFont = LoaderManager.Self.DefaultBitmapFont;
+                this.BitmapFont = DefaultBitmapFont;
             }
 #endif
             UpdateLinePrimitive();
@@ -829,16 +844,16 @@ namespace RenderingLibrary.Graphics
             {
                 return BitmapFont.MeasureString(whatToMeasure);
             }
-            else if (LoaderManager.Self.DefaultBitmapFont != null)
+            else if (DefaultBitmapFont != null)
             {
-                return LoaderManager.Self.DefaultBitmapFont.MeasureString(whatToMeasure);
+                return DefaultBitmapFont.MeasureString(whatToMeasure);
             }
             else
             {
 #if TEST
                 return 0;
 #else
-                float wordWidth = LoaderManager.Self.DefaultFont.MeasureString(whatToMeasure).X;
+                float wordWidth = DefaultFont.MeasureString(whatToMeasure).X;
                 return wordWidth;
 #endif
             }
@@ -865,7 +880,7 @@ namespace RenderingLibrary.Graphics
                 BitmapFont fontToUse = mBitmapFont;
                 if (mBitmapFont == null)
                 {
-                    fontToUse = LoaderManager.Self.DefaultBitmapFont;
+                    fontToUse = DefaultBitmapFont;
                 }
 
 
@@ -971,7 +986,7 @@ namespace RenderingLibrary.Graphics
             BitmapFont fontToUse = mBitmapFont;
             if (mBitmapFont == null)
             {
-                fontToUse = LoaderManager.Self.DefaultBitmapFont;
+                fontToUse = DefaultBitmapFont;
             }
 
 
@@ -1297,7 +1312,7 @@ namespace RenderingLibrary.Graphics
             float leftSide = offset.X + this.GetAbsoluteX();
             float topSide = offset.Y + this.GetAbsoluteY();
 
-            SpriteFont font = LoaderManager.Self.DefaultFont;
+            SpriteFont font = DefaultFont;
             // Maybe this hasn't been loaded yet?
             if (font != null)
             {
@@ -1347,7 +1362,7 @@ namespace RenderingLibrary.Graphics
                     offset.X = (int)offset.X; // so we don't have half-pixels that render weird
 
                     spriteRenderer.DrawString(font, line, offset, Color, this);
-                    offsetY += LoaderManager.Self.DefaultFont.LineSpacing;
+                    offsetY += DefaultFont.LineSpacing;
                 }
             }
         }

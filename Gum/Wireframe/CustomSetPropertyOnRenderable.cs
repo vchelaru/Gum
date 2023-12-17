@@ -1,4 +1,5 @@
-﻿using Gum.DataTypes;
+﻿using Gum.Content.AnimationChain;
+using Gum.DataTypes;
 using Gum.Graphics.Animation;
 using Gum.RenderingLibrary;
 using RenderingLibrary;
@@ -193,7 +194,7 @@ namespace Gum.Wireframe
                                 var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
 
                                 Microsoft.Xna.Framework.Graphics.Texture2D texture =
-                                    global::RenderingLibrary.Content.LoaderManager.Self.InvalidTexture;
+                                    Sprite.InvalidTexture;
 
                                 try
                                 {
@@ -773,7 +774,7 @@ namespace Gum.Wireframe
 
                 if (animationChainList == null)
                 {
-                    var animationChainListSave = Content.AnimationChain.AnimationChainListSave.FromFile(value);
+                    var animationChainListSave = AnimationChainListSave.FromFile(value);
                     animationChainList = animationChainListSave.ToAnimationChainList(null);
                     if (loaderManager.CacheTextures)
                     {
@@ -909,7 +910,7 @@ namespace Gum.Wireframe
                     }
                 }
 
-                ((Text)text).BitmapFont = font ?? global::RenderingLibrary.Content.LoaderManager.Self.DefaultBitmapFont;
+                ((Text)text).BitmapFont = font ?? Text.DefaultBitmapFont;
             }
         }
 

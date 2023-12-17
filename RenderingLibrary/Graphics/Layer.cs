@@ -87,7 +87,7 @@ namespace RenderingLibrary.Graphics
         /// This is a stable sort on Z.  It's incredibly fast on already-sorted lists so we'll do this over something like the built-in 
         /// binary sorts that .NET offers.
         /// </summary>
-        internal void SortRenderables()
+        public void SortRenderables()
         {
             /////////////Early Out//////////////
             if (mRenderables.Count < 2)

@@ -19,6 +19,14 @@ namespace RenderingLibrary.Graphics
     {
         #region Fields
 
+
+        static Texture2D mInvalidTexture;
+        public static Texture2D InvalidTexture
+        {
+            get { return mInvalidTexture; }
+            set {  mInvalidTexture = value; }
+        }
+
         int mCurrentChainIndex;
         protected int mCurrentFrameIndex;
         public int CurrentFrameIndex
@@ -574,7 +582,7 @@ namespace RenderingLibrary.Graphics
 
             if (textureToUse == null)
             {
-                textureToUse = LoaderManager.Self.InvalidTexture;
+                textureToUse = InvalidTexture;
 
                 if (textureToUse == null)
                 {
