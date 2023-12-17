@@ -152,14 +152,14 @@ namespace RenderingLibrary.Content
             return texture;
         }
 
-        private static Stream GetUrlStream(string url)
+        private static System.IO.Stream GetUrlStream(string url)
         {
             byte[] imageData = null;
 
             using (var wc = new System.Net.WebClient())
                 imageData = wc.DownloadData(url);
 
-            return new MemoryStream(imageData);
+            return new System.IO.MemoryStream(imageData);
         }
 
 
