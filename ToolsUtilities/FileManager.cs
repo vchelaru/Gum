@@ -946,7 +946,7 @@ namespace ToolsUtilities
             }
         }
 
-        public static string GetStringFromEmbeddedResource(Assembly assembly, string resourceName)
+        public static Stream GetStreamFromEmbeddedResource(Assembly assembly, string resourceName)
         {
             if (string.IsNullOrEmpty(resourceName))
             {
@@ -974,6 +974,13 @@ namespace ToolsUtilities
                 throw new NullReferenceException(message);
             }
 
+            return resourceStream;
+        }
+
+        public static string GetStringFromEmbeddedResource(Assembly assembly, string resourceName)
+        {
+            var resourceStream = GetStreamFromEmbeddedResource(assembly, resourceName);
+
             using (resourceStream)
             {
                 using (StreamReader reader = new StreamReader(resourceStream))
@@ -983,6 +990,7 @@ namespace ToolsUtilities
                 }
             }
         }
+
 
         public static byte[] GetByteArrayFromEmbeddedResource(Assembly assembly, string resourceName)
         {
