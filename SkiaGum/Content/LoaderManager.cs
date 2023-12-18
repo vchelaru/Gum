@@ -1,4 +1,7 @@
-﻿namespace RenderingLibrary.Content
+﻿using System;
+using System.Collections.Generic;
+
+namespace RenderingLibrary.Content
 {
     public class LoaderManager
     {
