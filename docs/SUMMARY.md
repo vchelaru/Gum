@@ -85,3 +85,5 @@
 * [SkiaGum](skiagum/README.md)
   * [Setup](skiagum/setup/README.md)
     * [WPF](skiagum/setup/wpf.md)
+* [MonoGame](monogame/README.md)
+  * [Setup](monogame/setup.md)
