@@ -9,11 +9,6 @@
       <Value xsi:type="xsd:string">Default</Value>
       <SetsValue>false</SetsValue>
     </Variable>
-    <Variable>
-      <Type>State</Type>
-      <Name>State</Name>
-      <SetsValue>true</SetsValue>
-    </Variable>
   </State>
   <Behaviors />
 </StandardElementSave>

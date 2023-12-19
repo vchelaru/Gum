@@ -2,7 +2,7 @@
 <GumProjectSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <CustomProperties />
   <FontRanges>32-126,160-255</FontRanges>
-  <Version>0</Version>
+  <Version>1</Version>
   <DefaultCanvasWidth>800</DefaultCanvasWidth>
   <DefaultCanvasHeight>600</DefaultCanvasHeight>
   <ShowOutlines>true</ShowOutlines>
@@ -21,17 +21,7 @@
     <LinkType>ReferenceOriginal</LinkType>
   </ScreenReference>
   <StandardElementReference>
-    <Name>Text</Name>
-    <ElementType>Standard</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </StandardElementReference>
-  <StandardElementReference>
-    <Name>Sprite</Name>
-    <ElementType>Standard</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </StandardElementReference>
-  <StandardElementReference>
-    <Name>Container</Name>
+    <Name>Circle</Name>
     <ElementType>Standard</ElementType>
     <LinkType>ReferenceOriginal</LinkType>
   </StandardElementReference>
@@ -41,17 +31,12 @@
     <LinkType>ReferenceOriginal</LinkType>
   </StandardElementReference>
   <StandardElementReference>
-    <Name>Circle</Name>
+    <Name>Component</Name>
     <ElementType>Standard</ElementType>
     <LinkType>ReferenceOriginal</LinkType>
   </StandardElementReference>
   <StandardElementReference>
-    <Name>Rectangle</Name>
-    <ElementType>Standard</ElementType>
-    <LinkType>ReferenceOriginal</LinkType>
-  </StandardElementReference>
-  <StandardElementReference>
-    <Name>Polygon</Name>
+    <Name>Container</Name>
     <ElementType>Standard</ElementType>
     <LinkType>ReferenceOriginal</LinkType>
   </StandardElementReference>
@@ -61,7 +46,22 @@
     <LinkType>ReferenceOriginal</LinkType>
   </StandardElementReference>
   <StandardElementReference>
-    <Name>Component</Name>
+    <Name>Polygon</Name>
+    <ElementType>Standard</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </StandardElementReference>
+  <StandardElementReference>
+    <Name>Rectangle</Name>
+    <ElementType>Standard</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </StandardElementReference>
+  <StandardElementReference>
+    <Name>Sprite</Name>
+    <ElementType>Standard</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </StandardElementReference>
+  <StandardElementReference>
+    <Name>Text</Name>
     <ElementType>Standard</ElementType>
     <LinkType>ReferenceOriginal</LinkType>
   </StandardElementReference>

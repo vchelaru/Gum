@@ -6,7 +6,12 @@ using RenderingLibrary.Math.Geometry;
 using Microsoft.Xna.Framework;
 using RenderingLibrary.Content;
 
+
 #if USE_GUMCOMMON
+using Gum.Managers;
+using GumRuntime;
+
+using MonoGameGum.Renderables;
 using Gum.Wireframe;
 #endif
 
@@ -151,6 +156,15 @@ namespace RenderingLibrary
                 GraphicalUiElement.AddRenderableToManagers = CustomSetPropertyOnRenderable.AddRenderableToManagers;
                 GraphicalUiElement.RemoveRenderableFromManagers = CustomSetPropertyOnRenderable.RemoveRenderableFromManagers;
                 Renderer.ApplyCameraZoomOnWorldTranslation = true;
+
+                ElementSaveExtensions.CustomCreateGraphicalComponentFunc = RenderableCreator.HandleCreateGraphicalComponent;
+
+                StandardElementsManager.Self.Initialize();
+
+                Text.RenderBoundaryDefault = false;
+
+                ToolsUtilities.FileManager.RelativeDirectory += "Content/";
+
 #endif
             }
         }

@@ -20,21 +20,21 @@ namespace MonoGameGumFromFile
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
+
+            _graphics.PreferredBackBufferWidth = 800;
+            _graphics.PreferredBackBufferHeight = 600;
         }
 
         protected override void Initialize()
         {
             SystemManagers.Default = new SystemManagers();
             SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
-            ElementSaveExtensions.CustomCreateGraphicalComponentFunc = RenderableCreator.HandleCreateGraphicalComponent;
 
-            StandardElementsManager.Self.Initialize();
-
-            var gumProject = GumProjectSave.Load("Content/GumProject.gumx", out _);
+            var gumProject = GumProjectSave.Load("GumProject.gumx", out _);
             ObjectFinder.Self.GumProjectSave = gumProject;
             gumProject.Initialize();
 
-            var item = gumProject.Screens.First().ToGraphicalUiElement(SystemManagers.Default, true);
+            gumProject.Screens.First().ToGraphicalUiElement(SystemManagers.Default, addToManagers:true);
 
 
             base.Initialize();
