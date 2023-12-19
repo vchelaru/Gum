@@ -85,3 +85,5 @@ GumCore/GumCoreXnaPc/GumCore.FNA/bin/*
 GumCore/GumCoreXnaPc/GumCore.FNA/obj/*
 MonoGameGum/bin/*
 MonoGameGum/obj/*
+Samples/MonoGameGumInCode/MonoGameGumInCode/bin/*
+Samples/MonoGameGumInCode/MonoGameGumInCode/obj/*
