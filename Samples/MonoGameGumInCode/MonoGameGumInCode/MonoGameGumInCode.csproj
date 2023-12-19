@@ -28,6 +28,11 @@
     <ProjectReference Include="..\..\..\MonoGameGum\MonoGameGum.csproj" />
     <ProjectReference Include="..\..\..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Update="Content\BearTexture.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
   <Target Name="RestoreDotnetTools" BeforeTargets="Restore">
     <Message Text="Restoring dotnet tools" Importance="High" />
     <Exec Command="dotnet tool restore" />
