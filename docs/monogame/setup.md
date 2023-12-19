@@ -26,6 +26,14 @@ Note that as of the time of this writing, only MonoGame Desktop GL projects are 
 
 To test that you have successfully added Gum to the project, add the following code to your Initialize method after SystemManagers.Default.Initialize:
 
+```csharp
+var rectangle = new ColoredRectangleRuntime();
+rectangle.Width = 100;
+rectangle.Height = 100;
+rectangle.Color = Color.White;
+rectangle.AddToManagers(SystemManagers.Default, null);
+```
+
 <figure><img src="../.gitbook/assets/image (25).png" alt=""><figcaption></figcaption></figure>
 
 If everything is intiailized correctly, you should see a white rectangle at the top-left of the screen.
