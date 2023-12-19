@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RenderingLibrary;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -179,6 +180,7 @@ namespace MonoGameGum.GueDeriving
             }
         }
 
+        public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 
     }
 }

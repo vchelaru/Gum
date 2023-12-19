@@ -1,4 +1,5 @@
 ﻿using Gum.Wireframe;
+using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
@@ -96,6 +97,7 @@ namespace MonoGameGum.GueDeriving
             }
         }
 
+        public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 
         public ColoredRectangleRuntime(bool fullInstantiation = true)
         {
