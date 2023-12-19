@@ -365,7 +365,21 @@ namespace RenderingLibrary.Content
             {
                 var image = System.Drawing.Image.FromFile(fileNameStandardized);
                 var bitmap = new System.Drawing.Bitmap(image);
-                var texture = new Texture2D(renderer.GraphicsDevice, bitmap.Width, bitmap.Height, false, SurfaceFormat.Bgr565);
+                
+                var texture = new Texture2D(renderer.GraphicsDevice, bitmap.Width, bitmap.Height, false, SurfaceFormat.Color);
+                for (var x = 0; x < bitmap.Width; x++)
+                {
+                    for (var y = 0; y < bitmap.Height; y++)
+                    {
+                        var color = bitmap.GetPixel(x, y);
+                        var r = color.R;
+                        var g = color.G;
+                        var b = color.B;
+                        var a = color.A;
+                        texture.SetData(0, new Microsoft.Xna.Framework.Rectangle(x, y, 1, 1), new[] { new Microsoft.Xna.Framework.Color(r, g, b, a) }, 0, 1);
+                    }
+                }
+                
                 texture.Name = fileNameStandardized;
 
                 toReturn = texture;
