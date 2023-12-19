@@ -346,7 +346,10 @@ namespace RenderingLibrary.Content
 #else
                 throw new NotImplementedException();
 #endif
-            } 
+            }
+
+#if HAS_SYSTEM_DRAWING_IMAGE
+
             else if (extension == "bmp")
             {
                 var image = System.Drawing.Image.FromFile(fileNameStandardized);
@@ -374,6 +377,7 @@ namespace RenderingLibrary.Content
 
                 toReturn = texture;
             }
+#endif
             else
             {
                 using (var stream = FileManager.GetStreamForFile(fileNameStandardized))
@@ -393,6 +397,6 @@ namespace RenderingLibrary.Content
             return toReturn;
         }
 
-        #endregion
+#endregion
     }
 }
