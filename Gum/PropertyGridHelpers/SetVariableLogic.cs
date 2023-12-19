@@ -714,6 +714,7 @@ namespace Gum.PropertyGridHelpers
             bool isValidExtension = extension == "gif" ||
                 extension == "jpg" ||
                 extension == "png" ||
+                extension == "bmp" ||
                 extension == "achx";
 
             if (!isValidExtension)
