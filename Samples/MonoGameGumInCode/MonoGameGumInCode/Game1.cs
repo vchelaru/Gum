@@ -57,6 +57,15 @@ namespace MonoGameGumInCode
             sprite.SourceFileName = "Content/BearTexture.png";
             container.Children.Add(sprite);
 
+            AddText(container, "This is a NineSlice:");
+            var nineSlice = new NineSliceRuntime();
+            nineSlice.X = 10;
+            nineSlice.Y = 10;
+            nineSlice.SourceFileName = "Content/Frame.png";
+            nineSlice.Width = 256;
+            nineSlice.Height = 48;
+            container.Children.Add(nineSlice);
+
         }
 
         private static void AddText(ContainerRuntime container, string text)
