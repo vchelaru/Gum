@@ -97,6 +97,7 @@ namespace RenderingLibrary.Content
                 yield return "tga";
                 yield return "gif";
                 yield return "svg";
+                yield return "bmp";
             }
         }
 
@@ -360,6 +361,14 @@ namespace RenderingLibrary.Content
 #else
                 throw new NotImplementedException();
 #endif
+            } else if (extension == "bmp")
+            {
+                var image = System.Drawing.Image.FromFile(fileNameStandardized);
+                var bitmap = new System.Drawing.Bitmap(image);
+                var texture = new Texture2D(renderer.GraphicsDevice, bitmap.Width, bitmap.Height, false, SurfaceFormat.Bgr565);
+                texture.Name = fileNameStandardized;
+
+                toReturn = texture;
             }
             else
             {
