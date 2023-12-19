@@ -1,0 +1,55 @@
+{
+  "UserEvents": {
+    "Owner": [
+      {
+        "NewName": "MainMenuGum.TextInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2023-12-14T23:35:21.8997915Z"
+      },
+      {
+        "NewName": "MainMenuGum.TextInstance1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2023-12-15T03:06:23.1193969Z"
+      },
+      {
+        "NewName": "GameScreenGum.SpriteInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2023-12-19T02:34:15.6887472Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "GameScreenGum.Sprite SpriteInstance in GameScreenGum",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2023-12-19T02:49:49.3728807Z"
+      },
+      {
+        "NewName": "StartScreen",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 0,
+        "TimestampUtc": "2023-12-19T02:52:42.3264276Z"
+      },
+      {
+        "NewName": "StartScreen.TextInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2023-12-19T02:52:47.3325019Z"
+      },
+      {
+        "NewName": "StartScreen.ColoredRectangleInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2023-12-19T02:53:10.8122667Z"
+      }
+    ]
+  }
+}
