@@ -5,6 +5,7 @@ using System.Reflection;
 using System.IO;
 using System.Xml.Serialization;
 using System.Xml;
+using System.Runtime.InteropServices.ComTypes;
 
 namespace ToolsUtilities
 {
@@ -944,6 +945,53 @@ namespace ToolsUtilities
                 }
             }
         }
+
+        public static Stream GetStreamFromEmbeddedResource(Assembly assembly, string resourceName)
+        {
+            if (string.IsNullOrEmpty(resourceName))
+            {
+                throw new NullReferenceException("ResourceName must not be null - can't get the byte array for resource");
+            }
+
+            if (assembly == null)
+            {
+                throw new NullReferenceException("Assembly is null, so can't find the resource\n" + resourceName);
+            }
+
+            Stream resourceStream = assembly.GetManifestResourceStream(resourceName);
+
+            if (resourceStream == null)
+            {
+                string message = "Could not find a resource stream for\n" + resourceName + "\n but found " +
+                    "the following names:\n\n";
+
+                foreach (string containedResource in assembly.GetManifestResourceNames())
+                {
+                    message += containedResource + "\n";
+                }
+
+
+                throw new NullReferenceException(message);
+            }
+
+            return resourceStream;
+        }
+
+        public static string GetStringFromEmbeddedResource(Assembly assembly, string resourceName)
+        {
+            var resourceStream = GetStreamFromEmbeddedResource(assembly, resourceName);
+
+            using (resourceStream)
+            {
+                using (StreamReader reader = new StreamReader(resourceStream))
+                {
+                    string text = reader.ReadToEnd();
+                    return text;
+                }
+            }
+        }
+
+
         public static byte[] GetByteArrayFromEmbeddedResource(Assembly assembly, string resourceName)
         {
             if (string.IsNullOrEmpty(resourceName))
@@ -972,11 +1020,14 @@ namespace ToolsUtilities
                 throw new NullReferenceException(message);
             }
 
-            byte[] buffer = new byte[resourceStream.Length];
-            resourceStream.Read(buffer, 0, buffer.Length);
-            resourceStream.Close();
-            resourceStream.Dispose();
-            return buffer;
+            using (resourceStream)
+            {
+                byte[] buffer = new byte[resourceStream.Length];
+                resourceStream.Read(buffer, 0, buffer.Length);
+                resourceStream.Close();
+                resourceStream.Dispose();
+                return buffer;
+            }
         }
 
         static string GetProperDirectoryCapitalization(DirectoryInfo dirInfo)

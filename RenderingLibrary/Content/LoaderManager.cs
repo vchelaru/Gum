@@ -17,11 +17,7 @@ namespace RenderingLibrary.Content
         bool mCacheTextures = false;
 
         static LoaderManager mSelf;
-        Texture2D mInvalidTexture;
         
-        SpriteFont mDefaultSpriteFont;
-        BitmapFont mDefaultBitmapFont;
-
         Dictionary<string, IDisposable> mCachedDisposables = new Dictionary<string, IDisposable>();
 
         ContentManager mContentManager;
@@ -58,11 +54,7 @@ namespace RenderingLibrary.Content
             }
         }
 
-        public Texture2D InvalidTexture
-        {
-            get { return mInvalidTexture; }
-        }
-
+        public Texture2D InvalidTexture => Sprite.InvalidTexture;
         public static LoaderManager Self
         {
             get
@@ -75,18 +67,11 @@ namespace RenderingLibrary.Content
             }
         }
 
-        public SpriteFont DefaultFont
-        {
-            get { return mDefaultSpriteFont; }
-        }
+        [Obsolete("Use Text.DefaultFont instead")]
+        public SpriteFont DefaultFont => Text.DefaultFont;
 
-        public BitmapFont DefaultBitmapFont
-        {
-            get
-            {
-                return mDefaultBitmapFont;
-            }
-        }
+        [Obsolete("Use Text.DefaultBitmapFont instead")]
+        public BitmapFont DefaultBitmapFont => Text.DefaultBitmapFont;
 
         public IEnumerable<string> ValidTextureExtensions
         {
@@ -146,11 +131,11 @@ namespace RenderingLibrary.Content
 
                 if (defaultFontLocation.EndsWith(".fnt"))
                 {
-                    mDefaultBitmapFont = new BitmapFont(defaultFontLocation, managers);
+                    Text.DefaultBitmapFont = new BitmapFont(defaultFontLocation, managers);
                 }
                 else
                 {
-                    mDefaultSpriteFont = mContentManager.Load<SpriteFont>(defaultFontLocation);
+                    Text.DefaultFont = mContentManager.Load<SpriteFont>(defaultFontLocation);
                 }
             }
         }
@@ -161,7 +146,7 @@ namespace RenderingLibrary.Content
                 FileManager.FileExists(invalidTextureLocation))
             {
 
-                mInvalidTexture = LoadContent<Texture2D>(invalidTextureLocation);
+                Sprite.InvalidTexture = LoadContent<Texture2D>(invalidTextureLocation);
             }
             else
             {
@@ -173,7 +158,7 @@ namespace RenderingLibrary.Content
                     imageData.SetPixel(15 - i, i, Microsoft.Xna.Framework.Color.Red);
 
                 }
-                mInvalidTexture = imageData.ToTexture2D(false);
+                Sprite.InvalidTexture = imageData.ToTexture2D(false);
             }
         }
 

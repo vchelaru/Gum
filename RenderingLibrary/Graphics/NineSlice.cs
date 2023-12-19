@@ -895,8 +895,15 @@ namespace RenderingLibrary.Graphics
                 {
                     for (var sprite = 0; sprite < NineSliceExtensions.PossibleNineSliceEndings.Count(); sprite++)
                     {
-                        mSprites[sprite].Texture = LoaderManager.Self.LoadOrInvalid(
-                            bareTexture + NineSliceExtensions.PossibleNineSliceEndings[sprite] + "." + extension, managers, out error);
+
+                        var item = LoaderManager.Self.TryLoadContent<Texture2D>(bareTexture + NineSliceExtensions.PossibleNineSliceEndings[sprite] + "." + extension);
+
+                        if(item == null)
+                        {
+                            item = Sprite.InvalidTexture;
+                        }
+
+                        mSprites[sprite].Texture = item;
                     }
                 }
             }

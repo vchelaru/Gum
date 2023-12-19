@@ -3,6 +3,12 @@ using System.Collections.Generic;
 using RenderingLibrary.Graphics;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Math.Geometry;
+using Microsoft.Xna.Framework;
+using RenderingLibrary.Content;
+
+#if USE_GUMCOMMON
+using Gum.Wireframe;
+#endif
 
 namespace RenderingLibrary
 {
@@ -103,7 +109,7 @@ namespace RenderingLibrary
             Renderer.Draw(this, layers);
         }
 
-        public void Initialize(GraphicsDevice graphicsDevice)
+        public void Initialize(GraphicsDevice graphicsDevice, bool fullInstantiation = false)
         {
 #if WINDOWS_8 || UWP
             mPrimaryThreadId = Environment.CurrentManagedThreadId;
@@ -120,9 +126,33 @@ namespace RenderingLibrary
 
             TextManager = new TextManager();
 
+
             SpriteManager.Managers = this;
             ShapeManager.Managers = this;
             TextManager.Managers = this;
+
+            if(fullInstantiation)
+            {
+#if USE_GUMCOMMON
+                LoaderManager.Self.ContentLoader = new ContentLoader();
+
+                var assembly = typeof(SystemManagers).Assembly;
+                var bitmapPattern = ToolsUtilities.FileManager.GetStringFromEmbeddedResource(assembly, "MonoGameGum.Content.Font18Arial.fnt");
+                using var stream = ToolsUtilities.FileManager.GetStreamFromEmbeddedResource(assembly, "MonoGameGum.Content.Font18Arial_0.png");
+                var defaultFontTexture = Texture2D.FromStream(graphicsDevice, stream);
+                Text.DefaultBitmapFont = new BitmapFont(defaultFontTexture, bitmapPattern);
+
+                GraphicalUiElement.CanvasWidth = graphicsDevice.Viewport.Width;
+                GraphicalUiElement.CanvasHeight = graphicsDevice.Viewport.Height;
+                GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
+                GraphicalUiElement.UpdateFontFromProperties = CustomSetPropertyOnRenderable.UpdateToFontValues;
+                GraphicalUiElement.ThrowExceptionsForMissingFiles = CustomSetPropertyOnRenderable.ThrowExceptionsForMissingFiles;
+
+                GraphicalUiElement.AddRenderableToManagers = CustomSetPropertyOnRenderable.AddRenderableToManagers;
+                GraphicalUiElement.RemoveRenderableFromManagers = CustomSetPropertyOnRenderable.RemoveRenderableFromManagers;
+                Renderer.ApplyCameraZoomOnWorldTranslation = true;
+#endif
+            }
         }
 
 
