@@ -346,25 +346,30 @@ namespace RenderingLibrary.Content
 #else
                 throw new NotImplementedException();
 #endif
-            } else if (extension == "bmp")
+            } 
+            else if (extension == "bmp")
             {
                 var image = System.Drawing.Image.FromFile(fileNameStandardized);
                 var bitmap = new System.Drawing.Bitmap(image);
                 
                 var texture = new Texture2D(renderer.GraphicsDevice, bitmap.Width, bitmap.Height, false, SurfaceFormat.Color);
-                for (var x = 0; x < bitmap.Width; x++)
+                var pixels = new Microsoft.Xna.Framework.Color[bitmap.Width * bitmap.Height];
+                var index = 0;
+                for (var y = 0; y < bitmap.Height; y++)
                 {
-                    for (var y = 0; y < bitmap.Height; y++)
+                    for (var x = 0; x < bitmap.Width; x++)
                     {
                         var color = bitmap.GetPixel(x, y);
                         var r = color.R;
                         var g = color.G;
                         var b = color.B;
                         var a = color.A;
-                        texture.SetData(0, new Microsoft.Xna.Framework.Rectangle(x, y, 1, 1), new[] { new Microsoft.Xna.Framework.Color(r, g, b, a) }, 0, 1);
+                        pixels[index] = new Microsoft.Xna.Framework.Color(r, g, b, a);
+                        index++;
                     }
                 }
                 
+                texture.SetData(pixels);
                 texture.Name = fileNameStandardized;
 
                 toReturn = texture;
