@@ -1,7 +1,12 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Gum.DataTypes;
+using Gum.Managers;
+using GumRuntime;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MonoGameGum.Renderables;
 using RenderingLibrary;
+using System.Linq;
 
 namespace MonoGameGumFromFile
 {
@@ -21,6 +26,16 @@ namespace MonoGameGumFromFile
         {
             SystemManagers.Default = new SystemManagers();
             SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
+            ElementSaveExtensions.CustomCreateGraphicalComponentFunc = RenderableCreator.HandleCreateGraphicalComponent;
+
+            StandardElementsManager.Self.Initialize();
+
+            var gumProject = GumProjectSave.Load("Content/GumProject.gumx", out _);
+            ObjectFinder.Self.GumProjectSave = gumProject;
+            gumProject.Initialize();
+
+            var item = gumProject.Screens.First().ToGraphicalUiElement(SystemManagers.Default, true);
+
 
             base.Initialize();
         }
