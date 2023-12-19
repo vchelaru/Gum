@@ -24,19 +24,24 @@ namespace MonoGameGumInCode
             SystemManagers.Default = new SystemManagers();
             SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
 
+            var container = new ContainerRuntime();
+            container.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            container.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            container.Width = 0;
+            container.Height = 0;
+            container.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+
+            container.AddToManagers();
+
 
             var TextInstance = new TextRuntime();
-            TextInstance.AddToManagers(SystemManagers.Default, null);
+            TextInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+            TextInstance.Width = 0;
+            TextInstance.Text = "This is a rectangle:";
+            container.Children.Add(TextInstance);
+            //TextInstance.AddToManagers();
 
-            TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Right;
-            TextInstance.Text = "Helloi";
-            TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
-            TextInstance.X = 0f;
-            TextInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Right;
-            TextInstance.XUnits = GeneralUnitType.PixelsFromLarge;
-            TextInstance.Y = 0f;
-            TextInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
-            TextInstance.YUnits = GeneralUnitType.PixelsFromSmall;
+
 
 
 

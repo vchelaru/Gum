@@ -1,4 +1,5 @@
-﻿using RenderingLibrary.Graphics;
+﻿using RenderingLibrary;
+using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace MonoGameGum.GueDeriving
 {
-    internal class ContainerRuntime : global::Gum.Wireframe.GraphicalUiElement
+    public class ContainerRuntime : global::Gum.Wireframe.GraphicalUiElement
     {
         public ContainerRuntime(bool fullInstantiation = true)
         {
@@ -16,7 +17,11 @@ namespace MonoGameGum.GueDeriving
                 SetContainedObject(new InvisibleRenderable());
                 Width = 150;
                 Height = 150;
+                Visible = true;
             }
         }
+
+        public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
+        
     }
 }

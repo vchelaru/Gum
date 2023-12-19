@@ -38,10 +38,28 @@ namespace MonoGameGum.GueDeriving
 
         public string Text
         {
-            get => ContainedText.RawText;
-            set => ContainedText.RawText = value;
+            get
+            {
+                return ContainedText.RawText;
+            }
+            set
+            {
+                var widthBefore = ContainedText.WrappedTextWidth;
+                var heightBefore = ContainedText.WrappedTextHeight;
+                if (this.WidthUnits == Gum.DataTypes.DimensionUnitType.RelativeToChildren)
+                {
+                    // make it have no line wrap width before assignign the text:
+                    ContainedText.Width = 0;
+                }
+                ContainedText.RawText = value;
+                NotifyPropertyChanged();
+                var shouldUpdate = widthBefore != ContainedText.WrappedTextWidth || heightBefore != ContainedText.WrappedTextHeight;
+                if (shouldUpdate)
+                {
+                    UpdateLayout(Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentWidthHeightDependOnChildren | Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentStacks, int.MaxValue / 2);
+                }
+            }
         }
-
 
         public TextRuntime(bool fullInstantiation = true)
         {
@@ -59,5 +77,7 @@ namespace MonoGameGum.GueDeriving
                 textRenderable.RawText = "Hello World";
             }
         }
+
+        public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer:null);
     }
 }
