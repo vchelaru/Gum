@@ -87,3 +87,4 @@
     * [WPF](skiagum/setup/wpf.md)
 * [MonoGame](monogame/README.md)
   * [Setup](monogame/setup.md)
+  * [Loading .gumx (Gum Project)](monogame/loading-.gumx-gum-project.md)
