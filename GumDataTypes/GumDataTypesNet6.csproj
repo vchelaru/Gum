@@ -6,7 +6,7 @@
 	<GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
 	<GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
 	<GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
-	<Platforms>AnyCPU;x86</Platforms>
+	<Platforms>AnyCPU</Platforms>
 	<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 	<PackageId>FlatRedBall.GumDataTypes</PackageId>
 	<Version>2023.12.19.2</Version>
