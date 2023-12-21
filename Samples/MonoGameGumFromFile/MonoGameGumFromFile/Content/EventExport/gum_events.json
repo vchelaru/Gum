@@ -245,6 +245,83 @@
         "ElementType": "Screens",
         "EventType": 5,
         "TimestampUtc": "2023-12-19T12:16:16.6021862Z"
+      },
+      {
+        "NewName": "ComponentWithState",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 0,
+        "TimestampUtc": "2023-12-21T21:16:03.4365666Z"
+      },
+      {
+        "NewName": "ComponentWithState (Container).ColoredRectangleInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2023-12-21T21:16:11.534368Z"
+      },
+      {
+        "NewName": "ComponentWithState (Container).ColoredRectangleInstance1",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2023-12-21T21:16:19.2743669Z"
+      },
+      {
+        "NewName": "StateScreen",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 0,
+        "TimestampUtc": "2023-12-21T21:16:37.7113065Z"
+      },
+      {
+        "NewName": "ComponentWithState (Container).LeftSideRectangle",
+        "OldName": "ComponentWithState (Container).ColoredRectangleInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2023-12-21T21:16:53.4464386Z"
+      },
+      {
+        "NewName": "ComponentWithState (Container).RightSideRectangle",
+        "OldName": "ComponentWithState (Container).ColoredRectangleInstance1",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2023-12-21T21:17:01.3345864Z"
+      },
+      {
+        "NewName": "StateScreen.ComponentWithStateInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2023-12-21T21:18:53.8613053Z"
+      },
+      {
+        "NewName": "StateScreen.TextInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2023-12-21T21:18:59.2894534Z"
+      },
+      {
+        "NewName": "StateScreen.ComponentWithStateInstance1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2023-12-21T21:19:42.9040327Z"
+      },
+      {
+        "NewName": "StateScreen.SetMeInCode",
+        "OldName": "StateScreen.ComponentWithStateInstance1",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2023-12-21T21:19:50.6254822Z"
+      },
+      {
+        "NewName": "StateScreen.TextInstance1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2023-12-21T21:19:53.2716216Z"
       }
     ]
   }

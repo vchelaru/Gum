@@ -1,11 +1,13 @@
 ﻿using Gum.DataTypes;
 using Gum.Managers;
+using Gum.Wireframe;
 using GumRuntime;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Renderables;
 using RenderingLibrary;
+using System;
 using System.Linq;
 
 namespace MonoGameGumFromFile
@@ -14,6 +16,8 @@ namespace MonoGameGumFromFile
     {
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
+
+        GraphicalUiElement currentScreenElement;
 
         public Game1()
         {
@@ -30,14 +34,37 @@ namespace MonoGameGumFromFile
             SystemManagers.Default = new SystemManagers();
             SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
 
+            LoadGumProject();
+
+            ShowScreen("StartScreen");
+            
+            base.Initialize();
+        }
+
+        private void ShowScreen(string screenName)
+        {
+            var gumScreenSave = ObjectFinder.Self.GumProjectSave.Screens.FirstOrDefault(item => item.Name == screenName);
+
+            var isAlreadyShown = false;
+            if (currentScreenElement != null)
+            {
+                isAlreadyShown = currentScreenElement.Tag == gumScreenSave;
+            }
+
+            if (!isAlreadyShown)
+            {
+                currentScreenElement?.RemoveFromManagers();
+                currentScreenElement = gumScreenSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
+            }
+
+        }
+
+        private static GumProjectSave LoadGumProject()
+        {
             var gumProject = GumProjectSave.Load("GumProject.gumx", out _);
             ObjectFinder.Self.GumProjectSave = gumProject;
             gumProject.Initialize();
-
-            gumProject.Screens.First().ToGraphicalUiElement(SystemManagers.Default, addToManagers:true);
-
-
-            base.Initialize();
+            return gumProject;
         }
 
         protected override void LoadContent()
@@ -54,7 +81,36 @@ namespace MonoGameGumFromFile
 
             SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
 
+            DoSwapScreenLogic();
+
             base.Update(gameTime);
+        }
+
+        private void DoSwapScreenLogic()
+        {
+            var state = Keyboard.GetState();
+
+            if(state.IsKeyDown(Keys.D1))
+            {
+                ShowScreen("StartScreen");
+            }
+            else if(state.IsKeyDown(Keys.D2))
+            {
+                ShowScreen("StateScreen");
+
+                var setMeInCode = currentScreenElement.GetGraphicalUiElementByName("SetMeInCode");
+
+                // States can be found in the Gum element's Categories and applied:
+                var stateToSet = setMeInCode.ElementSave.Categories
+                    .FirstOrDefault(item => item.Name == "RightSideCategory")
+                    .States.Find(item => item.Name == "Blue");
+
+                // Alternatively states can be set in an "unqualified" way, which can be easier, but can 
+                // result in unexpected behavior if there are multiple states with the same name:
+                setMeInCode.ApplyState("Green");
+
+                setMeInCode.ApplyState(stateToSet);
+            }
         }
 
         protected override void Draw(GameTime gameTime)

@@ -20,6 +20,16 @@
     <ElementType>Screen</ElementType>
     <LinkType>ReferenceOriginal</LinkType>
   </ScreenReference>
+  <ScreenReference>
+    <Name>StateScreen</Name>
+    <ElementType>Screen</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </ScreenReference>
+  <ComponentReference>
+    <Name>ComponentWithState</Name>
+    <ElementType>Component</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </ComponentReference>
   <StandardElementReference>
     <Name>Circle</Name>
     <ElementType>Standard</ElementType>
