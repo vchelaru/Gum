@@ -4818,10 +4818,13 @@ namespace Gum.Wireframe
         public virtual void ApplyState(DataTypes.Variables.StateSave state)
         {
 #if DEBUG
-            if (state.ParentContainer == null)
-            {
-                throw new InvalidOperationException("State.ParentContainer is null - did you remember to initialize the state?");
-            }
+            // Dynamic states can be applied in code. It is cumbersome for the user to
+            // specify the ParentContainer, especially if the state is to be reused. 
+            // I'm removing this to see if it causes problems:
+            //if (state.ParentContainer == null)
+            //{
+            //    throw new InvalidOperationException("State.ParentContainer is null - did you remember to initialize the state?");
+            //}
 
 #endif
             if (GraphicalUiElement.IsAllLayoutSuspended == false)
@@ -4860,7 +4863,7 @@ namespace Gum.Wireframe
                     .Except(parentSettingVariables)
                     // Even though we removed state-setting variables on the parent, we still allow setting
                     // states on the contained objects
-                    .OrderBy(item => !item.IsState(state.ParentContainer))
+                    .OrderBy(item => state.ParentContainer == null || !item.IsState(state.ParentContainer))
                     .ToArray();
 
             var variablesToConsider =

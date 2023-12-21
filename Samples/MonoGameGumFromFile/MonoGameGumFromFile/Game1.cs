@@ -1,4 +1,5 @@
 ﻿using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
@@ -70,8 +71,6 @@ namespace MonoGameGumFromFile
         protected override void LoadContent()
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
-
-            // TODO: use this.Content to load your game content here
         }
 
         protected override void Update(GameTime gameTime)
@@ -104,12 +103,30 @@ namespace MonoGameGumFromFile
                 var stateToSet = setMeInCode.ElementSave.Categories
                     .FirstOrDefault(item => item.Name == "RightSideCategory")
                     .States.Find(item => item.Name == "Blue");
+                setMeInCode.ApplyState(stateToSet);
 
                 // Alternatively states can be set in an "unqualified" way, which can be easier, but can 
                 // result in unexpected behavior if there are multiple states with the same name:
                 setMeInCode.ApplyState("Green");
 
-                setMeInCode.ApplyState(stateToSet);
+                // states can be constructed dynamically too. This state makes the SetMeInCode instance bigger:
+                var dynamicState = new StateSave();
+                dynamicState.Variables.Add(new VariableSave()
+                {
+                    Value = 300f,
+                    Name = "Width",
+                    Type = "float",
+                    // values can exist on a state but be "disabled"
+                    SetsValue = true
+                });
+                dynamicState.Variables.Add(new VariableSave()
+                {
+                    Value = 250f,
+                    Name = "Height",
+                    Type = "float",
+                    SetsValue = true
+                });
+                setMeInCode.ApplyState(dynamicState);
             }
         }
 
