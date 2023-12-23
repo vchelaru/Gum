@@ -128,6 +128,10 @@ namespace MonoGameGumFromFile
                 });
                 setMeInCode.ApplyState(dynamicState);
             }
+            else if(state.IsKeyDown(Keys.D3))
+            {
+                ShowScreen("ParentChildScreen");
+            }
         }
 
         protected override void Draw(GameTime gameTime)

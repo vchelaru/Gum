@@ -322,6 +322,41 @@
         "ElementType": "Screens",
         "EventType": 5,
         "TimestampUtc": "2023-12-21T21:19:53.2716216Z"
+      },
+      {
+        "NewName": "ParentChildScreen",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 0,
+        "TimestampUtc": "2023-12-23T19:08:09.135351Z"
+      },
+      {
+        "NewName": "ParentChildScreen.ColoredRectangleInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2023-12-23T19:08:20.1415937Z"
+      },
+      {
+        "NewName": "ParentChildScreen.ColoredRectangleInstance1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2023-12-23T19:08:28.7953863Z"
+      },
+      {
+        "NewName": "ParentChildScreen.OuterRectangle",
+        "OldName": "ParentChildScreen.ColoredRectangleInstance",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2023-12-23T19:08:51.4495114Z"
+      },
+      {
+        "NewName": "ParentChildScreen.TopLeft",
+        "OldName": "ParentChildScreen.ColoredRectangleInstance1",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2023-12-23T19:08:56.5873799Z"
       }
     ]
   }
