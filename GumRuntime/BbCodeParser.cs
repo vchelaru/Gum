@@ -28,6 +28,11 @@ namespace Gum.Wireframe
         public string Name;
         public TagInfo Open;
         public TagInfo Close;
+
+        public override string ToString()
+        {
+            return $"{Name}";
+        }
     }
 
     public static class BbCodeParser

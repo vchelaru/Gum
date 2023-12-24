@@ -92,7 +92,7 @@ namespace RenderingLibrary.Content
 
         public void AddDisposable(string name, IDisposable disposable)
         {
-            mCachedDisposables.Add(name, disposable);
+            mCachedDisposables[name] = disposable;
         }
 
         public void Dispose(string name)
@@ -179,7 +179,28 @@ namespace RenderingLibrary.Content
             return toReturn;
         }
 
-        
+        public T TryGetCachedDisposable<T>(string contentName)
+        {
+            if (mCachedDisposables.ContainsKey(contentName))
+            {
+                return (T)mCachedDisposables[contentName];
+            }
+            else
+            {
+                return default(T);
+            }
+        }
+
+        public void DisposeAndClear()
+        {
+            foreach (var item in mCachedDisposables.Values)
+            {
+                item.Dispose();
+            }
+
+            mCachedDisposables.Clear();
+        }
+
         public T TryLoadContent<T>( string contentName)
         {
 

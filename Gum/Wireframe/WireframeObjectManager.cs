@@ -252,7 +252,7 @@ namespace Gum.Wireframe
 
                     if(forceReloadTextures)
                     {
-                        ((ContentLoader)LoaderManager.Self.ContentLoader).DisposeAndClear();
+                        LoaderManager.Self.DisposeAndClear();
                         LoaderManager.Self.CacheTextures = false;
                     }
 

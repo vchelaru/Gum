@@ -15,7 +15,7 @@ namespace RenderingLibrary.Content
     {
         public SystemManagers SystemManagers { get; set; }
 
-        Dictionary<string, IDisposable> disposables = new Dictionary<string,IDisposable>();
+        public Dictionary<string, IDisposable> Disposables { get; private set; } = new Dictionary<string, IDisposable>();
 
         //List<Atlas> atlases = new List<Atlas>();
 
@@ -229,43 +229,6 @@ namespace RenderingLibrary.Content
             }
 
             return toReturn;
-        }
-
-        public void DisposeAndClear()
-        {
-            foreach(var item in disposables.Values)
-            {
-                item.Dispose();
-            }
-
-            disposables.Clear();
-        }
-
-        public T TryGetCachedDisposable<T>(string contentName)
-        {
-            if(disposables.ContainsKey(contentName))
-            {
-                return (T)disposables[contentName];
-            }
-            else
-            {
-                return default(T);
-            }
-        }
-
-        public void AddDisposable(string contentName, IDisposable disposable)
-        {
-            if (disposables.ContainsKey(contentName))
-            {
-                throw new Exception("This item has already been added");
-            }
-            else
-            {
-                disposables.Add(contentName, disposable);
-            }
-        }
-
-
-        
+        }        
     }
 }

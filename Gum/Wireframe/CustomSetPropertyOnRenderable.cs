@@ -2,8 +2,11 @@
 using Gum.DataTypes;
 using Gum.Graphics.Animation;
 using Gum.RenderingLibrary;
+using Gum.ToolStates;
 using RenderingLibrary;
+using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
+using RenderingLibrary.Graphics.Fonts;
 using RenderingLibrary.Math.Geometry;
 using System;
 using System.Collections.Generic;
@@ -15,6 +18,7 @@ using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Documents;
 using ToolsUtilitiesStandard.Helpers;
 
 namespace Gum.Wireframe
@@ -462,24 +466,51 @@ namespace Gum.Wireframe
             return handled;
         }
 
+        static HashSet<string> tags = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase) 
+        { 
+            "alpha",
+            "red", 
+            "blue", 
+            "green", 
+            "color", 
+            "font",
+            "fontsize",
+            "outlinethickness",
+            "isitalic",
+            "isbold",
+            "usefontsmoothing",
+            "fontscale",
+            "lineheightmultiplier"
+        
+        };
         private static void SetBbCodeText(global::RenderingLibrary.Graphics.Text asText, GraphicalUiElement graphicalUiElement, string bbcode)
         {
-            var tags = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase) { "red", "blue", "green", "color", "font" };
 
             var results = BbCodeParser.Parse(tags, bbcode);
             var strippedText = BbCodeParser.RemoveTags(bbcode, results);
             asText.RawText = strippedText;
 
+            var runningFontSize = graphicalUiElement.FontSize;
+            var runningFontName = graphicalUiElement.Font;
+            var runningOutlineThickness = graphicalUiElement.OutlineThickness;
+            var runningUseFontSmoothing = graphicalUiElement.UseFontSmoothing;
+            var runningIsItalic = graphicalUiElement.IsItalic;
+            var runningIsBold = graphicalUiElement.IsBold;
+            var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+            var contentLoader = loaderManager.ContentLoader;
+
             foreach (var item in results)
             {
                 object castedValue = item.Open.Argument;
                 string convertedName = item.Name;
+                var shouldApply = false;
                 switch (item.Name)
                 {
                     case "Red":
                     case "Green":
                     case "Blue":
                         castedValue = byte.Parse(item.Open.Argument);
+                        shouldApply = true;
                         break;
                     case "Color":
                         {
@@ -497,43 +528,105 @@ namespace Gum.Wireframe
                             {
                                 castedValue = System.Drawing.Color.FromName(item.Open.Argument);
                             }
+                            shouldApply = true;
                         }
                         break;
                     case "Font":
                         {
+                            runningFontName = item.Open.Argument;
                             convertedName = "BitmapFont";
-                            string fontName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
-                            graphicalUiElement.FontSize,
-                            item.Open.Argument,
-                            graphicalUiElement.OutlineThickness,
-                            graphicalUiElement.UseFontSmoothing,
-                                graphicalUiElement.IsItalic,
-                                graphicalUiElement.IsBold);
-
-                            string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, false, true);
-#if ANDROID || IOS
-                            fullFileName = fullFileName.ToLowerInvariant();
-#endif
-                            var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-                            var contentLoader = loaderManager.ContentLoader;
-                            castedValue = contentLoader.TryGetCachedDisposable<BitmapFont>(fullFileName);
+                            castedValue = GetAndCreateFontIfNecessary();
+                            shouldApply = castedValue != null;
+                        }
+                        break;
+                    case "FontSize":
+                        {
+                            if(int.TryParse(item.Open.Argument, out int parsedValue))
+                            {
+                                runningFontSize = parsedValue;
+                                convertedName = "BitmapFont";
+                                castedValue = GetAndCreateFontIfNecessary();
+                                shouldApply = castedValue != null;
+                            }
+                        }
+                        break;
+                    case "OutlineThickness":
+                        {
+                            if (int.TryParse(item.Open.Argument, out int parsedValue))
+                            {
+                                runningOutlineThickness = parsedValue;
+                                convertedName = "BitmapFont";
+                                castedValue = GetAndCreateFontIfNecessary();
+                                shouldApply = castedValue != null;
+                            }
                         }
                         break;
 
                 }
 
-                var inlineVariable = new InlineVariable
+                if(shouldApply)
                 {
-                    CharacterCount = item.Close.StartStrippedIndex - item.Open.StartStrippedIndex,
-                    StartIndex = item.Open.StartStrippedIndex,
-                    VariableName = convertedName,
-                    Value = castedValue
-                };
+                    var inlineVariable = new InlineVariable
+                    {
+                        CharacterCount = item.Close.StartStrippedIndex - item.Open.StartStrippedIndex,
+                        StartIndex = item.Open.StartStrippedIndex,
+                        VariableName = convertedName,
+                        Value = castedValue
+                    };
 
-                asText.InlineVariables.Add(inlineVariable);
+                    asText.InlineVariables.Add(inlineVariable);
+                }
             }
 
+            BitmapFont GetAndCreateFontIfNecessary()
+            {
+                var fontFileName = GetFontFileName();
 
+                var font = LoaderManager.Self.TryGetCachedDisposable<BitmapFont>(fontFileName);
+
+                // no cache, does it need to be created?
+                if(font == null)
+                {
+                    string fileName = Managers.FontManager.Self.AbsoluteFontCacheFolder +
+                        ToolsUtilities.FileManager.RemovePath(fontFileName);
+
+                    if (!ToolsUtilities.FileManager.FileExists(fileName))
+                    {
+                        BmfcSave.CreateBitmapFontFilesIfNecessary(
+                            runningFontSize,
+                            runningFontName,
+                            runningOutlineThickness,
+                            runningUseFontSmoothing,
+                            runningIsItalic,
+                            runningIsBold,
+                            GumState.Self.ProjectState.GumProjectSave?.FontRanges
+                            );
+                    }
+
+                    font = new BitmapFont(fileName, (SystemManagers)null);
+                    LoaderManager.Self.AddDisposable(fontFileName, font);
+
+                }
+
+                return font;
+            }
+
+            string GetFontFileName()
+            {
+                string fontFileNameName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
+                    runningFontSize,
+                    runningFontName,
+                    runningOutlineThickness,
+                    runningUseFontSmoothing,
+                    runningIsItalic,
+                    runningIsBold);
+
+                var fullFileName = ToolsUtilities.FileManager.Standardize(fontFileNameName, false, true);
+#if ANDROID || IOS
+                fullFileName = fullFileName.ToLowerInvariant();
+#endif
+                return fullFileName;
+            }
         }
 
         private static bool TrySetPropertyOnLineRectangle(IRenderableIpso mContainedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
@@ -853,7 +946,7 @@ namespace Gum.Wireframe
 
                     if (!string.IsNullOrEmpty(graphicalUiElement.CustomFontFile))
                     {
-                        font = contentLoader.TryGetCachedDisposable<BitmapFont>(graphicalUiElement.CustomFontFile);
+                        font = loaderManager.TryGetCachedDisposable<BitmapFont>(graphicalUiElement.CustomFontFile);
                         if (font == null)
                         {
                             // so normally we would just let the content loader check if the file exists but since we're not going to
@@ -861,7 +954,7 @@ namespace Gum.Wireframe
                             if (ToolsUtilities.FileManager.FileExists(graphicalUiElement.CustomFontFile))
                             {
                                 font = new BitmapFont(graphicalUiElement.CustomFontFile, SystemManagers.Default);
-                                contentLoader.AddDisposable(graphicalUiElement.CustomFontFile, font);
+                                loaderManager.AddDisposable(graphicalUiElement.CustomFontFile, font);
                             }
                         }
                     }
@@ -888,7 +981,7 @@ namespace Gum.Wireframe
 #endif
 
 
-                        font = contentLoader.TryGetCachedDisposable<BitmapFont>(fullFileName);
+                        font = loaderManager.TryGetCachedDisposable<BitmapFont>(fullFileName);
                         if (font == null)
                         {
                             // so normally we would just let the content loader check if the file exists but since we're not going to
@@ -897,7 +990,7 @@ namespace Gum.Wireframe
                             {
                                 font = new BitmapFont(fullFileName, SystemManagers.Default);
 
-                                contentLoader.AddDisposable(fullFileName, font);
+                                loaderManager.AddDisposable(fullFileName, font);
                             }
                         }
 
