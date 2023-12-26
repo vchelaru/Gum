@@ -30,6 +30,10 @@ The following shows a Text with its Y Origin set to Baseline:
 
 Baseline refers to the bottom of the text for letters without descenders. For more information see the [Wikipedia Baseline page](https://en.wikipedia.org/wiki/Baseline\_\(typography\)).
 
-Baseline is often used to align fonts of different sizes. The following image shows two Text objects with different font sizes. Both are positioned by their baseline so their bottoms align properly (ignoring descenders, such as on the letter p and the comma).
+Baseline is often used to align fonts of different sizes. The following image shows two Text instances with different font sizes. Both are positioned by their baseline so their bottoms align properly (ignoring descenders, such as on the letter p and the comma).
 
 <figure><img src="../../.gitbook/assets/image.png" alt=""><figcaption><p>50,000 xp aligned by baseline</p></figcaption></figure>
+
+By contrast, the following image shows the same Text instances using bottom alignment.&#x20;
+
+<figure><img src="../../.gitbook/assets/image (31).png" alt=""><figcaption></figcaption></figure>
