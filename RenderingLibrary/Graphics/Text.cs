@@ -1045,13 +1045,12 @@ namespace RenderingLibrary.Graphics
             int startOfLineIndex = 0;
 
             var rotation = this.GetAbsoluteRotation();
-
+            float topOfLine = absoluteTop;
             for (int i = 0; i < WrappedText.Count; i++)
             {
                 var absoluteLeft = mTempForRendering.GetAbsoluteLeft();
                 var lineOfText = WrappedText[i];
 
-                var topOfLine = absoluteTop + i * fontToUse.EffectiveLineHeight(mFontScale, mFontScale);
                 var color = Color;
 
                 var substrings = GetStyledSubstrings(startOfLineIndex, lineOfText, color);
@@ -1066,12 +1065,13 @@ namespace RenderingLibrary.Graphics
                         topOfLine,
                         this.GetAbsoluteRotation(), mFontScale, mFontScale, maxLettersToShow, OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier);
 
+                    topOfLine += fontToUse.EffectiveLineHeight(mFontScale, mFontScale);
 
                 }
                 else
                 {
 
-                    var lineHeight = fontToUse.EffectiveLineHeight(mFontScale, mFontScale);
+                    var lineHeight = fontToUse.EffectiveLineHeight(mFontScale, 1);
                     var defaultBaseline = fontToUse.BaselineY;
 
                     float currentFontScale = FontScale;
@@ -1148,6 +1148,8 @@ namespace RenderingLibrary.Graphics
                         absoluteLeft += rect.Width;
 
                     }
+
+                    topOfLine += lineHeight;
                 }
                 startOfLineIndex += lineOfText.Length;
             }
