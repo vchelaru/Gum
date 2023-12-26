@@ -14,13 +14,10 @@ namespace Gum.Wireframe
         public int Count;
         public int StartStrippedIndex;
         public string Argument;
-    }
 
-    public struct CloseTagInfo
-    {
-        public int StartIndex;
-        public int Count;
-        public int StartStrippedIndex;
+        // even though FoundTag has Name, we add the name here so we can
+        // sort open/close in one list
+        public string Name;
     }
 
     public struct FoundTag
@@ -84,7 +81,8 @@ namespace Gum.Wireframe
                                 StartIndex = activeTag.StartIndex,
                                 Count = activeTag.Count,
                                 Argument = activeTag.Argument,
-                                StartStrippedIndex = activeTag.StartStrippedIndex
+                                StartStrippedIndex = activeTag.StartStrippedIndex,
+                                Name = tag.Name
                             };
 
                             var closeStripped = tag.StartIndex - accumulatedTagLetterCount;
@@ -93,14 +91,15 @@ namespace Gum.Wireframe
                             {
                                 StartIndex = tag.StartIndex,
                                 Count = tag.Count,
-                                StartStrippedIndex = closeStripped
+                                StartStrippedIndex = closeStripped,
+                                Name = tag.Name
                             };
                             accumulatedTagLetterCount += close.Count;
                             results.Add(new FoundTag
                             {
                                 Name = tag.Name,
                                 Open = open,
-                                Close = close
+                                Close = close,
                             });
                             activeTags.Pop();
                         }

@@ -3,6 +3,7 @@ using Gum.DataTypes;
 using Gum.Graphics.Animation;
 using Gum.RenderingLibrary;
 using Gum.ToolStates;
+using HarfBuzzSharp;
 using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
@@ -20,6 +21,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Documents;
 using ToolsUtilitiesStandard.Helpers;
+using static SkiaSharp.HarfBuzz.SKShaper;
 
 namespace Gum.Wireframe
 {
@@ -483,6 +485,16 @@ namespace Gum.Wireframe
             "lineheightmultiplier"
         
         };
+
+        static Stack<int> fontSizeStack = new Stack<int>();
+        static Stack<string> fontNameStack = new Stack<string>();
+        static Stack<int> outlineThicknessStack = new Stack<int>();
+        static Stack<bool> useFontSmoothingStack = new Stack<bool>();
+        static Stack<bool> isItalicStack = new Stack<bool>();
+        static Stack<bool> isBoldStack = new Stack<bool>();
+
+        static List<TagInfo> allTags = new List<TagInfo>();
+
         private static void SetBbCodeText(global::RenderingLibrary.Graphics.Text asText, GraphicalUiElement graphicalUiElement, string bbcode)
         {
 
@@ -490,19 +502,19 @@ namespace Gum.Wireframe
             var strippedText = BbCodeParser.RemoveTags(bbcode, results);
             asText.RawText = strippedText;
 
-            var runningFontSize = graphicalUiElement.FontSize;
-            var runningFontName = graphicalUiElement.Font;
-            var runningOutlineThickness = graphicalUiElement.OutlineThickness;
-            var runningUseFontSmoothing = graphicalUiElement.UseFontSmoothing;
-            var runningIsItalic = graphicalUiElement.IsItalic;
-            var runningIsBold = graphicalUiElement.IsBold;
+            fontNameStack.Push(graphicalUiElement.Font);
+            fontSizeStack.Push(graphicalUiElement.FontSize);
+            outlineThicknessStack.Push(graphicalUiElement.OutlineThickness);
+            useFontSmoothingStack.Push(graphicalUiElement.UseFontSmoothing);
+            isItalicStack.Push(graphicalUiElement.IsItalic);
+            isBoldStack.Push(graphicalUiElement.IsBold);
+
             var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
             var contentLoader = loaderManager.ContentLoader;
 
             foreach (var item in results)
             {
                 object castedValue = item.Open.Argument;
-                string convertedName = item.Name;
                 var shouldApply = false;
                 switch (item.Name)
                 {
@@ -531,52 +543,137 @@ namespace Gum.Wireframe
                             shouldApply = true;
                         }
                         break;
-                    case "Font":
+                    case "FontScale":
                         {
-                            runningFontName = item.Open.Argument;
-                            convertedName = "BitmapFont";
-                            castedValue = GetAndCreateFontIfNecessary();
-                            shouldApply = castedValue != null;
-                        }
-                        break;
-                    case "FontSize":
-                        {
-                            if(int.TryParse(item.Open.Argument, out int parsedValue))
+                            if(float.TryParse( item.Open.Argument, out float parsed))
                             {
-                                runningFontSize = parsedValue;
-                                convertedName = "BitmapFont";
-                                castedValue = GetAndCreateFontIfNecessary();
-                                shouldApply = castedValue != null;
+                                castedValue = parsed;
+                                shouldApply = true;
                             }
                         }
                         break;
-                    case "OutlineThickness":
-                        {
-                            if (int.TryParse(item.Open.Argument, out int parsedValue))
-                            {
-                                runningOutlineThickness = parsedValue;
-                                convertedName = "BitmapFont";
-                                castedValue = GetAndCreateFontIfNecessary();
-                                shouldApply = castedValue != null;
-                            }
-                        }
-                        break;
-
                 }
 
-                if(shouldApply)
+                if (shouldApply)
                 {
                     var inlineVariable = new InlineVariable
                     {
                         CharacterCount = item.Close.StartStrippedIndex - item.Open.StartStrippedIndex,
                         StartIndex = item.Open.StartStrippedIndex,
-                        VariableName = convertedName,
+                        VariableName = item.Name,
                         Value = castedValue
                     };
 
                     asText.InlineVariables.Add(inlineVariable);
                 }
             }
+
+            ApplyFontVariables(asText, results);
+        }
+
+        private static void ApplyFontVariables(Text asText, List<FoundTag> results)
+        {
+            allTags.Clear();
+            allTags.AddRange(results.Select(item => item.Open));
+            allTags.AddRange(results.Select(item => item.Close));
+            allTags.Sort((a, b) => a.StartIndex - b.StartIndex);
+
+            InlineVariable lastFontInlineVariable = null;
+            foreach (var tag in allTags)
+            {
+
+                BitmapFont castedValue = null;
+                string convertedName = "BitmapFont";
+                var hasArg = !string.IsNullOrEmpty(tag.Argument);
+                switch (tag.Name)
+                {
+                    case "Font":
+                        {
+                            if(hasArg)
+                            {
+                                fontNameStack.Push(tag.Argument);
+                                castedValue = GetAndCreateFontIfNecessary();
+                            }
+                            else
+                            {
+                                fontNameStack.Pop();
+                                castedValue = GetAndCreateFontIfNecessary();
+                            }
+                        }
+                        break;
+                    case "FontSize":
+                        {
+                            if (int.TryParse(tag.Argument, out int parsedValue))
+                            {
+                                fontSizeStack.Push(parsedValue);
+                                castedValue = GetAndCreateFontIfNecessary();
+                            }
+                            else
+                            {
+                                fontSizeStack.Pop();
+                                castedValue = GetAndCreateFontIfNecessary();
+                            }
+                        }
+                        break;
+                    case "OutlineThickness":
+                        {
+                            if (int.TryParse(tag.Argument, out int parsedValue))
+                            {
+                                outlineThicknessStack.Push(parsedValue);
+                                castedValue = GetAndCreateFontIfNecessary();
+                            }
+                            else
+                            {
+                                outlineThicknessStack.Pop();
+                                castedValue = GetAndCreateFontIfNecessary();
+                            }
+                        }
+                        break;
+                    case "IsItalic":
+                        {
+                            if (bool.TryParse(tag.Argument, out bool parsedValue))
+                            {
+                                isItalicStack.Push(parsedValue);
+                                castedValue = GetAndCreateFontIfNecessary();
+                            }
+                            else
+                            {
+                                isItalicStack.Pop();
+                                castedValue = GetAndCreateFontIfNecessary();
+                            }
+                        }
+                        break;
+
+                }
+
+                if (castedValue != null)
+                {
+                    if (lastFontInlineVariable != null)
+                    {
+                        lastFontInlineVariable.CharacterCount = tag.StartStrippedIndex - lastFontInlineVariable.StartIndex;
+                    }
+
+                    var inlineVariable = new InlineVariable
+                    {
+                        // assigned above:
+                        //CharacterCount = tag.Close.StartStrippedIndex - tag.Open.StartStrippedIndex,
+                        StartIndex = tag.StartStrippedIndex,
+                        VariableName = convertedName,
+                        Value = castedValue
+                    };
+
+                    asText.InlineVariables.Add(inlineVariable);
+
+                    lastFontInlineVariable = inlineVariable;
+                }
+            }
+
+            // close off the last one:
+            if(lastFontInlineVariable != null)
+            {
+                lastFontInlineVariable.CharacterCount = asText.RawText.Length - lastFontInlineVariable.StartIndex;
+            }
+
 
             BitmapFont GetAndCreateFontIfNecessary()
             {
@@ -585,7 +682,7 @@ namespace Gum.Wireframe
                 var font = LoaderManager.Self.TryGetCachedDisposable<BitmapFont>(fontFileName);
 
                 // no cache, does it need to be created?
-                if(font == null)
+                if (font == null)
                 {
                     string fileName = Managers.FontManager.Self.AbsoluteFontCacheFolder +
                         ToolsUtilities.FileManager.RemovePath(fontFileName);
@@ -593,12 +690,12 @@ namespace Gum.Wireframe
                     if (!ToolsUtilities.FileManager.FileExists(fileName))
                     {
                         BmfcSave.CreateBitmapFontFilesIfNecessary(
-                            runningFontSize,
-                            runningFontName,
-                            runningOutlineThickness,
-                            runningUseFontSmoothing,
-                            runningIsItalic,
-                            runningIsBold,
+                            fontSizeStack.Peek(),
+                            fontNameStack.Peek(),
+                            outlineThicknessStack.Peek(),
+                            useFontSmoothingStack.Peek(),
+                            isItalicStack.Peek(),
+                            isBoldStack.Peek(),
                             GumState.Self.ProjectState.GumProjectSave?.FontRanges
                             );
                     }
@@ -614,12 +711,12 @@ namespace Gum.Wireframe
             string GetFontFileName()
             {
                 string fontFileNameName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
-                    runningFontSize,
-                    runningFontName,
-                    runningOutlineThickness,
-                    runningUseFontSmoothing,
-                    runningIsItalic,
-                    runningIsBold);
+                    fontSizeStack.Peek(),
+                    fontNameStack.Peek(),
+                    outlineThicknessStack.Peek(),
+                    useFontSmoothingStack.Peek(),
+                    isItalicStack.Peek(),
+                    isBoldStack.Peek());
 
                 var fullFileName = ToolsUtilities.FileManager.Standardize(fontFileNameName, false, true);
 #if ANDROID || IOS

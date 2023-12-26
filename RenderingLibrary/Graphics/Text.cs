@@ -13,6 +13,7 @@ using Matrix = System.Numerics.Matrix4x4;
 using System.Linq;
 using System.Data.SqlTypes;
 using ToolsUtilitiesStandard.Helpers;
+using System.Drawing;
 
 namespace RenderingLibrary.Graphics
 {
@@ -1073,7 +1074,25 @@ namespace RenderingLibrary.Graphics
                     var lineHeight = fontToUse.EffectiveLineHeight(mFontScale, mFontScale);
                     var defaultBaseline = fontToUse.BaselineY;
 
-
+                    float currentFontScale = FontScale;
+                    BitmapFont currentFont = fontToUse;
+                    foreach (var substring in substrings)
+                    {
+                        for (int variableIndex = 0; variableIndex < substring.Variables.Count; variableIndex++)
+                        {
+                            var variable = substring.Variables[variableIndex];
+                            if (variable.VariableName == nameof(FontScale))
+                            {
+                                currentFontScale = (float)variable.Value;
+                                lineHeight = System.Math.Max(lineHeight, currentFont.EffectiveLineHeight(currentFontScale, 1));
+                            }
+                            else if (variable.VariableName == nameof(BitmapFont))
+                            {
+                                currentFont = (BitmapFont)variable.Value;
+                                lineHeight = System.Math.Max(lineHeight, currentFont.EffectiveLineHeight(currentFontScale, 1));
+                            }
+                        }
+                    }
 
                     foreach (var substring in substrings)
                     {
