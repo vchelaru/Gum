@@ -39,9 +39,19 @@ namespace Gum.DataTypes.Variables
             // First we check if this state sets the value directly...
             object value = stateSave.GetValue(variableName);
 
+            ElementSave elementContainingState = stateSave.ParentContainer;
+            if(value == null && elementContainingState != null)
+            {
+                // See if variableName is an alias from exposing:
+                var variable = elementContainingState.GetVariableFromThisOrBase(variableName);
+                if (variable != null && variableName != variable.Name)
+                {
+                    value = stateSave.GetValue(variable.Name);
+                }
+            }
+
             if (value == null)
             {
-                ElementSave elementContainingState = stateSave.ParentContainer;
 
                 var foundVariable = stateSave.GetVariableRecursive(variableName);
                 

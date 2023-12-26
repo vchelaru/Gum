@@ -83,7 +83,7 @@ namespace Gum.PropertyGridHelpers
                     return false; // this can never be default, and if it is that causes all kinds of weirdness in variable displays.
                 }
 
-                return GetValue(InstanceSave) == null;
+                return GetValueStrictlyOnSelectedState(InstanceSave) == null;
             }
             set
             {
@@ -94,12 +94,11 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        private object GetValue(object component)
+        private object GetValueStrictlyOnSelectedState(object component)
         {
-            StateSave stateSave = SelectedState.Self.SelectedStateSave;
-            if (stateSave != null)
+            if (mStateSave != null)
             {
-                return stateSave.GetValue(Name);
+                return mStateSave.GetValue(Name);
             }
             else
             {
@@ -623,7 +622,7 @@ namespace Gum.PropertyGridHelpers
 
             else if (mPropertyDescriptor != null)
             {
-                var toReturn = GetValue(instance);
+                var toReturn = GetValueStrictlyOnSelectedState(instance);
 
                 if (toReturn == null)
                 {
