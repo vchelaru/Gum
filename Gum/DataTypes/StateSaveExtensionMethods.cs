@@ -4,6 +4,7 @@ using System.Linq;
 using Gum.Managers;
 using System.Collections;
 using ToolsUtilities;
+using System.CodeDom;
 //using Gum.Wireframe;
 
 
@@ -43,7 +44,10 @@ namespace Gum.DataTypes.Variables
             if(value == null && elementContainingState != null)
             {
                 // See if variableName is an alias from exposing:
-                var variable = elementContainingState.GetVariableFromThisOrBase(variableName);
+                //var variable = elementContainingState.GetVariableFromThisOrBase(variableName);
+                var variable = stateSave.GetVariableRecursive(variableName);
+
+
                 if (variable != null && variableName != variable.Name)
                 {
                     value = stateSave.GetValue(variable.Name);
