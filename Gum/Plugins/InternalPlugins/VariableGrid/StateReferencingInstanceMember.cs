@@ -697,6 +697,13 @@ namespace Gum.PropertyGridHelpers
                     }
 
                     stateSave.SetValue(Name, newValue, instanceSave, variableType);
+
+                    if(!string.IsNullOrEmpty(existingVariable?.ExposedAsName))
+                    {
+                        // need to set the exposed name on the variable:
+                        var variable = stateSave.GetVariableSave(Name);
+                        variable.ExposedAsName = existingVariable.ExposedAsName;
+                    }
                 }
 
                 NotifyVariableLogic(gumElementOrInstanceSaveAsObject, trySave:setPropertyArgs.CommitType == SetPropertyCommitType.Full);

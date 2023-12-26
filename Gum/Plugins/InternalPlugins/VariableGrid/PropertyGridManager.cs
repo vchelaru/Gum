@@ -852,6 +852,26 @@ namespace Gum.Managers
                                 var greenVariableName = greenVariable.Name;
                                 var blueVariableName = blueVariable.Name;
 
+                                // These could be exposed... If so, we want to assign the name with the dot in it, not the exposed as name:
+                                if(instance == null && element != null)
+                                {
+                                    var foundRed = element.GetVariableFromThisOrBase(redVariableName);
+                                    if(foundRed?.ExposedAsName == redVariableName)
+                                    {
+                                        redVariableName = foundRed.Name;
+                                    }
+                                    var foundGreen = element.GetVariableFromThisOrBase(greenVariableName);
+                                    if(foundGreen?.ExposedAsName == greenVariableName)
+                                    {
+                                        greenVariableName = foundGreen.Name;
+                                    }
+                                    var foundBlue = element.GetVariableFromThisOrBase(blueVariableName);
+                                    if(foundBlue?.ExposedAsName == blueVariableName)
+                                    {
+                                        blueVariableName = foundBlue.Name;
+                                    }
+                                }
+
 
 
                                 InstanceMember instanceMember = new InstanceMember( $"{beforeRed}Color{afterRed}", null);
@@ -915,6 +935,7 @@ namespace Gum.Managers
             var color = (Microsoft.Xna.Framework.Color)colorAsObject;
 
             state.SetValue(redVariableName, (int)color.R, "int");
+
             state.SetValue(greenVariableName, (int)color.G, "int");
             state.SetValue(blueVariableName, (int)color.B, "int");
 
@@ -928,9 +949,35 @@ namespace Gum.Managers
             var instance = SelectedState.Self.SelectedInstance;
             // These functions take unqualified:
 
+            if(instance == null && redVariableName.Contains("."))
+            {
+                // This is an exposed:
+                var foundDefaultRedVariable = SelectedState.Self.SelectedElement.DefaultState.GetVariableSave(redVariableName);
+                if(!string.IsNullOrEmpty(foundDefaultRedVariable.ExposedAsName) && foundDefaultRedVariable != null)
+                {
+                    state.GetVariableSave(redVariableName).ExposedAsName = foundDefaultRedVariable.ExposedAsName;        
+                }
+                var foundDefaultGreenVariable = SelectedState.Self.SelectedElement.DefaultState.GetVariableSave(greenVariableName);
+                if (!string.IsNullOrEmpty(foundDefaultGreenVariable.ExposedAsName) && foundDefaultGreenVariable != null)
+                {
+                    state.GetVariableSave(greenVariableName).ExposedAsName = foundDefaultGreenVariable.ExposedAsName;
+                }
+                var foundDefaultBlueVariable = SelectedState.Self.SelectedElement.DefaultState.GetVariableSave(blueVariableName);
+                if (!string.IsNullOrEmpty(foundDefaultBlueVariable.ExposedAsName) && foundDefaultBlueVariable != null)
+                {
+                    state.GetVariableSave(blueVariableName).ExposedAsName = foundDefaultBlueVariable.ExposedAsName;
+                }
+            }
+
             var unqualifiedRed = redVariableName.Substring(redVariableName.IndexOf('.') + 1);
             var unqualifiedGreen = greenVariableName.Substring(greenVariableName.IndexOf('.') + 1);
             var unqualifiedBlue = blueVariableName.Substring(blueVariableName.IndexOf('.') + 1);
+
+            if(redVariableName.Contains(".") && instance == null)
+            {
+                // This is an exposed:
+                instance = SelectedState.Self.SelectedElement.GetInstance(redVariableName.Substring(0, redVariableName.IndexOf('.')));
+            }
 
             SetVariableLogic.Self.PropertyValueChanged(unqualifiedRed, (int)oldColor.R, instance, true);
             SetVariableLogic.Self.PropertyValueChanged(unqualifiedGreen, (int)oldColor.G, instance, true);
