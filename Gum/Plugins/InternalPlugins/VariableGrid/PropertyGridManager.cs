@@ -782,34 +782,68 @@ namespace Gum.Managers
                             //var blueVariable = category.Members.FirstOrDefault(item => item.Name == blueVariableName);
                             var redVariable = variable;
 
-                            InstanceMember greenVariable = null;
-                            InstanceMember blueVariable = null;
-
+                            List<InstanceMember> greenVariables = new List<InstanceMember>();
+                            List<InstanceMember> blueVariables = new List<InstanceMember>();
                             if(instance != null)
                             {
-                                greenVariable = category.Members.FirstOrDefault(item =>
+                                greenVariables.AddRange(category.Members.Where(item =>
                                 {
                                     return 
                                         ObjectFinder.Self.GetRootVariable(item.Name, instance)?.Name == "Green";
-                                });
-                                blueVariable = category.Members.FirstOrDefault(item =>
+                                }));
+                                blueVariables.AddRange(category.Members.Where(item =>
                                 {
                                     return
                                         ObjectFinder.Self.GetRootVariable(item.Name, instance)?.Name == "Blue";
-                                });
+                                }));
                             }
                             else
                             {
-                                greenVariable = category.Members.FirstOrDefault(item =>
+                                greenVariables.AddRange(category.Members.Where(item =>
                                 {
                                     return
                                         ObjectFinder.Self.GetRootVariable(item.Name, element)?.Name == "Green";
-                                });
-                                blueVariable = category.Members.FirstOrDefault(item =>
+                                }));
+                                blueVariables.AddRange(category.Members.Where(item =>
                                 {
                                     return
                                         ObjectFinder.Self.GetRootVariable(item.Name, element)?.Name == "Blue";
-                                });
+                                }));
+                            }
+
+                            var rootName = variable.DisplayName;
+
+                            var beforeRed = "";
+                            var afterRed = "";
+                            if(rootName.Contains("Red"))
+                            {
+                                beforeRed = rootName.Substring(0, rootName.IndexOf("Red"));
+                                afterRed = rootName.Substring(rootName.IndexOf("Red") + "Red".Length);
+                            }
+
+
+
+                            InstanceMember greenVariable = null;
+                            InstanceMember blueVariable = null;
+
+                            if(greenVariables.Count > 0)
+                            {
+                                greenVariable = greenVariables.FirstOrDefault(item => item.DisplayName == $"{beforeRed}Green{afterRed}");
+                            }
+                            // In case there are exactly 1, or no matches were found:
+                            if(greenVariable == null)
+                            {
+                                greenVariable = greenVariables.FirstOrDefault();
+                            }
+
+                            if(blueVariables.Count > 0)
+                            {
+                                blueVariable = blueVariables.FirstOrDefault(item => item.DisplayName == $"{beforeRed}Blue{afterRed}");
+                            }
+                            // In case there are exactly 1, or no matches were found:
+                            if(blueVariable == null)
+                            {
+                                blueVariable = blueVariables.FirstOrDefault();
                             }
 
                             if(greenVariable != null && blueVariable != null) 
@@ -817,16 +851,6 @@ namespace Gum.Managers
                                 var redVariableName = variable.Name;
                                 var greenVariableName = greenVariable.Name;
                                 var blueVariableName = blueVariable.Name;
-
-                                var rootName = variable.DisplayName;
-
-                                var beforeRed = "";
-                                var afterRed = "";
-                                if(rootName.Contains("Red"))
-                                {
-                                    beforeRed = rootName.Substring(0, rootName.IndexOf("Red"));
-                                    afterRed = rootName.Substring(rootName.IndexOf("Red") + "Red".Length);
-                                }
 
 
 
