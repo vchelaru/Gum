@@ -785,7 +785,7 @@ namespace Gum.Wireframe
 
 
                         font = loaderManager.TryGetCachedDisposable<BitmapFont>(fullFileName);
-                        if (font == null)
+                        if (font == null || font.Texture?.IsDisposed == true)
                         {
                             // so normally we would just let the content loader check if the file exists but since we're not going to
                             // use the content loader for BitmapFont, we're going to protect this with a file.exists.
@@ -793,9 +793,12 @@ namespace Gum.Wireframe
                             {
                                 font = new BitmapFont(fullFileName, SystemManagers.Default);
 
+
                                 loaderManager.AddDisposable(fullFileName, font);
                             }
                         }
+
+                        // FRB may dispose fonts, so let's check:
 
 #if DEBUG
                         if (font?.Textures.Any(item => item?.IsDisposed == true) == true)

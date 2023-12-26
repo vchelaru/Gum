@@ -15,8 +15,6 @@ namespace RenderingLibrary.Content
     {
         public SystemManagers SystemManagers { get; set; }
 
-        public Dictionary<string, IDisposable> Disposables { get; private set; } = new Dictionary<string, IDisposable>();
-
         //List<Atlas> atlases = new List<Atlas>();
 
         public T LoadContent<T>(string contentName)
