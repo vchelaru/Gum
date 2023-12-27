@@ -1842,6 +1842,7 @@ namespace CodeOutputPlugin.Manager
             context.Element = element;
             context.TabCount = tabCount;
             context.CodeOutputProjectSettings = projectSettings;
+            context.StringBuilder = stringBuilder;
 
             #region States
 
@@ -1877,7 +1878,7 @@ namespace CodeOutputPlugin.Manager
 
             GenerateAddToParentsMethod(element, visualApi, tabCount, stringBuilder, projectSettings);
 
-            GenerateApplyDefaultVariables(context, stringBuilder);
+            GenerateApplyDefaultVariables(context);
 
             if (projectSettings.GenerateGumDataTypes)
             {
@@ -3492,20 +3493,20 @@ namespace CodeOutputPlugin.Manager
             return null;
         }
 
-        private static void GenerateApplyDefaultVariables(CodeGenerationContext context, StringBuilder stringBuilder)
+        private static void GenerateApplyDefaultVariables(CodeGenerationContext context)
         {
             var line = "private void ApplyDefaultVariables()";
-            stringBuilder.AppendLine(context.Tabs + line);
-            stringBuilder.AppendLine(context.Tabs + "{");
+            context.StringBuilder.AppendLine(context.Tabs + line);
+            context.StringBuilder.AppendLine(context.Tabs + "{");
             context.TabCount++;
 
             foreach (var instance in context.Element.Instances)
             {
                 context.Instance = instance;
 
-                FillWithNonParentVariableAssignments(context, stringBuilder);
+                FillWithNonParentVariableAssignments(context, context.StringBuilder);
 
-                TryGenerateApplyLocalizationForInstance(context, stringBuilder, instance);
+                TryGenerateApplyLocalizationForInstance(context, context.StringBuilder, instance);
 
                 var instanceApi = GetVisualApiForInstance(instance, context.Element);
                 var screenOrComponent = context.Element is ScreenSave
@@ -3513,19 +3514,18 @@ namespace CodeOutputPlugin.Manager
                     : "ComponentSave";
                 if (instanceApi == VisualApi.Gum && context.CodeOutputProjectSettings.GenerateGumDataTypes)
                 {
-                    stringBuilder.AppendLine(context.Tabs + $"if({screenOrComponent}?.DefaultState != null);");
+                    context.StringBuilder.AppendLine(context.Tabs + $"if({screenOrComponent}?.DefaultState != null);");
                     context.TabCount++;
-                    stringBuilder.AppendLine(context.Tabs + $"GumRuntime.ElementSaveExtensions.ApplyVariableReferences({instance.Name}, {screenOrComponent}.DefaultState);");
+                    context.StringBuilder.AppendLine(context.Tabs + $"GumRuntime.ElementSaveExtensions.ApplyVariableReferences({instance.Name}, {screenOrComponent}.DefaultState);");
                     context.TabCount--;
 
                 }
 
-                stringBuilder.AppendLine();
+                context.StringBuilder.AppendLine();
             }
 
             context.TabCount--;
-            stringBuilder.AppendLine(context.Tabs + "}");
-
+            context.StringBuilder.AppendLine(context.Tabs + "}");
         }
 
         #endregion
