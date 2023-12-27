@@ -210,6 +210,36 @@ namespace RenderingLibrary.Content
                 throw new NotImplementedException();
 #endif
             }
+#if HAS_SYSTEM_DRAWING_IMAGE
+
+            else if (extension == "bmp")
+            {
+                var image = System.Drawing.Image.FromFile(fileNameStandardized);
+                var bitmap = new System.Drawing.Bitmap(image);
+                
+                var texture = new Texture2D(renderer.GraphicsDevice, bitmap.Width, bitmap.Height, false, SurfaceFormat.Color);
+                var pixels = new Microsoft.Xna.Framework.Color[bitmap.Width * bitmap.Height];
+                var index = 0;
+                for (var y = 0; y < bitmap.Height; y++)
+                {
+                    for (var x = 0; x < bitmap.Width; x++)
+                    {
+                        var color = bitmap.GetPixel(x, y);
+                        var r = color.R;
+                        var g = color.G;
+                        var b = color.B;
+                        var a = color.A;
+                        pixels[index] = new Microsoft.Xna.Framework.Color(r, g, b, a);
+                        index++;
+                    }
+                }
+                
+                texture.SetData(pixels);
+                texture.Name = fileNameStandardized;
+
+                toReturn = texture;
+            }
+#endif
             else
             {
                 using (var stream = FileManager.GetStreamForFile(fileNameStandardized))
