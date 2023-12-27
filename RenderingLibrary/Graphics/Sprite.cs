@@ -369,178 +369,254 @@ namespace RenderingLibrary.Graphics
 
         private void RenderTiledSprite(SpriteRenderer spriteRenderer, SystemManagers managers)
         {
-            float texelsWide = 0;
-            float texelsTall = 0;
-
-            int fullTexelsWide = 0;
-            int fullTexelsTall = 0;
-
-            fullTexelsWide = this.Texture.Width;
-            fullTexelsTall = this.Texture.Height;
-
-            texelsWide = fullTexelsWide;
-            if (SourceRectangle.HasValue)
+            if(SourceRectangle == null || SourceRectangle.Value.Width <= 0 || SourceRectangle.Value.Height <= 0 || Texture == null)
             {
-                texelsWide = SourceRectangle.Value.Width;
-            }
-            texelsTall = fullTexelsTall;
-            if (SourceRectangle.HasValue)
-            {
-                texelsTall = SourceRectangle.Value.Height;
+                return;
             }
 
+            // We're going to change the width, height, X, and Y of "this" to make rendering code work
+            // by simply passing in the object. At the end of the drawing, we'll revert the values back
+            // to what they were before rendering started.
+            float oldWidth = this.Width;
+            float oldHeight = this.Height;
 
-            float xRepetitions = texelsWide / (float)fullTexelsWide;
-            float yRepetitions = texelsTall / (float)fullTexelsTall;
+            float textureWidthScale = this.Width / SourceRectangle.Value.Width;
+            float textureHeightScale = this.Height / SourceRectangle.Value.Height;
+
+            float oldX = this.X;
+            float oldY = this.Y;
+
+            var oldSource = this.SourceRectangle.Value;
+
+            var matrix = this.GetRotationMatrix();
 
 
-            if (xRepetitions > 0 && yRepetitions > 0)
+            int currentSourceX = SourceRectangle.Value.X;
+            int currentSourceY = SourceRectangle.Value.Y;
+
+            int rightTextureCoordinate = SourceRectangle.Value.Right;
+            int bottomTextureCoordinate = SourceRectangle.Value.Bottom;
+
+            float spriteLeft = this.X;
+            float spriteTop = this.Y;
+
+            float offsetXFromTopLeft = 0;
+            float offsetYFromTopLeft = 0;
+
+            int xIterations = SourceRectangle.Value.Left / Texture.Width;
+            int yIterations = SourceRectangle.Value.Top / Texture.Height;
+
+            for(int textureCoordinateTop = currentSourceY; textureCoordinateTop < bottomTextureCoordinate; )
             {
-                float eachWidth = this.Width / xRepetitions;
-                float eachHeight = this.Height / yRepetitions;
-
-
-                // We're going to change the width, height, X, and Y of "this" to make rendering code work
-                // by simply passing in the object. At the end of the drawing, we'll revert the values back
-                // to what they were before rendering started.
-                float oldWidth = this.Width;
-                float oldHeight = this.Height;
-
-                float oldX = this.X;
-                float oldY = this.Y;
-
-                var oldSource = this.SourceRectangle.Value;
-
-
-                float texelsPerWorldUnitX = (float)fullTexelsWide / eachWidth;
-                float texelsPerWorldUnitY = (float)fullTexelsTall / eachHeight;
-
-                int oldSourceY = oldSource.Y;
-
-                if (oldSourceY < 0)
+                xIterations = SourceRectangle.Value.Left / Texture.Width;
+                for(int textureCoordinateLeft = currentSourceX; textureCoordinateLeft < rightTextureCoordinate;)
                 {
-                    int amountToAdd = 1 - (oldSourceY / fullTexelsTall);
+                    System.Numerics.Vector3 position;
+                    position.X = oldX;
+                    position.Y = oldY;
+                    position.Z = 0;
+                    position += matrix.Right() * offsetXFromTopLeft;
+                    position += matrix.Up() * offsetYFromTopLeft;
 
-                    oldSourceY += amountToAdd * Texture.Height;
+                    this.X = position.X;
+                    this.Y = position.Y;
+
+                    var textureCoordinateRight = System.Math.Min(Texture.Width, oldSource.Right - xIterations * Texture.Width);
+                    var textureCoordinateBottom = System.Math.Min(Texture.Height, oldSource.Bottom - yIterations * Texture.Height);
+
+                    this.SourceRectangle = new Rectangle(
+                        textureCoordinateLeft - xIterations * Texture.Width, 
+                        textureCoordinateTop - yIterations * Texture.Height, 
+                        textureCoordinateRight - (textureCoordinateLeft - xIterations * Texture.Width), 
+                        textureCoordinateBottom - (textureCoordinateTop - yIterations * Texture.Height ));
+
+                    // todo - multiply:
+                    this.Width = SourceRectangle.Value.Width * textureWidthScale;
+                    this.Height = SourceRectangle.Value.Height * textureHeightScale;
+
+                    Render(managers, spriteRenderer, this, Texture, Color, SourceRectangle, FlipVertical, rotationInDegrees: Rotation);
+
+                    offsetXFromTopLeft += SourceRectangle.Value.Width * textureWidthScale;
+                    xIterations++;
+                    textureCoordinateLeft = ((textureCoordinateLeft / Texture.Width) + 1) * Texture.Width;
                 }
-
-                if (oldSourceY > 0)
-                {
-                    int amountToAdd = System.Math.Abs(oldSourceY) / fullTexelsTall;
-                    oldSourceY -= amountToAdd * Texture.Height;
-                }
-                float currentY = -oldSourceY * (1 / texelsPerWorldUnitY);
-
-                var matrix = this.GetRotationMatrix();
-
-                for (int y = 0; y < yRepetitions; y++)
-                {
-                    float worldUnitsChoppedOffTop = System.Math.Max(0, oldSourceY * (1 / texelsPerWorldUnitY));
-                    //float worldUnitsChoppedOffBottom = System.Math.Max(0, currentY + eachHeight - (int)oldEffectiveHeight);
-
-                    float worldUnitsChoppedOffBottom = 0;
-
-                    float extraY = yRepetitions - y;
-                    if (extraY < 1)
-                    {
-                        worldUnitsChoppedOffBottom = System.Math.Max(0, (1 - extraY) * eachHeight);
-                    }
-
-
-
-                    int texelsChoppedOffTop = 0;
-                    if (worldUnitsChoppedOffTop > 0)
-                    {
-                        texelsChoppedOffTop = oldSourceY;
-                    }
-
-                    int texelsChoppedOffBottom =
-                        RenderingLibrary.Math.MathFunctions.RoundToInt(worldUnitsChoppedOffBottom * texelsPerWorldUnitY);
-
-                    int sourceHeight = (int)(fullTexelsTall - texelsChoppedOffTop - texelsChoppedOffBottom);
-
-                    if (sourceHeight == 0)
-                    {
-                        break;
-                    }
-
-                    this.Height = sourceHeight * 1 / texelsPerWorldUnitY;
-
-                    int oldSourceX = oldSource.X;
-
-                    if (oldSourceX < 0)
-                    {
-                        int amountToAdd = 1 - (oldSourceX / Texture.Width);
-
-                        oldSourceX += amountToAdd * fullTexelsWide;
-                    }
-
-                    if (oldSourceX > 0)
-                    {
-                        int amountToAdd = System.Math.Abs(oldSourceX) / Texture.Width;
-
-                        oldSourceX -= amountToAdd * fullTexelsWide;
-                    }
-
-                    float currentX = -oldSourceX * (1 / texelsPerWorldUnitX) + y * eachHeight * matrix.Up().X;
-                    currentY = y * eachHeight * matrix.Up().Y;
-
-                    for (int x = 0; x < xRepetitions; x++)
-                    {
-                        float worldUnitsChoppedOffLeft = System.Math.Max(0, oldSourceX * (1 / texelsPerWorldUnitX));
-                        float worldUnitsChoppedOffRight = 0;
-
-                        float extra = xRepetitions - x;
-                        if (extra < 1)
-                        {
-                            worldUnitsChoppedOffRight = System.Math.Max(0, (1 - extra) * eachWidth);
-                        }
-
-                        int texelsChoppedOffLeft = 0;
-                        if (worldUnitsChoppedOffLeft > 0)
-                        {
-                            // Let's use the hard number to not have any floating point issues:
-                            //texelsChoppedOffLeft = worldUnitsChoppedOffLeft * texelsPerWorldUnit;
-                            texelsChoppedOffLeft = oldSourceX;
-                        }
-                        int texelsChoppedOffRight =
-                            RenderingLibrary.Math.MathFunctions.RoundToInt(worldUnitsChoppedOffRight * texelsPerWorldUnitX);
-
-                        this.X = oldX + currentX + worldUnitsChoppedOffLeft;
-                        this.Y = oldY + currentY + worldUnitsChoppedOffTop;
-
-                        int sourceWidth = (int)(fullTexelsWide - texelsChoppedOffLeft - texelsChoppedOffRight);
-
-                        if (sourceWidth == 0)
-                        {
-                            break;
-                        }
-
-                        this.Width = sourceWidth * 1 / texelsPerWorldUnitX;
-
-                        this.SourceRectangle = new Rectangle(
-                            texelsChoppedOffLeft,
-                            texelsChoppedOffTop,
-                            sourceWidth,
-                            sourceHeight);
-
-                        Render(managers, spriteRenderer, this, Texture, Color, SourceRectangle, FlipVertical, rotationInDegrees: Rotation);
-
-                        currentX = System.Math.Max(0, currentX);
-                        currentX += this.Width * matrix.Right().X;
-                        currentY += this.Width * matrix.Right().Y;
-
-                    }
-                }
-
-                this.Width = oldWidth;
-                this.Height = oldHeight;
-
-                this.X = oldX;
-                this.Y = oldY;
-
-                this.SourceRectangle = oldSource;
+                offsetYFromTopLeft += SourceRectangle.Value.Height * textureHeightScale;
+                yIterations++;
+                textureCoordinateTop = ((textureCoordinateTop / Texture.Height) + 1) * Texture.Height;
+                offsetXFromTopLeft = 0;
             }
+
+            this.Width = oldWidth;
+            this.Height = oldHeight;
+
+            this.X = oldX;
+            this.Y = oldY;
+
+            this.SourceRectangle = oldSource;
+
+            return;
+
+            //float texelsWide = 0;
+            //float texelsTall = 0;
+
+            //int fullTexelsWide = 0;
+            //int fullTexelsTall = 0;
+
+            //fullTexelsWide = this.Texture.Width;
+            //fullTexelsTall = this.Texture.Height;
+
+            //texelsWide = fullTexelsWide;
+            //if (SourceRectangle.HasValue)
+            //{
+            //    texelsWide = SourceRectangle.Value.Width;
+            //}
+            //texelsTall = fullTexelsTall;
+            //if (SourceRectangle.HasValue)
+            //{
+            //    texelsTall = SourceRectangle.Value.Height;
+            //}
+
+
+            //float xRepetitions = texelsWide / (float)fullTexelsWide;
+            //float yRepetitions = texelsTall / (float)fullTexelsTall;
+
+
+            //if (xRepetitions > 0 && yRepetitions > 0)
+            //{
+            //    float eachWidth = this.Width / xRepetitions;
+            //    float eachHeight = this.Height / yRepetitions;
+
+
+
+            //    float texelsPerWorldUnitX = (float)fullTexelsWide / eachWidth;
+            //    float texelsPerWorldUnitY = (float)fullTexelsTall / eachHeight;
+
+            //    int oldSourceY = oldSource.Y;
+
+            //    if (oldSourceY < 0)
+            //    {
+            //        int amountToAdd = 1 - (oldSourceY / fullTexelsTall);
+
+            //        oldSourceY += amountToAdd * Texture.Height;
+            //    }
+
+            //    if (oldSourceY > 0)
+            //    {
+            //        int amountToAdd = System.Math.Abs(oldSourceY) / fullTexelsTall;
+            //        oldSourceY -= amountToAdd * Texture.Height;
+            //    }
+            //    float currentY = -oldSourceY * (1 / texelsPerWorldUnitY);
+
+            //    var matrix = this.GetRotationMatrix();
+
+            //    for (int y = 0; y < yRepetitions; y++)
+            //    {
+            //        float worldUnitsChoppedOffTop = System.Math.Max(0, oldSourceY * (1 / texelsPerWorldUnitY));
+            //        //float worldUnitsChoppedOffBottom = System.Math.Max(0, currentY + eachHeight - (int)oldEffectiveHeight);
+
+            //        float worldUnitsChoppedOffBottom = 0;
+
+            //        float extraY = yRepetitions - y;
+            //        if (extraY < 1)
+            //        {
+            //            worldUnitsChoppedOffBottom = System.Math.Max(0, (1 - extraY) * eachHeight);
+            //        }
+
+
+
+            //        int texelsChoppedOffTop = 0;
+            //        if (worldUnitsChoppedOffTop > 0)
+            //        {
+            //            texelsChoppedOffTop = oldSourceY;
+            //        }
+
+            //        int texelsChoppedOffBottom =
+            //            RenderingLibrary.Math.MathFunctions.RoundToInt(worldUnitsChoppedOffBottom * texelsPerWorldUnitY);
+
+            //        int sourceHeight = (int)(fullTexelsTall - texelsChoppedOffTop - texelsChoppedOffBottom);
+
+            //        if (sourceHeight == 0)
+            //        {
+            //            break;
+            //        }
+
+            //        this.Height = sourceHeight * 1 / texelsPerWorldUnitY;
+
+            //        int oldSourceX = oldSource.X;
+
+            //        if (oldSourceX < 0)
+            //        {
+            //            int amountToAdd = 1 - (oldSourceX / Texture.Width);
+
+            //            oldSourceX += amountToAdd * fullTexelsWide;
+            //        }
+
+            //        if (oldSourceX > 0)
+            //        {
+            //            int amountToAdd = System.Math.Abs(oldSourceX) / Texture.Width;
+
+            //            oldSourceX -= amountToAdd * fullTexelsWide;
+            //        }
+
+            //        float currentX = -oldSourceX * (1 / texelsPerWorldUnitX) + y * eachHeight * matrix.Up().X;
+            //        currentY = y * eachHeight * matrix.Up().Y;
+
+            //        for (int x = 0; x < xRepetitions; x++)
+            //        {
+            //            float worldUnitsChoppedOffLeft = System.Math.Max(0, oldSourceX * (1 / texelsPerWorldUnitX));
+            //            float worldUnitsChoppedOffRight = 0;
+
+            //            float extra = xRepetitions - x;
+            //            if (extra < 1)
+            //            {
+            //                worldUnitsChoppedOffRight = System.Math.Max(0, (1 - extra) * eachWidth);
+            //            }
+
+            //            int texelsChoppedOffLeft = 0;
+            //            if (worldUnitsChoppedOffLeft > 0)
+            //            {
+            //                // Let's use the hard number to not have any floating point issues:
+            //                //texelsChoppedOffLeft = worldUnitsChoppedOffLeft * texelsPerWorldUnit;
+            //                texelsChoppedOffLeft = oldSourceX;
+            //            }
+            //            int texelsChoppedOffRight =
+            //                RenderingLibrary.Math.MathFunctions.RoundToInt(worldUnitsChoppedOffRight * texelsPerWorldUnitX);
+
+            //            this.X = oldX + currentX + worldUnitsChoppedOffLeft;
+            //            this.Y = oldY + currentY + worldUnitsChoppedOffTop;
+
+            //            int sourceWidth = (int)(fullTexelsWide - texelsChoppedOffLeft - texelsChoppedOffRight);
+
+            //            if (sourceWidth == 0)
+            //            {
+            //                break;
+            //            }
+
+            //            this.Width = sourceWidth * 1 / texelsPerWorldUnitX;
+
+            //            this.SourceRectangle = new Rectangle(
+            //                texelsChoppedOffLeft,
+            //                texelsChoppedOffTop,
+            //                sourceWidth,
+            //                sourceHeight);
+
+            //            Render(managers, spriteRenderer, this, Texture, Color, SourceRectangle, FlipVertical, rotationInDegrees: Rotation);
+
+            //            currentX = System.Math.Max(0, currentX);
+            //            currentX += this.Width * matrix.Right().X;
+            //            currentY += this.Width * matrix.Right().Y;
+
+            //        }
+            //    }
+
+            //    this.Width = oldWidth;
+            //    this.Height = oldHeight;
+
+            //    this.X = oldX;
+            //    this.Y = oldY;
+
+            //    this.SourceRectangle = oldSource;
+            //}
         }
 
 
