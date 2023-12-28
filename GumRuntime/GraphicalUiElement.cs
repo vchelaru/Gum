@@ -3333,14 +3333,12 @@ namespace Gum.Wireframe
                         wasSet = true;
                     }
 
-                    if (wasSet)
+                    // If the address is dimension based, then that means texture coords depend on dimension...but we
+                    // can't make dimension based on texture coords as that would cause a circular reference
+                    if (iTextureCoordinate.SourceRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
                     {
-                        // If the address is dimension based, then that means texture coords depend on dimension...but we
-                        // can't make dimension based on texture coords as that would cause a circular reference
-                        if (iTextureCoordinate.SourceRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
-                        {
-                            heightToSet = iTextureCoordinate.SourceRectangle.Value.Height * mHeight / 100.0f;
-                        }
+                        heightToSet = iTextureCoordinate.SourceRectangle.Value.Height * mHeight / 100.0f;
+                        wasSet = true;
                     }
                 }
 
@@ -3650,14 +3648,12 @@ namespace Gum.Wireframe
                         wasSet = true;
                     }
 
-                    if (wasSet)
+                    // If the address is dimension based, then that means texture coords depend on dimension...but we
+                    // can't make dimension based on texture coords as that would cause a circular reference
+                    if (iTextureCoordinate.SourceRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
                     {
-                        // If the address is dimension based, then that means texture coords depend on dimension...but we
-                        // can't make dimension based on texture coords as that would cause a circular reference
-                        if (iTextureCoordinate.SourceRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
-                        {
-                            widthToSet = iTextureCoordinate.SourceRectangle.Value.Width * mWidth / 100.0f;
-                        }
+                        widthToSet = iTextureCoordinate.SourceRectangle.Value.Width * mWidth / 100.0f;
+                        wasSet = true;
                     }
                 }
 
