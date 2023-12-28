@@ -4161,7 +4161,7 @@ namespace Gum.Wireframe
                     for (int i = 0; i < count; i++)
                     {
                         var asGraphicalUiElement = Children[i] as GraphicalUiElement;
-                        asGraphicalUiElement.ResumeLayoutUpdateIfDirtyRecursive();
+                        asGraphicalUiElement?.SuspendLayout(true);
                     }
                 }
                 else
