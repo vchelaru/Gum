@@ -47,8 +47,8 @@ namespace Gum.DataTypes.Variables
                 //var variable = elementContainingState.GetVariableFromThisOrBase(variableName);
                 var variable = stateSave.GetVariableRecursive(variableName);
 
-
-                if (variable != null && variableName != variable.Name)
+                // in case it is an exposed variable:
+                if (variable != null && variableName.Contains(".") == false && variableName != variable.Name)
                 {
                     value = stateSave.GetValue(variable.Name);
                 }
