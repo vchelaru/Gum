@@ -283,6 +283,15 @@ namespace Gum.Managers
                 {
                     mMenuStrip.Items.Add(mGoToDefinition);
 
+                    mMenuStrip.Items.Add("-");
+
+                    var deleteText = SelectedState.Self.SelectedInstances.Count() > 1
+                        ? $"Delete {SelectedState.Self.SelectedInstances.Count()} instances"
+                        : $"Delete {SelectedState.Self.SelectedInstance.Name}";
+                    mMenuStrip.Items.Add(deleteText, null, (not, used) => GumCommands.Self.Edit.DeleteSelection());
+
+                    mMenuStrip.Items.Add("-");
+
                     mAddInstance.Text = $"Add child object to '{SelectedState.Self.SelectedInstance.Name}'";
                     mMenuStrip.Items.Add(mAddInstance);
                     mAddParentInstance.Text = $"Add parent object to '{SelectedState.Self.SelectedInstance.Name}'";

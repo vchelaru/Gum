@@ -465,8 +465,6 @@ namespace Gum.Commands
 
         }
 
-
-
         public void DisplayReferencesTo(ElementSave element)
         {
 
@@ -558,5 +556,9 @@ namespace Gum.Commands
 
         #endregion
 
+        public void DeleteSelection()
+        {
+            DeleteLogic.Self.HandleDelete();
+        }
     }
 }
