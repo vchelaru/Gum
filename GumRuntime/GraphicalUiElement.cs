@@ -3195,14 +3195,14 @@ namespace Gum.Wireframe
 
         public void UpdateHeight(float parentHeight, bool considerWrappedStacked)
         {
-            float heightToSet = mHeight;
+            float pixelHeightToSet = mHeight;
 
 
             #region AbsoluteMultipliedByFontScale
 
             if (mHeightUnit == DimensionUnitType.AbsoluteMultipliedByFontScale)
             {
-                heightToSet *= GlobalFontScale;
+                pixelHeightToSet *= GlobalFontScale;
             }
 
             #endregion
@@ -3214,7 +3214,7 @@ namespace Gum.Wireframe
                 var effectiveManagers = this.EffectiveManagers;
                 if (effectiveManagers != null)
                 {
-                    heightToSet /= effectiveManagers.Renderer.Camera.Zoom;
+                    pixelHeightToSet /= effectiveManagers.Renderer.Camera.Zoom;
                 }
             }
 
@@ -3305,7 +3305,7 @@ namespace Gum.Wireframe
                     }
                 }
 
-                heightToSet = maxHeight + mHeight;
+                pixelHeightToSet = maxHeight + mHeight;
             }
 
             #endregion
@@ -3314,7 +3314,7 @@ namespace Gum.Wireframe
 
             else if (mHeightUnit == DimensionUnitType.Percentage)
             {
-                heightToSet = parentHeight * mHeight / 100.0f;
+                pixelHeightToSet = parentHeight * mHeight / 100.0f;
             }
 
             #endregion
@@ -3327,7 +3327,7 @@ namespace Gum.Wireframe
 
                 if (mTextureHeight > 0)
                 {
-                    heightToSet = mTextureHeight * mHeight / 100.0f;
+                    pixelHeightToSet = mTextureHeight * mHeight / 100.0f;
                     wasSet = true;
                 }
 
@@ -3335,7 +3335,7 @@ namespace Gum.Wireframe
                 {
                     if (iTextureCoordinate.TextureHeight != null)
                     {
-                        heightToSet = iTextureCoordinate.TextureHeight.Value * mHeight / 100.0f;
+                        pixelHeightToSet = iTextureCoordinate.TextureHeight.Value * mHeight / 100.0f;
                         wasSet = true;
                     }
 
@@ -3343,14 +3343,14 @@ namespace Gum.Wireframe
                     // can't make dimension based on texture coords as that would cause a circular reference
                     if (iTextureCoordinate.SourceRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
                     {
-                        heightToSet = iTextureCoordinate.SourceRectangle.Value.Height * mHeight / 100.0f;
+                        pixelHeightToSet = iTextureCoordinate.SourceRectangle.Value.Height * mHeight / 100.0f;
                         wasSet = true;
                     }
                 }
 
                 if (!wasSet)
                 {
-                    heightToSet = 64 * mHeight / 100.0f;
+                    pixelHeightToSet = 64 * mHeight / 100.0f;
                 }
             }
 
@@ -3370,7 +3370,7 @@ namespace Gum.Wireframe
                     //    throw new NotImplementedException();
                     //}
                     //else 
-                    heightToSet = GetAbsoluteWidth() * (mHeight / 100.0f) / aspectRatioObject.AspectRatio;
+                    pixelHeightToSet = GetAbsoluteWidth() * (mHeight / 100.0f) / aspectRatioObject.AspectRatio;
                     wasSet = true;
 
                     if (wasSet && mContainedObjectAsIpso is ITextureCoordinate textureCoordinate)
@@ -3380,13 +3380,13 @@ namespace Gum.Wireframe
                         if (textureCoordinate.SourceRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
                         {
                             var scale = GetAbsoluteWidth() / textureCoordinate.SourceRectangle.Value.Width;
-                            heightToSet = textureCoordinate.SourceRectangle.Value.Height * scale * mHeight / 100.0f;
+                            pixelHeightToSet = textureCoordinate.SourceRectangle.Value.Height * scale * mHeight / 100.0f;
                         }
                     }
                 }
                 if (!wasSet)
                 {
-                    heightToSet = 64 * mHeight / 100.0f;
+                    pixelHeightToSet = 64 * mHeight / 100.0f;
                 }
             }
 
@@ -3396,7 +3396,7 @@ namespace Gum.Wireframe
 
             else if (mHeightUnit == DimensionUnitType.RelativeToContainer)
             {
-                heightToSet = parentHeight + mHeight;
+                pixelHeightToSet = parentHeight + mHeight;
             }
 
             #endregion
@@ -3405,7 +3405,7 @@ namespace Gum.Wireframe
 
             else if (mHeightUnit == DimensionUnitType.PercentageOfOtherDimension)
             {
-                heightToSet = mContainedObjectAsIpso.Width * mHeight / 100.0f;
+                pixelHeightToSet = mContainedObjectAsIpso.Width * mHeight / 100.0f;
             }
 
             #endregion
@@ -3415,7 +3415,7 @@ namespace Gum.Wireframe
             {
                 if(this.Height == 0)
                 {
-                    heightToSet = 0;
+                    pixelHeightToSet = 0;
                 }
                 else
                 {
@@ -3478,17 +3478,17 @@ namespace Gum.Wireframe
                     }
                     if (totalRatio > 0)
                     {
-                        heightToSet = heightToSplit * (this.Height / totalRatio);
+                        pixelHeightToSet = heightToSplit * (this.Height / totalRatio);
                     }
                     else
                     {
-                        heightToSet = heightToSplit;
+                        pixelHeightToSet = heightToSplit;
                     }
                 }
             }
             #endregion
 
-            mContainedObjectAsIpso.Height = heightToSet;
+            mContainedObjectAsIpso.Height = pixelHeightToSet;
         }
 
         public void UpdateWidth(float parentWidth, bool considerWrappedStacked)

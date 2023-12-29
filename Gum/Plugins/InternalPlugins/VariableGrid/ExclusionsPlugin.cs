@@ -41,7 +41,7 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid
             {
                 var childrenLayoutVariable = finder.GetVariable("Children Layout");
                 var isStack = false;
-                if(childrenLayoutVariable.Value is ChildrenLayout childrenLayout)
+                if(childrenLayoutVariable?.Value is ChildrenLayout childrenLayout)
                 {
                     isStack = childrenLayout == ChildrenLayout.LeftToRightStack || childrenLayout == ChildrenLayout.TopToBottomStack;
                 }
