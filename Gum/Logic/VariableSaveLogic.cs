@@ -3,6 +3,8 @@ using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.ToolStates;
+using Gum.Wireframe;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Gum.Logic
@@ -66,7 +68,14 @@ namespace Gum.Logic
                 RecursiveVariableFinder rvf;
                 if (currentInstance != null)
                 {
-                    rvf = new RecursiveVariableFinder(currentInstance, container);
+                    //rvf = new RecursiveVariableFinder(currentInstance, container);
+                    // this should respect the current state:
+
+                    var elementWithState = new ElementWithState(container);
+                    elementWithState.InstanceName = currentInstance?.Name;
+                    elementWithState.StateName = GumState.Self.SelectedState.SelectedStateSave?.Name;
+                    var stack = new List<ElementWithState>() { elementWithState };
+                    rvf = new RecursiveVariableFinder(stack);
                 }
                 else
                 {

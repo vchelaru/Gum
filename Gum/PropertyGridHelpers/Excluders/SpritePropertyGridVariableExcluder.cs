@@ -1,6 +1,7 @@
 ﻿using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using System.ComponentModel.Composition;
+using System.Linq;
 
 namespace Gum.PropertyGridHelpers.Excluders
 {
@@ -32,6 +33,12 @@ namespace Gum.PropertyGridHelpers.Excluders
             if(!string.IsNullOrEmpty(nameOfInstanceOwningVariable))
             {
                 prefix = nameOfInstanceOwningVariable + ".";
+            }
+            
+            if(string.IsNullOrEmpty(prefix) && !string.IsNullOrEmpty( rvf.ElementStack.Last().InstanceName ))
+            {
+                prefix = rvf.ElementStack.Last().InstanceName + ".";
+
             }
 
             if (rootName == "Texture Top" || rootName == "Texture Left")

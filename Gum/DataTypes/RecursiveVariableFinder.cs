@@ -62,7 +62,7 @@ namespace Gum.DataTypes
             // Vic asks - if the RFV is for an instance in a container, should the instance name be set on the
             // elementWithState? The GetVariable method seems to expect that, so let's try that:
             // Update - the reason this works this way is - if the ElementWithState has an instance, then the name
-            // of the instance is automatically used on the variable. In other words, if this is assigned, and we want
+            // of the instance is automatically used on the variable. In other words, if an instance is assigned, and we want
             // the X value on the instance, then we sould ask the RecursiveVariableFinder for "X".
             // If no instance is assigned, then we would ask for "InstanceName.X". However, since the
             // constructor here explicitly assigns an instance, I think it's proper to assign the instance
@@ -88,12 +88,16 @@ namespace Gum.DataTypes
 
         public RecursiveVariableFinder(List<ElementWithState> elementStack)
         {
-            ContainerType = VariableContainerType.StateSave;
 
 
             var last = elementStack.Last();
             mStateSave = last.StateSave;
             ElementStack = elementStack;
+
+            // technically the elementstack could include elements that have instances. However, 
+            // the element stack could have a mix where some ElementWithStates have instances, and 
+            // some do not. therefore, we can't assume the entire thing uses instances. 
+            ContainerType = VariableContainerType.StateSave;
         }
 
         public RecursiveVariableFinder(StateSave stateSave)
