@@ -3325,6 +3325,12 @@ namespace Gum.Wireframe
             {
                 bool wasSet = false;
 
+                if (mTextureHeight > 0)
+                {
+                    heightToSet = mTextureHeight * mHeight / 100.0f;
+                    wasSet = true;
+                }
+
                 if (mContainedObjectAsIpso is ITextureCoordinate iTextureCoordinate)
                 {
                     if (iTextureCoordinate.TextureHeight != null)
@@ -3638,6 +3644,12 @@ namespace Gum.Wireframe
             else if (mWidthUnit == DimensionUnitType.PercentageOfSourceFile)
             {
                 bool wasSet = false;
+
+                if (mTextureWidth > 0)
+                {
+                    widthToSet = mTextureWidth * mWidth / 100.0f;
+                    wasSet = true;
+                }
 
                 if (mContainedObjectAsIpso is ITextureCoordinate iTextureCoordinate)
                 {
