@@ -246,7 +246,13 @@ namespace Gum.Logic
 
         private static void PasteCopiedInstanceSaves(TopOrRecursive topOrRecursive)
         {
-            if(topOrRecursive == TopOrRecursive.Recursive)
+            var element = SelectedState.Self.SelectedElement;
+
+            if(element == null)
+            {
+                GumCommands.Self.GuiCommands.ShowMessage("Select a target Screen or component to paste the copied instance(s).");
+            }
+            else if(topOrRecursive == TopOrRecursive.Recursive)
             {
                 PasteInstanceSaves(CopiedData.CopiedInstancesRecursive, CopiedData.CopiedStates, SelectedState.Self.SelectedElement, SelectedState.Self.SelectedInstance);
             }
