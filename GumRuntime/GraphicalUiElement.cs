@@ -1118,7 +1118,7 @@ namespace Gum.Wireframe
         }
 
         /// <summary>
-        /// The pixel width of the displayed region.
+        /// The pixel width of the source rectangle on the referenced texture.
         /// </summary>
         public int TextureWidth
         {
@@ -1137,7 +1137,7 @@ namespace Gum.Wireframe
         }
 
         /// <summary>
-        /// The pixel height of the displayed region.
+        /// The pixel height of the source rectangle on the referenced texture.
         /// </summary>
         public int TextureHeight
         {
