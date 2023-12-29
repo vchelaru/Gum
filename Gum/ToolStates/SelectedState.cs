@@ -338,6 +338,11 @@ namespace Gum.ToolStates
                         ElementSave parent = value.ParentContainer;
 
                         ElementTreeViewManager.Self.Select(value, parent);
+
+                        if(parent != null && SelectedElement == null)
+                        {
+                            SelectedElement = parent;
+                        }
                     }
                     else if (value == null && SelectedInstance != null)
                     {
@@ -598,6 +603,8 @@ namespace Gum.ToolStates
             }
 
             SelectionManager.Self.Refresh();
+
+
 
             if (SelectedStateSave != null)
             {

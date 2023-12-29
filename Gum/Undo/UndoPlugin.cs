@@ -47,11 +47,14 @@ namespace Gum.Undo
         void HandleElementSelected(DataTypes.ElementSave obj)
         {
             UndoManager.Self.RecordState();
+            UndoManager.Self.BroadcastUndosChanged();
         }
 
         void HandleInstanceSelected(DataTypes.ElementSave elementSave, InstanceSave instanceSave)
         {
             UndoManager.Self.RecordState();
+            // the instance could have changed the element, so broadcast anyway
+            UndoManager.Self.BroadcastUndosChanged();
         }
     }
 }

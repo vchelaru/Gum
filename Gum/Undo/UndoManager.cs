@@ -51,13 +51,14 @@ namespace Gum.Undo
             }
         }
 
-        public event EventHandler UndosChanged;
 
         //StateSave mRecordedStateSave;
         //List<InstanceSave> mRecordedInstanceList;
 
         #endregion
 
+        public event EventHandler UndosChanged;
+        public void BroadcastUndosChanged() => UndosChanged?.Invoke(this, null);
 
         public static UndoManager Self { get; private set; } = new UndoManager();
 
