@@ -11,7 +11,6 @@ using Vector3 = System.Numerics.Vector3;
 using Color = System.Drawing.Color;
 using Matrix = System.Numerics.Matrix4x4;
 using System.Linq;
-using System.Data.SqlTypes;
 using ToolsUtilitiesStandard.Helpers;
 using System.Drawing;
 
