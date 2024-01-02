@@ -27,15 +27,10 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid
 
         private bool HandleGetIfVariableIsExcluded(VariableSave variable, RecursiveVariableFinder finder)
         {
-            var instance = GumState.Self.SelectedState.SelectedInstance;
-
-            var prefix = instance == null
-                ? ""
-                : instance.Name + ".";
 
             if(variable.Name == "AutoGridHorizontalCells" || variable.Name == "AutoGridVerticalCells")
             {
-                var childrenLayoutVariable = finder.GetVariable(prefix + "Children Layout");
+                var childrenLayoutVariable = finder.GetVariable("Children Layout");
 
                 var isAuto = false;
                 if(childrenLayoutVariable?.Value is ChildrenLayout childrenLayout)
@@ -46,7 +41,7 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid
             }
             else if(variable.Name == "StackSpacing" || variable.Name == "Wraps Children")
             {
-                var childrenLayoutVariable = finder.GetVariable(prefix + "Children Layout");
+                var childrenLayoutVariable = finder.GetVariable("Children Layout");
                 var isStack = false;
                 if(childrenLayoutVariable?.Value is ChildrenLayout childrenLayout)
                 {

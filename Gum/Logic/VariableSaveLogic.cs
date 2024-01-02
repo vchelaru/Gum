@@ -75,7 +75,9 @@ namespace Gum.Logic
                     elementWithState.InstanceName = currentInstance?.Name;
                     elementWithState.StateName = GumState.Self.SelectedState.SelectedStateSave?.Name;
                     var stack = new List<ElementWithState>() { elementWithState };
-                    rvf = new RecursiveVariableFinder(stack);
+
+                    // Pass in the current instance so that everything is relative to that and the checks don't have to prefix anything
+                    rvf = new RecursiveVariableFinder(currentInstance, stack);
                 }
                 else
                 {
