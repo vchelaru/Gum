@@ -35,7 +35,7 @@ namespace Gum.PropertyGridHelpers.Excluders
                 prefix = nameOfInstanceOwningVariable + ".";
             }
             
-            if(string.IsNullOrEmpty(prefix) && !string.IsNullOrEmpty( rvf.ElementStack.Last().InstanceName ))
+            if(string.IsNullOrEmpty(prefix) && !string.IsNullOrEmpty( rvf.ElementStack.Last().InstanceName ) && rvf.ContainerType != DataTypes.RecursiveVariableFinder.VariableContainerType.InstanceSave)
             {
                 prefix = rvf.ElementStack.Last().InstanceName + ".";
 

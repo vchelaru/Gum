@@ -1,0 +1,89 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ScreenSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Name>ExposedVariableScreen</Name>
+  <State>
+    <Name>Default</Name>
+    <Variable>
+      <Type>int</Type>
+      <Name>ComponentExposingColorInstance.Blue</Name>
+      <Value xsi:type="xsd:int">146</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
+      <Name>ComponentExposingColorInstance.Green</Name>
+      <Value xsi:type="xsd:int">47</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
+      <Name>ComponentExposingColorInstance.Red</Name>
+      <Value xsi:type="xsd:int">151</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ComponentExposingColorInstance.X</Name>
+      <Value xsi:type="xsd:float">101</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ComponentExposingColorInstance.Y</Name>
+      <Value xsi:type="xsd:float">58</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>ComponentExposingTextInstance.Text</Name>
+      <Value xsi:type="xsd:string">First Exposed Text</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ComponentExposingTextInstance.X</Name>
+      <Value xsi:type="xsd:float">61</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ComponentExposingTextInstance.Y</Name>
+      <Value xsi:type="xsd:float">242</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>ComponentExposingTextInstance1.Text</Name>
+      <Value xsi:type="xsd:string">Second Exposed Text</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ComponentExposingTextInstance1.X</Name>
+      <Value xsi:type="xsd:float">244</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ComponentExposingTextInstance1.Y</Name>
+      <Value xsi:type="xsd:float">241</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+  </State>
+  <Instance>
+    <Name>ComponentExposingColorInstance</Name>
+    <BaseType>ComponentExposingColor</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>ComponentExposingTextInstance</Name>
+    <BaseType>ComponentExposingText</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>ComponentExposingTextInstance1</Name>
+    <BaseType>ComponentExposingText</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Behaviors />
+</ScreenSave>
