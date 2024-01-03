@@ -140,6 +140,120 @@ namespace CodeOutputPlugin.Manager
 
         #endregion
 
+        #region Generated Variables (Exposed and "new")
+
+        private static void FillWithExposedVariables(ElementSave element, StringBuilder stringBuilder, VisualApi visualApi, int tabCount)
+        {
+            var exposedVariables = element.DefaultState.Variables
+                .Where(item => !string.IsNullOrEmpty(item.ExposedAsName))
+                .ToArray();
+
+            foreach (var exposedVariable in exposedVariables)
+            {
+                // 
+                FillWithExposedVariable(exposedVariable, element, stringBuilder, tabCount);
+                stringBuilder.AppendLine();
+            }
+        }
+
+        private static void FillWithExposedVariable(VariableSave exposedVariable, ElementSave container, StringBuilder stringBuilder, int tabCount)
+        {
+
+            // if both the container and the instance are xamarin forms objects, then we can try to do some bubble-up binding
+            var instanceName = exposedVariable.SourceObject;
+            var foundInstance = container.GetInstance(instanceName);
+            ///////////////Early Out//////////////////////
+            if (foundInstance == null)
+            {
+                return;
+            }
+            //////////////End Early Out///////////////////
+
+            var bindingBehavior = GetBindingBehavior(container, instanceName);
+            var type = exposedVariable.Type;
+
+            if (exposedVariable.IsState(container, out ElementSave stateContainer, out StateSaveCategory category))
+            {
+
+                string stateContainerType;
+                VisualApi visualApi = GetVisualApiForElement(stateContainer);
+                stateContainerType = GetClassNameForType(stateContainer.Name, visualApi);
+                type = $"{stateContainerType}.{category.Name}";
+            }
+
+            if (bindingBehavior == BindingBehavior.BindablePropertyWithBoundInstance)
+            {
+                var containerClassName = GetClassNameForType(container.Name, VisualApi.XamarinForms);
+                stringBuilder.AppendLine($"{ToTabs(tabCount)}public static readonly BindableProperty {exposedVariable.ExposedAsName}Property = " +
+                    $"BindableProperty.Create(nameof({exposedVariable.ExposedAsName}),typeof({type}),typeof({containerClassName}), defaultBindingMode: BindingMode.TwoWay);");
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {exposedVariable.ExposedAsName}");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => ({type})GetValue({exposedVariable.ExposedAsName.Replace(" ", "")}Property);");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => SetValue({exposedVariable.ExposedAsName.Replace(" ", "")}Property, value);");
+                tabCount--;
+                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+            }
+            else if (bindingBehavior == BindingBehavior.BindablePropertyWithEventAssignment)
+            {
+                var rcv = new RecursiveVariableFinder(container.DefaultState);
+                var defaultValue = rcv.GetValue(exposedVariable.Name);
+                var defaultValueAsString = VariableValueToGumCodeValue(exposedVariable, container, forcedValue: defaultValue);
+                var containerClassName = GetClassNameForType(container.Name, VisualApi.XamarinForms);
+
+                string defaultAssignmentWithComma = null;
+
+                if (!string.IsNullOrEmpty(defaultValueAsString))
+                {
+                    defaultAssignmentWithComma = $", defaultValue:{defaultValueAsString}";
+                }
+
+                stringBuilder.AppendLine($"{ToTabs(tabCount)}public static readonly BindableProperty {exposedVariable.ExposedAsName}Property = " +
+                    $"BindableProperty.Create(nameof({exposedVariable.ExposedAsName}),typeof({type}),typeof({containerClassName}), defaultBindingMode: BindingMode.TwoWay, propertyChanged:Handle{exposedVariable.ExposedAsName}PropertyChanged{defaultAssignmentWithComma});");
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {exposedVariable.ExposedAsName}");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => ({type})GetValue({exposedVariable.ExposedAsName.Replace(" ", "")}Property);");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => SetValue({exposedVariable.ExposedAsName.Replace(" ", "")}Property, value);");
+                tabCount--;
+                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"private static void Handle{exposedVariable.ExposedAsName}PropertyChanged(BindableObject bindable, object oldValue, object newValue)");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"var casted = bindable as {containerClassName};");
+
+                if (!string.IsNullOrWhiteSpace(exposedVariable.SourceObject))
+                {
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{exposedVariable.SourceObject}.{exposedVariable.GetRootName()} = ({type})newValue;");
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{exposedVariable.SourceObject}?.EffectiveManagers?.InvalidateSurface();");
+                }
+                else
+                {
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{exposedVariable.Name.Replace(" ", "")} = ({type})newValue;");
+                }
+
+                tabCount--;
+                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+            }
+            else
+            {
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {exposedVariable.ExposedAsName}");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => {exposedVariable.Name.Replace(" ", "")};");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {exposedVariable.Name.Replace(" ", "")} = value;");
+                tabCount--;
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+            }
+        }
+
+        #endregion
+
         #region Initialize
 
         static bool DoesElementInheritFromCodeGeneratedElement(ElementSave element, CodeOutputProjectSettings projectSettings)
@@ -1869,8 +1983,12 @@ namespace CodeOutputPlugin.Manager
                 GenerateGumSaveObjects(context, stringBuilder);
             }
 
+            #region Variables (Exposed and "new")
+
+
             FillWithExposedVariables(element, stringBuilder, visualApi, tabCount);
             // -- no need for AppendLine here since FillWithExposedVariables does it after every variable --
+            #endregion
 
             GenerateConstructor(element, visualApi, tabCount, stringBuilder, projectSettings);
 
@@ -2592,116 +2710,6 @@ namespace CodeOutputPlugin.Manager
 
             context.TabCount--;
             stringBuilder.AppendLine(ToTabs(context.TabCount) + "}");
-        }
-
-        private static void FillWithExposedVariables(ElementSave element, StringBuilder stringBuilder, VisualApi visualApi, int tabCount)
-        {
-            var exposedVariables = element.DefaultState.Variables
-                .Where(item => !string.IsNullOrEmpty(item.ExposedAsName))
-                .ToArray();
-
-            foreach (var exposedVariable in exposedVariables)
-            {
-                // 
-                FillWithExposedVariable(exposedVariable, element, stringBuilder, tabCount);
-                stringBuilder.AppendLine();
-            }
-        }
-
-        private static void FillWithExposedVariable(VariableSave exposedVariable, ElementSave container, StringBuilder stringBuilder, int tabCount)
-        {
-
-            // if both the container and the instance are xamarin forms objects, then we can try to do some bubble-up binding
-            var instanceName = exposedVariable.SourceObject;
-            var foundInstance = container.GetInstance(instanceName);
-            ///////////////Early Out//////////////////////
-            if(foundInstance == null)
-            {
-                return;
-            }
-            //////////////End Early Out///////////////////
-            
-            var bindingBehavior = GetBindingBehavior(container, instanceName);
-            var type = exposedVariable.Type;
-
-            if (exposedVariable.IsState(container, out ElementSave stateContainer, out StateSaveCategory category))
-            {
-
-                string stateContainerType;
-                VisualApi visualApi = GetVisualApiForElement(stateContainer);
-                stateContainerType = GetClassNameForType(stateContainer.Name, visualApi);
-                type = $"{stateContainerType}.{category.Name}";
-            }
-
-            if (bindingBehavior == BindingBehavior.BindablePropertyWithBoundInstance)
-            {
-                var containerClassName = GetClassNameForType(container.Name, VisualApi.XamarinForms);
-                stringBuilder.AppendLine($"{ToTabs(tabCount)}public static readonly BindableProperty {exposedVariable.ExposedAsName}Property = " +
-                    $"BindableProperty.Create(nameof({exposedVariable.ExposedAsName}),typeof({type}),typeof({containerClassName}), defaultBindingMode: BindingMode.TwoWay);");
-
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {exposedVariable.ExposedAsName}");
-                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-                tabCount++;
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => ({type})GetValue({exposedVariable.ExposedAsName.Replace(" ", "")}Property);");
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => SetValue({exposedVariable.ExposedAsName.Replace(" ", "")}Property, value);");
-                tabCount--;
-                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
-            }
-            else if (bindingBehavior == BindingBehavior.BindablePropertyWithEventAssignment)
-            {
-                var rcv = new RecursiveVariableFinder(container.DefaultState);
-                var defaultValue = rcv.GetValue(exposedVariable.Name);
-                var defaultValueAsString = VariableValueToGumCodeValue(exposedVariable, container, forcedValue: defaultValue);
-                var containerClassName = GetClassNameForType(container.Name, VisualApi.XamarinForms);
-
-                string defaultAssignmentWithComma = null;
-
-                if (!string.IsNullOrEmpty(defaultValueAsString))
-                {
-                    defaultAssignmentWithComma = $", defaultValue:{defaultValueAsString}";
-                }
-
-                stringBuilder.AppendLine($"{ToTabs(tabCount)}public static readonly BindableProperty {exposedVariable.ExposedAsName}Property = " +
-                    $"BindableProperty.Create(nameof({exposedVariable.ExposedAsName}),typeof({type}),typeof({containerClassName}), defaultBindingMode: BindingMode.TwoWay, propertyChanged:Handle{exposedVariable.ExposedAsName}PropertyChanged{defaultAssignmentWithComma});");
-
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {exposedVariable.ExposedAsName}");
-                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-                tabCount++;
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => ({type})GetValue({exposedVariable.ExposedAsName.Replace(" ", "")}Property);");
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => SetValue({exposedVariable.ExposedAsName.Replace(" ", "")}Property, value);");
-                tabCount--;
-                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
-
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"private static void Handle{exposedVariable.ExposedAsName}PropertyChanged(BindableObject bindable, object oldValue, object newValue)");
-                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-                tabCount++;
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"var casted = bindable as {containerClassName};");
-
-                if (!string.IsNullOrWhiteSpace(exposedVariable.SourceObject))
-                {
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{exposedVariable.SourceObject}.{exposedVariable.GetRootName()} = ({type})newValue;");
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{exposedVariable.SourceObject}?.EffectiveManagers?.InvalidateSurface();");
-                }
-                else
-                {
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{exposedVariable.Name.Replace(" ", "")} = ({type})newValue;");
-                }
-
-                tabCount--;
-                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
-            }
-            else
-            {
-
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {exposedVariable.ExposedAsName}");
-                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-                tabCount++;
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => {exposedVariable.Name.Replace(" ", "")};");
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {exposedVariable.Name.Replace(" ", "")} = value;");
-                tabCount--;
-
-                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
-            }
         }
 
         private static BindingBehavior GetBindingBehavior(ElementSave container, string instanceName)
