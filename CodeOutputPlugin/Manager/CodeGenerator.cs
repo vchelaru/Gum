@@ -16,6 +16,7 @@ using System.Globalization;
 using System.Linq;
 using System.Net.Mime;
 using System.Runtime.CompilerServices;
+using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Animation;
@@ -142,22 +143,49 @@ namespace CodeOutputPlugin.Manager
 
         #region Generated Variables (Exposed and "new")
 
-        private static void FillWithExposedVariables(ElementSave element, StringBuilder stringBuilder, VisualApi visualApi, int tabCount)
+        private static void FillWithNewVariables(CodeGenerationContext context)
         {
-            var exposedVariables = element.DefaultState.Variables
+            var variables = context.Element.DefaultState.Variables;
+
+            var stringBuilder = context.StringBuilder;
+
+            foreach(var variable in variables)
+            {
+                if(variable.IsCustomVariable)
+                {
+                    var type = variable.Type;
+                    var name = variable.Name;
+                    stringBuilder.AppendLine(context.Tabs + $"public {type} {name}");
+                    stringBuilder.AppendLine(context.Tabs + "{");
+                    context.TabCount++;
+                    stringBuilder.AppendLine(context.Tabs + $"get;");
+                    stringBuilder.AppendLine(context.Tabs + $"set;");
+                    context.TabCount--;
+
+                    stringBuilder.AppendLine(context.Tabs + "}");
+                }
+            }
+        }
+
+        private static void FillWithExposedVariables(CodeGenerationContext context)
+        {
+            var exposedVariables = context.Element.DefaultState.Variables
                 .Where(item => !string.IsNullOrEmpty(item.ExposedAsName))
                 .ToArray();
 
             foreach (var exposedVariable in exposedVariables)
             {
                 // 
-                FillWithExposedVariable(exposedVariable, element, stringBuilder, tabCount);
-                stringBuilder.AppendLine();
+                FillWithExposedVariable(exposedVariable, context);
+                context.StringBuilder.AppendLine();
             }
         }
 
-        private static void FillWithExposedVariable(VariableSave exposedVariable, ElementSave container, StringBuilder stringBuilder, int tabCount)
+        private static void FillWithExposedVariable(VariableSave exposedVariable, CodeGenerationContext context)
         {
+            var container = context.Element;
+            var stringBuilder = context.StringBuilder;
+            var tabCount = context.TabCount;
 
             // if both the container and the instance are xamarin forms objects, then we can try to do some bubble-up binding
             var instanceName = exposedVariable.SourceObject;
@@ -1985,8 +2013,9 @@ namespace CodeOutputPlugin.Manager
 
             #region Variables (Exposed and "new")
 
+            FillWithNewVariables(context);
 
-            FillWithExposedVariables(element, stringBuilder, visualApi, tabCount);
+            FillWithExposedVariables(context);
             // -- no need for AppendLine here since FillWithExposedVariables does it after every variable --
             #endregion
 
@@ -2112,6 +2141,7 @@ namespace CodeOutputPlugin.Manager
         #endregion
 
         #region Assign Gum References (this.ComponentSave = ...)
+
         private static void GenerateAssignGumReferences(ElementSave element, VisualApi visualApi, int tabCount, StringBuilder stringBuilder)
         {
             var line = "private void AssignGumReferences()";
@@ -2151,6 +2181,7 @@ namespace CodeOutputPlugin.Manager
             tabCount--;
             stringBuilder.AppendLine(ToTabs(tabCount) + "}");
         }
+
         #endregion
 
         public static string GetElementNamespace(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
@@ -3508,6 +3539,16 @@ namespace CodeOutputPlugin.Manager
             context.StringBuilder.AppendLine(context.Tabs + "{");
             context.TabCount++;
 
+            foreach(var variable in context.Element.DefaultState.Variables)
+            {
+                if(variable.IsCustomVariable)
+                {
+                    // assign it:
+                    context.StringBuilder.AppendLine($"{context.CodePrefix}.{variable.Name} = {VariableValueToGumCodeValue(variable, context.Element)};");
+
+                }
+            }
+
             foreach (var instance in context.Element.Instances)
             {
                 context.Instance = instance;
@@ -3535,8 +3576,6 @@ namespace CodeOutputPlugin.Manager
             context.TabCount--;
             context.StringBuilder.AppendLine(context.Tabs + "}");
         }
-
-        #endregion
 
         private static void ProcessVariableGroups(List<VariableSave> variablesToConsider, StateSave defaultState, VisualApi visualApi, StringBuilder stringBuilder, CodeGenerationContext context)
         {
@@ -3595,6 +3634,8 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
+
+        #endregion
         private static void ProcessColorForLabel(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, StringBuilder stringBuilder, CodeGenerationContext context)
         {
             var rfv = new RecursiveVariableFinder(defaultState);
