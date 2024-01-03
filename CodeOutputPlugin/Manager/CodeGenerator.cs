@@ -141,7 +141,7 @@ namespace CodeOutputPlugin.Manager
 
         #endregion
 
-        #region Generated Variables (Exposed and "new")
+        #region Generated Variables Properties (Exposed and "new")
 
         private static void FillWithNewVariables(CodeGenerationContext context)
         {
@@ -2999,6 +2999,24 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
+        private static string VariableValueToXamarinFormsCodeValue(VariableSave variable, ElementSave container, CodeGenerationContext context)
+        {
+            var value = variable.Value;
+            var rootName = variable.GetRootName();
+            var isState = variable.IsState(container, out ElementSave categoryContainer, out StateSaveCategory category);
+            return VariableValueToXamarinFormsCodeValue(value, rootName, isState, categoryContainer, category, context);
+        }
+
+        private static string VariableValueToXamarinFormsCodeValue(VariableListSave variable, ElementSave container, CodeGenerationContext context)
+        {
+            var value = variable.ValueAsIList;
+            var rootName = variable.GetRootName();
+            var isState = false;
+            return VariableValueToXamarinFormsCodeValue(value, rootName, isState, null, null, context);
+        }
+
+
+
         private static string GetCodeLine(VariableListSave variable, CodeGenerationContext context, VisualApi visualApi)
         {
             // for now we actually don't do anything with this - I used to think we would, but the variable lists are part of the Gum save objects, not rutnime.
@@ -3185,7 +3203,7 @@ namespace CodeOutputPlugin.Manager
                 }
                 else
                 {
-                    return "\"" + asString.Replace("\n", "\\n") + "\"";
+                    return "\"" + asString.Replace("\n", "\\n").Replace("\"", "\\\"") + "\"";
                 }
             }
             else if (value is bool)
@@ -3849,22 +3867,6 @@ namespace CodeOutputPlugin.Manager
         }
 
 
-
-        private static string VariableValueToXamarinFormsCodeValue(VariableSave variable, ElementSave container, CodeGenerationContext context)
-        {
-            var value = variable.Value;
-            var rootName = variable.GetRootName();
-            var isState = variable.IsState(container, out ElementSave categoryContainer, out StateSaveCategory category);
-            return VariableValueToXamarinFormsCodeValue(value, rootName, isState, categoryContainer, category, context);
-        }
-
-        private static string VariableValueToXamarinFormsCodeValue(VariableListSave variable, ElementSave container, CodeGenerationContext context)
-        {
-            var value = variable.ValueAsIList;
-            var rootName = variable.GetRootName();
-            var isState = false;
-            return VariableValueToXamarinFormsCodeValue(value, rootName, isState, null, null, context);
-        }
 
 
         private static object GetGumVariableName(VariableSave variable, ElementSave container)
