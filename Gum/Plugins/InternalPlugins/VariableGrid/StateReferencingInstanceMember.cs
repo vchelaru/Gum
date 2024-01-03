@@ -696,11 +696,37 @@ namespace Gum.PropertyGridHelpers
                         }
                     }
 
-                    stateSave.SetValue(Name, newValue, instanceSave, variableType);
 
-                    if(!string.IsNullOrEmpty(existingVariable?.ExposedAsName))
+                    VariableSave foundAtComponentOrBase = null;
+
+                    if (!string.IsNullOrEmpty(existingVariable?.ExposedAsName))
                     {
-                        // need to set the exposed name on the variable:
+                        // need to set the exposed name on the variable, but only if it is defined in this component or in
+                        // a base component:
+
+                        foundAtComponentOrBase = SelectedState.Self.SelectedStateSave.GetVariableSave(Name);
+                        if (foundAtComponentOrBase == null && SelectedState.Self.SelectedStateSave != SelectedState.Self.SelectedElement.DefaultState)
+                        {
+                            foundAtComponentOrBase = SelectedState.Self.SelectedElement.DefaultState.GetVariableSave(Name);
+                        }
+
+                        if (foundAtComponentOrBase == null)
+                        {
+                            var allBase = ObjectFinder.Self.GetBaseElements(SelectedState.Self.SelectedElement);
+                            foreach (var baseElement in allBase)
+                            {
+                                foundAtComponentOrBase = baseElement.DefaultState.GetVariableSave(Name);
+                                if (foundAtComponentOrBase != null)
+                                {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    stateSave.SetValue(Name, newValue, instanceSave, variableType);
+                    if (!string.IsNullOrEmpty(existingVariable?.ExposedAsName)  && foundAtComponentOrBase != null)
+                    {
                         var variable = stateSave.GetVariableSave(Name);
                         variable.ExposedAsName = existingVariable.ExposedAsName;
                     }
