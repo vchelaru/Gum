@@ -123,6 +123,7 @@ namespace RenderingLibrary.Math.Geometry
         }
 
         float mRotation;
+        float lastAbsoluteRotation;
         public float Rotation
         {
             // even though it doesn't rotate itself, its children
@@ -130,8 +131,9 @@ namespace RenderingLibrary.Math.Geometry
             get => mRotation;
             set
             {
-                if(mRotation != value)
+                if(mRotation != value || lastAbsoluteRotation != this.GetAbsoluteRotation())
                 {
+                    lastAbsoluteRotation = this.GetAbsoluteRotation();
                     mRotation = value;
                     UpdatePoints();
                 }
@@ -199,7 +201,7 @@ namespace RenderingLibrary.Math.Geometry
         private void UpdatePoints()
         {
 
-            mLinePrimitive.CreateCircle(Radius, 15);
+            mLinePrimitive.CreateCircle(Radius, 16);
 
             if(mCircleOrigin == Geometry.CircleOrigin.TopLeft)
             {
