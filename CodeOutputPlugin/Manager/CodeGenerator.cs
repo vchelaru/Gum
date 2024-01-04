@@ -19,11 +19,7 @@ using System.Runtime.CompilerServices;
 using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Media.Animation;
-using System.Xml.Linq;
 using ToolsUtilities;
-using static System.Windows.Forms.AxHost;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace CodeOutputPlugin.Manager
 {
@@ -303,41 +299,78 @@ namespace CodeOutputPlugin.Manager
             return isDerived;
         }
 
-        private static void GenerateInitializeInstancesMethod(ElementSave element, VisualApi visualApi, int tabCount, StringBuilder stringBuilder, CodeOutputProjectSettings settings)
+        private static void GenerateInitializeInstancesMethod(CodeGenerationContext context)
         {
-            var isDerived = DoesElementInheritFromCodeGeneratedElement(element, settings);
+            var isDerived = DoesElementInheritFromCodeGeneratedElement(context.Element, context.CodeOutputProjectSettings);
 
             var virtualOrOverride = isDerived
                 ? "override"
                 : "virtual";
 
             var line = $"protected {virtualOrOverride} void InitializeInstances()";
-            stringBuilder.AppendLine(ToTabs(tabCount) + line);
-            stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-            tabCount++;
+            context.StringBuilder.AppendLine(context.Tabs + line);
+            context.StringBuilder.AppendLine(context.Tabs + "{");
 
-            CodeGenerationContext context = new CodeGenerationContext();
+            context.TabCount++;
             context.Instance = null;
-            context.Element = element;
-            context.TabCount = tabCount;
-
+            
             if (isDerived)
             {
-                stringBuilder.AppendLine(ToTabs(tabCount) + "base.InitializeInstances();");
+                context.StringBuilder.AppendLine(context.Tabs + "base.InitializeInstances();");
             }
 
-            foreach (var instance in element.Instances)
+            foreach (var instance in context.Element.Instances)
             {
                 if (!instance.DefinedByBase)
                 {
                     context.Instance = instance;
 
-                    FillWithInstanceInstantiation(instance, element, stringBuilder, tabCount);
+                    FillWithInstanceInstantiation(context);
                 }
+                context.Instance = null;
             }
 
-            tabCount--;
-            stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+            context.TabCount--;
+            context.StringBuilder.AppendLine(context.Tabs + "}");
+        }
+
+        private static void FillWithInstanceInstantiation(CodeGenerationContext context)
+        {
+            var instance = context.Instance;
+
+            var strippedType = instance.BaseType;
+            if (strippedType.Contains("/"))
+            {
+                strippedType = strippedType.Substring(strippedType.LastIndexOf("/") + 1);
+            }
+            
+            var visualApi = GetVisualApiForInstance(instance, context.Element);
+
+            var tabs = context.Tabs;
+
+            context.StringBuilder.AppendLine($"{tabs}{instance.Name} = new {GetClassNameForType(instance.BaseType, visualApi)}();");
+
+            var shouldSetBinding =
+                visualApi == VisualApi.XamarinForms && context.Element.DefaultState.Variables.Any(item => !string.IsNullOrEmpty(item.ExposedAsName) && item.SourceObject == instance.Name);
+            // If it's xamarin forms and we have exposed variables, then let's set up binding to this
+            if (shouldSetBinding)
+            {
+                context.StringBuilder.AppendLine($"{tabs}{instance.Name}.BindingContext = this;");
+            }
+
+            if (visualApi == VisualApi.Gum)
+            {
+                context.StringBuilder.AppendLine($"{tabs}{instance.Name}.Name = \"{instance.Name}\";");
+            }
+            else
+            {
+                // If defined by base, then the automation ID will already be set there, and 
+                // Xamarin.Forms doesn't like an automation ID being set 2x
+                if (instance.DefinedByBase == false)
+                {
+                    context.StringBuilder.AppendLine($"{tabs}{instance.Name}.AutomationId = \"{instance.Name}\";");
+                }
+            }
         }
 
         #endregion
@@ -2021,7 +2054,7 @@ namespace CodeOutputPlugin.Manager
 
             GenerateConstructor(element, visualApi, tabCount, stringBuilder, projectSettings);
 
-            GenerateInitializeInstancesMethod(element, visualApi, tabCount, stringBuilder, projectSettings);
+            GenerateInitializeInstancesMethod(context);
 
             GenerateAddToParentsMethod(element, visualApi, tabCount, stringBuilder, projectSettings);
 
@@ -2768,55 +2801,20 @@ namespace CodeOutputPlugin.Manager
 
             FillWithInstanceDeclaration(instance, element, stringBuilder);
 
-            FillWithInstanceInstantiation(instance, element, stringBuilder);
-
             var context = new CodeGenerationContext();
-            context.Instance = instance;
             context.Element = element;
             context.CodeOutputProjectSettings = codeOutputProjectSettings;
+            context.Instance = instance;
+            context.StringBuilder = stringBuilder;
 
-            FillWithNonParentVariableAssignments(context, stringBuilder);
+            FillWithInstanceInstantiation(context);
+
+            FillWithNonParentVariableAssignments(context);
 
             FillWithParentAssignments(instance, element, stringBuilder, 0, codeOutputProjectSettings);
 
             var code = stringBuilder.ToString();
             return code;
-        }
-
-        private static void FillWithInstanceInstantiation(InstanceSave instance, ElementSave element, StringBuilder stringBuilder, int tabCount = 0)
-        {
-            var strippedType = instance.BaseType;
-            if (strippedType.Contains("/"))
-            {
-                strippedType = strippedType.Substring(strippedType.LastIndexOf("/") + 1);
-            }
-            var tabs = new String(' ', 4 * tabCount);
-
-            var visualApi = GetVisualApiForInstance(instance, element);
-
-            stringBuilder.AppendLine($"{tabs}{instance.Name} = new {GetClassNameForType(instance.BaseType, visualApi)}();");
-
-            var shouldSetBinding =
-                visualApi == VisualApi.XamarinForms && element.DefaultState.Variables.Any(item => !string.IsNullOrEmpty(item.ExposedAsName) && item.SourceObject == instance.Name);
-            // If it's xamarin forms and we have exposed variables, then let's set up binding to this
-            if (shouldSetBinding)
-            {
-                stringBuilder.AppendLine($"{tabs}{instance.Name}.BindingContext = this;");
-            }
-
-            if (visualApi == VisualApi.Gum)
-            {
-                stringBuilder.AppendLine($"{tabs}{instance.Name}.Name = \"{instance.Name}\";");
-            }
-            else
-            {
-                // If defined by base, then the automation ID will already be set there, and 
-                // Xamarin.Forms doesn't like an automation ID being set 2x
-                if (instance.DefinedByBase == false)
-                {
-                    stringBuilder.AppendLine($"{tabs}{instance.Name}.AutomationId = \"{instance.Name}\";");
-                }
-            }
         }
 
         public static VisualApi GetVisualApiForInstance(InstanceSave instance, ElementSave elementContainingInstance, bool considerDefaultContainer = false)
@@ -2922,7 +2920,7 @@ namespace CodeOutputPlugin.Manager
         }
 
 
-        private static void FillWithNonParentVariableAssignments(CodeGenerationContext context, StringBuilder stringBuilder)
+        private static void FillWithNonParentVariableAssignments(CodeGenerationContext context)
         {
             #region Get variables to consider
 
@@ -2932,12 +2930,12 @@ namespace CodeOutputPlugin.Manager
 
             #endregion
 
-            FillWithVariableAssignments(context, stringBuilder, variablesToAssignValues);
+            FillWithVariableAssignments(context, context.StringBuilder, variablesToAssignValues);
 
             var variableListsToAssign = context.Element.DefaultState.VariableLists.Where(item => item.SourceObject == context.Instance.Name)
                 .ToArray();
 
-            FillWithVariableListAssignments(context, stringBuilder, variableListsToAssign);
+            FillWithVariableListAssignments(context, context.StringBuilder, variableListsToAssign);
         }
 
         private static void FillWithVariableListAssignments(CodeGenerationContext context, StringBuilder stringBuilder, VariableListSave[] variableListsToAssign)
@@ -3571,7 +3569,7 @@ namespace CodeOutputPlugin.Manager
             {
                 context.Instance = instance;
 
-                FillWithNonParentVariableAssignments(context, context.StringBuilder);
+                FillWithNonParentVariableAssignments(context);
 
                 TryGenerateApplyLocalizationForInstance(context, context.StringBuilder, instance);
 
@@ -3654,6 +3652,7 @@ namespace CodeOutputPlugin.Manager
 
 
         #endregion
+
         private static void ProcessColorForLabel(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, StringBuilder stringBuilder, CodeGenerationContext context)
         {
             var rfv = new RecursiveVariableFinder(defaultState);
