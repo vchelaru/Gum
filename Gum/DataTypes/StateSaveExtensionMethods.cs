@@ -909,7 +909,15 @@ namespace Gum.DataTypes.Variables
 
         //}
 
-        public static void Merge(StateSave firstState, StateSave secondState, float otherRatio, List<VariableSaveValues> mergedValues)
+        /// <summary>
+        /// Merges two states into a list of VariableSaveValues. This is an efficient way to perform state interpolation.
+        /// </summary>
+        /// <param name="firstState">The first state.</param>
+        /// <param name="secondState">The second state.</param>
+        /// <param name="secondRatio">The ratio of the second state. This value should be between 0 and 1.</param>
+        /// <param name="mergedValues">The resulting values.</param>
+        /// <exception cref="ArgumentNullException">If either of the argument states are null.</exception>
+        public static void Merge(StateSave firstState, StateSave secondState, float secondRatio, List<VariableSaveValues> mergedValues)
         {
 #if DEBUG
             if (firstState == null || secondState == null)
@@ -954,7 +962,7 @@ namespace Gum.DataTypes.Variables
 
                 if (setsValue)
                 {
-                    object interpolated = GetValueConsideringInterpolation(firstValue, secondValue, otherRatio);
+                    object interpolated = GetValueConsideringInterpolation(firstValue, secondValue, secondRatio);
 
                     VariableSaveValues value = new VariableSaveValues();
                     value.Name = secondVariable.Name;
@@ -1127,6 +1135,13 @@ namespace Gum.DataTypes.Variables
 
         }
 
+        /// <summary>
+        /// Returns a value that is the interpolation between the first and second values if the value is cast as an object. The value must ultimately be a numeric value.
+        /// </summary>
+        /// <param name="firstValue">The first value as a numeric value.</param>
+        /// <param name="secondValue">The second value as a numeric value.</param>
+        /// <param name="interpolationValue">A value between 0 and 1. A value of 0 returns the firstValue. A value of 1 returns the second value.</param>
+        /// <returns>The resulting interpolated value, matching the type of the arguments.</returns>
         private static object GetValueConsideringInterpolation(object firstValue, object secondValue, float interpolationValue)
         {
             if (firstValue == null || secondValue == null)

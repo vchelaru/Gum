@@ -362,13 +362,23 @@ namespace CodeOutputPlugin.Manager
             {
                 context.StringBuilder.AppendLine($"{tabs}{instance.Name}.Name = \"{instance.Name}\";");
             }
-            else
+
+            if(visualApi == VisualApi.XamarinForms)
             {
-                // If defined by base, then the automation ID will already be set there, and 
-                // Xamarin.Forms doesn't like an automation ID being set 2x
-                if (instance.DefinedByBase == false)
+                if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Maui || context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.XamarinForms)
                 {
-                    context.StringBuilder.AppendLine($"{tabs}{instance.Name}.AutomationId = \"{instance.Name}\";");
+                    // If defined by base, then the automation ID will already be set there, and 
+                    // Xamarin.Forms doesn't like an automation ID being set 2x
+                    if (instance.DefinedByBase == false)
+                    {
+                        context.StringBuilder.AppendLine($"{tabs}{instance.Name}.AutomationId = \"{instance.Name}\";");
+                    }
+
+                    if(IsOfXamarinFormsType(context.Instance, "ActivityIndicator"))
+                    {
+                        // If we don't do this, it is invisible which is confusing for the user...
+                        context.StringBuilder.AppendLine($"{tabs}{instance.Name}.IsRunning = true;");
+                    }
                 }
             }
         }
