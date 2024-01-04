@@ -38,6 +38,10 @@ namespace Gum.Plugins.Fonts
 
         private void HandleViewFontCache(object sender, EventArgs e)
         {
+            if(!System.IO.Directory.Exists(FontManager.Self.AbsoluteFontCacheFolder))
+            {
+                System.IO.Directory.CreateDirectory(FontManager.Self.AbsoluteFontCacheFolder);
+            }
             System.Diagnostics.Process.Start(FontManager.Self.AbsoluteFontCacheFolder);
         }
 
