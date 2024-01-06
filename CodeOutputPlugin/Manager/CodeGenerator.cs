@@ -1664,7 +1664,14 @@ namespace CodeOutputPlugin.Manager
                 if (visualApi == VisualApi.Gum)
                 {
                     // add it to "this"
-                    stringBuilder.AppendLine($"{tabs}this.Children.Add({instance.Name});");
+                    if (container is ScreenSave)
+                    {
+                        stringBuilder.AppendLine($"{tabs}this.WhatThisContains.Add({instance.Name});");
+                    }
+                    else
+                    {
+                        stringBuilder.AppendLine($"{tabs}this.Children.Add({instance.Name});");
+                    }
                 }
                 else // forms
                 {
