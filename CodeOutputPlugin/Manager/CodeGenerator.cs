@@ -1699,31 +1699,33 @@ namespace CodeOutputPlugin.Manager
             #endregion
         }
 
-        private static void GenerateAddToParentsMethod(ElementSave element, VisualApi visualApi, int tabCount, StringBuilder stringBuilder, CodeOutputProjectSettings projectSettings)
+        private static void GenerateAddToParentsMethod(CodeGenerationContext context)
         {
-            var isDerived = DoesElementInheritFromCodeGeneratedElement(element, projectSettings);
+            var isDerived = DoesElementInheritFromCodeGeneratedElement(context.Element, context.CodeOutputProjectSettings);
 
             var virtualOrOverride = isDerived
                 ? "override"
                 : "virtual";
 
             var line = $"protected {virtualOrOverride} void AssignParents()";
-            stringBuilder.AppendLine(ToTabs(tabCount) + line);
-            stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-            tabCount++;
+            context.StringBuilder.AppendLine(context.Tabs + line);
+            context.StringBuilder.AppendLine(context.Tabs + "{");
+            context.TabCount++;
 
             if (isDerived)
             {
-                stringBuilder.AppendLine(ToTabs(tabCount) + "// Intentionally do not call base.AssignParents so that this class can determine the addition of order");
+                context.StringBuilder.AppendLine(context.Tabs + "// Intentionally do not call base.AssignParents so that this class can determine the addition of order");
             }
 
-            foreach (var instance in element.Instances)
+            foreach (var instance in context.Element.Instances)
             {
-                FillWithParentAssignments(instance, element, stringBuilder, tabCount, projectSettings);
+                context.Instance = instance;
+                FillWithParentAssignments(instance, context.Element, context.StringBuilder, context.TabCount, context.CodeOutputProjectSettings);
             }
+            context.Instance = null;
 
-            tabCount--;
-            stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+            context.TabCount--;
+            context.StringBuilder.AppendLine(context.Tabs + "}");
         }
 
         #endregion
@@ -2066,7 +2068,7 @@ namespace CodeOutputPlugin.Manager
 
             GenerateInitializeInstancesMethod(context);
 
-            GenerateAddToParentsMethod(element, visualApi, tabCount, stringBuilder, projectSettings);
+            GenerateAddToParentsMethod(context);
 
             GenerateApplyDefaultVariables(context);
 
