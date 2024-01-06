@@ -106,6 +106,8 @@ namespace Gum.Wireframe
         /// </summary>
         List<GraphicalUiElement> mWhatThisContains = new List<GraphicalUiElement>();
 
+        protected List<GraphicalUiElement> WhatThisContains => mWhatThisContains;
+
         Dictionary<string, string> mExposedVariables = new Dictionary<string, string>();
 
         GeneralUnitType mXUnits;
