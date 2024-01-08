@@ -86,6 +86,8 @@ namespace WpfDataUi
 
         private void HandleDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
+            Grid.Children.Clear();
+
             UserControl = CreateInternalControl();
             Grid.Children.Add(UserControl);
         }
