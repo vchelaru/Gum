@@ -217,13 +217,13 @@ namespace WpfDataUi.DataTypes
                 {
                     return false;
                 }
-                else if (Instance != null && CustomGetEvent == null)
+                else if (Instance != null && (CustomGetEvent == null && CustomSetPropertyEvent == null))
                 {
                     return LateBinder.GetInstance(Instance.GetType()).IsReadOnly(Name);
                 }
                 else
                 {
-                    return CustomSetEvent == null;                
+                    return CustomSetEvent == null && CustomSetPropertyEvent == null;                
                 }
             }
         }
@@ -363,7 +363,7 @@ namespace WpfDataUi.DataTypes
         /// Provides a custom set event. This is required if the instance member is not part of the
         /// Instance class as a field or property. The parameters are (owner, value)
         /// </summary>
-        /// 
+        [Obsolete("Use CustomSetPropertyEvent to differentiate between Intermediate and Full property assignments")]
         public event Action<object, object> CustomSetEvent;
 
         /// <summary>
@@ -375,7 +375,7 @@ namespace WpfDataUi.DataTypes
 
         /// <summary>
         /// Allows the InstanceMenber to define its own custom logic for getting a value.
-        /// This requires a CustomSetEvent to be functional.
+        /// This requires a CustomSetEvent or CustomSetPropertyEvent to be functional.
         /// </summary>
         /// <remarks>
         /// The object passed in is the container of this member - which usually is the Instance of the DataGrid.

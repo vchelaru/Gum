@@ -27,6 +27,8 @@ namespace WpfDataUi.Controls
 
         public decimal? LabelDragValueRounding { get; set; } = 1;
 
+        public bool EnableLabelDragValueChange { get; set; } = true;
+
         #endregion
 
         #region Properties
@@ -267,15 +269,17 @@ namespace WpfDataUi.Controls
             RefreshPlaceholderText();
         }
 
+        #region Label Dragging
         double? currentDownX;
         private double unroundedValue;
 
         [DllImport("User32.dll")]
         private static extern bool SetCursorPos(int X, int Y);
 
+
         private void Label_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (mTextBoxLogic.IsNumeric)
+            if (mTextBoxLogic.IsNumeric && EnableLabelDragValueChange)
             {
                 currentDownX = e.GetPosition(this).X;
 
@@ -293,7 +297,7 @@ namespace WpfDataUi.Controls
 
         private void Label_MouseMove(object sender, MouseEventArgs e)
         {
-            if(currentDownX != null)
+            if(currentDownX != null && e.LeftButton == MouseButtonState.Pressed)
             {
                 var newX = e.GetPosition(this).X;
                 var difference = newX - currentDownX.Value;
@@ -330,7 +334,9 @@ namespace WpfDataUi.Controls
 
         private void Label_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            if (mTextBoxLogic.IsNumeric && currentDownX != 0)
+            if (mTextBoxLogic.IsNumeric && currentDownX != 0 && EnableLabelDragValueChange &&
+                // If the user changed the value with the mouse. Otherwise, it was a simple click
+                currentDownX != e.GetPosition(this).X)
             {
                 lastApplyValueResult = mTextBoxLogic.TryApplyToInstance(SetPropertyCommitType.Full);
 
@@ -338,6 +344,8 @@ namespace WpfDataUi.Controls
                 System.Windows.Input.Mouse.Capture(null);
             }
         }
+
+        #endregion
 
         public double RoundDouble(double valueToRound, double multipleOf)
         {
