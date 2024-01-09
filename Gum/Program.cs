@@ -18,7 +18,14 @@ namespace Gum
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            InitializeAppCenter();
+            try
+            {
+                InitializeAppCenter();
+            }
+            catch
+            {
+                // oh well
+            }
 
             Application.Run(new MainWindow());
         }
