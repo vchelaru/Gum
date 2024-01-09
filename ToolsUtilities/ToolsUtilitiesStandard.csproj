@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <Platforms>AnyCPU</Platforms>
+    <Platforms>AnyCPU; x86</Platforms>
   </PropertyGroup>
 
   <PropertyGroup>
