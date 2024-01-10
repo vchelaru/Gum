@@ -115,7 +115,16 @@ namespace Gum.Logic
                 {
                     state = element.DefaultState;
                 }
+
                 CopiedData.CopiedStates.Clear();
+    
+                var baseElementsDerivedFirst = ObjectFinder.Self.GetBaseElements(element);
+                // reverse loop:
+                for(int i = baseElementsDerivedFirst.Count - 1; i > -1; i--)
+                {
+                    CopiedData.CopiedStates.Add(baseElementsDerivedFirst[i].DefaultState.Clone());
+                }
+
                 CopiedData.CopiedStates.Add(state.Clone());
 
                 if(SelectedState.Self.SelectedStateCategorySave != null && SelectedState.Self.SelectedStateSave != null)
