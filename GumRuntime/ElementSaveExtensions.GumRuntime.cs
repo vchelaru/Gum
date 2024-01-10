@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 #if GUM
 using DynamicExpresso;
+using Gum.PropertyGridHelpers;
 #endif
 using Gum.DataTypes.Variables;
 using Gum.Managers;
@@ -180,7 +181,21 @@ namespace GumRuntime
                     {
                         foreach (string referenceString in variableList.ValueAsIList)
                         {
-                            ApplyVariableReferencesOnSpecificOwner((InstanceSave)null, referenceString, stateSave);
+                            var result = ApplyVariableReferencesOnSpecificOwner((InstanceSave)null, referenceString, stateSave);
+                            #if GUM
+                            if(!string.IsNullOrEmpty(result.variableName))
+                            {
+                                var unqualified = result.variableName;
+                                if(unqualified?.Contains(".") == true)
+                                {
+                                    unqualified = unqualified.Substring(unqualified.IndexOf(".") + 1);
+                                }
+                                //SetVariableLogic.Self.ReactToChangedMember(unqualified, result.valueBefore, element, null, stateSave, 
+                                //    refresh: false, recordUndo: false, trySave: true);
+                                Gum.Plugins.PluginManager.Self.VariableSet(element, null, unqualified, result.valueBefore);
+
+                            }
+#endif
                         }
                     }
                     else
@@ -190,7 +205,19 @@ namespace GumRuntime
                         {
                             foreach(string referenceString in variableList.ValueAsIList)
                             {
-                                ApplyVariableReferencesOnSpecificOwner(instance, referenceString, stateSave);
+                                var result = ApplyVariableReferencesOnSpecificOwner(instance, referenceString, stateSave);
+                                #if GUM
+                                if (!string.IsNullOrEmpty(result.variableName))
+                                {
+                                    var unqualified = result.variableName;
+                                    if (unqualified?.Contains(".") == true)
+                                    {
+                                        unqualified = unqualified.Substring(unqualified.IndexOf(".") + 1);
+                                    }
+                                    Gum.Plugins.PluginManager.Self.VariableSet(element, null, unqualified, result.valueBefore);
+
+                                }
+#endif
                             }
                         }
                     }
@@ -305,7 +332,7 @@ namespace GumRuntime
             }
         }
 
-        private static void ApplyVariableReferencesOnSpecificOwner(InstanceSave instance, string referenceString, StateSave stateSave)
+        private static (string variableName, object valueBefore) ApplyVariableReferencesOnSpecificOwner(InstanceSave instance, string referenceString, StateSave stateSave)
         {
             var split = referenceString
                 .Split(equalsArray, StringSplitOptions.RemoveEmptyEntries)
@@ -313,7 +340,7 @@ namespace GumRuntime
 
             if(split.Length != 2)
             {
-                return;
+                return (null, null);
             }
 
             var left = split[0];
@@ -327,17 +354,27 @@ namespace GumRuntime
 
             var value = recursiveVariableFinder.GetValue(right);
 
+            object valueBefore = null;
+            string effectiveLeft = null;
             if (value != null)
             {
                 if(instance == null)
                 {
+                    effectiveLeft = left;
+                    valueBefore = stateSave.GetValue(left);
                     stateSave.SetValue(left, value, instance);
                 }
                 else
                 {
-                    stateSave.SetValue($"{instance.Name}.{left}", value, instance);
+                    var nameToSet = $"{instance.Name}.{left}";
+                    effectiveLeft = nameToSet;
+                    valueBefore = stateSave.GetValue(nameToSet);
+
+                    stateSave.SetValue(nameToSet, value, instance);
                 }
             }
+
+            return (effectiveLeft, valueBefore);
         }
 
         private static void GetRightSideAndState(InstanceSave instanceSave, ref string right, ref StateSave stateSave)

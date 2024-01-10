@@ -106,7 +106,12 @@ namespace Gum.PropertyGridHelpers
         {
             if (parentElement != null)
             {
-
+                // This code calls plugin methods and may generate code. We want to generate code
+                // after the variable references are assigned. Moving this line of code down:
+                //ReactToChangedMember(unqualifiedMember, oldValue, parentElement, instance, stateSave);
+                // Update - ReactToChangedMember expands variable reference names like "Color" and it fills
+                // in implied assignments such as "Refernce.X" to "X = Reference.X"
+                // It must be called first before applying references
                 ReactToChangedMember(unqualifiedMember, oldValue, parentElement, instance, stateSave);
 
                 string qualifiedName = unqualifiedMember;
@@ -120,6 +125,12 @@ namespace Gum.PropertyGridHelpers
 
                 // this could be a tunneled variable. If so, we may need to propagate the value to other instances one level deeper
                 var didSetDeepReference = DoVariableReferenceReactionOnInstanceVariableSet(parentElement, instance, stateSave, unqualifiedMember, newValue);
+
+                // now force save it if it's a variable reference:
+                if(unqualifiedMember == "VariableReferences" && trySave)
+                {
+                    GumCommands.Self.FileCommands.TryAutoSaveElement(parentElement);
+                }
 
                 VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(qualifiedName);
 
@@ -876,6 +887,16 @@ namespace Gum.PropertyGridHelpers
 
             ///////////////////End Early Out/////////////////////////////////////
 
+            bool didChange = ApplyImpliedEqualsAndExpandVariableAliases(oldValue, newValueAsList);
+
+            if (didChange)
+            {
+                GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
+            }
+        }
+
+        private static bool ApplyImpliedEqualsAndExpandVariableAliases(object oldValue, List<string> newValueAsList)
+        {
             var oldValueAsList = oldValue as List<string>;
 
 
@@ -941,10 +962,7 @@ namespace Gum.PropertyGridHelpers
                 }
             }
 
-            if (didChange)
-            {
-                GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
-            }
+            return didChange;
         }
 
         private static void ExpandColorToRedGreenBlue(List<string> asList, int i, string rightSide)
