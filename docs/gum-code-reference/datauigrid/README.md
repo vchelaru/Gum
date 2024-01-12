@@ -21,15 +21,21 @@ The following references are needed for displaying the DataUiGrid:
 
 To add a grid to your XAML you'll need to:
 
-Add the following using:
+If using .NET 6+, add the following using:
 
 ```
+xmlns:WpfDataUi="clr-namespace:WpfDataUi;assembly=WpfDataUiCore"
+```
+
+If using .NET 4.7, add the following using:
+
+```xml
 xmlns:WpfDataUi="clr-namespace:WpfDataUi;assembly=WpfDataUi"
 ```
 
 Add the following inside a layout container (like a Grid):
 
-```
+```xml
 <WpfDataUi:DataUiGrid Name="DataGrid"></WpfDataUi:DataUiGrid>
 ```
 
@@ -37,7 +43,7 @@ Add the following inside a layout container (like a Grid):
 
 You can construct a grid in code just like any other WPF control.
 
-```
+```csharp
 var grid = new DataUiGrid();
 // add the grid to some layout object like a Grid or StackLayout...
 ```
@@ -46,7 +52,7 @@ var grid = new DataUiGrid();
 
 To use the grid in code you simply need to set its Instance member to an instance object you want to view. For example:
 
-```
+```csharp
 // We'll use a MemoryStream to show that it works,
 // but we could really use anything.
 MemoryStream memoryStream = new MemoryStream();
