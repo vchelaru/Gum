@@ -88,3 +88,5 @@
 * [MonoGame](monogame/README.md)
   * [Setup](monogame/setup.md)
   * [Loading .gumx (Gum Project)](monogame/loading-.gumx-gum-project.md)
+  * [Runtime Objects (GueDeriving)](monogame/runtime-objects-guederiving/README.md)
+    * [TextRuntime](monogame/runtime-objects-guederiving/textruntime.md)
