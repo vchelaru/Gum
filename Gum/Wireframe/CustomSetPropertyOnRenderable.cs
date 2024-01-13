@@ -680,7 +680,7 @@ namespace Gum.Wireframe
             {
                 var fontFileName = GetFontFileName();
 
-                var font = LoaderManager.Self.TryGetCachedDisposable<BitmapFont>(fontFileName);
+                var font = LoaderManager.Self.GetDisposable(fontFileName) as BitmapFont;
 
                 // no cache, does it need to be created?
                 if (font == null)
@@ -749,7 +749,7 @@ namespace Gum.Wireframe
 
                     if (!string.IsNullOrEmpty(graphicalUiElement.CustomFontFile))
                     {
-                        font = loaderManager.TryGetCachedDisposable<BitmapFont>(graphicalUiElement.CustomFontFile);
+                        font = loaderManager.GetDisposable(graphicalUiElement.CustomFontFile) as BitmapFont;
                         if (font == null)
                         {
                             // so normally we would just let the content loader check if the file exists but since we're not going to
@@ -784,7 +784,7 @@ namespace Gum.Wireframe
 #endif
 
 
-                        font = loaderManager.TryGetCachedDisposable<BitmapFont>(fullFileName);
+                        font = loaderManager.GetDisposable(fullFileName) as BitmapFont;
                         if (font == null || font.Texture?.IsDisposed == true)
                         {
                             // so normally we would just let the content loader check if the file exists but since we're not going to

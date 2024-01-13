@@ -66,6 +66,13 @@ namespace MonoGameGumInCode
             nineSlice.Height = 48;
             container.Children.Add(nineSlice);
 
+            var customText = new TextRuntime();
+            customText.Width = 300;
+            customText.UseCustomFont = true;
+            customText.CustomFontFile = "WhitePeaberryOutline/WhitePeaberryOutline.fnt";
+            customText.Text = "Hello, I am using a custom font.\nPretty cool huh?";
+            container.Children.Add(customText);
+
         }
 
         private static void AddText(ContainerRuntime container, string text)
