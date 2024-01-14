@@ -45,3 +45,48 @@ Also, note that files are loaded from-file rather than using the content pipelin
 
 <figure><img src="../../.gitbook/assets/image (1).png" alt=""><figcaption><p>Copy if newer property set</p></figcaption></figure>
 
+### Font Component Values
+
+A TextRuntime's font can be controlled by its individual font component values. **Setting these values in code will not produce a .fnt file for you - the .fnt file must already be in your project**. The following values are used to determine the font (.fnt) to load:
+
+* FontSize
+* Font
+* OutlineThickness
+* UseFontSmoothing
+* IsItalic
+* IsBold
+
+By default, all fonts will be of the format `Font{Font}{FontSize}.fnt`. Consider the following code:
+
+```csharp
+text.UseCustomFont = false;
+text.Font = "Arial";
+text.FontSize = 24;
+```
+
+This results in the TextRuntime object searching for a font named `FontArial24.fnt`.
+
+As mentioned before, the default location for fonts is the Content folder, so the code would search for `Content/FontArial24.fnt`.
+
+The following additional suffixes (in order listed below) are added to the font name.
+
+* OutlineThicknes - if greater than 0, then the suffix `_o` followed by the outline thickness is added. For example, if OutlineThickness is 3, a font might be named `FontArial24_3.fnt`
+* UseFontSmoothing - if false, then \_noSmooth is appended. For example `Font24_noSmooth.fnt`
+* IsItalic - if true, then \_Italic is appended. For example `Font24_Italic.fnt`
+* IsBold - if true, then \_Bold is appended. For example `Font24_Bold.fnt`
+
+The BmfcSave.GetFontCacheFileNameFor method can be called with any combination to obtain the desired font value. For example, the following code coudl be used to determine the desired .fnt file:
+
+```csharp
+var desiredFntName = BmfcSave.GetFontCacheFileNameFor(
+    18, // font size
+    "Consolas", // font name
+    2, // outline thickness
+    true, // use font smoothing
+    false, // is italic
+    true // is bold
+    );
+```
+
+Note that this method does not take into consideration the content folder.
+
