@@ -8,7 +8,7 @@ The Stack Spacing variable controls the additional padding between children when
 
 A larger Stack Spacing value increases the spacing between each child. By default Stack Spacing is set to 0 which means that no spacing is added between items in a stack.
 
-<figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
 
 Changing the stack spacing adds gaps between each child as shown in the following animation.
 

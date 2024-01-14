@@ -46,6 +46,6 @@ Gum Application (binaries): [files.flatredball.com/content/Tools/Gum/Gum.zip](ht
 
 Gum Source Code: [https://www.github.com/vchelaru/Gum](https://www.github.com/vchelaru/Gum)
 
-Note that Gum uses XNA so the XNA runtime must be installed here:
+Note that the Gum tool requires XNA. if you are using the Gum tool, you must install the XNA runtime:
 
 [https://www.microsoft.com/en-us/download/details.aspx?id=20914](https://www.microsoft.com/en-us/download/details.aspx?id=20914)
