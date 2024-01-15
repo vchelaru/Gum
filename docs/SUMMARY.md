@@ -54,6 +54,7 @@
     * [Categories](gum-elements/states/categories.md)
   * [Text](gum-elements/text/README.md)
     * [Blue](gum-elements/text/blue.md)
+    * [Color](gum-elements/text/color.md)
     * [Font Scale](gum-elements/text/font-scale.md)
     * [Font Size](gum-elements/text/font-size.md)
     * [Green](gum-elements/text/green.md)
