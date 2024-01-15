@@ -4,14 +4,14 @@
 
 The TextRuntime object is used to draw strings to the screen. It supports a variety of options for rendering text including alignment, fonts, coloring, and line wrapping.
 
-### Example
+### Example - Creating a TextRuntime
 
 To create a TextRuntime, instantiate it and add it to the managers as shown in the following code:
 
 ```csharp
 var textInstance = new TextRuntime();
 textInstance.Text = "Hello world";
-text.AddToManagers(SystemManagers.Default, null);
+textInstance.AddToManagers(SystemManagers.Default, null);
 ```
 
 ### Fonts
@@ -32,18 +32,18 @@ var customText = new TextRuntime();
 customText.UseCustomFont = true;
 customText.CustomFontFile = "WhitePeaberryOutline/WhitePeaberryOutline.fnt";
 customText.Text = "Hello, I am using a custom font";
-container.Children.Add(customText);
+customText.AddToManagers(SystemManagers.Default, null);
 ```
 
 This code assumes a font file named WhitePeaberryOutline.fnt is located in the `Content/WhitePeaberryOutline` folder. By default all Gum content loading is performed relative to the Content folder.
 
 Note that .fnt files reference one or more image files, so the image file must also be added to the correct folder. In this case, the WhitePeaberryOutline.fnt file references a WhitePeaberryOutline.png file, so both files are in the same folder.
 
-<figure><img src="../../.gitbook/assets/image.png" alt=""><figcaption><p>WhitePeaberryOutline font in the Solution Explorer</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (1).png" alt=""><figcaption><p>WhitePeaberryOutline font in the Solution Explorer</p></figcaption></figure>
 
 Also, note that files are loaded from-file rather than using the content pipeline. This means that extensions (such as .fnt) are included in the file path, and that both the .fnt and .png files must have their **Copy to Output Directory** value set to **Copy if newer**.
 
-<figure><img src="../../.gitbook/assets/image (1).png" alt=""><figcaption><p>Copy if newer property set</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (1) (1).png" alt=""><figcaption><p>Copy if newer property set</p></figcaption></figure>
 
 ### Font Component Values
 

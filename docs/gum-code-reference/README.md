@@ -27,7 +27,7 @@ For information on how to write Gum plugins, visit this page: [Plugins](https://
 * [Gum.DataTypes.InstanceSave](instancesave.md)
 * [Gum.DataTypes.VariableSave](variablesave.md)
 * [Gum.ToolStates.SelectedState](selectedstate.md)
-* [Gum.Wireframe.GraphicalUiElement](graphicaluielement.md)
+* [Gum.Wireframe.GraphicalUiElement](graphicaluielement/)
 * [RenderingLibrary.IPositionedSizedObject](ipositionedsizedobject.md)
 * [WpfDataUi.DataUiGrid](datauigrid/)
 * [WpfDataUi.IDataUi](idataui.md)
