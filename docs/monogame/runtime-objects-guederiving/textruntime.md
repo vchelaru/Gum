@@ -90,3 +90,10 @@ var desiredFntName = BmfcSave.GetFontCacheFileNameFor(
 
 Note that this method does not take into consideration the content folder.
 
+### Creating Fonts
+
+To create a .fnt file, you have a few options:
+
+1. Open Gum, create a temporary Text instance with the desired properties, then look at the font cache folder
+2. Use Angelcode Bitmap Font Generator. For more information see the [Use Custom Font page](../../gum-elements/text/use-custom-font.md).
+3. Manually create a .fnt file in text and a corresponding .png. This is easiest if you create a .fnt file using one of the options above, then modify it.
