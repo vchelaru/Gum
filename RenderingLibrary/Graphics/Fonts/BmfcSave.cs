@@ -153,7 +153,7 @@ namespace RenderingLibrary.Graphics.Fonts
             fileName = "Font" + fontSize + fontName;
             if (outline != 0)
             {
-                fileName = "Font" + fontSize + fontName + "_o" + outline;
+                fileName += "_o" + outline;
             }
 
             if(useFontSmoothing == false)
