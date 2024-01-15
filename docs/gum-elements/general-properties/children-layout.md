@@ -34,6 +34,10 @@ Children can be reordered using the right-click menu on an instance.
 
 ![](<../../.gitbook/assets/ReorderStackedChildren (1).gif>)
 
+Alternatively, children order can be changed by clicking on the item in the tree view, holding down the ALT key, then pressing the up or down arrows.
+
+<figure><img src="../../.gitbook/assets/15_08 09 38.gif" alt=""><figcaption><p>Changing order with ALT+Arrow hotkey</p></figcaption></figure>
+
 ## Wraps Children
 
 The [Wraps Children](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/Wraps%20Children/README.md) property controls how stacking behaves beyond boundaries. For more information, see the [Wraps Children](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/Wraps%20Children/README.md) page.
