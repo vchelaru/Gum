@@ -34,3 +34,4 @@ Gum integrations exist for the following environments:
 * WPF
 * Xamarin.Forms/Maui
 
+For details on integrating Gum with these runtimes, or for using GumCore to integrate with your own runtime, see the main documentation: https://docs.flatredball.com/gum/
