@@ -19,7 +19,7 @@ Gum exports to human-readable XML, and can be extended either using MEF or by mo
 
 Tutorials and documentation can be found here:
 
-[http://gumui.net/documentation](https://docs.flatredball.com/gum/)https://docs.flatredball.com/gum/
+https://docs.flatredball.com/gum/
 
 ## Platforms
 
