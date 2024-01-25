@@ -6,6 +6,14 @@ The Gum UI Tool is a WYSIWYG editor for creating layouts. Projects that are crea
 
 The Gum runtime (called MonoGameGum) is a NuGet package which adds the classes necessary to load and interact with Gum projects. Note that you are not required to use the Gum UI Tool in your project - if you prefer to do things in code you can! You are free to load Gum projects, or do it all in C#.
 
+### Sample Projects
+
+If you prefer to dive in and see things working, the Gum repository includes sample projects that show how to work with Gum purely in code, and also how to load a Gum project into a MonoGame project.
+
+You can clone the repository and open the projects in your favorite IDE (like Visual Studio) and try them out.&#x20;
+
+The direct link to the samples is here: [https://github.com/vchelaru/Gum/tree/master/Samples](https://github.com/vchelaru/Gum/tree/master/Samples)
+
 ### What is the Gum UI Tool?
 
 The Gum UI Tool (usually called "Gum") is a visual editor for creating layouts using the Gum layout engine. Gum has been used on many commercial games to create all types of UI ranging from standard game HUDs to complex forms-based UIs. Gum can be used for any type of game.
