@@ -40,7 +40,7 @@ Projects which perform their layouts purely in code can still take advantage of 
 
 A full list of Gum properties can be found in the [Gum Element General Properties](../gum-elements/general-properties/) page, but we will cover a few concepts here to give you an idea of how Gum works.
 
-By default, Gum elements are positioned relative to the top-left of their parent. Similarly, the origin of a Gum element is also its own top-left corner. Therefore, a container that has an X of 100 and a Y of 50 appears as shown in the following image:
+By default, Gum elements are positioned relative to the top-left of their parent. Similarly, the origin of a Gum element is also its own top-left corner. Therefore, a rectangle that has an X of 100 and a Y of 50 appears as shown in the following image:
 
 <figure><img src="../.gitbook/assets/image (36).png" alt=""><figcaption><p>Rectangle with X = 100 and Y = 50</p></figcaption></figure>
 
@@ -48,7 +48,7 @@ The Gum tool helps you visualize the relationship between a child and its parent
 
 <figure><img src="../.gitbook/assets/image (37).png" alt=""><figcaption><p>Selected rectangle showing its origin and its "units" (relative point on the parent)</p></figcaption></figure>
 
-A child's position is relative to its parent's position, so changing the position of the parent ultimately changes the absolute position of its child as well. The following animation shows a parent container which has a white rectangle as its child. Notice the child can be moved relative to the parent, and if the parent is also moved.
+A child's position is relative to its parent's position, so changing the position of the parent ultimately changes the absolute position of its child as well. The following animation shows a parent container which has a white rectangle as its child. Notice the child can be moved relative to the parent. If the parent is moved, then the child's absolute position changes as well.
 
 <figure><img src="../.gitbook/assets/25_06 09 20.gif" alt=""><figcaption><p>A child rectangle and a parent container</p></figcaption></figure>
 
