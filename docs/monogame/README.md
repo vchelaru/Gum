@@ -60,15 +60,41 @@ As mentioned above, the Gum tool is very useful for testing out how different pr
 
 <figure><img src="../.gitbook/assets/25_06 16 54.gif" alt=""><figcaption><p>Changing X and X Units immediately updates a child's position</p></figcaption></figure>
 
-The position, units, and origin values can be used to create common layouts. For example, the following combination of values can be used to center an object horizontally:
+The position, units, and origin values can be used to create common layouts. The following code could be used to center a child in its parent:
+
+```csharp
+//assuming child is a valid GraphicalUiElement:
+child.X = 0;
+child.XUnits = GeneralUnitType.PixelsFromMiddle;
+child.XOrigin = HorizontalAlignment.Center;
+```
+
+This same layout could be achieved in the Gum UI tool by setting the following values:
 
 * X = 0
-* X Units = Pixels from Center ( `GeneralUnitType.PixelsFromMiddle` )
-* X Origin = Center ( `HorizontalAlignment.Center` )
+* X Units = Pixels from Center
+* X Origin = Center
 
 <figure><img src="../.gitbook/assets/image (39).png" alt=""><figcaption><p>Child centered horizontally by changing X, X Units, and X Origin</p></figcaption></figure>
 
-An element's size can also be controlled through units. For example, a child rectangle could set to provide an 8 pixel border inside of its parent container using the following properties:
+
+
+An element's size can also be controlled through units. For example, a child rectangle could set to provide an 8 pixel border inside of its parent container using the following code.
+
+```csharp
+child.X = 0;
+child.XUnits = GeneralUnitType.PixelsFromMiddle;
+child.XOrigin = HorizontalAlignment.Center;
+child.Y = 0;
+child.YUnits = GeneralUnitType.PixelsFromMiddle;
+child.YOrigin = VerticalAlignment.Center;
+child.Width = -16;
+child.WidthUnits = DimensionUnitType.RelativeToContainer;
+child.Height = -16;
+child.HeightUnits = DimensionUnitType.RelativeToContainer;
+```
+
+Similarly, the following could be done in the Gum UI tool::
 
 * X = 0
 * X Units = Pixels from Center ( `GeneralUnitType.PixelsFromMiddle` )
@@ -77,8 +103,8 @@ An element's size can also be controlled through units. For example, a child rec
 * Y Units = Pixels from Center ( `GeneralUnitType.PixelsFromMiddle` )
 * Y Origin = Center ( `VerticalAlignment.Center` )
 * Width = -16&#x20;
-* Height = -16
 * Width Units = Relative to Container ( `DimensionUnitType.RelativeToContainer` )
+* Height = -16
 * Height Units = Relative to Container ( `DimensionUnitType.RelativeToContainer` )
 
 <figure><img src="../.gitbook/assets/image (40).png" alt=""><figcaption><p>Child positioned in the center of its parent with 8 pixel border</p></figcaption></figure>
