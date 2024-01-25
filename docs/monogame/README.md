@@ -97,15 +97,15 @@ child.HeightUnits = DimensionUnitType.RelativeToContainer;
 Similarly, the following could be done in the Gum UI tool::
 
 * X = 0
-* X Units = Pixels from Center ( `GeneralUnitType.PixelsFromMiddle` )
-* X Origin = Center ( `HorizontalAlignment.Center` )
+* X Units = Pixels from Center&#x20;
+* X Origin = Center
 * Y = 0
-* Y Units = Pixels from Center ( `GeneralUnitType.PixelsFromMiddle` )
-* Y Origin = Center ( `VerticalAlignment.Center` )
+* Y Units = Pixels from Center
+* Y Origin = Center
 * Width = -16&#x20;
-* Width Units = Relative to Container ( `DimensionUnitType.RelativeToContainer` )
+* Width Units = Relative to Container
 * Height = -16
-* Height Units = Relative to Container ( `DimensionUnitType.RelativeToContainer` )
+* Height Units = Relative to Container
 
 <figure><img src="../.gitbook/assets/image (40).png" alt=""><figcaption><p>Child positioned in the center of its parent with 8 pixel border</p></figcaption></figure>
 
