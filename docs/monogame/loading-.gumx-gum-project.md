@@ -49,4 +49,23 @@ gumProject.Screens.First().ToGraphicalUiElement(SystemManagers.Default, addToMan
 
 For an example of a Game1.cs file which loads a project file, see the MonoGameGumFromFile: [https://github.com/vchelaru/Gum/blob/8cde3f76d00cf14c00d68c1aaa4713b9f75e702f/Samples/MonoGameGumFromFile/MonoGameGumFromFile/Game1.cs#L33C1-L37C105](https://github.com/vchelaru/Gum/blob/8cde3f76d00cf14c00d68c1aaa4713b9f75e702f/Samples/MonoGameGumFromFile/MonoGameGumFromFile/Game1.cs#L33C1-L37C105)
 
-Note that calling ToGraphicalUiElement creates a GraphicalUiElement (Gum object) from the first screen. You can inspect the gumProject.Screens file and select which screen you would like to create if your project has mutliple Screens.
+Note that calling ToGraphicalUiElement creates a [GraphicalUiElement](../gum-code-reference/graphicaluielement/) (Gum object) from the first screen. You can inspect the gumProject.Screens file and select which screen you would like to create if your project has mutliple Screens.
+
+You can access elements within the screen by accessing the GraphicalUiElement that is created, as shown in the following code:
+
+```csharp
+// Load the gum project (see code above)
+var screen = gumProject.Screens.First().ToGraphicalUiElement(
+  SystemManagers.Default, 
+  addToManagers:true);
+
+// Items in the screen can be accessed using the GetGraphicalUiElementByName method:
+var child = screen.GetGraphicalUiElementByName("TitleInstance");
+
+// All GraphicalUiElements have common properties, like X:
+child.X += 30;
+
+// you can also set properties which may not be common to all GraphicalUiElements,
+// like Text:
+child.SetProperty("Text", "Hello world");
+```

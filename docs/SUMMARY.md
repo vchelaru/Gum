@@ -75,6 +75,8 @@
     * [Reflection](gum-code-reference/datauigrid/reflection.md)
     * [Categories](gum-code-reference/datauigrid/categories.md)
   * [GraphicalUiElement](gum-code-reference/graphicaluielement/README.md)
+    * [Children](gum-code-reference/graphicaluielement/children.md)
+    * [ContainedElements](gum-code-reference/graphicaluielement/containedelements.md)
     * [GetAbsoluteX](gum-code-reference/graphicaluielement/getabsolutex.md)
     * [GetAbsoluteY](gum-code-reference/graphicaluielement/getabsolutey.md)
   * [GumProjectSave](gum-code-reference/gumprojectsave.md)
@@ -92,3 +94,4 @@
   * [Runtime Objects (GueDeriving)](monogame/runtime-objects-guederiving/README.md)
     * [ContainerRuntime](monogame/runtime-objects-guederiving/containerruntime.md)
     * [TextRuntime](monogame/runtime-objects-guederiving/textruntime.md)
+* [Meadow](meadow.md)
