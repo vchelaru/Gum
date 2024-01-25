@@ -1,9 +1,12 @@
 ﻿using Gum.Converters;
+using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGameGum.GueDeriving;
 using RenderingLibrary;
+using RenderingLibrary.Graphics;
+using System;
 
 namespace MonoGameGumInCode
 {
@@ -24,12 +27,77 @@ namespace MonoGameGumInCode
             SystemManagers.Default = new SystemManagers();
             SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
 
-            CreateLayout();
+
+            // uncomment one of these to create a layout. Only have one uncommented or else UI overlaps
+            //CreateMixedLayout();
+            //CreateTextLayout();
+            CreateInvisibleLayout();
 
             base.Initialize();
         }
 
-        private static void CreateLayout()
+        private void CreateInvisibleLayout()
+        {
+            GraphicalUiElement.CanvasWidth = 800;
+            GraphicalUiElement.CanvasHeight = 600;
+
+            GraphicalUiElement parentContainer = new(new InvisibleRenderable(), null!)
+            {
+                X = 5,
+                Y = 5,
+                Width = 40,
+                Height = 0,
+
+                HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren,
+                ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack,
+                WrapsChildren = true
+            };
+
+            for (int i = 0; i < 10; i++)
+            {
+                GraphicalUiElement buttonWrapper = new(new InvisibleRenderable(), null!)
+                {
+                    WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute,
+                    Width = 20,
+                    XOrigin = RenderingLibrary.Graphics.HorizontalAlignment.Left,
+                    XUnits = Gum.Converters.GeneralUnitType.PixelsFromSmall,
+                    X = 0,
+
+                    HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute,
+                    Height = 1
+                };
+
+                parentContainer.Children.Add(buttonWrapper);
+            }
+
+            parentContainer.UpdateLayout();
+        }
+
+        private void CreateTextLayout()
+        {
+            var container = new ContainerRuntime();
+            container.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            container.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            // Give it 2 pixels on each side so text doesn't bump up against the edge of the screen
+            container.X = 2;
+            container.Y = 2;
+            container.Width = -4;
+            container.Height = -4;
+            container.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+            container.StackSpacing = 4;
+            container.AddToManagers();
+
+            var textRuntime = new TextRuntime();
+            textRuntime.Text = "Hi, I'm default text";
+            container.Children.Add(textRuntime);
+
+            var withOutline = new TextRuntime();
+            withOutline.Text = "I am text that has an outline.";
+            (withOutline.Component as RenderingLibrary.Graphics.Text).RenderBoundary = true;
+            container.Children.Add(withOutline);
+        }
+
+        private static void CreateMixedLayout()
         {
             var container = new ContainerRuntime();
             container.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
@@ -72,6 +140,7 @@ namespace MonoGameGumInCode
             customText.CustomFontFile = "WhitePeaberryOutline/WhitePeaberryOutline.fnt";
             customText.Text = "Hello, I am using a custom font.\nPretty cool huh?";
             container.Children.Add(customText);
+
 
         }
 
