@@ -2259,9 +2259,11 @@ namespace Gum.Wireframe
                 // if it is using a complex WidthUnit or HeightUnit. All other update types (such as absolute) can be determined on the
                 // spot when calculating the width of the ratio child.
                 // Therefore, we will need to do all RelativeToChildren first if:
+                //
                 // * Some children use WidthUnits with Ratio, and some children use WidthUnits with RelativeToChildren
                 //   --or--
-                // 2. Any children use HeightUnits with Ratios, and some children use HeightUnits with RelativeToChildren
+                // * Any children use HeightUnits with Ratios, and some children use HeightUnits with RelativeToChildren
+                //
                 // If either is the case, then we will first update all children that have the relative properties. Then we'll loop through all of them
                 // Note about optimization - if children using relative all come first, then a normal order will satisfy the dependencies.
                 // But that makes the code slightly more complex, so I'll bother with that performance optimization later.
@@ -2283,6 +2285,13 @@ namespace Gum.Wireframe
                 }
 
                 var shouldUpdateRelativeFirst = (useRatioWidth && useRelativeChildrenWidth) || (useRatioHeight && useRelativeChildrenHeight);
+
+                // Update - if this item stacks, then it cannot mark the children as updated - it needs to do another
+                // pass later to update the position of the children in order from top-to-bottom. If we flag as updated,
+                // then the pass later that does the actual stacking will skip anything that is flagged as updated.
+                // This bug was reproduced as reported in this issue:
+                // https://github.com/vchelaru/Gum/issues/141
+                var shouldFlagAsUpdated = this.ChildrenLayout == ChildrenLayout.Regular;
 
                 if(shouldUpdateRelativeFirst)
                 {
@@ -2306,7 +2315,7 @@ namespace Gum.Wireframe
                         if ((alreadyUpdated == null || alreadyUpdated.Contains(ipsoChild) == false) && ipsoChild is GraphicalUiElement child)
                         {
                             // now do all:
-                            UpdateChild(child, flagAsUpdated:true);
+                            UpdateChild(child, flagAsUpdated: shouldFlagAsUpdated);
                         }
                     }
                 }
@@ -2320,7 +2329,7 @@ namespace Gum.Wireframe
                         if ((alreadyUpdated == null || alreadyUpdated.Contains(ipsoChild) == false) && ipsoChild is GraphicalUiElement child)
                         {
                             // now do all:
-                            UpdateChild(child, flagAsUpdated: true);
+                            UpdateChild(child, flagAsUpdated: shouldFlagAsUpdated);
                         }
                     }
                 }
