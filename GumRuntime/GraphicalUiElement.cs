@@ -92,7 +92,10 @@ namespace Gum.Wireframe
         public static int UpdateLayoutCallCount;
         public static int ChildrenUpdatingParentLayoutCalls;
 
-        public static bool ShowLineRectangles = true;
+        // This used to be true until Jan 26, 2024, but it's
+        // confusing for new users. Let's keep this off and document
+        // how to use it (eventually).
+        public static bool ShowLineRectangles = false;
 
         // to save on casting:
         protected IRenderableIpso mContainedObjectAsIpso;
