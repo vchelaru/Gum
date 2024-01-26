@@ -90,3 +90,36 @@ Now that we have our CategoryDemo component set up with multiple categories, we 
 ![](../.gitbook/assets/GumCombinedStates.PNG)
 
 ![](../.gitbook/assets/GumLookCategoriesOnInstance.PNG)
+
+### Categories and Variables
+
+If a variable is modified in one of the states in a category, then all of the states in that category are automatically assigned the default value, and this value is explicitly set. This concept makes working with states far more predictable.
+
+For example, we can consider a component which has:
+
+* A single ColoredRectangle
+* A category called RectangleSizeCategory
+* States called Big, Medium, and Small
+
+Initially, all states in a category do not explicitly assign any variables. We can see this by selecting the category and observing the Variables tab.
+
+<figure><img src="../.gitbook/assets/image.png" alt=""><figcaption><p>RectangleSizeCategory which does not set any variables</p></figcaption></figure>
+
+If a variable is changed in one of the states in the category, then that variable propagates to all other states, and the Category lists this as one of the variables that it modifies.
+
+For example, we can select the Big category and change the ColoredRectangle.Width property to 150.
+
+<figure><img src="../.gitbook/assets/image (1).png" alt=""><figcaption><p>Setting ColoredRectangleInstance Width to 150</p></figcaption></figure>
+
+Once this value is changed, the RectangleSizeCategory lists this as a variable that it modifies in the Variables tab.
+
+<figure><img src="../.gitbook/assets/26_15 41 43.png" alt=""><figcaption><p>RectangleSizeCategory lists any variables that it changes</p></figcaption></figure>
+
+If we select any of the other states in the category, they show that they explicitly set the Width value as well (the value has a white background instead of light green). The value is inherited from the default state.
+
+<figure><img src="../.gitbook/assets/image (2).png" alt=""><figcaption><p>Width value set by Medium state</p></figcaption></figure>
+
+Once a variable is set in a category, all states are required to set this value. A variable cannot be removed from a single state in a category. Rather, to remove a variable, all states in the category must remove the variable. This can be done by selecting the category and pressing the X button next to the variable name.
+
+<figure><img src="../.gitbook/assets/image (3).png" alt=""><figcaption><p>Press the X next to a variable on a category to remove the assignment of that variable on all states in the category</p></figcaption></figure>
+
