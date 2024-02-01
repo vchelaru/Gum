@@ -1,23 +1,77 @@
 ﻿using Gum.Wireframe;
+using Microsoft.Xna.Framework;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using SkiaGum.GueDeriving;
 using SkiaGum.Managers;
 using SkiaSharp;
-using SkiaSharp.Views.Forms;
+using SkiaSharp.Views.Maui;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Xamarin.Forms;
-using Vector2 = System.Numerics.Vector2;
+using static SkiaGum.TimeSpanExtensionMethods;
 
 namespace SkiaGum
 {
-    public class SkiaGumCanvasView : SKCanvasView, ISystemManagers
+    internal static class TimeSpanExtensionMethods
+    {
+        public enum TimeSpanFormat
+        {
+            MinutesAndSeconds,
+            TimeOfDay,
+            TimeOfDayNoMinutes,
+            SecondsAndMilliseconds
+        }
+
+        public static string ToTimeString(this TimeSpan timeSpan, TimeSpanFormat format = TimeSpanFormat.MinutesAndSeconds)
+        {
+            switch (format)
+            {
+                case TimeSpanFormat.MinutesAndSeconds:
+                    return timeSpan.ToString(@"m\:ss");
+                case TimeSpanFormat.TimeOfDay:
+                    {
+                        var time = DateTime.Now.Date + timeSpan;
+                        return time.ToString(@"t");
+
+                    }
+                case TimeSpanFormat.TimeOfDayNoMinutes:
+                    {
+                        var time = DateTime.Now.Date + timeSpan;
+                        return time.ToString(@"h tt");
+                    }
+                case TimeSpanFormat.SecondsAndMilliseconds:
+                    {
+                        var time = DateTime.Now.Date + timeSpan;
+
+                        return time.ToString(@"s.fff");
+                    }
+
+            }
+            return string.Empty;
+        }
+
+        public static string ToTimeString(this TimeSpan? timeSpan, TimeSpanFormat format = TimeSpanFormat.MinutesAndSeconds)
+        {
+            if (timeSpan == null)
+            {
+                return "<null>";
+            }
+            else
+            {
+                return ToTimeString(timeSpan.Value, format);
+            }
+        }
+    }
+
+    public class SkiaGumCanvasView : SkiaSharp.Views.Maui.Controls.SKCanvasView, ISystemManagers
     {
         #region Fields/Properties
 
@@ -45,6 +99,8 @@ namespace SkiaGum
         public bool AutoSizeHeightAccordingToContents { get; set; }
         public bool AutoSizeWidthAccordingToContents { get; set; }
 
+        public double InternalPixelHeight => this.Height * DeviceDensity;
+        public double InternalPixelWidth => this.Width * DeviceDensity;
 
         BindableGraphicalUiElement elementPushed;
 
@@ -61,7 +117,13 @@ namespace SkiaGum
         public static event Action<BindableGraphicalUiElement> ElementPushed;
 
 
+        // There seems to be a bug in MAUI .NET 8 (preview) which will not resize a 
+        // canvas unless its page is invalidated. This is added here to work around the bug
+        public ISurfaceInvalidatable PageContainingThis { get; set; }
+
         #endregion
+        public event Action AfterLayoutBeforeDraw;
+        public event Action AfterAutoSizeChanged;
 
         public SkiaGumCanvasView()
         {
@@ -73,14 +135,34 @@ namespace SkiaGum
             base.Touch += HandleTouch;
         }
 
+        public event Func<Task<bool>> CanProceedFunc;
+        public event Action ReleaseFunc;
+
         public async Task<bool> CanProceed()
         {
-            var canProceed = await ExclusiveUiInteractionSemaphore.WaitAsync(0);
-            var tag = SemaphoreTag;
-            return canProceed;
+            if (CanProceedFunc != null)
+            {
+                return await CanProceedFunc();
+            }
+            else
+            {
+                var canProceed = await ExclusiveUiInteractionSemaphore.WaitAsync(0);
+                var tag = SemaphoreTag;
+                return canProceed;
+            }
         }
 
-        int ReleaseSemaphore(int count = 1) => ExclusiveUiInteractionSemaphore.Release(count);
+        void ReleaseSemaphore(int count = 1)
+        {
+            if (ReleaseFunc != null)
+            {
+                ReleaseFunc();
+            }
+            else
+            {
+                ExclusiveUiInteractionSemaphore.Release(count);
+            }
+        }
 
         #region Touch-related Logic
 
@@ -92,8 +174,14 @@ namespace SkiaGum
             float touchX = args.Location.X / GlobalScale;
             float touchY = args.Location.Y / GlobalScale;
 
+            var actionType = args.ActionType;
 
+            args.Handled = await TryHandleTouch(threshold, touchX, touchY, actionType);
+        }
 
+        public async Task<bool> TryHandleTouch(float threshold, float touchX, float touchY, SKTouchAction actionType)
+        {
+            var wasHandled = false;
             // SkiaSharp views return
             // whether they handle touches
             // through args.Handled. If the 
@@ -101,7 +189,7 @@ namespace SkiaGum
             // from this view to underlying views. Once
             // it is passed, it does not return to this view
             // until a new touch is initiated.
-            switch (args.ActionType)
+            switch (actionType)
             {
                 case SKTouchAction.Pressed:
                     yPushed = touchY;
@@ -137,7 +225,7 @@ namespace SkiaGum
                         await TryPushOnContainedGumObjects(touchX, touchY);
                     }
 
-                    args.Handled = true;
+                    wasHandled = true;
                     break;
                 case SKTouchAction.Moved:
                     if (isWithinThreshold)
@@ -165,7 +253,7 @@ namespace SkiaGum
                         }
                     }
 
-                    args.Handled = isWithinThreshold;
+                    wasHandled = isWithinThreshold;
                     break;
                 case SKTouchAction.Released:
                     {
@@ -226,6 +314,8 @@ namespace SkiaGum
 
                     break;
             }
+
+            return wasHandled;
         }
 
         private void LightenElement(GraphicalUiElement whatToLighten)
@@ -247,30 +337,15 @@ namespace SkiaGum
         }
 
         BindableGraphicalUiElement itemPushed;
-        private async Task TryPushOnContainedGumObjects(float x, float y)
+
+        // Made public for auto tests:
+        public async Task TryPushOnContainedGumObjects(float x, float y)
         {
             var clickableElement = FindElement(x, y, GumElementsInternal, item => item.PushedAsync != null);
 
             if (clickableElement != null)
             {
                 await TryPushElement(x, y, clickableElement);
-            }
-        }
-
-        public async Task TryPushElement(float x, float y, BindableGraphicalUiElement clickableElement)
-        {
-            if (await CanProceed())
-            {
-                try
-                {
-                    itemPushed = clickableElement;
-                    await clickableElement.PushedAsync(x, y);
-                    ElementPushed?.Invoke(clickableElement);
-                }
-                finally
-                {
-                    ReleaseSemaphore();
-                }
             }
         }
 
@@ -300,6 +375,23 @@ namespace SkiaGum
             }
         }
 
+        public async Task TryPushElement(float x, float y, BindableGraphicalUiElement clickableElement)
+        {
+            if (await CanProceed())
+            {
+                try
+                {
+                    itemPushed = clickableElement;
+                    await clickableElement.PushedAsync(x, y);
+                    ElementPushed?.Invoke(clickableElement);
+                }
+                finally
+                {
+                    ReleaseSemaphore();
+                }
+            }
+        }
+
         public void SetPushEvent(Func<Task> eventToRaise)
         {
             customPushEventToRaise = eventToRaise;
@@ -318,6 +410,7 @@ namespace SkiaGum
             EnableTouchEvents = true;
         }
 
+
         public async Task RaiseClickEvent()
         {
             if (customPushEventToRaise != null || customReleaseEventToRaise != null)
@@ -326,6 +419,7 @@ namespace SkiaGum
                 {
                     try
                     {
+                        //addbuttonanalyticshere?;
                         if (customPushEventToRaise != null)
                         {
                             await customPushEventToRaise();
@@ -345,7 +439,17 @@ namespace SkiaGum
             {
                 if (recognizer is TapGestureRecognizer tapGestureRecognizer)
                 {
-                    tapGestureRecognizer.SendTapped(this);
+                    //tapGestureRecognizer.SendTapped(this);
+                    // internal void SendTapped(View sender, Func<IElement?, Point?>? getPosition = null)
+                    // Vic says - not sure if we use this outside of testing, but I don't know if this works in MAUI
+                    //typeof(TapGestureRecognizer).GetMethod("SendTapped").Invoke(tapGestureRecognizer, new object[] { this });
+
+                    var method = typeof(TapGestureRecognizer).GetMethod("SendTapped", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (method == null)
+                    {
+                        throw new Exception($"Could not find SendTapped method on TapGestureRecognizer.");
+                    }
+                    method.Invoke(tapGestureRecognizer, new object[] { this, null });
                 }
             }
         }
@@ -361,9 +465,13 @@ namespace SkiaGum
                 // Children may sit outside of a container, so we should not restrict children checking on visibility bounds.
                 // Yea this makes it slower but it's important for some clicks
                 //if (gumElement.Visible && gumElement.IsPointInside(x, y))
+
                 if (gumElement.Visible)
                 {
-                    if ((condition == null || condition(gumElement)) && gumElement.IsPointInside(x, y))
+                    var passesCondition =
+                        (condition == null || condition(gumElement));
+
+                    if (passesCondition && gumElement.IsPointInside(x, y))
                     {
                         return gumElement;
                     }
@@ -445,8 +553,29 @@ namespace SkiaGum
             }
         }
 
+        DateTime? lastRecordedTime = null;
+        void RecordTime(string output)
+        {
+            if (lastRecordedTime == null)
+            {
+                lastRecordedTime = DateTime.Now;
+            }
+            else
+            {
+                var difference = DateTime.Now - lastRecordedTime;
+                System.Diagnostics.Debug.WriteLine($"   ### ({this.AutomationId}) {output} {difference.ToTimeString(TimeSpanFormat.SecondsAndMilliseconds)}");
+                lastRecordedTime = DateTime.Now;
+            }
+        }
+
+        // if true, then this is getting resized due to the control having a change in size. For this, we can skip the layout
+        // to improve perofrmance
+        bool SkipLayoutOnNextDrawFromDimensionSizeChange = false;
+
         protected override void OnPaintSurface(SKPaintSurfaceEventArgs args)
         {
+            // fast here....
+            //RecordTime("Start OnPaintSurface");
             var canvas = args.Surface.Canvas;
             SKImageInfo info = args.Info;
 
@@ -456,29 +585,93 @@ namespace SkiaGum
             GraphicalUiElement.CanvasHeight = info.Height / GlobalScale;
             SystemManagers.Renderer.Camera.Zoom = GlobalScale;
 
-            ForceGumLayout();
+            // fast here
+
+            //RecordTime($"Set Camera Zoom | Layouts Before:{GraphicalUiElement.UpdateLayoutCallCount}");
+
+            if (isLayoutSuppressedByInvalidateSurfaceCall)
+            {
+                isLayoutSuppressedByInvalidateSurfaceCall = false;
+            }
+            // For some reason this causes things to have really weird layouts. I don't know why....
+            //if(SkipLayoutOnNextDrawFromDimensionSizeChange == false)
+            //{
+            //    ForceGumLayout();
+            //}
+            //else
+            //{
+            //    SkipLayoutOnNextDrawFromDimensionSizeChange = false;
+            //}
+            // so let's just force it:
+            // At some point in the future Vic should investigate this for maximum performance.
+            else
+            {
+                ForceGumLayout();
+            }
+
+            // fast
+
+            AfterLayoutBeforeDraw?.Invoke();
+            //RecordTime($"Gum Layout | Layouts After:{GraphicalUiElement.UpdateLayoutCallCount}");
+
+
 
             SystemManagers.Renderer.Draw(this.GumElementsInternal, SystemManagers);
 
+
+            //RecordTime("Draw");
+            // slow here
             base.OnPaintSurface(args);
+
+            //RecordTime("Base Paint");
+
+
 
             if (AutoSizeHeightAccordingToContents || AutoSizeWidthAccordingToContents)
             {
-                var bottomRight = GetBottomRightMostElementCorner();
+                UpdateDimensionsFromAutoSize();
+            }
 
-                var desiredHeightRequest = bottomRight.Y / DeviceDensity;
+            //RecordTime("Resize...");
 
-                if (AutoSizeHeightAccordingToContents && this.HeightRequest != desiredHeightRequest)
-                {
-                    HeightRequest = desiredHeightRequest;
-                }
+        }
 
-                var desiredWidthRequest = bottomRight.X / DeviceDensity;
+        public void UpdateDimensionsFromAutoSize()
+        {
+            var bottomRight = GetBottomRightMostElementCorner();
 
-                if (AutoSizeWidthAccordingToContents && this.WidthRequest != desiredWidthRequest)
-                {
-                    WidthRequest = desiredWidthRequest;
-                }
+            var desiredHeightRequest = bottomRight.Y / DeviceDensity;
+
+            var shouldInvokeEvent = false;
+
+            if (AutoSizeHeightAccordingToContents && this.HeightRequest != desiredHeightRequest)
+            {
+                SkipLayoutOnNextDrawFromDimensionSizeChange = true;
+                HeightRequest = desiredHeightRequest;
+                shouldInvokeEvent = true;
+            }
+
+            var desiredWidthRequest = bottomRight.X / DeviceDensity;
+
+            if (AutoSizeWidthAccordingToContents && this.WidthRequest != desiredWidthRequest)
+            {
+                SkipLayoutOnNextDrawFromDimensionSizeChange = true;
+                WidthRequest = desiredWidthRequest;
+                shouldInvokeEvent = true;
+            }
+
+            var totalPixels = desiredWidthRequest * desiredHeightRequest;
+            if (totalPixels > 1000 * 1000)
+            {
+                System.Diagnostics.Debug.WriteLine($"Resize {this.AutomationId} to ({desiredWidthRequest},{desiredHeightRequest})");
+            }
+
+            if (shouldInvokeEvent)
+            {
+                InvalidateSurface();
+                var parentIView = this.Parent as IView;
+                parentIView?.InvalidateMeasure();
+                AfterAutoSizeChanged?.Invoke();
             }
         }
 
@@ -505,7 +698,7 @@ namespace SkiaGum
             GraphicalUiElement.IsAllLayoutSuspended = false;
             foreach (var item in this.GumElementsInternal)
             {
-                item.UpdateLayout();
+                item.UpdateLayout(updateParent: false, updateChildren: true);
             }
             GraphicalUiElement.IsAllLayoutSuspended = wasSuspended;
         }
@@ -523,6 +716,10 @@ namespace SkiaGum
 
         private void GetBottomRightMostRecursive(BindableGraphicalUiElement gue, ref Vector2 bottomRight)
         {
+            if (gue.Visible == false)
+            {
+                return;
+            }
             var right = gue.GetAbsoluteRight();
             var bottom = gue.GetAbsoluteBottom();
 
@@ -554,6 +751,31 @@ namespace SkiaGum
 
             var requiredSize = GetBottomRightMostElementCorner();
             HeightRequest = requiredSize.Y;
+        }
+
+        bool isLayoutSuppressedByInvalidateSurfaceCall;
+        public void InvalidateSurface(bool suppressLayout)
+        {
+            isLayoutSuppressedByInvalidateSurfaceCall = suppressLayout;
+            base.InvalidateSurface();
+        }
+
+        public new void InvalidateSurface()
+        {
+            bool shouldForcefullyRefresh = false;
+#if IOS
+            shouldForcefullyRefresh = AutoSizeHeightAccordingToContents || AutoSizeWidthAccordingToContents;
+#endif
+            if (shouldForcefullyRefresh)
+            {
+                this.ForceGumLayout();
+
+                UpdateDimensionsFromAutoSize();
+            }
+
+            base.InvalidateSurface();
+
+
         }
     }
 }
