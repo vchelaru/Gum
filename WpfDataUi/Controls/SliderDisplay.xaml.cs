@@ -171,8 +171,8 @@ namespace WpfDataUi.Controls
 
         private void RefreshMinMaxAndTickDisplay()
         {
-            MinValueText.Text = this.MinValue.ToString();
-            MaxValueText.Text = this.MaxValue.ToString();
+            MinValueText.Text = (this.MinValue * DisplayedValueMultiplier).ToString();
+            MaxValueText.Text = (this.MaxValue * DisplayedValueMultiplier).ToString();
 
             // Ticks are hidden by styling (I believe) but I don't know enough
             // about styling (or didn't spend enough time) to solve the problem

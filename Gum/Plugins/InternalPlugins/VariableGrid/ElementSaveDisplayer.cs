@@ -288,6 +288,7 @@ namespace Gum.PropertyGridHelpers
 
                 if (wasChangeMade)
                 {
+                    Undo.UndoManager.Self.RecordUndo();
                     PropertyGridManager.Self.RefreshUI(force: true);
                     WireframeObjectManager.Self.RefreshAll(true);
                     SelectionManager.Self.Refresh();
