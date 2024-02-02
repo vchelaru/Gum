@@ -81,6 +81,7 @@
     * [GetAbsoluteY](gum-code-reference/graphicaluielement/getabsolutey.md)
   * [GumProjectSave](gum-code-reference/gumprojectsave.md)
   * [IDataUi](gum-code-reference/idataui.md)
+  * [InstanceMember](gum-code-reference/instancemember.md)
   * [InstanceSave](gum-code-reference/instancesave.md)
   * [IPositionedSizedObject](gum-code-reference/ipositionedsizedobject.md)
   * [SelectedState](gum-code-reference/selectedstate.md)
