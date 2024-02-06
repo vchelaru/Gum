@@ -14,7 +14,7 @@ Gum separates its elements into three categories: Screens, Components, and Stand
 
 Standard elements represent the building-blocks for screens and components, and all projects use the same set of standard elements. To see the list of elements, expand the Standard tree item. Clicking on any element will display it in the preview window.
 
-<figure><img src="../.gitbook/assets/image (5).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (5) (2).png" alt=""><figcaption></figcaption></figure>
 
 Sprite element is selected in the image above. Notice that since a **SourceFile** is not set, the Sprite renders as a red X.
 
@@ -34,7 +34,7 @@ To create a screen:
 2. Enter the name of the new screen - such as **MainMenu**
 3.  The newly-created screen will be created and selected
 
-    <figure><img src="../.gitbook/assets/image (3) (1) (1).png" alt=""><figcaption></figcaption></figure>
+    <figure><img src="../.gitbook/assets/image (3) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
 
 ## Adding instances
 
