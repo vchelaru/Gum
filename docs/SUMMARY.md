@@ -93,6 +93,7 @@
   * [Setup](monogame/setup.md)
   * [Loading .gumx (Gum Project)](monogame/loading-.gumx-gum-project.md)
   * [Runtime Objects (GueDeriving)](monogame/runtime-objects-guederiving/README.md)
+    * [Component Runtimes](monogame/runtime-objects-guederiving/component-runtimes.md)
     * [ContainerRuntime](monogame/runtime-objects-guederiving/containerruntime.md)
     * [TextRuntime](monogame/runtime-objects-guederiving/textruntime.md)
 * [Meadow](meadow.md)
