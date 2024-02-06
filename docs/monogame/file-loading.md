@@ -46,3 +46,33 @@ currentDirectory = "c:/Folder/YourDesiredFolder/";
 // perform loading...
 ToolsUtilities.FileManager.RelativeDirectory = oldRelativeDirectory;
 ```
+
+### File Caching
+
+By default Gum caches loaded textures. In other words, the following code only results in a single file IO operation:
+
+```csharp
+Sprite1.SourceFile = "MyFile.png";
+Sprite2.SourceFile = "MyFile.png";
+```
+
+File caching can be disabled by setting the LoaderManager's CacheTextures property to false as shown in the following code:
+
+```csharp
+LoaderManager.Self.CacheTextures = false;
+```
+
+Of course, doing so means that Gum will go to disk for every file which can increase load times and result in significantly more video memory usage.
+
+Note that setting CacheTextures to false flushes the cache and disposes all cached content, so you can force the reload of all files by calling setting CacheTextures to false, then back to true as shown in the following code:
+
+```csharp
+Sprite1.SourceFile = "MyFile.png"; // This loads the file from disk
+Sprite2.SourceFile = "MyFile.png"; // This uses the cached Texture2D
+LoaderManager.Self.CacheTextures = false; // This clears the cache:
+LoaderManager.Self.CacheTextures = true;
+Sprite1.SourceFile = "MyFile.png"; // This once-again goes to disk to load the file
+Sprite2.SourceFile = "MyFile.png"; // This once-again goes to disk to load the file
+```
+
+Be careful setting CacheTextures to false since all existing textures will be disposed. This means that if you have loaded textures which are still being referenced by runtime objects, you will get an exception if those are still being drawn after setting CacheTextures to false.
