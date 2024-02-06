@@ -30,3 +30,11 @@ var componentSave = ObjectFinder.Self.GumProjectSave.Components
 var componentRuntime = componentSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
 // the componentRuntime can be modified here
 ```
+
+Note that the name passed to the First method should match the name given in Gum. For example, in this case the code searches for a component named ColoredRectangleComponent.
+
+<figure><img src="../../.gitbook/assets/image (41).png" alt=""><figcaption><p>ColoredRectangleComponent in Gum</p></figcaption></figure>
+
+If a component is in a folder, then its name is the qualified name relative to the Components folder. For example, the following component's name at runtime is `"Buttons/StandardButton"`
+
+<figure><img src="../../.gitbook/assets/image (42).png" alt=""><figcaption><p>StandardButton component in the Buttons folder in Gum</p></figcaption></figure>
