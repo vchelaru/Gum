@@ -94,6 +94,8 @@ namespace MonoGameGum.GueDeriving
                 NotifyPropertyChanged();
             }
         }
+
+        [Obsolete("Use Texture")]
         public Microsoft.Xna.Framework.Graphics.Texture2D SourceFile
         {
             get

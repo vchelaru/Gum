@@ -29,9 +29,9 @@ namespace MonoGameGumInCode
 
 
             // uncomment one of these to create a layout. Only have one uncommented or else UI overlaps
-            //CreateMixedLayout();
+            CreateMixedLayout();
             //CreateTextLayout();
-            CreateInvisibleLayout();
+            //CreateInvisibleLayout();
 
             base.Initialize();
         }
@@ -122,14 +122,14 @@ namespace MonoGameGumInCode
             var sprite = new SpriteRuntime();
             sprite.X = 10;
             sprite.Y = 10;
-            sprite.SourceFileName = "Content/BearTexture.png";
+            sprite.SourceFileName = "BearTexture.png";
             container.Children.Add(sprite);
 
             AddText(container, "This is a NineSlice:");
             var nineSlice = new NineSliceRuntime();
             nineSlice.X = 10;
             nineSlice.Y = 10;
-            nineSlice.SourceFileName = "Content/Frame.png";
+            nineSlice.SourceFileName = "Frame.png";
             nineSlice.Width = 256;
             nineSlice.Height = 48;
             container.Children.Add(nineSlice);

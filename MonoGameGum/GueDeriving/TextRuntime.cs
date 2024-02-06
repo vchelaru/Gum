@@ -36,6 +36,20 @@ namespace MonoGameGum.GueDeriving
             set => ContainedText.VerticalAlignment = value;
         }
 
+        public BitmapFont BitmapFont
+        {
+            get => ContainedText.BitmapFont;
+            set
+            {
+                if (value != BitmapFont)
+                {
+                    BitmapFont = value;
+                    NotifyPropertyChanged();
+                    UpdateLayout();
+                }
+            }
+        }
+
         public string Text
         {
             get
