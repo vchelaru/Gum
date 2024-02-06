@@ -31,6 +31,16 @@
     <LinkType>ReferenceOriginal</LinkType>
   </ScreenReference>
   <ComponentReference>
+    <Name>Buttons/StandardButton</Name>
+    <ElementType>Component</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </ComponentReference>
+  <ComponentReference>
+    <Name>ColoredRectangleComponent</Name>
+    <ElementType>Component</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </ComponentReference>
+  <ComponentReference>
     <Name>ComponentWithState</Name>
     <ElementType>Component</ElementType>
     <LinkType>ReferenceOriginal</LinkType>

@@ -38,8 +38,25 @@ namespace MonoGameGumFromFile
             LoadGumProject();
 
             ShowScreen("StartScreen");
+
+            InitializeComponentInCode();
             
             base.Initialize();
+        }
+
+        private void InitializeComponentInCode()
+        {
+            var componentSave = ObjectFinder.Self.GumProjectSave.Components
+                .First(item => item.Name == "ColoredRectangleComponent");
+
+            var componentRuntime = componentSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
+
+            componentRuntime.XUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
+            componentRuntime.XOrigin = RenderingLibrary.Graphics.HorizontalAlignment.Right;
+
+            componentRuntime.YUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
+            componentRuntime.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Bottom;
+
         }
 
         private void ShowScreen(string screenName)
