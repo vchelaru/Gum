@@ -46,9 +46,21 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>int</Type>
+      <Name>NormalText.FontSize</Name>
+      <Value xsi:type="xsd:int">18</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>string</Type>
       <Name>NormalText.Text</Name>
       <Value xsi:type="xsd:string">Normal Text</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>NormalText.Width</Name>
+      <Value xsi:type="xsd:float">382</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>

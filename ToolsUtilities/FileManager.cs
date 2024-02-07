@@ -23,7 +23,7 @@ namespace ToolsUtilities
         public const char DefaultSlash = '\\';
         #region Fields
 
-        static string mRelativeDirectory =
+        static string ExeLocation =>
 #if UWP
             "./";
 #elif ANDROID || IOS
@@ -31,6 +31,9 @@ namespace ToolsUtilities
 #else
             Path.GetDirectoryName(AppContext.BaseDirectory).ToLower().Replace("/", "\\") + "\\";
 #endif
+
+        static string mRelativeDirectory = ExeLocation;
+
         static Dictionary<Type, XmlSerializer> mXmlSerializers = new Dictionary<Type, XmlSerializer>();
 
         #endregion
@@ -42,7 +45,14 @@ namespace ToolsUtilities
             get { return mRelativeDirectory; }
             set
             {
-                mRelativeDirectory = value;
+                if(IsRelative(value))
+                {
+                    mRelativeDirectory = ExeLocation + value;
+                }
+                else
+                {
+                    mRelativeDirectory = value;
+                }
             }
         }
 
