@@ -42,14 +42,17 @@ If your Gum project (.gumx) is located in the Content folder, then you should pr
 
 <figure><img src="../.gitbook/assets/image (44).png" alt=""><figcaption><p>GumProject.gumx located in the Content folder</p></figcaption></figure>
 
-If your project is located in a subfolder of Content, then you must change the relative directory to be the location of your Gum project before you assign files. For example, you might do the following to properly load a screen:
+If your project is located in a subfolder of Content, then you must change the relative directory to be the location of your Gum project before you assign files. For example,  consider a situation where the Gum project is located in a folder called gum.
+
+<figure><img src="../.gitbook/assets/image (45).png" alt=""><figcaption><p>Gum project in a subfolder</p></figcaption></figure>
+
+To support this situation, you would want to set your relative directory as shown in the following code:
 
 ```csharp
-ToolsUtilities.FileManager.RelativeDirectory = 
-    Path.GetDirectoryName(AppContext.BaseDirectory).ToLower().Replace("/", "\\") +
-    "\\Content\\gum\\";
+ToolsUtilities.FileManager.RelativeDirectory = "content\\gum\\";
 
-gumProject.Screens.First().ToGraphicalUiElement(SystemManagers.Default, addToManagers:true);
+gumProject.Screens.First()
+    .ToGraphicalUiElement(SystemManagers.Default, addToManagers:true);
 ```
 
 Note that the following operations can result in files being loaded, so if your project is not located in the Content folder then you must set the RelativeDirectory before doing any of the following:
