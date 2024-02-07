@@ -511,6 +511,20 @@
         "ElementType": "Screens",
         "EventType": 7,
         "TimestampUtc": "2024-02-07T11:46:34.6303507Z"
+      },
+      {
+        "NewName": "TextScreen.DifferentFontAndSize1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-02-07T12:11:51.0078798Z"
+      },
+      {
+        "NewName": "TextScreen.ToggleFontSizes",
+        "OldName": "TextScreen.DifferentFontAndSize1",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2024-02-07T12:12:50.8137072Z"
       }
     ]
   }

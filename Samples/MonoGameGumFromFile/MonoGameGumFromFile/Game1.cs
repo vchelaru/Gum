@@ -18,6 +18,8 @@ namespace MonoGameGumFromFile
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
 
+        ScreenSave currentGumScreenSave;
+
         GraphicalUiElement currentScreenElement;
 
         public Game1()
@@ -61,18 +63,18 @@ namespace MonoGameGumFromFile
 
         private void ShowScreen(string screenName)
         {
-            var gumScreenSave = ObjectFinder.Self.GumProjectSave.Screens.FirstOrDefault(item => item.Name == screenName);
+            currentGumScreenSave = ObjectFinder.Self.GumProjectSave.Screens.FirstOrDefault(item => item.Name == screenName);
 
             var isAlreadyShown = false;
             if (currentScreenElement != null)
             {
-                isAlreadyShown = currentScreenElement.Tag == gumScreenSave;
+                isAlreadyShown = currentScreenElement.Tag == currentGumScreenSave;
             }
 
             if (!isAlreadyShown)
             {
                 currentScreenElement?.RemoveFromManagers();
-                currentScreenElement = gumScreenSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
+                currentScreenElement = currentGumScreenSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
             }
 
         }
@@ -90,6 +92,7 @@ namespace MonoGameGumFromFile
             _spriteBatch = new SpriteBatch(GraphicsDevice);
         }
 
+        MouseState lastMouseState;
         protected override void Update(GameTime gameTime)
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
@@ -99,7 +102,67 @@ namespace MonoGameGumFromFile
 
             DoSwapScreenLogic();
 
+            var mouseState = Mouse.GetState();
+
+            if(mouseState.LeftButton == ButtonState.Pressed && lastMouseState.LeftButton == ButtonState.Released)
+            {
+                // user just pushed on something so handle a push:
+                HandleMousePush(mouseState);
+            }
+
+            lastMouseState = mouseState;
+
             base.Update(gameTime);
+        }
+
+        private void HandleMousePush(MouseState mouseState)
+        {
+            var itemOver = GetItemOver(mouseState.X, mouseState.Y, currentScreenElement);
+
+            if(itemOver?.Tag is InstanceSave instanceSave && instanceSave.Name == "ToggleFontSizes")
+            {
+                if(itemOver.FontSize == 16)
+                {
+                    itemOver.FontSize = 32;
+                }
+                else
+                {
+                    itemOver.FontSize = 16;
+                }
+            }
+        }
+
+        private GraphicalUiElement GetItemOver(int x, int y, GraphicalUiElement graphicalUiElement)
+        {
+            if(graphicalUiElement.Children == null)
+            {
+                // this is a top level screen
+                foreach(var child in graphicalUiElement.ContainedElements)
+                {
+                    var isOver = 
+                        x >= child.GetAbsoluteLeft() &&
+                        x < child.GetAbsoluteRight() &&
+                        y >= child.GetAbsoluteTop() &&
+                        y < child.GetAbsoluteBottom();
+                    if(isOver)
+                    {
+                        return child;
+                    }
+                    else
+                    {
+                        var foundItem = GetItemOver(x, y, child);
+                        if(foundItem != null)
+                        {
+                            return foundItem;
+                        }    
+                    }
+                }
+            }
+            else
+            {
+                // todo
+            }
+            return null;
         }
 
         private void DoSwapScreenLogic()
