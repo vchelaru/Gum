@@ -24,6 +24,24 @@ namespace MonoGameGum.GueDeriving
             }
         }
 
+        public int Red
+        {
+            get => mContainedText.Red;
+            set => mContainedText.Red = value;
+        }
+
+        public int Green
+        {
+            get => mContainedText.Green;
+            set => mContainedText.Green = value;
+        }
+
+        public int Blue
+        {
+            get => mContainedText.Blue;
+            set => mContainedText.Blue = value;
+        }
+
         public HorizontalAlignment HorizontalAlignment
         {
             get => ContainedText.HorizontalAlignment;

@@ -525,6 +525,13 @@
         "ElementType": "Screens",
         "EventType": 7,
         "TimestampUtc": "2024-02-07T12:12:50.8137072Z"
+      },
+      {
+        "NewName": "TextScreen.NormalText1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-02-07T12:56:33.807934Z"
       }
     ]
   }
