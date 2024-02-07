@@ -66,7 +66,7 @@ text.FontSize = 24;
 
 This results in the TextRuntime object searching for a font named `FontArial24.fnt`.
 
-As mentioned before, when UseCustomFont is set to false the Gum runtime looks for the font in the FontCache folder. For this particular example the font would be located at `Content/FontCache/FontArial24.fnt`.
+As mentioned before, when UseCustomFont is set to false the Gum runtime looks for the font in the FontCache folder. For this particular example the font would be located at `Content/FontCache/FontArial24.fnt`. Note that if your Gum project is not located at the content root, then your FontCache folder will not be directly in the Content folder either. To fix this problem using the FileManager's RelativeDirectory, see the [File Loading](../file-loading.md) page.
 
 The following additional suffixes (in order listed below) are added to the font name.
 

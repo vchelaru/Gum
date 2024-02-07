@@ -36,16 +36,30 @@ In the case of the SourceFile assignment, the SpriteRuntime loads the Texture2D 
 
 ### Setting FileManager.RelativeDirectory
 
-Whenever a file is assigned on a runtime object, Gum looks for the file in the `ToolsUtilities.FileManager.RelativeDirectory` directory. This directory defaults to your game's Content folder, and in most cases it should not be changed. The most common case for changing the RelativeDirectory property is when loading a file which in turn has its own relative files. In this case you should keep track of the relative directory before you change it. Once you are finished loading, you should revert it.
+Whenever a file is assigned on a runtime object, Gum looks for the file in the `ToolsUtilities.FileManager.RelativeDirectory` directory. This directory defaults to your game's Content folder.
 
-For example, your code might look like the following snippet:
+If your Gum project (.gumx) is located in the Content folder, then you should probably not change this value.
+
+<figure><img src="../.gitbook/assets/image (44).png" alt=""><figcaption><p>GumProject.gumx located in the Content folder</p></figcaption></figure>
+
+If your project is located in a subfolder of Content, then you must change the relative directory to be the location of your Gum project before you assign files. For example, you might do the following to properly load a screen:
 
 ```csharp
-var oldRelativeDirectory = ToolsUtilities.FileManager.RelativeDirectory;
-currentDirectory = "c:/Folder/YourDesiredFolder/";
-// perform loading...
-ToolsUtilities.FileManager.RelativeDirectory = oldRelativeDirectory;
+ToolsUtilities.FileManager.RelativeDirectory = 
+    Path.GetDirectoryName(AppContext.BaseDirectory).ToLower().Replace("/", "\\") +
+    "\\Content\\gum\\";
+
+gumProject.Screens.First().ToGraphicalUiElement(SystemManagers.Default, addToManagers:true);
 ```
+
+Note that the following operations can result in files being loaded, so if your project is not located in the Content folder then you must set the RelativeDirectory before doing any of the following:
+
+* Calling ToGraphicalUiElement
+* Assigning SourceFileName
+* Setting custom or cached fonts on a Text object
+* Setting states (which may assign variables)
+
+It's recommended practice to set the RelativeDirectory to your Gum project's location and to leave it there so you never have to consider subfolders in any code that accesses files directly or indirectly.
 
 ### File Caching
 
