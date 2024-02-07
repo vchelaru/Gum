@@ -98,3 +98,12 @@ To create a .fnt file, you have a few options:
 2. Use Angelcode Bitmap Font Generator. For more information see the [Use Custom Font page](../../gum-elements/text/use-custom-font.md).
 3. Manually create a .fnt file in a text editor and a corresponding .png. This option requires understanding how the .fnt file format is structured. The best way to learn this is to open an existing font file.
 
+Using Gum to create the font cache is fairly simple, but you must know which fonts you intend to use ahead of time. A font is created automatically by the Gum tool whenever a Text property is changed.&#x20;
+
+To view the existing font cache, you can click the View Font Cache menu item in Gum.
+
+<figure><img src="../../.gitbook/assets/07_06 14 19.png" alt=""><figcaption><p>View Font Cache menu item</p></figcaption></figure>
+
+As you make changes to the Text object, new files are created and added to the font cache folder, as shown in the following animation:
+
+<figure><img src="../../.gitbook/assets/07_06 22 49 (1).gif" alt=""><figcaption><p>Changing the Font Size creates new fonts in FontCache</p></figcaption></figure>
