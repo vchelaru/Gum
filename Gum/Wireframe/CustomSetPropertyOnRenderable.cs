@@ -276,13 +276,7 @@ namespace Gum.Wireframe
             void ReactToFontValueChange()
             {
                 UpdateToFontValues(mContainedObjectAsIpso as IText, graphicalUiElement);
-                // we want to update if the text's size is based on its "children" (the letters it contains)
-                if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren ||
-                    // If height is relative to children, it could be in a stack
-                    graphicalUiElement.HeightUnits == DimensionUnitType.RelativeToChildren)
-                {
-                    graphicalUiElement.UpdateLayout();
-                }
+
                 handled = true;
             }
 
@@ -809,7 +803,21 @@ namespace Gum.Wireframe
                     }
                 }
 
-                ((Text)text).BitmapFont = font ?? Text.DefaultBitmapFont;
+                var fontToSet = font ?? Text.DefaultBitmapFont;
+
+                var asRenderableText = (Text)text;
+                if(asRenderableText.BitmapFont != fontToSet)
+                {
+                    asRenderableText.BitmapFont = fontToSet;
+
+                    // we want to update if the text's size is based on its "children" (the letters it contains)
+                    if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren ||
+                        // If height is relative to children, it could be in a stack
+                        graphicalUiElement.HeightUnits == DimensionUnitType.RelativeToChildren)
+                    {
+                        graphicalUiElement.UpdateLayout();
+                    }
+                }
             }
         }
 
