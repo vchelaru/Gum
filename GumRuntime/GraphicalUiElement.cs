@@ -120,7 +120,7 @@ namespace Gum.Wireframe
         DimensionUnitType mWidthUnit;
         DimensionUnitType mHeightUnit;
 
-        ISystemManagers mManagers;
+        protected ISystemManagers mManagers;
 
         int mTextureTop;
         int mTextureLeft;
@@ -4753,8 +4753,11 @@ namespace Gum.Wireframe
             if (this.mContainedObjectAsIpso is IText asIText && isFontDirty)
             {
 
-                UpdateFontFromProperties?.Invoke(asIText, this);
-                isFontDirty = false;
+                if(!this.IsLayoutSuspended)
+                {
+                    UpdateFontFromProperties?.Invoke(asIText, this);
+                    isFontDirty = false;
+                }
             }
 
             if (this.Children != null)

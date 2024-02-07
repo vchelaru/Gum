@@ -32,15 +32,18 @@ namespace GumRuntime
 
                 toReturn = ElementSaveExtensions.CreateGueForElement(instanceElement, true, genericType);
 
+                // Feb 7, 2024 - why not set the Name first before calling SetGraphicalUiElement? This would
+                // help debugging...
+                toReturn.Name = instanceSave.Name;
+
                 // If we get here but there's no contained graphical object then that means we don't
-                // have a strongly-typed system (like when a game is running in FRB). Therefore, we'll
+                // have a strongly-typed system. Therefore, we'll
                 // just fall back to the regular creation of graphical objects, like is done in the Gum tool:
                 if(toReturn.RenderableComponent == null)
                 {
                     instanceElement.SetGraphicalUiElement(toReturn, systemManagers);
                 }
 
-                toReturn.Name = instanceSave.Name;
                 toReturn.Tag = instanceSave;
             }
 

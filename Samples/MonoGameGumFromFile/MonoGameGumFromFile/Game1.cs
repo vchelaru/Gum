@@ -149,6 +149,10 @@ namespace MonoGameGumFromFile
             {
                 ShowScreen("ParentChildScreen");
             }
+            else if(state.IsKeyDown(Keys.D4))
+            {
+                ShowScreen("TextScreen");
+            }
         }
 
         protected override void Draw(GameTime gameTime)
