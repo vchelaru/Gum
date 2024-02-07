@@ -16,7 +16,7 @@ textInstance.AddToManagers(SystemManagers.Default, null);
 
 ### Fonts
 
-By default all TextRuntime instances us an Arial 18 pt font. This can be changed by specifying ta custom font.
+By default all TextRuntime instances use an Arial 18 pt font. This can be changed by specifying ta custom font.
 
 Fonts on TextRuntime objects can be modified in one of two ways:
 
@@ -35,7 +35,7 @@ customText.Text = "Hello, I am using a custom font";
 customText.AddToManagers(SystemManagers.Default, null);
 ```
 
-This code assumes a font file named WhitePeaberryOutline.fnt is located in the `Content/WhitePeaberryOutline` folder. By default all Gum content loading is performed relative to the Content folder.
+This code assumes a font file named WhitePeaberryOutline.fnt is located in the `Content/WhitePeaberryOutline` folder. By default all Gum content loading is performed relative to the Content folder; however, if UseCustomFont is set to false, then all font loading is performed from the FontCache folder. See the [Font Component Values](textruntime.md#font-component-values) section for more information on loading from the FontCache folder. See the [File Loading](../file-loading.md) page for more information about loading files in general.
 
 Note that .fnt files reference one or more image files, so the image file must also be added to the correct folder. In this case, the WhitePeaberryOutline.fnt file references a WhitePeaberryOutline.png file, so both files are in the same folder.
 
@@ -47,7 +47,7 @@ Also, note that files are loaded from-file rather than using the content pipelin
 
 ### Font Component Values
 
-A TextRuntime's font can be controlled by its individual font component values. **Setting these values in code will not produce a .fnt file for you - the .fnt file must already be in your project**. The following values are used to determine the font (.fnt) to load:
+A TextRuntime's font can be controlled by its individual font component values. **Setting these values in code will not produce a .fnt file for you - the .fnt file must already be in your project in the FontCache folder**. The following values are used to determine the font (.fnt) to load:
 
 * FontSize
 * Font
@@ -66,7 +66,7 @@ text.FontSize = 24;
 
 This results in the TextRuntime object searching for a font named `FontArial24.fnt`.
 
-As mentioned before, the default location for fonts is the Content folder, so the code would search for `Content/FontArial24.fnt`.
+As mentioned before, when UseCustomFont is set to false the Gum runtime looks for the font in the FontCache folder. For this particular example the font would be located at `Content/FontCache/FontArial24.fnt`. Note that if your Gum project is not located at the content root, then your FontCache folder will not be directly in the Content folder either. To fix this problem using the FileManager's RelativeDirectory, see the [File Loading](../file-loading.md) page.
 
 The following additional suffixes (in order listed below) are added to the font name.
 
@@ -96,4 +96,14 @@ To create a .fnt file, you have a few options:
 
 1. Open Gum, create a temporary Text instance with the desired properties, then look at the font cache folder
 2. Use Angelcode Bitmap Font Generator. For more information see the [Use Custom Font page](../../gum-elements/text/use-custom-font.md).
-3. Manually create a .fnt file in text and a corresponding .png. This is easiest if you create a .fnt file using one of the options above, then modify it.
+3. Manually create a .fnt file in a text editor and a corresponding .png. This option requires understanding how the .fnt file format is structured. The best way to learn this is to open an existing font file.
+
+Using Gum to create the font cache is fairly simple, but you must know which fonts you intend to use ahead of time. A font is created automatically by the Gum tool whenever a Text property is changed.&#x20;
+
+To view the existing font cache, you can click the View Font Cache menu item in Gum.
+
+<figure><img src="../../.gitbook/assets/07_06 14 19.png" alt=""><figcaption><p>View Font Cache menu item</p></figcaption></figure>
+
+As you make changes to the Text object, new files are created and added to the font cache folder, as shown in the following animation:
+
+<figure><img src="../../.gitbook/assets/07_06 22 49 (1).gif" alt=""><figcaption><p>Changing the Font Size creates new fonts in FontCache</p></figcaption></figure>

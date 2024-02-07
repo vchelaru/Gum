@@ -39,7 +39,7 @@ To load a Gum Project:
 2. Modify the Initialize method so that it has the following lines **after** initializing SystemManagers:
 
 ```csharp
-var gumProject = GumProjectSave.Load("GumProject.gumx", out _);
+var gumProject = GumProjectSave.Load("GumProject.gumx", out GumLoadResult result);
 ObjectFinder.Self.GumProjectSave = gumProject;
 gumProject.Initialize();
 
@@ -69,3 +69,11 @@ child.X += 30;
 // like Text:
 child.SetProperty("Text", "Hello world");
 ```
+
+### Troubleshooting Gum Project Loading
+
+If your Gum project loads incorrectly, you can inspect the GumLoadResult object that is returned from the Load method to see what might be wrong. To inspect this object, you can place a breakpoint after your Load call and look at the `result` object as shown in the following screenshot.
+
+<figure><img src="../.gitbook/assets/image (43).png" alt=""><figcaption><p>Viewing the GumLoadResult in the output window</p></figcaption></figure>
+
+In this case the GumLoadResult is indicating no errors and no missing files.
