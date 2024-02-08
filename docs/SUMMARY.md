@@ -95,6 +95,7 @@
   * [File Loading](monogame/file-loading.md)
   * [Runtime Objects (GueDeriving)](monogame/runtime-objects-guederiving/README.md)
     * [Component Runtimes](monogame/runtime-objects-guederiving/component-runtimes.md)
+    * [ColoredRectangleRuntime](monogame/runtime-objects-guederiving/coloredrectangleruntime.md)
     * [ContainerRuntime](monogame/runtime-objects-guederiving/containerruntime.md)
     * [NineSliceRuntime](monogame/runtime-objects-guederiving/ninesliceruntime.md)
     * [RectangleRuntime](monogame/runtime-objects-guederiving/rectangleruntime.md)

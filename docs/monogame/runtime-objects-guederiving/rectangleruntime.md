@@ -1,10 +1,10 @@
 # RectangleRuntime
 
-The RectangleRuntime object can be used to draw a single-pixel-wide rectangle. It can either have a solid outline or dotted, and can display any color.
+The RectangleRuntime object can be used to draw a single-pixel-wide rectangle. It can either have a solid outline or dotted, and can display any color. RectangleRuntimes only draw outlines. For filled rectangles see the [ColoredRectangleRuntime](coloredrectangleruntime.md) type.
 
 ### Code Example
 
-The following code can be used to create a RectangleRuntime:
+The following code creates a RectangleRuntime:
 
 ```csharp
 var lineRectangle = new RectangleRuntime();
