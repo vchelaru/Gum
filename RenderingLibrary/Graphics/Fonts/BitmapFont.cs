@@ -636,57 +636,72 @@ namespace RenderingLibrary.Graphics
                     point.X = scaleX * (requiredWidth - widths[lineNumber]) / 2;
                 }
 
-                
-                foreach (char c in line)
+                var effectiveTextRenderingMode = overrideTextRenderingPositionMode ??
+                    Text.TextRenderingPositionMode;
+                if(line.Length > 0)
                 {
                     FloatRectangle destRect;
                     int pageIndex;
-                    var sourceRect = GetCharacterRect(c, lineNumber, ref point, out destRect, out pageIndex, scaleX, lineHeightMultiplier: lineHeightMultiplier);
 
-                    var unrotatedX = destRect.X + xOffset;
-                    var unrotatedY = destRect.Y + yOffset;
-                    toReturn.X = System.Math.Min(toReturn.X, unrotatedX);
-                    toReturn.Y = System.Math.Min(toReturn.Y, unrotatedY);
-                    toReturn.Width = System.Math.Max(toReturn.Width, point.X);
-                    toReturn.Height = System.Math.Max(toReturn.Height, point.Y);
+                    var firstSource =
+                        GetCharacterRect(line[0], lineNumber, ref point, out destRect, out pageIndex, scaleX, lineHeightMultiplier: lineHeightMultiplier);
 
+                    var firstLetterDestinationX = destRect.X;
+                    var firstLetterDestinationXInt = MathFunctions.RoundToInt(firstLetterDestinationX);
+                    var lineOffset = 0f;
 
-                    var finalPosition = destRect.X * xAxis + destRect.Y * yAxis;
-
-                    finalPosition.X += xOffset;
-                    finalPosition.Y += yOffset;
-
-                    var effectiveTextRenderingMode = overrideTextRenderingPositionMode ??
-                        Text.TextRenderingPositionMode;
-
-                    if (effectiveTextRenderingMode == TextRenderingPositionMode.FreeFloating ||
-                        // If rotated, need free floating positions since sprite positions will likely not line up with pixels
-                        rotation != 0 || 
-                        // If scaled up/down, don't use free floating
-                        scaleX != 1)
+                    if(effectiveTextRenderingMode == TextRenderingPositionMode.SnapToPixel)
                     {
-                        var scale = new Vector2(scaleX, scaleY);
-                        spriteRenderer.Draw(mTextures[pageIndex], finalPosition,  sourceRect, color, -rotationRadians, Vector2.Zero, scale, SpriteEffects.None, 0, this);
-                    }
-                    else
-                    {
-                        // position:
-                        destRect.X += xOffsetAsInt;
-                        destRect.Y += yOffsetAsInt;
-
-                        var position = new Vector2(destRect.X, destRect.Y);
-
-                        spriteRenderer.Draw(mTextures[pageIndex], position, sourceRect, color, 0, Vector2.Zero, new Vector2(scaleX, scaleY), SpriteEffects.None, 0, this);
+                        lineOffset = firstLetterDestinationX - firstLetterDestinationXInt;
                     }
 
-                    numberOfLettersRendered++;
-
-                    if(numberOfLettersToRender <= numberOfLettersRendered)
+                    foreach (char c in line)
                     {
-                        break;
-                    }
+                        var sourceRect = GetCharacterRect(c, lineNumber, ref point, out destRect, out pageIndex, scaleX, lineHeightMultiplier: lineHeightMultiplier);
 
+                        var unrotatedX = destRect.X + xOffset;
+                        var unrotatedY = destRect.Y + yOffset;
+                        toReturn.X = System.Math.Min(toReturn.X, unrotatedX);
+                        toReturn.Y = System.Math.Min(toReturn.Y, unrotatedY);
+                        toReturn.Width = System.Math.Max(toReturn.Width, point.X);
+                        toReturn.Height = System.Math.Max(toReturn.Height, point.Y);
+
+
+
+
+
+                        if (effectiveTextRenderingMode == TextRenderingPositionMode.FreeFloating ||
+                            // If rotated, need free floating positions since sprite positions will likely not line up with pixels
+                            rotation != 0 || 
+                            // If scaled up/down, don't use free floating
+                            scaleX != 1)
+                        {
+                            var finalPosition = destRect.X * xAxis + destRect.Y * yAxis;
+                            finalPosition.X += xOffset;
+                            finalPosition.Y += yOffset;
+                            var scale = new Vector2(scaleX, scaleY);
+                            spriteRenderer.Draw(mTextures[pageIndex], finalPosition,  sourceRect, color, -rotationRadians, Vector2.Zero, scale, SpriteEffects.None, 0, this);
+                        }
+                        else
+                        {
+                            // position:
+                            destRect.X += xOffsetAsInt + lineOffset;
+                            destRect.Y += yOffsetAsInt;
+
+                            var position = new Vector2(destRect.X, destRect.Y);
+
+                            spriteRenderer.Draw(mTextures[pageIndex], position, sourceRect, color, 0, Vector2.Zero, new Vector2(scaleX, scaleY), SpriteEffects.None, 0, this);
+                        }
+
+                        numberOfLettersRendered++;
+
+                        if(numberOfLettersToRender <= numberOfLettersRendered)
+                        {
+                            break;
+                        }
+                    }
                 }
+
                 point.X = 0;
                 lineNumber++;
 
