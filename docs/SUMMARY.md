@@ -92,6 +92,7 @@
 * [MonoGame](monogame/README.md)
   * [Setup](monogame/setup.md)
   * [Loading .gumx (Gum Project)](monogame/loading-.gumx-gum-project.md)
+  * [Camera](monogame/camera.md)
   * [File Loading](monogame/file-loading.md)
   * [Runtime Objects (GueDeriving)](monogame/runtime-objects-guederiving/README.md)
     * [ColoredRectangleRuntime](monogame/runtime-objects-guederiving/coloredrectangleruntime.md)
