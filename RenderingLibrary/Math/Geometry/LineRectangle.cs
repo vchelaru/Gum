@@ -229,7 +229,8 @@ namespace RenderingLibrary.Math.Geometry
 
             UpdatePoints();
 
-            IsDotted = true;
+            // Why is it dotted by default? That's confusing.
+            //IsDotted = true;
         }
 
         private void UpdatePoints()

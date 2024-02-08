@@ -107,15 +107,26 @@ namespace MonoGameGumInCode
             container.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
             container.AddToManagers();
 
-            AddText(container, "This is a rectangle:");
+            AddText(container, "This is a colored rectangle:");
 
             var coloredRectangleInstance = new ColoredRectangleRuntime();
             coloredRectangleInstance.X = 10;
             coloredRectangleInstance.Y = 10;
             coloredRectangleInstance.Width = 120;
-            coloredRectangleInstance.Height = 48;
+            coloredRectangleInstance.Height = 24;
             coloredRectangleInstance.Color = Color.White;
             container.Children.Add(coloredRectangleInstance);
+
+            AddText(container, "This is a (line) rectangle:");
+
+            var lineRectangle = new RectangleRuntime();
+            lineRectangle.X = 10;
+            lineRectangle.Y = 10;
+            lineRectangle.Width = 120;
+            lineRectangle.Height = 24;
+            lineRectangle.Color = Color.Pink;
+            container.Children.Add(lineRectangle);
+
 
             AddText(container, "This is a sprite:");
 
@@ -147,8 +158,18 @@ namespace MonoGameGumInCode
         private static void AddText(ContainerRuntime container, string text)
         {
             var textInstance = new TextRuntime();
+
+            // adds a gap between this text and the item above
+            textInstance.Y = 8;
+
             textInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
             textInstance.Width = 0;
+
+            textInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+
+            // Makes it so the item below appears closer to the text:
+            textInstance.Height = -8;
+
             textInstance.Text = text;
             container.Children.Add(textInstance);
         }
