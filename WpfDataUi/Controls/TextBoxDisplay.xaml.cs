@@ -297,38 +297,47 @@ namespace WpfDataUi.Controls
 
         private void Label_MouseMove(object sender, MouseEventArgs e)
         {
-            if(currentDownX != null && e.LeftButton == MouseButtonState.Pressed)
+            if(currentDownX != null)
             {
-                var newX = e.GetPosition(this).X;
-                var difference = newX - currentDownX.Value;
-                currentDownX = newX;
-
-                if(difference != 0)
+                if ( e.LeftButton == MouseButtonState.Pressed)
                 {
-                    unroundedValue += difference;
-                    var rounded = unroundedValue;
-                    if(LabelDragValueRounding != null)
+                    var newX = e.GetPosition(this).X;
+                    var difference = newX - currentDownX.Value;
+                    currentDownX = newX;
+
+                    if(difference != 0)
                     {
-                        var isInt = Math.Abs(LabelDragValueRounding.Value - (int)LabelDragValueRounding.Value) < .0001m;
-
-                        rounded = RoundDouble(unroundedValue, (double)LabelDragValueRounding.Value);
-
-                        if(isInt)
+                        unroundedValue += difference;
+                        var rounded = unroundedValue;
+                        if(LabelDragValueRounding != null)
                         {
-                            rounded = (int)(System.Math.Round(rounded) + (System.Math.Sign(rounded) * .5f));
+                            var isInt = Math.Abs(LabelDragValueRounding.Value - (int)LabelDragValueRounding.Value) < .0001m;
+
+                            rounded = RoundDouble(unroundedValue, (double)LabelDragValueRounding.Value);
+
+                            if(isInt)
+                            {
+                                rounded = (int)(System.Math.Round(rounded) + (System.Math.Sign(rounded) * .5f));
+                            }
+                        }
+
+                        var getValueStatus = TryGetValueOnUi(out object valueOnInstance);
+
+                        if(getValueStatus == ApplyValueResult.Success)
+                        {
+                            var newValue = mTextBoxLogic.GetValueInDirection(difference, rounded);
+                            TrySetValueOnUi(newValue);
+                            lastApplyValueResult = mTextBoxLogic.TryApplyToInstance(SetPropertyCommitType.Intermediate);
                         }
                     }
-
-                    var getValueStatus = TryGetValueOnUi(out object valueOnInstance);
-
-                    if(getValueStatus == ApplyValueResult.Success)
+                }
+                else
+                {
+                    if(System.Windows.Input.Mouse.Captured == Label)
                     {
-                        var newValue = mTextBoxLogic.GetValueInDirection(difference, rounded);
-                        TrySetValueOnUi(newValue);
-                        lastApplyValueResult = mTextBoxLogic.TryApplyToInstance(SetPropertyCommitType.Intermediate);
+                        System.Windows.Input.Mouse.Capture(null);
                     }
                 }
-
             }
         }
 
