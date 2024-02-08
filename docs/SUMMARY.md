@@ -97,6 +97,7 @@
     * [Component Runtimes](monogame/runtime-objects-guederiving/component-runtimes.md)
     * [ContainerRuntime](monogame/runtime-objects-guederiving/containerruntime.md)
     * [NineSliceRuntime](monogame/runtime-objects-guederiving/ninesliceruntime.md)
+    * [RectangleRuntime](monogame/runtime-objects-guederiving/rectangleruntime.md)
     * [SpriteRuntime](monogame/runtime-objects-guederiving/spriteruntime.md)
     * [TextRuntime](monogame/runtime-objects-guederiving/textruntime.md)
 * [Meadow](meadow.md)
