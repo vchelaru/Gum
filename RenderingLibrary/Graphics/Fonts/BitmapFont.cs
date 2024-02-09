@@ -122,7 +122,7 @@ namespace RenderingLibrary.Graphics
                     bool isRelative = texturesToLoad[i].StartsWith("./") || FileManager.IsRelative(texturesToLoad[i]);
 
                     if (isRelative)
-                    { 
+                    {
                         if (FileManager.IsRelative(directory))
                         {
                             fileName = FileManager.RelativeDirectory + directory + texturesToLoad[i];
@@ -143,8 +143,8 @@ namespace RenderingLibrary.Graphics
                     //if (ToolsUtilities.FileManager.FileExists(fileName))
                     mTextures[i] = LoaderManager.Self.LoadContent<Texture2D>(fileName);
                 }
-            } 
-            
+            }
+
             SetFontPattern(fontContents);
         }
 
@@ -488,8 +488,8 @@ namespace RenderingLibrary.Graphics
         /// <param name="objectRequestingRender"></param>
         /// <param name="numberOfLettersToRender">The maximum number of characters to render.</param>
         /// <returns></returns>
-        public Texture2D RenderToTexture2D(List<string> lines, HorizontalAlignment horizontalAlignment, 
-            SystemManagers managers, Texture2D toReplace, object objectRequestingRender, 
+        public Texture2D RenderToTexture2D(List<string> lines, HorizontalAlignment horizontalAlignment,
+            SystemManagers managers, Texture2D toReplace, object objectRequestingRender,
             int? numberOfLettersToRender = null, float lineHeightMultiplier = 1)
         {
             if (managers == null)
@@ -502,7 +502,7 @@ namespace RenderingLibrary.Graphics
             {
                 return null;
             }
-            if(numberOfLettersToRender == 0)
+            if (numberOfLettersToRender == 0)
             {
                 return null;
             }
@@ -545,7 +545,7 @@ namespace RenderingLibrary.Graphics
                 {
                     managers.Renderer.GraphicsDevice.Viewport = viewportToSet;
                 }
-                catch(Exception exception)
+                catch (Exception exception)
                 {
                     throw new Exception("Error setting graphics device when rendering bitmap font. used values:\n" +
                         $"requiredWidth:{requiredWidth}\nrequiredHeight:{requiredHeight}", exception);
@@ -556,9 +556,9 @@ namespace RenderingLibrary.Graphics
                 managers.Renderer.GraphicsDevice.Clear(Microsoft.Xna.Framework.Color.Transparent);
                 spriteRenderer.Begin();
 
-                DrawTextLines(lines, horizontalAlignment, objectRequestingRender, requiredWidth, widths, 
-                    spriteRenderer, Color.White, numberOfLettersToRender: numberOfLettersToRender, lineHeightMultiplier:lineHeightMultiplier);
-                
+                DrawTextLines(lines, horizontalAlignment, objectRequestingRender, requiredWidth, widths,
+                    spriteRenderer, Color.White, numberOfLettersToRender: numberOfLettersToRender, lineHeightMultiplier: lineHeightMultiplier);
+
                 spriteRenderer.End();
 
                 managers.Renderer.GraphicsDevice.SetRenderTarget(null);
@@ -569,15 +569,15 @@ namespace RenderingLibrary.Graphics
             return renderTarget;
         }
 
-        public FloatRectangle DrawTextLines(List<string> lines, HorizontalAlignment horizontalAlignment, 
-            object objectRequestingChange, int requiredWidth, List<int> widths, 
-            SpriteRenderer spriteRenderer, 
+        public FloatRectangle DrawTextLines(List<string> lines, HorizontalAlignment horizontalAlignment,
+            object objectRequestingChange, int requiredWidth, List<int> widths,
+            SpriteRenderer spriteRenderer,
             Color color,
             float xOffset = 0, float yOffset = 0, float rotation = 0, float scaleX = 1, float scaleY = 1,
             int? numberOfLettersToRender = null, TextRenderingPositionMode? overrideTextRenderingPositionMode = null, float lineHeightMultiplier = 1)
         {
             ///////////Early Out////////////////
-            if(numberOfLettersToRender == 0)
+            if (numberOfLettersToRender == 0)
             {
                 return default(FloatRectangle);
             }
@@ -609,7 +609,7 @@ namespace RenderingLibrary.Graphics
             Vector2 xAxis = Vector2.UnitX;
             Vector2 yAxis = Vector2.UnitY;
 
-            if(rotation != 0)
+            if (rotation != 0)
             {
                 xAxis.X = (float)System.Math.Cos(-rotationRadians);
                 xAxis.Y = (float)System.Math.Sin(-rotationRadians);
@@ -620,7 +620,7 @@ namespace RenderingLibrary.Graphics
 
             int numberOfLettersRendered = 0;
 
-            for(int i = 0; i < lines.Count; i++)
+            for (int i = 0; i < lines.Count; i++)
             {
                 var line = lines[i];
 
@@ -629,7 +629,7 @@ namespace RenderingLibrary.Graphics
 
                 if (horizontalAlignment == HorizontalAlignment.Right)
                 {
-                    point.X = scaleX *( requiredWidth - widths[lineNumber]);
+                    point.X = scaleX * (requiredWidth - widths[lineNumber]);
                 }
                 else if (horizontalAlignment == HorizontalAlignment.Center)
                 {
@@ -638,26 +638,32 @@ namespace RenderingLibrary.Graphics
 
                 var effectiveTextRenderingMode = overrideTextRenderingPositionMode ??
                     Text.TextRenderingPositionMode;
-                if(line.Length > 0)
+
+                if (line.Length > 0)
                 {
                     FloatRectangle destRect;
                     int pageIndex;
 
-                    var firstSource =
-                        GetCharacterRect(line[0], lineNumber, ref point, out destRect, out pageIndex, scaleX, lineHeightMultiplier: lineHeightMultiplier);
+                    float lineOffset = 0;
 
-                    var firstLetterDestinationX = destRect.X;
-                    var firstLetterDestinationXInt = MathFunctions.RoundToInt(firstLetterDestinationX);
-                    var lineOffset = 0f;
-
-                    if(effectiveTextRenderingMode == TextRenderingPositionMode.SnapToPixel)
+                    for(int charIndex = 0; charIndex < line.Length; charIndex++)
                     {
-                        lineOffset = firstLetterDestinationX - firstLetterDestinationXInt;
-                    }
+                        char c = line[charIndex];
+                        var sourceRect =
+                            GetCharacterRect(c, lineNumber, ref point, out destRect, out pageIndex, scaleX, lineHeightMultiplier: lineHeightMultiplier);
 
-                    foreach (char c in line)
-                    {
-                        var sourceRect = GetCharacterRect(c, lineNumber, ref point, out destRect, out pageIndex, scaleX, lineHeightMultiplier: lineHeightMultiplier);
+                        if(charIndex == 0)
+                        {
+                            var firstLetterDestinationX = destRect.X;
+                            var firstLetterDestinationXInt = MathFunctions.RoundToInt(firstLetterDestinationX);
+                            lineOffset = 0f;
+
+                            if (effectiveTextRenderingMode == TextRenderingPositionMode.SnapToPixel)
+                            {
+                                lineOffset = firstLetterDestinationX - firstLetterDestinationXInt;
+                            }
+
+                        }
 
                         var unrotatedX = destRect.X + xOffset;
                         var unrotatedY = destRect.Y + yOffset;
@@ -667,25 +673,25 @@ namespace RenderingLibrary.Graphics
                         toReturn.Height = System.Math.Max(toReturn.Height, point.Y);
 
 
+                        var finalPosition = destRect.X * xAxis + destRect.Y * yAxis;
 
+                        finalPosition.X += xOffset;
+                        finalPosition.Y += yOffset;
 
 
                         if (effectiveTextRenderingMode == TextRenderingPositionMode.FreeFloating ||
                             // If rotated, need free floating positions since sprite positions will likely not line up with pixels
-                            rotation != 0 || 
+                            rotation != 0 ||
                             // If scaled up/down, don't use free floating
                             scaleX != 1)
                         {
-                            var finalPosition = destRect.X * xAxis + destRect.Y * yAxis;
-                            finalPosition.X += xOffset;
-                            finalPosition.Y += yOffset;
                             var scale = new Vector2(scaleX, scaleY);
-                            spriteRenderer.Draw(mTextures[pageIndex], finalPosition,  sourceRect, color, -rotationRadians, Vector2.Zero, scale, SpriteEffects.None, 0, this);
+                            spriteRenderer.Draw(mTextures[pageIndex], finalPosition, sourceRect, color, -rotationRadians, Vector2.Zero, scale, SpriteEffects.None, 0, this);
                         }
                         else
                         {
                             // position:
-                            destRect.X += xOffsetAsInt + lineOffset;
+                            destRect.X += xOffsetAsInt;
                             destRect.Y += yOffsetAsInt;
 
                             var position = new Vector2(destRect.X, destRect.Y);
@@ -695,13 +701,14 @@ namespace RenderingLibrary.Graphics
 
                         numberOfLettersRendered++;
 
-                        if(numberOfLettersToRender <= numberOfLettersRendered)
+                        if (numberOfLettersToRender <= numberOfLettersRendered)
                         {
                             break;
                         }
-                    }
-                }
 
+                    }
+
+                }
                 point.X = 0;
                 lineNumber++;
 
@@ -772,7 +779,7 @@ namespace RenderingLibrary.Graphics
                     mCharRect.Width = destRect.Width;
                     mCharRect.Height = destRect.Height;
 
-                    if(textObject.Parent != null)
+                    if (textObject.Parent != null)
                     {
                         mCharRect.X += textObject.Parent.GetAbsoluteX();
                         mCharRect.Y += textObject.Parent.GetAbsoluteY();
@@ -838,7 +845,7 @@ namespace RenderingLibrary.Graphics
                 int lineWidth = 0;
 
                 lineWidth = MeasureString(line);
-                if(widths != null)
+                if (widths != null)
                 {
                     widths.Add(lineWidth);
                 }
@@ -848,7 +855,7 @@ namespace RenderingLibrary.Graphics
             const int MaxWidthAndHeight = 4096; // change this later?
             requiredWidth = System.Math.Min(requiredWidth, MaxWidthAndHeight);
             requiredHeight = System.Math.Min(requiredHeight, MaxWidthAndHeight);
-            if(requiredWidth != 0 && mOutlineThickness != 0)
+            if (requiredWidth != 0 && mOutlineThickness != 0)
             {
                 requiredWidth += mOutlineThickness * 2;
             }

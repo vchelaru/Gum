@@ -188,6 +188,10 @@ namespace MonoGameGumInCode
 
             SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
 
+            var camera = SystemManagers.Default.Renderer.Camera;
+            var mouseState = Mouse.GetState();
+            camera.X = mouseState.X;
+            camera.Y = mouseState.Y;
 
             base.Update(gameTime);
         }
