@@ -262,6 +262,8 @@ namespace WpfDataUi.Controls
         {
             // So we don't exlicitly set values when losing focus
             this.mTextBoxLogic.HasUserChangedAnything = false;
+
+            mTextBoxLogic.TextAtStartOfEditing = this.TextBox.Text;
         }
 
         private void TextBox_GotFocus(object sender, RoutedEventArgs e)
