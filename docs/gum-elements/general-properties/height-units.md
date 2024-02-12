@@ -40,7 +40,7 @@ A non-zero **Height** when using **RelativeToChildren** can be used to add addit
 
 ![](../../.gitbook/assets/RelativeToChildrenHeight3.png)
 
-For more information on relative layout in regards to absolute vs. relative unit types, see the [Relative Layout Unit Type](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/Relative%20Layout%20Unit%20Type/README.md) page.
+For more information on relative layout in regards to absolute vs. relative unit types, see the [Relative Layout Unit Type](relative-layout-unit-type.md) page.
 
 ## PercentageOfOtherDimension
 
