@@ -27,7 +27,6 @@
     * [Children Layout](gum-elements/container/children-layout.md)
     * [Stack Spacing](gum-elements/container/stack-spacing.md)
   * [General Properties](gum-elements/general-properties/README.md)
-    * [Children Layout](gum-elements/general-properties/children-layout.md)
     * [Clips Children](gum-elements/general-properties/clips-children.md)
     * [Height Units](gum-elements/general-properties/height-units.md)
     * [Parent](gum-elements/general-properties/parent.md)
