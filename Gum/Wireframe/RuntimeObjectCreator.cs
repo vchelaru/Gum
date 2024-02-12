@@ -37,6 +37,10 @@ namespace Gum.Wireframe
 #endif
                             );
 
+#if GUM
+                        lineRectangle.IsDotted = true;
+#endif
+
                         containedObject = lineRectangle;
                     }
                     else

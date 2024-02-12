@@ -161,6 +161,7 @@ namespace Gum.Wireframe
             {
 
                 LineRectangle newRect = new LineRectangle();
+                newRect.IsDotted = true;
                 newRect.Name = "Highlight Rectangle";
                 newRect.Color = Color.Yellow;
                 newRect.Visible = true;
