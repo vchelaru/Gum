@@ -157,6 +157,8 @@ namespace RenderingLibrary
                 GraphicalUiElement.RemoveRenderableFromManagers = CustomSetPropertyOnRenderable.RemoveRenderableFromManagers;
                 Renderer.ApplyCameraZoomOnWorldTranslation = true;
 
+                Renderer.Camera.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
+
                 ElementSaveExtensions.CustomCreateGraphicalComponentFunc = RenderableCreator.HandleCreateGraphicalComponent;
 
                 StandardElementsManager.Self.Initialize();

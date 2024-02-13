@@ -6,31 +6,31 @@
     <Variable>
       <Type>float</Type>
       <Name>CircleInstance.Height</Name>
-      <Value xsi:type="xsd:float">151</Value>
+      <Value xsi:type="xsd:float">104</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>float</Type>
       <Name>CircleInstance.Radius</Name>
-      <Value xsi:type="xsd:float">75.5</Value>
+      <Value xsi:type="xsd:float">52</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>float</Type>
       <Name>CircleInstance.Width</Name>
-      <Value xsi:type="xsd:float">96</Value>
+      <Value xsi:type="xsd:float">55</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>float</Type>
       <Name>CircleInstance.X</Name>
-      <Value xsi:type="xsd:float">32</Value>
+      <Value xsi:type="xsd:float">23</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>float</Type>
       <Name>CircleInstance.Y</Name>
-      <Value xsi:type="xsd:float">250</Value>
+      <Value xsi:type="xsd:float">205</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -209,6 +209,36 @@
     </Variable>
     <Variable>
       <Type>bool</Type>
+      <Name>ContainerInstance1.Clips Children</Name>
+      <Value xsi:type="xsd:boolean">true</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ContainerInstance1.Height</Name>
+      <Value xsi:type="xsd:float">38</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ContainerInstance1.Width</Name>
+      <Value xsi:type="xsd:float">116</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ContainerInstance1.X</Name>
+      <Value xsi:type="xsd:float">390</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ContainerInstance1.Y</Name>
+      <Value xsi:type="xsd:float">294</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>bool</Type>
       <Name>IsOverrideInCodeGen</Name>
       <Value xsi:type="xsd:boolean">false</Value>
       <Category>Xamarin Forms</Category>
@@ -278,13 +308,13 @@
     <Variable>
       <Type>float</Type>
       <Name>RectangleInstance.X</Name>
-      <Value xsi:type="xsd:float">300</Value>
+      <Value xsi:type="xsd:float">178</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>float</Type>
       <Name>RectangleInstance.Y</Name>
-      <Value xsi:type="xsd:float">271</Value>
+      <Value xsi:type="xsd:float">283</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -539,7 +569,7 @@
     <Variable>
       <Type>float</Type>
       <Name>TextInstance2.Y</Name>
-      <Value xsi:type="xsd:float">215</Value>
+      <Value xsi:type="xsd:float">177</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -920,6 +950,42 @@
       <Value xsi:type="xsd:float">493</Value>
       <SetsValue>true</SetsValue>
     </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>TextInstance9.Height</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>TextInstance9.Height Units</Name>
+      <Value xsi:type="xsd:int">4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>TextInstance9.Parent</Name>
+      <Value xsi:type="xsd:string">ContainerInstance1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>TextInstance9.Text</Name>
+      <Value xsi:type="xsd:string">This text is clipped</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>TextInstance9.Width</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>TextInstance9.Width Units</Name>
+      <Value xsi:type="xsd:int">4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
     <VariableList xsi:type="VariableListSaveOfString">
       <Type>string</Type>
       <Name>NineSliceInstance.AnimationFrames</Name>
@@ -1088,6 +1154,16 @@
   <Instance>
     <Name>SpriteInstance</Name>
     <BaseType>Sprite</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>ContainerInstance1</Name>
+    <BaseType>Container</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>TextInstance9</Name>
+    <BaseType>Text</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Behaviors />

@@ -154,6 +154,7 @@ namespace Gum.Wireframe
                 InputLibrary.Keyboard.Self.Initialize(this);
 
                 mCanvasBounds = new LineRectangle();
+                mCanvasBounds.IsDotted = true;
                 mCanvasBounds.Name = "Gum Screen Bounds";
                 mCanvasBounds.Width = 800;
                 mCanvasBounds.Height = 600;

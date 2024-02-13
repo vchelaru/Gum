@@ -25,13 +25,13 @@ First we'll define the component:
 Next we'll add a background to our HealthBar Component
 
 1. Drag+drop a ColoredRectangle into the HealthBar\
-   ![](<../.gitbook/assets/image (5) (1).png>)
+   ![](<../.gitbook/assets/image (5) (1) (2).png>)
 2. Select the newly-created ColoredRectangleInstance
 3. Select the Alignment tab
 4.  Click the Fill Dock button\
 
 
-    <figure><img src="../.gitbook/assets/image (7).png" alt=""><figcaption></figcaption></figure>
+    <figure><img src="../.gitbook/assets/image (7) (2).png" alt=""><figcaption></figcaption></figure>
 5.  Change the ColoredRectangleInstance color to black\
 
 
@@ -48,7 +48,7 @@ The HealthBar displays its current health with another rectangle. This second re
 3. Click the Fill Dock button
 4. Change Width and Height to -8 to provide a 4 pixel margin on each side.
 
-<figure><img src="../.gitbook/assets/image (6) (2).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (6) (2) (1).png" alt=""><figcaption></figcaption></figure>
 
 ### Adding the Foreground Rectangle
 
@@ -65,6 +65,6 @@ Finally we'll add the foreground rectangle which displays the health:
 
 Now, the Width value can change between 0 and 100 to indicate the health percentage.
 
-<figure><img src="../.gitbook/assets/image (8).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (8) (2).png" alt=""><figcaption></figcaption></figure>
 
 Exposing the Width of the inner rectangle may be needed to change instances of each HealthBar.
