@@ -10,7 +10,7 @@ Note that as of the time of this writing, only MonoGame Desktop GL projects are 
 2.  Add the `Gum.MonoGame` NuGet package\
 
 
-    <figure><img src="../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
+    <figure><img src="../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
 
 ### Initializing Gum
 
