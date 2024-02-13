@@ -79,7 +79,7 @@ namespace Gum.Wireframe
                     {
                         Tag foundTag = activeTags.FirstOrDefault(
                             item => item.Name.Equals(tag.Name, StringComparison.InvariantCultureIgnoreCase));
-                        if(foundTag.Name == defaultTag.Name)
+                        if(foundTag.Name == tag.Name)
                         {
                             // Matching closing tag was at the top of the stack
                             var open = new TagInfo()
