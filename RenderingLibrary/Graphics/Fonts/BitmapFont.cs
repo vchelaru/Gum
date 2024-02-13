@@ -691,7 +691,7 @@ namespace RenderingLibrary.Graphics
                         else
                         {
                             // position:
-                            destRect.X += xOffsetAsInt;
+                            destRect.X += xOffsetAsInt + lineOffset;
                             destRect.Y += yOffsetAsInt;
 
                             var position = new Vector2(destRect.X, destRect.Y);
