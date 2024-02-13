@@ -29,7 +29,7 @@ To add the files to your .csproj:
 3.  Verify that all gum files (see the extension list above) are marked as Copy if newer in Visual Studio\
 
 
-    <figure><img src="../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Gum project set to Copy if newer</p></figcaption></figure>
+    <figure><img src="../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Gum project set to Copy if newer</p></figcaption></figure>
 
 ### Loading a Gum projecxt
 

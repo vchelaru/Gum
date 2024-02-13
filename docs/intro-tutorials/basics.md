@@ -34,7 +34,7 @@ To create a screen:
 2. Enter the name of the new screen - such as **MainMenu**
 3.  The newly-created screen will be created and selected
 
-    <figure><img src="../.gitbook/assets/image (3) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
+    <figure><img src="../.gitbook/assets/image (3) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
 
 ## Adding instances
 
