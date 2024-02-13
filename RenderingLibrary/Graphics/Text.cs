@@ -1074,7 +1074,11 @@ namespace RenderingLibrary.Graphics
                     var defaultBaseline = fontToUse.BaselineY;
 
                     float currentFontScale = FontScale;
+                    float maxFontScale = 1;
                     BitmapFont currentFont = fontToUse;
+
+                    float maxBaseline = currentFontScale * currentFont.BaselineY;
+
                     foreach (var substring in substrings)
                     {
                         for (int variableIndex = 0; variableIndex < substring.Variables.Count; variableIndex++)
@@ -1084,14 +1088,20 @@ namespace RenderingLibrary.Graphics
                             {
                                 currentFontScale = (float)variable.Value;
                                 lineHeight = System.Math.Max(lineHeight, currentFont.EffectiveLineHeight(currentFontScale, 1));
+                                maxFontScale = System.Math.Max(maxFontScale, currentFontScale);
+                                maxBaseline = System.Math.Max(maxBaseline, currentFontScale * currentFont.BaselineY);
                             }
                             else if (variable.VariableName == nameof(BitmapFont))
                             {
                                 currentFont = (BitmapFont)variable.Value;
                                 lineHeight = System.Math.Max(lineHeight, currentFont.EffectiveLineHeight(currentFontScale, 1));
+                                maxBaseline = System.Math.Max(maxBaseline, currentFontScale * currentFont.BaselineY);
+
                             }
                         }
                     }
+
+
 
                     foreach (var substring in substrings)
                     {
@@ -1131,11 +1141,10 @@ namespace RenderingLibrary.Graphics
 
                         var effectiveTopOfLine = topOfLine;
 
-                        if (fontToUse != effectiveFont)
-                        {
-                            var baselineDifference = fontToUse.BaselineY - effectiveFont.BaselineY;
-                            effectiveTopOfLine += baselineDifference * fontScale;
-                        }
+
+                        // todo - finish here!!!
+                        var baselineDifference = maxBaseline - (fontScale * effectiveFont.BaselineY);
+                        effectiveTopOfLine += baselineDifference;
 
                         var rect = effectiveFont.DrawTextLines(lineByLineList, HorizontalAlignment,
                             this,
