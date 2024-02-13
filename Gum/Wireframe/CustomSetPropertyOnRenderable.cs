@@ -547,6 +547,8 @@ namespace Gum.Wireframe
                             }
                         }
                         break;
+
+                        // Don't do anything like IsBold or IsItalic here - these are handled in ApplyFontVariables
                 }
 
                 if (shouldApply)
@@ -634,6 +636,20 @@ namespace Gum.Wireframe
                             else
                             {
                                 isItalicStack.Pop();
+                                castedValue = GetAndCreateFontIfNecessary();
+                            }
+                        }
+                        break;
+                    case "IsBold":
+                        {
+                            if (bool.TryParse(tag.Argument, out bool parsedValue))
+                            {
+                                isBoldStack.Push(parsedValue);
+                                castedValue = GetAndCreateFontIfNecessary();
+                            }
+                            else
+                            {
+                                isBoldStack.Pop();
                                 castedValue = GetAndCreateFontIfNecessary();
                             }
                         }

@@ -42,8 +42,14 @@ namespace Gum.Wireframe
             public string Name;
             public string Argument;
             public int StartStrippedIndex;
+
+            public override string ToString()
+            {
+                return $"{(IsOpening ? "Open" : "Close")} {Name} {Argument}";
+            }
         }
-        
+
+        readonly static Tag defaultTag = new Tag();
 
         public static List<FoundTag> Parse(HashSet<string> tags, string text)
         {
@@ -54,7 +60,7 @@ namespace Gum.Wireframe
             }
 
             var index = 0;
-            var activeTags = new Stack<Tag>();
+            var activeTags = new List<Tag>();
 
             int accumulatedTagLetterCount = 0;
 
@@ -66,22 +72,22 @@ namespace Gum.Wireframe
                     var tag = nullableTag.Value;
                     if (tag.IsOpening)
                     {
-                        activeTags.Push(tag);
+                        activeTags.Add(tag);
                         accumulatedTagLetterCount += tag.Count;
                     }
                     else if(activeTags.Count > 0)
                     {
-                        var activeTag = activeTags.Peek();
-
-                        if (activeTag.Name.Equals(tag.Name, StringComparison.InvariantCultureIgnoreCase))
+                        Tag foundTag = activeTags.FirstOrDefault(
+                            item => item.Name.Equals(tag.Name, StringComparison.InvariantCultureIgnoreCase));
+                        if(foundTag.Name == defaultTag.Name)
                         {
                             // Matching closing tag was at the top of the stack
                             var open = new TagInfo()
                             {
-                                StartIndex = activeTag.StartIndex,
-                                Count = activeTag.Count,
-                                Argument = activeTag.Argument,
-                                StartStrippedIndex = activeTag.StartStrippedIndex,
+                                StartIndex = foundTag.StartIndex,
+                                Count = foundTag.Count,
+                                Argument = foundTag.Argument,
+                                StartStrippedIndex = foundTag.StartStrippedIndex,
                                 Name = tag.Name
                             };
 
@@ -101,7 +107,8 @@ namespace Gum.Wireframe
                                 Open = open,
                                 Close = close,
                             });
-                            activeTags.Pop();
+
+                            activeTags.Remove(foundTag);
                         }
                     }
 
