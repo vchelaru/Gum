@@ -8,7 +8,7 @@ The **Texture Address** variable can be used to define the area that the NineSli
 
 The following screenshot shows an entire texture being used for a NineSlice.
 
-<figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
 
 The entire texture is split up into 3 sections horizontally and 3 sections vertically, matching up the texture coordinates used to display the NineSlice's 9 sections.
 
@@ -28,5 +28,5 @@ The NineSlice uses the following variables:
 
 These values result in the the following NineSlice:
 
-<figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
 

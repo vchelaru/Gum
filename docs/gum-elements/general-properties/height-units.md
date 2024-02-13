@@ -30,37 +30,37 @@ If an object uses **RelativeToContainer** Height, but has no parent, it will siz
 
 Ratio of Container can be used to fill available space or to share available space with other objects using a ratio.
 
-<figure><img src="../../.gitbook/assets/image.png" alt=""><figcaption><p>Ratio of Container Height Units</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (9).png" alt=""><figcaption><p>Ratio of Container Height Units</p></figcaption></figure>
 
 The simplest case is a single child in a container with its Height Units set to **Ratio of Continer**.
 
-<figure><img src="../../.gitbook/assets/image (1).png" alt=""><figcaption><p>Ratio of Container set to 1</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (1) (1).png" alt=""><figcaption><p>Ratio of Container set to 1</p></figcaption></figure>
 
 In this case the blue [ColoredRectangle](../coloredrectangle.md) has no siblings (its container has no other children), so it occupies the entire parent height. If a second child is added (by copy/pasting the existing child), then each child is given 1 _ratio_ value, which means each is 1/2 of the size of the entire parent.
 
-<figure><img src="../../.gitbook/assets/image (2).png" alt=""><figcaption><p>Two stacked ColoredRectangles, each with a Height ratio of 1</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (2) (1).png" alt=""><figcaption><p>Two stacked ColoredRectangles, each with a Height ratio of 1</p></figcaption></figure>
 
 To better visualize the effect of ratio, it's common to set the parent's [Children Layout](../container/children-layout.md) to Top to Bottom Stack, and to give each child a different color as shown in the following image.
 
-<figure><img src="../../.gitbook/assets/image (3).png" alt=""><figcaption><p>Stacked children with a Height Width of Ratio of Container</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (3) (1).png" alt=""><figcaption><p>Stacked children with a Height Width of Ratio of Container</p></figcaption></figure>
 
 As more children are added, each child's height is adjusted to make room for the new children.
 
-<figure><img src="../../.gitbook/assets/image (4).png" alt=""><figcaption><p>Children shrink to make room for new ColoredRectangles</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (4) (1).png" alt=""><figcaption><p>Children shrink to make room for new ColoredRectangles</p></figcaption></figure>
 
 Ratio values are distributed among all siblings using Ratio of Container proportionally. The image above shows four siblings, each given 1/4 of the ratio. If one of the the ratios changes (such as by increasing the second sibling's Height value to 3), then all siblings adjust in response to this change.
 
-<figure><img src="../../.gitbook/assets/image (6).png" alt=""><figcaption><p>Red ColoredRectangle with a Height value of 3</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (6) (1).png" alt=""><figcaption><p>Red ColoredRectangle with a Height value of 3</p></figcaption></figure>
 
 In this case, the total ratio is 6 (1 + 3 + 1 + 1), so the red is given 3/6 (1/2) of the container's height, while each of the others is given 1/6 of the container's height.
 
 Values of 0 are supported, resulting in the object drawing with an absolute height of 0.
 
-<figure><img src="../../.gitbook/assets/image (7).png" alt=""><figcaption><p>ColoredRectangle with a Ratio of Container Height of 0</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (7) (1).png" alt=""><figcaption><p>ColoredRectangle with a Ratio of Container Height of 0</p></figcaption></figure>
 
 Ratio of Container is calculated after accounting for the height of children which are using absolute height. For example, if the height of the first child is 80 with a Height Units of Absolute, then the other three shrink to give the first the necessary room.
 
-<figure><img src="../../.gitbook/assets/image (5).png" alt=""><figcaption><p>Absolute ColoredRectangle with 80 Height</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (5) (1).png" alt=""><figcaption><p>Absolute ColoredRectangle with 80 Height</p></figcaption></figure>
 
 This effect can also be seen by adjusting the height using the handles.
 

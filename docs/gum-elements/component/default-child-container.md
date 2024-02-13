@@ -16,7 +16,7 @@ This Component is designed to keep all of is children inside the InnerRectangle,
 
 To make this kind of relationship the default, the Frame can set its Default Child Container property to InnerRectangle.
 
-<figure><img src="../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
 
 Once this value is set, instances which are drag+dropped onto Frame instances will use the InnerRectangle as their parent, as shown in the following animation.
 
@@ -28,4 +28,4 @@ When one instance is drag+dropped onto another instance, the Parent property is 
 
 Using the example above, the RectangleInstance is dropped on the ContainerTestInstance. Since the ContainerTestInstance is of type Frame, then the Default Child Container is applied on the drop, which results in the RectangleInstance's Parent being set to ContainerTestInstance.InnerRectangle.
 
-<figure><img src="../../.gitbook/assets/image (2) (1) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>

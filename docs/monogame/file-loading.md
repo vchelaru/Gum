@@ -16,7 +16,7 @@ If all of your project files are located relative to the .gumx root project file
 
 The Gum runtime library performs all of its loading from-file, so all of your files must be present in the destination directory. As explained in the [Loading .gumx](loading-.gumx-gum-project.md) page, all of your files should be set to **Copy if newer** in Visual Studio.
 
-<figure><img src="../.gitbook/assets/image (4) (1).png" alt=""><figcaption><p>bear.png file set to Copy if newer</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (4) (1) (1).png" alt=""><figcaption><p>bear.png file set to Copy if newer</p></figcaption></figure>
 
 ### Loading Files Through Runtime Objects
 
