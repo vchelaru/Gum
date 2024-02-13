@@ -32,7 +32,7 @@ To create your own font file:
 2. Select **Options** -> **Font Settings**
 3.  Use the dropdown to select the font you would like to use. All .ttf files installed on the current machine should appear in the dropdown. If you would like to install a new .ttf, restart Bitmap Font Generator after installing the font.
 
-    ![](<../../.gitbook/assets/image (7) (1).png>)
+    ![](<../../.gitbook/assets/image (7) (1) (1).png>)
 4. After changing the settings, click **OK**
 5.  Select which characters you would like included in your font. Adding characters can increase the font size, but may be required depending on which characters you intend to use.
 
@@ -43,7 +43,7 @@ To create your own font file:
 9. Change the **Textures** option to **png – Portable Network Graphics**
 10. Press **OK** to apply the changes
 
-    ![](<../../.gitbook/assets/image (3) (1) (1) (1) (1) (1).png>)
+    ![](<../../.gitbook/assets/image (3) (1) (1) (1) (1) (1) (1).png>)
 
 You can verify that the settings will produce a proper PNG by selecting **Options** -> **Visualize**. If you see “No Output!” then you need to select characters to export. See the above step for more information.
 

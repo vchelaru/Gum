@@ -17,3 +17,15 @@ Text will wrap according to the Text object's Width.
 The enter key can be used to add new lines to text.
 
 ![](<../../.gitbook/assets/NewlinesGum (1).png>)
+
+### Using BBCode for Inline Styling
+
+Gum text supports inline styling using bbcode-like syntax. To add inline styling, surround text with variable assignment tags as shown in the following screenshot:
+
+<figure><img src="../../.gitbook/assets/image.png" alt=""><figcaption><p>Red color using BBCode syntax</p></figcaption></figure>
+
+The following table shows the available variables that can be used for insline styling:
+
+
+
+<table><thead><tr><th width="129">Tag</th><th width="357">Example</th><th>Result</th></tr></thead><tbody><tr><td>Color</td><td>This is [Color=orange]orange[/Color] text.</td><td><img src="../../.gitbook/assets/image (1).png" alt="" data-size="original"></td></tr><tr><td>Red Green Blue</td><td>This is [Red=0][Green=128][Blue=255]light blue[/Red][/Green][/Blue] text.</td><td><img src="../../.gitbook/assets/image (2).png" alt="" data-size="original"></td></tr><tr><td>FontScale</td><td>This is [FontScale=2]big[/FontScale] text.</td><td><img src="../../.gitbook/assets/image (3).png" alt="" data-size="original"></td></tr><tr><td>IsBold</td><td>This is [IsBold=true]bold[/IsBold] text.</td><td><img src="../../.gitbook/assets/image (4).png" alt="" data-size="original"></td></tr><tr><td>IsItalic</td><td>This is [IsItalic=true]italic[/IsItalic] text.</td><td><img src="../../.gitbook/assets/image (6).png" alt="" data-size="original"></td></tr><tr><td>Font</td><td>This is [Font=Papyrus]Papyrus[/Font] text.</td><td><img src="../../.gitbook/assets/image (7).png" alt="" data-size="original"></td></tr><tr><td>OutlineThickness</td><td>This is [OutlineThickness=2]outlined[/OutlineThickness] text.</td><td><img src="../../.gitbook/assets/image (8).png" alt="" data-size="original"></td></tr></tbody></table>
