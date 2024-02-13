@@ -133,6 +133,20 @@
         "ElementType": "Screens",
         "EventType": 5,
         "TimestampUtc": "2024-02-07T12:56:33.807934Z"
+      },
+      {
+        "NewName": "StartScreen.ContainerInstance1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-02-13T13:28:36.566647Z"
+      },
+      {
+        "NewName": "StartScreen.TextInstance9",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-02-13T13:28:45.0332005Z"
       }
     ]
   }
