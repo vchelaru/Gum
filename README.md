@@ -21,6 +21,11 @@ Tutorials and documentation can be found here:
 
 https://docs.flatredball.com/gum/
 
+## Need Help?
+
+The fastest way to get help is to ask in our Discord: https://discord.gg/uQSam6w36d
+You can also post an issue: https://github.com/vchelaru/Gum/issues
+
 ## Platforms
 
 Gum produces genera-purpose XML so it is technically possible to use Gum in any environment. That said, a number of runtimes exist to make integration into your project much easier.
