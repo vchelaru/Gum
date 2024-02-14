@@ -69,6 +69,11 @@ namespace StateAnimationPlugin.ViewModels
             private set;
         } = new ObservableCollection<MenuItem>();
 
+        public ObservableCollection<MenuItem> AnimationStateRightClickItems
+        {
+            get;
+            private set;
+        } = new ObservableCollection<MenuItem>();
 
         [DependsOn(nameof(SelectedAnimation))]
         public Visibility PlayButtonVisibility => 
@@ -96,7 +101,7 @@ namespace StateAnimationPlugin.ViewModels
                         }
                     }
 
-                    RefreshRightClickMenuItems();
+                    RefreshAnimationsRightClickMenuItems();
 
                 }
             }
@@ -256,7 +261,7 @@ namespace StateAnimationPlugin.ViewModels
             OnAnyChange(this, propertyName);
         }
 
-        private void RefreshRightClickMenuItems()
+        private void RefreshAnimationsRightClickMenuItems()
         {
             AnimationRightClickItems.Clear();
 
@@ -271,9 +276,33 @@ namespace StateAnimationPlugin.ViewModels
                 squashStretch.Header = "Squash/Stretch Frame Times";
                 squashStretch.Click += HandleSquashStretchTimes;
                 AnimationRightClickItems.Add(squashStretch);
+
+                var deleteAnimation = new MenuItem();
+                deleteAnimation.Header = "Delete Animation";
+                deleteAnimation.Click += HandleDeleteAnimation;
+                AnimationRightClickItems.Add(deleteAnimation);
             }
+        }
 
+        private void RefreshAnimationStatesRightClickMenuitems()
+        {
+            AnimationStateRightClickItems.Clear();
 
+            if(this.SelectedAnimation?.SelectedKeyframe != null)
+            {
+                var deleteState = new MenuItem();
+                deleteState.Header = "Delete Keyframe";
+                deleteState.Click += HandleDeleteKeyframe;
+                AnimationStateRightClickItems.Add(deleteState);
+            }
+        }
+
+        private void HandleDeleteKeyframe(object sender, RoutedEventArgs e)
+        {
+            if(SelectedAnimation != null && SelectedAnimation.SelectedKeyframe != null)
+            {
+                SelectedAnimation.Keyframes.Remove(SelectedAnimation.SelectedKeyframe);
+            }
         }
 
         private void HandleRenameAnimation(object sender, RoutedEventArgs e)
@@ -344,6 +373,16 @@ namespace StateAnimationPlugin.ViewModels
 
             }
         }
+
+        private void HandleDeleteAnimation(object sender, RoutedEventArgs e)
+        {
+            var result = MessageBox.Show("Delete animation " + SelectedAnimation.Name + "?", "Delete?", MessageBoxButton.YesNo);
+
+            if(result == MessageBoxResult.Yes)
+            {
+                Animations.Remove(SelectedAnimation);
+            }
+        } 
 
         private void OnAnyChange(object sender, string propertyName)
         {
