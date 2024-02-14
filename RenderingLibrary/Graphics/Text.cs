@@ -13,6 +13,7 @@ using Matrix = System.Numerics.Matrix4x4;
 using System.Linq;
 using ToolsUtilitiesStandard.Helpers;
 using System.Drawing;
+using System.Text;
 
 namespace RenderingLibrary.Graphics
 {
@@ -636,6 +637,9 @@ namespace RenderingLibrary.Graphics
         }
 
         char[] whatToSplitOn = new char[] { ' ' };
+
+
+        static char[] preservedNewlinableCharacters = new char[] { ',', '-', ':', '.' };
         private void UpdateWrappedText()
         {
             ///////////EARLY OUT/////////////
@@ -658,37 +662,16 @@ namespace RenderingLibrary.Graphics
                 }
             }
 
+            if(string.IsNullOrEmpty(mRawText))
+            {
+                return;
+            }
+
             if (effectiveMaxNumberOfLines == 0)
             {
                 return;
             }
             /////////END EARLY OUT///////////
-
-            bool didTruncate = false;
-
-            float wrappingWidth = mWidth / mFontScale;
-            if (mWidth == 0)
-            {
-                wrappingWidth = float.PositiveInfinity;
-            }
-
-            // This allocates like crazy but we're
-            // on the PC and prob won't be calling this
-            // very frequently so let's 
-            String line = String.Empty;
-            String returnString = String.Empty;
-
-            // The user may have entered "\n" in the string, which would 
-            // be written as "\\n".  Let's replace that, shall we?
-            string stringToUse = null;
-            List<string> wordArray = new List<string>();
-
-            if (!string.IsNullOrEmpty(mRawText))
-            {
-                // multiline text editing in Gum can add \r's, so get rid of those:
-                stringToUse = mRawText.Replace("\r\n", "\n");
-                wordArray.AddRange(stringToUse.Split(whatToSplitOn));
-            }
 
             float ellipsisWidth = 0;
             const string ellipsis = "...";
@@ -697,112 +680,219 @@ namespace RenderingLibrary.Graphics
                 ellipsisWidth = MeasureString(ellipsis);
             }
 
-            bool isLastLine = false;
-            while (wordArray.Count != 0)
+            string stringToUse = null;
+            if (!string.IsNullOrEmpty(mRawText))
             {
-                isLastLine = effectiveMaxNumberOfLines != null && mWrappedText.Count == effectiveMaxNumberOfLines - 1;
+                // multiline text editing in Gum can add \r's, so get rid of those:
+                stringToUse = mRawText.Replace("\r\n", "\n");
+            }
 
-                string word = wordArray[0];
-                var wordBeforeNewlineRemoval = word;
-                var isLastWord = wordArray.Count == 1;
+            const bool useNewWrapping = false;
 
-                bool containsNewline = false;
+            float wrappingWidth = mWidth / mFontScale;
+            if (mWidth == 0)
+            {
+                wrappingWidth = float.PositiveInfinity;
+            }
 
-                if (ToolsUtilities.StringFunctions.ContainsNoAlloc(word, '\n'))
+            if (useNewWrapping)
+            {
+                if(MeasureString(stringToUse) <= wrappingWidth && stringToUse?.Contains("\n") == false)
                 {
-                    word = word.Substring(0, word.IndexOf('\n'));
-                    containsNewline = true;
+                    mWrappedText.Add(stringToUse);
+                }
+                else
+                {
+                    StringBuilder currentLine = new StringBuilder();
+                    int? lastWrappableCharacterOnLine = null;
+                    int? lastWrappableCharacterAbsolute = null;
+
+                    // loop through each letter, adding to the mWrappedText. If the new letter can cause a newline then we push to the next line
+                    for(int i = 0; i < stringToUse.Length; i++)
+                    {
+                        var letter = stringToUse[i];
+
+                        if(letter == '\n')
+                        {
+                            AddLine(currentLine.ToString());
+                        }
+                        else
+                        {
+                            var widthAfterLetter = MeasureString(currentLine.ToString() + letter);
+
+                            if(widthAfterLetter > wrappingWidth && currentLine.Length > 0)
+                            {
+                                string textToAdd = String.Empty;
+                                if(lastWrappableCharacterOnLine != null)
+                                {
+                                    textToAdd = currentLine.ToString().Substring(0, lastWrappableCharacterOnLine.Value+1);
+                                    i = lastWrappableCharacterAbsolute.Value + 1;
+                                    letter = stringToUse[i];
+                                }
+                                else
+                                {
+                                    textToAdd = currentLine.ToString();
+                                }
+                                AddLine(textToAdd);
+                            }
+                            // do this before appending since length will tell us the index of the next letter to add
+                            if(char.IsWhiteSpace(letter) || preservedNewlinableCharacters.Contains(letter))
+                            {
+                                lastWrappableCharacterOnLine = currentLine.Length;
+                                lastWrappableCharacterAbsolute = i;
+                            }
+                            currentLine.Append(letter);
+                        }
+                    }
+                    if(currentLine.Length > 0)
+                    {
+                        AddLine(currentLine.ToString());
+                    }
+
+
+                    void AddLine(string text)
+                    {
+                        // We toss the leading space on newlines.
+                        if(text.Length > 0 && text[0] == ' ' && mWrappedText.Count > 0)
+                        {
+                            text = text.Substring(1);
+                        }
+                        mWrappedText.Add(text);
+                        lastWrappableCharacterOnLine = null;
+                        lastWrappableCharacterAbsolute = null;
+                        currentLine.Clear();
+                    }
+                }
+            }
+            else
+            {
+
+                bool didTruncate = false;
+
+                // This allocates like crazy but we're
+                // on the PC and prob won't be calling this
+                // very frequently so let's 
+                String line = String.Empty;
+                String returnString = String.Empty;
+
+                // The user may have entered "\n" in the string, which would 
+                // be written as "\\n".  Let's replace that, shall we?
+                List<string> wordArray = new List<string>();
+
+                if (!string.IsNullOrEmpty(mRawText))
+                {
+                    // multiline text editing in Gum can add \r's, so get rid of those:
+                    stringToUse = mRawText.Replace("\r\n", "\n");
+                    wordArray.AddRange(stringToUse.Split(whatToSplitOn));
                 }
 
-                // If it's not the last word, we show ellipsis, and the last word plus ellipsis won't fit, then we need
-                // to include part of the word:
 
-                float linePlusWordWidth = MeasureString(line + word);
-
-                var shouldAddEllipsis =
-                    IsTruncatingWithEllipsisOnLastLine &&
-                    isLastLine &&
-                    // If it's the last word, then we don't care if the ellipsis fit, we only want to see if the last word fits...
-                    ((isLastWord && linePlusWordWidth > wrappingWidth) ||
-                     // it's not the last word so we need to see if ellipsis fit
-                     (!isLastWord && linePlusWordWidth + ellipsisWidth >= wrappingWidth));
-                if (shouldAddEllipsis)
+                bool isLastLine = false;
+                while (wordArray.Count != 0)
                 {
-                    var addedEllipsis = false;
-                    for (int i = 1; i < word.Length; i++)
+                    isLastLine = effectiveMaxNumberOfLines != null && mWrappedText.Count == effectiveMaxNumberOfLines - 1;
+
+                    string word = wordArray[0];
+                    var wordBeforeNewlineRemoval = word;
+                    var isLastWord = wordArray.Count == 1;
+
+                    bool containsNewline = false;
+
+                    if (ToolsUtilities.StringFunctions.ContainsNoAlloc(word, '\n'))
                     {
-                        var substringEnd = word.SubstringEnd(i);
+                        word = word.Substring(0, word.IndexOf('\n'));
+                        containsNewline = true;
+                    }
 
-                        float linePlusWordSub = MeasureString(line + substringEnd);
+                    // If it's not the last word, we show ellipsis, and the last word plus ellipsis won't fit, then we need
+                    // to include part of the word:
 
-                        if (linePlusWordSub + ellipsisWidth <= wrappingWidth)
+                    float linePlusWordWidth = MeasureString(line + word);
+
+                    var shouldAddEllipsis =
+                        IsTruncatingWithEllipsisOnLastLine &&
+                        isLastLine &&
+                        // If it's the last word, then we don't care if the ellipsis fit, we only want to see if the last word fits...
+                        ((isLastWord && linePlusWordWidth > wrappingWidth) ||
+                         // it's not the last word so we need to see if ellipsis fit
+                         (!isLastWord && linePlusWordWidth + ellipsisWidth >= wrappingWidth));
+                    if (shouldAddEllipsis)
+                    {
+                        var addedEllipsis = false;
+                        for (int i = 1; i < word.Length; i++)
                         {
-                            mWrappedText.Add(line + substringEnd + ellipsis);
-                            addedEllipsis = true;
-                            break;
+                            var substringEnd = word.SubstringEnd(i);
+
+                            float linePlusWordSub = MeasureString(line + substringEnd);
+
+                            if (linePlusWordSub + ellipsisWidth <= wrappingWidth)
+                            {
+                                mWrappedText.Add(line + substringEnd + ellipsis);
+                                addedEllipsis = true;
+                                break;
+                            }
+                        }
+
+                        if (!addedEllipsis && line.EndsWith(" "))
+                        {
+                            mWrappedText.Add(line.SubstringEnd(1) + ellipsis);
+
+                        }
+                        break;
+                    }
+
+                    if (linePlusWordWidth > wrappingWidth)
+                    {
+                        if (!string.IsNullOrEmpty(line))
+                        {
+                            mWrappedText.Add(line);
+                            if (mWrappedText.Count == effectiveMaxNumberOfLines)
+                            {
+                                didTruncate = true;
+                                break;
+                            }
+                        }
+
+                        //returnString = returnString + line + '\n';
+                        line = String.Empty;
+                    }
+
+                    // If it's the first word and it's empty, don't add anything
+                    // update - but this prevents the word from sarting 
+                    //if ((!string.IsNullOrEmpty(word) || !string.IsNullOrEmpty(line)))
+                    {
+                        if (wordArray.Count > 1 || word == "")
+                        {
+                            line = line + word + ' ';
+                        }
+                        else
+                        {
+                            line = line + word;
                         }
                     }
 
-                    if (!addedEllipsis && line.EndsWith(" "))
-                    {
-                        mWrappedText.Add(line.SubstringEnd(1) + ellipsis);
+                    wordArray.RemoveAt(0);
 
-                    }
-                    break;
-                }
-
-                if (linePlusWordWidth > wrappingWidth)
-                {
-                    if (!string.IsNullOrEmpty(line))
+                    if (containsNewline)
                     {
                         mWrappedText.Add(line);
                         if (mWrappedText.Count == effectiveMaxNumberOfLines)
                         {
                             didTruncate = true;
+
                             break;
                         }
-                    }
-
-                    //returnString = returnString + line + '\n';
-                    line = String.Empty;
-                }
-
-                // If it's the first word and it's empty, don't add anything
-                // update - but this prevents the word from sarting 
-                //if ((!string.IsNullOrEmpty(word) || !string.IsNullOrEmpty(line)))
-                {
-                    if (wordArray.Count > 1 || word == "")
-                    {
-                        line = line + word + ' ';
-                    }
-                    else
-                    {
-                        line = line + word;
+                        line = string.Empty;
+                        int indexOfNewline = wordBeforeNewlineRemoval.IndexOf('\n');
+                        wordArray.Insert(0, wordBeforeNewlineRemoval.Substring(indexOfNewline + 1, wordBeforeNewlineRemoval.Length - (indexOfNewline + 1)));
                     }
                 }
 
-                wordArray.RemoveAt(0);
-
-                if (containsNewline)
+                if (effectiveMaxNumberOfLines == null || mWrappedText.Count < effectiveMaxNumberOfLines)
                 {
                     mWrappedText.Add(line);
-                    if (mWrappedText.Count == effectiveMaxNumberOfLines)
-                    {
-                        didTruncate = true;
-
-                        break;
-                    }
-                    line = string.Empty;
-                    int indexOfNewline = wordBeforeNewlineRemoval.IndexOf('\n');
-                    wordArray.Insert(0, wordBeforeNewlineRemoval.Substring(indexOfNewline + 1, wordBeforeNewlineRemoval.Length - (indexOfNewline + 1)));
                 }
             }
-
-            if (effectiveMaxNumberOfLines == null || mWrappedText.Count < effectiveMaxNumberOfLines)
-            {
-                mWrappedText.Add(line);
-            }
-
             //if(didTruncate && AddEllipsisOnLastLine && mWrappedText.Count > 0)
             //{
             //    var lastLine = mWrappedText[mWrappedText.Count-1];
@@ -836,6 +926,7 @@ namespace RenderingLibrary.Graphics
             {
                 mNeedsBitmapFontRefresh = true;
             }
+
         }
 
         private float MeasureString(string whatToMeasure)
