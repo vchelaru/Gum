@@ -22,35 +22,62 @@
 
         <Button x:Name="TopLeftButton" Click="TopLeftButton_Click" Grid.Row="0" Grid.Column="0" Margin="3">
             <Image Source="/Gum;component/Content/Icons/AnchorPlugin/TopLeft.png" Height="32" Width="32"/>
-        </Button>
+                <Button.ToolTip>
+                    Anchor Top Left
+                </Button.ToolTip>
+            </Button>
         <Button x:Name="TopButton" Click="TopButton_Click" Grid.Row="0" Grid.Column="1" Margin="3">
             <Image Source="/Gum;component/Content/Icons/AnchorPlugin/TopMiddle.png" Height="32" Width="32"/>
-        </Button>
+                <Button.ToolTip>
+                    Anchor Top
+                </Button.ToolTip>
+            </Button>
         <Button x:Name="TopRightButton" Click="TopRightButton_Click" Grid.Row="0" Grid.Column="2" Margin="3">
             <Image Source="/Gum;component/Content/Icons/AnchorPlugin/TopRight.png" Height="32" Width="32"/>
-        </Button>
+                <Button.ToolTip>
+                    Anchor Top Right
+                </Button.ToolTip>
+            </Button>
 
         
         <Button x:Name="LeftButton" Click="MiddleLeftButton_Click" Grid.Row="1" Grid.Column="0" Margin="3">
             <Image Source="/Gum;component/Content/Icons/AnchorPlugin/MiddleLeft.png" Height="32" Width="32"/>
-        </Button>
+                <Button.ToolTip>
+                    Anchor Left
+                </Button.ToolTip>
+            </Button>
         <Button x:Name="FillButton" Click="MiddleMiddleButton_Click" Grid.Row="1" Grid.Column="1" Margin="3">
             <Image Source="/Gum;component/Content/Icons/AnchorPlugin/MiddleMiddle.png" Height="32" Width="32"/>
-        </Button>
+                <Button.ToolTip>
+                    Anchor Center
+                </Button.ToolTip>
+            </Button>
         <Button x:Name="RightButton" Click="MiddleRightButton_Click" Grid.Row="1" Grid.Column="2" Margin="3">
             <Image Source="/Gum;component/Content/Icons/AnchorPlugin/MiddleRight.png" Height="32" Width="32"/>
-        </Button>
+                <Button.ToolTip>
+                    Anchor Right
+                </Button.ToolTip>
+            </Button>
 
 
         <Button x:Name="BottomLeftButton" Click="BottomLeftButton_Click" Grid.Row="2" Grid.Column="0" Margin="3">
             <Image Source="/Gum;component/Content/Icons/AnchorPlugin/BottomLeft.png" Height="32" Width="32"/>
-        </Button>
+                <Button.ToolTip>
+                    Anchor Bottom Left
+                </Button.ToolTip>
+            </Button>
         <Button x:Name="BottomButton" Click="BottomMiddleButton_Click" Grid.Row="2" Grid.Column="1" Margin="3">
-            <Image Source="/Gum;component/Content/Icons/AnchorPlugin/BottomMiddle.png" Height="32" Width="32"/>
-        </Button>
+                <Image Source="/Gum;component/Content/Icons/AnchorPlugin/BottomMiddle.png" Height="32" Width="32"/>
+                <Button.ToolTip>
+                    Anchor Bottom
+                </Button.ToolTip>
+            </Button>
         <Button x:Name="BottomRightButton" Click="BottomRightButton_Click" Grid.Row="2" Grid.Column="2" Margin="3">
             <Image Source="/Gum;component/Content/Icons/AnchorPlugin/BottomRight.png" Height="32" Width="32"/>
-        </Button>
+                <Button.ToolTip>
+                    Anchor Bottom Right
+                </Button.ToolTip>
+            </Button>
 
 
     </Grid>

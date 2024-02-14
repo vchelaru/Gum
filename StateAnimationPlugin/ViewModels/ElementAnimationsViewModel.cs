@@ -424,6 +424,11 @@ namespace StateAnimationPlugin.ViewModels
                 NotifyPropertyChanged(nameof(OverLengthTime));
             }
 
+            if(e.PropertyName == nameof(AnimationViewModel.SelectedKeyframe))
+            {
+                RefreshAnimationStatesRightClickMenuitems();
+            }
+
             OnAnyChange(sender, e.PropertyName);
 
         }
