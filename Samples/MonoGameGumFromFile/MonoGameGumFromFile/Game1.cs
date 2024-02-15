@@ -16,12 +16,18 @@ namespace MonoGameGumFromFile
 {
     public class Game1 : Game
     {
+        #region Fields/Properties
+
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
 
         ScreenSave currentGumScreenSave;
 
         GraphicalUiElement currentScreenElement;
+
+        #endregion
+
+        #region Other Methods
 
         public Game1()
         {
@@ -33,6 +39,21 @@ namespace MonoGameGumFromFile
             _graphics.PreferredBackBufferHeight = 600;
         }
 
+        protected override void LoadContent()
+        {
+            _spriteBatch = new SpriteBatch(GraphicsDevice);
+        }
+
+        protected override void Draw(GameTime gameTime)
+        {
+            GraphicsDevice.Clear(Color.CornflowerBlue);
+
+            SystemManagers.Default.Draw();
+
+            base.Draw(gameTime);
+        }
+        #endregion
+
         protected override void Initialize()
         {
             SystemManagers.Default = new SystemManagers();
@@ -42,8 +63,6 @@ namespace MonoGameGumFromFile
 
             ShowScreen("StartScreen");
 
-            InitializeComponentInCode();
-            
             base.Initialize();
         }
 
@@ -89,11 +108,6 @@ namespace MonoGameGumFromFile
             return gumProject;
         }
 
-        protected override void LoadContent()
-        {
-            _spriteBatch = new SpriteBatch(GraphicsDevice);
-        }
-
         MouseState lastMouseState;
         protected override void Update(GameTime gameTime)
         {
@@ -106,6 +120,11 @@ namespace MonoGameGumFromFile
 
             var mouseState = Mouse.GetState();
 
+            if(currentGumScreenSave?.Name == "ZoomScreen")
+            {
+                DoZoomScreenLogic(mouseState);
+            }
+
             if(mouseState.LeftButton == ButtonState.Pressed && lastMouseState.LeftButton == ButtonState.Released)
             {
                 // user just pushed on something so handle a push:
@@ -115,6 +134,32 @@ namespace MonoGameGumFromFile
             lastMouseState = mouseState;
 
             base.Update(gameTime);
+        }
+
+        private void DoZoomScreenLogic(MouseState mouseState)
+        {
+            var camera = SystemManagers.Default.Renderer.Camera;
+
+            var needsRefresh = false;
+            if(mouseState.LeftButton == ButtonState.Pressed)
+            {
+                camera.Zoom *= 1.01f;
+                needsRefresh = true;
+            }
+            else if(mouseState.RightButton == ButtonState.Pressed)
+            {
+                camera.Zoom *= .99f;
+                needsRefresh = true;
+            }
+
+            if(needsRefresh)
+            {
+                GraphicalUiElement.CanvasWidth = 800 / camera.Zoom;
+                GraphicalUiElement.CanvasHeight = 600 / camera.Zoom;
+
+                // need to update the layout in response to the canvas size changing:
+                currentScreenElement?.UpdateLayout();
+            }
         }
 
         private void HandleMousePush(MouseState mouseState)
@@ -218,15 +263,11 @@ namespace MonoGameGumFromFile
             {
                 ShowScreen("TextScreen");
             }
+            else if(state.IsKeyDown(Keys.D5))
+            {
+                ShowScreen("ZoomScreen");
+            }
         }
 
-        protected override void Draw(GameTime gameTime)
-        {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
-
-            SystemManagers.Default.Draw();
-
-            base.Draw(gameTime);
-        }
     }
 }

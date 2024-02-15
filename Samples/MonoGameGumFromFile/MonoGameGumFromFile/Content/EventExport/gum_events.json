@@ -147,6 +147,237 @@
         "ElementType": "Screens",
         "EventType": 5,
         "TimestampUtc": "2024-02-13T13:28:45.0332005Z"
+      },
+      {
+        "NewName": "TextScreen.ContainerInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-02-13T13:47:59.2558077Z"
+      },
+      {
+        "NewName": "TextScreen.NormalText2",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-02-13T13:48:41.2688327Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "TextScreen.Text NormalText in TextScreen",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2024-02-13T13:51:38.2706421Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "TextScreen.Text DifferentFontAndSize in TextScreen",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2024-02-13T13:51:42.5110625Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "TextScreen.Text ToggleFontSizes in TextScreen",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2024-02-13T13:51:42.5120631Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "TextScreen.Text NormalText1 in TextScreen",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2024-02-13T13:51:42.5130633Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "UITestScreenGum.Container ContainerInstance in UITestScreenGum",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2024-02-13T15:06:36.6858034Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "UITestScreenGum.ColoredRectangle ColoredRectangleInstance in UITestScreenGum",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2024-02-13T15:06:36.7168022Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "UITestScreenGum.ColoredRectangle ColoredRectangleInstance1 in UITestScreenGum",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2024-02-13T15:06:36.7168022Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "UITestScreenGum.ColoredRectangle ColoredRectangleInstance2 in UITestScreenGum",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2024-02-13T15:06:36.7178042Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "UITestScreenGum.ColoredRectangle ColoredRectangleInstance3 in UITestScreenGum",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2024-02-13T15:06:36.7248032Z"
+      },
+      {
+        "NewName": "UITestScreenGum.ButtonStandardInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-02-13T15:06:42.7733897Z"
+      },
+      {
+        "NewName": "UITestScreenGum.ListBoxInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-02-13T15:08:48.8827181Z"
+      },
+      {
+        "NewName": "UITestScreenGum.TextBoxInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-02-13T15:09:24.311033Z"
+      },
+      {
+        "NewName": "UITestScreenGum.TextInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-02-13T15:09:47.622773Z"
+      },
+      {
+        "NewName": "UITestScreenGum.NineSliceInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-02-13T15:10:10.1166668Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "UITestScreenGum.NineSlice NineSliceInstance in UITestScreenGum",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2024-02-13T15:10:15.9883499Z"
+      },
+      {
+        "NewName": "UITestScreenGum.ColoredRectangleInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-02-13T15:10:21.4312773Z"
+      },
+      {
+        "NewName": "UITestScreenGum.ContainerInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-02-13T15:10:30.1643063Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "UITestScreenGum.Controls/ButtonStandard ButtonStandardInstance in UITestScreenGum",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2024-02-14T13:18:35.3360558Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "UITestScreenGum.Controls/ListBox ListBoxInstance in UITestScreenGum",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2024-02-14T13:18:38.4369916Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "UITestScreenGum.Controls/TextBox TextBoxInstance in UITestScreenGum",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2024-02-14T13:18:40.8277555Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "UITestScreenGum.ColoredRectangle ColoredRectangleInstance in UITestScreenGum",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2024-02-14T13:18:42.2273476Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "UITestScreenGum.Container ContainerInstance in UITestScreenGum",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2024-02-14T13:18:43.4358952Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "TestUiScreen.Container ContainerInstance in TestUiScreen",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2024-02-15T11:05:23.4603124Z"
+      },
+      {
+        "NewName": "UITestScreenGum.TextInstance1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-02-15T11:12:14.4170317Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "UITestScreenGum.Text TextInstance in UITestScreenGum",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2024-02-15T11:22:37.8129341Z"
+      },
+      {
+        "NewName": "TextScreen.NormalText3",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-02-15T13:52:10.6627478Z"
+      },
+      {
+        "NewName": "ZoomScreen",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 0,
+        "TimestampUtc": "2024-02-15T14:03:00.4170172Z"
+      },
+      {
+        "NewName": "ZoomScreen.TextInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-02-15T14:03:07.3350146Z"
+      },
+      {
+        "NewName": "ZoomScreen.TextInstance1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-02-15T14:03:34.0434075Z"
+      },
+      {
+        "NewName": "ZoomScreen.TextInstance2",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-02-15T14:03:47.6807968Z"
+      },
+      {
+        "NewName": "ZoomScreen.TextInstance3",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-02-15T14:04:01.7276403Z"
       }
     ]
   }
