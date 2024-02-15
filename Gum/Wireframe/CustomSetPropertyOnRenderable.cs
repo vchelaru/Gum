@@ -297,10 +297,12 @@ namespace Gum.Wireframe
                 asText.InlineVariables.Clear();
                 if (valueAsString?.Contains("[") == true)
                 {
-                    SetBbCodeText(asText, graphicalUiElement, valueAsString);
+                    asText.StoredMarkupText = valueAsString;
+                    SetBbCodeText(asText, graphicalUiElement, asText.StoredMarkupText);
                 }
                 else
                 {
+                    asText.StoredMarkupText = null;
                     asText.RawText = valueAsString;
                 }
                 // we want to update if the text's size is based on its "children" (the letters it contains)
@@ -335,6 +337,12 @@ namespace Gum.Wireframe
             else if (propertyName == nameof(graphicalUiElement.UseCustomFont))
             {
                 graphicalUiElement.UseCustomFont = (bool)value;
+                var asText = ((Text)mContainedObjectAsIpso);
+
+                if (!string.IsNullOrEmpty(asText.StoredMarkupText))
+                {
+                    SetBbCodeText(asText, graphicalUiElement, asText.StoredMarkupText);
+                }
                 ReactToFontValueChange();
             }
 
@@ -615,7 +623,13 @@ namespace Gum.Wireframe
                         {
                             if(hasArg)
                             {
-                                fontNameStack.Push(tag.Argument);
+                                // tolerate ".fnt" suffix
+                                var argument = tag.Argument;
+                                if (argument?.EndsWith(".fnt") == true)
+                                {
+                                    argument = argument.Substring(0, argument.Length - ".fnt".Length);
+                                }
+                                fontNameStack.Push(argument);
                                 castedValue = GetAndCreateFontIfNecessary();
                             }
                             else
@@ -753,15 +767,23 @@ namespace Gum.Wireframe
 
                     if (!ToolsUtilities.FileManager.FileExists(fileName))
                     {
-                        BmfcSave.CreateBitmapFontFilesIfNecessary(
-                            fontSizeStack.Peek(),
-                            fontNameStack.Peek(),
-                            outlineThicknessStack.Peek(),
-                            useFontSmoothingStack.Peek(),
-                            isItalicStack.Peek(),
-                            isBoldStack.Peek(),
-                            GumState.Self.ProjectState.GumProjectSave?.FontRanges
-                            );
+                        // user could have typed anything in there, so who knows if this will succeed. Therefore, try/catch:
+                        try
+                        {
+                            BmfcSave.CreateBitmapFontFilesIfNecessary(
+                                fontSizeStack.Peek(),
+                                fontNameStack.Peek(),
+                                outlineThicknessStack.Peek(),
+                                useFontSmoothingStack.Peek(),
+                                isItalicStack.Peek(),
+                                isBoldStack.Peek(),
+                                GumState.Self.ProjectState.GumProjectSave?.FontRanges
+                                );
+                        }
+                        catch
+                        {
+                            // do nothing?
+                        }
                     }
 
                     if(ToolsUtilities.FileManager.FileExists(fileName))

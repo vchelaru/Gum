@@ -259,6 +259,15 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        /// <summary>
+        /// Stores the markup text including BBCode. This should not be
+        /// directly set outside of custom property assignments since setting
+        /// it directly does not update the RawText, WrappedText, or InlineVariables.
+        /// This only exists to make it easier for the code that creates InlineVariables
+        /// to use this.
+        /// </summary>
+        public string StoredMarkupText { get; set; }
+
         public List<string> WrappedText
         {
             get

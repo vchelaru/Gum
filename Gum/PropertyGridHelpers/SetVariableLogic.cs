@@ -50,6 +50,7 @@ namespace Gum.PropertyGridHelpers
             "Text",
             "Texture Address",
             "TextOverflowVerticalMode",
+            "UseCustomFont",
             "UseFontSmoothing",
             "VerticalAlignment",
             "Visible",
