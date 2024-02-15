@@ -1232,8 +1232,6 @@ namespace RenderingLibrary.Graphics
 
                         var effectiveTopOfLine = topOfLine;
 
-
-                        // todo - finish here!!!
                         var baselineDifference = maxBaseline - (fontScale * effectiveFont.BaselineY);
                         effectiveTopOfLine += baselineDifference;
 

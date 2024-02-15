@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using System;
 using System.Linq;
+using System.Windows.Forms;
 
 namespace Gum.Wireframe
 {
@@ -18,6 +19,18 @@ namespace Gum.Wireframe
         // even though FoundTag has Name, we add the name here so we can
         // sort open/close in one list
         public string Name;
+
+        public override string ToString()
+        {
+            if(!string.IsNullOrEmpty(Argument))
+            {
+                return $"{Name}={Argument}";
+            }
+            else
+            {
+                return Name;
+            }
+        }
     }
 
     public struct FoundTag

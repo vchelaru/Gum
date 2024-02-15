@@ -487,6 +487,7 @@ namespace Gum.Wireframe
         static Stack<bool> useFontSmoothingStack = new Stack<bool>();
         static Stack<bool> isItalicStack = new Stack<bool>();
         static Stack<bool> isBoldStack = new Stack<bool>();
+        static Stack<bool> useCustomFontStack = new Stack<bool>();
 
         static List<TagInfo> allTags = new List<TagInfo>();
 
@@ -497,12 +498,38 @@ namespace Gum.Wireframe
             var strippedText = BbCodeParser.RemoveTags(bbcode, results);
             asText.RawText = strippedText;
 
-            fontNameStack.Push(graphicalUiElement.Font);
+            fontNameStack.Clear();
+            if(graphicalUiElement.UseCustomFont)
+            {
+                var customFont = graphicalUiElement.CustomFontFile;
+                if(customFont?.EndsWith(".fnt") == true)
+                {
+                    customFont = customFont.Substring(0, customFont.Length - ".fnt".Length);
+                }
+                fontNameStack.Push(customFont);
+            }
+            else
+            {
+                fontNameStack.Push(graphicalUiElement.Font);
+            }
+
+            fontSizeStack.Clear();
             fontSizeStack.Push(graphicalUiElement.FontSize);
+
+            outlineThicknessStack.Clear();
             outlineThicknessStack.Push(graphicalUiElement.OutlineThickness);
+
+            useFontSmoothingStack.Clear();
             useFontSmoothingStack.Push(graphicalUiElement.UseFontSmoothing);
+
+            isItalicStack.Clear();
             isItalicStack.Push(graphicalUiElement.IsItalic);
+
+            isBoldStack.Clear();
             isBoldStack.Push(graphicalUiElement.IsBold);
+
+            useCustomFontStack.Clear();
+            useCustomFontStack.Push(graphicalUiElement.UseCustomFont);
 
             var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
             var contentLoader = loaderManager.ContentLoader;
@@ -654,6 +681,20 @@ namespace Gum.Wireframe
                             }
                         }
                         break;
+                    case "UseCustomFont":
+                        {
+                            if(bool.TryParse(tag.Argument, out bool parsedValue))
+                            {
+                                useCustomFontStack.Push(parsedValue);
+                                castedValue = GetAndCreateFontIfNecessary();
+                            }
+                            else
+                            {
+                                useCustomFontStack.Pop();
+                                castedValue = GetAndCreateFontIfNecessary();
+                            }
+                        }
+                        break;
 
                 }
 
@@ -696,8 +737,19 @@ namespace Gum.Wireframe
                 if (font == null)
                 {
 #if GUM
-                    string fileName = Managers.FontManager.Self.AbsoluteFontCacheFolder +
-                        ToolsUtilities.FileManager.RemovePath(fontFileName);
+                    // this could be a custom font, so let's see if it exists:
+
+                    string fileName;
+
+                    if(ToolsUtilities.FileManager.FileExists(fontFileName))
+                    {
+                        fileName = fontFileName;
+                    }
+                    else
+                    {
+                        fileName = Managers.FontManager.Self.AbsoluteFontCacheFolder +
+                            ToolsUtilities.FileManager.RemovePath(fontFileName);
+                    }
 
                     if (!ToolsUtilities.FileManager.FileExists(fileName))
                     {
@@ -712,7 +764,15 @@ namespace Gum.Wireframe
                             );
                     }
 
-                    font = new BitmapFont(fileName, (SystemManagers)null);
+                    if(ToolsUtilities.FileManager.FileExists(fileName))
+                    {
+                        font = new BitmapFont(fileName, (SystemManagers)null);
+                    }
+                    else
+                    {
+                        // This can happen when closing tags are encountered at the end of a font. If no font exists, we can just go to the default
+                        font = Text.DefaultBitmapFont;
+                    }
                     LoaderManager.Self.AddDisposable(fontFileName, font);
 #endif
                 }
@@ -722,13 +782,22 @@ namespace Gum.Wireframe
 
             string GetFontFileName()
             {
-                string fontFileNameName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
-                    fontSizeStack.Peek(),
-                    fontNameStack.Peek(),
-                    outlineThicknessStack.Peek(),
-                    useFontSmoothingStack.Peek(),
-                    isItalicStack.Peek(),
-                    isBoldStack.Peek());
+                string fontFileNameName;
+                if(useCustomFontStack.Peek())
+                {
+                    fontFileNameName = fontNameStack.Peek() + ".fnt";
+                }
+                else
+                {
+                    fontFileNameName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
+                        fontSizeStack.Peek(),
+                        fontNameStack.Peek(),
+                        outlineThicknessStack.Peek(),
+                        useFontSmoothingStack.Peek(),
+                        isItalicStack.Peek(),
+                        isBoldStack.Peek());
+
+                }
 
                 var fullFileName = ToolsUtilities.FileManager.Standardize(fontFileNameName, false, true);
 #if ANDROID || IOS

@@ -44,7 +44,7 @@ namespace RenderingLibrary.Graphics
 
         public Texture2D Texture
         {
-            get { return mTextures[0]; }
+            get { return mTextures.Length > 0 ? mTextures[0] : null; }
             set
             {
                 mTextures[0] = value;
@@ -798,6 +798,10 @@ namespace RenderingLibrary.Graphics
         public Rectangle GetCharacterRect(char c, int lineNumber, ref Vector2 point, out FloatRectangle destinationRectangle,
             out int pageIndex, float fontScale = 1, float lineHeightMultiplier = 1)
         {
+            if(Texture == null)
+            {
+                throw new InvalidOperationException("The bitmap font has a null texture so it cannot return a character rectangle");
+            }
             BitmapCharacterInfo characterInfo = GetCharacterInfo(c);
 
             int sourceLeft = characterInfo.GetPixelLeft(Texture);
@@ -1116,6 +1120,11 @@ namespace RenderingLibrary.Graphics
         public void Dispose()
         {
             // Do nothing, the loader will handle disposing the texture.
+        }
+
+        public override string ToString()
+        {
+            return mFontFile;
         }
     }
 }
