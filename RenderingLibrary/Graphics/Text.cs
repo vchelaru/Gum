@@ -535,6 +535,13 @@ namespace RenderingLibrary.Graphics
             get { return mFontScale; }
             set
             {
+                #if DEBUG
+                if (float.IsNaN(value) || float.IsInfinity(value))
+                {
+                    throw new ArgumentException($"Invalid value: {value}. Font scale cannot be NaN.");
+                }
+                #endif
+                
                 var newValue = System.Math.Max(0, value);
 
                 if (newValue != mFontScale)
