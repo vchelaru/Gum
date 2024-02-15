@@ -1152,8 +1152,13 @@ namespace RenderingLibrary.Graphics
 
             var rotation = this.GetAbsoluteRotation();
             float topOfLine = absoluteTop;
+            var lettersLeft = maxLettersToShow;
             for (int i = 0; i < WrappedText.Count; i++)
             {
+                if(lettersLeft <= 0)
+                {
+                    break;
+                }
                 var absoluteLeft = mTempForRendering.GetAbsoluteLeft();
                 var lineOfText = WrappedText[i];
 
@@ -1169,10 +1174,10 @@ namespace RenderingLibrary.Graphics
                         requiredWidth, widths, spriteRenderer, color,
                         absoluteLeft,
                         topOfLine,
-                        this.GetAbsoluteRotation(), mFontScale, mFontScale, maxLettersToShow, OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier);
+                        this.GetAbsoluteRotation(), mFontScale, mFontScale, lettersLeft, OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier);
 
                     topOfLine += fontToUse.EffectiveLineHeight(mFontScale, mFontScale);
-
+                    maxLettersToShow -= lineOfText.Length;
                 }
                 else
                 {
@@ -1209,9 +1214,13 @@ namespace RenderingLibrary.Graphics
                     }
 
 
-
                     foreach (var substring in substrings)
                     {
+                        if (lettersLeft <= 0)
+                        {
+                            break;
+                        }
+
                         lineByLineList[0] = substring.Substring;
                         color = Color;
                         var fontScale = mFontScale;
@@ -1256,7 +1265,12 @@ namespace RenderingLibrary.Graphics
                             requiredWidth, widths, spriteRenderer, color,
                             absoluteLeft,
                             effectiveTopOfLine,
-                            rotation, fontScale, fontScale, maxLettersToShow, OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier);
+                            rotation, fontScale, fontScale, lettersLeft, OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier);
+
+                        if(lettersLeft != null)
+                        {
+                            lettersLeft -= substring.Substring.Length;
+                        }
 
                         absoluteLeft += rect.Width;
 
