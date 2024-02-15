@@ -292,6 +292,13 @@ namespace WpfDataUi.Controls
                 if (getValueStatus == ApplyValueResult.Success)
                 {
                     var converter = TypeDescriptor.GetConverter(mTextBoxLogic.InstancePropertyType);
+
+                    if(valueOnInstance == null)
+                    {
+                        // If increasing from null, we should just treat it as if it's 0
+                        valueOnInstance = 0;
+                    }
+
                     unroundedValue = (double)converter.ConvertTo(valueOnInstance, typeof(double));
                 }
             }

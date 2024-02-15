@@ -638,8 +638,10 @@ namespace RenderingLibrary.Graphics
 
         char[] whatToSplitOn = new char[] { ' ' };
 
-
-        static char[] preservedNewlinableCharacters = new char[] { ',', '-', ':', '.' };
+        public static bool UseNewLineWrapping = false;
+        static char[] preservedNewlinableCharacters = new char[] { ',', '-', ':', '.', '?', '!', '&', 
+            // 
+            ')' };
         private void UpdateWrappedText()
         {
             ///////////EARLY OUT/////////////
@@ -687,15 +689,13 @@ namespace RenderingLibrary.Graphics
                 stringToUse = mRawText.Replace("\r\n", "\n");
             }
 
-            const bool useNewWrapping = false;
-
             float wrappingWidth = mWidth / mFontScale;
             if (mWidth == 0)
             {
                 wrappingWidth = float.PositiveInfinity;
             }
 
-            if (useNewWrapping)
+            if (UseNewLineWrapping)
             {
                 if(MeasureString(stringToUse) <= wrappingWidth && stringToUse?.Contains("\n") == false)
                 {
