@@ -750,20 +750,22 @@ namespace Gum.Wireframe
                 // no cache, does it need to be created?
                 if (font == null)
                 {
-#if GUM
                     // this could be a custom font, so let's see if it exists:
 
-                    string fileName;
-
+                    string fileName = String.Empty;
                     if(ToolsUtilities.FileManager.FileExists(fontFileName))
                     {
                         fileName = fontFileName;
                     }
                     else
                     {
+#if GUM
                         fileName = Managers.FontManager.Self.AbsoluteFontCacheFolder +
                             ToolsUtilities.FileManager.RemovePath(fontFileName);
+#endif
                     }
+
+#if GUM
 
                     if (!ToolsUtilities.FileManager.FileExists(fileName))
                     {
@@ -785,6 +787,7 @@ namespace Gum.Wireframe
                             // do nothing?
                         }
                     }
+#endif
 
                     if(ToolsUtilities.FileManager.FileExists(fileName))
                     {
@@ -796,7 +799,6 @@ namespace Gum.Wireframe
                         font = Text.DefaultBitmapFont;
                     }
                     LoaderManager.Self.AddDisposable(fontFileName, font);
-#endif
                 }
 
                 return font;
