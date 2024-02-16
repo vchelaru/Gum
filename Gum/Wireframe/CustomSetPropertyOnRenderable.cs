@@ -823,7 +823,7 @@ namespace Gum.Wireframe
 
                 }
 
-                var fullFileName = ToolsUtilities.FileManager.Standardize(fontFileNameName, false, true);
+                var fullFileName = ToolsUtilities.FileManager.RemoveDotDotSlash(ToolsUtilities.FileManager.Standardize(fontFileNameName, false, true));
 #if ANDROID || IOS
                 fullFileName = fullFileName.ToLowerInvariant();
 #endif
