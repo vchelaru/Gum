@@ -63,10 +63,16 @@ namespace Gum.Wireframe
 
         readonly static Tag defaultTag = new Tag();
 
-        public static List<FoundTag> Parse(HashSet<string> tags, string text)
+        /// <summary>
+        /// Returns a list of FoundTags in the argument text. Only tags in the availableTags set are returned.
+        /// </summary>
+        /// <param name="text">The text populated with tags.</param>
+        /// <param name="availableTags">The available tags for parsing. Tags can be lower-case.</param>
+        /// <returns>The list of found tags.</returns>
+        public static List<FoundTag> Parse(string text, HashSet<string> availableTags)
         {
             var results = new List<FoundTag>();
-            if (tags.Count == 0 || string.IsNullOrWhiteSpace(text))
+            if (availableTags.Count == 0 || string.IsNullOrWhiteSpace(text))
             {
                 return results;
             }
@@ -78,7 +84,7 @@ namespace Gum.Wireframe
 
             while (index < text.Length)
             {
-                var nullableTag = GetTagAtIndex(text, tags, index, accumulatedTagLetterCount);
+                var nullableTag = GetTagAtIndex(text, availableTags, index, accumulatedTagLetterCount);
                 if (nullableTag != null)
                 {
                     var tag = nullableTag.Value;
@@ -133,6 +139,60 @@ namespace Gum.Wireframe
             }
 
             return results.OrderBy(x => x.Open.StartIndex).ToList();
+        }
+
+        public static string AddTags(string text, List<FoundTag> tags, int strippedStringPaddingCount = 0)
+        {
+            var allTags = new List<TagInfo>(tags.Count * 2);
+            HashSet<TagInfo> openingTags = new HashSet<TagInfo>();
+            for (int i = 0; i < tags.Count; i++)
+            {
+                var tag = tags[i];
+
+                var isTagInString = (tag.Open.StartStrippedIndex >= strippedStringPaddingCount && tag.Open.StartStrippedIndex <= text.Length + strippedStringPaddingCount) ||
+                                    (tag.Close.StartStrippedIndex >= strippedStringPaddingCount && tag.Close.StartStrippedIndex <= text.Length + strippedStringPaddingCount);
+
+                if(isTagInString)
+                {
+                    allTags.Add(tag.Open);
+                    allTags.Add(tag.Close);
+                    openingTags.Add(tag.Open);
+                }
+            }
+
+            var sorted = allTags
+                .OrderBy(item => item.StartIndex).ToArray();
+
+            var stringBuilder = new StringBuilder(text);
+
+            int characterCountForTags = 0;
+
+            foreach (var tag in sorted)
+            {
+                var isOpening = openingTags.Contains(tag);
+                var tagText = isOpening 
+                    ? $"[{tag.Name}={tag.Argument}]"
+                    : $"[/{tag.Name}]";
+
+                var desiredStrippedInsertionIndex = 
+                    Math.Max(0, tag.StartStrippedIndex - strippedStringPaddingCount);
+
+                if (desiredStrippedInsertionIndex + characterCountForTags >= stringBuilder.Length)
+                {
+                    stringBuilder.Append(tagText);
+                }
+                
+                else
+                {
+                    stringBuilder.Insert(desiredStrippedInsertionIndex + characterCountForTags, tagText);
+                }
+
+
+                characterCountForTags += tagText.Length;
+                
+            }
+
+            return stringBuilder.ToString();
         }
 
         private static Tag? GetTagAtIndex(string text, HashSet<string> tags, int startIndex, int accumulatedTagLetterCount)

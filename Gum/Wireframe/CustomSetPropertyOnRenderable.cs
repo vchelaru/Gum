@@ -471,7 +471,7 @@ namespace Gum.Wireframe
             return handled;
         }
 
-        static HashSet<string> tags = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase) 
+        public static HashSet<string> Tags { get; private set; } = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase) 
         { 
             "alpha",
             "red", 
@@ -502,7 +502,7 @@ namespace Gum.Wireframe
         private static void SetBbCodeText(global::RenderingLibrary.Graphics.Text asText, GraphicalUiElement graphicalUiElement, string bbcode)
         {
 
-            var results = BbCodeParser.Parse(tags, bbcode);
+            var results = BbCodeParser.Parse(bbcode, Tags);
             var strippedText = BbCodeParser.RemoveTags(bbcode, results);
             asText.RawText = strippedText;
 
