@@ -667,7 +667,12 @@ namespace RenderingLibrary.Graphics
             }
 
             mWrappedText.Clear();
+            UpdateLines(mWrappedText);
 
+        }
+
+        public void UpdateLines(List<string> lines)
+        {
             var effectiveMaxNumberOfLines = MaxNumberOfLines;
 
             if (TextOverflowVerticalMode == TextOverflowVerticalMode.TruncateLine)
@@ -680,7 +685,7 @@ namespace RenderingLibrary.Graphics
                 }
             }
 
-            if(string.IsNullOrEmpty(mRawText))
+            if (string.IsNullOrEmpty(mRawText))
             {
                 return;
             }
@@ -713,9 +718,9 @@ namespace RenderingLibrary.Graphics
 
             if (UseNewLineWrapping)
             {
-                if(MeasureString(stringToUse) <= wrappingWidth && stringToUse?.Contains("\n") == false)
+                if (MeasureString(stringToUse) <= wrappingWidth && stringToUse?.Contains("\n") == false)
                 {
-                    mWrappedText.Add(stringToUse);
+                    lines.Add(stringToUse);
                 }
                 else
                 {
@@ -723,12 +728,12 @@ namespace RenderingLibrary.Graphics
                     int? lastWrappableCharacterOnLine = null;
                     int? lastWrappableCharacterAbsolute = null;
 
-                    // loop through each letter, adding to the mWrappedText. If the new letter can cause a newline then we push to the next line
-                    for(int i = 0; i < stringToUse.Length; i++)
+                    // loop through each letter, adding to the lines. If the new letter can cause a newline then we push to the next line
+                    for (int i = 0; i < stringToUse.Length; i++)
                     {
                         var letter = stringToUse[i];
 
-                        if(letter == '\n')
+                        if (letter == '\n')
                         {
                             AddLine(currentLine.ToString());
                         }
@@ -736,12 +741,12 @@ namespace RenderingLibrary.Graphics
                         {
                             var widthAfterLetter = MeasureString(currentLine.ToString() + letter);
 
-                            if(widthAfterLetter > wrappingWidth && currentLine.Length > 0)
+                            if (widthAfterLetter > wrappingWidth && currentLine.Length > 0)
                             {
                                 string textToAdd = String.Empty;
-                                if(lastWrappableCharacterOnLine != null)
+                                if (lastWrappableCharacterOnLine != null)
                                 {
-                                    textToAdd = currentLine.ToString().Substring(0, lastWrappableCharacterOnLine.Value+1);
+                                    textToAdd = currentLine.ToString().Substring(0, lastWrappableCharacterOnLine.Value + 1);
                                     i = lastWrappableCharacterAbsolute.Value + 1;
                                     letter = stringToUse[i];
                                 }
@@ -752,7 +757,7 @@ namespace RenderingLibrary.Graphics
                                 AddLine(textToAdd);
                             }
                             // do this before appending since length will tell us the index of the next letter to add
-                            if(char.IsWhiteSpace(letter) || preservedNewlinableCharacters.Contains(letter))
+                            if (char.IsWhiteSpace(letter) || preservedNewlinableCharacters.Contains(letter))
                             {
                                 lastWrappableCharacterOnLine = currentLine.Length;
                                 lastWrappableCharacterAbsolute = i;
@@ -760,7 +765,7 @@ namespace RenderingLibrary.Graphics
                             currentLine.Append(letter);
                         }
                     }
-                    if(currentLine.Length > 0)
+                    if (currentLine.Length > 0)
                     {
                         AddLine(currentLine.ToString());
                     }
@@ -769,11 +774,11 @@ namespace RenderingLibrary.Graphics
                     void AddLine(string text)
                     {
                         // We toss the leading space on newlines.
-                        if(text.Length > 0 && text[0] == ' ' && mWrappedText.Count > 0)
+                        if (text.Length > 0 && text[0] == ' ' && lines.Count > 0)
                         {
                             text = text.Substring(1);
                         }
-                        mWrappedText.Add(text);
+                        lines.Add(text);
                         lastWrappableCharacterOnLine = null;
                         lastWrappableCharacterAbsolute = null;
                         currentLine.Clear();
@@ -806,7 +811,7 @@ namespace RenderingLibrary.Graphics
                 bool isLastLine = false;
                 while (wordArray.Count != 0)
                 {
-                    isLastLine = effectiveMaxNumberOfLines != null && mWrappedText.Count == effectiveMaxNumberOfLines - 1;
+                    isLastLine = effectiveMaxNumberOfLines != null && lines.Count == effectiveMaxNumberOfLines - 1;
 
                     string word = wordArray[0];
                     var wordBeforeNewlineRemoval = word;
@@ -843,7 +848,7 @@ namespace RenderingLibrary.Graphics
 
                             if (linePlusWordSub + ellipsisWidth <= wrappingWidth)
                             {
-                                mWrappedText.Add(line + substringEnd + ellipsis);
+                                lines.Add(line + substringEnd + ellipsis);
                                 addedEllipsis = true;
                                 break;
                             }
@@ -851,7 +856,7 @@ namespace RenderingLibrary.Graphics
 
                         if (!addedEllipsis && line.EndsWith(" "))
                         {
-                            mWrappedText.Add(line.SubstringEnd(1) + ellipsis);
+                            lines.Add(line.SubstringEnd(1) + ellipsis);
 
                         }
                         break;
@@ -861,8 +866,8 @@ namespace RenderingLibrary.Graphics
                     {
                         if (!string.IsNullOrEmpty(line))
                         {
-                            mWrappedText.Add(line);
-                            if (mWrappedText.Count == effectiveMaxNumberOfLines)
+                            lines.Add(line);
+                            if (lines.Count == effectiveMaxNumberOfLines)
                             {
                                 didTruncate = true;
                                 break;
@@ -891,8 +896,8 @@ namespace RenderingLibrary.Graphics
 
                     if (containsNewline)
                     {
-                        mWrappedText.Add(line);
-                        if (mWrappedText.Count == effectiveMaxNumberOfLines)
+                        lines.Add(line);
+                        if (lines.Count == effectiveMaxNumberOfLines)
                         {
                             didTruncate = true;
 
@@ -904,9 +909,9 @@ namespace RenderingLibrary.Graphics
                     }
                 }
 
-                if (effectiveMaxNumberOfLines == null || mWrappedText.Count < effectiveMaxNumberOfLines)
+                if (effectiveMaxNumberOfLines == null || lines.Count < effectiveMaxNumberOfLines)
                 {
-                    mWrappedText.Add(line);
+                    lines.Add(line);
                 }
             }
             //if(didTruncate && AddEllipsisOnLastLine && mWrappedText.Count > 0)
@@ -942,7 +947,6 @@ namespace RenderingLibrary.Graphics
             {
                 mNeedsBitmapFontRefresh = true;
             }
-
         }
 
         private float MeasureString(string whatToMeasure)
