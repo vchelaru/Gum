@@ -43,7 +43,7 @@ To create your own font file:
 9. Change the **Textures** option to **png – Portable Network Graphics**
 10. Press **OK** to apply the changes
 
-    ![](<../../.gitbook/assets/image (3) (1) (1) (1) (1) (1) (1).png>)
+    ![](<../../.gitbook/assets/image (3) (1) (1) (1) (1) (1) (1) (1).png>)
 
 You can verify that the settings will produce a proper PNG by selecting **Options** -> **Visualize**. If you see “No Output!” then you need to select characters to export. See the above step for more information.
 
