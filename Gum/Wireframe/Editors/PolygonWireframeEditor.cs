@@ -397,8 +397,10 @@ namespace Gum.Wireframe.Editors
 
                     var pointAtIndex = linePolygon.PointAt(grabbedIndex.Value);
 
-                    pointAtIndex.X += cursor.XChange;
-                    pointAtIndex.Y += cursor.YChange;
+                    var zoom = Renderer.Self.Camera.Zoom;
+
+                    pointAtIndex.X += cursor.XChange / zoom;
+                    pointAtIndex.Y += cursor.YChange / zoom;
 
                     var shouldSetFirstAndLast = (grabbedIndex == 0 || grabbedIndex == linePolygon.PointCount - 1) &&
                         linePolygon.PointAt(0) == linePolygon.PointAt(linePolygon.PointCount - 1);
