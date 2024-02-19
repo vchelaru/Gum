@@ -501,9 +501,14 @@ namespace Gum.Wireframe
 
         private static void SetBbCodeText(global::RenderingLibrary.Graphics.Text asText, GraphicalUiElement graphicalUiElement, string bbcode)
         {
+            // Text can be rendered on multiple lines. This can happen due to explicit newline characters, or by automatic line wrapping.
+            // When line indexes are counted, newlines are not included. Therefore, we need to remove newlines here so that indexes match up.
+            var bbCodeNoNewlines = bbcode?.Replace("\n", "");
 
-            var results = BbCodeParser.Parse(bbcode, Tags);
-            var strippedText = BbCodeParser.RemoveTags(bbcode, results);
+            var resultsNoNewlines = BbCodeParser.Parse(bbCodeNoNewlines, Tags);
+            var resultsWithNewlines = BbCodeParser.Parse(bbcode, Tags);
+
+            var strippedText = BbCodeParser.RemoveTags(bbcode, resultsWithNewlines);
             asText.RawText = strippedText;
 
             fontNameStack.Clear();
@@ -542,7 +547,7 @@ namespace Gum.Wireframe
             var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
             var contentLoader = loaderManager.ContentLoader;
 
-            foreach (var item in results)
+            foreach (var item in resultsNoNewlines)
             {
                 object castedValue = item.Open.Argument;
                 var shouldApply = false;
@@ -600,7 +605,7 @@ namespace Gum.Wireframe
                 }
             }
 
-            ApplyFontVariables(asText, results);
+            ApplyFontVariables(asText, resultsNoNewlines);
         }
 
         private static void ApplyFontVariables(Text asText, List<FoundTag> results)

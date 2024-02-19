@@ -569,6 +569,25 @@ namespace RenderingLibrary.Graphics
             return renderTarget;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="lines"></param>
+        /// <param name="horizontalAlignment"></param>
+        /// <param name="objectRequestingChange"></param>
+        /// <param name="requiredWidth"></param>
+        /// <param name="widths"></param>
+        /// <param name="spriteRenderer"></param>
+        /// <param name="color"></param>
+        /// <param name="xOffset"></param>
+        /// <param name="yOffset"></param>
+        /// <param name="rotation"></param>
+        /// <param name="scaleX"></param>
+        /// <param name="scaleY"></param>
+        /// <param name="numberOfLettersToRender"></param>
+        /// <param name="overrideTextRenderingPositionMode"></param>
+        /// <param name="lineHeightMultiplier"></param>
+        /// <returns>The rectangle of the drawn text. This will return the same value regardless of alignment.</returns>
         public FloatRectangle DrawTextLines(List<string> lines, HorizontalAlignment horizontalAlignment,
             object objectRequestingChange, int requiredWidth, List<int> widths,
             SpriteRenderer spriteRenderer,
@@ -585,7 +604,7 @@ namespace RenderingLibrary.Graphics
 
             FloatRectangle toReturn = new FloatRectangle();
 
-            var point = new Vector2();
+            var currentLetterOrigin = new Vector2();
 
             int lineNumber = 0;
 
@@ -620,21 +639,26 @@ namespace RenderingLibrary.Graphics
 
             int numberOfLettersRendered = 0;
 
+
             for (int i = 0; i < lines.Count; i++)
             {
                 var line = lines[i];
 
                 // scoot over to leave room for the outline
-                point.X = mOutlineThickness;
+                currentLetterOrigin.X = mOutlineThickness;
+
+                float offsetFromAlignment = 0;
 
                 if (horizontalAlignment == HorizontalAlignment.Right)
                 {
-                    point.X = scaleX * (requiredWidth - widths[lineNumber]);
+                    offsetFromAlignment = scaleX * (requiredWidth - widths[lineNumber]);
                 }
                 else if (horizontalAlignment == HorizontalAlignment.Center)
                 {
-                    point.X = scaleX * (requiredWidth - widths[lineNumber]) / 2;
+                    offsetFromAlignment = scaleX * (requiredWidth - widths[lineNumber]) / 2;
                 }
+
+                currentLetterOrigin.X += offsetFromAlignment;
 
                 var effectiveTextRenderingMode = overrideTextRenderingPositionMode ??
                     Text.TextRenderingPositionMode;
@@ -650,7 +674,7 @@ namespace RenderingLibrary.Graphics
                     {
                         char c = line[charIndex];
                         var sourceRect =
-                            GetCharacterRect(c, lineNumber, ref point, out destRect, out pageIndex, scaleX, lineHeightMultiplier: lineHeightMultiplier);
+                            GetCharacterRect(c, lineNumber, ref currentLetterOrigin, out destRect, out pageIndex, scaleX, lineHeightMultiplier: lineHeightMultiplier);
 
                         if(charIndex == 0)
                         {
@@ -667,14 +691,18 @@ namespace RenderingLibrary.Graphics
 
                         var unrotatedX = destRect.X + xOffset;
                         var unrotatedY = destRect.Y + yOffset;
-                        toReturn.X = System.Math.Min(toReturn.X, unrotatedX);
+                        toReturn.X = System.Math.Min(toReturn.X, unrotatedX - offsetFromAlignment) ;
                         toReturn.Y = System.Math.Min(toReturn.Y, unrotatedY);
 
                         // why are we max'ing the point.X's and width? This makes center and right-alignment text render incorrectly
                         // when this method is called multiple times due to styling:
                         //toReturn.Width = System.Math.Max(toReturn.Width, point.X);
-                        toReturn.Width = sourceRect.Width;
-                        toReturn.Height = System.Math.Max(toReturn.Height, point.Y);
+                        // Update - because point.X is the current point - which marks the location of the next
+                        // character.
+                        // After calling GetCharacterRect, the currentLetterOrigin.X is updated to be the next letter's origin.
+                        toReturn.Width = System.Math.Max(toReturn.Width, currentLetterOrigin.X);
+
+                        toReturn.Height = System.Math.Max(toReturn.Height, currentLetterOrigin.Y);
 
 
                         var finalPosition = destRect.X * xAxis + destRect.Y * yAxis;
@@ -713,7 +741,7 @@ namespace RenderingLibrary.Graphics
                     }
 
                 }
-                point.X = 0;
+                currentLetterOrigin.X = 0;
                 lineNumber++;
 
                 if (numberOfLettersToRender <= numberOfLettersRendered)
@@ -799,7 +827,19 @@ namespace RenderingLibrary.Graphics
 
         public float EffectiveLineHeight(float fontScale = 1, float lineHeightMultiplier = 1) => mLineHeightInPixels * lineHeightMultiplier * fontScale;
 
-        public Rectangle GetCharacterRect(char c, int lineNumber, ref Vector2 point, out FloatRectangle destinationRectangle,
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="c"></param>
+        /// <param name="lineNumber"></param>
+        /// <param name="currentCharacterDrawPosition">When passed in, this is the point used to draw the current character. This is used to set the destinationRectangle. This value is modified, increasing the position by XAdvance.</param>
+        /// <param name="destinationRectangle"></param>
+        /// <param name="pageIndex"></param>
+        /// <param name="fontScale"></param>
+        /// <param name="lineHeightMultiplier"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        public Rectangle GetCharacterRect(char c, int lineNumber, ref Vector2 currentCharacterDrawPosition, out FloatRectangle destinationRectangle,
             out int pageIndex, float fontScale = 1, float lineHeightMultiplier = 1)
         {
             if(Texture == null)
@@ -812,23 +852,23 @@ namespace RenderingLibrary.Graphics
             int sourceTop = characterInfo.GetPixelTop(Texture);
             int sourceWidth = characterInfo.GetPixelRight(Texture) - sourceLeft;
             int sourceHeight = characterInfo.GetPixelBottom(Texture) - sourceTop;
+            var sourceRectangle = new Rectangle(sourceLeft, sourceTop, sourceWidth, sourceHeight);
+
+            pageIndex = characterInfo.PageNumber;
 
             int distanceFromTop = characterInfo.GetPixelDistanceFromTop(mLineHeightInPixels);
 
             // There could be some offset for this character
             int xOffset = characterInfo.GetPixelXOffset(mLineHeightInPixels);
-            point.X += xOffset * fontScale;
 
-            point.Y = lineNumber * EffectiveLineHeight(fontScale, lineHeightMultiplier) + distanceFromTop * fontScale;
+            // Shift the point by the xOffset, which affects destination (drawing) but does not affect the advance of the position for the next letter
+            currentCharacterDrawPosition.X += xOffset * fontScale;
+            currentCharacterDrawPosition.Y = lineNumber * EffectiveLineHeight(fontScale, lineHeightMultiplier) + distanceFromTop * fontScale;
+            destinationRectangle = new FloatRectangle(currentCharacterDrawPosition.X, currentCharacterDrawPosition.Y, sourceWidth * fontScale, sourceHeight * fontScale);
 
-            var sourceRectangle = new Rectangle(sourceLeft, sourceTop, sourceWidth, sourceHeight);
-
-            pageIndex = characterInfo.PageNumber;
-
-            destinationRectangle = new FloatRectangle(point.X, point.Y, sourceWidth * fontScale, sourceHeight * fontScale);
-
-            point.X -= xOffset * fontScale;
-            point.X += characterInfo.GetXAdvanceInPixels(mLineHeightInPixels) * fontScale;
+            // Shift it back.
+            currentCharacterDrawPosition.X -= xOffset * fontScale;
+            currentCharacterDrawPosition.X += characterInfo.GetXAdvanceInPixels(mLineHeightInPixels) * fontScale;
 
             return sourceRectangle;
         }

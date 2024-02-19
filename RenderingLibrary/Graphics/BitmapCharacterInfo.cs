@@ -16,7 +16,13 @@ namespace RenderingLibrary.Graphics
 
         public float ScaleX;
         public float ScaleY;
+
         public float Spacing;
+        /// <summary>
+        /// The offset of the character when drawn from the current X position. This value lets
+        /// a character get drawn further to the right or left without changing the X position of the
+        /// next character.
+        /// </summary>
         public float XOffset;
         public float DistanceFromTopOfLine;
 
@@ -44,6 +50,7 @@ namespace RenderingLibrary.Graphics
         {
             return GetPixelBottom(texture) - GetPixelTop(texture);
         }
+
 
         public int GetPixelXOffset(int lineHeightInPixels)
         {
