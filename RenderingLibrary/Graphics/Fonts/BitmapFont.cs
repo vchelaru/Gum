@@ -700,7 +700,7 @@ namespace RenderingLibrary.Graphics
                         // Update - because point.X is the current point - which marks the location of the next
                         // character.
                         // After calling GetCharacterRect, the currentLetterOrigin.X is updated to be the next letter's origin.
-                        toReturn.Width = System.Math.Max(toReturn.Width, currentLetterOrigin.X);
+                        toReturn.Width = System.Math.Max(toReturn.Width, currentLetterOrigin.X - offsetFromAlignment);
 
                         toReturn.Height = System.Math.Max(toReturn.Height, currentLetterOrigin.Y);
 
