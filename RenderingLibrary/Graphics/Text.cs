@@ -1148,6 +1148,8 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        // When drawing line-by-line, we only pass a single 
+        List<int> individualLineWidth = new List<int>() { 0 };
         private void DrawWithInlineVariables(BitmapFont fontToUse, int requiredWidth, SpriteRenderer spriteRenderer)
         {
             var absoluteTop = mTempForRendering.GetAbsoluteTop();
@@ -1185,7 +1187,7 @@ namespace RenderingLibrary.Graphics
                 }
                 else
                 {
-
+                    individualLineWidth[0] = widths[i];
                     var lineHeight = fontToUse.EffectiveLineHeight(mFontScale, 1);
                     var defaultBaseline = fontToUse.BaselineY;
 
@@ -1266,7 +1268,7 @@ namespace RenderingLibrary.Graphics
 
                         var rect = effectiveFont.DrawTextLines(lineByLineList, HorizontalAlignment,
                             this,
-                            requiredWidth, widths, spriteRenderer, color,
+                            requiredWidth, individualLineWidth, spriteRenderer, color,
                             absoluteLeft,
                             effectiveTopOfLine,
                             rotation, fontScale, fontScale, lettersLeft, OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier);

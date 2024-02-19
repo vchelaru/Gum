@@ -669,7 +669,11 @@ namespace RenderingLibrary.Graphics
                         var unrotatedY = destRect.Y + yOffset;
                         toReturn.X = System.Math.Min(toReturn.X, unrotatedX);
                         toReturn.Y = System.Math.Min(toReturn.Y, unrotatedY);
-                        toReturn.Width = System.Math.Max(toReturn.Width, point.X);
+
+                        // why are we max'ing the point.X's and width? This makes center and right-alignment text render incorrectly
+                        // when this method is called multiple times due to styling:
+                        //toReturn.Width = System.Math.Max(toReturn.Width, point.X);
+                        toReturn.Width = sourceRect.Width;
                         toReturn.Height = System.Math.Max(toReturn.Height, point.Y);
 
 
