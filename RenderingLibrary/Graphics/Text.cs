@@ -57,6 +57,11 @@ namespace RenderingLibrary.Graphics
         /// </summary>
         public int CharacterCount;
         public object Value;
+
+        public override string ToString()
+        {
+            return $"{VariableName} = {Value} at [{StartIndex}] for {CharacterCount} characters";
+        }
     }
 
     #endregion
@@ -894,7 +899,11 @@ namespace RenderingLibrary.Graphics
                     // update - but this prevents the word from sarting 
                     //if ((!string.IsNullOrEmpty(word) || !string.IsNullOrEmpty(line)))
                     {
-                        if (wordArray.Count > 1 || word == "")
+
+                        if ((wordArray.Count > 1 || word == "") &&
+                            // Update Feb 19, 2023
+                            // don't insert space after if it's a newline. That messes up indexes.
+                            !containsNewline)
                         {
                             line = line + word + ' ';
                         }
