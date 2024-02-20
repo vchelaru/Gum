@@ -85,6 +85,8 @@
   * [InstanceSave](gum-code-reference/instancesave.md)
   * [IPositionedSizedObject](gum-code-reference/ipositionedsizedobject.md)
   * [SelectedState](gum-code-reference/selectedstate.md)
+  * [SpriteRenderer](gum-code-reference/spriterenderer/README.md)
+    * [LastFrameDrawStates](gum-code-reference/spriterenderer/lastframedrawstates.md)
   * [VariableSave](gum-code-reference/variablesave.md)
 * [SkiaGum](skiagum/README.md)
   * [Setup](skiagum/setup/README.md)
