@@ -21,6 +21,9 @@ Tutorials and documentation can be found here:
 
 https://docs.flatredball.com/gum/
 
+### Star Velocity
+[![Sparkline](https://stars.medv.io/vchelaru/Gum.svg)](https://stars.medv.io/vchelaru/Gum)
+
 ## Need Help?
 
 The fastest way to get help is to ask in our Discord: https://discord.gg/uQSam6w36d
