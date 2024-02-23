@@ -835,9 +835,12 @@ namespace RenderingLibrary.Graphics
                     var isLastWord = wordArray.Count == 1;
 
                     bool containsNewline = false;
+                    bool startsWithNewline = false;
 
                     if (ToolsUtilities.StringFunctions.ContainsNoAlloc(word, '\n'))
                     {
+                        startsWithNewline = word.StartsWith("\n");
+
                         word = word.Substring(0, word.IndexOf('\n'));
                         containsNewline = true;
                     }
@@ -896,7 +899,7 @@ namespace RenderingLibrary.Graphics
                     }
 
                     // If it's the first word and it's empty, don't add anything
-                    // update - but this prevents the word from sarting 
+                    // update - but this prevents the word from starting with a space, which it should be able to 
                     //if ((!string.IsNullOrEmpty(word) || !string.IsNullOrEmpty(line)))
                     {
 
@@ -918,6 +921,8 @@ namespace RenderingLibrary.Graphics
                     if (containsNewline)
                     {
                         lines.Add(line);
+
+
                         if (lines.Count == effectiveMaxNumberOfLines)
                         {
                             didTruncate = true;

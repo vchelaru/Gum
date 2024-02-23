@@ -616,8 +616,23 @@ namespace Gum.Wireframe
             }
         }
 
+        TextOverflowVerticalMode textOverflowVerticalMode;
         // we have to store this locally because we are going to effectively assign the overflow mode based on the height units and this value
-        public TextOverflowVerticalMode TextOverflowVerticalMode = TextOverflowVerticalMode.SpillOver;
+        public TextOverflowVerticalMode TextOverflowVerticalMode
+        {
+            get => textOverflowVerticalMode;
+            set
+            {
+                if(textOverflowVerticalMode != value)
+                {
+                    if(this.RenderableComponent is IText text)
+                    {
+                        text.TextOverflowVerticalMode = value;
+                    }
+                    textOverflowVerticalMode = value;
+                }
+            }
+        }
 
         float stackSpacing;
         /// <summary>

@@ -149,8 +149,8 @@ namespace Gum.Wireframe
             {
                 var tag = tags[i];
 
-                var isTagInString = (tag.Open.StartStrippedIndex >= strippedStringPaddingCount && tag.Open.StartStrippedIndex <= text.Length + strippedStringPaddingCount) ||
-                                    (tag.Close.StartStrippedIndex >= strippedStringPaddingCount && tag.Close.StartStrippedIndex <= text.Length + strippedStringPaddingCount);
+                var isTagInString = (tag.Open.StartStrippedIndex >= strippedStringPaddingCount && tag.Open.StartStrippedIndex < text.Length + strippedStringPaddingCount) ||
+                                    (tag.Close.StartStrippedIndex > strippedStringPaddingCount && tag.Close.StartStrippedIndex <= text.Length + strippedStringPaddingCount);
 
                 if(isTagInString)
                 {
