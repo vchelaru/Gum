@@ -284,14 +284,25 @@ namespace RenderingLibrary.Math.Geometry
                 renderer = Renderer.Self;
             }
 
-            Texture2D textureToUse = renderer.SinglePixelTexture;
 
             if (isDotted)
             {
-                textureToUse = renderer.DottedLineTexture;
+                var textureToUse = renderer.DottedLineTexture;
+                linePrimitive.Render(spriteRenderer, managers, textureToUse, .25f * renderer.Camera.Zoom);
             }
+            else
+            {
+                var textureToUse = renderer.SinglePixelTexture;
+                if(renderer.SinglePixelSourceRectangle != null)
+                {
+                    linePrimitive.Render(spriteRenderer, managers, textureToUse, 0, renderer.SinglePixelSourceRectangle);
+                }
+                else
+                {
+                    linePrimitive.Render(spriteRenderer, managers, textureToUse, .25f * renderer.Camera.Zoom);
+                }
 
-            linePrimitive.Render(spriteRenderer, managers, textureToUse, .25f * renderer.Camera.Zoom);
+            }
         }
 
         #endregion

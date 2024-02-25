@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Renderables;
 using RenderingLibrary;
+using RenderingLibrary.Graphics;
 using System;
 using System.Linq;
 using ToolsUtilities;
@@ -59,11 +60,21 @@ namespace MonoGameGumFromFile
             SystemManagers.Default = new SystemManagers();
             SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
 
+            //SetSinglePixelTexture();
+
             LoadGumProject();
 
             ShowScreen("StartScreen");
 
             base.Initialize();
+        }
+
+        private void SetSinglePixelTexture()
+        {
+            var singlePixelTexture = Texture2D.FromFile(_graphics.GraphicsDevice, "Content/MainSpriteSheet.png");
+
+            SystemManagers.Default.Renderer.SinglePixelTexture = singlePixelTexture;
+            SystemManagers.Default.Renderer.SinglePixelSourceRectangle = new System.Drawing.Rectangle(1, 1, 1, 1);
         }
 
         private void InitializeComponentInCode()
