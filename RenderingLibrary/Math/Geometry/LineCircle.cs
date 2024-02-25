@@ -198,10 +198,11 @@ namespace RenderingLibrary.Math.Geometry
 
         }
 
+        const int SidesInCircle = 24;
         private void UpdatePoints()
         {
 
-            mLinePrimitive.CreateCircle(Radius, 16);
+            mLinePrimitive.CreateCircle(Radius, SidesInCircle);
 
             if(mCircleOrigin == Geometry.CircleOrigin.TopLeft)
             {

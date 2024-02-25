@@ -211,6 +211,7 @@ namespace RenderingLibrary.Math.Geometry
             //    endIndex = 2;
             //}
 
+            var sourceRectangleToUse = sourceRectangle;
 
             for (int i = startIndex; i < endIndex; i++)
             {
@@ -236,17 +237,18 @@ namespace RenderingLibrary.Math.Geometry
                 // calculate the distance between the two vectors
                 float distance = Vector2.Distance(vector1, vector2);
 
-                Vector2 scale = new Vector2(1, 1);
+                Vector2 scale = new Vector2(distance, LinePixelWidth / renderer.CurrentZoom);
 
 
                 if(sourceRectangle != null)
                 {
+                    sourceRectangleToUse = sourceRectangle;
                     // do nothing
                     scale = new Vector2(distance / sourceRectangle.Value.Width, 1 / sourceRectangle.Value.Height);
                 }
                 else if (repetitionsPerLength == 0)
                 {
-                    sourceRectangle = new Rectangle(
+                    sourceRectangleToUse = new Rectangle(
                         0,
                         0,
                         1,
@@ -267,7 +269,7 @@ namespace RenderingLibrary.Math.Geometry
 
                     // calculate the angle between the two vectors
 
-                    sourceRectangle = new Rectangle(
+                    sourceRectangleToUse = new Rectangle(
                         0, 
                         0, 
                         sourceRectWidth, 
@@ -282,11 +284,10 @@ namespace RenderingLibrary.Math.Geometry
                 float angle = (float)System.Math.Atan2((double)(vector2.Y - vector1.Y),
                     (double)(vector2.X - vector1.X));
 
-                // using Scale here is a little inaccurate so let's use source/destination rectangles:
                 spriteRenderer.Draw(textureToUse,
                     //offset + Position + vector1,
                     Position + vector1,
-                    sourceRectangle,
+                    sourceRectangleToUse,
                     Color,
                     angle,
                     Vector2.Zero,
