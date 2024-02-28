@@ -77,3 +77,13 @@ If your Gum project loads incorrectly, you can inspect the GumLoadResult object 
 <figure><img src="../.gitbook/assets/image (43).png" alt=""><figcaption><p>Viewing the GumLoadResult in the output window</p></figcaption></figure>
 
 In this case the GumLoadResult is indicating no errors and no missing files.
+
+You may see information about missing files if any files are not found during the loading process. For example, the following screenshot shows that a Component file (.gucx) is missing:
+
+<figure><img src="../.gitbook/assets/image (48).png" alt=""><figcaption><p>Missing component "CardInstance.gucx"</p></figcaption></figure>
+
+If you are missing files, you may have not set up the file to copy to the output folder. The following screenshot shows an incorrect setup - the file is not copied:
+
+<figure><img src="../.gitbook/assets/image (49).png" alt=""><figcaption><p>Incorrect setting on .gucx</p></figcaption></figure>
+
+This can be changed to copy in Visual Studio, or the .csproj can be modified to include wildcards for copying files over, which can make maintenance easier as the project grows.

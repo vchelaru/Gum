@@ -38,3 +38,7 @@ Note that the name passed to the First method should match the name given in Gum
 If a component is in a folder, then its name is the qualified name relative to the Components folder. For example, the following component's name at runtime is `"Buttons/StandardButton"`
 
 <figure><img src="../../.gitbook/assets/image (42).png" alt=""><figcaption><p>StandardButton component in the Buttons folder in Gum</p></figcaption></figure>
+
+### Troubleshooting Component Creation
+
+If your component is not visible, this may be a file issue. By default Gum project loading will not throw exceptions on missing files, and it will attempt to re-create missing file components. For more information, see the [Troubleshooting section in the Loading .gumx page](../loading-.gumx-gum-project.md#troubleshooting-gum-project-loading).
