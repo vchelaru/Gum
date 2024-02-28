@@ -98,12 +98,6 @@ namespace Gum.Logic.FileWatch
 
         private void HandleFileSystemDelete(object sender, FileSystemEventArgs e)
         {
-            var fileName = new FilePath(e.FullPath);
-
-            if(fileName.Extension == "png")
-            {
-                int m = 3;
-            }
             // do anything?
         }
 

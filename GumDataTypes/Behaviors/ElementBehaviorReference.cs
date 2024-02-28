@@ -11,5 +11,10 @@
 
         public string BehaviorName { get; set; }
 
+        public override string ToString()
+        {
+            return $"{BehaviorName}";
+        }
+
     }
 }
