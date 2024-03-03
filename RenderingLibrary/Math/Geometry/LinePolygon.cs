@@ -137,6 +137,12 @@ namespace RenderingLibrary.Math.Geometry
 
         public bool IsDotted { get; set; }
 
+        public float LinePixelWidth
+        {
+            get => mLinePrimitive.LinePixelWidth;
+            set => mLinePrimitive.LinePixelWidth = value;
+        }
+
         #endregion
 
         #region Constructor

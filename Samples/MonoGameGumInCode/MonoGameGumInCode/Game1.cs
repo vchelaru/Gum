@@ -152,6 +152,26 @@ namespace MonoGameGumInCode
             customText.Text = "Hello, I am using a custom font.\nPretty cool huh?";
             container.Children.Add(customText);
 
+            AddText(container, "This is a polygon:");
+            var polygon = new PolygonRuntime();
+            polygon.Name = "PolygonRuntime";
+            polygon.X = 10;
+            polygon.Y = 10;
+            polygon.Color = Color.Red;
+
+            var size = 30;
+
+            polygon.Width = size;
+            polygon.Height = size;
+            polygon.SetPoints(new System.Numerics.Vector2[]
+            {
+                new System.Numerics.Vector2(0, 0),
+                new System.Numerics.Vector2(0, size),
+                new System.Numerics.Vector2(size, size),
+                new System.Numerics.Vector2(size, 0),
+                new System.Numerics.Vector2(0, 0),
+            });
+            container.Children.Add(polygon);
 
         }
 
@@ -188,12 +208,22 @@ namespace MonoGameGumInCode
 
             SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
 
+            bool moveCameraWithMouse = false;
+            if(moveCameraWithMouse)
+            {
+                MoveCameraWithMouse();
+
+            }
+
+            base.Update(gameTime);
+        }
+
+        private static void MoveCameraWithMouse()
+        {
             var camera = SystemManagers.Default.Renderer.Camera;
             var mouseState = Mouse.GetState();
             camera.X = mouseState.X;
             camera.Y = mouseState.Y;
-
-            base.Update(gameTime);
         }
 
         protected override void Draw(GameTime gameTime)
