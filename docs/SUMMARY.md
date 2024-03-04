@@ -84,6 +84,7 @@
   * [InstanceMember](gum-code-reference/instancemember.md)
   * [InstanceSave](gum-code-reference/instancesave.md)
   * [IPositionedSizedObject](gum-code-reference/ipositionedsizedobject.md)
+  * [Layer](gum-code-reference/layer.md)
   * [Renderer](gum-code-reference/renderer/README.md)
     * [SinglePixelTexture](gum-code-reference/renderer/singlepixeltexture.md)
   * [SelectedState](gum-code-reference/selectedstate.md)
