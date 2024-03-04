@@ -8,6 +8,9 @@ namespace Gum.Wireframe
 {
     public class CameraController : Gum.Managers.Singleton<CameraController>
     {
+
+        Cursor handGrabCursor;
+
         global::RenderingLibrary.Camera Camera
         {
             get;
@@ -26,6 +29,9 @@ namespace Gum.Wireframe
 
             Renderer.Self.Camera.X = defaultWidth / 2 - 30;
             Renderer.Self.Camera.Y = defaultHeight / 2 - 30;
+
+            handGrabCursor = new Cursor("D:\\opensource\\Gum\\Gum\\Gum\\Content\\Cursors\\cursor-grab.cur");
+
         }
 
         internal void HandleMouseWheel(object sender, MouseEventArgs e)
@@ -73,6 +79,10 @@ namespace Gum.Wireframe
         {
             if (e.Button == MouseButtons.Middle)
             {
+
+                //Changing cursor to hand when dragging
+                Cursor.Current = handGrabCursor;
+
                 int xChange = e.X - mLastMouseLocation.X;
                 int yChange = e.Y - mLastMouseLocation.Y;
 
