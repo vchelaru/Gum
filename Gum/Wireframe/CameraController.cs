@@ -30,7 +30,7 @@ namespace Gum.Wireframe
             Renderer.Self.Camera.X = defaultWidth / 2 - 30;
             Renderer.Self.Camera.Y = defaultHeight / 2 - 30;
 
-            handGrabCursor = new Cursor("D:\\opensource\\Gum\\Gum\\Gum\\Content\\Cursors\\cursor-grab.cur");
+            handGrabCursor = new Cursor("../../../Content/Cursors/cursor-grab.cur");
 
         }
 
