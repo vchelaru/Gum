@@ -1,0 +1,1 @@
+Remove-Item -Path "ToolsUtilities/bin" -Recurse -Force
