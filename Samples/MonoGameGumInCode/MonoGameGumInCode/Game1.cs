@@ -163,6 +163,7 @@ namespace MonoGameGumInCode
 
             polygon.Width = size;
             polygon.Height = size;
+            polygon.IsDotted = true;
             polygon.SetPoints(new System.Numerics.Vector2[]
             {
                 new System.Numerics.Vector2(0, 0),

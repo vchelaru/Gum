@@ -25,11 +25,19 @@ To create a Gum project:
 To add the files to your .csproj:
 
 1. Open your .csproj file in a text editor
-2. Add a line to copy all files in the Gum project folder including the .gumx file itself. For an example, see the .csproj file for the MonoGameGumFromFile project: [https://github.com/vchelaru/Gum/blob/8cde3f76d00cf14c00d68c1aaa4713b9f75e702f/Samples/MonoGameGumFromFile/MonoGameGumFromFile/MonoGameGumFromFile.csproj#L37](https://github.com/vchelaru/Gum/blob/8cde3f76d00cf14c00d68c1aaa4713b9f75e702f/Samples/MonoGameGumFromFile/MonoGameGumFromFile/MonoGameGumFromFile.csproj#L37)
+2.  Add a line to copy all files in the Gum project folder including the .gumx file itself. For an example, see the .csproj file for the MonoGameGumFromFile project: [https://github.com/vchelaru/Gum/blob/8cde3f76d00cf14c00d68c1aaa4713b9f75e702f/Samples/MonoGameGumFromFile/MonoGameGumFromFile/MonoGameGumFromFile.csproj#L37](https://github.com/vchelaru/Gum/blob/8cde3f76d00cf14c00d68c1aaa4713b9f75e702f/Samples/MonoGameGumFromFile/MonoGameGumFromFile/MonoGameGumFromFile.csproj#L37)\
+    Your .csproj may look like this:\
+
+
+    <figure><img src="../.gitbook/assets/image (50).png" alt=""><figcaption><p>Copy all files to output</p></figcaption></figure>
 3.  Verify that all gum files (see the extension list above) are marked as Copy if newer in Visual Studio\
 
 
     <figure><img src="../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Gum project set to Copy if newer</p></figcaption></figure>
+
+The example above copies the entirety of the content folder to the output folder by using wildcards. If you do not want every file copied over, you can be more selective in what you copy by including only certain file types. For more information about wildcard support in .csproj files, see this page on how to include wildcards in your .csproj:
+
+[https://learn.microsoft.com/en-us/visualstudio/msbuild/how-to-select-the-files-to-build?view=vs-2022#specify-inputs-with-wildcards](https://learn.microsoft.com/en-us/visualstudio/msbuild/how-to-select-the-files-to-build?view=vs-2022#specify-inputs-with-wildcards)
 
 ### Loading a Gum projecxt
 

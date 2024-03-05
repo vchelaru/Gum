@@ -66,6 +66,12 @@ namespace MonoGameGum.GueDeriving
             set => ContainedPolygon.LinePixelWidth = value;
         }
 
+        public bool IsDotted
+        {
+            get => ContainedPolygon.IsDotted;
+            set => ContainedPolygon.IsDotted = value;
+        }
+
         public void InsertPointAt(Vector2 point, int index) => ContainedPolygon.InsertPointAt(point, index);
         public void RemovePointAtIndex(int index) => ContainedPolygon.RemovePointAtIndex(index);
         public void SetPointAt(Vector2 point, int index) => ContainedPolygon.SetPointAt(point, index);
