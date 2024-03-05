@@ -14,6 +14,7 @@ namespace MonoGameGumInCode
     {
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
+        Layer layer;
 
         public Game1()
         {
@@ -97,8 +98,24 @@ namespace MonoGameGumInCode
             container.Children.Add(withOutline);
         }
 
-        private static void CreateMixedLayout()
+        private void CreateMixedLayout()
         {
+            bool addLayeredObject = false;
+            if(addLayeredObject)
+            {
+                layer = SystemManagers.Default.Renderer.AddLayer();
+                layer.LayerCameraSettings = new LayerCameraSettings();
+                layer.LayerCameraSettings.IsInScreenSpace = true;
+
+                var layeredRectangle = new ColoredRectangleRuntime();
+                layeredRectangle.X = 10;
+                layeredRectangle.Y = 10;
+                layeredRectangle.Width = 120;
+                layeredRectangle.Height = 120;
+                layeredRectangle.Color = Color.Blue;
+                layeredRectangle.AddToManagers(SystemManagers.Default, layer);
+            }
+
             var container = new ContainerRuntime();
             container.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
             container.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
