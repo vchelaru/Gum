@@ -36,6 +36,11 @@
     <LinkType>ReferenceOriginal</LinkType>
   </ScreenReference>
   <ScreenReference>
+    <Name>ZoomLayerScreen</Name>
+    <ElementType>Screen</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </ScreenReference>
+  <ScreenReference>
     <Name>ZoomScreen</Name>
     <ElementType>Screen</ElementType>
     <LinkType>ReferenceOriginal</LinkType>

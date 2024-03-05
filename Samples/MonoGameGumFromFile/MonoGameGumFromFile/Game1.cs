@@ -92,7 +92,7 @@ namespace MonoGameGumFromFile
 
         }
 
-        private void ShowScreen(string screenName)
+        private bool ShowScreen(string screenName)
         {
             FileManager.RelativeDirectory = "content/";
             currentGumScreenSave = ObjectFinder.Self.GumProjectSave.Screens.FirstOrDefault(item => item.Name == screenName);
@@ -106,9 +106,15 @@ namespace MonoGameGumFromFile
             if (!isAlreadyShown)
             {
                 currentScreenElement?.RemoveFromManagers();
+                var layers = SystemManagers.Default.Renderer.Layers;
+                while(layers.Count > 1)
+                {
+                    SystemManagers.Default.Renderer.RemoveLayer(SystemManagers.Default.Renderer.Layers.LastOrDefault());
+                }
+
                 currentScreenElement = currentGumScreenSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
             }
-
+            return !isAlreadyShown;
         }
 
         private static GumProjectSave LoadGumProject()
@@ -233,38 +239,40 @@ namespace MonoGameGumFromFile
             }
             else if(state.IsKeyDown(Keys.D2))
             {
-                ShowScreen("StateScreen");
-
-                var setMeInCode = currentScreenElement.GetGraphicalUiElementByName("SetMeInCode");
-
-                // States can be found in the Gum element's Categories and applied:
-                var stateToSet = setMeInCode.ElementSave.Categories
-                    .FirstOrDefault(item => item.Name == "RightSideCategory")
-                    .States.Find(item => item.Name == "Blue");
-                setMeInCode.ApplyState(stateToSet);
-
-                // Alternatively states can be set in an "unqualified" way, which can be easier, but can 
-                // result in unexpected behavior if there are multiple states with the same name:
-                setMeInCode.ApplyState("Green");
-
-                // states can be constructed dynamically too. This state makes the SetMeInCode instance bigger:
-                var dynamicState = new StateSave();
-                dynamicState.Variables.Add(new VariableSave()
+                var justShowed = ShowScreen("StateScreen");
+                if(justShowed)
                 {
-                    Value = 300f,
-                    Name = "Width",
-                    Type = "float",
-                    // values can exist on a state but be "disabled"
-                    SetsValue = true
-                });
-                dynamicState.Variables.Add(new VariableSave()
-                {
-                    Value = 250f,
-                    Name = "Height",
-                    Type = "float",
-                    SetsValue = true
-                });
-                setMeInCode.ApplyState(dynamicState);
+                    var setMeInCode = currentScreenElement.GetGraphicalUiElementByName("SetMeInCode");
+
+                    // States can be found in the Gum element's Categories and applied:
+                    var stateToSet = setMeInCode.ElementSave.Categories
+                        .FirstOrDefault(item => item.Name == "RightSideCategory")
+                        .States.Find(item => item.Name == "Blue");
+                    setMeInCode.ApplyState(stateToSet);
+
+                    // Alternatively states can be set in an "unqualified" way, which can be easier, but can 
+                    // result in unexpected behavior if there are multiple states with the same name:
+                    setMeInCode.ApplyState("Green");
+
+                    // states can be constructed dynamically too. This state makes the SetMeInCode instance bigger:
+                    var dynamicState = new StateSave();
+                    dynamicState.Variables.Add(new VariableSave()
+                    {
+                        Value = 300f,
+                        Name = "Width",
+                        Type = "float",
+                        // values can exist on a state but be "disabled"
+                        SetsValue = true
+                    });
+                    dynamicState.Variables.Add(new VariableSave()
+                    {
+                        Value = 250f,
+                        Name = "Height",
+                        Type = "float",
+                        SetsValue = true
+                    });
+                    setMeInCode.ApplyState(dynamicState);
+                }
             }
             else if(state.IsKeyDown(Keys.D3))
             {
@@ -278,7 +286,28 @@ namespace MonoGameGumFromFile
             {
                 ShowScreen("ZoomScreen");
             }
+            else if(state.IsKeyDown(Keys.D6))
+            {
+                var justShowed = ShowScreen("ZoomLayerScreen");
+                if(justShowed)
+                {
+                    UpdateZoomScreen();
+                }
+            }
         }
 
+        private void UpdateZoomScreen()
+        {
+            var layered = currentScreenElement.GetGraphicalUiElementByName("Layered");
+            var layer = SystemManagers.Default.Renderer.AddLayer();
+            layer.Name = "Zoomed-in Layer";
+            layered.MoveToLayer(layer);
+
+            layer.LayerCameraSettings = new LayerCameraSettings()
+            {
+                Zoom = 2
+            };
+
+        }
     }
 }
