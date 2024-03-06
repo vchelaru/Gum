@@ -868,6 +868,14 @@ namespace Gum.Wireframe
                                 loaderManager.AddDisposable(graphicalUiElement.CustomFontFile, font);
                             }
                         }
+                        else if(font.Textures.Any(item => item?.IsDisposed == true))
+                        {
+                            // The BitmapFont is cached by Gum, but the underlying Texture2D might be managed by something else (like FRB).
+                            // This means that the Texture can be disposed without the BitmapFont being disposed. If this is the case we should
+                            // ask the underlying system for a new .png, but we can keep the same BitmapFont since that should stay the same and
+                            // .fnt parsing can be the slow part for large fonts.
+                            font.ReAssignTextures();
+                        }
                     }
 
 

@@ -96,15 +96,60 @@ namespace RenderingLibrary.Graphics
             string fontContents = FileManager.FromFileText(fontFile);
             mFontFile = FileManager.Standardize(fontFile);
 
-            string[] texturesToLoad = GetSourceTextures(fontContents);
 
-            mTextures = new Texture2D[texturesToLoad.Length];
+            ReloadTextures(fontFile, fontContents);
+
+            SetFontPattern(fontContents);
+        }
+
+
+        private void ReloadTextures(string fontFile, string fontContents)
+        {
+            var unqualifiedTextureNames = GetSourceTextures(fontContents);
+
+
+            mTextures = new Texture2D[unqualifiedTextureNames.Length];
+            mTextureNames = new string[unqualifiedTextureNames.Length];
 
             string directory = FileManager.GetDirectory(fontFile);
-
             for (int i = 0; i < mTextures.Length; i++)
             {
-                AtlasedTexture atlasedTexture = CheckForLoadedAtlasTexture(directory + texturesToLoad[i]);
+                // fnt files treat ./ as relative, but FRB Android treats ./ as
+                // absolute. Since the value comes directly from .fnt, we want to 
+                // consider ./ as relative instead of whatever FRB thinks is relative:
+                //if (FileManager.IsRelative(texturesToLoad[i]))
+                bool isRelative = unqualifiedTextureNames[i].StartsWith("./") || FileManager.IsRelative(unqualifiedTextureNames[i]);
+
+                if (isRelative)
+                {
+                    if (FileManager.IsRelative(directory))
+                    {
+                        mTextureNames[i] = FileManager.RelativeDirectory + directory + unqualifiedTextureNames[i];
+                    }
+                    else
+                    {
+                        mTextureNames[i] = directory + unqualifiedTextureNames[i];
+                    }
+                }
+                else
+                {
+                    mTextureNames[i] = unqualifiedTextureNames[i];
+                }
+            }
+
+            ReAssignTextures();
+        }
+
+        /// <summary>
+        /// Loops through all internally-stored texture names and reloads the textures.
+        /// Note, this does not clear any internal caches, so if these textures are cached,
+        /// the cache will be used.
+        /// </summary>
+        public void ReAssignTextures()
+        {
+            for (int i = 0; i < mTextures.Length; i++)
+            {
+                AtlasedTexture atlasedTexture = CheckForLoadedAtlasTexture(mTextureNames[i]);
                 if (atlasedTexture != null)
                 {
                     mAtlasedTexture = atlasedTexture;
@@ -112,45 +157,19 @@ namespace RenderingLibrary.Graphics
                 }
                 else
                 {
-                    string fileName;
-
-
-                    // fnt files treat ./ as relative, but FRB Android treats ./ as
-                    // absolute. Since the value comes directly from .fnt, we want to 
-                    // consider ./ as relative instead of whatever FRB thinks is relative:
-                    //if (FileManager.IsRelative(texturesToLoad[i]))
-                    bool isRelative = texturesToLoad[i].StartsWith("./") || FileManager.IsRelative(texturesToLoad[i]);
-
-                    if (isRelative)
-                    {
-                        if (FileManager.IsRelative(directory))
-                        {
-                            fileName = FileManager.RelativeDirectory + directory + texturesToLoad[i];
-                        }
-                        else
-                        {
-                            fileName = directory + texturesToLoad[i];
-                        }
-
-                        //mTextures[i] = LoaderManager.Self.Load(directory + texturesToLoad[i], managers);
-                    }
-                    else
-                    {
-                        //mTextures[i] = LoaderManager.Self.Load(texturesToLoad[i], managers);
-                        fileName = texturesToLoad[i];
-                    }
-                    // Don't rely on this - it may be aliased, the internal loader may redirect. Let it do its job:
-                    //if (ToolsUtilities.FileManager.FileExists(fileName))
-                    mTextures[i] = LoaderManager.Self.LoadContent<Texture2D>(fileName);
+                    // Don't rely on FileExists because mTextureNames may be aliased.
+                    // If aliased, the internal loader may redirect. Let it do its job:
+                    //if (ToolsUtilities.FileManager.FileExists(mTextureNames[i]))
+                    mTextures[i] = LoaderManager.Self.LoadContent<Texture2D>(mTextureNames[i]);
                 }
             }
-
-            SetFontPattern(fontContents);
         }
 
         public BitmapFont(string textureFile, string fontFile, SystemManagers managers)
         {
             mTextures = new Texture2D[1];
+
+            mTextureNames = new string[] { textureFile };
 
             var atlasedTexture = CheckForLoadedAtlasTexture(FileManager.GetDirectory(fontFile) + textureFile);
             if (atlasedTexture != null)
@@ -181,6 +200,8 @@ namespace RenderingLibrary.Graphics
             mTextures[0] = fontTextureGraphic;
 
             //mTextureName = mTexture.Name;
+            mTextureNames = new string[1];
+            mTextureNames[0] = mTextures[0]?.Name;
 
             SetFontPattern(fontPattern);
         }
@@ -314,16 +335,16 @@ namespace RenderingLibrary.Graphics
                 // Right now we'll assume that the pages come in order and they're sequential
                 // If this isn' the case then the logic may need to be modified to support this
                 // instead of just returning a string[].
-                int page = StringFunctions.GetIntAfter("page id=", fontPattern, currentIndexIntoFile);
+                //int page = StringFunctions.GetIntAfter("page id=", fontPattern, currentIndexIntoFile);
 
                 int openingQuotesIndex = fontPattern.IndexOf('"', currentIndexIntoFile);
 
-                int closingQuotes = fontPattern.IndexOf('"', openingQuotesIndex + 1);
+                int closingQuotesIndex = fontPattern.IndexOf('"', openingQuotesIndex + 1);
 
-                string textureName = fontPattern.Substring(openingQuotesIndex + 1, closingQuotes - openingQuotesIndex - 1);
+                string textureName = fontPattern.Substring(openingQuotesIndex + 1, closingQuotesIndex - openingQuotesIndex - 1);
                 texturesToLoad.Add(textureName);
 
-                currentIndexIntoFile = fontPattern.IndexOf("page id=", closingQuotes);
+                currentIndexIntoFile = fontPattern.IndexOf("page id=", closingQuotesIndex);
             }
             return texturesToLoad.ToArray();
         }
