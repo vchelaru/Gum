@@ -21,6 +21,8 @@ Tutorials and documentation can be found here:
 
 https://docs.flatredball.com/gum/
 
+![Alt](https://repobeats.axiom.co/api/embed/43574f096866fcf9b5addde4589447d1b532ade4.svg "Repobeats analytics image")
+
 ### Star Velocity
 [![Sparkline](https://stars.medv.io/vchelaru/Gum.svg)](https://stars.medv.io/vchelaru/Gum)
 
