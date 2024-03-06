@@ -1096,62 +1096,46 @@ namespace RenderingLibrary.Graphics
         private BitmapCharacterInfo FillBitmapCharacterInfo(int characterID, string fontString, int textureWidth,
             int textureHeight, int lineHeightInPixels, int startingIndex)
         {
+            // Example:
+            // char id=101  x=158   y=85    width=5     height=7     xoffset=1     yoffset=6     xadvance=7     page=0  chnl=0 
             BitmapCharacterInfo characterInfoToReturn = new BitmapCharacterInfo();
 
             int indexOfID = fontString.IndexOf("char id=" + characterID, startingIndex);
 
             if (indexOfID != -1)
             {
-                if (mAtlasedTexture != null)
-                {
-                    characterInfoToReturn.TULeft = (mAtlasedTexture.SourceRectangle.X +
-                                                   StringFunctions.GetIntAfter("x=", fontString, indexOfID)) /
-                                                   (float)textureWidth;
-                    characterInfoToReturn.TURight = characterInfoToReturn.TULeft +
-                                                    StringFunctions.GetIntAfter("width=", fontString, indexOfID) /
-                                                    (float)textureWidth;
-                    characterInfoToReturn.TVTop = (mAtlasedTexture.SourceRectangle.Y +
-                                                   StringFunctions.GetIntAfter("y=", fontString, indexOfID)) /
-                                                  (float)textureHeight;
-                    characterInfoToReturn.TVBottom = characterInfoToReturn.TVTop +
-                                                     StringFunctions.GetIntAfter("height=", fontString, indexOfID) /
-                                                     (float)textureHeight;
-                }
-                else
-                {
-                    characterInfoToReturn.TULeft =
-                        StringFunctions.GetIntAfter("x=", fontString, indexOfID) / (float)textureWidth;
-                    characterInfoToReturn.TVTop =
-                        StringFunctions.GetIntAfter("y=", fontString, indexOfID) / (float)textureHeight;
-                    characterInfoToReturn.TURight = characterInfoToReturn.TULeft +
-                        StringFunctions.GetIntAfter("width=", fontString, indexOfID) / (float)textureWidth;
-                    characterInfoToReturn.TVBottom = characterInfoToReturn.TVTop +
-                        StringFunctions.GetIntAfter("height=", fontString, indexOfID) / (float)textureHeight;
-                }
+                var x = StringFunctions.GetIntAfter("x=", fontString, ref indexOfID);
+                var y = StringFunctions.GetIntAfter("y=", fontString, ref indexOfID);
+                var width = StringFunctions.GetIntAfter("width=", fontString, ref indexOfID);
+                var height = StringFunctions.GetIntAfter("height=", fontString, ref indexOfID);
+                var xOffset = StringFunctions.GetIntAfter("xoffset=", fontString, ref indexOfID);
+                var yOffset = StringFunctions.GetIntAfter("yoffset=", fontString, ref indexOfID);
+                var xAdvance = StringFunctions.GetIntAfter("xadvance=", fontString, ref indexOfID);
+                var page = StringFunctions.GetIntAfter("page=", fontString, ref indexOfID);
+
+                var textureWidthF = (float)textureWidth;
+                var textureHeightF = (float)textureHeight;
+
+                characterInfoToReturn.TULeft = x / textureWidthF;
+                characterInfoToReturn.TVTop = y / textureHeightF;
+
+                characterInfoToReturn.TURight = characterInfoToReturn.TULeft + width / textureWidthF;
+                characterInfoToReturn.TVBottom = characterInfoToReturn.TVTop + height / textureHeightF;
+
+                var lineHeightInPixelsF = (float)lineHeightInPixels;
 
                 characterInfoToReturn.DistanceFromTopOfLine = // 1 sclY means 2 height
-                    2 * StringFunctions.GetIntAfter("yoffset=", fontString, indexOfID) / (float)lineHeightInPixels;
+                    2 * yOffset / lineHeightInPixelsF;
 
-                characterInfoToReturn.ScaleX = StringFunctions.GetIntAfter("width=", fontString, indexOfID) /
-                    (float)lineHeightInPixels;
+                characterInfoToReturn.ScaleX = width / lineHeightInPixelsF;
 
-                characterInfoToReturn.ScaleY = StringFunctions.GetIntAfter("height=", fontString, indexOfID) /
-                    (float)lineHeightInPixels;
+                characterInfoToReturn.ScaleY = height / lineHeightInPixelsF;
 
-                characterInfoToReturn.Spacing = 2 * StringFunctions.GetIntAfter("xadvance=", fontString, indexOfID) /
-                    (float)lineHeightInPixels;
+                characterInfoToReturn.Spacing = 2 * xAdvance / lineHeightInPixelsF;
 
-                characterInfoToReturn.XOffset = 2 * StringFunctions.GetIntAfter("xoffset=", fontString, indexOfID) /
-                    (float)lineHeightInPixels;
+                characterInfoToReturn.XOffset = 2 * xOffset / lineHeightInPixelsF;
 
-                characterInfoToReturn.PageNumber = StringFunctions.GetIntAfter("page=", fontString, indexOfID);
-
-
-
-                //              characterInfoToReturn.Spacing = 25 * StringFunctions.GetIntAfter("xadvance=", fontString, indexOfID) /
-                //                (float)(textureWidth);
-
-
+                characterInfoToReturn.PageNumber = page;
             }
 
             return characterInfoToReturn;

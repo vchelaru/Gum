@@ -113,10 +113,71 @@ namespace ToolsUtilities
             }
 
             return 0;
-
         }
 
-		public static string GetWordAfter(string stringToStartAfter, string entireString)
+        public static int GetIntAfter(string stringToSearchFor, string whereToSearch, ref int startIndex)
+        {
+            int startOfNumber = -1;
+            int endOfNumber = -1;
+
+#if NET6_0_OR_GREATER
+            ReadOnlySpan<char> span = null;
+#else
+            string substring = string.Empty;
+#endif
+
+            try
+            {
+                int indexOf = whereToSearch.IndexOf(stringToSearchFor, startIndex);
+
+                if (indexOf != -1)
+                {
+                    startOfNumber = indexOf + stringToSearchFor.Length;
+                    endOfNumber = startIndex;
+
+                    startIndex = startOfNumber;
+                    for (int i = startOfNumber; i < whereToSearch.Length; i++)
+                    {
+                        startIndex = i + 1;
+                        if (!sValidNumericalChars.Contains(whereToSearch[i]))
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            endOfNumber = i + 1;
+                        }
+                    }
+
+                    if (endOfNumber > startOfNumber)
+                    {
+#if NET6_0_OR_GREATER
+                        span = whereToSearch.AsSpan(startOfNumber, endOfNumber - startOfNumber);
+                        int toReturn = int.Parse(span);
+#else
+                        substring = whereToSearch.Substring(startOfNumber, endOfNumber - startOfNumber);
+                        // this method is called when reading from a file.  
+                        // usually, files use the . rather than other numerical formats, so if this fails, just use the regular . format
+                        int toReturn = int.Parse(substring);
+#endif
+
+                        return toReturn;
+                    }
+                }
+            }
+            catch (System.FormatException)
+            {
+#if NET6_0_OR_GREATER
+                return int.Parse(span, System.Globalization.NumberStyles.Integer, System.Globalization.NumberFormatInfo.InvariantInfo);
+#else
+                return int.Parse(substring, System.Globalization.NumberFormatInfo.InvariantInfo);
+#endif
+            }
+            return 0;
+        }
+
+
+        public static string GetWordAfter(string stringToStartAfter, string entireString)
 		{
             return GetWordAfter(stringToStartAfter, entireString, 0);
         }
