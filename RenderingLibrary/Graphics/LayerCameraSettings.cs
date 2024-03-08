@@ -1,4 +1,6 @@
-﻿namespace RenderingLibrary.Graphics
+﻿using System.Numerics;
+
+namespace RenderingLibrary.Graphics
 {
     public class LayerCameraSettings
     {
@@ -17,5 +19,7 @@
             get;
             set;
         }
+
+        public Vector2? Position;
     }
 }

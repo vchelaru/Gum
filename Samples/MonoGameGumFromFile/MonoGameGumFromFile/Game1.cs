@@ -55,6 +55,8 @@ namespace MonoGameGumFromFile
         }
         #endregion
 
+        #region Initialize
+
         protected override void Initialize()
         {
             SystemManagers.Default = new SystemManagers();
@@ -68,6 +70,15 @@ namespace MonoGameGumFromFile
 
             base.Initialize();
         }
+
+        private static GumProjectSave LoadGumProject()
+        {
+            var gumProject = GumProjectSave.Load("GumProject.gumx", out _);
+            ObjectFinder.Self.GumProjectSave = gumProject;
+            gumProject.Initialize();
+            return gumProject;
+        }
+
 
         private void SetSinglePixelTexture()
         {
@@ -90,6 +101,111 @@ namespace MonoGameGumFromFile
             componentRuntime.YUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
             componentRuntime.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Bottom;
 
+        }
+
+        #endregion
+
+        #region Swap Screens
+
+        private void DoSwapScreenLogic()
+        {
+            var state = Keyboard.GetState();
+
+            if (state.IsKeyDown(Keys.D1))
+            {
+                ShowScreen("StartScreen");
+            }
+            else if (state.IsKeyDown(Keys.D2))
+            {
+                var justShowed = ShowScreen("StateScreen");
+                if (justShowed)
+                {
+                    var setMeInCode = currentScreenElement.GetGraphicalUiElementByName("SetMeInCode");
+
+                    // States can be found in the Gum element's Categories and applied:
+                    var stateToSet = setMeInCode.ElementSave.Categories
+                        .FirstOrDefault(item => item.Name == "RightSideCategory")
+                        .States.Find(item => item.Name == "Blue");
+                    setMeInCode.ApplyState(stateToSet);
+
+                    // Alternatively states can be set in an "unqualified" way, which can be easier, but can 
+                    // result in unexpected behavior if there are multiple states with the same name:
+                    setMeInCode.ApplyState("Green");
+
+                    // states can be constructed dynamically too. This state makes the SetMeInCode instance bigger:
+                    var dynamicState = new StateSave();
+                    dynamicState.Variables.Add(new VariableSave()
+                    {
+                        Value = 300f,
+                        Name = "Width",
+                        Type = "float",
+                        // values can exist on a state but be "disabled"
+                        SetsValue = true
+                    });
+                    dynamicState.Variables.Add(new VariableSave()
+                    {
+                        Value = 250f,
+                        Name = "Height",
+                        Type = "float",
+                        SetsValue = true
+                    });
+                    setMeInCode.ApplyState(dynamicState);
+                }
+            }
+            else if (state.IsKeyDown(Keys.D3))
+            {
+                ShowScreen("ParentChildScreen");
+            }
+            else if (state.IsKeyDown(Keys.D4))
+            {
+                ShowScreen("TextScreen");
+            }
+            else if (state.IsKeyDown(Keys.D5))
+            {
+                ShowScreen("ZoomScreen");
+            }
+            else if (state.IsKeyDown(Keys.D6))
+            {
+                var justShowed = ShowScreen("ZoomLayerScreen");
+                if (justShowed)
+                {
+                    InitializeZoomScreen();
+                }
+            }
+            else if (state.IsKeyDown(Keys.D7))
+            {
+                if(ShowScreen("OffsetLayerScreen"))
+                {
+                    InitializeOffsetLayerScreen();
+                }
+            }
+        }
+
+        private void InitializeZoomScreen()
+        {
+            var layered = currentScreenElement.GetGraphicalUiElementByName("Layered");
+            var layer = SystemManagers.Default.Renderer.AddLayer();
+            layer.Name = "Zoomed-in Layer";
+            layered.MoveToLayer(layer);
+
+            layer.LayerCameraSettings = new LayerCameraSettings()
+            {
+                Zoom = 2
+            };
+
+        }
+
+        private void InitializeOffsetLayerScreen()
+        {
+            var layer = SystemManagers.Default.Renderer.AddLayer();
+            layer.Name = "Offset Layer";
+            layer.LayerCameraSettings = new LayerCameraSettings()
+            {
+                IsInScreenSpace= true
+            };
+
+            var layeredText = currentScreenElement.GetGraphicalUiElementByName("LayeredText");
+            layeredText.MoveToLayer(layer);
         }
 
         private bool ShowScreen(string screenName)
@@ -117,13 +233,7 @@ namespace MonoGameGumFromFile
             return !isAlreadyShown;
         }
 
-        private static GumProjectSave LoadGumProject()
-        {
-            var gumProject = GumProjectSave.Load("GumProject.gumx", out _);
-            ObjectFinder.Self.GumProjectSave = gumProject;
-            gumProject.Initialize();
-            return gumProject;
-        }
+        #endregion
 
         MouseState lastMouseState;
         protected override void Update(GameTime gameTime)
@@ -141,6 +251,10 @@ namespace MonoGameGumFromFile
             {
                 DoZoomScreenLogic(mouseState);
             }
+            else if(currentGumScreenSave?.Name == "OffsetLayerScreen")
+            {
+                DoOffsetLayerScreenLogic(mouseState);
+            }
 
             if(mouseState.LeftButton == ButtonState.Pressed && lastMouseState.LeftButton == ButtonState.Released)
             {
@@ -151,6 +265,15 @@ namespace MonoGameGumFromFile
             lastMouseState = mouseState;
 
             base.Update(gameTime);
+        }
+
+        private void DoOffsetLayerScreenLogic(MouseState mouseState)
+        {
+            var layer = SystemManagers.Default.Renderer.Layers[1];
+
+            layer.LayerCameraSettings.Position = new System.Numerics.Vector2(
+                -mouseState.Position.X,
+                -mouseState.Position.Y);
         }
 
         private void DoZoomScreenLogic(MouseState mouseState)
@@ -229,85 +352,6 @@ namespace MonoGameGumFromFile
             return null;
         }
 
-        private void DoSwapScreenLogic()
-        {
-            var state = Keyboard.GetState();
 
-            if(state.IsKeyDown(Keys.D1))
-            {
-                ShowScreen("StartScreen");
-            }
-            else if(state.IsKeyDown(Keys.D2))
-            {
-                var justShowed = ShowScreen("StateScreen");
-                if(justShowed)
-                {
-                    var setMeInCode = currentScreenElement.GetGraphicalUiElementByName("SetMeInCode");
-
-                    // States can be found in the Gum element's Categories and applied:
-                    var stateToSet = setMeInCode.ElementSave.Categories
-                        .FirstOrDefault(item => item.Name == "RightSideCategory")
-                        .States.Find(item => item.Name == "Blue");
-                    setMeInCode.ApplyState(stateToSet);
-
-                    // Alternatively states can be set in an "unqualified" way, which can be easier, but can 
-                    // result in unexpected behavior if there are multiple states with the same name:
-                    setMeInCode.ApplyState("Green");
-
-                    // states can be constructed dynamically too. This state makes the SetMeInCode instance bigger:
-                    var dynamicState = new StateSave();
-                    dynamicState.Variables.Add(new VariableSave()
-                    {
-                        Value = 300f,
-                        Name = "Width",
-                        Type = "float",
-                        // values can exist on a state but be "disabled"
-                        SetsValue = true
-                    });
-                    dynamicState.Variables.Add(new VariableSave()
-                    {
-                        Value = 250f,
-                        Name = "Height",
-                        Type = "float",
-                        SetsValue = true
-                    });
-                    setMeInCode.ApplyState(dynamicState);
-                }
-            }
-            else if(state.IsKeyDown(Keys.D3))
-            {
-                ShowScreen("ParentChildScreen");
-            }
-            else if(state.IsKeyDown(Keys.D4))
-            {
-                ShowScreen("TextScreen");
-            }
-            else if(state.IsKeyDown(Keys.D5))
-            {
-                ShowScreen("ZoomScreen");
-            }
-            else if(state.IsKeyDown(Keys.D6))
-            {
-                var justShowed = ShowScreen("ZoomLayerScreen");
-                if(justShowed)
-                {
-                    UpdateZoomScreen();
-                }
-            }
-        }
-
-        private void UpdateZoomScreen()
-        {
-            var layered = currentScreenElement.GetGraphicalUiElementByName("Layered");
-            var layer = SystemManagers.Default.Renderer.AddLayer();
-            layer.Name = "Zoomed-in Layer";
-            layered.MoveToLayer(layer);
-
-            layer.LayerCameraSettings = new LayerCameraSettings()
-            {
-                Zoom = 2
-            };
-
-        }
     }
 }

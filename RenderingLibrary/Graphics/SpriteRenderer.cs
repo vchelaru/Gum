@@ -229,45 +229,53 @@ namespace RenderingLibrary.Graphics
 
             if (layer.LayerCameraSettings != null)
             {
-                if (layer.LayerCameraSettings.IsInScreenSpace)
+                var layerCameraSettings = layer.LayerCameraSettings;
+                float zoom = 1;
+
+                if(layerCameraSettings.IsInScreenSpace)
                 {
-                    float zoom = 1;
-                    if (layer.LayerCameraSettings.Zoom.HasValue)
-                    {
-                        zoom = layer.LayerCameraSettings.Zoom.Value;
-                    }
-                    // set this before applying the override
-                    CurrentZoom = zoom;
-                    //zoom = Renderer.UseBasicEffectRendering ? 1 : zoom;
-
-                    matrix = Microsoft.Xna.Framework.Matrix.CreateScale(zoom);
-
+                    zoom = layerCameraSettings.Zoom ?? 1;
                 }
                 else
                 {
-                    float zoom = camera.Zoom;
-                    if (layer.LayerCameraSettings.Zoom.HasValue)
-                    {
-                        zoom = layer.LayerCameraSettings.Zoom.Value;
-                    }
-                    // set this before setting the overriding zoom
-                    CurrentZoom = zoom;
-
-                    // March 5, 2024
-                    // Why do we use a
-                    // zoom of 1 if Renderer.UsingEffect
-                    // is true? This makes rendering zoomed-in
-                    // layers not work in MonoGame.
-                    //zoom = Renderer.UsingEffect ? 1 : zoom;
-
-                    matrix = Camera.GetTransformationMatrix(
-                        camera.X, 
-                        camera.Y, 
-                        zoom, 
-                        camera.ClientWidth, 
-                        camera.ClientHeight, 
-                        forRendering:true).ToXNA();
+                    zoom = layerCameraSettings.Zoom ?? camera.Zoom;
                 }
+                CurrentZoom = zoom;
+
+                float x;
+                float y;
+
+                if (layerCameraSettings.IsInScreenSpace)
+                {
+                    x = layerCameraSettings.Position?.X ?? 0;
+                    y = layerCameraSettings.Position?.Y ?? 0;
+                }
+                else
+                {
+                    x = camera.X;
+                    y = camera.Y;
+
+                    if (layerCameraSettings.Position != null)
+                    {
+                        x += layerCameraSettings.Position.Value.X;
+                        y += layerCameraSettings.Position.Value.Y;
+                    }
+                }
+
+                // March 5, 2024
+                // Why do we use a
+                // zoom of 1 if Renderer.UsingEffect
+                // is true? This makes rendering zoomed-in
+                // layers not work in MonoGame.
+                //zoom = Renderer.UsingEffect ? 1 : zoom;
+
+                matrix = Camera.GetTransformationMatrix(
+                    x, 
+                    y, 
+                    zoom, 
+                    camera.ClientWidth, 
+                    camera.ClientHeight, 
+                    forRendering:true).ToXNA();
             }
             else
             {
