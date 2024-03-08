@@ -11,6 +11,7 @@ Note that this performs a [depth-first search](https://en.wikipedia.org/wiki/Dep
 The following code can be used to find a Text by the name TextInstance and set its Text property to "You found me":
 
 ```csharp
-var textInstance = RuntimeInstance.GetChildByNameRecursively("TextInstance");
+var textInstance = RuntimeInstance.GetChildByNameRecursively("TextInstance")
+     as GraphicalUiElement;
 textInstance.SetProperty("Text", "You found me");
 ```
