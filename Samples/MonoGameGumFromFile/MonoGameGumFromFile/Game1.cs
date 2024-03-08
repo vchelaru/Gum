@@ -67,6 +67,7 @@ namespace MonoGameGumFromFile
             LoadGumProject();
 
             ShowScreen("StartScreen");
+            InitializeStartScreen();
 
             base.Initialize();
         }
@@ -113,7 +114,10 @@ namespace MonoGameGumFromFile
 
             if (state.IsKeyDown(Keys.D1))
             {
-                ShowScreen("StartScreen");
+                if(ShowScreen("StartScreen"))
+                {
+                    InitializeStartScreen();
+                }
             }
             else if (state.IsKeyDown(Keys.D2))
             {
@@ -179,6 +183,12 @@ namespace MonoGameGumFromFile
                     InitializeOffsetLayerScreen();
                 }
             }
+        }
+
+        private void InitializeStartScreen()
+        {
+            var exposedVariableInstance = currentScreenElement.GetGraphicalUiElementByName("ComponentWithExposedVariableInstance");
+            exposedVariableInstance.SetProperty("Text", "I'm set in code");
         }
 
         private void InitializeZoomScreen()

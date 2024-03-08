@@ -133,48 +133,29 @@
         "ElementType": "Screens",
         "EventType": 7,
         "TimestampUtc": "2024-03-05T12:09:11.4197553Z"
-      },
+      }
+    ],
+    "Owner": [
       {
-        "NewName": "OffsetLayerScreen",
+        "NewName": "ComponentWithExposedVariable",
         "OldName": null,
-        "ElementType": "Screens",
+        "ElementType": "Components",
         "EventType": 0,
-        "TimestampUtc": "2024-03-08T13:08:17.3143753Z"
+        "TimestampUtc": "2024-03-08T20:39:26.5327163Z"
       },
       {
-        "NewName": "OffsetLayerScreen.TextInstance",
+        "NewName": "ComponentWithExposedVariable (Container).TextInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-03-08T20:39:40.0683724Z"
+      },
+      {
+        "NewName": "StartScreen.ComponentWithExposedVariableInstance",
         "OldName": null,
         "ElementType": "Screens",
         "EventType": 5,
-        "TimestampUtc": "2024-03-08T13:08:22.7547143Z"
-      },
-      {
-        "NewName": "OffsetLayerScreen.TextInstance1",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2024-03-08T13:08:25.3867619Z"
-      },
-      {
-        "NewName": "OffsetLayerScreen.UnlayeredTet",
-        "OldName": "OffsetLayerScreen.TextInstance",
-        "ElementType": "Screens",
-        "EventType": 7,
-        "TimestampUtc": "2024-03-08T13:08:35.2390994Z"
-      },
-      {
-        "NewName": "OffsetLayerScreen.UnlayeredText",
-        "OldName": "OffsetLayerScreen.UnlayeredTet",
-        "ElementType": "Screens",
-        "EventType": 7,
-        "TimestampUtc": "2024-03-08T13:08:39.0387528Z"
-      },
-      {
-        "NewName": "OffsetLayerScreen.LayeredText",
-        "OldName": "OffsetLayerScreen.TextInstance1",
-        "ElementType": "Screens",
-        "EventType": 7,
-        "TimestampUtc": "2024-03-08T13:10:23.9016753Z"
+        "TimestampUtc": "2024-03-08T20:40:36.8797236Z"
       }
     ]
   }

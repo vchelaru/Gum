@@ -172,6 +172,36 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>float</Type>
+      <Name>ComponentWithExposedVariableInstance.Height</Name>
+      <Value xsi:type="xsd:float">41</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>ComponentWithExposedVariableInstance.Text</Name>
+      <Value xsi:type="xsd:string">Set me in code</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ComponentWithExposedVariableInstance.Width</Name>
+      <Value xsi:type="xsd:float">162</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ComponentWithExposedVariableInstance.X</Name>
+      <Value xsi:type="xsd:float">170</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ComponentWithExposedVariableInstance.Y</Name>
+      <Value xsi:type="xsd:float">272</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>ChildrenLayout</Type>
       <Name>ContainerInstance.Children Layout</Name>
       <Value xsi:type="xsd:int">1</Value>
@@ -192,19 +222,19 @@
     <Variable>
       <Type>float</Type>
       <Name>ContainerInstance.Width</Name>
-      <Value xsi:type="xsd:float">250</Value>
+      <Value xsi:type="xsd:float">97</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>float</Type>
       <Name>ContainerInstance.X</Name>
-      <Value xsi:type="xsd:float">337</Value>
+      <Value xsi:type="xsd:float">294</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>float</Type>
       <Name>ContainerInstance.Y</Name>
-      <Value xsi:type="xsd:float">14</Value>
+      <Value xsi:type="xsd:float">13</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -228,13 +258,13 @@
     <Variable>
       <Type>float</Type>
       <Name>ContainerInstance1.X</Name>
-      <Value xsi:type="xsd:float">390</Value>
+      <Value xsi:type="xsd:float">425</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>float</Type>
       <Name>ContainerInstance1.Y</Name>
-      <Value xsi:type="xsd:float">294</Value>
+      <Value xsi:type="xsd:float">61</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -308,13 +338,13 @@
     <Variable>
       <Type>float</Type>
       <Name>RectangleInstance.X</Name>
-      <Value xsi:type="xsd:float">178</Value>
+      <Value xsi:type="xsd:float">405</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>float</Type>
       <Name>RectangleInstance.Y</Name>
-      <Value xsi:type="xsd:float">283</Value>
+      <Value xsi:type="xsd:float">112</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -1164,6 +1194,11 @@
   <Instance>
     <Name>TextInstance9</Name>
     <BaseType>Text</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>ComponentWithExposedVariableInstance</Name>
+    <BaseType>ComponentWithExposedVariable</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Behaviors />

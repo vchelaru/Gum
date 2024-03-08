@@ -61,6 +61,11 @@
     <LinkType>ReferenceOriginal</LinkType>
   </ComponentReference>
   <ComponentReference>
+    <Name>ComponentWithExposedVariable</Name>
+    <ElementType>Component</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </ComponentReference>
+  <ComponentReference>
     <Name>ComponentWithState</Name>
     <ElementType>Component</ElementType>
     <LinkType>ReferenceOriginal</LinkType>
