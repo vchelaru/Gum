@@ -56,3 +56,64 @@ container.Children.Add(componentRuntime);
 ### Troubleshooting Component Creation
 
 If your component is not visible, this may be a file issue. By default Gum project loading will not throw exceptions on missing files, and it will attempt to re-create missing file components. For more information, see the [Troubleshooting section in the Loading .gumx page](../loading-.gumx-gum-project.md#troubleshooting-gum-project-loading).
+
+### SetProperty
+
+The SetProperty method can be used to set properties on components which are not natively part of GraphicalUiElement. This is useful in the following situations:
+
+* Setting a property which may not exist on all GraphicalUiElements, such as the Text property on a GraphicalUiElement for a Text standard element
+* Setting a property which has been exposed
+
+If a GraphicalUiElement is a Text instance, the Text property can be assigned through SetProperty as shown in the following code:
+
+```csharp
+myTextInstance.SetProperty("Text", "I'm set in code");
+```
+
+If a component has an exposed variable, then this variable can be assigned through SetProperty. For example, consider the following component which exposes its Text variable:
+
+<figure><img src="../../.gitbook/assets/image.png" alt=""><figcaption><p>Component exposing a Text variable</p></figcaption></figure>
+
+This can be assigned through the SetProperty. Be sure to use the name exactly as it appears in Gum:
+
+```csharp
+myExposedVariableComponentInstance.SetProperty("Text", "I'm set in code");
+```
+
+### Apply State
+
+States can be applied in code by string (unqualified name), or by accessing the state on the backing ComponentSave. Note, this can also be performed on screens and standards.
+
+```csharp
+ var setMeInCode = currentScreenElement.GetGraphicalUiElementByName("SetMeInCode");
+
+ // States can be found in the Gum element's Categories and applied:
+ var stateToSet = setMeInCode.ElementSave.Categories
+     .FirstOrDefault(item => item.Name == "RightSideCategory")
+     .States.Find(item => item.Name == "Blue");
+ setMeInCode.ApplyState(stateToSet);
+
+ // Alternatively states can be set in an "unqualified" way, which can be easier, but can 
+ // result in unexpected behavior if there are multiple states with the same name:
+ setMeInCode.ApplyState("Green");
+
+ // states can be constructed dynamically too. This state makes the SetMeInCode instance bigger:
+ var dynamicState = new StateSave();
+ dynamicState.Variables.Add(new VariableSave()
+ {
+     Value = 300f,
+     Name = "Width",
+     Type = "float",
+     // values can exist on a state but be "disabled"
+     SetsValue = true
+ });
+ dynamicState.Variables.Add(new VariableSave()
+ {
+     Value = 250f,
+     Name = "Height",
+     Type = "float",
+     SetsValue = true
+ });
+ setMeInCode.ApplyState(dynamicState);
+
+```

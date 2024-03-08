@@ -36,7 +36,7 @@ Top to Bottom Stack results in each child being positioned after its previous si
 
 Left to Right Stack results in each child being positioned after its previous sibling horizontally. This can be used to create vertical stacks quickly.
 
-<figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
 
 ### Stacking and Units
 
