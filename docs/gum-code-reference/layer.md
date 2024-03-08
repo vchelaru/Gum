@@ -35,3 +35,20 @@ var layerCameraSettings = new LayerCameraSettings();
 layerCameraSettings.IsInScreenSpace = true;
 layer.LayerCameraSettings = layerCameraSettings;
 ```
+
+LayerCameraSettings can be used to offset all renderables on a layer independently. For example, the following LayerCameraSettings results in every object offset by 100 pixels to the right:
+
+```csharp
+var layerCameraSettings = new LayerCameraSettings();
+layerCameraSettings.Position = new Vector2(100,0);
+layer.LayerCameraSettings = layerCameraSettings;
+```
+
+The example above results in 100 pixel offsets added to the camera's position. If a layer has its IsInSceenSpace property set to true, then the offset is absolute and ignores the camera's position. For example, the following code offsets all objects by 50 pixels on the Y axis (down) relative to screen space (ignoring Camera position);
+
+```csharp
+var layerCameraSettings = new LayerCameraSettings();
+layerCameraSettings.IsInScreenSpace = true;
+layerCameraSettings.Position = new Vector2(0, 50);
+layer.LayerCameraSettings = layerCameraSettings;
+```
