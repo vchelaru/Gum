@@ -9,6 +9,8 @@ Gum projects can be loaded in a game project. Gum projects are made up of multip
 * .png - image files
 * .fnt - font files
 
+Note that you are not required to use the Gum tool or .gumx projects - you are free to do everything in code if you prefer. Of course using the Gum tool can make it much easier to iterate quickly and experiment so its use is recommended.
+
 ### Creating a Gum Project
 
 Before creating a Gum project, it is recommended that you already have a functional MonoGame project with a Content folder.

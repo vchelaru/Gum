@@ -36,5 +36,5 @@ rectangle.AddToManagers(SystemManagers.Default, null);
 
 <figure><img src="../.gitbook/assets/image (25).png" alt=""><figcaption></figcaption></figure>
 
-If everything is intiailized correctly, you should see a white rectangle at the top-left of the screen.
+If everything is initialized correctly, you should see a white rectangle at the top-left of the screen.
 
