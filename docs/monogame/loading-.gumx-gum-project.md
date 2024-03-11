@@ -15,6 +15,8 @@ Note that you are not required to use the Gum tool or .gumx projects - you are f
 
 Before creating a Gum project, it is recommended that you already have a functional MonoGame project with a Content folder.
 
+If you haven't already downloaded it, you should down the Gum tool. See the [Introduction page](../#downloading-gum) for information on downloading Gum.
+
 To create a Gum project:
 
 1. Open the gum tool
