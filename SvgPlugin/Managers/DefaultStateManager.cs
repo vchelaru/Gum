@@ -164,6 +164,9 @@ namespace SkiaPlugin.Managers
                 AddStrokeAndFilledVariables(roundedRectangleState);
 
                 AddVariableReferenceList(roundedRectangleState);
+
+                StandardElementsManager.AddClipsChildren(roundedRectangleState);
+
             }
 
             return roundedRectangleState;
