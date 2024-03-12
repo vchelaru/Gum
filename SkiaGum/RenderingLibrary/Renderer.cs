@@ -83,6 +83,11 @@ namespace RenderingLibrary.Graphics
             Draw(whatToRender, managers, true);
         }
 
+        public void Draw(ObservableCollection<IRenderableIpso> whatToRender, SystemManagers managers)
+        {
+            Draw(whatToRender, managers, true);
+        }
+
         void Draw(IList<IRenderableIpso> whatToRender, SystemManagers managers, bool isTopLevelDraw = false)
         { 
             if (ClearsCanvas && isTopLevelDraw)
