@@ -2,10 +2,11 @@
 using Gum.DataTypes;
 using RenderingLibrary.Graphics;
 using SkiaGum.Renderables;
+using SkiaSharp;
 
 namespace SkiaGum.GueDeriving
 {
-    public class RoundedRectangleRuntime : SkiaShapeRuntime
+    public class RoundedRectangleRuntime : SkiaShapeRuntime, IClipPath
     {
         protected override RenderableBase ContainedRenderable => ContainedRoundedRectangle;
 
@@ -32,6 +33,9 @@ namespace SkiaGum.GueDeriving
         {
             get; set;
         }
+
+        public SKPath GetClipPath() => ContainedRoundedRectangle.GetClipPath();
+
 
         #region Gradient Colors
 
