@@ -1,9 +1,11 @@
 ﻿using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.Managers;
 using Gum.Plugins.ImportPlugin.ViewModel;
 using Gum.Plugins.ImportPlugin.Views;
 using Gum.ToolStates;
 using System;
+using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using ToolsUtilities;
@@ -12,6 +14,7 @@ namespace Gum.Plugins.ImportPlugin.Manager
 {
     public static class ImportLogic
     {
+        #region Screen
 
         internal static void ShowImportScreenUi()
         {
@@ -91,6 +94,42 @@ namespace Gum.Plugins.ImportPlugin.Manager
             }
         }
 
+        private static ImportFileViewModel ShowImportScreenView()
+        {
+            var view = new ImportFileView();
+
+            var viewModel = new ImportFileViewModel();
+
+            viewModel.BrowseFileFilter = "Gum Screen (*.gusx)|*.gusx";
+
+
+            var screenFilesNotInProject = FileManager.GetAllFilesInDirectory(
+                GumState.Self.ProjectState.ScreenFilePath.FullPath, "gusx")
+                .Select(item => new FilePath(item))
+                .ToList();
+
+            var screenFilesInProject = GumState.Self.ProjectState.GumProjectSave
+                .Screens
+                .Select(item => new FilePath(GumState.Self.ProjectState.ComponentFilePath + item.Name + ".gusx"))
+                .ToArray();
+
+            screenFilesNotInProject = screenFilesNotInProject
+                .Except(screenFilesInProject)
+                .ToList();
+
+            viewModel.UnfilteredFileList.AddRange(screenFilesNotInProject.Select(item => item.FullPath));
+
+            viewModel.RefreshFilteredList();
+
+            view.DataContext = viewModel;
+            var result = view.ShowDialog();
+            return viewModel;
+        }
+
+        #endregion
+
+        #region Component
+
         internal static void ShowImportComponentUi()
         {
             if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
@@ -103,11 +142,11 @@ namespace Gum.Plugins.ImportPlugin.Manager
 
             ComponentSave lastImportedComponent = null;
 
+            string desiredDirectory = FileManager.GetDirectory(
+                ProjectManager.Self.GumProjectSave.FullFileName) + "Components/";
             for (int i = 0; i < viewModel.SelectedFiles.Count; ++i)
             {
                 string fileName = viewModel.SelectedFiles[i];
-                string desiredDirectory = FileManager.GetDirectory(
-                    ProjectManager.Self.GumProjectSave.FullFileName) + "Components/";
 
                 var shouldAdd = true;
 
@@ -169,39 +208,6 @@ namespace Gum.Plugins.ImportPlugin.Manager
             }
         }
 
-        private static ImportFileViewModel ShowImportScreenView()
-        {
-            var view = new ImportFileView();
-
-            var viewModel = new ImportFileViewModel();
-
-            viewModel.BrowseFileFilter = "Gum Screen (*.gusx)|*.gusx";
-
-
-            var screenFilesNotInProject = FileManager.GetAllFilesInDirectory(
-                GumState.Self.ProjectState.ScreenFilePath.FullPath, "gusx")
-                .Select(item => new FilePath(item))
-                .ToList();
-
-            var screenFilesInProject = GumState.Self.ProjectState.GumProjectSave
-                .Screens
-                .Select(item => new FilePath(GumState.Self.ProjectState.ComponentFilePath + item.Name + ".gusx"))
-                .ToArray();
-
-            screenFilesNotInProject = screenFilesNotInProject
-                .Except(screenFilesInProject)
-                .ToList();
-
-            viewModel.UnfilteredFileList.AddRange(screenFilesNotInProject.Select(item => item.FullPath));
-
-            viewModel.RefreshFilteredList();
-
-            view.DataContext = viewModel;
-            var result = view.ShowDialog();
-            return viewModel;
-        }
-
-
         private static ImportFileViewModel ShowImportComponentView()
         {
             var view = new ImportFileView();
@@ -232,5 +238,118 @@ namespace Gum.Plugins.ImportPlugin.Manager
             var result = view.ShowDialog();
             return viewModel;
         }
+
+        #endregion
+
+        #region Behavior
+
+        internal static void ShowImportBehaviorUi()
+        {
+            if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
+            {
+                MessageBox.Show("You must first save the project before adding a new component");
+                return;
+            }
+
+            var viewModel = ShowImportBehaviorView();
+
+            BehaviorSave lastImportedBehavior = null;
+
+            string desiredDirectory = FileManager.GetDirectory(
+                ProjectManager.Self.GumProjectSave.FullFileName) + "Behaviors/";
+            for(int i = 0; i < viewModel.SelectedFiles.Count; ++i)
+            {
+                string fileName = viewModel.SelectedFiles[i];
+
+                var shouldAdd = true;
+
+                if (!FileManager.IsRelativeTo(fileName, desiredDirectory))
+                {
+                    string fileNameWithoutPath = FileManager.RemovePath(fileName);
+
+                    var copyResult = MessageBox.Show("The file " + fileNameWithoutPath + " must be in the Gum project's Behaviors folder. " +
+                        "Would you like to copy the file?", "Copy?", MessageBoxButtons.YesNo);
+
+                    shouldAdd = copyResult == DialogResult.Yes;
+
+                    if(shouldAdd)
+                    {
+                        try
+                        {
+                            string destination = desiredDirectory + fileNameWithoutPath;
+                            System.IO.File.Copy(fileName, destination);
+
+                            fileName = destination;
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show("Error copying the file: " + ex.ToString());
+                            break;
+                        }
+                    }
+                }
+                if(shouldAdd)
+                {
+                    string strippedName = FileManager.RemovePath(FileManager.RemoveExtension(fileName));
+
+                    var behaviorSave = FileManager.XmlDeserialize<BehaviorSave>(fileName);
+
+                    var behaviorReferences = ProjectManager.Self.GumProjectSave.BehaviorReferences;
+                    behaviorReferences.Add(new BehaviorReference { Name = behaviorSave.Name });
+                    behaviorReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
+
+                    var behaviors = ProjectManager.Self.GumProjectSave.Behaviors;
+                    behaviors.Add(behaviorSave);
+                    behaviors.Sort((first, second) => first.Name.CompareTo(second.Name));
+
+                    behaviorSave.Initialize();
+
+                    GumCommands.Self.FileCommands.TryAutoSaveBehavior(behaviorSave);
+
+                    lastImportedBehavior = behaviorSave;
+                }
+            }
+
+            if(lastImportedBehavior != null)
+            {
+                GumCommands.Self.GuiCommands.RefreshElementTreeView();
+                SelectedState.Self.SelectedBehavior = lastImportedBehavior;
+                GumCommands.Self.FileCommands.TryAutoSaveProject();
+            }
+        }
+
+        private static ImportFileViewModel ShowImportBehaviorView()
+        {
+            var view = new ImportFileView();
+
+            var viewModel = new ImportFileViewModel();
+
+            viewModel.BrowseFileFilter = "Gum Behavior (*.behx)|*.behx";
+
+            var behaviorFilesNotInProject = FileManager.GetAllFilesInDirectory(
+                GumState.Self.ProjectState.BehaviorFilePath.FullPath, "behx")
+                .Select(item => new FilePath(item))
+                .ToList();
+
+            var behaviorFilesInProject = GumState.Self.ProjectState.GumProjectSave
+                .Behaviors
+                .Select(item => new FilePath(GumState.Self.ProjectState.BehaviorFilePath + item.Name + ".behx"))
+                .ToArray();
+
+            behaviorFilesNotInProject = behaviorFilesNotInProject
+                .Except(behaviorFilesInProject)
+                .ToList();
+
+            viewModel.UnfilteredFileList.AddRange(behaviorFilesNotInProject.Select(item => item.FullPath));
+            viewModel.RefreshFilteredList();
+
+            view.DataContext = viewModel;
+            var result = view.ShowDialog();
+            return viewModel;
+        }
+
+        #endregion
     }
 }
+
+
