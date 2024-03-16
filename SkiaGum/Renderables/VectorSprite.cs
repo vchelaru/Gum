@@ -11,7 +11,7 @@ using System.Drawing;
 
 namespace SkiaGum
 {
-    public class VectorSprite : IRenderableIpso, IVisible, ITextureCoordinate
+    public class VectorSprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinate
     {
         #region Fields/Properties
 
@@ -158,6 +158,22 @@ namespace SkiaGum
             get;
             set;
         }
+
+        public float AspectRatio
+        {
+            get
+            {
+                if (Texture?.Picture != null)
+                {
+                    return Texture.Picture.CullRect.Width / (float)Texture.Picture.CullRect.Height;
+                }
+                else
+                {
+                    return 1;
+                }
+            }
+        }
+
 
         #endregion
 

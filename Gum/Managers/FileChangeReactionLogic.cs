@@ -196,7 +196,8 @@ namespace Gum.Managers
         private void ReactToBehaviorChanged(FilePath file)
         {
             var behavior = ProjectState.Self.GumProjectSave.Behaviors.FirstOrDefault(item =>
-                item.Name.ToLowerInvariant() == file.StandardizedNoPathNoExtension.ToLowerInvariant());
+            // It's somehow possible for behaviors with no name to make it in the project. let's tolerate it
+                item?.Name.ToLowerInvariant() == file.StandardizedNoPathNoExtension.ToLowerInvariant());
 
             var refreshingSelected = behavior == SelectedState.Self.SelectedBehavior;
 

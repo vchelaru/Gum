@@ -36,5 +36,9 @@ rectangle.AddToManagers(SystemManagers.Default, null);
 
 <figure><img src="../.gitbook/assets/image (25).png" alt=""><figcaption></figcaption></figure>
 
-If everything is intiailized correctly, you should see a white rectangle at the top-left of the screen.
+If everything is initialized correctly, you should see a white rectangle at the top-left of the screen.
+
+### Downloading the Gum Tool
+
+The Gum tool can be used to create Gum projects which can be loaded into your MonoGame project. To download and run the Gum tool, see the [Introduction page](../#downloading-gum).
 
