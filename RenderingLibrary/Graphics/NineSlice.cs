@@ -896,7 +896,7 @@ namespace RenderingLibrary.Graphics
                     for (var sprite = 0; sprite < NineSliceExtensions.PossibleNineSliceEndings.Count(); sprite++)
                     {
 
-                        var item = LoaderManager.Self.TryLoadContent<Texture2D>(bareTexture + NineSliceExtensions.PossibleNineSliceEndings[sprite] + "." + extension);
+                        var item = global::RenderingLibrary.Content.LoaderManager.Self.TryLoadContent<Texture2D>(bareTexture + NineSliceExtensions.PossibleNineSliceEndings[sprite] + "." + extension);
 
                         if(item == null)
                         {

@@ -160,7 +160,7 @@ namespace RenderingLibrary.Graphics
                     // Don't rely on FileExists because mTextureNames may be aliased.
                     // If aliased, the internal loader may redirect. Let it do its job:
                     //if (ToolsUtilities.FileManager.FileExists(mTextureNames[i]))
-                    mTextures[i] = LoaderManager.Self.LoadContent<Texture2D>(mTextureNames[i]);
+                    mTextures[i] = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Texture2D>(mTextureNames[i]);
                 }
             }
         }
@@ -179,7 +179,7 @@ namespace RenderingLibrary.Graphics
             }
             else
             {
-                mTextures[0] = LoaderManager.Self.LoadContent<Texture2D>(textureFile);
+                mTextures[0] = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Texture2D>(textureFile);
             }
 
             mTextureNames[0] = mTextures[0].Name;

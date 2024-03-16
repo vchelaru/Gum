@@ -90,3 +90,7 @@ Samples/MonoGameGumInCode/MonoGameGumInCode/bin/*
 Samples/MonoGameGumInCode/MonoGameGumInCode/obj/*
 Samples/MonoGameGumFromFile/MonoGameGumFromFile/bin/*
 Samples/MonoGameGumFromFile/MonoGameGumFromFile/obj/*
+GumCore/GumCoreXnaPc/GumCoreAndroid/bin/*
+GumCore/GumCoreXnaPc/GumCoreAndroid/obj/*
+GumCore/GumCoreXnaPc/GumCoreiOS/bin/*
+GumCore/GumCoreXnaPc/GumCoreiOS/obj/*
