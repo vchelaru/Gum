@@ -82,46 +82,57 @@ namespace Gum.Managers
 
         #region Cache enable/disable
 
+        int cacheEanbleCount = 0;
+        private int cacheEnableCount;
+
         public void EnableCache()
         {
-            cachedDictionary = new Dictionary<string, ElementSave>();
-
-            var gumProject = GumProjectSave;
-
-            // Although it's not valid, we want to prevent a dupe from breaking the plugin, so we
-            // need to do ContainsKey checks
-
-            foreach (var screen in gumProject.Screens)
+            cacheEanbleCount++;
+            if (cacheEanbleCount == 1)
             {
-                var name = screen.Name.ToLowerInvariant();
-                if(!cachedDictionary.ContainsKey(name))
+                cachedDictionary = new Dictionary<string, ElementSave>();
+
+                var gumProject = GumProjectSave;
+
+                // Although it's not valid, we want to prevent a dupe from breaking the plugin, so we
+                // need to do ContainsKey checks
+
+                foreach (var screen in gumProject.Screens)
                 {
-                    cachedDictionary.Add(name, screen);
+                    var name = screen.Name.ToLowerInvariant();
+                    if(!cachedDictionary.ContainsKey(name))
+                    {
+                        cachedDictionary.Add(name, screen);
+                    }
                 }
-            }
 
-            foreach(var component in gumProject.Components)
-            {
-                var name = component.Name.ToLowerInvariant();
-                if (!cachedDictionary.ContainsKey(name))
+                foreach(var component in gumProject.Components)
                 {
-                    cachedDictionary.Add(name, component);
+                    var name = component.Name.ToLowerInvariant();
+                    if (!cachedDictionary.ContainsKey(name))
+                    {
+                        cachedDictionary.Add(name, component);
+                    }
                 }
-            }
 
-            foreach (var standard in gumProject.StandardElements)
-            {
-                var name = standard.Name.ToLowerInvariant();
-                if (!cachedDictionary.ContainsKey(name))
+                foreach (var standard in gumProject.StandardElements)
                 {
-                    cachedDictionary.Add(name, standard);
+                    var name = standard.Name.ToLowerInvariant();
+                    if (!cachedDictionary.ContainsKey(name))
+                    {
+                        cachedDictionary.Add(name, standard);
+                    }
                 }
             }
         }
 
         public void DisableCache()
         {
-            cachedDictionary = null;
+            cacheEnableCount--;
+            if (cacheEanbleCount == 0)
+            {
+                cachedDictionary = null;
+            }
         }
 
         #endregion

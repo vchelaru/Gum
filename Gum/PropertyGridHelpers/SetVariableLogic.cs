@@ -93,7 +93,7 @@ namespace Gum.PropertyGridHelpers
                     SelectedState.Self.SelectedVariableSave = SelectedState.Self.SelectedStateSave.GetVariableSave(unqualifiedMemberName);
                 }
             }
-            ReactToPropertyValueChanged(unqualifiedMemberName, oldValue, parentElement, instance, selectedStateSave, refresh, recordUndo: recordUndo, trySave:trySave);
+            ReactToPropertyValueChanged(unqualifiedMemberName, oldValue, parentElement, instance, selectedStateSave, refresh, recordUndo: recordUndo, trySave: trySave);
         }
 
         /// <summary>
@@ -104,51 +104,60 @@ namespace Gum.PropertyGridHelpers
         /// <param name="parentElement"></param>
         /// <param name="instance"></param>
         /// <param name="refresh"></param>
-        public void ReactToPropertyValueChanged(string unqualifiedMember, object oldValue, ElementSave parentElement, 
+        public void ReactToPropertyValueChanged(string unqualifiedMember, object oldValue, ElementSave parentElement,
             InstanceSave instance, StateSave stateSave, bool refresh, bool recordUndo = true, bool trySave = true)
         {
             if (parentElement != null)
             {
-                // This code calls plugin methods and may generate code. We want to generate code
-                // after the variable references are assigned. Moving this line of code down:
-                //ReactToChangedMember(unqualifiedMember, oldValue, parentElement, instance, stateSave);
-                // Update - ReactToChangedMember expands variable reference names like "Color" and it fills
-                // in implied assignments such as "Refernce.X" to "X = Reference.X"
-                // It must be called first before applying references
-                ReactToChangedMember(unqualifiedMember, oldValue, parentElement, instance, stateSave);
-
-                string qualifiedName = unqualifiedMember;
-                if (instance != null)
+                ObjectFinder.Self.EnableCache();
+                try
                 {
-                    qualifiedName = $"{instance.Name}.{unqualifiedMember}";
+
+                    // This code calls plugin methods and may generate code. We want to generate code
+                    // after the variable references are assigned. Moving this line of code down:
+                    //ReactToChangedMember(unqualifiedMember, oldValue, parentElement, instance, stateSave);
+                    // Update - ReactToChangedMember expands variable reference names like "Color" and it fills
+                    // in implied assignments such as "Refernce.X" to "X = Reference.X"
+                    // It must be called first before applying references
+                    ReactToChangedMember(unqualifiedMember, oldValue, parentElement, instance, stateSave);
+
+                    string qualifiedName = unqualifiedMember;
+                    if (instance != null)
+                    {
+                        qualifiedName = $"{instance.Name}.{unqualifiedMember}";
+                    }
+                    DoVariableReferenceReaction(parentElement, unqualifiedMember, stateSave);
+
+                    var newValue = stateSave.GetValueRecursive(qualifiedName);
+
+                    // this could be a tunneled variable. If so, we may need to propagate the value to other instances one level deeper
+                    var didSetDeepReference = DoVariableReferenceReactionOnInstanceVariableSet(parentElement, instance, stateSave, unqualifiedMember, newValue);
+
+                    // now force save it if it's a variable reference:
+                    if (unqualifiedMember == "VariableReferences" && trySave)
+                    {
+                        GumCommands.Self.FileCommands.TryAutoSaveElement(parentElement);
+                    }
+
+                    VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(qualifiedName);
+
+                    // Need to record undo before refreshing and reselecting the UI
+                    if (recordUndo)
+                    {
+                        Undo.UndoManager.Self.RecordUndo();
+                    }
+
+                    if (refresh)
+                    {
+                        RefreshInResponseToVariableChange(unqualifiedMember, oldValue, parentElement, instance, qualifiedName,
+                            // if a deep reference is set, then this is more complicated than a single variable assignment, so we should
+                            // force everything. This makes debugging a little more difficult, but it keeps the wireframe accurate without having to track individual assignments.
+                            forceWireframeRefresh: didSetDeepReference, trySave: trySave);
+                    }
                 }
-                DoVariableReferenceReaction(parentElement, unqualifiedMember, stateSave);
-
-                var newValue = stateSave.GetValueRecursive(qualifiedName);
-
-                // this could be a tunneled variable. If so, we may need to propagate the value to other instances one level deeper
-                var didSetDeepReference = DoVariableReferenceReactionOnInstanceVariableSet(parentElement, instance, stateSave, unqualifiedMember, newValue);
-
-                // now force save it if it's a variable reference:
-                if(unqualifiedMember == "VariableReferences" && trySave)
+                finally
                 {
-                    GumCommands.Self.FileCommands.TryAutoSaveElement(parentElement);
-                }
-
-                VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(qualifiedName);
-
-                // Need to record undo before refreshing and reselecting the UI
-                if (recordUndo)
-                {
-                    Undo.UndoManager.Self.RecordUndo();
-                }
-
-                if (refresh)
-                {
-                    RefreshInResponseToVariableChange(unqualifiedMember, oldValue, parentElement, instance, qualifiedName, 
-                        // if a deep reference is set, then this is more complicated than a single variable assignment, so we should
-                        // force everything. This makes debugging a little more difficult, but it keeps the wireframe accurate without having to track individual assignments.
-                        forceWireframeRefresh:didSetDeepReference, trySave:trySave);
+                    ObjectFinder.Self.DisableCache();
                 }
             }
         }
@@ -212,16 +221,16 @@ namespace Gum.PropertyGridHelpers
                                             + 1);
                                     }
 
-                                    var didAssignReferencedVariable = simplifiedRightSide == variableOnInstance.Name || 
+                                    var didAssignReferencedVariable = simplifiedRightSide == variableOnInstance.Name ||
                                         simplifiedRightSide == variableOnInstance.ExposedAsName;
 
-                                    if(didAssignReferencedVariable)
+                                    if (didAssignReferencedVariable)
                                     {
                                         var ownerOfVariableReferenceName = variableListSave.SourceObject;
 
                                         var ownerOfVariableReferenceInstanceSave = instanceElement.GetInstance(ownerOfVariableReferenceName);
 
-                                        if(ownerOfVariableReferenceInstanceSave != null)
+                                        if (ownerOfVariableReferenceInstanceSave != null)
                                         {
                                             // Setting this variable results in ownerOfVariableReferenceInstanceSave.leftSide also being assigned
                                             // but ownerOfVariableReferenceInstanceSave is inside of instanceElement, so we need to find all instances
@@ -282,7 +291,7 @@ namespace Gum.PropertyGridHelpers
 
         }
 
-        public void RefreshInResponseToVariableChange(string unqualifiedMember, object oldValue, ElementSave parentElement, 
+        public void RefreshInResponseToVariableChange(string unqualifiedMember, object oldValue, ElementSave parentElement,
             InstanceSave instance, string qualifiedName, bool forceWireframeRefresh = false, bool trySave = true)
         {
             // These properties may require some changes to the grid, so we refresh the tree view
@@ -715,7 +724,7 @@ namespace Gum.PropertyGridHelpers
 
             ////////////////early out//////////////////////
             var isUrl = FileManager.IsUrl(value);
-            if(isUrl)
+            if (isUrl)
             {
                 // extension can be anything...
                 return null;
@@ -988,7 +997,7 @@ namespace Gum.PropertyGridHelpers
             var rightSide = split[0]; // there is no left side, just right side
             var afterDot = rightSide.Substring(rightSide.LastIndexOf('.') + 1);
 
-            if(rightSide.Contains("."))
+            if (rightSide.Contains("."))
             {
                 // TODO: This is unused?
                 var withoutVariable = rightSide.Substring(0, rightSide.LastIndexOf('.'));

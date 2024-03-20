@@ -13,6 +13,7 @@ using Gum.PropertyGridHelpers;
 #endif
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Xceed.Wpf.Toolkit.PropertyGrid.Converters;
 
 namespace GumRuntime
 {
@@ -171,6 +172,18 @@ namespace GumRuntime
             ApplyVariableReferences(graphicalElement, stateSave);
         }
 
+        public static bool ValueEquality(object val1, object val2)
+        {
+            if(val1 is string string1 && val2 is string string2)
+            {
+                return string1 == string2;
+            }
+            else
+            {
+                return val1.Equals(val2);
+            }
+        }
+
         public static void ApplyVariableReferences(this ElementSave element, StateSave stateSave)
         {
             foreach (var variableList in stateSave.VariableLists)
@@ -183,16 +196,20 @@ namespace GumRuntime
                         {
                             var result = ApplyVariableReferencesOnSpecificOwner((InstanceSave)null, referenceString, stateSave);
                             #if GUM
-                            if(!string.IsNullOrEmpty(result.variableName))
+                            if(!string.IsNullOrEmpty(result.VariableName))
                             {
-                                var unqualified = result.variableName;
+                                var unqualified = result.VariableName;
                                 if(unqualified?.Contains(".") == true)
                                 {
                                     unqualified = unqualified.Substring(unqualified.IndexOf(".") + 1);
                                 }
                                 //SetVariableLogic.Self.ReactToChangedMember(unqualified, result.valueBefore, element, null, stateSave, 
                                 //    refresh: false, recordUndo: false, trySave: true);
-                                Gum.Plugins.PluginManager.Self.VariableSet(element, null, unqualified, result.valueBefore);
+
+                                if(!ValueEquality(result.OldValue, result.NewValue))
+                                {
+                                    Gum.Plugins.PluginManager.Self.VariableSet(element, null, unqualified, result.OldValue);
+                                }
 
                             }
 #endif
@@ -207,15 +224,17 @@ namespace GumRuntime
                             {
                                 var result = ApplyVariableReferencesOnSpecificOwner(instance, referenceString, stateSave);
                                 #if GUM
-                                if (!string.IsNullOrEmpty(result.variableName))
+                                if (!string.IsNullOrEmpty(result.VariableName))
                                 {
-                                    var unqualified = result.variableName;
+                                    var unqualified = result.VariableName;
                                     if (unqualified?.Contains(".") == true)
                                     {
                                         unqualified = unqualified.Substring(unqualified.IndexOf(".") + 1);
                                     }
-                                    Gum.Plugins.PluginManager.Self.VariableSet(element, null, unqualified, result.valueBefore);
-
+                                    if (!ValueEquality(result.OldValue, result.NewValue))
+                                    {
+                                        Gum.Plugins.PluginManager.Self.VariableSet(element, null, unqualified, result.OldValue);
+                                    }
                                 }
 #endif
                             }
@@ -332,7 +351,14 @@ namespace GumRuntime
             }
         }
 
-        private static (string variableName, object valueBefore) ApplyVariableReferencesOnSpecificOwner(InstanceSave instance, string referenceString, StateSave stateSave)
+        struct VariableReferenceAssignmentResult
+        {
+            public string VariableName;
+            public object OldValue;
+            public object NewValue;
+        }
+
+        private static VariableReferenceAssignmentResult ApplyVariableReferencesOnSpecificOwner(InstanceSave instance, string referenceString, StateSave stateSave)
         {
             var split = referenceString
                 .Split(equalsArray, StringSplitOptions.RemoveEmptyEntries)
@@ -340,7 +366,7 @@ namespace GumRuntime
 
             if(split.Length != 2)
             {
-                return (null, null);
+                return new VariableReferenceAssignmentResult { NewValue = null, OldValue = null, VariableName = null };
             }
 
             var left = split[0];
@@ -374,7 +400,13 @@ namespace GumRuntime
                 }
             }
 
-            return (effectiveLeft, valueBefore);
+            return new VariableReferenceAssignmentResult
+            {
+                NewValue = value,
+                OldValue = valueBefore,
+                VariableName = effectiveLeft
+            };
+            //(effectiveLeft, valueBefore);
         }
 
         private static void GetRightSideAndState(InstanceSave instanceSave, ref string right, ref StateSave stateSave)
