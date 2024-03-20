@@ -893,6 +893,8 @@ namespace RenderingLibrary.Graphics
                 SourceRectangle = new Rectangle(left, top, width, height);
 
                 this.FlipHorizontal = frame.FlipHorizontal;
+                this.FlipVertical = frame.FlipVertical;
+
                 didChange = true;
             }
             return didChange;

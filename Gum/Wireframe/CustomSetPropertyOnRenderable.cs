@@ -750,7 +750,7 @@ namespace Gum.Wireframe
             {
                 var fontFileName = GetFontFileName();
 
-                var font = LoaderManager.Self.GetDisposable(fontFileName) as BitmapFont;
+                var font = global::RenderingLibrary.Content.LoaderManager.Self.GetDisposable(fontFileName) as BitmapFont;
 
                 // no cache, does it need to be created?
                 if (font == null)
@@ -803,7 +803,7 @@ namespace Gum.Wireframe
                         // This can happen when closing tags are encountered at the end of a font. If no font exists, we can just go to the default
                         font = Text.DefaultBitmapFont;
                     }
-                    LoaderManager.Self.AddDisposable(fontFileName, font);
+                    global::RenderingLibrary.Content.LoaderManager.Self.AddDisposable(fontFileName, font);
                 }
 
                 return font;
