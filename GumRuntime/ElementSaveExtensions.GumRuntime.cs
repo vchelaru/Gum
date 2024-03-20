@@ -10,10 +10,10 @@ using System.Linq;
 #if GUM
 using DynamicExpresso;
 using Gum.PropertyGridHelpers;
+using Xceed.Wpf.Toolkit.PropertyGrid.Converters;
 #endif
 using Gum.DataTypes.Variables;
 using Gum.Managers;
-using Xceed.Wpf.Toolkit.PropertyGrid.Converters;
 
 namespace GumRuntime
 {
