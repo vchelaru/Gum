@@ -180,7 +180,7 @@ namespace GumRuntime
             }
             else
             {
-                return val1.Equals(val2);
+                return val1?.Equals(val2) == true;
             }
         }
 
