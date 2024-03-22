@@ -82,13 +82,18 @@ namespace Gum.Managers
 
         #region Cache enable/disable
 
-        int cacheEanbleCount = 0;
         private int cacheEnableCount;
+
+        public void ForceResetCache()
+        {
+            cacheEnableCount = 0;
+            EnableCache();
+        }
 
         public void EnableCache()
         {
-            cacheEanbleCount++;
-            if (cacheEanbleCount == 1)
+            cacheEnableCount++;
+            if (cacheEnableCount == 1)
             {
                 cachedDictionary = new Dictionary<string, ElementSave>();
 
@@ -128,8 +133,15 @@ namespace Gum.Managers
 
         public void DisableCache()
         {
-            cacheEnableCount--;
-            if (cacheEanbleCount == 0)
+            if(cacheEnableCount > 0)
+            {
+                cacheEnableCount--;
+                if (cacheEnableCount == 0)
+                {
+                    cachedDictionary = null;
+                }
+            }
+            else
             {
                 cachedDictionary = null;
             }
