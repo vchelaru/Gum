@@ -238,7 +238,7 @@ namespace InputLibrary
 
         public void SetWinformsCursor(WinCursor cursor)
         {
-            if (!mHasBeenSet)
+            if (!mHasBeenSet && !MiddleDown)
             {
                 mSetCursor = cursor;
                 mHasBeenSet = true;

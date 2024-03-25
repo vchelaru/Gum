@@ -664,6 +664,7 @@
     <None Include="Content\Icons\ChildrenLayout\AutoGridHorizontal.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="Content\Cursors\cursor-grab.cur" />
     <Content Include="Content\Icons\Origins\Baseline.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
