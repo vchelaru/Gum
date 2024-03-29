@@ -62,6 +62,7 @@
     * [OutlineThickness](gum-elements/text/outlinethickness.md)
     * [Red](gum-elements/text/red.md)
     * [Text](gum-elements/text/text.md)
+    * [Text Overflow Horizontal Mode](gum-elements/text/text-overflow-horizontal-mode.md)
     * [Text Overflow Vertical Mode](gum-elements/text/text-overflow-vertical-mode.md)
     * [Use Custom Font](gum-elements/text/use-custom-font.md)
 * [Plugins](plugins/README.md)
