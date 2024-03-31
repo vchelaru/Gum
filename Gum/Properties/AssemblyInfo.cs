@@ -156,5 +156,5 @@ using System.Runtime.InteropServices;
 // - Started expanding incremental variable setting to make Gum faster
 // - Added Newtonsoft for json parsing in Gum and plugins.
 // - 
-[assembly: AssemblyVersion("1.0.0")]
-[assembly: AssemblyFileVersion("1.0.0")]
+[assembly: AssemblyVersion("2024.3.31")]
+[assembly: AssemblyFileVersion("2024.3.31")]
