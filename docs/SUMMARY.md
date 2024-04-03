@@ -3,7 +3,7 @@
 * [Introduction](README.md)
 * [Intro Tutorials](intro-tutorials/README.md)
   * [1 - The Basics](intro-tutorials/basics.md)
-  * [2 - Property Window](intro-tutorials/properties-window.md)
+  * [2 - Variables Tab](intro-tutorials/properties-window.md)
   * [3 - Files](intro-tutorials/files.md)
   * [4 - Components](intro-tutorials/components.md)
   * [5 - Exposing Variables](intro-tutorials/exposing-variables.md)
