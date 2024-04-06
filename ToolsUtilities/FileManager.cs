@@ -731,17 +731,11 @@ namespace ToolsUtilities
             serializer.Serialize(memoryStream, objectToSerialize);
 
 
-#if SILVERLIGHT || WINDOWS_PHONE  || (XBOX360 && XNA4) || MONODROID || WINDOWS_8
+#if MONODROID
 
             byte[] asBytes = memoryStream.ToArray();
 
             stringToSerializeTo = System.Text.Encoding.UTF8.GetString(asBytes, 0, asBytes.Length);
-#elif XBOX360
-            
-            throw new NotImplementedException("XmlSerialization to string is not supported yet");
-
-
-
 #else
 
             stringToSerializeTo = System.Text.Encoding.UTF8.GetString(memoryStream.ToArray());
