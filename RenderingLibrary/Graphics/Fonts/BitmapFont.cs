@@ -88,13 +88,8 @@ namespace RenderingLibrary.Graphics
 
         public BitmapFont(string fontFile, SystemManagers managers)
         {
-
-#if ANDROID || IOS
-			fontFile = fontFile.ToLowerInvariant();
-#endif
-
             string fontContents = FileManager.FromFileText(fontFile);
-            mFontFile = FileManager.Standardize(fontFile);
+            mFontFile = FileManager.Standardize(fontFile, preserveCase:true);
 
 
             ReloadTextures(fontFile, fontContents);
@@ -471,7 +466,7 @@ namespace RenderingLibrary.Graphics
         public void SetFontPatternFromFile(string fntFileName)
         {
             // standardize before doing anything else
-            fntFileName = FileManager.Standardize(fntFileName);
+            fntFileName = FileManager.Standardize(fntFileName, preserveCase:true);
 
             mFontFile = fntFileName;
             //System.IO.StreamReader sr = new System.IO.StreamReader(mFontFile);

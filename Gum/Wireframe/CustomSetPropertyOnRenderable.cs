@@ -893,12 +893,7 @@ namespace Gum.Wireframe
                             graphicalUiElement.IsItalic,
                             graphicalUiElement.IsBold);
 
-                        string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, false, true);
-
-#if ANDROID || IOS
-                        fullFileName = fullFileName.ToLowerInvariant();
-#endif
-
+                        string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, preserveCase:true, makeAbsolute:true);
 
                         font = loaderManager.GetDisposable(fullFileName) as BitmapFont;
                         if (font == null || font.Texture?.IsDisposed == true)

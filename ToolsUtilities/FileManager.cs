@@ -101,13 +101,13 @@ namespace ToolsUtilities
 
         public static bool FileExists(string fileName, bool ignoreExtensions)
         {
-            fileName = Standardize(fileName, makeAbsolute: true);
+            fileName = Standardize(fileName, preserveCase:true, makeAbsolute: true);
             if (!ignoreExtensions)
             {
 #if ANDROID || IOS || WINDOWS_8 
 				try
                 {
-					if(fileName.StartsWith(".\\"))
+					if(fileName.StartsWith(".\\") || fileName.StartsWith("./"))
 					{
 						fileName = fileName.Substring(2);
 					}
