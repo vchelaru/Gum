@@ -117,7 +117,7 @@ namespace Gum.DataTypes
 
                 T elementSave = FileManager.XmlDeserialize<T>(
 #if ANDROID || IOS
-                    containedReferenceName.Standardized);
+                    containedReferenceName.StandardizedCaseSensitive);
 #else
                     containedReferenceName.FullPath);
 #endif
