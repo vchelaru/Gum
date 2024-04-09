@@ -2864,6 +2864,8 @@ namespace CodeOutputPlugin.Manager
             return visualApi;
         }
 
+        #region Variable Assignments
+
         private static void FillWithVariableAssignments(VisualApi visualApi, StringBuilder stringBuilder, CodeGenerationContext context)
         {
             var element = context.Element;
@@ -2938,7 +2940,6 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-
         private static void FillWithNonParentVariableAssignments(CodeGenerationContext context)
         {
             #region Get variables to consider
@@ -2975,8 +2976,6 @@ namespace CodeOutputPlugin.Manager
                 }
             }
         }
-
-        #region Variable Assignments
 
         /// <summary>
         /// Returns a no-tabbed line of code for the argument variable
@@ -3829,6 +3828,7 @@ namespace CodeOutputPlugin.Manager
             return type?.EndsWith("/ScrollView") == true ||
                     type?.EndsWith("/StickyScrollView") == true ||
                     type?.EndsWith("/RefreshView") == true ||
+                    type?.EndsWith("/View") == true ||
                     type?.EndsWith("/Frame") == true;
         }
 
