@@ -5077,11 +5077,18 @@ namespace Gum.Wireframe
             // suspend layouts while we do this so that previou values don't apply:
             var isSuspended = this.IsLayoutSuspended;
             this.SuspendLayout();
-            this.TextureLeft = asSprite.SourceRectangle.Value.Left;
-            this.TextureWidth = asSprite.SourceRectangle.Value.Width;
 
-            this.TextureTop = asSprite.SourceRectangle.Value.Top;
-            this.TextureHeight = asSprite.SourceRectangle.Value.Height;
+            // The AnimationChain (source file) could get set before the name desired name is set, so tolerate 
+            // if there's a missing source rectangle:
+            if(asSprite.SourceRectangle != null)
+            {
+                this.TextureLeft = asSprite.SourceRectangle.Value.Left;
+                this.TextureWidth = asSprite.SourceRectangle.Value.Width;
+
+                this.TextureTop = asSprite.SourceRectangle.Value.Top;
+                this.TextureHeight = asSprite.SourceRectangle.Value.Height;
+            }
+
             this.FlipHorizontal = asSprite.FlipHorizontal;
 
             if (this.TextureAddress == TextureAddress.EntireTexture)
