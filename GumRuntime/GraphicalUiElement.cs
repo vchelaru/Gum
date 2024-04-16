@@ -1276,6 +1276,11 @@ namespace Gum.Wireframe
         // could happen indefinitely so we only want to do this one time.
         // This prevents the size change from happening over and over:
         bool isInSizeChange;
+        /// <summary>
+        /// Event raised whenever this instance's absolute size changes. This size change can occur by a direct value being
+        /// set (such as Width or WidthUnits), or by an indirect value changing, such as if a Parent is resized and if
+        /// this uses a WidthUnits depending on the parent.
+        /// </summary>
         public event EventHandler SizeChanged;
         public event EventHandler PositionChanged;
         public event EventHandler ParentChanged;
