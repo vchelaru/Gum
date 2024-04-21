@@ -4,9 +4,7 @@
 
 A typical Gum project references many file types. Aside from the XML files created by the Gum tool (such as a .gumx file), a typical Gum project also references .png files and .fnt files.
 
-Files which are referenced by your Gum project (as created in the Gum UI tool) automatically load their necessary dependencies assuming the files are part of the built file system.
-
-Files can also be loaded and referenced at runtime for additional flexibility.
+Files which are referenced by your Gum project (as created in the Gum UI tool) automatically load their necessary dependencies assuming the files are part of the built file system. Typically this means that your project should copy all Gum XML, PNG, and FNT files to the output folder. Gum does not use the MonoGame content pipeline.
 
 ### Files in Gum Projects
 
