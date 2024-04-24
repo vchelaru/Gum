@@ -172,12 +172,6 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        public SamplerState SamplerState
-        {
-            get;
-            set;
-        }
-
         public SpriteRenderer SpriteRenderer
         {
             get
@@ -235,13 +229,15 @@ namespace RenderingLibrary.Graphics
         // vs XNA thing, but I traced it down to the zoom thing.
         // I'm going to add a bool here to control it.
         public static bool ApplyCameraZoomOnWorldTranslation { get; set; } = false;
+
+        public static TextureFilter TextureFilter { get; set; } = TextureFilter.Point;
+
         #endregion
 
         #region Methods
 
         public void Initialize(GraphicsDevice graphicsDevice, SystemManagers managers)
         {
-            SamplerState = SamplerState.LinearClamp;
             mCamera = new RenderingLibrary.Camera();
 
             if (graphicsDevice != null)
@@ -338,6 +334,10 @@ namespace RenderingLibrary.Graphics
                 mRenderStateVariables.BlendState = Renderer.NormalBlendState;
                 mRenderStateVariables.Wrap = false;
 
+                // todo - need to handle more advanced filtering here, but for now let's hook
+                // in to linear to make it work:
+                mRenderStateVariables.Filtering = TextureFilter == TextureFilter.Linear;
+
                 RenderLayer(managers, layer);
 
                 if (oldSampler != null)
@@ -361,6 +361,10 @@ namespace RenderingLibrary.Graphics
 
                 mRenderStateVariables.BlendState = Renderer.NormalBlendState;
                 mRenderStateVariables.Wrap = false;
+
+                // todo - need to handle more advanced filtering here, but for now let's hook
+                // in to linear to make it work:
+                mRenderStateVariables.Filtering = TextureFilter == TextureFilter.Linear;
 
                 for (int i = 0; i < layers.Count; i++)
                 {

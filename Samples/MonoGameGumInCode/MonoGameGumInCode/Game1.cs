@@ -28,6 +28,10 @@ namespace MonoGameGumInCode
             SystemManagers.Default = new SystemManagers();
             SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
 
+            // adjust this to zoom in or out
+            //SystemManagers.Default.Renderer.Camera.Zoom = 3;
+            // This can be used to make everything render with linear:
+            //Renderer.TextureFilter = TextureFilter.Linear;
 
             // uncomment one of these to create a layout. Only have one uncommented or else UI overlaps
             CreateMixedLayout();
