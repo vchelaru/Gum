@@ -6,6 +6,8 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <DefineConstants>FAST_GL_SKIA_RENDERING;INCLUDE_SVG;FNA</DefineConstants>
+	  <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
   </PropertyGroup>
 
   <ItemGroup>

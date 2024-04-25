@@ -2041,7 +2041,7 @@ namespace CodeOutputPlugin.Manager
             #region States
 
             FillWithStateEnums(element, stringBuilder, tabCount);
-            FillWithStateProperties(element, stringBuilder, tabCount, projectSettings);
+            FillWithStateProperties(context);
 
             #endregion
 
@@ -2575,121 +2575,137 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-        private static void FillWithStateProperties(ElementSave element, StringBuilder stringBuilder, int tabCount, CodeOutputProjectSettings codeProjectSettings)
+        private static void FillWithStateProperties(CodeGenerationContext context)
         {
-            var isXamarinForms = GetVisualApiForElement(element) == VisualApi.XamarinForms;
-            var containerClassName = GetClassNameForType(element.Name, GetVisualApiForElement(element));
-            foreach (var category in element.Categories)
+            var isXamarinForms = GetVisualApiForElement(context.Element) == VisualApi.XamarinForms;
+            var containerClassName = GetClassNameForType(context.Element.Name, GetVisualApiForElement(context.Element));
+            
+
+            foreach (var category in context.Element.Categories)
             {
-                // If it's Xamarin Forms we want to have the states be bindable
-
-                stringBuilder.AppendLine();
-
-                // Enum types need to be nullable because there could be no category set:
-                string enumName = category.Name + "?";
-
-                if (isXamarinForms)
-                {
-
-                    stringBuilder.AppendLine($"{ToTabs(tabCount)}public static readonly BindableProperty {category.Name}StateProperty = " +
-                        $"BindableProperty.Create(nameof({category.Name}State),typeof({enumName}),typeof({containerClassName}), defaultBindingMode: BindingMode.TwoWay, propertyChanged:Handle{category.Name}StatePropertyChanged);");
-
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"public {enumName} {category.Name}State");
-                    stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-                    tabCount++;
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"get => ({enumName})GetValue({category.Name}StateProperty);");
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"set => SetValue({category.Name}StateProperty, value);");
-                    tabCount--;
-                    stringBuilder.AppendLine(ToTabs(tabCount) + "}");
-
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"private static void Handle{category.Name}StatePropertyChanged(BindableObject bindable, object oldValue, object newValue)");
-                    stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-                    tabCount++;
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"var casted = bindable as {containerClassName};");
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"var value = ({enumName})newValue;");
-                    CodeGenerationContext context = new CodeGenerationContext();
-                    context.Element = element;
-                    context.ThisPrefix = "casted";
-                    context.TabCount = tabCount;
-                    context.CodeOutputProjectSettings = codeProjectSettings;
-
-                    AddAssignFromElement(context, stringBuilder);
-
-                    stringBuilder.AppendLine(context.Tabs + "if(!appliedDynamically)");
-                    stringBuilder.AppendLine(context.Tabs + "{");
-                    context.TabCount++;
-
-                    CreateStateVariableAssignmentSwitch(stringBuilder, category, context);
-
-                    context.TabCount--;
-                    stringBuilder.AppendLine(context.Tabs + "}");
-
-                    // We may need to invalidate surfaces here if any objects that have variables assigned are skia canvases
-                    // Update November 29, 2022
-                    // Currently we brute-force it by calling InvalidateSurface on all objects and their EffectiveManagers.
-                    // Could this be expensive? I think that this just flips a flag, and it will happen so fast that actual
-                    // redraws only occur 1 time. But if it's slow, we could hashset which manages have been invalidated and
-                    // make sure each one is only invalidated one time.
-                    foreach (var item in element.Instances)
-                    {
-                        if (item.BaseType.EndsWith("/SkiaSharpCanvasView"))
-                        {
-                            stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{item.Name}.InvalidateSurface();");
-                        }
-                        else if(GetVisualApiForInstance(item, element) == VisualApi.Gum)
-                        {
-                            stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{item.Name}.EffectiveManagers?.InvalidateSurface();");
-                        }
-                    }
-                    if (element.BaseType?.EndsWith("/SkiaGumCanvasView") == true)
-                    {
-                        stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.InvalidateSurface();");
-                    }
-
-                    tabCount--;
-                    stringBuilder.AppendLine(ToTabs(tabCount) + "}");
-
-                }
-                else
-                {
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"{category.Name} m{category.Name}State;");
-
-
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"public {category.Name} {category.Name}State");
-
-                    stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-                    tabCount++;
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"get => m{category.Name}State;");
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"set");
-
-                    stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-                    tabCount++;
-                    stringBuilder.AppendLine(ToTabs(tabCount) + $"m{category.Name}State = value;");
-                    CodeGenerationContext context = new CodeGenerationContext();
-                    context.Element = element;
-                    context.TabCount = tabCount;
-                    context.CodeOutputProjectSettings = codeProjectSettings;
-
-                    AddAssignFromElement(context, stringBuilder);
-
-                    stringBuilder.AppendLine(context.Tabs + "if(!appliedDynamically)");
-                    stringBuilder.AppendLine(context.Tabs + "{");
-                    context.TabCount++;
-
-                    CreateStateVariableAssignmentSwitch(stringBuilder, category, context);
-
-                    context.TabCount--;
-                    stringBuilder.AppendLine(context.Tabs + "}");
-
-
-                    context.TabCount--;
-                    stringBuilder.AppendLine(ToTabs(context.TabCount) + "}");
-
-                    context.TabCount--;
-                    stringBuilder.AppendLine(ToTabs(context.TabCount) + "}");
-                }
+                FillWithStatePropertiesForCategory(context.Element, context.StringBuilder, context.TabCount, context.CodeOutputProjectSettings, isXamarinForms, containerClassName, category);
 
             }
+        }
+
+        private static int FillWithStatePropertiesForCategory(ElementSave element, StringBuilder stringBuilder, int tabCount, CodeOutputProjectSettings codeProjectSettings, bool isXamarinForms, string containerClassName, StateSaveCategory category)
+        {
+            // If it's Xamarin Forms we want to have the states be bindable
+
+            stringBuilder.AppendLine();
+
+            // Enum types need to be nullable because there could be no category set:
+            string enumName = category.Name + "?";
+
+            if (isXamarinForms)
+            {
+
+                stringBuilder.AppendLine($"{ToTabs(tabCount)}public static readonly BindableProperty {category.Name}StateProperty = " +
+                    $"BindableProperty.Create(nameof({category.Name}State),typeof({enumName}),typeof({containerClassName}), defaultBindingMode: BindingMode.TwoWay, propertyChanged:Handle{category.Name}StatePropertyChanged);");
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {enumName} {category.Name}State");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => ({enumName})GetValue({category.Name}StateProperty);");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => SetValue({category.Name}StateProperty, value);");
+                tabCount--;
+                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"private static void Handle{category.Name}StatePropertyChanged(BindableObject bindable, object oldValue, object newValue)");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"var casted = bindable as {containerClassName};");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"var value = ({enumName})newValue;");
+                CodeGenerationContext context = new CodeGenerationContext();
+                context.Element = element;
+                context.ThisPrefix = "casted";
+                context.TabCount = tabCount;
+                context.CodeOutputProjectSettings = codeProjectSettings;
+
+                AddAssignFromElement(context, stringBuilder);
+
+                stringBuilder.AppendLine(context.Tabs + "if(!appliedDynamically)");
+                stringBuilder.AppendLine(context.Tabs + "{");
+                context.TabCount++;
+
+                CreateStateVariableAssignmentSwitch(stringBuilder, category, context);
+
+                context.TabCount--;
+                stringBuilder.AppendLine(context.Tabs + "}"); 
+
+                // We may need to invalidate surfaces here if any objects that have variables assigned are skia canvases
+                // Update November 29, 2022
+                // Currently we brute-force it by calling InvalidateSurface on all objects and their EffectiveManagers.
+                // Could this be expensive? I think that this just flips a flag, and it will happen so fast that actual
+                // redraws only occur 1 time. But if it's slow, we could hashset which manages have been invalidated and
+                // make sure each one is only invalidated one time.
+                // Update April 25, 2024
+                // This is slow because it invalidates all surfaces, even if they aren't associated with the objects being
+                // assigned. Therefore, we should only invalidate for instances which have variables assigned in this category.
+                var instancesNamesWithVariablesAssigned = category.States.SelectMany(item => item.Variables).Select(item => item.SourceObject).Distinct().ToList();
+
+                var instances = element.Instances.Where(item => instancesNamesWithVariablesAssigned.Contains(item.Name)).ToList();
+
+                foreach (var item in instances)
+                {
+                    if (item.BaseType.EndsWith("/SkiaSharpCanvasView"))
+                    {
+                        stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{item.Name}.InvalidateSurface();");
+                    }
+                    else if (GetVisualApiForInstance(item, element) == VisualApi.Gum)
+                    {
+                        stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{item.Name}.EffectiveManagers?.InvalidateSurface();");
+                    }
+                }
+                if (element.BaseType?.EndsWith("/SkiaGumCanvasView") == true)
+                {
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.InvalidateSurface();");
+                }
+
+                tabCount--;
+                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+
+            }
+            else
+            {
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"{category.Name} m{category.Name}State;");
+
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {category.Name} {category.Name}State");
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => m{category.Name}State;");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"set");
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"m{category.Name}State = value;");
+                CodeGenerationContext context = new CodeGenerationContext();
+                context.Element = element;
+                context.TabCount = tabCount;
+                context.CodeOutputProjectSettings = codeProjectSettings;
+
+                AddAssignFromElement(context, stringBuilder);
+
+                stringBuilder.AppendLine(context.Tabs + "if(!appliedDynamically)");
+                stringBuilder.AppendLine(context.Tabs + "{");
+                context.TabCount++;
+
+                CreateStateVariableAssignmentSwitch(stringBuilder, category, context);
+
+                context.TabCount--;
+                stringBuilder.AppendLine(context.Tabs + "}");
+
+
+                context.TabCount--;
+                stringBuilder.AppendLine(ToTabs(context.TabCount) + "}");
+
+                context.TabCount--;
+                stringBuilder.AppendLine(ToTabs(context.TabCount) + "}");
+            }
+
+            return tabCount;
         }
 
         private static void AddAssignFromElement(CodeGenerationContext context, StringBuilder stringBuilder)

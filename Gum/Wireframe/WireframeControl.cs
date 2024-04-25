@@ -142,7 +142,7 @@ namespace Gum.Wireframe
                 SystemManagers.Default = new SystemManagers();
                 SystemManagers.Default.Initialize(GraphicsDevice);
 
-                Renderer.Self.SamplerState = SamplerState.PointWrap;
+                Renderer.TextureFilter = TextureFilter.Point;
 
                 LoaderManager.Self.ContentLoader = new ContentLoader();
 

@@ -54,6 +54,7 @@ namespace RenderingLibrary.Graphics
 
         public static object LockObject = new object();
 
+
         #endregion
 
         #region Properties
