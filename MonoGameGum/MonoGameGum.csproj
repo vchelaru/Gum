@@ -6,7 +6,8 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageId>Gum.MonoGame</PackageId>
-	  <Version>2024.3.31.1</Version>
+	  <Version>2024.4.26.1</Version>
+
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
