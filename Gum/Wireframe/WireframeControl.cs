@@ -320,7 +320,7 @@ namespace Gum.Wireframe
 
                 PluginManager.Self.BeforeRender();
 
-                Renderer.Self.Draw(null);
+                Renderer.Self.Draw((SystemManagers)null);
 
                 PluginManager.Self.AfterRender();
 
