@@ -94,3 +94,6 @@ GumCore/GumCoreXnaPc/GumCoreAndroid/bin/*
 GumCore/GumCoreXnaPc/GumCoreAndroid/obj/*
 GumCore/GumCoreXnaPc/GumCoreiOS/bin/*
 GumCore/GumCoreXnaPc/GumCoreiOS/obj/*
+Samples/MonoGameGumFontLoading/MonoGameGumFontLoading/.config/*
+Samples/MonoGameGumFontLoading/MonoGameGumFontLoading/bin/*
+Samples/MonoGameGumFontLoading/MonoGameGumFontLoading/obj/*
