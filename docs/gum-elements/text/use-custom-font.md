@@ -48,6 +48,13 @@ To create your own font file:
 
     <figure><img src="../../.gitbook/assets/25_19 42 34.png" alt=""><figcaption><p>Options for creating .fnt file</p></figcaption></figure>
 
+Also, note that if you are using outline, you will want to have the following values:
+
+* A: outline
+* R: glyph
+* G: glyph
+* B: glyph
+
 You can verify that the settings will produce a proper PNG by selecting **Options** -> **Visualize**. If you see “No Output!” then you need to select characters to export. See the above step for more information.
 
 To save the font, select **Options**->**Save bitmap font as…** to save your .fnt and .png files.
