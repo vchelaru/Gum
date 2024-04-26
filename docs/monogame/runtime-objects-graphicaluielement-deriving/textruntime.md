@@ -35,6 +35,8 @@ customText.Text = "Hello, I am using a custom font";
 customText.AddToManagers(SystemManagers.Default, null);
 ```
 
+For information on creating your own .fnt file with Bitmap Font Generator, see the [Use Custom Font](../../gum-elements/text/use-custom-font.md) page.
+
 This code assumes a font file named WhitePeaberryOutline.fnt is located in the `Content/WhitePeaberryOutline` folder. By default all Gum content loading is performed relative to the Content folder; however, if UseCustomFont is set to false, then all font loading is performed from the FontCache folder. See the [Font Component Values](textruntime.md#font-component-values) section for more information on loading from the FontCache folder. See the [File Loading](../file-loading.md) page for more information about loading files in general.
 
 Note that .fnt files reference one or more image files, so the image file must also be added to the correct folder. In this case, the WhitePeaberryOutline.fnt file references a WhitePeaberryOutline.png file, so both files are in the same folder.
