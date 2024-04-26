@@ -74,13 +74,13 @@ namespace MonoGameGumImmediateMode
             // We can use Begin/Draw/End just like if we were using a SpriteBatch.
             // If we do this, we do not need to call SystemManagers.Default.Draw(),
             // which is used for "retained mode" rendering.
-            var renderer = SystemManagers.Default.Renderer;
+            //var renderer = SystemManagers.Default.Renderer;
 
-            // call begin, just like if using a SpriteBatch
-            renderer.Begin();
-            renderer.Draw(textRuntime);
-            renderer.Draw(text);
-            renderer.End();
+            //// call begin, just like if using a SpriteBatch
+            //renderer.Begin();
+            //renderer.Draw(textRuntime);
+            //renderer.Draw(text);
+            //renderer.End();
 
             // We can also do immediate mode without creating any objects:
             gumBatch.Begin();
