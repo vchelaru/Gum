@@ -1070,6 +1070,11 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        /// <summary>
+        /// Returns the number of pixels (horizontally) required to render the argument string.
+        /// </summary>
+        /// <param name="line">The line of text.</param>
+        /// <returns>The number of pixels needed to render this text horizontally.</returns>
         public int MeasureString(string line)
         {
             int toReturn = 0;
