@@ -41,9 +41,12 @@ To create your own font file:
 7. Select a Bit depth of 32 (or else transparencies won’t come through).
 8. Select the texture width and height. For best performance, select a size which will contain all of the characters you have selected. Also, many game engines prefer textures which are _power of two_ such as 256, 512, 1024, or 2048. Sizes larger than 2048 may not render properly on some hardware.
 9. Change the **Textures** option to **png – Portable Network Graphics**
-10. Press **OK** to apply the changes
+10. Be sure to keep the F**ont descriptor** as **Text**.
+11. Press **OK** to apply the changes
 
-    ![](<../../.gitbook/assets/image (3) (1) (1) (1) (1) (1) (1) (1).png>)
+
+
+    <figure><img src="../../.gitbook/assets/25_19 42 34.png" alt=""><figcaption><p>Options for creating .fnt file</p></figcaption></figure>
 
 You can verify that the settings will produce a proper PNG by selecting **Options** -> **Visualize**. If you see “No Output!” then you need to select characters to export. See the above step for more information.
 
