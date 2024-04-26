@@ -57,6 +57,24 @@ namespace MonoGameGumFontLoading
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
             SystemManagers.Default.Draw();
+
+
+            var renderer = SystemManagers.Default.Renderer;
+
+            renderer.Begin();
+
+            var text = new TextRuntime();
+            text.UseCustomFont = true;
+            text.CustomFontFile = "Fonts/Font16Jing_Jing.fnt";
+            text.Text = "I am an immediate mode TextRuntime";
+            text.X = 110;
+            text.Y = 120;
+
+            renderer.Draw(text);
+
+            renderer.End();
+
+
             base.Draw(gameTime);
         }
     }

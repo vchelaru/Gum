@@ -325,6 +325,11 @@ namespace RenderingLibrary.Graphics
 
             int currentIndexIntoFile = fontPattern.IndexOf("page id=");
 
+            if(fontPattern?.StartsWith("<?xml version=\"1.0\"?>") == true)
+            {
+                throw new Exception("Cannot load a font file that is in XML format. Please convert it to Text format.");
+            }
+
             while (currentIndexIntoFile != -1)
             {
                 // Right now we'll assume that the pages come in order and they're sequential

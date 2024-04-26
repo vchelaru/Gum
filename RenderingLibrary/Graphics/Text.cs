@@ -639,7 +639,17 @@ namespace RenderingLibrary.Graphics
             RenderBoundaryDefault = true;
         }
 
+        public Text()
+        {
+            Initialize(SystemManagers.Default, "Hello");
+        }
+
         public Text(SystemManagers managers, string text = "Hello")
+        {
+            Initialize(managers, text);
+        }
+
+        private void Initialize(SystemManagers managers, string text)
         {
             Visible = true;
             RenderBoundary = RenderBoundaryDefault;
