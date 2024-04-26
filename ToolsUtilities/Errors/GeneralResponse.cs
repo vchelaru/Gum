@@ -23,6 +23,8 @@
             this.Message = generalResponse.Message;
         }
 
+        public override string ToString() => $"{(Succeeded ? "Success" : "Failure")}: {Message}";
+
     }
 
     public class OptionallyAttemptedGeneralResponse : GeneralResponse
@@ -82,6 +84,9 @@
         {
             SetFrom(nonGenericResponse);
         }
+
+
+
 
     }
 }
