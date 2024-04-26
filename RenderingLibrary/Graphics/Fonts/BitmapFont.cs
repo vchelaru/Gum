@@ -901,6 +901,13 @@ namespace RenderingLibrary.Graphics
 
         // This sucks, but if we pass an IEnumerable, it allocates memory like crazy. Duplicate code to handle List to reduce alloc
         //public void GetRequiredWidthAndHeight(IEnumerable<string> lines, out int requiredWidth, out int requiredHeight, List<int> widths)
+        /// <summary>
+        /// Returns the width and height required to render the argument line of text.
+        /// </summary>
+        /// <param name="lines">The lines of text, where each entry is one line of text.</param>
+        /// <param name="requiredWidth">The required width returned by this method.</param>
+        /// <param name="requiredHeight">The required height returned by this method.</param>
+        /// <param name="widths">The widths of the individual lines.</param>
         public void GetRequiredWidthAndHeight(List<string> lines, out int requiredWidth, out int requiredHeight, List<int> widths)
         {
 
