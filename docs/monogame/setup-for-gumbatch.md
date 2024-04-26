@@ -28,7 +28,7 @@ The following shows a simple Game1.cs file which renders Gum Text:
 <pre class="language-csharp"><code class="lang-csharp">public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
-    BitmapFont font;
+    RenderingLibrary.Graphics.BitmapFont font;
     GumBatch gumBatch;
 
     public Game1()
@@ -44,7 +44,9 @@ The following shows a simple Game1.cs file which renders Gum Text:
         SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
 
         gumBatch = new GumBatch();
-        font = new BitmapFont("Fonts/Font18Caladea.fnt", SystemManagers.Default);
+        font = new RenderingLibrary.Graphics.BitmapFont(
+            "Fonts/Font18Caladea.fnt", 
+            SystemManagers.Default);
 
         base.Initialize();
     }
