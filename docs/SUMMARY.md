@@ -103,6 +103,7 @@
   * [Loading .gumx (Gum Project)](monogame/loading-.gumx-gum-project.md)
   * [Camera](monogame/camera.md)
   * [File Loading](monogame/file-loading.md)
+  * [GumBatch](monogame/gumbatch.md)
   * [Runtime Objects (GraphicalUiElement Deriving)](monogame/runtime-objects-graphicaluielement-deriving/README.md)
     * [ColoredRectangleRuntime](monogame/runtime-objects-graphicaluielement-deriving/coloredrectangleruntime.md)
     * [Component Runtimes](monogame/runtime-objects-graphicaluielement-deriving/component-runtimes.md)

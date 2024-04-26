@@ -25,8 +25,7 @@ To initialize a GumBatch, you must:
 
 The following shows a simple Game1.cs file which renders Gum Text:
 
-```csharp
-public class Game1 : Game
+<pre class="language-csharp"><code class="lang-csharp">public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
     BitmapFont font;
@@ -54,8 +53,8 @@ public class Game1 : Game
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
 
-        gumBatch.Begin();
-        
+<strong>        gumBatch.Begin();
+</strong>        
         gumBatch.DrawString(
             font, 
             "This is using Gum Batch", 
@@ -68,7 +67,7 @@ public class Game1 : Game
     }
 }
 
-```
+</code></pre>
 
 This code produces the following image:
 
