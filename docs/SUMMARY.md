@@ -99,6 +99,7 @@
     * [WPF](skiagum/setup/wpf.md)
 * [MonoGame](monogame/README.md)
   * [Setup](monogame/setup.md)
+  * [Setup for GumBatch](monogame/setup-for-gumbatch.md)
   * [Loading .gumx (Gum Project)](monogame/loading-.gumx-gum-project.md)
   * [Camera](monogame/camera.md)
   * [File Loading](monogame/file-loading.md)
