@@ -712,6 +712,7 @@ namespace RenderingLibrary.Graphics
             }
 
             internalTextForRendering.BitmapFont = font;
+            internalTextForRendering.Width = 0;
             internalTextForRendering.RawText = text;
             internalTextForRendering.X = position.X;
             internalTextForRendering.Y = position.Y;
