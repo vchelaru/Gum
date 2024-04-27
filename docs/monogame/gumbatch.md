@@ -99,3 +99,39 @@ gumBatch.End();
 ```
 
 <figure><img src="../.gitbook/assets/image (66).png" alt=""><figcaption><p>Rendering a TextRuntime in immediate mode with GumBatch</p></figcaption></figure>
+
+### RenderTargets
+
+GumBatch can be used to render Gum objects on RenderTarget2Ds, just like regular SpriteBatch calls.
+
+The following code shows how to render on a RenderTarget:
+
+```csharp
+// Assuming MyRenderTarget is a valid render target:
+GraphicsDevice.SetRenderTarget(MyRenderTarget);
+gumBatch.Begin();
+gumBatch.Draw(SomeGumObject);
+gumBatch.End();
+
+// now set the render target to null to draw it to screen:
+GraphicsDevice.SetRenderTarget(MyRenderTarget);
+spriteBatch.Draw(MyRenderTarget, new Vector2(0, 0), Color.White);
+```
+
+Note that if you are rendering multiple objects on a render target, the BlendState must be set as to add the transparency. Using the default BlendState may result in alpha being "removed" from the render target when new instances are drawn.
+
+The following shows how to create a BlendState for objects which have partial transpraency and are to be drawn on RenderTargets:
+
+```csharp
+var blendState = new BlendState();
+
+blendState.ColorSourceBlend = BlendState.NonPremultiplied.ColorSourceBlend;
+blendState.ColorDestinationBlend = BlendState.NonPremultiplied.ColorDestinationBlend;
+blendState.ColorBlendFunction = BlendState.NonPremultiplied.ColorBlendFunction;
+
+blendState.AlphaSourceBlend = Blend.SourceAlpha;
+blendState.AlphaDestinationBlend = Blend.DestinationAlpha;
+blendState.AlphaBlendFunction = BlendFunction.Add;
+
+halfTransparentRectangle.BlendState = blendState;
+```
