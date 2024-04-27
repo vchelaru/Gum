@@ -58,9 +58,9 @@ namespace MonoGameGumImmediateMode
             halfTransparentRectangle.Width = 200;
             halfTransparentRectangle.Height = 100;
             halfTransparentRectangle.Color = Color.White;
-            halfTransparentRectangle.Alpha = 255;
+            halfTransparentRectangle.Alpha = 128;
 
-
+            
 
 
             var blendState = new BlendState();
@@ -102,9 +102,6 @@ namespace MonoGameGumImmediateMode
             {
                 gumBatch.Begin();
                 gumBatch.Draw(redBackgroundRectangle);
-                gumBatch.End();
-
-                gumBatch.Begin();
                 gumBatch.Draw(halfTransparentRectangle);
                 gumBatch.End();
             }
