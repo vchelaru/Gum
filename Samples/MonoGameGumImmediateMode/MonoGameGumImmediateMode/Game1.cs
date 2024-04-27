@@ -13,10 +13,18 @@ namespace MonoGameGumImmediateMode
 
         // See Initialize for an explanation of the different types (such as TextRuntime vs normal Text)
         TextRuntime textRuntime;
+
+        ColoredRectangleRuntime redBackgroundRectangle;
+        ColoredRectangleRuntime halfTransparentRectangle;
+
         Text text;
 
         BitmapFont font;
         GumBatch gumBatch;
+        // We can mix SpriteBatch with GumBatch draws, including using RenderTargets
+        SpriteBatch spriteBatch;
+
+        RenderTarget2D renderTarget;
 
         public Game1()
         {
@@ -32,7 +40,7 @@ namespace MonoGameGumImmediateMode
 
             // "Runtime" objects such as TextRuntime, SpriteRuntime, and ColoredRectangleRuntime
             // are Gum objects which inherit from GraphicalUiElement. They have full support for
-            // all of Gum's layout rules (such as X/Y units, origins, and width/height units)...
+            // all of Gum's layout rules (such as X/Y units, origins, and width/height units)
             textRuntime = new TextRuntime();
             textRuntime.UseCustomFont = true;
             textRuntime.CustomFontFile = "Fonts/Font16Jing_Jing.fnt";
@@ -40,18 +48,39 @@ namespace MonoGameGumImmediateMode
             textRuntime.X = 0;
             textRuntime.Y = 50;
 
-            // ...whereas "normal" Gum objects such as Text, Sprite, and ColoredRectangle are
-            // renderables, but they always render according to their top-left corner, relative to 
-            // either the top-left of the screen or the top-left of their parent.
-            // These are lighter-weight and simpler to use, but do not have full support for Gum's
-            // layout rules.
-            text = new Text();
-            text.X = 0;
-            text.Y = 100;
+            // Any type is supported, not just Text. For example, ColoredRectangleRuntime:
+            redBackgroundRectangle = new ColoredRectangleRuntime();
+            redBackgroundRectangle.Width = 1000;
+            redBackgroundRectangle.Height = 1000;
+            redBackgroundRectangle.Color = Color.Red;
+
+            halfTransparentRectangle= new ColoredRectangleRuntime();
+            halfTransparentRectangle.Width = 200;
+            halfTransparentRectangle.Height = 100;
+            halfTransparentRectangle.Color = Color.White;
+            halfTransparentRectangle.Alpha = 255;
+
+
+
+
+            var blendState = new BlendState();
+
+            blendState.ColorSourceBlend = BlendState.NonPremultiplied.ColorSourceBlend;
+            blendState.ColorDestinationBlend = BlendState.NonPremultiplied.ColorDestinationBlend;
+            blendState.ColorBlendFunction = BlendState.NonPremultiplied.ColorBlendFunction;
+
+            blendState.AlphaSourceBlend = Blend.SourceAlpha;
+            blendState.AlphaDestinationBlend = Blend.DestinationAlpha;
+            blendState.AlphaBlendFunction = BlendFunction.Add;
+
+            halfTransparentRectangle.BlendState = blendState;
 
             gumBatch = new GumBatch();
+            spriteBatch = new SpriteBatch(GraphicsDevice);
 
             font = new BitmapFont("Fonts/Font18Caladea.fnt", SystemManagers.Default);
+
+            renderTarget = new RenderTarget2D(GraphicsDevice, 300, 300);
 
             base.Initialize();
         }
@@ -68,24 +97,30 @@ namespace MonoGameGumImmediateMode
 
         protected override void Draw(GameTime gameTime)
         {
+
+            GraphicsDevice.SetRenderTarget(renderTarget);
+            {
+                gumBatch.Begin();
+                gumBatch.Draw(redBackgroundRectangle);
+                gumBatch.End();
+
+                gumBatch.Begin();
+                gumBatch.Draw(halfTransparentRectangle);
+                gumBatch.End();
+            }
+            GraphicsDevice.SetRenderTarget(null);
+
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            // The Renderer is how Gum performs its rendering. 
-            // We can use Begin/Draw/End just like if we were using a SpriteBatch.
-            // If we do this, we do not need to call SystemManagers.Default.Draw(),
-            // which is used for "retained mode" rendering.
-            //var renderer = SystemManagers.Default.Renderer;
-
-            //// call begin, just like if using a SpriteBatch
-            //renderer.Begin();
-            //renderer.Draw(textRuntime);
-            //renderer.Draw(text);
-            //renderer.End();
-
-            // We can also do immediate mode without creating any objects:
             gumBatch.Begin();
-            gumBatch.DrawString(font, "This is using Gum Batch", new Vector2(0, 150), Color.White);
+            // We can do immediate mode without creating any objects by calling DrawString:
+            gumBatch.DrawString(font, "This is using Gum Batch", new Vector2(10, 10), Color.White);
             gumBatch.End();
+
+            spriteBatch.Begin();
+            spriteBatch.Draw(renderTarget, new Vector2(50, 10), Color.White);
+            spriteBatch.End();
+
             base.Draw(gameTime);
         }
     }

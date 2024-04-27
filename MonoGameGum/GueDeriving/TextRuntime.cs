@@ -24,6 +24,30 @@ namespace MonoGameGum.GueDeriving
             }
         }
 
+        public Gum.BlendState BlendState
+        {
+            get => ContainedText.BlendState;
+            set
+            {
+                ContainedText.BlendState = value;
+                NotifyPropertyChanged();
+                NotifyPropertyChanged(nameof(Blend));
+            }
+        }
+
+        public Gum.RenderingLibrary.Blend Blend
+        {
+            get
+            {
+                return Gum.RenderingLibrary.BlendExtensions.ToBlend(ContainedText.BlendState);
+            }
+            set
+            {
+                BlendState = Gum.RenderingLibrary.BlendExtensions.ToBlendState(value);
+                // NotifyPropertyChanged handled by BlendState:
+            }
+        }
+
         public int Red
         {
             get => mContainedText.Red;

@@ -415,7 +415,6 @@ namespace RenderingLibrary.Graphics
         // Immediate mode calls:
         public void Begin()
         {
-
             SpriteBatchStack.PerformStartOfLayerRenderingLogic();
 
             spriteRenderer.BeginSpriteBatch(mRenderStateVariables, mLayers[0], BeginType.Push, mCamera);
@@ -700,6 +699,8 @@ namespace RenderingLibrary.Graphics
             }
 
             State = GumBatchState.BeginCalled;
+
+
 
             systemManagers.Renderer.Begin();
         }

@@ -36,6 +36,18 @@ namespace MonoGameGum.GueDeriving
                 NotifyPropertyChanged();
             }
         }
+
+        public Microsoft.Xna.Framework.Graphics.BlendState BlendState
+        {
+            get => ContainedNineSlice.BlendState.ToXNA();
+            set
+            {
+                ContainedNineSlice.BlendState = value.ToGum();
+                NotifyPropertyChanged();
+                NotifyPropertyChanged(nameof(Blend));
+            }
+        }
+
         public Gum.RenderingLibrary.Blend Blend
         {
             get
@@ -44,8 +56,8 @@ namespace MonoGameGum.GueDeriving
             }
             set
             {
-                ContainedNineSlice.BlendState = Gum.RenderingLibrary.BlendExtensions.ToBlendState(value);
-                NotifyPropertyChanged();
+                BlendState = ContainedNineSlice.BlendState.ToXNA();
+                // NotifyPropertyChanged handled by BlendState:
             }
         }
         public int Blue

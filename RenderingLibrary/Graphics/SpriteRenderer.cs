@@ -198,6 +198,8 @@ namespace RenderingLibrary.Graphics
             // Miguel 2023/08/10
             // Why use Immediate instead of Deferred if it's slower?
             // I'll change it and let's see if it breaks anything.
+            // Victor April 27, 2024
+            // This seems to work fine in all cases, so no need to branch on beginType
             if (beginType == BeginType.Begin)
             {
                 mSpriteBatch.ReplaceRenderStates(SpriteSortMode.Deferred,

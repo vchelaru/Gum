@@ -1,4 +1,5 @@
 ﻿using RenderingLibrary;
+using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,6 +35,17 @@ namespace MonoGameGum.GueDeriving
                 NotifyPropertyChanged();
             }
         }
+        public Microsoft.Xna.Framework.Graphics.BlendState BlendState
+        {
+            get => ContainedSprite.BlendState.ToXNA();
+            set
+            {
+                ContainedSprite.BlendState = value.ToGum();
+                NotifyPropertyChanged();
+                NotifyPropertyChanged(nameof(Blend));
+            }
+        }
+
         public Gum.RenderingLibrary.Blend Blend
         {
             get
@@ -42,8 +54,8 @@ namespace MonoGameGum.GueDeriving
             }
             set
             {
-                ContainedSprite.BlendState = Gum.RenderingLibrary.BlendExtensions.ToBlendState(value);
-                NotifyPropertyChanged();
+                BlendState = ContainedSprite.BlendState.ToXNA();
+                // NotifyPropertyChanged handled by BlendState:
             }
         }
         public int Blue
