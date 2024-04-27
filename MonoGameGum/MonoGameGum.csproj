@@ -6,7 +6,8 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageId>Gum.MonoGame</PackageId>
-	  <Version>2024.4.26.3</Version>
+	  <Version>2024.4.26.4</Version>
+
 	  <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
 

@@ -61,7 +61,7 @@ namespace MonoGameGum.GueDeriving
             {
                 if (value != BitmapFont)
                 {
-                    BitmapFont = value;
+                    ContainedText.BitmapFont = value;
                     NotifyPropertyChanged();
                     UpdateLayout();
                 }
