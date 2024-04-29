@@ -2,7 +2,7 @@
 
 This page assumes you have an existing MonoGame project. This can be an empty project or an existing game.
 
-Note that as of the time of this writing, only MonoGame Desktop GL projects are supported. If you are working on a different platform, please contact us on discord or file an issue on Github requesting the addition of your project.
+Note that as of the time of this writing, only MonoGame Desktop GL projects are supported. Windows, Mac, and Linux have been tested. If you are working on a different platform, please contact us on discord or file an issue on Github requesting the addition of your project.
 
 ### Adding Gum Nuget Packages
 
