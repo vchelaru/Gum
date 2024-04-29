@@ -75,7 +75,7 @@ namespace MonoGameGumFromFile
 
         private static GumProjectSave LoadGumProject()
         {
-            var gumProject = GumProjectSave.Load("GumProject.gumx", out _);
+            var gumProject = GumProjectSave.Load("GumProject.gumx");
             ObjectFinder.Self.GumProjectSave = gumProject;
             gumProject.Initialize();
             return gumProject;

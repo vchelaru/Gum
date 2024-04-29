@@ -34,10 +34,7 @@
 		<ProjectReference Include="..\..\..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
 	</ItemGroup>
 	<ItemGroup>
-		<None Update="Content\*.*">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="Content\*\*.*">
+		<None Update="Content\**\*.*">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>

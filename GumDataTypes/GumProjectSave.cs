@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml.Serialization;
 using ToolsUtilities;
 
@@ -237,6 +238,32 @@ namespace Gum.DataTypes
             StandardElementReferences = new List<ElementReference>();
         }
 
+        public static GumProjectSave Load(string fileName)
+        {
+            var toReturn = Load(fileName, out GumLoadResult result);
+
+            if(!string.IsNullOrEmpty(result.ErrorMessage) || result.MissingFiles?.Count > 0)
+            {
+                var stringBuilder = new StringBuilder();
+
+                if(!string.IsNullOrEmpty(result.ErrorMessage))
+                {
+                    stringBuilder.AppendLine(result.ErrorMessage);
+                }
+
+                foreach(var missingFile in result.MissingFiles)
+                {
+                    stringBuilder.AppendLine($"Missing file: {missingFile}");
+                }
+
+
+                throw new Exception(stringBuilder.ToString());
+            }
+            else
+            {
+                return toReturn;
+            }
+        }
 
         public static GumProjectSave Load(string fileName, out GumLoadResult result)
         {
