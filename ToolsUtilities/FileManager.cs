@@ -29,7 +29,9 @@ namespace ToolsUtilities
 #elif ANDROID || IOS
             Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).ToLower().Replace("/", "\\") + "\\";
 #else
-            Path.GetDirectoryName(AppContext.BaseDirectory).ToLower().Replace("/", "\\") + "\\";
+            Path.GetDirectoryName(AppContext.BaseDirectory)
+                .Replace('/', Path.DirectorySeparatorChar)
+                .Replace('\\', Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
 #endif
 
         static string mRelativeDirectory = ExeLocation;
@@ -362,7 +364,11 @@ namespace ToolsUtilities
 #else
             if (fileName.Length < 1 || !Path.IsPathRooted(fileName))
             {
-                relative = true;
+                // On linux and mac, we need to still check if it has a root:
+                var root = Path.GetPathRoot(fileName);
+
+
+                relative = string.IsNullOrWhiteSpace(root);
             }
 #endif
             return relative;
@@ -614,7 +620,8 @@ namespace ToolsUtilities
             }
 
             // normalize slash direction
-            newFileName = newFileName.Replace(@"\", "/");
+            newFileName = newFileName.Replace('\\', Path.DirectorySeparatorChar)
+                .Replace('/', Path.DirectorySeparatorChar);
 
             return newFileName;
         }
