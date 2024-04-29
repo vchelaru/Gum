@@ -105,8 +105,15 @@ namespace SkiaGum.Wpf
             // Vic says - Not sure why this was written to have a GlobalScale rather than
             // use the camera. Using the camera gives more flexibility and standardizes the
             // syntax across different platforms.
-            GraphicalUiElement.CanvasWidth = info.Width / SystemManagers.Renderer.Camera.Zoom;
-            GraphicalUiElement.CanvasHeight = info.Height / SystemManagers.Renderer.Camera.Zoom;
+
+            var camera =
+                SystemManagers.Renderer.Camera;
+
+            camera.ClientWidth = info.Width;
+            camera.ClientHeight = info.Height;
+
+            GraphicalUiElement.CanvasWidth = info.Width / camera.Zoom;
+            GraphicalUiElement.CanvasHeight = info.Height / camera.Zoom;
             //SystemManagers.Renderer.Camera.Zoom = GlobalScale;
 
             ForceGumLayout();
