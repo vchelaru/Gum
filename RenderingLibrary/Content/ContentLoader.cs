@@ -172,7 +172,7 @@ namespace RenderingLibrary.Content
         /// <returns>The loaded Texture2D</returns>
         private Texture2D LoadTextureFromFile(string fileName, SystemManagers managers = null)
         {
-            string fileNameStandardized = FileManager.Standardize(fileName, false, false);
+            string fileNameStandardized = FileManager.Standardize(fileName, true, false);
 
             if (FileManager.IsRelative(fileNameStandardized))
             {

@@ -47,13 +47,14 @@ namespace ToolsUtilities
             get { return mRelativeDirectory; }
             set
             {
-                if(IsRelative(value))
+                if (IsRelative(value))
                 {
                     mRelativeDirectory = ExeLocation + value;
                 }
                 else
                 {
-                    mRelativeDirectory = value;
+                    mRelativeDirectory = value.Replace('/', Path.DirectorySeparatorChar)
+                        .Replace('\\', Path.DirectorySeparatorChar);
                 }
             }
         }
@@ -103,7 +104,7 @@ namespace ToolsUtilities
 
         public static bool FileExists(string fileName, bool ignoreExtensions)
         {
-            fileName = Standardize(fileName, preserveCase:true, makeAbsolute: true);
+            fileName = Standardize(fileName, preserveCase: true, makeAbsolute: true);
             if (!ignoreExtensions)
             {
 #if ANDROID || IOS || WINDOWS_8 
@@ -501,9 +502,11 @@ namespace ToolsUtilities
 
         public static string RemoveDotDotSlash(string fileNameToFix)
         {
+            fileNameToFix = fileNameToFix.Replace('\\', Path.DirectorySeparatorChar)
+                .Replace('/', Path.DirectorySeparatorChar);
+
             if (fileNameToFix.Contains(".."))
             {
-                fileNameToFix = fileNameToFix.Replace("\\", "/");
 
                 // First let's get rid of any ..'s that are in the middle
                 // for example:
@@ -514,23 +517,25 @@ namespace ToolsUtilities
                 // 
                 // "content/background/outdoorsanim/outdoorsanim.achx"
 
-                int indexOfNextDotDotSlash = fileNameToFix.IndexOf("../");
+                var dotDotSlash = ".." + Path.DirectorySeparatorChar;
+
+                int indexOfNextDotDotSlash = fileNameToFix.IndexOf(dotDotSlash);
 
                 bool shouldLoop = indexOfNextDotDotSlash > 0;
 
                 while (shouldLoop)
                 {
-                    int indexOfPreviousDirectory = fileNameToFix.LastIndexOf('/', indexOfNextDotDotSlash - 2, indexOfNextDotDotSlash - 2);
+                    int indexOfPreviousDirectory = fileNameToFix.LastIndexOf(Path.DirectorySeparatorChar, indexOfNextDotDotSlash - 2, indexOfNextDotDotSlash - 2);
 
                     fileNameToFix = fileNameToFix.Remove(indexOfPreviousDirectory + 1, indexOfNextDotDotSlash - indexOfPreviousDirectory + 2);
 
-                    indexOfNextDotDotSlash = fileNameToFix.IndexOf("../");
+                    indexOfNextDotDotSlash = fileNameToFix.IndexOf(dotDotSlash);
 
                     shouldLoop = indexOfNextDotDotSlash > 0;
                 }
             }
 
-            return fileNameToFix.Replace("\\", "/");
+            return fileNameToFix;
         }
 
         #region XML Docs
@@ -1217,7 +1222,7 @@ namespace ToolsUtilities
 
         public static void XmlSerialize(Type type, object objectToSerialize, string fileName)
         {
-                // Make sure that the directory for the file exists
+            // Make sure that the directory for the file exists
             string directory = FileManager.GetDirectory(fileName);
             if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
             {

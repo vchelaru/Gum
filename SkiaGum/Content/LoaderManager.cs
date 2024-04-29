@@ -38,7 +38,7 @@ namespace RenderingLibrary.Content
         // on by default...
         //bool mCacheTextures = false;
         bool mCacheTextures = true;
-        Dictionary<string, IDisposable> mCachedDisposables = new Dictionary<string, IDisposable>();
+        Dictionary<string, IDisposable> mCachedDisposables = new Dictionary<string, IDisposable>(StringComparer.OrdinalIgnoreCase);
         public bool CacheTextures
         {
             get { return mCacheTextures; }

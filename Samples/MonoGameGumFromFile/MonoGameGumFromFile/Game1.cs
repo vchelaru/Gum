@@ -10,6 +10,7 @@ using MonoGameGum.Renderables;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
+using System.IO;
 using System.Linq;
 using ToolsUtilities;
 
@@ -220,7 +221,7 @@ namespace MonoGameGumFromFile
 
         private bool ShowScreen(string screenName)
         {
-            FileManager.RelativeDirectory = "content/";
+            FileManager.RelativeDirectory = "Content" + Path.DirectorySeparatorChar;
             currentGumScreenSave = ObjectFinder.Self.GumProjectSave.Screens.FirstOrDefault(item => item.Name == screenName);
 
             var isAlreadyShown = false;
