@@ -29,11 +29,11 @@ To create a Gum project:
 To add the files to your .csproj:
 
 1. Open your .csproj file in a text editor
-2.  Add a line to copy all files in the Gum project folder including the .gumx file itself. For an example, see the .csproj file for the MonoGameGumFromFile project: [https://github.com/vchelaru/Gum/blob/8cde3f76d00cf14c00d68c1aaa4713b9f75e702f/Samples/MonoGameGumFromFile/MonoGameGumFromFile/MonoGameGumFromFile.csproj#L37](https://github.com/vchelaru/Gum/blob/8cde3f76d00cf14c00d68c1aaa4713b9f75e702f/Samples/MonoGameGumFromFile/MonoGameGumFromFile/MonoGameGumFromFile.csproj#L37)\
+2.  Add a line to copy all files in the Gum project folder including the .gumx file itself. For an example, see the .csproj file for the MonoGameGumFromFile project: [https://github.com/vchelaru/Gum/blob/0e266942560e585359f019ac090a6c1010621c0b/Samples/MonoGameGumFromFile/MonoGameGumFromFile/MonoGameGumFromFile.csproj#L37](https://github.com/vchelaru/Gum/blob/0e266942560e585359f019ac090a6c1010621c0b/Samples/MonoGameGumFromFile/MonoGameGumFromFile/MonoGameGumFromFile.csproj#L37)\
     Your .csproj may look like this:\
 
 
-    <figure><img src="../.gitbook/assets/image (50).png" alt=""><figcaption><p>Copy all files to output</p></figcaption></figure>
+    <figure><img src="../.gitbook/assets/29_12 07 52.png" alt=""><figcaption><p>Copy all files to output</p></figcaption></figure>
 3.  Verify that all gum files (see the extension list above) are marked as Copy if newer in Visual Studio\
 
 
@@ -51,7 +51,7 @@ To load a Gum Project:
 2. Modify the Initialize method so that it has the following lines **after** initializing SystemManagers:
 
 ```csharp
-var gumProject = GumProjectSave.Load("GumProject.gumx", out GumLoadResult result);
+var gumProject = GumProjectSave.Load("GumProject.gumx");
 ObjectFinder.Self.GumProjectSave = gumProject;
 gumProject.Initialize();
 
@@ -59,7 +59,7 @@ gumProject.Initialize();
 gumProject.Screens.First().ToGraphicalUiElement(SystemManagers.Default, addToManagers:true);
 ```
 
-For an example of a Game1.cs file which loads a project file, see the MonoGameGumFromFile: [https://github.com/vchelaru/Gum/blob/8cde3f76d00cf14c00d68c1aaa4713b9f75e702f/Samples/MonoGameGumFromFile/MonoGameGumFromFile/Game1.cs#L33C1-L37C105](https://github.com/vchelaru/Gum/blob/8cde3f76d00cf14c00d68c1aaa4713b9f75e702f/Samples/MonoGameGumFromFile/MonoGameGumFromFile/Game1.cs#L33C1-L37C105)
+For an example of a Game1.cs file which loads a project file, see the MonoGameGumFromFile: [https://github.com/vchelaru/Gum/blob/0e266942560e585359f019ac090a6c1010621c0b/Samples/MonoGameGumFromFile/MonoGameGumFromFile/Game1.cs#L76-L82](https://github.com/vchelaru/Gum/blob/0e266942560e585359f019ac090a6c1010621c0b/Samples/MonoGameGumFromFile/MonoGameGumFromFile/Game1.cs#L76-L82)
 
 Note that calling ToGraphicalUiElement creates a [GraphicalUiElement](../gum-code-reference/graphicaluielement/) (Gum object) from the first screen. You can inspect the gumProject.Screens file and select which screen you would like to create if your project has mutliple Screens.
 
@@ -84,18 +84,10 @@ child.SetProperty("Text", "Hello world");
 
 ### Troubleshooting Gum Project Loading
 
-If your Gum project loads incorrectly, you can inspect the GumLoadResult object that is returned from the Load method to see what might be wrong. To inspect this object, you can place a breakpoint after your Load call and look at the `result` object as shown in the following screenshot.
+If your Gum project load results in an exception, you can inspect the exception message for information about the failure. The most common type of failure is a missing file reference.
 
-<figure><img src="../.gitbook/assets/image (43).png" alt=""><figcaption><p>Viewing the GumLoadResult in the output window</p></figcaption></figure>
-
-In this case the GumLoadResult is indicating no errors and no missing files.
-
-You may see information about missing files if any files are not found during the loading process. For example, the following screenshot shows that a Component file (.gucx) is missing:
-
-<figure><img src="../.gitbook/assets/image (48).png" alt=""><figcaption><p>Missing component "CardInstance.gucx"</p></figcaption></figure>
-
-If you are missing files, you may have not set up the file to copy to the output folder. The following screenshot shows an incorrect setup - the file is not copied:
+If you are missing files, you may have not set up the file to copy to the output folder. The following screenshot shows an incorrect setup - the CardInstance.gucx file is not copied, but it probably should be:
 
 <figure><img src="../.gitbook/assets/image (49).png" alt=""><figcaption><p>Incorrect setting on .gucx</p></figcaption></figure>
 
-This can be changed to copy in Visual Studio, or the .csproj can be modified to include wildcards for copying files over, which can make maintenance easier as the project grows.
+This can be changed to copy in Visual Studio, or the .csproj can be modified to include wildcards for copying files over, which can make maintenance easier as the project grows. See the section above for information and examples on setting up your project loading.
