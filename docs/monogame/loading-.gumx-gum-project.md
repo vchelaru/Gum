@@ -33,7 +33,7 @@ To add the files to your .csproj:
     Your .csproj may look like this:\
 
 
-    <figure><img src="../.gitbook/assets/29_12 07 52.png" alt=""><figcaption><p>Copy all files to output</p></figcaption></figure>
+    <figure><img src="broken-reference" alt=""><figcaption><p>Copy all files to output</p></figcaption></figure>
 3.  Verify that all gum files (see the extension list above) are marked as Copy if newer in Visual Studio\
 
 
@@ -43,7 +43,7 @@ The example above copies the entirety of the content folder to the output folder
 
 [https://learn.microsoft.com/en-us/visualstudio/msbuild/how-to-select-the-files-to-build?view=vs-2022#specify-inputs-with-wildcards](https://learn.microsoft.com/en-us/visualstudio/msbuild/how-to-select-the-files-to-build?view=vs-2022#specify-inputs-with-wildcards)
 
-### Loading a Gum projecxt
+### Loading a Gum project
 
 To load a Gum Project:
 
