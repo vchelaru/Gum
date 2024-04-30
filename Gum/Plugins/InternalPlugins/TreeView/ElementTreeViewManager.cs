@@ -277,6 +277,8 @@ namespace Gum.Managers
 
 
             relative = FileManager.Standardize(relative);
+            // in the tool we use forward slashes:
+            relative = relative.Replace("\\", "/");
 
             if (relative.StartsWith("screens/"))
             {

@@ -3811,6 +3811,10 @@ namespace CodeOutputPlugin.Manager
                 {
                     strippedType = strippedType.Substring(strippedType.LastIndexOf("/") + 1);
                 }
+                if (strippedType.Contains("\\"))
+                {
+                    strippedType = strippedType.Substring(strippedType.LastIndexOf("\\") + 1);
+                }
 
                 string suffix = visualApi == VisualApi.Gum ? "Runtime" : "";
                 className = $"{strippedType}{suffix}";
