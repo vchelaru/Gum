@@ -440,7 +440,7 @@ namespace ToolsUtilities
                 pathToMakeRelativeTo = FileManager.Standardize(pathToMakeRelativeTo, preserveCase);
 
                 // Use the old method if we can
-                if (pathToMakeRelative.ToLowerInvariant().StartsWith(pathToMakeRelativeTo.ToLowerInvariant()))
+                if (pathToMakeRelative.StartsWith(pathToMakeRelativeTo, StringComparison.OrdinalIgnoreCase))
                 {
                     pathToMakeRelative = pathToMakeRelative.Substring(pathToMakeRelativeTo.Length);
                 }
@@ -449,8 +449,8 @@ namespace ToolsUtilities
                     // Otherwise, we have to use the new method to identify the common root
 
                     // Split the path strings
-                    string[] path = pathToMakeRelative.Split('/');
-                    string[] relpath = pathToMakeRelativeTo.Split('/');
+                    string[] path = pathToMakeRelative.Split(System.IO.Path.DirectorySeparatorChar);
+                    string[] relpath = pathToMakeRelativeTo.Split(System.IO.Path.DirectorySeparatorChar);
 
                     string relativepath = string.Empty;
 
@@ -468,7 +468,7 @@ namespace ToolsUtilities
                         for (int i = start; i < relpath.Length; i++)
                         {
                             if (relpath[i] != string.Empty)
-                                relativepath += @"../";
+                                relativepath += @".." + System.IO.Path.DirectorySeparatorChar; 
                         }
 
                         // if the current relative path is still empty, and there are more than one entries left in the path,
@@ -482,7 +482,7 @@ namespace ToolsUtilities
                         for (int i = start; i < path.Length; i++)
                         {
                             relativepath += path[i];
-                            if (i < path.Length - 1) relativepath += "/";
+                            if (i < path.Length - 1) relativepath += System.IO.Path.DirectorySeparatorChar;
                         }
 
                         pathToMakeRelative = relativepath;

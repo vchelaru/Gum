@@ -98,9 +98,19 @@ namespace RenderingLibrary.Graphics
                 {
                     managers.Canvas.Scale(Camera.Zoom);
                 }
-                if(Camera.X != 0 || Camera.Y != 0)
+
+                var translateX = -Camera.X;
+                var translateY = -Camera.Y;
+
+                if(Camera.CameraCenterOnScreen == CameraCenterOnScreen.Center)
                 {
-                    managers.Canvas.Translate(-Camera.X, -Camera.Y);
+                    translateX += (Camera.ClientWidth / 2.0f);
+                    translateY += (Camera.ClientHeight / 2.0f);
+                }
+
+                if(translateX != 0 || translateY != 0)
+                {
+                    managers.Canvas.Translate(translateX, translateY);
                 }
             }
 
