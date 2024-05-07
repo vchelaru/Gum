@@ -100,6 +100,54 @@ gumBatch.End();
 
 <figure><img src="../.gitbook/assets/image (66).png" alt=""><figcaption><p>Rendering a TextRuntime in immediate mode with GumBatch</p></figcaption></figure>
 
+### Rendering Parent/Child Hierarchy
+
+GumBatch.Draw renders any argument renderable object. If the object has children, then the Draw call performs a hierarchical draw, respecting the parent/child relationship to control draw order.
+
+For example, the following code creates a parent ColoredRectangleRuntime and a child TextRuntime:
+
+Since the Draw call is only called on the Parent, then only the Parent reference is kept at class scope:
+
+```csharp
+// at class scope:
+ColoredRectangleRuntime buttonRectangle;
+
+// in initialize:
+// It's possible to create a runtime object...
+buttonRectangle = new ColoredRectangleRuntime();
+buttonRectangle.Width = 128;
+buttonRectangle.Height = 32;
+buttonRectangle.Color = Color.DarkBlue;
+buttonRectangle.X = 0;
+buttonRectangle.Y = 100;
+// ... and add children to it:
+var buttonText = new TextRuntime();
+buttonText.Text = "Button text";
+buttonText.X = 0;
+buttonText.Y = 0;
+buttonText.Width = 0;
+buttonText.Height = 0;
+buttonText.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+buttonText.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+buttonText.XOrigin = HorizontalAlignment.Center;
+buttonText.YOrigin = VerticalAlignment.Center;
+buttonText.HorizontalAlignment = HorizontalAlignment.Center;
+buttonText.VerticalAlignment = VerticalAlignment.Center;
+buttonText.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+buttonText.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+buttonRectangle.Children.Add(buttonText);
+
+// Then draw call is only performed on the buttonRectangle - the children 
+// (buttonText) are drawn automatically:
+gumBatch.Begin();
+gumBatch.Draw(buttonRectangle);
+gumBatch.End();
+```
+
+<figure><img src="../.gitbook/assets/image.png" alt=""><figcaption><p>buttonRectangle drawn with its child buttonText</p></figcaption></figure>
+
+###
+
 ### RenderTargets
 
 GumBatch can be used to render Gum objects on RenderTarget2Ds, just like regular SpriteBatch calls.
