@@ -146,8 +146,6 @@ gumBatch.End();
 
 <figure><img src="../.gitbook/assets/image.png" alt=""><figcaption><p>buttonRectangle drawn with its child buttonText</p></figcaption></figure>
 
-###
-
 ### RenderTargets
 
 GumBatch can be used to render Gum objects on RenderTarget2Ds, just like regular SpriteBatch calls.
