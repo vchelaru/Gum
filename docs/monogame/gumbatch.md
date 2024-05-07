@@ -160,7 +160,7 @@ gumBatch.Draw(SomeGumObject);
 gumBatch.End();
 
 // now set the render target to null to draw it to screen:
-GraphicsDevice.SetRenderTarget(MyRenderTarget);
+GraphicsDevice.SetRenderTarget(null);
 spriteBatch.Draw(MyRenderTarget, new Vector2(0, 0), Color.White);
 ```
 
