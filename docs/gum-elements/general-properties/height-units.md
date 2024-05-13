@@ -74,15 +74,24 @@ Ratio of Container also respects [Stack Spacing](../container/stack-spacing.md).
 
 The following image shows a child [ColoredRectangle](height-units.md#relativetochildren) with 50 **RelativeToChildren** Height, which means that it will always be 50 pixels taller than is necessary to contain its children. Since the rectangle has no children, this is the same as having 50 **Absolute** Height:
 
-![](../../.gitbook/assets/RelativeToChildren1.png)
+![](<../../.gitbook/assets/13\_13 35 18.png>)
 
-**RelativeToChildren** can be used to size an object based on the position and sizes of a container's children. The following image shows a container with 0 **RelativeToChildren** Height, which mans that its height is set just large enough to contain its children.
+**RelativeToChildren** can be used to size an object based on the position and sizes of a container's children. The following image shows a container with 0 **RelativeToChildren** Height, which mans that its height is set just large enough to contain its children. Notice that if the children are moved, the rectangle's height adjusts. Both children are considered so the container adjusts its height according to the bottom-most side of either child:
 
-![](../../.gitbook/assets/RelativeToChildrenHeight2.png)
+![Moving children can adjust the absolute height of the parent if the parent is using a Height Units of RelativeToChildren](<../../.gitbook/assets/13\_13 37 33.gif>)
 
-A non-zero **Height** when using **RelativeToChildren** can be used to add additional padding to a parent container. The following image shows a container with 20 pixels of padding height:
+A non-zero **Height** when using **RelativeToChildren** can be used to add additional padding to a parent container. The following shows how changing the height can adjust the absolute height relative to children:
 
-![](../../.gitbook/assets/RelativeToChildrenHeight3.png)
+![Height is relative to the bottom-most child when using RelativeToChildren](<../../.gitbook/assets/13\_13 39 50.gif>)
+
+The term "children" can refer to:
+
+* Instances added to a parent, such as ColoredRectangles added to a Container
+* Individual letters in a Text instance - each letter and line of text can expand the height of its parent
+
+The following animation shows a Text instance which has its Height Units set to RelativeToChildren. As more lines of text are added, the Text automatically expands in size.
+
+<figure><img src="../../.gitbook/assets/13_13 33 18.gif" alt=""><figcaption><p>Adding lines of text to a Text instance expands its height if its Height Units is set to RelativeToChildren</p></figcaption></figure>
 
 For more information on relative layout in regards to absolute vs. relative unit types, see the [Relative Layout Unit Type](relative-layout-unit-type.md) page.
 
