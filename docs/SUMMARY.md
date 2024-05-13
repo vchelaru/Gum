@@ -81,6 +81,7 @@
     * [ContainedElements](gum-code-reference/graphicaluielement/containedelements.md)
     * [GetAbsoluteX](gum-code-reference/graphicaluielement/getabsolutex.md)
     * [GetAbsoluteY](gum-code-reference/graphicaluielement/getabsolutey.md)
+    * [GetAbsoluteHeight](gum-code-reference/graphicaluielement/getabsoluteheight.md)
     * [GetChildByNameRecursively](gum-code-reference/graphicaluielement/getchildbynamerecursively.md)
   * [GumProjectSave](gum-code-reference/gumprojectsave.md)
   * [IDataUi](gum-code-reference/idataui.md)
