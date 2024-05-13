@@ -20,3 +20,16 @@ container.Children.Add(nineSlice);
 
 <figure><img src="../../.gitbook/assets/image (3) (1) (1) (1).png" alt=""><figcaption><p>NineSlice using Frame.png</p></figcaption></figure>
 
+### TextureAddressMode and Texture Coordinates
+
+By default a NineSlice uses it entire texture. This can be customized using texture coordinate and TextureAddress properies as shown in the following code:
+
+```csharp
+nineSlice.TextureLeft = 0;
+nineSlice.TextureTop = 16;
+nineSlice.TextureWidth = 32;
+nineSlice.TextureHeight = 32;
+nineSlice.TextureAddress = Gum.Managers.TextureAddress.Custom;
+```
+
+Note that if TextureAddress isn't set to Custom, then the four coordinate values are ignored and the entire texture is used.
