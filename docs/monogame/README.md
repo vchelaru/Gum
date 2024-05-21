@@ -4,7 +4,13 @@ MonoGame projects can take full advantage of the Gum tool and runtimes to create
 
 The Gum UI Tool is a WYSIWYG editor for creating layouts. Projects that are created in the Gum UI tool can be loaded into your MonoGame project with just a few lines of code.
 
-The Gum runtime (called MonoGameGum) is a NuGet package which adds the classes necessary to load and interact with Gum projects. Note that you are not required to use the Gum UI Tool in your project - if you prefer to do things in code you can! You are free to load Gum projects, or do it all in C#.
+The Gum runtime (called MonoGameGum) is a NuGet package which adds the classes necessary to load and interact with Gum projects.&#x20;
+
+### Do I Need to Use the Gum Tool?
+
+Absolutely not! The Gum tool can be useful for doing complex layouts, previewing how things may be positioned, and helping you learn how to code with Gum - but it is not required! You can use Gum purely in code to do your own layouts or use only parts of Gum (such as font rendering).
+
+This section uses screenshots of the Gum tool so you can see what is possible with Gum, but everything you see here can also be done purely in code.
 
 ### Sample Projects
 
