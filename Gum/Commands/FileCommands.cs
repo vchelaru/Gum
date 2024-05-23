@@ -319,5 +319,21 @@ namespace Gum.Commands
             var settings = ProjectManager.Self.GeneralSettingsFile;
             settings.Save();
         }
+
+        public void SaveIfDiffers(FilePath filePath, string contents)
+        {
+            if (filePath.Exists() == false)
+            {
+                FileManager.SaveText(contents, filePath.FullPath);
+            }
+            else
+            {
+                string existingContents = FileManager.FromFileText(filePath.FullPath);
+                if (existingContents != contents)
+                {
+                    FileManager.SaveText(contents, filePath.FullPath);
+                }
+            }
+        }
     }
 }
