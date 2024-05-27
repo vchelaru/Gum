@@ -53,6 +53,7 @@ namespace SkiaGum.Wpf
 
             SystemManagers = new SystemManagers();
             SystemManagers.Initialize();
+            SystemManagers.Renderer.Camera.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
 
             DataContextChanged += HandleDataContextChanged;
         }
