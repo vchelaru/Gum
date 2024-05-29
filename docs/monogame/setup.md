@@ -2,7 +2,7 @@
 
 This page assumes you have an existing MonoGame project. This can be an empty project or an existing game.
 
-Note that as of the time of this writing, only MonoGame Desktop GL projects are supported. Windows, Mac, and Linux have been tested. If you are working on a different platform, please contact us on discord or file an issue on Github requesting the addition of your project.
+Note that as of the time of this writing, only MonoGame Desktop GL projects are supported. Windows, Mac, and Linux have been tested. If you are working on a different platform, please contact us on discord or file an issue on Github requesting the addition of your platform.
 
 ### Adding Gum Nuget Packages
 
@@ -34,7 +34,7 @@ rectangle.Color = Color.White;
 rectangle.AddToManagers(SystemManagers.Default, null);
 ```
 
-<figure><img src="../.gitbook/assets/image (25).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (25).png" alt=""><figcaption><p>White ColoredRectangleRuntime in game</p></figcaption></figure>
 
 If everything is initialized correctly, you should see a white rectangle at the top-left of the screen.
 
