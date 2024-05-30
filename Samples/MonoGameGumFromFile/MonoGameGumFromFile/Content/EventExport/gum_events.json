@@ -1,161 +1,41 @@
 {
   "UserEvents": {
-    "vchel": [
+    "vchel": [],
+    "Owner": [
       {
-        "NewName": "ZoomLayerScreen",
+        "NewName": "Buttons/StandardButton (Container).NineSliceInstance",
         "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 0,
-        "TimestampUtc": "2024-03-05T12:05:50.7104937Z"
-      },
-      {
-        "NewName": "ZoomLayerScreen.ColoredRectangleInstance",
-        "OldName": null,
-        "ElementType": "Screens",
+        "ElementType": "Components",
         "EventType": 5,
-        "TimestampUtc": "2024-03-05T12:05:58.4088714Z"
-      },
-      {
-        "NewName": "ZoomLayerScreen.Unlayered",
-        "OldName": "ZoomLayerScreen.ColoredRectangleInstance",
-        "ElementType": "Screens",
-        "EventType": 7,
-        "TimestampUtc": "2024-03-05T12:06:17.0082311Z"
-      },
-      {
-        "NewName": "ZoomLayerScreen.TextInstance",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2024-03-05T12:06:20.5784195Z"
-      },
-      {
-        "NewName": "ZoomLayerScreen.CircleInstance",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2024-03-05T12:06:45.4726263Z"
-      },
-      {
-        "NewName": "ZoomLayerScreen.ColoredRectangleInstance",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2024-03-05T12:06:49.9811931Z"
-      },
-      {
-        "NewName": "ZoomLayerScreen.NineSliceInstance",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2024-03-05T12:06:56.511235Z"
+        "TimestampUtc": "2024-05-30T20:43:23.2878676Z"
       },
       {
         "NewName": null,
-        "OldName": "ZoomLayerScreen.NineSlice NineSliceInstance in ZoomLayerScreen",
-        "ElementType": "Screens",
+        "OldName": "Buttons/StandardButton (Container).NineSlice NineSliceInstance in Buttons/StandardButton (Container)",
+        "ElementType": "Components",
         "EventType": 6,
-        "TimestampUtc": "2024-03-05T12:07:15.714276Z"
+        "TimestampUtc": "2024-05-30T20:43:35.7101626Z"
       },
       {
-        "NewName": "ZoomLayerScreen.NineSliceInstance",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2024-03-05T12:07:20.169984Z"
-      },
-      {
-        "NewName": "ZoomLayerScreen.PolygonInstance",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2024-03-05T12:07:41.423015Z"
-      },
-      {
-        "NewName": "ZoomLayerScreen.SpriteInstance",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2024-03-05T12:08:10.5962253Z"
-      },
-      {
-        "NewName": "ZoomLayerScreen.Unlayered1",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2024-03-05T12:08:20.9006279Z"
-      },
-      {
-        "NewName": "ZoomLayerScreen.TextInstance1",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2024-03-05T12:08:20.9016254Z"
-      },
-      {
-        "NewName": "ZoomLayerScreen.CircleInstance1",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2024-03-05T12:08:20.9205744Z"
-      },
-      {
-        "NewName": "ZoomLayerScreen.ColoredRectangleInstance1",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2024-03-05T12:08:20.9226143Z"
-      },
-      {
-        "NewName": "ZoomLayerScreen.NineSliceInstance1",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2024-03-05T12:08:20.9305483Z"
-      },
-      {
-        "NewName": "ZoomLayerScreen.PolygonInstance1",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2024-03-05T12:08:20.9365318Z"
-      },
-      {
-        "NewName": "ZoomLayerScreen.SpriteInstance1",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2024-03-05T12:08:20.9415188Z"
-      },
-      {
-        "NewName": "ZoomLayerScreen.Layered",
-        "OldName": "ZoomLayerScreen.Unlayered1",
-        "ElementType": "Screens",
-        "EventType": 7,
-        "TimestampUtc": "2024-03-05T12:09:11.4197553Z"
-      }
-    ],
-    "Owner": [
-      {
-        "NewName": "ComponentWithExposedVariable",
-        "OldName": null,
-        "ElementType": "Components",
-        "EventType": 0,
-        "TimestampUtc": "2024-03-08T20:39:26.5327163Z"
-      },
-      {
-        "NewName": "ComponentWithExposedVariable (Container).TextInstance",
+        "NewName": "Buttons/StandardButton (Container).ColoredRectangleInstance",
         "OldName": null,
         "ElementType": "Components",
         "EventType": 5,
-        "TimestampUtc": "2024-03-08T20:39:40.0683724Z"
+        "TimestampUtc": "2024-05-30T20:43:40.4143188Z"
       },
       {
-        "NewName": "StartScreen.ComponentWithExposedVariableInstance",
+        "NewName": "Buttons/StandardButton (Container).TextInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-05-30T20:44:12.7014161Z"
+      },
+      {
+        "NewName": "StartScreen.StandardButtonInstance",
         "OldName": null,
         "ElementType": "Screens",
         "EventType": 5,
-        "TimestampUtc": "2024-03-08T20:40:36.8797236Z"
+        "TimestampUtc": "2024-05-30T20:45:22.8178303Z"
       }
     ]
   }

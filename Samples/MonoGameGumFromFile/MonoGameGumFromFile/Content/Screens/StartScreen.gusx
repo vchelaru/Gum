@@ -448,6 +448,18 @@
     </Variable>
     <Variable>
       <Type>float</Type>
+      <Name>StandardButtonInstance.X</Name>
+      <Value xsi:type="xsd:float">32</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>StandardButtonInstance.Y</Name>
+      <Value xsi:type="xsd:float">332</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
       <Name>TextInstance.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
       <SetsValue>true</SetsValue>
@@ -1199,6 +1211,11 @@
   <Instance>
     <Name>ComponentWithExposedVariableInstance</Name>
     <BaseType>ComponentWithExposedVariable</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>StandardButtonInstance</Name>
+    <BaseType>Buttons/StandardButton</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Behaviors />

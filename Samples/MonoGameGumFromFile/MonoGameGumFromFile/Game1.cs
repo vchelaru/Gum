@@ -12,6 +12,7 @@ using RenderingLibrary.Graphics;
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using ToolsUtilities;
 
 namespace MonoGameGumFromFile
@@ -258,7 +259,12 @@ namespace MonoGameGumFromFile
 
             var mouseState = Mouse.GetState();
 
-            if(currentGumScreenSave?.Name == "ZoomScreen")
+            if(currentGumScreenSave?.Name == "StartScreen")
+            {
+                DoStartScreenLogic();
+            }
+
+            else if (currentGumScreenSave?.Name == "ZoomScreen")
             {
                 DoZoomScreenLogic(mouseState);
             }
@@ -276,6 +282,38 @@ namespace MonoGameGumFromFile
             lastMouseState = mouseState;
 
             base.Update(gameTime);
+        }
+
+        bool wasDownLastFrame = false;
+        int clickCount = 0;
+        private void DoStartScreenLogic()
+        {
+            // This could be cached to speed things up:
+            var button = currentScreenElement.GetGraphicalUiElementByName("StandardButtonInstance");
+
+            var mouseState = Mouse.GetState();
+
+            var mouseX = mouseState.X;
+            var mouseY = mouseState.Y;
+
+            var isDownThisFrame = mouseState.LeftButton == ButtonState.Pressed;
+
+            if(isDownThisFrame && !wasDownLastFrame)
+            {
+                var isOver = 
+                    mouseX > button.GetAbsoluteLeft() &&
+                    mouseX < button.GetAbsoluteRight() &&
+                    mouseY > button.GetAbsoluteTop() &&
+                    mouseY < button.GetAbsoluteBottom();
+
+                if (isOver)
+                {
+                    clickCount++;
+                    button.GetGraphicalUiElementByName("TextInstance").SetProperty("Text", "Clicked " + clickCount + " times");
+                }
+            }
+
+            wasDownLastFrame = isDownThisFrame;
         }
 
         private void DoOffsetLayerScreenLogic(MouseState mouseState)
