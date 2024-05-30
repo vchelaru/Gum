@@ -77,6 +77,7 @@
     * [Reflection](gum-code-reference/datauigrid/reflection.md)
     * [Categories](gum-code-reference/datauigrid/categories.md)
   * [GraphicalUiElement](gum-code-reference/graphicaluielement/README.md)
+    * [ApplyState](gum-code-reference/graphicaluielement/applystate.md)
     * [Children](gum-code-reference/graphicaluielement/children.md)
     * [ContainedElements](gum-code-reference/graphicaluielement/containedelements.md)
     * [GetAbsoluteX](gum-code-reference/graphicaluielement/getabsolutex.md)
