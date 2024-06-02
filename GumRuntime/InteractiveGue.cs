@@ -64,6 +64,15 @@ namespace Gum.Wireframe
         /// </summary>
         public event EventHandler RollOver;
 
+        // RollOff is determined outside of the individual InteractiveGue so we need to have this callable externally..
+        public void TryCallRollOff()
+        {
+            if (RollOff != null)
+            {
+                RollOff(this, EventArgs.Empty);
+            }
+        }
+
         #endregion
 
         private bool DoUiActivityRecursively(ICursor cursor, HandledActions handledActions = null)
@@ -158,9 +167,12 @@ namespace Gum.Wireframe
 
                         if (asInteractive?.HasEvents == true)
                         {
+                            var lastWindowOver = cursor.WindowOver;
+
                             // moved from above, see comments there...
                             handledByThis = true;
                             cursor.WindowOver = asInteractive;
+                            handledActions.SetWindowOver = true;
 
                             if (cursor.PrimaryPush && asInteractive.IsEnabled)
                             {
@@ -199,7 +211,16 @@ namespace Gum.Wireframe
                                     //}
                                 }
                             }
+                            if(asInteractive.RollOn != null && lastWindowOver != asInteractive)
+                            {
+                                asInteractive.RollOn(asInteractive, EventArgs.Empty);
+                            }
 
+                            if (asInteractive.RollOver != null && (cursor.XChange != 0 || cursor.YChange != 0))
+                            {
+                                asInteractive.RollOver(asInteractive, EventArgs.Empty);
+                            }
+                            
                         }
                     }
                     if (asInteractive?.HasEvents == true && asInteractive?.IsEnabled == true)
@@ -404,12 +425,29 @@ namespace Gum.Wireframe
     {
         public bool HandledMouseWheel;
         public bool HandledRollOver;
+        public bool SetWindowOver;
     }
     public static class GueInteractiveExtensionMethods
     {
         public static void DoUiActivityRecursively(this GraphicalUiElement gue, ICursor cursor)
         {
-            InteractiveGue.DoUiActivityRecursively(cursor, null, gue);
+            var windowOverBefore = cursor.WindowOver;
+
+            HandledActions actions = new HandledActions();
+            InteractiveGue.DoUiActivityRecursively(cursor, actions, gue);
+
+            if(!actions.SetWindowOver)
+            {
+                cursor.WindowOver = null;
+            }
+
+            if(windowOverBefore != cursor.WindowOver)
+            {
+                if(windowOverBefore is InteractiveGue interactiveBefore)
+                {
+                    interactiveBefore.TryCallRollOff();
+                }
+            }
         }
     }
 }

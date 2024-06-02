@@ -14,9 +14,12 @@ internal class ClickableButton : InteractiveGue
     public ClickableButton() : base() 
     {
         this.Click += HandleClick;
+        this.RollOn += (_, _) => System.Diagnostics.Debug.WriteLine($"Roll On {Name}");
+        this.RollOff += (_, _) => System.Diagnostics.Debug.WriteLine($"Roll Off @ {Name}");
     }
 
     int NumberOfClicks;
+
 
     public void HandleClick(object sender, EventArgs args)
     {
