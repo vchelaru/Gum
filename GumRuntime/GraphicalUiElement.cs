@@ -98,7 +98,7 @@ namespace Gum.Wireframe
 
         // to save on casting:
         protected IRenderableIpso mContainedObjectAsIpso;
-        IVisible mContainedObjectAsIVisible;
+        protected IVisible mContainedObjectAsIVisible;
 
         GraphicalUiElement mWhatContainsThis;
 
@@ -931,7 +931,7 @@ namespace Gum.Wireframe
         /// Since this is an interface using ContainedElements in a foreach allocates memory
         /// and this can actually be significant in a game that updates its UI frequently.
         /// </remarks>
-        public IEnumerable<GraphicalUiElement> ContainedElements
+        public IList<GraphicalUiElement> ContainedElements
         {
             get
             {

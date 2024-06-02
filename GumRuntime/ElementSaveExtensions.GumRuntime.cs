@@ -20,10 +20,16 @@ namespace GumRuntime
     public static class ElementSaveExtensions
     {
         static Dictionary<string, Type> mElementToGueTypes = new Dictionary<string, Type>();
+        static Func<GraphicalUiElement> TemplateFunc;
 
         public static void RegisterGueInstantiationType(string elementName, Type gueInheritingType)
         {
             mElementToGueTypes[elementName] = gueInheritingType;
+        }
+
+        public static void RegisterDefaultInstantiationType<T>(Func<T> templateFunc) where T : GraphicalUiElement
+        {
+            TemplateFunc = templateFunc;
         }
 
         public static GraphicalUiElement CreateGueForElement(ElementSave elementSave, bool fullInstantiation = false, string genericType = null)
@@ -46,10 +52,20 @@ namespace GumRuntime
                 {
                     type = type.MakeGenericType(mElementToGueTypes[genericType]);
                 }
-                var constructor = type.GetConstructor(new Type[] { typeof(bool), typeof(bool) });
-
-
-                toReturn = constructor.Invoke(new object[] { fullInstantiation, true }) as GraphicalUiElement;
+                var constructorWithArgs = type.GetConstructor(new Type[] { typeof(bool), typeof(bool) });
+                if(constructorWithArgs != null)
+                {
+                    toReturn = constructorWithArgs.Invoke(new object[] { fullInstantiation, true }) as GraphicalUiElement;
+                }
+                else
+                {
+                    // For InteractiveGue in MonoGame Gum
+                    toReturn = (GraphicalUiElement)Activator.CreateInstance(type);
+                }
+            }
+            else if(TemplateFunc != null)
+            {
+                toReturn = TemplateFunc();
             }
             else
             {

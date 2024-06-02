@@ -6,7 +6,9 @@ using GumRuntime;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MonoGameGum.Input;
 using MonoGameGum.Renderables;
+using MonoGameGumFromFile.ComponentRuntimes;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
@@ -27,6 +29,8 @@ namespace MonoGameGumFromFile
         ScreenSave currentGumScreenSave;
 
         GraphicalUiElement currentScreenElement;
+
+        Cursor cursor;
 
         #endregion
 
@@ -68,10 +72,20 @@ namespace MonoGameGumFromFile
 
             LoadGumProject();
 
+            InitializeRuntimeMapping();
+
             ShowScreen("StartScreen");
             InitializeStartScreen();
+            cursor = new Cursor();
 
             base.Initialize();
+        }
+
+        private void InitializeRuntimeMapping()
+        {
+            ElementSaveExtensions.RegisterGueInstantiationType(
+                "Buttons/StandardButton", 
+                typeof(ClickableButton));
         }
 
         private static GumProjectSave LoadGumProject()
@@ -185,6 +199,21 @@ namespace MonoGameGumFromFile
                     InitializeOffsetLayerScreen();
                 }
             }
+            else if(state.IsKeyDown(Keys.D8))
+            {
+                if(!GetIfIsAlreadyShown("InteractiveGueScreen"))
+                {
+                    //ElementSaveExtensions.RegisterDefaultInstantiationType(() => new InteractiveGue());
+                    ShowScreen("InteractiveGueScreen");
+                    //InitializeInteractiveGueScreen();
+                }
+
+            }
+        }
+
+        private void InitializeInteractiveGueScreen()
+        {
+
         }
 
         private void InitializeStartScreen()
@@ -220,19 +249,27 @@ namespace MonoGameGumFromFile
             layeredText.MoveToLayer(layer);
         }
 
-        private bool ShowScreen(string screenName)
+        bool GetIfIsAlreadyShown(string screenName)
         {
-            FileManager.RelativeDirectory = "Content" + Path.DirectorySeparatorChar;
-            currentGumScreenSave = ObjectFinder.Self.GumProjectSave.Screens.FirstOrDefault(item => item.Name == screenName);
+            var newScreenElement = ObjectFinder.Self.GumProjectSave.Screens.FirstOrDefault(item => item.Name == screenName);
 
             var isAlreadyShown = false;
             if (currentScreenElement != null)
             {
-                isAlreadyShown = currentScreenElement.Tag == currentGumScreenSave;
+                isAlreadyShown = currentScreenElement.Tag == newScreenElement;
             }
 
+            return isAlreadyShown;
+        }
+
+        private bool ShowScreen(string screenName)
+        {
+            var isAlreadyShown = GetIfIsAlreadyShown(screenName);
             if (!isAlreadyShown)
             {
+                var newScreenElement = ObjectFinder.Self.GumProjectSave.Screens.FirstOrDefault(item => item.Name == screenName);
+                FileManager.RelativeDirectory = "Content" + Path.DirectorySeparatorChar;
+                currentGumScreenSave = newScreenElement;
                 currentScreenElement?.RemoveFromManagers();
                 var layers = SystemManagers.Default.Renderer.Layers;
                 while(layers.Count > 1)
@@ -255,6 +292,8 @@ namespace MonoGameGumFromFile
 
             SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
 
+            cursor.Activity(gameTime.TotalGameTime.TotalSeconds);
+
             DoSwapScreenLogic();
 
             var mouseState = Mouse.GetState();
@@ -262,6 +301,10 @@ namespace MonoGameGumFromFile
             if(currentGumScreenSave?.Name == "StartScreen")
             {
                 DoStartScreenLogic();
+            }
+            else if(currentGumScreenSave?.Name == "InteractiveGueScreen")
+            {
+                DoInteractiveGueScreenLogic();
             }
 
             else if (currentGumScreenSave?.Name == "ZoomScreen")
@@ -284,36 +327,12 @@ namespace MonoGameGumFromFile
             base.Update(gameTime);
         }
 
-        bool wasDownLastFrame = false;
+        void DoStartScreenLogic() { }
+
         int clickCount = 0;
-        private void DoStartScreenLogic()
+        private void DoInteractiveGueScreenLogic()
         {
-            // This could be cached to speed things up:
-            var button = currentScreenElement.GetGraphicalUiElementByName("StandardButtonInstance");
-
-            var mouseState = Mouse.GetState();
-
-            var mouseX = mouseState.X;
-            var mouseY = mouseState.Y;
-
-            var isDownThisFrame = mouseState.LeftButton == ButtonState.Pressed;
-
-            if(isDownThisFrame && !wasDownLastFrame)
-            {
-                var isOver = 
-                    mouseX > button.GetAbsoluteLeft() &&
-                    mouseX < button.GetAbsoluteRight() &&
-                    mouseY > button.GetAbsoluteTop() &&
-                    mouseY < button.GetAbsoluteBottom();
-
-                if (isOver)
-                {
-                    clickCount++;
-                    button.GetGraphicalUiElementByName("TextInstance").SetProperty("Text", "Clicked " + clickCount + " times");
-                }
-            }
-
-            wasDownLastFrame = isDownThisFrame;
+            currentScreenElement.DoUiActivityRecursively(cursor);
         }
 
         private void DoOffsetLayerScreenLogic(MouseState mouseState)
