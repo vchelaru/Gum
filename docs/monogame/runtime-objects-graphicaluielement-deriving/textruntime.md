@@ -14,6 +14,15 @@ textInstance.Text = "Hello world";
 textInstance.AddToManagers(SystemManagers.Default, null);
 ```
 
+### Example - Obtaining a TextRuntime Reference From a Gum Project
+
+To get a TextRuntime instance from a loaded Gum (gumx) project, add the following code. This code assumes you have an object named CurrentScreen, and that it contains a Text instance named TextInstance:
+
+```csharp
+var textInstance = CurrentScreen.GetGraphicalUiElementByName("TextInstance");
+textInstance.Text = "I've been modified in code";
+```
+
 ### Fonts
 
 By default all TextRuntime instances use an Arial 18 pt font. This can be changed by specifying ta custom font.
