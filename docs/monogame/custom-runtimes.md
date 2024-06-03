@@ -25,7 +25,7 @@ The following is an example of a basic button runtime named ClickableButton:
 ```csharp
 internal class ClickableButton : InteractiveGue
 {
-    GraphicalUiElement textInstance;
+    TextRuntime textInstance;
 
     public ClickableButton() : base() 
     {
@@ -42,14 +42,14 @@ internal class ClickableButton : InteractiveGue
     {
         // The GraphicalUiElement is fully created at this point so it
         // should have access to all children such as TextInstance
-        textInstance = GetGraphicalUiElementByName("TextInstance");
+        textInstance = (TextRuntime)GetGraphicalUiElementByName("TextInstance");
     }
 
     public void HandleClick(object sender, EventArgs args)
     {
         NumberOfClicks++;
 
-        textInstance.SetProperty("Text", "Clicked " + NumberOfClicks + " times");
+        textInstance.Text = NumberOfClicks + " times";
     }
 }
 ```
