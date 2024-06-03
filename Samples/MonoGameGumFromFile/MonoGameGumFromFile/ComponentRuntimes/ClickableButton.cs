@@ -20,13 +20,13 @@ internal class ClickableButton : InteractiveGue
 
     int NumberOfClicks;
 
+    public override void AfterFullCreation()
+    {
+            textInstance = GetGraphicalUiElementByName("TextInstance");
+    }
 
     public void HandleClick(object sender, EventArgs args)
     {
-        if(textInstance == null)
-        {
-            textInstance = GetGraphicalUiElementByName("TextInstance");
-        }
 
         NumberOfClicks++;
 

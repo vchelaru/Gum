@@ -1392,6 +1392,11 @@ namespace Gum.Wireframe
 
         #region Methods
 
+        public virtual void AfterFullCreation()
+        {
+
+        }
+
         /// <summary>
         /// Sets the default state.
         /// </summary>

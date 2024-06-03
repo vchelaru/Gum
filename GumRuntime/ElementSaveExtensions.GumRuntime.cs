@@ -500,6 +500,8 @@ namespace GumRuntime
             toReturn.Tag = elementSave;
 
             toReturn.SetInitialState();
+
+            toReturn.AfterFullCreation();
         }
 
         public static void CreateChildrenRecursively(GraphicalUiElement graphicalUiElement, ElementSave elementSave, ISystemManagers systemManagers)
