@@ -50,6 +50,68 @@ internal class ClickableButton : InteractiveGue
 
 Notice that this assumes that the component has a TextRuntime, so your associated component must have a Text instance named TextInstance.
 
+### Associating a Gum Component to a Runtime
 
+Once a custom runtime is defined, it needs to be associated with a Gum component. For example, consider a component named StandardButton inside a Buttons folder.
 
-...under construction...
+<figure><img src="../.gitbook/assets/image.png" alt=""><figcaption><p>StandardButton in Gum</p></figcaption></figure>
+
+Notice that the name StandardButton does not match the name ClickableButton, and this is often not desirable. The only thing that matters in this case is that StandardButton must have a TextInstance, as suggested by the code above.
+
+To associate StandardButton with ClickableButton, add the following code **before** calling `ToGraphicalUiElement`:
+
+```csharp
+ElementSaveExtensions.RegisterGueInstantiationType(
+    "Buttons/StandardButton", 
+    typeof(ClickableButton));
+```
+
+Now whenever ToGraphicalUiElement is called, all instances of StandardButton will be instantiated as a ClickableButton rather than the default GraphicalUiElement.
+
+### Using Cursor to Enable Events
+
+If using InteractiveGue, the built-in events are only called if DoUiActivityRecursively is called either directly on the component, or on a parent of the component. Typically, DoUiActivityRecursively is called on the root-most object (usually a GraphicalUiElement representing a Screen).
+
+This method requires a Cursor implementation. Therefore, the following simplified code shows the full requirements to create a Cursor, update the Cursor every frame, and call DoUiActivityRecursively. Note that this code assumes a Screen GraphicalUiElement named CurrentScreen:
+
+```csharp
+// Define the Cursor at class scope:
+Cursor cursor;
+
+// Instantiate the Cursor in Initialize()
+protected override void Initialize()
+{
+    cursor = new Cursor();
+
+    // Remainder of initialization...
+
+    base.Initialize();
+}
+
+protected override void Update(GameTime gameTime)
+{
+    cursor.Activity(gameTime.TotalGameTime.TotalSeconds)
+    CurrentScreen.DoUiActivityRecursively(cursor);
+    // Remainder of update
+}
+```
+
+After adding the Cursor and DoUiActivityRecursively code, all events on any InteractiveGue will automatically be raised so long as the InteractiveGue is part of the hierarchy owned by the CurrentScreen.
+
+### Adding Events Per Instance
+
+Events often need to be customized per instance. For example, a game's MainMenu screen may have buttons for starting the game, going to the options screen, or exiting the game.&#x20;
+
+The following code shows how to add events to runtime instances. This code assumes that each runtime instance is using a Runtime that inherits from InteractiveGue.
+
+```csharp
+// Run the following code after calling ToGraphicalUiElement
+var startGameButton = (InteractiveGue)CurrentScreen.GetGraphicalUiElementByName("StartButton");
+startGameButton.Click += HandleStartGameClicked;
+
+var optionsGameButton = (InteractiveGue)CurrentScreen.GetGraphicalUiElementByName("OptionsButton");
+optionsGameButton.Click += HandleOptionsClicked;
+
+var exitGameButton = (InteractiveGue)CurrentScreen.GetGraphicalUiElementByName("ExitGameButton");
+exitGameButton.Click += HandleExitGameClicked;
+```
