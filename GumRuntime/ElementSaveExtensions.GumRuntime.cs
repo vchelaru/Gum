@@ -20,6 +20,7 @@ namespace GumRuntime
     public static class ElementSaveExtensions
     {
         static Dictionary<string, Type> mElementToGueTypes = new Dictionary<string, Type>();
+        static Dictionary<string, Func<GraphicalUiElement>> mElementToGueTypeFuncs = new Dictionary<string, Func<GraphicalUiElement>>();
         static Func<GraphicalUiElement> TemplateFunc;
 
         public static void RegisterGueInstantiationType(string elementName, Type gueInheritingType)
@@ -27,10 +28,18 @@ namespace GumRuntime
             mElementToGueTypes[elementName] = gueInheritingType;
         }
 
+        public static void RegisterGueInstantiation<T>(string elementName, Func<T> templateFunc) where T : GraphicalUiElement
+        {
+            mElementToGueTypeFuncs[elementName] = templateFunc;
+        }
+
+
         public static void RegisterDefaultInstantiationType<T>(Func<T> templateFunc) where T : GraphicalUiElement
         {
             TemplateFunc = templateFunc;
         }
+
+
 
         public static GraphicalUiElement CreateGueForElement(ElementSave elementSave, bool fullInstantiation = false, string genericType = null)
         {
@@ -41,7 +50,12 @@ namespace GumRuntime
             {
                 elementName = elementName + "<T>";
             }
-            if (mElementToGueTypes.ContainsKey(elementName))
+
+            if(mElementToGueTypeFuncs.ContainsKey(elementName))
+            {
+                toReturn = mElementToGueTypeFuncs[elementName]();
+            }
+            else if (mElementToGueTypes.ContainsKey(elementName))
             {
                 // This code allows sytems (like games that use Gum) to assign types
                 // to their GraphicalUiElements so that users of the code can work with

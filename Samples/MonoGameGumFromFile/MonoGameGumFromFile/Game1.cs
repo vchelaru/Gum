@@ -6,6 +6,7 @@ using GumRuntime;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MonoGameGum.GueDeriving;
 using MonoGameGum.Input;
 using MonoGameGum.Renderables;
 using MonoGameGumFromFile.ComponentRuntimes;
@@ -28,7 +29,7 @@ namespace MonoGameGumFromFile
 
         ScreenSave currentGumScreenSave;
 
-        GraphicalUiElement currentScreenElement;
+        GraphicalUiElement currentScreenGue;
 
         Cursor cursor;
 
@@ -86,6 +87,7 @@ namespace MonoGameGumFromFile
             ElementSaveExtensions.RegisterGueInstantiationType(
                 "Buttons/StandardButton", 
                 typeof(ClickableButton));
+
         }
 
         private static GumProjectSave LoadGumProject()
@@ -140,7 +142,7 @@ namespace MonoGameGumFromFile
                 var justShowed = ShowScreen("StateScreen");
                 if (justShowed)
                 {
-                    var setMeInCode = currentScreenElement.GetGraphicalUiElementByName("SetMeInCode");
+                    var setMeInCode = currentScreenGue.GetGraphicalUiElementByName("SetMeInCode");
 
                     // States can be found in the Gum element's Categories and applied:
                     var stateToSet = setMeInCode.ElementSave.Categories
@@ -218,13 +220,13 @@ namespace MonoGameGumFromFile
 
         private void InitializeStartScreen()
         {
-            var exposedVariableInstance = currentScreenElement.GetGraphicalUiElementByName("ComponentWithExposedVariableInstance");
+            var exposedVariableInstance = currentScreenGue.GetGraphicalUiElementByName("ComponentWithExposedVariableInstance");
             exposedVariableInstance.SetProperty("Text", "I'm set in code");
         }
 
         private void InitializeZoomScreen()
         {
-            var layered = currentScreenElement.GetGraphicalUiElementByName("Layered");
+            var layered = currentScreenGue.GetGraphicalUiElementByName("Layered");
             var layer = SystemManagers.Default.Renderer.AddLayer();
             layer.Name = "Zoomed-in Layer";
             layered.MoveToLayer(layer);
@@ -245,7 +247,7 @@ namespace MonoGameGumFromFile
                 IsInScreenSpace= true
             };
 
-            var layeredText = currentScreenElement.GetGraphicalUiElementByName("LayeredText");
+            var layeredText = currentScreenGue.GetGraphicalUiElementByName("LayeredText");
             layeredText.MoveToLayer(layer);
         }
 
@@ -254,9 +256,9 @@ namespace MonoGameGumFromFile
             var newScreenElement = ObjectFinder.Self.GumProjectSave.Screens.FirstOrDefault(item => item.Name == screenName);
 
             var isAlreadyShown = false;
-            if (currentScreenElement != null)
+            if (currentScreenGue != null)
             {
-                isAlreadyShown = currentScreenElement.Tag == newScreenElement;
+                isAlreadyShown = currentScreenGue.Tag == newScreenElement;
             }
 
             return isAlreadyShown;
@@ -270,14 +272,14 @@ namespace MonoGameGumFromFile
                 var newScreenElement = ObjectFinder.Self.GumProjectSave.Screens.FirstOrDefault(item => item.Name == screenName);
                 FileManager.RelativeDirectory = "Content" + Path.DirectorySeparatorChar;
                 currentGumScreenSave = newScreenElement;
-                currentScreenElement?.RemoveFromManagers();
+                currentScreenGue?.RemoveFromManagers();
                 var layers = SystemManagers.Default.Renderer.Layers;
                 while(layers.Count > 1)
                 {
                     SystemManagers.Default.Renderer.RemoveLayer(SystemManagers.Default.Renderer.Layers.LastOrDefault());
                 }
 
-                currentScreenElement = currentGumScreenSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
+                currentScreenGue = currentGumScreenSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
             }
             return !isAlreadyShown;
         }
@@ -332,7 +334,7 @@ namespace MonoGameGumFromFile
         int clickCount = 0;
         private void DoInteractiveGueScreenLogic()
         {
-            currentScreenElement.DoUiActivityRecursively(cursor);
+            currentScreenGue.DoUiActivityRecursively(cursor);
         }
 
         private void DoOffsetLayerScreenLogic(MouseState mouseState)
@@ -366,13 +368,13 @@ namespace MonoGameGumFromFile
                 GraphicalUiElement.CanvasHeight = 600 / camera.Zoom;
 
                 // need to update the layout in response to the canvas size changing:
-                currentScreenElement?.UpdateLayout();
+                currentScreenGue?.UpdateLayout();
             }
         }
 
         private void HandleMousePush(MouseState mouseState)
         {
-            var itemOver = GetItemOver(mouseState.X, mouseState.Y, currentScreenElement);
+            var itemOver = GetItemOver(mouseState.X, mouseState.Y, currentScreenGue);
 
             if(itemOver?.Tag is InstanceSave instanceSave && instanceSave.Name == "ToggleFontSizes")
             {

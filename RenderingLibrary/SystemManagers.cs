@@ -5,6 +5,8 @@ using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Math.Geometry;
 using Microsoft.Xna.Framework;
 using RenderingLibrary.Content;
+using MonoGameGum.GueDeriving;
+
 
 
 #if USE_GUMCOMMON
@@ -167,10 +169,45 @@ namespace RenderingLibrary
 
                 ToolsUtilities.FileManager.RelativeDirectory += "Content/";
 
+                RegisterComponentRuntimeInstantiations();
+
 #endif
             }
         }
 
+#if USE_GUMCOMMON
+
+        private void RegisterComponentRuntimeInstantiations()
+        {
+            ElementSaveExtensions.RegisterGueInstantiation(
+                "ColoredRectangle",
+                () => new ColoredRectangleRuntime());
+
+            ElementSaveExtensions.RegisterGueInstantiation(
+                "Container",
+                () => new ContainerRuntime());
+
+            ElementSaveExtensions.RegisterGueInstantiation(
+                "NineSlice",
+                () => new NineSliceRuntime());
+
+            ElementSaveExtensions.RegisterGueInstantiation(
+                "Polygon",
+                () => new PolygonRuntime());
+
+            ElementSaveExtensions.RegisterGueInstantiation(
+                "Rectangle",
+                () => new RectangleRuntime());
+
+            ElementSaveExtensions.RegisterGueInstantiation(
+                "Sprite",
+                () => new SpriteRuntime());
+
+            ElementSaveExtensions.RegisterGueInstantiation(
+                "Text",
+                () => new TextRuntime());
+        }
+#endif
 
         public override string ToString()
         {
