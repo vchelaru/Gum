@@ -19,7 +19,7 @@ textInstance.AddToManagers(SystemManagers.Default, null);
 To get a TextRuntime instance from a loaded Gum (gumx) project, add the following code. This code assumes you have an object named CurrentScreen, and that it contains a Text instance named TextInstance:
 
 ```csharp
-var textInstance = CurrentScreen.GetGraphicalUiElementByName("TextInstance");
+var textInstance = (TextRuntime)CurrentScreen.GetGraphicalUiElementByName("TextInstance");
 textInstance.Text = "I've been modified in code";
 ```
 
