@@ -22,7 +22,7 @@ internal class ClickableButton : InteractiveGue
 
     public override void AfterFullCreation()
     {
-            textInstance = GetGraphicalUiElementByName("TextInstance");
+        textInstance = GetGraphicalUiElementByName("TextInstance");
     }
 
     public void HandleClick(object sender, EventArgs args)
