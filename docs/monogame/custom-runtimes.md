@@ -30,17 +30,23 @@ internal class ClickableButton : InteractiveGue
     public ClickableButton() : base() 
     {
         this.Click += HandleClick;
+
+        // All of the children (such as TextInstance) have not yet
+        // been created, so we can't assign the textInstance yet.
+        // See AfterFullCreation
     }
 
     int NumberOfClicks;
 
+    public override void AfterFullCreation()
+    {
+        // The GraphicalUiElement is fully created at this point so it
+        // should have access to all children such as TextInstance
+        textInstance = GetGraphicalUiElementByName("TextInstance");
+    }
+
     public void HandleClick(object sender, EventArgs args)
     {
-        if(textInstance == null)
-        {
-            textInstance = GetGraphicalUiElementByName("TextInstance");
-        }
-
         NumberOfClicks++;
 
         textInstance.SetProperty("Text", "Clicked " + NumberOfClicks + " times");
