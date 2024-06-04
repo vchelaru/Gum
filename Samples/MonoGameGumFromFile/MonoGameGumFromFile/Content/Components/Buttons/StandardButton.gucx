@@ -5,6 +5,11 @@
   <State>
     <Name>Default</Name>
     <Variable>
+      <Type>ButtonStateCategory</Type>
+      <Name>ButtonStateCategoryState</Name>
+      <SetsValue>false</SetsValue>
+    </Variable>
+    <Variable>
       <Type>int</Type>
       <Name>ColoredRectangleInstance.Blue</Name>
       <Value xsi:type="xsd:int">255</Value>
@@ -89,6 +94,19 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>bool</Type>
+      <Name>IsOverrideInCodeGen</Name>
+      <Value xsi:type="xsd:boolean">false</Value>
+      <Category>Xamarin Forms</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>bool</Type>
+      <Name>IsXamarinFormsControl</Name>
+      <Category>Xamarin Forms</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>float</Type>
       <Name>RectangleInstance.Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -169,8 +187,8 @@
     <Variable>
       <Type>string</Type>
       <Name>TextInstance.Text</Name>
-      <Value xsi:type="xsd:string">Click Me</Value>
-      <SetsValue>true</SetsValue>
+      <ExposedAsName>Text</ExposedAsName>
+      <SetsValue>false</SetsValue>
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
@@ -221,6 +239,16 @@
       <SetsValue>true</SetsValue>
     </Variable>
   </State>
+  <Category>
+    <Name>ButtonStateCategory</Name>
+    <IsSetRecursively>false</IsSetRecursively>
+    <State>
+      <Name>Normal</Name>
+    </State>
+    <State>
+      <Name>Highlighted</Name>
+    </State>
+  </Category>
   <Instance>
     <Name>ColoredRectangleInstance</Name>
     <BaseType>ColoredRectangle</BaseType>

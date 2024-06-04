@@ -70,6 +70,13 @@
         "ElementType": "Screens",
         "EventType": 5,
         "TimestampUtc": "2024-06-02T12:26:54.7168593Z"
+      },
+      {
+        "NewName": "GameScreenGum.ColoredRectangleInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-06-03T12:16:10.1460854Z"
       }
     ],
     "Owner": [

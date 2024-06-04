@@ -1,4 +1,5 @@
-﻿using Gum.Mvvm;
+﻿using CodeOutputPlugin.Models;
+using Gum.Mvvm;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -62,6 +63,8 @@ namespace CodeOutputPlugin.ViewModels
                 }
             }
         }
+
+
 
         public string Code
         {

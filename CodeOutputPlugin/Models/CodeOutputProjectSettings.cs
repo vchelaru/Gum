@@ -14,6 +14,12 @@ namespace CodeOutputPlugin.Models
         Maui
     }
 
+    public enum ObjectInstantiationType
+    {
+        FullyInCode,
+        FindByName
+    }
+
     public class CodeOutputProjectSettings
     {
         public string CommonUsingStatements { get; set; } =
@@ -39,6 +45,8 @@ using SkiaGum.Renderables;
         public bool IsCodeGenPluginEnabled { get; set; }
 
         public bool IsShowCodegenPreviewChecked { get; set; }
+
+        public ObjectInstantiationType ObjectInstantiationType { get; set; }
 
         /// <summary>
         /// For XamarinForms this would be the base screen type like

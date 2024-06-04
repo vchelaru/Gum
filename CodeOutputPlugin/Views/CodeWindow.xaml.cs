@@ -95,6 +95,7 @@ namespace CodeOutputPlugin.Views
         {
             var projectCategory = new MemberCategory("Project-Wide Code Generation");
             projectCategory.Members.Add(CreateProjectTypeSelectionMember());
+            projectCategory.Members.Add(CreateGenerateObjectInstantiationTypeMember());
             projectCategory.Members.Add(CreateProjectUsingStatementsMember());
             projectCategory.Members.Add(CreateCodeProjectRootMember());
             projectCategory.Members.Add(CreateRootNamespaceMember());
@@ -294,6 +295,24 @@ namespace CodeOutputPlugin.Views
             member.PreferredDisplayer = typeof(CheckBoxDisplay);
             member.CustomGetEvent += (owner) => CodeOutputProjectSettings?.GenerateGumDataTypes ?? false;
             member.CustomGetTypeEvent += (owner) => typeof(string);
+
+            return member;
+        }
+
+        private InstanceMember CreateGenerateObjectInstantiationTypeMember()
+        {
+            var member = new InstanceMember("Object Instantiation Type", this);
+            member.CustomSetEvent += (owner, value) =>
+            {
+                if (CodeOutputProjectSettings != null)
+                {
+                    CodeOutputProjectSettings.ObjectInstantiationType = (ObjectInstantiationType)value;
+                    CodeOutputSettingsPropertyChanged?.Invoke(this, null);
+                }
+            };
+
+            member.CustomGetEvent += (owner) => CodeOutputProjectSettings?.ObjectInstantiationType;
+            member.CustomGetTypeEvent += (owner) => typeof(ObjectInstantiationType);
 
             return member;
         }

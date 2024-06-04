@@ -5,11 +5,11 @@ using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Math.Geometry;
 using Microsoft.Xna.Framework;
 using RenderingLibrary.Content;
-using MonoGameGum.GueDeriving;
 
 
 
 #if USE_GUMCOMMON
+using MonoGameGum.GueDeriving;
 using Gum.Managers;
 using GumRuntime;
 

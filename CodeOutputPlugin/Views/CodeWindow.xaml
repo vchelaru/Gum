@@ -32,15 +32,17 @@
                 <Grid Grid.Row="2">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"></ColumnDefinition>
-                        <ColumnDefinition></ColumnDefinition>
+                        <ColumnDefinition Width="Auto"></ColumnDefinition>
                     </Grid.ColumnDefinitions>
                     <StackPanel Orientation="Horizontal" Margin="0,0,6,0">
                         <Button Click="CopyButtonClicked">Copy</Button>
                     </StackPanel>
-                    <StackPanel Grid.Column="1">
-                        <RadioButton VerticalContentAlignment="Center" IsChecked="{Binding IsSelectedObjectSelected}">Selected Object</RadioButton>
-                        <RadioButton VerticalContentAlignment="Center" IsChecked="{Binding IsSelectedStateSelected}">Selected State</RadioButton>
-                    </StackPanel>
+                    <GroupBox Grid.Column="1" Header="Generation Scope">
+                        <StackPanel>
+                            <RadioButton VerticalContentAlignment="Center" IsChecked="{Binding IsSelectedObjectSelected}">Selected Object</RadioButton>
+                            <RadioButton VerticalContentAlignment="Center" IsChecked="{Binding IsSelectedStateSelected}">Selected State</RadioButton>
+                        </StackPanel>
+                    </GroupBox>
                 </Grid>
                 <TextBox x:Name="TextBoxInstance" Visibility="{Binding CodePreviewWindowVisibility}" ScrollViewer.VerticalScrollBarVisibility="Auto" Grid.Row="3" Text="{Binding Code}"></TextBox>
             </Grid>
