@@ -2726,16 +2726,24 @@ namespace Gum.Wireframe
 
         private void GetCellDimensions(int indexInSiblingList, out int xIndex, out int yIndex, out float cellWidth, out float cellHeight)
         {
-            var xRows = this.EffectiveParentGue.AutoGridHorizontalCells;
-            var yRows = this.EffectiveParentGue.AutoGridVerticalCells;
+            var effectiveParent = EffectiveParentGue;
+            var xRows = effectiveParent.AutoGridHorizontalCells;
+            var yRows = effectiveParent.AutoGridVerticalCells;
             if (xRows < 1) xRows = 1;
             if (yRows < 1) yRows = 1;
 
-
-            xIndex = indexInSiblingList % xRows;
-            yIndex = indexInSiblingList / xRows;
-            var parentWidth = this.EffectiveParentGue.GetAbsoluteWidth();
-            var parentHeight = this.EffectiveParentGue.GetAbsoluteHeight();
+            if(effectiveParent.ChildrenLayout == ChildrenLayout.AutoGridHorizontal)
+            {
+                xIndex = indexInSiblingList % xRows;
+                yIndex = indexInSiblingList / xRows;
+            }
+            else // vertical
+            {
+                yIndex = indexInSiblingList % yRows;
+                xIndex = indexInSiblingList / yRows;
+            }
+            var parentWidth = effectiveParent.GetAbsoluteWidth();
+            var parentHeight = effectiveParent.GetAbsoluteHeight();
 
             cellWidth = parentWidth / xRows;
             cellHeight = parentHeight / yRows;
