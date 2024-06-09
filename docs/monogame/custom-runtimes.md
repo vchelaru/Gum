@@ -60,7 +60,7 @@ Notice that this assumes that the component has a TextRuntime, so your associate
 
 Once a custom runtime is defined, it needs to be associated with a Gum component. For example, consider a component named StandardButton inside a Buttons folder.
 
-<figure><img src="../.gitbook/assets/image.png" alt=""><figcaption><p>StandardButton in Gum</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (8).png" alt=""><figcaption><p>StandardButton in Gum</p></figcaption></figure>
 
 Notice that the name StandardButton does not match the name ClickableButton, and this is often not desirable. The only thing that matters in this case is that StandardButton must have a TextInstance, as suggested by the code above.
 

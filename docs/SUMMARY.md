@@ -16,6 +16,7 @@
   * [3 - Playing Animations inside other Animations](animation-tutorials/playing-animations-inside-other-animations.md)
   * [4 - Combining Multiple Categories](animation-tutorials/4-combining-multiple-categories.md)
 * [Examples](examples/README.md)
+  * [Bottom-Up Stack](examples/bottom-up-stack.md)
   * [Custom NineSlice](examples/custom-nineslice.md)
   * [Health Bar](examples/health-bar.md)
 * [Menu](menu/README.md)
