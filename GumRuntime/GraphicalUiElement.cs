@@ -1039,6 +1039,9 @@ namespace Gum.Wireframe
             }
         }
 
+        /// <summary>
+        /// Returns the absolute X (in screen space) of the left edge of the GraphicalUielement.
+        /// </summary>
         public float AbsoluteLeft => this.GetAbsoluteX();
 
         /// <summary>
@@ -1087,6 +1090,9 @@ namespace Gum.Wireframe
             }
         }
 
+        /// <summary>
+        /// Returns the absolute Y (in screen space) of the top edge of the GraphicalUiElement.
+        /// </summary>
         public float AbsoluteTop => this.GetAbsoluteY();
 
         public IVisible ExplicitIVisibleParent
