@@ -18,7 +18,7 @@ nineSlice.Height = 48;
 container.Children.Add(nineSlice);
 ```
 
-<figure><img src="../../.gitbook/assets/image (3) (1) (1) (1).png" alt=""><figcaption><p>NineSlice using Frame.png</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (3) (1) (1) (1) (1).png" alt=""><figcaption><p>NineSlice using Frame.png</p></figcaption></figure>
 
 ### TextureAddressMode and Texture Coordinates
 
