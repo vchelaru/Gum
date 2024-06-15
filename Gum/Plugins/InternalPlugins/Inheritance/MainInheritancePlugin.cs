@@ -104,6 +104,7 @@ namespace Gum.Plugins.Inheritance
 
             foreach (var inheritingElement in elementsInheritingFromContainer)
             {
+                // Changed the base type on an instance, so find all instances in derived elements and change their base too
                 var toChange = inheritingElement.GetInstance(instance.Name);
 
                 if (toChange != null)

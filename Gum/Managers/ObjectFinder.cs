@@ -1058,6 +1058,28 @@ namespace Gum.Managers
             }
         }
 
+        internal bool IsInstanceRecursivelyReferencingElement(InstanceSave instance, ElementSave element)
+        {
+            if(instance.BaseType == element.Name)
+            {
+                return true;
+            }
+            else
+            {
+                var baseType = element.BaseType;
+
+                var baseElement = GetElementSave(baseType);
+
+                if(baseElement is StandardElementSave)
+                {
+                    return false;
+                }
+                else
+                {
+                    return IsInstanceRecursivelyReferencingElement(instance, GetElementSave(baseType));
+                }
+            }
+        }
     }
 
 

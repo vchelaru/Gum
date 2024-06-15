@@ -214,6 +214,10 @@ namespace Gum
 
                 CopyLinkedComponents();
 
+                if(FixRecursiveAssignments(mGumProjectSave))
+                {
+                    wasModified = true;
+                }
                 PluginManager.Self.ProjectLoad(mGumProjectSave);
 
                 StandardElementsManagerGumTool.Self.RefreshStateVariablesThroughPlugins();
@@ -230,7 +234,8 @@ namespace Gum
             }
             else
             {
-                PluginManager.Self.ProjectLoad(mGumProjectSave);
+                // No don't do this if it's null, why would we?
+                //PluginManager.Self.ProjectLoad(mGumProjectSave);
             }
 
             // Deselect everything
@@ -270,6 +275,46 @@ namespace Gum
             {
                 GeneralSettingsFile.Save();
             }
+        }
+
+        private bool FixRecursiveAssignments(GumProjectSave mGumProjectSave)
+        {
+            var toReturn = false;
+            // Instances can't be of type screen, so don't check this (unless someone messes with the XML but that's on them)
+            //foreach(var screen in mGumProjectSave.Screens)
+            //{
+            //    if(FixRecursiveAssignments(screen))
+            //    {
+            //        toReturn = true;
+            //    }
+            //}
+            foreach(var component in mGumProjectSave.Components)
+            {
+                if(FixRecursiveAssignments(component))
+                {
+                    toReturn = true;
+                }
+            }
+
+            return toReturn;
+        }
+
+        private bool FixRecursiveAssignments(ElementSave element)
+        {
+            var didModify = false;
+            // see if the child is either of this type, or a base type
+            foreach(var instance in element.Instances)
+            {
+                var isRecursive = ObjectFinder.Self.IsInstanceRecursivelyReferencingElement(instance, element);
+
+                if (isRecursive)
+                {
+                    instance.BaseType = "Container";
+                    didModify = true;
+                }
+            }
+
+            return didModify;
         }
 
         private void CopyLinkedComponents()

@@ -426,7 +426,29 @@ namespace Gum.PropertyGridHelpers
 
             ReactIfChangedMemberIsVariableReference(parentElement, instance, stateSave, rootVariableName, oldValue);
 
+            ReactIfChangedBaseType(parentElement, instance, stateSave, rootVariableName, oldValue);
+
             PluginManager.Self.VariableSet(parentElement, instance, rootVariableName, oldValue);
+        }
+
+        private void ReactIfChangedBaseType(ElementSave parentElement, InstanceSave instance, StateSave stateSave, string rootVariableName, object oldValue)
+        {
+
+            if (rootVariableName == "Base Type")
+            {
+                VariableSave variable = SelectedState.Self.SelectedVariableSave;
+
+                if(ObjectFinder.Self.IsInstanceRecursivelyReferencingElement(instance, parentElement))
+                {
+                    MessageBox.Show("This assignment would create a circular reference, which is not allowed.");
+                    //stateSave.SetValue("BaseType", oldValue, instance);
+                    instance.BaseType = (string)oldValue;
+
+                    GumCommands.Self.GuiCommands.PrintOutput($"BaseType assignment on {instance.Name} is not allowed - reverting to previous value");
+
+                    GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
+                }
+            }
         }
 
         private void ReactIfChangedMemberIsDefaultChildContainer(ElementSave parentElement, InstanceSave instance, string rootVariableName, object oldValue)
