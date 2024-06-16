@@ -138,6 +138,12 @@ namespace Gum.DataTypes.Variables
             get;
             set;
         }
+        // Update June 16, 2024
+        // Making this true because it 
+        // is super inconvenient to have 
+        // this be false when creating states
+        // in code:
+        = true;
 
         public bool IsHiddenInPropertyGrid
         {

@@ -42,13 +42,38 @@ namespace Gum.Wireframe
 
         public bool RaiseChildrenEventsOutsideOfBounds { get; set; } = false;
 
-        public bool IsEnabled { get; set; } = true;
+        public event EventHandler EnabledChange;
+        bool isEnabled = true;
+        public bool IsEnabled
+        {
+            get => isEnabled;
+            set
+            {
+                if (isEnabled != value)
+                {
+                    isEnabled = value;
+                    EnabledChange?.Invoke(this, null);
+                }
+            }
+        }
+
+        public virtual object FormsControlAsObject { get; set; }
 
         #region Events
 
         public event EventHandler Click;
         public event EventHandler Push;
 
+        /// <summary>
+        /// Event which is raised whenever this loses a push. A push occurs when the
+        /// cursor is over this window and the left mouse button is pushed. A push is lost
+        /// if the left mouse button is released or if the user moves the cursor so that it
+        /// is no longer over this while the mouse button is pressed. 
+        /// </summary>
+        /// <remarks>
+        /// LosePush is often used to change the state of a button back to its regular state.
+        /// </remarks>
+        public event EventHandler LosePush;
 
 
         /// <summary>
@@ -359,6 +384,22 @@ namespace Gum.Wireframe
             return toReturn;
         }
 
+        public bool IsInParentChain(InteractiveGue possibleParent)
+        {
+            if (Parent == possibleParent)
+            {
+                return true;
+            }
+            else if (Parent is InteractiveGue parentGue)
+            {
+                return parentGue.IsInParentChain(possibleParent);
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         static bool IsComponentOrInstanceOfComponent(GraphicalUiElement gue)
         {
             if (gue.Tag is Gum.DataTypes.ComponentSave)
@@ -392,6 +433,22 @@ namespace Gum.Wireframe
                 }
             }
             return false;
+        }
+
+        public InteractiveGue()
+        {
+            InitializeEvents();
+        }
+
+        public InteractiveGue(IRenderable renderable) : base(renderable)
+        {
+            InitializeEvents();
+        }
+
+        private void InitializeEvents()
+        {
+            Click += (not, used) => LosePush?.Invoke(this, EventArgs.Empty);
+            RollOff += (not, used) => LosePush?.Invoke(this, EventArgs.Empty);
         }
 
     }

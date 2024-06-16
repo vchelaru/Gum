@@ -954,8 +954,9 @@ namespace Gum.Wireframe
         }
 
         /// <summary>
-        /// Returns the direct hierarchical children of this. Note that this does not return all objects contained in the element. 
+        /// Returns the direct hierarchical children of this. Note that this does not return all objects contained in the element, only direct children. 
         /// </summary>
+
         public ObservableCollection<IRenderableIpso> Children
         {
             get
@@ -1326,7 +1327,7 @@ namespace Gum.Wireframe
             mIsLayoutSuspended = false;
         }
 
-        public GraphicalUiElement(IRenderable containedObject, GraphicalUiElement whatContainsThis)
+        public GraphicalUiElement(IRenderable containedObject, GraphicalUiElement whatContainsThis = null)
         {
             SetContainedObject(containedObject);
 
@@ -4666,7 +4667,7 @@ namespace Gum.Wireframe
                     }
                 }
             }
-            catch (InvalidCastException)
+            catch (InvalidCastException innerException)
             {
                 // There could be some rogue value set to the incorrect type, or maybe
                 // a new type or plugin initialized the default to the wrong type. We don't
@@ -4678,7 +4679,7 @@ namespace Gum.Wireframe
                 // being swallowed, but maybe we should push those
                 // errors up and let the callers handle it.
 #if DEBUG
-                throw new InvalidCastException($"Trying to set property {propertyName} to a value of {value} of type {value?.GetType()} on {Name}");
+                throw new InvalidCastException($"Trying to set property {propertyName} to a value of {value} of type {value?.GetType()} on {Name}", innerException);
 #endif
             }
             return toReturn;

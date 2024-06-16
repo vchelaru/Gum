@@ -100,3 +100,5 @@ Samples/MonoGameGumFontLoading/MonoGameGumFontLoading/obj/*
 Samples/MonoGameGumImmediateMode/MonoGameGumImmediateMode/bin/*
 Samples/MonoGameGumImmediateMode/MonoGameGumImmediateMode/obj/*
 Samples/MonoGameGumImmediateMode/MonoGameGumImmediateMode/.config/*
+/Samples/GumFormsSample/GumFormsSample/bin
+/Samples/GumFormsSample/GumFormsSample/obj

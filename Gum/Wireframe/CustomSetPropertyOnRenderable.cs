@@ -89,8 +89,17 @@ namespace Gum.Wireframe
                 }
                 else if (propertyName == "Color")
                 {
-                    var valueAsColor = (Color)value;
-                    solidRect.Color = valueAsColor;
+                    //var valueAsColor = (Color)value;
+                    if (value is System.Drawing.Color drawingColor)
+                    {
+                        solidRect.Color = drawingColor;
+                    }
+                    else if (value is Microsoft.Xna.Framework.Color xnaColor)
+                    {
+                        solidRect.Color = xnaColor.ToSystemDrawing();
+
+                    }
+
                     handled = true;
                 }
 
@@ -131,8 +140,15 @@ namespace Gum.Wireframe
                 }
                 else if (propertyName == "Color")
                 {
-                    var valueAsColor = (Color)value;
-                    sprite.Color = valueAsColor;
+                    if(value is System.Drawing.Color drawingColor)
+                    {
+                        sprite.Color = drawingColor;
+                    }
+                    else if(value is Microsoft.Xna.Framework.Color xnaColor)
+                    {
+                        sprite.Color = xnaColor.ToSystemDrawing();
+
+                    }
                     handled = true;
                 }
 
