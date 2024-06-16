@@ -89,12 +89,26 @@ namespace Gum.Wireframe
         /// </summary>
         public event EventHandler RollOver;
 
+        /// <summary>
+        /// Event raised when the cursor pushes on an object and moves. This is similar to RollOver, but is raised even
+        /// if outside of the bounds of the object.
+        /// </summary>
+        public event EventHandler Dragging;
+
         // RollOff is determined outside of the individual InteractiveGue so we need to have this callable externally..
         public void TryCallRollOff()
         {
             if (RollOff != null)
             {
                 RollOff(this, EventArgs.Empty);
+            }
+        }
+
+        public void TryCallDragging()
+        {
+            if(Dragging != null)
+            {
+                Dragging(this, EventArgs.Empty);
             }
         }
 
@@ -504,6 +518,10 @@ namespace Gum.Wireframe
                 {
                     interactiveBefore.TryCallRollOff();
                 }
+            }
+            if(cursor.WindowPushed != null && (cursor.XChange != 0 || cursor.YChange != 0))
+            {
+                cursor.WindowPushed.TryCallDragging();
             }
         }
     }

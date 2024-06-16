@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using ToolsUtilities;
@@ -514,6 +515,40 @@ namespace MonoGameGum.Forms.Controls
             {
                 this.IsEnabled = Visual.IsEnabled;
             }
+        }
+
+        protected void PushValueToViewModel([CallerMemberName] string uiPropertyName = null)
+        {
+            //todo
+            //var kvp = vmPropsToUiProps.FirstOrDefault(item => item.Value == uiPropertyName);
+
+            //if (kvp.Value == uiPropertyName)
+            //{
+            //    var vmPropName = kvp.Key;
+
+            //    var vmProperty = BindingContext?.GetType().GetProperty(vmPropName);
+
+            //    if (vmProperty?.CanWrite == true)
+            //    {
+            //        var uiProperty = this.GetType().GetProperty(uiPropertyName);
+            //        if (uiProperty != null)
+            //        {
+            //            var uiValue = uiProperty.GetValue(this, null);
+
+            //            try
+            //            {
+            //                var convertedValue = GraphicalUiElement.ConvertValue(uiValue, vmProperty.PropertyType, null);
+
+            //                vmProperty.SetValue(BindingContext, convertedValue, null);
+            //            }
+            //            catch (System.ArgumentException argumentException)
+            //            {
+            //                throw new Exception($"Could not convert UI value {GetType().Name}.{uiPropertyName} of type {uiProperty.PropertyType} " +
+            //                    $"into ViewModel {BindingContext.GetType().Name}.{vmProperty.Name} of type {vmProperty.PropertyType}", argumentException);
+            //            }
+            //        }
+            //    }
+            //}
         }
 
         /// <summary>
