@@ -53,8 +53,8 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 {
                     new ()
                     {
+                        Name = "ButtonBackground.Color",
                         Value = new Color(0, 0, 128),
-                        Name = "ButtonBackground.Color"
                     }
                 }
             });
@@ -66,8 +66,8 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 {
                     new ()
                     {
+                        Name = "ButtonBackground.Color",
                         Value = new Color(0, 0, 160),
-                        Name = "ButtonBackground.Color"
                     }
                 }
             });
@@ -79,9 +79,21 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 {
                     new ()
                     {
+                        Name = "ButtonBackground.Color",
                         Value = new Color(0, 0, 96),
+                    }
+                }
+            });
 
-                        Name = "ButtonBackground.Color"
+            buttonCategory.States.Add(new ()
+            {
+                Name = "Disabled",
+                Variables = new ()
+                {
+                    new ()
+                    {
+                        Name = "ButtonBackground.Color",
+                        Value = new Color(48, 48, 64),
                     }
                 }
             });

@@ -31,8 +31,8 @@ namespace GumFormsSample
             SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
             cursor = new Cursor();
 
-            FrameworkElement.DefaultFormsComponents[typeof(Button)] = 
-                typeof(DefaultButtonRuntime);
+            FrameworkElement.DefaultFormsComponents[typeof(Button)] = typeof(DefaultButtonRuntime);
+            FrameworkElement.DefaultFormsComponents[typeof(CheckBox)] = typeof(DefaultCheckboxRuntime);
             FrameworkElement.MainCursor = cursor;
 
             Root = new ContainerRuntime();
@@ -51,6 +51,18 @@ namespace GumFormsSample
             button.Height = 50;
             button.Text = "Hello MonoGame!";
 
+            var checkbox = new CheckBox();
+            Root.Children.Add(checkbox.Visual);
+            checkbox.X = 0;
+            checkbox.Y = 100;
+            checkbox.Text = "Checkbox";
+
+            int clickCount = 0;
+            button.Click += (_, _) =>
+            {
+                clickCount++;
+                button.Text = $"Clicked {clickCount} times";
+            };
 
 
             base.Initialize();
