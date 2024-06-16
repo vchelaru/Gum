@@ -39,13 +39,3 @@ Gum is actively maintained and provides lots of ways to get answers:
 * Check the rest of the documentation here
 * Join the [Discord chat](https://discord.gg/EvqwmSQuBz) (shared discord with FlatRedBall)
 * Create an [issue on Github](https://github.com/vchelaru/Gum/issues)
-
-### Downloading Gum
-
-Gum Application (binaries): [files.flatredball.com/content/Tools/Gum/Gum.zip](https://files.flatredball.com/content/Tools/Gum/Gum.zip)
-
-Gum Source Code: [https://www.github.com/vchelaru/Gum](https://www.github.com/vchelaru/Gum)
-
-Note that the Gum tool requires XNA. if you are using the Gum tool, you must install the XNA runtime:
-
-[https://www.microsoft.com/en-us/download/details.aspx?id=20914](https://www.microsoft.com/en-us/download/details.aspx?id=20914)

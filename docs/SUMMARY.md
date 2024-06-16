@@ -1,6 +1,7 @@
 # Table of contents
 
 * [Introduction](README.md)
+* [Setup](setup.md)
 * [Intro Tutorials](intro-tutorials/README.md)
   * [1 - The Basics](intro-tutorials/basics.md)
   * [2 - Variables Tab](intro-tutorials/properties-window.md)
