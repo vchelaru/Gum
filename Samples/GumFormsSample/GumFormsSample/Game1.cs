@@ -33,6 +33,7 @@ namespace GumFormsSample
 
             FrameworkElement.DefaultFormsComponents[typeof(Button)] = typeof(DefaultButtonRuntime);
             FrameworkElement.DefaultFormsComponents[typeof(CheckBox)] = typeof(DefaultCheckboxRuntime);
+            FrameworkElement.DefaultFormsComponents[typeof(ScrollBar)] = typeof(DefaultScrollBarRuntime);
             FrameworkElement.MainCursor = cursor;
 
             Root = new ContainerRuntime();
@@ -56,6 +57,16 @@ namespace GumFormsSample
             checkbox.X = 0;
             checkbox.Y = 100;
             checkbox.Text = "Checkbox";
+
+            var scrollBar = new ScrollBar();
+            this.Root.Children.Add(scrollBar.Visual);
+            scrollBar.Width = 24;
+            scrollBar.Height = 200;
+            scrollBar.X = 200;
+            scrollBar.Minimum = 0;
+            scrollBar.Maximum = 150;
+            scrollBar.ViewportSize = 50;
+
 
             int clickCount = 0;
             button.Click += (_, _) =>

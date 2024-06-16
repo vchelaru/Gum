@@ -92,6 +92,15 @@ namespace MonoGameGum.Forms.Controls
         /// </summary>
         public float ActualWidth => Visual.GetAbsoluteWidth();
 
+        /// <summary>
+        /// Returns the left of this element in absolute (screen) coordinates
+        /// </summary>
+        public float AbsoluteLeft => Visual.AbsoluteLeft;
+        /// <summary>
+        /// Returns the top of this element in absolute (screen) coordinates
+        /// </summary>
+        public float AbsoluteTop => Visual.AbsoluteTop;
+
         public float Height
         {
             get { return Visual.Height; }

@@ -519,7 +519,7 @@ namespace Gum.Wireframe
                     interactiveBefore.TryCallRollOff();
                 }
             }
-            if(cursor.WindowPushed != null && (cursor.XChange != 0 || cursor.YChange != 0))
+            if(cursor.WindowPushed != null && cursor.PrimaryDown && (cursor.XChange != 0 || cursor.YChange != 0))
             {
                 cursor.WindowPushed.TryCallDragging();
             }

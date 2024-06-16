@@ -12,6 +12,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
 {
     public class DefaultButtonRuntime : InteractiveGue
     {
+        public TextRuntime TextInstance { get; private set; }
         public DefaultButtonRuntime() : base(new InvisibleRenderable())
         {
             this.Width = 128;
@@ -25,22 +26,21 @@ namespace MonoGameGum.Forms.DefaultVisuals
             background.Name = "ButtonBackground";
             this.Children.Add(background);
 
-            var text = new TextRuntime();
-            text.X = 0;
-            text.Y = 0;
-            text.Width = 0;
-            text.Height = 0;
-            text.Name = "TextInstance";
-            text.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            text.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-
-            text.XOrigin = RenderingLibrary.Graphics.HorizontalAlignment.Center;
-            text.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Center;
-            text.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-            text.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-            text.HorizontalAlignment = RenderingLibrary.Graphics.HorizontalAlignment.Center;
-            text.VerticalAlignment = RenderingLibrary.Graphics.VerticalAlignment.Center;
-            this.Children.Add(text);
+            TextInstance = new TextRuntime();
+            TextInstance.X = 0;
+            TextInstance.Y = 0;
+            TextInstance.Width = 0;
+            TextInstance.Height = 0;
+            TextInstance.Name = "TextInstance";
+            TextInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            TextInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            TextInstance.XOrigin = RenderingLibrary.Graphics.HorizontalAlignment.Center;
+            TextInstance.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Center;
+            TextInstance.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+            TextInstance.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+            TextInstance.HorizontalAlignment = RenderingLibrary.Graphics.HorizontalAlignment.Center;
+            TextInstance.VerticalAlignment = RenderingLibrary.Graphics.VerticalAlignment.Center;
+            this.Children.Add(TextInstance);
 
 
 

@@ -18,8 +18,8 @@ namespace MonoGameGum.Forms.Controls.Primitives
         // version 1 of this would use the thumb's parent. But this is problematic if the thumb
         // parent is re-assigned after the Slider is created. Instead we should look for an explicit
         // track:
-        GraphicalUiElement explicitTrack;
-        protected GraphicalUiElement Track => explicitTrack ?? thumb.Visual.EffectiveParentGue;
+        InteractiveGue explicitTrack;
+        protected InteractiveGue Track => explicitTrack ?? thumb.Visual.EffectiveParentGue as InteractiveGue;
 
         /// <summary>
         /// Represents the X or Y offset of the cursor relative to the thumb when the thumb was grabbed.
@@ -155,7 +155,7 @@ namespace MonoGameGum.Forms.Controls.Primitives
             //{
             //    thumbParent.RaiseChildrenEventsOutsideOfBounds = true;
             //}
-            explicitTrack = this.Visual.GetGraphicalUiElementByName("TrackInstance");
+            explicitTrack = (InteractiveGue)this.Visual.GetGraphicalUiElementByName("TrackInstance");
             if (explicitTrack is InteractiveGue trackAsInteractive)
             {
                 trackAsInteractive.RaiseChildrenEventsOutsideOfBounds = true;
