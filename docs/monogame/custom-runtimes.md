@@ -96,7 +96,7 @@ protected override void Initialize()
 
 protected override void Update(GameTime gameTime)
 {
-    cursor.Activity(gameTime.TotalGameTime.TotalSeconds)
+    cursor.Activity(gameTime.TotalGameTime.TotalSeconds);
     CurrentScreen.DoUiActivityRecursively(cursor);
     // Remainder of update
 }
