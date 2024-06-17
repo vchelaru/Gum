@@ -117,5 +117,37 @@ chmod +x ~/bin/Gum
 ```sh
 if ! grep -q 'export PATH="\$HOME/bin:\$PATH"' ~/.bash_profile 2>/dev/null; then
     echo 'export PATH="$HOME/bin:$PATH"' >> ~/.bash_profile
-... (32 lines left)
+fi
 ```
+
+**For ZSH Shell**
+
+```sh
+if ! grep -q 'export PATH="\$HOME/bin:\$PATH"' ~/.zshrc 2>/dev/null; then
+    echo 'export PATH="$HOME/bin:$PATH"' >> ~/.zshrc
+fi
+```
+
+11. Reload the shell configuration to apply the changes. Run the following command:
+
+\*\*For BASH Shell
+
+```sh
+source ~/.bash_profile
+```
+
+**For ZSH Shell**
+
+```sh
+source ~/.zshrc
+```
+
+#### Running the Gum Tool
+
+Congratulations! You have now successfully set up the Gum Tool on macOS using WINE. You can open the Gum Tool by simply typing the following command in the terminal:
+
+```sh
+Gum
+```
+
+If the command doesn't work immediately, try closing and reopening the terminal.
