@@ -17,24 +17,14 @@ namespace MonoGameGum.Input
         /// <summary>
         /// Returns the screen space (in pixels) change on the X axis since the last frame.
         /// </summary>
-        public int XChange
-        {
-            get
-            {
-                return mMouseState.X - mLastFrameMouseState.X;
-            }
-        }
+        public int XChange => mMouseState.X - mLastFrameMouseState.X;
 
         /// <summary>
         /// Returns the screen space (in pixel) change on the Y axis since the last frame.
         /// </summary>
-        public int YChange
-        {
-            get
-            {
-                return mMouseState.Y - mLastFrameMouseState.Y;
-            }
-        }
+        public int YChange => mMouseState.Y - mLastFrameMouseState.Y;
+
+        public int ScrollWheelChange => (mMouseState.ScrollWheelValue - mLastFrameMouseState.ScrollWheelValue) / 120;
 
         public bool PrimaryPush
         {

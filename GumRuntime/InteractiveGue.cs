@@ -30,6 +30,11 @@ using System.Reflection;
 
 namespace Gum.Wireframe
 {
+    public class RoutedEventArgs
+    {
+        public bool Handled { get; set; }
+    }
+
     /// <summary>
     /// The base object for all Gum runtime objects. It contains functionality for
     /// setting variables, states, and performing layout. The GraphicalUiElement can
@@ -41,8 +46,6 @@ namespace Gum.Wireframe
         public bool ExposeChildrenEvents { get; set; } = true;
 
         public bool RaiseChildrenEventsOutsideOfBounds { get; set; } = false;
-
-        public event EventHandler EnabledChange;
         bool isEnabled = true;
         public bool IsEnabled
         {
@@ -94,6 +97,12 @@ namespace Gum.Wireframe
         /// if outside of the bounds of the object.
         /// </summary>
         public event EventHandler Dragging;
+
+        public event EventHandler EnabledChange;
+
+        public event Action<object, RoutedEventArgs> MouseWheelScroll;
+        public event Action<object, RoutedEventArgs> RollOverBubbling;
+
 
         // RollOff is determined outside of the individual InteractiveGue so we need to have this callable externally..
         public void TryCallRollOff()
@@ -272,12 +281,13 @@ namespace Gum.Wireframe
                         //}
 
 
-                        //if (cursor.ZVelocity != 0 && handledActions.HandledMouseWheel == false)
-                        //{
-                        //    FlatRedBall.Gui.RoutedEventArgs args = new FlatRedBall.Gui.RoutedEventArgs();
-                        //    MouseWheelScroll?.Invoke(this, args);
-                        //    handledActions.HandledMouseWheel = args.Handled;
-                        //}
+                        if (cursor.ScrollWheelChange != 0 && handledActions.HandledMouseWheel == false)
+                        {
+                            var args = new RoutedEventArgs();
+
+                            asInteractive.MouseWheelScroll?.Invoke(asInteractive, args);
+                            handledActions.HandledMouseWheel = args.Handled;
+                        }
                     }
                 }
             }
@@ -473,6 +483,8 @@ namespace Gum.Wireframe
         int Y { get; }
         int XChange { get; }
         int YChange { get; }
+
+        int ScrollWheelChange { get; }
 
         bool PrimaryPush { get; }
         bool PrimaryDown { get; }

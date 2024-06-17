@@ -34,6 +34,7 @@ namespace GumFormsSample
             FrameworkElement.DefaultFormsComponents[typeof(Button)] = typeof(DefaultButtonRuntime);
             FrameworkElement.DefaultFormsComponents[typeof(CheckBox)] = typeof(DefaultCheckboxRuntime);
             FrameworkElement.DefaultFormsComponents[typeof(ScrollBar)] = typeof(DefaultScrollBarRuntime);
+            FrameworkElement.DefaultFormsComponents[typeof(ScrollViewer)] = typeof(DefaultScrollViewerRuntime);
             FrameworkElement.MainCursor = cursor;
 
             Root = new ContainerRuntime();
@@ -51,6 +52,12 @@ namespace GumFormsSample
             button.Width = 100;
             button.Height = 50;
             button.Text = "Hello MonoGame!";
+            int clickCount = 0;
+            button.Click += (_, _) =>
+            {
+                clickCount++;
+                button.Text = $"Clicked {clickCount} times";
+            };
 
             var checkbox = new CheckBox();
             Root.Children.Add(checkbox.Visual);
@@ -67,13 +74,49 @@ namespace GumFormsSample
             scrollBar.Maximum = 150;
             scrollBar.ViewportSize = 50;
 
+            var scrollViewer = new ScrollViewer();
+            this.Root.Children.Add(scrollViewer.Visual);
+            scrollViewer.X = 300;
+            scrollViewer.Y = 0;
+            scrollViewer.Width = 200;
+            scrollViewer.Height = 200;
+            scrollViewer.InnerPanel.StackSpacing = 2;
+            for (int i = 0; i < 20; i++)
+            {
+                var innerButton = new Button();
+                innerButton.X = 1;
+                innerButton.Visual.Width = -2;
+                innerButton.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                innerButton.Text = $"Button {i}";
+                scrollViewer.InnerPanel.Children.Add(innerButton.Visual);
+            }
 
-            int clickCount = 0;
-            button.Click += (_, _) =>
+            //var viewer = new DefaultScrollViewerRuntime(true, false);
+            //this.Root.Children.Add(viewer);
+            //viewer.X = 300;
+            //viewer.Y = 0;
+            //viewer.Width = 200;
+            //viewer.Height = 200;
+
+
+
+
+            // We can also create buttons through the creation of the default controls:
+            var buttonRuntime = new DefaultButtonRuntime();
+            Root.Children.Add(buttonRuntime);
+            buttonRuntime.X = 0;
+            buttonRuntime.Y = 200;
+            buttonRuntime.Width = 100;
+            buttonRuntime.Height = 50;
+            buttonRuntime.TextInstance.Text = "Other Button!";
+            var formsButton = buttonRuntime.FormsControl;
+            formsButton.Click += (_, _) =>
             {
                 clickCount++;
-                button.Text = $"Clicked {clickCount} times";
+                formsButton.Text = $"Clicked {clickCount} times";
             };
+
+
 
 
             base.Initialize();

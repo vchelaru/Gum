@@ -284,6 +284,12 @@ namespace MonoGameGum.Forms.Controls
             if (DefaultFormsComponents.ContainsKey(type))
             {
                 var gumType = DefaultFormsComponents[type];
+
+                // The bool/bool constructor is required to match the FlatRedBall.Forms functionality
+                // of being able to be Gum-first or forms-first. The 2nd bool in particular tells the runtime
+                // whether to create a forms object. Yes, this is less convenient for the user who is manually
+                // creating runtimes, but it's worth it for the standard behavior of the user creating instances
+                // of Gum objects, and to be able to create Forms objects in Gum tool
                 System.Reflection.ConstructorInfo? boolBoolConstructor = gumType.GetConstructor(new[] { typeof(bool), typeof(bool) });
                 if(boolBoolConstructor != null)
                 {
@@ -291,9 +297,8 @@ namespace MonoGameGum.Forms.Controls
                 }
                 else
                 {
-                    System.Reflection.ConstructorInfo? noArgConstructor = gumType.GetConstructor(new Type[0]);
-                    return noArgConstructor.Invoke(new object[] { }) as InteractiveGue;
-                    // see if there is a no args constructor
+                    throw new Exception($"The Runtime type {gumType} needs to have a two-argument constructor, both bools, where" +
+                        " the second argument controls whether the object should internally create a Forms instance.");
                 }
 
 
