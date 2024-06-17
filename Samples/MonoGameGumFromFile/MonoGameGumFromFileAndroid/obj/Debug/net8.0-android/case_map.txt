@@ -1,2 +1,0 @@
-drawable\icon;drawable\Icon
-values\strings;values\Strings
