@@ -130,7 +130,7 @@ fi
 
 11. Reload the shell configuration to apply the changes. Run the following command:
 
-\*\*For BASH Shell
+**For BASH Shell**
 
 ```sh
 source ~/.bash_profile
