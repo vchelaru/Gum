@@ -1,0 +1,330 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ScreenSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Name>TextScreen</Name>
+  <State>
+    <Name>Default</Name>
+    <Variable>
+      <Type>ChildrenLayout</Type>
+      <Name>ContainerInstance.Children Layout</Name>
+      <Value xsi:type="xsd:int">1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ContainerInstance.Height</Name>
+      <Value xsi:type="xsd:float">598</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ContainerInstance.Width</Name>
+      <Value xsi:type="xsd:float">420</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>DifferentFontAndSize.Font</Name>
+      <Value xsi:type="xsd:string">Caladea</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
+      <Name>DifferentFontAndSize.FontSize</Name>
+      <Value xsi:type="xsd:int">32</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>DifferentFontAndSize.Height</Name>
+      <Value xsi:type="xsd:float">80</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>DifferentFontAndSize.Parent</Name>
+      <Value xsi:type="xsd:string">ContainerInstance</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>DifferentFontAndSize.Text</Name>
+      <Value xsi:type="xsd:string">Text with different font and font size</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>DifferentFontAndSize.Width</Name>
+      <Value xsi:type="xsd:float">288</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>DifferentFontAndSize.X</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>DifferentFontAndSize.Y</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>bool</Type>
+      <Name>IsOverrideInCodeGen</Name>
+      <Value xsi:type="xsd:boolean">false</Value>
+      <Category>Xamarin Forms</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>bool</Type>
+      <Name>IsXamarinFormsControl</Name>
+      <Category>Xamarin Forms</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
+      <Name>NormalText.FontSize</Name>
+      <Value xsi:type="xsd:int">18</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>NormalText.Parent</Name>
+      <Value xsi:type="xsd:string">ContainerInstance</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>NormalText.Text</Name>
+      <Value xsi:type="xsd:string">Normal Text</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>NormalText.Width</Name>
+      <Value xsi:type="xsd:float">382</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
+      <Name>NormalText1.Blue</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
+      <Name>NormalText1.Green</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>NormalText1.Parent</Name>
+      <Value xsi:type="xsd:string">ContainerInstance</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
+      <Name>NormalText1.Red</Name>
+      <Value xsi:type="xsd:int">255</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>NormalText1.Text</Name>
+      <Value xsi:type="xsd:string">Colored Text</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>NormalText1.Width</Name>
+      <Value xsi:type="xsd:float">143</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>NormalText1.X</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>NormalText1.Y</Name>
+      <Value xsi:type="xsd:float">20</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
+      <Name>NormalText2.FontSize</Name>
+      <Value xsi:type="xsd:int">18</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>NormalText2.Height</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>NormalText2.Height Units</Name>
+      <Value xsi:type="xsd:int">4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HorizontalAlignment</Type>
+      <Name>NormalText2.HorizontalAlignment</Name>
+      <Value xsi:type="xsd:int">1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>NormalText2.Parent</Name>
+      <Value xsi:type="xsd:string">ContainerInstance</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>NormalText2.Text</Name>
+      <Value xsi:type="xsd:string">This is some multiline text that uses center horizontal
+alignment. The
+longest line 
+defines the
+width.</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>NormalText2.Width</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>NormalText2.Width Units</Name>
+      <Value xsi:type="xsd:int">4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
+      <Name>NormalText3.FontSize</Name>
+      <Value xsi:type="xsd:int">18</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>NormalText3.Parent</Name>
+      <Value xsi:type="xsd:string">ContainerInstance</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>NormalText3.Text</Name>
+      <Value xsi:type="xsd:string">Normal Text</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>NormalText3.Width</Name>
+      <Value xsi:type="xsd:float">382</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>ToggleFontSizes.Font</Name>
+      <Value xsi:type="xsd:string">Jing Jing</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
+      <Name>ToggleFontSizes.FontSize</Name>
+      <Value xsi:type="xsd:int">16</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ToggleFontSizes.Height</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>ToggleFontSizes.Height Units</Name>
+      <Value xsi:type="xsd:int">4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>ToggleFontSizes.Parent</Name>
+      <Value xsi:type="xsd:string">ContainerInstance</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>ToggleFontSizes.Text</Name>
+      <Value xsi:type="xsd:string">Click me to toggle font sizes</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ToggleFontSizes.Width</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>ToggleFontSizes.Width Units</Name>
+      <Value xsi:type="xsd:int">4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ToggleFontSizes.X</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ToggleFontSizes.Y</Name>
+      <Value xsi:type="xsd:float">20</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+  </State>
+  <Instance>
+    <Name>NormalText</Name>
+    <BaseType>Text</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>NormalText3</Name>
+    <BaseType>Text</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>NormalText2</Name>
+    <BaseType>Text</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>DifferentFontAndSize</Name>
+    <BaseType>Text</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>ToggleFontSizes</Name>
+    <BaseType>Text</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>NormalText1</Name>
+    <BaseType>Text</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>ContainerInstance</Name>
+    <BaseType>Container</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Behaviors />
+</ScreenSave>
