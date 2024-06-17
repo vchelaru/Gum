@@ -11,7 +11,7 @@ This page assumes you have an existing MonoGame project. This can be an empty pr
 1. Open your MonoGame project in your preferred IDE.
 2. Add the `Gum.MonoGame` NuGet package
 
-<figure><img src="../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Add Gum.MonoGame NuGet Package to your project</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Add Gum.MonoGame NuGet Package to your project</p></figcaption></figure>
 
 ### GumBatch Quick Start
 
