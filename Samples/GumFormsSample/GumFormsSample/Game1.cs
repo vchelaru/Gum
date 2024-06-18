@@ -34,6 +34,7 @@ namespace GumFormsSample
 
             FrameworkElement.DefaultFormsComponents[typeof(Button)] = typeof(DefaultButtonRuntime);
             FrameworkElement.DefaultFormsComponents[typeof(CheckBox)] = typeof(DefaultCheckboxRuntime);
+            FrameworkElement.DefaultFormsComponents[typeof(ListBox)] = typeof(DefaultListBoxRuntime);
             FrameworkElement.DefaultFormsComponents[typeof(ListBoxItem)] = typeof(DefaultListBoxItemRuntime);
             FrameworkElement.DefaultFormsComponents[typeof(ScrollBar)] = typeof(DefaultScrollBarRuntime);
             FrameworkElement.DefaultFormsComponents[typeof(ScrollViewer)] = typeof(DefaultScrollViewerRuntime);
@@ -64,7 +65,7 @@ namespace GumFormsSample
             var checkbox = new CheckBox();
             Root.Children.Add(checkbox.Visual);
             checkbox.X = 0;
-            checkbox.Y = 100;
+            checkbox.Y = 50;
             checkbox.Text = "Checkbox";
 
             var scrollBar = new ScrollBar();
@@ -95,6 +96,32 @@ namespace GumFormsSample
 
             }
 
+            // We can also create buttons through the creation of the default controls:
+            var buttonRuntime = new DefaultButtonRuntime();
+            Root.Children.Add(buttonRuntime);
+            buttonRuntime.X = 0;
+            buttonRuntime.Y = 100;
+            buttonRuntime.Width = 100;
+            buttonRuntime.Height = 50;
+            buttonRuntime.TextInstance.Text = "Other Button!";
+            var formsButton = buttonRuntime.FormsControl;
+            formsButton.Click += (_, _) =>
+            {
+                clickCount++;
+                formsButton.Text = $"Clicked {clickCount} times";
+            };
+
+            var listBox = new ListBox();
+            this.Root.Children.Add(listBox.Visual);
+            listBox.X = 0;
+            listBox.Y = 200;
+            listBox.Width = 200;
+            listBox.Height = 200;
+            for (int i = 0; i < 20; i++)
+            {
+                listBox.Items.Add($"Item {i}");
+            }
+
             //var viewer = new DefaultScrollViewerRuntime(true, false);
             //this.Root.Children.Add(viewer);
             //viewer.X = 300;
@@ -105,20 +132,6 @@ namespace GumFormsSample
 
 
 
-            // We can also create buttons through the creation of the default controls:
-            var buttonRuntime = new DefaultButtonRuntime();
-            Root.Children.Add(buttonRuntime);
-            buttonRuntime.X = 0;
-            buttonRuntime.Y = 200;
-            buttonRuntime.Width = 100;
-            buttonRuntime.Height = 50;
-            buttonRuntime.TextInstance.Text = "Other Button!";
-            var formsButton = buttonRuntime.FormsControl;
-            formsButton.Click += (_, _) =>
-            {
-                clickCount++;
-                formsButton.Text = $"Clicked {clickCount} times";
-            };
 
 
 

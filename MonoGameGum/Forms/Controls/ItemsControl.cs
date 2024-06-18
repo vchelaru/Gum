@@ -183,12 +183,12 @@ namespace MonoGameGum.Forms.Controls
                         "This property must be set before adding any items");
                 }
 #endif
-                var listBoxFormsConstructor = ItemFormsType.GetConstructor(new Type[] { typeof(GraphicalUiElement) });
+                var listBoxFormsConstructor = ItemFormsType.GetConstructor(new Type[] { typeof(InteractiveGue) });
 
                 if (listBoxFormsConstructor == null)
                 {
                     string message =
-                        $"Could not find a constructor for {ItemFormsType} which takes a single GraphicalUiElement argument. " +
+                        $"Could not find a constructor for {ItemFormsType} which takes a single InteractiveGue argument. " +
                         $"If you defined {ItemFormsType} without specifying a constructor, you need to add a constructor which takes a GraphicalUiElement and calls the base constructor.";
                     throw new Exception(message);
                 }
