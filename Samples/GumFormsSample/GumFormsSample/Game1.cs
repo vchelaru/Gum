@@ -7,6 +7,7 @@ using MonoGameGum.Forms.DefaultVisuals;
 using MonoGameGum.GueDeriving;
 using MonoGameGum.Input;
 using RenderingLibrary;
+using System.Diagnostics;
 
 namespace GumFormsSample
 {
@@ -33,6 +34,7 @@ namespace GumFormsSample
 
             FrameworkElement.DefaultFormsComponents[typeof(Button)] = typeof(DefaultButtonRuntime);
             FrameworkElement.DefaultFormsComponents[typeof(CheckBox)] = typeof(DefaultCheckboxRuntime);
+            FrameworkElement.DefaultFormsComponents[typeof(ListBoxItem)] = typeof(DefaultListBoxItemRuntime);
             FrameworkElement.DefaultFormsComponents[typeof(ScrollBar)] = typeof(DefaultScrollBarRuntime);
             FrameworkElement.DefaultFormsComponents[typeof(ScrollViewer)] = typeof(DefaultScrollViewerRuntime);
             FrameworkElement.MainCursor = cursor;
@@ -89,6 +91,8 @@ namespace GumFormsSample
                 innerButton.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
                 innerButton.Text = $"Button {i}";
                 scrollViewer.InnerPanel.Children.Add(innerButton.Visual);
+
+
             }
 
             //var viewer = new DefaultScrollViewerRuntime(true, false);

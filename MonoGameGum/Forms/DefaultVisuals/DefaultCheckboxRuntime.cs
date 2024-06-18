@@ -62,35 +62,35 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 {
                     Name = "EnabledOn",
                     Variables = new List<Gum.DataTypes.Variables.VariableSave>()
-                {
-                    new Gum.DataTypes.Variables.VariableSave()
                     {
-                        Name = "InnerCheck.Visible",
-                        Value = true,
-                    },
-                    new Gum.DataTypes.Variables.VariableSave()
-                    {
-                        Name = "CheckBoxBackground.Color",
-                        Value = new Color(41, 55, 52),
+                        new Gum.DataTypes.Variables.VariableSave()
+                        {
+                            Name = "InnerCheck.Visible",
+                            Value = true,
+                        },
+                        new Gum.DataTypes.Variables.VariableSave()
+                        {
+                            Name = "CheckBoxBackground.Color",
+                            Value = new Color(41, 55, 52),
+                        }
                     }
-                }
                 });
                 checkboxCategory.States.Add(new Gum.DataTypes.Variables.StateSave()
                 {
                     Name = "EnabledOff",
                     Variables = new List<Gum.DataTypes.Variables.VariableSave>()
-                {
-                    new Gum.DataTypes.Variables.VariableSave()
                     {
-                        Name = "InnerCheck.Visible",
-                        Value = false,
-                    },
-                    new Gum.DataTypes.Variables.VariableSave()
-                    {
-                        Name = "CheckBoxBackground.Color",
-                        Value = new Color(41, 55, 52),
+                        new Gum.DataTypes.Variables.VariableSave()
+                        {
+                            Name = "InnerCheck.Visible",
+                            Value = false,
+                        },
+                        new Gum.DataTypes.Variables.VariableSave()
+                        {
+                            Name = "CheckBoxBackground.Color",
+                            Value = new Color(41, 55, 52),
+                        }
                     }
-                }
                 });
 
                 checkboxCategory.States.Add(new Gum.DataTypes.Variables.StateSave()
@@ -131,7 +131,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 this.AddCategory(checkboxCategory);
             }
 
-            if(tryCreateFormsObject)
+            if (tryCreateFormsObject)
             {
                 FormsControlAsObject = new CheckBox();
             }
