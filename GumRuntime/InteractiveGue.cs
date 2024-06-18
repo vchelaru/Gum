@@ -24,6 +24,7 @@ using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
 using Matrix = System.Numerics.Matrix4x4;
 using GumRuntime;
+using System.Collections;
 #if UWP
 using System.Reflection;
 #endif
@@ -33,6 +34,17 @@ namespace Gum.Wireframe
     public class RoutedEventArgs
     {
         public bool Handled { get; set; }
+    }
+
+    public class SelectionChangedEventArgs
+    {
+        public IList RemovedItems { get; private set; } = new List<Object>();
+        public IList AddedItems { get; private set; } = new List<Object>();
+    }
+
+    public class BindingContextChangedEventArgs : EventArgs
+    {
+        public object OldBindingContext { get; set; }
     }
 
     /// <summary>
