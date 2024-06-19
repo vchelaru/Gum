@@ -351,7 +351,13 @@ namespace Gum.PropertyGridHelpers
                 // if that will cause problems now, so instead I'm going
                 // to do it one by one:
                 var handledByDirectSet = false;
-                if (forceWireframeRefresh == false && PropertiesSupportingIncrementalChange.Contains(unqualifiedMember) &&
+                if (forceWireframeRefresh == false && 
+                    PropertiesSupportingIncrementalChange.Contains(unqualifiedMember) &&
+                    // June 19, 2024 - if the value is null (from default assignment), we
+                    // can't set this single value - it requires a recursive variable finder.
+                    // for simplicity (for now?) we will just refresh all:
+                    value != null && 
+
                     (instance != null || SelectedState.Self.SelectedComponent != null || SelectedState.Self.SelectedStandardElement != null))
                 {
                     // this assumes that the object having its variable set is the selected instance. If we're setting
