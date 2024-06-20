@@ -299,8 +299,10 @@ namespace Gum.DataTypes
 
             if(shouldLoadFromTitleContainer)
             {
-                using var stream = FileManager.GetStreamForFile(fileName);
-                gps = FileManager.XmlDeserializeFromStream<GumProjectSave>(stream);
+                using (var stream = FileManager.GetStreamForFile(fileName))
+                {
+                    gps = FileManager.XmlDeserializeFromStream<GumProjectSave>(stream);
+                }
             }
             else
             {
