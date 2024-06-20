@@ -93,39 +93,39 @@ namespace MonoGameGum.Forms.DefaultVisuals
                     }
                 });
 
-                checkboxCategory.States.Add(new Gum.DataTypes.Variables.StateSave()
+                checkboxCategory.States.Add(new ()
                 {
                     Name = "HighlightedOn",
-                    Variables = new List<Gum.DataTypes.Variables.VariableSave>()
-                {
-                    new Gum.DataTypes.Variables.VariableSave()
+                    Variables = new ()
                     {
-                        Name = "InnerCheck.Visible",
-                        Value = true,
-                    },
-                    new Gum.DataTypes.Variables.VariableSave()
-                    {
-                        Name = "CheckBoxBackground.Color",
-                        Value = new Color(51, 65, 62),
+                        new ()
+                        {
+                            Name = "InnerCheck.Visible",
+                            Value = true,
+                        },
+                        new ()
+                        {
+                            Name = "CheckBoxBackground.Color",
+                            Value = new Color(51, 65, 62),
+                        }
                     }
-                }
                 });
-                checkboxCategory.States.Add(new Gum.DataTypes.Variables.StateSave()
+                checkboxCategory.States.Add(new ()
                 {
                     Name = "HighlightedOff",
-                    Variables = new List<Gum.DataTypes.Variables.VariableSave>()
-                {
-                    new Gum.DataTypes.Variables.VariableSave()
+                    Variables = new ()
                     {
-                        Name = "InnerCheck.Visible",
-                        Value = false,
-                    },
-                    new Gum.DataTypes.Variables.VariableSave()
-                    {
-                        Name = "CheckBoxBackground.Color",
-                        Value = new Color(61, 65, 62),
+                        new ()
+                        {
+                            Name = "InnerCheck.Visible",
+                            Value = false,
+                        },
+                        new ()
+                        {
+                            Name = "CheckBoxBackground.Color",
+                            Value = new Color(61, 65, 62),
+                        }
                     }
-                }
                 });
 
                 this.AddCategory(checkboxCategory);

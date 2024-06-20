@@ -5,6 +5,8 @@ using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Math.Geometry;
 using Microsoft.Xna.Framework;
 using RenderingLibrary.Content;
+using ToolsUtilities;
+
 
 
 
@@ -118,6 +120,28 @@ namespace RenderingLibrary
 
         public void Initialize(GraphicsDevice graphicsDevice, bool fullInstantiation = false)
         {
+#if NET6_0_OR_GREATER
+            var usesTitleContainer = System.OperatingSystem.IsAndroid() || 
+                System.OperatingSystem.IsIOS();
+
+            if(usesTitleContainer)
+            {
+                FileManager.CustomGetStreamFromFile = (fileName) =>
+                {
+                    if(FileManager.IsRelative(fileName) == false)
+                    {
+                        fileName = FileManager.MakeRelative(fileName, FileManager.ExeLocation, preserveCase:true);
+                    }
+                    var stream = TitleContainer.OpenStream(fileName);
+                    return stream;
+                };
+            }
+
+
+
+
+#endif
+
 #if WINDOWS_8 || UWP
             mPrimaryThreadId = Environment.CurrentManagedThreadId;
 #else

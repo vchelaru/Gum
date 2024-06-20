@@ -9,7 +9,6 @@ using System.Runtime.InteropServices.ComTypes;
 
 namespace ToolsUtilities
 {
-    #region XML Docs
     /// <summary>
     /// Utility class used to help dealing with files.
     /// </summary>
@@ -17,13 +16,12 @@ namespace ToolsUtilities
     /// This code is a copy of code from FlatRedBall.  It's ok,
     /// Victor Chelaru wrote that code and he's the one who put it in here.
     /// </remarks>
-    #endregion
     public static partial class FileManager
     {
         public const char DefaultSlash = '\\';
         #region Fields
 
-        static string ExeLocation =>
+        public static string ExeLocation =>
 #if UWP
             "./";
 #elif ANDROID || IOS
@@ -58,6 +56,12 @@ namespace ToolsUtilities
                 }
             }
         }
+
+        #endregion
+
+        #region Delegates
+
+        public static Func<string, Stream> CustomGetStreamFromFile;
 
         #endregion
 
@@ -154,6 +158,12 @@ namespace ToolsUtilities
             }
         }
 
+        public static bool DirectoryExists(string directory)
+        {
+            directory = Standardize(directory, true, true);
+
+            return Directory.Exists(directory);
+        }
 
         public static string FromFileText(string fileName)
         {
@@ -681,11 +691,21 @@ namespace ToolsUtilities
 
         public static Stream GetStreamForFile(string fileName)
         {
+
+
+
 #if ANDROID || IOS || WINDOWS_8
             fileName = TryRemoveLeadingDotSlash(fileName);
 			return Microsoft.Xna.Framework.TitleContainer.OpenStream(fileName);
 #else
-            return System.IO.File.OpenRead(fileName);
+            if(CustomGetStreamFromFile != null)
+            {
+                return CustomGetStreamFromFile(fileName);
+            }
+            else
+            {
+                return System.IO.File.OpenRead(fileName);
+            }
 #endif
         }
 
@@ -758,11 +778,8 @@ namespace ToolsUtilities
     }
 
 
-    // Stuff that only works on desktop (and not Windows RT)
     public static partial class FileManager
     {
-#if !UWP
-
         public static string UserApplicationData =>
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @"\";
 
@@ -1274,7 +1291,6 @@ namespace ToolsUtilities
             return objectToReturn;
         }
 
-#endif
         public static bool IsUrl(string fileName)
         {
             return fileName.IndexOf("http:") == 0 || fileName.IndexOf("https:") == 0;

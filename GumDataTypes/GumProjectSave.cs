@@ -287,29 +287,43 @@ namespace Gum.DataTypes
 
             GumProjectSave gps = null;
 
+            var shouldLoadFromTitleContainer = false;
 #if ANDROID || IOS || WINDOWS_8
-            gps = LoadFromTitleStorage(fileName, linkLoadingPreference, result);
-#else
-            if(!System.IO.File.Exists(fileName))
-            {
-                result.ErrorMessage = $"Could not find main project file {fileName}";
-                return null;
-            }
-            try
-            {
-                gps = FileManager.XmlDeserialize<GumProjectSave>(fileName);
-            }
-            catch (FileNotFoundException)
-            {
-                result.MissingFiles.Add(fileName);
-                return null;
-            }
-            catch (IOException ex)
-            {
-                result.ErrorMessage = ex.Message;
-                return null;
-            }
+            shouldLoadFromTitleContainer = true;
+#elif NET6_0_OR_GREATER
+            shouldLoadFromTitleContainer = System.OperatingSystem.IsAndroid();
+            // If not using precompiles, it may be a standard .dll which is used everywhere, so we still can check like this:
+
 #endif
+
+
+            if(shouldLoadFromTitleContainer)
+            {
+                using var stream = FileManager.GetStreamForFile(fileName);
+                gps = FileManager.XmlDeserializeFromStream<GumProjectSave>(stream);
+            }
+            else
+            {
+                if (!System.IO.File.Exists(fileName))
+                {
+                    result.ErrorMessage = $"Could not find main project file {fileName}";
+                    return null;
+                }
+                try
+                {
+                    gps = FileManager.XmlDeserialize<GumProjectSave>(fileName);
+                }
+                catch (FileNotFoundException)
+                {
+                    result.MissingFiles.Add(fileName);
+                    return null;
+                }
+                catch (IOException ex)
+                {
+                    result.ErrorMessage = ex.Message;
+                    return null;
+                }
+            }
             string projectRootDirectory = FileManager.GetDirectory(fileName);
 
             gps.PopulateElementSavesFromReferences(projectRootDirectory, linkLoadingPreference, result);
@@ -476,7 +490,7 @@ namespace Gum.DataTypes
             }
         }
 
-#if  !UWP
+#if !UWP
         public void Save(string fileName, bool saveElements)
         {
             FileManager.XmlSerialize(this, fileName);
@@ -568,7 +582,7 @@ namespace Gum.DataTypes
             }
         }
 
-        #endregion
+#endregion
 
     }
 }
