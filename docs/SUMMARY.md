@@ -21,6 +21,7 @@
   * [Custom NineSlice](examples/custom-nineslice.md)
   * [Health Bar](examples/health-bar.md)
 * [Menu](menu/README.md)
+  * [Content](menu/content.md)
   * [Project Properties](menu/project-properties.md)
 * [Gum Elements](gum-elements/README.md)
   * [General Properties](gum-elements/general-properties/README.md)
