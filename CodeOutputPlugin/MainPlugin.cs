@@ -163,7 +163,7 @@ namespace CodeOutputPlugin
 
         private void LoadCodeSettingsFile(ElementSave element)
         {
-            if(element != null)
+            if(element != null && GumState.Self.ProjectState.GumProjectSave?.FullFileName != null)
             {
                 control.CodeOutputElementSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(element);
             }

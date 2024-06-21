@@ -342,10 +342,17 @@ namespace StateAnimationPlugin
             }
 
             var element = SelectedState.Self.SelectedElement;
+
             if (currentlyReferencedElement != element)
             {
-
-                mCurrentViewModel = AnimationCollectionViewModelManager.Self.GetAnimationCollectionViewModel(element);
+                if(GumState.Self.ProjectState.GumProjectSave?.FullFileName == null)
+                {
+                    mCurrentViewModel = null;
+                }
+                else
+                {
+                    mCurrentViewModel = AnimationCollectionViewModelManager.Self.GetAnimationCollectionViewModel(element);
+                }
 
                 if (mCurrentViewModel != null)
                 {
