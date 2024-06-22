@@ -84,10 +84,15 @@ Note that setting CacheTextures to false flushes the cache and disposes all cach
 ```csharp
 Sprite1.SourceFile = "MyFile.png"; // This loads the file from disk
 Sprite2.SourceFile = "MyFile.png"; // This uses the cached Texture2D
+
 LoaderManager.Self.CacheTextures = false; // This clears the cache:
 LoaderManager.Self.CacheTextures = true;
 Sprite1.SourceFile = "MyFile.png"; // This once-again goes to disk to load the file
 Sprite2.SourceFile = "MyFile.png"; // This uses the cached Texture2D 
+
+LoaderManager.Self.CacheTextures = false; // This clears the cache
+Sprite1.SourceFile = "MyFile.png"; // This once-again goes to disk to load the file
+Sprite2.SourceFile = "MyFile.png"; // This also goes to disk to load the file
 ```
 
 Be careful setting CacheTextures to false since all existing textures will be disposed. This means that if you have loaded textures which are still being referenced by runtime objects, you will get an exception if those are still being drawn after setting CacheTextures to false.
