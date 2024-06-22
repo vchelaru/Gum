@@ -82,6 +82,20 @@ child.X += 30;
 child.SetProperty("Text", "Hello world");
 ```
 
+### Gum Projects in Different Folders
+
+The code above and most samples in the Gum repository assume a Gum project located in the Content folder. If you are placing your Gum project in a subfolder, you need to set the FileManager.RelativeDirectory to the sbufolder. For example:
+
+```csharp
+FileManager.RelativeDirectory = "Content/MySubFolder/";
+
+var screen = gumProject.Screens.First().ToGraphicalUiElement(
+  SystemManagers.Default, 
+  addToManagers:true);
+```
+
+For a more detailed discussion on file loading and file locations, see the [File Loading](file-loading.md#loading-files-through-runtime-objects) page.
+
 ### Troubleshooting Gum Project Loading
 
 If your Gum project load results in an exception, you can inspect the exception message for information about the failure. The most common type of failure is a missing file reference.
