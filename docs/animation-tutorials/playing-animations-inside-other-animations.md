@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Gum supports creating animations which can play other animations. This is especially useful when creating animations in Screens that contain components which themselves have animations. This tutorial will build upon the [previous tutorial](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Animation%20Tutorial/Usage-Guide\_-Creating-an-Animation/README.md) where we created an animated component called TextComponent.
+Gum supports creating animations which can play other animations. This is especially useful when creating animations in Screens that contain components which themselves have animations. This tutorial will build upon the [previous tutorial](creating-an-animation.md) where we created an animated component called TextComponent.
 
 ## Creating a Screen
 
