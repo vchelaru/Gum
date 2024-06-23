@@ -54,6 +54,10 @@ namespace Gum.Wireframe
     /// </summary>
     public partial class InteractiveGue : GraphicalUiElement
     {
+        static List<Action> nextPushActions = new List<Action>();
+        static List<Action> nextClickActions = new List<Action>();
+        public static double CurrentGameTime { get; set; }
+
         public bool HasEvents { get; set; } = true;
         public bool ExposeChildrenEvents { get; set; } = true;
 
@@ -487,6 +491,53 @@ namespace Gum.Wireframe
             RollOff += (not, used) => LosePush?.Invoke(this, EventArgs.Empty);
         }
 
+        public static void AddNextPushAction(Action action)
+        {
+#if DEBUG
+            if (action == null)
+            {
+                throw new ArgumentNullException(nameof(action));
+            }
+#endif
+            nextPushActions.Add(action);
+        }
+        public static void AddNextClickAction(Action action)
+        {
+#if DEBUG
+            if (action == null)
+            {
+                throw new ArgumentNullException(nameof(action));
+            }
+#endif
+            nextClickActions.Add(action);
+        }
+        internal static void DoNextClickActions()
+        {
+
+            if (nextClickActions.Count > 0)
+            {
+                var items = nextClickActions.ToList();
+                nextClickActions.Clear();
+                foreach (var item in items)
+                {
+                    item();
+                }
+
+            }
+        }
+
+        internal static void DoNextPushActions()
+        {
+            if (nextPushActions.Count > 0)
+            {
+                var items = nextPushActions.ToList();
+                nextPushActions.Clear();
+                foreach (var item in items)
+                {
+                    item();
+                }
+            }
+        }
     }
 
     public interface ICursor
@@ -501,6 +552,12 @@ namespace Gum.Wireframe
         bool PrimaryPush { get; }
         bool PrimaryDown { get; }
         bool PrimaryClick { get; }
+        /// <summary>
+        /// Returns whether the cursor has been clicked without movement between the push and release.
+        /// Simple implementations can return PrimaryClick, but more complex implementations may want to
+        /// consider a movement threshold.
+        /// </summary>
+        bool PrimaryClickNoSlide { get; }
         bool PrimaryDoubleClick { get; }
 
         bool SecondaryPush { get; }
@@ -524,8 +581,9 @@ namespace Gum.Wireframe
     }
     public static class GueInteractiveExtensionMethods
     {
-        public static void DoUiActivityRecursively(this GraphicalUiElement gue, ICursor cursor)
+        public static void DoUiActivityRecursively(this GraphicalUiElement gue, ICursor cursor, double currentGameTimeInSeconds)
         {
+            InteractiveGue.CurrentGameTime = currentGameTimeInSeconds;
             var windowOverBefore = cursor.WindowOver;
 
             HandledActions actions = new HandledActions();
@@ -546,6 +604,19 @@ namespace Gum.Wireframe
             if(cursor.WindowPushed != null && cursor.PrimaryDown && (cursor.XChange != 0 || cursor.YChange != 0))
             {
                 cursor.WindowPushed.TryCallDragging();
+            }
+
+            // the click/push actions need to be after the UI activity
+            if (cursor.PrimaryClick)
+            {
+                InteractiveGue.DoNextClickActions();
+
+            }
+
+            if (cursor.PrimaryPush)
+            {
+                InteractiveGue.DoNextPushActions();
+
             }
         }
     }

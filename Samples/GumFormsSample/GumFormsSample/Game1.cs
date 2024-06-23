@@ -151,7 +151,7 @@ namespace GumFormsSample
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
             cursor.Activity(gameTime.TotalGameTime.TotalSeconds);
-            Root.DoUiActivityRecursively(cursor);
+            Root.DoUiActivityRecursively(cursor, gameTime.TotalGameTime.TotalSeconds);
 
             SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
             // TODO: Add your update logic here
