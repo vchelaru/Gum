@@ -41,6 +41,7 @@ namespace GumFormsSample
             FrameworkElement.DefaultFormsComponents[typeof(ScrollBar)] = typeof(DefaultScrollBarRuntime);
             FrameworkElement.DefaultFormsComponents[typeof(ScrollViewer)] = typeof(DefaultScrollViewerRuntime);
             FrameworkElement.DefaultFormsComponents[typeof(TextBox)] = typeof(DefaultTextBoxRuntime);
+            FrameworkElement.DefaultFormsComponents[typeof(PasswordBox)] = typeof(DefaultTextBoxRuntime);
             FrameworkElement.MainCursor = cursor;
 
             Root = new ContainerRuntime();
@@ -148,6 +149,13 @@ namespace GumFormsSample
             textBox2.Height = 34;
             textBox2.Placeholder = "Placeholder Text...";
 
+            var passwordBox = new PasswordBox();
+            this.Root.Children.Add(passwordBox.Visual);
+            passwordBox.X = 220;
+            passwordBox.Y = 300;
+            passwordBox.Width = 200;
+            passwordBox.Height = 34;
+            passwordBox.Placeholder = "Enter Password";
 
 
 

@@ -146,6 +146,11 @@ namespace Gum.Wireframe
         public event Action<object, RoutedEventArgs> MouseWheelScroll;
         public event Action<object, RoutedEventArgs> RollOverBubbling;
 
+        /// <summary>
+        /// Event raised when this Window is pushed, then is no longer the pushed window due to a cursor releasing the primary button.
+        /// </summary>
+        public event EventHandler RemovedAsPushed;
+
 
         // RollOff is determined outside of the individual InteractiveGue so we need to have this callable externally..
         public void TryCallRollOff()
@@ -162,6 +167,11 @@ namespace Gum.Wireframe
             {
                 Dragging(this, EventArgs.Empty);
             }
+        }
+
+        public void TryCallRemoveAsPushed()
+        {
+            RemovedAsPushed?.Invoke(this, EventArgs.Empty);
         }
 
         #endregion
@@ -644,6 +654,7 @@ namespace Gum.Wireframe
         {
             InteractiveGue.CurrentGameTime = currentGameTimeInSeconds;
             var windowOverBefore = cursor.WindowOver;
+            var windowPushedBefore = cursor.WindowPushed;
 
             HandledActions actions = new HandledActions();
             InteractiveGue.DoUiActivityRecursively(cursor, actions, gue);
@@ -658,6 +669,13 @@ namespace Gum.Wireframe
                 if(windowOverBefore is InteractiveGue interactiveBefore)
                 {
                     interactiveBefore.TryCallRollOff();
+                }
+            }
+            if(windowPushedBefore != cursor.WindowPushed)
+            {
+                if(windowPushedBefore is InteractiveGue interactiveBefore)
+                {
+                    interactiveBefore.TryCallRemoveAsPushed();
                 }
             }
             if(cursor.WindowPushed != null && cursor.PrimaryDown && (cursor.XChange != 0 || cursor.YChange != 0))
