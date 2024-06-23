@@ -35,7 +35,6 @@ namespace MonoGameGum.Forms.Controls
     public class FrameworkElement
     {
         public static ICursor MainCursor { get; set; }
-        public static IInputReceiver CurrentInputReceiver { get; set; }
 
         protected bool isFocused;
         protected double timeFocused;

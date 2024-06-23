@@ -58,6 +58,33 @@ namespace Gum.Wireframe
         static List<Action> nextClickActions = new List<Action>();
         public static double CurrentGameTime { get; set; }
 
+        static IInputReceiver currentInputReceiver;
+        public static IInputReceiver CurrentInputReceiver
+        {
+            get => currentInputReceiver;
+            set
+            {
+                var differs = currentInputReceiver != value;
+                if (differs)
+                {
+                    var old = currentInputReceiver;
+                    currentInputReceiver = value;
+
+                    if (old != null)
+                    {
+                        old.OnLoseFocus();
+                    }
+                }
+                currentInputReceiver = value;
+                if (differs && currentInputReceiver != null)
+                {
+                    currentInputReceiver.OnGainFocus();
+                }
+
+
+            }
+        }
+
         public bool HasEvents { get; set; } = true;
         public bool ExposeChildrenEvents { get; set; } = true;
 
@@ -385,9 +412,10 @@ namespace Gum.Wireframe
                 }
                 else
                 {
+                    var thisInstanceName = thisInstance.Name ?? $"this {thisInstance.GetType()} instance (unnamed)";
                     string message =
-                        "Could not determine whether the cursor is over this instance because" +
-                        "this instance is not on any camera, nor is a default camera set up";
+                        $"Could not determine whether the cursor is over {thisInstanceName} because" +
+                        " it is not on any camera, nor is a default camera set up";
                     throw new Exception(message);
                 }
             }
@@ -540,6 +568,24 @@ namespace Gum.Wireframe
         }
     }
 
+    public interface IInputReceiver
+    {
+        /// <summary>
+        /// Called by the engine automatically when an IInputReceiver gains focus.
+        /// </summary>
+        /// <remarks>
+        /// The implementation of this method should raise the GainFocus event.
+        /// </remarks>
+        void OnGainFocus();
+
+        /// <summary>
+        /// Called by the engine automatically when an IInputReceiver loses focus.
+        /// </summary>
+        void OnLoseFocus();
+
+        void DoKeyboardAction(IInputReceiverKeyboard keyboard);
+    }
+
     public interface ICursor
     {
         int X { get; }
@@ -573,6 +619,19 @@ namespace Gum.Wireframe
         InteractiveGue WindowPushed { get; set; }
         InteractiveGue WindowOver { get; set; }
     }
+
+    public interface IInputReceiverKeyboard
+    {
+        bool IsShiftDown { get; }
+        bool IsCtrlDown { get; }
+        bool IsAltDown { get; }
+
+        //IReadOnlyCollection<T> KeysTyped { get; }
+
+        string GetStringTyped();
+    }
+
+
     class HandledActions
     {
         public bool HandledMouseWheel;
@@ -581,7 +640,7 @@ namespace Gum.Wireframe
     }
     public static class GueInteractiveExtensionMethods
     {
-        public static void DoUiActivityRecursively(this GraphicalUiElement gue, ICursor cursor, double currentGameTimeInSeconds)
+        public static void DoUiActivityRecursively(this GraphicalUiElement gue, ICursor cursor, IInputReceiverKeyboard keyboard, double currentGameTimeInSeconds)
         {
             InteractiveGue.CurrentGameTime = currentGameTimeInSeconds;
             var windowOverBefore = cursor.WindowOver;
@@ -616,7 +675,11 @@ namespace Gum.Wireframe
             if (cursor.PrimaryPush)
             {
                 InteractiveGue.DoNextPushActions();
+            }
 
+            if(InteractiveGue.CurrentInputReceiver != null)
+            {
+                InteractiveGue.CurrentInputReceiver.DoKeyboardAction(keyboard);
             }
         }
     }

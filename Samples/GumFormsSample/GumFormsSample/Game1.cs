@@ -18,6 +18,7 @@ namespace GumFormsSample
 
         ContainerRuntime Root;
         Cursor cursor;
+        MonoGameGum.Input.Keyboard keyboard;
         public Game1()
         {
             _graphics = new GraphicsDeviceManager(this);
@@ -31,6 +32,7 @@ namespace GumFormsSample
             SystemManagers.Default = new SystemManagers(); 
             SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
             cursor = new Cursor();
+            keyboard = new MonoGameGum.Input.Keyboard();
 
             FrameworkElement.DefaultFormsComponents[typeof(Button)] = typeof(DefaultButtonRuntime);
             FrameworkElement.DefaultFormsComponents[typeof(CheckBox)] = typeof(DefaultCheckboxRuntime);
@@ -38,6 +40,7 @@ namespace GumFormsSample
             FrameworkElement.DefaultFormsComponents[typeof(ListBoxItem)] = typeof(DefaultListBoxItemRuntime);
             FrameworkElement.DefaultFormsComponents[typeof(ScrollBar)] = typeof(DefaultScrollBarRuntime);
             FrameworkElement.DefaultFormsComponents[typeof(ScrollViewer)] = typeof(DefaultScrollViewerRuntime);
+            FrameworkElement.DefaultFormsComponents[typeof(TextBox)] = typeof(DefaultTextBoxRuntime);
             FrameworkElement.MainCursor = cursor;
 
             Root = new ContainerRuntime();
@@ -129,9 +132,21 @@ namespace GumFormsSample
             //viewer.Width = 200;
             //viewer.Height = 200;
 
+            var textBox = new TextBox();
+            this.Root.Children.Add(textBox.Visual);
+            textBox.X = 220;
+            textBox.Y = 220;
+            textBox.Width = 200;
+            textBox.Height = 34;
+            textBox.Placeholder = "Placeholder Text...";
 
-
-
+            var textBox2 = new TextBox();
+            this.Root.Children.Add(textBox2.Visual);
+            textBox2.X = 220;
+            textBox2.Y = 260;
+            textBox2.Width = 200;
+            textBox2.Height = 34;
+            textBox2.Placeholder = "Placeholder Text...";
 
 
 
@@ -148,10 +163,11 @@ namespace GumFormsSample
 
         protected override void Update(GameTime gameTime)
         {
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Microsoft.Xna.Framework.Input.Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
             cursor.Activity(gameTime.TotalGameTime.TotalSeconds);
-            Root.DoUiActivityRecursively(cursor, gameTime.TotalGameTime.TotalSeconds);
+            keyboard.Activity(gameTime.TotalGameTime.TotalSeconds);
+            Root.DoUiActivityRecursively(cursor, keyboard, gameTime.TotalGameTime.TotalSeconds);
 
             SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
             // TODO: Add your update logic here

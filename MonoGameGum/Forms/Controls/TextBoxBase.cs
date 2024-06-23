@@ -1,5 +1,6 @@
 ﻿using Gum.Wireframe;
 using Microsoft.Xna.Framework.Input;
+using MonoGameGum.Input;
 using RenderingLibrary;
 using System;
 using System.Collections.Generic;
@@ -19,10 +20,9 @@ namespace MonoGameGum.Forms.Controls
         public TextCompositionEventArgs(string text) { Text = text; }
     }
 
-    public interface IInputReceiver
-    {
 
-    }
+
+
 
     public enum TextWrapping
     {
@@ -282,7 +282,7 @@ namespace MonoGameGum.Forms.Controls
 
         private void HandleClick(object sender, EventArgs args)
         {
-            CurrentInputReceiver = this;
+            InteractiveGue.CurrentInputReceiver = this;
 
             if (MainCursor.PrimaryDoubleClick)
             {
@@ -738,15 +738,50 @@ namespace MonoGameGum.Forms.Controls
             IsFocused = true;
         }
 
-        public void LoseFocus()
+        public void OnLoseFocus()
         {
             IsFocused = false;
 
         }
 
+        public void DoKeyboardAction(IInputReceiverKeyboard keyboard)
+        {
+            OnFocusUpdate();
+
+            ReceiveInput();
+
+            var shift = keyboard.IsShiftDown;
+            var ctrl = keyboard.IsCtrlDown;
+            var alt = keyboard.IsAltDown;
+
+
+
+
+            // This allocates. We could potentially make this return 
+            // an IList or List. That's a breaking change for a tiny amount
+            // of allocation....what to do....
+
+            var asMonoGameKeyboard = (IInputReceiverKeyboardMonoGame)keyboard;
+
+            foreach (var key in asMonoGameKeyboard.KeysTyped)
+            {
+                HandleKeyDown(key, shift, alt, ctrl);
+            }
+
+            var stringTyped = keyboard.GetStringTyped();
+
+            if (stringTyped != null)
+            {
+                for (int i = 0; i < stringTyped.Length; i++)
+                {
+                    // receiver could get nulled out by itself when something like enter is pressed
+                    HandleCharEntered(stringTyped[i]);
+                }
+            }
+        }
+
         public void ReceiveInput()
         {
-
         }
         #endregion
 
@@ -766,7 +801,7 @@ namespace MonoGameGum.Forms.Controls
             {
                 Visual.SetProperty(CategoryName, "Selected");
             }
-            else if (!isTouchScreen && Visual.HasCursorOver(cursor))
+            else if (!isTouchScreen && Visual.Managers != null && Visual.HasCursorOver(cursor))
             {
                 Visual.SetProperty(CategoryName, "Highlighted");
             }
@@ -840,9 +875,9 @@ namespace MonoGameGum.Forms.Controls
             {
                 InteractiveGue.AddNextClickAction(HandleClickOff);
 
-                if (FrameworkElement.CurrentInputReceiver != this)
+                if (InteractiveGue.CurrentInputReceiver != this)
                 {
-                    FrameworkElement.CurrentInputReceiver = this;
+                    InteractiveGue.CurrentInputReceiver = this;
                 }
 #if ANDROID
                 FlatRedBall.Input.InputManager.Keyboard.ShowKeyboard();
@@ -851,9 +886,9 @@ namespace MonoGameGum.Forms.Controls
             }
             else if (!isFocused)
             {
-                if (FrameworkElement.CurrentInputReceiver == this)
+                if (InteractiveGue.CurrentInputReceiver == this)
                 {
-                    FrameworkElement.CurrentInputReceiver = null;
+                    InteractiveGue.CurrentInputReceiver = null;
 #if ANDROID
                     FlatRedBall.Input.InputManager.Keyboard.HideKeyboard();
 #endif
