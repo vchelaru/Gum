@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace MonoGameGum.Forms.Controls
 {
-    internal class Slider : RangeBase, IInputReceiver
+    public class Slider : RangeBase, IInputReceiver
     {
         #region Fields/Properties
 

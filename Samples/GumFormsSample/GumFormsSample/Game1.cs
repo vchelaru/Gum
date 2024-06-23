@@ -42,6 +42,7 @@ namespace GumFormsSample
             FrameworkElement.DefaultFormsComponents[typeof(ScrollViewer)] = typeof(DefaultScrollViewerRuntime);
             FrameworkElement.DefaultFormsComponents[typeof(TextBox)] = typeof(DefaultTextBoxRuntime);
             FrameworkElement.DefaultFormsComponents[typeof(PasswordBox)] = typeof(DefaultTextBoxRuntime);
+            FrameworkElement.DefaultFormsComponents[typeof(Slider)] = typeof(DefaultSliderRuntime);
             FrameworkElement.MainCursor = cursor;
 
             Root = new ContainerRuntime();
@@ -157,7 +158,15 @@ namespace GumFormsSample
             passwordBox.Height = 34;
             passwordBox.Placeholder = "Enter Password";
 
-
+            var slider = new Slider();
+            this.Root.Children.Add(slider.Visual);
+            slider.X = 220;
+            slider.Y = 340;
+            slider.Minimum = 0;
+            slider.Maximum = 10;
+            slider.TicksFrequency = 1;
+            slider.IsSnapToTickEnabled = true;
+            slider.Width = 200;
 
             base.Initialize();
         }
