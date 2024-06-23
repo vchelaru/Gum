@@ -54,6 +54,37 @@ namespace Gum.Wireframe
     /// </summary>
     public partial class InteractiveGue : GraphicalUiElement
     {
+        static List<Action> nextPushActions = new List<Action>();
+        static List<Action> nextClickActions = new List<Action>();
+        public static double CurrentGameTime { get; set; }
+
+        static IInputReceiver currentInputReceiver;
+        public static IInputReceiver CurrentInputReceiver
+        {
+            get => currentInputReceiver;
+            set
+            {
+                var differs = currentInputReceiver != value;
+                if (differs)
+                {
+                    var old = currentInputReceiver;
+                    currentInputReceiver = value;
+
+                    if (old != null)
+                    {
+                        old.OnLoseFocus();
+                    }
+                }
+                currentInputReceiver = value;
+                if (differs && currentInputReceiver != null)
+                {
+                    currentInputReceiver.OnGainFocus();
+                }
+
+
+            }
+        }
+
         public bool HasEvents { get; set; } = true;
         public bool ExposeChildrenEvents { get; set; } = true;
 
@@ -115,6 +146,11 @@ namespace Gum.Wireframe
         public event Action<object, RoutedEventArgs> MouseWheelScroll;
         public event Action<object, RoutedEventArgs> RollOverBubbling;
 
+        /// <summary>
+        /// Event raised when this Window is pushed, then is no longer the pushed window due to a cursor releasing the primary button.
+        /// </summary>
+        public event EventHandler RemovedAsPushed;
+
 
         // RollOff is determined outside of the individual InteractiveGue so we need to have this callable externally..
         public void TryCallRollOff()
@@ -131,6 +167,11 @@ namespace Gum.Wireframe
             {
                 Dragging(this, EventArgs.Empty);
             }
+        }
+
+        public void TryCallRemoveAsPushed()
+        {
+            RemovedAsPushed?.Invoke(this, EventArgs.Empty);
         }
 
         #endregion
@@ -381,9 +422,10 @@ namespace Gum.Wireframe
                 }
                 else
                 {
+                    var thisInstanceName = thisInstance.Name ?? $"this {thisInstance.GetType()} instance (unnamed)";
                     string message =
-                        "Could not determine whether the cursor is over this instance because" +
-                        "this instance is not on any camera, nor is a default camera set up";
+                        $"Could not determine whether the cursor is over {thisInstanceName} because" +
+                        " it is not on any camera, nor is a default camera set up";
                     throw new Exception(message);
                 }
             }
@@ -487,6 +529,71 @@ namespace Gum.Wireframe
             RollOff += (not, used) => LosePush?.Invoke(this, EventArgs.Empty);
         }
 
+        public static void AddNextPushAction(Action action)
+        {
+#if DEBUG
+            if (action == null)
+            {
+                throw new ArgumentNullException(nameof(action));
+            }
+#endif
+            nextPushActions.Add(action);
+        }
+        public static void AddNextClickAction(Action action)
+        {
+#if DEBUG
+            if (action == null)
+            {
+                throw new ArgumentNullException(nameof(action));
+            }
+#endif
+            nextClickActions.Add(action);
+        }
+        internal static void DoNextClickActions()
+        {
+
+            if (nextClickActions.Count > 0)
+            {
+                var items = nextClickActions.ToList();
+                nextClickActions.Clear();
+                foreach (var item in items)
+                {
+                    item();
+                }
+
+            }
+        }
+
+        internal static void DoNextPushActions()
+        {
+            if (nextPushActions.Count > 0)
+            {
+                var items = nextPushActions.ToList();
+                nextPushActions.Clear();
+                foreach (var item in items)
+                {
+                    item();
+                }
+            }
+        }
+    }
+
+    public interface IInputReceiver
+    {
+        /// <summary>
+        /// Called by the engine automatically when an IInputReceiver gains focus.
+        /// </summary>
+        /// <remarks>
+        /// The implementation of this method should raise the GainFocus event.
+        /// </remarks>
+        void OnGainFocus();
+
+        /// <summary>
+        /// Called by the engine automatically when an IInputReceiver loses focus.
+        /// </summary>
+        void OnLoseFocus();
+
+        void DoKeyboardAction(IInputReceiverKeyboard keyboard);
     }
 
     public interface ICursor
@@ -501,6 +608,12 @@ namespace Gum.Wireframe
         bool PrimaryPush { get; }
         bool PrimaryDown { get; }
         bool PrimaryClick { get; }
+        /// <summary>
+        /// Returns whether the cursor has been clicked without movement between the push and release.
+        /// Simple implementations can return PrimaryClick, but more complex implementations may want to
+        /// consider a movement threshold.
+        /// </summary>
+        bool PrimaryClickNoSlide { get; }
         bool PrimaryDoubleClick { get; }
 
         bool SecondaryPush { get; }
@@ -516,6 +629,19 @@ namespace Gum.Wireframe
         InteractiveGue WindowPushed { get; set; }
         InteractiveGue WindowOver { get; set; }
     }
+
+    public interface IInputReceiverKeyboard
+    {
+        bool IsShiftDown { get; }
+        bool IsCtrlDown { get; }
+        bool IsAltDown { get; }
+
+        //IReadOnlyCollection<T> KeysTyped { get; }
+
+        string GetStringTyped();
+    }
+
+
     class HandledActions
     {
         public bool HandledMouseWheel;
@@ -524,9 +650,11 @@ namespace Gum.Wireframe
     }
     public static class GueInteractiveExtensionMethods
     {
-        public static void DoUiActivityRecursively(this GraphicalUiElement gue, ICursor cursor)
+        public static void DoUiActivityRecursively(this GraphicalUiElement gue, ICursor cursor, IInputReceiverKeyboard keyboard, double currentGameTimeInSeconds)
         {
+            InteractiveGue.CurrentGameTime = currentGameTimeInSeconds;
             var windowOverBefore = cursor.WindowOver;
+            var windowPushedBefore = cursor.WindowPushed;
 
             HandledActions actions = new HandledActions();
             InteractiveGue.DoUiActivityRecursively(cursor, actions, gue);
@@ -543,9 +671,33 @@ namespace Gum.Wireframe
                     interactiveBefore.TryCallRollOff();
                 }
             }
+            if(windowPushedBefore != cursor.WindowPushed)
+            {
+                if(windowPushedBefore is InteractiveGue interactiveBefore)
+                {
+                    interactiveBefore.TryCallRemoveAsPushed();
+                }
+            }
             if(cursor.WindowPushed != null && cursor.PrimaryDown && (cursor.XChange != 0 || cursor.YChange != 0))
             {
                 cursor.WindowPushed.TryCallDragging();
+            }
+
+            // the click/push actions need to be after the UI activity
+            if (cursor.PrimaryClick)
+            {
+                InteractiveGue.DoNextClickActions();
+
+            }
+
+            if (cursor.PrimaryPush)
+            {
+                InteractiveGue.DoNextPushActions();
+            }
+
+            if(InteractiveGue.CurrentInputReceiver != null)
+            {
+                InteractiveGue.CurrentInputReceiver.DoKeyboardAction(keyboard);
             }
         }
     }

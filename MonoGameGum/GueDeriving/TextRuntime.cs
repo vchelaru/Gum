@@ -66,6 +66,19 @@ namespace MonoGameGum.GueDeriving
             set => mContainedText.Blue = value;
         }
 
+        public Microsoft.Xna.Framework.Color Color
+        {
+            get
+            {
+                return RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedText.Color);
+            }
+            set
+            {
+                ContainedText.Color = RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
+                NotifyPropertyChanged();
+            }
+        }
+
         public HorizontalAlignment HorizontalAlignment
         {
             get => ContainedText.HorizontalAlignment;
@@ -123,6 +136,7 @@ namespace MonoGameGum.GueDeriving
             {
                 var textRenderable = new Text(SystemManagers.Default);
                 textRenderable.RenderBoundary = false;
+                mContainedText = textRenderable;
                 
                 SetContainedObject(textRenderable);
                 Width = 0;

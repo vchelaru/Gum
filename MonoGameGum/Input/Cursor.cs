@@ -54,6 +54,9 @@ namespace MonoGameGum.Input
 
         public bool PrimaryDoubleClick { get; private set; }
 
+        // for now just return true, but we'll need to keep track of actual push/clicks eventually:
+        public bool PrimaryClickNoSlide => PrimaryClick;
+
         public bool SecondaryPush
         {
             get

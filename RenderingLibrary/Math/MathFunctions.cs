@@ -124,6 +124,18 @@ namespace RenderingLibrary.Math
             return ((int)(System.Math.Sign(valueToRound) * .5f + valueToRound / multipleOf)) * multipleOf;
         }
 
+        public static double RoundDouble(double valueToRound, double multipleOf)
+        {
+            return ((int)(System.Math.Sign(valueToRound) * .5 + valueToRound / multipleOf)) * multipleOf;
+        }
+
+        public static double RoundDouble(double valueToRound, double multipleOf, double seed)
+        {
+            valueToRound -= seed;
+
+            return seed + ((int)(System.Math.Sign(valueToRound) * .5f + valueToRound / multipleOf)) * multipleOf;
+        }
+
         public static decimal RoundDecimal(decimal valueToRound, decimal multipleOf)
         {
             return ((int)(System.Math.Sign(valueToRound) * .5m + valueToRound / multipleOf)) * multipleOf;
