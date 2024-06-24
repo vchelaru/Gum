@@ -671,12 +671,17 @@ namespace Gum.Wireframe
                     interactiveBefore.TryCallRollOff();
                 }
             }
-            if(windowPushedBefore != cursor.WindowPushed)
+            if(windowPushedBefore != cursor.WindowPushed || 
+                (windowPushedBefore != null && cursor.PrimaryDown == false))
             {
                 if(windowPushedBefore is InteractiveGue interactiveBefore)
                 {
                     interactiveBefore.TryCallRemoveAsPushed();
                 }
+            }
+            if(cursor.PrimaryDown == false)
+            {
+                cursor.WindowPushed = null;
             }
             if(cursor.WindowPushed != null && cursor.PrimaryDown && (cursor.XChange != 0 || cursor.YChange != 0))
             {

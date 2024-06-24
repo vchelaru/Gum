@@ -32,7 +32,7 @@ namespace MonoGameGum.Forms.Controls.Primitives
 
         double minimum = 0;
         /// <summary>
-        /// The minimum value which can be set through the UI.
+        /// The minimum inclusive value which can be set through the UI.
         /// </summary>
         public double Minimum
         {
@@ -48,7 +48,7 @@ namespace MonoGameGum.Forms.Controls.Primitives
 
         double maximum = 1;
         /// <summary>
-        /// The maximum value which can be set through the UI.
+        /// The maximum inclusive value which can be set through the UI.
         /// </summary>
         public double Maximum
         {
