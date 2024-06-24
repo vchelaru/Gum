@@ -4435,7 +4435,6 @@ namespace Gum.Wireframe
             }
         }
 
-
         /// <summary>
         /// Sets a variable on this object (such as "X") to the argument value
         /// (such as 100.0f). This can be a primitive property like Height, or it can be

@@ -335,6 +335,20 @@ namespace Gum.DataTypes
             return gps;
         }
 
+        // todo - need to figure out how to get this to work with sub-elements each having their own streams
+        //public static GumProjectSave Load(Stream stream)
+        //{
+        //    GumProjectSave gps = null;
+        //    gps = FileManager.XmlDeserializeFromStream<GumProjectSave>(stream);
+        //    string projectRootDirectory = FileManager.GetDirectory(fileName);
+
+        //    gps.PopulateElementSavesFromReferences(projectRootDirectory, linkLoadingPreference, result);
+        //    // filename is unknown...
+        //    //gps.FullFileName = fileName.Replace('\\', '/');
+        //    return gps;
+
+        //}
+
 #if ANDROID || IOS
         static GumProjectSave LoadFromTitleStorage(string fileName, LinkLoadingPreference linkLoadingPreference, GumLoadResult result)
 		{

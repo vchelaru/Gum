@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MonoGameGum.Forms;
 using MonoGameGum.Forms.Controls;
 using MonoGameGum.Forms.DefaultVisuals;
 using MonoGameGum.GueDeriving;
@@ -17,8 +18,7 @@ namespace GumFormsSample
         private SpriteBatch _spriteBatch;
 
         ContainerRuntime Root;
-        Cursor cursor;
-        MonoGameGum.Input.Keyboard keyboard;
+
         public Game1()
         {
             _graphics = new GraphicsDeviceManager(this);
@@ -31,19 +31,10 @@ namespace GumFormsSample
             // TODO: Add your initialization logic here
             SystemManagers.Default = new SystemManagers(); 
             SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
-            cursor = new Cursor();
-            keyboard = new MonoGameGum.Input.Keyboard();
 
-            FrameworkElement.DefaultFormsComponents[typeof(Button)] = typeof(DefaultButtonRuntime);
-            FrameworkElement.DefaultFormsComponents[typeof(CheckBox)] = typeof(DefaultCheckboxRuntime);
-            FrameworkElement.DefaultFormsComponents[typeof(ListBox)] = typeof(DefaultListBoxRuntime);
-            FrameworkElement.DefaultFormsComponents[typeof(ListBoxItem)] = typeof(DefaultListBoxItemRuntime);
-            FrameworkElement.DefaultFormsComponents[typeof(ScrollBar)] = typeof(DefaultScrollBarRuntime);
-            FrameworkElement.DefaultFormsComponents[typeof(ScrollViewer)] = typeof(DefaultScrollViewerRuntime);
-            FrameworkElement.DefaultFormsComponents[typeof(TextBox)] = typeof(DefaultTextBoxRuntime);
-            FrameworkElement.DefaultFormsComponents[typeof(PasswordBox)] = typeof(DefaultTextBoxRuntime);
-            FrameworkElement.DefaultFormsComponents[typeof(Slider)] = typeof(DefaultSliderRuntime);
-            FrameworkElement.MainCursor = cursor;
+
+            FormsUtilities.InitializeDefaults();
+
 
             Root = new ContainerRuntime();
             Root.Width = 0;
@@ -182,12 +173,10 @@ namespace GumFormsSample
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Microsoft.Xna.Framework.Input.Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
-            cursor.Activity(gameTime.TotalGameTime.TotalSeconds);
-            keyboard.Activity(gameTime.TotalGameTime.TotalSeconds);
-            Root.DoUiActivityRecursively(cursor, keyboard, gameTime.TotalGameTime.TotalSeconds);
+
+            FormsUtilities.Update(gameTime, Root);
 
             SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
-            // TODO: Add your update logic here
 
             base.Update(gameTime);
         }
@@ -195,8 +184,8 @@ namespace GumFormsSample
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
+
             SystemManagers.Default.Draw();
-            // TODO: Add your drawing code here
 
             base.Draw(gameTime);
         }
