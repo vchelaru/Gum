@@ -114,7 +114,7 @@ namespace MonoGameGum.Input
                 )
             {
 
-#if !MONOGAME && !FNA
+#if !MONOGAME && !KNI && !FNA
                 bool isSTAThreadUsed =
                     System.Threading.Thread.CurrentThread.GetApartmentState() == System.Threading.ApartmentState.STA;
 
@@ -245,7 +245,7 @@ namespace MonoGameGum.Input
         {
             bool isShiftDown = KeyDown(Keys.LeftShift) || KeyDown(Keys.RightShift);
 
-#if !MONOGAME && !FNA
+#if !MONOGAME && !KNI && !FNA
             if (System.Windows.Forms.Control.IsKeyLocked(System.Windows.Forms.Keys.CapsLock))
             {
                 isShiftDown = !isShiftDown;

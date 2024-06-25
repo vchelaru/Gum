@@ -168,8 +168,13 @@ namespace RenderingLibrary
                 LoaderManager.Self.ContentLoader = new ContentLoader();
 
                 var assembly = typeof(SystemManagers).Assembly;
+#if KNI
+                var bitmapPattern = ToolsUtilities.FileManager.GetStringFromEmbeddedResource(assembly, "KniGum.Content.Font18Arial.fnt");
+                using var stream = ToolsUtilities.FileManager.GetStreamFromEmbeddedResource(assembly, "KniGum.Content.Font18Arial_0.png");
+#else
                 var bitmapPattern = ToolsUtilities.FileManager.GetStringFromEmbeddedResource(assembly, "MonoGameGum.Content.Font18Arial.fnt");
                 using var stream = ToolsUtilities.FileManager.GetStreamFromEmbeddedResource(assembly, "MonoGameGum.Content.Font18Arial_0.png");
+#endif
                 var defaultFontTexture = Texture2D.FromStream(graphicsDevice, stream);
                 Text.DefaultBitmapFont = new BitmapFont(defaultFontTexture, bitmapPattern);
 
