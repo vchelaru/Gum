@@ -383,7 +383,11 @@ namespace ToolsUtilities
                 return true;
 
 #else
-            if (fileName.Length < 1 || !Path.IsPathRooted(fileName))
+            if(fileName.StartsWith(ExeLocation))
+            {
+                relative = false;
+            }
+            else if (fileName.Length < 1 || !Path.IsPathRooted(fileName))
             {
                 // On linux and mac, we need to still check if it has a root:
                 var root = Path.GetPathRoot(fileName);
