@@ -886,6 +886,18 @@ namespace Gum.Wireframe
                         font = loaderManager.GetDisposable(graphicalUiElement.CustomFontFile) as BitmapFont;
                         if (font == null)
                         {
+#if KNI
+                            try
+                            {
+                                // this could be running in browser where we don't have File.Exists, so JUST DO IT
+                                font = new BitmapFont(graphicalUiElement.CustomFontFile, SystemManagers.Default);
+                                loaderManager.AddDisposable(graphicalUiElement.CustomFontFile, font);
+                            }
+                            catch
+                            {
+                                // font doesn't exist, carry on...
+                            }
+#else
                             // so normally we would just let the content loader check if the file exists but since we're not going to
                             // use the content loader for BitmapFont, we're going to protect this with a file.exists.
                             if (ToolsUtilities.FileManager.FileExists(graphicalUiElement.CustomFontFile))
@@ -893,6 +905,7 @@ namespace Gum.Wireframe
                                 font = new BitmapFont(graphicalUiElement.CustomFontFile, SystemManagers.Default);
                                 loaderManager.AddDisposable(graphicalUiElement.CustomFontFile, font);
                             }
+#endif
                         }
                         else if(font.Textures.Any(item => item?.IsDisposed == true))
                         {
@@ -964,7 +977,7 @@ namespace Gum.Wireframe
             }
         }
 
-        #endregion
+#endregion
 
         private static bool TrySetPropertyOnLineRectangle(IRenderableIpso mContainedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
         {
