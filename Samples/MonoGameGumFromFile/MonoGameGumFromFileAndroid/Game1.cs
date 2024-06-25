@@ -32,6 +32,7 @@ namespace MonoGameGumFromFileAndroid
         GraphicalUiElement currentScreenGue;
 
         Cursor cursor;
+        MonoGameGum.Input.Keyboard gumKeyboard;
 
         #endregion
 
@@ -78,6 +79,7 @@ namespace MonoGameGumFromFileAndroid
             ShowScreen("StartScreen");
             InitializeStartScreen();
             cursor = new Cursor();
+            gumKeyboard = new MonoGameGum.Input.Keyboard();
 
             base.Initialize();
         }
@@ -128,7 +130,7 @@ namespace MonoGameGumFromFileAndroid
 
         private void DoSwapScreenLogic()
         {
-            var state = Keyboard.GetState();
+            var state = Microsoft.Xna.Framework.Input.Keyboard.GetState();
 
             if (state.IsKeyDown(Keys.D1))
             {
@@ -289,12 +291,13 @@ namespace MonoGameGumFromFileAndroid
         MouseState lastMouseState;
         protected override void Update(GameTime gameTime)
         {
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Microsoft.Xna.Framework.Input.Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
             SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
 
             cursor.Activity(gameTime.TotalGameTime.TotalSeconds);
+            gumKeyboard.Activity(gameTime.TotalGameTime.TotalSeconds);
 
             DoSwapScreenLogic();
 
@@ -306,7 +309,7 @@ namespace MonoGameGumFromFileAndroid
             }
             else if(currentGumScreenSave?.Name == "InteractiveGueScreen")
             {
-                DoInteractiveGueScreenLogic();
+                DoInteractiveGueScreenLogic(gameTime.TotalGameTime.TotalSeconds);
             }
 
             else if (currentGumScreenSave?.Name == "ZoomScreen")
@@ -332,9 +335,9 @@ namespace MonoGameGumFromFileAndroid
         void DoStartScreenLogic() { }
 
         int clickCount = 0;
-        private void DoInteractiveGueScreenLogic()
+        private void DoInteractiveGueScreenLogic(double currentGameTimeInSeconds)
         {
-            currentScreenGue.DoUiActivityRecursively(cursor);
+            currentScreenGue.DoUiActivityRecursively(cursor, gumKeyboard, currentGameTimeInSeconds);
         }
 
         private void DoOffsetLayerScreenLogic(MouseState mouseState)
