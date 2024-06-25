@@ -1,0 +1,161 @@
+
+#----------------------------- Global Properties ----------------------------#
+
+/outputDir:bin/$(Platform)
+/intermediateDir:obj/$(Platform)
+/config:
+/profile:Reach
+/compress:False
+
+#-------------------------------- References --------------------------------#
+
+
+#---------------------------------- Content ---------------------------------#
+
+#begin GumProject.gumx
+/copy:GumProject.gumx
+
+#begin Screens/InteractiveGueScreen.gusx
+/copy:Screens/InteractiveGueScreen.gusx
+
+#begin Screens/TextScreen.gusx
+/copy:Screens/TextScreen.gusx
+
+#begin Screens/ZoomLayerScreen.gusx
+/copy:Screens/ZoomLayerScreen.gusx
+
+#begin Screens/ZoomScreen.gusx
+/copy:Screens/ZoomScreen.gusx
+
+#begin Screens/OffsetLayerScreen.gusx
+/copy:Screens/OffsetLayerScreen.gusx
+
+#begin Screens/ParentChildScreen.gusx
+/copy:Screens/ParentChildScreen.gusx
+
+#begin Screens/StartScreen.gusx
+/copy:Screens/StartScreen.gusx
+
+#begin Screens/StateScreen.gusx
+/copy:Screens/StateScreen.gusx
+
+#begin Components/Buttons/StandardButton.gucx
+/copy:Components/Buttons/StandardButton.gucx
+
+#begin Components/ColoredRectangleComponent.gucx
+/copy:Components/ColoredRectangleComponent.gucx
+
+#begin Components/ComponentWithExposedVariable.gucx
+/copy:Components/ComponentWithExposedVariable.gucx
+
+#begin Components/ComponentWithState.gucx
+/copy:Components/ComponentWithState.gucx
+
+#begin Standards/Circle.gutx
+/copy:Standards/Circle.gutx
+
+#begin Standards/ColoredRectangle.gutx
+/copy:Standards/ColoredRectangle.gutx
+
+#begin Standards/Component.gutx
+/copy:Standards/Component.gutx
+
+#begin Standards/Container.gutx
+/copy:Standards/Container.gutx
+
+#begin Standards/NineSlice.gutx
+/copy:Standards/NineSlice.gutx
+
+#begin Standards/Polygon.gutx
+/copy:Standards/Polygon.gutx
+
+#begin Standards/Rectangle.gutx
+/copy:Standards/Rectangle.gutx
+
+#begin Standards/Sprite.gutx
+/copy:Standards/Sprite.gutx
+
+#begin Standards/Text.gutx
+/copy:Standards/Text.gutx
+
+#begin bear.png
+/copy:bear.png
+
+#begin MainSpriteSheet.png
+/copy:MainSpriteSheet.png
+
+#begin metalpanel_blue.png
+/copy:metalpanel_blue.png
+
+#begin FontCache/Font16Jing_Jing.fnt
+/copy:FontCache/Font16Jing_Jing.fnt
+
+#begin FontCache/Font18Arial.fnt
+/copy:FontCache/Font18Arial.fnt
+
+#begin FontCache/Font18Bahnschrift_Light.fnt
+/copy:FontCache/Font18Bahnschrift_Light.fnt
+
+#begin FontCache/Font18Caladea.fnt
+/copy:FontCache/Font18Caladea.fnt
+
+#begin FontCache/Font20Arial.fnt
+/copy:FontCache/Font20Arial.fnt
+
+#begin FontCache/Font22Arial.fnt
+/copy:FontCache/Font22Arial.fnt
+
+#begin FontCache/Font24Arial.fnt
+/copy:FontCache/Font24Arial.fnt
+
+#begin FontCache/Font32Caladea.fnt
+/copy:FontCache/Font32Caladea.fnt
+
+#begin FontCache/Font32Carlito.fnt
+/copy:FontCache/Font32Carlito.fnt
+
+#begin FontCache/Font32Corbel.fnt
+/copy:FontCache/Font32Corbel.fnt
+
+#begin FontCache/Font32Dogica_Pixel.fnt
+/copy:FontCache/Font32Dogica_Pixel.fnt
+
+#begin FontCache/Font32Jing_Jing.fnt
+/copy:FontCache/Font32Jing_Jing.fnt
+
+#begin FontCache/Font16Jing_Jing_0.png
+/copy:FontCache/Font16Jing_Jing_0.png
+
+#begin FontCache/Font18Arial_0.png
+/copy:FontCache/Font18Arial_0.png
+
+#begin FontCache/Font18Bahnschrift_Light_0.png
+/copy:FontCache/Font18Bahnschrift_Light_0.png
+
+#begin FontCache/Font18Caladea_0.png
+/copy:FontCache/Font18Caladea_0.png
+
+#begin FontCache/Font20Arial_0.png
+/copy:FontCache/Font20Arial_0.png
+
+#begin FontCache/Font22Arial_0.png
+/copy:FontCache/Font22Arial_0.png
+
+#begin FontCache/Font24Arial_0.png
+/copy:FontCache/Font24Arial_0.png
+
+#begin FontCache/Font32Caladea_0.png
+/copy:FontCache/Font32Caladea_0.png
+
+#begin FontCache/Font32Carlito_0.png
+/copy:FontCache/Font32Carlito_0.png
+
+#begin FontCache/Font32Corbel_0.png
+/copy:FontCache/Font32Corbel_0.png
+
+#begin FontCache/Font32Dogica_Pixel_0.png
+/copy:FontCache/Font32Dogica_Pixel_0.png
+
+#begin FontCache/Font32Jing_Jing_0.png
+/copy:FontCache/Font32Jing_Jing_0.png
+
