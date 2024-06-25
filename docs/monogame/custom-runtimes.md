@@ -81,14 +81,17 @@ If using InteractiveGue, the built-in events are only called if DoUiActivityRecu
 This method requires a Cursor implementation. Therefore, the following simplified code shows the full requirements to create a Cursor, update the Cursor every frame, and call DoUiActivityRecursively. Note that this code assumes a Screen GraphicalUiElement named CurrentScreen:
 
 ```csharp
+using GumKeyboard = MonoGameGum.Input.Keyboard;
+
 // Define the Cursor at class scope:
 Cursor cursor;
+GumKeyboard gumKeyboard;
 
 // Instantiate the Cursor in Initialize()
 protected override void Initialize()
 {
     cursor = new Cursor();
-
+    gumKeyboard = new GumKeyboard ();
     // Remainder of initialization...
 
     base.Initialize();
@@ -97,7 +100,8 @@ protected override void Initialize()
 protected override void Update(GameTime gameTime)
 {
     cursor.Activity(gameTime.TotalGameTime.TotalSeconds);
-    CurrentScreen.DoUiActivityRecursively(cursor);
+    keyboard.Activity(gameTime.TotalGameTime.TotalSeconds);
+    CurrentScreen.DoUiActivityRecursively(cursor, keyboard, gameTime.TotalGameTime.TotalSeconds);
     // Remainder of update
 }
 ```
