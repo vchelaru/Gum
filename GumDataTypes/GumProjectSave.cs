@@ -291,8 +291,8 @@ namespace Gum.DataTypes
 #if ANDROID || IOS || WINDOWS_8
             shouldLoadFromTitleContainer = true;
 #elif NET6_0_OR_GREATER
-            shouldLoadFromTitleContainer = System.OperatingSystem.IsAndroid();
             // If not using precompiles, it may be a standard .dll which is used everywhere, so we still can check like this:
+            shouldLoadFromTitleContainer = System.OperatingSystem.IsAndroid() || System.OperatingSystem.IsBrowser();
 
 #endif
 
@@ -422,21 +422,24 @@ namespace Gum.DataTypes
                 }
             }
 
-            foreach(var reference in BehaviorReferences)
+            if  (BehaviorReferences != null)
             {
-                BehaviorSave toAdd = null;
+                foreach (var reference in BehaviorReferences)
+                {
+                    BehaviorSave toAdd = null;
 
-                try
-                {
-                    toAdd = reference.ToBehaviorSave(projectRootDirectory);
-                }
-                catch (Exception e)
-                {
-                    errors += "\nError loading " + reference.Name + ":\n" + e.Message;
-                }
-                if (toAdd != null)
-                {
-                    Behaviors.Add(toAdd);
+                    try
+                    {
+                        toAdd = reference.ToBehaviorSave(projectRootDirectory);
+                    }
+                    catch (Exception e)
+                    {
+                        errors += "\nError loading " + reference.Name + ":\n" + e.Message;
+                    }
+                    if (toAdd != null)
+                    {
+                        Behaviors.Add(toAdd);
+                    }
                 }
             }
 

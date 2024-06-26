@@ -21,16 +21,26 @@ namespace ToolsUtilities
         public const char DefaultSlash = '\\';
         #region Fields
 
-        public static string ExeLocation =>
+        public static string ExeLocation
+        {
+            get
+            {
 #if UWP
-            "./";
+            return "./";
 #elif ANDROID || IOS
-            Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).ToLower().Replace("/", "\\") + "\\";
+            return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).ToLower().Replace("/", "\\") + "\\";
 #else
-            Path.GetDirectoryName(AppContext.BaseDirectory)
-                .Replace('/', Path.DirectorySeparatorChar)
-                .Replace('\\', Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+                string result = AppContext.BaseDirectory;
+
+                // Blazor-WASM returns "/" for BaseDirectory, which is invalid for GetDirectoryName.
+                if (result != "/")
+                    result = Path.GetDirectoryName(result);
+
+                return result.Replace('/', Path.DirectorySeparatorChar)
+                             .Replace('\\', Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
 #endif
+            }
+        }
 
         static string mRelativeDirectory = ExeLocation;
 
@@ -373,7 +383,11 @@ namespace ToolsUtilities
                 return true;
 
 #else
-            if (fileName.Length < 1 || !Path.IsPathRooted(fileName))
+            if(fileName.StartsWith(ExeLocation))
+            {
+                relative = false;
+            }
+            else if (fileName.Length < 1 || !Path.IsPathRooted(fileName))
             {
                 // On linux and mac, we need to still check if it has a root:
                 var root = Path.GetPathRoot(fileName);
