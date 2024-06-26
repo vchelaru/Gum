@@ -103,3 +103,33 @@ enabledState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
 
 <figure><img src="../../.gitbook/assets/26_07 50 10.gif" alt=""><figcaption><p>Enabled state resetting text color and size</p></figcaption></figure>
 
+### Available Instances
+
+Each default control type is made up of individual instances, most of which are standard types such as ColoredRectangle and TextInstance. The example above assigns properties on two instances:
+
+* ButtonBackground
+* TextInstance
+
+Since each control (such as Button, CheckBox, or TextBox) has its own individual instances, we need to know the names and types of these instances to add VariableSaves to our states.
+
+We can find the names of these instances by looking at the source code for the default forms implementations.
+
+These can be found in the Gum repository here:
+
+{% embed url="https://github.com/vchelaru/Gum/tree/master/MonoGameGum/Forms/DefaultVisuals" %}
+Forms DefaultVisuals Folder
+{% endembed %}
+
+For example, we can look at the DefaultButtonRuntime.cs file and notice that it has a ButtonBackground and TextInstance:
+
+```csharp
+var background = new ColoredRectangleRuntime();
+// ...
+background.Name = "ButtonBackground";
+
+TextInstance = new TextRuntime();
+// ...
+TextInstance.Name = "TextInstance";
+```
+
+By inspecting the code of other controls we can see which instances are available for styling. We can also look at the existing states which are provided by the default implementations. For example the DefaultButtonRuntime adds states for Enabled, Highlighted, Pushed, and Disabled. Note that this list may change in the future as Gum Forms continues to be developed.
