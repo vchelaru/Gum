@@ -105,6 +105,20 @@ namespace MonoGameGum.GueDeriving
             }
         }
 
+        public float FontScale
+        {
+            get => ContainedText.FontScale;
+            set
+            {
+                if (value != FontScale)
+                {
+                    ContainedText.FontScale = value;
+                    NotifyPropertyChanged();
+                    UpdateLayout();
+                }
+            }
+        }
+
         public string Text
         {
             get

@@ -159,6 +159,64 @@ namespace GumFormsSample
             slider.IsSnapToTickEnabled = true;
             slider.Width = 200;
 
+
+            var customizedButton = new Button();
+            this.Root.Children.Add(customizedButton.Visual);
+
+            customizedButton.Width = 200;
+            customizedButton.Height = 50;
+
+            customizedButton.X = 450;
+            customizedButton.Y = 300;
+
+            // ButtonCategory is the category that all Buttons must have
+            var category = customizedButton.Visual.Categories["ButtonCategory"];
+
+            // Highlighted state is applied when the button is hovered over
+            var highlightedState = category.States.Find(item => item.Name == "Highlighted");
+            // remove all old styling:
+            highlightedState.Variables.Clear();
+            // Add the new color:
+            highlightedState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
+            {
+                Name = "ButtonBackground.Color",
+                Value = Color.Yellow
+            });
+
+            highlightedState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
+            {
+                Name = "TextInstance.Color",
+                Value = Color.Black
+            });
+
+            highlightedState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
+            {
+                Name = "TextInstance.FontScale",
+                // FontScale expects a float value, so use 2.0f instead of 2
+                Value = 2.0f
+            });
+
+            var enabledState = category.States.Find(item => item.Name == "Enabled");
+            enabledState.Variables.Clear();
+            enabledState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
+            {
+                Name = "ButtonBackground.Color",
+                Value = new Color(0, 0, 128),
+            });
+
+            enabledState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
+            {
+                Name = "TextInstance.Color",
+                Value = Color.White
+            });
+
+            enabledState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
+            {
+                Name = "TextInstance.FontScale",
+                // FontScale expects a float value, so use 2.0f instead of 2
+                Value = 1.0f
+            });
+
             base.Initialize();
         }
 

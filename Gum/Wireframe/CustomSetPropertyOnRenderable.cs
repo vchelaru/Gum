@@ -440,9 +440,19 @@ namespace Gum.Wireframe
             else if (propertyName == "Color")
             {
 #if MONOGAME || XNA4 || FNA
-                var valueAsColor = (Color)value;
-                ((Text)mContainedObjectAsIpso).Color = valueAsColor;
-                handled = true;
+                //var valueAsColor = (Color)value;
+                //((Text)mContainedObjectAsIpso).Color = valueAsColor;
+                //handled = true;
+                if (value is System.Drawing.Color drawingColor)
+                {
+                    ((Text)mContainedObjectAsIpso).Color = drawingColor;
+                    handled = true;
+                }
+                else if (value is Microsoft.Xna.Framework.Color xnaColor)
+                {
+                    ((Text)mContainedObjectAsIpso).Color = xnaColor.ToSystemDrawing();
+                    handled = true;
+                }
 #endif
             }
 

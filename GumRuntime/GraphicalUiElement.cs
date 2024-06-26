@@ -157,6 +157,9 @@ namespace Gum.Wireframe
         Dictionary<string, Gum.DataTypes.Variables.StateSaveCategory> mCategories =
             new Dictionary<string, Gum.DataTypes.Variables.StateSaveCategory>();
 
+        // This needs to be made public so that individual Forms objects can be customized:
+        public Dictionary<string, Gum.DataTypes.Variables.StateSaveCategory> Categories => mCategories;
+
         // the row or column index when anobject is sorted.
         // This is used by the stacking logic to properly sort objects
         public int StackedRowOrColumnIndex { get; set; } = -1;
