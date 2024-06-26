@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <EnableDefaultItems>false</EnableDefaultItems>
@@ -6,8 +6,8 @@
     <RollForward>Major</RollForward>
     <ProjectGuid>6ecf4593-538a-42dd-9fc1-d04f57ab5707</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <PublishTrimmed>True</PublishTrimmed>
-    <PublishAot>True</PublishAot>
+    <PublishTrimmed>false</PublishTrimmed>
+    <PublishAot>false</PublishAot>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>KniGumFromFile</RootNamespace>
     <AssemblyName>KniGumFromFile</AssemblyName>
