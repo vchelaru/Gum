@@ -291,8 +291,8 @@ namespace Gum.DataTypes
 #if ANDROID || IOS || WINDOWS_8
             shouldLoadFromTitleContainer = true;
 #elif NET6_0_OR_GREATER
-            shouldLoadFromTitleContainer = System.OperatingSystem.IsAndroid();
             // If not using precompiles, it may be a standard .dll which is used everywhere, so we still can check like this:
+            shouldLoadFromTitleContainer = System.OperatingSystem.IsAndroid() || System.OperatingSystem.IsBrowser();
 
 #endif
 

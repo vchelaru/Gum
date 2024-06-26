@@ -103,11 +103,11 @@ namespace Gum.DataTypes
                 containedReferenceName = ToolsUtilities.FileManager.RelativeDirectory + containedReferenceName.Original;
             }
 
-            var isMobile = false;
+            var isMobileOrWeb = false;
 #if ANDROID || IOS
-            isMobile = true;
+            isMobileOrWeb = true;
 #elif NET6_0_OR_GREATER
-            isMobile = System.OperatingSystem.IsAndroid() || System.OperatingSystem.IsIOS();
+            isMobileOrWeb = System.OperatingSystem.IsAndroid() || System.OperatingSystem.IsIOS() || System.OperatingSystem.IsBrowser();
 #endif
 
 
@@ -120,7 +120,7 @@ namespace Gum.DataTypes
 #if ANDROID || IOS
             else if (containedReferenceName != null && (linkedName == null || linkLoadingPreference == LinkLoadingPreference.PreferLinked))
 #else
-            else if (  ((isMobile && containedReferenceName != null) ||  containedReferenceName.Exists()) && (linkedName == null || linkLoadingPreference == LinkLoadingPreference.PreferLinked))
+            else if (  ((isMobileOrWeb && containedReferenceName != null) ||  containedReferenceName.Exists()) && (linkedName == null || linkLoadingPreference == LinkLoadingPreference.PreferLinked))
 #endif
             {
 
