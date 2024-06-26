@@ -422,21 +422,24 @@ namespace Gum.DataTypes
                 }
             }
 
-            foreach(var reference in BehaviorReferences)
+            if  (BehaviorReferences != null)
             {
-                BehaviorSave toAdd = null;
+                foreach (var reference in BehaviorReferences)
+                {
+                    BehaviorSave toAdd = null;
 
-                try
-                {
-                    toAdd = reference.ToBehaviorSave(projectRootDirectory);
-                }
-                catch (Exception e)
-                {
-                    errors += "\nError loading " + reference.Name + ":\n" + e.Message;
-                }
-                if (toAdd != null)
-                {
-                    Behaviors.Add(toAdd);
+                    try
+                    {
+                        toAdd = reference.ToBehaviorSave(projectRootDirectory);
+                    }
+                    catch (Exception e)
+                    {
+                        errors += "\nError loading " + reference.Name + ":\n" + e.Message;
+                    }
+                    if (toAdd != null)
+                    {
+                        Behaviors.Add(toAdd);
+                    }
                 }
             }
 
