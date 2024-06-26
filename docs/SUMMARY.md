@@ -120,6 +120,7 @@
       * [ScrollViewer](monogame/gum-forms/controls/scrollviewer.md)
       * [Slider](monogame/gum-forms/controls/slider.md)
       * [TextBox](monogame/gum-forms/controls/textbox.md)
+    * [Control Customization](monogame/gum-forms/control-customization.md)
   * [Runtime Objects (GraphicalUiElement Deriving)](monogame/runtime-objects-graphicaluielement-deriving/README.md)
     * [ColoredRectangleRuntime](monogame/runtime-objects-graphicaluielement-deriving/coloredrectangleruntime.md)
     * [Component Runtimes](monogame/runtime-objects-graphicaluielement-deriving/component-runtimes.md)
