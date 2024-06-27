@@ -256,6 +256,19 @@ namespace Gum.Wireframe
 
                     handled = true;
                 }
+                else if (propertyName == "Color")
+                {
+                    if (value is System.Drawing.Color drawingColor)
+                    {
+                        nineSlice.Color = drawingColor;
+                    }
+                    else if (value is Microsoft.Xna.Framework.Color xnaColor)
+                    {
+                        nineSlice.Color = xnaColor.ToSystemDrawing();
+
+                    }
+                    handled = true;
+                }
             }
 #endif
 
