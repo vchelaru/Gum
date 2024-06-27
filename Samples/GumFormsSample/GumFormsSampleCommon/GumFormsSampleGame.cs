@@ -12,14 +12,14 @@ using System.Diagnostics;
 
 namespace GumFormsSample
 {
-    public class Game1 : Game
+    public class GumFormsSampleGame : Game
     {
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
 
         ContainerRuntime Root;
 
-        public Game1()
+        public GumFormsSampleGame()
         {
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
