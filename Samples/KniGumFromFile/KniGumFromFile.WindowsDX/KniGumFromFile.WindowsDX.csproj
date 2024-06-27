@@ -1,0 +1,57 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RollForward>Major</RollForward>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ProjectGuid>ceb2ff82-2104-40a4-8818-584fcd7d2275</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>KniGumFromFile</RootNamespace>
+    <AssemblyName>KniGumFromFile</AssemblyName>
+    <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
+    <DefineConstants>$(DefineConstants);WINDOWSDX</DefineConstants>
+    <KniPlatform>Windows</KniPlatform>
+  </PropertyGroup>
+	
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+  </PropertyGroup>
+	
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+  </PropertyGroup>
+	
+  <PropertyGroup>
+    <ApplicationIcon>Icon.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="nkast.Xna.Framework" Version="3.12.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Content" Version="3.12.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Graphics" Version="3.12.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Audio" Version="3.12.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Media" Version="3.12.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Input" Version="3.12.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Game" Version="3.12.9001" />
+    <PackageReference Include="MonoGame.Framework.WindowsDX.9000" Version="3.12.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Content.Pipeline.Builder" Version="3.12.9001" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Icon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <KniContentReference Include="..\KniGumFromFileContent\KniGumFromFileContent.mgcb">
+      <Link>Content\KniGumFromFileContent.mgcb</Link>
+    </KniContentReference>
+    <None Include="app.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\KniGumFromFileCommon\KniGumFromFileCommon.csproj" />
+  </ItemGroup>
+
+</Project>

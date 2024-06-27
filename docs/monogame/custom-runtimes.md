@@ -2,7 +2,7 @@
 
 ### Introduction
 
-Custom runtimes allow the creation of custom classes which are created when loading your Gum project. The use of custom runtimes is especially important if you are developing UI which should respond to user interactions such as clicks.
+Custom runtimes allow the creation of custom classes which are created when loading your Gum project. The use of custom runtimes is especially important if you are developing UI which should respond to user interactions such as clicks or if you are using Gum Forms.
 
 In the context of Gum, a _runtime_ is a class which handles interaction with a Gum component or screen while your game is running. The term _runtime_ is used to distinguish between an object used at runtime (such as a [TextRuntime](runtime-objects-graphicaluielement-deriving/textruntime.md)), or the Gum element (such as [Text](../gum-elements/text/)).
 
@@ -10,51 +10,49 @@ Custom runtimes can encapsulate functionality and can be used to build any time 
 
 ### Custom Runtimes GraphicalUiElement-Inheriting Classes
 
-Custom runtimes are classes which you define which inherit from GraphicalUiElement or InteractiveGue. If your runtime needs custom logic but does not respond to user actions then you should use GraphicalUiElement as your base. If your runtime responds to user actions such as clicks, then you should use InteractiveGue as your base.
+Custom runtimes are classes which you define which inherit from GraphicalUiElement or InteractiveGue. If your runtime needs custom logic but does not respond to user actions then you should use GraphicalUiElement as your base. If your runtime responds to user actions such as clicks, then you should use InteractiveGue as your base. If you are defining a custom runtime to be used as the Visual for Gum Forms, you should also inherit from InteractiveGue.
 
-This tutorial uses InteractiveGue as a base since responding to clicks is the most common reason for creating a custom runtime.
+This tutorial uses InteractiveGue as a base since responding to clicks is the most common reason for creating a custom runtime, and such an object would be suitable for Gum Forms.
 
 The InteractiveGue class inherits from GraphicalUiElement, but adds additional logic for raising events on common mouse actions. These actions are exposed as public events which can be subscribed internally in your InteractiveGue-inheriting class or externally per-instance. This tutorial shows how to handle events both internally and externally.
 
 ### Defining a Custom Runtime
 
-The only requirement to create a runtime class is to inherit from GraphicalUiElement or InteractiveGue. As mentioned earlier, we will be using InteractiveGue since it gives us access to cursor events.
+Custom runtimes fall into one of two categories:
 
-The following is an example of a basic button runtime named ClickableButton:
+1. Runtimes defined fully in-code
+2. Runtimes defined in a Gum project
+
+If a custom runtime is defined fully in code, then it must instantiate its own children. Typically these instances are added in a constructor.
+
+Alternatively if a custom runtime is loaded from a Gum project, then it should not define its children since those will come from the loaded Gum project. However, it may need to access those children. It can do so in the `AfterFullCreation` method.
+
+### Example - Custom Runtime Defined in Gum
+
+The following code shows how to create a custom runtime from Gum. Often times custom runtimes are used for Gum object, so using the standard 2-argument constructor and creating Gum objects is recommended as shown in the following code:
 
 ```csharp
 internal class ClickableButton : InteractiveGue
 {
-    TextRuntime textInstance;
+    GraphicalUiElement textInstance;
 
-    public ClickableButton() : base() 
+    public ClickableButton(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base() 
     {
-        this.Click += HandleClick;
+        if(fullInstantiation)
+        {
+            // no need to do anything here, we are fully instantiated by the Gum object
+        }
 
-        // All of the children (such as TextInstance) have not yet
-        // been created, so we can't assign the textInstance yet.
-        // See AfterFullCreation
+        if(tryCreateFormsObject)
+        {
+            FormsControlAsObject = new Button(this);
+        }
     }
-
-    int NumberOfClicks;
-
-    public override void AfterFullCreation()
-    {
-        // The GraphicalUiElement is fully created at this point so it
-        // should have access to all children such as TextInstance
-        textInstance = (TextRuntime)GetGraphicalUiElementByName("TextInstance");
-    }
-
-    public void HandleClick(object sender, EventArgs args)
-    {
-        NumberOfClicks++;
-
-        textInstance.Text = NumberOfClicks + " times";
-    }
+    public Button FormsControl => FormsControlAsObject as Button;
 }
 ```
 
-Notice that this assumes that the component has a TextRuntime, so your associated component must have a Text instance named TextInstance.
+Note that this type of control is assumed to be used as a Forms Button, so it includes the instantiation of a Forms button.
 
 ### Associating a Gum Component to a Runtime
 
@@ -62,7 +60,7 @@ Once a custom runtime is defined, it needs to be associated with a Gum component
 
 <figure><img src="../.gitbook/assets/image (8).png" alt=""><figcaption><p>StandardButton in Gum</p></figcaption></figure>
 
-Notice that the name StandardButton does not match the name ClickableButton, and this is often not desirable. The only thing that matters in this case is that StandardButton must have a TextInstance, as suggested by the code above.
+Notice that the name StandardButton does not match the name ClickableButton, and this is often not desirable.
 
 To associate StandardButton with ClickableButton, add the following code **before** calling `ToGraphicalUiElement`:
 
@@ -76,22 +74,15 @@ Now whenever ToGraphicalUiElement is called, all instances of StandardButton wil
 
 ### Using Cursor to Enable Events
 
-If using InteractiveGue, the built-in events are only called if DoUiActivityRecursively is called either directly on the component, or on a parent of the component. Typically, DoUiActivityRecursively is called on the root-most object (usually a GraphicalUiElement representing a Screen).
+If using InteractiveGue, the built-in events are only called if DoUiActivityRecursively is called either directly on the component, or on a parent of the component. Usually DoUiActivityRecursively is called in the context of using Forms, so it is recommended to do so using the FormsUtilities object. By using FormsUtilities you can reduce the amount of code needed for interactivity.
 
-This method requires a Cursor implementation. Therefore, the following simplified code shows the full requirements to create a Cursor, update the Cursor every frame, and call DoUiActivityRecursively. Note that this code assumes a Screen GraphicalUiElement named CurrentScreen:
+We can add FormsUtilities to our code as shown in the following snippet:
 
 ```csharp
-using GumKeyboard = MonoGameGum.Input.Keyboard;
-
-// Define the Cursor at class scope:
-Cursor cursor;
-GumKeyboard gumKeyboard;
-
 // Instantiate the Cursor in Initialize()
 protected override void Initialize()
 {
-    cursor = new Cursor();
-    gumKeyboard = new GumKeyboard ();
+    FormsUtilities.InitializeDefaults();
     // Remainder of initialization...
 
     base.Initialize();
@@ -99,14 +90,12 @@ protected override void Initialize()
 
 protected override void Update(GameTime gameTime)
 {
-    cursor.Activity(gameTime.TotalGameTime.TotalSeconds);
-    keyboard.Activity(gameTime.TotalGameTime.TotalSeconds);
-    CurrentScreen.DoUiActivityRecursively(cursor, keyboard, gameTime.TotalGameTime.TotalSeconds);
+    FormsUtilities.Update(gameTime, CurrentScreen);
     // Remainder of update
 }
 ```
 
-After adding the Cursor and DoUiActivityRecursively code, all events on any InteractiveGue will automatically be raised so long as the InteractiveGue is part of the hierarchy owned by the CurrentScreen.
+After adding the FormsUtilities calls, all events on any InteractiveGue will automatically be raised so long as the InteractiveGue is part of the hierarchy owned by the CurrentScreen.
 
 ### Adding Events Per Instance
 

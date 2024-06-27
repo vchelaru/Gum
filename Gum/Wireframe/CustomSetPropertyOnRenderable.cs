@@ -36,7 +36,7 @@ namespace Gum.Wireframe
             {
                 handled = TrySetPropertyOnText(mContainedObjectAsIpso, graphicalUiElement, propertyName, value);
             }
-#if MONOGAME || XNA4 || FNA
+#if MONOGAME || KNI || XNA4 || FNA
             else if (mContainedObjectAsIpso is LineCircle)
             {
                 handled = TrySetPropertyOnLineCircle(mContainedObjectAsIpso, graphicalUiElement, propertyName, value);
@@ -362,7 +362,7 @@ namespace Gum.Wireframe
 
                 ReactToFontValueChange();
             }
-#if MONOGAME || XNA4 || FNA
+#if MONOGAME || KNI || XNA4 || FNA
             else if (propertyName == nameof(graphicalUiElement.UseCustomFont))
             {
                 graphicalUiElement.UseCustomFont = (bool)value;
@@ -414,7 +414,7 @@ namespace Gum.Wireframe
             }
             else if (propertyName == nameof(Blend))
             {
-#if MONOGAME || XNA4 || FNA
+#if MONOGAME || KNI || XNA4 || FNA
                 var valueAsGumBlend = (RenderingLibrary.Blend)value;
 
                 var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
@@ -426,7 +426,7 @@ namespace Gum.Wireframe
             }
             else if (propertyName == "Alpha")
             {
-#if MONOGAME || XNA4 || FNA
+#if MONOGAME || KNI || XNA4 || FNA
                 int valueAsInt = (int)value;
                 ((Text)mContainedObjectAsIpso).Alpha = valueAsInt;
                 handled = true;
@@ -452,7 +452,7 @@ namespace Gum.Wireframe
             }
             else if (propertyName == "Color")
             {
-#if MONOGAME || XNA4 || FNA
+#if MONOGAME || KNI || XNA4 || FNA
                 //var valueAsColor = (Color)value;
                 //((Text)mContainedObjectAsIpso).Color = valueAsColor;
                 //handled = true;
@@ -481,7 +481,7 @@ namespace Gum.Wireframe
             }
             else if (propertyName == "MaxLettersToShow")
             {
-#if MONOGAME || XNA4 || FNA
+#if MONOGAME || KNI || XNA4 || FNA
                 ((Text)mContainedObjectAsIpso).MaxLettersToShow = (int?)value;
                 handled = true;
 #endif
@@ -899,6 +899,18 @@ namespace Gum.Wireframe
                         font = loaderManager.GetDisposable(graphicalUiElement.CustomFontFile) as BitmapFont;
                         if (font == null)
                         {
+#if KNI
+                            try
+                            {
+                                // this could be running in browser where we don't have File.Exists, so JUST DO IT
+                                font = new BitmapFont(graphicalUiElement.CustomFontFile, SystemManagers.Default);
+                                loaderManager.AddDisposable(graphicalUiElement.CustomFontFile, font);
+                            }
+                            catch
+                            {
+                                // font doesn't exist, carry on...
+                            }
+#else
                             // so normally we would just let the content loader check if the file exists but since we're not going to
                             // use the content loader for BitmapFont, we're going to protect this with a file.exists.
                             if (ToolsUtilities.FileManager.FileExists(graphicalUiElement.CustomFontFile))
@@ -906,6 +918,7 @@ namespace Gum.Wireframe
                                 font = new BitmapFont(graphicalUiElement.CustomFontFile, SystemManagers.Default);
                                 loaderManager.AddDisposable(graphicalUiElement.CustomFontFile, font);
                             }
+#endif
                         }
                         else if(font.Textures.Any(item => item?.IsDisposed == true))
                         {
@@ -937,6 +950,19 @@ namespace Gum.Wireframe
                         font = loaderManager.GetDisposable(fullFileName) as BitmapFont;
                         if (font == null || font.Texture?.IsDisposed == true)
                         {
+#if KNI
+                            try
+                            {
+                                // this could be running in browser where we don't have File.Exists, so JUST DO IT
+                                font = new BitmapFont(fullFileName, SystemManagers.Default);
+
+                                loaderManager.AddDisposable(fullFileName, font);
+                            }
+                            catch
+                            {
+                                // font doesn't exist, carry on...
+                            }
+#else
                             // so normally we would just let the content loader check if the file exists but since we're not going to
                             // use the content loader for BitmapFont, we're going to protect this with a file.exists.
                             if (ToolsUtilities.FileManager.FileExists(fullFileName))
@@ -946,6 +972,7 @@ namespace Gum.Wireframe
 
                                 loaderManager.AddDisposable(fullFileName, font);
                             }
+#endif
                         }
 
                         // FRB may dispose fonts, so let's check:
@@ -977,7 +1004,7 @@ namespace Gum.Wireframe
             }
         }
 
-        #endregion
+#endregion
 
         private static bool TrySetPropertyOnLineRectangle(IRenderableIpso mContainedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
         {
@@ -1374,7 +1401,7 @@ namespace Gum.Wireframe
 
         public static void ThrowExceptionsForMissingFiles(GraphicalUiElement graphicalUiElement)
         {
-#if MONOGAME
+#if MONOGAME || KNI
             // We can't throw exceptions when assigning values on fonts because the font values get set one-by-one
             // and the end result of all values determines which file to load. For example, an object may set the following
             // variables one-by-one:
