@@ -1,4 +1,5 @@
 ﻿using Gum.Wireframe;
+using MonoGameGum.Forms.Controls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,27 +10,18 @@ namespace MonoGameGumFromFile.ComponentRuntimes;
 
 internal class ClickableButton : InteractiveGue
 {
-    GraphicalUiElement textInstance;
-
-    public ClickableButton() : base() 
+    public ClickableButton(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base() 
     {
-        this.Click += HandleClick;
-        this.RollOn += (_, _) => System.Diagnostics.Debug.WriteLine($"Roll On {Name}");
-        this.RollOff += (_, _) => System.Diagnostics.Debug.WriteLine($"Roll Off @ {Name}");
+        if(fullInstantiation)
+        {
+            // no need to do anything here, we are fully instantiated by the Gum object
+        }
+
+        if(tryCreateFormsObject)
+        {
+            FormsControlAsObject = new Button(this);
+        }
     }
 
-    int NumberOfClicks;
-
-    public override void AfterFullCreation()
-    {
-        textInstance = GetGraphicalUiElementByName("TextInstance");
-    }
-
-    public void HandleClick(object sender, EventArgs args)
-    {
-
-        NumberOfClicks++;
-
-        textInstance.SetProperty("Text", "Clicked " + NumberOfClicks + " times");
-    }
+    public Button FormsControl => FormsControlAsObject as Button;
 }

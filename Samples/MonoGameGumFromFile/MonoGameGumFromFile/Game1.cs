@@ -6,6 +6,7 @@ using GumRuntime;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MonoGameGum.Forms;
 using MonoGameGum.GueDeriving;
 using MonoGameGum.Input;
 using MonoGameGum.Renderables;
@@ -31,8 +32,6 @@ namespace MonoGameGumFromFile
 
         GraphicalUiElement currentScreenGue;
 
-        Cursor cursor;
-        MonoGameGum.Input.Keyboard gumKeyboard;
         #endregion
 
         #region Other Methods
@@ -68,6 +67,7 @@ namespace MonoGameGumFromFile
         {
             SystemManagers.Default = new SystemManagers();
             SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
+            FormsUtilities.InitializeDefaults();
 
             //SetSinglePixelTexture();
 
@@ -77,8 +77,6 @@ namespace MonoGameGumFromFile
 
             ShowScreen("StartScreen");
             InitializeStartScreen();
-            cursor = new Cursor();
-            gumKeyboard = new MonoGameGum.Input.Keyboard();
 
             base.Initialize();
         }
@@ -295,8 +293,7 @@ namespace MonoGameGumFromFile
 
             SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
 
-            cursor.Activity(gameTime.TotalGameTime.TotalSeconds);
-            gumKeyboard.Activity(gameTime.TotalGameTime.TotalSeconds);
+            FormsUtilities.Update(gameTime, currentScreenGue);
 
             DoSwapScreenLogic();
 
