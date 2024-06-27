@@ -3,6 +3,7 @@
 
 /outputDir:bin/$(Platform)
 /intermediateDir:obj/$(Platform)
+/platform:Windows
 /config:
 /profile:Reach
 /compress:False
@@ -11,4 +12,7 @@
 
 
 #---------------------------------- Content ---------------------------------#
+
+#begin button_square_gradient.png
+/copy:button_square_gradient.png
 
