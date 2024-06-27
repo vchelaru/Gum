@@ -19,6 +19,7 @@
   </PropertyGroup>
 	
   <ItemGroup>
+    <Compile Include="FullyCustomizedButton.cs" />
     <Compile Include="GumFormsSampleGame.cs" />
   </ItemGroup>
 	
