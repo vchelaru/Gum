@@ -24,6 +24,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\MonoGameGum\MonoGameGum.csproj" />
+    <ProjectReference Include="..\GumFormsSampleCommon\MonoGameGumFormsSampleCommon.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="Content\button_square_gradient.png">

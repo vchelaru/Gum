@@ -1,0 +1,39 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <TargetFramework>net6.0</TargetFramework>
+    <ProjectGuid>{7C9C5729-78E4-4C13-BBB2-05C25443A980}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>GumFormsSample</RootNamespace>
+    <AssemblyName>GumFormsSampleCommon</AssemblyName>
+    <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
+    <DefineConstants>$(DefineConstants);MONOGAME</DefineConstants>
+  </PropertyGroup>
+	
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+  </PropertyGroup>
+	
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+  </PropertyGroup>
+	
+  <ItemGroup>
+    <Compile Include="FullyCustomizedButton.cs" />
+    <Compile Include="GumFormsSampleGame.cs" />
+  </ItemGroup>
+	
+  <ItemGroup>
+	  <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303">
+		  <PrivateAssets>All</PrivateAssets>
+	  </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\MonoGameGum\MonoGameGum.csproj" />
+	<ProjectReference Include="..\..\..\GumCommon\GumCommon.csproj" />
+	<ProjectReference Include="..\..\..\GumDataTypes\GumDataTypesNet6.csproj" />
+	<ProjectReference Include="..\..\..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
+  </ItemGroup>
+
+</Project>
