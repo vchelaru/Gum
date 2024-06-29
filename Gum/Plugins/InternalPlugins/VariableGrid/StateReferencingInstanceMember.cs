@@ -845,7 +845,17 @@ namespace Gum.PropertyGridHelpers
                         }
                         else
                         {
-                            GumCommands.Self.GuiCommands.PrintOutput("Could not set value to default because the default state doesn't set this value");
+                            // If it's a state, we can un-set that back to null, that's okay:
+                            if(variable.IsState(selectedElement))
+                            {
+                                variable.Value = null;
+                                variable.SetsValue = true;
+                            }
+                            else
+                            {
+                                GumCommands.Self.GuiCommands.PrintOutput("Could not set value to default because the default state doesn't set this value");
+
+                            }
 
                         }
 
