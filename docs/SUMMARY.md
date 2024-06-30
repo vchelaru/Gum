@@ -43,6 +43,8 @@
   * [Component](gum-elements/component/README.md)
     * [Default Child Container](gum-elements/component/default-child-container.md)
   * [Container](gum-elements/container/README.md)
+    * [CanvasHeight](gum-elements/container/canvasheight.md)
+    * [CanvasWidth](gum-elements/container/canvaswidth.md)
     * [Children Layout](gum-elements/container/children-layout.md)
     * [Stack Spacing](gum-elements/container/stack-spacing.md)
     * [Wraps Children](gum-elements/container/wraps-children.md)
