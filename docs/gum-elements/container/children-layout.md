@@ -10,7 +10,7 @@ The value **TopToBottomStack** results in the children stacking one on top of an
 
 The value **LeftToRightStack** results in the children stacking one beside another, from left to right.
 
-## Example
+### Example
 
 The following shows how to use the ChildrenLayout property to stack objects. It begins with a single NineSlice inside of a container called ContainerInstance. The following actions are performed:
 
@@ -62,7 +62,7 @@ For example, if a container stacks its children using a **Top to Bottom Stack**,
 
 Top to Bottom and Left to Right stacks separate their children using the Stack Spacing property. For more information, see the [Stack Spacing](stack-spacing.md) page.
 
-## Stacking and Children Origin
+### Stacking and Children Origin
 
 In most cases children which are stacked should use a Left [X Origin](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/X%20Origin/README.md) if the parent uses a **LeftToRightStack** and should use a Top [Y Origin](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/Y%20Origin/README.md) if the parent uses a **Top To Bottom Stack**.
 
@@ -80,11 +80,11 @@ If the red rectangle's [X Origin](https://github.com/vchelaru/Gum/tree/8c293a405
 
 This overlapping may not be desirable, so keep this in mind when changing a stacked child's origin.
 
-## Wraps Children
+### Wraps Children
 
 The [Wraps Children](children-layout.md#wraps-children) property controls how stacking behaves beyond boundaries. For more information, see the [Wraps Children](children-layout.md#wraps-children) page.
 
-## Reordering Children
+### Reordering Children
 
 Children of a container which uses the **TopToBottomStack** or **LeftToWriteStack** will be ordered according to their order in the tree view on the left. By default this is the order in which the children are added to a parent container.
 
@@ -97,3 +97,35 @@ Children can be reordered using the right-click menu on an instance.
 Alternatively, children order can be changed by clicking on the item in the tree view, holding down the ALT key, then pressing the up or down arrows.
 
 <figure><img src="../../.gitbook/assets/15_08 09 38.gif" alt=""><figcaption><p>Changing order with ALT+Arrow hotkey</p></figcaption></figure>
+
+### Auto Grid Horizontal and Auto Grid Vertical
+
+Auto Grid Horizontal and Auto Grid Vertical layouts result in each child of the container being placed in its own cell. All position and size values are relative to the entire cell, so children can expand to fill their cell or be positioned according to any side or corner.
+
+The following shows a container with an Auto Grid Horizontal and Vertical Cells of 2, resulting in a 2x2 grid. As children are added to the container through copy/paste, each child is placed in its own cell.
+
+<figure><img src="../../.gitbook/assets/30_15 23 20.gif" alt=""><figcaption><p>Container using Auto Grid Horizontal creating a 2x2 grid</p></figcaption></figure>
+
+The number of cells is controlled by the Auto Grid Horizontal Cells and Auto Grid Vertical Cells. Increasing the number of cells results in the rows or columns adjusting automatically.
+
+<figure><img src="../../.gitbook/assets/30_15 24 39.gif" alt=""><figcaption><p>Increasing Auto Grid Horizontal Cells adds additional columns</p></figcaption></figure>
+
+Each child occupies one cell, and the order of the children controls the order of the placement in grids. The first child occupies the top-left row. If using Auto Grid Horizontal, each child is placed to the right of its preceding sibling, wrapping to the next line when reaching the end of a row. If using Auto Grid Vertical, each child is placed below its preceding sibling, wrapping to the next column when reaching the end of a column.
+
+<figure><img src="../../.gitbook/assets/30_15 29 21.gif" alt=""><figcaption><p>Auto Grid Vertical and Horizontal change the ordering of children</p></figcaption></figure>
+
+Children can be reordered by using the alt+arrow key in the tree view, resulting in reordering just like when using a stacking Children Layout.
+
+<figure><img src="../../.gitbook/assets/30_15 26 55.gif" alt=""><figcaption><p>Alt+arrow changes the order of the selected item in the tree view, updating the positions in the grid</p></figcaption></figure>
+
+Children treat their particular cell in the grid as their parent, so any sizes or positions will be based on their parent cell. In other words, if a child's WidthUnits is set to RelativeToContainer, the container in this case is the cell, not the entire Container instance.
+
+<figure><img src="../../.gitbook/assets/30_15 33 38.gif" alt=""><figcaption><p>Changing Anchor and Dock values results in children being placed relative to their particular cell</p></figcaption></figure>
+
+If additional children are added beyond the number of cells in a grid, additional children will spill over the bounds of the grid. The following animation shows a 3x3 grid using Auto Grid Horizontal. As more children are added, additional rows are added below the bounds of the grid.
+
+<figure><img src="../../.gitbook/assets/30_15 39 54.gif" alt=""><figcaption><p>Additionl children can create rows or columns outside of the bounds of the grid.</p></figcaption></figure>
+
+When using Auto Grid Horizontal, the number of columns is fixed, but additional rows can be added beyond the bounds of the container.
+
+When using Auto Grid Vertical, the number of rows is fixed, but additional columns can be added beyond the bounds of the container.
