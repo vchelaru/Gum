@@ -82,7 +82,7 @@ This overlapping may not be desirable, so keep this in mind when changing a stac
 
 ## Wraps Children
 
-The [Wraps Children](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/Wraps%20Children/README.md) property controls how stacking behaves beyond boundaries. For more information, see the [Wraps Children](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/Wraps%20Children/README.md) page.
+The [Wraps Children](children-layout.md#wraps-children) property controls how stacking behaves beyond boundaries. For more information, see the [Wraps Children](children-layout.md#wraps-children) page.
 
 ## Reordering Children
 
