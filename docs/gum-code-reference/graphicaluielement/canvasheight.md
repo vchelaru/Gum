@@ -15,6 +15,9 @@ Setting these values does not automaticaly cause all GraphicalUiElements to perf
 If your game is not zoomed, then the CanvasWidth and CanvasHeight should match the graphicsDevice width and height as shown in the following code:
 
 ```csharp
+// CanvasWidth and CanvasHeight are not tied to a particular
+// GraphicalUiElement instance - they are static values so we
+// use the GraphicalUiElement type.
 GraphicalUiElement.CanvasWidth = _graphics.GraphicsDevice.Viewport.Width;
 GraphicalUiElement.CanvasHeight = _graphics.GraphicsDevice.Viewport.Height;
 ```
