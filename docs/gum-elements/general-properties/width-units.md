@@ -2,7 +2,7 @@
 
 ## Introduction
 
-The **Width Units** variable controls how a unit is horizontally sized, which may be relative to its parent. By default an object uses **Absolute** width, where each unit represents 1 pixel of width in absolute terms. When using **Absolute**, an object ignores its parents' With.
+The **Width Units** variable controls how a unit is horizontally sized, which may be relative to its parent. By default an object uses **Absolute** width, where each unit represents 1 pixel of width in absolute terms. When using **Absolute**, an object ignores its parents' Width.
 
 ## Absolute
 
@@ -18,6 +18,8 @@ The following shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/t
 
 If an object uses **Percentage** Width, but has no parent, it will size itself as a percentage of the entire screen's width.
 
+<figure><img src="../../.gitbook/assets/image (69).png" alt=""><figcaption></figcaption></figure>
+
 ## RelativeToContainer
 
 The following image shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/Gum/coloredrectangle/ColoredRectangle.html) with -10 **RelativeToContainer** Width, which means it will always be 10 pixels less wide than its parent.
@@ -25,6 +27,8 @@ The following image shows a child [ColoredRectangle](https://github.com/vchelaru
 ![](../../.gitbook/assets/Negative10RelativeToContainer.png)
 
 If an object uses **RelativeToContainer** Width, but has no parent, it will size itself relative to the entire screen's width.
+
+<figure><img src="../../.gitbook/assets/image (70).png" alt=""><figcaption></figcaption></figure>
 
 ## RelativeToChildren
 
