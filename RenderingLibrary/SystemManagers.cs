@@ -201,6 +201,8 @@ namespace RenderingLibrary
 
                 RegisterComponentRuntimeInstantiations();
 
+                GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ThrowException;
+
 #endif
             }
         }
