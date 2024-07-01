@@ -84,7 +84,7 @@ child.SetProperty("Text", "Hello world");
 
 ### Gum Projects in Different Folders
 
-The code above and most samples in the Gum repository assume a Gum project located in the Content folder. If you are placing your Gum project in a subfolder, you need to set the FileManager.RelativeDirectory to the sbufolder. For example:
+The code above and most samples in the Gum repository assume a Gum project located in the Content folder. If you are placing your Gum project in a subfolder, you need to set the `FileManager.RelativeDirectory` to the sbufolder prior to calling `ToGraphicalUiElement`. For example:
 
 ```csharp
 FileManager.RelativeDirectory = "Content/MySubFolder/";
