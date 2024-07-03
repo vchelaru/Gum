@@ -2,11 +2,13 @@
 
 ### Introduction
 
-Gum provides a GumBatch object which works similar to GumBatch. It can be used for _immediate mode_ rendering, which allows for calling `Begin`, `Draw`, and `End` just like SpriteBatch. This is useful if your project requires mixing Gum and MonoGame rendering, or if you are more comfortable using a SpriteBatch-like interface.
+Gum provides a GumBatch object which works similar to SpriteBatch. It can be used for _immediate mode_ rendering, which allows for calling `Begin`, `Draw`, and `End` just like SpriteBatch. This is useful if your project requires mixing Gum and MonoGame rendering, or if you are more comfortable using a SpriteBatch-like interface.
 
 This page assumes you have an existing MonoGame project. This can be an empty project or an existing game.
 
-### Adding Gum Nuget Packages
+Usage of GumBatch is completely optional, and it is only needed if you want to draw Gum objects at a partciular point in your drawing code. If you are using Gum to load .gumx projects, or if you would like Gum to handle all UI or HUD rendering, then you do not need to use GumBatch.
+
+### Adding Gum NuGet Packages
 
 1. Open your MonoGame project in your preferred IDE.
 2. Add the `Gum.MonoGame` NuGet package
