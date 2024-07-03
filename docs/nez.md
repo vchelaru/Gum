@@ -19,6 +19,13 @@ public class Game1 : Core
 
         SystemManagers.Default = new SystemManagers();
         SystemManagers.Default.Initialize(Core.GraphicsDevice, fullInstantiation: true);
+        
+        // Optional - adding a colored rectangle to make sure it all works:
+        var rectangle = new ColoredRectangleRuntime();
+        rectangle.Width = 100;
+        rectangle.Height = 100;
+        rectangle.Color = Color.White;
+        rectangle.AddToManagers(SystemManagers.Default, null);
 
         Window.AllowUserResizing = true;
         Scene = new BasicScene();
@@ -37,6 +44,8 @@ public class Game1 : Core
     }
 }
 ```
+
+If you have been able to get Gum working in a Nez project without any runtime errors, you are ready to start adding more complex UI to your game. Head on over to the [MonoGame section](monogame/) for more information.
 
 ### Troubleshooting
 
