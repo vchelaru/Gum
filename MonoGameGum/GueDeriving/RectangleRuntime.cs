@@ -24,6 +24,15 @@ namespace MonoGameGum.GueDeriving
             }
         }
 
+        public float LineWidth
+        {
+            get => ContainedLineRectangle.LinePixelWidth;
+            set
+            {
+                ContainedLineRectangle.LinePixelWidth = value;
+            }
+        }
+
         public bool IsDotted
         {
             get => ContainedLineRectangle.IsDotted;
