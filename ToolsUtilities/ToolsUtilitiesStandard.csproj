@@ -9,7 +9,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageId>FlatRedBall.ToolsUtilities.NetStandard</PackageId>
-	  <Version>2024.7.1.1</Version>
+	  <Version>2024.7.2.1</Version>
 	  <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
   </PropertyGroup>
