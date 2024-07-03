@@ -2,9 +2,9 @@
 
 This page assumes you have an existing MonoGame project. This can be an empty project or an existing game.
 
-Note that as of the time of this writing, only MonoGame Desktop GL projects are supported. Windows, Mac, and Linux have been tested. If you are working on a different platform, please contact us on discord or file an issue on Github requesting the addition of your platform.
+At the time of this writing Gum + MonoGame has been tested on a variety of platforms including DesktopGL, DirectX, and mobile. It has also been used with Nez and Kni. If your particular platform is not supported please contact us on Discord and we will do our best to add support.
 
-### Adding Gum Nuget Packages
+### Adding Gum NuGet Packages
 
 1. Open your MonoGame project in your preferred IDE.
 2.  Add the `Gum.MonoGame` NuGet package\
