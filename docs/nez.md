@@ -39,8 +39,9 @@ public class Game1 : Core
 
     protected override void Draw(GameTime gameTime)
     {
-        SystemManagers.Default.Draw();
         base.Draw(gameTime);
+        // Add System.Default.Draw after base.Draw or else graphics won't show up
+        SystemManagers.Default.Draw();
     }
 }
 ```
