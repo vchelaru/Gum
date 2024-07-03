@@ -102,10 +102,7 @@ namespace MonoGameGum.GueDeriving
             {
                 return ContainedNineSlice.TopLeftTexture;
             }
-            set
-            {
-                ContainedNineSlice.SetSingleTexture(value);
-            }
+            set => ContainedNineSlice.SetSingleTexture(value);
         }
         public Microsoft.Xna.Framework.Color Color
         {
@@ -118,6 +115,12 @@ namespace MonoGameGum.GueDeriving
                 ContainedNineSlice.Color = RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
                 NotifyPropertyChanged();
             }
+        }
+
+        public float? CustomFrameTextureCoordinateWidth
+        {
+            get => ContainedNineSlice.CustomFrameTextureCoordinateWidth;
+            set => ContainedNineSlice.CustomFrameTextureCoordinateWidth = value;
         }
 
         public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
