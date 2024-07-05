@@ -874,6 +874,8 @@ namespace RenderingLibrary.Graphics
                 //mCurrentFrameIndex < mAnimationChains[mCurrentChainIndex].Count
                 )
             {
+
+
                 var index = mCurrentFrameIndex;
                 if (index >= mAnimationChains[mCurrentChainIndex].Count)
                 {
@@ -883,6 +885,12 @@ namespace RenderingLibrary.Graphics
 
                 Texture = frame.Texture;
 
+#if DEBUG
+                if(Texture == null)
+                {
+                    throw new NullReferenceException("The AnimationFrame for this sprite has a null texture. This is not allowed.");
+                }
+#endif
 
                 var left = MathFunctions.RoundToInt(frame.LeftCoordinate * frame.Texture.Width);
                 var width = MathFunctions.RoundToInt(frame.RightCoordinate * frame.Texture.Width) - left;
