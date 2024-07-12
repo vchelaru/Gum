@@ -91,6 +91,11 @@ namespace RenderingLibrary
 
         #endregion
 
+        /// <summary>
+        /// Performs every-frame activity for all contained systems in the SystemManager.
+        /// </summary>
+        /// <param name="currentTime">The amount of time that has passed since the game started.</param>
+        /// <exception cref="InvalidOperationException">Exception thrown if the SystemManagers hasn't yet been initialized.</exception>
         public void Activity(double currentTime)
         {
 #if DEBUG
