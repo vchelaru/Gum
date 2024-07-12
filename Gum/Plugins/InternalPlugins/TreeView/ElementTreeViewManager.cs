@@ -1084,6 +1084,11 @@ namespace Gum.Managers
 
         public void RefreshUi(TreeNode node)
         {
+            if(node  == null)
+            {
+                throw new ArgumentNullException(nameof(node));
+            }
+
             if (node.Tag is ElementSave)
             {
                 ElementSave elementSave = node.Tag as ElementSave;
