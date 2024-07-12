@@ -22,6 +22,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="KniGum\**" />
+    <EmbeddedResource Remove="KniGum\**" />
+    <None Remove="KniGum\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="Content\Font18Arial.fnt" />
     <None Remove="Content\Font18Arial_0.png" />
   </ItemGroup>
@@ -64,7 +70,8 @@
     <Compile Include="..\RenderingLibrary\Math\Geometry\ShapeManager.cs" Link="RenderingLibrary\ShapeManager.cs" />
     <Compile Include="..\RenderingLibrary\Math\Geometry\SolidRectangle.cs" Link="Renderables\SolidRectangle.cs" />
     <Compile Include="..\RenderingLibrary\Math\MathFunctions.cs" Link="Utilities\MathFunctions.cs" />
-    <Compile Include="..\RenderingLibrary\SystemManagers.cs" Link="RenderingLibrary\SystemManagers.cs" />
+	<Compile Include="..\RenderingLibrary\SystemManagers.cs" Link="RenderingLibrary\SystemManagers.cs" />
+	  
   </ItemGroup>
 
   <ItemGroup>
