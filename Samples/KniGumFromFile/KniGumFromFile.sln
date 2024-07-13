@@ -21,7 +21,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GumCommon", "..\..\GumCommo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GumDataTypesNet6", "..\..\GumDataTypes\GumDataTypesNet6.csproj", "{AE52F669-C565-4FB0-8484-9A1866A398FC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KniGum", "..\..\MonoGameGum\KniGum.csproj", "{4482F4CA-6A08-465E-86A4-4CF992F97FE5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KniGum", "..\..\MonoGameGum\KniGum\KniGum.csproj", "{4482F4CA-6A08-465E-86A4-4CF992F97FE5}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ToolsUtilitiesStandard", "..\..\ToolsUtilities\ToolsUtilitiesStandard.csproj", "{7C5878AF-48CE-4E7C-A0BF-03C8F7042DDF}"
 EndProject
