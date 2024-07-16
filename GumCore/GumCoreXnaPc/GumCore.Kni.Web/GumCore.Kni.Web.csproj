@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <DefineConstants>$(DefineConstants)TRACE;FNA;XNA4;WEB;BLAZORGL;KNI</DefineConstants>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+	</PropertyGroup>
+
+    <Import Project="..\..\..\GumCoreShared.projitems" Label="Shared" />
+    <Import Project="..\..\..\..\FlatRedBall\FRBDK\Glue\GumPlugin\GumPlugin\GumCoreShared.FlatRedBall.projitems" Label="Shared" />
+    <ItemGroup>
+      <ProjectReference Include="..\..\..\..\FlatRedBall\Engines\Forms\FlatRedBall.Forms\StateInterpolation\StateInterpolation.Kni.Web\StateInterpolation.Kni.Web.csproj" />
+    </ItemGroup>
+</Project>
