@@ -1863,8 +1863,6 @@ namespace CodeOutputPlugin.Manager
             {
                 #region Constructor Header
 
-                string baseCall = null;
-
                 stringBuilder.AppendLine(ToTabs(tabCount) + $"public {elementName}(bool fullInstantiation = true)");
 
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
@@ -3128,40 +3126,6 @@ namespace CodeOutputPlugin.Manager
             // for now we actually don't do anything with this - I used to think we would, but the variable lists are part of the Gum save objects, not rutnime.
 
             return "";
-            if (visualApi == VisualApi.Gum)
-            {
-                //var fullLineReplacement = TryGetFullGumLineReplacement(context.Instance, variable, context);
-
-                //if (fullLineReplacement != null)
-                //{
-                //    return fullLineReplacement;
-                //}
-                //else
-                {
-                    //var variableName = GetGumVariableName(variable, container);
-                    var variableName = variable.GetRootName();
-
-
-                    return $"{context.CodePrefix}.{variableName} = {VariableValueToGumCodeValue(variable, context.Element)};";
-                }
-
-            }
-            else // xamarin forms
-            {
-                //var fullLineReplacement = TryGetFullXamarinFormsLineReplacement(context.Instance, container, variable, state, context);
-                //if (fullLineReplacement != null)
-                //{
-                //    return fullLineReplacement;
-                //}
-                //else
-                {
-                    //var variableName = GetXamarinFormsVariableName(variable);
-                    var variableName = variable.Name;
-
-                    return $"{context.CodePrefix}.{variableName} = {VariableValueToXamarinFormsCodeValue(variable, context.Element, context)};";
-                }
-
-            }
         }
 
         private static string VariableValueToGumCodeValue(VariableSave variable, ElementSave container, object forcedValue = null)
