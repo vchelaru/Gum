@@ -4040,6 +4040,24 @@ namespace Gum.Wireframe
                     }
                 }
             }
+            else if(e.Action == NotifyCollectionChangedAction.Replace)
+            {
+                foreach (IRenderableIpso ipso in e.OldItems)
+                {
+                    if (ipso.Parent == this)
+                    {
+                        ipso.Parent = null;
+                    }
+                }
+                foreach (IRenderableIpso ipso in e.NewItems)
+                {
+                    if (ipso.Parent != this)
+                    {
+                        ipso.Parent = this;
+
+                    }
+                }
+            }
         }
 
         private void AddChildren(ISystemManagers managers, Layer layer)
