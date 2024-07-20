@@ -82,6 +82,7 @@
     * [Categories](gum-code-reference/datauigrid/categories.md)
   * [GraphicalUiElement](gum-code-reference/graphicaluielement/README.md)
     * [ApplyState](gum-code-reference/graphicaluielement/applystate.md)
+    * [BlendState](gum-code-reference/graphicaluielement/blendstate.md)
     * [CanvasHeight](gum-code-reference/graphicaluielement/canvasheight.md)
     * [CanvasWidth](gum-code-reference/graphicaluielement/canvaswidth.md)
     * [Children](gum-code-reference/graphicaluielement/children.md)
