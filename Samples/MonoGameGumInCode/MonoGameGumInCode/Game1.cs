@@ -181,18 +181,17 @@ namespace MonoGameGumInCode
             polygon.Y = 10;
             polygon.Color = Color.Red;
 
-            var size = 30;
-
-            polygon.Width = size;
-            polygon.Height = size;
+            // width/heights are used for layout
+            polygon.Width = 30;
+            polygon.Height = 30;
             polygon.IsDotted = true;
             polygon.SetPoints(new System.Numerics.Vector2[]
             {
-                new System.Numerics.Vector2(0, 0),
-                new System.Numerics.Vector2(0, size),
-                new System.Numerics.Vector2(size, size),
-                new System.Numerics.Vector2(size, 0),
-                new System.Numerics.Vector2(0, 0),
+                new System.Numerics.Vector2(30, 0),
+                new System.Numerics.Vector2(0, 30),
+                new System.Numerics.Vector2(30, 30),
+                new System.Numerics.Vector2(60, 0),
+                new System.Numerics.Vector2(30, 0),
             });
             container.Children.Add(polygon);
 

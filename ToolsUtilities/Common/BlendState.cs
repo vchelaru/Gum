@@ -99,12 +99,24 @@ namespace Gum
         //     color data contains no alpha information.
         public static readonly BlendState NonPremultiplied;
 
+        public static readonly BlendState NonPremultipliedAddAlpha;
+
         static BlendState()
         {
             Additive = new BlendState("BlendState.Additive", Blend.SourceAlpha, Blend.One);
             AlphaBlend = new BlendState("BlendState.AlphaBlend", Blend.One, Blend.InverseSourceAlpha);
             NonPremultiplied = new BlendState("BlendState.NonPremultiplied", Blend.SourceAlpha, Blend.InverseSourceAlpha);
             Opaque = new BlendState("BlendState.Opaque", Blend.One, Blend.Zero);
+
+            NonPremultipliedAddAlpha = new BlendState();
+
+            NonPremultipliedAddAlpha.ColorSourceBlend = BlendState.NonPremultiplied.ColorSourceBlend;
+            NonPremultipliedAddAlpha.ColorDestinationBlend = BlendState.NonPremultiplied.ColorDestinationBlend;
+            NonPremultipliedAddAlpha.ColorBlendFunction = BlendState.NonPremultiplied.ColorBlendFunction;
+
+            NonPremultipliedAddAlpha.AlphaSourceBlend = Blend.SourceAlpha;
+            NonPremultipliedAddAlpha.AlphaDestinationBlend = Blend.DestinationAlpha;
+            NonPremultipliedAddAlpha.AlphaBlendFunction = BlendFunction.Add;
         }
 
         public BlendState()
