@@ -1,61 +1,61 @@
 <Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
-  <PropertyGroup>
-    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-    <TargetFramework>net8.0</TargetFramework>
-    <Nullable>disable</Nullable>
-    <ImplicitUsings>disable</ImplicitUsings>
-    <ProjectGuid>{92e4ba45-e9cb-466b-852c-2bb3033cd2fd}</ProjectGuid>
-    <RootNamespace>KniGumInCode</RootNamespace>
-    <AssemblyName>KniGumInCode</AssemblyName>
-    <DefineConstants>$(DefineConstants);BLAZORGL</DefineConstants>
-	<KniPlatform>BlazorGL</KniPlatform>
-  </PropertyGroup>
-  
-  <PropertyGroup>
-    <BlazorEnableTimeZoneSupport>false</BlazorEnableTimeZoneSupport>
-  </PropertyGroup>
+	<PropertyGroup>
+		<EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>disable</Nullable>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<ProjectGuid>{92e4ba45-e9cb-466b-852c-2bb3033cd2fd}</ProjectGuid>
+		<RootNamespace>KniGumInCode</RootNamespace>
+		<AssemblyName>KniGumInCode</AssemblyName>
+		<DefineConstants>$(DefineConstants);BLAZORGL</DefineConstants>
+		<KniPlatform>BlazorGL</KniPlatform>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-  </PropertyGroup>
+	<PropertyGroup>
+		<BlazorEnableTimeZoneSupport>false</BlazorEnableTimeZoneSupport>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+	</PropertyGroup>
 
-  <ItemGroup>
-    <Compile Include="Pages\Index.razor.cs" />
-    <Compile Include="Program.cs" />
-  </ItemGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="nkast.Xna.Framework" Version="3.12.9001" />
-    <PackageReference Include="nkast.Xna.Framework.Content" Version="3.12.9001" />
-    <PackageReference Include="nkast.Xna.Framework.Graphics" Version="3.12.9001" />
-    <PackageReference Include="nkast.Xna.Framework.Audio" Version="3.12.9001" />
-    <PackageReference Include="nkast.Xna.Framework.Media" Version="3.12.9001" />
-    <PackageReference Include="nkast.Xna.Framework.Input" Version="3.12.9001" />
-    <PackageReference Include="nkast.Xna.Framework.Game" Version="3.12.9001" />
-    <PackageReference Include="nkast.Xna.Framework.Blazor" Version="3.12.9001" />
-    <PackageReference Include="nkast.Xna.Framework.Content.Pipeline.Builder" Version="3.12.9001" />
-  </ItemGroup>
+	<ItemGroup>
+		<Compile Include="Pages\Index.razor.cs" />
+		<Compile Include="Program.cs" />
+	</ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.27" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="6.0.27" PrivateAssets="all" />
-  </ItemGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net8.0' ">
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.2" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.2" PrivateAssets="all" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="nkast.Xna.Framework" Version="3.12.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Content" Version="3.12.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="3.12.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Audio" Version="3.12.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Media" Version="3.12.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Input" Version="3.12.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Game" Version="3.12.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Blazor" Version="3.12.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Content.Pipeline.Builder" Version="3.12.9001" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <KniContentReference Include="..\KniGumInCodeContent\KniGumInCodeContent.mgcb">   
-      <Link>Content\KniGumInCodeContent.mgcb</Link>
-    </KniContentReference>
-  </ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.27" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="6.0.27" PrivateAssets="all" />
+	</ItemGroup>
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net8.0' ">
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.2" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.2" PrivateAssets="all" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\KniGumInCodeCommon\KniGumInCodeCommon.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<KniContentReference Include="..\KniGumInCodeContent\KniGumInCodeContent.mgcb">
+			<Link>Content\KniGumInCodeContent.mgcb</Link>
+		</KniContentReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\KniGumInCodeCommon\KniGumInCodeCommon.csproj" />
+	</ItemGroup>
 
 </Project>

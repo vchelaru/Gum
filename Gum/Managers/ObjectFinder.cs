@@ -1074,6 +1074,11 @@ namespace Gum.Managers
                 {
                     return false;
                 }
+                else if(baseType == null)
+                {
+                    // this would be a screen...
+                    return false;
+                }
                 else
                 {
                     return IsInstanceRecursivelyReferencingElement(instance, GetElementSave(baseType));

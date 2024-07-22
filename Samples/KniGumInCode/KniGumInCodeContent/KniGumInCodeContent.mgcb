@@ -3,8 +3,9 @@
 
 /outputDir:bin/$(Platform)
 /intermediateDir:obj/$(Platform)
+/platform:DesktopGL
 /config:
-/profile:Reach
+/profile:HiDef
 /compress:False
 
 #-------------------------------- References --------------------------------#
@@ -23,4 +24,10 @@
 
 #begin WhitePeaberryOutline/WhitePeaberryOutline.png
 /copy:WhitePeaberryOutline/WhitePeaberryOutline.png
+
+#begin Shader.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shader.fx
 

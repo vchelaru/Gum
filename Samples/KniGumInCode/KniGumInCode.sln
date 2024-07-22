@@ -23,7 +23,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GumDataTypesNet6", "..\..\G
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ToolsUtilitiesStandard", "..\..\ToolsUtilities\ToolsUtilitiesStandard.csproj", "{2937EE73-50B5-47C2-A852-C29BF136C537}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KniGum", "..\..\MonoGameGum\KniGum.csproj", "{5FD51919-6C1D-4017-A3AF-D42A53119640}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KniGum", "..\..\MonoGameGum\KniGum\KniGum.csproj", "{5FD51919-6C1D-4017-A3AF-D42A53119640}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

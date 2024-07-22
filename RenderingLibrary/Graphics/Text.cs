@@ -79,6 +79,9 @@ namespace RenderingLibrary.Graphics
             set { mDefaultSpriteFont = value; }
         }
 
+        /// <summary>
+        /// The default BitmapFont to use if a Text instance is referencing a null font.
+        /// </summary>
         public static BitmapFont DefaultBitmapFont
         {
             get { return mDefaultBitmapFont; }
