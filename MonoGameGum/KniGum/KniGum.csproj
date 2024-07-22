@@ -1,117 +1,117 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <PackageId>Gum.KNI</PackageId>
-		<Version>2024.7.12.3</Version>
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<PackageId>Gum.KNI</PackageId>
+		<Version>2024.7.22.1</Version>
 
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 
 
-  </PropertyGroup>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>$(DefineConstants);KNI;USE_GUMCOMMON</DefineConstants>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<DefineConstants>$(DefineConstants);KNI;USE_GUMCOMMON</DefineConstants>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>$(DefineConstants);KNI;USE_GUMCOMMON</DefineConstants>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<DefineConstants>$(DefineConstants);KNI;USE_GUMCOMMON</DefineConstants>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <None Remove="..\Content\Font18Arial.fnt" />
-    <None Remove="..\Content\Font18Arial_0.png" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Remove="..\Content\Font18Arial.fnt" />
+		<None Remove="..\Content\Font18Arial_0.png" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Compile Include="..\..\GumRuntime\BbCodeParser.cs" Link="Renderables\BbCodeParser.cs" />
-    <Compile Include="..\..\Gum\Graphics\Animation\Content\AnimationChainListSave.cs" Link="Animation\Content\AnimationChainListSave.cs" />
-    <Compile Include="..\..\Gum\Graphics\Animation\Content\AnimationChainSave.cs" Link="Animation\Content\AnimationChainSave.cs" />
-    <Compile Include="..\..\Gum\Graphics\Animation\Content\AnimationFrameSave.cs" Link="Animation\Content\AnimationFrameSave.cs" />
-    <Compile Include="..\..\Gum\RenderingLibrary\BlendExtensions.cs" Link="RenderingLibrary\BlendExtensions.cs" />
-    <Compile Include="..\..\Gum\Wireframe\CustomSetPropertyOnRenderable.cs" Link="Utilities\CustomSetPropertyOnRenderable.cs" />
-    <Compile Include="..\..\Gum\Wireframe\RuntimeObjectCreator.cs" Link="GueDeriving\RuntimeObjectCreator.cs" />
-    <Compile Include="..\..\RenderingLibrary\Content\ContentLoader.cs" Link="RenderingLibrary\ContentLoader.cs" />
-    <Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationChain.cs" Link="Animation\AnimationChain.cs" />
-    <Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationChainList.cs" Link="Animation\AnimationChainList.cs" />
-    <Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationFrame.cs" Link="Animation\AnimationFrame.cs" />
-    <Compile Include="..\..\RenderingLibrary\Graphics\AtlasedTexture.cs" Link="Renderables\AtlasedTexture.cs" />
-    <Compile Include="..\..\RenderingLibrary\Graphics\BitmapCharacterInfo.cs" Link="Renderables\Fonts\BitmapCharacterInfo.cs" />
-    <Compile Include="..\..\RenderingLibrary\Graphics\Fonts\BitmapFont.cs" Link="Renderables\Fonts\BitmapFont.cs" />
-    <Compile Include="..\..\RenderingLibrary\Graphics\Fonts\BmfcSave.cs" Link="Renderables\Fonts\BmfcSave.cs" />
-    <Compile Include="..\..\RenderingLibrary\Graphics\IAnimation.cs" Link="Renderables\IAnimation.cs" />
-    <Compile Include="..\..\RenderingLibrary\Graphics\ImageData.cs" Link="RenderingLibrary\ImageData.cs" />
-    <Compile Include="..\..\RenderingLibrary\Graphics\NineSlice.cs" Link="Renderables\NineSlice.cs" />
-    <Compile Include="..\..\RenderingLibrary\Graphics\NineSliceExtensions.cs" Link="Renderables\NineSliceExtensions.cs" />
-    <Compile Include="..\..\RenderingLibrary\Graphics\Renderer.cs" Link="RenderingLibrary\Renderer.cs" />
-    <Compile Include="..\..\RenderingLibrary\Graphics\Sprite.cs" Link="Renderables\Sprite.cs" />
-    <Compile Include="..\..\RenderingLibrary\Graphics\SpriteBatchStack.cs" Link="RenderingLibrary\SpriteBatchStack.cs" />
-    <Compile Include="..\..\RenderingLibrary\Graphics\SpriteManager.cs" Link="RenderingLibrary\SpriteManager.cs" />
-    <Compile Include="..\..\RenderingLibrary\Graphics\SpriteRenderer.cs" Link="RenderingLibrary\SpriteRenderer.cs" />
-    <Compile Include="..\..\RenderingLibrary\Graphics\Text.cs" Link="Renderables\Text.cs" />
-    <Compile Include="..\..\RenderingLibrary\Graphics\TextManager.cs" Link="RenderingLibrary\TextManager.cs" />
-    <Compile Include="..\..\RenderingLibrary\Graphics\XNAExtensions.cs" Link="Utilities\XNAExtensions.cs" />
-    <Compile Include="..\..\RenderingLibrary\Math\FloatRectangle.cs" Link="Utilities\FloatRectangle.cs" />
-    <Compile Include="..\..\RenderingLibrary\Math\Geometry\Line.cs" Link="Renderables\Line.cs" />
-    <Compile Include="..\..\RenderingLibrary\Math\Geometry\LineCircle.cs" Link="Renderables\LineCircle.cs" />
-    <Compile Include="..\..\RenderingLibrary\Math\Geometry\LineGrid.cs" Link="Renderables\LineGrid.cs" />
-    <Compile Include="..\..\RenderingLibrary\Math\Geometry\LinePolygon.cs" Link="Renderables\LinePolygon.cs" />
-    <Compile Include="..\..\RenderingLibrary\Math\Geometry\LinePrimitive.cs" Link="Renderables\LinePrimitive.cs" />
-    <Compile Include="..\..\RenderingLibrary\Math\Geometry\LineRectangle.cs" Link="Renderables\LineRectangle.cs" />
-    <Compile Include="..\..\RenderingLibrary\Math\Geometry\ShapeManager.cs" Link="RenderingLibrary\ShapeManager.cs" />
-    <Compile Include="..\..\RenderingLibrary\Math\Geometry\SolidRectangle.cs" Link="Renderables\SolidRectangle.cs" />
-    <Compile Include="..\..\RenderingLibrary\Math\MathFunctions.cs" Link="Utilities\MathFunctions.cs" />
-    <Compile Include="..\..\RenderingLibrary\SystemManagers.cs" Link="RenderingLibrary\SystemManagers.cs" />
-    
-      <Compile Include="..\**\*.cs" />
+	<ItemGroup>
+		<Compile Include="..\..\GumRuntime\BbCodeParser.cs" Link="Renderables\BbCodeParser.cs" />
+		<Compile Include="..\..\Gum\Graphics\Animation\Content\AnimationChainListSave.cs" Link="Animation\Content\AnimationChainListSave.cs" />
+		<Compile Include="..\..\Gum\Graphics\Animation\Content\AnimationChainSave.cs" Link="Animation\Content\AnimationChainSave.cs" />
+		<Compile Include="..\..\Gum\Graphics\Animation\Content\AnimationFrameSave.cs" Link="Animation\Content\AnimationFrameSave.cs" />
+		<Compile Include="..\..\Gum\RenderingLibrary\BlendExtensions.cs" Link="RenderingLibrary\BlendExtensions.cs" />
+		<Compile Include="..\..\Gum\Wireframe\CustomSetPropertyOnRenderable.cs" Link="Utilities\CustomSetPropertyOnRenderable.cs" />
+		<Compile Include="..\..\Gum\Wireframe\RuntimeObjectCreator.cs" Link="GueDeriving\RuntimeObjectCreator.cs" />
+		<Compile Include="..\..\RenderingLibrary\Content\ContentLoader.cs" Link="RenderingLibrary\ContentLoader.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationChain.cs" Link="Animation\AnimationChain.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationChainList.cs" Link="Animation\AnimationChainList.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationFrame.cs" Link="Animation\AnimationFrame.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\AtlasedTexture.cs" Link="Renderables\AtlasedTexture.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\BitmapCharacterInfo.cs" Link="Renderables\Fonts\BitmapCharacterInfo.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\Fonts\BitmapFont.cs" Link="Renderables\Fonts\BitmapFont.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\Fonts\BmfcSave.cs" Link="Renderables\Fonts\BmfcSave.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\IAnimation.cs" Link="Renderables\IAnimation.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\ImageData.cs" Link="RenderingLibrary\ImageData.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\NineSlice.cs" Link="Renderables\NineSlice.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\NineSliceExtensions.cs" Link="Renderables\NineSliceExtensions.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\Renderer.cs" Link="RenderingLibrary\Renderer.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\Sprite.cs" Link="Renderables\Sprite.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\SpriteBatchStack.cs" Link="RenderingLibrary\SpriteBatchStack.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\SpriteManager.cs" Link="RenderingLibrary\SpriteManager.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\SpriteRenderer.cs" Link="RenderingLibrary\SpriteRenderer.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\Text.cs" Link="Renderables\Text.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\TextManager.cs" Link="RenderingLibrary\TextManager.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\XNAExtensions.cs" Link="Utilities\XNAExtensions.cs" />
+		<Compile Include="..\..\RenderingLibrary\Math\FloatRectangle.cs" Link="Utilities\FloatRectangle.cs" />
+		<Compile Include="..\..\RenderingLibrary\Math\Geometry\Line.cs" Link="Renderables\Line.cs" />
+		<Compile Include="..\..\RenderingLibrary\Math\Geometry\LineCircle.cs" Link="Renderables\LineCircle.cs" />
+		<Compile Include="..\..\RenderingLibrary\Math\Geometry\LineGrid.cs" Link="Renderables\LineGrid.cs" />
+		<Compile Include="..\..\RenderingLibrary\Math\Geometry\LinePolygon.cs" Link="Renderables\LinePolygon.cs" />
+		<Compile Include="..\..\RenderingLibrary\Math\Geometry\LinePrimitive.cs" Link="Renderables\LinePrimitive.cs" />
+		<Compile Include="..\..\RenderingLibrary\Math\Geometry\LineRectangle.cs" Link="Renderables\LineRectangle.cs" />
+		<Compile Include="..\..\RenderingLibrary\Math\Geometry\ShapeManager.cs" Link="RenderingLibrary\ShapeManager.cs" />
+		<Compile Include="..\..\RenderingLibrary\Math\Geometry\SolidRectangle.cs" Link="Renderables\SolidRectangle.cs" />
+		<Compile Include="..\..\RenderingLibrary\Math\MathFunctions.cs" Link="Utilities\MathFunctions.cs" />
+		<Compile Include="..\..\RenderingLibrary\SystemManagers.cs" Link="RenderingLibrary\SystemManagers.cs" />
 
-  </ItemGroup>
+		<Compile Include="..\**\*.cs" />
 
-  <ItemGroup>
-    <Compile Remove="obj\**" />
-    <EmbeddedResource Remove="obj\**" />
-    <None Remove="obj\**" />
-  </ItemGroup>
+	</ItemGroup>
 
-  <ItemGroup>
-    <Compile Remove="..\obj\Debug\net6.0\.NETCoreApp,Version=v6.0.AssemblyAttributes.cs" />
-    <Compile Remove="..\obj\Debug\net6.0\KniGum.AssemblyInfo.cs" />
-    <Compile Remove="..\obj\Debug\net6.0\KniGum.GlobalUsings.g.cs" />
-    <Compile Remove="..\obj\Debug\net6.0\MonoGameGum.AssemblyInfo.cs" />
-    <Compile Remove="..\obj\Debug\net6.0\MonoGameGum.GlobalUsings.g.cs" />
-  </ItemGroup>
+	<ItemGroup>
+		<Compile Remove="obj\**" />
+		<EmbeddedResource Remove="obj\**" />
+		<None Remove="obj\**" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Include="..\Content\Font18Arial.fnt" />
-    <EmbeddedResource Include="..\Content\Font18Arial_0.png" />
-  </ItemGroup>
+	<ItemGroup>
+		<Compile Remove="..\obj\Debug\net6.0\.NETCoreApp,Version=v6.0.AssemblyAttributes.cs" />
+		<Compile Remove="..\obj\Debug\net6.0\KniGum.AssemblyInfo.cs" />
+		<Compile Remove="..\obj\Debug\net6.0\KniGum.GlobalUsings.g.cs" />
+		<Compile Remove="..\obj\Debug\net6.0\MonoGameGum.AssemblyInfo.cs" />
+		<Compile Remove="..\obj\Debug\net6.0\MonoGameGum.GlobalUsings.g.cs" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
-    <ProjectReference Include="..\..\GumDataTypes\GumDataTypesNet6.csproj" />
-    <ProjectReference Include="..\..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="..\Content\Font18Arial.fnt" />
+		<EmbeddedResource Include="..\Content\Font18Arial_0.png" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Animation\Content\" />
-    <Folder Include="Renderables\Fonts\" />
-    <Folder Include="Utilities\" />
-    <Folder Include="RenderingLibrary\" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+		<ProjectReference Include="..\..\GumDataTypes\GumDataTypesNet6.csproj" />
+		<ProjectReference Include="..\..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-	<PackageReference Include="nkast.Xna.Framework" Version="3.12.9001" />
-	<PackageReference Include="nkast.Xna.Framework.Content" Version="3.12.9001" />
-	<PackageReference Include="nkast.Xna.Framework.Graphics" Version="3.12.9001" />
-	<PackageReference Include="nkast.Xna.Framework.Input" Version="3.12.9001" />
-	<PackageReference Include="nkast.Xna.Framework.Game" Version="3.12.9001" />
-    <!--<PackageReference Include="nkast.Xna.Framework.Audio" Version="3.12.9001" />-->
-    <!--<PackageReference Include="nkast.Xna.Framework.Media" Version="3.12.9001" />-->
+	<ItemGroup>
+		<Folder Include="Animation\Content\" />
+		<Folder Include="Renderables\Fonts\" />
+		<Folder Include="Utilities\" />
+		<Folder Include="RenderingLibrary\" />
+	</ItemGroup>
 
-    <PackageReference Include="TextCopy" Version="6.2.1" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="nkast.Xna.Framework" Version="3.12.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Content" Version="3.12.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="3.12.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Input" Version="3.12.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Game" Version="3.12.9001" />
+		<!--<PackageReference Include="nkast.Xna.Framework.Audio" Version="3.12.9001" />-->
+		<!--<PackageReference Include="nkast.Xna.Framework.Media" Version="3.12.9001" />-->
+
+		<PackageReference Include="TextCopy" Version="6.2.1" />
+	</ItemGroup>
 
 </Project>
