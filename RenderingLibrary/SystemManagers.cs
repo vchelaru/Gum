@@ -138,13 +138,18 @@ namespace RenderingLibrary
                     {
                         fileName = FileManager.MakeRelative(fileName, FileManager.ExeLocation, preserveCase:true);
                     }
+
+#if WEB
+                    if(fileName.StartsWith("./"))
+                    {
+                       fileName = fileName.Substring(2);
+                    }
+#endif
+
                     var stream = TitleContainer.OpenStream(fileName);
                     return stream;
                 };
             }
-
-
-
 
 #endif
 

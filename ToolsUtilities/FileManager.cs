@@ -706,21 +706,27 @@ namespace ToolsUtilities
         public static Stream GetStreamForFile(string fileName)
         {
 
-
-
-#if ANDROID || IOS || WINDOWS_8
-            fileName = TryRemoveLeadingDotSlash(fileName);
-			return Microsoft.Xna.Framework.TitleContainer.OpenStream(fileName);
-#else
-            if(CustomGetStreamFromFile != null)
+            try
             {
-                return CustomGetStreamFromFile(fileName);
+
+    #if ANDROID || IOS || WINDOWS_8
+                fileName = TryRemoveLeadingDotSlash(fileName);
+			    return Microsoft.Xna.Framework.TitleContainer.OpenStream(fileName);
+    #else
+                if(CustomGetStreamFromFile != null)
+                {
+                    return CustomGetStreamFromFile(fileName);
+                }
+                else
+                {
+                    return System.IO.File.OpenRead(fileName);
+                }
+    #endif
             }
-            else
+            catch (Exception e)
             {
-                return System.IO.File.OpenRead(fileName);
+                throw new IOException("Could not get the stream for the file " + fileName, e);
             }
-#endif
         }
 
         public static T XmlDeserializeFromStream<T>(Stream stream)
