@@ -6,7 +6,14 @@ using RenderingLibrary.Math.Geometry;
 using Microsoft.Xna.Framework;
 using RenderingLibrary.Content;
 using ToolsUtilities;
+using System.Text;
+using System.Net;
+using System.Xml.Linq;
 
+#if WEB
+using nkast.Wasm.XHR;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+#endif
 
 
 
@@ -123,6 +130,7 @@ namespace RenderingLibrary
             Renderer.Draw(this, layers);
         }
 
+        
         public void Initialize(GraphicsDevice graphicsDevice, bool fullInstantiation = false)
         {
 #if NET6_0_OR_GREATER
@@ -139,15 +147,48 @@ namespace RenderingLibrary
                         fileName = FileManager.MakeRelative(fileName, FileManager.ExeLocation, preserveCase:true);
                     }
 
+
 #if WEB
                     if(fileName.StartsWith("./"))
                     {
                        fileName = fileName.Substring(2);
                     }
-#endif
 
+                    XMLHttpRequest request = new XMLHttpRequest();
+
+                    var suffix =
+                        "?token=" + DateTime.Now.Ticks;
+
+                    request.Open("GET", fileName + suffix, false);
+                    request.OverrideMimeType("text/plain; charset=x-user-defined");
+                    request.Send();
+
+                    if (request.Status == 200)
+                    {
+                        string responseText = request.ResponseText;
+
+                        var bytes =
+                            System.Text.Encoding.UTF8.GetBytes(responseText);
+                        return new MemoryStream(bytes);
+
+                        //byte[] buffer = new byte[responseText.Length];
+                        //for (int i = 0; i < responseText.Length; i++)
+                        //    buffer[i] = (byte)(responseText[i] & 0xff);
+
+                        //Stream ms = new MemoryStream(buffer);
+
+                        //return ms;
+                    }
+                    else
+                    {
+                        throw new IOException("HTTP request failed. Status:" + request.Status);
+                    }
+
+
+#else
                     var stream = TitleContainer.OpenStream(fileName);
                     return stream;
+#endif
                 };
             }
 
@@ -156,7 +197,7 @@ namespace RenderingLibrary
 #if WINDOWS_8 || UWP
             mPrimaryThreadId = Environment.CurrentManagedThreadId;
 #else
-            mPrimaryThreadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
+                    mPrimaryThreadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
 #endif
 
             Renderer = new Renderer();
