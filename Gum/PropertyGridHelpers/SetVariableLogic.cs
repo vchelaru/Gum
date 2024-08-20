@@ -444,15 +444,18 @@ namespace Gum.PropertyGridHelpers
             {
                 VariableSave variable = SelectedState.Self.SelectedVariableSave;
 
-                if(ObjectFinder.Self.IsInstanceRecursivelyReferencingElement(instance, parentElement))
+                if(instance != null)
                 {
-                    MessageBox.Show("This assignment would create a circular reference, which is not allowed.");
-                    //stateSave.SetValue("BaseType", oldValue, instance);
-                    instance.BaseType = (string)oldValue;
+                    if(ObjectFinder.Self.IsInstanceRecursivelyReferencingElement(instance, parentElement))
+                    {
+                        MessageBox.Show("This assignment would create a circular reference, which is not allowed.");
+                        //stateSave.SetValue("BaseType", oldValue, instance);
+                        instance.BaseType = (string)oldValue;
 
-                    GumCommands.Self.GuiCommands.PrintOutput($"BaseType assignment on {instance.Name} is not allowed - reverting to previous value");
+                        GumCommands.Self.GuiCommands.PrintOutput($"BaseType assignment on {instance.Name} is not allowed - reverting to previous value");
 
-                    GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
+                        GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
+                    }
                 }
             }
         }

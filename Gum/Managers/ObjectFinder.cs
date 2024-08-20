@@ -1060,6 +1060,15 @@ namespace Gum.Managers
 
         internal bool IsInstanceRecursivelyReferencingElement(InstanceSave instance, ElementSave element)
         {
+            if(instance == null)
+            {
+                throw new ArgumentNullException(nameof(instance));
+            }
+            if(element == null)
+            {
+                throw new ArgumentNullException(nameof(element));
+            }
+
             if(instance.BaseType == element.Name)
             {
                 return true;
