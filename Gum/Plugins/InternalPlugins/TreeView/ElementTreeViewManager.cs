@@ -19,6 +19,7 @@ using Grid = System.Windows.Controls.Grid;
 using Gum.Mvvm;
 using Gum.Plugins.InternalPlugins.TreeView;
 using Gum.Plugins.InternalPlugins.TreeView.ViewModels;
+using RenderingLibrary.Graphics;
 
 namespace Gum.Managers
 {
@@ -110,6 +111,7 @@ namespace Gum.Managers
         object mRecordedSelectedObject;
 
         TextBox searchTextBox;
+        CheckBox deepSearchCheckBox;
         #endregion
 
         #region Properties
@@ -407,6 +409,9 @@ namespace Gum.Managers
                 new System.Windows.Controls.RowDefinition() 
                 { Height = new System.Windows.GridLength(22, System.Windows.GridUnitType.Pixel) });
             grid.RowDefinitions.Add(
+                new System.Windows.Controls.RowDefinition()
+                { Height = new System.Windows.GridLength(22, System.Windows.GridUnitType.Pixel) });
+            grid.RowDefinitions.Add(
                 new System.Windows.Controls.RowDefinition() 
                 { Height = new System.Windows.GridLength(1, System.Windows.GridUnitType.Star) });
 
@@ -416,7 +421,7 @@ namespace Gum.Managers
             //panel.Controls.Add(ObjectTreeView);
             TreeViewHost = new System.Windows.Forms.Integration.WindowsFormsHost();
             TreeViewHost.Child = ObjectTreeView;
-            Grid.SetRow(TreeViewHost, 1);
+            Grid.SetRow(TreeViewHost, 2);
             grid.Children.Add(TreeViewHost);
 
 
@@ -426,11 +431,17 @@ namespace Gum.Managers
             Grid.SetRow(searchBarHost, 0);
             grid.Children.Add(searchBarHost);
 
+            var checkBoxUi = CreateSearchCheckBoxUi();
+            var checkBoxHost = new System.Windows.Forms.Integration.WindowsFormsHost();
+            checkBoxHost.Child = checkBoxUi;
+            Grid.SetRow(checkBoxHost, 1);
+            grid.Children.Add(checkBoxHost);
+
             FlatList = CreateFlatSearchList();
             FlatList.HorizontalAlignment = System.Windows.HorizontalAlignment.Stretch;
             FlatList.VerticalAlignment = System.Windows.VerticalAlignment.Stretch;
 
-            Grid.SetRow(FlatList, 1);
+            Grid.SetRow(FlatList, 2);
             grid.Children.Add(FlatList);
 
 
@@ -1522,6 +1533,18 @@ namespace Gum.Managers
                         vm.BackingObject = component;
                         FlatList.FlatList.Items.Add(vm);
                     }
+
+                    if (deepSearchCheckBox.Checked)
+                    {
+                        var textVariable = component.GetVariableFromThisOrBase("Text");
+                        if (textVariable.Value != null && (textVariable.Value as string).ToLower().Contains(filterTextLower))
+                        {
+                            Console.WriteLine($"Found text {textVariable}");
+                            var vm = new SearchItemViewModel();
+                            vm.BackingObject = component;
+                            FlatList.FlatList.Items.Add(vm);
+                        }
+                    }
                 }
                 foreach (var standard in project.StandardElements)
                 {
@@ -1627,6 +1650,20 @@ namespace Gum.Managers
             xButton.Width = 24;
             panel.Controls.Add(xButton);
             panel.Height = 20;
+
+            return panel;
+        }
+
+        private Control CreateSearchCheckBoxUi()
+        {
+            var panel = new Panel();
+
+            deepSearchCheckBox = new CheckBox();
+            deepSearchCheckBox.Checked = false;
+            deepSearchCheckBox.Text = "Deep search";
+
+            panel.Controls.Add(deepSearchCheckBox);
+
             return panel;
         }
 
