@@ -1542,6 +1542,7 @@ namespace Gum.Managers
                             Console.WriteLine($"Found text {textVariable}");
                             var vm = new SearchItemViewModel();
                             vm.BackingObject = component;
+                            //vm.Display = $"{component.Name} (Text.Text = \"{textVariable}\"";
                             FlatList.FlatList.Items.Add(vm);
                         }
                     }
