@@ -20,6 +20,8 @@ using Gum.Mvvm;
 using Gum.Plugins.InternalPlugins.TreeView;
 using Gum.Plugins.InternalPlugins.TreeView.ViewModels;
 using RenderingLibrary.Graphics;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolTip;
+using System.Management.Instrumentation;
 
 namespace Gum.Managers
 {
@@ -1520,30 +1522,56 @@ namespace Gum.Managers
                 {
                     if (screen.Name.ToLower().Contains(filterTextLower))
                     {
-                        var vm = new SearchItemViewModel();
-                        vm.BackingObject = screen;
-                        FlatList.FlatList.Items.Add(vm);
+                        AddToFlatList(screen);
+                    }
+
+                    if (deepSearchCheckBox.Checked)
+                    {
+                        foreach (var state in screen.States)
+                        {
+                            foreach (var variable in state.Variables)
+                            {
+                                if (variable == null)
+                                {
+                                    continue;
+                                }
+
+                                if (variable.Value != null && (variable.Value is string str) && str.ToLower().Contains(filterTextLower))
+                                {
+                                    var instance = screen.Instances.FirstOrDefault(item => item.Name == variable.SourceObject);
+                                    AddToFlatList(instance, $"{screen.Name}/{variable.SourceObject} ({variable.GetRootName()})");
+                                }
+                            }
+                        }
                     }
                 }
                 foreach (var component in project.Components)
                 {
                     if (component.Name.ToLower().Contains(filterTextLower))
                     {
-                        var vm = new SearchItemViewModel();
-                        vm.BackingObject = component;
-                        FlatList.FlatList.Items.Add(vm);
+                        AddToFlatList(component);
+                    }
+
+                    foreach (var instance in component.Instances)
+                    {
+                        if (instance.Name.ToLower().Contains(filterTextLower))
+                        {
+                            AddToFlatList(instance, $"{component.Name}/{instance.Name} ({instance.BaseType})");
+                        }
                     }
 
                     if (deepSearchCheckBox.Checked)
                     {
                         var textVariable = component.GetVariableFromThisOrBase("Text");
+
+                        if (textVariable == null)
+                        {
+                            continue;
+                        }
+
                         if (textVariable.Value != null && (textVariable.Value as string).ToLower().Contains(filterTextLower))
                         {
-                            Console.WriteLine($"Found text {textVariable}");
-                            var vm = new SearchItemViewModel();
-                            vm.BackingObject = component;
-                            //vm.Display = $"{component.Name} (Text.Text = \"{textVariable}\"";
-                            FlatList.FlatList.Items.Add(vm);
+                            AddToFlatList(component);
                         }
                     }
                 }
@@ -1551,9 +1579,7 @@ namespace Gum.Managers
                 {
                     if (standard.Name.ToLower().Contains(filterTextLower))
                     {
-                        var vm = new SearchItemViewModel();
-                        vm.BackingObject = standard;
-                        FlatList.FlatList.Items.Add(vm);
+                        AddToFlatList(standard);
                     }
                 }
 
@@ -1584,6 +1610,18 @@ namespace Gum.Managers
 
             //    SelectedNode?.EnsureVisible();
             //}
+        }
+
+        private void AddToFlatList(object element, string customName = "")
+        {
+            if (element == null)
+            {
+                throw new Exception("The element should not be null");
+            }
+            var vm = new SearchItemViewModel();
+            vm.BackingObject = element;
+            vm.CustomText = customName;
+            FlatList.FlatList.Items.Add(vm);
         }
 
         private Control CreateSearchBoxUi()
@@ -1662,6 +1700,10 @@ namespace Gum.Managers
             deepSearchCheckBox = new CheckBox();
             deepSearchCheckBox.Checked = false;
             deepSearchCheckBox.Text = "Deep search";
+            deepSearchCheckBox.CheckedChanged += (object sender, EventArgs args) =>
+            {
+                ReactToFilterTextChanged();
+            };
 
             panel.Controls.Add(deepSearchCheckBox);
 
@@ -1679,6 +1721,10 @@ namespace Gum.Managers
                     GumState.Self.SelectedState.SelectedElement = asComponent;
                 else if (backingObject is StandardElementSave asStandard)
                     GumState.Self.SelectedState.SelectedElement = asStandard;
+                else if (backingObject is InstanceSave asInstance)
+                    GumState.Self.SelectedState.SelectedInstance = asInstance;
+                else if (backingObject is VariableSave asVariable)
+                    GumState.Self.SelectedState.SelectedBehaviorVariable = asVariable;
 
                 searchTextBox.Text = null;
                 FilterText = null;
