@@ -1616,7 +1616,7 @@ namespace Gum.Managers
         {
             if (element == null)
             {
-                throw new Exception("The element should not be null");
+                throw new ArgumentNullException("The element should not be null");
             }
             var vm = new SearchItemViewModel();
             vm.BackingObject = element;
