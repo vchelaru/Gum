@@ -1699,7 +1699,7 @@ namespace Gum.Managers
 
             deepSearchCheckBox = new CheckBox();
             deepSearchCheckBox.Checked = false;
-            deepSearchCheckBox.Text = "Deep search";
+            deepSearchCheckBox.Text = "Search instance properties";
             deepSearchCheckBox.CheckedChanged += (object sender, EventArgs args) =>
             {
                 ReactToFilterTextChanged();
