@@ -27,7 +27,9 @@ namespace Gum.Plugins.InternalPlugins.TreeView.ViewModels
 
         public object BackingObject { get; set; }
 
-        public string Display => BackingObject?.ToString();
+        public string CustomText { get; set; }
+
+        public string Display => !string.IsNullOrWhiteSpace(CustomText) ? CustomText : BackingObject?.ToString();
 
         public BitmapImage Image =>
             BackingObject is ScreenSave ? ScreenIcon
