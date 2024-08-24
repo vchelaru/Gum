@@ -32,6 +32,7 @@ namespace Gum.Managers
         ToolStripMenuItem mAddParentInstance;
         ToolStripMenuItem mSaveObject;
         ToolStripMenuItem mGoToDefinition;
+        ToolStripMenuItem mCreateComponent;
         ToolStripMenuItem mDeleteObject;
 
         ToolStripMenuItem mAddFolder;
@@ -78,6 +79,10 @@ namespace Gum.Managers
             mGoToDefinition.Text = "Go to definition";
             mGoToDefinition.Click += OnGoToDefinitionClick;
 
+            mCreateComponent = new ToolStripMenuItem();
+            mCreateComponent.Text = "Create Component";
+            mCreateComponent.Click += CreateComponentClick;
+
             mAddFolder = new ToolStripMenuItem();
             mAddFolder.Text = "Add Folder";
             mAddFolder.Click += AddFolderClick;
@@ -114,6 +119,15 @@ namespace Gum.Managers
                 ElementSave element = ObjectFinder.Self.GetElementSave(SelectedState.Self.SelectedInstance.BaseType);
 
                 SelectedState.Self.SelectedElement = element;
+            }
+        }
+
+        void CreateComponentClick(object sender, EventArgs e)
+        {
+            if (SelectedState.Self.SelectedScreen != null ||
+                SelectedState.Self.SelectedComponent != null)
+            {
+                GumCommands.Self.Edit.CreateComponent();
             }
         }
 
@@ -277,6 +291,10 @@ namespace Gum.Managers
                 if (SelectedState.Self.SelectedInstance != null)
                 {
                     mMenuStrip.Items.Add(mGoToDefinition);
+
+                    mMenuStrip.Items.Add("-");
+
+                    mMenuStrip.Items.Add(mCreateComponent);
 
                     mMenuStrip.Items.Add("-");
 

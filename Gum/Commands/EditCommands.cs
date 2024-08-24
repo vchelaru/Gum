@@ -465,6 +465,51 @@ namespace Gum.Commands
 
         }
 
+        public void CreateComponent()
+        {
+            var container = SelectedState.Self.SelectedElement;
+            var elements = SelectedState.Self.SelectedInstances.ToList();
+            if (elements == null || elements.Count == 0 || container == null)
+            {
+                MessageBox.Show("You must first save the project before adding a new component");
+            }
+            else if (elements is List<InstanceSave>)
+            {
+                TextInputWithCheckboxWindow tiwcw = new TextInputWithCheckboxWindow();
+                tiwcw.Message = "Enter new Component name:";
+
+                FilePath filePath = container.Name;
+                var nameWithoutPath = filePath.FileNameNoPath;
+
+                tiwcw.Result = nameWithoutPath;
+                tiwcw.Option = $"Replace {nameWithoutPath} and all children with an instance of the new component";
+
+                if (tiwcw.ShowDialog() == DialogResult.OK)
+                {
+                    string name = tiwcw.Result;
+                    bool replace = tiwcw.Checked;
+
+                    string whyNotValid;
+                    NameVerifier.Self.IsComponentNameValid(tiwcw.Result, "", null, out whyNotValid);
+
+                    if (string.IsNullOrEmpty(whyNotValid))
+                    {
+                        var newElements = new List<InstanceSave>();
+                        foreach (var element in elements)
+                        {
+                            newElements.Add(element.Clone());
+                        }
+                        ProjectCommands.Self.AddComponentFromInstance(name, "", container, newElements);
+                        MessageBox.Show("Component added");
+                    }
+                    else
+                    {
+                        MessageBox.Show($"Invalid name for new component: {whyNotValid}");
+                    }
+                }
+            } 
+        }
+
         public void DisplayReferencesTo(ElementSave element)
         {
 

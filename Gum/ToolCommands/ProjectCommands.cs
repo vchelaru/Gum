@@ -6,6 +6,8 @@ using Gum.ToolStates;
 using ToolsUtilities;
 using CommonFormsAndControls;
 using System.Windows.Forms;
+using System.Windows.Controls;
+using Gum.DataTypes.Variables;
 
 namespace Gum.ToolCommands
 {
@@ -177,6 +179,39 @@ namespace Gum.ToolCommands
             {
                 ComponentSave componentSave = new ComponentSave();
                 PrepareNewComponentSave(componentSave, folder + componentName);
+
+                AddComponent(componentSave);
+                return componentSave;
+            }
+        }
+
+        public ComponentSave AddComponentFromInstance(string componentName, string folder, ElementSave parentContainer, List<InstanceSave> instances)
+        {
+            string whyNotValid;
+
+            if (!NameVerifier.Self.IsComponentNameValid(componentName, folder, null, out whyNotValid))
+            {
+                MessageBox.Show(whyNotValid);
+                return null;
+            }
+            else
+            {
+                ComponentSave componentSave = new ComponentSave();
+                if (!string.IsNullOrEmpty(folder))
+                {
+                    folder += "/";
+                }
+                componentSave.Name = folder + componentName;
+
+                var states = new List<StateSave>();
+                foreach (var state in parentContainer.States)
+                {
+                    componentSave.States.Add(state.Clone());
+                }
+
+                componentSave.States = parentContainer.States;
+                componentSave.Initialize(parentContainer.DefaultState);
+                componentSave.Instances = instances;
 
                 AddComponent(componentSave);
                 return componentSave;

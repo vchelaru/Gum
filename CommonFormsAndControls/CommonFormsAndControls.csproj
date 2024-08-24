@@ -55,6 +55,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="EnumerableExtensionMethods.cs" />
+    <Compile Include="TextInputWithCheckboxWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="TextInputWithCheckboxWindow.Designer.cs">
+      <DependentUpon>TextInputWithCheckboxWindow.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormUtilities.cs" />
     <Compile Include="MultiButtonMessageBox.cs">
       <SubType>Form</SubType>
@@ -81,6 +87,9 @@
     <EmbeddedResource Include="TextInputWindow.resx">
       <DependentUpon>TextInputWindow.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="TextInputWithCheckboxWindow.resx">
+      <DependentUpon>TextInputWithCheckboxWindow.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
