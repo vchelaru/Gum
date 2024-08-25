@@ -10,6 +10,7 @@ using Gum.ToolStates;
 using StateAnimationPlugin.Views;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Controls;
 using System.Windows.Forms;
 using ToolsUtilities;
 
@@ -467,40 +468,63 @@ namespace Gum.Commands
 
         public void CreateComponent()
         {
-            var container = SelectedState.Self.SelectedElement;
-            var elements = SelectedState.Self.SelectedInstances.ToList();
-            if (elements == null || elements.Count == 0 || container == null)
+            var element = SelectedState.Self.SelectedElement;
+            var instances = SelectedState.Self.SelectedInstances.ToList();
+            if (instances == null || instances.Count == 0 || element == null)
             {
                 MessageBox.Show("You must first save the project before adding a new component");
             }
-            else if (elements is List<InstanceSave>)
+            else if (instances is List<InstanceSave>)
             {
-                TextInputWithCheckboxWindow tiwcw = new TextInputWithCheckboxWindow();
+                TextInputWindow tiwcw = new TextInputWindow();
                 tiwcw.Message = "Enter new Component name:";
 
-                FilePath filePath = container.Name;
+                FilePath filePath = element.Name;
                 var nameWithoutPath = filePath.FileNameNoPath;
 
                 tiwcw.Result = nameWithoutPath;
-                tiwcw.Option = $"Replace {nameWithoutPath} and all children with an instance of the new component";
+                //tiwcw.Option = $"Replace {nameWithoutPath} and all children with an instance of the new component";
 
                 if (tiwcw.ShowDialog() == DialogResult.OK)
                 {
                     string name = tiwcw.Result;
-                    bool replace = tiwcw.Checked;
+                    //bool replace = tiwcw.Checked
 
                     string whyNotValid;
                     NameVerifier.Self.IsComponentNameValid(tiwcw.Result, "", null, out whyNotValid);
 
                     if (string.IsNullOrEmpty(whyNotValid))
                     {
-                        var newElements = new List<InstanceSave>();
-                        foreach (var element in elements)
+                        ComponentSave componentSave = new ComponentSave();
+                        string folder = null;
+                        if (!string.IsNullOrEmpty(folder))
                         {
-                            newElements.Add(element.Clone());
+                            folder += "/";
                         }
-                        ProjectCommands.Self.AddComponentFromInstance(name, "", container, newElements);
-                        MessageBox.Show("Component added");
+                        componentSave.Name = folder + name;
+
+                        // Clone states
+                        var states = new List<StateSave>();
+                        foreach (var state in element.States)
+                        {
+                            componentSave.States.Add(state.Clone());
+                        }
+
+                        componentSave.States = element.States;
+                        componentSave.Initialize(element.DefaultState);
+
+                        foreach (var instance in instances)
+                        {
+                            var instanceSave = instance.Clone();
+                            instanceSave.ParentContainer = componentSave;
+                            instanceSave.BaseType = instance.BaseType;
+
+                            ElementCommands.Self.AddInstance(componentSave, instanceSave, name);
+                        }
+
+                        StandardElementsManagerGumTool.Self.FixCustomTypeConverters(componentSave);
+                        ProjectCommands.Self.AddComponent(componentSave);
+                        
                     }
                     else
                     {
