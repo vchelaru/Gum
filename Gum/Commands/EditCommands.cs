@@ -504,14 +504,15 @@ namespace Gum.Commands
                         componentSave.Name = folder + name;
 
                         // Clone states
-                        var states = new List<StateSave>();
                         foreach (var state in element.States)
                         {
+                            if (element.DefaultState == state)
+                            {
+                                componentSave.Initialize(state.Clone());
+                                continue;
+                            }
                             componentSave.States.Add(state.Clone());
                         }
-
-                        componentSave.States = element.States;
-                        componentSave.Initialize(element.DefaultState);
 
                         foreach (var instance in instances)
                         {
