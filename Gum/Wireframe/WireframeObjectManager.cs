@@ -244,6 +244,12 @@ namespace Gum.Wireframe
                 ClearAll();
                 RootGue = null;
             }
+            else if(elementSave is ComponentSave && string.IsNullOrEmpty(elementSave.BaseType))
+            {
+                ClearAll();
+                RootGue = null;
+                GumCommands.Self.GuiCommands.PrintOutput($"Error - cannot create representation for Component {elementSave.Name} because its BaseType is not set.");
+            }
             else if (forceLayout || forceReloadTextures)
             {
                 ObjectFinder.Self.EnableCache();
@@ -258,50 +264,43 @@ namespace Gum.Wireframe
 
                     LoaderManager.Self.CacheTextures = true;
 
-                    var useNew = true;
-                    if(useNew)
+
+                    GraphicalUiElement.IsAllLayoutSuspended = true;
+
+                    RootGue = elementSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
+                    // Always set default first, then if the selected state is not the default, then apply that after:
+                    RootGue.SetVariablesRecursively(elementSave, elementSave.DefaultState);
+                    var selectedState = GumState.Self.SelectedState.SelectedStateSave;
+                    if(selectedState != null && selectedState != elementSave.DefaultState)
                     {
-                        GraphicalUiElement.IsAllLayoutSuspended = true;
-
-                        RootGue = elementSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
-                        // Always set default first, then if the selected state is not the default, then apply that after:
-                        RootGue.SetVariablesRecursively(elementSave, elementSave.DefaultState);
-                        var selectedState = GumState.Self.SelectedState.SelectedStateSave;
-                        if(selectedState != null && selectedState != elementSave.DefaultState)
-                        {
-                            RootGue.ApplyState(selectedState);
-                        }
-
-
-                        AddAllIpsos(RootGue);
-                        HashSet<GraphicalUiElement> hashSet = new HashSet<GraphicalUiElement>();
-                        var tempSorted = AllIpsos.OrderBy(item =>
-                        {
-                            hashSet.Clear();
-                            return GetDepth(item, hashSet);
-                        }).ToArray();
-
-                        AllIpsos.Clear();
-                        AllIpsos.AddRange(tempSorted);
-
-                        UpdateTextOutlines(RootGue);
-
-                        GraphicalUiElement.IsAllLayoutSuspended = false;
-
-                        RootGue.UpdateFontRecursive();
-                        RootGue.UpdateLayout();
-
-                        gueManager.Add(RootGue);
-                        // what about fonts?
-                        // We recreate missing fonts on startup, so do we need to bother here?
-                        // I'm not sure, but if we do we would call:
-                        //FontManager.Self.CreateAllMissingFontFiles(ObjectFinder.Self.GumProjectSave);
+                        RootGue.ApplyState(selectedState);
                     }
-                    else
+
+
+                    AddAllIpsos(RootGue);
+                    HashSet<GraphicalUiElement> hashSet = new HashSet<GraphicalUiElement>();
+                    var tempSorted = AllIpsos.OrderBy(item =>
                     {
-                        RootGue = CreateIpsoForElement(elementSave);
+                        hashSet.Clear();
+                        return GetDepth(item, hashSet);
+                    }).ToArray();
 
-                    }
+                    AllIpsos.Clear();
+                    AllIpsos.AddRange(tempSorted);
+
+                    UpdateTextOutlines(RootGue);
+
+                    GraphicalUiElement.IsAllLayoutSuspended = false;
+
+                    RootGue.UpdateFontRecursive();
+                    RootGue.UpdateLayout();
+
+                    gueManager.Add(RootGue);
+                    // what about fonts?
+                    // We recreate missing fonts on startup, so do we need to bother here?
+                    // I'm not sure, but if we do we would call:
+                    //FontManager.Self.CreateAllMissingFontFiles(ObjectFinder.Self.GumProjectSave);
+
 
                     if(LocalizationManager.HasDatabase)
                     {

@@ -2084,9 +2084,9 @@ namespace Gum.Wireframe
                             }
                         }
                     }
-                    else if (this.Parent is GraphicalUiElement)
+                    else if (this.Parent is GraphicalUiElement parentGue && parentGue.Children != null)
                     {
-                        var siblingsAsIpsos = ((GraphicalUiElement)Parent).Children;
+                        var siblingsAsIpsos = parentGue.Children;
                         for (int i = 0; i < siblingsAsIpsos.Count; i++)
                         {
                             var siblingAsGraphicalUiElement = siblingsAsIpsos[i] as GraphicalUiElement;
