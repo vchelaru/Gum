@@ -496,6 +496,7 @@ namespace Gum.Commands
                     if (string.IsNullOrEmpty(whyNotValid))
                     {
                         ComponentSave componentSave = new ComponentSave();
+                        componentSave.BaseType = "Container";
                         string folder = null;
                         if (!string.IsNullOrEmpty(folder))
                         {
