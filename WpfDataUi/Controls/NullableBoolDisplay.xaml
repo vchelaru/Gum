@@ -14,6 +14,16 @@
             <RadioButton x:Name="TrueRadioButton" Checked="TrueRadioButton_Checked">True</RadioButton>
             <RadioButton x:Name="FalseRadioButton" Checked="FalseRadioButton_Checked">False</RadioButton>
             <RadioButton x:Name="NullRadioButton" Checked="NullRadioButton_Checked">None</RadioButton>
+
+            <TextBlock x:Name="HintTextBlock" 
+                    Padding="8,1,8,0" 
+                    TextWrapping="Wrap"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Width="{Binding ElementName=TopRowGrid, Path=ActualWidth, Mode=OneWay}"
+                    FontSize="10" Text="This is a property description. But what if it is longer?" />
+
+
         </StackPanel>
     </GroupBox>
 </UserControl>

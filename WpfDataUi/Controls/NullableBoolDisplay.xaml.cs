@@ -82,9 +82,10 @@ namespace WpfDataUi.Controls
             {
                 bool wasSet = false;
                 wasSet = TrySetValueOnUi(valueOnInstance) == ApplyValueResult.Success;
-
             }
 
+            HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
+            HintTextBlock.Text = InstanceMember?.DetailText;
 
             GroupBox.Header = InstanceMember?.DisplayName ?? InstanceMember?.Name;
 
