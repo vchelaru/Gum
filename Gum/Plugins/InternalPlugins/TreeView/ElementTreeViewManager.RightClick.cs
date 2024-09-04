@@ -127,7 +127,7 @@ namespace Gum.Managers
             if (SelectedState.Self.SelectedScreen != null ||
                 SelectedState.Self.SelectedComponent != null)
             {
-                GumCommands.Self.Edit.CreateComponent();
+                GumCommands.Self.Edit.ShowCreateComponentFromInstancesDialog();
             }
         }
 

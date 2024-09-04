@@ -466,7 +466,7 @@ namespace Gum.Commands
 
         }
 
-        public void CreateComponent()
+        public void ShowCreateComponentFromInstancesDialog()
         {
             var element = SelectedState.Self.SelectedElement;
             var instances = SelectedState.Self.SelectedInstances.ToList();
