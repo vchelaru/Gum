@@ -536,6 +536,7 @@ namespace Gum.Commands
                     else
                     {
                         MessageBox.Show($"Invalid name for new component: {whyNotValid}");
+                        ShowCreateComponentFromInstancesDialog();
                     }
                 }
             } 
