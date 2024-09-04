@@ -504,24 +504,29 @@ namespace Gum.Commands
                         }
                         componentSave.Name = folder + name;
 
+                        StateSave defaultState;
+
+                        // Clone instances
+                        foreach (var instance in instances)
+                        {
+                            var instanceSave = instance.Clone();
+                            instanceSave.BaseType = instance.BaseType;
+                            instanceSave.ParentContainer = componentSave;
+
+                            componentSave.Instances.Add(instanceSave);
+                        }
+
                         // Clone states
                         foreach (var state in element.States)
                         {
                             if (element.DefaultState == state)
                             {
-                                componentSave.Initialize(state.Clone());
+                                defaultState = state.Clone();
+
+                                componentSave.Initialize(defaultState);
                                 continue;
                             }
                             componentSave.States.Add(state.Clone());
-                        }
-
-                        foreach (var instance in instances)
-                        {
-                            var instanceSave = instance.Clone();
-                            instanceSave.ParentContainer = componentSave;
-                            instanceSave.BaseType = instance.BaseType;
-
-                            ElementCommands.Self.AddInstance(componentSave, instanceSave, name);
                         }
 
                         StandardElementsManagerGumTool.Self.FixCustomTypeConverters(componentSave);
