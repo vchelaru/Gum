@@ -482,7 +482,7 @@ namespace Gum.Commands
                 FilePath filePath = element.Name;
                 var nameWithoutPath = filePath.FileNameNoPath;
 
-                tiwcw.Result = nameWithoutPath;
+                tiwcw.Result = $"{nameWithoutPath}Component";
                 //tiwcw.Option = $"Replace {nameWithoutPath} and all children with an instance of the new component";
 
                 if (tiwcw.ShowDialog() == DialogResult.OK)
