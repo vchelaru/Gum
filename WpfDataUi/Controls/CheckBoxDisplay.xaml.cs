@@ -109,7 +109,7 @@ namespace WpfDataUi.Controls
             HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
             HintTextBlock.Text = InstanceMember?.DetailText;
 
-            CheckBox.Foreground = DesiredForegroundBrush;
+            SetForeground(DesiredForegroundBrush);
 
             RefreshIsEnabled();
 
@@ -166,11 +166,19 @@ namespace WpfDataUi.Controls
             {
                 this.TrySetValueOnInstance();
 
+                SetForeground(DesiredForegroundBrush);
+            }
+        }
 
-                CheckBox.Foreground = DesiredForegroundBrush;
-
-
-
+        private void SetForeground(Brush brush)
+        {
+            if (brush == Brushes.Black)
+            {
+                CheckBox.ClearValue(Control.ForegroundProperty);
+            }
+            else
+            {
+                CheckBox.Foreground = brush;
             }
         }
 

@@ -403,7 +403,7 @@ namespace WpfDataUi.Controls
             }
         }
 
-        public static SolidColorBrush DefaultValueBackground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(180, 255, 180));
+        public static SolidColorBrush DefaultValueBackground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(180, 255, 180)) { Opacity = 0.5 };
         public static SolidColorBrush IndeterminateValueBackground = new SolidColorBrush(System.Windows.Media.Colors.LightGray);
         public static SolidColorBrush CustomValueBackground = System.Windows.Media.Brushes.White;
 
@@ -491,7 +491,14 @@ namespace WpfDataUi.Controls
             }
             else
             {
-                mAssociatedTextBox.Background = CustomValueBackground;
+                if (mAssociatedTextBox.TryFindResource("Frb.Brushes.TextBox.Background") != null)
+                {
+                    mAssociatedTextBox.SetResourceReference(TextBox.BackgroundProperty, "Frb.Brushes.TextBox.Background");
+                }
+                else
+                {
+                    mAssociatedTextBox.ClearValue(TextBox.BackgroundProperty);
+                }
             }
         }
     }
