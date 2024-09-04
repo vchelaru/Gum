@@ -6,6 +6,9 @@ using Gum.ToolStates;
 using ToolsUtilities;
 using CommonFormsAndControls;
 using System.Windows.Forms;
+using System.Windows.Controls;
+using Gum.DataTypes.Variables;
+using Gum.Plugins;
 
 namespace Gum.ToolCommands
 {
