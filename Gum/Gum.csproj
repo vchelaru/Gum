@@ -187,7 +187,10 @@
     <Compile Include="Graphics\Animation\Content\AnimationChainListSave.cs" />
     <Compile Include="Graphics\Animation\Content\AnimationChainSave.cs" />
     <Compile Include="Graphics\Animation\Content\AnimationFrameSave.cs" />
-    <Compile Include="Gui\Window\DeleteOptionsWindow.xaml.cs">
+    <Compile Include="Gui\Windows\CreateComponentWindow.xaml.cs">
+      <DependentUpon>CreateComponentWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Gui\Windows\DeleteOptionsWindow.xaml.cs">
       <DependentUpon>DeleteOptionsWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Logic\CopyPasteLogic.cs" />
@@ -729,7 +732,11 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Gui\Window\DeleteOptionsWindow.xaml">
+    <Page Include="Gui\Windows\CreateComponentWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Gui\Windows\DeleteOptionsWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
