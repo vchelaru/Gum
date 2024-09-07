@@ -51,7 +51,7 @@ namespace WpfDataUi
                 headerSite.Visibility = hidden ? Visibility.Collapsed : Visibility.Visible;
             }
 
-            static T FindVisualChildByName<T>(DependencyObject parent, string name) where T : FrameworkElement
+            T FindVisualChildByName<T>(DependencyObject parent, string name) where T : FrameworkElement
             {
                 for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
                 {
