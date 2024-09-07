@@ -42,30 +42,35 @@ namespace WpfDataUi
             }
         }
 
-        private static void UpdateExpanderArrow(Expander expander, bool visible)
+        private static void UpdateExpanderArrow(Expander expander, bool hidden)
         {
-            Grid headerGrid =
-                VisualTreeHelper.GetChild(
-                    VisualTreeHelper.GetChild(
-                            VisualTreeHelper.GetChild(
-                                VisualTreeHelper.GetChild(
-                                    VisualTreeHelper.GetChild(
-                                        expander,
-                                        0),
-                                    0),
-                                0),
-                            0),
-                        0) as Grid;
+            FrameworkElement headerSite = FindVisualChildByName<FrameworkElement>(expander, "HeaderSite");
 
-            if (headerGrid != null)
+            if (headerSite != null)
             {
-                headerGrid.Visibility = visible ? Visibility.Collapsed : Visibility.Visible;
+                headerSite.Visibility = hidden ? Visibility.Collapsed : Visibility.Visible;
             }
-            //headerGrid.Children[0].Visibility = visible ? Visibility.Collapsed : Visibility.Visible; // Hide or show the Ellipse
-            //headerGrid.Children[1].Visibility = visible ? Visibility.Collapsed : Visibility.Visible; // Hide or show the Arrow
-            //headerGrid.Children[2].SetValue(Grid.ColumnProperty, visible ? 0 : 1); // If the Arrow is not visible, then shift the Header Content to the first column.
-            //headerGrid.Children[2].SetValue(Grid.ColumnSpanProperty, visible ? 2 : 1); // If the Arrow is not visible, then set the Header Content to span both rows.
-            //headerGrid.Children[2].SetValue(ContentPresenter.MarginProperty, visible ? new Thickness(0) : new Thickness(4, 0, 0, 0)); // If the Arrow is not visible, then remove the margin from the Content.
+
+            static T FindVisualChildByName<T>(DependencyObject parent, string name) where T : FrameworkElement
+            {
+                for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+                {
+                    var child = VisualTreeHelper.GetChild(parent, i);
+
+                    if (child is T typedChild && typedChild.Name == name)
+                    {
+                        return typedChild;
+                    }
+
+                    var result = FindVisualChildByName<T>(child, name);
+                    if (result != null)
+                    {
+                        return result;
+                    }
+                }
+
+                return null;
+            }
         }
 
         #endregion
