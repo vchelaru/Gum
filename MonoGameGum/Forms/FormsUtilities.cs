@@ -14,7 +14,12 @@ namespace MonoGameGum.Forms
     public class FormsUtilities
     {
         static Cursor cursor;
+
+        public static Cursor Cursor => cursor;
+
         static MonoGameGum.Input.Keyboard keyboard;
+
+        public Keyboard Keyboard => keyboard;
 
         public static void InitializeDefaults()
         {
