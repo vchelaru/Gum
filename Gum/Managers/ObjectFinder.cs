@@ -928,10 +928,17 @@ namespace Gum.Managers
         /// <returns>The root VariableSave</returns>
         public VariableSave GetRootVariable(string name, InstanceSave instance)
         {
+            // This could be referencing an invalid type
             var instanceElement = GetElementSave(instance.BaseType);
             var afterDot = name.Substring(name.IndexOf('.') + 1);
-
-            return GetRootVariable(afterDot, instanceElement);
+            if(instanceElement == null)
+            {
+                return null;
+            }
+            else
+            {
+                return GetRootVariable(afterDot, instanceElement);
+            }
         }
 
         public VariableSave GetRootVariable(string name, ElementSave element)
