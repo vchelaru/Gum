@@ -43,7 +43,6 @@ namespace Gum.ToolCommands
             instanceSave.Name = name;
             instanceSave.ParentContainer = elementToAddTo;
             instanceSave.BaseType = type ?? StandardElementsManager.Self.DefaultType;
-            elementToAddTo.Instances.Add(instanceSave);
 
             return AddInstance(elementToAddTo, instanceSave, parentName);
         }
