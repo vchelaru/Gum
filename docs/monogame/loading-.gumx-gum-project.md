@@ -56,7 +56,21 @@ ObjectFinder.Self.GumProjectSave = gumProject;
 gumProject.Initialize();
 
 // This assumes that your project has at least 1 screen
-gumProject.Screens.First().ToGraphicalUiElement(SystemManagers.Default, addToManagers:true);
+gumProject.Screens.First().ToGraphicalUiElement(
+    SystemManagers.Default, addToManagers:true);
+```
+
+Note that the ToGraphicalUiElement method has an `addToManage` parameter which determines whether the GraphicalUiElement is added to managers. If a GraphicalUiElement is not added to managers, it will not appear on screen.
+
+Alternatively, the AddToManagers method can be explicitly called as shown in the following code:
+
+```csharp
+var gumScreen = gumProject.Screens.First().ToGraphicalUiElement(
+    SystemManagers.Default, addToManagers:true);
+
+// AddToManagers provides more control, such as delaying addition, or adding 
+// a GraphicalUiElement to a Layer
+gumScreen.AddToManagers(SystemManagers.Default, layer:null);
 ```
 
 For an example of a Game1.cs file which loads a project file, see the MonoGameGumFromFile: [https://github.com/vchelaru/Gum/blob/0e266942560e585359f019ac090a6c1010621c0b/Samples/MonoGameGumFromFile/MonoGameGumFromFile/Game1.cs#L76-L82](https://github.com/vchelaru/Gum/blob/0e266942560e585359f019ac090a6c1010621c0b/Samples/MonoGameGumFromFile/MonoGameGumFromFile/Game1.cs#L76-L82)
