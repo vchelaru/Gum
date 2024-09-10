@@ -29,8 +29,8 @@ namespace GumFormsSample
 #if (ANDROID || iOS)
             graphics.IsFullScreen = true;
 #endif
-
         }
+
 
         protected override void Initialize()
         {
@@ -42,12 +42,10 @@ namespace GumFormsSample
                 typeof(FullyCustomizedButton);
 
             Root = new ContainerRuntime();
-            Root.Width = 0;
-            Root.Height = 0;
+
             Root.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
             Root.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
             Root.AddToManagers();
-
 
             var button = new Button();
             Root.Children.Add(button.Visual);
@@ -174,7 +172,21 @@ namespace GumFormsSample
             customizedButton.X = 450;
             customizedButton.Y = 300;
 
+            var spriteRuntime = new SpriteRuntime();
+            spriteRuntime.SourceFileName = "button_square_gradient.png";
+            spriteRuntime.X = 100;
+            spriteRuntime.Y = 100;
+            spriteRuntime.Width = 500;
+            spriteRuntime.Height = 600;
+            this.Root.Children.Add(spriteRuntime);
 
+            var innerTextBox = new TextBox();
+            innerTextBox.X = 100;
+            innerTextBox.Y = 200;
+            innerTextBox.Width = 200;
+            innerTextBox.Height = 40;
+
+            spriteRuntime.Children.Add(innerTextBox.Visual);
 
             //// ButtonCategory is the category that all Buttons must have
             //var category = customizedButton.Visual.Categories["ButtonCategory"];
@@ -242,21 +254,35 @@ namespace GumFormsSample
 
         protected override void Update(GameTime gameTime)
         {
+            var cursor = FormsUtilities.Cursor;
+
+
+
             MouseState mouseState = Mouse.GetState();
             KeyboardState keyboardState = Keyboard.GetState();
             GamePadState gamePadState = default;
             try { gamePadState = GamePad.GetState(PlayerIndex.One); }
             catch (NotImplementedException) { /* ignore gamePadState */ }
 
+
             if (keyboardState.IsKeyDown(Keys.Escape) ||
                 keyboardState.IsKeyDown(Keys.Back) ||
                 gamePadState.Buttons.Back == ButtonState.Pressed)
             {
-                try { Exit(); }
-                catch (PlatformNotSupportedException) { /* ignore */ }
+                int m = 3;
             }
 
+
+
             FormsUtilities.Update(gameTime, Root);
+
+            string windowOver = "<null>";
+            if(cursor.WindowOver != null)
+            {
+                windowOver = $"{cursor.WindowOver.GetType().Name}" ;
+            }
+
+            System.Diagnostics.Debug.WriteLine($"Window over: {windowOver} @ x:{cursor.WindowOver?.X}");
 
             SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
 
