@@ -20,6 +20,36 @@ container.Children.Add(nineSlice);
 
 <figure><img src="../../.gitbook/assets/image (3) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>NineSlice using Frame.png</p></figcaption></figure>
 
+### Assigning NineSlice Texture
+
+NineSlice textures can be assigned using a string property or Texture2D instance. When assigning using a string, the `ToolsUtilities.FileManager.RelativeDirectory` is used to determine the file's directory.
+
+For example, consider a file called Frame.png which is located in the Content directory:
+
+<figure><img src="../../.gitbook/assets/image.png" alt=""><figcaption><p>Frame.png in Content</p></figcaption></figure>
+
+This file can be used as a texture by assigning the RelativeDirectory and then loading Frame.png. Note that RelativeDirectory is usually set to Content, or to the location of the .gumx file.
+
+```csharp
+ToolsUtilities.FileManager.RelativeDirectory = "Content";
+nineSlice.SourceFileName = "Frame.png";
+```
+
+Alternatively, a Texture2D can be assigned directly
+
+```csharp
+// assuming MyTexture is a valid Texture2D
+nineSlice.SourceFile = MyTexture;
+```
+
+Once a SourceFileName is assigned, the SourceFile property references a valid Texture2D which can be reused.
+
+```csharp
+// assigning SourceFileName results in SourceFile also being set
+firstNineSlice.SourceFileName = "Frame.png";
+secondNineSlice.SourceFile = firstNineSlice.SourceFile;
+```
+
 ### TextureAddressMode and Texture Coordinates
 
 By default a NineSlice uses it entire texture. This can be customized using texture coordinate and TextureAddress properies as shown in the following code:
