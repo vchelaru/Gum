@@ -41,6 +41,8 @@ namespace FntLoading
 
             if(currentState.IsKeyDown(Keys.Space) && lastState.IsKeyUp(Keys.Space))
             {
+                System.Diagnostics.Debug.WriteLine("Loading font pattern...");
+
                 // Load it before 
                 string fontContents = FileManager.FromFileText("FontMedievalSharp_Bold30.fnt");
 
@@ -49,6 +51,8 @@ namespace FntLoading
                 var before = DateTime.Now;
                 bitmapFont.SetFontPattern(fontContents);
                 var after = DateTime.Now;
+
+                System.Diagnostics.Debug.WriteLine("Time to load: " + (after - before).TotalMilliseconds.ToString("0.0"));
             }
             SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
             base.Update(gameTime);
