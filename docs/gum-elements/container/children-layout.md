@@ -24,7 +24,7 @@ The following shows how to use the ChildrenLayout property to stack objects. It 
 
 Regular layout positions each child independent of every other child. The position of one child will not affect the position of the other child. This is used in all cases except when stacking is needed.
 
-<figure><img src="../../.gitbook/assets/image (4) (1) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (4) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
 
 ### Top to Bottom Stack
 
@@ -36,7 +36,7 @@ Top to Bottom Stack results in each child being positioned after its previous si
 
 Left to Right Stack results in each child being positioned after its previous sibling horizontally. This can be used to create vertical stacks quickly.
 
-<figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
 
 ### Stacking and Units
 
@@ -44,7 +44,7 @@ When children stack, each child's X or Y depends on the boundary of its previous
 
 For example, the following image shows a Text object with a Y value of 20. Notice that it is positioned 20 units below the item above it.
 
-<figure><img src="../../.gitbook/assets/image (3) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (3) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
 
 This effect is very easy to notice when dragging an object inside a stack, as shown in the following animation:
 

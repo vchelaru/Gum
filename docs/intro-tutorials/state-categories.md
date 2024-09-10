@@ -109,7 +109,7 @@ If a variable is changed in one of the states in the category, then that variabl
 
 For example, we can select the Big category and change the ColoredRectangle.Width property to 150.
 
-<figure><img src="../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Setting ColoredRectangleInstance Width to 150</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Setting ColoredRectangleInstance Width to 150</p></figcaption></figure>
 
 Once this value is changed, the RectangleSizeCategory lists this as a variable that it modifies in the Variables tab.
 
@@ -117,9 +117,9 @@ Once this value is changed, the RectangleSizeCategory lists this as a variable t
 
 If we select any of the other states in the category, they show that they explicitly set the Width value as well (the value has a white background instead of light green). The value is inherited from the default state.
 
-<figure><img src="../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Width value set by Medium state</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Width value set by Medium state</p></figcaption></figure>
 
 Once a variable is set in a category, all states are required to set this value. A variable cannot be removed from a single state in a category. Rather, to remove a variable, all states in the category must remove the variable. This can be done by selecting the category and pressing the X button next to the variable name.
 
-<figure><img src="../.gitbook/assets/image (3) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Press the X next to a variable on a category to remove the assignment of that variable on all states in the category</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (3) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Press the X next to a variable on a category to remove the assignment of that variable on all states in the category</p></figcaption></figure>
 
