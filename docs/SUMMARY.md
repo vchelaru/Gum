@@ -121,6 +121,8 @@
     * [Controls](monogame/gum-forms/controls/README.md)
       * [Button](monogame/gum-forms/controls/button.md)
       * [CheckBox](monogame/gum-forms/controls/checkbox.md)
+      * [FrameworkElement](monogame/gum-forms/controls/frameworkelement/README.md)
+        * [IsEnabled](monogame/gum-forms/controls/frameworkelement/isenabled.md)
       * [ListBox](monogame/gum-forms/controls/listbox.md)
       * [PasswordBox](monogame/gum-forms/controls/passwordbox.md)
       * [ScrollViewer](monogame/gum-forms/controls/scrollviewer.md)
