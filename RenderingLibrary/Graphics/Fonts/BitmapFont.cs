@@ -355,110 +355,61 @@ namespace RenderingLibrary.Graphics
 
         public void SetFontPattern(string fontPattern)
         {
-            ReadOnlyMemory<char>? fontLineTag = null;
-            var currentAttributeName = (ReadOnlyMemory<char>?) null;
-            var fontLineAttributes = new List<KeyValuePair<ReadOnlyMemory<char>, ReadOnlyMemory<char>>>(12);
-            var fontFileData = fontPattern.AsMemory();
-
-            void ParseNextLine()
-            {
-                void finalizeWord(int wordStartIndex, int wordEndIndex)
-                {
-                    var length = wordEndIndex - wordStartIndex;
-                    var slice = fontFileData.Slice(wordStartIndex, length);
-                    if (fontLineTag == null)
-                    {
-                        // No tag yet, so this word must be the tag
-                        fontLineTag = slice;
-                    }
-                    else
-                    {
-                        // We have a tag, so this must be either an attribute or value
-                        if (currentAttributeName == null)
-                        {
-                            currentAttributeName = slice;
-                        }
-                        else
-                        {
-                            var kvp = new KeyValuePair<ReadOnlyMemory<char>, ReadOnlyMemory<char>>(
-                                currentAttributeName.Value, 
-                                slice);
-                            
-                            fontLineAttributes.Add(kvp);
-                        }
-                    }
-                }
-                
-                fontLineTag = null;
-                fontLineAttributes.Clear();
-                var text = fontFileData.Span;
-                if (fontFileData.IsEmpty)
-                {
-                    return;
-                }
-
-                var currentIndex = 0;
-                var wordStartIndex = (int?)null;
-                var isInQuote = false;
-                while (currentIndex < text.Length)
-                {
-                    if (!isInQuote && char.IsWhiteSpace(text[currentIndex]))
-                    {
-                        if (wordStartIndex != null)
-                        {
-                            finalizeWord(wordStartIndex.Value, currentIndex - wordStartIndex.Value - 1);
-                        }
-
-                        if (text[currentIndex] == '\n')
-                        {
-                            fontFileData.Slice(currentIndex + 1);
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        if (wordStartIndex == null)
-                        {
-                            wordStartIndex = currentIndex;
-                        }
-                    }
-                }
-                
-                // Handle end of file
-                if (wordStartIndex != )
-            }
-            
-            
-            
+            var patternSpan = fontPattern.AsSpan();
+            var currentTag = ReadOnlySpan<char>.Empty;
+            var currentAttributeName = ReadOnlySpan<char>.Empty;
             while (true)
             {
-                var lineIndex = fontPatternSpan.IndexOf('\n');
-                if (lineIndex < 0)
+                var parseResult = FontFileParseWordResult.NextWord(patternSpan);
+                if (parseResult.Word.IsEmpty)
                 {
+                    // Couldn't find any more words
                     break;
                 }
 
-                var line = fontPatternSpan.Slice(0, lineIndex);
-                fontPatternSpan = fontPatternSpan.Slice(lineIndex + 1);
-                if (line.IsWhiteSpace())
+                patternSpan = parseResult.Remaining;
+
+                if (currentTag == ReadOnlySpan<char>.Empty)
                 {
-                    continue;
+                    currentTag = parseResult.Word;
+                } 
+                else if (currentTag.Equals("info", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (currentAttributeName.IsEmpty)
+                    {
+                        currentAttributeName = parseResult.Word;
+                    }
+                    else
+                    {
+                        if (currentAttributeName.Equals("outline", StringComparison.OrdinalIgnoreCase))
+                        {
+                            var digit = Convert.ToInt32(parseResult.Word.ToString());
+                            mOutlineThickness = digit;
+                        }
+                        
+                        currentAttributeName = ReadOnlySpan<char>.Empty;
+                    }
+                }
+                else if (currentTag.Equals("common", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (currentAttributeName.IsEmpty)
+                    {
+                        currentAttributeName = parseResult.Word;
+                    }
+                    else
+                    {
+                        if (currentAttributeName.SequenceEqual("lineHeight", ))
+                    }
                 }
 
-                var headerEndIndex = line.IndexOf(' ');
-                if (headerEndIndex <= 0)
+                if (parseResult.Terminator == FontFileWordTerminator.LineTerminator)
                 {
-                    // No header on the line
-                    continue;
+                    // End of the line, which will start a new tag
+                    currentAttributeName = ReadOnlySpan<char>.Empty;
+                    currentTag = ReadOnlySpan<char>.Empty;
                 }
-                
             }
             
-            
-            mOutlineThickness = StringFunctions.GetIntAfter(" outline=", fontPattern);
-
-
-            #region Identify the size of the character array to create
 
             int sizeOfArray = 256;
             // now loop through the file and look for numbers after "char id="
@@ -1296,6 +1247,107 @@ namespace RenderingLibrary.Graphics
         {
             public readonly ReadOnlyMemory<char> Tag;
             public readonly KeyValuePair<ReadOnlyMemory<char>, ReadOnlyMemory<char>?>[] Attributes;
+        }
+        
+        private enum FontFileWordTerminator { Whitespace, EqualsSign, LineTerminator, EndOfFile, Quote }
+
+        private ref struct FontFileParseWordResult
+        {
+            public readonly ReadOnlySpan<char> Word;
+            public readonly ReadOnlySpan<char> Remaining;
+            public FontFileWordTerminator Terminator;
+
+            private FontFileParseWordResult(
+                ReadOnlySpan<char> word, 
+                ReadOnlySpan<char> remaining, 
+                FontFileWordTerminator terminator)
+            {
+                Word = word;
+                Remaining = remaining;
+                Terminator = terminator;
+            }
+
+            public static FontFileParseWordResult NextWord(ReadOnlySpan<char> text)
+            {
+                if (text.IsEmpty) return new FontFileParseWordResult();
+
+                var wordStartIndex = (int?)null;
+                var isInQuotes = false;
+                var currentIndex = 0;
+                foreach (var character in text)
+                {
+                    if (char.IsWhiteSpace(character) || character == '=')
+                    {
+                        if (!isInQuotes && wordStartIndex != null)
+                        {
+                            // Hit the end of a word
+                            var length = currentIndex - wordStartIndex.Value - 1;
+                            var word = text.Slice(wordStartIndex.Value, length);
+                            var remaining = text.Slice(currentIndex);
+                            var terminator = character switch
+                            {
+                                '\n' => FontFileWordTerminator.LineTerminator,
+                                '\r' => FontFileWordTerminator.LineTerminator,
+                                '=' => FontFileWordTerminator.EqualsSign,
+                                _ => FontFileWordTerminator.Whitespace,
+                            };
+
+                            return new FontFileParseWordResult(word, remaining, terminator);
+                        }
+                    }
+                    else
+                    {
+                        if (character == '"')
+                        {
+                            if (!isInQuotes)
+                            {
+                                // starting quote
+                                if (wordStartIndex != null)
+                                {
+                                    // Not sure that this is valid
+                                    var message = "Found quote in the middle of an existing font file word.";
+                                    throw new InvalidOperationException(message);
+                                }
+                                
+                                isInQuotes = true;
+                                wordStartIndex = currentIndex;
+                            }
+                            else
+                            {
+                                // Ending quote
+                                if (wordStartIndex == null)
+                                {
+                                    var message = "Got an ending quote without a word start";
+                                    throw new InvalidOperationException(message);
+                                }
+                                
+                                // Cut off the quotes
+                                var length = currentIndex - wordStartIndex.Value - 2;
+                                var word = text.Slice(wordStartIndex.Value + 1, length);
+                                var remaining = text.Slice(currentIndex + 1);
+
+                                return new FontFileParseWordResult(word, remaining, FontFileWordTerminator.Quote);
+                            }
+                        }
+
+                        wordStartIndex ??= currentIndex;
+                    }
+
+                    currentIndex++;
+                }
+                
+                // If we got here we hit the end of the file
+                if (wordStartIndex == null)
+                {
+                    return new FontFileParseWordResult();
+                }
+
+                var finalWord = text.Slice(wordStartIndex.Value);
+                return new FontFileParseWordResult(
+                    finalWord, 
+                    ReadOnlySpan<char>.Empty,
+                    FontFileWordTerminator.EndOfFile);
+            }
         }
     }
 }
