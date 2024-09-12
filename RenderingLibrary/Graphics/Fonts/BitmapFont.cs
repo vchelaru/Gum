@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Content;
 using System.Collections;
+using Microsoft.Xna.Framework;
 using RenderingLibrary.Math;
 using RenderingLibrary.Math.Geometry;
 using ToolsUtilities;
@@ -348,9 +350,111 @@ namespace RenderingLibrary.Graphics
             }
             return texturesToLoad.ToArray();
         }
+        
+        
 
         public void SetFontPattern(string fontPattern)
         {
+            ReadOnlyMemory<char>? fontLineTag = null;
+            var currentAttributeName = (ReadOnlyMemory<char>?) null;
+            var fontLineAttributes = new List<KeyValuePair<ReadOnlyMemory<char>, ReadOnlyMemory<char>>>(12);
+            var fontFileData = fontPattern.AsMemory();
+
+            void ParseNextLine()
+            {
+                void finalizeWord(int wordStartIndex, int wordEndIndex)
+                {
+                    var length = wordEndIndex - wordStartIndex;
+                    var slice = fontFileData.Slice(wordStartIndex, length);
+                    if (fontLineTag == null)
+                    {
+                        // No tag yet, so this word must be the tag
+                        fontLineTag = slice;
+                    }
+                    else
+                    {
+                        // We have a tag, so this must be either an attribute or value
+                        if (currentAttributeName == null)
+                        {
+                            currentAttributeName = slice;
+                        }
+                        else
+                        {
+                            var kvp = new KeyValuePair<ReadOnlyMemory<char>, ReadOnlyMemory<char>>(
+                                currentAttributeName.Value, 
+                                slice);
+                            
+                            fontLineAttributes.Add(kvp);
+                        }
+                    }
+                }
+                
+                fontLineTag = null;
+                fontLineAttributes.Clear();
+                var text = fontFileData.Span;
+                if (fontFileData.IsEmpty)
+                {
+                    return;
+                }
+
+                var currentIndex = 0;
+                var wordStartIndex = (int?)null;
+                var isInQuote = false;
+                while (currentIndex < text.Length)
+                {
+                    if (!isInQuote && char.IsWhiteSpace(text[currentIndex]))
+                    {
+                        if (wordStartIndex != null)
+                        {
+                            finalizeWord(wordStartIndex.Value, currentIndex - wordStartIndex.Value - 1);
+                        }
+
+                        if (text[currentIndex] == '\n')
+                        {
+                            fontFileData.Slice(currentIndex + 1);
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        if (wordStartIndex == null)
+                        {
+                            wordStartIndex = currentIndex;
+                        }
+                    }
+                }
+                
+                // Handle end of file
+                if (wordStartIndex != )
+            }
+            
+            
+            
+            while (true)
+            {
+                var lineIndex = fontPatternSpan.IndexOf('\n');
+                if (lineIndex < 0)
+                {
+                    break;
+                }
+
+                var line = fontPatternSpan.Slice(0, lineIndex);
+                fontPatternSpan = fontPatternSpan.Slice(lineIndex + 1);
+                if (line.IsWhiteSpace())
+                {
+                    continue;
+                }
+
+                var headerEndIndex = line.IndexOf(' ');
+                if (headerEndIndex <= 0)
+                {
+                    // No header on the line
+                    continue;
+                }
+                
+            }
+            
+            
             mOutlineThickness = StringFunctions.GetIntAfter(" outline=", fontPattern);
 
 
@@ -1186,6 +1290,12 @@ namespace RenderingLibrary.Graphics
         public override string ToString()
         {
             return mFontFile;
+        }
+
+        private struct FontFileLine
+        {
+            public readonly ReadOnlyMemory<char> Tag;
+            public readonly KeyValuePair<ReadOnlyMemory<char>, ReadOnlyMemory<char>?>[] Attributes;
         }
     }
 }
