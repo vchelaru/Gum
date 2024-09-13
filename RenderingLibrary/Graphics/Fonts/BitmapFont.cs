@@ -355,98 +355,21 @@ namespace RenderingLibrary.Graphics
 
         public void SetFontPattern(string fontPattern)
         {
-            var patternSpan = fontPattern.AsSpan();
-            var currentTag = ReadOnlySpan<char>.Empty;
-            var currentAttributeName = ReadOnlySpan<char>.Empty;
-            while (true)
-            {
-                var parseResult = FontFileParseWordResult.NextWord(patternSpan);
-                if (parseResult.Word.IsEmpty)
-                {
-                    // Couldn't find any more words
-                    break;
-                }
+            var parsedData = new ParsedFontFile(fontPattern.AsSpan());
 
-                patternSpan = parseResult.Remaining;
-
-                if (currentTag == ReadOnlySpan<char>.Empty)
-                {
-                    currentTag = parseResult.Word;
-                } 
-                else if (currentTag.Equals("info", StringComparison.OrdinalIgnoreCase))
-                {
-                    if (currentAttributeName.IsEmpty)
-                    {
-                        currentAttributeName = parseResult.Word;
-                    }
-                    else
-                    {
-                        if (currentAttributeName.Equals("outline", StringComparison.OrdinalIgnoreCase))
-                        {
-                            var digit = Convert.ToInt32(parseResult.Word.ToString());
-                            mOutlineThickness = digit;
-                        }
-                        
-                        currentAttributeName = ReadOnlySpan<char>.Empty;
-                    }
-                }
-                else if (currentTag.Equals("common", StringComparison.OrdinalIgnoreCase))
-                {
-                    if (currentAttributeName.IsEmpty)
-                    {
-                        currentAttributeName = parseResult.Word;
-                    }
-                    else
-                    {
-                        if (currentAttributeName.SequenceEqual("lineHeight", ))
-                    }
-                }
-
-                if (parseResult.Terminator == FontFileWordTerminator.LineTerminator)
-                {
-                    // End of the line, which will start a new tag
-                    currentAttributeName = ReadOnlySpan<char>.Empty;
-                    currentTag = ReadOnlySpan<char>.Empty;
-                }
-            }
-            
-
-            int sizeOfArray = 256;
-            // now loop through the file and look for numbers after "char id="
-
-            // Vic says:  This used to
-            // go through the entire file
-            // to find the last character index.
-            // I think they're ordered by character
-            // index, so we can just find the last one
-            // and save some time.
-            int index = fontPattern.LastIndexOf("char id=");
-            if (index != -1)
-            {
-                int ID = StringFunctions.GetIntAfter("char id=", fontPattern, index);
-
-                sizeOfArray = System.Math.Max(sizeOfArray, ID + 1);
-            }
-
-            #endregion
-
-
-
-            mCharacterInfo = new BitmapCharacterInfo[sizeOfArray];
-            mLineHeightInPixels =
-                StringFunctions.GetIntAfter(
-                "lineHeight=", fontPattern);
-
-            BaselineY = StringFunctions.GetIntAfter(
-                "base=", fontPattern);
+            var charArraySize = (parsedData.Chars.LastOrDefault()?.Id + 1) ?? 0;
+            mCharacterInfo = new BitmapCharacterInfo[charArraySize];
+            mLineHeightInPixels = parsedData.Common.LineHeight;
+            BaselineY = parsedData.Common.Base;
 
             if (mTextures.Length > 0 && mTextures[0] != null)
             {
                 //ToDo: Atlas support  **************************************************************
-                BitmapCharacterInfo space = FillBitmapCharacterInfo(' ', fontPattern,
-                   mTextures[0].Width, mTextures[0].Height, mLineHeightInPixels, 0);
-
-                for (int i = 0; i < sizeOfArray; i++)
+                var spaceCharInfo = parsedData.Chars.First(x => x.Id == ' ');
+                var space = FillBitmapCharacterInfo(spaceCharInfo, mTextures[0].Width, mTextures[0].Height,
+                    mLineHeightInPixels);
+                
+                for (int i = 0; i < charArraySize; i++)
                 {
                     mCharacterInfo[i] = space;
                 }
@@ -455,72 +378,21 @@ namespace RenderingLibrary.Graphics
                 mCharacterInfo['t'].ScaleX = space.ScaleX * 4;
                 mCharacterInfo['t'].Spacing = space.Spacing * 4;
 
-                index = fontPattern.IndexOf("char id=");
-                while (index != -1)
+                foreach (var charInfo in parsedData.Chars)
                 {
-
-                    int ID = StringFunctions.GetIntAfter("char id=", fontPattern, index);
-                    //ToDo: Atlas support   *************************************************************
-                    mCharacterInfo[ID] = FillBitmapCharacterInfo(ID, fontPattern, mTextures[0].Width,
-                        mTextures[0].Height, mLineHeightInPixels, index);
-
-                    int indexOfID = fontPattern.IndexOf("char id=", index);
-                    if (indexOfID != -1)
-                    {
-                        index = indexOfID + ID.ToString().Length;
-                    }
-                    else
-                        index = -1;
+                    mCharacterInfo[charInfo.Id] = FillBitmapCharacterInfo(charInfo, mTextures[0].Width,
+                        mTextures[0].Height, mLineHeightInPixels);
                 }
 
-                #region Get Kearning Info
-
-                index = fontPattern.IndexOf("kerning ");
-
-                if (index != -1)
+                foreach (var kerning in parsedData.Kernings)
                 {
-
-                    index = fontPattern.IndexOf("first=", index);
-
-                    while (index != -1)
+                    var character = mCharacterInfo[kerning.First];
+                    if (!character.SecondLetterKearning.ContainsKey(kerning.Second))
                     {
-                        int ID = StringFunctions.GetIntAfter("first=", fontPattern, index);
-                        int secondCharacter = StringFunctions.GetIntAfter("second=", fontPattern, index);
-                        int kearningAmount = StringFunctions.GetIntAfter("amount=", fontPattern, index);
-
-                        // January 21, 2022
-                        // Not sure why but Vic
-                        // was able to create a font
-                        // file with duplicate kearnings.
-                        // Specifically the contents had:
-                        // kerning first=35  second=54  amount=-1    << First entry of 
-                        // kerning first=47  second=49  amount=2
-                        // kerning first=47  second=51  amount=1
-                        // kerning first=47  second=53  amount=1
-                        // kerning first=47  second=55  amount=1
-                        // kerning first=35  second=52  amount=-1
-                        // kerning first=35  second=54  amount=-1    << Duplicate entry
-                        // This file is created by BitmapFontGenerator,
-                        // which is not controlled by Gum. Therefore, we
-                        // should tolerate duplicates
-                        //if (mCharacterInfo[ID].SecondLetterKearning.ContainsKey(secondCharacter))
-                        //{
-                        //    throw new InvalidOperationException($"Trying to add the character {secondCharacter} to the mCharacterInfo {ID}, but this entry already exists");
-                        //}
-                        //mCharacterInfo[ID].SecondLetterKearning.Add(secondCharacter, kearningAmount);
-                        if (!mCharacterInfo[ID].SecondLetterKearning.ContainsKey(secondCharacter))
-                        {
-                            mCharacterInfo[ID].SecondLetterKearning.Add(secondCharacter, kearningAmount);
-                        }
-
-                        index = fontPattern.IndexOf("first=", index + 1);
+                        character.SecondLetterKearning.Add(kerning.Second, kerning.Amount);
                     }
                 }
-
-                #endregion
-
             }
-            //mCharacterInfo[32].ScaleX = .23f;
         }
 
         public void SetFontPatternFromFile(string fntFileName)
@@ -1181,6 +1053,30 @@ namespace RenderingLibrary.Graphics
             return atlasedTexture;
         }
 
+        private BitmapCharacterInfo FillBitmapCharacterInfo(
+            FontFileCharLine charInfo, 
+            int textureWidth, 
+            int textureHeight,
+            int lineHeightInPixels)
+        {
+            var tuLeft = charInfo.X / (float)textureWidth;
+            var tvTop = charInfo.Y / (float)textureHeight;
+
+            return new BitmapCharacterInfo
+            {
+                TULeft = tuLeft,
+                TVTop = tvTop,
+                TURight = tuLeft + charInfo.Width / (float)textureWidth,
+                TVBottom = tvTop + charInfo.Height / (float)textureHeight,
+                DistanceFromTopOfLine = 2 * charInfo.YOffset / (float)lineHeightInPixels,
+                ScaleX = charInfo.Width / (float)lineHeightInPixels,
+                ScaleY = charInfo.Height / (float)lineHeightInPixels,
+                Spacing = 2 * charInfo.XAdvance / (float)lineHeightInPixels,
+                XOffset = 2 * charInfo.XOffset / (float)lineHeightInPixels,
+                PageNumber = charInfo.Page,
+            };
+        }
+
         private BitmapCharacterInfo FillBitmapCharacterInfo(int characterID, string fontString, int textureWidth,
             int textureHeight, int lineHeightInPixels, int startingIndex)
         {
@@ -1243,28 +1139,17 @@ namespace RenderingLibrary.Graphics
             return mFontFile;
         }
 
-        private struct FontFileLine
-        {
-            public readonly ReadOnlyMemory<char> Tag;
-            public readonly KeyValuePair<ReadOnlyMemory<char>, ReadOnlyMemory<char>?>[] Attributes;
-        }
-        
-        private enum FontFileWordTerminator { Whitespace, EqualsSign, LineTerminator, EndOfFile, Quote }
-
         private ref struct FontFileParseWordResult
         {
             public readonly ReadOnlySpan<char> Word;
             public readonly ReadOnlySpan<char> Remaining;
-            public FontFileWordTerminator Terminator;
+            public bool IsEndOfLine;
 
-            private FontFileParseWordResult(
-                ReadOnlySpan<char> word, 
-                ReadOnlySpan<char> remaining, 
-                FontFileWordTerminator terminator)
+            private FontFileParseWordResult(ReadOnlySpan<char> word, ReadOnlySpan<char> remaining, bool isEndOfLine)
             {
                 Word = word;
                 Remaining = remaining;
-                Terminator = terminator;
+                IsEndOfLine = isEndOfLine;
             }
 
             public static FontFileParseWordResult NextWord(ReadOnlySpan<char> text)
@@ -1281,18 +1166,12 @@ namespace RenderingLibrary.Graphics
                         if (!isInQuotes && wordStartIndex != null)
                         {
                             // Hit the end of a word
-                            var length = currentIndex - wordStartIndex.Value - 1;
+                            var length = currentIndex - wordStartIndex.Value;
                             var word = text.Slice(wordStartIndex.Value, length);
                             var remaining = text.Slice(currentIndex);
-                            var terminator = character switch
-                            {
-                                '\n' => FontFileWordTerminator.LineTerminator,
-                                '\r' => FontFileWordTerminator.LineTerminator,
-                                '=' => FontFileWordTerminator.EqualsSign,
-                                _ => FontFileWordTerminator.Whitespace,
-                            };
+                            var isEndOfLine = character == '\r' || character == '\n';
 
-                            return new FontFileParseWordResult(word, remaining, terminator);
+                            return new FontFileParseWordResult(word, remaining, isEndOfLine);
                         }
                     }
                     else
@@ -1322,11 +1201,11 @@ namespace RenderingLibrary.Graphics
                                 }
                                 
                                 // Cut off the quotes
-                                var length = currentIndex - wordStartIndex.Value - 2;
+                                var length = currentIndex - wordStartIndex.Value - 1;
                                 var word = text.Slice(wordStartIndex.Value + 1, length);
                                 var remaining = text.Slice(currentIndex + 1);
 
-                                return new FontFileParseWordResult(word, remaining, FontFileWordTerminator.Quote);
+                                return new FontFileParseWordResult(word, remaining, false);
                             }
                         }
 
@@ -1344,9 +1223,159 @@ namespace RenderingLibrary.Graphics
 
                 var finalWord = text.Slice(wordStartIndex.Value);
                 return new FontFileParseWordResult(
-                    finalWord, 
+                    finalWord,
                     ReadOnlySpan<char>.Empty,
-                    FontFileWordTerminator.EndOfFile);
+                    true);
+            }
+        }
+
+        private class ParsedFontFile
+        {
+            public FontFileInfoLine Info { get; }
+            public FontFileCommonLine Common { get; }
+            public List<FontFileCharLine> Chars { get; } = new(300);
+            public List<FontFileKerningLine> Kernings { get; } = new(300);
+
+            public ParsedFontFile(ReadOnlySpan<char> contents)
+            {
+                while (true)
+                {
+                    var result = FontFileParseWordResult.NextWord(contents);
+                    contents = result.Remaining;
+                    if (result.Word.IsEmpty)
+                    {
+                        return;
+                    }
+
+                    if (result.Word.Equals("info", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Info = new FontFileInfoLine(ref contents);
+                    }
+                    else if (result.Word.Equals("common", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        Common = new FontFileCommonLine(ref contents);
+                    }
+                    else if (result.Word.Equals("char", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        Chars.Add(new FontFileCharLine(ref contents));
+                    }
+                    else if (result.Word.Equals("kerning", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        Kernings.Add(new FontFileKerningLine(ref contents));
+                    }
+                }
+            }
+        }
+
+        private class FontFileInfoLine
+        {
+            public int Outline { get; set; }
+
+            public FontFileInfoLine(ref ReadOnlySpan<char> contents)
+            {
+                ParseLine(ref contents, this, new Dictionary<string, Action<FontFileInfoLine, int>>
+                {
+                    {"outline", (line, num) => line.Outline = num},
+                });
+            }
+        }
+
+        private class FontFileCommonLine
+        {
+            public int LineHeight { get; set; }
+            public int Base { get; set; }
+
+            public FontFileCommonLine(ref ReadOnlySpan<char> contents)
+            {
+                ParseLine(ref contents, this, new Dictionary<string, Action<FontFileCommonLine, int>>
+                {
+                    {"lineHeight", (line, num) => line.LineHeight = num},
+                    {"base", (line, num) => line.Base = num},
+                });
+            }
+        }
+
+        private class FontFileCharLine
+        {
+            public int Id { get; set; }
+            public int X { get; set; }
+            public int Y { get; set; }
+            public int Width { get; set; }
+            public int Height { get; set; }
+            public int XOffset { get; set; }
+            public int YOffset { get; set; }
+            public int XAdvance { get; set; }
+            public int Page { get; set; }
+
+            public FontFileCharLine(ref ReadOnlySpan<char> contents)
+            {
+                ParseLine(ref contents, this, new Dictionary<string, Action<FontFileCharLine, int>>
+                {
+                    {"id", (line, num) => line.Id = num},
+                    {"x", (line, num) => line.X = num},
+                    {"y", (line, num) => line.Y = num},
+                    {"width", (line, num) => line.Width = num},
+                    {"height", (line, num) => line.Height = num},
+                    {"xoffset", (line, num) => line.XOffset = num},
+                    {"yoffset", (line, num) => line.YOffset = num},
+                    {"xadvance", (line, num) => line.XAdvance = num},
+                    {"page", (line, num) => line.Page = num},
+                });
+            }
+        }
+
+        private class FontFileKerningLine
+        {
+            public int First { get; set; }
+            public int Second { get; set; }
+            public int Amount { get; set; }
+
+            public FontFileKerningLine(ref ReadOnlySpan<char> contents)
+            {
+                ParseLine(ref contents, this, new Dictionary<string, Action<FontFileKerningLine, int>>
+                {
+                    {"first", (line, num) => line.First = num},
+                    {"second", (line, num) => line.Second = num},
+                    {"amount", (line, num) => line.Amount = num},
+                });
+            }
+        }
+
+        private static void ParseLine<T>(
+            ref ReadOnlySpan<char> contents, 
+            T item, 
+            Dictionary<string, Action<T, int>> modifiers)
+        {
+            ReadOnlySpan<char> currentAttribute = ReadOnlySpan<char>.Empty;
+            while (true)
+            {
+                var result = FontFileParseWordResult.NextWord(contents);
+                contents = result.Remaining;
+
+                if (!result.Word.IsEmpty)
+                {
+                    if (currentAttribute.IsEmpty)
+                    {
+                        currentAttribute = result.Word;
+                    }
+                    else
+                    {
+                        foreach (var modifier in modifiers)
+                        {
+                            if (currentAttribute.Equals(modifier.Key, StringComparison.OrdinalIgnoreCase))
+                            {
+                                modifier.Value(item, Convert.ToInt32(result.Word.ToString()));
+                                break;
+                            }
+                        }
+                        currentAttribute = ReadOnlySpan<char>.Empty;
+                    }
+                }
+
+                if (result.Word.IsEmpty || result.IsEndOfLine)
+                {
+                    return;
+                }
             }
         }
     }

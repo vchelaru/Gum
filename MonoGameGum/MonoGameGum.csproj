@@ -88,7 +88,6 @@
 	<ItemGroup>
 		<Folder Include="Animation\Content\" />
 		<Folder Include="Renderables\Fonts\" />
-		<Folder Include="Renderables\Parsing\" />
 		<Folder Include="Utilities\" />
 		<Folder Include="RenderingLibrary\" />
 	</ItemGroup>
