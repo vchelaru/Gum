@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework.Graphics;
@@ -1093,17 +1092,17 @@ namespace RenderingLibrary.Graphics
         private class ParsedFontLine
         {
             public string Tag { get; }
-            public Dictionary<string, int> NumericAttributes { get; } = new(StringComparer.OrdinalIgnoreCase);
+            public Dictionary<string, int> NumericAttributes { get; } = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
             private ParsedFontLine(string tag)
             {
                 Tag = tag;
             }
 
-            public static (ParsedFontLine? line, int nextIndex) Parse(string contents, int startIndex)
+            public static (ParsedFontLine line, int nextIndex) Parse(string contents, int startIndex)
             {
-                var parsedLine = (ParsedFontLine?)null;
-                var currentAttributeName = (string?)null;
+                var parsedLine = (ParsedFontLine)null;
+                var currentAttributeName = (string)null;
                 var wordStartIndex = (int?)null;
                 var isInQuotes = false;
                 var index = startIndex;
@@ -1161,7 +1160,7 @@ namespace RenderingLibrary.Graphics
                     }
                     else
                     {
-                        wordStartIndex ??= index;
+                        wordStartIndex = wordStartIndex ?? index;
                         if (character == '"' && !isInQuotes)
                         {
                             isInQuotes = true;
@@ -1187,8 +1186,8 @@ namespace RenderingLibrary.Graphics
         {
             public FontFileInfoLine Info { get; }
             public FontFileCommonLine Common { get; }
-            public List<FontFileCharLine> Chars { get; } = new(300);
-            public List<FontFileKerningLine> Kernings { get; } = new(300);
+            public List<FontFileCharLine> Chars { get; } = new List<FontFileCharLine>(300);
+            public List<FontFileKerningLine> Kernings { get; } = new List<FontFileKerningLine>(300);
 
             public ParsedFontFile(string contents)
             {
