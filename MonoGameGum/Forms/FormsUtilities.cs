@@ -40,13 +40,21 @@ namespace MonoGameGum.Forms
 
         }
 
+        [Obsolete("Use the overload which takes a Game as the first argument, and pass the game instance.")]
         public static void Update(GameTime gameTime, GraphicalUiElement rootElement)
         {
-            cursor.Activity(gameTime.TotalGameTime.TotalSeconds);
-            keyboard.Activity(gameTime.TotalGameTime.TotalSeconds);
+            Update(null, gameTime, rootElement);
+        }
 
-            rootElement.DoUiActivityRecursively(cursor, keyboard, gameTime.TotalGameTime.TotalSeconds);
+        public static void Update(Game game, GameTime gameTime, GraphicalUiElement rootElement)
+        {
+            if(game.IsActive)
+            {
+                cursor.Activity(gameTime.TotalGameTime.TotalSeconds);
+                keyboard.Activity(gameTime.TotalGameTime.TotalSeconds);
+                rootElement.DoUiActivityRecursively(cursor, keyboard, gameTime.TotalGameTime.TotalSeconds);
 
+            }
         }
     }
 }

@@ -25,6 +25,7 @@ using Rectangle = System.Drawing.Rectangle;
 using Matrix = System.Numerics.Matrix4x4;
 using GumRuntime;
 using System.Collections;
+using System.Runtime.CompilerServices;
 #if UWP
 using System.Reflection;
 #endif
@@ -650,11 +651,15 @@ namespace Gum.Wireframe
     }
     public static class GueInteractiveExtensionMethods
     {
-        public static void DoUiActivityRecursively(this GraphicalUiElement gue, ICursor cursor, IInputReceiverKeyboard keyboard, double currentGameTimeInSeconds)
+        public static void DoUiActivityRecursively(this GraphicalUiElement gue, ICursor cursor, IInputReceiverKeyboard keyboard, double currentGameTimeInSeconds, 
+            int? gameWidth = null, int? gameHeight = null)
         {
             InteractiveGue.CurrentGameTime = currentGameTimeInSeconds;
             var windowOverBefore = cursor.WindowOver;
             var windowPushedBefore = cursor.WindowPushed;
+
+            var isInWindow = cursor.X >= 0 && cursor.X < GraphicalUiElement.CanvasWidth && 
+                cursor.Y >= 0 && cursor.Y < GraphicalUiElement.CanvasHeight;
 
             HandledActions actions = new HandledActions();
             InteractiveGue.DoUiActivityRecursively(cursor, actions, gue);
@@ -689,13 +694,13 @@ namespace Gum.Wireframe
             }
 
             // the click/push actions need to be after the UI activity
-            if (cursor.PrimaryClick)
+            if (cursor.PrimaryClick && isInWindow)
             {
                 InteractiveGue.DoNextClickActions();
 
             }
 
-            if (cursor.PrimaryPush)
+            if (cursor.PrimaryPush && isInWindow)
             {
                 InteractiveGue.DoNextPushActions();
             }
