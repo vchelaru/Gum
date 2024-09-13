@@ -4,6 +4,8 @@ using System.Linq;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Content;
 using System.Collections;
+using System.Globalization;
+using Microsoft.Xna.Framework;
 using RenderingLibrary.Math;
 using RenderingLibrary.Math.Geometry;
 using ToolsUtilities;
@@ -351,47 +353,21 @@ namespace RenderingLibrary.Graphics
 
         public void SetFontPattern(string fontPattern)
         {
-            mOutlineThickness = StringFunctions.GetIntAfter(" outline=", fontPattern);
+            var parsedData = new ParsedFontFile(fontPattern);
 
-
-            #region Identify the size of the character array to create
-
-            int sizeOfArray = 256;
-            // now loop through the file and look for numbers after "char id="
-
-            // Vic says:  This used to
-            // go through the entire file
-            // to find the last character index.
-            // I think they're ordered by character
-            // index, so we can just find the last one
-            // and save some time.
-            int index = fontPattern.LastIndexOf("char id=");
-            if (index != -1)
-            {
-                int ID = StringFunctions.GetIntAfter("char id=", fontPattern, index);
-
-                sizeOfArray = System.Math.Max(sizeOfArray, ID + 1);
-            }
-
-            #endregion
-
-
-
-            mCharacterInfo = new BitmapCharacterInfo[sizeOfArray];
-            mLineHeightInPixels =
-                StringFunctions.GetIntAfter(
-                "lineHeight=", fontPattern);
-
-            BaselineY = StringFunctions.GetIntAfter(
-                "base=", fontPattern);
+            var charArraySize = (parsedData.Chars.LastOrDefault()?.Id + 1) ?? 0;
+            mCharacterInfo = new BitmapCharacterInfo[charArraySize];
+            mLineHeightInPixels = parsedData.Common.LineHeight;
+            BaselineY = parsedData.Common.Base;
 
             if (mTextures.Length > 0 && mTextures[0] != null)
             {
                 //ToDo: Atlas support  **************************************************************
-                BitmapCharacterInfo space = FillBitmapCharacterInfo(' ', fontPattern,
-                   mTextures[0].Width, mTextures[0].Height, mLineHeightInPixels, 0);
-
-                for (int i = 0; i < sizeOfArray; i++)
+                var spaceCharInfo = parsedData.Chars.First(x => x.Id == ' ');
+                var space = FillBitmapCharacterInfo(spaceCharInfo, mTextures[0].Width, mTextures[0].Height,
+                    mLineHeightInPixels);
+                
+                for (int i = 0; i < charArraySize; i++)
                 {
                     mCharacterInfo[i] = space;
                 }
@@ -400,72 +376,21 @@ namespace RenderingLibrary.Graphics
                 mCharacterInfo['t'].ScaleX = space.ScaleX * 4;
                 mCharacterInfo['t'].Spacing = space.Spacing * 4;
 
-                index = fontPattern.IndexOf("char id=");
-                while (index != -1)
+                foreach (var charInfo in parsedData.Chars)
                 {
-
-                    int ID = StringFunctions.GetIntAfter("char id=", fontPattern, index);
-                    //ToDo: Atlas support   *************************************************************
-                    mCharacterInfo[ID] = FillBitmapCharacterInfo(ID, fontPattern, mTextures[0].Width,
-                        mTextures[0].Height, mLineHeightInPixels, index);
-
-                    int indexOfID = fontPattern.IndexOf("char id=", index);
-                    if (indexOfID != -1)
-                    {
-                        index = indexOfID + ID.ToString().Length;
-                    }
-                    else
-                        index = -1;
+                    mCharacterInfo[charInfo.Id] = FillBitmapCharacterInfo(charInfo, mTextures[0].Width,
+                        mTextures[0].Height, mLineHeightInPixels);
                 }
 
-                #region Get Kearning Info
-
-                index = fontPattern.IndexOf("kerning ");
-
-                if (index != -1)
+                foreach (var kerning in parsedData.Kernings)
                 {
-
-                    index = fontPattern.IndexOf("first=", index);
-
-                    while (index != -1)
+                    var character = mCharacterInfo[kerning.First];
+                    if (!character.SecondLetterKearning.ContainsKey(kerning.Second))
                     {
-                        int ID = StringFunctions.GetIntAfter("first=", fontPattern, index);
-                        int secondCharacter = StringFunctions.GetIntAfter("second=", fontPattern, index);
-                        int kearningAmount = StringFunctions.GetIntAfter("amount=", fontPattern, index);
-
-                        // January 21, 2022
-                        // Not sure why but Vic
-                        // was able to create a font
-                        // file with duplicate kearnings.
-                        // Specifically the contents had:
-                        // kerning first=35  second=54  amount=-1    << First entry of 
-                        // kerning first=47  second=49  amount=2
-                        // kerning first=47  second=51  amount=1
-                        // kerning first=47  second=53  amount=1
-                        // kerning first=47  second=55  amount=1
-                        // kerning first=35  second=52  amount=-1
-                        // kerning first=35  second=54  amount=-1    << Duplicate entry
-                        // This file is created by BitmapFontGenerator,
-                        // which is not controlled by Gum. Therefore, we
-                        // should tolerate duplicates
-                        //if (mCharacterInfo[ID].SecondLetterKearning.ContainsKey(secondCharacter))
-                        //{
-                        //    throw new InvalidOperationException($"Trying to add the character {secondCharacter} to the mCharacterInfo {ID}, but this entry already exists");
-                        //}
-                        //mCharacterInfo[ID].SecondLetterKearning.Add(secondCharacter, kearningAmount);
-                        if (!mCharacterInfo[ID].SecondLetterKearning.ContainsKey(secondCharacter))
-                        {
-                            mCharacterInfo[ID].SecondLetterKearning.Add(secondCharacter, kearningAmount);
-                        }
-
-                        index = fontPattern.IndexOf("first=", index + 1);
+                        character.SecondLetterKearning.Add(kerning.Second, kerning.Amount);
                     }
                 }
-
-                #endregion
-
             }
-            //mCharacterInfo[32].ScaleX = .23f;
         }
 
         public void SetFontPatternFromFile(string fntFileName)
@@ -1126,52 +1051,28 @@ namespace RenderingLibrary.Graphics
             return atlasedTexture;
         }
 
-        private BitmapCharacterInfo FillBitmapCharacterInfo(int characterID, string fontString, int textureWidth,
-            int textureHeight, int lineHeightInPixels, int startingIndex)
+        private BitmapCharacterInfo FillBitmapCharacterInfo(
+            FontFileCharLine charInfo, 
+            int textureWidth, 
+            int textureHeight,
+            int lineHeightInPixels)
         {
-            // Example:
-            // char id=101  x=158   y=85    width=5     height=7     xoffset=1     yoffset=6     xadvance=7     page=0  chnl=0 
-            BitmapCharacterInfo characterInfoToReturn = new BitmapCharacterInfo();
+            var tuLeft = charInfo.X / (float)textureWidth;
+            var tvTop = charInfo.Y / (float)textureHeight;
 
-            int indexOfID = fontString.IndexOf("char id=" + characterID, startingIndex);
-
-            if (indexOfID != -1)
+            return new BitmapCharacterInfo
             {
-                var x = StringFunctions.GetIntAfter("x=", fontString, ref indexOfID);
-                var y = StringFunctions.GetIntAfter("y=", fontString, ref indexOfID);
-                var width = StringFunctions.GetIntAfter("width=", fontString, ref indexOfID);
-                var height = StringFunctions.GetIntAfter("height=", fontString, ref indexOfID);
-                var xOffset = StringFunctions.GetIntAfter("xoffset=", fontString, ref indexOfID);
-                var yOffset = StringFunctions.GetIntAfter("yoffset=", fontString, ref indexOfID);
-                var xAdvance = StringFunctions.GetIntAfter("xadvance=", fontString, ref indexOfID);
-                var page = StringFunctions.GetIntAfter("page=", fontString, ref indexOfID);
-
-                var textureWidthF = (float)textureWidth;
-                var textureHeightF = (float)textureHeight;
-
-                characterInfoToReturn.TULeft = x / textureWidthF;
-                characterInfoToReturn.TVTop = y / textureHeightF;
-
-                characterInfoToReturn.TURight = characterInfoToReturn.TULeft + width / textureWidthF;
-                characterInfoToReturn.TVBottom = characterInfoToReturn.TVTop + height / textureHeightF;
-
-                var lineHeightInPixelsF = (float)lineHeightInPixels;
-
-                characterInfoToReturn.DistanceFromTopOfLine = // 1 sclY means 2 height
-                    2 * yOffset / lineHeightInPixelsF;
-
-                characterInfoToReturn.ScaleX = width / lineHeightInPixelsF;
-
-                characterInfoToReturn.ScaleY = height / lineHeightInPixelsF;
-
-                characterInfoToReturn.Spacing = 2 * xAdvance / lineHeightInPixelsF;
-
-                characterInfoToReturn.XOffset = 2 * xOffset / lineHeightInPixelsF;
-
-                characterInfoToReturn.PageNumber = page;
-            }
-
-            return characterInfoToReturn;
+                TULeft = tuLeft,
+                TVTop = tvTop,
+                TURight = tuLeft + charInfo.Width / (float)textureWidth,
+                TVBottom = tvTop + charInfo.Height / (float)textureHeight,
+                DistanceFromTopOfLine = 2 * charInfo.YOffset / (float)lineHeightInPixels,
+                ScaleX = charInfo.Width / (float)lineHeightInPixels,
+                ScaleY = charInfo.Height / (float)lineHeightInPixels,
+                Spacing = 2 * charInfo.XAdvance / (float)lineHeightInPixels,
+                XOffset = 2 * charInfo.XOffset / (float)lineHeightInPixels,
+                PageNumber = charInfo.Page,
+            };
         }
 
         #endregion
@@ -1186,6 +1087,208 @@ namespace RenderingLibrary.Graphics
         public override string ToString()
         {
             return mFontFile;
+        }
+
+        private class ParsedFontLine
+        {
+            public string Tag { get; }
+            public Dictionary<string, int> NumericAttributes { get; } = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+            private ParsedFontLine(string tag)
+            {
+                Tag = tag;
+            }
+
+            public static (ParsedFontLine line, int nextIndex) Parse(string contents, int startIndex)
+            {
+                var parsedLine = (ParsedFontLine)null;
+                var currentAttributeName = (string)null;
+                var wordStartIndex = (int?)null;
+                var isInQuotes = false;
+                var index = startIndex;
+
+                void ProcessWord()
+                {
+                    if (wordStartIndex == null)
+                    {
+                        return;
+                    }
+                    
+                    var length = index - wordStartIndex.Value;
+                    var word = contents.Substring(wordStartIndex.Value, length);
+                    if (parsedLine == null)
+                    {
+                        parsedLine = new ParsedFontLine(word);
+                    }
+                    else if (currentAttributeName == null)
+                    {
+                        currentAttributeName = word;
+                    }
+                    else
+                    {
+                        if (int.TryParse(word, out var number))
+                        {
+                            parsedLine.NumericAttributes[currentAttributeName] = number;
+                        }
+                        else if (int.TryParse(word, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out number))
+                        {
+                            // Fallback for other cultures that expect a comma, but a period was found
+                            parsedLine.NumericAttributes[currentAttributeName] = number;
+                        }
+
+                        currentAttributeName = null;
+                    }
+
+                    wordStartIndex = null;
+                }
+                
+                while (index < contents.Length)
+                {
+                    var character = contents[index];
+                    if (char.IsWhiteSpace(character) || character == '=')
+                    {
+                        if (!isInQuotes && wordStartIndex != null)
+                        {
+                            // Hit the end of a word
+                            ProcessWord();
+                        }
+
+                        if (character == '\r' || character == '\n')
+                        {
+                            return (parsedLine, index + 1);
+                        }
+                    }
+                    else
+                    {
+                        wordStartIndex = wordStartIndex ?? index;
+                        if (character == '"' && !isInQuotes)
+                        {
+                            isInQuotes = true;
+                        }
+                        else if (character == '"' && isInQuotes)
+                        {
+                            isInQuotes = false;
+                            wordStartIndex = null; // ignore string attributes for now, we only use numerics
+                        }
+                    }
+
+                    index++;
+                }
+                
+                // Hit the end of the string
+                ProcessWord();
+
+                return (parsedLine, index);
+            }
+        }
+
+        private class ParsedFontFile
+        {
+            public FontFileInfoLine Info { get; }
+            public FontFileCommonLine Common { get; }
+            public List<FontFileCharLine> Chars { get; } = new List<FontFileCharLine>(300);
+            public List<FontFileKerningLine> Kernings { get; } = new List<FontFileKerningLine>(300);
+
+            public ParsedFontFile(string contents)
+            {
+                var index = 0;
+                while (index < contents.Length)
+                {
+                    var (parsedLine, nextIndex) = ParsedFontLine.Parse(contents, index);
+                    index = nextIndex;
+                    if (parsedLine != null)
+                    {
+                        switch (parsedLine.Tag)
+                        {
+                            case "info":
+                                Info = new FontFileInfoLine(parsedLine);
+                                break;
+                            
+                            case "common":
+                                Common = new FontFileCommonLine(parsedLine);
+                                break;
+                            
+                            case "char":
+                                Chars.Add(new FontFileCharLine(parsedLine));
+                                break;
+                            
+                            case "kerning":
+                                Kernings.Add(new FontFileKerningLine(parsedLine));
+                                break;
+                            
+                            default:
+                                break; // ignore unknown tags
+                        }
+                    }
+                }
+
+                if (Info == null || Common == null)
+                {
+                    throw new InvalidOperationException("Font file did not have an info or common tag");
+                }
+            }
+        }
+
+        private class FontFileInfoLine
+        {
+            public int Outline { get; set; }
+
+            public FontFileInfoLine(ParsedFontLine line)
+            {
+                Outline = line.NumericAttributes["outline"];
+            }
+        }
+
+        private class FontFileCommonLine
+        {
+            public int LineHeight { get; set; }
+            public int Base { get; set; }
+
+            public FontFileCommonLine(ParsedFontLine line)
+            {
+                LineHeight = line.NumericAttributes["lineheight"];
+                Base = line.NumericAttributes["base"];
+            }
+        }
+
+        private class FontFileCharLine
+        {
+            public int Id { get; set; }
+            public int X { get; set; }
+            public int Y { get; set; }
+            public int Width { get; set; }
+            public int Height { get; set; }
+            public int XOffset { get; set; }
+            public int YOffset { get; set; }
+            public int XAdvance { get; set; }
+            public int Page { get; set; }
+
+            public FontFileCharLine(ParsedFontLine line)
+            {
+                Id = line.NumericAttributes["id"];
+                X = line.NumericAttributes["x"];
+                Y = line.NumericAttributes["y"];
+                Width = line.NumericAttributes["width"];
+                Height = line.NumericAttributes["height"];
+                XOffset = line.NumericAttributes["xoffset"];
+                YOffset = line.NumericAttributes["yoffset"];
+                XAdvance = line.NumericAttributes["xadvance"];
+                Page = line.NumericAttributes["page"];
+            }
+        }
+
+        private class FontFileKerningLine
+        {
+            public int First { get; set; }
+            public int Second { get; set; }
+            public int Amount { get; set; }
+
+            public FontFileKerningLine(ParsedFontLine line)
+            {
+                First = line.NumericAttributes["first"];
+                Second = line.NumericAttributes["second"];
+                Amount = line.NumericAttributes["amount"];
+            }
         }
     }
 }

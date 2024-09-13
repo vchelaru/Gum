@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Input;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
+using System.Diagnostics;
 using ToolsUtilities;
 
 namespace FntLoading
@@ -41,18 +42,23 @@ namespace FntLoading
 
             if(currentState.IsKeyDown(Keys.Space) && lastState.IsKeyUp(Keys.Space))
             {
-                System.Diagnostics.Debug.WriteLine("Loading font pattern...");
+                Console.WriteLine("Loading font pattern...");
 
                 // Load it before 
+                var stopWatch = Stopwatch.StartNew();
                 string fontContents = FileManager.FromFileText("FontMedievalSharp_Bold30.fnt");
+                var fileLoadTime = stopWatch.Elapsed;
 
                 // you can replace this with your own timing, but it's so slow
                 // that this is good enough resolution...
-                var before = DateTime.Now;
                 bitmapFont.SetFontPattern(fontContents);
-                var after = DateTime.Now;
+                var totalTime = stopWatch.Elapsed;
+                stopWatch.Stop();
 
-                System.Diagnostics.Debug.WriteLine("Time to load: " + (after - before).TotalMilliseconds.ToString("0.0"));
+                var fontPatternTime = totalTime - fileLoadTime;
+
+                Console.WriteLine(
+                    $"Font times: {fileLoadTime.TotalMilliseconds:0.0}->{fontPatternTime.TotalMilliseconds:0.0} ");
             }
             SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
             base.Update(gameTime);
