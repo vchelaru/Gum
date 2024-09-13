@@ -1077,54 +1077,6 @@ namespace RenderingLibrary.Graphics
             };
         }
 
-        private BitmapCharacterInfo FillBitmapCharacterInfo(int characterID, string fontString, int textureWidth,
-            int textureHeight, int lineHeightInPixels, int startingIndex)
-        {
-            // Example:
-            // char id=101  x=158   y=85    width=5     height=7     xoffset=1     yoffset=6     xadvance=7     page=0  chnl=0 
-            BitmapCharacterInfo characterInfoToReturn = new BitmapCharacterInfo();
-
-            int indexOfID = fontString.IndexOf("char id=" + characterID, startingIndex);
-
-            if (indexOfID != -1)
-            {
-                var x = StringFunctions.GetIntAfter("x=", fontString, ref indexOfID);
-                var y = StringFunctions.GetIntAfter("y=", fontString, ref indexOfID);
-                var width = StringFunctions.GetIntAfter("width=", fontString, ref indexOfID);
-                var height = StringFunctions.GetIntAfter("height=", fontString, ref indexOfID);
-                var xOffset = StringFunctions.GetIntAfter("xoffset=", fontString, ref indexOfID);
-                var yOffset = StringFunctions.GetIntAfter("yoffset=", fontString, ref indexOfID);
-                var xAdvance = StringFunctions.GetIntAfter("xadvance=", fontString, ref indexOfID);
-                var page = StringFunctions.GetIntAfter("page=", fontString, ref indexOfID);
-
-                var textureWidthF = (float)textureWidth;
-                var textureHeightF = (float)textureHeight;
-
-                characterInfoToReturn.TULeft = x / textureWidthF;
-                characterInfoToReturn.TVTop = y / textureHeightF;
-
-                characterInfoToReturn.TURight = characterInfoToReturn.TULeft + width / textureWidthF;
-                characterInfoToReturn.TVBottom = characterInfoToReturn.TVTop + height / textureHeightF;
-
-                var lineHeightInPixelsF = (float)lineHeightInPixels;
-
-                characterInfoToReturn.DistanceFromTopOfLine = // 1 sclY means 2 height
-                    2 * yOffset / lineHeightInPixelsF;
-
-                characterInfoToReturn.ScaleX = width / lineHeightInPixelsF;
-
-                characterInfoToReturn.ScaleY = height / lineHeightInPixelsF;
-
-                characterInfoToReturn.Spacing = 2 * xAdvance / lineHeightInPixelsF;
-
-                characterInfoToReturn.XOffset = 2 * xOffset / lineHeightInPixelsF;
-
-                characterInfoToReturn.PageNumber = page;
-            }
-
-            return characterInfoToReturn;
-        }
-
         #endregion
 
         #endregion
