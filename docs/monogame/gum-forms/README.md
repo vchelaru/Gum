@@ -68,7 +68,11 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
-        FormsUtilities.Update(gameTime, Root);
+        if(IsActive)
+        {
+            FormsUtilities.Update(gameTime, Root);
+        }
+        
         SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
         base.Update(gameTime);
     }
