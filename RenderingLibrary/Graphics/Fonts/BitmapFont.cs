@@ -5,6 +5,7 @@ using System.Linq;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Content;
 using System.Collections;
+using System.Globalization;
 using Microsoft.Xna.Framework;
 using RenderingLibrary.Math;
 using RenderingLibrary.Math.Geometry;
@@ -350,12 +351,10 @@ namespace RenderingLibrary.Graphics
             }
             return texturesToLoad.ToArray();
         }
-        
-        
 
         public void SetFontPattern(string fontPattern)
         {
-            var parsedData = new ParsedFontFile(fontPattern.AsSpan());
+            var parsedData = new ParsedFontFile(fontPattern);
 
             var charArraySize = (parsedData.Chars.LastOrDefault()?.Id + 1) ?? 0;
             mCharacterInfo = new BitmapCharacterInfo[charArraySize];
@@ -1091,93 +1090,96 @@ namespace RenderingLibrary.Graphics
             return mFontFile;
         }
 
-        private ref struct FontFileParseWordResult
+        private class ParsedFontLine
         {
-            public readonly ReadOnlySpan<char> Word;
-            public readonly ReadOnlySpan<char> Remaining;
-            public bool IsEndOfLine;
+            public string Tag { get; }
+            public Dictionary<string, int> NumericAttributes { get; } = new(StringComparer.OrdinalIgnoreCase);
 
-            private FontFileParseWordResult(ReadOnlySpan<char> word, ReadOnlySpan<char> remaining, bool isEndOfLine)
+            private ParsedFontLine(string tag)
             {
-                Word = word;
-                Remaining = remaining;
-                IsEndOfLine = isEndOfLine;
+                Tag = tag;
             }
 
-            public static FontFileParseWordResult NextWord(ReadOnlySpan<char> text)
+            public static (ParsedFontLine? line, int nextIndex) Parse(string contents, int startIndex)
             {
-                if (text.IsEmpty) return new FontFileParseWordResult();
-
+                var parsedLine = (ParsedFontLine?)null;
+                var currentAttributeName = (string?)null;
                 var wordStartIndex = (int?)null;
                 var isInQuotes = false;
-                var currentIndex = 0;
-                foreach (var character in text)
+                var index = startIndex;
+
+                void ProcessWord()
                 {
+                    if (wordStartIndex == null)
+                    {
+                        return;
+                    }
+                    
+                    var length = index - wordStartIndex.Value;
+                    var word = contents.Substring(wordStartIndex.Value, length);
+                    if (parsedLine == null)
+                    {
+                        parsedLine = new ParsedFontLine(word);
+                    }
+                    else if (currentAttributeName == null)
+                    {
+                        currentAttributeName = word;
+                    }
+                    else
+                    {
+                        if (int.TryParse(word, out var number))
+                        {
+                            parsedLine.NumericAttributes[currentAttributeName] = number;
+                        }
+                        else if (int.TryParse(word, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out number))
+                        {
+                            // Fallback for other cultures that expect a comma, but a period was found
+                            parsedLine.NumericAttributes[currentAttributeName] = number;
+                        }
+
+                        currentAttributeName = null;
+                    }
+
+                    wordStartIndex = null;
+                }
+                
+                while (index < contents.Length)
+                {
+                    var character = contents[index];
                     if (char.IsWhiteSpace(character) || character == '=')
                     {
                         if (!isInQuotes && wordStartIndex != null)
                         {
                             // Hit the end of a word
-                            var length = currentIndex - wordStartIndex.Value;
-                            var word = text.Slice(wordStartIndex.Value, length);
-                            var remaining = text.Slice(currentIndex);
-                            var isEndOfLine = character == '\r' || character == '\n';
+                            ProcessWord();
+                        }
 
-                            return new FontFileParseWordResult(word, remaining, isEndOfLine);
+                        if (character == '\r' || character == '\n')
+                        {
+                            return (parsedLine, index + 1);
                         }
                     }
                     else
                     {
-                        if (character == '"')
+                        wordStartIndex ??= index;
+                        if (character == '"' && !isInQuotes)
                         {
-                            if (!isInQuotes)
-                            {
-                                // starting quote
-                                if (wordStartIndex != null)
-                                {
-                                    // Not sure that this is valid
-                                    var message = "Found quote in the middle of an existing font file word.";
-                                    throw new InvalidOperationException(message);
-                                }
-                                
-                                isInQuotes = true;
-                                wordStartIndex = currentIndex;
-                            }
-                            else
-                            {
-                                // Ending quote
-                                if (wordStartIndex == null)
-                                {
-                                    var message = "Got an ending quote without a word start";
-                                    throw new InvalidOperationException(message);
-                                }
-                                
-                                // Cut off the quotes
-                                var length = currentIndex - wordStartIndex.Value - 1;
-                                var word = text.Slice(wordStartIndex.Value + 1, length);
-                                var remaining = text.Slice(currentIndex + 1);
-
-                                return new FontFileParseWordResult(word, remaining, false);
-                            }
+                            isInQuotes = true;
                         }
-
-                        wordStartIndex ??= currentIndex;
+                        else if (character == '"' && isInQuotes)
+                        {
+                            isInQuotes = false;
+                            wordStartIndex = null; // ignore string attributes for now, we only use numerics
+                        }
                     }
 
-                    currentIndex++;
+                    index++;
                 }
                 
-                // If we got here we hit the end of the file
-                if (wordStartIndex == null)
-                {
-                    return new FontFileParseWordResult();
-                }
+                // Hit the end of the string
+                ProcessWord();
 
-                var finalWord = text.Slice(wordStartIndex.Value);
-                return new FontFileParseWordResult(
-                    finalWord,
-                    ReadOnlySpan<char>.Empty,
-                    true);
+                return (parsedLine, index);
             }
         }
 
@@ -1188,33 +1190,42 @@ namespace RenderingLibrary.Graphics
             public List<FontFileCharLine> Chars { get; } = new(300);
             public List<FontFileKerningLine> Kernings { get; } = new(300);
 
-            public ParsedFontFile(ReadOnlySpan<char> contents)
+            public ParsedFontFile(string contents)
             {
-                while (true)
+                var index = 0;
+                while (index < contents.Length)
                 {
-                    var result = FontFileParseWordResult.NextWord(contents);
-                    contents = result.Remaining;
-                    if (result.Word.IsEmpty)
+                    var (parsedLine, nextIndex) = ParsedFontLine.Parse(contents, index);
+                    index = nextIndex;
+                    if (parsedLine != null)
                     {
-                        return;
+                        switch (parsedLine.Tag)
+                        {
+                            case "info":
+                                Info = new FontFileInfoLine(parsedLine);
+                                break;
+                            
+                            case "common":
+                                Common = new FontFileCommonLine(parsedLine);
+                                break;
+                            
+                            case "char":
+                                Chars.Add(new FontFileCharLine(parsedLine));
+                                break;
+                            
+                            case "kerning":
+                                Kernings.Add(new FontFileKerningLine(parsedLine));
+                                break;
+                            
+                            default:
+                                break; // ignore unknown tags
+                        }
                     }
+                }
 
-                    if (result.Word.Equals("info", StringComparison.OrdinalIgnoreCase))
-                    {
-                        Info = new FontFileInfoLine(ref contents);
-                    }
-                    else if (result.Word.Equals("common", StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        Common = new FontFileCommonLine(ref contents);
-                    }
-                    else if (result.Word.Equals("char", StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        Chars.Add(new FontFileCharLine(ref contents));
-                    }
-                    else if (result.Word.Equals("kerning", StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        Kernings.Add(new FontFileKerningLine(ref contents));
-                    }
+                if (Info == null || Common == null)
+                {
+                    throw new InvalidOperationException("Font file did not have an info or common tag");
                 }
             }
         }
@@ -1223,12 +1234,9 @@ namespace RenderingLibrary.Graphics
         {
             public int Outline { get; set; }
 
-            public FontFileInfoLine(ref ReadOnlySpan<char> contents)
+            public FontFileInfoLine(ParsedFontLine line)
             {
-                ParseLine(ref contents, this, new Dictionary<string, Action<FontFileInfoLine, int>>
-                {
-                    {"outline", (line, num) => line.Outline = num},
-                });
+                Outline = line.NumericAttributes["outline"];
             }
         }
 
@@ -1237,13 +1245,10 @@ namespace RenderingLibrary.Graphics
             public int LineHeight { get; set; }
             public int Base { get; set; }
 
-            public FontFileCommonLine(ref ReadOnlySpan<char> contents)
+            public FontFileCommonLine(ParsedFontLine line)
             {
-                ParseLine(ref contents, this, new Dictionary<string, Action<FontFileCommonLine, int>>
-                {
-                    {"lineHeight", (line, num) => line.LineHeight = num},
-                    {"base", (line, num) => line.Base = num},
-                });
+                LineHeight = line.NumericAttributes["lineheight"];
+                Base = line.NumericAttributes["base"];
             }
         }
 
@@ -1259,20 +1264,17 @@ namespace RenderingLibrary.Graphics
             public int XAdvance { get; set; }
             public int Page { get; set; }
 
-            public FontFileCharLine(ref ReadOnlySpan<char> contents)
+            public FontFileCharLine(ParsedFontLine line)
             {
-                ParseLine(ref contents, this, new Dictionary<string, Action<FontFileCharLine, int>>
-                {
-                    {"id", (line, num) => line.Id = num},
-                    {"x", (line, num) => line.X = num},
-                    {"y", (line, num) => line.Y = num},
-                    {"width", (line, num) => line.Width = num},
-                    {"height", (line, num) => line.Height = num},
-                    {"xoffset", (line, num) => line.XOffset = num},
-                    {"yoffset", (line, num) => line.YOffset = num},
-                    {"xadvance", (line, num) => line.XAdvance = num},
-                    {"page", (line, num) => line.Page = num},
-                });
+                Id = line.NumericAttributes["id"];
+                X = line.NumericAttributes["x"];
+                Y = line.NumericAttributes["y"];
+                Width = line.NumericAttributes["width"];
+                Height = line.NumericAttributes["height"];
+                XOffset = line.NumericAttributes["xoffset"];
+                YOffset = line.NumericAttributes["yoffset"];
+                XAdvance = line.NumericAttributes["xadvance"];
+                Page = line.NumericAttributes["page"];
             }
         }
 
@@ -1282,52 +1284,11 @@ namespace RenderingLibrary.Graphics
             public int Second { get; set; }
             public int Amount { get; set; }
 
-            public FontFileKerningLine(ref ReadOnlySpan<char> contents)
+            public FontFileKerningLine(ParsedFontLine line)
             {
-                ParseLine(ref contents, this, new Dictionary<string, Action<FontFileKerningLine, int>>
-                {
-                    {"first", (line, num) => line.First = num},
-                    {"second", (line, num) => line.Second = num},
-                    {"amount", (line, num) => line.Amount = num},
-                });
-            }
-        }
-
-        private static void ParseLine<T>(
-            ref ReadOnlySpan<char> contents, 
-            T item, 
-            Dictionary<string, Action<T, int>> modifiers)
-        {
-            ReadOnlySpan<char> currentAttribute = ReadOnlySpan<char>.Empty;
-            while (true)
-            {
-                var result = FontFileParseWordResult.NextWord(contents);
-                contents = result.Remaining;
-
-                if (!result.Word.IsEmpty)
-                {
-                    if (currentAttribute.IsEmpty)
-                    {
-                        currentAttribute = result.Word;
-                    }
-                    else
-                    {
-                        foreach (var modifier in modifiers)
-                        {
-                            if (currentAttribute.Equals(modifier.Key, StringComparison.OrdinalIgnoreCase))
-                            {
-                                modifier.Value(item, Convert.ToInt32(result.Word.ToString()));
-                                break;
-                            }
-                        }
-                        currentAttribute = ReadOnlySpan<char>.Empty;
-                    }
-                }
-
-                if (result.Word.IsEmpty || result.IsEndOfLine)
-                {
-                    return;
-                }
+                First = line.NumericAttributes["first"];
+                Second = line.NumericAttributes["second"];
+                Amount = line.NumericAttributes["amount"];
             }
         }
     }
