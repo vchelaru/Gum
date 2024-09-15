@@ -89,6 +89,9 @@ namespace RenderingLibrary
             }
         }
 
+        public static Dictionary<string, byte[]> StreamByteDictionary { get; private set; } = 
+            new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
+        
         /// <summary>
         /// The font scale value. This can be used to scale all fonts globally, 
         /// generally in response to a font scaling value like the Android font scale setting.
@@ -146,13 +149,19 @@ namespace RenderingLibrary
                     {
                         fileName = FileManager.MakeRelative(fileName, FileManager.ExeLocation, preserveCase:true);
                     }
-
-
 #if WEB
                     if(fileName.StartsWith("./"))
                     {
                        fileName = fileName.Substring(2);
                     }
+
+#endif
+                    if(StreamByteDictionary.ContainsKey(fileName))
+                    {
+                        var bytes = StreamByteDictionary[fileName];
+                        return new System.IO.MemoryStream(bytes);
+                    }
+#if WEB
 
                     XMLHttpRequest request = new XMLHttpRequest();
 
