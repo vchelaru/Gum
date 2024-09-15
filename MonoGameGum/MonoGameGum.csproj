@@ -22,8 +22,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Compile Remove="FnaGum\**" />
 		<Compile Remove="KniGum\**" />
+		<EmbeddedResource Remove="FnaGum\**" />
 		<EmbeddedResource Remove="KniGum\**" />
+		<None Remove="FnaGum\**" />
 		<None Remove="KniGum\**" />
 	</ItemGroup>
 

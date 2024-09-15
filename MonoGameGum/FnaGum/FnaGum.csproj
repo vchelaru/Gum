@@ -1,25 +1,24 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFramework>net8.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.KNI</PackageId>
 		<Version>2024.9.9.1</Version>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 
 
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<DefineConstants>$(DefineConstants);KNI;USE_GUMCOMMON</DefineConstants>
+		<DefineConstants>$(DefineConstants);XNA4;FNA;USE_GUMCOMMON</DefineConstants>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-		<DefineConstants>$(DefineConstants);KNI;USE_GUMCOMMON</DefineConstants>
+		<DefineConstants>$(DefineConstants);XNA4;FNA;USE_GUMCOMMON</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -78,12 +77,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Compile Remove="..\obj\Debug\net6.0\.NETCoreApp,Version=v6.0.AssemblyAttributes.cs" />
-		<Compile Remove="..\obj\Debug\net6.0\KniGum.AssemblyInfo.cs" />
-		<Compile Remove="..\obj\Debug\net6.0\KniGum.GlobalUsings.g.cs" />
-		<Compile Remove="..\obj\Debug\net6.0\MonoGameGum.AssemblyInfo.cs" />
-		<Compile Remove="..\obj\Debug\net6.0\MonoGameGum.GlobalUsings.g.cs" />
-		<Compile Remove="..\FnaGum\**" />
+		<Compile Remove="..\obj\**" />
+		<Compile Remove="..\KniGum\**" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -92,6 +87,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\..\fna\FNA.Core.csproj" />
 		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
 		<ProjectReference Include="..\..\GumDataTypes\GumDataTypesNet6.csproj" />
 		<ProjectReference Include="..\..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
@@ -105,11 +101,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="nkast.Xna.Framework" Version="3.12.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Content" Version="3.12.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="3.12.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Input" Version="3.12.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Game" Version="3.12.9001" />
 		<!--<PackageReference Include="nkast.Xna.Framework.Audio" Version="3.12.9001" />-->
 		<!--<PackageReference Include="nkast.Xna.Framework.Media" Version="3.12.9001" />-->
 
