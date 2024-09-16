@@ -96,6 +96,7 @@ namespace RenderingLibrary
         public static float GlobalFontScale { get; set; } = 1.0f;
         public bool EnableTouchEvents { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
+        public static Dictionary<string, byte[]> StreamByteDictionary { get; private set; } = new Dictionary<string, byte[]>();
         #endregion
 
         /// <summary>
@@ -153,6 +154,17 @@ namespace RenderingLibrary
                     {
                        fileName = fileName.Substring(2);
                     }
+#endif
+
+                    if(StreamByteDictionary.ContainsKey(fileName))
+                    {
+                        var bytes = StreamByteDictionary[fileName];
+                        return new MemoryStream(bytes);
+                    }
+
+#if WEB
+
+
 
                     XMLHttpRequest request = new XMLHttpRequest();
 
