@@ -333,7 +333,7 @@ namespace MonoGameGumFromFile
         int clickCount = 0;
         private void DoInteractiveGueScreenLogic(double currentGameTimeInSeconds)
         {
-            currentScreenGue.DoUiActivityRecursively(cursor, gumKeyboard, currentGameTimeInSeconds);
+            currentScreenGue.DoUiActivityRecursively(FormsUtilities.Cursor, FormsUtilities.Keyboard, currentGameTimeInSeconds);
         }
 
         private void DoOffsetLayerScreenLogic(MouseState mouseState)

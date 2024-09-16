@@ -19,7 +19,7 @@ namespace MonoGameGum.Forms
 
         static MonoGameGum.Input.Keyboard keyboard;
 
-        public Keyboard Keyboard => keyboard;
+        public static Keyboard Keyboard => keyboard;
 
         public static void InitializeDefaults()
         {
