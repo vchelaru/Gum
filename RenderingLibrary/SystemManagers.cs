@@ -159,7 +159,7 @@ namespace RenderingLibrary
                     if(StreamByteDictionary.ContainsKey(fileName))
                     {
                         var bytes = StreamByteDictionary[fileName];
-                        return new MemoryStream(bytes);
+                        return new System.IO.MemoryStream(bytes);
                     }
 
 #if WEB

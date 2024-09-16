@@ -595,6 +595,19 @@ namespace RenderingLibrary.Graphics
 
                 float offsetFromAlignment = 0;
 
+#if DEBUG
+                if(lineNumber >= widths.Count)
+                {
+                    var message = $"Error trying to draw text with {lines.Count} lines, but only {widths.Count} widths. Lines:\n{GetCombinedLines()}";
+                    throw new Exception(message);
+                }
+
+                string GetCombinedLines()
+                {
+                    return string.Join("\n", lines);
+                }
+#endif
+
                 if (horizontalAlignment == HorizontalAlignment.Right)
                 {
                     offsetFromAlignment = scaleX * (requiredWidth - widths[lineNumber]);
@@ -656,6 +669,12 @@ namespace RenderingLibrary.Graphics
                         finalPosition.X += xOffset;
                         finalPosition.Y += yOffset;
 
+#if DEBUG
+                        if(mTextures.Length <= pageIndex)
+                        {
+                            throw new Exception($"Attempting to render a character {c} in line {line} with font which accesses a character on page {pageIndex}, but only {mTextures} texture page(s) exist");
+                        }
+#endif
 
                         if (effectiveTextRenderingMode == TextRenderingPositionMode.FreeFloating ||
                             // If rotated, need free floating positions since sprite positions will likely not line up with pixels
