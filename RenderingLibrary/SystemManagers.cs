@@ -235,6 +235,10 @@ namespace RenderingLibrary
 #if KNI
                 var bitmapPattern = ToolsUtilities.FileManager.GetStringFromEmbeddedResource(assembly, "KniGum.Font18Arial.fnt");
                 using var stream = ToolsUtilities.FileManager.GetStreamFromEmbeddedResource(assembly, "KniGum.Font18Arial_0.png");
+#elif FNA
+                var bitmapPattern = ToolsUtilities.FileManager.GetStringFromEmbeddedResource(assembly, "FnaGum.Font18Arial.fnt");
+                using var stream = ToolsUtilities.FileManager.GetStreamFromEmbeddedResource(assembly, "FnaGum.Font18Arial_0.png");
+
 #else
                 var bitmapPattern = ToolsUtilities.FileManager.GetStringFromEmbeddedResource(assembly, "MonoGameGum.Content.Font18Arial.fnt");
                 using var stream = ToolsUtilities.FileManager.GetStreamFromEmbeddedResource(assembly, "MonoGameGum.Content.Font18Arial_0.png");
