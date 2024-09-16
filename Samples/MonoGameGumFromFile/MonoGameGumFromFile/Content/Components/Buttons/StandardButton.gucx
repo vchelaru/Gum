@@ -248,6 +248,9 @@
     <State>
       <Name>Highlighted</Name>
     </State>
+    <State>
+      <Name>Pushed</Name>
+    </State>
   </Category>
   <Instance>
     <Name>ColoredRectangleInstance</Name>

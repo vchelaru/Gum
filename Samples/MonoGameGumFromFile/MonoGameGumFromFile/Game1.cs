@@ -11,6 +11,7 @@ using MonoGameGum.GueDeriving;
 using MonoGameGum.Input;
 using MonoGameGum.Renderables;
 using MonoGameGumFromFile.ComponentRuntimes;
+using MonoGameGumFromFile.Managers;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
@@ -31,6 +32,8 @@ namespace MonoGameGumFromFile
         ScreenSave currentGumScreenSave;
 
         GraphicalUiElement currentScreenGue;
+
+        SingleThreadSynchronizationContext synchronizationContext;
 
         #endregion
 
@@ -65,6 +68,7 @@ namespace MonoGameGumFromFile
 
         protected override void Initialize()
         {
+            synchronizationContext = new SingleThreadSynchronizationContext();
             SystemManagers.Default = new SystemManagers();
             SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
             FormsUtilities.InitializeDefaults();
@@ -294,6 +298,8 @@ namespace MonoGameGumFromFile
             SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
 
             FormsUtilities.Update(gameTime, currentScreenGue);
+
+            synchronizationContext.Update();
 
             DoSwapScreenLogic();
 
