@@ -348,6 +348,104 @@ Now we can run our game and see the button in action:
 
 As mentioned above, you are free to add any controls to your custom button including icons, additional Text instances, and additional Sprites for other effects. You can customize your Forms objects to look however you want.
 
+### Available States
+
+Most controls in Forms share the same common states. The exception is components which can be toggled on/off such as CheckBox. For all other controls the following states exist:
+
+* Enabled
+* Disabled
+* Highlighted
+* Pushed
+* Focused
+* HighlightedFocused
+* DisabledFocused
+
+CheckBoxes append the words On, Off, and Indeterminate to the states. For example, a CheckBox can support states including:
+
+* EnabledOn
+* EnabledOff
+* EnabledIndeterminate
+* DisabledOn
+* DisabledOff
+* DisabledIndetermate
+* ... and so on.
+
 ### Defining a Custom Runtime from Gum
 
-For information on using a custom runtime defined in your Gum project, see the [Custom Runtimes](../custom-runtimes.md) tutorial.
+Buttons can be defined fully in the Gum tool. This approach allows you to preview your visuals in the editor, and allows editing of the styles without writing any code.
+
+Conceptually the steps are as follows:
+
+1. Define a component for your forms type
+2. Add the states needed for the forms type that you are working with in the proper category
+3. Define a custom runtime for the Forms control
+4. Associate the custom runtime to the forms type using the DefaultFormsComponents dictionary
+
+This section walks you through how to create a custom Button component, and how to use this in your project. Once you understand how to create a Button component, other Forms controls can be created similarly.
+
+#### Defining a Button Component in Gum
+
+The first step is to define a Button component in Gum. This component can be named anything you want. For example, you may name it **Button** or **StandardButton**. You can also create components for specific purposes such as CloseButton which would be a button that closes menus.
+
+Components defined in Gum can contain almost anything you want; however, Buttons should usually contain a TextInstance so that the Text property can assign the string on an internal Text object.
+
+The following image shows the a component named StandardButton which contains a ColoredRectangle, a Rectangle, and a Text instance. For other controls, see the DefaultVisuals page linked above.
+
+<figure><img src="../../.gitbook/assets/image.png" alt=""><figcaption><p>Example Button in Gum</p></figcaption></figure>
+
+#### Adding Button States to the Component
+
+All Gum Forms components react to various properties by assigning states. For a full list of states needed, see the DefaultVisuals page linked above.
+
+For Buttons, we can add a ButtonCategory state. You are free to implement as many or as few states as you want. For the full list of states see above in the [Available States](control-customization.md#available-states) section.
+
+<figure><img src="../../.gitbook/assets/image (1).png" alt=""><figcaption><p>Example of a ButtonStateCategory implementing only Normal, Highlighted, and Pushed</p></figcaption></figure>
+
+#### Defining a Custom Runtime for the Forms Control
+
+Once you have created a Component in your project, you need to create a custom runtime class. This custom runtime class associates the Component in your .gumx file to a strongly-typed class. This runtime type also enables the creation of Forms controls by instantiating the runtime object, including when an element from the Gum project is converted to a GraphicalUiElement.
+
+The runtime class does not need much code since most of the work is done in the Gum project. The following shows an example custom runtime for the StandardButton component:
+
+```csharp
+internal class StandardButtonRuntime : InteractiveGue
+{
+    public StandardButtonRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base() 
+    {
+        if(fullInstantiation)
+        {
+            // no need to do anything here, we are fully instantiated by the Gum object
+        }
+
+        if(tryCreateFormsObject)
+        {
+            FormsControlAsObject = new Button(this);
+        }
+    }
+
+    public Button FormsControl => FormsControlAsObject as Button;
+}
+
+```
+
+This runtime can be associated with the StandardButton component in Gum using the following code in your Game class:
+
+```csharp
+ElementSaveExtensions.RegisterGueInstantiationType(
+    "Buttons/StandardButton", 
+    typeof(StandardButtonRuntime));
+```
+
+For more information on using a custom runtime defined in your Gum project, see the [Custom Runtimes](../custom-runtimes.md) tutorial.
+
+#### Associate the Custom Runtime to the Forms Type
+
+Finally, we can assocaite the Forms control with the runtime. For example, the following code can be used to create a StandardButtonRuntime whenever the code calls `new Button`. Note that this is not a requirement for working with Forms, but it can make testing more convenient.
+
+```csharp
+FrameworkElement.DefaultFormsComponents[typeof(Button)] = typeof(StandardButtonRuntime);
+```
+
+Note that in this case, we can only associate one type of component runtime with each type of Forms control. In other words, if you write code that instantiates a new Button using the Button constructor, a StandardButtonRuntime will be created internally.
+
+Of course, you are not required to create buttons this way - you can also create buttons by adding instances of your component in your Gum screen in the tool, or by instantiating the desired runtime.
