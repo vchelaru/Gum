@@ -36,3 +36,5 @@ scrollViewer.Visual.RollOverBubbling += (sender, args) =>
 };
 
 ```
+
+<figure><img src="../../../.gitbook/assets/16_19 51 01.gif" alt=""><figcaption><p>Scrolling a ListBox by pressing and moving the cursor</p></figcaption></figure>
