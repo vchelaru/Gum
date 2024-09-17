@@ -32,3 +32,28 @@ button.Click += (s, e) =>
 ```
 
 <figure><img src="../../../.gitbook/assets/24_06 50 24.gif" alt=""><figcaption><p>Addign items to a ListBox by clicking a button</p></figcaption></figure>
+
+### Selection
+
+ListBox items can be selected. The ListBox class provides a number of ways to work with the selection.
+
+Selection can be set by index:
+
+```csharp
+listBox.SelectedIndex = 0;
+```
+
+Item can also be selected by the reference itself, assuming the referenced item is part of the list box:
+
+```csharp
+listBox.SelectedObject = "English";
+```
+
+Whenever the selection changes, the SelectionChanged event is raised:
+
+```csharp
+listBox.SelectionChanged += (sender, args) =>
+{
+    System.Diagnostics.Debug.WriteLine($"Selected item: {listBox.SelectedObject}");
+};
+```
