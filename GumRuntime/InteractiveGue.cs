@@ -107,7 +107,17 @@ namespace Gum.Wireframe
 
         #region Events
 
+        /// <summary>
+        /// Event which is raised whenever this is clicked by a cursor. A click occurs
+        /// when the cursor is over this and is first pushed, then released.
+        /// </summary>
         public event EventHandler Click;
+
+        /// <summary>
+        /// Event shich is raised whenever this is pushed by a cursor. A push occurs
+        /// when the cursor is over this and the left mouse button is pushed (not down last frame,
+        /// down this frame).
+        /// </summary>
         public event EventHandler Push;
 
         /// <summary>
@@ -152,9 +162,10 @@ namespace Gum.Wireframe
         public event Action<object, RoutedEventArgs> MouseWheelScroll;
 
         /// <summary>
-        /// Event raised when the mouse rolls over this instance. This event is raised bottom-up, with the
-        /// root object having the opportunity to handle the roll over. If a control sets the argument RoutedEventArgs Handled to true,
-        /// then children objects will not have this event raised.
+        /// Event raised when the mouse rolls over this instance. This event is raised top-down, with the
+        /// child object having the opportunity to handle the roll over first. If a control sets the argument 
+        /// RoutedEventArgs Handled to true,
+        /// then parent objects will not have this event raised.
         /// </summary>
         public event Action<object, RoutedEventArgs> RollOverBubbling;
 
@@ -338,7 +349,7 @@ namespace Gum.Wireframe
                     }
                     if (asInteractive?.HasEvents == true && asInteractive?.IsEnabled == true)
                     {
-                        if (handledActions.HandledRollOver == false)
+                        if (handledActions.HandledRollOver == false && (cursor.XChange != 0 || cursor.YChange != 0))
                         {
                             var args = new RoutedEventArgs();
                             asInteractive.RollOverBubbling?.Invoke(asInteractive, args);
