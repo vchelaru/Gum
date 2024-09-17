@@ -143,7 +143,19 @@ namespace Gum.Wireframe
 
         public event EventHandler EnabledChange;
 
+        /// <summary>
+        /// Eent raised when the mouse wheel has been scrolled while the cursor is over this instance.
+        /// This event is raised bottom-up, with the root object having the opportunity to handle the roll over.
+        /// If a control sets the argument RoutedEventArgs Handled to true, the children objects 
+        /// will not have this event raised.
+        /// </summary>
         public event Action<object, RoutedEventArgs> MouseWheelScroll;
+
+        /// <summary>
+        /// Event raised when the mouse rolls over this instance. This event is raised bottom-up, with the
+        /// root object having the opportunity to handle the roll over. If a control sets the argument RoutedEventArgs Handled to true,
+        /// then children objects will not have this event raised.
+        /// </summary>
         public event Action<object, RoutedEventArgs> RollOverBubbling;
 
         /// <summary>
@@ -326,18 +338,16 @@ namespace Gum.Wireframe
                     }
                     if (asInteractive?.HasEvents == true && asInteractive?.IsEnabled == true)
                     {
-                        //if (handledActions.HandledRollOver == false)
-                        //{
-                        //    FlatRedBall.Gui.RoutedEventArgs args = new FlatRedBall.Gui.RoutedEventArgs();
-                        //    RollOverBubbling?.Invoke(this, args);
-                        //    handledActions.HandledRollOver = args.Handled;
-                        //}
-
+                        if (handledActions.HandledRollOver == false)
+                        {
+                            var args = new RoutedEventArgs();
+                            asInteractive.RollOverBubbling?.Invoke(asInteractive, args);
+                            handledActions.HandledRollOver = args.Handled;
+                        }
 
                         if (cursor.ScrollWheelChange != 0 && handledActions.HandledMouseWheel == false)
                         {
                             var args = new RoutedEventArgs();
-
                             asInteractive.MouseWheelScroll?.Invoke(asInteractive, args);
                             handledActions.HandledMouseWheel = args.Handled;
                         }

@@ -9,6 +9,7 @@ using MonoGameGum.Forms.DefaultVisuals;
 using MonoGameGum.GueDeriving;
 using RenderingLibrary;
 using System.Diagnostics;
+using MonoGameGum.Input;
 
 namespace GumFormsSample
 {
@@ -172,21 +173,21 @@ namespace GumFormsSample
             customizedButton.X = 450;
             customizedButton.Y = 300;
 
-            var spriteRuntime = new SpriteRuntime();
-            spriteRuntime.SourceFileName = "button_square_gradient.png";
-            spriteRuntime.X = 100;
-            spriteRuntime.Y = 100;
-            spriteRuntime.Width = 500;
-            spriteRuntime.Height = 600;
-            this.Root.Children.Add(spriteRuntime);
+            //var spriteRuntime = new SpriteRuntime();
+            //spriteRuntime.SourceFileName = "button_square_gradient.png";
+            //spriteRuntime.X = 100;
+            //spriteRuntime.Y = 100;
+            //spriteRuntime.Width = 500;
+            //spriteRuntime.Height = 600;
+            //this.Root.Children.Add(spriteRuntime);
 
-            var innerTextBox = new TextBox();
-            innerTextBox.X = 100;
-            innerTextBox.Y = 200;
-            innerTextBox.Width = 200;
-            innerTextBox.Height = 40;
+            //var innerTextBox = new TextBox();
+            //innerTextBox.X = 100;
+            //innerTextBox.Y = 200;
+            //innerTextBox.Width = 200;
+            //innerTextBox.Height = 40;
 
-            spriteRuntime.Children.Add(innerTextBox.Visual);
+            //spriteRuntime.Children.Add(innerTextBox.Visual);
 
             //// ButtonCategory is the category that all Buttons must have
             //var category = customizedButton.Visual.Categories["ButtonCategory"];
@@ -259,7 +260,7 @@ namespace GumFormsSample
 
 
             MouseState mouseState = Mouse.GetState();
-            KeyboardState keyboardState = Keyboard.GetState();
+            KeyboardState keyboardState = Microsoft.Xna.Framework.Input.Keyboard.GetState();
             GamePadState gamePadState = default;
             try { gamePadState = GamePad.GetState(PlayerIndex.One); }
             catch (NotImplementedException) { /* ignore gamePadState */ }

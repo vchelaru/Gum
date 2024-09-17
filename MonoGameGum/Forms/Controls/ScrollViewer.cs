@@ -30,6 +30,9 @@ namespace MonoGameGum.Forms.Controls
 
     public class ScrollViewer : FrameworkElement
     {
+        public const string VerticalScrollBarInstanceName = "VerticalScrollBarInstance";
+
+
         #region Fields/Properties
 
         bool reactToInnerPanelPositionOrSizeChanged = true;
@@ -68,7 +71,7 @@ namespace MonoGameGum.Forms.Controls
 
         protected override void ReactToVisualChanged()
         {
-            var scrollBarVisual = Visual.GetGraphicalUiElementByName("VerticalScrollBarInstance") as InteractiveGue;
+            var scrollBarVisual = Visual.GetGraphicalUiElementByName(VerticalScrollBarInstanceName) as InteractiveGue;
             if (scrollBarVisual.FormsControlAsObject == null)
             {
                 verticalScrollBar = new ScrollBar(scrollBarVisual);
