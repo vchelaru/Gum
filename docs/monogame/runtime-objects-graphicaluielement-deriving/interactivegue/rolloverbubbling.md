@@ -11,7 +11,9 @@ This event is raised top-down, with children object having the first opportunity
 The following code shows how to implement ListBox scrolling using the cursor when the cursor is pressed.
 
 ```csharp
-scrollViewer.Visual.RollOverBubbling += (sender, args) =>
+// This will work with any item that has a scrollbar, such as
+// ListBox, ItemsControl, and ScrollViewer
+listBox.Visual.RollOverBubbling += (sender, args) =>
 {
     var cursor = FormsUtilities.Cursor;
 
@@ -19,7 +21,7 @@ scrollViewer.Visual.RollOverBubbling += (sender, args) =>
     if (cursor.PrimaryDown)
     {
         // we can get the vertical scroll bar through visuals:
-        var scrollBarVisual = (InteractiveGue) scrollViewer.Visual.GetChildByNameRecursively(
+        var scrollBarVisual = (InteractiveGue) listBox.Visual.GetChildByNameRecursively(
             ListBox.VerticalScrollBarInstanceName);
 
         // InteractiveGues provide a FormsControlAsObject property to access
