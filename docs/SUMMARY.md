@@ -114,6 +114,7 @@
   * [Setup](monogame/setup.md)
   * [Setup for GumBatch](monogame/setup-for-gumbatch.md)
   * [Loading .gumx (Gum Project)](monogame/loading-.gumx-gum-project.md)
+  * [async Programming](monogame/async-programming.md)
   * [Camera](monogame/camera.md)
   * [File Loading](monogame/file-loading.md)
   * [GumBatch](monogame/gumbatch.md)
