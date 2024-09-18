@@ -157,6 +157,7 @@ namespace MonoGameGum.GueDeriving
                 WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
                 Height = 0;
                 HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+                this.FontSize = 18;
 
                 textRenderable.RawText = "Hello World";
             }
