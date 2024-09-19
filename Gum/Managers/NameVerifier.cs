@@ -235,6 +235,11 @@ namespace Gum.Managers
             }
         }
 
+        public bool IsComponentNameAlreadyUsed(string name)
+        {
+            return ObjectFinder.Self.GetComponent(name) != null;
+        }
+
         private void IsNameAlreadyUsed(string name, object objectToIgnore, ElementSave elementSave, out string whyNotValid)
         {
             whyNotValid = null;

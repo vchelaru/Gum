@@ -2,12 +2,14 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
+using Gum.Gui.Windows;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Responses;
 using Gum.ToolCommands;
 using Gum.ToolStates;
 using StateAnimationPlugin.Views;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Controls;
@@ -476,22 +478,23 @@ namespace Gum.Commands
             }
             else if (instances is List<InstanceSave>)
             {
-                TextInputWindow tiwcw = new TextInputWindow();
-                tiwcw.Message = "Enter new Component name:";
+                CreateComponentWindow createComponentWindow = new CreateComponentWindow();
 
                 FilePath filePath = element.Name;
                 var nameWithoutPath = filePath.FileNameNoPath;
 
-                tiwcw.Result = $"{nameWithoutPath}Component";
+                createComponentWindow.Result = $"{nameWithoutPath}Component";
                 //tiwcw.Option = $"Replace {nameWithoutPath} and all children with an instance of the new component";
 
-                if (tiwcw.ShowDialog() == DialogResult.OK)
+                Nullable<bool> result = createComponentWindow.ShowDialog();
+
+                if (result == true)
                 {
-                    string name = tiwcw.Result;
+                    string name = createComponentWindow.Result;
                     //bool replace = tiwcw.Checked
 
                     string whyNotValid;
-                    NameVerifier.Self.IsComponentNameValid(tiwcw.Result, "", null, out whyNotValid);
+                    NameVerifier.Self.IsComponentNameValid(createComponentWindow.Result, "", null, out whyNotValid);
 
                     if (string.IsNullOrEmpty(whyNotValid))
                     {
