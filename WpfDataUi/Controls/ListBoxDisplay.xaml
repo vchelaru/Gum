@@ -39,8 +39,8 @@
                 <TextBox x:Name="NewTextBox" KeyDown="NewTextBox_KeyDown">
 
                 </TextBox>
-                <Button Grid.Column="1" Width="30" Click="OkButton_Click">OK</Button>
-                <Button Grid.Column="2" Width="40" Click="CancelButton_Click">Cancel</Button>
+                <Button Grid.Column="1" Click="OkButton_Click">OK</Button>
+                <Button Grid.Column="2" Click="CancelButton_Click">Cancel</Button>
             </Grid>
         </Grid>
     </Grid>
