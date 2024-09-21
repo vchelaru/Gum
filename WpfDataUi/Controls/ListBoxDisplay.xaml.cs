@@ -43,8 +43,7 @@ namespace WpfDataUi.Controls
 
         public bool SuppressSettingProperty { get; set; }
 
-        static SolidColorBrush DefaultValueBackground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(180, 255, 180));
-        static SolidColorBrush CustomValueBackground = System.Windows.Media.Brushes.White;
+        static SolidColorBrush DefaultValueBackground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(180, 255, 180)){Opacity = 0.5f};
 
         public void Refresh(bool forceRefreshEvenIfFocused = false)
         {
@@ -60,7 +59,14 @@ namespace WpfDataUi.Controls
                 this.RefreshContextMenu(ListBox.ContextMenu);
                 //this.RefreshContextMenu(StackPanel.ContextMenu);
 
-                this.ListBox.Background = InstanceMember.IsDefault ? DefaultValueBackground : CustomValueBackground;
+                if (InstanceMember.IsDefault)
+                {
+                    this.ListBox.Background = DefaultValueBackground;
+                }
+                else
+                {
+                    ClearValue(BackgroundProperty);
+                }
 
                 //HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
                 //HintTextBlock.Text = InstanceMember?.DetailText;
@@ -157,6 +163,7 @@ namespace WpfDataUi.Controls
         private void AddButtonClicked(object sender, RoutedEventArgs e)
         {
             NewEntryGrid.Visibility = Visibility.Visible;
+            NotEditingEntryStackPanel.Visibility = Visibility.Collapsed;
             NewTextBox.Focus();
         }
 
@@ -236,6 +243,7 @@ namespace WpfDataUi.Controls
             }
             NewTextBox.Text = null;
             NewEntryGrid.Visibility = Visibility.Collapsed;
+            NotEditingEntryStackPanel.Visibility = Visibility.Visible;
             this.TrySetValueOnInstance();
 
             TryDoManualRefresh();
@@ -262,6 +270,7 @@ namespace WpfDataUi.Controls
         {
             NewTextBox.Text = null;
             NewEntryGrid.Visibility = Visibility.Collapsed;
+            NotEditingEntryStackPanel.Visibility = Visibility.Visible;
         }
 
         private void NewTextBox_KeyDown(object sender, KeyEventArgs e)
