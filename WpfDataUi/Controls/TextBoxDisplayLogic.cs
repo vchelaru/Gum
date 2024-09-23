@@ -491,9 +491,9 @@ namespace WpfDataUi.Controls
             }
             else
             {
-                if (mAssociatedTextBox.TryFindResource("Frb.Brushes.TextBox.Background") != null)
+                if (mAssociatedTextBox.TryFindResource("Frb.Brushes.Field.Background") != null)
                 {
-                    mAssociatedTextBox.SetResourceReference(TextBox.BackgroundProperty, "Frb.Brushes.TextBox.Background");
+                    mAssociatedTextBox.SetResourceReference(TextBox.BackgroundProperty, "Frb.Brushes.Field.Background");
                 }
                 else
                 {
