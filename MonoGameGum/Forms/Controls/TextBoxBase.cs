@@ -787,7 +787,7 @@ namespace MonoGameGum.Forms.Controls
 
         #region UpdateTo Methods
 
-        protected override void UpdateState()
+        public override void UpdateState()
         {
             var cursor = MainCursor;
 

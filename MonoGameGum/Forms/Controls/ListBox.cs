@@ -279,7 +279,7 @@ namespace MonoGameGum.Forms.Controls
             }
         }
 
-        protected override void UpdateState()
+        public override void UpdateState()
         {
             var category = "ListBoxCategoryState";
             if (IsEnabled == false)

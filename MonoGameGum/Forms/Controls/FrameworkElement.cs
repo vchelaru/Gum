@@ -795,8 +795,11 @@ namespace MonoGameGum.Forms.Controls
             return didChildHandle;
         }
 
-
-        protected virtual void UpdateState() { }
+        /// <summary>
+        /// Gets the state according to the element's current properties (such as whether it is enabled) and applies it
+        /// to refresh the Visual's appearance.
+        /// </summary>
+        public virtual void UpdateState() { }
 
         protected void RaiseKeyDown(KeyEventArgs e)
         {

@@ -117,7 +117,7 @@ namespace MonoGameGum.Forms.Controls
             }
         }
 
-        protected override void UpdateState()
+        public override void UpdateState()
         {
             var cursor = MainCursor;
             var isTouchScreen = false;
