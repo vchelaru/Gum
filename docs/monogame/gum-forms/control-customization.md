@@ -43,6 +43,9 @@ highlightedState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
     Name = "ButtonBackground.Color",
     Value = Color.Yellow
 });
+
+// We can forcefully refresh the appearance by calling UpdateState:
+customizedButton.UpdateState();
 ```
 
 Now the button highlights yellow instead of a lighter blue.
@@ -68,6 +71,8 @@ highlightedState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
     // FontScale expects a float value, so use 2.0f instead of 2
     Value = 2.0f
 });
+
+customizedButton.UpdateState();
 ```
 
 The button text now becomes black and is twice as big when highlighted but notice that the text changes are not undone when the cursor moves off of the button (when the Highlighted state is unset).
@@ -99,6 +104,8 @@ enabledState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
     // FontScale expects a float value, so use 2.0f instead of 2
     Value = 1.0f
 });
+
+customizedButton.UpdateState();
 ```
 
 <figure><img src="../../.gitbook/assets/26_07 50 10.gif" alt=""><figcaption><p>Enabled state resetting text color and size</p></figcaption></figure>
@@ -187,6 +194,8 @@ if(fullInstantiation)
         Name = "ButtonBackground.Color",
         Value = new Color(255, 100, 194),
     });
+    
+    this.Updatestate();
 }
 ```
 
