@@ -27,14 +27,17 @@ textInstance.Text = "I've been modified in code";
 
 By default all TextRuntime instances use an Arial 18 pt font. This can be changed by specifying ta custom font.
 
-Fonts on TextRuntime objects can be modified in one of two ways:
+Fonts on TextRuntime objects can be modified in one of the following ways:
 
-1. By setting the UseCustomFont property to true, then changing the CustomFontFile property to a desired .fnt file.
-2. By setting UseCustomFont property to false, then changing the individual Font values. This approach requires following a specific .fnt naming convention.
+1. By setting the `UseCustomFont` property to `true`, then changing the `CustomFontFile` property to a desired .fnt file.
+2. By directly assigning the `BitmapFont` property on the TextRuntime object, bypassing all other properties.&#x20;
+3. By setting `UseCustomFont` property to `false`, then changing the individual Font values. This approach requires following a specific .fnt naming convention.
 
-For most projects, the first approach is recommended since it doesn't require specific naming conventions. The second approach is convenient if your project is using the Gum tool, and if the Gum tool has already generated fonts for the specific combinations of values you are assigning.
+For most projects, the first approach is recommended since it doesn't require specific naming conventions. The second approach also works well if you are directly loading the BitmapFont object yourself. The third approach is convenient if your project is using the Gum tool, and if the Gum tool has already generated fonts for the specific combinations of values you are assigning.
 
-The following code shows how to load a custom font:
+### Assigning CustomFontFile
+
+The following code shows how to load a custom font (the first approach):
 
 ```csharp
 var customText = new TextRuntime();
@@ -57,6 +60,18 @@ Also, note that files are loaded from-file rather than using the content pipelin
 <figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Copy if newer property set</p></figcaption></figure>
 
 The easiest way to mark all content as "Copy to Output Directory" is to use wildcard items in your .csproj. This is explained in the [Loading .gumx (Gum project)](../loading-.gumx-gum-project.md#adding-the-gum-project-files-to-your-.csproj) page.
+
+### Assigning BitmapFont
+
+The following code shows how to assign the BitmapFont property on a TextRuntime:
+
+```csharp
+var bitmapFont = new BitmapFont("WhitePeaberryOutline/WhitePeaberryOutline.fnt", SystemManagers.Default);
+customText.BitmapFont = bitmapFont;
+// no additional properties such as UseCustomFont or any of the font component values
+// are used once this is assigned. By assigning those, the BitmapFont assignment may
+// get overwritten
+```
 
 ### Font Component Values
 
