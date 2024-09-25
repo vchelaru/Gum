@@ -381,11 +381,13 @@ namespace Gum.Wireframe
                 ReactToFontValueChange();
 
             }
+#if USE_GUMCOMMON
             else if(propertyName == nameof(MonoGameGum.GueDeriving.TextRuntime.BitmapFont) && graphicalUiElement is MonoGameGum.GueDeriving.TextRuntime textRuntime)
             {
                 textRuntime.BitmapFont = (BitmapFont)value;
                 handled = true;
             }
+#endif
 #endif
             else if (propertyName == nameof(graphicalUiElement.FontSize))
             {
