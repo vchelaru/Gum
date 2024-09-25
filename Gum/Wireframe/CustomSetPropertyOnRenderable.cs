@@ -381,6 +381,11 @@ namespace Gum.Wireframe
                 ReactToFontValueChange();
 
             }
+            else if(propertyName == nameof(MonoGameGum.GueDeriving.TextRuntime.BitmapFont) && graphicalUiElement is MonoGameGum.GueDeriving.TextRuntime textRuntime)
+            {
+                textRuntime.BitmapFont = (BitmapFont)value;
+                handled = true;
+            }
 #endif
             else if (propertyName == nameof(graphicalUiElement.FontSize))
             {
