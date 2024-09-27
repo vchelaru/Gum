@@ -10,6 +10,10 @@ namespace MonoGameGum.Forms.Controls
 {
     public class Button : ButtonBase
     {
+        /// <summary>
+        /// The name of the Category containing visual states for the Button object.
+        /// </summary>
+        public const string ButtonCategoryState = "ButtonCategoryState";
         #region Fields/Properties
 
         GraphicalUiElement textComponent;
@@ -80,11 +84,9 @@ namespace MonoGameGum.Forms.Controls
 
         public override void UpdateState()
         {
-            const string category = "ButtonCategoryState";
-
             var state = base.GetDesiredState();
 
-            Visual.SetProperty(category, state);
+            Visual.SetProperty(ButtonCategoryState, state);
         }
 
         #endregion

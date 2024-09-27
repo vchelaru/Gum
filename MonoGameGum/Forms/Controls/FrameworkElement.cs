@@ -806,6 +806,15 @@ namespace MonoGameGum.Forms.Controls
             KeyDown?.Invoke(this, e);
         }
 
+        public const string DisabledState = "Disabled";
+        public const string DisabledFocusedState = "DisabledFocused";
+        public const string EnabledState = "Enabled";
+        public const string FocusedState = "Focused";
+        public const string HighlightedState = "Highlighted";
+        public const string HighlightedFocusedState = "HighlightedFocused";
+        public const string PushedState = "Pushed";
+
+
         protected string GetDesiredState()
         {
             var cursor = MainCursor;
@@ -826,18 +835,18 @@ namespace MonoGameGum.Forms.Controls
             {
                 if (isFocused)
                 {
-                    return "DisabledFocused";
+                    return DisabledFocusedState;
                 }
                 else
                 {
-                    return "Disabled";
+                    return DisabledState;
                 }
             }
             else if (IsFocused)
             {
                 if (cursor.WindowPushed == visual && primaryDown)
                 {
-                    return "Pushed";
+                    return PushedState;
                 }
                 // Even if the cursor is reported as being over the button, if the
                 // cursor got its input from a touch screen then the cursor really isn't
@@ -846,18 +855,18 @@ namespace MonoGameGum.Forms.Controls
                 else if (GetIfIsOnThisOrChildVisual(cursor) &&
                     !isTouchScreen)
                 {
-                    return "HighlightedFocused";
+                    return HighlightedFocusedState;
                 }
                 else
                 {
-                    return "Focused";
+                    return FocusedState;
                 }
             }
             else if (GetIfIsOnThisOrChildVisual(cursor))
             {
                 if (cursor.WindowPushed == visual && primaryDown)
                 {
-                    return "Pushed";
+                    return PushedState;
                 }
                 // Even if the cursor is reported as being over the button, if the
                 // cursor got its input from a touch screen then the cursor really isn't
@@ -865,16 +874,16 @@ namespace MonoGameGum.Forms.Controls
                 // is a physical on-screen cursor
                 else if (!isTouchScreen)
                 {
-                    return "Highlighted";
+                    return HighlightedState;
                 }
                 else
                 {
-                    return "Enabled";
+                    return EnabledState;
                 }
             }
             else
             {
-                return "Enabled";
+                return EnabledState;
             }
         }
 

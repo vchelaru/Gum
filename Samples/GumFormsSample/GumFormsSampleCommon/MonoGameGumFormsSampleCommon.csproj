@@ -19,6 +19,9 @@
   </PropertyGroup>
 	
   <ItemGroup>
+    <Compile Include="CustomRuntimes\CustomListBoxItemRuntime.cs" />
+    <Compile Include="Screens\FormsCustomizationScreen.cs" />
+    <Compile Include="Screens\FrameworkElementExampleScreen.cs" />
     <Compile Include="FullyCustomizedButton.cs" />
     <Compile Include="GumFormsSampleGame.cs" />
   </ItemGroup>
