@@ -8,9 +8,11 @@ Gum Forms provide fully functional controls with minimal setup. These controls c
 
 Individual instances can be customized by modifying the built-in states which are added automatically by the default implementations.
 
-The following code shows how to modify a Button instance. Note that all code in this document assumes that Gum Forms has already been initialized.
+{% hint style="info" %}
+Note that all code in this document assumes that Gum Forms has already been initialized.
+{% endhint %}
 
-A default button can be constructed using the following code:
+The following code shows how to modify a Button instance.  A default button can be constructed using the following code:
 
 ```csharp
 var customizedButton = new Button();
@@ -21,7 +23,7 @@ Notice that this button has subtle color changes when the cursor hovers over or 
 
 <figure><img src="../../.gitbook/assets/26_07 28 29.gif" alt=""><figcaption><p>Button responding to hover and push events</p></figcaption></figure>
 
-These events result in different states being applied to the button. These states are initialized by default when calling the following code:
+These cursor actions result in different states being applied to the button. These states are initialized by default when calling the following code:
 
 ```csharp
 FormsUtilities.InitializeDefaults();
@@ -41,10 +43,11 @@ highlightedState.Variables.Clear();
 highlightedState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
 {
     Name = "ButtonBackground.Color",
-    Value = Color.Yellow
+    Value = Microsoft.Xna.Framework.Color.Yellow
 });
 
-// We can forcefully refresh the appearance by calling UpdateState:
+// We can forcefully refresh the appearance by calling UpdateState, which is
+// important if we modify the default "Enabled" state:
 customizedButton.UpdateState();
 ```
 
@@ -52,7 +55,11 @@ Now the button highlights yellow instead of a lighter blue.
 
 <figure><img src="../../.gitbook/assets/26_07 35 48.gif" alt=""><figcaption><p>Button highlighting yellow on hover</p></figcaption></figure>
 
-Note that any property on the button or its children can be modified through states. For example, we can also change the text color and size as shown in the following code. Note that you may need to make the button bigger so it can contain the larger text.
+{% hint style="info" %}
+Each Forms instance creates its own Categories dictionary, so modifying the Categories on one instance does not affect the Categories on another instance.
+{% endhint %}
+
+Any property on the button or its children can be modified through states. For example, we can also change the text color and size as shown in the following code. You may need to make the button bigger so it can contain the larger text.
 
 ```csharp
 // make the button bigger to hold the larger text:
@@ -62,7 +69,7 @@ customizedButton.Height = 50;
 highlightedState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
 {
     Name = "TextInstance.Color",
-    Value = Color.Black
+    Value = Microsoft.Xna.Framework.Color.Black
 });
 
 highlightedState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
@@ -72,6 +79,8 @@ highlightedState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
     Value = 2.0f
 });
 
+// We can forcefully refresh the appearance by calling UpdateState, which is
+// important if we modify the default "Enabled" state:
 customizedButton.UpdateState();
 ```
 
@@ -89,13 +98,13 @@ enabledState.Variables.Clear();
 enabledState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
 {
     Name = "ButtonBackground.Color",
-    Value = new Color(0, 0, 128),
+    Value = new Microsoft.Xna.Framework.Color(0, 0, 128),
 });
 
 enabledState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
 {
     Name = "TextInstance.Color",
-    Value = Color.White
+    Value = Microsoft.Xna.Framework.Color.White
 });
 
 enabledState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
@@ -184,7 +193,7 @@ if(fullInstantiation)
     highlightedState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
     {
         Name = "ButtonBackground.Color",
-        Value = new Color(255,0,191)
+        Value = new Microsoft.Xna.Framework.Color(255,0,191)
     });
 
     var enabledState = category.States.Find(item => item.Name == "Enabled");
@@ -192,7 +201,7 @@ if(fullInstantiation)
     enabledState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
     {
         Name = "ButtonBackground.Color",
-        Value = new Color(255, 100, 194),
+        Value = new Microsoft.Xna.Framework.Color(255, 100, 194),
     });
     
     this.Updatestate();
@@ -299,7 +308,7 @@ namespace GumFormsSample
                         new ()
                         {
                             Name = "ButtonBackground.Color",
-                            Value = new Color(255, 255, 255),
+                            Value = new Microsoft.Xna.Framework.Color(255, 255, 255),
                         }
                     }
                 });
@@ -312,7 +321,7 @@ namespace GumFormsSample
                         new ()
                         {
                             Name = "ButtonBackground.Color",
-                            Value = new Color(230, 230, 230),
+                            Value = new Microsoft.Xna.Framework.Color(230, 230, 230),
                         }
                     }
                 });
@@ -325,7 +334,7 @@ namespace GumFormsSample
                         new ()
                         {
                             Name = "ButtonBackground.Color",
-                            Value = new Color(128, 128, 128),
+                            Value = new Microsoft.Xna.Framework.Color(128, 128, 128),
                         }
                     }
                 });
@@ -449,7 +458,7 @@ For more information on using a custom runtime defined in your Gum project, see 
 
 #### Associate the Custom Runtime to the Forms Type
 
-Finally, we can assocaite the Forms control with the runtime. For example, the following code can be used to create a StandardButtonRuntime whenever the code calls `new Button`. Note that this is not a requirement for working with Forms, but it can make testing more convenient.
+Finally, we can associate the Forms control with the runtime. For example, the following code can be used to create a StandardButtonRuntime whenever the code calls `new Button`. Note that this is not a requirement for working with Forms, but it can make testing more convenient.
 
 ```csharp
 FrameworkElement.DefaultFormsComponents[typeof(Button)] = typeof(StandardButtonRuntime);
@@ -458,3 +467,43 @@ FrameworkElement.DefaultFormsComponents[typeof(Button)] = typeof(StandardButtonR
 Note that in this case, we can only associate one type of component runtime with each type of Forms control. In other words, if you write code that instantiates a new Button using the Button constructor, a StandardButtonRuntime will be created internally.
 
 Of course, you are not required to create buttons this way - you can also create buttons by adding instances of your component in your Gum screen in the tool, or by instantiating the desired runtime.
+
+### Modifying ListBoxItems
+
+ListBoxItems are typically created automatically when items are added to a ListBox instance. We can modify ListBoxItems by creating a runtime object for our ListBoxItem then assigning the ListBox's VisualTemplate.
+
+The easeist way to create a runtime object for ListBoxItem is to copy the existing DefaultListBoxItemRuntime class which can be found here: [https://github.com/vchelaru/Gum/blob/master/MonoGameGum/Forms/DefaultVisuals/DefaultListBoxItemRuntime.cs](../../../MonoGameGum/Forms/DefaultVisuals/DefaultListBoxItemRuntime.cs)
+
+You may want to rename the class when creating your own version. For example, you may want to name yours `CustomListBoxItemRuntime`.
+
+Notice that the DefaultListBoxItemRuntime creates visual states beginning on this line: [https://github.com/vchelaru/Gum/blob/cc88486578636cdb46f0c3333233e54f54a75eba/MonoGameGum/Forms/DefaultVisuals/DefaultListBoxItemRuntime.cs#L68](https://github.com/vchelaru/Gum/blob/cc88486578636cdb46f0c3333233e54f54a75eba/MonoGameGum/Forms/DefaultVisuals/DefaultListBoxItemRuntime.cs#L68)
+
+Once you have created your custom ListBoxItem runtime implementation, you can use it on a list box by assigning the VisualTemplate. Be sure to assign it before adding items to your ListBox, as shown in the following code:
+
+```csharp
+var listBox = new ListBox();
+Root.Children.Add(listBox.Visual);
+listBox.X = 0;
+listBox.Y = 100;
+listBox.Width = 200;
+listBox.Height = 200;
+
+// assign the template before adding new list items
+listBox.VisualTemplate = 
+    new MonoGameGum.Forms.VisualTemplate(() => 
+        // do not create a forms object because this template will be
+        // automatically added to a ListBoxItem by the ListBox:
+        new CustomListBoxItemRuntime(tryCreateFormsObject:false));
+
+for (int i = 0; i < 20; i++)
+{
+    listBox.Items.Add($"Custom ListBoxItem [{i}]");
+}
+
+```
+
+{% hint style="info" %}
+Notice that the code above passes a false value to the `tryCreateFormsObject` parameter. This prevents the CustomListBoxItemRuntime from creating its own Forms object that would override the default styling.
+{% endhint %}
+
+<figure><img src="../../.gitbook/assets/27_06 00 06.gif" alt="" width="164"><figcaption><p>Custom ListBoxItem in a ListBox</p></figcaption></figure>
