@@ -372,9 +372,12 @@ namespace RenderingLibrary.Graphics
                     mCharacterInfo[i] = space;
                 }
 
-                // Make the tab character be equivalent to 4 spaces:
-                mCharacterInfo['t'].ScaleX = space.ScaleX * 4;
-                mCharacterInfo['t'].Spacing = space.Spacing * 4;
+                if(mCharacterInfo.Length > (int)'\t')
+                {
+                    // Make the tab character be equivalent to 4 spaces:
+                    mCharacterInfo['\t'].ScaleX = space.ScaleX * 4;
+                    mCharacterInfo['\t'].Spacing = space.Spacing * 4;
+                }
 
                 foreach (var charInfo in parsedData.Chars)
                 {
@@ -1292,7 +1295,10 @@ namespace RenderingLibrary.Graphics
                 XOffset = line.NumericAttributes["xoffset"];
                 YOffset = line.NumericAttributes["yoffset"];
                 XAdvance = line.NumericAttributes["xadvance"];
-                Page = line.NumericAttributes["page"];
+                if(line.NumericAttributes.ContainsKey("page"))
+                {
+                    Page = line.NumericAttributes["page"];
+                }
             }
         }
 
