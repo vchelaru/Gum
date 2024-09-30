@@ -52,22 +52,6 @@ namespace WpfDataUi.Controls
 
         public bool SuppressSettingProperty { get; set; }
 
-        public Brush DesiredForegroundBrush
-        {
-            get
-            {
-                if (InstanceMember.IsDefault)
-                {
-                    return Brushes.Green;
-                }
-                else
-                {
-                    return Brushes.Black;
-
-                }
-            }
-        }
-
         protected Grid Grid
         {
             get;
@@ -272,6 +256,8 @@ namespace WpfDataUi.Controls
             this.ComboBox.Text = valueOnInstance?.ToString();
             this.SuppressSettingProperty = false;
 
+            SyncForegroundWithState();
+
             return ApplyValueResult.Success;
         }
 
@@ -407,7 +393,7 @@ namespace WpfDataUi.Controls
             }
             else
             {
-                ClearValue(ComboBox.ForegroundProperty);
+                ComboBox.ClearValue(Control.ForegroundProperty);
             }
         }
     }
