@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net7.0</TargetFramework>
@@ -6,6 +6,7 @@
         <Nullable>enable</Nullable>
         <DefineConstants>$(DefineConstants)TRACE;FNA;XNA4</DefineConstants>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<NoWarn>1591</NoWarn>
 
 	</PropertyGroup>
 

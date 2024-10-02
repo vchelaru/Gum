@@ -4,6 +4,7 @@
 	<PropertyGroup>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<Platforms>AnyCPU</Platforms>
+		<NoWarn>1591</NoWarn>
 	</PropertyGroup>
 
 	<PropertyGroup>

@@ -4,8 +4,9 @@
 	<PropertyGroup>
     <TargetFramework>net6.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
+		<NoWarn>1591</NoWarn>
 
-  </PropertyGroup>
+	</PropertyGroup>
 
   <ItemGroup>
     <Compile Include="..\SkiaGum.Wpf\GumSKElement.cs" Link="GumSKElement.cs" />

@@ -3,6 +3,7 @@
 	<PropertyGroup>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<Platforms>AnyCPU; x86</Platforms>
+		<NoWarn>1591</NoWarn>
 	</PropertyGroup>
 
 	<PropertyGroup>
