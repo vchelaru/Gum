@@ -66,11 +66,15 @@ This effect can also be seen by adjusting the height using the handles.
 
 <figure><img src="../../.gitbook/assets/13_06 12 29.gif" alt=""><figcaption><p>Adjusting height changes all sibling heights</p></figcaption></figure>
 
+Gum ignores invisible objects when calculating available space for Ratio Width units. Therefore, if a sibling is invisible, Gum treats it as if it has 0 height which allows all other Ratio siblings to expand.
+
+<figure><img src="../../.gitbook/assets/02_17 34 27.gif" alt=""><figcaption><p>Toggling visibility removes an object from the height ratio calculation</p></figcaption></figure>
+
 Ratio of Container also respects [Stack Spacing](../container/stack-spacing.md). A Stack Spacing value greater than 0 removes the available space for all children with a Height Units of Relative to Container.
 
 <figure><img src="../../.gitbook/assets/13_06 20 22.gif" alt=""><figcaption><p>Increasing Stack Spacing reduces the available ratio space for all children</p></figcaption></figure>
 
-## RelativeToChildren
+## Relative to Children
 
 The following image shows a child [ColoredRectangle](height-units.md#relativetochildren) with 50 **RelativeToChildren** Height, which means that it will always be 50 pixels taller than is necessary to contain its children. Since the rectangle has no children, this is the same as having 50 **Absolute** Height:
 
@@ -95,7 +99,7 @@ The following animation shows a Text instance which has its Height Units set to 
 
 For more information on relative layout in regards to absolute vs. relative unit types, see the [Relative Layout Unit Type](relative-layout-unit-type.md) page.
 
-## PercentageOfOtherDimension
+## Percentage of Other Dimension
 
 **PercentageOfOtherDimension** will adjust the object's effective height so it remains proportional to the Width value multiplied by the Height value (as a percentage). For example, if a Height value of 200 is entered, then the effective height will be 200% (2x) of the width.
 
