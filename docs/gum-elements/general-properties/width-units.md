@@ -10,17 +10,17 @@ The following shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/t
 
 ![](<../../.gitbook/assets/50AbsoluteWidth (1).png>)
 
-## Percentage
+## Percentage of Container
 
-The following shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/Gum/coloredrectangle/ColoredRectangle.html) with 100 **Percentage** Width, which means it will have 100% of the width of its parent. Note that 100 **Percentage** is the same as 0 **RelativeToContainer**:
+The following shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/Gum/coloredrectangle/ColoredRectangle.html) with 100 **Percentage of Container** Width, which means it will have 100% of the width of its parent. Note that 100 **Percentage** is the same as 0 **Relative to Container**:
 
-![](../../.gitbook/assets/100PercentageWidth.png)
+![Rectangle using 100% of its container](<../../.gitbook/assets/02\_10 09 01.png>)
 
 If an object uses **Percentage** Width, but has no parent, it will size itself as a percentage of the entire screen's width.
 
 <figure><img src="../../.gitbook/assets/image (69).png" alt=""><figcaption></figcaption></figure>
 
-## RelativeToContainer
+## Relative to Container
 
 The following image shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/Gum/coloredrectangle/ColoredRectangle.html) with -10 **RelativeToContainer** Width, which means it will always be 10 pixels less wide than its parent.
 
@@ -30,7 +30,11 @@ If an object uses **RelativeToContainer** Width, but has no parent, it will size
 
 <figure><img src="../../.gitbook/assets/image (70).png" alt=""><figcaption></figcaption></figure>
 
-## RelativeToChildren
+## Ratio of Container
+
+Ratio of Container can be used to fill available space or to share available space with other objects using a ratio. It behaves similar to a Height Units of [Ratio of Container](height-units.md#ratio-of-container), but operates vertically rather than horizontally.
+
+## Relative to Children
 
 The following image shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/Gum/coloredrectangle/ColoredRectangle.html) with 50 **RelativeToChildren** Width, which means that it will always be 50 pixels wider than is necessary to contain its children. Since the rectangle has no children, this is the same as having 50 **Absolute** Width:
 
