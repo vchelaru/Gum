@@ -35,6 +35,8 @@ If you would like to create a new Kni project from scratch, you can follow these
 
 You should test your project to make sure it runs prior to adding Gum.
 
+### Adding Gum to a Kni Project
+
 Once you have verified that your project runs, you can add Gum to your project by following these steps:
 
 1. Right-click on your project's dependencies and select to **Manage NuGet packages...**

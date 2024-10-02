@@ -10,6 +10,14 @@ Currently the Gum tool requires XNA runtimes. Download and install the runtime p
 
 {% embed url="https://www.microsoft.com/en-us/download/details.aspx?id=20914" %}
 
+Since Gum is a prebuilt file in a .zip, Windows _blocks_ the file which results in the "Windows protected your PC" popup:
+
+<figure><img src=".gitbook/assets/image (77).png" alt=""><figcaption><p>Windows protected your PC popup</p></figcaption></figure>
+
+You can click **More info,** then **Run anyway**. Alternatively, you can right-click on the .zip file and select the option to unblock:
+
+<figure><img src=".gitbook/assets/image (78).png" alt=""><figcaption><p>Unblocking the .zip file removes the "Windows protected your PC" popup</p></figcaption></figure>
+
 ### Mac
 
 #### Prerequisites
