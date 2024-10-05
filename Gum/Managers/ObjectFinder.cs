@@ -58,6 +58,10 @@ namespace Gum.Managers
 
         static ObjectFinder mObjectFinder;
 
+        /// <summary>
+        /// Provides quick access to Gum objects by name. Elements do not prefix their type
+        /// so a Screen would be "MainScreen" rather than "Screens/MainScreen"
+        /// </summary>
         Dictionary<string, ElementSave> cachedDictionary;
 
         public static ObjectFinder Self

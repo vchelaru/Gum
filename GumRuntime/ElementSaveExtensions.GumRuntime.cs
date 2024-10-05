@@ -43,6 +43,13 @@ namespace GumRuntime
 
         public static GraphicalUiElement CreateGueForElement(ElementSave elementSave, bool fullInstantiation = false, string genericType = null)
         {
+#if DEBUG
+            if(elementSave == null)
+            {
+                throw new ArgumentNullException(nameof(elementSave));
+
+            }
+#endif
             GraphicalUiElement toReturn = null;
 
             var elementName = elementSave.Name;
