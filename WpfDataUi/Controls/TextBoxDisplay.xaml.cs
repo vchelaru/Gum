@@ -273,6 +273,7 @@ namespace WpfDataUi.Controls
 
         #region Label Dragging
         double? currentDownX;
+        double? pressedX;
         private double unroundedValue;
 
         [DllImport("User32.dll")]
@@ -284,6 +285,7 @@ namespace WpfDataUi.Controls
             if (mTextBoxLogic.IsNumeric && EnableLabelDragValueChange)
             {
                 currentDownX = e.GetPosition(this).X;
+                pressedX = currentDownX;
 
                 System.Windows.Input.Mouse.Capture(Label);
 
@@ -354,11 +356,11 @@ namespace WpfDataUi.Controls
         {
             if (mTextBoxLogic.IsNumeric && currentDownX != 0 && EnableLabelDragValueChange &&
                 // If the user changed the value with the mouse. Otherwise, it was a simple click
-                currentDownX != e.GetPosition(this).X)
+                pressedX != e.GetPosition(this).X)
             {
                 lastApplyValueResult = mTextBoxLogic.TryApplyToInstance(SetPropertyCommitType.Full);
 
-                currentDownX = null;
+                pressedX = null;
                 System.Windows.Input.Mouse.Capture(null);
             }
         }

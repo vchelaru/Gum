@@ -43,6 +43,20 @@ namespace GumRuntime
                 {
                     instanceElement.SetGraphicalUiElement(toReturn, systemManagers);
                 }
+                else
+                {
+                    // Do most of the things that would happen in the SetGraphicalUiElement, but don't actually
+                    // call SetGraphicalUiElement because that would potentially re-create children
+                    toReturn.SetStatesAndCategoriesRecursively(instanceElement);
+
+                    toReturn.AddExposedVariablesRecursively(instanceElement);
+
+                    toReturn.Tag = instanceElement;
+
+                    toReturn.SetInitialState();
+
+                    toReturn.AfterFullCreation();
+                }
 
                 toReturn.Tag = instanceSave;
             }
