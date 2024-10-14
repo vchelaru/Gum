@@ -52,7 +52,7 @@ The X,Y values, Origin values, and Units values are all available for every type
 
 You may have noticed that some variables in the Variables tab have a green background while others have a white background. For example, in the image above the TextInstance's **Vertical Alignment** is green. The reason for this is because instances are not required to define values for every variable. Whenever an instance does not set a variable value, it uses the value that is defined in the Standard Element definition.
 
-To see how this works, select the **Text** item under the **Standard** folder. Notice that all values are black. Notice the default values for **Horizontal Alignment** and **Vertical Alignment**:
+To see how this works, select the **Text** item under the **Standard** folder. Notice that all values have a white background. Notice the default values for **Horizontal Alignment** and **Vertical Alignment**:
 
 ![](<../.gitbook/assets/image (8) (1) (1) (1).png>)
 
@@ -60,7 +60,7 @@ If the default Horizontal Alignment and Vertical Alignment values are changed, t
 
 ![](<../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png>)
 
-Now if we select the TextIntance we will see that the VerticalAlignment is visibly using the Bottom value; however the **Horizontal Alignment** is still using center - this is because a value that is explicitly set on an instance will always override the default value set in the Standard element. Notice that **Horizontal Alignment** is black (indicating a custom value) and **Vertical Alignment** is green (indicating a default value).
+Now if we select the TextIntance we will see that the VerticalAlignment is visibly using the Bottom value; however the **Horizontal Alignment** is still using center - this is because a value that is explicitly set on an instance will always override the default value set in the Standard element. Notice that **Horizontal Alignment** has a white background (indicating a custom value) and **Vertical Alignment** has a green background (indicating a default value).
 
 ![](<../.gitbook/assets/image (9) (1).png>)
 
