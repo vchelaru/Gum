@@ -23,9 +23,11 @@ To do this:
 3. Right-click on the text box and select "Expose Variable"
 4. Enter the name "Text" for the variable name
 
+<figure><img src="../.gitbook/assets/Gum_1efsktPMgR (1).png" alt=""><figcaption></figcaption></figure>
+
 You can verify that the Text value is exposed by clicking the "Button" component and seeing the "Text" variable under the "Exposed" category:
 
-![](<../.gitbook/assets/GumExposedText (1).PNG>)
+<figure><img src="../.gitbook/assets/Gum_HcVRSOPPR9.png" alt=""><figcaption></figcaption></figure>
 
 ## Setting instance variables
 
@@ -36,4 +38,4 @@ Now that the Text variable is an exposed variable, it can be set per-instance. T
 
 Feel free to set different Text values on all of the buttons. Notice that the Text may word-wrap.
 
-![](<../.gitbook/assets/GumInstanceVariables (1).PNG>)
+![](../.gitbook/assets/Gum\_8vSjkMFzj4.png)
