@@ -127,7 +127,30 @@ namespace MonoGameGum.Forms.Controls.Primitives
 #if DEBUG
             if (thumbVisual == null)
             {
-                throw new Exception($"The {this.GetType().Name} Gum object must have a button called ThumbInstance");
+                var message =
+                    $"The {this.GetType().Name} Gum object must have a button called ThumbInstance.";
+
+                if(Visual.Children != null)
+                {
+                    if(Visual.Children.Count == 0)
+                    {
+                        message += " This visual has no children";
+                    }
+                    else
+                    {
+                        message += " The visual has the following children:";
+                        foreach(var child in Visual.Children)
+                        {
+                            message += "\n" + child.Name;
+                        }
+                    }
+                }
+                else //if(Visual.Children == null)
+                {
+                    message += " This visual has null children";
+                }
+
+                throw new Exception(message);
 
             }
 #endif
@@ -155,8 +178,21 @@ namespace MonoGameGum.Forms.Controls.Primitives
             //{
             //    thumbParent.RaiseChildrenEventsOutsideOfBounds = true;
             //}
-            explicitTrack = (InteractiveGue)this.Visual.GetGraphicalUiElementByName("TrackInstance");
-            if (explicitTrack is InteractiveGue trackAsInteractive)
+            var trackLocal = this.Visual.GetGraphicalUiElementByName("TrackInstance");
+
+#if DEBUG
+            if(trackLocal == null)
+            {
+                throw new Exception("Could not find a child named TrackInstance");
+            }
+            else if(!(trackLocal is InteractiveGue))
+            {
+                throw new Exception("Found a TrackInstance, but it is not an InteractiveGue");
+            }
+#endif
+
+            var explicitTrack = (InteractiveGue)trackLocal;
+            if (trackLocal is InteractiveGue trackAsInteractive)
             {
                 trackAsInteractive.RaiseChildrenEventsOutsideOfBounds = true;
             }

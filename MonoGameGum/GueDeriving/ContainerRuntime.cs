@@ -1,4 +1,5 @@
-﻿using RenderingLibrary;
+﻿using Gum.Wireframe;
+using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace MonoGameGum.GueDeriving
 {
-    public class ContainerRuntime : global::Gum.Wireframe.GraphicalUiElement
+    public class ContainerRuntime : InteractiveGue
     {
         public ContainerRuntime(bool fullInstantiation = true)
         {
