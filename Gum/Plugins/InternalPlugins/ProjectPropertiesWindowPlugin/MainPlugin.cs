@@ -56,17 +56,20 @@ namespace Gum.Plugins.PropertiesWindowPlugin
         {
             try
             {
+                // Only create a new instance if we don't already have one
                 if (control == null)
                 {
                     control = new ProjectPropertiesControl();
 
                     control.CloseClicked += HandleCloseClicked;
-                }
-                viewModel.SetFrom(ProjectManager.Self.GeneralSettingsFile, ProjectState.Self.GumProjectSave);
 
-                GumCommands.Self.GuiCommands.AddControl(control, "Project Properties");
+                    GumCommands.Self.GuiCommands.AddControl(control, "Project Properties");
+                    viewModel.SetFrom(ProjectManager.Self.GeneralSettingsFile, ProjectState.Self.GumProjectSave);
+                    control.ViewModel = viewModel;
+                }
+
                 GumCommands.Self.GuiCommands.ShowControl(control);
-                control.ViewModel = viewModel;
+                
             }
             catch (Exception ex)
             {
