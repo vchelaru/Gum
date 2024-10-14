@@ -581,6 +581,9 @@ namespace Gum
                     if (succeeded)
                     {
                         PluginManager.Self.ProjectSave(GumProjectSave);
+                        GeneralSettingsFile.AddToRecentFilesIfNew(GumProjectSave.FullFileName);
+                        GeneralSettingsFile.LastProject = GumProjectSave.FullFileName;
+                        GeneralSettingsFile.Save();
                     }
                 }
             }
