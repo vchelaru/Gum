@@ -24,7 +24,7 @@ using StateAnimationPlugin.SaveClasses;
 namespace StateAnimationPlugin
 {
     [Export(typeof(PluginBase))]
-    public class MainPlugin : PluginBase
+    public class MainStateAnimationPlugin : PluginBase
     {
         #region Fields
 
@@ -176,13 +176,13 @@ namespace StateAnimationPlugin
                 mMainWindow.AnimationColumnsResized += HandleAnimationColumnsResized;
             }
 
-            var wasShown = GumCommands.Self.GuiCommands.ShowControl(mMainWindow);
+            var wasShown = GumCommands.Self.GuiCommands.ShowTabForControl(mMainWindow);
 
             if(!wasShown)
             {
                 var pluginTab = GumCommands.Self.GuiCommands.AddControl(mMainWindow, "Animations", 
                     TabLocation.RightBottom);
-                GumCommands.Self.GuiCommands.ShowControl(mMainWindow);
+                GumCommands.Self.GuiCommands.ShowTabForControl(mMainWindow);
                 pluginTab.Focus();
             }
 

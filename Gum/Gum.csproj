@@ -249,7 +249,7 @@
     <Compile Include="Plugins\InternalPlugins\VariableGrid\MainVariableGridPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\VariableGrid\StateSaveCategoryDisplayer.cs" />
     <Compile Include="Plugins\PluginTab.cs" />
-    <Compile Include="Plugins\InternalPlugins\ProjectPropertiesWindowPlugin\MainPlugin.cs" />
+    <Compile Include="Plugins\InternalPlugins\ProjectPropertiesWindowPlugin\MainPropertiesWindowPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\ProjectPropertiesWindowPlugin\ProjectPropertiesControl.xaml.cs">
       <DependentUpon>ProjectPropertiesControl.xaml</DependentUpon>
     </Compile>

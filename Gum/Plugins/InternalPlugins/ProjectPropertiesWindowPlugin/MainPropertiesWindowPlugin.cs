@@ -21,7 +21,7 @@ namespace Gum.Plugins.PropertiesWindowPlugin
     /// Plugin for displaying project properties
     /// </summary>
     [Export(typeof(PluginBase))]
-    class MainPlugin : InternalPlugin
+    class MainPropertiesWindowPlugin : InternalPlugin
     {
         #region Fields/Properties
 
@@ -59,14 +59,19 @@ namespace Gum.Plugins.PropertiesWindowPlugin
                 if (control == null)
                 {
                     control = new ProjectPropertiesControl();
-
                     control.CloseClicked += HandleCloseClicked;
                 }
-                viewModel.SetFrom(ProjectManager.Self.GeneralSettingsFile, ProjectState.Self.GumProjectSave);
 
-                GumCommands.Self.GuiCommands.AddControl(control, "Project Properties");
-                GumCommands.Self.GuiCommands.ShowControl(control);
-                control.ViewModel = viewModel;
+                viewModel.SetFrom(ProjectManager.Self.GeneralSettingsFile, ProjectState.Self.GumProjectSave);
+                var wasShown = 
+                    GumCommands.Self.GuiCommands.ShowTabForControl(control);
+
+                if(!wasShown)
+                {
+                    GumCommands.Self.GuiCommands.AddControl(control, "Project Properties");
+                    control.ViewModel = viewModel;
+                    GumCommands.Self.GuiCommands.ShowTabForControl(control);
+                }
             }
             catch (Exception ex)
             {
