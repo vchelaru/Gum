@@ -2,7 +2,7 @@
 
 ### Introduction
 
-Gum Forms provide fully functional controls with minimal setup. These controls can be restyled in code, either per-instance, or globally per control type.
+Gum Forms provide fully functional controls with minimal setup. These controls can be restyled in code, either per-instance, or globally per control type. Customization can be performed in-code or in the Gum tool.
 
 ### Customizing an Instance
 
@@ -179,7 +179,7 @@ namespace GumFormsSample
 }
 ```
 
-Notice that we must implement a constructor with the same parameters as the base class - this is important because Gum will call this constructor for us when we create a Button instance and the parameter list must match.
+Notice that we must implement a constructor with the same parameters as the base class - this is important because Gum calls this constructor for us when we create a Button instance and the parameter list must match.
 
 Now we can implement our own styling inside the `if(fullInstantiation)` block. The code to implement styling here is the same as above except this object is the visual, so the category exists on `this`. For example, we can make the background pink when highlighted and enabled as shown in the following code:
 
@@ -394,9 +394,9 @@ Buttons can be defined fully in the Gum tool. This approach allows you to previe
 
 Conceptually the steps are as follows:
 
-1. Define a component for your forms type
+1. Define a component for your forms type in the Gum tool
 2. Add the states needed for the forms type that you are working with in the proper category
-3. Define a custom runtime for the Forms control
+3. Define a custom runtime for the Forms control in your Visual Studio project
 4. Associate the custom runtime to the forms type using the DefaultFormsComponents dictionary
 
 This section walks you through how to create a custom Button component, and how to use this in your project. Once you understand how to create a Button component, other Forms controls can be created similarly.
@@ -435,7 +435,22 @@ internal class StandardButtonRuntime : InteractiveGue
             // no need to do anything here, we are fully instantiated by the Gum object
         }
 
-        if(tryCreateFormsObject)
+        // Warning - the StandardButtonRuntime children have not yet been
+        // populated from Gum. Therefore, we shouldn't create the children
+        // here, even if tryCreateFormsObject is set to true.
+        // See AfterFullCreation below
+
+    }
+
+    // The Forms objects should only be created after the 
+    // children have been assigned. We can override the AfterFullCreation
+    // method to handle creating the Forms object after the children have 
+    // been created.
+    public override void AfterFullCreation()
+    {
+        base.AfterFullCreation();
+
+        if (FormsControl == null)
         {
             FormsControlAsObject = new Button(this);
         }
