@@ -10,7 +10,7 @@ At the time of this writing Gum + MonoGame has been tested on a variety of platf
 2.  Add the `Gum.MonoGame` NuGet package\
 
 
-    <figure><img src="../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Add Gum.MonoGame NuGet Package to your project</p></figcaption></figure>
+    <figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Add Gum.MonoGame NuGet Package to your project</p></figcaption></figure>
 
 ### Initializing Gum
 
@@ -34,11 +34,11 @@ rectangle.Color = Color.White;
 rectangle.AddToManagers(SystemManagers.Default, null);
 ```
 
-<figure><img src="../.gitbook/assets/image (25).png" alt=""><figcaption><p>White ColoredRectangleRuntime in game</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (25).png" alt=""><figcaption><p>White ColoredRectangleRuntime in game</p></figcaption></figure>
 
 If everything is initialized correctly, you should see a white rectangle at the top-left of the screen.
 
 ### Downloading the Gum Tool
 
-The Gum tool can be used to create Gum projects which can be loaded into your MonoGame project. To download and run the Gum tool, see the [Setup page](../setup.md).
+The Gum tool can be used to create Gum projects which can be loaded into your MonoGame project. To download and run the Gum tool, see the [Setup page](../../setup.md).
 
