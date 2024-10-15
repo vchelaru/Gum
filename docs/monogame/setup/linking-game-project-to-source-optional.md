@@ -21,7 +21,7 @@ To replace this package with source references:
 5. Repeat the previous step but select the following csproj files:
    1. \<Gum Root>/GumCommon/GumCommon.csproj
    2. \<Gum Root>/GumDataTypes/GumDataTypesNet6.csproj
-   3.  \<Gum Root>/ToolsUtilitiesStandard/ToolsUtilitiesStandard.csproj\
+   3.  \<Gum Root>/ToolsUtilities/ToolsUtilitiesStandard.csproj\
 
 
        <figure><img src="../../.gitbook/assets/14_22 07 47.png" alt=""><figcaption><p>A game project named GumTest and the other projects in the Solution Explorer</p></figcaption></figure>

@@ -26,6 +26,10 @@ To set a custom font
 
 Custom font files are .fnt files created by BitmapFontGenerator. Gum automatically creates .fnt files whenever a font value changes when UseCustomFonts is unchecked.&#x20;
 
+{% hint style="info" %}
+The .fnt file format used by Gum is the Angelcode BitmapFontGenerator format. This can be produced by a number of applications. Note that this is not the same as the old .fnt extension used for Windows fonts. [https://docs.fileformat.com/font/fnt/](https://docs.fileformat.com/font/fnt/)
+{% endhint %}
+
 ### Creating Fonts with BitmapFontGenerator
 
 To create your own font file:
