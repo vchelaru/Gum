@@ -75,27 +75,7 @@ namespace CodeOutputPlugin.Manager
         public static string GetClassHeader(ElementSave element, CodeOutputProjectSettings projectSettings)
         {
             var visualApi = CodeGenerator.GetVisualApiForElement(element);
-            string inheritance = null;
-            if (element is ScreenSave)
-            {
-                inheritance = element.BaseType ?? projectSettings.DefaultScreenBase;
-            }
-            else if (element.BaseType == "XamarinForms/SkiaGumCanvasView")
-            {
-                inheritance = "SkiaGum.SkiaGumCanvasView";
-            }
-            else if (element.BaseType == "Container")
-            {
-                inheritance = "BindableGraphicalUiElement";
-            }
-            else
-            {
-                inheritance = element.BaseType;
-                if (inheritance?.Contains("/") == true)
-                {
-                    inheritance = inheritance.Substring(inheritance.LastIndexOf('/') + 1);
-                }
-            }
+            string inheritance = CodeGenerator.GetInheritance(element, projectSettings);
 
             var classHeader = $"partial class {CodeGenerator.GetClassNameForType(element.Name, visualApi)} : {inheritance}";
             return classHeader;

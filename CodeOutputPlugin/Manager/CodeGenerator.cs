@@ -107,7 +107,19 @@ namespace CodeOutputPlugin.Manager
 
         public string Tabs => new string(' ', TabCount * 4);
 
-        public int TabCount { get; internal set; }
+        int _tabs;
+        public int TabCount 
+        {
+            get => _tabs;
+            set
+            {
+                if(_tabs < 0)
+                {
+                    throw new InvalidOperationException();
+                }
+                _tabs = value;
+            }
+        }
 
         public VisualApi VisualApi => CodeGenerator.GetVisualApiForElement(Element);
 
@@ -117,12 +129,15 @@ namespace CodeOutputPlugin.Manager
 
     public static class CodeGenerator
     {
+        #region BindingBehavior Enum
         enum BindingBehavior
         {
             NoBinding,
             BindablePropertyWithEventAssignment,
             BindablePropertyWithBoundInstance
         }
+
+        #endregion
 
         #region Fields/Properties
 
@@ -1823,6 +1838,146 @@ namespace CodeOutputPlugin.Manager
 
         #endregion
 
+        #region Namespace
+
+        public static string GetElementNamespace(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
+        {
+            var namespaceName = elementSettings?.Namespace;
+
+            if (string.IsNullOrEmpty(namespaceName) && !string.IsNullOrWhiteSpace(projectSettings.RootNamespace))
+            {
+                namespaceName = projectSettings.RootNamespace;
+                if (element is ScreenSave)
+                {
+                    namespaceName += ".Screens";
+                }
+                else if (element is ComponentSave)
+                {
+                    namespaceName += ".Components";
+                }
+                else // standard element
+                {
+                    namespaceName += ".Standards";
+                }
+
+                var splitElementName = element.Name.Split('\\').ToArray();
+                var splitPrefix = splitElementName.Take(splitElementName.Length - 1).ToArray();
+                var whatToAppend = string.Join(".", splitPrefix);
+                if (!string.IsNullOrEmpty(whatToAppend))
+                {
+                    namespaceName += "." + whatToAppend;
+                }
+            }
+
+            return namespaceName;
+        }
+
+        #endregion
+
+        #region Class Name and Header
+
+
+        private static void GenerateClassHeader(CodeGenerationContext context)
+        {
+            const string access = "public";
+
+            var header =
+                $"{access} partial class {GetClassNameForType(context.Element.Name, context.VisualApi)}";
+
+            if(context.CodeOutputProjectSettings.InheritanceLocation == InheritanceLocation.InGeneratedCode)
+            {
+                var inheritance = GetInheritance(context.Element, context.CodeOutputProjectSettings);
+                header += ":" + inheritance;
+            }
+
+            context.StringBuilder.AppendLine(context.Tabs + header);
+        }
+
+        public static string GetClassNameForType(string gumType, VisualApi visualApi)
+        {
+            string className = null;
+            var specialHandledCase = false;
+
+            if (visualApi == VisualApi.XamarinForms)
+            {
+                switch (gumType)
+                {
+                    case "Text":
+                        className = "Label";
+                        specialHandledCase = true;
+                        break;
+                }
+            }
+
+            if (!specialHandledCase)
+            {
+
+                var strippedType = gumType;
+                if (strippedType.Contains("/"))
+                {
+                    strippedType = strippedType.Substring(strippedType.LastIndexOf("/") + 1);
+                }
+                if (strippedType.Contains("\\"))
+                {
+                    strippedType = strippedType.Substring(strippedType.LastIndexOf("\\") + 1);
+                }
+
+                string suffix = visualApi == VisualApi.Gum ? "Runtime" : "";
+                className = $"{strippedType}{suffix}";
+
+            }
+            return className;
+        }
+
+
+        public static string GetInheritance(ElementSave element, CodeOutputProjectSettings projectSettings)
+        {
+            string inheritance = null;
+            if (element is ScreenSave)
+            {
+                inheritance = element.BaseType ?? projectSettings.DefaultScreenBase;
+            }
+            else if (element.BaseType == "XamarinForms/SkiaGumCanvasView")
+            {
+                inheritance = "SkiaGum.SkiaGumCanvasView";
+            }
+            else if (element.BaseType == "Container")
+            {
+                if(projectSettings.OutputLibrary == OutputLibrary.MonoGame)
+                {
+                    inheritance = "ContainerRuntime";
+                }
+                else
+                {
+                    inheritance = "BindableGraphicalUiElement";
+                }
+            }
+            else
+            {
+                inheritance = element.BaseType;
+                if (inheritance?.Contains("/") == true)
+                {
+                    inheritance = inheritance.Substring(inheritance.LastIndexOf('/') + 1);
+                }
+                if(projectSettings.OutputLibrary == OutputLibrary.MonoGame)
+                {
+                    // for standards, append "Runtime"
+                    var isStandard = ObjectFinder.Self.GetStandardElement(inheritance) != null;
+
+                    if(isStandard)
+                    {
+                        inheritance = inheritance + "Runtime";
+                    }
+                }
+            }
+
+            return inheritance;
+        }
+
+
+
+        #endregion
+
         #region Constructor
 
         private static void GenerateConstructor(ElementSave element, VisualApi visualApi, int tabCount, StringBuilder stringBuilder, CodeOutputProjectSettings projectSettings)
@@ -1849,7 +2004,9 @@ namespace CodeOutputPlugin.Manager
                     stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                     tabCount++;
 
-                    if (element.BaseType == "Container")
+                    if (element.BaseType == "Container" && 
+                        // In MonoGame the Container is a ContainerRuntime which handles this already
+                        projectSettings.OutputLibrary != OutputLibrary.MonoGame)
                     {
                         stringBuilder.AppendLine(ToTabs(tabCount) + "this.SetContainedObject(new InvisibleRenderable());");
                     }
@@ -2064,21 +2221,20 @@ namespace CodeOutputPlugin.Manager
 
             #endregion
 
-            #region Class Header/Opening {
-
-            const string access = "public";
-
-            stringBuilder.AppendLine(ToTabs(tabCount) + $"{access} partial class {GetClassNameForType(element.Name, visualApi)}");
-            stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-            tabCount++;
-            #endregion
-
-
             var context = new CodeGenerationContext();
             context.Element = element;
             context.TabCount = tabCount;
             context.CodeOutputProjectSettings = projectSettings;
             context.StringBuilder = stringBuilder;
+
+            #region Class Header/Opening {
+
+            GenerateClassHeader(context);
+            stringBuilder.AppendLine(context.Tabs + "{");
+            context.TabCount++;
+            #endregion
+
+
 
             #region States
 
@@ -2134,8 +2290,8 @@ namespace CodeOutputPlugin.Manager
             stringBuilder.AppendLine(ToTabs(tabCount) + "partial void CustomInitialize();");
 
             #region Class Closing }
-            tabCount--;
-            stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+            context.TabCount--;
+            stringBuilder.AppendLine(context.Tabs + "}");
             #endregion
 
             if (!string.IsNullOrEmpty(namespaceName))
@@ -2146,6 +2302,7 @@ namespace CodeOutputPlugin.Manager
 
             return stringBuilder.ToString();
         }
+
 
         public static void GenerateCodeForElement(ElementSave selectedElement, Models.CodeOutputElementSettings elementSettings, CodeOutputProjectSettings codeOutputProjectSettings, bool showPopups)
         {
@@ -2280,38 +2437,6 @@ namespace CodeOutputPlugin.Manager
         }
 
         #endregion
-
-        public static string GetElementNamespace(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
-        {
-            var namespaceName = elementSettings?.Namespace;
-
-            if (string.IsNullOrEmpty(namespaceName) && !string.IsNullOrWhiteSpace(projectSettings.RootNamespace))
-            {
-                namespaceName = projectSettings.RootNamespace;
-                if (element is ScreenSave)
-                {
-                    namespaceName += ".Screens";
-                }
-                else if (element is ComponentSave)
-                {
-                    namespaceName += ".Components";
-                }
-                else // standard element
-                {
-                    namespaceName += ".Standards";
-                }
-
-                var splitElementName = element.Name.Split('\\').ToArray();
-                var splitPrefix = splitElementName.Take(splitElementName.Length - 1).ToArray();
-                var whatToAppend = string.Join(".", splitPrefix);
-                if (!string.IsNullOrEmpty(whatToAppend))
-                {
-                    namespaceName += "." + whatToAppend;
-                }
-            }
-
-            return namespaceName;
-        }
 
         public static VisualApi GetVisualApiForElement(ElementSave element)
         {
@@ -3825,41 +3950,6 @@ namespace CodeOutputPlugin.Manager
             stringBuilder.AppendLine($"{tabs}{accessString}{className} {instance.Name} {{ get; protected set; }}");
         }
 
-        public static string GetClassNameForType(string gumType, VisualApi visualApi)
-        {
-            string className = null;
-            var specialHandledCase = false;
-
-            if (visualApi == VisualApi.XamarinForms)
-            {
-                switch (gumType)
-                {
-                    case "Text":
-                        className = "Label";
-                        specialHandledCase = true;
-                        break;
-                }
-            }
-
-            if (!specialHandledCase)
-            {
-
-                var strippedType = gumType;
-                if (strippedType.Contains("/"))
-                {
-                    strippedType = strippedType.Substring(strippedType.LastIndexOf("/") + 1);
-                }
-                if (strippedType.Contains("\\"))
-                {
-                    strippedType = strippedType.Substring(strippedType.LastIndexOf("\\") + 1);
-                }
-
-                string suffix = visualApi == VisualApi.Gum ? "Runtime" : "";
-                className = $"{strippedType}{suffix}";
-
-            }
-            return className;
-        }
 
         private static string GetSuffixCodeLine(InstanceSave instance, VariableSave variable, VisualApi visualApi)
         {
