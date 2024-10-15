@@ -26,6 +26,8 @@ To set a custom font
 
 Custom font files are .fnt files created by BitmapFontGenerator. Gum automatically creates .fnt files whenever a font value changes when UseCustomFonts is unchecked.&#x20;
 
+### Creating Fonts with BitmapFontGenerator
+
 To create your own font file:
 
 1. Download Bitmap Font Generator from [https://angelcode.com/products/bmfont/](https://angelcode.com/products/bmfont/)
@@ -60,3 +62,9 @@ You can verify that the settings will produce a proper PNG by selecting **Option
 To save the font, select **Options**->**Save bitmap font as…** to save your .fnt and .png files.
 
 Once you have saved your files, you can select the .fnt to use in your project.
+
+### Creating Fonts with Hiero
+
+The Hiero tool can also be used to generate .fnt files:
+
+[https://libgdx.com/wiki/tools/hiero](https://libgdx.com/wiki/tools/hiero)
