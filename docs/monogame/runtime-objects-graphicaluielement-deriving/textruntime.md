@@ -138,13 +138,17 @@ As you make changes to the Text object, new files are created and added to the f
 
 ### Missing Font Exceptions
 
-By default TextRuntime instances do not throw exceptions for missing font files even if GraphicalUiElement.ThrowExceptionsForMissingFiles is set to  CustomSetPropertyOnRenderable.ThrowExceptionsForMissingFiles. The reason for this is because a TextRuntime's font is ultimately decided by multiple properties.
+By default TextRuntime instances do not throw exceptions for missing font files even if GraphicalUiElement.ThrowExceptionsForMissingFiles is set to  CustomSetPropertyOnRenderable.ThrowExceptionsForMissingFiles. The reason for this is because a TextRuntime's font is decided by a combination multiple properties.
 
-If UseCustomFont is set to false, then the font is determined by the combinatoin of font values (as discussed above). If useCustomFont is set to true, then the font is determined by the CustomFontFile (also as discussed above).
+If UseCustomFont is set to false, then the font is determined by the combination of font values (as discussed above). If useCustomFont is set to true, then the font is determined by the CustomFontFile (also as discussed above).
 
 Ultimately the variables which are used for fonts can be assigned in any order, and can be assigned from multiple spots (such as direct assignments, states, or creation from Gum projects).&#x20;
 
-In other words, the TextRuntime doesn't know when variable assignment is finished. Therefore, to check if a font is valid, you can use the the `GraphicalUiElement.ThrowExceptionsForMissingFiles` method to verify if a font is valid.
+In other words, the TextRuntime doesn't know when variable assignment is finished. We can address this in a few different ways.
+
+The first is to explicitly load the desired BitmapFont as discussed above. By calling the BitmapFont constructor, missing files will immediately throw an exception.
+
+Another option is to use the `GraphicalUiElement.ThrowExceptionsForMissingFiles` method to verify if a font is valid.
 
 The following code example shows how to check for invalid fonts using this method:
 
