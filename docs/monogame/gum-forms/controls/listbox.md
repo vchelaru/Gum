@@ -57,3 +57,16 @@ listBox.SelectionChanged += (sender, args) =>
     System.Diagnostics.Debug.WriteLine($"Selected item: {listBox.SelectedObject}");
 };
 ```
+
+### Customizing with VisualTemplate
+
+The VisualTemplate lets you customize the type of ListBoxItem created for the ListBox. The following code shows how to assign a VisualTemplate to a runtime object named CustomListBoxItemRuntime:
+
+```csharp
+// assign the template before adding new list items
+listBox.VisualTemplate = 
+    new MonoGameGum.Forms.VisualTemplate(() => 
+        // do not create a forms object because this template will be
+        // automatically added to a ListBoxItem by the ListBox:
+        new CustomListBoxItemRuntime(tryCreateFormsObject:false));
+```
