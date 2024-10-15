@@ -1,8 +1,10 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Gum.Wireframe;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGameGum.GueDeriving;
 using RenderingLibrary;
+using System.IO;
 
 namespace MonoGameGumFontLoading
 {
@@ -28,6 +30,8 @@ namespace MonoGameGumFontLoading
             text.CustomFontFile = "Fonts/Font16Jing_Jing.fnt";
             text.Text = "I use Jing_Jing";
             text.AddToManagers(SystemManagers.Default, null);
+            // No errors here:
+            GraphicalUiElement.ThrowExceptionsForMissingFiles(text);
 
             var text2 = new TextRuntime();
             text2.UseCustomFont = true;
@@ -35,6 +39,8 @@ namespace MonoGameGumFontLoading
             text2.Text = "I use Arial 18";
             text2.AddToManagers(SystemManagers.Default, null);
             text2.Y = 30;
+            // No errors here:
+            GraphicalUiElement.ThrowExceptionsForMissingFiles(text2);
 
             var text3 = new TextRuntime();
             text3.UseCustomFont = true;
@@ -42,6 +48,21 @@ namespace MonoGameGumFontLoading
             text3.Text = "I use Font18Bahnschrift Light";
             text3.AddToManagers(SystemManagers.Default, null);
             text3.Y = 60;
+            // No errors here:
+            GraphicalUiElement.ThrowExceptionsForMissingFiles(text3);
+
+
+            try
+            {
+                var textThatHasError = new TextRuntime();
+                textThatHasError.UseCustomFont = true;
+                textThatHasError.CustomFontFile = "Fonts/InvalidFont.fnt";
+                GraphicalUiElement.ThrowExceptionsForMissingFiles(textThatHasError);
+            }
+            catch (FileNotFoundException e)
+            {
+                System.Diagnostics.Debug.WriteLine("Yay we got an exception! That's expected");     
+            }
 
             base.Initialize();
         }

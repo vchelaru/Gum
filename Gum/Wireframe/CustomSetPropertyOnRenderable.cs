@@ -1449,9 +1449,21 @@ namespace Gum.Wireframe
 
                             throw new System.IO.FileNotFoundException($"Missing:{standardized}");
                         }
-
                     }
+                }
+                else
+                {
+                    // we have a valid font file, so let's make sure the BitmapFont matches the expected font
+                    if(graphicalUiElement.UseCustomFont)
+                    {
+                        var expectedFont = graphicalUiElement.CustomFontFile?.Replace("\\", "/");
+                        var currentFont = asText.BitmapFont.FontFile?.Replace("\\", "/");
 
+                        if(!expectedFont.Equals(currentFont, StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            throw new System.IO.FileNotFoundException($"Expected:{expectedFont} but currently using:{currentFont}");
+                        }
+                    }
                 }
             }
 #endif
