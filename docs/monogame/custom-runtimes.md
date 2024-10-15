@@ -38,16 +38,20 @@ internal class ClickableButton : InteractiveGue
 
     public ClickableButton(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base() 
     {
-        if(fullInstantiation)
-        {
-            // no need to do anything here, we are fully instantiated by the Gum object
-        }
+        // no need to do anything here, implement forms object creation in
+        // AfterFullCreation
+    }
+    
+    public override void AfterFullCreation()
+    {
+        base.AfterFullCreation();
 
-        if(tryCreateFormsObject)
+        if (FormsControl == null)
         {
             FormsControlAsObject = new Button(this);
         }
     }
+    
     public Button FormsControl => FormsControlAsObject as Button;
 }
 ```
