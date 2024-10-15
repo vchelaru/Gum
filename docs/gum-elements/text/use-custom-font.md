@@ -71,4 +71,16 @@ Once you have saved your files, you can select the .fnt to use in your project.
 
 The Hiero tool can also be used to generate .fnt files:
 
-[https://libgdx.com/wiki/tools/hiero](https://libgdx.com/wiki/tools/hiero)
+{% embed url="https://libgdx.com/wiki/tools/hiero" %}
+
+To generate a font:
+
+1. Download and open the Hiero tool
+2.  Set the values needed for your font, such as font type, size, and effects\
+
+
+    <figure><img src="../../.gitbook/assets/image (79).png" alt=""><figcaption><p>Font in Hiero tool</p></figcaption></figure>
+3. Select **File** -> **Save BMFont Files (text)...**
+4. Select the location to save the files, such as in your project's Contents folder, or the subfolder which contains your Gum project
+
+This .fnt file can now be loaded in the Gum tool or in code just like any other .fnt file.
