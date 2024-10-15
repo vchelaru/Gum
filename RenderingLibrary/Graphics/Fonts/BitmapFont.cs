@@ -1257,7 +1257,10 @@ namespace RenderingLibrary.Graphics
 
             public FontFileInfoLine(ParsedFontLine line)
             {
-                Outline = line.NumericAttributes["outline"];
+                if(line.NumericAttributes.ContainsKey("outline"))
+                {
+                    Outline = line.NumericAttributes["outline"];
+                }
             }
         }
 
