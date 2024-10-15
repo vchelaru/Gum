@@ -135,3 +135,37 @@ To view the existing font cache, you can click the View Font Cache menu item in 
 As you make changes to the Text object, new files are created and added to the font cache folder, as shown in the following animation:
 
 <figure><img src="../../.gitbook/assets/07_06 22 49 (1).gif" alt=""><figcaption><p>Changing the Font Size creates new fonts in FontCache</p></figcaption></figure>
+
+### Missing Font Exceptions
+
+By default TextRuntime instances do not throw exceptions for missing font files even if GraphicalUiElement.ThrowExceptionsForMissingFiles is set to  CustomSetPropertyOnRenderable.ThrowExceptionsForMissingFiles. The reason for this is because a TextRuntime's font is ultimately decided by multiple properties.
+
+If UseCustomFont is set to false, then the font is determined by the combinatoin of font values (as discussed above). If useCustomFont is set to true, then the font is determined by the CustomFontFile (also as discussed above).
+
+Ultimately the variables which are used for fonts can be assigned in any order, and can be assigned from multiple spots (such as direct assignments, states, or creation from Gum projects).&#x20;
+
+In other words, the TextRuntime doesn't know when variable assignment is finished. Therefore, to check if a font is valid, you can use the the `GraphicalUiElement.ThrowExceptionsForMissingFiles` method to verify if a font is valid.
+
+The following code example shows how to check for invalid fonts using this method:
+
+```csharp
+var textWithValidFont = new TextRuntime();
+textWithValidFont.UseCustomFont = true;
+textWithValidFont.CustomFontFile = "Fonts/ValidFont.fnt";
+textWithValidFont.AddToManagers(SystemManagers.Default, null);
+// No errors here:
+GraphicalUiElement.ThrowExceptionsForMissingFiles(text3);
+
+try
+{
+    var textThatHasError = new TextRuntime();
+    textThatHasError.UseCustomFont = true;
+    textThatHasError.CustomFontFile = "Fonts/InvalidFont.fnt";
+    textWithValidFont.AddToManagers(SystemManagers.Default, null);
+    GraphicalUiElement.ThrowExceptionsForMissingFiles(textThatHasError);
+}
+catch (FileNotFoundException e)
+{
+    System.Diagnostics.Debug.WriteLine("Yay we got an exception! That's expected");     
+}
+```
