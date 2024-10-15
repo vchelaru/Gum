@@ -112,7 +112,7 @@
 * [Kni](kni.md)
 * [MonoGame](monogame/README.md)
   * [Setup](monogame/setup/README.md)
-    * [Linking Game Project to Source](monogame/setup/linking-game-project-to-source.md)
+    * [Linking Game Project to Source (Optional)](monogame/setup/linking-game-project-to-source-optional.md)
   * [Setup for GumBatch](monogame/setup-for-gumbatch.md)
   * [Loading .gumx (Gum Project)](monogame/loading-.gumx-gum-project.md)
   * [async Programming](monogame/async-programming.md)
