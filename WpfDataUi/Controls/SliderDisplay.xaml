@@ -3,97 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:WpfDataUi.Controls"
              mc:Ignorable="d" >
-
-    <UserControl.Resources>
-
-
-        <Style x:Key="DarkSliderRepeatButtonStyle" TargetType="{x:Type RepeatButton}">
-            <Setter Property="OverridesDefaultStyle" Value="true"/>
-            <Setter Property="IsTabStop" Value="false"/>
-            <Setter Property="Focusable" Value="false"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type RepeatButton}">
-                        <Border BorderThickness="1" Margin="0,3,-2,3"
-                            CornerRadius="3,0,0,3" BorderBrush="#888888" Background="#dddddd">
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="LightSliderRepeatButtonStyle" TargetType="{x:Type RepeatButton}">
-            <Setter Property="OverridesDefaultStyle" Value="true"/>
-            <Setter Property="IsTabStop" Value="false"/>
-            <Setter Property="Focusable" Value="false"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type RepeatButton}">
-                        <Border BorderThickness="1" Margin="-2,3,0,3"
-                            CornerRadius="0,3,3,0" BorderBrush="#888888" Background="#ffffff">
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="CustomThumbForSlider" TargetType="{x:Type Thumb}">
-            <Setter Property="OverridesDefaultStyle" Value="True"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type Thumb}">
-                        <Border BorderThickness="0" Height="20" Width="17" VerticalAlignment="Center"
-                            CornerRadius="3" BorderBrush="#aaaaaa" Background="#aaaaaa">
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="MyCustomStyleForSlider" TargetType="{x:Type Slider}">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type Slider}">
-                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="20"/>
-                                </Grid.RowDefinitions>
-                                <TickBar x:Name="TopTick" Visibility="Collapsed" Fill="{TemplateBinding Foreground}" Placement="Top" Height="4" Grid.Row="0"/>
-                                <TickBar x:Name="BottomTick" Fill="{TemplateBinding Foreground}" Placement="Bottom" Grid.Row="0"/>
-                                <Border x:Name="TrackBackground" BorderThickness="1" CornerRadius="1" Margin="5,0" VerticalAlignment="Center" Grid.Row="1" >
-                                    <Canvas Margin="-6,-1">
-                                        <Rectangle Visibility="Hidden" x:Name="PART_SelectionRange" 
-                                                   Height="14.0" Fill="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" 
-                                                   Stroke="{DynamicResource {x:Static SystemColors.ControlDarkDarkBrushKey}}" StrokeThickness="1.0"/>
-                                    </Canvas>
-                                </Border>
-                                <Track x:Name="PART_Track" Grid.Row="1">
-                                    <Track.DecreaseRepeatButton>
-                                        <RepeatButton Style="{StaticResource DarkSliderRepeatButtonStyle}" Command="{x:Static Slider.DecreaseLarge}"/>
-                                    </Track.DecreaseRepeatButton>
-                                    <Track.IncreaseRepeatButton>
-                                        <RepeatButton Style="{StaticResource LightSliderRepeatButtonStyle}" Command="{x:Static Slider.IncreaseLarge}"/>
-                                    </Track.IncreaseRepeatButton>
-                                    <Track.Thumb>
-                                        <Thumb Style="{StaticResource CustomThumbForSlider}" x:Name="Thumb" Background="Black"/>
-                                    </Track.Thumb>
-                                </Track>
-                            </Grid>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-
-
-    </UserControl.Resources>
-
-
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition></RowDefinition>
@@ -122,7 +32,6 @@
                 MinWidth="60" 
                 Height="20" 
                 VerticalAlignment="Center" 
-                Style="{StaticResource MyCustomStyleForSlider}"
                 ></Slider>
 
             <TextBox Grid.Column="2" x:Name="TextBox" Margin="3,1,1,1" Height="22"
