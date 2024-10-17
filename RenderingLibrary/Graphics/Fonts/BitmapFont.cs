@@ -363,20 +363,25 @@ namespace RenderingLibrary.Graphics
             if (mTextures.Length > 0 && mTextures[0] != null)
             {
                 //ToDo: Atlas support  **************************************************************
-                var spaceCharInfo = parsedData.Chars.First(x => x.Id == ' ');
-                var space = FillBitmapCharacterInfo(spaceCharInfo, mTextures[0].Width, mTextures[0].Height,
-                    mLineHeightInPixels);
-                
-                for (int i = 0; i < charArraySize; i++)
-                {
-                    mCharacterInfo[i] = space;
-                }
+                var spaceCharInfo = parsedData.Chars.FirstOrDefault(x => x.Id == ' ');
 
-                if(mCharacterInfo.Length > (int)'\t')
+                // Added null check for space since some special fonts might not have a space inside them.
+                if (spaceCharInfo != null)
                 {
-                    // Make the tab character be equivalent to 4 spaces:
-                    mCharacterInfo['\t'].ScaleX = space.ScaleX * 4;
-                    mCharacterInfo['\t'].Spacing = space.Spacing * 4;
+                    var space = FillBitmapCharacterInfo(spaceCharInfo, mTextures[0].Width, mTextures[0].Height,
+                        mLineHeightInPixels);
+
+                    for (int i = 0; i < charArraySize; i++)
+                    {
+                        mCharacterInfo[i] = space;
+                    }
+
+                    if (mCharacterInfo.Length > (int)'\t')
+                    {
+                        // Make the tab character be equivalent to 4 spaces:
+                        mCharacterInfo['\t'].ScaleX = space.ScaleX * 4;
+                        mCharacterInfo['\t'].Spacing = space.Spacing * 4;
+                    }
                 }
 
                 foreach (var charInfo in parsedData.Chars)
