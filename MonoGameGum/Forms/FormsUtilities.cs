@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using MonoGameGum.Forms.Controls;
 using MonoGameGum.Forms.DefaultVisuals;
+using MonoGameGum.GueDeriving;
 using MonoGameGum.Input;
 using System;
 using System.Collections.Generic;
@@ -25,6 +26,7 @@ namespace MonoGameGum.Forms
         {
             FrameworkElement.DefaultFormsComponents[typeof(Button)] = typeof(DefaultButtonRuntime);
             FrameworkElement.DefaultFormsComponents[typeof(CheckBox)] = typeof(DefaultCheckboxRuntime);
+            FrameworkElement.DefaultFormsComponents[typeof(ComboBox)] = typeof(DefaultComboBoxRuntime);
             FrameworkElement.DefaultFormsComponents[typeof(ListBox)] = typeof(DefaultListBoxRuntime);
             FrameworkElement.DefaultFormsComponents[typeof(ListBoxItem)] = typeof(DefaultListBoxItemRuntime);
             FrameworkElement.DefaultFormsComponents[typeof(ScrollBar)] = typeof(DefaultScrollBarRuntime);
@@ -38,14 +40,22 @@ namespace MonoGameGum.Forms
 
             FrameworkElement.MainCursor = cursor;
 
+            var root = new ContainerRuntime();
+
+            root.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            root.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            root.AddToManagers();
+
+            FrameworkElement.Root = root;
+
         }
 
-        public static void Update(GameTime gameTime, GraphicalUiElement rootElement)
+        public static void Update(GameTime gameTime)
         {
             cursor.Activity(gameTime.TotalGameTime.TotalSeconds);
             keyboard.Activity(gameTime.TotalGameTime.TotalSeconds);
 
-            rootElement.DoUiActivityRecursively(cursor, keyboard, gameTime.TotalGameTime.TotalSeconds);
+            FrameworkElement.Root.DoUiActivityRecursively(cursor, keyboard, gameTime.TotalGameTime.TotalSeconds);
 
         }
     }

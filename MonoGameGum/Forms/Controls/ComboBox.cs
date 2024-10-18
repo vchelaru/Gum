@@ -3,6 +3,7 @@ using Gum.DataTypes;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Input;
+using RenderingLibrary;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -16,7 +17,7 @@ namespace MonoGameGum.Forms.Controls
     {
         #region Fields/Properties
 
-        ListBox listBox;
+        public ListBox listBox;
         GraphicalUiElement textComponent;
         RenderingLibrary.Graphics.Text coreTextObject;
 
@@ -214,7 +215,14 @@ namespace MonoGameGum.Forms.Controls
             Visual.RollOff += this.HandleRollOff;
 
             var effectiveParent = listBox.Visual.EffectiveParentGue as InteractiveGue;
-            effectiveParent.RaiseChildrenEventsOutsideOfBounds = true;
+            if(effectiveParent != null)
+            {
+                effectiveParent.RaiseChildrenEventsOutsideOfBounds = true;
+            }
+            else
+            {
+                Visual.RaiseChildrenEventsOutsideOfBounds = true;
+            }
             listBox.SelectionChanged += HandleSelectionChanged;
             listBox.ItemClicked += HandleListBoxItemClicked;
 
@@ -299,15 +307,16 @@ namespace MonoGameGum.Forms.Controls
             // let's just make sure it's removed
             listBox.Visual.RemoveFromManagers();
 
-            var layerToAddListBoxTo =
-                Visual.Managers.Renderer.MainLayer;
+            var managers = Visual.Managers ?? SystemManagers.Default;
+
+            var layerToAddListBoxTo = managers.Renderer.MainLayer;
 
             var mainRoot = Visual.ElementGueContainingThis ?? Visual;
 
             // do a search in the layers to see where this is held - expensive but we can at least look in non-main layers
-            foreach (var layer in Visual.Managers.Renderer.Layers)
+            foreach (var layer in managers.Renderer.Layers)
             {
-                if (layer != Visual.Managers.Renderer.MainLayer)
+                if (layer != managers.Renderer.MainLayer)
                 {
                     if (layer.Renderables.Contains(mainRoot) || layer.Renderables.Contains(mainRoot?.RenderableComponent))
                     {
@@ -316,9 +325,9 @@ namespace MonoGameGum.Forms.Controls
                     }
                 }
             }
+            listBox.RepositionToKeepInScreen();
 
-            listBox.Visual.AddToManagers(Visual.Managers,
-                layerToAddListBoxTo);
+            FrameworkElement.Root.Children.Add(listBox.Visual);
 
             //var rootParent = listBox.Visual.GetParentRoot();
 
@@ -326,13 +335,13 @@ namespace MonoGameGum.Forms.Controls
             //var isDominant = false;
             //while (parent != null)
             //{
-                //if (GuiManager.DominantWindows.Contains(parent))
-                //{
-                //    isDominant = true;
-                //    break;
-                //}
+            //if (GuiManager.DominantWindows.Contains(parent))
+            //{
+            //    isDominant = true;
+            //    break;
+            //}
 
-                //parent = parent.Parent;
+            //parent = parent.Parent;
             //}
 
             //if (isDominant)
@@ -343,7 +352,6 @@ namespace MonoGameGum.Forms.Controls
             //GuiManager.AddNextPushAction(TryHideFromPush);
             //GuiManager.SortZAndLayerBased();
 
-            listBox.RepositionToKeepInScreen();
 
             UpdateState();
         }
@@ -369,7 +377,7 @@ namespace MonoGameGum.Forms.Controls
 
         private void HideListBox()
         {
-            if (Visual.Managers != null && listBox.IsVisible)
+            if (Visual.EffectiveManagers != null && listBox.IsVisible)
             {
                 listBox.IsVisible = false;
                 listBox.Visual.RemoveFromManagers();
@@ -384,8 +392,9 @@ namespace MonoGameGum.Forms.Controls
                 listBox.Visual.Width = listBoxWidth;
                 listBox.Visual.Height = listBoxHeight;
 
-                Visual.Managers.Renderer.MainLayer.Remove(listBox.Visual);
+                Visual.EffectiveManagers.Renderer.MainLayer.Remove(listBox.Visual);
 
+                listBox.Visual.GetTopParent().Children.Remove(listBox.Visual);
 
                 UpdateState();
             }
@@ -402,7 +411,7 @@ namespace MonoGameGum.Forms.Controls
             //var isTextBound = vmPropsToUiProps?.Values.Any(item => item == nameof(Text)) == true;
             //if (isTextBound == false)
             //{
-            //    coreTextObject.RawText = listBox.SelectedObject?.ToString();
+            coreTextObject.RawText = listBox.SelectedObject?.ToString();
             //}
 
             // Why do we hide the list box here? We don't want to do it if

@@ -1,4 +1,5 @@
-﻿using MonoGameGum.Forms.Controls;
+﻿using Gum.Wireframe;
+using MonoGameGum.Forms.Controls;
 using MonoGameGum.Forms.DefaultVisuals;
 using MonoGameGum.GueDeriving;
 using System;
@@ -11,12 +12,13 @@ namespace GumFormsSample.Screens
 {
     internal class FrameworkElementExampleScreen
     {
-        public void Initialize(ContainerRuntime Root)
+        public void Initialize(InteractiveGue Root)
         {
 
             FrameworkElement.DefaultFormsComponents[typeof(Button)] =
                 typeof(FullyCustomizedButton);
 
+            var currentY = 0;
 
             var button = new Button();
             Root.Children.Add(button.Visual);
@@ -32,11 +34,56 @@ namespace GumFormsSample.Screens
                 button.Text = $"Clicked {clickCount} times";
             };
 
+            currentY += 50;
+
             var checkbox = new CheckBox();
             Root.Children.Add(checkbox.Visual);
             checkbox.X = 0;
-            checkbox.Y = 50;
+            checkbox.Y = currentY;
             checkbox.Text = "Checkbox";
+
+            currentY += 50;
+
+            var comboBox = new ComboBox();
+            Root.Children.Add(comboBox.Visual);
+            comboBox.Name = "Hello";
+            comboBox.Width = 140;
+            comboBox.X = 0;
+            comboBox.Y = currentY;
+            for(int i = 0; i < 20; i++)
+            {
+                comboBox.Items.Add($"Item {i}");
+            }
+
+            currentY += 120;
+
+            // We can also create buttons through the creation of the default controls:
+            var buttonRuntime = new DefaultButtonRuntime();
+            Root.Children.Add(buttonRuntime);
+            buttonRuntime.X = 0;
+            buttonRuntime.Y = currentY;
+            buttonRuntime.Width = 100;
+            buttonRuntime.Height = 50;
+            buttonRuntime.TextInstance.Text = "Other Button!";
+            var formsButton = buttonRuntime.FormsControl;
+            formsButton.Click += (_, _) =>
+            {
+                clickCount++;
+                formsButton.Text = $"Clicked {clickCount} times";
+            };
+
+            currentY += 50;
+            var listBox = new ListBox();
+            Root.Children.Add(listBox.Visual);
+            listBox.X = 0;
+            listBox.Y = currentY;
+            listBox.Width = 200;
+            listBox.Height = 200;
+            for (int i = 0; i < 20; i++)
+            {
+                listBox.Items.Add($"Item {i}");
+            }
+
 
             var scrollBar = new ScrollBar();
             Root.Children.Add(scrollBar.Visual);
@@ -66,31 +113,7 @@ namespace GumFormsSample.Screens
 
             }
 
-            // We can also create buttons through the creation of the default controls:
-            var buttonRuntime = new DefaultButtonRuntime();
-            Root.Children.Add(buttonRuntime);
-            buttonRuntime.X = 0;
-            buttonRuntime.Y = 100;
-            buttonRuntime.Width = 100;
-            buttonRuntime.Height = 50;
-            buttonRuntime.TextInstance.Text = "Other Button!";
-            var formsButton = buttonRuntime.FormsControl;
-            formsButton.Click += (_, _) =>
-            {
-                clickCount++;
-                formsButton.Text = $"Clicked {clickCount} times";
-            };
 
-            var listBox = new ListBox();
-            Root.Children.Add(listBox.Visual);
-            listBox.X = 0;
-            listBox.Y = 200;
-            listBox.Width = 200;
-            listBox.Height = 200;
-            for (int i = 0; i < 20; i++)
-            {
-                listBox.Items.Add($"Item {i}");
-            }
 
             //var viewer = new DefaultScrollViewerRuntime(true, false);
             //this.Root.Children.Add(viewer);
