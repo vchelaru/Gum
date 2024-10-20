@@ -1980,18 +1980,23 @@ namespace CodeOutputPlugin.Manager
 
         #region Constructor
 
-        private static void GenerateConstructor(ElementSave element, VisualApi visualApi, int tabCount, StringBuilder stringBuilder, CodeOutputProjectSettings projectSettings)
+        private static void GenerateConstructor(CodeGenerationContext context)
         {
+            var element = context.Element;
+            var visualApi = context.VisualApi;
+            var stringBuilder = context.StringBuilder;
+            var projectSettings = context.CodeOutputProjectSettings;
+
             var elementName = GetClassNameForType(element.Name, visualApi);
 
             if (visualApi == VisualApi.Gum)
             {
                 #region Constructor Header
 
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {elementName}(bool fullInstantiation = true)");
+                stringBuilder.AppendLine(context.Tabs + $"public {elementName}(bool fullInstantiation = true)");
 
-                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-                tabCount++;
+                stringBuilder.AppendLine(context.Tabs + "{");
+                context.TabCount++;
 
                 #endregion
 
@@ -2000,15 +2005,15 @@ namespace CodeOutputPlugin.Manager
                 if (projectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
                 {
 
-                    stringBuilder.AppendLine(ToTabs(tabCount) + "if(fullInstantiation)");
-                    stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-                    tabCount++;
+                    stringBuilder.AppendLine(context.Tabs + "if(fullInstantiation)");
+                    stringBuilder.AppendLine(context.Tabs + "{");
+                    context.TabCount++;
 
                     if (element.BaseType == "Container" && 
                         // In MonoGame the Container is a ContainerRuntime which handles this already
                         projectSettings.OutputLibrary != OutputLibrary.MonoGame)
                     {
-                        stringBuilder.AppendLine(ToTabs(tabCount) + "this.SetContainedObject(new InvisibleRenderable());");
+                        stringBuilder.AppendLine(context.Tabs + "this.SetContainedObject(new InvisibleRenderable());");
                     }
 
                     stringBuilder.AppendLine();
@@ -2020,17 +2025,17 @@ namespace CodeOutputPlugin.Manager
             {
                 #region Constructor Header
 
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {elementName}(bool fullInstantiation = true)");
+                stringBuilder.AppendLine(context.Tabs + $"public {elementName}(bool fullInstantiation = true)");
 
-                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-                tabCount++;
+                stringBuilder.AppendLine(context.TabCount + "{");
+                context.TabCount++;
 
                 #endregion
 
                 #region XamarinForms-required constructor code
 
-                stringBuilder.AppendLine(ToTabs(tabCount) + "var wasSuspended = GraphicalUiElement.IsAllLayoutSuspended;");
-                stringBuilder.AppendLine(ToTabs(tabCount) + "GraphicalUiElement.IsAllLayoutSuspended = true;");
+                stringBuilder.AppendLine(context.Tabs + "var wasSuspended = GraphicalUiElement.IsAllLayoutSuspended;");
+                stringBuilder.AppendLine(context.Tabs + "GraphicalUiElement.IsAllLayoutSuspended = true;");
 
                 var elementBaseType = element?.BaseType;
                 var baseElements = ObjectFinder.Self.GetBaseElements(element);
@@ -2043,7 +2048,7 @@ namespace CodeOutputPlugin.Manager
                 {
                     // August 4, 2023 - why is it "var"? That seems like a mistake...
                     //stringBuilder.AppendLine(ToTabs(tabCount) + "var MainLayout = this;");
-                    stringBuilder.AppendLine(ToTabs(tabCount) + "MainLayout = this;");
+                    stringBuilder.AppendLine(context.Tabs + "MainLayout = this;");
                 }
                 else if (!isSkiaCanvasView && !isStackLayout)
                 {
@@ -2051,19 +2056,15 @@ namespace CodeOutputPlugin.Manager
 
                     if (shouldAddMainLayout)
                     {
-                        stringBuilder.AppendLine(ToTabs(tabCount) + "MainLayout = new AbsoluteLayout();");
-                        stringBuilder.AppendLine(ToTabs(tabCount) + "BaseGrid.Children.Add(MainLayout);");
+                        stringBuilder.AppendLine(context.Tabs + "MainLayout = new AbsoluteLayout();");
+                        stringBuilder.AppendLine(context.Tabs + "BaseGrid.Children.Add(MainLayout);");
                     }
                 }
                 #endregion
             }
 
-            CodeGenerationContext context = new CodeGenerationContext();
             context.Instance = null;
-            context.Element = element;
-            context.TabCount = tabCount;
-            context.CodeOutputProjectSettings = projectSettings;
-            context.StringBuilder = stringBuilder;
+            
             if (context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
             {
                 FillWithVariableAssignments(visualApi, stringBuilder, context);
@@ -2073,11 +2074,11 @@ namespace CodeOutputPlugin.Manager
 
             if (!DoesElementInheritFromCodeGeneratedElement(element, projectSettings))
             {
-                stringBuilder.AppendLine(ToTabs(tabCount) + "InitializeInstances();");
+                stringBuilder.AppendLine(context.Tabs + "InitializeInstances();");
 
                 if (context.CodeOutputProjectSettings.GenerateGumDataTypes)
                 {
-                    stringBuilder.AppendLine(ToTabs(tabCount) + "AssignGumReferences();");
+                    stringBuilder.AppendLine(context.Tabs + "AssignGumReferences();");
                 }
             }
 
@@ -2088,46 +2089,49 @@ namespace CodeOutputPlugin.Manager
             // fill with variable binding after the instances have been created
             if (visualApi == VisualApi.XamarinForms)
             {
-                FillWithVariableBinding(element, stringBuilder, tabCount);
+                FillWithVariableBinding(element, stringBuilder, context.TabCount);
             }
 
             if (context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
             {
-                stringBuilder.AppendLine(ToTabs(tabCount) + "if(fullInstantiation)");
-                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-                tabCount++;
-                stringBuilder.AppendLine(ToTabs(tabCount) + "ApplyDefaultVariables();");
-                tabCount--;
-                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+                stringBuilder.AppendLine(context.Tabs + "if(fullInstantiation)");
+                stringBuilder.AppendLine(context.Tabs + "{");
+                context.TabCount++;
+                stringBuilder.AppendLine(context.Tabs + "ApplyDefaultVariables();");
+                context.TabCount--;
+                stringBuilder.AppendLine(context.Tabs + "}");
 
                 if (!DoesElementInheritFromCodeGeneratedElement(element, projectSettings))
                 {
                     // AssignParents doesn't call base so that the derived can control the ultimate order.
                     // However, it overrides and the base calls AssignParents. Therefore, no need for us to
                     // call it here, I don't think...
-                    stringBuilder.AppendLine(ToTabs(tabCount) + "AssignParents();");
+                    stringBuilder.AppendLine(context.Tabs + "AssignParents();");
                 }
             }
 
-            stringBuilder.AppendLine(ToTabs(tabCount) + "CustomInitialize();");
+            stringBuilder.AppendLine(context.Tabs + "CustomInitialize();");
 
             if (visualApi == VisualApi.Gum)
             {
-                // close the if check
-                tabCount--;
-                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+                // close the if fullInstantiation check
+                if (projectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
+                {
+                    context.TabCount--;
+                    stringBuilder.AppendLine(context.Tabs + "}");
+                }
             }
             else
             {
-                stringBuilder.AppendLine(ToTabs(tabCount) + "GraphicalUiElement.IsAllLayoutSuspended = wasSuspended;");
+                stringBuilder.AppendLine(context.Tabs + "GraphicalUiElement.IsAllLayoutSuspended = wasSuspended;");
 
             }
 
             DoInitialSizeUpdates(context);
 
 
-            tabCount--;
-            stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+            context.TabCount--;
+            stringBuilder.AppendLine(context.Tabs + "}");
         }
 
         private static void DoInitialSizeUpdates(CodeGenerationContext context)
@@ -2191,7 +2195,9 @@ namespace CodeOutputPlugin.Manager
             VisualApi visualApi = GetVisualApiForElement(element);
 
             var stringBuilder = new StringBuilder();
-            int tabCount = 0;
+            var context = new CodeGenerationContext();
+            context.TabCount = 0;
+            context.Element = element;
 
             #endregion
 
@@ -2214,16 +2220,13 @@ namespace CodeOutputPlugin.Manager
 
             if (!string.IsNullOrEmpty(namespaceName))
             {
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"namespace {namespaceName}");
-                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-                tabCount++;
+                stringBuilder.AppendLine(context.Tabs + $"namespace {namespaceName}");
+                stringBuilder.AppendLine(context.Tabs + "{");
+                context.TabCount++;
             }
 
             #endregion
 
-            var context = new CodeGenerationContext();
-            context.Element = element;
-            context.TabCount = tabCount;
             context.CodeOutputProjectSettings = projectSettings;
             context.StringBuilder = stringBuilder;
 
@@ -2247,10 +2250,10 @@ namespace CodeOutputPlugin.Manager
 
             foreach (var instance in element.Instances.Where(item => item.DefinedByBase == false))
             {
-                FillWithInstanceDeclaration(instance, element, stringBuilder, tabCount);
+                FillWithInstanceDeclaration(instance, element, stringBuilder, context.TabCount);
             }
 
-            AddAbsoluteLayoutIfNecessary(element, tabCount, stringBuilder, projectSettings);
+            AddAbsoluteLayoutIfNecessary(element, context.TabCount, stringBuilder, projectSettings);
 
             stringBuilder.AppendLine();
 
@@ -2269,7 +2272,7 @@ namespace CodeOutputPlugin.Manager
             // -- no need for AppendLine here since FillWithExposedVariables does it after every variable --
             #endregion
 
-            GenerateConstructor(element, visualApi, tabCount, stringBuilder, projectSettings);
+            GenerateConstructor(context);
 
             GenerateInitializeInstancesMethod(context);
 
@@ -2278,16 +2281,20 @@ namespace CodeOutputPlugin.Manager
                 GenerateAddToParentsMethod(context);
                 GenerateApplyDefaultVariables(context);
             }
+            else
+            {
+                context.StringBuilder.AppendLine(context.Tabs + "//Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code");
+            }
 
 
             if (projectSettings.GenerateGumDataTypes)
             {
-                GenerateAssignGumReferences(element, visualApi, tabCount, stringBuilder);
+                GenerateAssignGumReferences(element, visualApi, context.TabCount, stringBuilder);
             }
 
-            GenerateApplyLocalizationMethod(element, tabCount, stringBuilder);
+            GenerateApplyLocalizationMethod(element, context.TabCount, stringBuilder);
 
-            stringBuilder.AppendLine(ToTabs(tabCount) + "partial void CustomInitialize();");
+            stringBuilder.AppendLine(context.Tabs + "partial void CustomInitialize();");
 
             #region Class Closing }
             context.TabCount--;
@@ -2296,8 +2303,8 @@ namespace CodeOutputPlugin.Manager
 
             if (!string.IsNullOrEmpty(namespaceName))
             {
-                tabCount--;
-                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+                context.TabCount--;
+                stringBuilder.AppendLine(context.Tabs + "}");
             }
 
             return stringBuilder.ToString();

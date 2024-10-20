@@ -46,7 +46,7 @@ namespace MonoGameGumFromFile
             IsMouseVisible = true;
 
             _graphics.PreferredBackBufferWidth = 800;
-            _graphics.PreferredBackBufferHeight = 600;
+            _graphics.PreferredBackBufferHeight = 300;
         }
 
         protected override void LoadContent()
@@ -73,7 +73,15 @@ namespace MonoGameGumFromFile
             SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
             FormsUtilities.InitializeDefaults();
 
-            //SetSinglePixelTexture();
+            
+            // This allows you to resize:
+            Window.AllowUserResizing = true;
+            // This event is raised whenever a resize occurs, allowing
+            // us to perform custom logic on a resize
+            Window.ClientSizeChanged += HandleClientSizeChanged;
+
+            // store off the original height so we can use it for zooming
+            originalHeight = _graphics.GraphicsDevice.Viewport.Height;
 
             LoadGumProject();
 
@@ -83,6 +91,30 @@ namespace MonoGameGumFromFile
             InitializeStartScreen();
 
             base.Initialize();
+        }
+
+        bool performZoom = true;
+        int originalHeight;
+
+        private void HandleClientSizeChanged(object sender, EventArgs e)
+        {
+            float zoom = 1;
+            if(performZoom)
+            {
+                zoom = _graphics.GraphicsDevice.Viewport.Height / (float)originalHeight;
+            }
+            SystemManagers.Default.Renderer.Camera.Zoom = zoom;
+
+
+            GraphicalUiElement.CanvasWidth = _graphics.GraphicsDevice.Viewport.Width/zoom;
+            GraphicalUiElement.CanvasHeight = _graphics.GraphicsDevice.Viewport.Height/zoom;
+
+            // Grab the rootmost object and tell it to resize:
+            currentScreenGue.UpdateLayout();
+
+            // If you are using Gum Forms, you should also notify GumForms:
+            //MonoGameGum.Forms.Controls.FrameworkElement.Root.UpdateLayout();
+
         }
 
         private void InitializeRuntimeMapping()
@@ -212,7 +244,10 @@ namespace MonoGameGumFromFile
                     ShowScreen("InteractiveGueScreen");
                     //InitializeInteractiveGueScreen();
                 }
-
+            }
+            else if(state.IsKeyDown(Keys.D9))
+            {
+                ShowScreen("ResizeScreen");
             }
         }
 
