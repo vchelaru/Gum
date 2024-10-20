@@ -24,9 +24,6 @@ namespace Gum
 
             MainWindow mainWindow = null;
 
-            // testing:
-            return RunResponseCodes.XnaNotInstalled;
-
             try
             {
                 mainWindow = new MainWindow();
