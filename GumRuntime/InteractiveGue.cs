@@ -684,11 +684,11 @@ namespace Gum.Wireframe
         public static void DoUiActivityRecursively(ISystemManagers systemManagers, ICursor cursor, IInputReceiverKeyboard keyboard, double currentGameTimeInSeconds)
         {
             internalList.Clear();
-            for(int i = systemManagers.Renderer.Layers.Count-1; i > -1; i--)
+            for(int i = 0; i < systemManagers.Renderer.Layers.Count; i++)
             {
                 var layer = systemManagers.Renderer.Layers[i];
 
-                for(int j = layer.Renderables.Count -1; j > -1; j--)
+                for(int j = 0; j < layer.Renderables.Count; j++)
                 {
                     var renderable = layer.Renderables[j];
 
@@ -699,7 +699,7 @@ namespace Gum.Wireframe
                     else if(renderable is InvisibleRenderable invisibleRenderable)
                     {
                         // this could be a screen item, so let's loop through its children.
-                        for(int k = invisibleRenderable.Children.Count - 1; k > -1; k--)
+                        for(int k = 0; k < invisibleRenderable.Children.Count; k++ )
                         {
                             var child = invisibleRenderable.Children[k] as GraphicalUiElement;
                             if (child != null) internalList.Add(child);
