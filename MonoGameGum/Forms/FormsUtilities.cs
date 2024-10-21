@@ -46,19 +46,6 @@ namespace MonoGameGum.Forms
             keyboard = new MonoGameGum.Input.Keyboard();
 
             FrameworkElement.MainCursor = cursor;
-
-            var root = new ContainerRuntime();
-
-            root.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            root.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            if(SystemManagers.Default == null)
-            {
-                throw new InvalidOperationException("You must call this method after initializing SystemManagers.Default");
-            }
-            root.AddToManagers();
-
-            FrameworkElement.Root = root;
-
         }
 
         public static void Update(GameTime gameTime)

@@ -42,7 +42,7 @@ namespace GumFormsSample
             var screen = new FrameworkElementExampleScreen();
             // Uncommment to see customization:
             //var screen = new FormsCustomizationScreen();
-            screen.Initialize(FrameworkElement.Root);
+            screen.Initialize();
 
             base.Initialize();
 
