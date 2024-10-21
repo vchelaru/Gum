@@ -671,18 +671,42 @@ namespace Gum.Wireframe
     }
     public static class GueInteractiveExtensionMethods
     {
+
+        static List<GraphicalUiElement> internalList = new List<GraphicalUiElement>();
         public static void DoUiActivityRecursively(this GraphicalUiElement gue, ICursor cursor, IInputReceiverKeyboard keyboard, double currentGameTimeInSeconds)
         {
+            internalList.Clear();
+            internalList.Add(gue);
+
+            DoUiActivityRecursively(internalList, cursor, keyboard, currentGameTimeInSeconds);
+        }
+
+        public static void DoUiActivityRecursively(IList<GraphicalUiElement> gues, ICursor cursor, IInputReceiverKeyboard keyboard, double currentGameTimeInSeconds)
+        { 
             InteractiveGue.CurrentGameTime = currentGameTimeInSeconds;
             var windowOverBefore = cursor.WindowOver;
             var windowPushedBefore = cursor.WindowPushed;
 
             HandledActions actions = new HandledActions();
-            InteractiveGue.DoUiActivityRecursively(cursor, actions, gue);
+            cursor.WindowOver = null;
+            for(int i = gues.Count-1; i > -1; i--)
+            {
+                var gue = gues[i];
+                InteractiveGue.DoUiActivityRecursively(cursor, actions, gue);
+                if(cursor.WindowOver != null)
+                {
+                    System.Diagnostics.Debug.WriteLine("Breaking because new window over is: " + cursor.WindowOver);
+                    break;
+                }
+            }
 
             if(!actions.SetWindowOver)
             {
                 cursor.WindowOver = null;
+            }
+            else if(cursor.WindowOver == null)
+            {
+                cursor.WindowOver = windowOverBefore;
             }
 
             if(windowOverBefore != cursor.WindowOver)

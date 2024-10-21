@@ -36,6 +36,8 @@ namespace MonoGameGum.Forms.Controls
     {
         public static ICursor MainCursor { get; set; }
 
+        public static InteractiveGue PopupRoot { get; set; }
+
         protected bool isFocused;
         protected double timeFocused;
         public virtual bool IsFocused

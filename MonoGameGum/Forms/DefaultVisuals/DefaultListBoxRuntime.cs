@@ -1,5 +1,6 @@
 ﻿using Gum.Converters;
 using Gum.Wireframe;
+using MonoGameGum.Forms.Controls;
 using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System;
@@ -75,6 +76,13 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
                 // todo - add here:
             }
+
+            if (tryCreateFormsObject)
+            {
+                FormsControlAsObject = new ListBox();
+            }
         }
+
+        public ListBox FormsControl => FormsControlAsObject as ListBox;
     }
 }

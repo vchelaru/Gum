@@ -20,7 +20,6 @@ namespace GumFormsSample
         private SpriteBatch _spriteBatch;
 
         ContainerRuntime Root;
-
         public GumFormsSampleGame()
         {
             _graphics = new GraphicsDeviceManager(this);
@@ -45,6 +44,7 @@ namespace GumFormsSample
             Root.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
             Root.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
             Root.AddToManagers();
+
 
             var screen = new FrameworkElementExampleScreen();
             // Uncommment to see customization:
@@ -97,7 +97,8 @@ namespace GumFormsSample
                 windowOver = $"{cursor.WindowOver.GetType().Name}" ;
             }
 
-            System.Diagnostics.Debug.WriteLine($"Window over: {windowOver} @ x:{cursor.WindowOver?.X}");
+            // Uncomment this to see the current window over every frame
+            //System.Diagnostics.Debug.WriteLine($"Window over: {windowOver} @ x:{cursor.WindowOver?.X}");
 
             SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
 
