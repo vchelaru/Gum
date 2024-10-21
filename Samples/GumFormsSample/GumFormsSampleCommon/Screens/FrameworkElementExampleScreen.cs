@@ -12,21 +12,20 @@ namespace GumFormsSample.Screens
 {
     internal class FrameworkElementExampleScreen
     {
-        public void Initialize()
+        public void Initialize(ContainerRuntime root)
         {
-            var Root = new ContainerRuntime();
-            Root.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            Root.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            Root.Width = 0;
-            Root.Height = 0;
-            Root.AddToManagers();
+            root.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            root.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            root.Width = 0;
+            root.Height = 0;
+            root.AddToManagers();
             FrameworkElement.DefaultFormsComponents[typeof(Button)] =
                 typeof(FullyCustomizedButton);
 
             var currentY = 0;
 
             var button = new Button();
-            Root.Children.Add(button.Visual);
+            root.Children.Add(button.Visual);
             button.X = 0;
             button.Y = 0;
             button.Width = 100;
@@ -42,7 +41,7 @@ namespace GumFormsSample.Screens
             currentY += 50;
 
             var checkbox = new CheckBox();
-            Root.Children.Add(checkbox.Visual);
+            root.Children.Add(checkbox.Visual);
             checkbox.X = 0;
             checkbox.Y = currentY;
             checkbox.Text = "Checkbox";
@@ -50,7 +49,7 @@ namespace GumFormsSample.Screens
             currentY += 50;
 
             var comboBox = new ComboBox();
-            Root.Children.Add(comboBox.Visual);
+            root.Children.Add(comboBox.Visual);
             comboBox.Name = "Hello";
             comboBox.Width = 140;
             comboBox.X = 0;
@@ -64,7 +63,7 @@ namespace GumFormsSample.Screens
 
             // We can also create buttons through the creation of the default controls:
             var buttonRuntime = new DefaultButtonRuntime();
-            Root.Children.Add(buttonRuntime);
+            root.Children.Add(buttonRuntime);
             buttonRuntime.X = 0;
             buttonRuntime.Y = currentY;
             buttonRuntime.Width = 100;
@@ -79,7 +78,7 @@ namespace GumFormsSample.Screens
 
             currentY += 50;
             var listBox = new ListBox();
-            Root.Children.Add(listBox.Visual);
+            root.Children.Add(listBox.Visual);
             listBox.X = 0;
             listBox.Y = currentY;
             listBox.Width = 200;
@@ -91,7 +90,7 @@ namespace GumFormsSample.Screens
 
 
             var scrollBar = new ScrollBar();
-            Root.Children.Add(scrollBar.Visual);
+            root.Children.Add(scrollBar.Visual);
             scrollBar.Width = 24;
             scrollBar.Height = 200;
             scrollBar.X = 200;
@@ -100,7 +99,7 @@ namespace GumFormsSample.Screens
             scrollBar.ViewportSize = 50;
 
             var scrollViewer = new ScrollViewer();
-            Root.Children.Add(scrollViewer.Visual);
+            root.Children.Add(scrollViewer.Visual);
             scrollViewer.X = 300;
             scrollViewer.Y = 0;
             scrollViewer.Width = 200;
@@ -128,7 +127,7 @@ namespace GumFormsSample.Screens
             //viewer.Height = 200;
 
             var textBox = new TextBox();
-            Root.Children.Add(textBox.Visual);
+            root.Children.Add(textBox.Visual);
             textBox.X = 220;
             textBox.Y = 220;
             textBox.Width = 200;
@@ -136,7 +135,7 @@ namespace GumFormsSample.Screens
             textBox.Placeholder = "Placeholder Text...";
 
             var textBox2 = new TextBox();
-            Root.Children.Add(textBox2.Visual);
+            root.Children.Add(textBox2.Visual);
             textBox2.X = 220;
             textBox2.Y = 260;
             textBox2.Width = 200;
@@ -144,7 +143,7 @@ namespace GumFormsSample.Screens
             textBox2.Placeholder = "Placeholder Text...";
 
             var passwordBox = new PasswordBox();
-            Root.Children.Add(passwordBox.Visual);
+            root.Children.Add(passwordBox.Visual);
             passwordBox.X = 220;
             passwordBox.Y = 300;
             passwordBox.Width = 200;
@@ -152,7 +151,7 @@ namespace GumFormsSample.Screens
             passwordBox.Placeholder = "Enter Password";
 
             var slider = new Slider();
-            Root.Children.Add(slider.Visual);
+            root.Children.Add(slider.Visual);
             slider.X = 220;
             slider.Y = 340;
             slider.Minimum = 0;
@@ -163,7 +162,7 @@ namespace GumFormsSample.Screens
 
 
             var customizedButton = new Button();
-            Root.Children.Add(customizedButton.Visual);
+            root.Children.Add(customizedButton.Visual);
 
             //customizedButton.Width = 200;
             //customizedButton.Height = 50;

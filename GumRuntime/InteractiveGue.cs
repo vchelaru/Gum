@@ -681,37 +681,6 @@ namespace Gum.Wireframe
             DoUiActivityRecursively(internalList, cursor, keyboard, currentGameTimeInSeconds);
         }
 
-        public static void DoUiActivityRecursively(ISystemManagers systemManagers, ICursor cursor, IInputReceiverKeyboard keyboard, double currentGameTimeInSeconds)
-        {
-            internalList.Clear();
-            for(int i = 0; i < systemManagers.Renderer.Layers.Count; i++)
-            {
-                var layer = systemManagers.Renderer.Layers[i];
-
-                for(int j = 0; j < layer.Renderables.Count; j++)
-                {
-                    var renderable = layer.Renderables[j];
-
-                    if(renderable is GraphicalUiElement gue)
-                    {
-                        internalList.Add(gue);
-                    }
-                    else if(renderable is InvisibleRenderable invisibleRenderable)
-                    {
-                        // this could be a screen item, so let's loop through its children.
-                        for(int k = 0; k < invisibleRenderable.Children.Count; k++ )
-                        {
-                            var child = invisibleRenderable.Children[k] as GraphicalUiElement;
-                            if (child != null) internalList.Add(child);
-                        }
-                    }
-                }
-
-            }
-
-            DoUiActivityRecursively(internalList, cursor, keyboard, currentGameTimeInSeconds);
-        }
-
         public static void DoUiActivityRecursively(IList<GraphicalUiElement> gues, ICursor cursor, IInputReceiverKeyboard keyboard, double currentGameTimeInSeconds)
         { 
             InteractiveGue.CurrentGameTime = currentGameTimeInSeconds;
@@ -719,13 +688,14 @@ namespace Gum.Wireframe
             var windowPushedBefore = cursor.WindowPushed;
 
             HandledActions actions = new HandledActions();
-
+            cursor.WindowOver = null;
             for(int i = gues.Count-1; i > -1; i--)
             {
                 var gue = gues[i];
                 InteractiveGue.DoUiActivityRecursively(cursor, actions, gue);
-                if(windowOverBefore != cursor.WindowOver)
+                if(cursor.WindowOver != null)
                 {
+                    System.Diagnostics.Debug.WriteLine("Breaking because new window over is: " + cursor.WindowOver);
                     break;
                 }
             }
@@ -733,6 +703,10 @@ namespace Gum.Wireframe
             if(!actions.SetWindowOver)
             {
                 cursor.WindowOver = null;
+            }
+            else if(cursor.WindowOver == null)
+            {
+                cursor.WindowOver = windowOverBefore;
             }
 
             if(windowOverBefore != cursor.WindowOver)

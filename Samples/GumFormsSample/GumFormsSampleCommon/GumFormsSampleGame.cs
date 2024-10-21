@@ -19,7 +19,7 @@ namespace GumFormsSample
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
 
-
+        ContainerRuntime Root;
         public GumFormsSampleGame()
         {
             _graphics = new GraphicsDeviceManager(this);
@@ -39,10 +39,17 @@ namespace GumFormsSample
             SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
             FormsUtilities.InitializeDefaults();
 
+            Root = new ContainerRuntime();
+
+            Root.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            Root.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            Root.AddToManagers();
+
+
             var screen = new FrameworkElementExampleScreen();
             // Uncommment to see customization:
             //var screen = new FormsCustomizationScreen();
-            screen.Initialize();
+            screen.Initialize(Root);
 
             base.Initialize();
 
@@ -82,7 +89,7 @@ namespace GumFormsSample
 
 
 
-            FormsUtilities.Update(gameTime);
+            FormsUtilities.Update(gameTime, Root);
 
             string windowOver = "<null>";
             if(cursor.WindowOver != null)

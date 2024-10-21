@@ -327,9 +327,7 @@ namespace MonoGameGum.Forms.Controls
             }
             listBox.RepositionToKeepInScreen();
 
-            //FrameworkElement.Root.Children.Add(listBox.Visual);
-            // What if we add this to managers instead of an object so we don't have to maintain a root...
-            listBox.Visual.AddToManagers(SystemManagers.Default, layer:null);
+            FrameworkElement.PopupRoot.Children.Add(listBox.Visual);
 
             //var rootParent = listBox.Visual.GetParentRoot();
 
