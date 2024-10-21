@@ -66,8 +66,8 @@ namespace MonoGameGum.Forms
             cursor.Activity(gameTime.TotalGameTime.TotalSeconds);
             keyboard.Activity(gameTime.TotalGameTime.TotalSeconds);
 
-            FrameworkElement.Root.DoUiActivityRecursively(cursor, keyboard, gameTime.TotalGameTime.TotalSeconds);
-
+            //FrameworkElement.Root.DoUiActivityRecursively(cursor, keyboard, gameTime.TotalGameTime.TotalSeconds);
+            GueInteractiveExtensionMethods.DoUiActivityRecursively(SystemManagers.Default, cursor, keyboard, gameTime.TotalGameTime.TotalSeconds);
         }
     }
 }

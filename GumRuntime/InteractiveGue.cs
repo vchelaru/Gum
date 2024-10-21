@@ -671,14 +671,64 @@ namespace Gum.Wireframe
     }
     public static class GueInteractiveExtensionMethods
     {
+
+        static List<GraphicalUiElement> internalList = new List<GraphicalUiElement>();
         public static void DoUiActivityRecursively(this GraphicalUiElement gue, ICursor cursor, IInputReceiverKeyboard keyboard, double currentGameTimeInSeconds)
         {
+            internalList.Clear();
+            internalList.Add(gue);
+
+            DoUiActivityRecursively(internalList, cursor, keyboard, currentGameTimeInSeconds);
+        }
+
+        public static void DoUiActivityRecursively(ISystemManagers systemManagers, ICursor cursor, IInputReceiverKeyboard keyboard, double currentGameTimeInSeconds)
+        {
+            internalList.Clear();
+            for(int i = systemManagers.Renderer.Layers.Count-1; i > -1; i--)
+            {
+                var layer = systemManagers.Renderer.Layers[i];
+
+                for(int j = layer.Renderables.Count -1; j > -1; j--)
+                {
+                    var renderable = layer.Renderables[j];
+
+                    if(renderable is GraphicalUiElement gue)
+                    {
+                        internalList.Add(gue);
+                    }
+                    else if(renderable is InvisibleRenderable invisibleRenderable)
+                    {
+                        // this could be a screen item, so let's loop through its children.
+                        for(int k = invisibleRenderable.Children.Count - 1; k > -1; k--)
+                        {
+                            var child = invisibleRenderable.Children[k] as GraphicalUiElement;
+                            if (child != null) internalList.Add(child);
+                        }
+                    }
+                }
+
+            }
+
+            DoUiActivityRecursively(internalList, cursor, keyboard, currentGameTimeInSeconds);
+        }
+
+        public static void DoUiActivityRecursively(IList<GraphicalUiElement> gues, ICursor cursor, IInputReceiverKeyboard keyboard, double currentGameTimeInSeconds)
+        { 
             InteractiveGue.CurrentGameTime = currentGameTimeInSeconds;
             var windowOverBefore = cursor.WindowOver;
             var windowPushedBefore = cursor.WindowPushed;
 
             HandledActions actions = new HandledActions();
-            InteractiveGue.DoUiActivityRecursively(cursor, actions, gue);
+
+            for(int i = gues.Count-1; i > -1; i--)
+            {
+                var gue = gues[i];
+                InteractiveGue.DoUiActivityRecursively(cursor, actions, gue);
+                if(windowOverBefore != cursor.WindowOver)
+                {
+                    break;
+                }
+            }
 
             if(!actions.SetWindowOver)
             {

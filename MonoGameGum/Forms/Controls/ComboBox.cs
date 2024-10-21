@@ -327,7 +327,9 @@ namespace MonoGameGum.Forms.Controls
             }
             listBox.RepositionToKeepInScreen();
 
-            FrameworkElement.Root.Children.Add(listBox.Visual);
+            //FrameworkElement.Root.Children.Add(listBox.Visual);
+            // What if we add this to managers instead of an object so we don't have to maintain a root...
+            listBox.Visual.AddToManagers(SystemManagers.Default, layer:null);
 
             //var rootParent = listBox.Visual.GetParentRoot();
 
@@ -394,7 +396,7 @@ namespace MonoGameGum.Forms.Controls
 
                 Visual.EffectiveManagers.Renderer.MainLayer.Remove(listBox.Visual);
 
-                listBox.Visual.GetTopParent().Children.Remove(listBox.Visual);
+                listBox.Visual.GetTopParent()?.Children.Remove(listBox.Visual);
 
                 UpdateState();
             }
