@@ -110,11 +110,11 @@ namespace CodeOutputPlugin.Views
         {
             var member = new InstanceMember("Output Library", this);
 
-            member.CustomSetEvent += (owner, value) =>
+            member.CustomSetPropertyEvent += (owner, args) =>
             {
                 if (CodeOutputProjectSettings != null)
                 {
-                    CodeOutputProjectSettings.OutputLibrary = (OutputLibrary)value;
+                    CodeOutputProjectSettings.OutputLibrary = (OutputLibrary)args.Value;
                     CodeOutputSettingsPropertyChanged?.Invoke(this, null);
                 }
             };
@@ -139,11 +139,11 @@ namespace CodeOutputPlugin.Views
         {
             var member = new InstanceMember("Project-wide Using Statements", this);
 
-            member.CustomSetEvent += (owner, value) =>
+            member.CustomSetPropertyEvent += (owner, args) =>
             {
                 if (CodeOutputProjectSettings != null)
                 {
-                    CodeOutputProjectSettings.CommonUsingStatements = (string)value;
+                    CodeOutputProjectSettings.CommonUsingStatements = (string)args.Value;
                     CodeOutputSettingsPropertyChanged?.Invoke(this, null);
                 }
             };
@@ -159,11 +159,11 @@ namespace CodeOutputPlugin.Views
         {
             var member = new InstanceMember("Code Project Root", this);
 
-            member.CustomSetEvent += (owner, value) =>
+            member.CustomSetPropertyEvent += (owner, args) =>
             {
                 if (CodeOutputProjectSettings != null)
                 {
-                    var valueToSet = (string)value;
+                    var valueToSet = (string)args.Value;
                     var needsAppendedSlash = !string.IsNullOrEmpty(valueToSet) &&
                         !valueToSet.EndsWith("\\") &&
                         !valueToSet.EndsWith("/");
@@ -206,11 +206,11 @@ namespace CodeOutputPlugin.Views
         {
             var member = new InstanceMember("Root Namespace", this);
 
-            member.CustomSetEvent += (owner, value) =>
+            member.CustomSetPropertyEvent += (owner, args) =>
             {
                 if(CodeOutputProjectSettings != null)
                 {
-                    CodeOutputProjectSettings.RootNamespace = (string)value;
+                    CodeOutputProjectSettings.RootNamespace = (string)args.Value;
                     CodeOutputSettingsPropertyChanged?.Invoke(this, null);
                 }
             };
@@ -226,11 +226,11 @@ namespace CodeOutputPlugin.Views
 
             var member = new InstanceMember("Default Screen Base", this);
             member.DetailText = "Base class for screens";
-            member.CustomSetEvent += (owner, value) =>
+            member.CustomSetPropertyEvent += (owner, args) =>
             {
                 if (CodeOutputProjectSettings != null)
                 {
-                    CodeOutputProjectSettings.DefaultScreenBase = (string)value;
+                    CodeOutputProjectSettings.DefaultScreenBase = (string)args.Value;
                     CodeOutputSettingsPropertyChanged?.Invoke(this, null);
                 }
             };
@@ -244,11 +244,11 @@ namespace CodeOutputPlugin.Views
         private InstanceMember CreateAdjustPixelValuesForDensityMember()
         {
             var member = new InstanceMember("Adjust Pixel Values for Density", this);
-            member.CustomSetEvent += (owner, value) =>
+            member.CustomSetPropertyEvent += (owner, args) =>
             {
                 if (CodeOutputProjectSettings != null)
                 {
-                    CodeOutputProjectSettings.AdjustPixelValuesForDensity = (bool)value;
+                    CodeOutputProjectSettings.AdjustPixelValuesForDensity = (bool)args.Value;
                     CodeOutputSettingsPropertyChanged?.Invoke(this, null);
                 }
             };
@@ -263,11 +263,11 @@ namespace CodeOutputPlugin.Views
         private InstanceMember CreateBaseTypesNotCodeGenerated()
         {
             var member = new InstanceMember("Base types ignored in code generation", this);
-            member.CustomSetEvent += (owner, value) =>
+            member.CustomSetPropertyEvent += (owner, args) =>
             {
                 if (CodeOutputProjectSettings != null)
                 {
-                    CodeOutputProjectSettings.BaseTypesNotCodeGenerated = (string)value;
+                    CodeOutputProjectSettings.BaseTypesNotCodeGenerated = (string)args.Value;
                     CodeOutputSettingsPropertyChanged?.Invoke(this, null);
                 }
             };
@@ -283,11 +283,11 @@ namespace CodeOutputPlugin.Views
         private InstanceMember CreateGenerateGumDataTypesCode()
         {
             var member = new InstanceMember("Generate Gum DataTypes Code", this);
-            member.CustomSetEvent += (owner, value) =>
+            member.CustomSetPropertyEvent += (owner, args) =>
             {
                 if(CodeOutputProjectSettings != null)
                 {
-                    CodeOutputProjectSettings.GenerateGumDataTypes = (bool)value;
+                    CodeOutputProjectSettings.GenerateGumDataTypes = (bool)args.Value;
                     CodeOutputSettingsPropertyChanged?.Invoke(this, null);
                 }
             };
@@ -302,11 +302,11 @@ namespace CodeOutputPlugin.Views
         private InstanceMember CreateGenerateObjectInstantiationTypeMember()
         {
             var member = new InstanceMember("Object Instantiation Type", this);
-            member.CustomSetEvent += (owner, value) =>
+            member.CustomSetPropertyEvent += (owner, args) =>
             {
                 if (CodeOutputProjectSettings != null)
                 {
-                    CodeOutputProjectSettings.ObjectInstantiationType = (ObjectInstantiationType)value;
+                    CodeOutputProjectSettings.ObjectInstantiationType = (ObjectInstantiationType)args.Value;
                     CodeOutputSettingsPropertyChanged?.Invoke(this, null);
                 }
             };
@@ -325,11 +325,11 @@ namespace CodeOutputPlugin.Views
         {
             var member = new InstanceMember("Generation Behavior", this);
 
-            member.CustomSetEvent += (owner, value) =>
+            member.CustomSetPropertyEvent += (owner, args) =>
             {
-                if (codeOutputElementSettings != null && value != null)
+                if (codeOutputElementSettings != null && args.Value != null)
                 {
-                    codeOutputElementSettings.GenerationBehavior = (GenerationBehavior)value;
+                    codeOutputElementSettings.GenerationBehavior = (GenerationBehavior)args.Value;
                     CodeOutputSettingsPropertyChanged?.Invoke(this, null);
                 }
             };
@@ -344,11 +344,11 @@ namespace CodeOutputPlugin.Views
         {
             var member = new InstanceMember("Using Statements", this);
 
-            member.CustomSetEvent += (owner, value) =>
+            member.CustomSetPropertyEvent += (owner, args) =>
             {
                 if(codeOutputElementSettings != null)
                 {
-                    codeOutputElementSettings.UsingStatements = (string)value;
+                    codeOutputElementSettings.UsingStatements = (string)args.Value;
                     CodeOutputSettingsPropertyChanged?.Invoke(this, null);
                 }
             };
@@ -369,11 +369,11 @@ namespace CodeOutputPlugin.Views
         {
             var member = new InstanceMember("Namespace", this);
 
-            member.CustomSetEvent += (owner, value) =>
+            member.CustomSetPropertyEvent += (owner, args) =>
             {
                 if (codeOutputElementSettings != null)
                 {
-                    codeOutputElementSettings.Namespace = (string)value;
+                    codeOutputElementSettings.Namespace = (string)args.Value;
                     CodeOutputSettingsPropertyChanged?.Invoke(this, null);
                 }
             };
@@ -392,11 +392,11 @@ namespace CodeOutputPlugin.Views
         {
             var member = new InstanceMember("Generated File Name", this);
 
-            member.CustomSetEvent += (owner, value) =>
+            member.CustomSetPropertyEvent += (owner, args) =>
             {
                 if (codeOutputElementSettings != null)
                 {
-                    var valueAsString = (string)value;
+                    var valueAsString = (string)args.Value;
                     if(!string.IsNullOrWhiteSpace(ProjectState.Self.ProjectDirectory) && FileManager.IsRelative(valueAsString) == false)
                     {
                         valueAsString = FileManager.MakeRelative(valueAsString, ProjectState.Self.ProjectDirectory, preserveCase:true);
@@ -417,11 +417,11 @@ namespace CodeOutputPlugin.Views
         {
             var member = new InstanceMember("Localize Element", this);
 
-            member.CustomSetEvent += (owner, value) =>
+            member.CustomSetPropertyEvent += (owner, args) =>
             {
                 if (codeOutputElementSettings != null)
                 {
-                    codeOutputElementSettings.LocalizeElement = (bool)value;
+                    codeOutputElementSettings.LocalizeElement = (bool)args.Value;
 
                     CodeOutputSettingsPropertyChanged?.Invoke(this, null);
                 }

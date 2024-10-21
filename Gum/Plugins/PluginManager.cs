@@ -46,7 +46,6 @@ namespace Gum.Plugins
 
         private const String ReferenceFileName = "References.txt";
         private const String CompatibilityFileName = "Compatibility.txt";
-        private bool mError = false;
         
         static PluginManager mGlobalInstance;
         static PluginManager mProjectInstance;
@@ -231,7 +230,6 @@ namespace Gum.Plugins
         {
             #region Get the Catalog
 
-            instance.mError = false;
 
             ResolveEventHandler reh = new ResolveEventHandler(instance.currentDomain_AssemblyResolve);
 

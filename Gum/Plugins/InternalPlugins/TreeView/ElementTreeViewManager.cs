@@ -1699,6 +1699,7 @@ namespace Gum.Managers
 
             deepSearchCheckBox = new CheckBox();
             deepSearchCheckBox.Checked = false;
+            deepSearchCheckBox.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             deepSearchCheckBox.Text = "Search instance properties";
             deepSearchCheckBox.CheckedChanged += (object sender, EventArgs args) =>
             {
