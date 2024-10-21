@@ -3,11 +3,60 @@
     "vchel": [],
     "Owner": [
       {
-        "NewName": "Pushed",
-        "OldName": "Pressed",
-        "ElementType": "Components",
-        "EventType": 3,
-        "TimestampUtc": "2024-09-16T19:56:50.5710925Z"
+        "NewName": "ResizeScreen",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 0,
+        "TimestampUtc": "2024-10-20T12:04:12.6450304Z"
+      },
+      {
+        "NewName": "ResizeScreen.ContainerInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-10-20T12:38:11.1311093Z"
+      },
+      {
+        "NewName": "ResizeScreen.ColoredRectangleInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-10-20T12:38:31.6445183Z"
+      },
+      {
+        "NewName": "ResizeScreen.TextInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-10-20T12:38:44.8544271Z"
+      },
+      {
+        "NewName": "ResizeScreen.TextInstance1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-10-20T12:38:58.1306625Z"
+      },
+      {
+        "NewName": "ResizeScreen.TextInstance2",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-10-20T12:39:06.5630621Z"
+      },
+      {
+        "NewName": "ResizeScreen.TextInstance3",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-10-20T12:39:17.3621177Z"
+      },
+      {
+        "NewName": "ResizeScreen.TextInstance4",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-10-20T12:39:25.5034412Z"
       }
     ]
   }

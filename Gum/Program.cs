@@ -2,43 +2,52 @@
 using Microsoft.AppCenter.Analytics;
 using Microsoft.AppCenter.Crashes;
 using System;
+using System.IO;
 using System.Windows.Forms;
 
 namespace Gum
 {
     static class Program
     {
+
+
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main()
+        static int Main()
         {
             System.Windows.Media.RenderOptions.ProcessRenderMode = System.Windows.Interop.RenderMode.SoftwareOnly;
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
+            MainWindow mainWindow = null;
+
             try
             {
-                InitializeAppCenter();
+                mainWindow = new MainWindow();
             }
-            catch
+            catch(FileNotFoundException)
             {
-                // oh well
+                return RunResponseCodes.XnaNotInstalled;
+            }
+            catch (Exception e)
+            {
+                return RunResponseCodes.UnknownFailure;
             }
 
-            Application.Run(new MainWindow());
+            Application.Run(mainWindow);
+
+            return RunResponseCodes.Success;
         }
 
-        private static void InitializeAppCenter()
-        {
-            Application.ThreadException += (sender, args) =>
-            {
-                Crashes.TrackError(args.Exception);
-            };
+    }
 
-            AppCenter.Start("ba71b882-7cee-4dff-90a0-3cbbb179bec0",
-                   typeof(Analytics), typeof(Crashes));
-        }
+    static class RunResponseCodes
+    {
+        public const int Success = 0;
+        public const int UnknownFailure = 1;
+        public const int XnaNotInstalled = 2;
     }
 }
