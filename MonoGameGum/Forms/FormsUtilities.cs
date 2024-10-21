@@ -4,6 +4,7 @@ using MonoGameGum.Forms.Controls;
 using MonoGameGum.Forms.DefaultVisuals;
 using MonoGameGum.GueDeriving;
 using MonoGameGum.Input;
+using RenderingLibrary;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,6 +23,12 @@ namespace MonoGameGum.Forms
 
         public static Keyboard Keyboard => keyboard;
 
+        /// <summary>
+        /// Initializes defaults to enable FlatRedBall Forms. This method should be called before using Forms.
+        /// </summary>
+        /// <remarks>
+        /// Projects can make further customization to Forms such as by modifying the FrameworkElement.Root or the DefaultFormsComponents.
+        /// </remarks>
         public static void InitializeDefaults()
         {
             FrameworkElement.DefaultFormsComponents[typeof(Button)] = typeof(DefaultButtonRuntime);
@@ -44,6 +51,10 @@ namespace MonoGameGum.Forms
 
             root.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
             root.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            if(SystemManagers.Default == null)
+            {
+                throw new InvalidOperationException("You must call this method after initializing SystemManagers.Default");
+            }
             root.AddToManagers();
 
             FrameworkElement.Root = root;
