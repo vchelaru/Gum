@@ -58,6 +58,39 @@ internal class ClickableButton : InteractiveGue
 
 Note that this type of control is assumed to be used as a Forms Button, so it includes the instantiation of a Forms button.
 
+### Custom Runtimes for Screens
+
+Custom runtime classes can be created for screens using the same approach as components. Typically custom runtimes for screens inherit from GraphicalUiElement rather than InteractiveGue since the screen itself does not need click events.
+
+The following code is an example of a custom runtime for a screen which contains a text instance named `TextInstance`:
+
+```csharp
+class StartScreenRuntime : GraphicalUiElement
+{
+    public StartScreenRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
+        : base()
+    { }
+
+    public override void AfterFullCreation()
+    {
+        base.AfterFullCreation();
+
+        var exposedVariableInstance = 
+            GetGraphicalUiElementByName("TextInstance");
+        exposedVariableInstance.SetProperty("Text", "I'm set in code");
+    }
+}
+```
+
+This type is registered using ElementSaveExtensions:
+
+```csharp
+ElementSaveExtensions.RegisterGueInstantiation("StartScreen",
+    () => new StartScreenRuntime());
+```
+
+Calling `ToGraphicalUiElement` on the StartScreen results in an instance of the StartScreenRuntime being created.
+
 ### Associating a Gum Component to a Runtime
 
 Once a custom runtime is defined, it needs to be associated with a Gum component. For example, consider a component named StandardButton inside a Buttons folder.
