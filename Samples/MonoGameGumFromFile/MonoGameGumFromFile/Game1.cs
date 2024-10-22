@@ -12,6 +12,7 @@ using MonoGameGum.Input;
 using MonoGameGum.Renderables;
 using MonoGameGumFromFile.ComponentRuntimes;
 using MonoGameGumFromFile.Managers;
+using MonoGameGumFromFile.ScreenRuntimes;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
@@ -46,7 +47,7 @@ namespace MonoGameGumFromFile
             IsMouseVisible = true;
 
             _graphics.PreferredBackBufferWidth = 800;
-            _graphics.PreferredBackBufferHeight = 300;
+            _graphics.PreferredBackBufferHeight = 600;
         }
 
         protected override void LoadContent()
@@ -83,12 +84,16 @@ namespace MonoGameGumFromFile
             // store off the original height so we can use it for zooming
             originalHeight = _graphics.GraphicsDevice.Viewport.Height;
 
+            // This example includes code that assocaites a particular screen with a
+            // runtime class
+            ElementSaveExtensions.RegisterGueInstantiation("StartScreen",
+                () => new StartScreenRuntime());
+
             LoadGumProject();
 
             InitializeRuntimeMapping();
 
             ShowScreen("StartScreen");
-            InitializeStartScreen();
 
             base.Initialize();
         }
@@ -167,10 +172,7 @@ namespace MonoGameGumFromFile
 
             if (state.IsKeyDown(Keys.D1))
             {
-                if(ShowScreen("StartScreen"))
-                {
-                    InitializeStartScreen();
-                }
+                ShowScreen("StartScreen");
             }
             else if (state.IsKeyDown(Keys.D2))
             {
@@ -256,12 +258,6 @@ namespace MonoGameGumFromFile
 
         }
 
-        private void InitializeStartScreen()
-        {
-            var exposedVariableInstance = currentScreenGue.GetGraphicalUiElementByName("ComponentWithExposedVariableInstance");
-            exposedVariableInstance.SetProperty("Text", "I'm set in code");
-        }
-
         private void InitializeZoomScreen()
         {
             var layered = currentScreenGue.GetGraphicalUiElementByName("Layered");
@@ -332,7 +328,7 @@ namespace MonoGameGumFromFile
 
             SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
 
-            FormsUtilities.Update(gameTime);
+            FormsUtilities.Update(gameTime, currentScreenGue);
 
             synchronizationContext.Update();
 
