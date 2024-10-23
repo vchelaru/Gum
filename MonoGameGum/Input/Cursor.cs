@@ -187,6 +187,17 @@ namespace MonoGameGum.Input
         double mLastSecondaryClickTime = -999;
         double mLastMiddleClickTime = -999;
 
+        public void ClearInputValues()
+        {
+            _lastFrameTouchCollection = new TouchCollection();
+            _touchCollection = new TouchCollection();
+
+            mLastFrameMouseState = new MouseState();
+            _mouseState = new MouseState();
+
+            // do we want to change X and Y?
+        }
+
         public void Activity(double currentTime)
         {
             mLastFrameMouseState = _mouseState;
