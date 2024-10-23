@@ -695,7 +695,6 @@ namespace Gum.Wireframe
                 InteractiveGue.DoUiActivityRecursively(cursor, actions, gue);
                 if(cursor.WindowOver != null)
                 {
-                    System.Diagnostics.Debug.WriteLine("Breaking because new window over is: " + cursor.WindowOver);
                     break;
                 }
             }
