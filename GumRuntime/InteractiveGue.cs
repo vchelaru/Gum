@@ -576,6 +576,7 @@ namespace Gum.Wireframe
             if (nextClickActions.Count > 0)
             {
                 var items = nextClickActions.ToList();
+                // clear first so that any actions can add more click actions that won't get run this frame:
                 nextClickActions.Clear();
                 foreach (var item in items)
                 {

@@ -350,6 +350,7 @@ namespace MonoGameGum.Forms.Controls
             //}
 
             //GuiManager.AddNextPushAction(TryHideFromPush);
+            InteractiveGue.AddNextPushAction(TryHideFromPush);
             //GuiManager.SortZAndLayerBased();
 
 
@@ -363,7 +364,9 @@ namespace MonoGameGum.Forms.Controls
 
             var clickedOnThisOrChild =
                 cursor.WindowOver == this.Visual ||
-                (cursor.WindowOver != null && cursor.WindowOver.IsInParentChain(this.Visual));
+                (cursor.WindowOver != null && cursor.WindowOver.IsInParentChain(this.Visual)) ||
+                (cursor.WindowOver != null && cursor.WindowOver.IsInParentChain(this.listBox.Visual))
+                ;
 
             if (clickedOnThisOrChild == false)
             {
@@ -371,7 +374,8 @@ namespace MonoGameGum.Forms.Controls
             }
             else
             {
-                //GuiManager.AddNextPushAction(TryHideFromPush);
+                InteractiveGue.AddNextPushAction(TryHideFromPush);
+                    //GuiManager.AddNextPushAction(TryHideFromPush);
             }
         }
 
