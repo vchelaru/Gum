@@ -40,7 +40,7 @@ Gum produces genera-purpose XML so it is technically possible to use Gum in any 
 
 Gum integrations exist for the following environments:
 
-* MonoGame
+* MonoGame/FNA/Kni
 * FlatRedBall
 * Meadow
 * SkiaSharp
