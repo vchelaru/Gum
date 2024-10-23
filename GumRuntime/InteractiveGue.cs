@@ -694,7 +694,9 @@ namespace Gum.Wireframe
                 var gue = gues[i];
                 InteractiveGue.DoUiActivityRecursively(cursor, actions, gue);
                 if(cursor.WindowOver != null)
+                {
                     break;
+                }
             }
 
             if(!actions.SetWindowOver)
