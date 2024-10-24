@@ -670,7 +670,7 @@ namespace ToolsUtilities
             //ThrowExceptionIfFileDoesntExist(fileName);
 
 #if ANDROID || IOS
-            // Silverlight and 360 don't like ./ at the start of the file name, but that's what we use to identify an absolute path
+            // Mobile platforms don't like ./ at the start of the file name, but that's what we use to identify an absolute path
 			fileName = TryRemoveLeadingDotSlash (fileName);
 #endif
 

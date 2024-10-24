@@ -53,12 +53,7 @@ namespace Gum.DataTypes.Behaviors
 
         public void Save(string fileName)
         {
-#if WINDOWS_8 || UWP
-
-            throw new NotImplementedException();
-#else
             FileManager.XmlSerialize(this.GetType(), this, fileName);
-#endif
         }
     }
 }

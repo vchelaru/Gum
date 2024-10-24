@@ -8,9 +8,7 @@ using Gum.Graphics.Animation;
 namespace Gum.Content.AnimationChain
 {
     [XmlRoot("AnimationChain")]
-#if !UWP && !WINDOWS_8
     [Serializable]
-#endif
     public class AnimationChainSave
     {
         #region Fields
@@ -125,36 +123,7 @@ namespace Gum.Content.AnimationChain
         //        {
         //            if (!string.IsNullOrEmpty(ParentFile))
         //            {
-        //#if !WINDOWS_8
-        //                FlatRedBall.Graphics.Animation.AnimationChain animationChain = 
-        //                    FlatRedBall.Graphics.Animation.AnimationChain.FromGif(
-        //                        ParentFile, contentManagerName);
 
-        //                animationChain.Name = Name;
-
-        //                animationChain.ParentGifFileName = ParentFile;
-
-        //                if (animationChain.Count == this.Frames.Count)
-        //                {
-        //                    for (int i = 0; i < animationChain.Count; i++)
-        //                    {
-        //                        animationChain[i].FlipHorizontal = Frames[i].FlipHorizontal;
-        //                        animationChain[i].FlipVertical = Frames[i].FlipVertical;
-        //                        animationChain[i].FrameLength = Frames[i].FrameLength;
-        //                        animationChain[i].RelativeX = Frames[i].RelativeX;
-        //                        animationChain[i].RelativeY = Frames[i].RelativeY;
-
-        //                        animationChain[i].TopCoordinate = Frames[i].TopCoordinate;
-        //                        animationChain[i].BottomCoordinate = Frames[i].BottomCoordinate;
-        //                        animationChain[i].LeftCoordinate = Frames[i].LeftCoordinate;
-        //                        animationChain[i].RightCoordinate = Frames[i].RightCoordinate;
-        //                    }
-        //                }
-
-        //                return animationChain;
-        //#else
-        //                throw new NotImplementedException();
-        //#endif
         //            }
         //            else
         //            {

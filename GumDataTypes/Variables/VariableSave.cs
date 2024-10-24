@@ -198,9 +198,7 @@ namespace Gum.DataTypes.Variables
         public VariableSave Clone()
         {
             VariableSave toReturn = (VariableSave)this.MemberwiseClone();
-#if !WINDOWS_8 && !UWP
             toReturn.CustomTypeConverter = this.CustomTypeConverter;
-#endif
             toReturn.ExcludedValuesForEnum = new List<object>();
             toReturn.ExcludedValuesForEnum.AddRange(this.ExcludedValuesForEnum);
 

@@ -288,7 +288,7 @@ namespace Gum.DataTypes
             GumProjectSave gps = null;
 
             var shouldLoadFromTitleContainer = false;
-#if ANDROID || IOS || WINDOWS_8
+#if ANDROID || IOS
             shouldLoadFromTitleContainer = true;
 #elif NET6_0_OR_GREATER
             // If not using precompiles, it may be a standard .dll which is used everywhere, so we still can check like this:
