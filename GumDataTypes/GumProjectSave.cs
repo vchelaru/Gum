@@ -509,7 +509,6 @@ namespace Gum.DataTypes
             }
         }
 
-#if !UWP
         public void Save(string fileName, bool saveElements)
         {
             FileManager.XmlSerialize(this, fileName);
@@ -529,7 +528,6 @@ namespace Gum.DataTypes
                 SaveStandardElements(directory);
             }
         }
-#endif
 
         public void SaveStandardElements(string directory)
         {
@@ -556,9 +554,7 @@ namespace Gum.DataTypes
                     catch (Exception e)
                     {
                         exception = e;
-#if !WINDOWS8 && !UWP
                         System.Threading.Thread.Sleep(msBetweenSaves);
-#endif
                         numberOfTimesTried++;
                     }
                 }

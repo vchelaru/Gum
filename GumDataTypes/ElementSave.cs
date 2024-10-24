@@ -154,11 +154,7 @@ namespace Gum.DataTypes
 
         public void Save(string fileName)
         {
-#if UWP
-            throw new NotImplementedException();
-#else
             FileManager.XmlSerialize(this.GetType(), this, fileName);
-#endif
         }
 
 

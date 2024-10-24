@@ -25,9 +25,7 @@ namespace ToolsUtilities
         {
             get
             {
-#if UWP
-            return "./";
-#elif ANDROID || IOS
+#if ANDROID || IOS
             return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).ToLower().Replace("/", "\\") + "\\";
 #else
                 string result = AppContext.BaseDirectory;
@@ -363,7 +361,7 @@ namespace ToolsUtilities
             }
 
 
-#if XBOX360 || ANDROID || IOS || UWP
+#if ANDROID || IOS
             // Justin Johnson 6/6/2017: this compiler flagged code might be eliminated now that 
             // this whole method is more cross platform friendly!
 			if(fileName.Length > 1 && fileName[0] == '.' && (fileName[1] == '/' || fileName[1] == '\\'))

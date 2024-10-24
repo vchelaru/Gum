@@ -165,14 +165,12 @@ namespace Gum.DataTypes.Variables
             set;
         }
 
-#if !UWP
         [XmlIgnore]
         public TypeConverter CustomTypeConverter
         {
             get;
             set;
         }
-#endif
 
         [XmlIgnore]
         public bool CanOnlyBeSetInDefaultState { get; set; }

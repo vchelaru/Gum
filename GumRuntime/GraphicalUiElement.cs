@@ -24,9 +24,6 @@ using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
 using Matrix = System.Numerics.Matrix4x4;
 using GumRuntime;
-#if UWP
-using System.Reflection;
-#endif
 
 namespace Gum.Wireframe
 {
