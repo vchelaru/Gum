@@ -327,7 +327,14 @@ namespace MonoGameGum.Forms.Controls
             }
             listBox.RepositionToKeepInScreen();
 
-            FrameworkElement.PopupRoot.Children.Add(listBox.Visual);
+            if(this.Visual.GetTopParent() == FrameworkElement.ModalRoot)
+            {
+                FrameworkElement.ModalRoot.Children.Add(listBox.Visual);
+            }
+            else
+            {
+                FrameworkElement.PopupRoot.Children.Add(listBox.Visual);
+            }
 
             //var rootParent = listBox.Visual.GetParentRoot();
 
@@ -375,7 +382,6 @@ namespace MonoGameGum.Forms.Controls
             else
             {
                 InteractiveGue.AddNextPushAction(TryHideFromPush);
-                    //GuiManager.AddNextPushAction(TryHideFromPush);
             }
         }
 

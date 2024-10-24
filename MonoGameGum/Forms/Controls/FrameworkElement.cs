@@ -11,6 +11,7 @@ using ToolsUtilities;
 
 namespace MonoGameGum.Forms.Controls
 {
+    #region Enums
 
     public enum TabDirection
     {
@@ -24,6 +25,7 @@ namespace MonoGameGum.Forms.Controls
         FocusableIfInputReceiver,
         SkipOnTab
     }
+    #endregion
 
     public class KeyEventArgs : EventArgs
     {
@@ -36,7 +38,16 @@ namespace MonoGameGum.Forms.Controls
     {
         public static ICursor MainCursor { get; set; }
 
+        /// <summary>
+        /// Container used to hold popups such as the ListBox which appears when clicking on a combo box.
+        /// </summary>
         public static InteractiveGue PopupRoot { get; set; }
+
+        /// <summary>
+        /// Container used to hold modal objects. If any object is added to this container, then all other
+        /// UI does not receive events.
+        /// </summary>
+        public static InteractiveGue ModalRoot { get; set; }
 
         protected bool isFocused;
         protected double timeFocused;

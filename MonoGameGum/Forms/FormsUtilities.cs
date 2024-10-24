@@ -48,18 +48,27 @@ namespace MonoGameGum.Forms
 
             FrameworkElement.MainCursor = cursor;
 
-            var root = new ContainerRuntime();
-
-            root.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            root.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-
             if (SystemManagers.Default == null)
             {
                 throw new InvalidOperationException("You must call this method after initializing SystemManagers.Default");
             }
 
-            root.AddToManagers();
-            FrameworkElement.PopupRoot = root;
+            FrameworkElement.PopupRoot = CreateFullscreenContainer();
+            FrameworkElement.ModalRoot = CreateFullscreenContainer();
+        }
+
+        static ContainerRuntime CreateFullscreenContainer()
+        {
+            var container = new ContainerRuntime();
+
+            container.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+            container.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+            container.Width = GraphicalUiElement.CanvasWidth;
+            container.Height = GraphicalUiElement.CanvasHeight;
+
+            container.AddToManagers();
+
+            return container;
         }
 
         static List<GraphicalUiElement> innerList = new List<GraphicalUiElement>();
@@ -68,32 +77,68 @@ namespace MonoGameGum.Forms
         {
             cursor.Activity(gameTime.TotalGameTime.TotalSeconds);
             keyboard.Activity(gameTime.TotalGameTime.TotalSeconds);
-
             innerList.Clear();
-            innerList.Add(rootGue);
-            if(rootGue != FrameworkElement.PopupRoot && FrameworkElement.PopupRoot != null)
+
+            if (FrameworkElement.ModalRoot.Children.Count > 0)
             {
+                SetDimensionsToCanvas(FrameworkElement.ModalRoot);
+
                 // make sure this is the last:
-                foreach(var layer in SystemManagers.Default.Renderer.Layers)
+                foreach (var layer in SystemManagers.Default.Renderer.Layers)
                 {
-                    if(layer.Renderables.Contains(FrameworkElement.PopupRoot.RenderableComponent) && layer.Renderables.Last() != FrameworkElement.PopupRoot.RenderableComponent)
+                    if (layer.Renderables.Contains(FrameworkElement.ModalRoot.RenderableComponent) && layer.Renderables.Last() != FrameworkElement.ModalRoot.RenderableComponent)
                     {
-                        layer.Remove(FrameworkElement.PopupRoot.RenderableComponent as IRenderableIpso);
-                        layer.Add(FrameworkElement.PopupRoot.RenderableComponent as IRenderableIpso);
+                        layer.Remove(FrameworkElement.ModalRoot.RenderableComponent as IRenderableIpso);
+                        layer.Add(FrameworkElement.ModalRoot.RenderableComponent as IRenderableIpso);
                     }
                 }
 
-                foreach (var item in FrameworkElement.PopupRoot.Children)
+                foreach (var item in FrameworkElement.ModalRoot.Children)
                 {
-                    if(item is GraphicalUiElement itemAsGue)
+                    if (item is GraphicalUiElement itemAsGue)
                     {
                         innerList.Add(itemAsGue);
                     }
                 }
             }
+            else
+            {
+                innerList.Add(rootGue);
+                if (rootGue != FrameworkElement.PopupRoot && FrameworkElement.PopupRoot != null && FrameworkElement.PopupRoot.Children.Count > 0)
+                {
+                    SetDimensionsToCanvas(FrameworkElement.PopupRoot);
+                    // make sure this is the last:
+                    foreach (var layer in SystemManagers.Default.Renderer.Layers)
+                    {
+                        if (layer.Renderables.Contains(FrameworkElement.PopupRoot.RenderableComponent) && layer.Renderables.Last() != FrameworkElement.PopupRoot.RenderableComponent)
+                        {
+                            layer.Remove(FrameworkElement.PopupRoot.RenderableComponent as IRenderableIpso);
+                            layer.Add(FrameworkElement.PopupRoot.RenderableComponent as IRenderableIpso);
+                        }
+                    }
+
+                    foreach (var item in FrameworkElement.PopupRoot.Children)
+                    {
+                        if (item is GraphicalUiElement itemAsGue)
+                        {
+                            innerList.Add(itemAsGue);
+                        }
+                    }
+                }
+            }
+
 
             //FrameworkElement.Root.DoUiActivityRecursively(cursor, keyboard, gameTime.TotalGameTime.TotalSeconds);
             GueInteractiveExtensionMethods.DoUiActivityRecursively(innerList, cursor, keyboard, gameTime.TotalGameTime.TotalSeconds);
+        }
+
+        static void SetDimensionsToCanvas(InteractiveGue container)
+        {
+
+            container.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+            container.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+            container.Width = GraphicalUiElement.CanvasWidth;
+            container.Height = GraphicalUiElement.CanvasHeight;
         }
     }
 }

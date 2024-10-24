@@ -446,7 +446,7 @@ namespace Gum.Wireframe
                     var thisInstanceName = thisInstance.Name ?? $"this {thisInstance.GetType()} instance (unnamed)";
                     string message =
                         $"Could not determine whether the cursor is over {thisInstanceName} because" +
-                        " it is not on any camera, nor is a default camera set up";
+                        " it is not on any camera, nor is a default camera set up. Did you forget to add this (or its parent) to managers?";
                     throw new Exception(message);
                 }
             }
