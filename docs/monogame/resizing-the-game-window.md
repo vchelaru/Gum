@@ -34,11 +34,8 @@ The following code shows how to handle a resize:
     GraphicalUiElement.CanvasWidth = _graphics.GraphicsDevice.Viewport.Width;
     GraphicalUiElement.CanvasHeight = _graphics.GraphicsDevice.Viewport.Height;
 
-    // Grab the rootmost object and tell it to resize:
+    // Grab your rootmost object and tell it to resize:
     currentScreenGue.UpdateLayout();
-
-    // If you are using Gum Forms, you should also notify GumForms:
-    MonoGameGum.Forms.Controls.FrameworkElement.Root.UpdateLayout();
 }
 </code></pre>
 
@@ -75,12 +72,13 @@ private void HandleClientSizeChanged(object sender, EventArgs e)
     GraphicalUiElement.CanvasWidth = _graphics.GraphicsDevice.Viewport.Width/zoom;
     GraphicalUiElement.CanvasHeight = _graphics.GraphicsDevice.Viewport.Height/zoom;
 
-    // Grab the rootmost object and tell it to resize:
+    // Grab your rootmost object and tell it to resize:
     currentScreenGue.UpdateLayout();
-
-    // If you are using Gum Forms, you should also notify GumForms:
-    MonoGameGum.Forms.Controls.FrameworkElement.Root.UpdateLayout();
 }
 ```
 
 <figure><img src="../.gitbook/assets/20_07 03 01.gif" alt=""><figcaption><p>Gum responding to resizes by zooming and adjusting canvas sizes</p></figcaption></figure>
+
+### FrameworkElement PopupRoot and ModalRoot
+
+The FrameworkElement object has two InteractiveGues: PopupRoot and ModalRoot. These are typically created automatically by FormsUtilities but can be assigned manually. In either case, the size of these two containers is automatically managed by FormsUtilities in its Update call so you do not need to update these manually.
