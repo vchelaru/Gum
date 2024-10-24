@@ -80,11 +80,7 @@ namespace RenderingLibrary
         {
             get
             {
-#if WINDOWS_8 || UWP
-                int threadId = Environment.CurrentManagedThreadId;
-#else
                 int threadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
-#endif
                 return threadId == mPrimaryThreadId;
             }
         }
@@ -206,11 +202,7 @@ namespace RenderingLibrary
 
 #endif
 
-#if WINDOWS_8 || UWP
-            mPrimaryThreadId = Environment.CurrentManagedThreadId;
-#else
-                    mPrimaryThreadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
-#endif
+            mPrimaryThreadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
 
             Renderer = new Renderer();
             Renderer.Initialize(graphicsDevice, this);

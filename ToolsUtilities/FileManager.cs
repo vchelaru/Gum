@@ -121,7 +121,7 @@ namespace ToolsUtilities
             fileName = Standardize(fileName, preserveCase: true, makeAbsolute: true);
             if (!ignoreExtensions)
             {
-#if ANDROID || IOS || WINDOWS_8 
+#if ANDROID || IOS
 				try
                 {
 					if(fileName.StartsWith(".\\") || fileName.StartsWith("./"))
@@ -143,9 +143,6 @@ namespace ToolsUtilities
             }
             else
             {
-#if WINDOWS_8 || UWP
-                throw new NotImplementedException();
-#else
                 // This takes a little bit of work
                 string fileWithoutExtension = FileManager.RemoveExtension(fileName);
 
@@ -164,7 +161,6 @@ namespace ToolsUtilities
                 }
 
                 return false;
-#endif
             }
         }
 
@@ -177,13 +173,8 @@ namespace ToolsUtilities
 
         public static string FromFileText(string fileName)
         {
-#if WINDOWS_8 || UWP
-            return FromFileText(fileName, Encoding.UTF8);
-
-#else
             Encoding encoding = Encoding.Default;
             return FromFileText(fileName, encoding);
-#endif
         }
 
         public static string FromFileText(string fileName, Encoding encoding)
@@ -203,9 +194,7 @@ namespace ToolsUtilities
                 using (System.IO.StreamReader sr = new StreamReader(fileStream, encoding))
                 {
                     containedText = sr.ReadToEnd();
-#if !WINDOWS_8 && !UWP
                     sr.Close();
-#endif
                 }
             }
 
@@ -686,9 +675,7 @@ namespace ToolsUtilities
                     throw new IOException("Could not deserialize the XML file"
                         + Environment.NewLine + fileName, e);
                 }
-#if !WINDOWS_8 && !UWP
                 stream.Close();
-#endif
             }
 
             return objectToReturn;
@@ -709,7 +696,7 @@ namespace ToolsUtilities
             try
             {
 
-    #if ANDROID || IOS || WINDOWS_8
+    #if ANDROID || IOS
                 fileName = TryRemoveLeadingDotSlash(fileName);
 			    return Microsoft.Xna.Framework.TitleContainer.OpenStream(fileName);
     #else
