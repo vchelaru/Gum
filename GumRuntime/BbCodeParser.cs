@@ -61,8 +61,6 @@ namespace Gum.Wireframe
             }
         }
 
-        readonly static Tag defaultTag = new Tag();
-
         /// <summary>
         /// Returns a list of FoundTags in the argument text. Only tags in the availableTags set are returned.
         /// </summary>
