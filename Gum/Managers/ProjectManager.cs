@@ -517,8 +517,37 @@ namespace Gum
                 {
                     PluginManager.Self.BeforeProjectSave(GumProjectSave);
 
+                    foreach(var elementSave in GumProjectSave.Screens)
+                    {
+                        foreach (var stateSave in elementSave.AllStates)
+                        {
+                            stateSave.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
+                        }
+                    }
+                    foreach (var elementSave in GumProjectSave.Components)
+                    {
+                        foreach (var stateSave in elementSave.AllStates)
+                        {
+                            stateSave.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
+                        }
+                    }
+                    foreach (var elementSave in GumProjectSave.StandardElements)
+                    {
+                        foreach (var stateSave in elementSave.AllStates)
+                        {
+                            stateSave.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
+                        }
+                    }
+                    foreach (var behavior in GumProjectSave.Behaviors)
+                    {
+                        foreach (var stateSave in behavior.AllStates)
+                        {
+                            stateSave.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
+                        }
+                    }
+
                     bool saveContainedElements = isNewProject || forceSaveContainedElements;
-                    
+
                     try
                     {
 
@@ -540,6 +569,16 @@ namespace Gum
                         FileWatchLogic.Self.IgnoreNextChangeOn(GumProjectSave.FullFileName);
 
                         GumCommands.Self.TryMultipleTimes(() => GumProjectSave.Save(GumProjectSave.FullFileName, saveContainedElements));
+
+                        if(isNewProject)
+                        {
+                            var sourceFile = "Content\\ExampleSpriteFrame.png";
+                            var destinationFile = FileManager.GetDirectory(GumProjectSave.FullFileName) + "ExampleSpriteFrame.png";
+                            System.IO.File.Copy(sourceFile, destinationFile);
+
+                            var nineSliceStandard = GumProjectSave.StandardElements.Find(item => item.Name == "NineSlice");
+                            nineSliceStandard.DefaultState.SetValue("SourceFile", "ExampleSpriteFrame.png", "string");
+                        }
 
                         succeeded = true;
 
