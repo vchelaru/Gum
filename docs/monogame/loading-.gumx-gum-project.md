@@ -1,6 +1,6 @@
-# Loading .gumx (Gum Project)
+# Loading a Gum Project (Optional)
 
-Gum projects can be loaded in a game project. Gum projects are made up of multiple projects including:
+Gum projects can be loaded in a game project. Gum projects are made up of multiple filesincluding:
 
 * .gumx - the main Gum project
 * .gusx - Gum screen files
@@ -9,7 +9,9 @@ Gum projects can be loaded in a game project. Gum projects are made up of multip
 * .png - image files
 * .fnt - font files
 
-Note that you are not required to use the Gum tool or .gumx projects - you are free to do everything in code if you prefer. Of course using the Gum tool can make it much easier to iterate quickly and experiment so its use is recommended.
+{% hint style="info" %}
+You are not required to use the Gum tool or .gumx projects - you are free to do everything in code if you prefer. Of course using the Gum tool can make it much easier to iterate quickly and experiment so its use is recommended.
+{% endhint %}
 
 ### Creating a Gum Project
 

@@ -4,6 +4,28 @@
 
 If your game includes support for resizing the game window, you may need to write additional code to handle the new width and height. This page discusses the options you have for handling resizing. When a game is resized, the typical response is to adjust GraphicalUiElement.CanvasWidth and GraphicalUiElement.CanvasHeight, but you may also want to zoom your UI depending on the needs of your game.
 
+### Setting Initial Size
+
+Desktop projects can set their initial size in the Game constructor as shown in the following code:
+
+```csharp
+public GumFormsSampleGame()
+{
+    _graphics = new GraphicsDeviceManager(this);
+    Content.RootDirectory = "Content";
+    IsMouseVisible = true;
+
+    // This sets the initial size:
+    _graphics.PreferredBackBufferWidth = 1024;
+    _graphics.PreferredBackBufferHeight = 768;
+
+    _graphics.SupportedOrientations = DisplayOrientation.LandscapeLeft | DisplayOrientation.LandscapeRight;
+#if (ANDROID || iOS)
+    graphics.IsFullScreen = true;
+#endif
+}
+```
+
 ### Default Behavior
 
 By default resizing your Game does not adjust Gum. The following animation shows how Gum behaves by default. Note that the objects in the following animation are properly docked to the corners and center as indicated by the displayed text:
