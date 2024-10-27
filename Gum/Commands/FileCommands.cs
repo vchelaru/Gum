@@ -111,15 +111,6 @@ namespace Gum.Commands
 
                     var fileName = elementSave.GetFullPathXmlFile();
 
-                    // We could have this handled by various systems (there is
-                    // code floating around which does), but why leave it up to each
-                    // system to know that this is important? We should *always* sort prior to saving:
-                    foreach(var stateSave in elementSave.AllStates)
-                    {
-                        stateSave.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
-                    }
-
-
                     // if it's readonly, let's warn the user
                     bool isReadOnly = ProjectManager.IsFileReadOnly(fileName.FullPath);
 
