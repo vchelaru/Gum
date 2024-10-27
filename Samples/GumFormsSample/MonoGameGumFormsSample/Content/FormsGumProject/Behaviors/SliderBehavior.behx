@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BehaviorSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Name>SliderBehavior</Name>
+  <RequiredVariables />
+  <Category>
+    <Name>SliderCategory</Name>
+    <IsSetRecursively>false</IsSetRecursively>
+    <State>
+      <Name>Enabled</Name>
+    </State>
+    <State>
+      <Name>Focused</Name>
+    </State>
+    <State>
+      <Name>Highlighted</Name>
+    </State>
+    <State>
+      <Name>HighlightedFocused</Name>
+    </State>
+  </Category>
+  <RequiredInstances>
+    <InstanceSave>
+      <Name>ThumbInstance</Name>
+      <DefinedByBase>false</DefinedByBase>
+      <Behaviors>
+        <BehaviorReference>
+          <Name>ButtonBehavior</Name>
+        </BehaviorReference>
+      </Behaviors>
+    </InstanceSave>
+  </RequiredInstances>
+  <RequiredAnimations />
+</BehaviorSave>

@@ -1,4 +1,5 @@
-﻿using GumFormsSample.CustomRuntimes;
+﻿using Gum.Wireframe;
+using GumFormsSample.CustomRuntimes;
 using MonoGameGum.Forms.Controls;
 using MonoGameGum.GueDeriving;
 using System;
@@ -11,7 +12,7 @@ namespace GumFormsSample.Screens
 {
     internal class FormsCustomizationScreen
     {
-        public void Initialize(ContainerRuntime Root)
+        public void Initialize(GraphicalUiElement Root)
         {
 
             var button = new Button();

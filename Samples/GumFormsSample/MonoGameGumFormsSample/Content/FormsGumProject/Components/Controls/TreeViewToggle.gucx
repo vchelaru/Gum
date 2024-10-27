@@ -1,0 +1,401 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ComponentSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Name>Controls/TreeViewToggle</Name>
+  <BaseType>Container</BaseType>
+  <State>
+    <Name>Default</Name>
+    <Variable>
+      <Type>float</Type>
+      <Name>Height</Name>
+      <Value xsi:type="xsd:float">24</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>Height Units</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>IconInstance.Height</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>IconInstance.Height Units</Name>
+      <Value xsi:type="xsd:int">2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>IconCategory</Type>
+      <Name>IconInstance.IconCategoryState</Name>
+      <Value xsi:type="xsd:string">Arrow2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>IconInstance.Parent</Name>
+      <Value xsi:type="xsd:string">NineSliceInstance</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>IconInstance.Width</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>IconInstance.Width Units</Name>
+      <Value xsi:type="xsd:int">2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>ColorCategory</Type>
+      <Name>NineSliceInstance.ColorCategoryState</Name>
+      <Value xsi:type="xsd:string">Primary</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>StyleCategory</Type>
+      <Name>NineSliceInstance.StyleCategoryState</Name>
+      <Value xsi:type="xsd:string">Bordered</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>State</Type>
+      <Name>State</Name>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>ToggleCategory</Type>
+      <Name>ToggleCategoryState</Name>
+      <SetsValue>false</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>Width</Name>
+      <Value xsi:type="xsd:float">24</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>Width Units</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+  </State>
+  <Category>
+    <Name>ToggleCategory</Name>
+    <IsSetRecursively>false</IsSetRecursively>
+    <State>
+      <Name>EnabledOn</Name>
+      <Variable>
+        <Type>ColorCategory</Type>
+        <Name>IconInstance.IconColor</Name>
+        <Value xsi:type="xsd:string">White</Value>
+        <ExposedAsName>IconColor</ExposedAsName>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>float</Type>
+        <Name>IconInstance.Rotation</Name>
+        <Value xsi:type="xsd:float">-90</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>RenderingLibrary.Graphics.HorizontalAlignment</Type>
+        <Name>IconInstance.X Origin</Name>
+        <Value xsi:type="xsd:int">0</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>RenderingLibrary.Graphics.VerticalAlignment</Type>
+        <Name>IconInstance.Y Origin</Name>
+        <Value xsi:type="xsd:int">2</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>ColorCategory</Type>
+        <Name>NineSliceInstance.ColorCategoryState</Name>
+        <Value xsi:type="xsd:string">Primary</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+    </State>
+    <State>
+      <Name>EnabledOff</Name>
+      <Variable>
+        <Type>ColorCategory</Type>
+        <Name>IconInstance.IconColor</Name>
+        <Value xsi:type="xsd:string">White</Value>
+        <ExposedAsName>IconColor</ExposedAsName>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>float</Type>
+        <Name>IconInstance.Rotation</Name>
+        <Value xsi:type="xsd:float">0</Value>
+        <Category>Flip and Rotation</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>HorizontalAlignment</Type>
+        <Name>IconInstance.X Origin</Name>
+        <Value xsi:type="xsd:int">0</Value>
+        <Category>Position</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>VerticalAlignment</Type>
+        <Name>IconInstance.Y Origin</Name>
+        <Value xsi:type="xsd:int">0</Value>
+        <Category>Position</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>ColorCategory</Type>
+        <Name>NineSliceInstance.ColorCategoryState</Name>
+        <Value xsi:type="xsd:string">Primary</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+    </State>
+    <State>
+      <Name>DisabledOn</Name>
+      <Variable>
+        <Type>string</Type>
+        <Name>IconInstance.IconColor</Name>
+        <Value xsi:type="xsd:string">Gray</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>float</Type>
+        <Name>IconInstance.Rotation</Name>
+        <Value xsi:type="xsd:float">-90</Value>
+        <Category>Flip and Rotation</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>HorizontalAlignment</Type>
+        <Name>IconInstance.X Origin</Name>
+        <Value xsi:type="xsd:int">0</Value>
+        <Category>Position</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>VerticalAlignment</Type>
+        <Name>IconInstance.Y Origin</Name>
+        <Value xsi:type="xsd:int">2</Value>
+        <Category>Position</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>ColorCategory</Type>
+        <Name>NineSliceInstance.ColorCategoryState</Name>
+        <Value xsi:type="xsd:string">DarkGray</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+    </State>
+    <State>
+      <Name>DisabledOff</Name>
+      <Variable>
+        <Type>ColorCategory</Type>
+        <Name>IconInstance.IconColor</Name>
+        <Value xsi:type="xsd:string">Gray</Value>
+        <ExposedAsName>IconColor</ExposedAsName>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>float</Type>
+        <Name>IconInstance.Rotation</Name>
+        <Value xsi:type="xsd:float">0</Value>
+        <Category>Flip and Rotation</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>HorizontalAlignment</Type>
+        <Name>IconInstance.X Origin</Name>
+        <Value xsi:type="xsd:int">0</Value>
+        <Category>Position</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>VerticalAlignment</Type>
+        <Name>IconInstance.Y Origin</Name>
+        <Value xsi:type="xsd:int">0</Value>
+        <Category>Position</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>ColorCategory</Type>
+        <Name>NineSliceInstance.ColorCategoryState</Name>
+        <Value xsi:type="xsd:string">DarkGray</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+    </State>
+    <State>
+      <Name>HighlightedOn</Name>
+      <Variable>
+        <Type>ColorCategory</Type>
+        <Name>IconInstance.IconColor</Name>
+        <Value xsi:type="xsd:string">White</Value>
+        <ExposedAsName>IconColor</ExposedAsName>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>float</Type>
+        <Name>IconInstance.Rotation</Name>
+        <Value xsi:type="xsd:float">-90</Value>
+        <Category>Flip and Rotation</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>HorizontalAlignment</Type>
+        <Name>IconInstance.X Origin</Name>
+        <Value xsi:type="xsd:int">0</Value>
+        <Category>Position</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>VerticalAlignment</Type>
+        <Name>IconInstance.Y Origin</Name>
+        <Value xsi:type="xsd:int">2</Value>
+        <Category>Position</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>ColorCategory</Type>
+        <Name>NineSliceInstance.ColorCategoryState</Name>
+        <Value xsi:type="xsd:string">PrimaryLight</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+    </State>
+    <State>
+      <Name>HighlightedOff</Name>
+      <Variable>
+        <Type>ColorCategory</Type>
+        <Name>IconInstance.IconColor</Name>
+        <Value xsi:type="xsd:string">White</Value>
+        <ExposedAsName>IconColor</ExposedAsName>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>float</Type>
+        <Name>IconInstance.Rotation</Name>
+        <Value xsi:type="xsd:float">0</Value>
+        <Category>Flip and Rotation</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>HorizontalAlignment</Type>
+        <Name>IconInstance.X Origin</Name>
+        <Value xsi:type="xsd:int">0</Value>
+        <Category>Position</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>VerticalAlignment</Type>
+        <Name>IconInstance.Y Origin</Name>
+        <Value xsi:type="xsd:int">0</Value>
+        <Category>Position</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>ColorCategory</Type>
+        <Name>NineSliceInstance.ColorCategoryState</Name>
+        <Value xsi:type="xsd:string">PrimaryLight</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+    </State>
+    <State>
+      <Name>PushedOn</Name>
+      <Variable>
+        <Type>ColorCategory</Type>
+        <Name>IconInstance.IconColor</Name>
+        <Value xsi:type="xsd:string">White</Value>
+        <ExposedAsName>IconColor</ExposedAsName>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>float</Type>
+        <Name>IconInstance.Rotation</Name>
+        <Value xsi:type="xsd:float">-90</Value>
+        <Category>Flip and Rotation</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>HorizontalAlignment</Type>
+        <Name>IconInstance.X Origin</Name>
+        <Value xsi:type="xsd:int">0</Value>
+        <Category>Position</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>VerticalAlignment</Type>
+        <Name>IconInstance.Y Origin</Name>
+        <Value xsi:type="xsd:int">2</Value>
+        <Category>Position</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>ColorCategory</Type>
+        <Name>NineSliceInstance.ColorCategoryState</Name>
+        <Value xsi:type="xsd:string">PrimaryDark</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+    </State>
+    <State>
+      <Name>PushedOff</Name>
+      <Variable>
+        <Type>ColorCategory</Type>
+        <Name>IconInstance.IconColor</Name>
+        <Value xsi:type="xsd:string">White</Value>
+        <ExposedAsName>IconColor</ExposedAsName>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>float</Type>
+        <Name>IconInstance.Rotation</Name>
+        <Value xsi:type="xsd:float">0</Value>
+        <Category>Flip and Rotation</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>HorizontalAlignment</Type>
+        <Name>IconInstance.X Origin</Name>
+        <Value xsi:type="xsd:int">0</Value>
+        <Category>Position</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>VerticalAlignment</Type>
+        <Name>IconInstance.Y Origin</Name>
+        <Value xsi:type="xsd:int">0</Value>
+        <Category>Position</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>ColorCategory</Type>
+        <Name>NineSliceInstance.ColorCategoryState</Name>
+        <Value xsi:type="xsd:string">PrimaryDark</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+    </State>
+  </Category>
+  <Instance>
+    <Name>NineSliceInstance</Name>
+    <BaseType>NineSlice</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>IconInstance</Name>
+    <BaseType>Elements/Icon</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Behaviors>
+    <ElementBehaviorReference>
+      <BehaviorName>ToggleBehavior</BehaviorName>
+    </ElementBehaviorReference>
+  </Behaviors>
+</ComponentSave>

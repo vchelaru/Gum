@@ -13,13 +13,12 @@ namespace GumFormsSample.Screens
 {
     internal class FrameworkElementExampleScreen
     {
-        public void Initialize(ContainerRuntime root)
+        public void Initialize(GraphicalUiElement root)
         {
             root.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
             root.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
             root.Width = 0;
             root.Height = 0;
-            root.AddToManagers();
             FrameworkElement.DefaultFormsComponents[typeof(Button)] =
                 typeof(FullyCustomizedButton);
 
