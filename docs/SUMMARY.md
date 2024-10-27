@@ -145,6 +145,7 @@
     * [RectangleRuntime](monogame/runtime-objects-graphicaluielement-deriving/rectangleruntime.md)
     * [SpriteRuntime](monogame/runtime-objects-graphicaluielement-deriving/spriteruntime.md)
     * [TextRuntime](monogame/runtime-objects-graphicaluielement-deriving/textruntime.md)
+  * [Samples](monogame/samples.md)
 * [Nez](nez.md)
 * [Meadow](meadow.md)
 * [SkiaGum](skiagum/README.md)
