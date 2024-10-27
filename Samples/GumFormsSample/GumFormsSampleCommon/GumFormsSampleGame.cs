@@ -1,21 +1,13 @@
 ﻿using Gum.Wireframe;
-using System;
+using GumFormsSample.Screens;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Forms;
-using MonoGameGum.Forms.Controls;
-using MonoGameGum.Forms.DefaultVisuals;
 using MonoGameGum.GueDeriving;
 using RenderingLibrary;
+using System;
 using System.Diagnostics;
-using MonoGameGum.Input;
-using GumFormsSample.Screens;
-using Gum.DataTypes;
-using Gum.Managers;
-using System.Linq;
-using GumRuntime;
-using ToolsUtilities;
 
 namespace GumFormsSample;
 
@@ -25,21 +17,21 @@ public class GumFormsSampleGame : Game
     private SpriteBatch _spriteBatch;
 
     GraphicalUiElement Root;
-public GumFormsSampleGame()
-{
-    _graphics = new GraphicsDeviceManager(this);
-    Content.RootDirectory = "Content";
-    IsMouseVisible = true;
+    public GumFormsSampleGame()
+    {
+        _graphics = new GraphicsDeviceManager(this);
+        Content.RootDirectory = "Content";
+        IsMouseVisible = true;
 
-    // This sets the initial size:
-    _graphics.PreferredBackBufferWidth = 1024;
-    _graphics.PreferredBackBufferHeight = 768;
+        // This sets the initial size:
+        _graphics.PreferredBackBufferWidth = 1024;
+        _graphics.PreferredBackBufferHeight = 768;
 
-    _graphics.SupportedOrientations = DisplayOrientation.LandscapeLeft | DisplayOrientation.LandscapeRight;
+        _graphics.SupportedOrientations = DisplayOrientation.LandscapeLeft | DisplayOrientation.LandscapeRight;
 #if (ANDROID || iOS)
     graphics.IsFullScreen = true;
 #endif
-}
+    }
 
 
     protected override void Initialize()
@@ -48,13 +40,22 @@ public GumFormsSampleGame()
         SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
         FormsUtilities.InitializeDefaults();
 
-        // The initialize methods here create one of the available screens
-        // Uncomment the one you want to see
-        //InitializeFrameworkElementExampleScreen();
-        //InitializeFormsCustomizationScreen();
-        InitializeFromFileDemoScreen();
-        base.Initialize();
+        const int screenNumber = 0;
 
+        switch (screenNumber)
+        {
+            case 0:
+                InitializeFromFileDemoScreen();
+                break;
+            case 1:
+                InitializeFrameworkElementExampleScreen();
+                break;
+            case 2:
+                InitializeFormsCustomizationScreen();
+                break;
+        }
+
+        base.Initialize();
     }
 
     private void InitializeFromFileDemoScreen()
@@ -86,50 +87,35 @@ public GumFormsSampleGame()
         Root.AddToManagers(SystemManagers.Default, null);
     }
 
-    protected override void LoadContent()
-    {
-        _spriteBatch = new SpriteBatch(GraphicsDevice);
-
-        // TODO: Use this.Content to load your game content here
-    }
-
-    protected override void UnloadContent()
-    {
-        // TODO: Unload any non ContentManager content here
-    }
-
     protected override void Update(GameTime gameTime)
     {
         var cursor = FormsUtilities.Cursor;
 
-
-
-        MouseState mouseState = Mouse.GetState();
-        KeyboardState keyboardState = Microsoft.Xna.Framework.Input.Keyboard.GetState();
         GamePadState gamePadState = default;
         try { gamePadState = GamePad.GetState(PlayerIndex.One); }
         catch (NotImplementedException) { /* ignore gamePadState */ }
 
 
-        if (keyboardState.IsKeyDown(Keys.Escape) ||
-            keyboardState.IsKeyDown(Keys.Back) ||
+        if (FormsUtilities.Keyboard.KeyDown(Keys.Escape) ||
             gamePadState.Buttons.Back == ButtonState.Pressed)
         {
+            // Put a breakpoint here if you want to pause the app when the user presses ESC
             int m = 3;
         }
 
-
-
         FormsUtilities.Update(gameTime, Root);
 
-        string windowOver = "<null>";
-        if(cursor.WindowOver != null)
+        // Set this to true to see WindowOver information in the output window
+        bool printWindowOver = false;
+        if (printWindowOver)
         {
-            windowOver = $"{cursor.WindowOver.GetType().Name}" ;
+            string windowOver = "<null>";
+            if (cursor.WindowOver != null)
+            {
+                windowOver = $"{cursor.WindowOver.GetType().Name}";
+            }
+            Debug.WriteLine($"Window over: {windowOver} @ x:{cursor.WindowOver?.X}");
         }
-
-        // Uncomment this to see the current window over every frame
-        //System.Diagnostics.Debug.WriteLine($"Window over: {windowOver} @ x:{cursor.WindowOver?.X}");
 
         SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
 
