@@ -35,7 +35,20 @@ internal class FromFileDemoScreen
 
         PopulateListBox();
 
+        PopulateComboBox();
+
         InitializeRadioButtons();
+    }
+
+    private void PopulateComboBox()
+    {
+        var comboBox = (InteractiveGue)_root.GetGraphicalUiElementByName("ComboBoxInstance");
+        var comboBoxForms = comboBox.FormsControlAsObject as ComboBox;
+
+        comboBoxForms.Items.Add("Easy");
+        comboBoxForms.Items.Add("Medium");
+        comboBoxForms.Items.Add("Hard");
+        comboBoxForms.Items.Add("Impossible");
     }
 
     private void InitializeRadioButtons()
@@ -76,11 +89,29 @@ internal class FromFileDemoScreen
                     component.Name,
                     typeof(DefaultFromFileCheckBoxRuntime));
             }
+            else if (component.Categories.Any(item => item.Name == "ComboBoxCategory"))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileComboBoxRuntime));
+            }
             else if(component.Categories.Any(item => item.Name == "ListBoxCategory"))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileListBoxRuntime));
+            }
+            else if (component.Categories.Any(item => item.Name == "PasswordBoxCategory"))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFilePasswordBoxRuntime));
+            }
+            else if (component.Categories.Any(item => item.Name == "RadioButtonCategory"))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileRadioButtonRuntime));
             }
             else if(component.Categories.Any(item => item.Name == "ScrollBarCategory"))
             {
@@ -94,11 +125,11 @@ internal class FromFileDemoScreen
                     component.Name,
                     typeof(DefaultFromFileSliderRuntime));
             }
-            else if (component.Categories.Any(item => item.Name == "RadioButtonCategory"))
+            else if (component.Categories.Any(item => item.Name == "TextBoxCategory"))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
-                    typeof(DefaultFromFileRadioButtonRuntime));
+                    typeof(DefaultFromFileTextBoxRuntime));
             }
         }
     }
