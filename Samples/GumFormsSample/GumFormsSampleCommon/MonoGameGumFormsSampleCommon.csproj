@@ -24,6 +24,7 @@
     <Compile Include="Screens\FrameworkElementExampleScreen.cs" />
     <Compile Include="FullyCustomizedButton.cs" />
     <Compile Include="GumFormsSampleGame.cs" />
+    <Compile Include="Screens\FromFileDemoScreen.cs" />
   </ItemGroup>
 	
   <ItemGroup>

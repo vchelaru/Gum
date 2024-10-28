@@ -1,117 +1,133 @@
 ﻿using Gum.Wireframe;
-using System;
+using GumFormsSample.Screens;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Forms;
-using MonoGameGum.Forms.Controls;
-using MonoGameGum.Forms.DefaultVisuals;
 using MonoGameGum.GueDeriving;
 using RenderingLibrary;
+using System;
 using System.Diagnostics;
-using MonoGameGum.Input;
-using GumFormsSample.Screens;
 
-namespace GumFormsSample
+namespace GumFormsSample;
+
+public class GumFormsSampleGame : Game
 {
-    public class GumFormsSampleGame : Game
+    private GraphicsDeviceManager _graphics;
+    private SpriteBatch _spriteBatch;
+
+    GraphicalUiElement Root;
+    public GumFormsSampleGame()
     {
-        private GraphicsDeviceManager _graphics;
-        private SpriteBatch _spriteBatch;
+        _graphics = new GraphicsDeviceManager(this);
+        Content.RootDirectory = "Content";
+        IsMouseVisible = true;
 
-        ContainerRuntime Root;
-        public GumFormsSampleGame()
-        {
-            _graphics = new GraphicsDeviceManager(this);
-            Content.RootDirectory = "Content";
-            IsMouseVisible = true;
+        // This sets the initial size:
+        _graphics.PreferredBackBufferWidth = 1024;
+        _graphics.PreferredBackBufferHeight = 768;
 
-            _graphics.SupportedOrientations = DisplayOrientation.LandscapeLeft | DisplayOrientation.LandscapeRight;
+        _graphics.SupportedOrientations = DisplayOrientation.LandscapeLeft | DisplayOrientation.LandscapeRight;
 #if (ANDROID || iOS)
-            graphics.IsFullScreen = true;
+    graphics.IsFullScreen = true;
 #endif
+    }
+
+
+    protected override void Initialize()
+    {
+        SystemManagers.Default = new SystemManagers();
+        SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
+        FormsUtilities.InitializeDefaults();
+
+        const int screenNumber = 0;
+
+        switch (screenNumber)
+        {
+            case 0:
+                InitializeFromFileDemoScreen();
+                break;
+            case 1:
+                InitializeFrameworkElementExampleScreen();
+                break;
+            case 2:
+                InitializeFormsCustomizationScreen();
+                break;
         }
 
+        base.Initialize();
+    }
 
-        protected override void Initialize()
+    private void InitializeFromFileDemoScreen()
+    {
+        var screen = new FromFileDemoScreen();
+        screen.Initialize(ref Root);
+    }
+
+    private void InitializeFormsCustomizationScreen()
+    {
+        CreateRoot();
+        var screen = new FormsCustomizationScreen();
+        screen.Initialize(Root);
+    }
+
+    private void InitializeFrameworkElementExampleScreen()
+    {
+        CreateRoot();
+        var screen = new FrameworkElementExampleScreen();
+        screen.Initialize(Root);
+    }
+
+    private void CreateRoot()
+    {
+        Root = new ContainerRuntime();
+
+        Root.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+        Root.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+        Root.AddToManagers(SystemManagers.Default, null);
+    }
+
+    protected override void Update(GameTime gameTime)
+    {
+        var cursor = FormsUtilities.Cursor;
+
+        GamePadState gamePadState = default;
+        try { gamePadState = GamePad.GetState(PlayerIndex.One); }
+        catch (NotImplementedException) { /* ignore gamePadState */ }
+
+
+        if (FormsUtilities.Keyboard.KeyDown(Keys.Escape) ||
+            gamePadState.Buttons.Back == ButtonState.Pressed)
         {
-            SystemManagers.Default = new SystemManagers(); 
-            SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
-            FormsUtilities.InitializeDefaults();
-
-            Root = new ContainerRuntime();
-
-            Root.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            Root.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            Root.AddToManagers();
-
-
-            var screen = new FrameworkElementExampleScreen();
-            // Uncommment to see customization:
-            //var screen = new FormsCustomizationScreen();
-            screen.Initialize(Root);
-
-            base.Initialize();
-
+            // Put a breakpoint here if you want to pause the app when the user presses ESC
+            int m = 3;
         }
 
-        protected override void LoadContent()
+        FormsUtilities.Update(gameTime, Root);
+
+        // Set this to true to see WindowOver information in the output window
+        bool printWindowOver = false;
+        if (printWindowOver)
         {
-            _spriteBatch = new SpriteBatch(GraphicsDevice);
-
-            // TODO: Use this.Content to load your game content here
-        }
-
-        protected override void UnloadContent()
-        {
-            // TODO: Unload any non ContentManager content here
-        }
-
-        protected override void Update(GameTime gameTime)
-        {
-            var cursor = FormsUtilities.Cursor;
-
-
-
-            MouseState mouseState = Mouse.GetState();
-            KeyboardState keyboardState = Microsoft.Xna.Framework.Input.Keyboard.GetState();
-            GamePadState gamePadState = default;
-            try { gamePadState = GamePad.GetState(PlayerIndex.One); }
-            catch (NotImplementedException) { /* ignore gamePadState */ }
-
-
-            if (keyboardState.IsKeyDown(Keys.Escape) ||
-                keyboardState.IsKeyDown(Keys.Back) ||
-                gamePadState.Buttons.Back == ButtonState.Pressed)
-            {
-                int m = 3;
-            }
-
-
-
-            FormsUtilities.Update(gameTime, Root);
-
             string windowOver = "<null>";
-            if(cursor.WindowOver != null)
+            if (cursor.WindowOver != null)
             {
-                windowOver = $"{cursor.WindowOver.GetType().Name}" ;
+                windowOver = $"{cursor.WindowOver.GetType().Name}";
             }
-
-            // Uncomment this to see the current window over every frame
-            //System.Diagnostics.Debug.WriteLine($"Window over: {windowOver} @ x:{cursor.WindowOver?.X}");
-
-            SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
-
-            base.Update(gameTime);
+            Debug.WriteLine($"Window over: {windowOver} @ x:{cursor.WindowOver?.X}");
         }
 
-        protected override void Draw(GameTime gameTime)
-        {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+        SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
 
-            SystemManagers.Default.Draw();
+        base.Update(gameTime);
+    }
 
-            base.Draw(gameTime);
-        }
+    protected override void Draw(GameTime gameTime)
+    {
+        GraphicsDevice.Clear(Color.CornflowerBlue);
+
+        SystemManagers.Default.Draw();
+
+        base.Draw(gameTime);
     }
 }

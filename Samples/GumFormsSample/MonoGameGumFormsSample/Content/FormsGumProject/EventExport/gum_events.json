@@ -1,0 +1,14 @@
+{
+  "UserEvents": {
+    "vchel": [],
+    "Owner": [
+      {
+        "NewName": "Controls/ScrollBar (Container).TrackInstance",
+        "OldName": "Controls/ScrollBar (Container).ThumbContainer",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-27T13:40:03.954783Z"
+      }
+    ]
+  }
+}

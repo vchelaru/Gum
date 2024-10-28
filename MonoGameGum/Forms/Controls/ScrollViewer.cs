@@ -71,7 +71,23 @@ namespace MonoGameGum.Forms.Controls
 
         protected override void ReactToVisualChanged()
         {
-            var scrollBarVisual = Visual.GetGraphicalUiElementByName(VerticalScrollBarInstanceName) as InteractiveGue;
+            var scrollBarVisualAsGue = Visual.GetGraphicalUiElementByName(VerticalScrollBarInstanceName);
+#if DEBUG
+            if(scrollBarVisualAsGue == null)
+            {
+                throw new InvalidOperationException($"Could not find a child with the name {VerticalScrollBarInstanceName}");
+            }
+#endif
+            var scrollBarVisual = scrollBarVisualAsGue as InteractiveGue;
+
+#if DEBUG
+            if(scrollBarVisual == null)
+            {
+                throw new InvalidOperationException($"The child with the name {VerticalScrollBarInstanceName} was found, but is not an InteractiveGue." +
+                    $" Did you forget to set forms associations for this type?");
+            }
+#endif
+
             if (scrollBarVisual.FormsControlAsObject == null)
             {
                 verticalScrollBar = new ScrollBar(scrollBarVisual);

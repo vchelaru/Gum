@@ -1,6 +1,9 @@
-﻿using Gum.Wireframe;
+﻿using Gum.Managers;
+using Gum.Wireframe;
+using GumRuntime;
 using Microsoft.Xna.Framework;
 using MonoGameGum.Forms.Controls;
+using MonoGameGum.Forms.DefaultFromFileVisuals;
 using MonoGameGum.Forms.DefaultVisuals;
 using MonoGameGum.GueDeriving;
 using MonoGameGum.Input;
@@ -139,6 +142,75 @@ namespace MonoGameGum.Forms
             container.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
             container.Width = GraphicalUiElement.CanvasWidth;
             container.Height = GraphicalUiElement.CanvasHeight;
+        }
+
+        public static void RegisterFromFileFormRuntimeDefaults()
+        {
+#if DEBUG
+            if(ObjectFinder.Self.GumProjectSave == null)
+            {
+                throw new InvalidOperationException("A Gum project (gumx) must be loaded and assigned to" +
+                    "ObjectFinder.Self.GumProjectSave before making this call");
+            }
+#endif
+
+            foreach (var component in ObjectFinder.Self.GumProjectSave.Components)
+            {
+                if (component.Categories.Any(item => item.Name == "ButtonCategory"))
+                {
+                    ElementSaveExtensions.RegisterGueInstantiationType(
+                        component.Name,
+                        typeof(DefaultFromFileButtonRuntime));
+                }
+                else if (component.Categories.Any(item => item.Name == "CheckBoxCategory"))
+                {
+                    ElementSaveExtensions.RegisterGueInstantiationType(
+                        component.Name,
+                        typeof(DefaultFromFileCheckBoxRuntime));
+                }
+                else if (component.Categories.Any(item => item.Name == "ComboBoxCategory"))
+                {
+                    ElementSaveExtensions.RegisterGueInstantiationType(
+                        component.Name,
+                        typeof(DefaultFromFileComboBoxRuntime));
+                }
+                else if (component.Categories.Any(item => item.Name == "ListBoxCategory"))
+                {
+                    ElementSaveExtensions.RegisterGueInstantiationType(
+                        component.Name,
+                        typeof(DefaultFromFileListBoxRuntime));
+                }
+                else if (component.Categories.Any(item => item.Name == "PasswordBoxCategory"))
+                {
+                    ElementSaveExtensions.RegisterGueInstantiationType(
+                        component.Name,
+                        typeof(DefaultFromFilePasswordBoxRuntime));
+                }
+                else if (component.Categories.Any(item => item.Name == "RadioButtonCategory"))
+                {
+                    ElementSaveExtensions.RegisterGueInstantiationType(
+                        component.Name,
+                        typeof(DefaultFromFileRadioButtonRuntime));
+                }
+                else if (component.Categories.Any(item => item.Name == "ScrollBarCategory"))
+                {
+                    ElementSaveExtensions.RegisterGueInstantiationType(
+                        component.Name,
+                        typeof(DefaultFromFileScrollBarRuntime));
+                }
+                else if (component.Categories.Any(item => item.Name == "SliderCategory"))
+                {
+                    ElementSaveExtensions.RegisterGueInstantiationType(
+                        component.Name,
+                        typeof(DefaultFromFileSliderRuntime));
+                }
+                else if (component.Categories.Any(item => item.Name == "TextBoxCategory"))
+                {
+                    ElementSaveExtensions.RegisterGueInstantiationType(
+                        component.Name,
+                        typeof(DefaultFromFileTextBoxRuntime));
+                }
+            }
         }
     }
 }
