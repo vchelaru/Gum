@@ -24,6 +24,7 @@
   * [Content](menu/content.md)
   * [Project Properties](menu/project-properties.md)
 * [Gum Elements](gum-elements/README.md)
+  * [Behaviors](gum-elements/behaviors.md)
   * [General Properties](gum-elements/general-properties/README.md)
     * [Clips Children](gum-elements/general-properties/clips-children.md)
     * [Height Units](gum-elements/general-properties/height-units.md)
