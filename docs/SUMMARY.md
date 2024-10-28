@@ -26,6 +26,7 @@
 * [Gum Elements](gum-elements/README.md)
   * [Behaviors](gum-elements/behaviors.md)
   * [General Properties](gum-elements/general-properties/README.md)
+    * [Base Type (Inheritance)](gum-elements/general-properties/base-type-inheritance.md)
     * [Clips Children](gum-elements/general-properties/clips-children.md)
     * [Height Units](gum-elements/general-properties/height-units.md)
     * [Parent](gum-elements/general-properties/parent.md)
