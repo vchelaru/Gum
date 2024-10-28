@@ -3212,7 +3212,7 @@ namespace CodeOutputPlugin.Manager
                 }
                 else
                 {
-                    var variableName = GetGumVariableName(variable, container);
+                    var variableName = GetGumVariableName(variable, context);
 
 
 
@@ -4042,11 +4042,15 @@ namespace CodeOutputPlugin.Manager
 
 
 
-        private static object GetGumVariableName(VariableSave variable, ElementSave container)
+        private static object GetGumVariableName(VariableSave variable, CodeGenerationContext context)
         {
-            if (variable.IsState(container))
+            if (variable.IsState(context.Element))
             {
                 return variable.GetRootName().Replace(" ", "");
+            }
+            else if(variable.GetRootName() == "SourceFile" && context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
+            {
+                return "SourceFileName";
             }
             else
             {
