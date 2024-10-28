@@ -31,6 +31,14 @@ Sprite element is selected in the image above. Notice that since a **SourceFile*
 
 Note that through plugins the Standard list can be expanded. For example, Gum supports additional standard types through a Skia plugin.
 
+## Components
+
+Components are objects which can contain standard elements and instances of other components. Components can be very simple, such as a Label, or very complex, such as an options menu with dozens of items.
+
+### Screens
+
+Screens are objects which can contain standard elements and instances of other components. Unlike Components, Screens cannot be added to other Screens. Screens exist mainly for organization.
+
 ## Components vs. Screens
 
 Components and screens are similar - both can contain instances of standard elements, and both can contain other components. The only difference between screens and components is that screens cannot contain other screens.

@@ -425,8 +425,7 @@ Once you have created a Component in your project, you need to create a custom r
 
 The runtime class does not need much code since most of the work is done in the Gum project. The following shows an example custom runtime for the StandardButton component:
 
-```csharp
-internal class StandardButtonRuntime : InteractiveGue
+<pre class="language-csharp"><code class="lang-csharp">internal class StandardButtonRuntime : InteractiveGue
 {
     public StandardButtonRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base() 
     {
@@ -444,8 +443,8 @@ internal class StandardButtonRuntime : InteractiveGue
 
     // The Forms objects should only be created after the 
     // children have been assigned. We can override the AfterFullCreation
-    // method to handle creating the Forms object after the children have 
-    // been created.
+<strong>    // method to handle creating the Forms object after the children have 
+</strong>    // been created.
     public override void AfterFullCreation()
     {
         base.AfterFullCreation();
@@ -459,7 +458,7 @@ internal class StandardButtonRuntime : InteractiveGue
     public Button FormsControl => FormsControlAsObject as Button;
 }
 
-```
+</code></pre>
 
 This runtime can be associated with the StandardButton component in Gum using the following code in your Game class:
 
