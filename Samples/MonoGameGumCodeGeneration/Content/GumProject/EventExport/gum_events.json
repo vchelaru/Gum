@@ -14,6 +14,13 @@
         "ElementType": "Components",
         "EventType": 5,
         "TimestampUtc": "2024-10-29T11:09:03.5650224Z"
+      },
+      {
+        "NewName": "Popup (Container).TextInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-10-29T11:12:22.6411502Z"
       }
     ]
   }
