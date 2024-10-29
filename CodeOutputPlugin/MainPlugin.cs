@@ -213,7 +213,7 @@ namespace CodeOutputPlugin
 
                 var elementSettings = control.CodeOutputElementSettings;
 
-                if (elementSettings.AutoGenerateOnChange)
+                if (elementSettings.AutoGenerateOnChange && control.CodeOutputProjectSettings.IsCodeGenPluginEnabled)
                 {
                     GenerateCodeForSelectedElement(showPopups: false);
                 }
