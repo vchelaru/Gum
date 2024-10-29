@@ -1993,7 +1993,15 @@ namespace CodeOutputPlugin.Manager
             {
                 #region Constructor Header
 
-                stringBuilder.AppendLine(context.Tabs + $"public {elementName}(bool fullInstantiation = true)");
+                if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
+                {
+                    // MonoGame expects 0 or 2-arg constructors. We'll start with 0 for now, and eventually go to 2 if we need Forms support
+                    stringBuilder.AppendLine(context.Tabs + $"public {elementName}()");
+                }
+                else
+                {
+                    stringBuilder.AppendLine(context.Tabs + $"public {elementName}(bool fullInstantiation = true)");
+                }
 
                 stringBuilder.AppendLine(context.Tabs + "{");
                 context.TabCount++;
