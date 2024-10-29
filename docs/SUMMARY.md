@@ -74,6 +74,7 @@
     * [Text Overflow Vertical Mode](gum-elements/text/text-overflow-vertical-mode.md)
     * [Use Custom Font](gum-elements/text/use-custom-font.md)
     * [Use Font Smoothing](gum-elements/text/use-font-smoothing.md)
+* [Code Tab](code-tab.md)
 * [Plugins](plugins/README.md)
   * [AddAndRemoveVariablesForType](plugins/pluginbase.addandremovevariablesfortype.md)
   * [AddMenuItem](plugins/pluginbase.addmenuitem.md)
