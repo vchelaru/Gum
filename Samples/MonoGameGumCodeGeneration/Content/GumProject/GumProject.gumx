@@ -21,6 +21,11 @@
     <LinkType>ReferenceOriginal</LinkType>
   </ScreenReference>
   <ComponentReference>
+    <Name>ComponentWithStates</Name>
+    <ElementType>Component</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </ComponentReference>
+  <ComponentReference>
     <Name>Popup</Name>
     <ElementType>Component</ElementType>
     <LinkType>ReferenceOriginal</LinkType>

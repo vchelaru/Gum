@@ -2915,10 +2915,24 @@ namespace CodeOutputPlugin.Manager
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
 
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"var category = ((Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == \"{category}\");");
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"var state = category.States.Find(item => item.Name == \"value.ToString()\");");
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"this.ApplyState(state);");    
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"if(Categories.ContainsKey(\"{category}\"))");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"var category = Categories[\"{category}\"];");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"var state = category.States.Find(item => item.Name == value.ToString());");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"this.ApplyState(state);");
+                tabCount--;
+                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"else");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
 
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"var category = ((Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == \"{category}\");");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"var state = category.States.Find(item => item.Name == value.ToString());");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"this.ApplyState(state);");
+                tabCount--;
+                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
                 tabCount--;
                 stringBuilder.AppendLine(ToTabs(tabCount) + "}");
                 tabCount--;

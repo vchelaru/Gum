@@ -36,6 +36,8 @@ using Gum.Managers;
 using Gum.Wireframe;
 
 using RenderingLibrary.Graphics;
+
+using System.Linq;
 ";
 
         /// <summary>

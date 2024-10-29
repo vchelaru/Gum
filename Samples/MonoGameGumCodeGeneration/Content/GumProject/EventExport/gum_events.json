@@ -35,6 +35,41 @@
         "ElementType": "Screens",
         "EventType": 5,
         "TimestampUtc": "2024-10-29T11:40:11.0868229Z"
+      },
+      {
+        "NewName": "ComponentWithStates",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 0,
+        "TimestampUtc": "2024-10-29T17:01:08.5864933Z"
+      },
+      {
+        "NewName": "ComponentWithStates (Container).ColoredRectangleInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-10-29T17:01:14.7940148Z"
+      },
+      {
+        "NewName": "MainMenu.ColoredRectangleInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-10-29T17:04:29.0462176Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "MainMenu.ColoredRectangle ColoredRectangleInstance in MainMenu",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2024-10-29T17:04:56.2515015Z"
+      },
+      {
+        "NewName": "MainMenu.ComponentWithStatesInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-10-29T17:04:58.8940064Z"
       }
     ]
   }

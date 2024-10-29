@@ -14,16 +14,18 @@ namespace MonoGameGumCodeGeneration.Screens
     public partial class MainMenuRuntime
     {
         public PopupRuntime PopupInstance { get; protected set; }
+        public ComponentWithStatesRuntime ComponentWithStatesInstance { get; protected set; }
 
-        public MainMenuRuntime(bool fullInstantiation = true)
+        public MainMenuRuntime()
         {
 
 
-            CustomInitialize();
         }
         public override void AfterFullCreation()
         {
             PopupInstance = this.GetGraphicalUiElementByName("PopupInstance") as PopupRuntime;
+            ComponentWithStatesInstance = this.GetGraphicalUiElementByName("ComponentWithStatesInstance") as ComponentWithStatesRuntime;
+            CustomInitialize();
         }
         //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
         partial void CustomInitialize();

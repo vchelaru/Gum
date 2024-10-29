@@ -31,6 +31,10 @@ namespace MonoGameGumCodeGeneration
                 "Popup",
                 typeof(PopupRuntime)
             );
+            ElementSaveExtensions.RegisterGueInstantiationType(
+                "ComponentWithStates",
+                typeof(ComponentWithStatesRuntime)
+            );
 
             var gumProject = GumProjectSave.Load("GumProject/GumProject.gumx");
 
@@ -40,8 +44,12 @@ namespace MonoGameGumCodeGeneration
             FileManager.RelativeDirectory = "Content/GumProject/";
 
             // This assumes that your project has at least 1 screen
-            gumProject.Screens.First().ToGraphicalUiElement(
+            var screenGue = gumProject.Screens.First().ToGraphicalUiElement(
                 SystemManagers.Default, addToManagers: true);
+
+            var componentWithStates = screenGue.GetGraphicalUiElementByName("ComponentWithStatesInstance")
+                as ComponentWithStatesRuntime;
+            componentWithStates.ColorCategoryState = ComponentWithStatesRuntime.ColorCategory.BlueState;
 
             //gumProject.Components.First().ToGraphicalUiElement(
             //    SystemManagers.Default, addToManagers: true);
