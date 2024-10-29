@@ -6,13 +6,13 @@
     <Variable>
       <Type>float</Type>
       <Name>ComponentWithStatesInstance.X</Name>
-      <Value xsi:type="xsd:float">53</Value>
+      <Value xsi:type="xsd:float">85</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>float</Type>
       <Name>ComponentWithStatesInstance.Y</Name>
-      <Value xsi:type="xsd:float">116</Value>
+      <Value xsi:type="xsd:float">65</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -26,6 +26,18 @@
       <Type>bool</Type>
       <Name>IsXamarinFormsControl</Name>
       <Category>Xamarin Forms</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>PopupInstance.X</Name>
+      <Value xsi:type="xsd:float">2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>PopupInstance.Y</Name>
+      <Value xsi:type="xsd:float">-10</Value>
       <SetsValue>true</SetsValue>
     </Variable>
   </State>
