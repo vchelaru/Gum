@@ -6,6 +6,7 @@ using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 
 using MonoGameGum.GueDeriving;
+using static MonoGameGumCodeGeneration.Components.ComponentWithStatesRuntime;
 
 namespace MonoGameGumCodeGeneration.Screens
 {
@@ -13,7 +14,9 @@ namespace MonoGameGumCodeGeneration.Screens
     {
         partial void CustomInitialize()
         {
-        
+            ComponentWithStatesInstance.ColorCategoryState = ColorCategory.RedState;
+            PopupInstance.TextInstance.Text = "I'm setting the text here in custom code.";
+
         }
     }
 }

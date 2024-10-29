@@ -8,7 +8,7 @@ using RenderingLibrary.Graphics;
 
 using MonoGameGum.GueDeriving;
 using MonoGameGumCodeGeneration.Components;
-
+using System.Linq;
 namespace MonoGameGumCodeGeneration.Screens
 {
     public partial class MainMenuRuntime

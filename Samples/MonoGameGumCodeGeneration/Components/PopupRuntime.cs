@@ -11,7 +11,6 @@ namespace MonoGameGumCodeGeneration.Components
     {
         partial void CustomInitialize()
         {
-        
         }
     }
 }

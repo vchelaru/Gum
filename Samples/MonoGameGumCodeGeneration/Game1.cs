@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGameGumCodeGeneration.Components;
+using MonoGameGumCodeGeneration.Screens;
 using RenderingLibrary;
 using System.Linq;
 using ToolsUtilities;
@@ -36,6 +37,12 @@ namespace MonoGameGumCodeGeneration
                 typeof(ComponentWithStatesRuntime)
             );
 
+            ElementSaveExtensions.RegisterGueInstantiationType(
+                "MainMenu",
+                typeof(MainMenuRuntime)
+            );
+
+
             var gumProject = GumProjectSave.Load("GumProject/GumProject.gumx");
 
             ObjectFinder.Self.GumProjectSave = gumProject;
@@ -46,13 +53,6 @@ namespace MonoGameGumCodeGeneration
             // This assumes that your project has at least 1 screen
             var screenGue = gumProject.Screens.First().ToGraphicalUiElement(
                 SystemManagers.Default, addToManagers: true);
-
-            var componentWithStates = screenGue.GetGraphicalUiElementByName("ComponentWithStatesInstance")
-                as ComponentWithStatesRuntime;
-            componentWithStates.ColorCategoryState = ComponentWithStatesRuntime.ColorCategory.BlueState;
-
-            //gumProject.Components.First().ToGraphicalUiElement(
-            //    SystemManagers.Default, addToManagers: true);
 
 
             base.Initialize();

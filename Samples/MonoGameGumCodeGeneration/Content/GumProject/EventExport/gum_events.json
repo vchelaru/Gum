@@ -70,6 +70,13 @@
         "ElementType": "Screens",
         "EventType": 5,
         "TimestampUtc": "2024-10-29T17:04:58.8940064Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "MainMenu.ComponentWithStates ComponentWithStatesInstance in MainMenu",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2024-10-29T18:04:32.6858107Z"
       }
     ]
   }
