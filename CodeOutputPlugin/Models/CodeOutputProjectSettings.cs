@@ -36,10 +36,6 @@ using Gum.Managers;
 using Gum.Wireframe;
 
 using RenderingLibrary.Graphics;
-
-using SkiaGum;
-using SkiaGum.GueDeriving;
-using SkiaGum.Renderables;
 ";
 
         /// <summary>
