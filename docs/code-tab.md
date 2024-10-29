@@ -55,17 +55,51 @@ The Code tab supports the automatic copying of files to disk. By using this feat
 Projects should be backed up or committed to source control before enabling automatic code generation to make it easy to undo changes.
 {% endhint %}
 
-to set up automatic code generation:
+To set up automatic code generation, first enable the code generation plugin as shown above. The Show CodeGen Preview checkbox does not need to be checked.
 
-1. Enable the code generation plugin as shown above. The Show CodeGen Preview checkbox does not need to be checked.
-2. Select the desired Output Library, such as MonoGame.
-3. Select the Object Instantiaton type
-   1. If you are planning on loading the .gumx project, select the FindByName option
-   2. If you would like the entire project generated, select the FullyInCode option. This option enables working in Gum to create layouts which will work fully in code without loading a .gumx file. This is especially improtant if you are working on a platform with limited IO access. Generated code can run faster than loading a .gumx file since it does not require file IO, XML parsing, and reflection.
-4. Enter the location of the project's .csproj file in the Code Project Root text box. If an absolute path is entered, it will be changed to a relative path so that generatoin works for all users working on a project regardless of where a project is cloned.
-5. Enter the project's Root Namespace, such as MyGame.
-6. Select the Generation Behavior
-   1. Select NeverGenerate for components which should not generate to disk
-   2. Select GenerateManually if you would like to generate code only when the Generate Code button is clicked.
-   3. Select GenerateAutomaticallyOnPropertyChange to generate code whenever a property changed. This option is useful once you are comfortable with code generation. It results in code being generated automatically as you make edits in Gum.
+Next, modify the values in the Project-Wide Code Generation section and the Element Code Generation section as discussed in the following sections:
+
+#### Output Library
+
+Select the desired Output Library, such as **MonoGame**.
+
+#### Object Instantiation Type
+
+If you are planning on loading the .gumx project, select the **FindByName** option.
+
+If you would like the entire project generated, select the **FullyInCode** option. This option enables working in Gum to create layouts which will work fully in code without loading a .gumx file. This is especially improtant if you are working on a platform with limited IO access. Generated code can run faster than loading a .gumx file since it does not require file IO, XML parsing, and reflection.
+
+#### Project-wide Using Statements
+
+Add the following using statement at the end of the Project-wide Using Statement box so that references to standard runtime types are found.
+
+```csharp
+using MonoGameGum.GueDeriving;
+```
+
+If you plan on creating Screens, you should also add using statements for your component runtimes
+
+```csharp
+using {YourProjectNamespace}.Components;
+```
+
+#### Code Project Root
+
+Enter the location of the folder containing the .csproj file in the Code Project Root text box. If an absolute path is entered, it will be saved to a relative path so that generation works for all users working on a project regardless of where a project is cloned even though it appears absolute in Gum. For example: `C:\Users\Owner\Documents\GitHub\Gum\Samples\MonoGameGumCodeGeneration\`
+
+#### Root Namespace
+
+Enter the project's Root Namespace, such as `MyGame`.
+
+#### Default Screen Base
+
+Enter the type that you would like all Screen runtimes to inherit from. If you're not sure what to enter, then use `GraphicalUiElement`. If your game uses a custom class that you have written for all Screens, then use the name of that class. You can switch to custom classes later as your project grows.
+
+#### Generation Behavior
+
+Select NeverGenerate for components which should not generate to disk
+
+Select GenerateManually if you would like to generate code only when the Generate Code button is clicked.
+
+Select GenerateAutomaticallyOnPropertyChange to generate code whenever a property changed. This option is useful once you are comfortable with code generation. It results in code being generated automatically as you make edits in Gum.
 
