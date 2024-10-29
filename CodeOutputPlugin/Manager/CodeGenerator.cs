@@ -351,6 +351,7 @@ namespace CodeOutputPlugin.Manager
                 else
                 {
                     context.StringBuilder.AppendLine(context.Tabs + "base.AfterFullCreation();");
+
                 }
             }
 
@@ -370,6 +371,11 @@ namespace CodeOutputPlugin.Manager
                     }
                 }
                 context.Instance = null;
+            }
+
+            if(!isFullyInstantiatingInCode)
+            {
+                context.StringBuilder.AppendLine(context.Tabs + "CustomInitialize();");
             }
 
             context.TabCount--;
@@ -2082,7 +2088,10 @@ namespace CodeOutputPlugin.Manager
 
             if (!DoesElementInheritFromCodeGeneratedElement(element, projectSettings))
             {
-                stringBuilder.AppendLine(context.Tabs + "InitializeInstances();");
+                if(context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
+                {
+                    stringBuilder.AppendLine(context.Tabs + "InitializeInstances();");
+                }
 
                 if (context.CodeOutputProjectSettings.GenerateGumDataTypes)
                 {
@@ -2116,9 +2125,10 @@ namespace CodeOutputPlugin.Manager
                     // call it here, I don't think...
                     stringBuilder.AppendLine(context.Tabs + "AssignParents();");
                 }
-            }
 
-            stringBuilder.AppendLine(context.Tabs + "CustomInitialize();");
+                // If not fully in code, we do this in AfterFullCreation
+                stringBuilder.AppendLine(context.Tabs + "CustomInitialize();");
+            }
 
             if (visualApi == VisualApi.Gum)
             {
