@@ -15,6 +15,11 @@
   <Guides />
   <ShowLocalizationInGum>true</ShowLocalizationInGum>
   <CurrentLanguageIndex>0</CurrentLanguageIndex>
+  <ScreenReference>
+    <Name>MainMenu</Name>
+    <ElementType>Screen</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </ScreenReference>
   <ComponentReference>
     <Name>Popup</Name>
     <ElementType>Component</ElementType>

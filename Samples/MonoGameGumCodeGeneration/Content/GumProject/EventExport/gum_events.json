@@ -21,6 +21,20 @@
         "ElementType": "Components",
         "EventType": 5,
         "TimestampUtc": "2024-10-29T11:12:22.6411502Z"
+      },
+      {
+        "NewName": "MainMenu",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 0,
+        "TimestampUtc": "2024-10-29T11:40:08.4394702Z"
+      },
+      {
+        "NewName": "MainMenu.PopupInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-10-29T11:40:11.0868229Z"
       }
     ]
   }

@@ -1,7 +1,13 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Gum.DataTypes;
+using Gum.Managers;
+using GumRuntime;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MonoGameGumCodeGeneration.Components;
 using RenderingLibrary;
+using System.Linq;
+using ToolsUtilities;
 
 namespace MonoGameGumCodeGeneration
 {
@@ -20,6 +26,27 @@ namespace MonoGameGumCodeGeneration
         {
             SystemManagers.Default = new SystemManagers(); 
             SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
+
+            ElementSaveExtensions.RegisterGueInstantiationType(
+                "Popup",
+                typeof(PopupRuntime)
+            );
+
+            var gumProject = GumProjectSave.Load("GumProject/GumProject.gumx");
+
+            ObjectFinder.Self.GumProjectSave = gumProject;
+            gumProject.Initialize();
+
+            FileManager.RelativeDirectory = "Content/GumProject/";
+
+            // This assumes that your project has at least 1 screen
+            gumProject.Screens.First().ToGraphicalUiElement(
+                SystemManagers.Default, addToManagers: true);
+
+            //gumProject.Components.First().ToGraphicalUiElement(
+            //    SystemManagers.Default, addToManagers: true);
+
+
             base.Initialize();
         }
 
