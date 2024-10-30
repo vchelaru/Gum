@@ -94,7 +94,7 @@ listBox.VisualTemplate =
 
 ### Customizing Displayed Property with ListBoxItemFormsType
 
-By default the ListBox calls ToString on each item. This is usually okay if you are dealign with primitive types. For example, the following code adds sequential integers to a ListBox:
+By default the ListBox calls ToString on each item. This is usually okay if you are dealing with primitive types. For example, the following code adds sequential integers to a ListBox:
 
 ```csharp
 for (int i = 0; i < 20; i++)
