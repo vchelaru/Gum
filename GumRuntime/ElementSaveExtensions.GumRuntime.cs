@@ -512,13 +512,18 @@ namespace GumRuntime
             // We need to set categories and states first since those are used below;
             toReturn.SetStatesAndCategoriesRecursively(elementSave);
 
-            toReturn.CreateGraphicalComponent(elementSave, systemManagers);
+            if(toReturn.RenderableComponent == null)
+            {
+                // This could have already been created by the type that is instantiated, so don't do this to double-create
+                toReturn.CreateGraphicalComponent(elementSave, systemManagers);
+            }
 
             toReturn.AddExposedVariablesRecursively(elementSave);
 
             toReturn.CreateChildrenRecursively(elementSave, systemManagers);
 
             toReturn.Tag = elementSave;
+            toReturn.ElementSave = elementSave;
 
             toReturn.SetInitialState();
 

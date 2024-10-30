@@ -351,6 +351,7 @@ namespace CodeOutputPlugin.Manager
                 else
                 {
                     context.StringBuilder.AppendLine(context.Tabs + "base.AfterFullCreation();");
+
                 }
             }
 
@@ -370,6 +371,11 @@ namespace CodeOutputPlugin.Manager
                     }
                 }
                 context.Instance = null;
+            }
+
+            if(!isFullyInstantiatingInCode)
+            {
+                context.StringBuilder.AppendLine(context.Tabs + "CustomInitialize();");
             }
 
             context.TabCount--;
@@ -1993,7 +1999,15 @@ namespace CodeOutputPlugin.Manager
             {
                 #region Constructor Header
 
-                stringBuilder.AppendLine(context.Tabs + $"public {elementName}(bool fullInstantiation = true)");
+                if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
+                {
+                    // MonoGame expects 0 or 2-arg constructors. We'll start with 0 for now, and eventually go to 2 if we need Forms support
+                    stringBuilder.AppendLine(context.Tabs + $"public {elementName}()");
+                }
+                else
+                {
+                    stringBuilder.AppendLine(context.Tabs + $"public {elementName}(bool fullInstantiation = true)");
+                }
 
                 stringBuilder.AppendLine(context.Tabs + "{");
                 context.TabCount++;
@@ -2074,7 +2088,10 @@ namespace CodeOutputPlugin.Manager
 
             if (!DoesElementInheritFromCodeGeneratedElement(element, projectSettings))
             {
-                stringBuilder.AppendLine(context.Tabs + "InitializeInstances();");
+                if(context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
+                {
+                    stringBuilder.AppendLine(context.Tabs + "InitializeInstances();");
+                }
 
                 if (context.CodeOutputProjectSettings.GenerateGumDataTypes)
                 {
@@ -2108,9 +2125,10 @@ namespace CodeOutputPlugin.Manager
                     // call it here, I don't think...
                     stringBuilder.AppendLine(context.Tabs + "AssignParents();");
                 }
-            }
 
-            stringBuilder.AppendLine(context.Tabs + "CustomInitialize();");
+                // If not fully in code, we do this in AfterFullCreation
+                stringBuilder.AppendLine(context.Tabs + "CustomInitialize();");
+            }
 
             if (visualApi == VisualApi.Gum)
             {
@@ -2897,10 +2915,24 @@ namespace CodeOutputPlugin.Manager
                 stringBuilder.AppendLine(ToTabs(tabCount) + "{");
                 tabCount++;
 
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"var category = ((Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == \"{category}\");");
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"var state = category.States.Find(item => item.Name == \"value.ToString()\");");
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"this.ApplyState(state);");    
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"if(Categories.ContainsKey(\"{category}\"))");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"var category = Categories[\"{category}\"];");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"var state = category.States.Find(item => item.Name == value.ToString());");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"this.ApplyState(state);");
+                tabCount--;
+                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"else");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
 
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"var category = ((Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == \"{category}\");");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"var state = category.States.Find(item => item.Name == value.ToString());");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"this.ApplyState(state);");
+                tabCount--;
+                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
                 tabCount--;
                 stringBuilder.AppendLine(ToTabs(tabCount) + "}");
                 tabCount--;
