@@ -93,5 +93,5 @@ The code above produces a single button which can be clicked to increment the cl
 
 ### Gum Forms and the Gum Tool
 
-A fully-functional Gum project can be downloaded which includes components for all Gum Form types. This can be found in the Samples folder of the repository. You can use the Gum project located there to load Gum Forms into your own project, or you can run the sample to see how it works. For more information see the [Samples page](../samples.md).
+A fully-functional Gum project can be downloaded which includes components for all Gum Form types. This can be found in the Samples folder of the repository. You can use the Gum project located there to load Gum Forms into your own project, or you can run the sample to see how it works. For more information see the [Samples page](../samples/).
 
