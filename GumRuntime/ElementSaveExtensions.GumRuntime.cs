@@ -523,6 +523,7 @@ namespace GumRuntime
             toReturn.CreateChildrenRecursively(elementSave, systemManagers);
 
             toReturn.Tag = elementSave;
+            toReturn.ElementSave = elementSave;
 
             toReturn.SetInitialState();
 

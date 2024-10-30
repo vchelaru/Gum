@@ -75,13 +75,14 @@ internal class FormsCustomizationScreen
 
         listBox.ListBoxItemFormsType = typeof(DateDisplayingListBoxItem);
 
-        for(int i = 0; i < 20; i++)
+        for (int i = 0; i < 20; i++)
         {
             var date = DateTime.Now.AddDays(-20 + i);
             listBox.Items.Add(date);
         }
     }
 }
+
 
 class DateDisplayingListBoxItem : ListBoxItem
 {

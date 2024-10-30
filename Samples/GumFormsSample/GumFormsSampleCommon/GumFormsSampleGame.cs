@@ -53,10 +53,14 @@ public class GumFormsSampleGame : Game
             case 2:
                 InitializeFormsCustomizationScreen();
                 break;
+            case 3:
+                InitializeComplexListBoxItemScreen();
+                break;
         }
 
         base.Initialize();
     }
+
 
     private void InitializeFromFileDemoScreen()
     {
@@ -75,6 +79,14 @@ public class GumFormsSampleGame : Game
     {
         CreateRoot();
         var screen = new FrameworkElementExampleScreen();
+        screen.Initialize(Root);
+    }
+
+
+    private void InitializeComplexListBoxItemScreen()
+    {
+        CreateRoot();
+        var screen = new ComplexListBoxItemScreen();
         screen.Initialize(Root);
     }
 
