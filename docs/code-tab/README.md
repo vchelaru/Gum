@@ -4,7 +4,7 @@
 
 The Code tab provides generated code for your current Gum objects.
 
-<figure><img src=".gitbook/assets/image (90).png" alt=""><figcaption><p>Code tab displaying generated code for the selected component</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (90).png" alt=""><figcaption><p>Code tab displaying generated code for the selected component</p></figcaption></figure>
 
 This tab provides the following functionality:
 
@@ -22,7 +22,7 @@ To enable code generation:
 2. Check the **Is CodeGen Plugin Enabled** checkbox
 3. Check the **Show CodeGen Preview** checkbox to display the current selection in the preview window
 
-<figure><img src=".gitbook/assets/image (91).png" alt=""><figcaption><p>Generated code preview displayed in Gum</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (91).png" alt=""><figcaption><p>Generated code preview displayed in Gum</p></figcaption></figure>
 
 {% hint style="info" %}
 The generation of code may make selection slightly slower, especially when viewing complex screens or components. If you are experiencing performance problems, you may consider unchecking the **Show CodeGen Preview** checkbox when performing editing.
@@ -32,7 +32,7 @@ The generation of code may make selection slightly slower, especially when viewi
 
 If you have a single instance selected, the preview window displays the code for creating the instance and assigning its variables. This is especially useful if you are unsure how to reproduce a particular layout in code. For example, the following image shows the generated code for a Text named TextInstance.
 
-<figure><img src=".gitbook/assets/image (92).png" alt=""><figcaption><p>Generated code for a Text named TextInstance</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (92).png" alt=""><figcaption><p>Generated code for a Text named TextInstance</p></figcaption></figure>
 
 The generated code shows all of the assignments necessary to reproduce the current instance's layout. Keep in mind that only explicitly-set variables are displayed. Any default (green background) variables are not assigned in generated code.
 
@@ -47,7 +47,7 @@ If a Screen or Component is selected, then an entire class for the component is 
 * A property for each instance in the Screen or Component
 * Initialization of all variables including variables on the instances
 
-### Automatic and Manual Code Generation
+### Automatic Saving of Generated Code
 
 The Code tab supports the automatic copying of files to disk. By using this feature, C# projects can automatically stay in sync with Gum projects, eliminating the need to write custom Runtime objects.
 

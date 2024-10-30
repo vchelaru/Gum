@@ -23,14 +23,14 @@ If you would like to create a new Kni project from scratch, you can follow these
 2.  Download and run the latest KniSdkSetup exe\
     &#x20;
 
-    <figure><img src=".gitbook/assets/image (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>KniSdkSetup in GitHub</p></figcaption></figure>
+    <figure><img src=".gitbook/assets/image (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>KniSdkSetup in GitHub</p></figcaption></figure>
 3. After installing the SDK, open Visual Studio
 4. Select the option to create a new project
 5. Search for Kni
 6.  Select one of the project templates, such as **Web browser**\
 
 
-    <figure><img src=".gitbook/assets/image (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Web browser project in Kni</p></figcaption></figure>
+    <figure><img src=".gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Web browser project in Kni</p></figcaption></figure>
 7. Click Next and proceed through the remainder of the steps to create a project
 
 You should test your project to make sure it runs prior to adding Gum.
@@ -87,4 +87,4 @@ public class WebGlTest1Game : Game
 
 ```
 
-<figure><img src=".gitbook/assets/image (2) (1) (1) (1).png" alt=""><figcaption><p>KniGum drawing a rectangle</p></figcaption></figure>
+<figure><img src=".gitbook/assets/image (2) (1) (1) (1) (1).png" alt=""><figcaption><p>KniGum drawing a rectangle</p></figcaption></figure>
