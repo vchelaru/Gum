@@ -70,3 +70,61 @@ listBox.VisualTemplate =
         // automatically added to a ListBoxItem by the ListBox:
         new CustomListBoxItemRuntime(tryCreateFormsObject:false));
 ```
+
+The VisualTemplate class can optionally pass a parameter representing the item in the list box. This can be used to create different types of items based on the object added. For example the following code would compare the passed object as an integer to whether it is greater than 100 and returns a different item depending on this result:
+
+```csharp
+// assign the template before adding new list items
+listBox.VisualTemplate = 
+    new MonoGameGum.Forms.VisualTemplate((item) => 
+    {
+        // Be sure you know the type before casting:
+        var itemAsInt = (int)item;
+        if(itemAsInt > 100)
+        {
+            return new CustomListBoxItemHighValue(tryCreateFormsObject:false);
+        }
+        else
+        {
+            return new CustomListBoxItemLowValue(tryCreateFormsObject:false);
+        }
+        
+    }
+```
+
+### Customizing Displayed Property with ListBoxItemFormsType
+
+By default the ListBox calls ToString on each item. This is usually okay if you are dealign with primitive types. For example, the following code adds sequential integers to a ListBox:
+
+```csharp
+for (int i = 0; i < 20; i++)
+{
+    listBox.Items.Add(i);
+}
+```
+
+<figure><img src="../../../.gitbook/assets/image.png" alt=""><figcaption><p>ListBox displaying integers</p></figcaption></figure>
+
+Often you may want to add a list of items which should not use their ToString method. For example you may have a list of IDs which represent weapons in a dictionary. The display can be customized by inheriting from ListBoxItem as shown in the following code:
+
+```csharp
+listBox.ListBoxItemFormsType = typeof(WeaponDisplayingListBoxItem);
+
+foreach(var weapon in weapons)
+{
+    listBox.Items.Add(weapon.Id);
+}
+
+// define WeaponDisplayingListBoxItem
+class WeaponDisplayingListBoxItem : ListBoxItem
+{
+    public WeaponDisplayingListBoxItem(InteractiveGue gue) : base(gue) { }
+    public override void UpdateToObject(object o)
+    {
+        var idAsInt = (int)o;
+        // assuming this has access to Weapons:
+        var weapon = Weapons[idAsInt];
+        coreText.RawText = weapon.Name;
+    }
+}
+```
