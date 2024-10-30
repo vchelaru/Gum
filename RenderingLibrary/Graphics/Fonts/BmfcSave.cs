@@ -17,9 +17,6 @@ namespace RenderingLibrary.Graphics.Fonts
 
         public void Save(string fileName)
         {
-#if UWP
-            throw new NotImplementedException();
-#else
             var assembly2 = Assembly.GetEntryAssembly();
 
             string directory = FileManager.GetDirectory(assembly2.Location);
@@ -63,7 +60,6 @@ namespace RenderingLibrary.Graphics.Fonts
             template = template.Replace("chars=32-126,160-255", $"chars={newRange}");
 
             FileManager.SaveText(template, fileName);
-#endif        
         }
 
         public static bool GetIfIsValidRange(string newRange)
@@ -153,7 +149,7 @@ namespace RenderingLibrary.Graphics.Fonts
             fileName = "Font" + fontSize + fontName;
             if (outline != 0)
             {
-                fileName = "Font" + fontSize + fontName + "_o" + outline;
+                fileName += "_o" + outline;
             }
 
             if(useFontSmoothing == false)
@@ -182,7 +178,6 @@ namespace RenderingLibrary.Graphics.Fonts
 
 
         // tool-necessary implementations
-#if !UWP
         public static void CreateBitmapFontFilesIfNecessary(int fontSize, string fontName, int outline, bool fontSmoothing,
             bool isItalic = false, bool isBold = false, string fontRanges = DefaultRanges)
         {
@@ -260,6 +255,5 @@ namespace RenderingLibrary.Graphics.Fonts
                 }
             }
         }
-#endif
     }
 }

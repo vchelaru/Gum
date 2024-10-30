@@ -179,7 +179,7 @@ namespace RenderingLibrary.Math.Geometry
             mVectors[index] = point;
         }
 
-        public void Render(SpriteRenderer spriteRenderer, SystemManagers managers, Texture2D textureToUse, float repetitionsPerLength)
+        public void Render(SpriteRenderer spriteRenderer, SystemManagers managers, Texture2D textureToUse, float repetitionsPerLength, System.Drawing.Rectangle? sourceRectangle = null)
         {
             if (mVectors.Count < 2)
                 return;
@@ -211,6 +211,7 @@ namespace RenderingLibrary.Math.Geometry
             //    endIndex = 2;
             //}
 
+            var sourceRectangleToUse = sourceRectangle;
 
             for (int i = startIndex; i < endIndex; i++)
             {
@@ -236,36 +237,57 @@ namespace RenderingLibrary.Math.Geometry
                 // calculate the distance between the two vectors
                 float distance = Vector2.Distance(vector1, vector2);
 
-                int repetitions = (int)(distance * repetitionsPerLength);
+                Vector2 scale = new Vector2(distance, LinePixelWidth / renderer.CurrentZoom);
 
-                if (repetitions < 1)
+
+                if(sourceRectangle != null)
                 {
-                    repetitions = 1;
+                    sourceRectangleToUse = sourceRectangle;
+                    // do nothing
+                    scale = new Vector2(distance / sourceRectangle.Value.Width, 1 / sourceRectangle.Value.Height);
+                }
+                else if (repetitionsPerLength == 0)
+                {
+                    sourceRectangleToUse = new Rectangle(
+                        0,
+                        0,
+                        1,
+                        1);
+                }
+                else
+                {
+                    int repetitions = (int)(distance * repetitionsPerLength);
+
+                    if (repetitions < 1)
+                    {
+                        repetitions = 1;
+                    }
+                    var sourceRectWidth =
+                        textureToUse.Width * repetitions;
+
+                    //repetitions = 128;
+
+                    // calculate the angle between the two vectors
+
+                    sourceRectangleToUse = new Rectangle(
+                        0, 
+                        0, 
+                        sourceRectWidth, 
+                        textureToUse.Height);
+                    scale =
+                        new Vector2(distance / ((float)repetitions * textureToUse.Width), LinePixelWidth / renderer.CurrentZoom);
                 }
 
-                //repetitions = 128;
-
-                // calculate the angle between the two vectors
-                float angle = (float)System.Math.Atan2((double)(vector2.Y - vector1.Y),
-                    (double)(vector2.X - vector1.X));
-
-                Rectangle sourceRectangle = new Rectangle(
-                    0, 
-                    0, 
-                    textureToUse.Width * repetitions, 
-                    textureToUse.Height);
-
-                var scale =
-                    new Vector2(distance / ((float)repetitions * textureToUse.Width), LinePixelWidth / renderer.CurrentZoom);
                 // stretch the pixel between the two vectors
 
 
-                // using Scale here is a little inaccurate so let's use source/destination rectangles:
+                float angle = (float)System.Math.Atan2((double)(vector2.Y - vector1.Y),
+                    (double)(vector2.X - vector1.X));
 
                 spriteRenderer.Draw(textureToUse,
                     //offset + Position + vector1,
                     Position + vector1,
-                    sourceRectangle,
+                    sourceRectangleToUse,
                     Color,
                     angle,
                     Vector2.Zero,

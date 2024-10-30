@@ -214,6 +214,10 @@ namespace Gum
 
                 CopyLinkedComponents();
 
+                if(FixRecursiveAssignments(mGumProjectSave))
+                {
+                    wasModified = true;
+                }
                 PluginManager.Self.ProjectLoad(mGumProjectSave);
 
                 StandardElementsManagerGumTool.Self.RefreshStateVariablesThroughPlugins();
@@ -230,7 +234,8 @@ namespace Gum
             }
             else
             {
-                PluginManager.Self.ProjectLoad(mGumProjectSave);
+                // No don't do this if it's null, why would we?
+                //PluginManager.Self.ProjectLoad(mGumProjectSave);
             }
 
             // Deselect everything
@@ -270,6 +275,46 @@ namespace Gum
             {
                 GeneralSettingsFile.Save();
             }
+        }
+
+        private bool FixRecursiveAssignments(GumProjectSave mGumProjectSave)
+        {
+            var toReturn = false;
+            // Instances can't be of type screen, so don't check this (unless someone messes with the XML but that's on them)
+            //foreach(var screen in mGumProjectSave.Screens)
+            //{
+            //    if(FixRecursiveAssignments(screen))
+            //    {
+            //        toReturn = true;
+            //    }
+            //}
+            foreach(var component in mGumProjectSave.Components)
+            {
+                if(FixRecursiveAssignments(component))
+                {
+                    toReturn = true;
+                }
+            }
+
+            return toReturn;
+        }
+
+        private bool FixRecursiveAssignments(ElementSave element)
+        {
+            var didModify = false;
+            // see if the child is either of this type, or a base type
+            foreach(var instance in element.Instances)
+            {
+                var isRecursive = ObjectFinder.Self.IsInstanceRecursivelyReferencingElement(instance, element);
+
+                if (isRecursive)
+                {
+                    instance.BaseType = "Container";
+                    didModify = true;
+                }
+            }
+
+            return didModify;
         }
 
         private void CopyLinkedComponents()
@@ -472,8 +517,37 @@ namespace Gum
                 {
                     PluginManager.Self.BeforeProjectSave(GumProjectSave);
 
+                    foreach(var elementSave in GumProjectSave.Screens)
+                    {
+                        foreach (var stateSave in elementSave.AllStates)
+                        {
+                            stateSave.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
+                        }
+                    }
+                    foreach (var elementSave in GumProjectSave.Components)
+                    {
+                        foreach (var stateSave in elementSave.AllStates)
+                        {
+                            stateSave.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
+                        }
+                    }
+                    foreach (var elementSave in GumProjectSave.StandardElements)
+                    {
+                        foreach (var stateSave in elementSave.AllStates)
+                        {
+                            stateSave.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
+                        }
+                    }
+                    foreach (var behavior in GumProjectSave.Behaviors)
+                    {
+                        foreach (var stateSave in behavior.AllStates)
+                        {
+                            stateSave.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
+                        }
+                    }
+
                     bool saveContainedElements = isNewProject || forceSaveContainedElements;
-                    
+
                     try
                     {
 
@@ -495,6 +569,16 @@ namespace Gum
                         FileWatchLogic.Self.IgnoreNextChangeOn(GumProjectSave.FullFileName);
 
                         GumCommands.Self.TryMultipleTimes(() => GumProjectSave.Save(GumProjectSave.FullFileName, saveContainedElements));
+
+                        if(isNewProject)
+                        {
+                            var sourceFile = "Content\\ExampleSpriteFrame.png";
+                            var destinationFile = FileManager.GetDirectory(GumProjectSave.FullFileName) + "ExampleSpriteFrame.png";
+                            System.IO.File.Copy(sourceFile, destinationFile);
+
+                            var nineSliceStandard = GumProjectSave.StandardElements.Find(item => item.Name == "NineSlice");
+                            nineSliceStandard.DefaultState.SetValue("SourceFile", "ExampleSpriteFrame.png", "string");
+                        }
 
                         succeeded = true;
 
@@ -536,6 +620,9 @@ namespace Gum
                     if (succeeded)
                     {
                         PluginManager.Self.ProjectSave(GumProjectSave);
+                        GeneralSettingsFile.AddToRecentFilesIfNew(GumProjectSave.FullFileName);
+                        GeneralSettingsFile.LastProject = GumProjectSave.FullFileName;
+                        GeneralSettingsFile.Save();
                     }
                 }
             }

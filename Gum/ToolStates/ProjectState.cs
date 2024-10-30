@@ -44,6 +44,7 @@ namespace Gum.ToolStates
 
         public FilePath ComponentFilePath => ProjectDirectory + "Components/";
         public FilePath ScreenFilePath => ProjectDirectory + "Screens/";
+        public FilePath BehaviorFilePath => ProjectDirectory + "Behaviors/";
     }
 
 }

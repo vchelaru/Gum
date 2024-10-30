@@ -41,6 +41,7 @@ namespace Gum.PropertyGridHelpers
             "Height Units",
             "HorizontalAlignment",
             nameof(GraphicalUiElement.IgnoredByParentSize),
+            "IsBold",
             "MaxLettersToShow",
             nameof(Text.MaxNumberOfLines),
             "Red",
@@ -49,6 +50,8 @@ namespace Gum.PropertyGridHelpers
             "Text",
             "Texture Address",
             "TextOverflowVerticalMode",
+            "UseCustomFont",
+            "UseFontSmoothing",
             "VerticalAlignment",
             "Visible",
             "Width",
@@ -90,7 +93,7 @@ namespace Gum.PropertyGridHelpers
                     SelectedState.Self.SelectedVariableSave = SelectedState.Self.SelectedStateSave.GetVariableSave(unqualifiedMemberName);
                 }
             }
-            ReactToPropertyValueChanged(unqualifiedMemberName, oldValue, parentElement, instance, selectedStateSave, refresh, recordUndo: recordUndo, trySave:trySave);
+            ReactToPropertyValueChanged(unqualifiedMemberName, oldValue, parentElement, instance, selectedStateSave, refresh, recordUndo: recordUndo, trySave: trySave);
         }
 
         /// <summary>
@@ -101,40 +104,60 @@ namespace Gum.PropertyGridHelpers
         /// <param name="parentElement"></param>
         /// <param name="instance"></param>
         /// <param name="refresh"></param>
-        public void ReactToPropertyValueChanged(string unqualifiedMember, object oldValue, ElementSave parentElement, 
+        public void ReactToPropertyValueChanged(string unqualifiedMember, object oldValue, ElementSave parentElement,
             InstanceSave instance, StateSave stateSave, bool refresh, bool recordUndo = true, bool trySave = true)
         {
             if (parentElement != null)
             {
-
-                ReactToChangedMember(unqualifiedMember, oldValue, parentElement, instance, stateSave);
-
-                string qualifiedName = unqualifiedMember;
-                if (instance != null)
+                ObjectFinder.Self.EnableCache();
+                try
                 {
-                    qualifiedName = $"{instance.Name}.{unqualifiedMember}";
+
+                    // This code calls plugin methods and may generate code. We want to generate code
+                    // after the variable references are assigned. Moving this line of code down:
+                    //ReactToChangedMember(unqualifiedMember, oldValue, parentElement, instance, stateSave);
+                    // Update - ReactToChangedMember expands variable reference names like "Color" and it fills
+                    // in implied assignments such as "Refernce.X" to "X = Reference.X"
+                    // It must be called first before applying references
+                    ReactToChangedMember(unqualifiedMember, oldValue, parentElement, instance, stateSave);
+
+                    string qualifiedName = unqualifiedMember;
+                    if (instance != null)
+                    {
+                        qualifiedName = $"{instance.Name}.{unqualifiedMember}";
+                    }
+                    DoVariableReferenceReaction(parentElement, unqualifiedMember, stateSave);
+
+                    var newValue = stateSave.GetValueRecursive(qualifiedName);
+
+                    // this could be a tunneled variable. If so, we may need to propagate the value to other instances one level deeper
+                    var didSetDeepReference = DoVariableReferenceReactionOnInstanceVariableSet(parentElement, instance, stateSave, unqualifiedMember, newValue);
+
+                    // now force save it if it's a variable reference:
+                    if (unqualifiedMember == "VariableReferences" && trySave)
+                    {
+                        GumCommands.Self.FileCommands.TryAutoSaveElement(parentElement);
+                    }
+
+                    VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(qualifiedName);
+
+                    // Need to record undo before refreshing and reselecting the UI
+                    if (recordUndo)
+                    {
+                        Undo.UndoManager.Self.RecordUndo();
+                    }
+
+                    if (refresh)
+                    {
+                        RefreshInResponseToVariableChange(unqualifiedMember, oldValue, parentElement, instance, qualifiedName,
+                            // if a deep reference is set, then this is more complicated than a single variable assignment, so we should
+                            // force everything. This makes debugging a little more difficult, but it keeps the wireframe accurate without having to track individual assignments.
+                            forceWireframeRefresh: didSetDeepReference, trySave: trySave);
+                    }
                 }
-                DoVariableReferenceReaction(parentElement, unqualifiedMember, stateSave);
-
-                var newValue = stateSave.GetValueRecursive(qualifiedName);
-
-                // this could be a tunneled variable. If so, we may need to propagate the value to other instances one level deeper
-                var didSetDeepReference = DoVariableReferenceReactionOnInstanceVariableSet(parentElement, instance, stateSave, unqualifiedMember, newValue);
-
-                VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(qualifiedName);
-
-                // Need to record undo before refreshing and reselecting the UI
-                if (recordUndo)
+                finally
                 {
-                    Undo.UndoManager.Self.RecordUndo();
-                }
-
-                if (refresh)
-                {
-                    RefreshInResponseToVariableChange(unqualifiedMember, oldValue, parentElement, instance, qualifiedName, 
-                        // if a deep reference is set, then this is more complicated than a single variable assignment, so we should
-                        // force everything. This makes debugging a little more difficult, but it keeps the wireframe accurate without having to track individual assignments.
-                        forceWireframeRefresh:didSetDeepReference, trySave:trySave);
+                    ObjectFinder.Self.DisableCache();
                 }
             }
         }
@@ -198,16 +221,16 @@ namespace Gum.PropertyGridHelpers
                                             + 1);
                                     }
 
-                                    var didAssignReferencedVariable = simplifiedRightSide == variableOnInstance.Name || 
+                                    var didAssignReferencedVariable = simplifiedRightSide == variableOnInstance.Name ||
                                         simplifiedRightSide == variableOnInstance.ExposedAsName;
 
-                                    if(didAssignReferencedVariable)
+                                    if (didAssignReferencedVariable)
                                     {
                                         var ownerOfVariableReferenceName = variableListSave.SourceObject;
 
                                         var ownerOfVariableReferenceInstanceSave = instanceElement.GetInstance(ownerOfVariableReferenceName);
 
-                                        if(ownerOfVariableReferenceInstanceSave != null)
+                                        if (ownerOfVariableReferenceInstanceSave != null)
                                         {
                                             // Setting this variable results in ownerOfVariableReferenceInstanceSave.leftSide also being assigned
                                             // but ownerOfVariableReferenceInstanceSave is inside of instanceElement, so we need to find all instances
@@ -268,7 +291,7 @@ namespace Gum.PropertyGridHelpers
 
         }
 
-        public void RefreshInResponseToVariableChange(string unqualifiedMember, object oldValue, ElementSave parentElement, 
+        public void RefreshInResponseToVariableChange(string unqualifiedMember, object oldValue, ElementSave parentElement,
             InstanceSave instance, string qualifiedName, bool forceWireframeRefresh = false, bool trySave = true)
         {
             // These properties may require some changes to the grid, so we refresh the tree view
@@ -328,7 +351,13 @@ namespace Gum.PropertyGridHelpers
                 // if that will cause problems now, so instead I'm going
                 // to do it one by one:
                 var handledByDirectSet = false;
-                if (forceWireframeRefresh == false && PropertiesSupportingIncrementalChange.Contains(unqualifiedMember) &&
+                if (forceWireframeRefresh == false && 
+                    PropertiesSupportingIncrementalChange.Contains(unqualifiedMember) &&
+                    // June 19, 2024 - if the value is null (from default assignment), we
+                    // can't set this single value - it requires a recursive variable finder.
+                    // for simplicity (for now?) we will just refresh all:
+                    value != null && 
+
                     (instance != null || SelectedState.Self.SelectedComponent != null || SelectedState.Self.SelectedStandardElement != null))
                 {
                     // this assumes that the object having its variable set is the selected instance. If we're setting
@@ -403,7 +432,32 @@ namespace Gum.PropertyGridHelpers
 
             ReactIfChangedMemberIsVariableReference(parentElement, instance, stateSave, rootVariableName, oldValue);
 
+            ReactIfChangedBaseType(parentElement, instance, stateSave, rootVariableName, oldValue);
+
             PluginManager.Self.VariableSet(parentElement, instance, rootVariableName, oldValue);
+        }
+
+        private void ReactIfChangedBaseType(ElementSave parentElement, InstanceSave instance, StateSave stateSave, string rootVariableName, object oldValue)
+        {
+
+            if (rootVariableName == "Base Type")
+            {
+                VariableSave variable = SelectedState.Self.SelectedVariableSave;
+
+                if(instance != null)
+                {
+                    if(ObjectFinder.Self.IsInstanceRecursivelyReferencingElement(instance, parentElement))
+                    {
+                        MessageBox.Show("This assignment would create a circular reference, which is not allowed.");
+                        //stateSave.SetValue("BaseType", oldValue, instance);
+                        instance.BaseType = (string)oldValue;
+
+                        GumCommands.Self.GuiCommands.PrintOutput($"BaseType assignment on {instance.Name} is not allowed - reverting to previous value");
+
+                        GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
+                    }
+                }
+            }
         }
 
         private void ReactIfChangedMemberIsDefaultChildContainer(ElementSave parentElement, InstanceSave instance, string rootVariableName, object oldValue)
@@ -701,7 +755,7 @@ namespace Gum.PropertyGridHelpers
 
             ////////////////early out//////////////////////
             var isUrl = FileManager.IsUrl(value);
-            if(isUrl)
+            if (isUrl)
             {
                 // extension can be anything...
                 return null;
@@ -876,6 +930,16 @@ namespace Gum.PropertyGridHelpers
 
             ///////////////////End Early Out/////////////////////////////////////
 
+            bool didChange = ApplyImpliedEqualsAndExpandVariableAliases(oldValue, newValueAsList);
+
+            if (didChange)
+            {
+                GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
+            }
+        }
+
+        private static bool ApplyImpliedEqualsAndExpandVariableAliases(object oldValue, List<string> newValueAsList)
+        {
             var oldValueAsList = oldValue as List<string>;
 
 
@@ -941,10 +1005,7 @@ namespace Gum.PropertyGridHelpers
                 }
             }
 
-            if (didChange)
-            {
-                GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
-            }
+            return didChange;
         }
 
         private static void ExpandColorToRedGreenBlue(List<string> asList, int i, string rightSide)
@@ -967,7 +1028,7 @@ namespace Gum.PropertyGridHelpers
             var rightSide = split[0]; // there is no left side, just right side
             var afterDot = rightSide.Substring(rightSide.LastIndexOf('.') + 1);
 
-            if(rightSide.Contains("."))
+            if (rightSide.Contains("."))
             {
                 // TODO: This is unused?
                 var withoutVariable = rightSide.Substring(0, rightSide.LastIndexOf('.'));

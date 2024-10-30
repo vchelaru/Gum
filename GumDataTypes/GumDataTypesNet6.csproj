@@ -2,33 +2,31 @@
 
   <PropertyGroup>
 	  <TargetFrameworks>netstandard2.1;net6.0</TargetFrameworks>
-	  <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
-	<GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
-	<GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-	<GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
-	<Platforms>AnyCPU</Platforms>
-	<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-	<PackageId>FlatRedBall.GumDataTypes</PackageId>
-	<Version>2023.12.19.2</Version>
-  </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove="objNetFramework\**" />
-    <EmbeddedResource Remove="objNetFramework\**" />
-    <None Remove="objNetFramework\**" />
-  </ItemGroup>
+		<NoWarn>1591</NoWarn>
 
-  <ItemGroup>
-    <Compile Remove="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Extensions\" />
-    <Folder Include="Properties\" />
-  </ItemGroup>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 
-  <ItemGroup>
-    <ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
-  </ItemGroup>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Remove="objNetFramework\**" />
+		<EmbeddedResource Remove="objNetFramework\**" />
+		<None Remove="objNetFramework\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Remove="Properties\AssemblyInfo.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="Extensions\" />
+		<Folder Include="Properties\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
+	</ItemGroup>
 
 </Project>

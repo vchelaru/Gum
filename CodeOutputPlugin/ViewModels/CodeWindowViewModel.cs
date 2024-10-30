@@ -1,4 +1,5 @@
-﻿using Gum.Mvvm;
+﻿using CodeOutputPlugin.Models;
+using Gum.Mvvm;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -59,6 +60,38 @@ namespace CodeOutputPlugin.ViewModels
                 if (value)
                 {
                     WhatToView = WhatToView.SelectedState;
+                }
+            }
+        }
+
+        public InheritanceLocation InheritanceLocation
+        {
+            get => Get<InheritanceLocation>();
+            set => Set(value);
+        }
+
+        [DependsOn(nameof(InheritanceLocation))]
+        public bool IsInCustomCodeChecked
+        {
+            get => InheritanceLocation == InheritanceLocation.InCustomCode;
+            set
+            {
+                if (value)
+                {
+                    InheritanceLocation = InheritanceLocation.InCustomCode;
+                }
+            }
+        }
+
+        [DependsOn(nameof(InheritanceLocation))]
+        public bool IsInGeneratedCodeChecked
+        {
+            get => InheritanceLocation == InheritanceLocation.InGeneratedCode;
+            set
+            {
+                if (value)
+                {
+                    InheritanceLocation = InheritanceLocation.InGeneratedCode;
                 }
             }
         }

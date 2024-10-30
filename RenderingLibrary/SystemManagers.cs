@@ -5,9 +5,20 @@ using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Math.Geometry;
 using Microsoft.Xna.Framework;
 using RenderingLibrary.Content;
+using ToolsUtilities;
+using System.Text;
+using System.Net;
+using System.Xml.Linq;
+
+#if WEB
+using nkast.Wasm.XHR;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+#endif
+
 
 
 #if USE_GUMCOMMON
+using MonoGameGum.GueDeriving;
 using Gum.Managers;
 using GumRuntime;
 
@@ -69,11 +80,7 @@ namespace RenderingLibrary
         {
             get
             {
-#if WINDOWS_8 || UWP
-                int threadId = Environment.CurrentManagedThreadId;
-#else
                 int threadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
-#endif
                 return threadId == mPrimaryThreadId;
             }
         }
@@ -85,8 +92,14 @@ namespace RenderingLibrary
         public static float GlobalFontScale { get; set; } = 1.0f;
         public bool EnableTouchEvents { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
+        public static Dictionary<string, byte[]> StreamByteDictionary { get; private set; } = new Dictionary<string, byte[]>();
         #endregion
 
+        /// <summary>
+        /// Performs every-frame activity for all contained systems in the SystemManager.
+        /// </summary>
+        /// <param name="currentTime">The amount of time that has passed since the game started.</param>
+        /// <exception cref="InvalidOperationException">Exception thrown if the SystemManagers hasn't yet been initialized.</exception>
         public void Activity(double currentTime)
         {
 #if DEBUG
@@ -114,13 +127,82 @@ namespace RenderingLibrary
             Renderer.Draw(this, layers);
         }
 
+        
         public void Initialize(GraphicsDevice graphicsDevice, bool fullInstantiation = false)
         {
-#if WINDOWS_8 || UWP
-            mPrimaryThreadId = Environment.CurrentManagedThreadId;
-#else
-            mPrimaryThreadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
+#if NET6_0_OR_GREATER
+            var usesTitleContainer = System.OperatingSystem.IsAndroid() || 
+                System.OperatingSystem.IsIOS() ||
+                System.OperatingSystem.IsBrowser();
+
+            if(usesTitleContainer)
+            {
+                FileManager.CustomGetStreamFromFile = (fileName) =>
+                {
+                    if(FileManager.IsRelative(fileName) == false)
+                    {
+                        fileName = FileManager.MakeRelative(fileName, FileManager.ExeLocation, preserveCase:true);
+                    }
+
+
+#if WEB
+                    if(fileName.StartsWith("./"))
+                    {
+                       fileName = fileName.Substring(2);
+                    }
 #endif
+
+                    if(StreamByteDictionary.ContainsKey(fileName))
+                    {
+                        var bytes = StreamByteDictionary[fileName];
+                        return new System.IO.MemoryStream(bytes);
+                    }
+
+#if WEB
+
+
+
+                    XMLHttpRequest request = new XMLHttpRequest();
+
+                    var suffix =
+                        "?token=" + DateTime.Now.Ticks;
+
+                    request.Open("GET", fileName + suffix, false);
+                    request.OverrideMimeType("text/plain; charset=x-user-defined");
+                    request.Send();
+
+                    if (request.Status == 200)
+                    {
+                        string responseText = request.ResponseText;
+
+                        var bytes =
+                            System.Text.Encoding.UTF8.GetBytes(responseText);
+                        return new MemoryStream(bytes);
+
+                        //byte[] buffer = new byte[responseText.Length];
+                        //for (int i = 0; i < responseText.Length; i++)
+                        //    buffer[i] = (byte)(responseText[i] & 0xff);
+
+                        //Stream ms = new MemoryStream(buffer);
+
+                        //return ms;
+                    }
+                    else
+                    {
+                        throw new IOException("HTTP request failed. Status:" + request.Status);
+                    }
+
+
+#else
+                    var stream = TitleContainer.OpenStream(fileName);
+                    return stream;
+#endif
+                };
+            }
+
+#endif
+
+            mPrimaryThreadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
 
             Renderer = new Renderer();
             Renderer.Initialize(graphicsDevice, this);
@@ -142,8 +224,17 @@ namespace RenderingLibrary
                 LoaderManager.Self.ContentLoader = new ContentLoader();
 
                 var assembly = typeof(SystemManagers).Assembly;
+#if KNI
+                var bitmapPattern = ToolsUtilities.FileManager.GetStringFromEmbeddedResource(assembly, "KniGum.Font18Arial.fnt");
+                using var stream = ToolsUtilities.FileManager.GetStreamFromEmbeddedResource(assembly, "KniGum.Font18Arial_0.png");
+#elif FNA
+                var bitmapPattern = ToolsUtilities.FileManager.GetStringFromEmbeddedResource(assembly, "FnaGum.Font18Arial.fnt");
+                using var stream = ToolsUtilities.FileManager.GetStreamFromEmbeddedResource(assembly, "FnaGum.Font18Arial_0.png");
+
+#else
                 var bitmapPattern = ToolsUtilities.FileManager.GetStringFromEmbeddedResource(assembly, "MonoGameGum.Content.Font18Arial.fnt");
                 using var stream = ToolsUtilities.FileManager.GetStreamFromEmbeddedResource(assembly, "MonoGameGum.Content.Font18Arial_0.png");
+#endif
                 var defaultFontTexture = Texture2D.FromStream(graphicsDevice, stream);
                 Text.DefaultBitmapFont = new BitmapFont(defaultFontTexture, bitmapPattern);
 
@@ -157,6 +248,8 @@ namespace RenderingLibrary
                 GraphicalUiElement.RemoveRenderableFromManagers = CustomSetPropertyOnRenderable.RemoveRenderableFromManagers;
                 Renderer.ApplyCameraZoomOnWorldTranslation = true;
 
+                Renderer.Camera.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
+
                 ElementSaveExtensions.CustomCreateGraphicalComponentFunc = RenderableCreator.HandleCreateGraphicalComponent;
 
                 StandardElementsManager.Self.Initialize();
@@ -165,10 +258,47 @@ namespace RenderingLibrary
 
                 ToolsUtilities.FileManager.RelativeDirectory += "Content/";
 
+                RegisterComponentRuntimeInstantiations();
+
+                GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ThrowException;
+
 #endif
             }
         }
 
+#if USE_GUMCOMMON
+
+        private void RegisterComponentRuntimeInstantiations()
+        {
+            ElementSaveExtensions.RegisterGueInstantiation(
+                "ColoredRectangle",
+                () => new ColoredRectangleRuntime());
+
+            ElementSaveExtensions.RegisterGueInstantiation(
+                "Container",
+                () => new ContainerRuntime());
+
+            ElementSaveExtensions.RegisterGueInstantiation(
+                "NineSlice",
+                () => new NineSliceRuntime());
+
+            ElementSaveExtensions.RegisterGueInstantiation(
+                "Polygon",
+                () => new PolygonRuntime());
+
+            ElementSaveExtensions.RegisterGueInstantiation(
+                "Rectangle",
+                () => new RectangleRuntime());
+
+            ElementSaveExtensions.RegisterGueInstantiation(
+                "Sprite",
+                () => new SpriteRuntime());
+
+            ElementSaveExtensions.RegisterGueInstantiation(
+                "Text",
+                () => new TextRuntime());
+        }
+#endif
 
         public override string ToString()
         {

@@ -1,0 +1,61 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <PropertyGroup>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <ProjectGuid>{5e9c34b5-2114-48b5-9c87-979a8b570474}</ProjectGuid>
+    <RootNamespace>KniGumFromFile</RootNamespace>
+    <AssemblyName>KniGumFromFile</AssemblyName>
+    <DefineConstants>$(DefineConstants);BLAZORGL</DefineConstants>
+	<KniPlatform>BlazorGL</KniPlatform>
+  </PropertyGroup>
+  
+  <PropertyGroup>
+    <BlazorEnableTimeZoneSupport>false</BlazorEnableTimeZoneSupport>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Pages\Index.razor.cs" />
+    <Compile Include="Program.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="nkast.Xna.Framework" Version="3.12.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Content" Version="3.12.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Graphics" Version="3.12.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Audio" Version="3.12.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Media" Version="3.12.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Input" Version="3.12.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Game" Version="3.12.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Blazor" Version="3.12.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Content.Pipeline.Builder" Version="3.12.9001" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.27" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="6.0.27" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net8.0' ">
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.2" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <KniContentReference Include="..\KniGumFromFileContent\KniGumFromFileContent.mgcb">   
+      <Link>Content\KniGumFromFileContent.mgcb</Link>
+    </KniContentReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\KniGumFromFileCommon\KniGumFromFileCommon.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -11,7 +11,20 @@ namespace CodeOutputPlugin.Models
         XamarinForms,
         WPF,
         RawSkia,
-        Maui
+        Maui,
+        MonoGame
+    }
+
+    public enum ObjectInstantiationType
+    {
+        FullyInCode,
+        FindByName
+    }
+
+    public enum InheritanceLocation
+    {
+        InCustomCode,
+        InGeneratedCode
     }
 
     public class CodeOutputProjectSettings
@@ -24,9 +37,7 @@ using Gum.Wireframe;
 
 using RenderingLibrary.Graphics;
 
-using SkiaGum;
-using SkiaGum.GueDeriving;
-using SkiaGum.Renderables;
+using System.Linq;
 ";
 
         /// <summary>
@@ -39,6 +50,10 @@ using SkiaGum.Renderables;
         public bool IsCodeGenPluginEnabled { get; set; }
 
         public bool IsShowCodegenPreviewChecked { get; set; }
+
+        public InheritanceLocation InheritanceLocation { get; set; }
+
+        public ObjectInstantiationType ObjectInstantiationType { get; set; }
 
         /// <summary>
         /// For XamarinForms this would be the base screen type like

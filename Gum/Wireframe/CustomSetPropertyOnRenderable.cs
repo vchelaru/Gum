@@ -36,7 +36,7 @@ namespace Gum.Wireframe
             {
                 handled = TrySetPropertyOnText(mContainedObjectAsIpso, graphicalUiElement, propertyName, value);
             }
-#if MONOGAME || XNA4 || FNA
+#if MONOGAME || KNI || XNA4 || FNA
             else if (mContainedObjectAsIpso is LineCircle)
             {
                 handled = TrySetPropertyOnLineCircle(mContainedObjectAsIpso, graphicalUiElement, propertyName, value);
@@ -89,8 +89,17 @@ namespace Gum.Wireframe
                 }
                 else if (propertyName == "Color")
                 {
-                    var valueAsColor = (Color)value;
-                    solidRect.Color = valueAsColor;
+                    //var valueAsColor = (Color)value;
+                    if (value is System.Drawing.Color drawingColor)
+                    {
+                        solidRect.Color = drawingColor;
+                    }
+                    else if (value is Microsoft.Xna.Framework.Color xnaColor)
+                    {
+                        solidRect.Color = xnaColor.ToSystemDrawing();
+
+                    }
+
                     handled = true;
                 }
 
@@ -131,8 +140,15 @@ namespace Gum.Wireframe
                 }
                 else if (propertyName == "Color")
                 {
-                    var valueAsColor = (Color)value;
-                    sprite.Color = valueAsColor;
+                    if(value is System.Drawing.Color drawingColor)
+                    {
+                        sprite.Color = drawingColor;
+                    }
+                    else if(value is Microsoft.Xna.Framework.Color xnaColor)
+                    {
+                        sprite.Color = xnaColor.ToSystemDrawing();
+
+                    }
                     handled = true;
                 }
 
@@ -240,6 +256,19 @@ namespace Gum.Wireframe
 
                     handled = true;
                 }
+                else if (propertyName == "Color")
+                {
+                    if (value is System.Drawing.Color drawingColor)
+                    {
+                        nineSlice.Color = drawingColor;
+                    }
+                    else if (value is Microsoft.Xna.Framework.Color xnaColor)
+                    {
+                        nineSlice.Color = xnaColor.ToSystemDrawing();
+
+                    }
+                    handled = true;
+                }
             }
 #endif
 
@@ -276,13 +305,7 @@ namespace Gum.Wireframe
             void ReactToFontValueChange()
             {
                 UpdateToFontValues(mContainedObjectAsIpso as IText, graphicalUiElement);
-                // we want to update if the text's size is based on its "children" (the letters it contains)
-                if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren ||
-                    // If height is relative to children, it could be in a stack
-                    graphicalUiElement.HeightUnits == DimensionUnitType.RelativeToChildren)
-                {
-                    graphicalUiElement.UpdateLayout();
-                }
+
                 handled = true;
             }
 
@@ -303,10 +326,12 @@ namespace Gum.Wireframe
                 asText.InlineVariables.Clear();
                 if (valueAsString?.Contains("[") == true)
                 {
-                    SetBbCodeText(asText, graphicalUiElement, valueAsString);
+                    asText.StoredMarkupText = valueAsString;
+                    SetBbCodeText(asText, graphicalUiElement, asText.StoredMarkupText);
                 }
                 else
                 {
+                    asText.StoredMarkupText = null;
                     asText.RawText = valueAsString;
                 }
                 // we want to update if the text's size is based on its "children" (the letters it contains)
@@ -337,10 +362,16 @@ namespace Gum.Wireframe
 
                 ReactToFontValueChange();
             }
-#if MONOGAME || XNA4 || FNA
+#if MONOGAME || KNI || XNA4 || FNA
             else if (propertyName == nameof(graphicalUiElement.UseCustomFont))
             {
                 graphicalUiElement.UseCustomFont = (bool)value;
+                var asText = ((Text)mContainedObjectAsIpso);
+
+                if (!string.IsNullOrEmpty(asText.StoredMarkupText))
+                {
+                    SetBbCodeText(asText, graphicalUiElement, asText.StoredMarkupText);
+                }
                 ReactToFontValueChange();
             }
 
@@ -350,6 +381,13 @@ namespace Gum.Wireframe
                 ReactToFontValueChange();
 
             }
+#if USE_GUMCOMMON
+            else if(propertyName == nameof(MonoGameGum.GueDeriving.TextRuntime.BitmapFont) && graphicalUiElement is MonoGameGum.GueDeriving.TextRuntime textRuntime)
+            {
+                textRuntime.BitmapFont = (BitmapFont)value;
+                handled = true;
+            }
+#endif
 #endif
             else if (propertyName == nameof(graphicalUiElement.FontSize))
             {
@@ -383,7 +421,7 @@ namespace Gum.Wireframe
             }
             else if (propertyName == nameof(Blend))
             {
-#if MONOGAME || XNA4 || FNA
+#if MONOGAME || KNI || XNA4 || FNA
                 var valueAsGumBlend = (RenderingLibrary.Blend)value;
 
                 var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
@@ -395,7 +433,7 @@ namespace Gum.Wireframe
             }
             else if (propertyName == "Alpha")
             {
-#if MONOGAME || XNA4 || FNA
+#if MONOGAME || KNI || XNA4 || FNA
                 int valueAsInt = (int)value;
                 ((Text)mContainedObjectAsIpso).Alpha = valueAsInt;
                 handled = true;
@@ -421,10 +459,20 @@ namespace Gum.Wireframe
             }
             else if (propertyName == "Color")
             {
-#if MONOGAME || XNA4 || FNA
-                var valueAsColor = (Color)value;
-                ((Text)mContainedObjectAsIpso).Color = valueAsColor;
-                handled = true;
+#if MONOGAME || KNI || XNA4 || FNA
+                //var valueAsColor = (Color)value;
+                //((Text)mContainedObjectAsIpso).Color = valueAsColor;
+                //handled = true;
+                if (value is System.Drawing.Color drawingColor)
+                {
+                    ((Text)mContainedObjectAsIpso).Color = drawingColor;
+                    handled = true;
+                }
+                else if (value is Microsoft.Xna.Framework.Color xnaColor)
+                {
+                    ((Text)mContainedObjectAsIpso).Color = xnaColor.ToSystemDrawing();
+                    handled = true;
+                }
 #endif
             }
 
@@ -440,7 +488,7 @@ namespace Gum.Wireframe
             }
             else if (propertyName == "MaxLettersToShow")
             {
-#if MONOGAME || XNA4 || FNA
+#if MONOGAME || KNI || XNA4 || FNA
                 ((Text)mContainedObjectAsIpso).MaxLettersToShow = (int?)value;
                 handled = true;
 #endif
@@ -469,7 +517,7 @@ namespace Gum.Wireframe
             return handled;
         }
 
-        static HashSet<string> tags = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase) 
+        public static HashSet<string> Tags { get; private set; } = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase) 
         { 
             "alpha",
             "red", 
@@ -493,27 +541,59 @@ namespace Gum.Wireframe
         static Stack<bool> useFontSmoothingStack = new Stack<bool>();
         static Stack<bool> isItalicStack = new Stack<bool>();
         static Stack<bool> isBoldStack = new Stack<bool>();
+        static Stack<bool> useCustomFontStack = new Stack<bool>();
 
         static List<TagInfo> allTags = new List<TagInfo>();
 
         private static void SetBbCodeText(global::RenderingLibrary.Graphics.Text asText, GraphicalUiElement graphicalUiElement, string bbcode)
         {
+            // Text can be rendered on multiple lines. This can happen due to explicit newline characters, or by automatic line wrapping.
+            // When line indexes are counted, newlines are not included. Therefore, we need to remove newlines here so that indexes match up.
+            var bbCodeNoNewlines = bbcode?.Replace("\n", "");
 
-            var results = BbCodeParser.Parse(tags, bbcode);
-            var strippedText = BbCodeParser.RemoveTags(bbcode, results);
+            var resultsNoNewlines = BbCodeParser.Parse(bbCodeNoNewlines, Tags);
+            var resultsWithNewlines = BbCodeParser.Parse(bbcode, Tags);
+
+            var strippedText = BbCodeParser.RemoveTags(bbcode, resultsWithNewlines);
             asText.RawText = strippedText;
 
-            fontNameStack.Push(graphicalUiElement.Font);
+            fontNameStack.Clear();
+            if(graphicalUiElement.UseCustomFont)
+            {
+                var customFont = graphicalUiElement.CustomFontFile;
+                if(customFont?.EndsWith(".fnt") == true)
+                {
+                    customFont = customFont.Substring(0, customFont.Length - ".fnt".Length);
+                }
+                fontNameStack.Push(customFont);
+            }
+            else
+            {
+                fontNameStack.Push(graphicalUiElement.Font);
+            }
+
+            fontSizeStack.Clear();
             fontSizeStack.Push(graphicalUiElement.FontSize);
+
+            outlineThicknessStack.Clear();
             outlineThicknessStack.Push(graphicalUiElement.OutlineThickness);
+
+            useFontSmoothingStack.Clear();
             useFontSmoothingStack.Push(graphicalUiElement.UseFontSmoothing);
+
+            isItalicStack.Clear();
             isItalicStack.Push(graphicalUiElement.IsItalic);
+
+            isBoldStack.Clear();
             isBoldStack.Push(graphicalUiElement.IsBold);
+
+            useCustomFontStack.Clear();
+            useCustomFontStack.Push(graphicalUiElement.UseCustomFont);
 
             var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
             var contentLoader = loaderManager.ContentLoader;
 
-            foreach (var item in results)
+            foreach (var item in resultsNoNewlines)
             {
                 object castedValue = item.Open.Argument;
                 var shouldApply = false;
@@ -553,6 +633,8 @@ namespace Gum.Wireframe
                             }
                         }
                         break;
+
+                        // Don't do anything like IsBold or IsItalic here - these are handled in ApplyFontVariables
                 }
 
                 if (shouldApply)
@@ -569,7 +651,7 @@ namespace Gum.Wireframe
                 }
             }
 
-            ApplyFontVariables(asText, results);
+            ApplyFontVariables(asText, resultsNoNewlines);
         }
 
         private static void ApplyFontVariables(Text asText, List<FoundTag> results)
@@ -592,7 +674,13 @@ namespace Gum.Wireframe
                         {
                             if(hasArg)
                             {
-                                fontNameStack.Push(tag.Argument);
+                                // tolerate ".fnt" suffix
+                                var argument = tag.Argument;
+                                if (argument?.EndsWith(".fnt") == true)
+                                {
+                                    argument = argument.Substring(0, argument.Length - ".fnt".Length);
+                                }
+                                fontNameStack.Push(argument);
                                 castedValue = GetAndCreateFontIfNecessary();
                             }
                             else
@@ -644,6 +732,34 @@ namespace Gum.Wireframe
                             }
                         }
                         break;
+                    case "IsBold":
+                        {
+                            if (bool.TryParse(tag.Argument, out bool parsedValue))
+                            {
+                                isBoldStack.Push(parsedValue);
+                                castedValue = GetAndCreateFontIfNecessary();
+                            }
+                            else
+                            {
+                                isBoldStack.Pop();
+                                castedValue = GetAndCreateFontIfNecessary();
+                            }
+                        }
+                        break;
+                    case "UseCustomFont":
+                        {
+                            if(bool.TryParse(tag.Argument, out bool parsedValue))
+                            {
+                                useCustomFontStack.Push(parsedValue);
+                                castedValue = GetAndCreateFontIfNecessary();
+                            }
+                            else
+                            {
+                                useCustomFontStack.Pop();
+                                castedValue = GetAndCreateFontIfNecessary();
+                            }
+                        }
+                        break;
 
                 }
 
@@ -680,31 +796,60 @@ namespace Gum.Wireframe
             {
                 var fontFileName = GetFontFileName();
 
-                var font = LoaderManager.Self.TryGetCachedDisposable<BitmapFont>(fontFileName);
+                var font = global::RenderingLibrary.Content.LoaderManager.Self.GetDisposable(fontFileName) as BitmapFont;
 
                 // no cache, does it need to be created?
                 if (font == null)
                 {
+                    // this could be a custom font, so let's see if it exists:
+
+                    string fileName = String.Empty;
+                    if(ToolsUtilities.FileManager.FileExists(fontFileName))
+                    {
+                        fileName = fontFileName;
+                    }
+                    else
+                    {
 #if GUM
-                    string fileName = Managers.FontManager.Self.AbsoluteFontCacheFolder +
-                        ToolsUtilities.FileManager.RemovePath(fontFileName);
+                        fileName = Managers.FontManager.Self.AbsoluteFontCacheFolder +
+                            ToolsUtilities.FileManager.RemovePath(fontFileName);
+#endif
+                    }
+
+#if GUM
 
                     if (!ToolsUtilities.FileManager.FileExists(fileName))
                     {
-                        BmfcSave.CreateBitmapFontFilesIfNecessary(
-                            fontSizeStack.Peek(),
-                            fontNameStack.Peek(),
-                            outlineThicknessStack.Peek(),
-                            useFontSmoothingStack.Peek(),
-                            isItalicStack.Peek(),
-                            isBoldStack.Peek(),
-                            GumState.Self.ProjectState.GumProjectSave?.FontRanges
-                            );
+                        // user could have typed anything in there, so who knows if this will succeed. Therefore, try/catch:
+                        try
+                        {
+                            BmfcSave.CreateBitmapFontFilesIfNecessary(
+                                fontSizeStack.Peek(),
+                                fontNameStack.Peek(),
+                                outlineThicknessStack.Peek(),
+                                useFontSmoothingStack.Peek(),
+                                isItalicStack.Peek(),
+                                isBoldStack.Peek(),
+                                GumState.Self.ProjectState.GumProjectSave?.FontRanges
+                                );
+                        }
+                        catch
+                        {
+                            // do nothing?
+                        }
                     }
-
-                    font = new BitmapFont(fileName, (SystemManagers)null);
-                    LoaderManager.Self.AddDisposable(fontFileName, font);
 #endif
+
+                    if(ToolsUtilities.FileManager.FileExists(fileName))
+                    {
+                        font = new BitmapFont(fileName, (SystemManagers)null);
+                    }
+                    else
+                    {
+                        // This can happen when closing tags are encountered at the end of a font. If no font exists, we can just go to the default
+                        font = Text.DefaultBitmapFont;
+                    }
+                    global::RenderingLibrary.Content.LoaderManager.Self.AddDisposable(fontFileName, font);
                 }
 
                 return font;
@@ -712,15 +857,24 @@ namespace Gum.Wireframe
 
             string GetFontFileName()
             {
-                string fontFileNameName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
-                    fontSizeStack.Peek(),
-                    fontNameStack.Peek(),
-                    outlineThicknessStack.Peek(),
-                    useFontSmoothingStack.Peek(),
-                    isItalicStack.Peek(),
-                    isBoldStack.Peek());
+                string fontFileNameName;
+                if(useCustomFontStack.Peek())
+                {
+                    fontFileNameName = fontNameStack.Peek() + ".fnt";
+                }
+                else
+                {
+                    fontFileNameName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
+                        fontSizeStack.Peek(),
+                        fontNameStack.Peek(),
+                        outlineThicknessStack.Peek(),
+                        useFontSmoothingStack.Peek(),
+                        isItalicStack.Peek(),
+                        isBoldStack.Peek());
 
-                var fullFileName = ToolsUtilities.FileManager.Standardize(fontFileNameName, false, true);
+                }
+
+                var fullFileName = ToolsUtilities.FileManager.RemoveDotDotSlash(ToolsUtilities.FileManager.Standardize(fontFileNameName, false, true));
 #if ANDROID || IOS
                 fullFileName = fullFileName.ToLowerInvariant();
 #endif
@@ -749,9 +903,21 @@ namespace Gum.Wireframe
 
                     if (!string.IsNullOrEmpty(graphicalUiElement.CustomFontFile))
                     {
-                        font = loaderManager.TryGetCachedDisposable<BitmapFont>(graphicalUiElement.CustomFontFile);
+                        font = loaderManager.GetDisposable(graphicalUiElement.CustomFontFile) as BitmapFont;
                         if (font == null)
                         {
+#if KNI
+                            try
+                            {
+                                // this could be running in browser where we don't have File.Exists, so JUST DO IT
+                                font = new BitmapFont(graphicalUiElement.CustomFontFile, SystemManagers.Default);
+                                loaderManager.AddDisposable(graphicalUiElement.CustomFontFile, font);
+                            }
+                            catch
+                            {
+                                // font doesn't exist, carry on...
+                            }
+#else
                             // so normally we would just let the content loader check if the file exists but since we're not going to
                             // use the content loader for BitmapFont, we're going to protect this with a file.exists.
                             if (ToolsUtilities.FileManager.FileExists(graphicalUiElement.CustomFontFile))
@@ -759,6 +925,15 @@ namespace Gum.Wireframe
                                 font = new BitmapFont(graphicalUiElement.CustomFontFile, SystemManagers.Default);
                                 loaderManager.AddDisposable(graphicalUiElement.CustomFontFile, font);
                             }
+#endif
+                        }
+                        else if(font.Textures.Any(item => item?.IsDisposed == true))
+                        {
+                            // The BitmapFont is cached by Gum, but the underlying Texture2D might be managed by something else (like FRB).
+                            // This means that the Texture can be disposed without the BitmapFont being disposed. If this is the case we should
+                            // ask the underlying system for a new .png, but we can keep the same BitmapFont since that should stay the same and
+                            // .fnt parsing can be the slow part for large fonts.
+                            font.ReAssignTextures();
                         }
                     }
 
@@ -777,16 +952,24 @@ namespace Gum.Wireframe
                             graphicalUiElement.IsItalic,
                             graphicalUiElement.IsBold);
 
-                        string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, false, true);
+                        string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, preserveCase:true, makeAbsolute:true);
 
-#if ANDROID || IOS
-                        fullFileName = fullFileName.ToLowerInvariant();
-#endif
-
-
-                        font = loaderManager.TryGetCachedDisposable<BitmapFont>(fullFileName);
+                        font = loaderManager.GetDisposable(fullFileName) as BitmapFont;
                         if (font == null || font.Texture?.IsDisposed == true)
                         {
+#if KNI
+                            try
+                            {
+                                // this could be running in browser where we don't have File.Exists, so JUST DO IT
+                                font = new BitmapFont(fullFileName, SystemManagers.Default);
+
+                                loaderManager.AddDisposable(fullFileName, font);
+                            }
+                            catch
+                            {
+                                // font doesn't exist, carry on...
+                            }
+#else
                             // so normally we would just let the content loader check if the file exists but since we're not going to
                             // use the content loader for BitmapFont, we're going to protect this with a file.exists.
                             if (ToolsUtilities.FileManager.FileExists(fullFileName))
@@ -796,6 +979,7 @@ namespace Gum.Wireframe
 
                                 loaderManager.AddDisposable(fullFileName, font);
                             }
+#endif
                         }
 
                         // FRB may dispose fonts, so let's check:
@@ -809,11 +993,25 @@ namespace Gum.Wireframe
                     }
                 }
 
-                ((Text)text).BitmapFont = font ?? Text.DefaultBitmapFont;
+                var fontToSet = font ?? Text.DefaultBitmapFont;
+
+                var asRenderableText = (Text)text;
+                if(asRenderableText.BitmapFont != fontToSet)
+                {
+                    asRenderableText.BitmapFont = fontToSet;
+
+                    // we want to update if the text's size is based on its "children" (the letters it contains)
+                    if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren ||
+                        // If height is relative to children, it could be in a stack
+                        graphicalUiElement.HeightUnits == DimensionUnitType.RelativeToChildren)
+                    {
+                        graphicalUiElement.UpdateLayout();
+                    }
+                }
             }
         }
 
-        #endregion
+#endregion
 
         private static bool TrySetPropertyOnLineRectangle(IRenderableIpso mContainedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
         {
@@ -1210,7 +1408,7 @@ namespace Gum.Wireframe
 
         public static void ThrowExceptionsForMissingFiles(GraphicalUiElement graphicalUiElement)
         {
-#if MONOGAME
+#if MONOGAME || KNI
             // We can't throw exceptions when assigning values on fonts because the font values get set one-by-one
             // and the end result of all values determines which file to load. For example, an object may set the following
             // variables one-by-one:
@@ -1251,9 +1449,21 @@ namespace Gum.Wireframe
 
                             throw new System.IO.FileNotFoundException($"Missing:{standardized}");
                         }
-
                     }
+                }
+                else
+                {
+                    // we have a valid font file, so let's make sure the BitmapFont matches the expected font
+                    if(graphicalUiElement.UseCustomFont)
+                    {
+                        var expectedFont = graphicalUiElement.CustomFontFile?.Replace("\\", "/");
+                        var currentFont = asText.BitmapFont.FontFile?.Replace("\\", "/");
 
+                        if(!expectedFont.Equals(currentFont, StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            throw new System.IO.FileNotFoundException($"Expected:{expectedFont} but currently using:{currentFont}");
+                        }
+                    }
                 }
             }
 #endif

@@ -1,6 +1,6 @@
 # Introduction
 
-Gum is the best Game UI Layout tool available. It provides a flexible, efficient layout engine capable of producing virtually any layout. Gum can be used in a variety of contexts including in the FlatRedBall game engine, and MonoGame. The Gum layout engine can also be included in any .NET project without requiring the use of a particular graphical API.
+Gum is the best Game UI Layout tool available. It provides a flexible, efficient layout engine capable of producing virtually any layout. Gum can be used in a variety of contexts including in the [FlatRedBall game engine](https://docs.flatredball.com/gum/), [MonoGame](monogame/), and [Meadow](meadow.md). The Gum layout engine can also be included in any .NET project without requiring the use of a particular graphical API.
 
 ### Powerful WYSIWYG Editor
 
@@ -39,13 +39,3 @@ Gum is actively maintained and provides lots of ways to get answers:
 * Check the rest of the documentation here
 * Join the [Discord chat](https://discord.gg/EvqwmSQuBz) (shared discord with FlatRedBall)
 * Create an [issue on Github](https://github.com/vchelaru/Gum/issues)
-
-### Downloading Gum
-
-Gum Application (binaries): [files.flatredball.com/content/Tools/Gum/Gum.zip](https://files.flatredball.com/content/Tools/Gum/Gum.zip)
-
-Gum Source Code: [https://www.github.com/vchelaru/Gum](https://www.github.com/vchelaru/Gum)
-
-Note that Gum uses XNA so the XNA runtime must be installed here:
-
-[https://www.microsoft.com/en-us/download/details.aspx?id=20914](https://www.microsoft.com/en-us/download/details.aspx?id=20914)

@@ -1,0 +1,60 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <TargetFramework>net8.0</TargetFramework>
+    <RollForward>Major</RollForward>
+    <ProjectGuid>7fbdb67c-3e17-4856-9b98-fb06f5327631</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <PublishTrimmed>True</PublishTrimmed>
+    <PublishAot>True</PublishAot>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>KniGumInCode</RootNamespace>
+    <AssemblyName>KniGumInCode</AssemblyName>
+    <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
+    <DefineConstants>$(DefineConstants);DESKTOPGL</DefineConstants>
+    <KniPlatform>DesktopGL</KniPlatform>
+  </PropertyGroup>
+	
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+  </PropertyGroup>
+	
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+  </PropertyGroup>
+	
+  <PropertyGroup>
+    <ApplicationIcon>Icon.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="nkast.Xna.Framework" Version="3.12.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Content" Version="3.12.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Graphics" Version="3.12.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Audio" Version="3.12.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Media" Version="3.12.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Input" Version="3.12.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Game" Version="3.12.9001" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL.9000" Version="3.12.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Content.Pipeline.Builder" Version="3.12.9001" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Icon.ico" />
+    <EmbeddedResource Include="Icon.bmp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <KniContentReference Include="..\KniGumInCodeContent\KniGumInCodeContent.mgcb">
+      <Link>Content\KniGumInCodeContent.mgcb</Link>
+    </KniContentReference>
+    <None Include="app.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\KniGumInCodeCommon\KniGumInCodeCommon.csproj" />
+  </ItemGroup>
+
+</Project>

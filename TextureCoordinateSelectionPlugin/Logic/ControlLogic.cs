@@ -507,6 +507,29 @@ namespace TextureCoordinateSelectionPlugin.Logic
                         selector.Top + selector.Height / 2.0f;
 
                 }
+                else if(textureAddress == TextureAddress.DimensionsBased)
+                {
+                    shouldClearOut = false;
+                    control.DesiredSelectorCount = 1;
+                    var selector = control.RectangleSelector;
+
+                    selector.Left = rfv.GetValue<int>($"{instancePrefix}Texture Left");
+                    selector.Top = rfv.GetValue<int>($"{instancePrefix}Texture Top");
+
+                    var widthScale = rfv.GetValue<float>($"{instancePrefix}Texture Width Scale");
+                    var heightScale = rfv.GetValue<float>($"{instancePrefix}Texture Height Scale");
+
+                    var absoluteWidth = graphicalUiElement.GetAbsoluteWidth();
+                    var absoluteHeight = graphicalUiElement.GetAbsoluteHeight();
+
+                    selector.Width = absoluteWidth * widthScale;
+                    selector.Height = absoluteHeight * heightScale;
+
+                    selector.Visible = true;
+                    selector.ShowHandles = false;
+                    selector.AllowMoveWithoutHandles = true;
+                    selector.ShowMoveCursorWhenOver = true;
+                }
             }
 
             if (shouldClearOut)

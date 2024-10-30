@@ -73,8 +73,8 @@ namespace Gum.Controls
                 MiddleSplitter.Width = splitterLength;
 
 
-                BottomRightSplitter.Height = bottomRowLength;
-                BottomRightPanel.Height = splitterLength;
+                BottomRightSplitter.Height = splitterLength;
+                BottomRightPanel.Height = bottomRowLength;
 
                 isHidden = false;
             }

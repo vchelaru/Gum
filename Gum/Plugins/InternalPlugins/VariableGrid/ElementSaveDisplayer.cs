@@ -96,7 +96,8 @@ namespace Gum.PropertyGridHelpers
                         new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, propertyDescriptor.Name, instance, element);
                 }
 
-                srim.SetToDefault += (memberName) => ResetVariableToDefault(srim);
+                // moved to internal
+                //srim.SetToDefault += (memberName) => ResetVariableToDefault(srim);
                 srim.DetailText = propertyDescriptor.Subtext;
                 string category = propertyDescriptor.Category?.Trim();
 
@@ -138,7 +139,8 @@ namespace Gum.PropertyGridHelpers
                             new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, propertyDescriptor.Name, instance, element);
                     }
 
-                    srim.SetToDefault += (memberName) => ResetVariableToDefault(srim);
+                    // moved to internal
+                    //srim.SetToDefault += (memberName) => ResetVariableToDefault(srim);
                     srim.PreferredDisplayer = typeof(ListBoxDisplay);
 
                     string category = propertyDescriptor.Category?.Trim();
@@ -156,157 +158,7 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        private void ResetVariableToDefault(StateReferencingInstanceMember srim)
-        {
-            string variableName = srim.Name;
 
-            bool shouldReset = false;
-            bool affectsTreeView = false;
-
-            var selectedElement = SelectedState.Self.SelectedElement;
-            var selectedInstance = SelectedState.Self.SelectedInstance;
-
-            if (selectedInstance != null)
-            {
-                affectsTreeView = variableName == "Parent";
-                //variableName = SelectedState.Self.SelectedInstance.Name + "." + variableName;
-
-                shouldReset = true;
-            }
-            else if (selectedElement != null)
-            {
-                shouldReset =
-                    // Don't let the user reset standard element variables, they have to have some actual value
-                    (selectedElement is StandardElementSave) == false ||
-                    // ... unless it's not the default
-                    SelectedState.Self.SelectedStateSave != SelectedState.Self.SelectedElement.DefaultState;
-            }
-
-            // now we reset, but we don't remove the variable:
-            //if(shouldReset)
-            //{
-            //    // If the variable is part of a category, then we don't allow setting the variable to default - they gotta do it through the cateory itself
-
-            //    if (isPartOfCategory)
-            //    {
-            //        var window = new DeletingVariablesInCategoriesMessageBox();
-            //        window.ShowDialog();
-
-            //        shouldReset = false;
-            //    }
-            //}
-
-            if (shouldReset)
-            {
-                bool isPartOfCategory = srim.StateSaveCategory != null;
-
-                StateSave state = SelectedState.Self.SelectedStateSave;
-                bool wasChangeMade = false;
-                VariableSave variable = state.GetVariableSave(variableName);
-                var oldValue = variable?.Value;
-                if (variable != null)
-                {
-                    // Don't remove the variable if it's part of an element - we still want it there
-                    // so it can be set, we just don't want it to set a value
-                    // Update August 13, 2013
-                    // Actually, we do want to remove it if it's part of an element but not the
-                    // default state
-                    // Update October 17, 2017
-                    // Now that components do not
-                    // necessarily need to have all
-                    // of their variables, we can remove
-                    // the variable now. In fact, we should
-                    //bool shouldRemove = SelectedState.Self.SelectedInstance != null ||
-                    //    SelectedState.Self.SelectedStateSave != SelectedState.Self.SelectedElement.DefaultState;
-                    // Also, don't remove it if it's an exposed variable, this un-exposes things
-                    bool shouldRemove = string.IsNullOrEmpty(variable.ExposedAsName) && !isPartOfCategory && !variable.IsCustomVariable;
-
-                    // Update October 7, 2019
-                    // Actually, we can remove any variable so long as the current state isn't the "base definition" for it
-                    // For elements - no variables are the base variable definitions except for variables that are categorized
-                    // state variables for categories defined in this element
-                    if (shouldRemove)
-                    {
-                        var isState = variable.IsState(selectedElement, out ElementSave categoryContainer, out StateSaveCategory categoryForVariable);
-
-                        if (isState)
-                        {
-                            var isDefinedHere = categoryForVariable != null && categoryContainer == selectedElement;
-
-                            shouldRemove = !isDefinedHere;
-                        }
-                    }
-
-
-                    if (shouldRemove)
-                    {
-                        state.Variables.Remove(variable);
-                    }
-                    else if (isPartOfCategory)
-                    {
-                        var variableInDefault = SelectedState.Self.SelectedElement.DefaultState.GetVariableSave(variable.Name);
-                        if (variableInDefault != null)
-                        {
-                            GumCommands.Self.GuiCommands.PrintOutput(
-                                $"The variable {variable.Name} is part of the category {srim.StateSaveCategory.Name} so it cannot be removed. Instead, the value has been set to the value in the default state");
-
-                            variable.Value = variableInDefault.Value;
-                        }
-                        else
-                        {
-                            GumCommands.Self.GuiCommands.PrintOutput("Could not set value to default because the default state doesn't set this value");
-
-                        }
-
-                    }
-                    else
-                    {
-                        variable.Value = null;
-                        variable.SetsValue = false;
-                    }
-
-                    wasChangeMade = true;
-                    // We need to refresh the property grid and the wireframe display
-
-                }
-                else
-                {
-                    // Maybe this is a variable list?
-                    VariableListSave variableList = state.GetVariableListSave(variableName);
-                    if (variableList != null)
-                    {
-                        state.VariableLists.Remove(variableList);
-
-                        // We don't support this yet:
-                        // variableList.SetsValue = false; // just to be safe
-                        wasChangeMade = true;
-                    }
-                }
-
-                ElementSaveExtensions.ApplyVariableReferences(selectedElement, state);
-
-
-                if (wasChangeMade)
-                {
-                    PropertyGridManager.Self.RefreshUI(force: true);
-                    WireframeObjectManager.Self.RefreshAll(true);
-                    SelectionManager.Self.Refresh();
-
-                    PluginManager.Self.VariableSet(selectedElement, selectedInstance, variableName, oldValue);
-
-                    if (affectsTreeView)
-                    {
-                        GumCommands.Self.GuiCommands.RefreshElementTreeView(SelectedState.Self.SelectedElement);
-                    }
-
-                    GumCommands.Self.FileCommands.TryAutoSaveElement(SelectedState.Self.SelectedElement);
-                }
-            }
-            else
-            {
-                srim.IsDefault = false;
-            }
-        }
 
 
         private static StateSave GetRecursiveStateFor(ElementSave elementSave, StateSave stateToAddTo = null)

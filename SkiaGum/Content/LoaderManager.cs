@@ -32,8 +32,13 @@ namespace RenderingLibrary.Content
             set;
         }
 
-        bool mCacheTextures = false;
-        Dictionary<string, IDisposable> mCachedDisposables = new Dictionary<string, IDisposable>();
+        // February 6, 2024
+        // Why is this false?
+        // Caching should be turned
+        // on by default...
+        //bool mCacheTextures = false;
+        bool mCacheTextures = true;
+        Dictionary<string, IDisposable> mCachedDisposables = new Dictionary<string, IDisposable>(StringComparer.OrdinalIgnoreCase);
         public bool CacheTextures
         {
             get { return mCacheTextures; }

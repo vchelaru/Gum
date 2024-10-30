@@ -142,7 +142,7 @@ namespace Gum.Wireframe
                 SystemManagers.Default = new SystemManagers();
                 SystemManagers.Default.Initialize(GraphicsDevice);
 
-                Renderer.Self.SamplerState = SamplerState.PointWrap;
+                Renderer.TextureFilter = TextureFilter.Point;
 
                 LoaderManager.Self.ContentLoader = new ContentLoader();
 
@@ -154,6 +154,7 @@ namespace Gum.Wireframe
                 InputLibrary.Keyboard.Self.Initialize(this);
 
                 mCanvasBounds = new LineRectangle();
+                mCanvasBounds.IsDotted = true;
                 mCanvasBounds.Name = "Gum Screen Bounds";
                 mCanvasBounds.Width = 800;
                 mCanvasBounds.Height = 600;
@@ -319,7 +320,7 @@ namespace Gum.Wireframe
 
                 PluginManager.Self.BeforeRender();
 
-                Renderer.Self.Draw(null);
+                Renderer.Self.Draw((SystemManagers)null);
 
                 PluginManager.Self.AfterRender();
 

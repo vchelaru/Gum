@@ -75,6 +75,11 @@ namespace WpfDataUi.DataTypes
             }
         }
 
+        public bool IsExpanded
+        {
+            get; set;
+        } = true;
+
         #endregion
 
         #region Events

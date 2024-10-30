@@ -588,6 +588,7 @@ namespace SkiaGum.GueDeriving
 
             }
         }
+
         public string DebugDetails => $"{Name} {GetType().Name}";
     }
 }

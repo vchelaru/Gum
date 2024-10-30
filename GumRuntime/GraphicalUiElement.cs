@@ -17,7 +17,6 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.ComponentModel;
 using ToolsUtilitiesStandard.Helpers;
-using BlendState = Gum.BlendState;
 using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
 using Vector2 = System.Numerics.Vector2;
 using Vector3 = System.Numerics.Vector3;
@@ -25,9 +24,6 @@ using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
 using Matrix = System.Numerics.Matrix4x4;
 using GumRuntime;
-#if UWP
-using System.Reflection;
-#endif
 
 namespace Gum.Wireframe
 {
@@ -43,7 +39,7 @@ namespace Gum.Wireframe
 
     /// <summary>
     /// The base object for all Gum runtime objects. It contains functionality for
-    /// setting variables, states, and perofrming layout. The GraphicalUiElement can
+    /// setting variables, states, and performing layout. The GraphicalUiElement can
     /// wrap an underlying rendering object.
     /// </summary>
     public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyPropertyChanged
@@ -92,11 +88,14 @@ namespace Gum.Wireframe
         public static int UpdateLayoutCallCount;
         public static int ChildrenUpdatingParentLayoutCalls;
 
-        public static bool ShowLineRectangles = true;
+        // This used to be true until Jan 26, 2024, but it's
+        // confusing for new users. Let's keep this off and document
+        // how to use it (eventually).
+        public static bool ShowLineRectangles = false;
 
         // to save on casting:
         protected IRenderableIpso mContainedObjectAsIpso;
-        IVisible mContainedObjectAsIVisible;
+        protected IVisible mContainedObjectAsIVisible;
 
         GraphicalUiElement mWhatContainsThis;
 
@@ -117,7 +116,7 @@ namespace Gum.Wireframe
         DimensionUnitType mWidthUnit;
         DimensionUnitType mHeightUnit;
 
-        ISystemManagers mManagers;
+        protected ISystemManagers mManagers;
 
         int mTextureTop;
         int mTextureLeft;
@@ -154,6 +153,9 @@ namespace Gum.Wireframe
 
         Dictionary<string, Gum.DataTypes.Variables.StateSaveCategory> mCategories =
             new Dictionary<string, Gum.DataTypes.Variables.StateSaveCategory>();
+
+        // This needs to be made public so that individual Forms objects can be customized:
+        public Dictionary<string, Gum.DataTypes.Variables.StateSaveCategory> Categories => mCategories;
 
         // the row or column index when anobject is sorted.
         // This is used by the stacking logic to properly sort objects
@@ -613,8 +615,23 @@ namespace Gum.Wireframe
             }
         }
 
+        TextOverflowVerticalMode textOverflowVerticalMode;
         // we have to store this locally because we are going to effectively assign the overflow mode based on the height units and this value
-        public TextOverflowVerticalMode TextOverflowVerticalMode = TextOverflowVerticalMode.SpillOver;
+        public TextOverflowVerticalMode TextOverflowVerticalMode
+        {
+            get => textOverflowVerticalMode;
+            set
+            {
+                if(textOverflowVerticalMode != value)
+                {
+                    if(this.RenderableComponent is IText text)
+                    {
+                        text.TextOverflowVerticalMode = value;
+                    }
+                    textOverflowVerticalMode = value;
+                }
+            }
+        }
 
         float stackSpacing;
         /// <summary>
@@ -914,7 +931,7 @@ namespace Gum.Wireframe
         /// Since this is an interface using ContainedElements in a foreach allocates memory
         /// and this can actually be significant in a game that updates its UI frequently.
         /// </remarks>
-        public IEnumerable<GraphicalUiElement> ContainedElements
+        public IList<GraphicalUiElement> ContainedElements
         {
             get
             {
@@ -937,8 +954,9 @@ namespace Gum.Wireframe
         }
 
         /// <summary>
-        /// Returns the direct hierarchical children of this. Note that this does not return all objects contained in the element. 
+        /// Returns the direct hierarchical children of this. Note that this does not return all objects contained in the element, only direct children. 
         /// </summary>
+
         public ObservableCollection<IRenderableIpso> Children
         {
             get
@@ -1022,6 +1040,9 @@ namespace Gum.Wireframe
             }
         }
 
+        /// <summary>
+        /// Returns the absolute X (in screen space) of the left edge of the GraphicalUielement.
+        /// </summary>
         public float AbsoluteLeft => this.GetAbsoluteX();
 
         /// <summary>
@@ -1070,6 +1091,9 @@ namespace Gum.Wireframe
             }
         }
 
+        /// <summary>
+        /// Returns the absolute Y (in screen space) of the top edge of the GraphicalUiElement.
+        /// </summary>
         public float AbsoluteTop => this.GetAbsoluteY();
 
         public IVisible ExplicitIVisibleParent
@@ -1259,6 +1283,11 @@ namespace Gum.Wireframe
         // could happen indefinitely so we only want to do this one time.
         // This prevents the size change from happening over and over:
         bool isInSizeChange;
+        /// <summary>
+        /// Event raised whenever this instance's absolute size changes. This size change can occur by a direct value being
+        /// set (such as Width or WidthUnits), or by an indirect value changing, such as if a Parent is resized and if
+        /// this uses a WidthUnits depending on the parent.
+        /// </summary>
         public event EventHandler SizeChanged;
         public event EventHandler PositionChanged;
         public event EventHandler ParentChanged;
@@ -1298,7 +1327,7 @@ namespace Gum.Wireframe
             mIsLayoutSuspended = false;
         }
 
-        public GraphicalUiElement(IRenderable containedObject, GraphicalUiElement whatContainsThis)
+        public GraphicalUiElement(IRenderable containedObject, GraphicalUiElement whatContainsThis = null)
         {
             SetContainedObject(containedObject);
 
@@ -1369,6 +1398,11 @@ namespace Gum.Wireframe
         #endregion
 
         #region Methods
+
+        public virtual void AfterFullCreation()
+        {
+
+        }
 
         /// <summary>
         /// Sets the default state.
@@ -2047,9 +2081,9 @@ namespace Gum.Wireframe
                             }
                         }
                     }
-                    else if (this.Parent is GraphicalUiElement)
+                    else if (this.Parent is GraphicalUiElement parentGue && parentGue.Children != null)
                     {
-                        var siblingsAsIpsos = ((GraphicalUiElement)Parent).Children;
+                        var siblingsAsIpsos = parentGue.Children;
                         for (int i = 0; i < siblingsAsIpsos.Count; i++)
                         {
                             var siblingAsGraphicalUiElement = siblingsAsIpsos[i] as GraphicalUiElement;
@@ -2256,9 +2290,11 @@ namespace Gum.Wireframe
                 // if it is using a complex WidthUnit or HeightUnit. All other update types (such as absolute) can be determined on the
                 // spot when calculating the width of the ratio child.
                 // Therefore, we will need to do all RelativeToChildren first if:
+                //
                 // * Some children use WidthUnits with Ratio, and some children use WidthUnits with RelativeToChildren
                 //   --or--
-                // 2. Any children use HeightUnits with Ratios, and some children use HeightUnits with RelativeToChildren
+                // * Any children use HeightUnits with Ratios, and some children use HeightUnits with RelativeToChildren
+                //
                 // If either is the case, then we will first update all children that have the relative properties. Then we'll loop through all of them
                 // Note about optimization - if children using relative all come first, then a normal order will satisfy the dependencies.
                 // But that makes the code slightly more complex, so I'll bother with that performance optimization later.
@@ -2280,6 +2316,13 @@ namespace Gum.Wireframe
                 }
 
                 var shouldUpdateRelativeFirst = (useRatioWidth && useRelativeChildrenWidth) || (useRatioHeight && useRelativeChildrenHeight);
+
+                // Update - if this item stacks, then it cannot mark the children as updated - it needs to do another
+                // pass later to update the position of the children in order from top-to-bottom. If we flag as updated,
+                // then the pass later that does the actual stacking will skip anything that is flagged as updated.
+                // This bug was reproduced as reported in this issue:
+                // https://github.com/vchelaru/Gum/issues/141
+                var shouldFlagAsUpdated = this.ChildrenLayout == ChildrenLayout.Regular;
 
                 if(shouldUpdateRelativeFirst)
                 {
@@ -2303,7 +2346,7 @@ namespace Gum.Wireframe
                         if ((alreadyUpdated == null || alreadyUpdated.Contains(ipsoChild) == false) && ipsoChild is GraphicalUiElement child)
                         {
                             // now do all:
-                            UpdateChild(child, flagAsUpdated:true);
+                            UpdateChild(child, flagAsUpdated: shouldFlagAsUpdated);
                         }
                     }
                 }
@@ -2317,7 +2360,7 @@ namespace Gum.Wireframe
                         if ((alreadyUpdated == null || alreadyUpdated.Contains(ipsoChild) == false) && ipsoChild is GraphicalUiElement child)
                         {
                             // now do all:
-                            UpdateChild(child, flagAsUpdated: true);
+                            UpdateChild(child, flagAsUpdated: shouldFlagAsUpdated);
                         }
                     }
                 }
@@ -2690,16 +2733,24 @@ namespace Gum.Wireframe
 
         private void GetCellDimensions(int indexInSiblingList, out int xIndex, out int yIndex, out float cellWidth, out float cellHeight)
         {
-            var xRows = this.EffectiveParentGue.AutoGridHorizontalCells;
-            var yRows = this.EffectiveParentGue.AutoGridVerticalCells;
+            var effectiveParent = EffectiveParentGue;
+            var xRows = effectiveParent.AutoGridHorizontalCells;
+            var yRows = effectiveParent.AutoGridVerticalCells;
             if (xRows < 1) xRows = 1;
             if (yRows < 1) yRows = 1;
 
-
-            xIndex = indexInSiblingList % xRows;
-            yIndex = indexInSiblingList / xRows;
-            var parentWidth = this.EffectiveParentGue.GetAbsoluteWidth();
-            var parentHeight = this.EffectiveParentGue.GetAbsoluteHeight();
+            if(effectiveParent.ChildrenLayout == ChildrenLayout.AutoGridHorizontal)
+            {
+                xIndex = indexInSiblingList % xRows;
+                yIndex = indexInSiblingList / xRows;
+            }
+            else // vertical
+            {
+                yIndex = indexInSiblingList % yRows;
+                xIndex = indexInSiblingList / yRows;
+            }
+            var parentWidth = effectiveParent.GetAbsoluteWidth();
+            var parentHeight = effectiveParent.GetAbsoluteHeight();
 
             cellWidth = parentWidth / xRows;
             cellHeight = parentHeight / yRows;
@@ -3986,6 +4037,24 @@ namespace Gum.Wireframe
                     }
                 }
             }
+            else if(e.Action == NotifyCollectionChangedAction.Replace)
+            {
+                foreach (IRenderableIpso ipso in e.OldItems)
+                {
+                    if (ipso.Parent == this)
+                    {
+                        ipso.Parent = null;
+                    }
+                }
+                foreach (IRenderableIpso ipso in e.NewItems)
+                {
+                    if (ipso.Parent != this)
+                    {
+                        ipso.Parent = this;
+
+                    }
+                }
+            }
         }
 
         private void AddChildren(ISystemManagers managers, Layer layer)
@@ -4384,7 +4453,6 @@ namespace Gum.Wireframe
             }
         }
 
-
         /// <summary>
         /// Sets a variable on this object (such as "X") to the argument value
         /// (such as 100.0f). This can be a primitive property like Height, or it can be
@@ -4616,7 +4684,7 @@ namespace Gum.Wireframe
                     }
                 }
             }
-            catch (InvalidCastException)
+            catch (InvalidCastException innerException)
             {
                 // There could be some rogue value set to the incorrect type, or maybe
                 // a new type or plugin initialized the default to the wrong type. We don't
@@ -4628,7 +4696,7 @@ namespace Gum.Wireframe
                 // being swallowed, but maybe we should push those
                 // errors up and let the callers handle it.
 #if DEBUG
-                throw new InvalidCastException($"Trying to set property {propertyName} to a value of {value} of type {value?.GetType()} on {Name}");
+                throw new InvalidCastException($"Trying to set property {propertyName} to a value of {value} of type {value?.GetType()} on {Name}", innerException);
 #endif
             }
             return toReturn;
@@ -4741,8 +4809,11 @@ namespace Gum.Wireframe
             if (this.mContainedObjectAsIpso is IText asIText && isFontDirty)
             {
 
-                UpdateFontFromProperties?.Invoke(asIText, this);
-                isFontDirty = false;
+                if(!this.IsLayoutSuspended)
+                {
+                    UpdateFontFromProperties?.Invoke(asIText, this);
+                    isFontDirty = false;
+                }
             }
 
             if (this.Children != null)
@@ -5048,11 +5119,18 @@ namespace Gum.Wireframe
             // suspend layouts while we do this so that previou values don't apply:
             var isSuspended = this.IsLayoutSuspended;
             this.SuspendLayout();
-            this.TextureLeft = asSprite.SourceRectangle.Value.Left;
-            this.TextureWidth = asSprite.SourceRectangle.Value.Width;
 
-            this.TextureTop = asSprite.SourceRectangle.Value.Top;
-            this.TextureHeight = asSprite.SourceRectangle.Value.Height;
+            // The AnimationChain (source file) could get set before the name desired name is set, so tolerate 
+            // if there's a missing source rectangle:
+            if(asSprite.SourceRectangle != null)
+            {
+                this.TextureLeft = asSprite.SourceRectangle.Value.Left;
+                this.TextureWidth = asSprite.SourceRectangle.Value.Width;
+
+                this.TextureTop = asSprite.SourceRectangle.Value.Top;
+                this.TextureHeight = asSprite.SourceRectangle.Value.Height;
+            }
+
             this.FlipHorizontal = asSprite.FlipHorizontal;
 
             if (this.TextureAddress == TextureAddress.EntireTexture)

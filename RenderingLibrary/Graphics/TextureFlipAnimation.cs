@@ -88,7 +88,7 @@ namespace RenderingLibrary.Graphics
 
             foreach (string fileName in list)
             {
-                toReturn.TextureList.Add(LoaderManager.Self.LoadContent<Texture2D>(fileName));
+                toReturn.TextureList.Add(global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Texture2D>(fileName));
             }
             return toReturn;
         }

@@ -667,26 +667,38 @@ namespace RenderingLibrary.Graphics
                 mFullInsideWidth = usedWidth - (mFullOutsideWidth * 2);
                 mFullInsideHeight = usedHeight - (mFullOutsideHeight * 2);
 
-                int outsideWidth = System.Math.Min(mFullOutsideWidth, RenderingLibrary.Math.MathFunctions.RoundToInt(Width / 2)); ;
+                int outsideWidth = System.Math.Min(mFullOutsideWidth, RenderingLibrary.Math.MathFunctions.RoundToInt(Width / 2));
                 int outsideHeight = System.Math.Min(mFullOutsideHeight, RenderingLibrary.Math.MathFunctions.RoundToInt(Height / 2));
+
+                int topHeight = outsideHeight;
+                int bottomHeight = outsideHeight;
+
                 int insideWidth = mFullInsideWidth;
                 int insideHeight = mFullInsideHeight;
+
+                if(Height <= mFullOutsideHeight*2 && Height%2 == 1)
+                {
+                    // If this is an odd (not even) height
+                    // and if the middle has 0 height, then one of the nineslices needs to be 1 pixel shorter
+                    // We'll arbitrarily choose the bottom one
+                    bottomHeight--;
+                }
 
                 mSprites[(int)NineSliceSections.TopLeft].SourceRectangle = new Rectangle(
                     leftCoordinate + 0,
                     topCoordinate + 0,
                     outsideWidth,
-                    outsideHeight);
+                    topHeight);
                 mSprites[(int)NineSliceSections.Top].SourceRectangle = new Rectangle(
                     leftCoordinate + outsideWidth,
                     topCoordinate + 0,
                     insideWidth,
-                    outsideHeight);
+                    topHeight);
                 mSprites[(int)NineSliceSections.TopRight].SourceRectangle = new Rectangle(
                     rightCoordinate - outsideWidth,
                     topCoordinate + 0,
                     outsideWidth,
-                    outsideHeight);
+                    topHeight);
 
                 mSprites[(int)NineSliceSections.Left].SourceRectangle = new Rectangle(
                     leftCoordinate + 0,
@@ -706,19 +718,19 @@ namespace RenderingLibrary.Graphics
 
                 mSprites[(int)NineSliceSections.BottomLeft].SourceRectangle = new Rectangle(
                     leftCoordinate + 0,
-                    bottomCoordinate - outsideHeight,
+                    bottomCoordinate - bottomHeight,
                     outsideWidth,
-                    outsideHeight);
+                    bottomHeight);
                 mSprites[(int)NineSliceSections.Bottom].SourceRectangle = new Rectangle(
                     leftCoordinate + outsideWidth,
-                    bottomCoordinate - outsideHeight,
+                    bottomCoordinate - bottomHeight,
                     insideWidth,
-                    outsideHeight);
+                    bottomHeight);
                 mSprites[(int)NineSliceSections.BottomRight].SourceRectangle = new Rectangle(
                     rightCoordinate - outsideWidth,
-                    bottomCoordinate - outsideHeight,
+                    bottomCoordinate - bottomHeight,
                     outsideWidth,
-                    outsideHeight);
+                    bottomHeight);
             }
 
             //top
@@ -896,7 +908,7 @@ namespace RenderingLibrary.Graphics
                     for (var sprite = 0; sprite < NineSliceExtensions.PossibleNineSliceEndings.Count(); sprite++)
                     {
 
-                        var item = LoaderManager.Self.TryLoadContent<Texture2D>(bareTexture + NineSliceExtensions.PossibleNineSliceEndings[sprite] + "." + extension);
+                        var item = global::RenderingLibrary.Content.LoaderManager.Self.TryLoadContent<Texture2D>(bareTexture + NineSliceExtensions.PossibleNineSliceEndings[sprite] + "." + extension);
 
                         if(item == null)
                         {

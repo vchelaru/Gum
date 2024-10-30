@@ -13,6 +13,7 @@ using Matrix = System.Numerics.Matrix4x4;
 using System.Linq;
 using ToolsUtilitiesStandard.Helpers;
 using System.Drawing;
+using System.Text;
 
 namespace RenderingLibrary.Graphics
 {
@@ -40,10 +41,27 @@ namespace RenderingLibrary.Graphics
 
     public class InlineVariable
     {
+        /// <summary>
+        /// Variable name, such as "Font". This translates to the left-side of the assignment in the tag. For example
+        /// [Font=Arial] would have a VariableName of "Font".
+        /// </summary>
         public string VariableName;
+
+        /// <summary>
+        /// The start index of the tag in the "stripped" text (after all tags have been removed).
+        /// </summary>
         public int StartIndex;
+
+        /// <summary>
+        /// The number of characters covered by this inline variable. This is the character count on the "stripped" text.
+        /// </summary>
         public int CharacterCount;
         public object Value;
+
+        public override string ToString()
+        {
+            return $"{VariableName} = {Value} at [{StartIndex}] for {CharacterCount} characters";
+        }
     }
 
     #endregion
@@ -61,6 +79,9 @@ namespace RenderingLibrary.Graphics
             set { mDefaultSpriteFont = value; }
         }
 
+        /// <summary>
+        /// The default BitmapFont to use if a Text instance is referencing a null font.
+        /// </summary>
         public static BitmapFont DefaultBitmapFont
         {
             get { return mDefaultBitmapFont; }
@@ -257,6 +278,15 @@ namespace RenderingLibrary.Graphics
                 }
             }
         }
+
+        /// <summary>
+        /// Stores the markup text including BBCode. This should not be
+        /// directly set outside of custom property assignments since setting
+        /// it directly does not update the RawText, WrappedText, or InlineVariables.
+        /// This only exists to make it easier for the code that creates InlineVariables
+        /// to use this.
+        /// </summary>
+        public string StoredMarkupText { get; set; }
 
         public List<string> WrappedText
         {
@@ -525,6 +555,13 @@ namespace RenderingLibrary.Graphics
             get { return mFontScale; }
             set
             {
+                #if DEBUG
+                if (float.IsNaN(value) || float.IsInfinity(value))
+                {
+                    throw new ArgumentException($"Invalid value: {value}. Font scale cannot be NaN.");
+                }
+                #endif
+                
                 var newValue = System.Math.Max(0, value);
 
                 if (newValue != mFontScale)
@@ -605,7 +642,17 @@ namespace RenderingLibrary.Graphics
             RenderBoundaryDefault = true;
         }
 
+        public Text()
+        {
+            Initialize(SystemManagers.Default, "Hello");
+        }
+
         public Text(SystemManagers managers, string text = "Hello")
+        {
+            Initialize(managers, text);
+        }
+
+        private void Initialize(SystemManagers managers, string text)
         {
             Visible = true;
             RenderBoundary = RenderBoundaryDefault;
@@ -636,6 +683,11 @@ namespace RenderingLibrary.Graphics
         }
 
         char[] whatToSplitOn = new char[] { ' ' };
+
+        public static bool UseNewLineWrapping = false;
+        static char[] preservedNewlinableCharacters = new char[] { ',', '-', ':', '.', '?', '!', '&', 
+            // 
+            ')' };
         private void UpdateWrappedText()
         {
             ///////////EARLY OUT/////////////
@@ -645,7 +697,12 @@ namespace RenderingLibrary.Graphics
             }
 
             mWrappedText.Clear();
+            UpdateLines(mWrappedText);
 
+        }
+
+        public void UpdateLines(List<string> lines)
+        {
             var effectiveMaxNumberOfLines = MaxNumberOfLines;
 
             if (TextOverflowVerticalMode == TextOverflowVerticalMode.TruncateLine)
@@ -658,37 +715,16 @@ namespace RenderingLibrary.Graphics
                 }
             }
 
+            if (string.IsNullOrEmpty(mRawText))
+            {
+                return;
+            }
+
             if (effectiveMaxNumberOfLines == 0)
             {
                 return;
             }
             /////////END EARLY OUT///////////
-
-            bool didTruncate = false;
-
-            float wrappingWidth = mWidth / mFontScale;
-            if (mWidth == 0)
-            {
-                wrappingWidth = float.PositiveInfinity;
-            }
-
-            // This allocates like crazy but we're
-            // on the PC and prob won't be calling this
-            // very frequently so let's 
-            String line = String.Empty;
-            String returnString = String.Empty;
-
-            // The user may have entered "\n" in the string, which would 
-            // be written as "\\n".  Let's replace that, shall we?
-            string stringToUse = null;
-            List<string> wordArray = new List<string>();
-
-            if (!string.IsNullOrEmpty(mRawText))
-            {
-                // multiline text editing in Gum can add \r's, so get rid of those:
-                stringToUse = mRawText.Replace("\r\n", "\n");
-                wordArray.AddRange(stringToUse.Split(whatToSplitOn));
-            }
 
             float ellipsisWidth = 0;
             const string ellipsis = "...";
@@ -697,112 +733,226 @@ namespace RenderingLibrary.Graphics
                 ellipsisWidth = MeasureString(ellipsis);
             }
 
-            bool isLastLine = false;
-            while (wordArray.Count != 0)
+            string stringToUse = null;
+            if (!string.IsNullOrEmpty(mRawText))
             {
-                isLastLine = effectiveMaxNumberOfLines != null && mWrappedText.Count == effectiveMaxNumberOfLines - 1;
+                // multiline text editing in Gum can add \r's, so get rid of those:
+                stringToUse = mRawText.Replace("\r\n", "\n");
+            }
 
-                string word = wordArray[0];
-                var wordBeforeNewlineRemoval = word;
-                var isLastWord = wordArray.Count == 1;
+            float wrappingWidth = mWidth / mFontScale;
+            if (mWidth == 0)
+            {
+                wrappingWidth = float.PositiveInfinity;
+            }
 
-                bool containsNewline = false;
-
-                if (ToolsUtilities.StringFunctions.ContainsNoAlloc(word, '\n'))
+            if (UseNewLineWrapping)
+            {
+                if (MeasureString(stringToUse) <= wrappingWidth && stringToUse?.Contains("\n") == false)
                 {
-                    word = word.Substring(0, word.IndexOf('\n'));
-                    containsNewline = true;
+                    lines.Add(stringToUse);
                 }
-
-                // If it's not the last word, we show ellipsis, and the last word plus ellipsis won't fit, then we need
-                // to include part of the word:
-
-                float linePlusWordWidth = MeasureString(line + word);
-
-                var shouldAddEllipsis =
-                    IsTruncatingWithEllipsisOnLastLine &&
-                    isLastLine &&
-                    // If it's the last word, then we don't care if the ellipsis fit, we only want to see if the last word fits...
-                    ((isLastWord && linePlusWordWidth > wrappingWidth) ||
-                     // it's not the last word so we need to see if ellipsis fit
-                     (!isLastWord && linePlusWordWidth + ellipsisWidth >= wrappingWidth));
-                if (shouldAddEllipsis)
+                else
                 {
-                    var addedEllipsis = false;
-                    for (int i = 1; i < word.Length; i++)
+                    StringBuilder currentLine = new StringBuilder();
+                    int? lastWrappableCharacterOnLine = null;
+                    int? lastWrappableCharacterAbsolute = null;
+
+                    // loop through each letter, adding to the lines. If the new letter can cause a newline then we push to the next line
+                    for (int i = 0; i < stringToUse.Length; i++)
                     {
-                        var substringEnd = word.SubstringEnd(i);
+                        var letter = stringToUse[i];
 
-                        float linePlusWordSub = MeasureString(line + substringEnd);
-
-                        if (linePlusWordSub + ellipsisWidth <= wrappingWidth)
+                        if (letter == '\n')
                         {
-                            mWrappedText.Add(line + substringEnd + ellipsis);
-                            addedEllipsis = true;
-                            break;
+                            AddLine(currentLine.ToString());
+                        }
+                        else
+                        {
+                            var widthAfterLetter = MeasureString(currentLine.ToString() + letter);
+
+                            if (widthAfterLetter > wrappingWidth && currentLine.Length > 0)
+                            {
+                                string textToAdd = String.Empty;
+                                if (lastWrappableCharacterOnLine != null)
+                                {
+                                    textToAdd = currentLine.ToString().Substring(0, lastWrappableCharacterOnLine.Value + 1);
+                                    i = lastWrappableCharacterAbsolute.Value + 1;
+                                    letter = stringToUse[i];
+                                }
+                                else
+                                {
+                                    textToAdd = currentLine.ToString();
+                                }
+                                AddLine(textToAdd);
+                            }
+                            // do this before appending since length will tell us the index of the next letter to add
+                            if (char.IsWhiteSpace(letter) || preservedNewlinableCharacters.Contains(letter))
+                            {
+                                lastWrappableCharacterOnLine = currentLine.Length;
+                                lastWrappableCharacterAbsolute = i;
+                            }
+                            currentLine.Append(letter);
                         }
                     }
-
-                    if (!addedEllipsis && line.EndsWith(" "))
+                    if (currentLine.Length > 0)
                     {
-                        mWrappedText.Add(line.SubstringEnd(1) + ellipsis);
-
+                        AddLine(currentLine.ToString());
                     }
-                    break;
-                }
 
-                if (linePlusWordWidth > wrappingWidth)
-                {
-                    if (!string.IsNullOrEmpty(line))
+
+                    void AddLine(string text)
                     {
-                        mWrappedText.Add(line);
-                        if (mWrappedText.Count == effectiveMaxNumberOfLines)
+                        // We toss the leading space on newlines.
+                        if (text.Length > 0 && text[0] == ' ' && lines.Count > 0)
                         {
-                            didTruncate = true;
-                            break;
+                            text = text.Substring(1);
                         }
-                    }
-
-                    //returnString = returnString + line + '\n';
-                    line = String.Empty;
-                }
-
-                // If it's the first word and it's empty, don't add anything
-                // update - but this prevents the word from sarting 
-                //if ((!string.IsNullOrEmpty(word) || !string.IsNullOrEmpty(line)))
-                {
-                    if (wordArray.Count > 1 || word == "")
-                    {
-                        line = line + word + ' ';
-                    }
-                    else
-                    {
-                        line = line + word;
+                        lines.Add(text);
+                        lastWrappableCharacterOnLine = null;
+                        lastWrappableCharacterAbsolute = null;
+                        currentLine.Clear();
                     }
                 }
+            }
+            else
+            {
 
-                wordArray.RemoveAt(0);
+                bool didTruncate = false;
 
-                if (containsNewline)
+                // This allocates like crazy but we're
+                // on the PC and prob won't be calling this
+                // very frequently so let's 
+                String line = String.Empty;
+                String returnString = String.Empty;
+
+                // The user may have entered "\n" in the string, which would 
+                // be written as "\\n".  Let's replace that, shall we?
+                List<string> wordArray = new List<string>();
+
+                if (!string.IsNullOrEmpty(mRawText))
                 {
-                    mWrappedText.Add(line);
-                    if (mWrappedText.Count == effectiveMaxNumberOfLines)
-                    {
-                        didTruncate = true;
+                    // multiline text editing in Gum can add \r's, so get rid of those:
+                    stringToUse = mRawText.Replace("\r\n", "\n");
+                    wordArray.AddRange(stringToUse.Split(whatToSplitOn));
+                }
 
+
+                bool isLastLine = false;
+                while (wordArray.Count != 0)
+                {
+                    isLastLine = effectiveMaxNumberOfLines != null && lines.Count == effectiveMaxNumberOfLines - 1;
+
+                    string word = wordArray[0];
+                    var wordBeforeNewlineRemoval = word;
+                    var isLastWord = wordArray.Count == 1;
+
+                    bool containsNewline = false;
+                    bool startsWithNewline = false;
+
+                    if (ToolsUtilities.StringFunctions.ContainsNoAlloc(word, '\n'))
+                    {
+                        startsWithNewline = word.StartsWith("\n");
+
+                        word = word.Substring(0, word.IndexOf('\n'));
+                        containsNewline = true;
+                    }
+
+                    // If it's not the last word, we show ellipsis, and the last word plus ellipsis won't fit, then we need
+                    // to include part of the word:
+
+                    float linePlusWordWidth = MeasureString(line + word);
+
+                    var shouldAddEllipsis =
+                        IsTruncatingWithEllipsisOnLastLine &&
+                        isLastLine &&
+                        // If it's the last word, then we don't care if the ellipsis fit, we only want to see if the last word fits...
+                        ((isLastWord && linePlusWordWidth > wrappingWidth) ||
+                         // it's not the last word so we need to see if ellipsis fit
+                         (!isLastWord && linePlusWordWidth + ellipsisWidth >= wrappingWidth));
+                    if (shouldAddEllipsis)
+                    {
+                        var addedEllipsis = false;
+                        for (int i = 1; i < word.Length; i++)
+                        {
+                            var substringEnd = word.SubstringEnd(i);
+
+                            float linePlusWordSub = MeasureString(line + substringEnd);
+
+                            if (linePlusWordSub + ellipsisWidth <= wrappingWidth)
+                            {
+                                lines.Add(line + substringEnd + ellipsis);
+                                addedEllipsis = true;
+                                break;
+                            }
+                        }
+
+                        if (!addedEllipsis && line.EndsWith(" "))
+                        {
+                            lines.Add(line.SubstringEnd(1) + ellipsis);
+
+                        }
                         break;
                     }
-                    line = string.Empty;
-                    int indexOfNewline = wordBeforeNewlineRemoval.IndexOf('\n');
-                    wordArray.Insert(0, wordBeforeNewlineRemoval.Substring(indexOfNewline + 1, wordBeforeNewlineRemoval.Length - (indexOfNewline + 1)));
+
+                    if (linePlusWordWidth > wrappingWidth)
+                    {
+                        if (!string.IsNullOrEmpty(line))
+                        {
+                            lines.Add(line);
+                            if (lines.Count == effectiveMaxNumberOfLines)
+                            {
+                                didTruncate = true;
+                                break;
+                            }
+                        }
+
+                        //returnString = returnString + line + '\n';
+                        line = String.Empty;
+                    }
+
+                    // If it's the first word and it's empty, don't add anything
+                    // update - but this prevents the word from starting with a space, which it should be able to 
+                    //if ((!string.IsNullOrEmpty(word) || !string.IsNullOrEmpty(line)))
+                    {
+
+                        if ((wordArray.Count > 1 || word == "") &&
+                            // Update Feb 19, 2023
+                            // don't insert space after if it's a newline. That messes up indexes.
+                            !containsNewline)
+                        {
+                            line = line + word + ' ';
+                        }
+                        else
+                        {
+                            line = line + word;
+                        }
+                    }
+
+                    wordArray.RemoveAt(0);
+
+                    if (containsNewline)
+                    {
+                        lines.Add(line);
+
+
+                        if (lines.Count == effectiveMaxNumberOfLines)
+                        {
+                            didTruncate = true;
+
+                            break;
+                        }
+                        line = string.Empty;
+                        int indexOfNewline = wordBeforeNewlineRemoval.IndexOf('\n');
+                        wordArray.Insert(0, wordBeforeNewlineRemoval.Substring(indexOfNewline + 1, wordBeforeNewlineRemoval.Length - (indexOfNewline + 1)));
+                    }
+                }
+
+                if (effectiveMaxNumberOfLines == null || lines.Count < effectiveMaxNumberOfLines)
+                {
+                    lines.Add(line);
                 }
             }
-
-            if (effectiveMaxNumberOfLines == null || mWrappedText.Count < effectiveMaxNumberOfLines)
-            {
-                mWrappedText.Add(line);
-            }
-
             //if(didTruncate && AddEllipsisOnLastLine && mWrappedText.Count > 0)
             //{
             //    var lastLine = mWrappedText[mWrappedText.Count-1];
@@ -1037,6 +1187,8 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        // When drawing line-by-line, we only pass a single 
+        List<int> individualLineWidth = new List<int>() { 0 };
         private void DrawWithInlineVariables(BitmapFont fontToUse, int requiredWidth, SpriteRenderer spriteRenderer)
         {
             var absoluteTop = mTempForRendering.GetAbsoluteTop();
@@ -1045,8 +1197,13 @@ namespace RenderingLibrary.Graphics
 
             var rotation = this.GetAbsoluteRotation();
             float topOfLine = absoluteTop;
+            var lettersLeft = maxLettersToShow;
             for (int i = 0; i < WrappedText.Count; i++)
             {
+                if(lettersLeft <= 0)
+                {
+                    break;
+                }
                 var absoluteLeft = mTempForRendering.GetAbsoluteLeft();
                 var lineOfText = WrappedText[i];
 
@@ -1062,19 +1219,23 @@ namespace RenderingLibrary.Graphics
                         requiredWidth, widths, spriteRenderer, color,
                         absoluteLeft,
                         topOfLine,
-                        this.GetAbsoluteRotation(), mFontScale, mFontScale, maxLettersToShow, OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier);
+                        this.GetAbsoluteRotation(), mFontScale, mFontScale, lettersLeft, OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier);
 
                     topOfLine += fontToUse.EffectiveLineHeight(mFontScale, mFontScale);
-
+                    maxLettersToShow -= lineOfText.Length;
                 }
                 else
                 {
-
+                    individualLineWidth[0] = widths[i];
                     var lineHeight = fontToUse.EffectiveLineHeight(mFontScale, 1);
                     var defaultBaseline = fontToUse.BaselineY;
 
                     float currentFontScale = FontScale;
+                    float maxFontScale = 1;
                     BitmapFont currentFont = fontToUse;
+
+                    float maxBaseline = currentFontScale * currentFont.BaselineY;
+
                     foreach (var substring in substrings)
                     {
                         for (int variableIndex = 0; variableIndex < substring.Variables.Count; variableIndex++)
@@ -1084,17 +1245,27 @@ namespace RenderingLibrary.Graphics
                             {
                                 currentFontScale = (float)variable.Value;
                                 lineHeight = System.Math.Max(lineHeight, currentFont.EffectiveLineHeight(currentFontScale, 1));
+                                maxFontScale = System.Math.Max(maxFontScale, currentFontScale);
+                                maxBaseline = System.Math.Max(maxBaseline, currentFontScale * currentFont.BaselineY);
                             }
                             else if (variable.VariableName == nameof(BitmapFont))
                             {
                                 currentFont = (BitmapFont)variable.Value;
                                 lineHeight = System.Math.Max(lineHeight, currentFont.EffectiveLineHeight(currentFontScale, 1));
+                                maxBaseline = System.Math.Max(maxBaseline, currentFontScale * currentFont.BaselineY);
+
                             }
                         }
                     }
 
+
                     foreach (var substring in substrings)
                     {
+                        if (lettersLeft <= 0)
+                        {
+                            break;
+                        }
+
                         lineByLineList[0] = substring.Substring;
                         color = Color;
                         var fontScale = mFontScale;
@@ -1131,18 +1302,20 @@ namespace RenderingLibrary.Graphics
 
                         var effectiveTopOfLine = topOfLine;
 
-                        if (fontToUse != effectiveFont)
-                        {
-                            var baselineDifference = fontToUse.BaselineY - effectiveFont.BaselineY;
-                            effectiveTopOfLine += baselineDifference * fontScale;
-                        }
+                        var baselineDifference = maxBaseline - (fontScale * effectiveFont.BaselineY);
+                        effectiveTopOfLine += baselineDifference;
 
                         var rect = effectiveFont.DrawTextLines(lineByLineList, HorizontalAlignment,
                             this,
-                            requiredWidth, widths, spriteRenderer, color,
+                            requiredWidth, individualLineWidth, spriteRenderer, color,
                             absoluteLeft,
                             effectiveTopOfLine,
-                            rotation, fontScale, fontScale, maxLettersToShow, OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier);
+                            rotation, fontScale, fontScale, lettersLeft, OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier);
+
+                        if(lettersLeft != null)
+                        {
+                            lettersLeft -= substring.Substring.Length;
+                        }
 
                         absoluteLeft += rect.Width;
 

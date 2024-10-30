@@ -26,13 +26,19 @@ To set a custom font
 
 Custom font files are .fnt files created by BitmapFontGenerator. Gum automatically creates .fnt files whenever a font value changes when UseCustomFonts is unchecked.&#x20;
 
+{% hint style="info" %}
+The .fnt file format used by Gum is the Angelcode BitmapFontGenerator format. This can be produced by a number of applications. Note that this is not the same as the old .fnt extension used for Windows fonts. [https://docs.fileformat.com/font/fnt/](https://docs.fileformat.com/font/fnt/)
+{% endhint %}
+
+### Creating Fonts with BitmapFontGenerator
+
 To create your own font file:
 
 1. Download Bitmap Font Generator from [https://angelcode.com/products/bmfont/](https://angelcode.com/products/bmfont/)
 2. Select **Options** -> **Font Settings**
 3.  Use the dropdown to select the font you would like to use. All .ttf files installed on the current machine should appear in the dropdown. If you would like to install a new .ttf, restart Bitmap Font Generator after installing the font.
 
-    ![](<../../.gitbook/assets/image (7) (1).png>)
+    ![](<../../.gitbook/assets/image (7) (1) (1) (1).png>)
 4. After changing the settings, click **OK**
 5.  Select which characters you would like included in your font. Adding characters can increase the font size, but may be required depending on which characters you intend to use.
 
@@ -41,12 +47,40 @@ To create your own font file:
 7. Select a Bit depth of 32 (or else transparencies won’t come through).
 8. Select the texture width and height. For best performance, select a size which will contain all of the characters you have selected. Also, many game engines prefer textures which are _power of two_ such as 256, 512, 1024, or 2048. Sizes larger than 2048 may not render properly on some hardware.
 9. Change the **Textures** option to **png – Portable Network Graphics**
-10. Press **OK** to apply the changes
+10. Be sure to keep the F**ont descriptor** as **Text**.
+11. Press **OK** to apply the changes
 
-    ![](<../../.gitbook/assets/image (3) (1) (1).png>)
+
+
+    <figure><img src="../../.gitbook/assets/25_19 42 34.png" alt=""><figcaption><p>Options for creating .fnt file</p></figcaption></figure>
+
+Also, note that if you are using outline, you will want to have the following values:
+
+* A: outline
+* R: glyph
+* G: glyph
+* B: glyph
 
 You can verify that the settings will produce a proper PNG by selecting **Options** -> **Visualize**. If you see “No Output!” then you need to select characters to export. See the above step for more information.
 
 To save the font, select **Options**->**Save bitmap font as…** to save your .fnt and .png files.
 
 Once you have saved your files, you can select the .fnt to use in your project.
+
+### Creating Fonts with Hiero
+
+The Hiero tool can also be used to generate .fnt files:
+
+{% embed url="https://libgdx.com/wiki/tools/hiero" %}
+
+To generate a font:
+
+1. Download and open the Hiero tool
+2.  Set the values needed for your font, such as font type, size, and effects\
+
+
+    <figure><img src="../../.gitbook/assets/image (79).png" alt=""><figcaption><p>Font in Hiero tool</p></figcaption></figure>
+3. Select **File** -> **Save BMFont Files (text)...**
+4. Select the location to save the files, such as in your project's Contents folder, or the subfolder which contains your Gum project
+
+This .fnt file can now be loaded in the Gum tool or in code just like any other .fnt file.

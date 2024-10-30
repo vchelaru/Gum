@@ -27,6 +27,8 @@ namespace WpfDataUi.Controls
 
         public decimal? LabelDragValueRounding { get; set; } = 1;
 
+        public bool EnableLabelDragValueChange { get; set; } = true;
+
         #endregion
 
         #region Properties
@@ -260,6 +262,8 @@ namespace WpfDataUi.Controls
         {
             // So we don't exlicitly set values when losing focus
             this.mTextBoxLogic.HasUserChangedAnything = false;
+
+            mTextBoxLogic.TextAtStartOfEditing = this.TextBox.Text;
         }
 
         private void TextBox_GotFocus(object sender, RoutedEventArgs e)
@@ -267,17 +271,21 @@ namespace WpfDataUi.Controls
             RefreshPlaceholderText();
         }
 
+        #region Label Dragging
         double? currentDownX;
+        double? pressedX;
         private double unroundedValue;
 
         [DllImport("User32.dll")]
         private static extern bool SetCursorPos(int X, int Y);
 
+
         private void Label_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (mTextBoxLogic.IsNumeric)
+            if (mTextBoxLogic.IsNumeric && EnableLabelDragValueChange)
             {
                 currentDownX = e.GetPosition(this).X;
+                pressedX = currentDownX;
 
                 System.Windows.Input.Mouse.Capture(Label);
 
@@ -286,6 +294,13 @@ namespace WpfDataUi.Controls
                 if (getValueStatus == ApplyValueResult.Success)
                 {
                     var converter = TypeDescriptor.GetConverter(mTextBoxLogic.InstancePropertyType);
+
+                    if(valueOnInstance == null)
+                    {
+                        // If increasing from null, we should just treat it as if it's 0
+                        valueOnInstance = 0;
+                    }
+
                     unroundedValue = (double)converter.ConvertTo(valueOnInstance, typeof(double));
                 }
             }
@@ -295,49 +310,62 @@ namespace WpfDataUi.Controls
         {
             if(currentDownX != null)
             {
-                var newX = e.GetPosition(this).X;
-                var difference = newX - currentDownX.Value;
-                currentDownX = newX;
-
-                if(difference != 0)
+                if ( e.LeftButton == MouseButtonState.Pressed)
                 {
-                    unroundedValue += difference;
-                    var rounded = unroundedValue;
-                    if(LabelDragValueRounding != null)
+                    var newX = e.GetPosition(this).X;
+                    var difference = newX - currentDownX.Value;
+                    currentDownX = newX;
+
+                    if(difference != 0)
                     {
-                        var isInt = Math.Abs(LabelDragValueRounding.Value - (int)LabelDragValueRounding.Value) < .0001m;
-
-                        rounded = RoundDouble(unroundedValue, (double)LabelDragValueRounding.Value);
-
-                        if(isInt)
+                        unroundedValue += difference;
+                        var rounded = unroundedValue;
+                        if(LabelDragValueRounding != null)
                         {
-                            rounded = (int)(System.Math.Round(rounded) + (System.Math.Sign(rounded) * .5f));
+                            var isInt = Math.Abs(LabelDragValueRounding.Value - (int)LabelDragValueRounding.Value) < .0001m;
+
+                            rounded = RoundDouble(unroundedValue, (double)LabelDragValueRounding.Value);
+
+                            if(isInt)
+                            {
+                                rounded = (int)(System.Math.Round(rounded) + (System.Math.Sign(rounded) * .5f));
+                            }
+                        }
+
+                        var getValueStatus = TryGetValueOnUi(out object valueOnInstance);
+
+                        if(getValueStatus == ApplyValueResult.Success)
+                        {
+                            var newValue = mTextBoxLogic.GetValueInDirection(difference, rounded);
+                            TrySetValueOnUi(newValue);
+                            lastApplyValueResult = mTextBoxLogic.TryApplyToInstance(SetPropertyCommitType.Intermediate);
                         }
                     }
-
-                    var getValueStatus = TryGetValueOnUi(out object valueOnInstance);
-
-                    if(getValueStatus == ApplyValueResult.Success)
+                }
+                else
+                {
+                    if(System.Windows.Input.Mouse.Captured == Label)
                     {
-                        var newValue = mTextBoxLogic.GetValueInDirection(difference, rounded);
-                        TrySetValueOnUi(newValue);
-                        lastApplyValueResult = mTextBoxLogic.TryApplyToInstance(SetPropertyCommitType.Intermediate);
+                        System.Windows.Input.Mouse.Capture(null);
                     }
                 }
-
             }
         }
 
         private void Label_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            if (mTextBoxLogic.IsNumeric && currentDownX != 0)
+            if (mTextBoxLogic.IsNumeric && currentDownX != 0 && EnableLabelDragValueChange &&
+                // If the user changed the value with the mouse. Otherwise, it was a simple click
+                pressedX != e.GetPosition(this).X)
             {
                 lastApplyValueResult = mTextBoxLogic.TryApplyToInstance(SetPropertyCommitType.Full);
 
-                currentDownX = null;
+                pressedX = null;
                 System.Windows.Input.Mouse.Capture(null);
             }
         }
+
+        #endregion
 
         public double RoundDouble(double valueToRound, double multipleOf)
         {

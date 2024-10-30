@@ -140,6 +140,11 @@
                 <ListBox ItemsSource="{Binding SelectedAnimation.Keyframes}" 
                        SelectedItem="{Binding SelectedAnimation.SelectedKeyframe}" 
                        KeyDown="HandleAnimationKeyframeListBoxKey">
+                    <ListBox.ContextMenu>
+                        <ContextMenu 
+                            ItemsSource="{Binding AnimationStateRightClickItems}"
+                            x:Name="AnimationStateContextMenu"></ContextMenu>
+                    </ListBox.ContextMenu>
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">

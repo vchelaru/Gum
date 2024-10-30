@@ -7,6 +7,7 @@
              xmlns:local="clr-namespace:WpfDataUi"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300"
+             Padding="0,1,0,0"
              >
     <!--Vic sasks - why is this wrapped in a stack panel? Shouldn't an ItemsControl expand the same as the stack panel? Having it in a stack panel screws with horizontal layouts...-->
     <!--<StackPanel Background="Purple">-->
@@ -29,16 +30,30 @@
                         Width="{Binding Width}"
                         BorderThickness="{Binding CategoryBorderThickness}"
                         VerticalAlignment="Stretch"  
-                        IsExpanded="True" 
-                        Margin="1"
+                        IsExpanded="{Binding IsExpanded}" 
+                        Margin="0,0,0,4"
+                        Padding="0,0,0,2"
                         local:DataGridAttachedProperties.HideExpanderArrow="{Binding HideHeader}"
                               >
-                    <ItemsControl x:Name="ItemsControlInstance" ItemsSource="{Binding Members}" Focusable="False">
+                    <ItemsControl x:Name="ItemsControlInstance" ItemsSource="{Binding Members}" Focusable="False" AlternationCount="2">
+                        <ItemsControl.Resources>
+                            <SolidColorBrush x:Key="LightBg" Color="White" Opacity="0.1"/>
+                            <SolidColorBrush x:Key="DarkBg" Color="Black" Opacity="0.05"/>
+                        </ItemsControl.Resources>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <DataUi:SingleDataUiContainer FontSize="12" Margin="3,0,3,3" Background="{Binding BackgroundColor}"/>
+                                <DataUi:SingleDataUiContainer x:Name="Container" FontSize="12" Padding="2,1"/>
+                                <DataTemplate.Triggers>
+                                    <Trigger Property="ItemsControl.AlternationIndex" Value="0">
+                                        <Setter TargetName="Container" Property="Background" Value="{StaticResource LightBg}"/>
+                                    </Trigger>
+                                    <Trigger Property="ItemsControl.AlternationIndex" Value="1">
+                                        <Setter TargetName="Container" Property="Background" Value="{StaticResource DarkBg}"/>
+                                    </Trigger>
+                                </DataTemplate.Triggers>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
+
                     </ItemsControl>
                 </Expander>
             </DataTemplate>

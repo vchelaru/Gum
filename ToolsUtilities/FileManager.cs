@@ -9,7 +9,6 @@ using System.Runtime.InteropServices.ComTypes;
 
 namespace ToolsUtilities
 {
-    #region XML Docs
     /// <summary>
     /// Utility class used to help dealing with files.
     /// </summary>
@@ -17,20 +16,32 @@ namespace ToolsUtilities
     /// This code is a copy of code from FlatRedBall.  It's ok,
     /// Victor Chelaru wrote that code and he's the one who put it in here.
     /// </remarks>
-    #endregion
     public static partial class FileManager
     {
         public const char DefaultSlash = '\\';
         #region Fields
 
-        static string mRelativeDirectory =
-#if UWP
-            "./";
-#elif ANDROID || IOS
-            Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).ToLower().Replace("/", "\\") + "\\";
+        public static string ExeLocation
+        {
+            get
+            {
+#if ANDROID || IOS
+            return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).ToLower().Replace("/", "\\") + "\\";
 #else
-            Path.GetDirectoryName(AppContext.BaseDirectory).ToLower().Replace("/", "\\") + "\\";
+                string result = AppContext.BaseDirectory;
+
+                // Blazor-WASM returns "/" for BaseDirectory, which is invalid for GetDirectoryName.
+                if (result != "/")
+                    result = Path.GetDirectoryName(result);
+
+                return result.Replace('/', Path.DirectorySeparatorChar)
+                             .Replace('\\', Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
 #endif
+            }
+        }
+
+        static string mRelativeDirectory = ExeLocation;
+
         static Dictionary<Type, XmlSerializer> mXmlSerializers = new Dictionary<Type, XmlSerializer>();
 
         #endregion
@@ -42,9 +53,23 @@ namespace ToolsUtilities
             get { return mRelativeDirectory; }
             set
             {
-                mRelativeDirectory = value;
+                if (IsRelative(value))
+                {
+                    mRelativeDirectory = ExeLocation + value;
+                }
+                else
+                {
+                    mRelativeDirectory = value.Replace('/', Path.DirectorySeparatorChar)
+                        .Replace('\\', Path.DirectorySeparatorChar);
+                }
             }
         }
+
+        #endregion
+
+        #region Delegates
+
+        public static Func<string, Stream> CustomGetStreamFromFile;
 
         #endregion
 
@@ -91,13 +116,13 @@ namespace ToolsUtilities
 
         public static bool FileExists(string fileName, bool ignoreExtensions)
         {
-            fileName = Standardize(fileName, makeAbsolute: true);
+            fileName = Standardize(fileName, preserveCase: true, makeAbsolute: true);
             if (!ignoreExtensions)
             {
-#if ANDROID || IOS || WINDOWS_8 
+#if ANDROID || IOS
 				try
                 {
-					if(fileName.StartsWith(".\\"))
+					if(fileName.StartsWith(".\\") || fileName.StartsWith("./"))
 					{
 						fileName = fileName.Substring(2);
 					}
@@ -116,9 +141,6 @@ namespace ToolsUtilities
             }
             else
             {
-#if WINDOWS_8 || UWP
-                throw new NotImplementedException();
-#else
                 // This takes a little bit of work
                 string fileWithoutExtension = FileManager.RemoveExtension(fileName);
 
@@ -137,20 +159,20 @@ namespace ToolsUtilities
                 }
 
                 return false;
-#endif
             }
         }
 
+        public static bool DirectoryExists(string directory)
+        {
+            directory = Standardize(directory, true, true);
+
+            return Directory.Exists(directory);
+        }
 
         public static string FromFileText(string fileName)
         {
-#if WINDOWS_8 || UWP
-            return FromFileText(fileName, Encoding.UTF8);
-
-#else
             Encoding encoding = Encoding.Default;
             return FromFileText(fileName, encoding);
-#endif
         }
 
         public static string FromFileText(string fileName, Encoding encoding)
@@ -170,9 +192,7 @@ namespace ToolsUtilities
                 using (System.IO.StreamReader sr = new StreamReader(fileStream, encoding))
                 {
                     containedText = sr.ReadToEnd();
-#if !WINDOWS_8 && !UWP
                     sr.Close();
-#endif
                 }
             }
 
@@ -341,7 +361,7 @@ namespace ToolsUtilities
             }
 
 
-#if XBOX360 || ANDROID || IOS || UWP
+#if ANDROID || IOS
             // Justin Johnson 6/6/2017: this compiler flagged code might be eliminated now that 
             // this whole method is more cross platform friendly!
 			if(fileName.Length > 1 && fileName[0] == '.' && (fileName[1] == '/' || fileName[1] == '\\'))
@@ -350,9 +370,17 @@ namespace ToolsUtilities
                 return true;
 
 #else
-            if (fileName.Length < 1 || !Path.IsPathRooted(fileName))
+            if(fileName.StartsWith(ExeLocation))
             {
-                relative = true;
+                relative = false;
+            }
+            else if (fileName.Length < 1 || !Path.IsPathRooted(fileName))
+            {
+                // On linux and mac, we need to still check if it has a root:
+                var root = Path.GetPathRoot(fileName);
+
+
+                relative = string.IsNullOrWhiteSpace(root);
             }
 #endif
             return relative;
@@ -423,7 +451,7 @@ namespace ToolsUtilities
                 pathToMakeRelativeTo = FileManager.Standardize(pathToMakeRelativeTo, preserveCase);
 
                 // Use the old method if we can
-                if (pathToMakeRelative.ToLowerInvariant().StartsWith(pathToMakeRelativeTo.ToLowerInvariant()))
+                if (pathToMakeRelative.StartsWith(pathToMakeRelativeTo, StringComparison.OrdinalIgnoreCase))
                 {
                     pathToMakeRelative = pathToMakeRelative.Substring(pathToMakeRelativeTo.Length);
                 }
@@ -432,8 +460,8 @@ namespace ToolsUtilities
                     // Otherwise, we have to use the new method to identify the common root
 
                     // Split the path strings
-                    string[] path = pathToMakeRelative.Split('/');
-                    string[] relpath = pathToMakeRelativeTo.Split('/');
+                    string[] path = pathToMakeRelative.Split(System.IO.Path.DirectorySeparatorChar);
+                    string[] relpath = pathToMakeRelativeTo.Split(System.IO.Path.DirectorySeparatorChar);
 
                     string relativepath = string.Empty;
 
@@ -451,7 +479,7 @@ namespace ToolsUtilities
                         for (int i = start; i < relpath.Length; i++)
                         {
                             if (relpath[i] != string.Empty)
-                                relativepath += @"../";
+                                relativepath += @".." + System.IO.Path.DirectorySeparatorChar; 
                         }
 
                         // if the current relative path is still empty, and there are more than one entries left in the path,
@@ -465,7 +493,7 @@ namespace ToolsUtilities
                         for (int i = start; i < path.Length; i++)
                         {
                             relativepath += path[i];
-                            if (i < path.Length - 1) relativepath += "/";
+                            if (i < path.Length - 1) relativepath += System.IO.Path.DirectorySeparatorChar;
                         }
 
                         pathToMakeRelative = relativepath;
@@ -485,9 +513,11 @@ namespace ToolsUtilities
 
         public static string RemoveDotDotSlash(string fileNameToFix)
         {
+            fileNameToFix = fileNameToFix.Replace('\\', Path.DirectorySeparatorChar)
+                .Replace('/', Path.DirectorySeparatorChar);
+
             if (fileNameToFix.Contains(".."))
             {
-                fileNameToFix = fileNameToFix.Replace("\\", "/");
 
                 // First let's get rid of any ..'s that are in the middle
                 // for example:
@@ -498,23 +528,25 @@ namespace ToolsUtilities
                 // 
                 // "content/background/outdoorsanim/outdoorsanim.achx"
 
-                int indexOfNextDotDotSlash = fileNameToFix.IndexOf("../");
+                var dotDotSlash = ".." + Path.DirectorySeparatorChar;
+
+                int indexOfNextDotDotSlash = fileNameToFix.IndexOf(dotDotSlash);
 
                 bool shouldLoop = indexOfNextDotDotSlash > 0;
 
                 while (shouldLoop)
                 {
-                    int indexOfPreviousDirectory = fileNameToFix.LastIndexOf('/', indexOfNextDotDotSlash - 2, indexOfNextDotDotSlash - 2);
+                    int indexOfPreviousDirectory = fileNameToFix.LastIndexOf(Path.DirectorySeparatorChar, indexOfNextDotDotSlash - 2, indexOfNextDotDotSlash - 2);
 
                     fileNameToFix = fileNameToFix.Remove(indexOfPreviousDirectory + 1, indexOfNextDotDotSlash - indexOfPreviousDirectory + 2);
 
-                    indexOfNextDotDotSlash = fileNameToFix.IndexOf("../");
+                    indexOfNextDotDotSlash = fileNameToFix.IndexOf(dotDotSlash);
 
                     shouldLoop = indexOfNextDotDotSlash > 0;
                 }
             }
 
-            return fileNameToFix.Replace("\\", "/");
+            return fileNameToFix;
         }
 
         #region XML Docs
@@ -604,7 +636,8 @@ namespace ToolsUtilities
             }
 
             // normalize slash direction
-            newFileName = newFileName.Replace(@"\", "/");
+            newFileName = newFileName.Replace('\\', Path.DirectorySeparatorChar)
+                .Replace('/', Path.DirectorySeparatorChar);
 
             return newFileName;
         }
@@ -624,7 +657,7 @@ namespace ToolsUtilities
             //ThrowExceptionIfFileDoesntExist(fileName);
 
 #if ANDROID || IOS
-            // Silverlight and 360 don't like ./ at the start of the file name, but that's what we use to identify an absolute path
+            // Mobile platforms don't like ./ at the start of the file name, but that's what we use to identify an absolute path
 			fileName = TryRemoveLeadingDotSlash (fileName);
 #endif
 
@@ -640,9 +673,7 @@ namespace ToolsUtilities
                     throw new IOException("Could not deserialize the XML file"
                         + Environment.NewLine + fileName, e);
                 }
-#if !WINDOWS_8 && !UWP
                 stream.Close();
-#endif
             }
 
             return objectToReturn;
@@ -659,12 +690,28 @@ namespace ToolsUtilities
 
         public static Stream GetStreamForFile(string fileName)
         {
-#if ANDROID || IOS || WINDOWS_8
-            fileName = TryRemoveLeadingDotSlash(fileName);
-			return Microsoft.Xna.Framework.TitleContainer.OpenStream(fileName);
-#else
-            return System.IO.File.OpenRead(fileName);
-#endif
+
+            try
+            {
+
+    #if ANDROID || IOS
+                fileName = TryRemoveLeadingDotSlash(fileName);
+			    return Microsoft.Xna.Framework.TitleContainer.OpenStream(fileName);
+    #else
+                if(CustomGetStreamFromFile != null)
+                {
+                    return CustomGetStreamFromFile(fileName);
+                }
+                else
+                {
+                    return System.IO.File.OpenRead(fileName);
+                }
+    #endif
+            }
+            catch (Exception e)
+            {
+                throw new IOException("Could not get the stream for the file " + fileName, e);
+            }
         }
 
         public static T XmlDeserializeFromStream<T>(Stream stream)
@@ -721,17 +768,11 @@ namespace ToolsUtilities
             serializer.Serialize(memoryStream, objectToSerialize);
 
 
-#if SILVERLIGHT || WINDOWS_PHONE  || (XBOX360 && XNA4) || MONODROID || WINDOWS_8
+#if MONODROID
 
             byte[] asBytes = memoryStream.ToArray();
 
             stringToSerializeTo = System.Text.Encoding.UTF8.GetString(asBytes, 0, asBytes.Length);
-#elif XBOX360
-            
-            throw new NotImplementedException("XmlSerialization to string is not supported yet");
-
-
-
 #else
 
             stringToSerializeTo = System.Text.Encoding.UTF8.GetString(memoryStream.ToArray());
@@ -742,11 +783,8 @@ namespace ToolsUtilities
     }
 
 
-    // Stuff that only works on desktop (and not Windows RT)
     public static partial class FileManager
     {
-#if !UWP
-
         public static string UserApplicationData =>
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @"\";
 
@@ -1206,7 +1244,7 @@ namespace ToolsUtilities
 
         public static void XmlSerialize(Type type, object objectToSerialize, string fileName)
         {
-                // Make sure that the directory for the file exists
+            // Make sure that the directory for the file exists
             string directory = FileManager.GetDirectory(fileName);
             if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
             {
@@ -1258,7 +1296,6 @@ namespace ToolsUtilities
             return objectToReturn;
         }
 
-#endif
         public static bool IsUrl(string fileName)
         {
             return fileName.IndexOf("http:") == 0 || fileName.IndexOf("https:") == 0;

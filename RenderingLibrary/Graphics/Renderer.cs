@@ -7,6 +7,7 @@ using BlendState = Gum.BlendState;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
 using Gum;
+using System.Reflection.Emit;
 
 namespace RenderingLibrary.Graphics
 {
@@ -53,6 +54,7 @@ namespace RenderingLibrary.Graphics
         Texture2D mDottedLineTexture;
 
         public static object LockObject = new object();
+
 
         #endregion
 
@@ -172,12 +174,6 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        public SamplerState SamplerState
-        {
-            get;
-            set;
-        }
-
         public SpriteRenderer SpriteRenderer
         {
             get
@@ -235,13 +231,15 @@ namespace RenderingLibrary.Graphics
         // vs XNA thing, but I traced it down to the zoom thing.
         // I'm going to add a bool here to control it.
         public static bool ApplyCameraZoomOnWorldTranslation { get; set; } = false;
+
+        public static TextureFilter TextureFilter { get; set; } = TextureFilter.Point;
+
         #endregion
 
         #region Methods
 
         public void Initialize(GraphicsDevice graphicsDevice, SystemManagers managers)
         {
-            SamplerState = SamplerState.LinearClamp;
             mCamera = new RenderingLibrary.Camera();
 
             if (graphicsDevice != null)
@@ -338,6 +336,10 @@ namespace RenderingLibrary.Graphics
                 mRenderStateVariables.BlendState = Renderer.NormalBlendState;
                 mRenderStateVariables.Wrap = false;
 
+                // todo - need to handle more advanced filtering here, but for now let's hook
+                // in to linear to make it work:
+                mRenderStateVariables.Filtering = TextureFilter == TextureFilter.Linear;
+
                 RenderLayer(managers, layer);
 
                 if (oldSampler != null)
@@ -361,6 +363,10 @@ namespace RenderingLibrary.Graphics
 
                 mRenderStateVariables.BlendState = Renderer.NormalBlendState;
                 mRenderStateVariables.Wrap = false;
+
+                // todo - need to handle more advanced filtering here, but for now let's hook
+                // in to linear to make it work:
+                mRenderStateVariables.Filtering = TextureFilter == TextureFilter.Linear;
 
                 for (int i = 0; i < layers.Count; i++)
                 {
@@ -405,6 +411,27 @@ namespace RenderingLibrary.Graphics
             spriteRenderer.EndSpriteBatch();
         }
 
+
+        // Immediate mode calls:
+        public void Begin()
+        {
+            SpriteBatchStack.PerformStartOfLayerRenderingLogic();
+
+            spriteRenderer.BeginSpriteBatch(mRenderStateVariables, mLayers[0], BeginType.Push, mCamera);
+        }
+
+
+        public void Draw(IRenderableIpso renderable)
+        {
+            Draw(SystemManagers.Default, mLayers[0], renderable);
+        }
+
+        public void End()
+        {
+            spriteRenderer.EndSpriteBatch();
+        }
+
+
         private void PreRender(IList<IRenderableIpso> renderables)
         {
 #if DEBUG
@@ -438,25 +465,31 @@ namespace RenderingLibrary.Graphics
             for (int i = 0; i < count; i++)
             {
                 var renderable = whatToRender[i];
-                if(renderable.Visible)
+                Draw(managers, layer, renderable);
+            }
+        }
+
+
+        private void Draw(SystemManagers managers, Layer layer, IRenderableIpso renderable)
+        {
+            if (renderable.Visible)
+            {
+                var oldClip = mRenderStateVariables.ClipRectangle;
+                AdjustRenderStates(mRenderStateVariables, layer, renderable);
+                bool didClipChange = oldClip != mRenderStateVariables.ClipRectangle;
+
+                renderable.Render(managers);
+
+
+                if (RenderUsingHierarchy)
                 {
-                    var oldClip = mRenderStateVariables.ClipRectangle;
-                    AdjustRenderStates(mRenderStateVariables, layer, renderable);
-                    bool didClipChange = oldClip != mRenderStateVariables.ClipRectangle;
+                    Render(renderable.Children, managers, layer);
+                }
 
-                    renderable.Render(managers);
-
-
-                    if (RenderUsingHierarchy)
-                    {
-                        Render(renderable.Children, managers, layer);
-                    }
-
-                    if (didClipChange)
-                    {
-                        mRenderStateVariables.ClipRectangle = oldClip;
-                        spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera);
-                    }
+                if (didClipChange)
+                {
+                    mRenderStateVariables.ClipRectangle = oldClip;
+                    spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera);
                 }
             }
         }
@@ -637,6 +670,77 @@ namespace RenderingLibrary.Graphics
         }
 
         #endregion
+
+    }
+
+    public class GumBatch
+    {
+        enum GumBatchState
+        {
+            NotRendering,
+            BeginCalled
+        }
+
+
+        GumBatchState State;
+        SystemManagers systemManagers;
+        Text internalTextForRendering;
+        public GumBatch()
+        {
+            systemManagers = SystemManagers.Default;
+            internalTextForRendering = new Text(systemManagers);
+        }
+
+        public void Begin()
+        {
+            if(State == GumBatchState.BeginCalled)
+            {
+                throw new InvalidOperationException("Begin has already been called. You must call End before calling Begin again.");
+            }
+
+            State = GumBatchState.BeginCalled;
+
+
+
+            systemManagers.Renderer.Begin();
+        }
+
+        public void DrawString(BitmapFont font, string text, Microsoft.Xna.Framework.Vector2 position, Microsoft.Xna.Framework.Color color)
+        {
+            if (State == GumBatchState.NotRendering)
+            {
+                throw new InvalidOperationException("You must call Begin before calling DrawString");
+            }
+
+            internalTextForRendering.BitmapFont = font;
+            internalTextForRendering.Width = 0;
+            internalTextForRendering.RawText = text;
+            internalTextForRendering.X = position.X;
+            internalTextForRendering.Y = position.Y;
+            internalTextForRendering.Color = color.ToSystemDrawing();
+            Draw(internalTextForRendering);
+        }
+
+        public void Draw(IRenderableIpso renderable)
+        {
+            if(State == GumBatchState.NotRendering)
+            {
+                throw new InvalidOperationException("You must call Begin before calling Draw");
+            }
+
+            systemManagers.Renderer.Draw(renderable);
+        }
+
+        public void End()
+        {
+            if(State == GumBatchState.NotRendering)
+            {
+                throw new InvalidOperationException("You must call Begin before calling End");
+            }
+            State = GumBatchState.NotRendering;
+
+            systemManagers.Renderer.End();
+        }
 
 
     }
@@ -906,7 +1010,8 @@ namespace RenderingLibrary.Graphics
                                        new DeviceManager(graphicsDevice)));
             }
 
-            try { Effect = mContentManager.Load<Effect>("Content/shader"); } catch { }
+            // Shader should be capitalized
+            try { Effect = mContentManager.Load<Effect>("Content/Shader"); } catch { }
         }
 
         static EffectTechnique GetTechniqueVariant(bool useDefaultOrPointFilter, EffectTechnique point, EffectTechnique pointLinearized, EffectTechnique linear, EffectTechnique linearLinearized)

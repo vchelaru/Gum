@@ -24,6 +24,61 @@ namespace MonoGameGum.GueDeriving
             }
         }
 
+        public Gum.BlendState BlendState
+        {
+            get => ContainedText.BlendState;
+            set
+            {
+                ContainedText.BlendState = value;
+                NotifyPropertyChanged();
+                NotifyPropertyChanged(nameof(Blend));
+            }
+        }
+
+        public Gum.RenderingLibrary.Blend Blend
+        {
+            get
+            {
+                return Gum.RenderingLibrary.BlendExtensions.ToBlend(ContainedText.BlendState);
+            }
+            set
+            {
+                BlendState = Gum.RenderingLibrary.BlendExtensions.ToBlendState(value);
+                // NotifyPropertyChanged handled by BlendState:
+            }
+        }
+
+        public int Red
+        {
+            get => mContainedText.Red;
+            set => mContainedText.Red = value;
+        }
+
+        public int Green
+        {
+            get => mContainedText.Green;
+            set => mContainedText.Green = value;
+        }
+
+        public int Blue
+        {
+            get => mContainedText.Blue;
+            set => mContainedText.Blue = value;
+        }
+
+        public Microsoft.Xna.Framework.Color Color
+        {
+            get
+            {
+                return RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedText.Color);
+            }
+            set
+            {
+                ContainedText.Color = RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
+                NotifyPropertyChanged();
+            }
+        }
+
         public HorizontalAlignment HorizontalAlignment
         {
             get => ContainedText.HorizontalAlignment;
@@ -34,6 +89,34 @@ namespace MonoGameGum.GueDeriving
         {
             get => ContainedText.VerticalAlignment;
             set => ContainedText.VerticalAlignment = value;
+        }
+
+        public BitmapFont BitmapFont
+        {
+            get => ContainedText.BitmapFont;
+            set
+            {
+                if (value != BitmapFont)
+                {
+                    ContainedText.BitmapFont = value;
+                    NotifyPropertyChanged();
+                    UpdateLayout();
+                }
+            }
+        }
+
+        public float FontScale
+        {
+            get => ContainedText.FontScale;
+            set
+            {
+                if (value != FontScale)
+                {
+                    ContainedText.FontScale = value;
+                    NotifyPropertyChanged();
+                    UpdateLayout();
+                }
+            }
         }
 
         public string Text
@@ -67,12 +150,14 @@ namespace MonoGameGum.GueDeriving
             {
                 var textRenderable = new Text(SystemManagers.Default);
                 textRenderable.RenderBoundary = false;
+                mContainedText = textRenderable;
                 
                 SetContainedObject(textRenderable);
                 Width = 0;
                 WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
                 Height = 0;
                 HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+                this.FontSize = 18;
 
                 textRenderable.RawText = "Hello World";
             }

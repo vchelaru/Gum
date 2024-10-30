@@ -4,6 +4,8 @@ using System.Linq;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Content;
 using System.Collections;
+using System.Globalization;
+using Microsoft.Xna.Framework;
 using RenderingLibrary.Math;
 using RenderingLibrary.Math.Geometry;
 using ToolsUtilities;
@@ -44,7 +46,7 @@ namespace RenderingLibrary.Graphics
 
         public Texture2D Texture
         {
-            get { return mTextures[0]; }
+            get { return mTextures.Length > 0 ? mTextures[0] : null; }
             set
             {
                 mTextures[0] = value;
@@ -88,23 +90,63 @@ namespace RenderingLibrary.Graphics
 
         public BitmapFont(string fontFile, SystemManagers managers)
         {
-
-#if ANDROID || IOS
-			fontFile = fontFile.ToLowerInvariant();
-#endif
-
             string fontContents = FileManager.FromFileText(fontFile);
-            mFontFile = FileManager.Standardize(fontFile);
+            mFontFile = FileManager.Standardize(fontFile, preserveCase:true);
 
-            string[] texturesToLoad = GetSourceTextures(fontContents);
 
-            mTextures = new Texture2D[texturesToLoad.Length];
+            ReloadTextures(fontFile, fontContents);
+
+            SetFontPattern(fontContents);
+        }
+
+
+        private void ReloadTextures(string fontFile, string fontContents)
+        {
+            var unqualifiedTextureNames = GetSourceTextures(fontContents);
+
+
+            mTextures = new Texture2D[unqualifiedTextureNames.Length];
+            mTextureNames = new string[unqualifiedTextureNames.Length];
 
             string directory = FileManager.GetDirectory(fontFile);
-
             for (int i = 0; i < mTextures.Length; i++)
             {
-                AtlasedTexture atlasedTexture = CheckForLoadedAtlasTexture(directory + texturesToLoad[i]);
+                // fnt files treat ./ as relative, but FRB Android treats ./ as
+                // absolute. Since the value comes directly from .fnt, we want to 
+                // consider ./ as relative instead of whatever FRB thinks is relative:
+                //if (FileManager.IsRelative(texturesToLoad[i]))
+                bool isRelative = unqualifiedTextureNames[i].StartsWith("./") || FileManager.IsRelative(unqualifiedTextureNames[i]);
+
+                if (isRelative)
+                {
+                    if (FileManager.IsRelative(directory))
+                    {
+                        mTextureNames[i] = FileManager.RelativeDirectory + directory + unqualifiedTextureNames[i];
+                    }
+                    else
+                    {
+                        mTextureNames[i] = directory + unqualifiedTextureNames[i];
+                    }
+                }
+                else
+                {
+                    mTextureNames[i] = unqualifiedTextureNames[i];
+                }
+            }
+
+            ReAssignTextures();
+        }
+
+        /// <summary>
+        /// Loops through all internally-stored texture names and reloads the textures.
+        /// Note, this does not clear any internal caches, so if these textures are cached,
+        /// the cache will be used.
+        /// </summary>
+        public void ReAssignTextures()
+        {
+            for (int i = 0; i < mTextures.Length; i++)
+            {
+                AtlasedTexture atlasedTexture = CheckForLoadedAtlasTexture(mTextureNames[i]);
                 if (atlasedTexture != null)
                 {
                     mAtlasedTexture = atlasedTexture;
@@ -112,45 +154,19 @@ namespace RenderingLibrary.Graphics
                 }
                 else
                 {
-                    string fileName;
-
-
-                    // fnt files treat ./ as relative, but FRB Android treats ./ as
-                    // absolute. Since the value comes directly from .fnt, we want to 
-                    // consider ./ as relative instead of whatever FRB thinks is relative:
-                    //if (FileManager.IsRelative(texturesToLoad[i]))
-                    bool isRelative = texturesToLoad[i].StartsWith("./") || FileManager.IsRelative(texturesToLoad[i]);
-
-                    if (isRelative)
-                    { 
-                        if (FileManager.IsRelative(directory))
-                        {
-                            fileName = FileManager.RelativeDirectory + directory + texturesToLoad[i];
-                        }
-                        else
-                        {
-                            fileName = directory + texturesToLoad[i];
-                        }
-
-                        //mTextures[i] = LoaderManager.Self.Load(directory + texturesToLoad[i], managers);
-                    }
-                    else
-                    {
-                        //mTextures[i] = LoaderManager.Self.Load(texturesToLoad[i], managers);
-                        fileName = texturesToLoad[i];
-                    }
-                    // Don't rely on this - it may be aliased, the internal loader may redirect. Let it do its job:
-                    //if (ToolsUtilities.FileManager.FileExists(fileName))
-                    mTextures[i] = LoaderManager.Self.LoadContent<Texture2D>(fileName);
+                    // Don't rely on FileExists because mTextureNames may be aliased.
+                    // If aliased, the internal loader may redirect. Let it do its job:
+                    //if (ToolsUtilities.FileManager.FileExists(mTextureNames[i]))
+                    mTextures[i] = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Texture2D>(mTextureNames[i]);
                 }
-            } 
-            
-            SetFontPattern(fontContents);
+            }
         }
 
         public BitmapFont(string textureFile, string fontFile, SystemManagers managers)
         {
             mTextures = new Texture2D[1];
+
+            mTextureNames = new string[] { textureFile };
 
             var atlasedTexture = CheckForLoadedAtlasTexture(FileManager.GetDirectory(fontFile) + textureFile);
             if (atlasedTexture != null)
@@ -160,7 +176,7 @@ namespace RenderingLibrary.Graphics
             }
             else
             {
-                mTextures[0] = LoaderManager.Self.LoadContent<Texture2D>(textureFile);
+                mTextures[0] = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Texture2D>(textureFile);
             }
 
             mTextureNames[0] = mTextures[0].Name;
@@ -181,6 +197,8 @@ namespace RenderingLibrary.Graphics
             mTextures[0] = fontTextureGraphic;
 
             //mTextureName = mTexture.Name;
+            mTextureNames = new string[1];
+            mTextureNames[0] = mTextures[0]?.Name;
 
             SetFontPattern(fontPattern);
         }
@@ -309,148 +327,84 @@ namespace RenderingLibrary.Graphics
 
             int currentIndexIntoFile = fontPattern.IndexOf("page id=");
 
+            if(fontPattern?.StartsWith("<?xml version=\"1.0\"?>") == true)
+            {
+                throw new Exception("Cannot load a font file that is in XML format. Please convert it to Text format.");
+            }
+
             while (currentIndexIntoFile != -1)
             {
                 // Right now we'll assume that the pages come in order and they're sequential
                 // If this isn' the case then the logic may need to be modified to support this
                 // instead of just returning a string[].
-                int page = StringFunctions.GetIntAfter("page id=", fontPattern, currentIndexIntoFile);
+                //int page = StringFunctions.GetIntAfter("page id=", fontPattern, currentIndexIntoFile);
 
                 int openingQuotesIndex = fontPattern.IndexOf('"', currentIndexIntoFile);
 
-                int closingQuotes = fontPattern.IndexOf('"', openingQuotesIndex + 1);
+                int closingQuotesIndex = fontPattern.IndexOf('"', openingQuotesIndex + 1);
 
-                string textureName = fontPattern.Substring(openingQuotesIndex + 1, closingQuotes - openingQuotesIndex - 1);
+                string textureName = fontPattern.Substring(openingQuotesIndex + 1, closingQuotesIndex - openingQuotesIndex - 1);
                 texturesToLoad.Add(textureName);
 
-                currentIndexIntoFile = fontPattern.IndexOf("page id=", closingQuotes);
+                currentIndexIntoFile = fontPattern.IndexOf("page id=", closingQuotesIndex);
             }
             return texturesToLoad.ToArray();
         }
 
         public void SetFontPattern(string fontPattern)
         {
-            mOutlineThickness = StringFunctions.GetIntAfter(" outline=", fontPattern);
+            var parsedData = new ParsedFontFile(fontPattern);
 
-
-            #region Identify the size of the character array to create
-
-            int sizeOfArray = 256;
-            // now loop through the file and look for numbers after "char id="
-
-            // Vic says:  This used to
-            // go through the entire file
-            // to find the last character index.
-            // I think they're ordered by character
-            // index, so we can just find the last one
-            // and save some time.
-            int index = fontPattern.LastIndexOf("char id=");
-            if (index != -1)
-            {
-                int ID = StringFunctions.GetIntAfter("char id=", fontPattern, index);
-
-                sizeOfArray = System.Math.Max(sizeOfArray, ID + 1);
-            }
-
-            #endregion
-
-
-
-            mCharacterInfo = new BitmapCharacterInfo[sizeOfArray];
-            mLineHeightInPixels =
-                StringFunctions.GetIntAfter(
-                "lineHeight=", fontPattern);
-
-            BaselineY = StringFunctions.GetIntAfter(
-                "base=", fontPattern);
+            var charArraySize = (parsedData.Chars.LastOrDefault()?.Id + 1) ?? 0;
+            mCharacterInfo = new BitmapCharacterInfo[charArraySize];
+            mLineHeightInPixels = parsedData.Common.LineHeight;
+            BaselineY = parsedData.Common.Base;
 
             if (mTextures.Length > 0 && mTextures[0] != null)
             {
                 //ToDo: Atlas support  **************************************************************
-                BitmapCharacterInfo space = FillBitmapCharacterInfo(' ', fontPattern,
-                   mTextures[0].Width, mTextures[0].Height, mLineHeightInPixels, 0);
+                var spaceCharInfo = parsedData.Chars.FirstOrDefault(x => x.Id == ' ');
 
-                for (int i = 0; i < sizeOfArray; i++)
+                // Added null check for space since some special fonts might not have a space inside them.
+                if (spaceCharInfo != null)
                 {
-                    mCharacterInfo[i] = space;
-                }
+                    var space = FillBitmapCharacterInfo(spaceCharInfo, mTextures[0].Width, mTextures[0].Height,
+                        mLineHeightInPixels);
 
-                // Make the tab character be equivalent to 4 spaces:
-                mCharacterInfo['t'].ScaleX = space.ScaleX * 4;
-                mCharacterInfo['t'].Spacing = space.Spacing * 4;
-
-                index = fontPattern.IndexOf("char id=");
-                while (index != -1)
-                {
-
-                    int ID = StringFunctions.GetIntAfter("char id=", fontPattern, index);
-                    //ToDo: Atlas support   *************************************************************
-                    mCharacterInfo[ID] = FillBitmapCharacterInfo(ID, fontPattern, mTextures[0].Width,
-                        mTextures[0].Height, mLineHeightInPixels, index);
-
-                    int indexOfID = fontPattern.IndexOf("char id=", index);
-                    if (indexOfID != -1)
+                    for (int i = 0; i < charArraySize; i++)
                     {
-                        index = indexOfID + ID.ToString().Length;
+                        mCharacterInfo[i] = space;
                     }
-                    else
-                        index = -1;
-                }
 
-                #region Get Kearning Info
-
-                index = fontPattern.IndexOf("kerning ");
-
-                if (index != -1)
-                {
-
-                    index = fontPattern.IndexOf("first=", index);
-
-                    while (index != -1)
+                    if (mCharacterInfo.Length > (int)'\t')
                     {
-                        int ID = StringFunctions.GetIntAfter("first=", fontPattern, index);
-                        int secondCharacter = StringFunctions.GetIntAfter("second=", fontPattern, index);
-                        int kearningAmount = StringFunctions.GetIntAfter("amount=", fontPattern, index);
-
-                        // January 21, 2022
-                        // Not sure why but Vic
-                        // was able to create a font
-                        // file with duplicate kearnings.
-                        // Specifically the contents had:
-                        // kerning first=35  second=54  amount=-1    << First entry of 
-                        // kerning first=47  second=49  amount=2
-                        // kerning first=47  second=51  amount=1
-                        // kerning first=47  second=53  amount=1
-                        // kerning first=47  second=55  amount=1
-                        // kerning first=35  second=52  amount=-1
-                        // kerning first=35  second=54  amount=-1    << Duplicate entry
-                        // This file is created by BitmapFontGenerator,
-                        // which is not controlled by Gum. Therefore, we
-                        // should tolerate duplicates
-                        //if (mCharacterInfo[ID].SecondLetterKearning.ContainsKey(secondCharacter))
-                        //{
-                        //    throw new InvalidOperationException($"Trying to add the character {secondCharacter} to the mCharacterInfo {ID}, but this entry already exists");
-                        //}
-                        //mCharacterInfo[ID].SecondLetterKearning.Add(secondCharacter, kearningAmount);
-                        if (!mCharacterInfo[ID].SecondLetterKearning.ContainsKey(secondCharacter))
-                        {
-                            mCharacterInfo[ID].SecondLetterKearning.Add(secondCharacter, kearningAmount);
-                        }
-
-                        index = fontPattern.IndexOf("first=", index + 1);
+                        // Make the tab character be equivalent to 4 spaces:
+                        mCharacterInfo['\t'].ScaleX = space.ScaleX * 4;
+                        mCharacterInfo['\t'].Spacing = space.Spacing * 4;
                     }
                 }
 
-                #endregion
+                foreach (var charInfo in parsedData.Chars)
+                {
+                    mCharacterInfo[charInfo.Id] = FillBitmapCharacterInfo(charInfo, mTextures[0].Width,
+                        mTextures[0].Height, mLineHeightInPixels);
+                }
 
+                foreach (var kerning in parsedData.Kernings)
+                {
+                    var character = mCharacterInfo[kerning.First];
+                    if (!character.SecondLetterKearning.ContainsKey(kerning.Second))
+                    {
+                        character.SecondLetterKearning.Add(kerning.Second, kerning.Amount);
+                    }
+                }
             }
-            //mCharacterInfo[32].ScaleX = .23f;
         }
 
         public void SetFontPatternFromFile(string fntFileName)
         {
             // standardize before doing anything else
-            fntFileName = FileManager.Standardize(fntFileName);
+            fntFileName = FileManager.Standardize(fntFileName, preserveCase:true);
 
             mFontFile = fntFileName;
             //System.IO.StreamReader sr = new System.IO.StreamReader(mFontFile);
@@ -488,8 +442,8 @@ namespace RenderingLibrary.Graphics
         /// <param name="objectRequestingRender"></param>
         /// <param name="numberOfLettersToRender">The maximum number of characters to render.</param>
         /// <returns></returns>
-        public Texture2D RenderToTexture2D(List<string> lines, HorizontalAlignment horizontalAlignment, 
-            SystemManagers managers, Texture2D toReplace, object objectRequestingRender, 
+        public Texture2D RenderToTexture2D(List<string> lines, HorizontalAlignment horizontalAlignment,
+            SystemManagers managers, Texture2D toReplace, object objectRequestingRender,
             int? numberOfLettersToRender = null, float lineHeightMultiplier = 1)
         {
             if (managers == null)
@@ -502,7 +456,7 @@ namespace RenderingLibrary.Graphics
             {
                 return null;
             }
-            if(numberOfLettersToRender == 0)
+            if (numberOfLettersToRender == 0)
             {
                 return null;
             }
@@ -545,7 +499,7 @@ namespace RenderingLibrary.Graphics
                 {
                     managers.Renderer.GraphicsDevice.Viewport = viewportToSet;
                 }
-                catch(Exception exception)
+                catch (Exception exception)
                 {
                     throw new Exception("Error setting graphics device when rendering bitmap font. used values:\n" +
                         $"requiredWidth:{requiredWidth}\nrequiredHeight:{requiredHeight}", exception);
@@ -556,9 +510,9 @@ namespace RenderingLibrary.Graphics
                 managers.Renderer.GraphicsDevice.Clear(Microsoft.Xna.Framework.Color.Transparent);
                 spriteRenderer.Begin();
 
-                DrawTextLines(lines, horizontalAlignment, objectRequestingRender, requiredWidth, widths, 
-                    spriteRenderer, Color.White, numberOfLettersToRender: numberOfLettersToRender, lineHeightMultiplier:lineHeightMultiplier);
-                
+                DrawTextLines(lines, horizontalAlignment, objectRequestingRender, requiredWidth, widths,
+                    spriteRenderer, Color.White, numberOfLettersToRender: numberOfLettersToRender, lineHeightMultiplier: lineHeightMultiplier);
+
                 spriteRenderer.End();
 
                 managers.Renderer.GraphicsDevice.SetRenderTarget(null);
@@ -569,15 +523,34 @@ namespace RenderingLibrary.Graphics
             return renderTarget;
         }
 
-        public FloatRectangle DrawTextLines(List<string> lines, HorizontalAlignment horizontalAlignment, 
-            object objectRequestingChange, int requiredWidth, List<int> widths, 
-            SpriteRenderer spriteRenderer, 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="lines"></param>
+        /// <param name="horizontalAlignment"></param>
+        /// <param name="objectRequestingChange"></param>
+        /// <param name="requiredWidth"></param>
+        /// <param name="widths"></param>
+        /// <param name="spriteRenderer"></param>
+        /// <param name="color"></param>
+        /// <param name="xOffset"></param>
+        /// <param name="yOffset"></param>
+        /// <param name="rotation"></param>
+        /// <param name="scaleX"></param>
+        /// <param name="scaleY"></param>
+        /// <param name="numberOfLettersToRender"></param>
+        /// <param name="overrideTextRenderingPositionMode"></param>
+        /// <param name="lineHeightMultiplier"></param>
+        /// <returns>The rectangle of the drawn text. This will return the same value regardless of alignment.</returns>
+        public FloatRectangle DrawTextLines(List<string> lines, HorizontalAlignment horizontalAlignment,
+            object objectRequestingChange, int requiredWidth, List<int> widths,
+            SpriteRenderer spriteRenderer,
             Color color,
             float xOffset = 0, float yOffset = 0, float rotation = 0, float scaleX = 1, float scaleY = 1,
             int? numberOfLettersToRender = null, TextRenderingPositionMode? overrideTextRenderingPositionMode = null, float lineHeightMultiplier = 1)
         {
             ///////////Early Out////////////////
-            if(numberOfLettersToRender == 0)
+            if (numberOfLettersToRender == 0)
             {
                 return default(FloatRectangle);
             }
@@ -585,7 +558,7 @@ namespace RenderingLibrary.Graphics
 
             FloatRectangle toReturn = new FloatRectangle();
 
-            var point = new Vector2();
+            var currentLetterOrigin = new Vector2();
 
             int lineNumber = 0;
 
@@ -609,7 +582,7 @@ namespace RenderingLibrary.Graphics
             Vector2 xAxis = Vector2.UnitX;
             Vector2 yAxis = Vector2.UnitY;
 
-            if(rotation != 0)
+            if (rotation != 0)
             {
                 xAxis.X = (float)System.Math.Cos(-rotationRadians);
                 xAxis.Y = (float)System.Math.Sin(-rotationRadians);
@@ -620,74 +593,128 @@ namespace RenderingLibrary.Graphics
 
             int numberOfLettersRendered = 0;
 
-            for(int i = 0; i < lines.Count; i++)
+
+            for (int i = 0; i < lines.Count; i++)
             {
                 var line = lines[i];
 
                 // scoot over to leave room for the outline
-                point.X = mOutlineThickness;
+                currentLetterOrigin.X = mOutlineThickness;
+
+                float offsetFromAlignment = 0;
+
+#if DEBUG
+                if(lineNumber >= widths.Count)
+                {
+                    var message = $"Error trying to draw text with {lines.Count} lines, but only {widths.Count} widths. Lines:\n{GetCombinedLines()}";
+                    throw new Exception(message);
+                }
+
+                string GetCombinedLines()
+                {
+                    return string.Join("\n", lines);
+                }
+#endif
 
                 if (horizontalAlignment == HorizontalAlignment.Right)
                 {
-                    point.X = scaleX *( requiredWidth - widths[lineNumber]);
+                    offsetFromAlignment = scaleX * (requiredWidth - widths[lineNumber]);
                 }
                 else if (horizontalAlignment == HorizontalAlignment.Center)
                 {
-                    point.X = scaleX * (requiredWidth - widths[lineNumber]) / 2;
+                    offsetFromAlignment = scaleX * (requiredWidth - widths[lineNumber]) / 2;
                 }
 
-                
-                foreach (char c in line)
+                currentLetterOrigin.X += offsetFromAlignment;
+
+                var effectiveTextRenderingMode = overrideTextRenderingPositionMode ??
+                    Text.TextRenderingPositionMode;
+
+                if (line.Length > 0)
                 {
                     FloatRectangle destRect;
                     int pageIndex;
-                    var sourceRect = GetCharacterRect(c, lineNumber, ref point, out destRect, out pageIndex, scaleX, lineHeightMultiplier: lineHeightMultiplier);
 
-                    var unrotatedX = destRect.X + xOffset;
-                    var unrotatedY = destRect.Y + yOffset;
-                    toReturn.X = System.Math.Min(toReturn.X, unrotatedX);
-                    toReturn.Y = System.Math.Min(toReturn.Y, unrotatedY);
-                    toReturn.Width = System.Math.Max(toReturn.Width, point.X);
-                    toReturn.Height = System.Math.Max(toReturn.Height, point.Y);
+                    float lineOffset = 0;
 
-
-                    var finalPosition = destRect.X * xAxis + destRect.Y * yAxis;
-
-                    finalPosition.X += xOffset;
-                    finalPosition.Y += yOffset;
-
-                    var effectiveTextRenderingMode = overrideTextRenderingPositionMode ??
-                        Text.TextRenderingPositionMode;
-
-                    if (effectiveTextRenderingMode == TextRenderingPositionMode.FreeFloating ||
-                        // If rotated, need free floating positions since sprite positions will likely not line up with pixels
-                        rotation != 0 || 
-                        // If scaled up/down, don't use free floating
-                        scaleX != 1)
+                    for(int charIndex = 0; charIndex < line.Length; charIndex++)
                     {
-                        var scale = new Vector2(scaleX, scaleY);
-                        spriteRenderer.Draw(mTextures[pageIndex], finalPosition,  sourceRect, color, -rotationRadians, Vector2.Zero, scale, SpriteEffects.None, 0, this);
-                    }
-                    else
-                    {
-                        // position:
-                        destRect.X += xOffsetAsInt;
-                        destRect.Y += yOffsetAsInt;
+                        char c = line[charIndex];
+                        var sourceRect =
+                            GetCharacterRect(c, lineNumber, ref currentLetterOrigin, out destRect, out pageIndex, scaleX, lineHeightMultiplier: lineHeightMultiplier);
 
-                        var position = new Vector2(destRect.X, destRect.Y);
+                        if(charIndex == 0)
+                        {
+                            var firstLetterDestinationX = destRect.X;
+                            var firstLetterDestinationXInt = MathFunctions.RoundToInt(firstLetterDestinationX);
+                            lineOffset = 0f;
 
-                        spriteRenderer.Draw(mTextures[pageIndex], position, sourceRect, color, 0, Vector2.Zero, new Vector2(scaleX, scaleY), SpriteEffects.None, 0, this);
-                    }
+                            if (effectiveTextRenderingMode == TextRenderingPositionMode.SnapToPixel)
+                            {
+                                lineOffset = firstLetterDestinationX - firstLetterDestinationXInt;
+                            }
 
-                    numberOfLettersRendered++;
+                        }
 
-                    if(numberOfLettersToRender <= numberOfLettersRendered)
-                    {
-                        break;
+                        var unrotatedX = destRect.X + xOffset;
+                        var unrotatedY = destRect.Y + yOffset;
+                        toReturn.X = System.Math.Min(toReturn.X, unrotatedX - offsetFromAlignment) ;
+                        toReturn.Y = System.Math.Min(toReturn.Y, unrotatedY);
+
+                        // why are we max'ing the point.X's and width? This makes center and right-alignment text render incorrectly
+                        // when this method is called multiple times due to styling:
+                        //toReturn.Width = System.Math.Max(toReturn.Width, point.X);
+                        // Update - because point.X is the current point - which marks the location of the next
+                        // character.
+                        // After calling GetCharacterRect, the currentLetterOrigin.X is updated to be the next letter's origin.
+                        toReturn.Width = System.Math.Max(toReturn.Width, currentLetterOrigin.X - offsetFromAlignment);
+
+                        toReturn.Height = System.Math.Max(toReturn.Height, currentLetterOrigin.Y);
+
+
+                        var finalPosition = destRect.X * xAxis + destRect.Y * yAxis;
+
+                        finalPosition.X += xOffset;
+                        finalPosition.Y += yOffset;
+
+#if DEBUG
+                        if(mTextures.Length <= pageIndex)
+                        {
+                            throw new Exception($"Attempting to render a character {c} in line {line} with font which accesses a character on page {pageIndex}, but only {mTextures} texture page(s) exist");
+                        }
+#endif
+
+                        if (effectiveTextRenderingMode == TextRenderingPositionMode.FreeFloating ||
+                            // If rotated, need free floating positions since sprite positions will likely not line up with pixels
+                            rotation != 0 ||
+                            // If scaled up/down, don't use free floating
+                            scaleX != 1)
+                        {
+                            var scale = new Vector2(scaleX, scaleY);
+                            spriteRenderer.Draw(mTextures[pageIndex], finalPosition, sourceRect, color, -rotationRadians, Vector2.Zero, scale, SpriteEffects.None, 0, this);
+                        }
+                        else
+                        {
+                            // position:
+                            destRect.X += xOffsetAsInt + lineOffset;
+                            destRect.Y += yOffsetAsInt;
+
+                            var position = new Vector2(destRect.X, destRect.Y);
+
+                            spriteRenderer.Draw(mTextures[pageIndex], position, sourceRect, color, 0, Vector2.Zero, new Vector2(scaleX, scaleY), SpriteEffects.None, 0, this);
+                        }
+
+                        numberOfLettersRendered++;
+
+                        if (numberOfLettersToRender <= numberOfLettersRendered)
+                        {
+                            break;
+                        }
+
                     }
 
                 }
-                point.X = 0;
+                currentLetterOrigin.X = 0;
                 lineNumber++;
 
                 if (numberOfLettersToRender <= numberOfLettersRendered)
@@ -757,7 +784,7 @@ namespace RenderingLibrary.Graphics
                     mCharRect.Width = destRect.Width;
                     mCharRect.Height = destRect.Height;
 
-                    if(textObject.Parent != null)
+                    if (textObject.Parent != null)
                     {
                         mCharRect.X += textObject.Parent.GetAbsoluteX();
                         mCharRect.Y += textObject.Parent.GetAbsoluteY();
@@ -773,32 +800,48 @@ namespace RenderingLibrary.Graphics
 
         public float EffectiveLineHeight(float fontScale = 1, float lineHeightMultiplier = 1) => mLineHeightInPixels * lineHeightMultiplier * fontScale;
 
-        public Rectangle GetCharacterRect(char c, int lineNumber, ref Vector2 point, out FloatRectangle destinationRectangle,
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="c"></param>
+        /// <param name="lineNumber"></param>
+        /// <param name="currentCharacterDrawPosition">When passed in, this is the point used to draw the current character. This is used to set the destinationRectangle. This value is modified, increasing the position by XAdvance.</param>
+        /// <param name="destinationRectangle"></param>
+        /// <param name="pageIndex"></param>
+        /// <param name="fontScale"></param>
+        /// <param name="lineHeightMultiplier"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        public Rectangle GetCharacterRect(char c, int lineNumber, ref Vector2 currentCharacterDrawPosition, out FloatRectangle destinationRectangle,
             out int pageIndex, float fontScale = 1, float lineHeightMultiplier = 1)
         {
+            if(Texture == null)
+            {
+                throw new InvalidOperationException("The bitmap font has a null texture so it cannot return a character rectangle");
+            }
             BitmapCharacterInfo characterInfo = GetCharacterInfo(c);
 
             int sourceLeft = characterInfo.GetPixelLeft(Texture);
             int sourceTop = characterInfo.GetPixelTop(Texture);
             int sourceWidth = characterInfo.GetPixelRight(Texture) - sourceLeft;
             int sourceHeight = characterInfo.GetPixelBottom(Texture) - sourceTop;
+            var sourceRectangle = new Rectangle(sourceLeft, sourceTop, sourceWidth, sourceHeight);
+
+            pageIndex = characterInfo.PageNumber;
 
             int distanceFromTop = characterInfo.GetPixelDistanceFromTop(mLineHeightInPixels);
 
             // There could be some offset for this character
             int xOffset = characterInfo.GetPixelXOffset(mLineHeightInPixels);
-            point.X += xOffset * fontScale;
 
-            point.Y = lineNumber * EffectiveLineHeight(fontScale, lineHeightMultiplier) + distanceFromTop * fontScale;
+            // Shift the point by the xOffset, which affects destination (drawing) but does not affect the advance of the position for the next letter
+            currentCharacterDrawPosition.X += xOffset * fontScale;
+            currentCharacterDrawPosition.Y = lineNumber * EffectiveLineHeight(fontScale, lineHeightMultiplier) + distanceFromTop * fontScale;
+            destinationRectangle = new FloatRectangle(currentCharacterDrawPosition.X, currentCharacterDrawPosition.Y, sourceWidth * fontScale, sourceHeight * fontScale);
 
-            var sourceRectangle = new Rectangle(sourceLeft, sourceTop, sourceWidth, sourceHeight);
-
-            pageIndex = characterInfo.PageNumber;
-
-            destinationRectangle = new FloatRectangle(point.X, point.Y, sourceWidth * fontScale, sourceHeight * fontScale);
-
-            point.X -= xOffset * fontScale;
-            point.X += characterInfo.GetXAdvanceInPixels(mLineHeightInPixels) * fontScale;
+            // Shift it back.
+            currentCharacterDrawPosition.X -= xOffset * fontScale;
+            currentCharacterDrawPosition.X += characterInfo.GetXAdvanceInPixels(mLineHeightInPixels) * fontScale;
 
             return sourceRectangle;
         }
@@ -810,6 +853,13 @@ namespace RenderingLibrary.Graphics
 
         // This sucks, but if we pass an IEnumerable, it allocates memory like crazy. Duplicate code to handle List to reduce alloc
         //public void GetRequiredWidthAndHeight(IEnumerable<string> lines, out int requiredWidth, out int requiredHeight, List<int> widths)
+        /// <summary>
+        /// Returns the width and height required to render the argument line of text.
+        /// </summary>
+        /// <param name="lines">The lines of text, where each entry is one line of text.</param>
+        /// <param name="requiredWidth">The required width returned by this method.</param>
+        /// <param name="requiredHeight">The required height returned by this method.</param>
+        /// <param name="widths">The widths of the individual lines.</param>
         public void GetRequiredWidthAndHeight(List<string> lines, out int requiredWidth, out int requiredHeight, List<int> widths)
         {
 
@@ -823,7 +873,7 @@ namespace RenderingLibrary.Graphics
                 int lineWidth = 0;
 
                 lineWidth = MeasureString(line);
-                if(widths != null)
+                if (widths != null)
                 {
                     widths.Add(lineWidth);
                 }
@@ -833,7 +883,7 @@ namespace RenderingLibrary.Graphics
             const int MaxWidthAndHeight = 4096; // change this later?
             requiredWidth = System.Math.Min(requiredWidth, MaxWidthAndHeight);
             requiredHeight = System.Math.Min(requiredHeight, MaxWidthAndHeight);
-            if(requiredWidth != 0 && mOutlineThickness != 0)
+            if (requiredWidth != 0 && mOutlineThickness != 0)
             {
                 requiredWidth += mOutlineThickness * 2;
             }
@@ -979,6 +1029,11 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        /// <summary>
+        /// Returns the number of pixels (horizontally) required to render the argument string.
+        /// </summary>
+        /// <param name="line">The line of text.</param>
+        /// <returns>The number of pixels needed to render this text horizontally.</returns>
         public int MeasureString(string line)
         {
             int toReturn = 0;
@@ -1023,68 +1078,28 @@ namespace RenderingLibrary.Graphics
             return atlasedTexture;
         }
 
-        private BitmapCharacterInfo FillBitmapCharacterInfo(int characterID, string fontString, int textureWidth,
-            int textureHeight, int lineHeightInPixels, int startingIndex)
+        private BitmapCharacterInfo FillBitmapCharacterInfo(
+            FontFileCharLine charInfo, 
+            int textureWidth, 
+            int textureHeight,
+            int lineHeightInPixels)
         {
-            BitmapCharacterInfo characterInfoToReturn = new BitmapCharacterInfo();
+            var tuLeft = charInfo.X / (float)textureWidth;
+            var tvTop = charInfo.Y / (float)textureHeight;
 
-            int indexOfID = fontString.IndexOf("char id=" + characterID, startingIndex);
-
-            if (indexOfID != -1)
+            return new BitmapCharacterInfo
             {
-                if (mAtlasedTexture != null)
-                {
-                    characterInfoToReturn.TULeft = (mAtlasedTexture.SourceRectangle.X +
-                                                   StringFunctions.GetIntAfter("x=", fontString, indexOfID)) /
-                                                   (float)textureWidth;
-                    characterInfoToReturn.TURight = characterInfoToReturn.TULeft +
-                                                    StringFunctions.GetIntAfter("width=", fontString, indexOfID) /
-                                                    (float)textureWidth;
-                    characterInfoToReturn.TVTop = (mAtlasedTexture.SourceRectangle.Y +
-                                                   StringFunctions.GetIntAfter("y=", fontString, indexOfID)) /
-                                                  (float)textureHeight;
-                    characterInfoToReturn.TVBottom = characterInfoToReturn.TVTop +
-                                                     StringFunctions.GetIntAfter("height=", fontString, indexOfID) /
-                                                     (float)textureHeight;
-                }
-                else
-                {
-                    characterInfoToReturn.TULeft =
-                        StringFunctions.GetIntAfter("x=", fontString, indexOfID) / (float)textureWidth;
-                    characterInfoToReturn.TVTop =
-                        StringFunctions.GetIntAfter("y=", fontString, indexOfID) / (float)textureHeight;
-                    characterInfoToReturn.TURight = characterInfoToReturn.TULeft +
-                        StringFunctions.GetIntAfter("width=", fontString, indexOfID) / (float)textureWidth;
-                    characterInfoToReturn.TVBottom = characterInfoToReturn.TVTop +
-                        StringFunctions.GetIntAfter("height=", fontString, indexOfID) / (float)textureHeight;
-                }
-
-                characterInfoToReturn.DistanceFromTopOfLine = // 1 sclY means 2 height
-                    2 * StringFunctions.GetIntAfter("yoffset=", fontString, indexOfID) / (float)lineHeightInPixels;
-
-                characterInfoToReturn.ScaleX = StringFunctions.GetIntAfter("width=", fontString, indexOfID) /
-                    (float)lineHeightInPixels;
-
-                characterInfoToReturn.ScaleY = StringFunctions.GetIntAfter("height=", fontString, indexOfID) /
-                    (float)lineHeightInPixels;
-
-                characterInfoToReturn.Spacing = 2 * StringFunctions.GetIntAfter("xadvance=", fontString, indexOfID) /
-                    (float)lineHeightInPixels;
-
-                characterInfoToReturn.XOffset = 2 * StringFunctions.GetIntAfter("xoffset=", fontString, indexOfID) /
-                    (float)lineHeightInPixels;
-
-                characterInfoToReturn.PageNumber = StringFunctions.GetIntAfter("page=", fontString, indexOfID);
-
-
-
-                //              characterInfoToReturn.Spacing = 25 * StringFunctions.GetIntAfter("xadvance=", fontString, indexOfID) /
-                //                (float)(textureWidth);
-
-
-            }
-
-            return characterInfoToReturn;
+                TULeft = tuLeft,
+                TVTop = tvTop,
+                TURight = tuLeft + charInfo.Width / (float)textureWidth,
+                TVBottom = tvTop + charInfo.Height / (float)textureHeight,
+                DistanceFromTopOfLine = 2 * charInfo.YOffset / (float)lineHeightInPixels,
+                ScaleX = charInfo.Width / (float)lineHeightInPixels,
+                ScaleY = charInfo.Height / (float)lineHeightInPixels,
+                Spacing = 2 * charInfo.XAdvance / (float)lineHeightInPixels,
+                XOffset = 2 * charInfo.XOffset / (float)lineHeightInPixels,
+                PageNumber = charInfo.Page,
+            };
         }
 
         #endregion
@@ -1094,6 +1109,219 @@ namespace RenderingLibrary.Graphics
         public void Dispose()
         {
             // Do nothing, the loader will handle disposing the texture.
+        }
+
+        public override string ToString()
+        {
+            return mFontFile;
+        }
+
+        private class ParsedFontLine
+        {
+            public string Tag { get; }
+            public Dictionary<string, int> NumericAttributes { get; } = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+            private ParsedFontLine(string tag)
+            {
+                Tag = tag;
+            }
+
+            public static (ParsedFontLine line, int nextIndex) Parse(string contents, int startIndex)
+            {
+                var parsedLine = (ParsedFontLine)null;
+                var currentAttributeName = (string)null;
+                var wordStartIndex = (int?)null;
+                var isInQuotes = false;
+                var index = startIndex;
+
+                void ProcessWord()
+                {
+                    if (wordStartIndex == null)
+                    {
+                        return;
+                    }
+                    
+                    var length = index - wordStartIndex.Value;
+                    var word = contents.Substring(wordStartIndex.Value, length);
+                    if (parsedLine == null)
+                    {
+                        parsedLine = new ParsedFontLine(word);
+                    }
+                    else if (currentAttributeName == null)
+                    {
+                        currentAttributeName = word;
+                    }
+                    else
+                    {
+                        if (int.TryParse(word, out var number))
+                        {
+                            parsedLine.NumericAttributes[currentAttributeName] = number;
+                        }
+                        else if (int.TryParse(word, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out number))
+                        {
+                            // Fallback for other cultures that expect a comma, but a period was found
+                            parsedLine.NumericAttributes[currentAttributeName] = number;
+                        }
+
+                        currentAttributeName = null;
+                    }
+
+                    wordStartIndex = null;
+                }
+                
+                while (index < contents.Length)
+                {
+                    var character = contents[index];
+                    if (char.IsWhiteSpace(character) || character == '=')
+                    {
+                        if (!isInQuotes && wordStartIndex != null)
+                        {
+                            // Hit the end of a word
+                            ProcessWord();
+                        }
+
+                        if (character == '\r' || character == '\n')
+                        {
+                            return (parsedLine, index + 1);
+                        }
+                    }
+                    else
+                    {
+                        wordStartIndex = wordStartIndex ?? index;
+                        if (character == '"' && !isInQuotes)
+                        {
+                            isInQuotes = true;
+                        }
+                        else if (character == '"' && isInQuotes)
+                        {
+                            isInQuotes = false;
+                            wordStartIndex = null; // ignore string attributes for now, we only use numerics
+                        }
+                    }
+
+                    index++;
+                }
+                
+                // Hit the end of the string
+                ProcessWord();
+
+                return (parsedLine, index);
+            }
+        }
+
+        private class ParsedFontFile
+        {
+            public FontFileInfoLine Info { get; }
+            public FontFileCommonLine Common { get; }
+            public List<FontFileCharLine> Chars { get; } = new List<FontFileCharLine>(300);
+            public List<FontFileKerningLine> Kernings { get; } = new List<FontFileKerningLine>(300);
+
+            public ParsedFontFile(string contents)
+            {
+                var index = 0;
+                while (index < contents.Length)
+                {
+                    var (parsedLine, nextIndex) = ParsedFontLine.Parse(contents, index);
+                    index = nextIndex;
+                    if (parsedLine != null)
+                    {
+                        switch (parsedLine.Tag)
+                        {
+                            case "info":
+                                Info = new FontFileInfoLine(parsedLine);
+                                break;
+                            
+                            case "common":
+                                Common = new FontFileCommonLine(parsedLine);
+                                break;
+                            
+                            case "char":
+                                Chars.Add(new FontFileCharLine(parsedLine));
+                                break;
+                            
+                            case "kerning":
+                                Kernings.Add(new FontFileKerningLine(parsedLine));
+                                break;
+                            
+                            default:
+                                break; // ignore unknown tags
+                        }
+                    }
+                }
+
+                if (Info == null || Common == null)
+                {
+                    throw new InvalidOperationException("Font file did not have an info or common tag");
+                }
+            }
+        }
+
+        private class FontFileInfoLine
+        {
+            public int Outline { get; set; }
+
+            public FontFileInfoLine(ParsedFontLine line)
+            {
+                if(line.NumericAttributes.ContainsKey("outline"))
+                {
+                    Outline = line.NumericAttributes["outline"];
+                }
+            }
+        }
+
+        private class FontFileCommonLine
+        {
+            public int LineHeight { get; set; }
+            public int Base { get; set; }
+
+            public FontFileCommonLine(ParsedFontLine line)
+            {
+                LineHeight = line.NumericAttributes["lineheight"];
+                Base = line.NumericAttributes["base"];
+            }
+        }
+
+        private class FontFileCharLine
+        {
+            public int Id { get; set; }
+            public int X { get; set; }
+            public int Y { get; set; }
+            public int Width { get; set; }
+            public int Height { get; set; }
+            public int XOffset { get; set; }
+            public int YOffset { get; set; }
+            public int XAdvance { get; set; }
+            public int Page { get; set; }
+
+            public FontFileCharLine(ParsedFontLine line)
+            {
+                Id = line.NumericAttributes["id"];
+                X = line.NumericAttributes["x"];
+                Y = line.NumericAttributes["y"];
+                Width = line.NumericAttributes["width"];
+                Height = line.NumericAttributes["height"];
+                XOffset = line.NumericAttributes["xoffset"];
+                YOffset = line.NumericAttributes["yoffset"];
+                XAdvance = line.NumericAttributes["xadvance"];
+                if(line.NumericAttributes.ContainsKey("page"))
+                {
+                    Page = line.NumericAttributes["page"];
+                }
+            }
+        }
+
+        private class FontFileKerningLine
+        {
+            public int First { get; set; }
+            public int Second { get; set; }
+            public int Amount { get; set; }
+
+            public FontFileKerningLine(ParsedFontLine line)
+            {
+                First = line.NumericAttributes["first"];
+                Second = line.NumericAttributes["second"];
+                Amount = line.NumericAttributes["amount"];
+            }
         }
     }
 }

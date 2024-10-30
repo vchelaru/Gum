@@ -1,0 +1,33 @@
+
+#----------------------------- Global Properties ----------------------------#
+
+/outputDir:bin/$(Platform)
+/intermediateDir:obj/$(Platform)
+/platform:DesktopGL
+/config:
+/profile:HiDef
+/compress:False
+
+#-------------------------------- References --------------------------------#
+
+
+#---------------------------------- Content ---------------------------------#
+
+#begin BearTexture.png
+/copy:BearTexture.png
+
+#begin Frame.png
+/copy:Frame.png
+
+#begin WhitePeaberryOutline/WhitePeaberryOutline.fnt
+/copy:WhitePeaberryOutline/WhitePeaberryOutline.fnt
+
+#begin WhitePeaberryOutline/WhitePeaberryOutline.png
+/copy:WhitePeaberryOutline/WhitePeaberryOutline.png
+
+#begin Shader.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shader.fx
+

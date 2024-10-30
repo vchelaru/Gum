@@ -1,0 +1,83 @@
+{
+  "UserEvents": {
+    "Owner": [
+      {
+        "NewName": "Popup",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 0,
+        "TimestampUtc": "2024-10-29T11:08:30.6815516Z"
+      },
+      {
+        "NewName": "Popup (Container).NineSliceInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-10-29T11:09:03.5650224Z"
+      },
+      {
+        "NewName": "Popup (Container).TextInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-10-29T11:12:22.6411502Z"
+      },
+      {
+        "NewName": "MainMenu",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 0,
+        "TimestampUtc": "2024-10-29T11:40:08.4394702Z"
+      },
+      {
+        "NewName": "MainMenu.PopupInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-10-29T11:40:11.0868229Z"
+      },
+      {
+        "NewName": "ComponentWithStates",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 0,
+        "TimestampUtc": "2024-10-29T17:01:08.5864933Z"
+      },
+      {
+        "NewName": "ComponentWithStates (Container).ColoredRectangleInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-10-29T17:01:14.7940148Z"
+      },
+      {
+        "NewName": "MainMenu.ColoredRectangleInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-10-29T17:04:29.0462176Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "MainMenu.ColoredRectangle ColoredRectangleInstance in MainMenu",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2024-10-29T17:04:56.2515015Z"
+      },
+      {
+        "NewName": "MainMenu.ComponentWithStatesInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-10-29T17:04:58.8940064Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "MainMenu.ComponentWithStates ComponentWithStatesInstance in MainMenu",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2024-10-29T18:04:32.6858107Z"
+      }
+    ]
+  }
+}

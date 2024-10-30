@@ -1,4 +1,5 @@
-﻿using Gum.Managers;
+﻿using Gum.DataTypes;
+using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using Gum.ToolStates;
 using System;
@@ -29,6 +30,14 @@ namespace Gum.Plugins.Fonts
 
             refreshFontCacheMenuItem.Click += HandleRefreshFontCache;
 
+            this.ProjectLoad += HandleProjectLoaded;
+
+        }
+
+        private void HandleProjectLoaded(GumProjectSave save)
+        {
+            FontManager.Self.CreateAllMissingFontFiles(
+                ProjectState.Self.GumProjectSave);
         }
 
         private void HandleClearFontCache(object sender, EventArgs e)

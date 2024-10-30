@@ -277,6 +277,19 @@ namespace WpfDataUi.Controls
 
             this.RefreshContextMenu(MainGrid.ContextMenu);
 
+            if (InstanceMember.IsDefault)
+            {
+                TextBox.Background = TextBoxDisplayLogic.DefaultValueBackground;
+            }
+            else if (InstanceMember.IsIndeterminate)
+            {
+                TextBox.Background = TextBoxDisplayLogic.IndeterminateValueBackground;
+            }
+            else
+            {
+                TextBox.Background = TextBoxDisplayLogic.CustomValueBackground;
+            }
+
             SuppressSettingProperty = false;
         }
 

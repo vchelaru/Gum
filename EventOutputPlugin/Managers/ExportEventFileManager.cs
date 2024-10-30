@@ -138,7 +138,11 @@ namespace EventOutputPlugin.Managers
                         var directoryName = file.GetDirectoryContainingThis().FullPath;
                         // make the directory
                         System.IO.Directory.CreateDirectory(directoryName);
-                        System.IO.File.WriteAllText(file.FullPath, serialized);
+
+
+
+                        //System.IO.File.WriteAllText(file.FullPath, serialized);
+                        GumCommands.Self.FileCommands.SaveIfDiffers(file, serialized);
                     });
             }
         }

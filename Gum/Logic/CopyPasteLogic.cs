@@ -115,7 +115,16 @@ namespace Gum.Logic
                 {
                     state = element.DefaultState;
                 }
+
                 CopiedData.CopiedStates.Clear();
+    
+                var baseElementsDerivedFirst = ObjectFinder.Self.GetBaseElements(element);
+                // reverse loop:
+                for(int i = baseElementsDerivedFirst.Count - 1; i > -1; i--)
+                {
+                    CopiedData.CopiedStates.Add(baseElementsDerivedFirst[i].DefaultState.Clone());
+                }
+
                 CopiedData.CopiedStates.Add(state.Clone());
 
                 if(SelectedState.Self.SelectedStateCategorySave != null && SelectedState.Self.SelectedStateSave != null)
@@ -488,6 +497,8 @@ namespace Gum.Logic
                             // If we did, the user would have 2 variables exposed with the same.
                             copiedVariable.ExposedAsName = null;
 
+                            // this prevents double-adds like for Parent:
+                            targetState.Variables.RemoveAll(item => item.Name == copiedVariable.Name);
                             targetState.Variables.Add(copiedVariable);
                         }
                         // Copy over the VariableLists too
@@ -500,6 +511,7 @@ namespace Gum.Logic
                                 VariableListSave copiedList = sourceVariableList.Clone();
                                 copiedList.Name = newInstance.Name + "." + copiedList.GetRootName();
 
+                                targetState.VariableLists.RemoveAll(item => item.Name == copiedList.Name);
                                 targetState.VariableLists.Add(copiedList);
                             }
                         }

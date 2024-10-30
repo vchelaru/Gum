@@ -9,6 +9,8 @@ using System.Collections.Generic;
 using System.Linq;
 #if GUM
 using DynamicExpresso;
+using Gum.PropertyGridHelpers;
+using Xceed.Wpf.Toolkit.PropertyGrid.Converters;
 #endif
 using Gum.DataTypes.Variables;
 using Gum.Managers;
@@ -18,14 +20,36 @@ namespace GumRuntime
     public static class ElementSaveExtensions
     {
         static Dictionary<string, Type> mElementToGueTypes = new Dictionary<string, Type>();
+        static Dictionary<string, Func<GraphicalUiElement>> mElementToGueTypeFuncs = new Dictionary<string, Func<GraphicalUiElement>>();
+        static Func<GraphicalUiElement> TemplateFunc;
 
         public static void RegisterGueInstantiationType(string elementName, Type gueInheritingType)
         {
             mElementToGueTypes[elementName] = gueInheritingType;
         }
 
+        public static void RegisterGueInstantiation<T>(string elementName, Func<T> templateFunc) where T : GraphicalUiElement
+        {
+            mElementToGueTypeFuncs[elementName] = templateFunc;
+        }
+
+
+        public static void RegisterDefaultInstantiationType<T>(Func<T> templateFunc) where T : GraphicalUiElement
+        {
+            TemplateFunc = templateFunc;
+        }
+
+
+
         public static GraphicalUiElement CreateGueForElement(ElementSave elementSave, bool fullInstantiation = false, string genericType = null)
         {
+#if DEBUG
+            if(elementSave == null)
+            {
+                throw new ArgumentNullException(nameof(elementSave));
+
+            }
+#endif
             GraphicalUiElement toReturn = null;
 
             var elementName = elementSave.Name;
@@ -33,7 +57,12 @@ namespace GumRuntime
             {
                 elementName = elementName + "<T>";
             }
-            if (mElementToGueTypes.ContainsKey(elementName))
+
+            if(mElementToGueTypeFuncs.ContainsKey(elementName))
+            {
+                toReturn = mElementToGueTypeFuncs[elementName]();
+            }
+            else if (mElementToGueTypes.ContainsKey(elementName))
             {
                 // This code allows sytems (like games that use Gum) to assign types
                 // to their GraphicalUiElements so that users of the code can work with
@@ -44,10 +73,20 @@ namespace GumRuntime
                 {
                     type = type.MakeGenericType(mElementToGueTypes[genericType]);
                 }
-                var constructor = type.GetConstructor(new Type[] { typeof(bool), typeof(bool) });
-
-
-                toReturn = constructor.Invoke(new object[] { fullInstantiation, true }) as GraphicalUiElement;
+                var constructorWithArgs = type.GetConstructor(new Type[] { typeof(bool), typeof(bool) });
+                if(constructorWithArgs != null)
+                {
+                    toReturn = constructorWithArgs.Invoke(new object[] { fullInstantiation, true }) as GraphicalUiElement;
+                }
+                else
+                {
+                    // For InteractiveGue in MonoGame Gum
+                    toReturn = (GraphicalUiElement)Activator.CreateInstance(type);
+                }
+            }
+            else if(TemplateFunc != null)
+            {
+                toReturn = TemplateFunc();
             }
             else
             {
@@ -170,6 +209,18 @@ namespace GumRuntime
             ApplyVariableReferences(graphicalElement, stateSave);
         }
 
+        public static bool ValueEquality(object val1, object val2)
+        {
+            if(val1 is string string1 && val2 is string string2)
+            {
+                return string1 == string2;
+            }
+            else
+            {
+                return val1?.Equals(val2) == true;
+            }
+        }
+
         public static void ApplyVariableReferences(this ElementSave element, StateSave stateSave)
         {
             foreach (var variableList in stateSave.VariableLists)
@@ -180,7 +231,25 @@ namespace GumRuntime
                     {
                         foreach (string referenceString in variableList.ValueAsIList)
                         {
-                            ApplyVariableReferencesOnSpecificOwner((InstanceSave)null, referenceString, stateSave);
+                            var result = ApplyVariableReferencesOnSpecificOwner((InstanceSave)null, referenceString, stateSave);
+                            #if GUM
+                            if(!string.IsNullOrEmpty(result.VariableName))
+                            {
+                                var unqualified = result.VariableName;
+                                if(unqualified?.Contains(".") == true)
+                                {
+                                    unqualified = unqualified.Substring(unqualified.IndexOf(".") + 1);
+                                }
+                                //SetVariableLogic.Self.ReactToChangedMember(unqualified, result.valueBefore, element, null, stateSave, 
+                                //    refresh: false, recordUndo: false, trySave: true);
+
+                                if(!ValueEquality(result.OldValue, result.NewValue))
+                                {
+                                    Gum.Plugins.PluginManager.Self.VariableSet(element, null, unqualified, result.OldValue);
+                                }
+
+                            }
+#endif
                         }
                     }
                     else
@@ -190,7 +259,21 @@ namespace GumRuntime
                         {
                             foreach(string referenceString in variableList.ValueAsIList)
                             {
-                                ApplyVariableReferencesOnSpecificOwner(instance, referenceString, stateSave);
+                                var result = ApplyVariableReferencesOnSpecificOwner(instance, referenceString, stateSave);
+                                #if GUM
+                                if (!string.IsNullOrEmpty(result.VariableName))
+                                {
+                                    var unqualified = result.VariableName;
+                                    if (unqualified?.Contains(".") == true)
+                                    {
+                                        unqualified = unqualified.Substring(unqualified.IndexOf(".") + 1);
+                                    }
+                                    if (!ValueEquality(result.OldValue, result.NewValue))
+                                    {
+                                        Gum.Plugins.PluginManager.Self.VariableSet(element, null, unqualified, result.OldValue);
+                                    }
+                                }
+#endif
                             }
                         }
                     }
@@ -305,7 +388,14 @@ namespace GumRuntime
             }
         }
 
-        private static void ApplyVariableReferencesOnSpecificOwner(InstanceSave instance, string referenceString, StateSave stateSave)
+        struct VariableReferenceAssignmentResult
+        {
+            public string VariableName;
+            public object OldValue;
+            public object NewValue;
+        }
+
+        private static VariableReferenceAssignmentResult ApplyVariableReferencesOnSpecificOwner(InstanceSave instance, string referenceString, StateSave stateSave)
         {
             var split = referenceString
                 .Split(equalsArray, StringSplitOptions.RemoveEmptyEntries)
@@ -313,7 +403,7 @@ namespace GumRuntime
 
             if(split.Length != 2)
             {
-                return;
+                return new VariableReferenceAssignmentResult { NewValue = null, OldValue = null, VariableName = null };
             }
 
             var left = split[0];
@@ -327,17 +417,33 @@ namespace GumRuntime
 
             var value = recursiveVariableFinder.GetValue(right);
 
+            object valueBefore = null;
+            string effectiveLeft = null;
             if (value != null)
             {
                 if(instance == null)
                 {
+                    effectiveLeft = left;
+                    valueBefore = stateSave.GetValue(left);
                     stateSave.SetValue(left, value, instance);
                 }
                 else
                 {
-                    stateSave.SetValue($"{instance.Name}.{left}", value, instance);
+                    var nameToSet = $"{instance.Name}.{left}";
+                    effectiveLeft = nameToSet;
+                    valueBefore = stateSave.GetValue(nameToSet);
+
+                    stateSave.SetValue(nameToSet, value, instance);
                 }
             }
+
+            return new VariableReferenceAssignmentResult
+            {
+                NewValue = value,
+                OldValue = valueBefore,
+                VariableName = effectiveLeft
+            };
+            //(effectiveLeft, valueBefore);
         }
 
         private static void GetRightSideAndState(InstanceSave instanceSave, ref string right, ref StateSave stateSave)
@@ -406,15 +512,22 @@ namespace GumRuntime
             // We need to set categories and states first since those are used below;
             toReturn.SetStatesAndCategoriesRecursively(elementSave);
 
-            toReturn.CreateGraphicalComponent(elementSave, systemManagers);
+            if(toReturn.RenderableComponent == null)
+            {
+                // This could have already been created by the type that is instantiated, so don't do this to double-create
+                toReturn.CreateGraphicalComponent(elementSave, systemManagers);
+            }
 
             toReturn.AddExposedVariablesRecursively(elementSave);
 
             toReturn.CreateChildrenRecursively(elementSave, systemManagers);
 
             toReturn.Tag = elementSave;
+            toReturn.ElementSave = elementSave;
 
             toReturn.SetInitialState();
+
+            toReturn.AfterFullCreation();
         }
 
         public static void CreateChildrenRecursively(GraphicalUiElement graphicalUiElement, ElementSave elementSave, ISystemManagers systemManagers)

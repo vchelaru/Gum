@@ -58,6 +58,10 @@ namespace Gum.Managers
 
         static ObjectFinder mObjectFinder;
 
+        /// <summary>
+        /// Provides quick access to Gum objects by name. Elements do not prefix their type
+        /// so a Screen would be "MainScreen" rather than "Screens/MainScreen"
+        /// </summary>
         Dictionary<string, ElementSave> cachedDictionary;
 
         public static ObjectFinder Self
@@ -82,46 +86,69 @@ namespace Gum.Managers
 
         #region Cache enable/disable
 
+        private int cacheEnableCount;
+
+        public void ForceResetCache()
+        {
+            cacheEnableCount = 0;
+            EnableCache();
+        }
+
         public void EnableCache()
         {
-            cachedDictionary = new Dictionary<string, ElementSave>();
-
-            var gumProject = GumProjectSave;
-
-            // Although it's not valid, we want to prevent a dupe from breaking the plugin, so we
-            // need to do ContainsKey checks
-
-            foreach (var screen in gumProject.Screens)
+            cacheEnableCount++;
+            if (cacheEnableCount == 1)
             {
-                var name = screen.Name.ToLowerInvariant();
-                if(!cachedDictionary.ContainsKey(name))
+                cachedDictionary = new Dictionary<string, ElementSave>();
+
+                var gumProject = GumProjectSave;
+
+                // Although it's not valid, we want to prevent a dupe from breaking the plugin, so we
+                // need to do ContainsKey checks
+
+                foreach (var screen in gumProject.Screens)
                 {
-                    cachedDictionary.Add(name, screen);
+                    var name = screen.Name.ToLowerInvariant();
+                    if(!cachedDictionary.ContainsKey(name))
+                    {
+                        cachedDictionary.Add(name, screen);
+                    }
                 }
-            }
 
-            foreach(var component in gumProject.Components)
-            {
-                var name = component.Name.ToLowerInvariant();
-                if (!cachedDictionary.ContainsKey(name))
+                foreach(var component in gumProject.Components)
                 {
-                    cachedDictionary.Add(name, component);
+                    var name = component.Name.ToLowerInvariant();
+                    if (!cachedDictionary.ContainsKey(name))
+                    {
+                        cachedDictionary.Add(name, component);
+                    }
                 }
-            }
 
-            foreach (var standard in gumProject.StandardElements)
-            {
-                var name = standard.Name.ToLowerInvariant();
-                if (!cachedDictionary.ContainsKey(name))
+                foreach (var standard in gumProject.StandardElements)
                 {
-                    cachedDictionary.Add(name, standard);
+                    var name = standard.Name.ToLowerInvariant();
+                    if (!cachedDictionary.ContainsKey(name))
+                    {
+                        cachedDictionary.Add(name, standard);
+                    }
                 }
             }
         }
 
         public void DisableCache()
         {
-            cachedDictionary = null;
+            if(cacheEnableCount > 0)
+            {
+                cacheEnableCount--;
+                if (cacheEnableCount == 0)
+                {
+                    cachedDictionary = null;
+                }
+            }
+            else
+            {
+                cachedDictionary = null;
+            }
         }
 
         #endregion
@@ -905,10 +932,17 @@ namespace Gum.Managers
         /// <returns>The root VariableSave</returns>
         public VariableSave GetRootVariable(string name, InstanceSave instance)
         {
+            // This could be referencing an invalid type
             var instanceElement = GetElementSave(instance.BaseType);
             var afterDot = name.Substring(name.IndexOf('.') + 1);
-
-            return GetRootVariable(afterDot, instanceElement);
+            if(instanceElement == null)
+            {
+                return null;
+            }
+            else
+            {
+                return GetRootVariable(afterDot, instanceElement);
+            }
         }
 
         public VariableSave GetRootVariable(string name, ElementSave element)
@@ -1035,6 +1069,42 @@ namespace Gum.Managers
             }
         }
 
+        internal bool IsInstanceRecursivelyReferencingElement(InstanceSave instance, ElementSave element)
+        {
+            if(instance == null)
+            {
+                throw new ArgumentNullException(nameof(instance));
+            }
+            if(element == null)
+            {
+                throw new ArgumentNullException(nameof(element));
+            }
+
+            if(instance.BaseType == element.Name)
+            {
+                return true;
+            }
+            else
+            {
+                var baseType = element.BaseType;
+
+                var baseElement = GetElementSave(baseType);
+
+                if(baseElement is StandardElementSave)
+                {
+                    return false;
+                }
+                else if(baseType == null)
+                {
+                    // this would be a screen...
+                    return false;
+                }
+                else
+                {
+                    return IsInstanceRecursivelyReferencingElement(instance, GetElementSave(baseType));
+                }
+            }
+        }
     }
 
 

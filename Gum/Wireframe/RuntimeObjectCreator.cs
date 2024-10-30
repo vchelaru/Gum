@@ -19,7 +19,7 @@ namespace Gum.Wireframe
             IRenderable containedObject = null;
             switch (baseType)
             {
-#if MONOGAME || FNA
+#if MONOGAME || KNI || FNA
 
                 case "Container":
                 case "Component": // this should never be set in Gum, but there could be XML errors or someone could have used an old Gum...
@@ -36,6 +36,10 @@ namespace Gum.Wireframe
                         255,255,255,255
 #endif
                             );
+
+#if GUM
+                        lineRectangle.IsDotted = true;
+#endif
 
                         containedObject = lineRectangle;
                     }

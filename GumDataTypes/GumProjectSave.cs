@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml.Serialization;
 using ToolsUtilities;
 
@@ -237,6 +238,32 @@ namespace Gum.DataTypes
             StandardElementReferences = new List<ElementReference>();
         }
 
+        public static GumProjectSave Load(string fileName)
+        {
+            var toReturn = Load(fileName, out GumLoadResult result);
+
+            if(!string.IsNullOrEmpty(result.ErrorMessage) || result.MissingFiles?.Count > 0)
+            {
+                var stringBuilder = new StringBuilder();
+
+                if(!string.IsNullOrEmpty(result.ErrorMessage))
+                {
+                    stringBuilder.AppendLine(result.ErrorMessage);
+                }
+
+                foreach(var missingFile in result.MissingFiles)
+                {
+                    stringBuilder.AppendLine($"Missing file: {missingFile}");
+                }
+
+
+                throw new Exception(stringBuilder.ToString());
+            }
+            else
+            {
+                return toReturn;
+            }
+        }
 
         public static GumProjectSave Load(string fileName, out GumLoadResult result)
         {
@@ -260,29 +287,45 @@ namespace Gum.DataTypes
 
             GumProjectSave gps = null;
 
-#if ANDROID || IOS || WINDOWS_8
-            gps = LoadFromTitleStorage(fileName, linkLoadingPreference, result);
-#else
-            if(!System.IO.File.Exists(fileName))
-            {
-                result.ErrorMessage = $"Could not find main project file {fileName}";
-                return null;
-            }
-            try
-            {
-                gps = FileManager.XmlDeserialize<GumProjectSave>(fileName);
-            }
-            catch (FileNotFoundException)
-            {
-                result.MissingFiles.Add(fileName);
-                return null;
-            }
-            catch (IOException ex)
-            {
-                result.ErrorMessage = ex.Message;
-                return null;
-            }
+            var shouldLoadFromTitleContainer = false;
+#if ANDROID || IOS
+            shouldLoadFromTitleContainer = true;
+#elif NET6_0_OR_GREATER
+            // If not using precompiles, it may be a standard .dll which is used everywhere, so we still can check like this:
+            shouldLoadFromTitleContainer = System.OperatingSystem.IsAndroid() || System.OperatingSystem.IsBrowser();
+
 #endif
+
+
+            if(shouldLoadFromTitleContainer)
+            {
+                using (var stream = FileManager.GetStreamForFile(fileName))
+                {
+                    gps = FileManager.XmlDeserializeFromStream<GumProjectSave>(stream);
+                }
+            }
+            else
+            {
+                if (!System.IO.File.Exists(fileName))
+                {
+                    result.ErrorMessage = $"Could not find main project file {fileName}";
+                    return null;
+                }
+                try
+                {
+                    gps = FileManager.XmlDeserialize<GumProjectSave>(fileName);
+                }
+                catch (FileNotFoundException)
+                {
+                    result.MissingFiles.Add(fileName);
+                    return null;
+                }
+                catch (IOException ex)
+                {
+                    result.ErrorMessage = ex.Message;
+                    return null;
+                }
+            }
             string projectRootDirectory = FileManager.GetDirectory(fileName);
 
             gps.PopulateElementSavesFromReferences(projectRootDirectory, linkLoadingPreference, result);
@@ -292,18 +335,26 @@ namespace Gum.DataTypes
             return gps;
         }
 
+        // todo - need to figure out how to get this to work with sub-elements each having their own streams
+        //public static GumProjectSave Load(Stream stream)
+        //{
+        //    GumProjectSave gps = null;
+        //    gps = FileManager.XmlDeserializeFromStream<GumProjectSave>(stream);
+        //    string projectRootDirectory = FileManager.GetDirectory(fileName);
+
+        //    gps.PopulateElementSavesFromReferences(projectRootDirectory, linkLoadingPreference, result);
+        //    // filename is unknown...
+        //    //gps.FullFileName = fileName.Replace('\\', '/');
+        //    return gps;
+
+        //}
+
 #if ANDROID || IOS
         static GumProjectSave LoadFromTitleStorage(string fileName, LinkLoadingPreference linkLoadingPreference, GumLoadResult result)
 		{
 			using (System.IO.Stream stream = Microsoft.Xna.Framework.TitleContainer.OpenStream(fileName))
 			{
 				GumProjectSave gps = FileManager.XmlDeserializeFromStream<GumProjectSave>(stream);
-
-				string projectRootDirectory = FileManager.GetDirectory(fileName);
-
-				gps.PopulateElementSavesFromReferences(projectRootDirectory, linkLoadingPreference, result);
-
-				gps.FullFileName = fileName;
 
 				return gps;
 			}
@@ -371,21 +422,24 @@ namespace Gum.DataTypes
                 }
             }
 
-            foreach(var reference in BehaviorReferences)
+            if  (BehaviorReferences != null)
             {
-                BehaviorSave toAdd = null;
+                foreach (var reference in BehaviorReferences)
+                {
+                    BehaviorSave toAdd = null;
 
-                try
-                {
-                    toAdd = reference.ToBehaviorSave(projectRootDirectory);
-                }
-                catch (Exception e)
-                {
-                    errors += "\nError loading " + reference.Name + ":\n" + e.Message;
-                }
-                if (toAdd != null)
-                {
-                    Behaviors.Add(toAdd);
+                    try
+                    {
+                        toAdd = reference.ToBehaviorSave(projectRootDirectory);
+                    }
+                    catch (Exception e)
+                    {
+                        errors += "\nError loading " + reference.Name + ":\n" + e.Message;
+                    }
+                    if (toAdd != null)
+                    {
+                        Behaviors.Add(toAdd);
+                    }
                 }
             }
 
@@ -455,7 +509,6 @@ namespace Gum.DataTypes
             }
         }
 
-#if  !UWP
         public void Save(string fileName, bool saveElements)
         {
             FileManager.XmlSerialize(this, fileName);
@@ -475,7 +528,6 @@ namespace Gum.DataTypes
                 SaveStandardElements(directory);
             }
         }
-#endif
 
         public void SaveStandardElements(string directory)
         {
@@ -502,9 +554,7 @@ namespace Gum.DataTypes
                     catch (Exception e)
                     {
                         exception = e;
-#if !WINDOWS8 && !UWP
                         System.Threading.Thread.Sleep(msBetweenSaves);
-#endif
                         numberOfTimesTried++;
                     }
                 }
@@ -547,7 +597,7 @@ namespace Gum.DataTypes
             }
         }
 
-        #endregion
+#endregion
 
     }
 }

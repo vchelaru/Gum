@@ -1,0 +1,363 @@
+{
+  "UserEvents": {
+    "Owner": [
+      {
+        "NewName": "Popup",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 0,
+        "TimestampUtc": "2024-10-29T11:08:30.6815516Z"
+      },
+      {
+        "NewName": "Popup (Container).NineSliceInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-10-29T11:09:03.5650224Z"
+      },
+      {
+        "NewName": "Popup (Container).TextInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-10-29T11:12:22.6411502Z"
+      },
+      {
+        "NewName": "MainMenu",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 0,
+        "TimestampUtc": "2024-10-29T11:40:08.4394702Z"
+      },
+      {
+        "NewName": "MainMenu.PopupInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-10-29T11:40:11.0868229Z"
+      },
+      {
+        "NewName": "ComponentWithStates",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 0,
+        "TimestampUtc": "2024-10-29T17:01:08.5864933Z"
+      },
+      {
+        "NewName": "ComponentWithStates (Container).ColoredRectangleInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-10-29T17:01:14.7940148Z"
+      },
+      {
+        "NewName": "MainMenu.ColoredRectangleInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-10-29T17:04:29.0462176Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "MainMenu.ColoredRectangle ColoredRectangleInstance in MainMenu",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2024-10-29T17:04:56.2515015Z"
+      },
+      {
+        "NewName": "MainMenu.ComponentWithStatesInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-10-29T17:04:58.8940064Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "MainMenu.ComponentWithStates ComponentWithStatesInstance in MainMenu",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2024-10-29T18:04:32.6858107Z"
+      },
+      {
+        "NewName": "Controls/ListBoxItem1",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 0,
+        "TimestampUtc": "2024-10-30T10:29:09.3585577Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem",
+        "OldName": "Controls/ListBoxItem1",
+        "ElementType": "Components",
+        "EventType": 2,
+        "TimestampUtc": "2024-10-30T10:29:18.66908Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).WeaponNameTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).TextInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T10:30:16.6198435Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).WeaponNameTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).TextInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T10:30:16.6218292Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).WeaponNameTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).TextInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T10:30:16.6334696Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).WeaponNameTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).TextInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T10:30:16.6344737Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).WeaponNameTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).TextInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T10:30:16.6418742Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).WeaponNameTextInstance1",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-10-30T10:30:40.2645016Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).DurabilityTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).WeaponNameTextInstance1",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T10:31:10.9657557Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).DurabilityTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).WeaponNameTextInstance1",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T10:31:10.9667551Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).DurabilityTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).WeaponNameTextInstance1",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T10:31:10.9804947Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).DurabilityTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).WeaponNameTextInstance1",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T10:31:10.9846171Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).DurabilityTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).WeaponNameTextInstance1",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T10:31:10.9908669Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).NameTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).WeaponNameTextInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T10:31:17.4182487Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).NameTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).WeaponNameTextInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T10:31:17.4232466Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).NameTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).WeaponNameTextInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T10:31:17.430247Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).NameTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).WeaponNameTextInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T10:31:17.4343647Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).NameTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).WeaponNameTextInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T10:31:17.4456777Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).DamageTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).DurabilityTextInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T10:31:26.492635Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).DamageTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).DurabilityTextInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T10:31:26.4936317Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).DamageTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).DurabilityTextInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T10:31:26.5026291Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).DamageTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).DurabilityTextInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T10:31:26.5077467Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).DamageTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).DurabilityTextInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T10:31:26.5134361Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).DamageTextInstance1",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-10-30T10:31:29.3137848Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).DurabilityTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).DamageTextInstance1",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T10:31:39.6496463Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).DurabilityTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).DamageTextInstance1",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T10:31:39.6506453Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).DurabilityTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).DamageTextInstance1",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T10:31:39.660267Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).DurabilityTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).DamageTextInstance1",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T10:31:39.6710539Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).DurabilityTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).DamageTextInstance1",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T10:31:39.6724545Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).DurabilityTextInstance1",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-10-30T10:31:54.9368711Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).LeveTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).DurabilityTextInstance1",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T10:55:20.4469823Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).LeveTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).DurabilityTextInstance1",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T10:55:20.4479813Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).LeveTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).DurabilityTextInstance1",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T10:55:20.4559804Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).LeveTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).DurabilityTextInstance1",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T10:55:20.4621086Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).LeveTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).DurabilityTextInstance1",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T10:55:20.467097Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).LevelTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).LeveTextInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T11:06:57.062904Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).LevelTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).LeveTextInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T11:06:57.0639036Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).LevelTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).LeveTextInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T11:06:57.0733128Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).LevelTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).LeveTextInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T11:06:57.077328Z"
+      },
+      {
+        "NewName": "Controls/WeaponListBoxItem (Container).LevelTextInstance",
+        "OldName": "Controls/WeaponListBoxItem (Container).LeveTextInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-10-30T11:06:57.0828725Z"
+      }
+    ]
+  }
+}

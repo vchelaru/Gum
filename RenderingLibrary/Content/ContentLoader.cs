@@ -87,7 +87,9 @@ namespace RenderingLibrary.Content
 
         private Texture2D LoadTexture2D(string fileName, SystemManagers managers)
         {
-            string fileNameStandardized = FileManager.Standardize(fileName, false, false);
+            const bool preserveCase = true;
+
+            string fileNameStandardized = FileManager.Standardize(fileName, preserveCase, false);
 
             if (FileManager.IsRelative(fileNameStandardized) && FileManager.IsUrl(fileName) == false)
             {
@@ -170,7 +172,7 @@ namespace RenderingLibrary.Content
         /// <returns>The loaded Texture2D</returns>
         private Texture2D LoadTextureFromFile(string fileName, SystemManagers managers = null)
         {
-            string fileNameStandardized = FileManager.Standardize(fileName, false, false);
+            string fileNameStandardized = FileManager.Standardize(fileName, true, false);
 
             if (FileManager.IsRelative(fileNameStandardized))
             {

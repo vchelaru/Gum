@@ -58,7 +58,7 @@
                                Margin="3,0,16,0" x:Name="PlaceholderText" ></TextBlock>
                 </decorators:NoSizeDecorator>
             </Grid>
-            <Label Content="&#186;" Height="32" Width="15" HorizontalAlignment="Right"></Label>
+            <Label Content="&#186;" Height="32" HorizontalAlignment="Right"></Label>
         </Grid>
     </Grid>
 </UserControl>

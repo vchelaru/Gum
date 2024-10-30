@@ -39,16 +39,21 @@ namespace Gum.ToolCommands
 
         public InstanceSave AddInstance(ElementSave elementToAddTo, string name, string type = null, string parentName = null)
         {
-            if (elementToAddTo == null)
-            {
-                throw new Exception("Could not add instance named " + name + " because no element is selected");
-            }
-
-
             InstanceSave instanceSave = new InstanceSave();
             instanceSave.Name = name;
             instanceSave.ParentContainer = elementToAddTo;
             instanceSave.BaseType = type ?? StandardElementsManager.Self.DefaultType;
+
+            return AddInstance(elementToAddTo, instanceSave, parentName);
+        }
+
+        public InstanceSave AddInstance(ElementSave elementToAddTo, InstanceSave instanceSave, string parentName = null)
+        {
+            if (elementToAddTo == null)
+            {
+                throw new Exception("Could not add instance named " + instanceSave.Name + " because no element is selected");
+            }
+
             elementToAddTo.Instances.Add(instanceSave);
 
             GumCommands.Self.GuiCommands.RefreshElementTreeView(elementToAddTo);
@@ -57,7 +62,7 @@ namespace Gum.ToolCommands
             //SelectedState.Self.SelectedInstance = instanceSave;
 
             // Set the parent before adding the instance in case plugins want to reject the creation of the object...
-            if(!string.IsNullOrEmpty(parentName))
+            if (!string.IsNullOrEmpty(parentName))
             {
                 elementToAddTo.DefaultState.SetValue($"{instanceSave.Name}.Parent", parentName, "string");
             }
@@ -66,7 +71,7 @@ namespace Gum.ToolCommands
             PluginManager.Self.InstanceAdd(elementToAddTo, instanceSave);
 
             // a plugin may have removed this instance. If so, we need to refresh the tree node again:
-            if(elementToAddTo.Instances.Contains(instanceSave) == false)
+            if (elementToAddTo.Instances.Contains(instanceSave) == false)
             {
                 GumCommands.Self.GuiCommands.RefreshElementTreeView(elementToAddTo);
                 Wireframe.WireframeObjectManager.Self.RefreshAll(true);

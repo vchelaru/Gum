@@ -198,10 +198,11 @@ namespace RenderingLibrary.Math.Geometry
 
         }
 
+        const int SidesInCircle = 24;
         private void UpdatePoints()
         {
 
-            mLinePrimitive.CreateCircle(Radius, 16);
+            mLinePrimitive.CreateCircle(Radius, SidesInCircle);
 
             if(mCircleOrigin == Geometry.CircleOrigin.TopLeft)
             {
@@ -237,8 +238,16 @@ namespace RenderingLibrary.Math.Geometry
             {
                 mLinePrimitive.Position.X = this.GetAbsoluteLeft();
                 mLinePrimitive.Position.Y = this.GetAbsoluteTop();
+
                 var systemManagers = managers as SystemManagers;
-                mLinePrimitive.Render(systemManagers.Renderer.SpriteRenderer, systemManagers);
+                var renderer = systemManagers.Renderer;
+                mLinePrimitive.Render(
+                    renderer.SpriteRenderer, 
+                    systemManagers,
+                    renderer.SinglePixelTexture,
+                    // circles cannot be dotted, so pass 0 for the repetition
+                    repetitionsPerLength:0,
+                    renderer.SinglePixelSourceRectangle);
             }
         }
         #endregion

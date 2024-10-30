@@ -18,7 +18,7 @@ namespace RenderingLibrary.Content
 
         static LoaderManager mSelf;
         
-        Dictionary<string, IDisposable> mCachedDisposables = new Dictionary<string, IDisposable>();
+        Dictionary<string, IDisposable> mCachedDisposables = new Dictionary<string, IDisposable>(StringComparer.OrdinalIgnoreCase);
 
         ContentManager mContentManager;
 

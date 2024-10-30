@@ -292,7 +292,7 @@ namespace Gum.Managers
 
                 AddColorVariables(stateSave, true);
 
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "Blend", Value = Blend.Normal, Name = "Blend", Category = "Rendering" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "Blend", Value = Gum.RenderingLibrary.Blend.Normal, Name = "Blend", Category = "Rendering" });
 
                 AddEventVariables(stateSave);
 
@@ -419,7 +419,7 @@ namespace Gum.Managers
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
 
                 AddColorVariables(stateSave);
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "Blend", Value = Blend.Normal, Name = "Blend", Category = "Rendering" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "Blend", Value = Gum.RenderingLibrary.Blend.Normal, Name = "Blend", Category = "Rendering" });
 
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "TextureAddress", Value = Gum.Managers.TextureAddress.EntireTexture, Name = "Texture Address", Category = "Source" });
 

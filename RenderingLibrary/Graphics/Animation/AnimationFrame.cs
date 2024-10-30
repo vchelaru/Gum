@@ -1,7 +1,7 @@
 using System;
 
 
-#if MONOGAME || XNA4
+#if MONOGAME || KNI || XNA4
 using Texture2D = Microsoft.Xna.Framework.Graphics.Texture2D;
 #endif
 
@@ -35,7 +35,7 @@ namespace Gum.Graphics.Animation
         #endregion
         public static AnimationFrame Empty;
 
-#if MONOGAME || XNA4
+#if MONOGAME || KNI || XNA4
         /// <summary>
         /// The texture that the AnimationFrame will show.
         /// </summary>
@@ -145,7 +145,7 @@ namespace Gum.Graphics.Animation
         }
 
 
-#if MONOGAME || XNA4
+#if MONOGAME || KNI || XNA4
         /// <summary>
         /// Creates a new AnimationFrame.
         /// </summary>
@@ -188,7 +188,7 @@ namespace Gum.Graphics.Animation
         }
 
 
-#if MONOGAME || XNA4
+#if MONOGAME || KNI || XNA4
         /// <summary>
         /// Returns a string representation of this.
         /// </summary>

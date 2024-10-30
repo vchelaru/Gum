@@ -19,6 +19,9 @@ using Grid = System.Windows.Controls.Grid;
 using Gum.Mvvm;
 using Gum.Plugins.InternalPlugins.TreeView;
 using Gum.Plugins.InternalPlugins.TreeView.ViewModels;
+using RenderingLibrary.Graphics;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolTip;
+using System.Management.Instrumentation;
 
 namespace Gum.Managers
 {
@@ -110,6 +113,7 @@ namespace Gum.Managers
         object mRecordedSelectedObject;
 
         TextBox searchTextBox;
+        CheckBox deepSearchCheckBox;
         #endregion
 
         #region Properties
@@ -277,6 +281,8 @@ namespace Gum.Managers
 
 
             relative = FileManager.Standardize(relative);
+            // in the tool we use forward slashes:
+            relative = relative.Replace("\\", "/");
 
             if (relative.StartsWith("screens/"))
             {
@@ -405,6 +411,9 @@ namespace Gum.Managers
                 new System.Windows.Controls.RowDefinition() 
                 { Height = new System.Windows.GridLength(22, System.Windows.GridUnitType.Pixel) });
             grid.RowDefinitions.Add(
+                new System.Windows.Controls.RowDefinition()
+                { Height = new System.Windows.GridLength(22, System.Windows.GridUnitType.Pixel) });
+            grid.RowDefinitions.Add(
                 new System.Windows.Controls.RowDefinition() 
                 { Height = new System.Windows.GridLength(1, System.Windows.GridUnitType.Star) });
 
@@ -414,7 +423,7 @@ namespace Gum.Managers
             //panel.Controls.Add(ObjectTreeView);
             TreeViewHost = new System.Windows.Forms.Integration.WindowsFormsHost();
             TreeViewHost.Child = ObjectTreeView;
-            Grid.SetRow(TreeViewHost, 1);
+            Grid.SetRow(TreeViewHost, 2);
             grid.Children.Add(TreeViewHost);
 
 
@@ -424,11 +433,17 @@ namespace Gum.Managers
             Grid.SetRow(searchBarHost, 0);
             grid.Children.Add(searchBarHost);
 
+            var checkBoxUi = CreateSearchCheckBoxUi();
+            var checkBoxHost = new System.Windows.Forms.Integration.WindowsFormsHost();
+            checkBoxHost.Child = checkBoxUi;
+            Grid.SetRow(checkBoxHost, 1);
+            grid.Children.Add(checkBoxHost);
+
             FlatList = CreateFlatSearchList();
             FlatList.HorizontalAlignment = System.Windows.HorizontalAlignment.Stretch;
             FlatList.VerticalAlignment = System.Windows.VerticalAlignment.Stretch;
 
-            Grid.SetRow(FlatList, 1);
+            Grid.SetRow(FlatList, 2);
             grid.Children.Add(FlatList);
 
 
@@ -1082,6 +1097,11 @@ namespace Gum.Managers
 
         public void RefreshUi(TreeNode node)
         {
+            if(node  == null)
+            {
+                throw new ArgumentNullException(nameof(node));
+            }
+
             if (node.Tag is ElementSave)
             {
                 ElementSave elementSave = node.Tag as ElementSave;
@@ -1502,27 +1522,64 @@ namespace Gum.Managers
                 {
                     if (screen.Name.ToLower().Contains(filterTextLower))
                     {
-                        var vm = new SearchItemViewModel();
-                        vm.BackingObject = screen;
-                        FlatList.FlatList.Items.Add(vm);
+                        AddToFlatList(screen);
+                    }
+
+                    if (deepSearchCheckBox.Checked)
+                    {
+                        foreach (var state in screen.States)
+                        {
+                            foreach (var variable in state.Variables)
+                            {
+                                if (variable == null)
+                                {
+                                    continue;
+                                }
+
+                                if (variable.Value != null && (variable.Value is string str) && str.ToLower().Contains(filterTextLower))
+                                {
+                                    var instance = screen.Instances.FirstOrDefault(item => item.Name == variable.SourceObject);
+                                    AddToFlatList(instance, $"{screen.Name}/{variable.SourceObject} ({variable.GetRootName()})");
+                                }
+                            }
+                        }
                     }
                 }
                 foreach (var component in project.Components)
                 {
                     if (component.Name.ToLower().Contains(filterTextLower))
                     {
-                        var vm = new SearchItemViewModel();
-                        vm.BackingObject = component;
-                        FlatList.FlatList.Items.Add(vm);
+                        AddToFlatList(component);
+                    }
+
+                    foreach (var instance in component.Instances)
+                    {
+                        if (instance.Name.ToLower().Contains(filterTextLower))
+                        {
+                            AddToFlatList(instance, $"{component.Name}/{instance.Name} ({instance.BaseType})");
+                        }
+                    }
+
+                    if (deepSearchCheckBox.Checked)
+                    {
+                        var textVariable = component.GetVariableFromThisOrBase("Text");
+
+                        if (textVariable == null)
+                        {
+                            continue;
+                        }
+
+                        if (textVariable.Value != null && (textVariable.Value as string).ToLower().Contains(filterTextLower))
+                        {
+                            AddToFlatList(component);
+                        }
                     }
                 }
                 foreach (var standard in project.StandardElements)
                 {
                     if (standard.Name.ToLower().Contains(filterTextLower))
                     {
-                        var vm = new SearchItemViewModel();
-                        vm.BackingObject = standard;
-                        FlatList.FlatList.Items.Add(vm);
+                        AddToFlatList(standard);
                     }
                 }
 
@@ -1553,6 +1610,18 @@ namespace Gum.Managers
 
             //    SelectedNode?.EnsureVisible();
             //}
+        }
+
+        private void AddToFlatList(object element, string customName = "")
+        {
+            if (element == null)
+            {
+                throw new ArgumentNullException($"{nameof(element)}");
+            }
+            var vm = new SearchItemViewModel();
+            vm.BackingObject = element;
+            vm.CustomText = customName;
+            FlatList.FlatList.Items.Add(vm);
         }
 
         private Control CreateSearchBoxUi()
@@ -1620,6 +1689,25 @@ namespace Gum.Managers
             xButton.Width = 24;
             panel.Controls.Add(xButton);
             panel.Height = 20;
+
+            return panel;
+        }
+
+        private Control CreateSearchCheckBoxUi()
+        {
+            var panel = new Panel();
+
+            deepSearchCheckBox = new CheckBox();
+            deepSearchCheckBox.Checked = false;
+            deepSearchCheckBox.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            deepSearchCheckBox.Text = "Search instance properties";
+            deepSearchCheckBox.CheckedChanged += (object sender, EventArgs args) =>
+            {
+                ReactToFilterTextChanged();
+            };
+
+            panel.Controls.Add(deepSearchCheckBox);
+
             return panel;
         }
 
@@ -1634,6 +1722,10 @@ namespace Gum.Managers
                     GumState.Self.SelectedState.SelectedElement = asComponent;
                 else if (backingObject is StandardElementSave asStandard)
                     GumState.Self.SelectedState.SelectedElement = asStandard;
+                else if (backingObject is InstanceSave asInstance)
+                    GumState.Self.SelectedState.SelectedInstance = asInstance;
+                else if (backingObject is VariableSave asVariable)
+                    GumState.Self.SelectedState.SelectedBehaviorVariable = asVariable;
 
                 searchTextBox.Text = null;
                 FilterText = null;

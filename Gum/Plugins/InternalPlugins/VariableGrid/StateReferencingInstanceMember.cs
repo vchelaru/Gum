@@ -8,6 +8,7 @@ using Gum.Plugins;
 using Gum.Reflection;
 using Gum.ToolStates;
 using Gum.Wireframe;
+using GumRuntime;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -78,7 +79,7 @@ namespace Gum.PropertyGridHelpers
         {
             get
             {
-                if(this.RootVariableName == "Name")
+                if (this.RootVariableName == "Name")
                 {
                     return false; // this can never be default, and if it is that causes all kinds of weirdness in variable displays.
                 }
@@ -110,11 +111,11 @@ namespace Gum.PropertyGridHelpers
         {
             get
             {
-                if (mPropertyDescriptor != null && mPropertyDescriptor.Converter != null && 
+                if (mPropertyDescriptor != null && mPropertyDescriptor.Converter != null &&
                     (mPropertyDescriptor.Converter is System.ComponentModel.BooleanConverter == false))
                 {
                     var values = mPropertyDescriptor.Converter.GetStandardValues(null);
-                    if(values != null)
+                    if (values != null)
                     {
                         List<object> toReturn = new List<object>();
                         if (values != null)
@@ -141,10 +142,10 @@ namespace Gum.PropertyGridHelpers
                     var attributes = mPropertyDescriptor.Attributes;
 
                     if (attributes != null)
-                    { 
-                        foreach(var attribute in attributes)
+                    {
+                        foreach (var attribute in attributes)
                         {
-                            if(attribute is EditorAttribute)
+                            if (attribute is EditorAttribute)
                             {
                                 EditorAttribute editorAttribute = attribute as EditorAttribute;
 
@@ -167,15 +168,15 @@ namespace Gum.PropertyGridHelpers
                 bool shouldBeComboBox = false;
                 // we want to still give priority to the base displayer since
                 // we may want to replace combo boxes with something like toggles:
-                if(CustomOptions != null && base.PreferredDisplayer == null)
+                if (CustomOptions != null && base.PreferredDisplayer == null)
                 {
                     shouldBeComboBox =
-                       CustomOptions.Count != 0 || 
-                    // If this is a state, still show the combo box even if there are no
-                    // available states to select from. Otherwise it's a confusing text box
+                       CustomOptions.Count != 0 ||
+                       // If this is a state, still show the combo box even if there are no
+                       // available states to select from. Otherwise it's a confusing text box
                        mPropertyDescriptor.Converter is Converters.AvailableStatesConverter;
                 }
-                if(shouldBeComboBox)
+                if (shouldBeComboBox)
                 {
                     return typeof(WpfDataUi.Controls.ComboBoxDisplay);
                 }
@@ -198,7 +199,7 @@ namespace Gum.PropertyGridHelpers
         {
             get
             {
-                return mStateSave.Variables.FirstOrDefault(item => 
+                return mStateSave.Variables.FirstOrDefault(item =>
                     item.Name == mVariableName || item.ExposedAsName == mVariableName);
             }
         }
@@ -220,7 +221,7 @@ namespace Gum.PropertyGridHelpers
 
         #region Methods
 
-        public StateReferencingInstanceMember(InstanceSavePropertyDescriptor ispd, StateSave stateSave, 
+        public StateReferencingInstanceMember(InstanceSavePropertyDescriptor ispd, StateSave stateSave,
             StateSaveCategory stateSaveCategory,
             string variableName, InstanceSave instanceSave, ElementSave elementSave) :
             base(variableName, stateSave)
@@ -232,7 +233,7 @@ namespace Gum.PropertyGridHelpers
             mPropertyDescriptor = ispd;
             ElementSave = elementSave;
 
-            if(ispd?.IsReadOnly == true)
+            if (ispd?.IsReadOnly == true)
             {
                 // don't assign it (can't null it)
                 //this.CustomSetEvent = null;
@@ -240,6 +241,7 @@ namespace Gum.PropertyGridHelpers
             else
             {
                 this.CustomSetPropertyEvent += HandleCustomSet;
+                this.SetToDefault += HandleSetToDefault;
             }
             this.CustomGetEvent += HandleCustomGet;
             this.CustomGetTypeEvent += HandleCustomGetType;
@@ -258,9 +260,9 @@ namespace Gum.PropertyGridHelpers
             }
 
             var alreadyHasSpaces = RootVariableName?.Contains(" ");
-            if(alreadyHasSpaces == false)
+            if (alreadyHasSpaces == false)
             {
-                DisplayName =  ToolsUtilities.StringFunctions.InsertSpacesInCamelCaseString(RootVariableName);
+                DisplayName = ToolsUtilities.StringFunctions.InsertSpacesInCamelCaseString(RootVariableName);
             }
             else
             {
@@ -308,7 +310,7 @@ namespace Gum.PropertyGridHelpers
                     defaultState = PluginManager.Self.GetDefaultStateFor(standardElement.Name);
                 }
 
-                if(defaultState != null)
+                if (defaultState != null)
                 {
                     var defaultStateVariable = defaultState.Variables.FirstOrDefault(item => item.Name == RootVariableName);
 
@@ -330,13 +332,15 @@ namespace Gum.PropertyGridHelpers
 
         }
 
+
+
         private void HandleUiCreated(System.Windows.Controls.UserControl obj)
         {
             if (this.RootVariableName == "VariableReferences")
             {
                 var asTextBox = obj as StringListTextBoxDisplay;
 
-                if(asTextBox != null)
+                if (asTextBox != null)
                 {
                     asTextBox.KeyDown += (s, e) =>
                     {
@@ -344,28 +348,28 @@ namespace Gum.PropertyGridHelpers
                         {
                             var text = asTextBox.GetCurrentLineText();
 
-                            if(text?.Contains("=") == true)
+                            if (text?.Contains("=") == true)
                             {
                                 var rightSideOfEquals = text.Substring(text.IndexOf("=") + 1).Trim();
 
-                                if(rightSideOfEquals.Contains("."))
+                                if (rightSideOfEquals.Contains("."))
                                 {
                                     var beforeDot = rightSideOfEquals.Substring(0, rightSideOfEquals.IndexOf("."));
 
-                                    if(beforeDot.Contains("/"))
+                                    if (beforeDot.Contains("/"))
                                     {
                                         beforeDot = beforeDot.Substring(beforeDot.LastIndexOf("/") + 1);
                                     }
 
                                     var element = ObjectFinder.Self.GetElementSave(beforeDot);
 
-                                    if(element != null)
+                                    if (element != null)
                                     {
                                         var afterDot = rightSideOfEquals.Substring(rightSideOfEquals.IndexOf(".") + 1);
 
                                         var instanceName = afterDot;
 
-                                        if(afterDot.Contains("."))
+                                        if (afterDot.Contains("."))
                                         {
                                             instanceName = afterDot.Substring(0, afterDot.IndexOf("."));
                                         }
@@ -375,7 +379,7 @@ namespace Gum.PropertyGridHelpers
                                         {
                                             instance = element.GetInstance(instanceName);
                                         }
-                                        if(instance != null)
+                                        if (instance != null)
                                         {
                                             SelectedState.Self.SelectedInstance = instance;
                                         }
@@ -407,7 +411,7 @@ namespace Gum.PropertyGridHelpers
 
         private void TryAddCopyVariableReferenceMenuOptions()
         {
-            if(this.mVariableName != null)
+            if (this.mVariableName != null)
             {
                 ContextMenuEvents.Add("Copy Qualified Variable Name", (sender, e) =>
                 {
@@ -417,7 +421,7 @@ namespace Gum.PropertyGridHelpers
                     {
                         qualifiedName = $"Screens/{ElementSave.Name}";
                     }
-                    else if(ElementSave is ComponentSave)
+                    else if (ElementSave is ComponentSave)
                     {
                         qualifiedName = $"Components/{ElementSave.Name}";
                     }
@@ -439,16 +443,16 @@ namespace Gum.PropertyGridHelpers
                 });
             }
 
-            if(this.VariableSave?.IsCustomVariable == true)
+            if (this.VariableSave?.IsCustomVariable == true)
             {
                 ContextMenuEvents.Add("Delete Variable", (sender, e) =>
                 {
-                    if(ElementSave?.DefaultState.Variables.Contains(this.VariableSave) == true)
+                    if (ElementSave?.DefaultState.Variables.Contains(this.VariableSave) == true)
                     {
                         ElementSave.DefaultState.Variables.Remove(this.VariableSave);
 
                         GumCommands.Self.FileCommands.TryAutoSaveElement(ElementSave);
-                        GumCommands.Self.GuiCommands.RefreshPropertyGrid(force:true);
+                        GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
                     }
                 });
             }
@@ -489,7 +493,7 @@ namespace Gum.PropertyGridHelpers
         {
             // Find this variable in the source instance and make it not exposed
             VariableSave variableSave = this.VariableSave;
-            
+
             if (variableSave != null)
             {
                 var oldExposedName = variableSave.ExposedAsName;
@@ -509,7 +513,7 @@ namespace Gum.PropertyGridHelpers
                 MessageBox.Show("Cannot expose variables on components or screens, only on instances");
                 return;
             }
-            
+
             // Update June 1, 2017
             // This code used to expose
             // a variable on whatever state
@@ -529,10 +533,10 @@ namespace Gum.PropertyGridHelpers
 
                 ElementSave elementForInstance = ObjectFinder.Self.GetElementSave(instanceSave.BaseType);
                 var variableInDefault = elementForInstance.DefaultState.GetVariableSave(rawVariableName);
-                while(variableInDefault == null && !string.IsNullOrEmpty(elementForInstance.BaseType))
+                while (variableInDefault == null && !string.IsNullOrEmpty(elementForInstance.BaseType))
                 {
                     elementForInstance = ObjectFinder.Self.GetElementSave(elementForInstance.BaseType);
-                    if(elementForInstance?.DefaultState == null)
+                    if (elementForInstance?.DefaultState == null)
                     {
                         break;
                     }
@@ -592,7 +596,7 @@ namespace Gum.PropertyGridHelpers
                             if (isActive == false)
                             {
                                 // gotta remove the variable:
-                                if(elementSave.DefaultState.Variables.Contains(existingVariable))
+                                if (elementSave.DefaultState.Variables.Contains(existingVariable))
                                 {
                                     // We may need to worry about inheritance...eventually
                                     elementSave.DefaultState.Variables.Remove(existingVariable);
@@ -615,7 +619,7 @@ namespace Gum.PropertyGridHelpers
 
         private object HandleCustomGet(object instance)
         {
-            if(RootVariableName == "Name" && instance is InstanceSave asInstanceSave)
+            if (RootVariableName == "Name" && instance is InstanceSave asInstanceSave)
             {
                 return asInstanceSave.Name;
             }
@@ -725,20 +729,188 @@ namespace Gum.PropertyGridHelpers
                     }
 
                     stateSave.SetValue(Name, newValue, instanceSave, variableType);
-                    if (!string.IsNullOrEmpty(existingVariable?.ExposedAsName)  && foundAtComponentOrBase != null)
+                    if (!string.IsNullOrEmpty(existingVariable?.ExposedAsName) && foundAtComponentOrBase != null)
                     {
                         var variable = stateSave.GetVariableSave(Name);
                         variable.ExposedAsName = existingVariable.ExposedAsName;
                     }
                 }
 
-                NotifyVariableLogic(gumElementOrInstanceSaveAsObject, trySave:setPropertyArgs.CommitType == SetPropertyCommitType.Full);
+                NotifyVariableLogic(gumElementOrInstanceSaveAsObject, trySave: setPropertyArgs.CommitType == SetPropertyCommitType.Full);
             }
             else
             {
                 mStateSave.SetValue(mVariableName, newValue);
             }
             // set the value
+        }
+
+        private void HandleSetToDefault(string obj)
+        {
+            string variableName = Name;
+
+            bool shouldReset = false;
+            bool affectsTreeView = false;
+
+            var selectedElement = SelectedState.Self.SelectedElement;
+            var selectedInstance = SelectedState.Self.SelectedInstance;
+
+            if (selectedInstance != null)
+            {
+                affectsTreeView = variableName == "Parent";
+                //variableName = SelectedState.Self.SelectedInstance.Name + "." + variableName;
+
+                shouldReset = true;
+            }
+            else if (selectedElement != null)
+            {
+                shouldReset =
+                    // Don't let the user reset standard element variables, they have to have some actual value
+                    (selectedElement is StandardElementSave) == false ||
+                    // ... unless it's not the default
+                    SelectedState.Self.SelectedStateSave != SelectedState.Self.SelectedElement.DefaultState;
+            }
+
+            // now we reset, but we don't remove the variable:
+            //if(shouldReset)
+            //{
+            //    // If the variable is part of a category, then we don't allow setting the variable to default - they gotta do it through the cateory itself
+
+            //    if (isPartOfCategory)
+            //    {
+            //        var window = new DeletingVariablesInCategoriesMessageBox();
+            //        window.ShowDialog();
+
+            //        shouldReset = false;
+            //    }
+            //}
+
+            StateSave state = SelectedState.Self.SelectedStateSave;
+            VariableSave variable = state.GetVariableSave(variableName);
+            var oldValue = variable?.Value;
+            LastOldValue = oldValue;
+
+            if (shouldReset)
+            {
+                bool isPartOfCategory = StateSaveCategory != null;
+
+                bool wasChangeMade = false;
+                if (variable != null)
+                {
+                    // Don't remove the variable if it's part of an element - we still want it there
+                    // so it can be set, we just don't want it to set a value
+                    // Update August 13, 2013
+                    // Actually, we do want to remove it if it's part of an element but not the
+                    // default state
+                    // Update October 17, 2017
+                    // Now that components do not
+                    // necessarily need to have all
+                    // of their variables, we can remove
+                    // the variable now. In fact, we should
+                    //bool shouldRemove = SelectedState.Self.SelectedInstance != null ||
+                    //    SelectedState.Self.SelectedStateSave != SelectedState.Self.SelectedElement.DefaultState;
+                    // Also, don't remove it if it's an exposed variable, this un-exposes things
+                    bool shouldRemove = string.IsNullOrEmpty(variable.ExposedAsName) && !isPartOfCategory && !variable.IsCustomVariable;
+
+                    // Update October 7, 2019
+                    // Actually, we can remove any variable so long as the current state isn't the "base definition" for it
+                    // For elements - no variables are the base variable definitions except for variables that are categorized
+                    // state variables for categories defined in this element
+                    if (shouldRemove)
+                    {
+                        var isState = variable.IsState(selectedElement, out ElementSave categoryContainer, out StateSaveCategory categoryForVariable);
+
+                        if (isState)
+                        {
+                            var isDefinedHere = categoryForVariable != null && categoryContainer == selectedElement;
+
+                            shouldRemove = !isDefinedHere;
+                        }
+                    }
+
+
+                    if (shouldRemove)
+                    {
+                        state.Variables.Remove(variable);
+                    }
+                    else if (isPartOfCategory)
+                    {
+                        var variableInDefault = SelectedState.Self.SelectedElement.DefaultState.GetVariableSave(variable.Name);
+                        if (variableInDefault != null)
+                        {
+                            GumCommands.Self.GuiCommands.PrintOutput(
+                                $"The variable {variable.Name} is part of the category {StateSaveCategory.Name} so it cannot be removed. Instead, the value has been set to the value in the default state");
+
+                            variable.Value = variableInDefault.Value;
+                        }
+                        else
+                        {
+                            // If it's a state, we can un-set that back to null, that's okay:
+                            if(variable.IsState(selectedElement))
+                            {
+                                variable.Value = null;
+                                variable.SetsValue = true;
+                            }
+                            else
+                            {
+                                GumCommands.Self.GuiCommands.PrintOutput("Could not set value to default because the default state doesn't set this value");
+
+                            }
+
+                        }
+
+                    }
+                    else
+                    {
+                        variable.Value = null;
+                        variable.SetsValue = false;
+                    }
+
+                    wasChangeMade = true;
+                    // We need to refresh the property grid and the wireframe display
+
+                }
+                else
+                {
+                    // Maybe this is a variable list?
+                    VariableListSave variableList = state.GetVariableListSave(variableName);
+                    if (variableList != null)
+                    {
+                        state.VariableLists.Remove(variableList);
+
+                        // We don't support this yet:
+                        // variableList.SetsValue = false; // just to be safe
+                        wasChangeMade = true;
+                    }
+                }
+
+                ElementSaveExtensions.ApplyVariableReferences(selectedElement, state);
+
+
+                if (wasChangeMade)
+                {
+                    Undo.UndoManager.Self.RecordUndo();
+                    PropertyGridManager.Self.RefreshUI(force: true);
+                    WireframeObjectManager.Self.RefreshAll(true);
+                    SelectionManager.Self.Refresh();
+
+                    PluginManager.Self.VariableSet(selectedElement, selectedInstance, variableName, oldValue);
+
+                    if (affectsTreeView)
+                    {
+                        GumCommands.Self.GuiCommands.RefreshElementTreeView(SelectedState.Self.SelectedElement);
+                    }
+
+                    GumCommands.Self.FileCommands.TryAutoSaveElement(SelectedState.Self.SelectedElement);
+                }
+            }
+            else
+            {
+                IsDefault = false;
+            }
+
+            var gumElementOrInstanceSaveAsObject = this.Instance;
+            NotifyVariableLogic(gumElementOrInstanceSaveAsObject, trySave: true);
         }
 
         public void NotifyVariableLogic(object gumElementOrInstanceSaveAsObject, bool? forceRefresh = null, bool trySave = true)
@@ -779,7 +951,7 @@ namespace Gum.PropertyGridHelpers
             if (!handledByExposedVariable)
             {
                 SetVariableLogic.Self.PropertyValueChanged(name, LastOldValue, gumElementOrInstanceSaveAsObject as InstanceSave, refresh: effectiveRefresh, recordUndo: effectiveRecordUndo,
-                    trySave:trySave);
+                    trySave: trySave);
             }
         }
 
@@ -823,7 +995,7 @@ namespace Gum.PropertyGridHelpers
             else
             {
                 var variableType = TryGetTypeFromVariableListSave();
-                return variableType ?? 
+                return variableType ??
                     typeof(string);
             }
         }
@@ -849,8 +1021,8 @@ namespace Gum.PropertyGridHelpers
         public Type TryGetTypeFromVariableListSave()
         {
             string typeName = null;
-            
-            if(InstanceSave != null)
+
+            if (InstanceSave != null)
             {
                 typeName = InstanceSave?.GetVariableListFromThisOrBase(
                     InstanceSave.ParentContainer, RootVariableName)?.Type;
@@ -860,7 +1032,7 @@ namespace Gum.PropertyGridHelpers
                 typeName = ElementSave.GetVariableListFromThisOrBase(RootVariableName)?.Type;
             }
 
-            if(!string.IsNullOrEmpty(typeName))
+            if (!string.IsNullOrEmpty(typeName))
             {
                 return TypeManager.Self.GetTypeFromString($"List<{typeName}>");
             }

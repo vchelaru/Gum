@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Media;
 using WpfDataUi.DataTypes;
 
@@ -50,22 +51,6 @@ namespace WpfDataUi.Controls
         }
 
         public bool SuppressSettingProperty { get; set; }
-
-        public Brush DesiredForegroundBrush
-        {
-            get
-            {
-                if (InstanceMember.IsDefault)
-                {
-                    return Brushes.Green;
-                }
-                else
-                {
-                    return Brushes.Black;
-
-                }
-            }
-        }
 
         protected Grid Grid
         {
@@ -240,7 +225,7 @@ namespace WpfDataUi.Controls
             HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
             HintTextBlock.Text = InstanceMember?.DetailText;
 
-            TextBlock.SetForeground(ComboBox, DesiredForegroundBrush);
+            SyncForegroundWithState();
 
 
             this.RefreshContextMenu(ComboBox.ContextMenu);
@@ -271,10 +256,7 @@ namespace WpfDataUi.Controls
             this.ComboBox.Text = valueOnInstance?.ToString();
             this.SuppressSettingProperty = false;
 
-            if (PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs("DesiredForegroundBrush"));
-            }
+            SyncForegroundWithState();
 
             return ApplyValueResult.Success;
         }
@@ -400,11 +382,19 @@ namespace WpfDataUi.Controls
         {
             this.TrySetValueOnInstance();
 
-            if (PropertyChanged != null)
+            SyncForegroundWithState();
+        }
+
+        private void SyncForegroundWithState()
+        {
+            if (InstanceMember.IsDefault)
             {
-                PropertyChanged(this, new PropertyChangedEventArgs("DesiredForegroundBrush"));
+                ComboBox.Foreground = Brushes.Green;
             }
-            TextBlock.SetForeground(ComboBox, DesiredForegroundBrush);
+            else
+            {
+                ComboBox.ClearValue(Control.ForegroundProperty);
+            }
         }
     }
 }

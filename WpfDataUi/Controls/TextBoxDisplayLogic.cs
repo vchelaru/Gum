@@ -403,9 +403,9 @@ namespace WpfDataUi.Controls
             }
         }
 
-        public SolidColorBrush DefaultValueBackground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(180, 255, 180));
-        public SolidColorBrush IndeterminateValueBackground = new SolidColorBrush(System.Windows.Media.Colors.LightGray);
-        public SolidColorBrush CustomValueBackground = System.Windows.Media.Brushes.White;
+        public static SolidColorBrush DefaultValueBackground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(180, 255, 180)) { Opacity = 0.5 };
+        public static SolidColorBrush IndeterminateValueBackground = new SolidColorBrush(System.Windows.Media.Colors.LightGray);
+        public static SolidColorBrush CustomValueBackground = System.Windows.Media.Brushes.White;
 
 
         public object GetValueInDirection(int direction, object value)
@@ -481,9 +481,7 @@ namespace WpfDataUi.Controls
                 mContainer.TrySetValueOnUi(valueOnInstance);
             }
 
-
-            bool isDefault = InstanceMember.IsDefault;
-            if (isDefault)
+            if (InstanceMember.IsDefault)
             {
                 mAssociatedTextBox.Background = DefaultValueBackground;
             }
@@ -493,7 +491,14 @@ namespace WpfDataUi.Controls
             }
             else
             {
-                mAssociatedTextBox.Background = CustomValueBackground;
+                if (mAssociatedTextBox.TryFindResource("Frb.Brushes.Field.Background") != null)
+                {
+                    mAssociatedTextBox.SetResourceReference(TextBox.BackgroundProperty, "Frb.Brushes.Field.Background");
+                }
+                else
+                {
+                    mAssociatedTextBox.ClearValue(TextBox.BackgroundProperty);
+                }
             }
         }
     }

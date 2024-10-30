@@ -5,46 +5,36 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Gum.Content.AnimationChain
 {
-#if !UWP
     [Serializable]
-#endif
     public class AnimationFrameSave
     {
-        #region XML Docs
         /// <summary>
         /// Whether the texture should be flipped horizontally.
         /// </summary>
-        #endregion
         public bool FlipHorizontal;
         public bool ShouldSerializeFlipHorizontal()
         {
             return FlipHorizontal == true;
         }
 
-        #region XML Docs
         /// <summary>
         /// Whether the texture should be flipped on the vertidally.
         /// </summary>
-        #endregion
         public bool FlipVertical;
         public bool ShouldSerializeFlipVertical()
         {
             return FlipVertical == true;
         }
 
-        #region XML Docs
         /// <summary>
         /// Used in XML Serialization of AnimationChains - this should
         /// not explicitly be set by the user.
         /// </summary>
-        #endregion
         public string TextureName;
 
-        #region XML Docs
         /// <summary>
         /// The amount of time in seconds the AnimationFrame should be shown for.
         /// </summary>
-        #endregion
         public float FrameLength;
 
         /// <summary>
@@ -71,26 +61,22 @@ namespace Gum.Content.AnimationChain
         /// </summary>
         public float BottomCoordinate = 1;
 
-        #region XML Docs
         /// <summary>
         /// The relative X position of the object that is using this AnimationFrame.  This
         /// is only applied if the IAnimationChainAnimatable's UseAnimationRelativePosition is
         /// set to true.
         /// </summary>
-        #endregion
         public float RelativeX;
         public bool ShouldSerializeRelativeX()
         {
             return RelativeX != 0;
         }
 
-        #region XML Docs
         /// <summary>
         /// The relative Y position of the object that is using this AnimationFrame.  This
         /// is only applied if the IAnimationChainAnimatable's UseAnimationRelativePosition is
         /// set to true.
         /// </summary>
-        #endregion
         public float RelativeY;
         public bool ShouldSerializeRelativeY()
         {
@@ -99,9 +85,7 @@ namespace Gum.Content.AnimationChain
 
 
         [XmlIgnore]
-#if !UWP
         [NonSerialized]
-#endif
         internal Texture2D mTextureInstance;
 
 

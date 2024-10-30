@@ -137,6 +137,12 @@ namespace RenderingLibrary.Math.Geometry
 
         public bool IsDotted { get; set; }
 
+        public float LinePixelWidth
+        {
+            get => mLinePrimitive.LinePixelWidth;
+            set => mLinePrimitive.LinePixelWidth = value;
+        }
+
         #endregion
 
         #region Constructor
@@ -228,6 +234,7 @@ namespace RenderingLibrary.Math.Geometry
                 mLinePrimitive.Position.Y = this.GetAbsoluteTop();
 
                 Renderer renderer;
+                var systemManagers = managers as SystemManagers;
                 if (managers != null)
                 {
                     renderer = managers.Renderer as Renderer;
@@ -237,17 +244,28 @@ namespace RenderingLibrary.Math.Geometry
                     renderer = Renderer.Self;
                 }
 
-                Texture2D textureToUse = renderer.SinglePixelTexture;
 
                 if (IsDotted)
                 {
-                    textureToUse = renderer.DottedLineTexture;
+                    var textureToUse = renderer.DottedLineTexture;
+
+                    mLinePrimitive.Render(renderer.SpriteRenderer, systemManagers, textureToUse, .1f * renderer.Camera.Zoom);
+                }
+                else
+                {
+                    var textureToUse = renderer.SinglePixelTexture;
+                    if(renderer.SinglePixelSourceRectangle != null)
+                    {
+                        mLinePrimitive.Render(renderer.SpriteRenderer, systemManagers, textureToUse, 0, renderer.SinglePixelSourceRectangle);
+                    }
+                    else
+                    {
+                        mLinePrimitive.Render(renderer.SpriteRenderer, systemManagers, textureToUse, .1f * renderer.Camera.Zoom);
+                    }
                 }
 
-                var systemManagers = managers as SystemManagers;
 
                 //mLinePrimitive.Render(spriteRenderer, managers, textureToUse, .2f * renderer.Camera.Zoom);
-                mLinePrimitive.Render(systemManagers.Renderer.SpriteRenderer, systemManagers, textureToUse, .1f * renderer.Camera.Zoom);
             }
         }
 

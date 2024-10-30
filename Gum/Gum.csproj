@@ -187,7 +187,10 @@
     <Compile Include="Graphics\Animation\Content\AnimationChainListSave.cs" />
     <Compile Include="Graphics\Animation\Content\AnimationChainSave.cs" />
     <Compile Include="Graphics\Animation\Content\AnimationFrameSave.cs" />
-    <Compile Include="Gui\Window\DeleteOptionsWindow.xaml.cs">
+    <Compile Include="Gui\Windows\CreateComponentWindow.xaml.cs">
+      <DependentUpon>CreateComponentWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Gui\Windows\DeleteOptionsWindow.xaml.cs">
       <DependentUpon>DeleteOptionsWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Logic\CopyPasteLogic.cs" />
@@ -246,7 +249,7 @@
     <Compile Include="Plugins\InternalPlugins\VariableGrid\MainVariableGridPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\VariableGrid\StateSaveCategoryDisplayer.cs" />
     <Compile Include="Plugins\PluginTab.cs" />
-    <Compile Include="Plugins\InternalPlugins\ProjectPropertiesWindowPlugin\MainPlugin.cs" />
+    <Compile Include="Plugins\InternalPlugins\ProjectPropertiesWindowPlugin\MainPropertiesWindowPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\ProjectPropertiesWindowPlugin\ProjectPropertiesControl.xaml.cs">
       <DependentUpon>ProjectPropertiesControl.xaml</DependentUpon>
     </Compile>
@@ -664,6 +667,9 @@
     <None Include="Content\Icons\ChildrenLayout\AutoGridHorizontal.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="Content\ExampleSpriteFrame.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Content\Icons\Origins\Baseline.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -729,7 +735,11 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Gui\Window\DeleteOptionsWindow.xaml">
+    <Page Include="Gui\Windows\CreateComponentWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Gui\Windows\DeleteOptionsWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

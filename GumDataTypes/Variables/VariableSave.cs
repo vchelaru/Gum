@@ -138,6 +138,12 @@ namespace Gum.DataTypes.Variables
             get;
             set;
         }
+        // Update June 16, 2024
+        // Making this true because it 
+        // is super inconvenient to have 
+        // this be false when creating states
+        // in code:
+        = true;
 
         public bool IsHiddenInPropertyGrid
         {
@@ -159,14 +165,12 @@ namespace Gum.DataTypes.Variables
             set;
         }
 
-#if !UWP
         [XmlIgnore]
         public TypeConverter CustomTypeConverter
         {
             get;
             set;
         }
-#endif
 
         [XmlIgnore]
         public bool CanOnlyBeSetInDefaultState { get; set; }
@@ -192,9 +196,7 @@ namespace Gum.DataTypes.Variables
         public VariableSave Clone()
         {
             VariableSave toReturn = (VariableSave)this.MemberwiseClone();
-#if !WINDOWS_8 && !UWP
             toReturn.CustomTypeConverter = this.CustomTypeConverter;
-#endif
             toReturn.ExcludedValuesForEnum = new List<object>();
             toReturn.ExcludedValuesForEnum.AddRange(this.ExcludedValuesForEnum);
 

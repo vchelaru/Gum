@@ -120,6 +120,7 @@ namespace CodeOutputPlugin
             codeOutputProjectSettings = CodeOutputProjectSettingsManager.CreateOrLoadSettingsForProject();
             viewModel.IsCodeGenPluginEnabled = codeOutputProjectSettings.IsCodeGenPluginEnabled;
             viewModel.IsShowCodegenPreviewChecked = codeOutputProjectSettings.IsShowCodegenPreviewChecked;
+            viewModel.InheritanceLocation = codeOutputProjectSettings.InheritanceLocation;
             CustomVariableManager.ViewModel = viewModel;
             HandleElementSelected(null);
         }
@@ -163,7 +164,7 @@ namespace CodeOutputPlugin
 
         private void LoadCodeSettingsFile(ElementSave element)
         {
-            if(element != null)
+            if(element != null && GumState.Self.ProjectState.GumProjectSave?.FullFileName != null)
             {
                 control.CodeOutputElementSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(element);
             }
@@ -212,7 +213,7 @@ namespace CodeOutputPlugin
 
                 var elementSettings = control.CodeOutputElementSettings;
 
-                if (elementSettings.AutoGenerateOnChange)
+                if (elementSettings.AutoGenerateOnChange && control.CodeOutputProjectSettings.IsCodeGenPluginEnabled)
                 {
                     GenerateCodeForSelectedElement(showPopups: false);
                 }
@@ -326,6 +327,10 @@ namespace CodeOutputPlugin
                     break;
                 case nameof(viewModel.IsShowCodegenPreviewChecked):
                     codeOutputProjectSettings.IsShowCodegenPreviewChecked = viewModel.IsShowCodegenPreviewChecked;
+                    CodeOutputProjectSettingsManager.WriteSettingsForProject(codeOutputProjectSettings);
+                    break;
+                case nameof(viewModel.InheritanceLocation):
+                    codeOutputProjectSettings.InheritanceLocation = viewModel.InheritanceLocation;
                     CodeOutputProjectSettingsManager.WriteSettingsForProject(codeOutputProjectSettings);
                     break;
                 default:

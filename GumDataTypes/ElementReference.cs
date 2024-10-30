@@ -77,17 +77,17 @@ namespace Gum.DataTypes
         //{
         //    string fullName = projectroot + Subfolder + "/" + Name + "." + extension;
 
-//    ElementSave elementSave = FileManager.XmlDeserialize<ElementSave>(fullName);
+        //    ElementSave elementSave = FileManager.XmlDeserialize<ElementSave>(fullName);
 
-//    return elementSave;
-//}
+        //    return elementSave;
+        //}
 
         public T ToElementSave<T>(string projectroot, string extension, GumLoadResult result, LinkLoadingPreference linkLoadingPreference = LinkLoadingPreference.PreferLinked) where T : ElementSave, new()
         {
             FilePath linkedName = null;
             FilePath containedReferenceName = null;
-            
-            if(!string.IsNullOrWhiteSpace(this.Link))
+
+            if (!string.IsNullOrWhiteSpace(this.Link))
             {
                 linkedName = projectroot + this.Link;
 
@@ -103,6 +103,15 @@ namespace Gum.DataTypes
                 containedReferenceName = ToolsUtilities.FileManager.RelativeDirectory + containedReferenceName.Original;
             }
 
+            var isMobileOrWeb = false;
+#if ANDROID || IOS
+            isMobileOrWeb = true;
+#elif NET6_0_OR_GREATER
+            isMobileOrWeb = System.OperatingSystem.IsAndroid() || System.OperatingSystem.IsIOS() || System.OperatingSystem.IsBrowser();
+#endif
+
+
+
             if (linkedName?.Exists() == true)
             {
                 T elementSave = FileManager.XmlDeserialize<T>(linkedName.FullPath);
@@ -111,13 +120,13 @@ namespace Gum.DataTypes
 #if ANDROID || IOS
             else if (containedReferenceName != null && (linkedName == null || linkLoadingPreference == LinkLoadingPreference.PreferLinked))
 #else
-            else if (containedReferenceName.Exists() && (linkedName == null || linkLoadingPreference == LinkLoadingPreference.PreferLinked))
+            else if (  ((isMobileOrWeb && containedReferenceName != null) ||  containedReferenceName.Exists()) && (linkedName == null || linkLoadingPreference == LinkLoadingPreference.PreferLinked))
 #endif
             {
 
                 T elementSave = FileManager.XmlDeserialize<T>(
 #if ANDROID || IOS
-                    containedReferenceName.Standardized);
+                    containedReferenceName.StandardizedCaseSensitive);
 #else
                     containedReferenceName.FullPath);
 #endif

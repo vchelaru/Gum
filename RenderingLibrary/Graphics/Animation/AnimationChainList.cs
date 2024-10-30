@@ -11,7 +11,6 @@ namespace Gum.Graphics.Animation
         Second
     }
 
-    #region XML Docs
     /// <summary>
     /// A list of AnimationChains.
     /// </summary>
@@ -21,7 +20,6 @@ namespace Gum.Graphics.Animation
     /// is common to get a reference to an AnimationChain by its name and set it as the
     /// IAnimationChainAnimatable's current AnimationChain.
     /// </remarks>
-    #endregion
     public class AnimationChainList : List<AnimationChain>, IDisposable, IEquatable<AnimationChainList>
     {
         #region Fields
@@ -104,21 +102,17 @@ namespace Gum.Graphics.Animation
 
         #region Constructors
 
-        #region XML Docs
         /// <summary>
         /// Instantiates a new AnimationChainList.
         /// </summary>
-        #endregion
         public AnimationChainList()
             : base()
         { }
 
-        #region XML Docs
         /// <summary>
         /// Instantiates a new AnimationChainList.
         /// </summary>
         /// <param name="capacity">Sets the initial capacity to reduce memory allocation when subsequently calling Add.</param>
-        #endregion
         public AnimationChainList(int capacity)
             : base(capacity)
         { }

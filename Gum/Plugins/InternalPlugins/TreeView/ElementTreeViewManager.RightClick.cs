@@ -25,7 +25,6 @@ namespace Gum.Managers
         ToolStripMenuItem mAddScreen;
         ToolStripMenuItem mImportScreen;
 
-        ToolStripMenuItem mAddComponent;
         ToolStripMenuItem mImportComponent;
         ToolStripMenuItem mAddLinkedComponent;
 
@@ -33,6 +32,7 @@ namespace Gum.Managers
         ToolStripMenuItem mAddParentInstance;
         ToolStripMenuItem mSaveObject;
         ToolStripMenuItem mGoToDefinition;
+        ToolStripMenuItem mCreateComponent;
         ToolStripMenuItem mDeleteObject;
 
         ToolStripMenuItem mAddFolder;
@@ -54,10 +54,6 @@ namespace Gum.Managers
             mImportScreen = new ToolStripMenuItem();
             mImportScreen.Text = "Import Screen";
             mImportScreen.Click += ImportScreenClick;
-
-            mAddComponent = new ToolStripMenuItem();
-            mAddComponent.Text = "Add Component";
-            mAddComponent.Click += AddComponentClick;
 
             mImportComponent = new ToolStripMenuItem();
             mImportComponent.Text = "Import Components";
@@ -82,6 +78,10 @@ namespace Gum.Managers
             mGoToDefinition = new ToolStripMenuItem();
             mGoToDefinition.Text = "Go to definition";
             mGoToDefinition.Click += OnGoToDefinitionClick;
+
+            mCreateComponent = new ToolStripMenuItem();
+            mCreateComponent.Text = "Create Component";
+            mCreateComponent.Click += CreateComponentClick;
 
             mAddFolder = new ToolStripMenuItem();
             mAddFolder.Text = "Add Folder";
@@ -119,6 +119,15 @@ namespace Gum.Managers
                 ElementSave element = ObjectFinder.Self.GetElementSave(SelectedState.Self.SelectedInstance.BaseType);
 
                 SelectedState.Self.SelectedElement = element;
+            }
+        }
+
+        void CreateComponentClick(object sender, EventArgs e)
+        {
+            if (SelectedState.Self.SelectedScreen != null ||
+                SelectedState.Self.SelectedComponent != null)
+            {
+                GumCommands.Self.Edit.ShowCreateComponentFromInstancesDialog();
             }
         }
 
@@ -285,6 +294,10 @@ namespace Gum.Managers
 
                     mMenuStrip.Items.Add("-");
 
+                    mMenuStrip.Items.Add(mCreateComponent);
+
+                    mMenuStrip.Items.Add("-");
+
                     var deleteText = SelectedState.Self.SelectedInstances.Count() > 1
                         ? $"Delete {SelectedState.Self.SelectedInstances.Count()} instances"
                         : $"Delete {SelectedState.Self.SelectedInstance.Name}";
@@ -392,9 +405,11 @@ namespace Gum.Managers
 
                 #endregion
 
+                #region Component folder (top or contained)
+
                 else if (SelectedNode.IsTopComponentContainerTreeNode() || SelectedNode.IsComponentsFolderTreeNode())
                 {
-                    mMenuStrip.Items.Add(mAddComponent);
+                    mMenuStrip.Items.Add("Add Component", null, AddComponentClick);
                     mMenuStrip.Items.Add(mImportComponent);
                     mMenuStrip.Items.Add(mAddFolder);
                     mMenuStrip.Items.Add("View in explorer", null, HandleViewInExplorer);
@@ -406,9 +421,15 @@ namespace Gum.Managers
 
                     }
                 }
+
+                #endregion
+
                 else if(SelectedNode.IsTopBehaviorTreeNode())
                 {
                     mMenuStrip.Items.Add("Add Behavior", null, HandleAddBehavior);
+                    mMenuStrip.Items.Add("Import Behavior", null, HandleImportBehavior);
+                    mMenuStrip.Items.Add("View in explorer", null, HandleViewInExplorer);
+
                 }
             }
         }
@@ -558,6 +579,11 @@ namespace Gum.Managers
         private void HandleAddBehavior(object sender, EventArgs e)
         {
             GumCommands.Self.Edit.AddBehavior();
+        }
+
+        private void HandleImportBehavior(object sender, EventArgs args)
+        {
+            Plugins.ImportPlugin.Manager.ImportLogic.ShowImportBehaviorUi();
         }
 
         public void AddScreenClick(object sender, EventArgs e)
