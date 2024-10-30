@@ -1648,8 +1648,12 @@ namespace CodeOutputPlugin.Manager
 
         #region Parent
 
-        private static void FillWithParentAssignments(InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount, CodeOutputProjectSettings projectSettings)
+        private static void FillWithParentAssignments(CodeGenerationContext context)
         {
+            var container = context.Element;
+            var instance = context.Instance;
+            //context.Instance, context.Element, context.StringBuilder, context.TabCount, context.CodeOutputProjectSettings;
+
             // Some history on this:
             // Initially parent assignment
             // was mixed in with normal variable
@@ -1674,13 +1678,8 @@ namespace CodeOutputPlugin.Manager
 
             VisualApi visualApi = GetVisualApiForInstance(instance, container);
 
-            var tabs = new String(' ', 4 * tabCount);
 
             //FillWithVariableAssignments(instance, container, stringBuilder, tabCount, parentVariables);
-            var context = new CodeGenerationContext();
-            context.Element = container;
-            context.Instance = instance;
-            context.CodeOutputProjectSettings = projectSettings;
 
             var parentValue = parentVariable?.Value as string;
             var parentInstance = parentValue != null
@@ -1699,13 +1698,13 @@ namespace CodeOutputPlugin.Manager
                 // But we also don't want a ton of spaces generated.
                 if (!string.IsNullOrWhiteSpace(codeLine))
                 {
-                    stringBuilder.AppendLine(tabs + codeLine);
+                    context.StringBuilder.AppendLine(context.Tabs + codeLine);
                 }
 
                 var suffixCodeLine = GetSuffixCodeLine(instance, parentVariable, visualApi);
                 if (!string.IsNullOrEmpty(suffixCodeLine))
                 {
-                    stringBuilder.AppendLine(tabs + suffixCodeLine);
+                    context.StringBuilder.AppendLine(context.Tabs + suffixCodeLine);
                 }
             }
 
@@ -1720,11 +1719,18 @@ namespace CodeOutputPlugin.Manager
                     // add it to "this"
                     if (container is ScreenSave)
                     {
-                        stringBuilder.AppendLine($"{tabs}this.WhatThisContains.Add({instance.Name});");
+                        if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
+                        {
+                            context.StringBuilder.AppendLine($"{context.Tabs}this.Children.Add({instance.Name});");
+                        }
+                        else
+                        {
+                            context.StringBuilder.AppendLine($"{context.Tabs}this.WhatThisContains.Add({instance.Name});");
+                        }
                     }
                     else
                     {
-                        stringBuilder.AppendLine($"{tabs}this.Children.Add({instance.Name});");
+                        context.StringBuilder.AppendLine($"{context.Tabs}this.Children.Add({instance.Name});");
                     }
                 }
                 else // forms
@@ -1738,21 +1744,21 @@ namespace CodeOutputPlugin.Manager
 
                     if (instanceBaseType.EndsWith("/GumCollectionView"))
                     {
-                        stringBuilder.AppendLine($"{tabs}var tempFor{instance.Name} = GumScrollBar.CreateScrollableAbsoluteLayout({instance.Name}, ScrollableLayoutParentPlacement.Free);");
+                        context.StringBuilder.AppendLine($"{context.Tabs}var tempFor{instance.Name} = GumScrollBar.CreateScrollableAbsoluteLayout({instance.Name}, ScrollableLayoutParentPlacement.Free);");
                         instanceName = $"tempFor{instance.Name}";
                     }
 
                     if (isContainerStackLayout || isContainerAbsoluteLayout)
                     {
-                        stringBuilder.AppendLine($"{tabs}this.Children.Add({instanceName});");
+                        context.StringBuilder.AppendLine($"{context.Tabs}this.Children.Add({instanceName});");
                     }
                     else if (DoesTypeHaveContent(container.BaseType))
                     {
-                        stringBuilder.Append($"{tabs}this.Content = {instanceName};");
+                        context.StringBuilder.Append($"{context.Tabs}this.Content = {instanceName};");
                     }
                     else
                     {
-                        stringBuilder.AppendLine($"{tabs}MainLayout.Children.Add({instanceName});");
+                        context.StringBuilder.AppendLine($"{context.Tabs}MainLayout.Children.Add({instanceName});");
                     }
                 }
             }
@@ -1781,7 +1787,7 @@ namespace CodeOutputPlugin.Manager
             foreach (var instance in context.Element.Instances)
             {
                 context.Instance = instance;
-                FillWithParentAssignments(instance, context.Element, context.StringBuilder, context.TabCount, context.CodeOutputProjectSettings);
+                FillWithParentAssignments(context);
             }
             context.Instance = null;
 
@@ -3082,7 +3088,7 @@ namespace CodeOutputPlugin.Manager
 
             FillWithNonParentVariableAssignments(context);
 
-            FillWithParentAssignments(instance, element, stringBuilder, 0, codeOutputProjectSettings);
+            FillWithParentAssignments(context);
 
             var code = stringBuilder.ToString();
             return code;
