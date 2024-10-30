@@ -685,6 +685,9 @@ namespace Gum.Wireframe
             var windowOverBefore = cursor.WindowOver;
             var windowPushedBefore = cursor.WindowPushed;
 
+            var isInWindow = cursor.X >= 0 && cursor.X < GraphicalUiElement.CanvasWidth &&
+                cursor.Y >= 0 && cursor.Y < GraphicalUiElement.CanvasHeight;
+
             HandledActions actions = new HandledActions();
             cursor.WindowOver = null;
             for(int i = gues.Count-1; i > -1; i--)
@@ -731,13 +734,13 @@ namespace Gum.Wireframe
             }
 
             // the click/push actions need to be after the UI activity
-            if (cursor.PrimaryClick)
+            if (cursor.PrimaryClick && isInWindow)
             {
                 InteractiveGue.DoNextClickActions();
 
             }
 
-            if (cursor.PrimaryPush)
+            if (cursor.PrimaryPush && isInWindow)
             {
                 InteractiveGue.DoNextPushActions();
             }

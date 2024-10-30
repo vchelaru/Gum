@@ -76,8 +76,22 @@ namespace MonoGameGum.Forms
 
         static List<GraphicalUiElement> innerList = new List<GraphicalUiElement>();
 
+        [Obsolete("Use the overload which takes a Game as the first argument, and pass the game instance.")]
         public static void Update(GameTime gameTime, GraphicalUiElement rootGue)
         {
+            Update(null, gameTime, rootGue);
+        }
+
+        public static void Update(Game game, GameTime gameTime, GraphicalUiElement rootGue)
+        {
+            // tolerate null games for now...
+            var shouldProcess = game == null || game.IsActive;
+
+            if(!shouldProcess)
+            {
+                return;
+            }
+
             cursor.Activity(gameTime.TotalGameTime.TotalSeconds);
             keyboard.Activity(gameTime.TotalGameTime.TotalSeconds);
             innerList.Clear();
