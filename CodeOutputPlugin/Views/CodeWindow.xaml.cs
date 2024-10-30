@@ -94,7 +94,7 @@ namespace CodeOutputPlugin.Views
         private void CreateProjectWideUi()
         {
             var projectCategory = new MemberCategory("Project-Wide Code Generation");
-            projectCategory.Members.Add(CreateProjectTypeSelectionMember());
+            projectCategory.Members.Add(CreateOutputLibrarySelectionMember());
             projectCategory.Members.Add(CreateGenerateObjectInstantiationTypeMember());
             projectCategory.Members.Add(CreateProjectUsingStatementsMember());
             projectCategory.Members.Add(CreateCodeProjectRootMember());
@@ -106,7 +106,7 @@ namespace CodeOutputPlugin.Views
             DataGrid.Categories.Add(projectCategory);
         }
 
-        private InstanceMember CreateProjectTypeSelectionMember()
+        private InstanceMember CreateOutputLibrarySelectionMember()
         {
             var member = new InstanceMember("Output Library", this);
 
@@ -115,6 +115,16 @@ namespace CodeOutputPlugin.Views
                 if (CodeOutputProjectSettings != null)
                 {
                     CodeOutputProjectSettings.OutputLibrary = (OutputLibrary)args.Value;
+
+                    // Check for required using statements:
+                    if(CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
+                    {
+                        // This should have MonoGameGum.GueDeriving
+                        if(CodeOutputProjectSettings.CommonUsingStatements.Contains("using MonoGameGum.GueDeriving;")== false)
+                        {
+                            CodeOutputProjectSettings.CommonUsingStatements += "\nusing MonoGameGum.GueDeriving;";
+                        }
+                    }
                     CodeOutputSettingsPropertyChanged?.Invoke(this, null);
                 }
             };
