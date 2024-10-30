@@ -15,6 +15,7 @@ namespace MonoGameGumCodeGeneration.Screens
     {
         public PopupRuntime PopupInstance { get; protected set; }
         public ComponentWithStatesRuntime ComponentWithStatesInstance { get; protected set; }
+        public TextRuntime TextWithLotsOfPropertiesSet { get; protected set; }
 
         public MainMenuRuntime()
         {
@@ -25,6 +26,8 @@ namespace MonoGameGumCodeGeneration.Screens
         {
             PopupInstance = this.GetGraphicalUiElementByName("PopupInstance") as PopupRuntime;
             ComponentWithStatesInstance = this.GetGraphicalUiElementByName("ComponentWithStatesInstance") as ComponentWithStatesRuntime;
+            TextWithLotsOfPropertiesSet = this.GetGraphicalUiElementByName("TextWithLotsOfPropertiesSet") as TextRuntime;
+
             CustomInitialize();
         }
         //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

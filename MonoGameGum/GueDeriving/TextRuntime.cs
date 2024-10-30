@@ -119,6 +119,32 @@ namespace MonoGameGum.GueDeriving
             }
         }
 
+        public float LineHeightMultiplier
+        {
+            get => ContainedText.LineHeightMultiplier;
+            set
+            {
+                if (value != LineHeightMultiplier)
+                {
+                    ContainedText.LineHeightMultiplier = value;
+                    NotifyPropertyChanged();
+                    UpdateLayout();
+                }
+            }
+        }
+
+        public TextOverflowHorizontalMode TextOverflowHorizontalMode
+        {
+            // Currently GraphicalUiElement doesn't expose this property so we have to go through setting it by string:
+            get => ContainedText.IsTruncatingWithEllipsisOnLastLine ? TextOverflowHorizontalMode.EllipsisLetter : TextOverflowHorizontalMode.TruncateWord;
+            set
+            {
+                ContainedText.IsTruncatingWithEllipsisOnLastLine = value == TextOverflowHorizontalMode.EllipsisLetter;
+                NotifyPropertyChanged();
+                UpdateLayout();
+            }
+        }
+
         public string Text
         {
             get
