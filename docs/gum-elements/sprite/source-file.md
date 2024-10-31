@@ -10,6 +10,10 @@ The Source File property determines the file that is used by the Sprite. Sprite 
 
 <figure><img src="../../.gitbook/assets/image (93).png" alt=""><figcaption><p>Sprite displaying the FlatRedBall logo</p></figcaption></figure>
 
+If a Sprite has an empty Source File or if it references a missing file, then the missing file texture is displayed.
+
+<figure><img src="../../.gitbook/assets/image.png" alt=""><figcaption><p>Sprite with a missing or emtpy Source File</p></figcaption></figure>
+
 ### Setting a PNG Source File
 
 Source File can be set by typing a value or using the **...** button to browser for a file.
@@ -24,7 +28,7 @@ If a file is referenced outside of the .gumx folder, then Gum asks if you would 
 
 ### ACHX Files
 
-Gum natively supports referencing Animation Chain XML files (.achx) which are created by the FlatRedBall AnimationEditor. For more information on creating .achx files, see the FlatRedBall [AnimatoinEditor page](https://docs.flatredball.com/flatredball/glue-gluevault-component-pages-animationeditor-plugin).
+Gum natively supports referencing Animation Chain XML files (.achx) which are created by the FlatRedBall AnimationEditor. For more information on creating .achx files, see the FlatRedBall [AnimationEditor page](https://docs.flatredball.com/flatredball/glue-gluevault-component-pages-animationeditor-plugin).
 
 Once you have created an .achx file, you can reference it the same as a .png by entering its name or selecting it with the **...** button.
 
