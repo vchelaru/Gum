@@ -557,8 +557,9 @@ namespace Gum.DataTypes.Variables
 
 
                 if (isFile &&
-                    value is string &&
-                    !FileManager.IsRelative((string)value))
+                    value is string asString &&
+                    !string.IsNullOrEmpty(asString) &&
+                    !FileManager.IsRelative(asString))
                 {
                     string directoryToMakeRelativeTo = FileManager.GetDirectory(ObjectFinder.Self.GumProjectSave.FullFileName);
 

@@ -233,6 +233,8 @@ namespace RenderingLibrary.Graphics
         public float? TextureWidth => Texture?.Width;
         public float? TextureHeight => Texture?.Height;
 
+        // October 30, 2024
+        // Vic asks - is this even used?
         public IAnimation Animation
         {
             get;

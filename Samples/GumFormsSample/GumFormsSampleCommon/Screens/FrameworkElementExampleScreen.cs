@@ -100,36 +100,51 @@ namespace GumFormsSample.Screens
 
             var scrollViewer = new ScrollViewer();
             root.Children.Add(scrollViewer.Visual);
+            scrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
+
             scrollViewer.X = 300;
-            scrollViewer.Y = 0;
+            scrollViewer.Y = 20;
             scrollViewer.Width = 200;
             scrollViewer.Height = 200;
             scrollViewer.InnerPanel.StackSpacing = 2;
-            for (int i = 0; i < 20; i++)
+            //for (int i = 0; i < 20; i++)
+            //{
+            //    var innerButton = new Button();
+            //    innerButton.X = 1;
+            //    innerButton.Visual.Width = -2;
+            //    innerButton.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            //    innerButton.Text = $"Button {i}";
+            //    innerButton.Click += (_, _) =>
+            //    {
+            //        ShowPopup($"You just clicked on {innerButton.Text}. This is a modal popup (no other UI has input)");
+            //    };
+            //    scrollViewer.InnerPanel.Children.Add(innerButton.Visual);
+
+
+            //}
+            Button addButton = new Button();
+            addButton.Text = "Add Items";
+            addButton.Click += (_,_) =>
             {
-                var innerButton = new Button();
-                innerButton.X = 1;
-                innerButton.Visual.Width = -2;
-                innerButton.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-                innerButton.Text = $"Button {i}";
-                innerButton.Click += (_, _) =>
-                {
-                    ShowPopup($"You just clicked on {innerButton.Text}. This is a modal popup (no other UI has input)");
-                };
-                scrollViewer.InnerPanel.Children.Add(innerButton.Visual);
+                var random = new System.Random();
 
+                var child = new ColoredRectangleRuntime();
+                child.Red = random.Next(255);
+                child.Green= random.Next(255);
+                child.Blue = random.Next(255);
+                scrollViewer.InnerPanel.Children.Add(child);
 
-            }
-
-
-
+            };
+            addButton.X = 300;
+            addButton.Y = 220;
+            root.Children.Add(addButton.Visual);
             //var viewer = new DefaultScrollViewerRuntime(true, false);
             //this.Root.Children.Add(viewer);
             //viewer.X = 300;
             //viewer.Y = 0;
             //viewer.Width = 200;
             //viewer.Height = 200;
-
+            return;
             var textBox = new TextBox();
             root.Children.Add(textBox.Visual);
             textBox.X = 220;

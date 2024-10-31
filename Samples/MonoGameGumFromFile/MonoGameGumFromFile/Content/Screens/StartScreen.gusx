@@ -357,13 +357,13 @@
     <Variable>
       <Type>float</Type>
       <Name>SpriteInstance.X</Name>
-      <Value xsi:type="xsd:float">30</Value>
+      <Value xsi:type="xsd:float">10</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>float</Type>
       <Name>SpriteInstance.Y</Name>
-      <Value xsi:type="xsd:float">461</Value>
+      <Value xsi:type="xsd:float">439</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -406,13 +406,13 @@
     <Variable>
       <Type>float</Type>
       <Name>SpriteInstance1.X</Name>
-      <Value xsi:type="xsd:float">102</Value>
+      <Value xsi:type="xsd:float">68</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>float</Type>
       <Name>SpriteInstance1.Y</Name>
-      <Value xsi:type="xsd:float">472</Value>
+      <Value xsi:type="xsd:float">449</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -437,13 +437,62 @@
     <Variable>
       <Type>float</Type>
       <Name>SpriteInstance2.X</Name>
-      <Value xsi:type="xsd:float">249</Value>
+      <Value xsi:type="xsd:float">96</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>float</Type>
       <Name>SpriteInstance2.Y</Name>
-      <Value xsi:type="xsd:float">463</Value>
+      <Value xsi:type="xsd:float">462</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>bool</Type>
+      <Name>AnimatedSprite.Animate</Name>
+      <Value xsi:type="xsd:boolean">true</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>AnimatedSprite.CurrentChainName</Name>
+      <Value xsi:type="xsd:string">IdleRight</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>AnimatedSprite.Height</Name>
+      <Value xsi:type="xsd:float">300</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <IsFile>true</IsFile>
+      <Type>string</Type>
+      <Name>AnimatedSprite.SourceFile</Name>
+      <Value xsi:type="xsd:string">CharacterAnimations.achx</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>Gum.Managers.TextureAddress</Type>
+      <Name>AnimatedSprite.Texture Address</Name>
+      <Value xsi:type="xsd:int">1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>AnimatedSprite.Width</Name>
+      <Value xsi:type="xsd:float">300</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>AnimatedSprite.X</Name>
+      <Value xsi:type="xsd:float">229</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>AnimatedSprite.Y</Name>
+      <Value xsi:type="xsd:float">483</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -558,6 +607,48 @@
       <Type>PositionUnitType</Type>
       <Name>TextInstance1.Y Units</Name>
       <Value xsi:type="xsd:int">7</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>TextInstance10.Height</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>TextInstance10.Height Units</Name>
+      <Value xsi:type="xsd:int">4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>TextInstance10.Text</Name>
+      <Value xsi:type="xsd:string">Animate it with .achx files:</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>TextInstance10.Width</Name>
+      <Value xsi:type="xsd:float">80</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>TextInstance10.Width Units</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>TextInstance10.X</Name>
+      <Value xsi:type="xsd:float">231</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>TextInstance10.Y</Name>
+      <Value xsi:type="xsd:float">446</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -929,13 +1020,13 @@
     <Variable>
       <Type>float</Type>
       <Name>TextInstance7.X</Name>
-      <Value xsi:type="xsd:float">30</Value>
+      <Value xsi:type="xsd:float">9</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>float</Type>
       <Name>TextInstance7.Y</Name>
-      <Value xsi:type="xsd:float">417</Value>
+      <Value xsi:type="xsd:float">411</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -971,13 +1062,13 @@
     <Variable>
       <Type>float</Type>
       <Name>TextInstance8.X</Name>
-      <Value xsi:type="xsd:float">163</Value>
+      <Value xsi:type="xsd:float">10</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>float</Type>
       <Name>TextInstance8.Y</Name>
-      <Value xsi:type="xsd:float">493</Value>
+      <Value xsi:type="xsd:float">490</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -1075,6 +1166,13 @@
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value />
     </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>AnimatedSprite.AnimationFrames</Name>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value />
+    </VariableList>
   </State>
   <Instance>
     <Name>TextInstance</Name>
@@ -1144,6 +1242,16 @@
   <Instance>
     <Name>SpriteInstance2</Name>
     <BaseType>Sprite</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>AnimatedSprite</Name>
+    <BaseType>Sprite</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>TextInstance10</Name>
+    <BaseType>Text</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>

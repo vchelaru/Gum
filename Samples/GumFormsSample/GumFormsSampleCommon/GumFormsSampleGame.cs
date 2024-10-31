@@ -40,7 +40,7 @@ public class GumFormsSampleGame : Game
         SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
         FormsUtilities.InitializeDefaults();
 
-        const int screenNumber = 0;
+        const int screenNumber = 1;
 
         switch (screenNumber)
         {
