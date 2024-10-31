@@ -53,6 +53,7 @@
     * [Texture Address](gum-elements/nineslice/nineslice.texture-address.md)
   * [Sprite](gum-elements/sprite/README.md)
     * [Color](gum-elements/sprite/color.md)
+    * [Source File](gum-elements/sprite/source-file.md)
     * [Texture Address](gum-elements/sprite/texture-address.md)
     * [Wrap](gum-elements/sprite/wrap.md)
   * [States](gum-elements/states/README.md)
