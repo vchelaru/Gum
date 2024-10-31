@@ -24,7 +24,7 @@ If a file is referenced outside of the .gumx folder, then Gum asks if you would 
 
 ### ACHX Files
 
-Gum natively supports referencing Animation Chain XML files (.achx) which are created by the FlatRedBall AnimationEditor. For more information on creating .achx files, see the FlatRedBall [AnimatoinEditor page](https://docs.flatredball.com/flatredball/glue-gluevault-component-pages-animationeditor-plugin).
+Gum natively supports referencing Animation Chain XML files (.achx) which are created by the FlatRedBall AnimationEditor. For more information on creating .achx files, see the FlatRedBall [AnimationEditor page](https://docs.flatredball.com/flatredball/glue-gluevault-component-pages-animationeditor-plugin).
 
 Once you have created an .achx file, you can reference it the same as a .png by entering its name or selecting it with the **...** button.
 
