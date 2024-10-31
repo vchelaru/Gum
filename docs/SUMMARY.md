@@ -93,6 +93,7 @@
     * [Categories](gum-code-reference/datauigrid/categories.md)
   * [GraphicalUiElement](gum-code-reference/graphicaluielement/README.md)
     * [AddToManagers](gum-code-reference/graphicaluielement/addtomanagers.md)
+    * [AnimateSelf](gum-code-reference/graphicaluielement/animateself.md)
     * [ApplyState](gum-code-reference/graphicaluielement/applystate.md)
     * [BlendState](gum-code-reference/graphicaluielement/blendstate.md)
     * [CanvasHeight](gum-code-reference/graphicaluielement/canvasheight.md)
