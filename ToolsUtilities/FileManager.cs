@@ -374,6 +374,10 @@ namespace ToolsUtilities
             {
                 relative = false;
             }
+            else if(fileName == String.Empty)
+            {
+                relative = true; // it doesn't have a prefix so it's technically relative:
+            }
             else if (fileName.Length < 1 || !Path.IsPathRooted(fileName))
             {
                 // On linux and mac, we need to still check if it has a root:
