@@ -92,6 +92,12 @@ listBox.VisualTemplate =
     }
 ```
 
+{% hint style="info" %}
+Note that the code above uses the item to decide which type of list box item to create. If your list box item needs to react to changes on the item, you can also pass the item in the constructor to your list box. This allows for additional initialization based on the item. You can also hold on to the reference of the item to react to changes that may happen on the item, or to push changes to the item.
+
+In other words, you are free to use the item for your game's needs; however, keep in mind that UpdateToObject will be called after your ListBoxItem is constructed. For more information on how to customize UpdateToObject, see the section below.
+{% endhint %}
+
 ### Customizing Displayed Property with ListBoxItemFormsType
 
 By default the ListBox calls ToString on each item. This is usually okay if you are dealing with primitive types. For example, the following code adds sequential integers to a ListBox:

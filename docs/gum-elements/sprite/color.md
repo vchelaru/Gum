@@ -1,10 +1,10 @@
 # Color
 
-Introduction
+### Introduction
 
 The Color value is used to perform a _multiply_ color operation on the sprite. Color values can be used to darken or tint a grayscale texture. By default Sprites us a white color, which means the original texture will display unmodified.
 
-Examples
+### Examples
 
 The following images show the color values as applied to a multi-color sprite.
 

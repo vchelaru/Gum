@@ -33,3 +33,15 @@ for (int i = 0; i < 30; i++)
 ```
 
 <figure><img src="../../../.gitbook/assets/24_07 07 19.gif" alt=""><figcaption><p>ScrollViewer displaying multiple ColoredRectangles</p></figcaption></figure>
+
+### VerticalScrollBarVisibility
+
+VerticalScrollBarVisibility controls the visibility of the vertical scroll bar, specifically in regards to the number of items in the ScrollViewer. The available values are:
+
+* Auto - the ScrollBar displays only if needed based on the size of the inner panel
+* Hidden - the ScrollBar remains invisible even if the contents of the inner panel exceed the size of its container
+* Visible - the ScrollBar always displays
+
+The default is Auto which means that the scroll bar only displays if necessary.
+
+<figure><img src="../../../.gitbook/assets/30_12 14 23.gif" alt=""><figcaption><p>VerticalScrollBarVisibilty set to Auto only shows the ScrollBar if enough items are added to the ScrollView</p></figcaption></figure>
