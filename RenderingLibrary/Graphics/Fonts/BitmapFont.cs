@@ -355,6 +355,8 @@ namespace RenderingLibrary.Graphics
         {
             var parsedData = new ParsedFontFile(fontPattern);
 
+            this.mOutlineThickness = parsedData.Info?.Outline ?? 0;
+
             var charArraySize = (parsedData.Chars.LastOrDefault()?.Id + 1) ?? 0;
             mCharacterInfo = new BitmapCharacterInfo[charArraySize];
             mLineHeightInPixels = parsedData.Common.LineHeight;
