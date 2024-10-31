@@ -194,6 +194,16 @@ namespace Gum.Wireframe
             RemovedAsPushed?.Invoke(this, EventArgs.Empty);
         }
 
+        public void TryCallRollOn()
+        {
+            RollOn?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void TryCallRollOver()
+        {
+            RollOver?.Invoke(this, EventArgs.Empty);
+        }
+
         #endregion
 
         private bool DoUiActivityRecursively(ICursor cursor, HandledActions handledActions = null)
@@ -288,8 +298,6 @@ namespace Gum.Wireframe
 
                         if (asInteractive?.HasEvents == true)
                         {
-                            var lastWindowOver = cursor.WindowOver;
-
                             // moved from above, see comments there...
                             handledByThis = true;
                             cursor.WindowOver = asInteractive;
@@ -332,16 +340,7 @@ namespace Gum.Wireframe
                                     //}
                                 }
                             }
-                            if(asInteractive.RollOn != null && lastWindowOver != asInteractive)
-                            {
-                                asInteractive.RollOn(asInteractive, EventArgs.Empty);
-                            }
-
-                            if (asInteractive.RollOver != null && (cursor.XChange != 0 || cursor.YChange != 0))
-                            {
-                                asInteractive.RollOver(asInteractive, EventArgs.Empty);
-                            }
-                            
+                           
                         }
                     }
                     if (asInteractive?.HasEvents == true && asInteractive?.IsEnabled == true)
@@ -689,6 +688,8 @@ namespace Gum.Wireframe
                 cursor.Y >= 0 && cursor.Y < GraphicalUiElement.CanvasHeight;
 
             HandledActions actions = new HandledActions();
+            var lastWindowOver = cursor.WindowOver;
+
             cursor.WindowOver = null;
             for(int i = gues.Count-1; i > -1; i--)
             {
@@ -700,7 +701,21 @@ namespace Gum.Wireframe
                 }
             }
 
-            if(!actions.SetWindowOver)
+            var windowOverAsInteractive = cursor.WindowOver as InteractiveGue;
+            if (windowOverAsInteractive != null)
+            {
+                if (lastWindowOver != windowOverAsInteractive)
+                {
+                    windowOverAsInteractive.TryCallRollOn();
+                }
+
+                if (cursor.XChange != 0 || cursor.YChange != 0)
+                {
+                    windowOverAsInteractive.TryCallRollOver();
+                }
+            }
+
+            if (!actions.SetWindowOver)
             {
                 cursor.WindowOver = null;
             }

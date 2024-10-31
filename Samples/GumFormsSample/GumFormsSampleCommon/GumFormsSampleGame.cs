@@ -115,7 +115,7 @@ public class GumFormsSampleGame : Game
             int m = 3;
         }
 
-        FormsUtilities.Update(gameTime, Root);
+        FormsUtilities.Update(this, gameTime, Root);
 
         // Set this to true to see WindowOver information in the output window
         bool printWindowOver = false;

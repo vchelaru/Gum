@@ -329,6 +329,7 @@ namespace MonoGameGumFromFile
             SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
 
             currentScreenGue.AnimateSelf(gameTime.ElapsedGameTime.TotalSeconds);
+
             FormsUtilities.Update(this, gameTime, currentScreenGue);
 
             synchronizationContext.Update();

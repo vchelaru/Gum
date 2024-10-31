@@ -98,6 +98,12 @@ namespace MonoGameGum.Forms
 
             if (FrameworkElement.ModalRoot.Children.Count > 0)
             {
+#if DEBUG
+                if(FrameworkElement.ModalRoot.Managers == null)
+                {
+                    throw new InvalidOperationException("The ModalRoot has a Managers property of null. Did you accidentally call RemoveFromManagers?");
+                }
+#endif
                 SetDimensionsToCanvas(FrameworkElement.ModalRoot);
 
                 // make sure this is the last:
@@ -110,11 +116,14 @@ namespace MonoGameGum.Forms
                     }
                 }
 
-                foreach (var item in FrameworkElement.ModalRoot.Children)
+                for(int i = FrameworkElement.ModalRoot.Children.Count - 1; i > -1; i--)
                 {
+                    var item = FrameworkElement.ModalRoot.Children[i];
                     if (item is GraphicalUiElement itemAsGue)
                     {
                         innerList.Add(itemAsGue);
+                        // only the top-most element receives input
+                        break;
                     }
                 }
             }
@@ -123,6 +132,13 @@ namespace MonoGameGum.Forms
                 innerList.Add(rootGue);
                 if (rootGue != FrameworkElement.PopupRoot && FrameworkElement.PopupRoot != null && FrameworkElement.PopupRoot.Children.Count > 0)
                 {
+#if DEBUG
+                    if (FrameworkElement.PopupRoot.Managers == null)
+                    {
+                        throw new InvalidOperationException("The PopupRoot has a Managers property of null. Did you accidentally call RemoveFromManagers?");
+                    }
+#endif
+
                     SetDimensionsToCanvas(FrameworkElement.PopupRoot);
                     // make sure this is the last:
                     foreach (var layer in SystemManagers.Default.Renderer.Layers)
@@ -151,7 +167,9 @@ namespace MonoGameGum.Forms
 
         static void SetDimensionsToCanvas(InteractiveGue container)
         {
-
+            // Just to be safe, we'll set X and Y:
+            container.X = 0;
+            container.Y = 0;
             container.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
             container.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
             container.Width = GraphicalUiElement.CanvasWidth;

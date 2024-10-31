@@ -5,6 +5,7 @@ using MonoGameGum.Forms.DefaultVisuals;
 using MonoGameGum.GueDeriving;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,6 +23,14 @@ namespace GumFormsSample.Screens
             FrameworkElement.DefaultFormsComponents[typeof(Button)] =
                 typeof(FullyCustomizedButton);
 
+            CreateColumn1Ui(root);
+
+            CreateColumn2Ui(root);
+
+        }
+
+        private void CreateColumn1Ui(GraphicalUiElement root)
+        {
             var currentY = 0;
 
             var button = new Button();
@@ -54,7 +63,7 @@ namespace GumFormsSample.Screens
             comboBox.Width = 140;
             comboBox.X = 0;
             comboBox.Y = currentY;
-            for(int i = 0; i < 20; i++)
+            for (int i = 0; i < 20; i++)
             {
                 comboBox.Items.Add($"Item {i}");
             }
@@ -97,164 +106,132 @@ namespace GumFormsSample.Screens
             scrollBar.Minimum = 0;
             scrollBar.Maximum = 150;
             scrollBar.ViewportSize = 50;
+        }
+
+        private void CreateColumn2Ui(GraphicalUiElement root)
+        {
+            var currentY = 20;
 
             var scrollViewer = new ScrollViewer();
             root.Children.Add(scrollViewer.Visual);
             scrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
 
-            scrollViewer.X = 300;
-            scrollViewer.Y = 20;
+            scrollViewer.X = 260;
+            scrollViewer.Y = currentY;
             scrollViewer.Width = 200;
             scrollViewer.Height = 200;
             scrollViewer.InnerPanel.StackSpacing = 2;
-            //for (int i = 0; i < 20; i++)
-            //{
-            //    var innerButton = new Button();
-            //    innerButton.X = 1;
-            //    innerButton.Visual.Width = -2;
-            //    innerButton.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            //    innerButton.Text = $"Button {i}";
-            //    innerButton.Click += (_, _) =>
-            //    {
-            //        ShowPopup($"You just clicked on {innerButton.Text}. This is a modal popup (no other UI has input)");
-            //    };
-            //    scrollViewer.InnerPanel.Children.Add(innerButton.Visual);
 
 
-            //}
+            currentY += 200;
             Button addButton = new Button();
             addButton.Text = "Add Items";
-            addButton.Click += (_,_) =>
+            addButton.Click += (_, _) =>
             {
                 var random = new System.Random();
 
                 var child = new ColoredRectangleRuntime();
                 child.Red = random.Next(255);
-                child.Green= random.Next(255);
+                child.Green = random.Next(255);
                 child.Blue = random.Next(255);
                 scrollViewer.InnerPanel.Children.Add(child);
 
             };
-            addButton.X = 300;
-            addButton.Y = 220;
+            addButton.X = 260;
+            addButton.Y = currentY;
             root.Children.Add(addButton.Visual);
-            //var viewer = new DefaultScrollViewerRuntime(true, false);
-            //this.Root.Children.Add(viewer);
-            //viewer.X = 300;
-            //viewer.Y = 0;
-            //viewer.Width = 200;
-            //viewer.Height = 200;
-            return;
+
+            currentY += 40;
+
             var textBox = new TextBox();
             root.Children.Add(textBox.Visual);
-            textBox.X = 220;
-            textBox.Y = 220;
+            textBox.X = 260;
+            textBox.Y = currentY;
             textBox.Width = 200;
             textBox.Height = 34;
             textBox.Placeholder = "Placeholder Text...";
 
+            currentY += 40;
+
             var textBox2 = new TextBox();
             root.Children.Add(textBox2.Visual);
-            textBox2.X = 220;
-            textBox2.Y = 260;
+            textBox2.X = 260;
+            textBox2.Y = currentY;
             textBox2.Width = 200;
             textBox2.Height = 34;
             textBox2.Placeholder = "Placeholder Text...";
 
+            currentY += 40;
+
             var passwordBox = new PasswordBox();
             root.Children.Add(passwordBox.Visual);
-            passwordBox.X = 220;
-            passwordBox.Y = 300;
+            passwordBox.X = 260;
+            passwordBox.Y = currentY;
             passwordBox.Width = 200;
             passwordBox.Height = 34;
             passwordBox.Placeholder = "Enter Password";
 
+            currentY += 40;
+
             var slider = new Slider();
             root.Children.Add(slider.Visual);
-            slider.X = 220;
-            slider.Y = 340;
+            slider.X = 260;
+            slider.Y = currentY;
             slider.Minimum = 0;
             slider.Maximum = 10;
             slider.TicksFrequency = 1;
             slider.IsSnapToTickEnabled = true;
             slider.Width = 200;
 
+            currentY += 40;
 
-            var customizedButton = new Button();
-            root.Children.Add(customizedButton.Visual);
+            var showPopupButton = new Button();
+            root.Children.Add(showPopupButton.Visual);
 
-            //customizedButton.Width = 200;
-            //customizedButton.Height = 50;
+            showPopupButton.Visual.RollOn += (_, _) =>
+            {
+                Debug.WriteLine($"Roll on at {DateTime.Now}");
+            };
 
-            customizedButton.X = 450;
-            customizedButton.Y = 300;
+            showPopupButton.Visual.RollOff += (_, _) =>
+            {
+                Debug.WriteLine($"Roll off at {DateTime.Now}");
+            };
 
-            //var spriteRuntime = new SpriteRuntime();
-            //spriteRuntime.SourceFileName = "button_square_gradient.png";
-            //spriteRuntime.X = 100;
-            //spriteRuntime.Y = 100;
-            //spriteRuntime.Width = 500;
-            //spriteRuntime.Height = 600;
-            //this.Root.Children.Add(spriteRuntime);
+            showPopupButton.X = 260;
+            showPopupButton.Y = currentY;
+            showPopupButton.Width = 200;
 
-            //var innerTextBox = new TextBox();
-            //innerTextBox.X = 100;
-            //innerTextBox.Y = 200;
-            //innerTextBox.Width = 200;
-            //innerTextBox.Height = 40;
+            showPopupButton.Text = "Show Non-Modal Popup";
+            showPopupButton.Click += (_, _) =>
+            {
+                ShowPopup("This is a non-modal popup", isModal: false);
+                // create a popup here
+            };
+            currentY += 40;
 
-            //spriteRuntime.Children.Add(innerTextBox.Visual);
 
-            //// ButtonCategory is the category that all Buttons must have
-            //var category = customizedButton.Visual.Categories["ButtonCategory"];
+            var showModalPopupButton = new Button();
+            root.Children.Add(showModalPopupButton.Visual);
 
-            //// Highlighted state is applied when the button is hovered over
-            //var highlightedState = category.States.Find(item => item.Name == "Highlighted");
-            //// remove all old styling:
-            //highlightedState.Variables.Clear();
-            //// Add the new color:
-            //highlightedState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
-            //{
-            //    Name = "ButtonBackground.Color",
-            //    Value = Color.Yellow
-            //});
+            showModalPopupButton.X = 260;
+            showModalPopupButton.Y = currentY;
+            showModalPopupButton.Width = 200;
 
-            //highlightedState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
-            //{
-            //    Name = "TextInstance.Color",
-            //    Value = Color.Black
-            //});
+            showModalPopupButton.Text = "Show Modal Popup";
+            showModalPopupButton.Click += (_,_) =>
+            {
+                ShowPopup("This is a modal popup", isModal:true);
+                // create a popup here
+            };
+            currentY += 40;
 
-            //highlightedState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
-            //{
-            //    Name = "TextInstance.FontScale",
-            //    // FontScale expects a float value, so use 2.0f instead of 2
-            //    Value = 2.0f
-            //});
 
-            //var enabledState = category.States.Find(item => item.Name == "Enabled");
-            //enabledState.Variables.Clear();
-            //enabledState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
-            //{
-            //    Name = "ButtonBackground.Color",
-            //    Value = new Color(0, 0, 128),
-            //});
 
-            //enabledState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
-            //{
-            //    Name = "TextInstance.Color",
-            //    Value = Color.White
-            //});
-
-            //enabledState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
-            //{
-            //    Name = "TextInstance.FontScale",
-            //    // FontScale expects a float value, so use 2.0f instead of 2
-            //    Value = 1.0f
-            //});
         }
 
-        private void ShowPopup(string text)
+
+        private void ShowPopup(string text, bool isModal)
         {
             var container = new ContainerRuntime();
             container.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
@@ -264,7 +241,14 @@ namespace GumFormsSample.Screens
             container.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Center;
             container.Y = 0;
 
-            FrameworkElement.ModalRoot.Children.Add(container);
+            if(isModal)
+            {
+                FrameworkElement.ModalRoot.Children.Add(container);
+            }
+            else
+            {
+                FrameworkElement.PopupRoot.Children.Add(container);
+            }
 
             container.Width = 300;
             container.Height = 200;
