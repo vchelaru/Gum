@@ -595,7 +595,7 @@ namespace Gum.ToolStates
                     currentGue = WireframeObjectManager.Self.RootGue;
                 }
 
-                if(currentGue != null)
+                if(currentGue != null && this.SelectedStateSave != null)
                 {
                     // Applying a state just stacks it on top of the current
                     currentGue.ApplyState(this.SelectedStateSave);
