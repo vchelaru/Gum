@@ -15,6 +15,7 @@ using Gum.Logic.FileWatch;
 using Gum.CommandLine;
 using Gum.DataTypes.Variables;
 using System.Linq;
+using System.Reflection;
 
 namespace Gum
 {
@@ -500,6 +501,12 @@ namespace Gum
             }
         }
 
+        public static string GetExecutingDirectory()
+        {
+            string path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            return path;
+        }
+
         internal void SaveProject(bool forceSaveContainedElements = false)
         {
             bool succeeded = false;
@@ -572,12 +579,20 @@ namespace Gum
 
                         if(isNewProject)
                         {
-                            var sourceFile = "Content\\ExampleSpriteFrame.png";
-                            var destinationFile = FileManager.GetDirectory(GumProjectSave.FullFileName) + "ExampleSpriteFrame.png";
-                            System.IO.File.Copy(sourceFile, destinationFile);
 
-                            var nineSliceStandard = GumProjectSave.StandardElements.Find(item => item.Name == "NineSlice");
-                            nineSliceStandard.DefaultState.SetValue("SourceFile", "ExampleSpriteFrame.png", "string");
+                            var sourceFile = Path.Combine(GetExecutingDirectory(), "Content\\ExampleSpriteFrame.png");
+                            var destinationFile = FileManager.GetDirectory(GumProjectSave.FullFileName) + "ExampleSpriteFrame.png";
+                            try
+                            {
+                                System.IO.File.Copy(sourceFile, destinationFile);
+
+                                var nineSliceStandard = GumProjectSave.StandardElements.Find(item => item.Name == "NineSlice");
+                                nineSliceStandard.DefaultState.SetValue("SourceFile", "ExampleSpriteFrame.png", "string");
+                            }
+                            catch(Exception e)
+                            {
+                                GumCommands.Self.GuiCommands.PrintOutput($"Error copying ExampleSpriteFrame.png: {e}");
+                            }
                         }
 
                         succeeded = true;
