@@ -14,6 +14,7 @@ using Xceed.Wpf.Toolkit.PropertyGrid.Converters;
 #endif
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using System.ComponentModel;
 
 namespace GumRuntime
 {
@@ -44,7 +45,7 @@ namespace GumRuntime
         public static GraphicalUiElement CreateGueForElement(ElementSave elementSave, bool fullInstantiation = false, string genericType = null)
         {
 #if DEBUG
-            if(elementSave == null)
+            if (elementSave == null)
             {
                 throw new ArgumentNullException(nameof(elementSave));
 
@@ -58,7 +59,7 @@ namespace GumRuntime
                 elementName = elementName + "<T>";
             }
 
-            if(mElementToGueTypeFuncs.ContainsKey(elementName))
+            if (mElementToGueTypeFuncs.ContainsKey(elementName))
             {
                 toReturn = mElementToGueTypeFuncs[elementName]();
             }
@@ -74,7 +75,7 @@ namespace GumRuntime
                     type = type.MakeGenericType(mElementToGueTypes[genericType]);
                 }
                 var constructorWithArgs = type.GetConstructor(new Type[] { typeof(bool), typeof(bool) });
-                if(constructorWithArgs != null)
+                if (constructorWithArgs != null)
                 {
                     toReturn = constructorWithArgs.Invoke(new object[] { fullInstantiation, true }) as GraphicalUiElement;
                 }
@@ -84,7 +85,7 @@ namespace GumRuntime
                     toReturn = (GraphicalUiElement)Activator.CreateInstance(type);
                 }
             }
-            else if(TemplateFunc != null)
+            else if (TemplateFunc != null)
             {
                 toReturn = TemplateFunc();
             }
@@ -142,22 +143,22 @@ namespace GumRuntime
 
         public static void CreateGraphicalComponent(this GraphicalUiElement graphicalElement, ElementSave elementSave, ISystemManagers systemManagers)
         {
-            if(CustomCreateGraphicalComponentFunc == null)
+            if (CustomCreateGraphicalComponentFunc == null)
             {
                 throw new InvalidOperationException("The CustomCreateGraphicalComponentFunc must be set before calling CreateGraphicalComponent");
             }
 
             var containedObject = CustomCreateGraphicalComponentFunc(elementSave.Name, systemManagers);
 
-            if(containedObject != null)
+            if (containedObject != null)
             {
                 graphicalElement.SetContainedObject(containedObject);
             }
-            else if(containedObject == null && !string.IsNullOrEmpty(elementSave.BaseType))
+            else if (containedObject == null && !string.IsNullOrEmpty(elementSave.BaseType))
             {
                 var baseElement = ObjectFinder.Self.GetElementSave(elementSave.BaseType);
 
-                if(baseElement != null)
+                if (baseElement != null)
                 {
                     CreateGraphicalComponent(graphicalElement, baseElement, systemManagers);
                 }
@@ -189,7 +190,7 @@ namespace GumRuntime
         public static void SetVariablesRecursively(this GraphicalUiElement graphicalElement, ElementSave elementSave, Gum.DataTypes.Variables.StateSave stateSave)
         {
 #if DEBUG
-            if(stateSave == null)
+            if (stateSave == null)
             {
                 throw new Exception("State cannot be null");
             }
@@ -211,7 +212,7 @@ namespace GumRuntime
 
         public static bool ValueEquality(object val1, object val2)
         {
-            if(val1 is string string1 && val2 is string string2)
+            if (val1 is string string1 && val2 is string string2)
             {
                 return string1 == string2;
             }
@@ -232,18 +233,18 @@ namespace GumRuntime
                         foreach (string referenceString in variableList.ValueAsIList)
                         {
                             var result = ApplyVariableReferencesOnSpecificOwner((InstanceSave)null, referenceString, stateSave);
-                            #if GUM
-                            if(!string.IsNullOrEmpty(result.VariableName))
+#if GUM
+                            if (!string.IsNullOrEmpty(result.VariableName))
                             {
                                 var unqualified = result.VariableName;
-                                if(unqualified?.Contains(".") == true)
+                                if (unqualified?.Contains(".") == true)
                                 {
                                     unqualified = unqualified.Substring(unqualified.IndexOf(".") + 1);
                                 }
                                 //SetVariableLogic.Self.ReactToChangedMember(unqualified, result.valueBefore, element, null, stateSave, 
                                 //    refresh: false, recordUndo: false, trySave: true);
 
-                                if(!ValueEquality(result.OldValue, result.NewValue))
+                                if (!ValueEquality(result.OldValue, result.NewValue))
                                 {
                                     Gum.Plugins.PluginManager.Self.VariableSet(element, null, unqualified, result.OldValue);
                                 }
@@ -255,12 +256,12 @@ namespace GumRuntime
                     else
                     {
                         InstanceSave instance = element.GetInstance(variableList.SourceObject);
-                        if(instance != null)
+                        if (instance != null)
                         {
-                            foreach(string referenceString in variableList.ValueAsIList)
+                            foreach (string referenceString in variableList.ValueAsIList)
                             {
                                 var result = ApplyVariableReferencesOnSpecificOwner(instance, referenceString, stateSave);
-                                #if GUM
+#if GUM
                                 if (!string.IsNullOrEmpty(result.VariableName))
                                 {
                                     var unqualified = result.VariableName;
@@ -281,6 +282,12 @@ namespace GumRuntime
             }
         }
 
+        /// <summary>
+        /// Loops through all variable references in the argument graphicalUiElement, evaluates them, then applies the evlauated value to the
+        /// owner of each variable reference.
+        /// </summary>
+        /// <param name="graphicalElement">The top level owner for which to apply variables.</param>
+        /// <param name="stateSave">The current state, such as the argument graphicalElement's default state</param>
         public static void ApplyVariableReferences(this GraphicalUiElement graphicalElement, StateSave stateSave)
         {
             foreach (var variableList in stateSave.VariableLists)
@@ -323,68 +330,115 @@ namespace GumRuntime
 
         static char[] equalsArray = new char[] { '=' };
 
+        /// <summary>
+        /// Evaluates the reference string (such as X = SomeOtherItem.X), applying the right side to the left side.
+        /// </summary>
+        /// <param name="referenceOwner">The owner that owns the variable reference, such as the instance.</param>
+        /// <param name="referenceString">The string such as "X = SomeItem.X"</param>
+        /// <param name="stateSave">The state save which owns the variable reference.</param>
         public static void ApplyVariableReferencesOnSpecificOwner(GraphicalUiElement referenceOwner, string referenceString, StateSave stateSave)
         {
+            // splits the left and right side, so that we get two items. the first is the left side like "X" and the second is the right side like "SomeItem.X"
             var split = referenceString
                 .Split(equalsArray, 2, StringSplitOptions.RemoveEmptyEntries)
                 .Select(item => item.Trim()).ToArray();
+
+            if (split.Length <= 1)
+            {
+                return;
+            }
+
             object value = null;
             string left = "";
 
-            if(split.Length > 1)
-            {
-                left = split[0];
+            left = split[0];
 
-                var instanceLeft = referenceOwner.Tag as InstanceSave;
-                var currentScreenOrComponent = ObjectFinder.Self.GetContainerOf(instanceLeft);
+            var instanceLeft = referenceOwner.Tag as InstanceSave;
+            var currentScreenOrComponent = ObjectFinder.Self.GetContainerOf(instanceLeft);
 
-                if (!(currentScreenOrComponent is ScreenSave screenLeft)) {
-                    // TODO?
-                    return;
-                }
+            var currentScreen = currentScreenOrComponent as ScreenSave;
+            var currentComponent = currentScreenOrComponent as ComponentSave;
 
 #if GUM
-                var interpreter = new Interpreter(InterpreterOptions.PrimitiveTypes | InterpreterOptions.SystemKeywords);
+            // the Interpreter is loaded up with all available variables in the current project.
+            // This is potentially inefficient, and maybe could be cached, but that's an optimization
+            // for another day.
+            var interpreter = new Interpreter(InterpreterOptions.PrimitiveTypes | InterpreterOptions.SystemKeywords);
 
-                foreach (var screen in ObjectFinder.Self.GumProjectSave.Screens) {
-                    var prefix = screen != screenLeft ? "Screens::" : "";
-                    var allVariables = screen.DefaultState.Variables;
-                    foreach(var variable in allVariables)
-                    {
-                        var vValue = variable.Value;
-                        var name = variable.Name; // this would be something like ColoredRectangleInstance.X
-                        interpreter.SetVariable(prefix + name.Replace('.', '\u1234'), vValue);
-                    }
-                }
-                // FIXME: Add all variables of current instance to interpreter as well, so "X" is also valid (instead of "FullInstanceName.X")
+            AddAllVariablesToInterpreter(currentScreenOrComponent, interpreter);
 
-                string expression = split[1].Replace('.', '\u1234');
-                try {
-                    var parsedExpression = interpreter.Parse(expression);
-                    value = parsedExpression.Invoke();
 
-                    var variableLeft = screenLeft.DefaultState.GetVariableRecursive(instanceLeft.Name + "." + left);
-                    var variableLeftType = variableLeft.GetRuntimeType();
+            // FIXME: Add all variables of current instance to interpreter as well, so "X" is also valid (instead of "FullInstanceName.X")
 
-                    value = Convert.ChangeType(value, variableLeftType);
-                } catch (Exception ex) {
-                    // TODO: Show error
-                    return;
-                }
-#endif
-                // var ownerOfRightSideVariable = stateSave;
+            // The interpreter has to treat each fully qualified variable as a separate value
+            // The variable "MyObject.X" cannot be seen as a variable, it has to be a standard C#
+            // variable. Therefore, we replace all periods and slashes with \u1234.
+            // Why \u1234? Not sure, need to ask arcnor, but I suspect it's a variable
+            // that is valid for variables, but will not be used by users when writing scripts.
+            // Also, there is some ambiguity in variable references. Currently the character '/' is used
+            // to separate folders in an object, and the period is used to separate objects from their variables.
+            // However, in the future we may want to support math operations which include decimals and division.
+            // This would create ambiguity so we'd need to create a standard way to identify what is math vs. what
+            // is gum variable references...
+            // For now, no math operations are supported in variable references.
+            string expression = split[1].Replace('.', '\u1234').Replace('/', '\u1234');
+            try
+            {
+                var parsedExpression = interpreter.Parse(expression);
+                value = parsedExpression.Invoke();
 
-                // GetRightSideAndState(, ref right, ref ownerOfRightSideVariable);
+                var variableLeft = currentScreenOrComponent.DefaultState.GetVariableRecursive(instanceLeft.Name + "." + left);
+                var variableLeftType = variableLeft.GetRuntimeType();
 
-                // var recursiveVariableFinder = new RecursiveVariableFinder(ownerOfRightSideVariable);
-
-                // value = recursiveVariableFinder.GetValue(right);
+                value = Convert.ChangeType(value, variableLeftType);
             }
+            catch (Exception ex)
+            {
+                // TODO: Show error
+                return;
+            }
+#endif
 
 
             if (value != null)
             {
                 referenceOwner.SetProperty(left, value);
+            }
+        }
+
+        private static void AddAllVariablesToInterpreter(ElementSave currentScreenOrComponent, Interpreter interpreter)
+        {
+            foreach (var screen in ObjectFinder.Self.GumProjectSave.Screens)
+            {
+                AddVariablesToInterpreter(screen, "Screens");
+            }
+
+            foreach (var component in ObjectFinder.Self.GumProjectSave.Components)
+            {
+                AddVariablesToInterpreter(component, "Components");
+            }
+
+            void AddVariablesToInterpreter(ElementSave element, string screensOrComponents)
+            {
+                var allVariables = element.DefaultState.Variables;
+                var prefix = $"{screensOrComponents}/" + element.Name + "/";
+                AddVaraiblesWithPrefix(prefix, allVariables);
+                // Also add unqualified versions:
+                if (element == currentScreenOrComponent)
+                {
+                    AddVaraiblesWithPrefix("", allVariables);
+                }
+            }
+
+            void AddVaraiblesWithPrefix(string prefix, List<VariableSave> allVariables)
+            {
+                foreach (var variable in allVariables)
+                {
+                    var vValue = variable.Value;
+                    var name = variable.Name; // this would be something like ColoredRectangleInstance.X
+                    var fullVariableName = (prefix + name).Replace('.', '\u1234').Replace('/', '\u1234');
+                    interpreter.SetVariable(fullVariableName, vValue);
+                }
             }
         }
 
@@ -401,7 +455,7 @@ namespace GumRuntime
                 .Split(equalsArray, StringSplitOptions.RemoveEmptyEntries)
                 .Select(item => item.Trim()).ToArray();
 
-            if(split.Length != 2)
+            if (split.Length != 2)
             {
                 return new VariableReferenceAssignmentResult { NewValue = null, OldValue = null, VariableName = null };
             }
@@ -421,7 +475,7 @@ namespace GumRuntime
             string effectiveLeft = null;
             if (value != null)
             {
-                if(instance == null)
+                if (instance == null)
                 {
                     effectiveLeft = left;
                     valueBefore = stateSave.GetValue(left);
@@ -463,19 +517,19 @@ namespace GumRuntime
 
                     var element = ObjectFinder.Self.GetComponent(stripped);
 
-                    if(element != null)
+                    if (element != null)
                     {
                         stateSave = GetRightSide(ref right, firstDot, element);
                     }
                 }
-                else if(elementNameToFind.StartsWith("Screens/"))
+                else if (elementNameToFind.StartsWith("Screens/"))
                 {
                     var stripped = elementNameToFind.Substring("Screens/".Length);
 
                     var element = ObjectFinder.Self.GetScreen(stripped);
 
-                    if(element != null)
-                    { 
+                    if (element != null)
+                    {
                         stateSave = GetRightSide(ref right, firstDot, element);
                     }
                 }
@@ -512,7 +566,7 @@ namespace GumRuntime
             // We need to set categories and states first since those are used below;
             toReturn.SetStatesAndCategoriesRecursively(elementSave);
 
-            if(toReturn.RenderableComponent == null)
+            if (toReturn.RenderableComponent == null)
             {
                 // This could have already been created by the type that is instantiated, so don't do this to double-create
                 toReturn.CreateGraphicalComponent(elementSave, systemManagers);
