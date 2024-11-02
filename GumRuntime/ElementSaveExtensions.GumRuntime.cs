@@ -406,6 +406,7 @@ namespace GumRuntime
             }
         }
 
+#if GUM
         private static void AddAllVariablesToInterpreter(ElementSave currentScreenOrComponent, Interpreter interpreter)
         {
             foreach (var screen in ObjectFinder.Self.GumProjectSave.Screens)
@@ -441,7 +442,7 @@ namespace GumRuntime
                 }
             }
         }
-
+#endif
         struct VariableReferenceAssignmentResult
         {
             public string VariableName;
