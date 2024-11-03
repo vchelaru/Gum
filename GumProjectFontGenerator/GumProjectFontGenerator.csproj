@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Gum\Managers\FontManager.cs" Link="FontManager.cs" />
+    <Compile Include="..\Gum\Managers\Singleton.cs" Link="Singleton.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.2.1105" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GumCommon\GumCommon.csproj" />
+    <ProjectReference Include="..\GumDataTypes\GumDataTypesNet6.csproj" />
+    <ProjectReference Include="..\MonoGameGum\MonoGameGum.csproj" />
+    <ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
+  </ItemGroup>
+
+</Project>

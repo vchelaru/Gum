@@ -42,7 +42,14 @@ namespace Gum.Plugins.Fonts
 
         private void HandleClearFontCache(object sender, EventArgs e)
         {
-            FontManager.Self.DeleteFontCacheFolder();
+            try
+            {
+                FontManager.Self.DeleteFontCacheFolder();
+            }
+            catch
+            {
+                System.Windows.Forms.MessageBox.Show("Error deleting font cache:\n" + e.ToString());
+            }
         }
 
         private void HandleViewFontCache(object sender, EventArgs e)

@@ -1,6 +1,5 @@
 ﻿using Gum.DataTypes;
 using Gum.DataTypes.Variables;
-using Gum.ToolStates;
 using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
@@ -53,23 +52,18 @@ namespace Gum.Managers
 
         public void DeleteFontCacheFolder()
         {
-            try
-            {
-                FileManager.DeleteDirectory(AbsoluteFontCacheFolder);
-            }
-            catch(Exception e)
-            {
-                System.Windows.Forms.MessageBox.Show("Error deleting font cache:\n" + e.ToString());
-            }
+            FileManager.DeleteDirectory(AbsoluteFontCacheFolder);
         }
 
         public void CreateAllMissingFontFiles(GumProjectSave project)
         {
-            foreach(var element in project.StandardElements)
+            var fontRanges = project.FontRanges;
+
+            foreach (var element in project.StandardElements)
             {
                 foreach(var state in element.AllStates)
                 {
-                    TryCreateFontFileFor(null, state);
+                    TryCreateFontFileFor(null, state, fontRanges);
 
                     // standard elements don't have instances
                 }
@@ -78,11 +72,11 @@ namespace Gum.Managers
             {
                 foreach (var state in component.AllStates)
                 {
-                    TryCreateFontFileFor(null, state);
+                    TryCreateFontFileFor(null, state, fontRanges);
 
                     foreach(var instance in component.Instances)
                     {
-                        TryCreateFontFileFor(instance, state);
+                        TryCreateFontFileFor(instance, state, fontRanges);
                     }
                 }
             }
@@ -90,35 +84,27 @@ namespace Gum.Managers
             {
                 foreach (var state in screen.AllStates)
                 {
-                    TryCreateFontFileFor(null, state);
+                    TryCreateFontFileFor(null, state, fontRanges);
 
                     foreach (var instance in screen.Instances)
                     {
-                        TryCreateFontFileFor(instance, state);
+                        TryCreateFontFileFor(instance, state, fontRanges);
                     }
                 }
             }
         }
 
-        internal void ReactToFontValueSet(InstanceSave instance, StateSave forcedValues = null)
+        internal void ReactToFontValueSet(InstanceSave instance, GumProjectSave gumProject, StateSave stateSave, StateSave forcedValues)
         {
-            StateSave stateSave = SelectedState.Self.SelectedStateSave;
-
-            // If the user has a category selected but no state in the category, then use the default:
-            if (stateSave == null && SelectedState.Self.SelectedStateCategorySave != null)
-            {
-                stateSave = SelectedState.Self.SelectedElement.DefaultState;
-            }
-
             if (stateSave == null)
             {
                 throw new InvalidOperationException($"{nameof(stateSave)} is null");
             }
 
-            TryCreateFontFileFor(instance, stateSave, forcedValues);
+            TryCreateFontFileFor(instance, stateSave, gumProject.FontRanges, forcedValues);
         }
 
-        public void TryCreateFontFileFor(InstanceSave instance, StateSave stateSave, StateSave forcedValues = null)
+        public void TryCreateFontFileFor(InstanceSave instance, StateSave stateSave, string fontRanges, StateSave forcedValues = null)
         {
             string prefix = "";
             if (instance != null)
@@ -144,7 +130,7 @@ namespace Gum.Managers
                     fontSmoothing, 
                     isItalic, 
                     isBold,
-                    GumState.Self.ProjectState.GumProjectSave?.FontRanges
+                    fontRanges
                     );
             }
         }

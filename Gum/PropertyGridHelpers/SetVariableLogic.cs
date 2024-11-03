@@ -532,8 +532,16 @@ namespace Gum.PropertyGridHelpers
                     TryAddForced("IsItalic");
                     TryAddForced("IsBold");
 
+                    StateSave stateSave = SelectedState.Self.SelectedStateSave;
 
-                    FontManager.Self.ReactToFontValueSet(instance, forcedValues);
+                    // If the user has a category selected but no state in the category, then use the default:
+                    if (stateSave == null && SelectedState.Self.SelectedStateCategorySave != null)
+                    {
+                        stateSave = SelectedState.Self.SelectedElement.DefaultState;
+                    }
+
+
+                    FontManager.Self.ReactToFontValueSet(instance, GumState.Self.ProjectState.GumProjectSave, stateSave, forcedValues);
                 }
             }
 

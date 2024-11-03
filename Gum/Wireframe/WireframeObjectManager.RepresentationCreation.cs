@@ -168,7 +168,17 @@ namespace Gum.Wireframe
                         TryAddForced("IsItalic");
                         TryAddForced("IsBold");
 
-                        FontManager.Self.ReactToFontValueSet(instance, forcedValues);
+                        StateSave stateSave = SelectedState.Self.SelectedStateSave;
+
+                        // If the user has a category selected but no state in the category, then use the default:
+                        if (stateSave == null && SelectedState.Self.SelectedStateCategorySave != null)
+                        {
+                            stateSave = SelectedState.Self.SelectedElement.DefaultState;
+                        }
+
+
+
+                        FontManager.Self.ReactToFontValueSet(instance, GumState.Self.ProjectState.GumProjectSave, stateSave, forcedValues);
                     }
                 }
 
