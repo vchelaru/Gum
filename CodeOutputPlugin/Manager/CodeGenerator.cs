@@ -2008,7 +2008,9 @@ namespace CodeOutputPlugin.Manager
                 if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
                 {
                     // MonoGame expects 0 or 2-arg constructors. We'll start with 0 for now, and eventually go to 2 if we need Forms support
-                    stringBuilder.AppendLine(context.Tabs + $"public {elementName}()");
+                    // Update November 3, 2024 - there's code that is generated that expects fullInstantiation. Also the docs recommend a 2-arg
+                    // approach so let's do that:
+                    stringBuilder.AppendLine(context.Tabs + $"public {elementName}(bool fullInstantiation = true, bool tryCreateFormsObject = true)");
                 }
                 else
                 {
@@ -2117,12 +2119,13 @@ namespace CodeOutputPlugin.Manager
 
             if (context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
             {
-                stringBuilder.AppendLine(context.Tabs + "if(fullInstantiation)");
-                stringBuilder.AppendLine(context.Tabs + "{");
-                context.TabCount++;
+                // this may not be necessary anymore:
+                //stringBuilder.AppendLine(context.Tabs + "if(fullInstantiation)");
+                //stringBuilder.AppendLine(context.Tabs + "{");
+                //context.TabCount++;
                 stringBuilder.AppendLine(context.Tabs + "ApplyDefaultVariables();");
-                context.TabCount--;
-                stringBuilder.AppendLine(context.Tabs + "}");
+                //context.TabCount--;
+                //stringBuilder.AppendLine(context.Tabs + "}");
 
                 if (!DoesElementInheritFromCodeGeneratedElement(element, projectSettings))
                 {
