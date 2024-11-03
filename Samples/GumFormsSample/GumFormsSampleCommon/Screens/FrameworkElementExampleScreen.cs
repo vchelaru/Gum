@@ -41,6 +41,10 @@ namespace GumFormsSample.Screens
             button.Height = 50;
             button.Text = "Hello MonoGame!";
             int clickCount = 0;
+            button.Visual.RollOn += (_, _) =>
+            {
+                Debug.WriteLine($"Roll on at {DateTime.Now}");
+            };
             button.Click += (_, _) =>
             {
                 clickCount++;
