@@ -1,8 +1,8 @@
 ﻿using Gum.DataTypes;
 using Gum.Wireframe;
-#if !NO_XNA
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
+#if !NO_XNA
 #endif
 using System;
 using System.Collections.Generic;
