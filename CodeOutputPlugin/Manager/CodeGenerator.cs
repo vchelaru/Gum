@@ -3177,6 +3177,16 @@ namespace CodeOutputPlugin.Manager
                         }
 
                     }
+                    if(shouldInclude)
+                    {
+                        var rootName = item.GetRootName();
+
+                        // these are excluded from codegen for now:
+                        if(rootName == "Contained Type")
+                        {
+                            shouldInclude = false;
+                        }
+                    }
 
                     return shouldInclude;
                 })

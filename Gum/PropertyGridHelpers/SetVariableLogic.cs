@@ -181,7 +181,7 @@ namespace Gum.PropertyGridHelpers
                     .Where(item => item.ReferenceType == ReferenceType.VariableReference)
                     .ToArray();
 
-                if (references != null)
+                if (references != null && variableOnInstance != null)
                 {
                     foreach (var reference in filteredReferences)
                     {
