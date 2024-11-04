@@ -266,7 +266,7 @@ namespace CodeOutputPlugin
                         {
 
                             string gumCode = CodeGenerator.GetGeneratedCodeForElement(selectedElement, settings, codeOutputProjectSettings);
-                            viewModel.Code = $"//Code for {selectedElement.ToString()}\n{gumCode}";
+                            viewModel.Code = $"//Code for {selectedElement.ToString()}\r\n{gumCode}";
                         }
                         break;
                     case ViewModels.WhatToView.SelectedState:
@@ -275,7 +275,7 @@ namespace CodeOutputPlugin
                         if (state != null && selectedElement != null)
                         {
                             string gumCode = CodeGenerator.GetCodeForState(selectedElement, state, VisualApi.Gum);
-                            viewModel.Code = $"//State Code for {state.Name ?? "Default"}:\n{gumCode}";
+                            viewModel.Code = $"//State Code for {state.Name ?? "Default"}:\r\n{gumCode}";
                         }
                         break;
                 }

@@ -17,7 +17,9 @@ namespace CodeOutputPlugin.Manager
             var fileName = GetProjectCodeSettingsFile();
             if(fileName != null)
             {
-                var serialized = JsonConvert.SerializeObject(settings);
+                var serialized = JsonConvert.SerializeObject(settings, 
+                    // This makes debugging a little easier:
+                    Formatting.Indented);
                 System.IO.File.WriteAllText(fileName.FullPath, serialized);
             }
         }

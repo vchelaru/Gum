@@ -19,6 +19,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Remoting.Contexts;
 using System.Security.Principal;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using ToolsUtilities;
 
@@ -129,6 +130,34 @@ namespace CodeOutputPlugin.Manager
 
     public static class CodeGenerator
     {
+        #region Using Statements
+
+
+        private static void GenerateUsingStatements(CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings, StringBuilder stringBuilder)
+        {
+            // The regex's here fix this bug:
+            // https://github.com/vchelaru/Gum/issues/242
+
+            if (!string.IsNullOrWhiteSpace(projectSettings?.CommonUsingStatements))
+            {
+                string originalString = projectSettings.CommonUsingStatements;
+                string result = Regex.Replace(originalString, @"(?<!\r)\n", "\r\n");
+
+                stringBuilder.AppendLine(result);
+            }
+
+            if (!string.IsNullOrEmpty(elementSettings?.UsingStatements))
+            {
+                string originalString = elementSettings.UsingStatements;
+                string result = Regex.Replace(originalString, @"(?<!\r)\n", "\r\n");
+
+
+                stringBuilder.AppendLine(result);
+            }
+        }
+
+        #endregion
+
         #region BindingBehavior Enum
         enum BindingBehavior
         {
@@ -2230,15 +2259,8 @@ namespace CodeOutputPlugin.Manager
 
             #region Using Statements
 
-            if (!string.IsNullOrWhiteSpace(projectSettings?.CommonUsingStatements))
-            {
-                stringBuilder.AppendLine(projectSettings.CommonUsingStatements);
-            }
+            GenerateUsingStatements(elementSettings, projectSettings, stringBuilder);
 
-            if (!string.IsNullOrEmpty(elementSettings?.UsingStatements))
-            {
-                stringBuilder.AppendLine(elementSettings.UsingStatements);
-            }
             #endregion
 
             #region Namespace Header/Opening {
@@ -2359,7 +2381,7 @@ namespace CodeOutputPlugin.Manager
             //var contents = ViewModel.Code;
 
             string contents = CodeGenerator.GetGeneratedCodeForElement(selectedElement, elementSettings, codeOutputProjectSettings);
-            contents = $"//Code for {selectedElement.ToString()}\n{contents}";
+            contents = $"//Code for {selectedElement.ToString()}\r\n{contents}";
 
             string message = string.Empty;
 
