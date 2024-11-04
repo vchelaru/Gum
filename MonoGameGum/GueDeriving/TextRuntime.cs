@@ -1,4 +1,5 @@
-﻿using Gum.Wireframe;
+﻿using Gum.DataTypes;
+using Gum.Wireframe;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
@@ -170,6 +171,22 @@ namespace MonoGameGum.GueDeriving
             }
         }
 
+        #region Defaults
+
+
+
+        // todo - add more here
+        public static string DefaultFont = "Arial";
+        public static int DefaultFontSize = 18;
+
+        public float DefaultWidth = 100;
+        public float DefaultHeight = 50;
+
+        public DimensionUnitType DefaultWidthUnits = DimensionUnitType.Absolute;
+        public DimensionUnitType DefaultHeightUnits = DimensionUnitType.Absolute;
+
+        #endregion
+
         public TextRuntime(bool fullInstantiation = true)
         {
             if(fullInstantiation)
@@ -179,11 +196,13 @@ namespace MonoGameGum.GueDeriving
                 mContainedText = textRenderable;
                 
                 SetContainedObject(textRenderable);
-                Width = 0;
-                WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-                Height = 0;
-                HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-                this.FontSize = 18;
+
+                Width = DefaultWidth;
+                WidthUnits = DefaultWidthUnits;
+                Height = DefaultHeight;
+                HeightUnits = DefaultHeightUnits;
+                this.FontSize = DefaultFontSize;
+                this.Font = DefaultFont;
 
                 textRenderable.RawText = "Hello World";
             }
