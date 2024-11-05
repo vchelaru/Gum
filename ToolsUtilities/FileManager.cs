@@ -21,22 +21,36 @@ namespace ToolsUtilities
         public const char DefaultSlash = '\\';
         #region Fields
 
+        static bool IsMobile =>
+#if NET6_0_OR_GREATER
+            System.OperatingSystem.IsAndroid() || 
+                System.OperatingSystem.IsIOS() ;
+#elif ANDROID || IOS
+        true;
+#else
+        false;
+#endif
+
         public static string ExeLocation
         {
             get
             {
-#if ANDROID || IOS
-            return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).ToLower().Replace("/", "\\") + "\\";
-#else
-                string result = AppContext.BaseDirectory;
+                if (IsMobile)
+                {
+                    return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).ToLower().Replace("/", "\\") + "\\";
+                }
+                else
+                {
 
-                // Blazor-WASM returns "/" for BaseDirectory, which is invalid for GetDirectoryName.
-                if (result != "/")
-                    result = Path.GetDirectoryName(result);
+                    string result = AppContext.BaseDirectory;
 
-                return result.Replace('/', Path.DirectorySeparatorChar)
-                             .Replace('\\', Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
-#endif
+                    // Blazor-WASM returns "/" for BaseDirectory, which is invalid for GetDirectoryName.
+                    if (result != "/")
+                        result = Path.GetDirectoryName(result);
+
+                    return result.Replace('/', Path.DirectorySeparatorChar)
+                                 .Replace('\\', Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+                }
             }
         }
 
@@ -55,7 +69,14 @@ namespace ToolsUtilities
             {
                 if (IsRelative(value))
                 {
-                    mRelativeDirectory = ExeLocation + value;
+                    if(IsMobile)
+                    {
+                        mRelativeDirectory = "./" + value;
+                    }
+                    else
+                    {
+                        mRelativeDirectory = ExeLocation + value;
+                    }
                 }
                 else
                 {
@@ -119,25 +140,28 @@ namespace ToolsUtilities
             fileName = Standardize(fileName, preserveCase: true, makeAbsolute: true);
             if (!ignoreExtensions)
             {
-#if ANDROID || IOS
-				try
+                if(IsMobile)
                 {
-					if(fileName.StartsWith(".\\") || fileName.StartsWith("./"))
-					{
-						fileName = fileName.Substring(2);
-					}
-					using (var stream = Microsoft.Xna.Framework.TitleContainer.OpenStream(fileName))
-					{
-						return stream != null;
-					}
+                    try
+                    {
+                        if (fileName.StartsWith(".\\") || fileName.StartsWith("./"))
+                        {
+                            fileName = fileName.Substring(2);
+                        }
+                        using (var stream = CustomGetStreamFromFile(fileName))
+                        {
+                            return stream != null;
+                        }
+                    }
+                    catch
+                    {
+                        return false;
+                    }
                 }
-                catch
+                else
                 {
-                    return false;
+                    return File.Exists(fileName);
                 }
-#else
-                return File.Exists(fileName);
-#endif
             }
             else
             {
@@ -360,33 +384,35 @@ namespace ToolsUtilities
                 throw new System.ArgumentException("Cannot check if a null file name is relative.");
             }
 
-
-#if ANDROID || IOS
-            // Justin Johnson 6/6/2017: this compiler flagged code might be eliminated now that 
-            // this whole method is more cross platform friendly!
-			if(fileName.Length > 1 && fileName[0] == '.' && (fileName[1] == '/' || fileName[1] == '\\'))
-                return false;
+            if(IsMobile)
+            {
+                // Justin Johnson 6/6/2017: this compiler flagged code might be eliminated now that 
+                // this whole method is more cross platform friendly!
+                if (fileName.Length > 1 && fileName[0] == '.' && (fileName[1] == '/' || fileName[1] == '\\'))
+                    return false;
+                else
+                    return true;
+            }
             else
-                return true;
-
-#else
-            if(fileName.StartsWith(ExeLocation))
             {
-                relative = false;
-            }
-            else if(fileName == String.Empty)
-            {
-                relative = true; // it doesn't have a prefix so it's technically relative:
-            }
-            else if (fileName.Length < 1 || !Path.IsPathRooted(fileName))
-            {
-                // On linux and mac, we need to still check if it has a root:
-                var root = Path.GetPathRoot(fileName);
+                if (fileName.StartsWith(ExeLocation))
+                {
+                    relative = false;
+                }
+                else if (fileName == String.Empty)
+                {
+                    relative = true; // it doesn't have a prefix so it's technically relative:
+                }
+                else if (fileName.Length < 1 || !Path.IsPathRooted(fileName))
+                {
+                    // On linux and mac, we need to still check if it has a root:
+                    var root = Path.GetPathRoot(fileName);
 
 
-                relative = string.IsNullOrWhiteSpace(root);
+                    relative = string.IsNullOrWhiteSpace(root);
+                }
             }
-#endif
+
             return relative;
         }
 
@@ -483,7 +509,7 @@ namespace ToolsUtilities
                         for (int i = start; i < relpath.Length; i++)
                         {
                             if (relpath[i] != string.Empty)
-                                relativepath += @".." + System.IO.Path.DirectorySeparatorChar; 
+                                relativepath += @".." + System.IO.Path.DirectorySeparatorChar;
                         }
 
                         // if the current relative path is still empty, and there are more than one entries left in the path,
@@ -660,10 +686,12 @@ namespace ToolsUtilities
 
             //ThrowExceptionIfFileDoesntExist(fileName);
 
-#if ANDROID || IOS
-            // Mobile platforms don't like ./ at the start of the file name, but that's what we use to identify an absolute path
-			fileName = TryRemoveLeadingDotSlash (fileName);
-#endif
+
+            if(IsMobile)
+            {
+                // Mobile platforms don't like ./ at the start of the file name, but that's what we use to identify an absolute path
+			    fileName = TryRemoveLeadingDotSlash (fileName);
+            }
 
 
             using (Stream stream = GetStreamForFile(fileName))
@@ -698,11 +726,11 @@ namespace ToolsUtilities
             try
             {
 
-    #if ANDROID || IOS
+#if ANDROID || IOS
                 fileName = TryRemoveLeadingDotSlash(fileName);
 			    return Microsoft.Xna.Framework.TitleContainer.OpenStream(fileName);
-    #else
-                if(CustomGetStreamFromFile != null)
+#else
+                if (CustomGetStreamFromFile != null)
                 {
                     return CustomGetStreamFromFile(fileName);
                 }
@@ -710,7 +738,7 @@ namespace ToolsUtilities
                 {
                     return System.IO.File.OpenRead(fileName);
                 }
-    #endif
+#endif
             }
             catch (Exception e)
             {

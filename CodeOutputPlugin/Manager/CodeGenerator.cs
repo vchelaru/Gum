@@ -4097,10 +4097,17 @@ namespace CodeOutputPlugin.Manager
             // ignored variables:
             else if (rootName == "IsXamarinFormsControl" ||
                 rootName == "ExposeChildrenEvents" ||
-                rootName == "IsOverrideInCodeGen" ||
-                rootName == "HasEvents")
+                rootName == "IsOverrideInCodeGen")
             {
                 return " ";
+            }
+            else if(rootName == "HasEvents")
+            {
+                // if this is a MonoGame project, do not return " ";
+                if(context.CodeOutputProjectSettings.OutputLibrary != OutputLibrary.MonoGame)
+                {
+                    return " ";
+                }
             }
             else if (GetIsShouldBeLocalized(variable, context.Element.DefaultState))
             {

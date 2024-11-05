@@ -924,8 +924,10 @@ namespace Gum.Wireframe
             }
         }
 
+
         /// <summary>
-        /// Returns an enumerable for all GraphicalUiElements that this contains.
+        /// A flat list of all GraphicalUiElements contained by this element. For example, if this GraphicalUiElement
+        /// is a Screen, this list is all GraphicalUielements for every instance contained regardless of hierarchy.
         /// </summary>
         /// <remarks>
         /// Since this is an interface using ContainedElements in a foreach allocates memory

@@ -38,6 +38,17 @@ namespace RenderingLibrary
 
         #region Properties
 
+
+        static bool IsMobile =>
+#if NET6_0_OR_GREATER
+            System.OperatingSystem.IsAndroid() ||
+                System.OperatingSystem.IsIOS();
+#elif ANDROID || IOS
+        true;
+#else
+        false;
+#endif
+
         public static SystemManagers Default
         {
             get;
@@ -194,6 +205,12 @@ namespace RenderingLibrary
 
 
 #else
+
+                    if(IsMobile && fileName.StartsWith ("./"))
+                    {
+                        fileName = fileName.Substring(2);
+                    }
+
                     var stream = TitleContainer.OpenStream(fileName);
                     return stream;
 #endif
@@ -256,7 +273,7 @@ namespace RenderingLibrary
 
                 Text.RenderBoundaryDefault = false;
 
-                ToolsUtilities.FileManager.RelativeDirectory += "Content/";
+                ToolsUtilities.FileManager.RelativeDirectory = "Content/";
 
                 RegisterComponentRuntimeInstantiations();
 
