@@ -16,39 +16,39 @@ The **Children Layout** property determines how a container positions its childr
 
 ### Example
 
-The following shows how to use the ChildrenLayout property to change the default position of a Container's children. It begins with a single NineSlice inside of a container called ContainerInstance. The following animation shows the different Children Layouts being set:
+The following shows how to use the ChildrenLayout property to change the default position of a Container's children. The following animation shows the different Children Layouts being set:
 
-<figure><img src="../../.gitbook/assets/04_14 25 58.gif" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/04_14 25 58.gif" alt=""><figcaption><p>Changing Children Layout updates the position of all contained children</p></figcaption></figure>
 
 ### Regular
 
-Regular layout positions each child independent of every other child. The position of one child will not affect the position of the other child. This is used in all cases except when stacking is needed.
+Regular layout positions each child independent of every other child. The position of one child does not affect the position other children. This is the default layout for containers.
 
-<figure><img src="../../.gitbook/assets/image (4) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (4) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Two ColoredRectangles using regular layout</p></figcaption></figure>
 
 ### Top to Bottom Stack
 
-Top to Bottom Stack results in each child being positioned after its previous sibling vertically. This can be used to create horizontal stacks quickly.
+Top to Bottom Stack results in each child being positioned after its previous sibling vertically. This can be used to create horizontal stacks.
 
-<figure><img src="../../.gitbook/assets/image (12).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (12).png" alt=""><figcaption><p>Text Instances in a top to bottom stack</p></figcaption></figure>
 
 ### Left to Right Stack
 
-Left to Right Stack results in each child being positioned after its previous sibling horizontally. This can be used to create vertical stacks quickly.
+Left to Right Stack results in each child being positioned after its previous sibling horizontally. This can be used to create vertical stacks.
 
-<figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Sprites in a left to right stack</p></figcaption></figure>
 
-### Stacking and Units
+### Stacking and X/Y Values
 
 When children stack, each child's X or Y depends on the boundary of its previous sibling. When stacking vertically, the child's Y value begins at the bottom side of the previous item. Similarly, when stacking horizontally, the child's X value begins at the right side of the previous item.
 
 For example, the following image shows a Text object with a Y value of 20. Notice that it is positioned 20 units below the item above it.
 
-<figure><img src="../../.gitbook/assets/image (3) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (3) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>A Text's Y value can be used to separate it from its previous sibling in a Top to Bottom Stack</p></figcaption></figure>
 
-This effect is very easy to notice when dragging an object inside a stack, as shown in the following animation:
+This effect is easy to notice when dragging an object inside a stack, as shown in the following animation:
 
-<figure><img src="../../.gitbook/assets/01_09 00 19.gif" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/01_09 00 19.gif" alt=""><figcaption><p>As a Y value changes, all following siblings move too</p></figcaption></figure>
 
 ### Stacking and Units
 
@@ -56,7 +56,13 @@ If instances are stacked in a container, the stacking controls the instance valu
 
 For example, if a container stacks its children using a **Top to Bottom Stack**, the children in the stack are free to change their X values. The following animation shows how children can be left, center, or right anchored (which changes their **X Units** and **X Origin**) without affecting the other children in the stack.
 
-<figure><img src="../../.gitbook/assets/01_10 09 47.gif" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/01_10 09 47.gif" alt=""><figcaption><p>Changing horizontal layout values does not affect siblings in a Top to Bottom Stack</p></figcaption></figure>
+
+An object will stack only if its position unit values are top or left for vertical or horizontal stacks. For example, if a child is part of a Top to Bottom Stack, it will only stack if its Y Units is set to Pixels from Top. Otherwise it ignores its parents stacking behavior.
+
+<figure><img src="../../.gitbook/assets/04_19 41 43.gif" alt=""><figcaption><p>Top to Bottom Stack is only respected if the child has its Y Units set to Pixels from Top</p></figcaption></figure>
+
+In general this behavior can cause unexpected behavior, especially if additional siblings follow the child which is not using the default Pixels from Top or Pixels from Left, so changing this value on the primary stacking direction is not recommended.
 
 ### Stack Spacing
 
