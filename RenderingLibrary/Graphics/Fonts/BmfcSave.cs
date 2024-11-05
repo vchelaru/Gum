@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System.Diagnostics;
 using ToolsUtilities;
+using System.IO;
 
 namespace RenderingLibrary.Graphics.Fonts
 {
@@ -21,7 +22,15 @@ namespace RenderingLibrary.Graphics.Fonts
 
             string directory = FileManager.GetDirectory(assembly2.Location);
 
-            string template = FileManager.FromFileText(directory + "Content/BmfcTemplate.bmfc");
+            var bmfcTemplateFullPath =
+                directory + "Content/BmfcTemplate.bmfc";
+
+            if(!System.IO.File.Exists(bmfcTemplateFullPath))
+            {
+                throw new FileNotFoundException(bmfcTemplateFullPath);
+            }
+
+            string template = FileManager.FromFileText(bmfcTemplateFullPath);
 
             template = template.Replace("FontNameVariable", FontName);
             template = template.Replace("FontSizeVariable", FontSize.ToString());
@@ -213,6 +222,7 @@ namespace RenderingLibrary.Graphics.Fonts
             {
 
                 string bmfcFileToSave = FileManager.RelativeDirectory + FileManager.RemoveExtension(fileName) + ".bmfc";
+                System.Console.WriteLine("Saving: " + bmfcFileToSave);
 
                 Save(bmfcFileToSave);
 
@@ -222,7 +232,7 @@ namespace RenderingLibrary.Graphics.Fonts
                 ProcessStartInfo info = new ProcessStartInfo();
                 info.FileName = locationToSave;
 
-
+                System.Console.WriteLine("Running: " + info.FileName + " " + info.Arguments);
 
                 info.Arguments = "-c \"" + bmfcFileToSave + "\"" +
                     " -o \"" + FileManager.RelativeDirectory + fileName + "\"";

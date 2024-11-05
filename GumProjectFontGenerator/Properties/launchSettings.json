@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "GumProjectFontGenerator": {
+      "commandName": "Project",
+      "commandLineArgs": "C:/Users/Owner/Documents/GitHub/FlatRedBall/Tests/TestProjectDesktopNet6/TestProjectDesktopNet6/Content/GumProject/GumProject.gumx"
+    }
+  }
+}

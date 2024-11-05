@@ -23,4 +23,13 @@
     <ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Content\BmfcTemplate.bmfc">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Libraries\bmfont.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
