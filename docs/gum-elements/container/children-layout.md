@@ -6,19 +6,19 @@ The **Children Layout** property determines how a container positions its childr
 
 <figure><img src="../../.gitbook/assets/image (47).png" alt=""><figcaption><p>Children Layout showing Regular, Top to Bottom Stack, Left to Right Stack, Auto Grid Horizontal, and Auto Grid Vertical</p></figcaption></figure>
 
-The value **TopToBottomStack** results in the children stacking one on top of another, from top to bottom.
+**Top to Bottom Stack** results in the children stacking one on top of another, from top to bottom.
 
-The value **LeftToRightStack** results in the children stacking one beside another, from left to right.
+**Left to Right Stack** results in the children stacking one beside another, from left to right.
+
+**Auto Grid Horizontal** results in the children being placed in a grid, filling in horizontally first before wrapping to the next row.
+
+**Auto Grid Vertical** results in the children being placed in a grid, filling in vertically first before wrapping to a new column.
 
 ### Example
 
-The following shows how to use the ChildrenLayout property to stack objects. It begins with a single NineSlice inside of a container called ContainerInstance. The following actions are performed:
+The following shows how to use the ChildrenLayout property to change the default position of a Container's children. It begins with a single NineSlice inside of a container called ContainerInstance. The following animation shows the different Children Layouts being set:
 
-1. The NineSliceInstance is copied and pasted 3 times. At this point all NineSliceInstance's are overlapping each other
-2. The Children Layout is changed from Regular to TopToBottomStack. The NineSliceInstance's are automatically stacked top-to-bottom.
-3. The Children Layout is changed to LeftToRightStack. The NineSliceInstance's are automatically stacked left-to-right.
-
-![](<../../.gitbook/assets/ChildrenLayoutGum (1).gif>)
+<figure><img src="../../.gitbook/assets/04_14 25 58.gif" alt=""><figcaption></figcaption></figure>
 
 ### Regular
 
