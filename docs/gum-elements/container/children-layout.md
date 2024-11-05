@@ -88,7 +88,7 @@ This overlapping may not be desirable, so keep this in mind when changing a stac
 
 ### Wraps Children
 
-The [Wraps Children](children-layout.md#wraps-children) property controls how stacking behaves beyond boundaries. For more information, see the [Wraps Children](children-layout.md#wraps-children) page.
+The [Wraps Children](wraps-children.md) property controls how stacking behaves beyond boundaries. For more information, see the [Wraps Children](wraps-children.md) page.
 
 ### Reordering Children
 
