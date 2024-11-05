@@ -36,7 +36,7 @@ namespace GumRuntime
 
                     toReturn = ElementSaveExtensions.ToGraphicalUiElement(instanceElement, systemManagers, 
                         // don't add to managers, this is going to be added to the owner
-                        addToManagers: false);
+                        addToManagers: false, genericType:genericType);
                     toReturn.Name = instanceSave.Name;
 
                 }
