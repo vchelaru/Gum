@@ -205,14 +205,18 @@ namespace RenderingLibrary.Graphics.Fonts
         public void CreateBitmapFontFilesIfNecessary(string fileName)
         {
             string resourceName = "RenderingLibrary.Libraries.bmfont.exe";
-            string locationToSave = FileManager.RelativeDirectory + "Libraries\\bmfont.exe";
 
-            if (!FileManager.FileExists(locationToSave))
+            string mainExecutablePath = FileManager.GetDirectory( Assembly.GetExecutingAssembly().Location );
+
+
+            string bmFontExeLocation = Path.Combine(mainExecutablePath, "Libraries\\bmfont.exe");
+
+            if (!FileManager.FileExists(bmFontExeLocation))
             {
                 FileManager.SaveEmbeddedResource(
                     Assembly.GetAssembly(typeof(BmfcSave)),
                     resourceName,
-                    locationToSave);
+                    bmFontExeLocation);
 
             }
 
@@ -230,7 +234,7 @@ namespace RenderingLibrary.Graphics.Fonts
 
                 // Now call the executable
                 ProcessStartInfo info = new ProcessStartInfo();
-                info.FileName = locationToSave;
+                info.FileName = bmFontExeLocation;
 
                 System.Console.WriteLine("Running: " + info.FileName + " " + info.Arguments);
 
