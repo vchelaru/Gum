@@ -12,7 +12,9 @@ namespace Gum.DataTypes
         /// checking for other errors.
         /// </summary>
         /// <param name="gumProjectSave">The GumProjectSave</param>
-        public static bool Initialize(this GumProjectSave gumProjectSave)
+        /// <param name="tolerateMissingDefaultStates">Whether to tolerate missing default states. If false, 
+        /// exceptions are thrown if there is a missing standard state. If true, missing states will not throw an exception.</param>
+        public static bool Initialize(this GumProjectSave gumProjectSave, bool tolerateMissingDefaultStates = false)
         {
             bool wasModified = false;
 
@@ -46,12 +48,23 @@ namespace Gum.DataTypes
             // ignored enum values.
             foreach (StandardElementSave standardElementSave in gumProjectSave.StandardElements)
             {
-                StateSave stateSave = StandardElementsManager.Self.GetDefaultStateFor(standardElementSave.Name);
-                // this will result in extra variables being
-                // added
-                wasModified = standardElementSave.Initialize(stateSave) || wasModified;
+                try
+                {
+                    StateSave stateSave = StandardElementsManager.Self.GetDefaultStateFor(standardElementSave.Name);
+                    // this will result in extra variables being
+                    // added
+                    wasModified = standardElementSave.Initialize(stateSave) || wasModified;
 
-                stateSave.ParentContainer = standardElementSave;
+                    stateSave.ParentContainer = standardElementSave;
+
+                }
+                catch
+                {
+                    if (!tolerateMissingDefaultStates)
+                    {
+                        throw;
+                    }
+                }
             }
 
             foreach (ScreenSave screenSave in gumProjectSave.Screens)

@@ -82,7 +82,7 @@ namespace Gum
 
             CommandLineManager.Self.ReadCommandLine();
 
-            if(!CommandLineManager.Self.ShouldExitImmediately)
+            if (!CommandLineManager.Self.ShouldExitImmediately)
             {
                 var isShift = (Control.ModifierKeys & Keys.Shift) != 0;
 
@@ -129,7 +129,7 @@ namespace Gum
 
             DialogResult result = openFileDialog.ShowDialog();
 
-                
+
 
             if (result == DialogResult.OK)
             {
@@ -159,7 +159,7 @@ namespace Gum
             if (!string.IsNullOrEmpty(errors))
             {
                 MessageBox.Show("Errors loading " + fileName + "\n\n" + errors);
-                
+
                 // If the file doesn't exist, that's okay we will let the user still work - it's not like they can overwrite a file that doesn't exist
                 // But if it does exist, we want to be careful and not allow overwriting because they could be wiping out good data
                 if (fileName.Exists())
@@ -186,20 +186,20 @@ namespace Gum
                 StandardElementsManagerGumTool.Self.FixCustomTypeConverters(mGumProjectSave);
                 RecreateMissingStandardElements();
 
-                if(RecreateMissingDefinedByBaseObjects())
+                if (RecreateMissingDefinedByBaseObjects())
                 {
                     wasModified = true;
                 }
 
-                if(mGumProjectSave.AddNewStandardElementTypes())
+                if (mGumProjectSave.AddNewStandardElementTypes())
                 {
                     wasModified = true;
                 }
-                if(FixSlashesInNames(mGumProjectSave))
+                if (FixSlashesInNames(mGumProjectSave))
                 {
                     wasModified = true;
                 }
-                if(RemoveDuplicateVariables(mGumProjectSave))
+                if (RemoveDuplicateVariables(mGumProjectSave))
                 {
                     wasModified = true;
                 }
@@ -215,7 +215,7 @@ namespace Gum
 
                 CopyLinkedComponents();
 
-                if(FixRecursiveAssignments(mGumProjectSave))
+                if (FixRecursiveAssignments(mGumProjectSave))
                 {
                     wasModified = true;
                 }
@@ -225,7 +225,7 @@ namespace Gum
 
                 if (wasModified)
                 {
-                    ProjectManager.Self.SaveProject(forceSaveContainedElements:true);
+                    ProjectManager.Self.SaveProject(forceSaveContainedElements: true);
                 }
 
                 GraphicalUiElement.CanvasWidth = mGumProjectSave.DefaultCanvasWidth;
@@ -245,7 +245,7 @@ namespace Gum
             GumCommands.Self.GuiCommands.RefreshElementTreeView();
 
 
-            if(mGumProjectSave != null)
+            if (mGumProjectSave != null)
             {
                 GumCommands.Self.FileCommands.LoadLocalizationFile();
             }
@@ -259,12 +259,12 @@ namespace Gum
                 shouldSaveSettings = true;
             }
 
-            if(!string.IsNullOrEmpty(result.ErrorMessage))
+            if (!string.IsNullOrEmpty(result.ErrorMessage))
             {
-                if(!fileName.Exists())
+                if (!fileName.Exists())
                 {
                     var numberRemoved = GeneralSettingsFile.RecentProjects.RemoveAll(item => item.FilePath == fileName);
-                    if(numberRemoved > 0)
+                    if (numberRemoved > 0)
                     {
                         shouldSaveSettings = true;
                     }
@@ -272,7 +272,7 @@ namespace Gum
 
             }
 
-            if(shouldSaveSettings)
+            if (shouldSaveSettings)
             {
                 GeneralSettingsFile.Save();
             }
@@ -289,9 +289,9 @@ namespace Gum
             //        toReturn = true;
             //    }
             //}
-            foreach(var component in mGumProjectSave.Components)
+            foreach (var component in mGumProjectSave.Components)
             {
-                if(FixRecursiveAssignments(component))
+                if (FixRecursiveAssignments(component))
                 {
                     toReturn = true;
                 }
@@ -304,7 +304,7 @@ namespace Gum
         {
             var didModify = false;
             // see if the child is either of this type, or a base type
-            foreach(var instance in element.Instances)
+            foreach (var instance in element.Instances)
             {
                 var isRecursive = ObjectFinder.Self.IsInstanceRecursivelyReferencingElement(instance, element);
 
@@ -341,7 +341,7 @@ namespace Gum
                 }
             }
 
-            foreach(var reference in mGumProjectSave.ScreenReferences)
+            foreach (var reference in mGumProjectSave.ScreenReferences)
             {
                 CopyReference(reference);
             }
@@ -357,38 +357,73 @@ namespace Gum
             }
         }
 
-        private bool FixSlashesInNames(GumProjectSave mGumProjectSave)
+        /// <summary>
+        /// Fixes slashes in all references, component names, and instance references. 
+        /// </summary>
+        /// <param name="gumProjectSave">The project for which to fix slashes.</param>
+        /// <returns>Whether any changes were made.</returns>
+        private bool FixSlashesInNames(GumProjectSave gumProjectSave)
         {
-            var toReturn = false;
-            foreach(var reference in mGumProjectSave.ComponentReferences)
+            var didAnythingChange = false;
+
+            foreach (var reference in gumProjectSave.ScreenReferences)
             {
-                if(reference.Name.Contains("\\"))
+                if (reference.Name.Contains("\\"))
                 {
                     reference.Name = reference.Name.Replace("\\", "/");
-                    toReturn = true;
+                    didAnythingChange = true;
                 }
             }
 
-            foreach(var component in mGumProjectSave.Components)
+            foreach (var reference in gumProjectSave.ComponentReferences)
             {
-                if(component.Name.Contains("\\"))
+                if (reference.Name.Contains("\\"))
+                {
+                    reference.Name = reference.Name.Replace("\\", "/");
+                    didAnythingChange = true;
+                }
+            }
+
+            foreach (var screen in gumProjectSave.Screens)
+            {
+                if (screen.Name.Contains("\\"))
+                {
+                    screen.Name = screen.Name.Replace("\\", "/");
+                    didAnythingChange = true;
+                }
+            }
+
+
+
+            foreach (var component in gumProjectSave.Components)
+            {
+                if (component.Name.Contains("\\"))
                 {
                     component.Name = component.Name.Replace("\\", "/");
-                    toReturn = true;
+                    didAnythingChange = true;
+                }
+
+                foreach (var instance in component.Instances)
+                {
+                    if (instance.BaseType.Contains("\\"))
+                    {
+                        instance.BaseType = instance.BaseType.Replace("\\", "/");
+                        didAnythingChange = true;
+                    }
                 }
             }
 
-            return toReturn;
+            return didAnythingChange;
         }
 
         private bool RemoveDuplicateVariables(GumProjectSave gumProjectSave)
         {
             var didChange = false;
-            foreach(var screen in gumProjectSave.Screens)
+            foreach (var screen in gumProjectSave.Screens)
             {
                 didChange = RemoveDuplicateVariables(screen) || didChange;
             }
-            foreach(var component in gumProjectSave.Components)
+            foreach (var component in gumProjectSave.Components)
             {
                 didChange = RemoveDuplicateVariables(component) || didChange;
             }
@@ -402,7 +437,7 @@ namespace Gum
         private bool RemoveDuplicateVariables(ElementSave element)
         {
             var didChange = false;
-            foreach(var state in element.AllStates)
+            foreach (var state in element.AllStates)
             {
                 didChange = RemoveDuplicateVariables(state) || didChange;
             }
@@ -415,9 +450,9 @@ namespace Gum
 
             var didChange = false;
             if (variableNames.Count != state.Variables.Count)
-            { 
+            {
                 var newVariables = new List<VariableSave>();
-                foreach(var variableName in variableNames)
+                foreach (var variableName in variableNames)
                 {
                     var matchingVariable = state.Variables.FirstOrDefault(item => item.Name == variableName);
                     newVariables.Add(matchingVariable);
@@ -465,16 +500,16 @@ namespace Gum
         {
             var wasAnythingAdded = false;
 
-            foreach(var component in mGumProjectSave.Components)
+            foreach (var component in mGumProjectSave.Components)
             {
                 List<InstanceSave> necessaryInstances = new List<InstanceSave>();
                 FillWithNecessaryInstances(component, necessaryInstances);
-                foreach(var instanceInBase in necessaryInstances)
+                foreach (var instanceInBase in necessaryInstances)
                 {
                     // see if there's a match:
                     var matching = component.GetInstance(instanceInBase.Name);
 
-                    if(matching == null)
+                    if (matching == null)
                     {
                         var instance = instanceInBase.Clone();
                         instance.DefinedByBase = true;
@@ -488,11 +523,11 @@ namespace Gum
 
         private void FillWithNecessaryInstances(ComponentSave component, List<InstanceSave> necessaryInstances)
         {
-            if( !string.IsNullOrWhiteSpace( component.BaseType))
+            if (!string.IsNullOrWhiteSpace(component.BaseType))
             {
                 var baseComponent = ObjectFinder.Self.GetElementSave(component.BaseType) as ComponentSave;
 
-                if(baseComponent != null)
+                if (baseComponent != null)
                 {
                     necessaryInstances.AddRange(baseComponent.Instances);
 
@@ -524,7 +559,7 @@ namespace Gum
                 {
                     PluginManager.Self.BeforeProjectSave(GumProjectSave);
 
-                    foreach(var elementSave in GumProjectSave.Screens)
+                    foreach (var elementSave in GumProjectSave.Screens)
                     {
                         foreach (var stateSave in elementSave.AllStates)
                         {
@@ -577,7 +612,7 @@ namespace Gum
 
                         GumCommands.Self.TryMultipleTimes(() => GumProjectSave.Save(GumProjectSave.FullFileName, saveContainedElements));
 
-                        if(isNewProject)
+                        if (isNewProject)
                         {
 
                             var sourceFile = Path.Combine(GetExecutingDirectory(), "Content\\ExampleSpriteFrame.png");
@@ -589,7 +624,7 @@ namespace Gum
                                 var nineSliceStandard = GumProjectSave.StandardElements.Find(item => item.Name == "NineSlice");
                                 nineSliceStandard.DefaultState.SetValue("SourceFile", "ExampleSpriteFrame.png", "string");
                             }
-                            catch(Exception e)
+                            catch (Exception e)
                             {
                                 GumCommands.Self.GuiCommands.PrintOutput($"Error copying ExampleSpriteFrame.png: {e}");
                             }
@@ -613,7 +648,7 @@ namespace Gum
                             }
                         }
                     }
-                    catch(UnauthorizedAccessException exception)
+                    catch (UnauthorizedAccessException exception)
                     {
                         var tempFileName = FileManager.RemoveExtension(GumProjectSave.FullFileName) + DateTime.Now.ToString("s") + "gumx";
                         GumCommands.Self.TryMultipleTimes(() => GumProjectSave.Save(tempFileName, saveContainedElements));

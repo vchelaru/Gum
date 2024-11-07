@@ -2,7 +2,7 @@
   "profiles": {
     "GumProjectFontGenerator": {
       "commandName": "Project",
-      "commandLineArgs": "C:/Users/Owner/Documents/GitHub/FlatRedBall/Tests/TestProjectDesktopNet6/TestProjectDesktopNet6/Content/GumProject/GumProject.gumx"
+      "commandLineArgs": "C:\\Users\\Owner\\Documents\\GitHub\\KidDefense\\GameProject\\KidDefense\\Content\\GumProject\\gumproject.gumx"
     }
   }
 }

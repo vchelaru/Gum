@@ -33,7 +33,9 @@ internal class Program
             //var relativeDirectory = FileManager.RelativeDirectory;
             var gumProject = GumProjectSave.Load(projectName);
 
-            gumProject.Initialize();
+            gumProject.Initialize(
+                // This could be using plugins that add things like Arc and other Skia elements
+                tolerateMissingDefaultStates:true);
             ObjectFinder.Self.GumProjectSave = gumProject;
             FileManager.RelativeDirectory = FileManager.GetDirectory(projectName);
 
