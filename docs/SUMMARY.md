@@ -150,6 +150,7 @@
     * [Component Runtimes](monogame/runtime-objects-graphicaluielement-deriving/component-runtimes.md)
     * [ContainerRuntime](monogame/runtime-objects-graphicaluielement-deriving/containerruntime.md)
     * [InteractiveGue](monogame/runtime-objects-graphicaluielement-deriving/interactivegue/README.md)
+      * [CurrentInputReceiver](monogame/runtime-objects-graphicaluielement-deriving/interactivegue/currentinputreceiver.md)
       * [RollOverBubbling](monogame/runtime-objects-graphicaluielement-deriving/interactivegue/rolloverbubbling.md)
     * [NineSliceRuntime](monogame/runtime-objects-graphicaluielement-deriving/ninesliceruntime.md)
     * [RectangleRuntime](monogame/runtime-objects-graphicaluielement-deriving/rectangleruntime.md)
