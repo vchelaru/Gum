@@ -26,32 +26,32 @@ namespace Gum.Wireframe
 {
     public class CustomSetPropertyOnRenderable
     {
-        public static void SetPropertyOnRenderable(IRenderableIpso mContainedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+        public static void SetPropertyOnRenderable(IRenderableIpso renderableIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
         {
             bool handled = false;
 
             // First try special-casing.  
 
-            if (mContainedObjectAsIpso is Text)
+            if (renderableIpso is Text)
             {
-                handled = TrySetPropertyOnText(mContainedObjectAsIpso, graphicalUiElement, propertyName, value);
+                handled = TrySetPropertyOnText(renderableIpso, graphicalUiElement, propertyName, value);
             }
 #if MONOGAME || KNI || XNA4 || FNA
-            else if (mContainedObjectAsIpso is LineCircle)
+            else if (renderableIpso is LineCircle)
             {
-                handled = TrySetPropertyOnLineCircle(mContainedObjectAsIpso, graphicalUiElement, propertyName, value);
+                handled = TrySetPropertyOnLineCircle(renderableIpso, graphicalUiElement, propertyName, value);
             }
-            else if (mContainedObjectAsIpso is LineRectangle)
+            else if (renderableIpso is LineRectangle)
             {
-                handled = TrySetPropertyOnLineRectangle(mContainedObjectAsIpso, graphicalUiElement, propertyName, value);
+                handled = TrySetPropertyOnLineRectangle(renderableIpso, graphicalUiElement, propertyName, value);
             }
-            else if (mContainedObjectAsIpso is LinePolygon)
+            else if (renderableIpso is LinePolygon)
             {
-                handled = TrySetPropertyOnLinePolygon(mContainedObjectAsIpso, propertyName, value);
+                handled = TrySetPropertyOnLinePolygon(renderableIpso, propertyName, value);
             }
-            else if (mContainedObjectAsIpso is SolidRectangle)
+            else if (renderableIpso is SolidRectangle)
             {
-                var solidRect = mContainedObjectAsIpso as SolidRectangle;
+                var solidRect = renderableIpso as SolidRectangle;
 
                 if (propertyName == "Blend")
                 {
@@ -104,82 +104,13 @@ namespace Gum.Wireframe
                 }
 
             }
-            else if (mContainedObjectAsIpso is Sprite)
+            else if (renderableIpso is Sprite)
             {
-                var sprite = mContainedObjectAsIpso as Sprite;
-
-                if (propertyName == "SourceFile")
-                {
-                    var asString = value as String;
-                    handled = AssignSourceFileOnSprite(sprite, graphicalUiElement, asString);
-
-                }
-                else if (propertyName == "Alpha")
-                {
-                    int valueAsInt = (int)value;
-                    sprite.Alpha = valueAsInt;
-                    handled = true;
-                }
-                else if (propertyName == "Red")
-                {
-                    int valueAsInt = (int)value;
-                    sprite.Red = valueAsInt;
-                    handled = true;
-                }
-                else if (propertyName == "Green")
-                {
-                    int valueAsInt = (int)value;
-                    sprite.Green = valueAsInt;
-                    handled = true;
-                }
-                else if (propertyName == "Blue")
-                {
-                    int valueAsInt = (int)value;
-                    sprite.Blue = valueAsInt;
-                    handled = true;
-                }
-                else if (propertyName == "Color")
-                {
-                    if(value is System.Drawing.Color drawingColor)
-                    {
-                        sprite.Color = drawingColor;
-                    }
-                    else if(value is Microsoft.Xna.Framework.Color xnaColor)
-                    {
-                        sprite.Color = xnaColor.ToSystemDrawing();
-
-                    }
-                    handled = true;
-                }
-
-                else if (propertyName == "Blend")
-                {
-                    var valueAsGumBlend = (RenderingLibrary.Blend)value;
-
-                    var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
-
-                    sprite.BlendState = valueAsXnaBlend;
-
-                    handled = true;
-                }
-                else if(propertyName == "Animate")
-                {
-                    sprite.Animate = (bool)value;
-                    handled = true;
-                }
-                else if(propertyName == "CurrentChainName")
-                {
-                    sprite.CurrentChainName = (string)value;
-                    handled = true;
-                }
-                if (!handled)
-                {
-                    int m = 3;
-                }
+                handled = TrySetPropertyOnSprite(renderableIpso, graphicalUiElement, propertyName, value);
             }
-            else if (mContainedObjectAsIpso is NineSlice)
+            else if (renderableIpso is NineSlice)
             {
-                var nineSlice = mContainedObjectAsIpso as NineSlice;
+                var nineSlice = renderableIpso as NineSlice;
 
                 if (propertyName == "SourceFile")
                 {
@@ -281,7 +212,7 @@ namespace Gum.Wireframe
                 }
                 else
                 {
-                    System.Reflection.PropertyInfo propertyInfo = mContainedObjectAsIpso.GetType().GetProperty(propertyName);
+                    System.Reflection.PropertyInfo propertyInfo = renderableIpso.GetType().GetProperty(propertyName);
 
                     if (propertyInfo != null && propertyInfo.CanWrite)
                     {
@@ -290,10 +221,89 @@ namespace Gum.Wireframe
                         {
                             value = System.Convert.ChangeType(value, propertyInfo.PropertyType);
                         }
-                        propertyInfo.SetValue(mContainedObjectAsIpso, value, null);
+                        propertyInfo.SetValue(renderableIpso, value, null);
                     }
                 }
             }
+        }
+
+        private static bool TrySetPropertyOnSprite(IRenderableIpso renderableIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+        {
+            bool handled = false;
+            var sprite = renderableIpso as Sprite;
+
+            if (propertyName ==  "SourceFile")
+            {
+                var asString = value as String;
+                handled = AssignSourceFileOnSprite(sprite, graphicalUiElement, asString);
+
+            }
+            else if (propertyName == nameof(Sprite.Alpha))
+            {
+                int valueAsInt = (int)value;
+                sprite.Alpha = valueAsInt;
+                handled = true;
+            }
+            else if (propertyName == nameof(Sprite.Red))
+            {
+                int valueAsInt = (int)value;
+                sprite.Red = valueAsInt;
+                handled = true;
+            }
+            else if (propertyName == nameof(Sprite.Green))
+            {
+                int valueAsInt = (int)value;
+                sprite.Green = valueAsInt;
+                handled = true;
+            }
+            else if (propertyName == nameof(Sprite.Blue))
+            {
+                int valueAsInt = (int)value;
+                sprite.Blue = valueAsInt;
+                handled = true;
+            }
+            else if (propertyName == nameof(Sprite.Color))
+            {
+                if (value is System.Drawing.Color drawingColor)
+                {
+                    sprite.Color = drawingColor;
+                }
+                else if (value is Microsoft.Xna.Framework.Color xnaColor)
+                {
+                    sprite.Color = xnaColor.ToSystemDrawing();
+
+                }
+                handled = true;
+            }
+
+            else if (propertyName == "Blend")
+            {
+                var valueAsGumBlend = (RenderingLibrary.Blend)value;
+
+                var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
+
+                sprite.BlendState = valueAsXnaBlend;
+
+                handled = true;
+            }
+            else if (propertyName == nameof(Sprite.Animate))
+            {
+                sprite.Animate = (bool)value;
+                handled = true;
+            }
+            else if (propertyName == nameof(Sprite.CurrentChainName))
+            {
+                sprite.CurrentChainName = (string)value;
+                graphicalUiElement.UpdateTextureValuesFrom(sprite);
+                graphicalUiElement.UpdateLayout();
+                handled = true;
+            }
+            if (!handled)
+            {
+                int m = 3;
+            }
+
+            return handled;
         }
 
         #region Text

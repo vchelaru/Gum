@@ -918,7 +918,11 @@ namespace RenderingLibrary.Graphics
             {
                 throw new ArgumentException("The timeIntoAnimation argument must be 0 or positive");
             }
-            else if (CurrentChain != null && CurrentChain.Count > 1)
+            else if (CurrentChain != null && 
+                // This used to check if the count was > 1, but that prevents 1-frame animations from applying, so we should do > 0
+                //CurrentChain.Count > 1
+                CurrentChain.Count > 0
+                )
             {
                 int frameIndex = 0;
                 while (timeIntoAnimation >= 0)
