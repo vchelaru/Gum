@@ -7,6 +7,14 @@
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <StackPanel>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                <ColumnDefinition></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <Label Content="Margin"></Label>
+            <TextBox Grid.Column="1" Text="{Binding DockMargin}" VerticalContentAlignment="Center" ></TextBox>
+        </Grid>
         <local:AnchorControl></local:AnchorControl>
         <local:DockControl></local:DockControl>
     </StackPanel>

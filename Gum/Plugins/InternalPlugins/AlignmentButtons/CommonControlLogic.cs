@@ -14,9 +14,9 @@ namespace Gum.Plugins.AlignmentButtons
             }
             return false;
         }
-        public static void SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment alignment, PositionUnitType xUnits)
+        public static void SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment alignment, PositionUnitType xUnits, float value = 0f)
         {
-            SetAndCallReact("X", 0.0f, "float");
+            SetAndCallReact("X", value, "float");
             SetAndCallReact("X Origin", alignment, "HorizontalAlignment");
             SetAndCallReact("X Units", xUnits, typeof(Gum.Managers.PositionUnitType).Name);
 
@@ -27,11 +27,11 @@ namespace Gum.Plugins.AlignmentButtons
 
         }
 
-        public static void SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment alignment, PositionUnitType yUnits)
+        public static void SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment alignment, PositionUnitType yUnits, float value = 0f)
         {
             var state = SelectedState.Self.SelectedStateSave;
 
-            SetAndCallReact("Y", 0.0f, "float");
+            SetAndCallReact("Y", value, "float");
             SetAndCallReact("Y Origin", alignment, typeof(global::RenderingLibrary.Graphics.VerticalAlignment).Name);
             SetAndCallReact("Y Units", yUnits, typeof(PositionUnitType).Name);
 

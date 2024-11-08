@@ -1,4 +1,5 @@
-﻿using System.Windows.Controls;
+﻿using Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels;
+using System.Windows.Controls;
 
 namespace Gum.Plugins.AlignmentButtons
 {
@@ -10,6 +11,8 @@ namespace Gum.Plugins.AlignmentButtons
         public AlignmentPluginControl()
         {
             InitializeComponent();
+            this.DataContext = new AlignmentViewModel();
+
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels;
 using Gum.ToolStates;
 using Gum.Undo;
 using System.Windows.Controls;
@@ -12,6 +13,8 @@ namespace Gum.Plugins.AlignmentButtons
     /// </summary>
     public partial class AnchorControl : UserControl
     {
+        AlignmentViewModel ViewModel => (AlignmentViewModel)DataContext;
+
         StateSave CurrentState
         {
             get
@@ -34,155 +37,48 @@ namespace Gum.Plugins.AlignmentButtons
 
         private void TopLeftButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            using (UndoManager.Self.RequestLock())
-            {
-
-                SetXValues(
-                global::RenderingLibrary.Graphics.HorizontalAlignment.Left,
-                PositionUnitType.PixelsFromLeft);
-
-                SetYValues(
-                    global::RenderingLibrary.Graphics.VerticalAlignment.Top,
-                    PositionUnitType.PixelsFromTop);
-
-                RefreshAndSave();
-            }
+            ViewModel.TopLeftButton_Click();
         }
 
 
         private void TopButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            using (UndoManager.Self.RequestLock())
-            {
-
-                SetXValues(
-                global::RenderingLibrary.Graphics.HorizontalAlignment.Center,
-                PositionUnitType.PixelsFromCenterX);
-
-                SetYValues(
-                    global::RenderingLibrary.Graphics.VerticalAlignment.Top,
-                    PositionUnitType.PixelsFromTop);
-
-                RefreshAndSave();
-            }
+            ViewModel.TopButton_Click();
         }
 
         private void TopRightButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            using (UndoManager.Self.RequestLock())
-            {
-
-                SetXValues(
-                global::RenderingLibrary.Graphics.HorizontalAlignment.Right,
-                PositionUnitType.PixelsFromRight);
-
-                SetYValues(
-                    global::RenderingLibrary.Graphics.VerticalAlignment.Top,
-                    PositionUnitType.PixelsFromTop);
-
-                RefreshAndSave();
-            }
+            ViewModel.TopRightButton_Click();
         }
 
         private void MiddleLeftButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            using (UndoManager.Self.RequestLock())
-            {
-
-                SetXValues(
-                global::RenderingLibrary.Graphics.HorizontalAlignment.Left,
-                PositionUnitType.PixelsFromLeft);
-
-                SetYValues(
-                    global::RenderingLibrary.Graphics.VerticalAlignment.Center,
-                    PositionUnitType.PixelsFromCenterY);
-
-                RefreshAndSave();
-            }
+            ViewModel.MiddleLeftButton_Click();
         }
 
         private void MiddleMiddleButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            using (UndoManager.Self.RequestLock())
-            {
-                SetXValues(
-                global::RenderingLibrary.Graphics.HorizontalAlignment.Center,
-                PositionUnitType.PixelsFromCenterX);
-
-                SetYValues(
-                    global::RenderingLibrary.Graphics.VerticalAlignment.Center,
-                    PositionUnitType.PixelsFromCenterY);
-
-                RefreshAndSave();
-            }
+            ViewModel.MiddleMiddleButton_Click();
         }
 
         private void MiddleRightButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            using (UndoManager.Self.RequestLock())
-            {
-
-                SetXValues(
-                global::RenderingLibrary.Graphics.HorizontalAlignment.Right,
-                PositionUnitType.PixelsFromRight);
-
-                SetYValues(
-                    global::RenderingLibrary.Graphics.VerticalAlignment.Center,
-                    PositionUnitType.PixelsFromCenterY);
-
-                RefreshAndSave();
-            }
+            ViewModel.MiddleRightButton_Click();
         }
 
         private void BottomLeftButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            using (UndoManager.Self.RequestLock())
-            {
-
-                SetXValues(
-                global::RenderingLibrary.Graphics.HorizontalAlignment.Left,
-                PositionUnitType.PixelsFromLeft);
-
-                SetYValues(
-                    global::RenderingLibrary.Graphics.VerticalAlignment.Bottom,
-                    PositionUnitType.PixelsFromBottom);
-
-                RefreshAndSave();
-            }
+            ViewModel.BottomLeftButton_Click();
         }
 
         private void BottomMiddleButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            using (UndoManager.Self.RequestLock())
-            {
-
-                SetXValues(
-                global::RenderingLibrary.Graphics.HorizontalAlignment.Center,
-                PositionUnitType.PixelsFromCenterX);
-
-                SetYValues(
-                    global::RenderingLibrary.Graphics.VerticalAlignment.Bottom,
-                    PositionUnitType.PixelsFromBottom);
-
-                RefreshAndSave();
-            }
+            ViewModel.BottomMiddleButton_Click();
         }
 
         private void BottomRightButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            using (UndoManager.Self.RequestLock())
-            {
-
-                SetXValues(
-                global::RenderingLibrary.Graphics.HorizontalAlignment.Right,
-                PositionUnitType.PixelsFromRight);
-
-                SetYValues(
-                    global::RenderingLibrary.Graphics.VerticalAlignment.Bottom,
-                    PositionUnitType.PixelsFromBottom);
-
-                RefreshAndSave();
-            }
+            ViewModel.BottomRightButton_Click();
         }
     }
 }
