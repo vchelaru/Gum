@@ -37,7 +37,7 @@ namespace RenderingLibrary.Graphics
         #region Fields
 
 
-        List<Layer> mLayers = new List<Layer>();
+        List<Layer> _layers = new List<Layer>();
         ReadOnlyCollection<Layer> mLayersReadOnly;
 
         SpriteRenderer spriteRenderer = new SpriteRenderer();
@@ -71,14 +71,14 @@ namespace RenderingLibrary.Graphics
 
         public Layer MainLayer
         {
-            get { return mLayers[0]; }
+            get { return _layers[0]; }
         }
 
         internal List<Layer> LayersWritable
         {
             get
             {
-                return mLayers;
+                return _layers;
             }
         }
 
@@ -258,10 +258,10 @@ namespace RenderingLibrary.Graphics
             Camera.PixelPerfectOffsetY = .0f;
 #endif
 
-            mLayersReadOnly = new ReadOnlyCollection<Layer>(mLayers);
+            mLayersReadOnly = new ReadOnlyCollection<Layer>(_layers);
 
-            mLayers.Add(new Layer());
-            mLayers[0].Name = "Main Layer";
+            _layers.Add(new Layer());
+            _layers[0].Name = "Main Layer";
 
             mGraphicsDevice = graphicsDevice;
 
@@ -291,9 +291,11 @@ namespace RenderingLibrary.Graphics
         public Layer AddLayer()
         {
             Layer layer = new Layer();
-            mLayers.Add(layer);
+            _layers.Add(layer);
             return layer;
         }
+
+        public void AddLayer(Layer layer) => _layers.Add(layer);
 
 
         //public void AddLayer(SortableLayer sortableLayer, Layer masterLayer)
@@ -315,7 +317,7 @@ namespace RenderingLibrary.Graphics
                 managers = SystemManagers.Default;
             }
 
-            Draw(managers, mLayers);
+            Draw(managers, _layers);
 
             ForceEnd();
         }
@@ -417,13 +419,13 @@ namespace RenderingLibrary.Graphics
         {
             SpriteBatchStack.PerformStartOfLayerRenderingLogic();
 
-            spriteRenderer.BeginSpriteBatch(mRenderStateVariables, mLayers[0], BeginType.Push, mCamera);
+            spriteRenderer.BeginSpriteBatch(mRenderStateVariables, _layers[0], BeginType.Push, mCamera);
         }
 
 
         public void Draw(IRenderableIpso renderable)
         {
-            Draw(SystemManagers.Default, mLayers[0], renderable);
+            Draw(SystemManagers.Default, _layers[0], renderable);
         }
 
         public void End()
@@ -651,7 +653,7 @@ namespace RenderingLibrary.Graphics
 
         public void RemoveLayer(Layer layer)
         {
-            mLayers.Remove(layer);
+            _layers.Remove(layer);
         }
 
         public void ClearPerformanceRecordingVariables()

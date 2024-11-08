@@ -32,11 +32,10 @@ namespace Gum.Wireframe
     {
         #region Fields / Properties
         private ToolFontService _toolFontService;
-
+        private ToolLayerService _toolLayerService;
         XnaAndWinforms.GraphicsDeviceControl mControl;
         SystemManagers mManagers;
         Layer mRulerLayer;
-        Layer mScreenSpaceLayer;
         Cursor mCursor;
         Keyboard mKeyboard;
 
@@ -252,9 +251,11 @@ namespace Gum.Wireframe
 
 
 
-        public Ruler(GraphicsDeviceControl control, SystemManagers managers, Cursor cursor, InputLibrary.Keyboard keyboard, ToolFontService toolFontService)
+        public Ruler(GraphicsDeviceControl control, SystemManagers managers, Cursor cursor, InputLibrary.Keyboard keyboard, 
+            ToolFontService toolFontService, ToolLayerService toolLayerService)
         {
             _toolFontService = toolFontService;
+            _toolLayerService = toolLayerService;
 
             mControl = control;
             mKeyboard = keyboard;
@@ -264,7 +265,7 @@ namespace Gum.Wireframe
             // do this before creating the arrows
             CreateLayer();
 
-            CreateArrows(managers, mScreenSpaceLayer);
+            CreateArrows(managers);
 
             CreateVisualRepresentation();
 
@@ -275,11 +276,11 @@ namespace Gum.Wireframe
 
         }
 
-        private void CreateArrows(SystemManagers managers, Layer layer)
+        private void CreateArrows(SystemManagers managers)
         {
-            DistanceArrow1 = new DistanceArrows(managers ?? SystemManagers.Default, layer, _toolFontService);
+            DistanceArrow1 = new DistanceArrows(managers ?? SystemManagers.Default, _toolFontService, _toolLayerService);
             DistanceArrow1.AddToManagers();
-            DistanceArrow2 = new DistanceArrows(managers ?? SystemManagers.Default, layer, _toolFontService);
+            DistanceArrow2 = new DistanceArrows(managers ?? SystemManagers.Default, _toolFontService, _toolLayerService);
             DistanceArrow2.AddToManagers();
 
             DistanceArrow1.IsStartArrowTipVisible = false;
@@ -409,11 +410,6 @@ namespace Gum.Wireframe
             mRulerLayer.LayerCameraSettings = new LayerCameraSettings();
             mRulerLayer.LayerCameraSettings.IsInScreenSpace = true;
             mRulerLayer.Name = "Ruler Layer";
-
-            mScreenSpaceLayer = Renderer.AddLayer();
-
-            mScreenSpaceLayer.Name = "ScreenSpace Ruler Layer";
-
         }
 
         private bool PerformGuidesActivity(bool isCursorInWindow)

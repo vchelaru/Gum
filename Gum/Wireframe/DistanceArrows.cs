@@ -11,6 +11,7 @@ namespace Gum.Wireframe
 {
     internal class DistanceArrows
     {
+        private ToolLayerService _toolLayerService;
         Arrow Arrow1;
         Arrow Arrow2;
 
@@ -30,8 +31,6 @@ namespace Gum.Wireframe
 
         Text _distanceText;
 
-        Layer _layer;
-
         bool _visible;
 
 
@@ -50,17 +49,22 @@ namespace Gum.Wireframe
             }
         }
 
-        public DistanceArrows(SystemManagers systemManagers, Layer layer, ToolFontService toolFontService)
+        public DistanceArrows(SystemManagers systemManagers, ToolFontService toolFontService, ToolLayerService toolLayerService)
         {
+            _toolLayerService = toolLayerService;
             Arrow1 = new Arrow();
             Arrow2 = new Arrow();
+
+            if(_toolLayerService.TopLayer == null)
+            {
+                throw new InvalidOperationException("_toolLayerService.TopLayer should not be null at this point");
+            }
 
             _distanceText = new Text(systemManagers);
             _distanceText.RenderBoundary = false;
             _distanceText.HorizontalAlignment = HorizontalAlignment.Center;
             _distanceText.VerticalAlignment = VerticalAlignment.Center;
             _distanceText.BitmapFont = toolFontService.ToolFont;
-            this._layer = layer;
         }
 
         public void SetFrom(Vector2 startAbsolute, Vector2 endAbsolute)
@@ -134,18 +138,18 @@ namespace Gum.Wireframe
 
         public void AddToManagers()
         {
-            Arrow1.AddToManagers(_layer);
-            Arrow2.AddToManagers(_layer);
+            Arrow1.AddToManagers(_toolLayerService.TopLayer);
+            Arrow2.AddToManagers(_toolLayerService.TopLayer);
 
-            _layer.Add(_distanceText);
+            _toolLayerService.TopLayer.Add(_distanceText);
         }
 
         public void RemoveFromManagers()
         {
-            Arrow1.RemoveFromManagers(_layer);
-            Arrow2.RemoveFromManagers(_layer);
+            Arrow1.RemoveFromManagers(_toolLayerService.TopLayer);
+            Arrow2.RemoveFromManagers(_toolLayerService.TopLayer);
 
-            _layer.Remove(_distanceText);
+            _toolLayerService.TopLayer.Remove(_distanceText);
         }
     }
 

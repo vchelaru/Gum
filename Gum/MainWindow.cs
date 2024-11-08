@@ -117,15 +117,16 @@ namespace Gum
 
             ToolCommands.GuiCommands.Self.Initialize(wireframeControl1);
 
-            ToolFontService.Self.Initialize();
-
 
             Wireframe.WireframeObjectManager.Self.Initialize(WireframeEditControl, wireframeControl1, addCursor);
 
             VariableSaveExtensionMethods.CustomFixEnumerations = VariableSaveExtensionMethodsGumTool.FixEnumerationsWithReflection;
 
             wireframeControl1.XnaUpdate += () =>
+            {
                 Wireframe.WireframeObjectManager.Self.Activity();
+                ToolLayerService.Self.Activity();
+            };
 
 
             EditingManager.Self.Initialize(this.WireframeContextMenuStrip);
@@ -135,6 +136,8 @@ namespace Gum
             // does, then we need to make sure that the wireframe controls
             // are set up properly before that happens.
             HandleXnaInitialize();
+
+
 
             InitializeFileWatchTimer();
 

@@ -142,6 +142,9 @@ namespace Gum.Wireframe
                 SystemManagers.Default = new SystemManagers();
                 SystemManagers.Default.Initialize(GraphicsDevice);
 
+                ToolFontService.Self.Initialize();
+                ToolLayerService.Self.Initialize();
+
                 Renderer.TextureFilter = TextureFilter.Point;
 
                 LoaderManager.Self.ContentLoader = new ContentLoader();
@@ -165,7 +168,8 @@ namespace Gum.Wireframe
                 this.MouseDown += CameraController.Self.HandleMouseDown;
                 this.MouseMove += CameraController.Self.HandleMouseMove;
                 this.MouseWheel += CameraController.Self.HandleMouseWheel;
-                this.mTopRuler = new Ruler(this, SystemManagers.Default, InputLibrary.Cursor.Self, InputLibrary.Keyboard.Self, ToolFontService.Self);
+                this.mTopRuler = new Ruler(this, SystemManagers.Default, InputLibrary.Cursor.Self, InputLibrary.Keyboard.Self, 
+                    ToolFontService.Self, ToolLayerService.Self);
 
                 this.MouseEnter += (not, used) =>
                 {
@@ -179,7 +183,8 @@ namespace Gum.Wireframe
                     mouseHasEntered = false;
                 };
 
-                mLeftRuler = new Ruler(this, SystemManagers.Default, InputLibrary.Cursor.Self, InputLibrary.Keyboard.Self, ToolFontService.Self);
+                mLeftRuler = new Ruler(this, SystemManagers.Default, InputLibrary.Cursor.Self, InputLibrary.Keyboard.Self, 
+                    ToolFontService.Self, ToolLayerService.Self);
                 mLeftRuler.RulerSide = RulerSide.Left;
 
                 if (AfterXnaInitialize != null)
