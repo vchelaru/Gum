@@ -117,6 +117,8 @@ namespace Gum
 
             ToolCommands.GuiCommands.Self.Initialize(wireframeControl1);
 
+            ToolFontService.Self.Initialize();
+
 
             Wireframe.WireframeObjectManager.Self.Initialize(WireframeEditControl, wireframeControl1, addCursor);
 

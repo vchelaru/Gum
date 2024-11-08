@@ -5,6 +5,7 @@ using System;
 using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
 using Vector2 = System.Numerics.Vector2;
 using Matrix = System.Numerics.Matrix4x4;
+using Gum.Managers;
 
 namespace Gum.Wireframe
 {
@@ -27,11 +28,11 @@ namespace Gum.Wireframe
 
         public HorizontalAlignment TextHorizontalAlignment { get; set; }
 
-        Text distanceText;
+        Text _distanceText;
 
-        Layer layer;
+        Layer _layer;
 
-        bool visible;
+        bool _visible;
 
 
 
@@ -39,26 +40,27 @@ namespace Gum.Wireframe
 
         public bool Visible
         {
-            get => visible;
+            get => _visible;
             set
             {
-                this.visible = value;
+                this._visible = value;
                 Arrow1.Visible = value;
                 Arrow2.Visible = value;
-                distanceText.Visible = value;
+                _distanceText.Visible = value;
             }
         }
 
-        public DistanceArrows(SystemManagers systemManagers, Layer layer)
+        public DistanceArrows(SystemManagers systemManagers, Layer layer, ToolFontService toolFontService)
         {
             Arrow1 = new Arrow();
             Arrow2 = new Arrow();
 
-            distanceText = new Text(systemManagers);
-            distanceText.RenderBoundary = false;
-            distanceText.HorizontalAlignment = HorizontalAlignment.Center;
-            distanceText.VerticalAlignment = VerticalAlignment.Center;
-            this.layer = layer;
+            _distanceText = new Text(systemManagers);
+            _distanceText.RenderBoundary = false;
+            _distanceText.HorizontalAlignment = HorizontalAlignment.Center;
+            _distanceText.VerticalAlignment = VerticalAlignment.Center;
+            _distanceText.BitmapFont = toolFontService.ToolFont;
+            this._layer = layer;
         }
 
         public void SetFrom(Vector2 startAbsolute, Vector2 endAbsolute)
@@ -66,20 +68,20 @@ namespace Gum.Wireframe
             var midpoint = (startAbsolute + endAbsolute) / 2.0f;
 
 
-            distanceText.RawText =
+            _distanceText.RawText =
                 (endAbsolute - startAbsolute).Length().ToString("0.00");
 
-            distanceText.FontScale = 1 / Zoom;
+            _distanceText.FontScale = 1 / Zoom;
             //distanceText.Position.ToString();
-            distanceText.Position = midpoint;
+            _distanceText.Position = midpoint;
 
             switch (TextHorizontalAlignment)
             {
                 case HorizontalAlignment.Center:
-                    distanceText.X -= distanceText.EffectiveWidth / 2.0f;
+                    _distanceText.X -= _distanceText.EffectiveWidth / 2.0f;
                     break;
                 case HorizontalAlignment.Right:
-                    distanceText.X -= distanceText.EffectiveWidth;
+                    _distanceText.X -= _distanceText.EffectiveWidth;
                     break;
 
                 case HorizontalAlignment.Left:
@@ -87,9 +89,9 @@ namespace Gum.Wireframe
                     break;
             }
 
-            distanceText.Y -= distanceText.EffectiveHeight / 2.0f;
-            distanceText.Width = 0;
-            distanceText.Height = 0;
+            _distanceText.Y -= _distanceText.EffectiveHeight / 2.0f;
+            _distanceText.Width = 0;
+            _distanceText.Height = 0;
 
             var xAbsolute = Math.Abs(startAbsolute.X - endAbsolute.X);
             var yAbsolute = Math.Abs(startAbsolute.Y - endAbsolute.Y);
@@ -97,11 +99,11 @@ namespace Gum.Wireframe
             float textGap = 18;
             if(yAbsolute > xAbsolute)
             {
-                textGap = distanceText.EffectiveHeight ;
+                textGap = _distanceText.EffectiveHeight ;
             }
             else
             {
-                textGap = distanceText.EffectiveWidth;
+                textGap = _distanceText.EffectiveWidth;
             }
 
             textGap += 4 / Zoom;
@@ -115,8 +117,8 @@ namespace Gum.Wireframe
             }
             else
             {
-                Arrow1.Visible = visible;
-                Arrow2.Visible = visible;
+                Arrow1.Visible = _visible;
+                Arrow2.Visible = _visible;
             }
 
             var arrow1Start = midpoint + (startAbsolute - midpoint).AtLength(textGap / 2);
@@ -132,18 +134,18 @@ namespace Gum.Wireframe
 
         public void AddToManagers()
         {
-            Arrow1.AddToManagers(layer);
-            Arrow2.AddToManagers(layer);
+            Arrow1.AddToManagers(_layer);
+            Arrow2.AddToManagers(_layer);
 
-            layer.Add(distanceText);
+            _layer.Add(_distanceText);
         }
 
         public void RemoveFromManagers()
         {
-            Arrow1.RemoveFromManagers(layer);
-            Arrow2.RemoveFromManagers(layer);
+            Arrow1.RemoveFromManagers(_layer);
+            Arrow2.RemoveFromManagers(_layer);
 
-            layer.Remove(distanceText);
+            _layer.Remove(_distanceText);
         }
     }
 

@@ -14,6 +14,7 @@ using Gum.ToolStates;
 using Gum.Input;
 using Vector2 = System.Numerics.Vector2;
 using Color = System.Drawing.Color;
+using Gum.Managers;
 
 namespace Gum.Wireframe
 {
@@ -29,7 +30,8 @@ namespace Gum.Wireframe
 
     public class Ruler
     {
-        #region Fields / properties
+        #region Fields / Properties
+        private ToolFontService _toolFontService;
 
         XnaAndWinforms.GraphicsDeviceControl mControl;
         SystemManagers mManagers;
@@ -43,7 +45,7 @@ namespace Gum.Wireframe
         List<Line> mGuides = new List<Line>();
 
         Line mGrabbedGuide;
-        Text mGrabbedGuideText;
+        Text _grabbedGuideText;
 
         DistanceArrows DistanceArrow1;
         DistanceArrows DistanceArrow2;
@@ -231,17 +233,17 @@ namespace Gum.Wireframe
             {
                 visible = value;
                 mRectangle.Visible = value;
-                foreach(var line in mRulerLines)
+                foreach (var line in mRulerLines)
                 {
                     line.Visible = value;
                 }
-                foreach(var line in mGuides)
+                foreach (var line in mGuides)
                 {
                     line.Visible = value;
                 }
-                if(mGrabbedGuideText != null)
+                if (_grabbedGuideText != null)
                 {
-                    mGrabbedGuideText.Visible = value;
+                    _grabbedGuideText.Visible = value;
                 }
             }
         }
@@ -250,38 +252,34 @@ namespace Gum.Wireframe
 
 
 
-        public Ruler(GraphicsDeviceControl control, SystemManagers managers, Cursor cursor, InputLibrary.Keyboard keyboard )
+        public Ruler(GraphicsDeviceControl control, SystemManagers managers, Cursor cursor, InputLibrary.Keyboard keyboard, ToolFontService toolFontService)
         {
-            try
-            {
-                mControl = control;
-                mKeyboard = keyboard;
-                mManagers = managers;
-                mCursor = cursor;
+            _toolFontService = toolFontService;
 
-                // do this before creating the arrows
-                CreateLayer();
+            mControl = control;
+            mKeyboard = keyboard;
+            mManagers = managers;
+            mCursor = cursor;
 
-                CreateArrows(managers, mScreenSpaceLayer);
+            // do this before creating the arrows
+            CreateLayer();
 
-                CreateVisualRepresentation();
+            CreateArrows(managers, mScreenSpaceLayer);
 
-                // Create the text after the Layer
-                CreateGuideText();
+            CreateVisualRepresentation();
 
-                RulerSide = Wireframe.RulerSide.Top;
-            }
-            catch (Exception e)
-            {
-                throw e;
-            }
+            // Create the text after the Layer
+            CreateGuideText();
+
+            RulerSide = Wireframe.RulerSide.Top;
+
         }
 
         private void CreateArrows(SystemManagers managers, Layer layer)
         {
-            DistanceArrow1 = new DistanceArrows(managers ?? SystemManagers.Default, layer);
+            DistanceArrow1 = new DistanceArrows(managers ?? SystemManagers.Default, layer, _toolFontService);
             DistanceArrow1.AddToManagers();
-            DistanceArrow2 = new DistanceArrows(managers ?? SystemManagers.Default, layer);
+            DistanceArrow2 = new DistanceArrows(managers ?? SystemManagers.Default, layer, _toolFontService);
             DistanceArrow2.AddToManagers();
 
             DistanceArrow1.IsStartArrowTipVisible = false;
@@ -309,10 +307,11 @@ namespace Gum.Wireframe
 
         private void CreateGuideText()
         {
-            mGrabbedGuideText = new Text(mManagers, "");
-            mGrabbedGuideText.RenderBoundary = false;
-            mGrabbedGuideText.Parent = mOffsetSprite;
-            TextManager.Add(mGrabbedGuideText, mRulerLayer);
+            _grabbedGuideText = new Text(mManagers, "");
+            _grabbedGuideText.RenderBoundary = false;
+            _grabbedGuideText.Parent = mOffsetSprite;
+            _grabbedGuideText.BitmapFont = _toolFontService.ToolFont;
+            TextManager.Add(_grabbedGuideText, mRulerLayer);
         }
 
         private void CreateVisualRepresentation()
@@ -389,10 +388,10 @@ namespace Gum.Wireframe
         private void CreateRulerLine(float y, float length, Color color)
         {
             Line line = new Line(mManagers);
-                line.X = 10 - length;
-                line.Y = MathFunctions.RoundToInt(y) + .5f;
+            line.X = 10 - length;
+            line.Y = MathFunctions.RoundToInt(y) + .5f;
 
-            
+
             line.RelativePoint = new Vector2(length, 0);
 
             line.Color = color;
@@ -475,7 +474,7 @@ namespace Gum.Wireframe
 
                 if (this.RulerSide == Wireframe.RulerSide.Left)
                 {
-                    if(mKeyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Up))
+                    if (mKeyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Up))
                     {
                         nudgeYOffset--;
                     }
@@ -537,7 +536,7 @@ namespace Gum.Wireframe
                     var guideBelow = mGuides.OrderBy(item => item.Y).Where(item => item.RelativePoint.Y == 0 && item.Y > mGrabbedGuide.Y).FirstOrDefault();
 
                     var yAbove = guideAbove?.Y / mZoomValue;
-                    if (yAbove == null && mGrabbedGuide.Y/mZoomValue > GraphicalUiElement.CanvasHeight)
+                    if (yAbove == null && mGrabbedGuide.Y / mZoomValue > GraphicalUiElement.CanvasHeight)
                     {
                         yAbove = GraphicalUiElement.CanvasHeight;
                     }
@@ -546,7 +545,7 @@ namespace Gum.Wireframe
                         yAbove = 0;
                     }
 
-                    var yBelow = guideBelow?.Y/ mZoomValue;
+                    var yBelow = guideBelow?.Y / mZoomValue;
                     if (yBelow == null && mGrabbedGuide.Y < 0)
                     {
                         yBelow = 0;
@@ -558,16 +557,16 @@ namespace Gum.Wireframe
 
                     var x = mCursor.GetWorldX();
 
-                    if(yAbove != null)
+                    if (yAbove != null)
                     {
                         DistanceArrow1.Visible = true;
                         DistanceArrow1.SetFrom(new Vector2(x, mGrabbedGuide.Y / mZoomValue), new Vector2(x, yAbove.Value));
                     }
 
-                    if(yBelow != null)
+                    if (yBelow != null)
                     {
                         DistanceArrow2.Visible = true;
-                        DistanceArrow2.SetFrom(new Vector2(x, mGrabbedGuide.Y/ mZoomValue), new Vector2(x, yBelow.Value));
+                        DistanceArrow2.SetFrom(new Vector2(x, mGrabbedGuide.Y / mZoomValue), new Vector2(x, yBelow.Value));
                     }
                 }
                 else // ruler is the top ruller, so do this on the X
@@ -576,33 +575,33 @@ namespace Gum.Wireframe
                     var guideRight = mGuides.OrderBy(item => item.X).Where(item => item.RelativePoint.X == 0 && item.X > mGrabbedGuide.X).FirstOrDefault();
 
                     var xLeft = guideLeft?.X / mZoomValue;
-                    if(xLeft == null && mGrabbedGuide.X / mZoomValue > GraphicalUiElement.CanvasWidth)
+                    if (xLeft == null && mGrabbedGuide.X / mZoomValue > GraphicalUiElement.CanvasWidth)
                     {
                         xLeft = GraphicalUiElement.CanvasWidth;
                     }
-                    if(xLeft == null && mGrabbedGuide.X / mZoomValue > 0)
+                    if (xLeft == null && mGrabbedGuide.X / mZoomValue > 0)
                     {
                         xLeft = 0;
                     }
 
                     var xRight = guideRight?.X / mZoomValue;
-                    if(xRight == null && mGrabbedGuide.X / mZoomValue < 0)
+                    if (xRight == null && mGrabbedGuide.X / mZoomValue < 0)
                     {
                         xRight = 0;
                     }
-                    if(xRight == null && mGrabbedGuide.X / mZoomValue < GraphicalUiElement.CanvasWidth)
+                    if (xRight == null && mGrabbedGuide.X / mZoomValue < GraphicalUiElement.CanvasWidth)
                     {
                         xRight = GraphicalUiElement.CanvasWidth;
                     }
 
                     var y = mCursor.GetWorldY();
 
-                    if(xLeft != null)
+                    if (xLeft != null)
                     {
                         DistanceArrow1.Visible = true;
                         DistanceArrow1.SetFrom(new Vector2(mGrabbedGuide.X / mZoomValue, y), new Vector2(xLeft.Value, y));
                     }
-                    if(xRight != null)
+                    if (xRight != null)
                     {
                         DistanceArrow2.Visible = true;
                         DistanceArrow2.SetFrom(new Vector2(mGrabbedGuide.X / mZoomValue, y), new Vector2(xRight.Value, y));
@@ -626,24 +625,24 @@ namespace Gum.Wireframe
             // need to make it bigger to support scrollbars
             //const float distanceFromEdge = 10;
             const float distanceFromEdge = 30;
-            mGrabbedGuideText.Visible = false;
+            _grabbedGuideText.Visible = false;
             if (mCursor.PrimaryDown && mGrabbedGuide != null)
             {
-                mGrabbedGuideText.Visible = true;
-                mGrabbedGuideText.Color = guideTextColor;
+                _grabbedGuideText.Visible = true;
+                _grabbedGuideText.Color = guideTextColor;
                 if (this.RulerSide == Wireframe.RulerSide.Left)
                 {
-                    mGrabbedGuideText.Y = mGrabbedGuide.Y - 21;
-                    mGrabbedGuideText.X = Renderer.Camera.ClientWidth - distanceFromEdge - mGrabbedGuideText.Width;
-                    mGrabbedGuideText.RawText = (mGrabbedGuide.Y / mZoomValue).ToString();
-                    mGrabbedGuideText.HorizontalAlignment = HorizontalAlignment.Right;
+                    _grabbedGuideText.Y = mGrabbedGuide.Y - 21;
+                    _grabbedGuideText.X = Renderer.Camera.ClientWidth - distanceFromEdge - _grabbedGuideText.Width;
+                    _grabbedGuideText.RawText = (mGrabbedGuide.Y / mZoomValue).ToString();
+                    _grabbedGuideText.HorizontalAlignment = HorizontalAlignment.Right;
                 }
                 else
                 {
-                    mGrabbedGuideText.Y = Renderer.Camera.ClientHeight - distanceFromEdge - 22 ;
-                    mGrabbedGuideText.X = mGrabbedGuide.X + 4;
-                    mGrabbedGuideText.RawText = (mGrabbedGuide.X / mZoomValue).ToString();
-                    mGrabbedGuideText.HorizontalAlignment = HorizontalAlignment.Left;
+                    _grabbedGuideText.Y = Renderer.Camera.ClientHeight - distanceFromEdge - 22;
+                    _grabbedGuideText.X = mGrabbedGuide.X + 4;
+                    _grabbedGuideText.RawText = (mGrabbedGuide.X / mZoomValue).ToString();
+                    _grabbedGuideText.HorizontalAlignment = HorizontalAlignment.Left;
 
                 }
             }
@@ -652,8 +651,8 @@ namespace Gum.Wireframe
         private bool HandleAddingGuides()
         {
             bool toReturn = false;
-             float x = mCursor.X;
-                float y = mCursor.Y;
+            float x = mCursor.X;
+            float y = mCursor.Y;
 
             if (mCursor.PrimaryClick)
             {
@@ -697,7 +696,7 @@ namespace Gum.Wireframe
                 if (camera.CameraCenterOnScreen == CameraCenterOnScreen.TopLeft)
                 {
                     halfResolutionWidth = 0;
-                } 
+                }
                 mOffsetSprite.Y = 0;
                 mOffsetSprite.X = MathFunctions.RoundToInt(
                     -camera.X * mZoomValue + halfResolutionWidth);

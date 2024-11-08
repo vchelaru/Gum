@@ -47,12 +47,14 @@ namespace Gum.Controls
                         Value = PositionUnitType.PixelsFromCenterY,
                         Image = pixelsFromCenterBitmap
                     },
-                    new Option
-                    {
-                        Name = "Pixels From Center Y Inverted",
-                        Value = PositionUnitType.PixelsFromCenterYInverted,
-                        Image = pixelsFromCenterYInvertedBitmap
-                    },
+                    // November 7, 2024
+                    // even though this exists in the underlying layout engine, we never use it in Gum so let's remove it.
+                    //new Option
+                    //{
+                    //    Name = "Pixels From Center Y Inverted",
+                    //    Value = PositionUnitType.PixelsFromCenterYInverted,
+                    //    Image = pixelsFromCenterYInvertedBitmap
+                    //},
                     new Option
                     {
                         Name = "Pixels From Bottom",

@@ -5,6 +5,7 @@ using ToolsUtilitiesStandard.Helpers;
 using Vector2 = System.Numerics.Vector2;
 using Color = System.Drawing.Color;
 using Matrix = System.Numerics.Matrix4x4;
+using Gum.Managers;
 
 namespace Gum.Wireframe.Editors
 {
@@ -32,7 +33,14 @@ namespace Gum.Wireframe.Editors
 
         SystemManagers systemManagers;
 
+        ToolFontService _toolFontService;
+
         #endregion
+
+        public DimensionDisplay()
+        {
+            _toolFontService = ToolFontService.Self;
+        }
 
         public void AddToManagers(SystemManagers systemManagers)
         {
@@ -45,6 +53,8 @@ namespace Gum.Wireframe.Editors
             dimensionDisplayText.RenderBoundary = false;
             dimensionDisplayText.Width = 0;
             dimensionDisplayText.Height = 0;
+            dimensionDisplayText.Name = "Dimension display text";
+            dimensionDisplayText.BitmapFont = _toolFontService.ToolFont;
 
             systemManagers.TextManager.Add(dimensionDisplayText);
             this.systemManagers = systemManagers;
@@ -85,6 +95,7 @@ namespace Gum.Wireframe.Editors
 
         public void Activity(GraphicalUiElement objectToUpdateTo, WidthOrHeight widthOrHeight)
         {
+
             var asIpso = objectToUpdateTo as IRenderableIpso;
 
             var left = asIpso.GetAbsoluteX();

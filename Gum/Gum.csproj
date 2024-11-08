@@ -204,6 +204,7 @@
     <Compile Include="Managers\HotkeyManager.cs" />
     <Compile Include="Managers\LocalizationManager.cs" />
     <Compile Include="Managers\StandardElementsManager.GumTool.cs" />
+    <Compile Include="Managers\ToolFontService.cs" />
     <Compile Include="Plugins\InternalPlugins\AlignmentButtons\CommonControlLogic.cs" />
     <Compile Include="Plugins\InternalPlugins\CirclePlugin\MainCirclePlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\DuplicateVariablePlugin\MainDuplicateVariablePlugin.cs" />
@@ -456,6 +457,9 @@
       <DependentUpon>FileListWindow.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="app.config" />
+    <None Include="Content\Fonts\Font18Arial_o1.fnt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Content\TestFont.fnt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -668,6 +672,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Content Include="Content\ExampleSpriteFrame.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Fonts\Font18Arial_o1_0.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\Icons\Origins\Baseline.png">

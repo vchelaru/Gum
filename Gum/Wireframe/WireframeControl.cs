@@ -165,7 +165,7 @@ namespace Gum.Wireframe
                 this.MouseDown += CameraController.Self.HandleMouseDown;
                 this.MouseMove += CameraController.Self.HandleMouseMove;
                 this.MouseWheel += CameraController.Self.HandleMouseWheel;
-                this.mTopRuler = new Ruler(this, SystemManagers.Default, InputLibrary.Cursor.Self, InputLibrary.Keyboard.Self);
+                this.mTopRuler = new Ruler(this, SystemManagers.Default, InputLibrary.Cursor.Self, InputLibrary.Keyboard.Self, ToolFontService.Self);
 
                 this.MouseEnter += (not, used) =>
                 {
@@ -179,7 +179,7 @@ namespace Gum.Wireframe
                     mouseHasEntered = false;
                 };
 
-                mLeftRuler = new Ruler(this, SystemManagers.Default, InputLibrary.Cursor.Self, InputLibrary.Keyboard.Self);
+                mLeftRuler = new Ruler(this, SystemManagers.Default, InputLibrary.Cursor.Self, InputLibrary.Keyboard.Self, ToolFontService.Self);
                 mLeftRuler.RulerSide = RulerSide.Left;
 
                 if (AfterXnaInitialize != null)

@@ -172,6 +172,11 @@ namespace MonoGameGum.Input
         public bool MiddleDoubleClick { get; private set; }
 
         public InteractiveGue WindowPushed { get; set; }
+
+        /// <summary>
+        /// The last window that the cursor was over. This typically gets updated every frame in Update, usually by calls to 
+        /// FormsUtilities.
+        /// </summary>
         public InteractiveGue WindowOver { get; set; }
 
 
