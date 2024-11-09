@@ -9,10 +9,8 @@ using WpfDataUi.DataTypes;
 
 namespace WpfDataUi.Controls
 {
-    /// <summary>
-    /// Interaction logic for ComboBoxDisplay.xaml
-    /// </summary>
-    public partial class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
+
+    public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
     {
         #region Fields
 
@@ -134,11 +132,17 @@ namespace WpfDataUi.Controls
 
         private void CreateLayout()
         {
+            StackPanel stackPanel = new StackPanel();
+
             Grid = new Grid();
+            Grid.Name = "TopRowGrid";
+            stackPanel.Children.Add(Grid);
+
             var firstColumnDefinition = new ColumnDefinition();
             firstColumnDefinition.SetBinding(ColumnDefinition.WidthProperty, "FirstGridLength");
             Grid.ColumnDefinitions.Add(firstColumnDefinition);
             Grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            Grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto});
 
             Grid.RowDefinitions.Add(new RowDefinition());
             Grid.RowDefinitions.Add(new RowDefinition());
@@ -181,15 +185,34 @@ namespace WpfDataUi.Controls
                 Name="DetailTextBlock",
                 VerticalAlignment = VerticalAlignment.Center,
                 TextWrapping = TextWrapping.Wrap,
-                HorizontalAlignment = HorizontalAlignment.Stretch,
+                HorizontalAlignment = HorizontalAlignment.Left,
                 Margin = new Thickness(8, 1, 0, 4),
-                FontSize = 10
+                FontSize = 10,
+                MaxWidth = 250
             };
-            Grid.SetColumnSpan(HintTextBlock, 2);
-            Grid.SetRow(HintTextBlock, 1);
-            Grid.Children.Add(HintTextBlock);
 
-            this.Content = Grid;
+            // This is an attempt to make the hint text block only take as much space as the top
+            // grid. I can't get it to work, even though it works with the TextBoxDisplay. Therefore, we'll just give the 
+            // a reasonable max width.
+            //var binding = new Binding()
+            //{
+            //    ElementName = "TopRowGrid",
+            //    Path = new PropertyPath("ActualWidth"),
+            //    Mode = BindingMode.OneWay
+            //};
+
+            //HintTextBlock.SetBinding(TextBlock.WidthProperty, binding);
+            // More info here: https://github.com/vchelaru/FlatRedBall/issues/1618
+
+            stackPanel.Children.Add(HintTextBlock);
+
+            //var binding = 
+
+            //Grid.SetColumnSpan(HintTextBlock, 2);
+            //Grid.SetRow(HintTextBlock, 1);
+            //Grid.Children.Add(HintTextBlock);
+
+            this.Content = stackPanel;
         }
 
         public void Refresh(bool forceRefreshEvenIfFocused = false)
