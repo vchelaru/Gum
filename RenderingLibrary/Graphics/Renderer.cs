@@ -8,6 +8,7 @@ using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
 using Gum;
 using System.Reflection.Emit;
+using Microsoft.Xna.Framework;
 
 namespace RenderingLibrary.Graphics
 {
@@ -415,11 +416,11 @@ namespace RenderingLibrary.Graphics
 
 
         // Immediate mode calls:
-        public void Begin()
+        public void Begin(Matrix? spriteBatchMatrix)
         {
             SpriteBatchStack.PerformStartOfLayerRenderingLogic();
 
-            spriteRenderer.BeginSpriteBatch(mRenderStateVariables, _layers[0], BeginType.Push, mCamera);
+            spriteRenderer.BeginSpriteBatch(mRenderStateVariables, _layers[0], BeginType.Push, mCamera, spriteBatchMatrix);
         }
 
 
@@ -693,7 +694,7 @@ namespace RenderingLibrary.Graphics
             internalTextForRendering = new Text(systemManagers);
         }
 
-        public void Begin()
+        public void Begin(Matrix? spriteBatchMatrix = null)
         {
             if(State == GumBatchState.BeginCalled)
             {
@@ -704,7 +705,7 @@ namespace RenderingLibrary.Graphics
 
 
 
-            systemManagers.Renderer.Begin();
+            systemManagers.Renderer.Begin(spriteBatchMatrix);
         }
 
         public void DrawString(BitmapFont font, string text, Microsoft.Xna.Framework.Vector2 position, Microsoft.Xna.Framework.Color color)

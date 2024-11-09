@@ -56,11 +56,14 @@ namespace RenderingLibrary.Graphics
 
         }
 
-        public void BeginSpriteBatch(RenderStateVariables renderStates, Layer layer, BeginType beginType, Camera camera)
+        public void BeginSpriteBatch(RenderStateVariables renderStates, Layer layer, BeginType beginType, Camera camera, Microsoft.Xna.Framework.Matrix? spriteBatchTransformMatrix = null)
         {
-            var spriteBatchTransformMatrix =  Renderer.UsingEffect 
-                ? GetZoomMatrixFromLayerCameraSettings()
-                : GetZoomAndMatrix(layer, camera);
+            if(spriteBatchTransformMatrix == null)
+            {
+                spriteBatchTransformMatrix =  Renderer.UsingEffect 
+                    ? GetZoomMatrixFromLayerCameraSettings()
+                    : GetZoomAndMatrix(layer, camera);
+            }
 
             Microsoft.Xna.Framework.Matrix GetZoomMatrixFromLayerCameraSettings()
             {
@@ -208,7 +211,7 @@ namespace RenderingLibrary.Graphics
                     depthStencilState,
                     rasterizerState,
                     effectiveEffect,
-                    spriteBatchTransformMatrix,
+                    spriteBatchTransformMatrix.Value,
                     scissorRectangle);
             }
             else
@@ -219,7 +222,7 @@ namespace RenderingLibrary.Graphics
                     depthStencilState,
                     rasterizerState,
                     effectiveEffect,
-                    spriteBatchTransformMatrix,
+                    spriteBatchTransformMatrix.Value,
                     scissorRectangle);
             }
         }
