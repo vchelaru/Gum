@@ -192,6 +192,9 @@ namespace Gum.DataTypes.Variables
         public Type PreferredDisplayer { get; set; }
         // If adding stuff here, make sure to add to the Clone method!
 
+        [XmlIgnore]
+        public string DetailText { get; set; }
+
 
         public VariableSave Clone()
         {
