@@ -3,6 +3,8 @@ using Microsoft.Xna.Framework;
 using MonoGameGum.Forms.Controls;
 using MonoGameGum.Forms.DefaultVisuals;
 using MonoGameGum.GueDeriving;
+using RenderingLibrary;
+using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -14,8 +16,9 @@ namespace GumFormsSample.Screens
 {
     internal class FrameworkElementExampleScreen
     {
-        public void Initialize(GraphicalUiElement root)
+        public void Initialize(List<GraphicalUiElement> roots)
         {
+            var root = roots[0];
             root.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
             root.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
             root.Width = 0;
@@ -26,6 +29,8 @@ namespace GumFormsSample.Screens
             CreateColumn1Ui(root);
 
             CreateColumn2Ui(root);
+
+            CreateLayeredUi(roots);
 
         }
 
@@ -231,7 +236,37 @@ namespace GumFormsSample.Screens
             currentY += 40;
 
 
+        }
 
+        void CreateLayeredUi(List<GraphicalUiElement> extraRoots)
+        {
+            var layeredContainer = new ContainerRuntime();
+            layeredContainer.X = 0;
+            layeredContainer.Y = 0;
+            layeredContainer.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+            layeredContainer.AddToManagers(SystemManagers.Default, null);
+            layeredContainer.XUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
+            layeredContainer.XOrigin = HorizontalAlignment.Right;
+            extraRoots.Add(layeredContainer);
+
+            //var layer = new Layer();
+            //SystemManagers.Default.Renderer.AddLayer(layer);
+
+            var zoomInButton = new Button();
+            zoomInButton.Text = "Zoom layer in";
+            zoomInButton.Width = 0;
+            zoomInButton.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            zoomInButton.Height = 100;
+            layeredContainer.Children.Add(zoomInButton.Visual);
+
+
+            var zoomOutButton = new Button();
+            zoomOutButton.Text = "Zoom layer in";
+            zoomOutButton.Width = 0;
+            zoomOutButton.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            zoomOutButton.Height = 100;
+            layeredContainer.Children.Add(zoomOutButton.Visual);
+            //button.Visual.AddToManagers(SystemManagers.Default, null);
         }
 
 

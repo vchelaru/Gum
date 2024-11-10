@@ -82,8 +82,16 @@ namespace MonoGameGum.Forms
             Update(null, gameTime, rootGue);
         }
 
+        static List<GraphicalUiElement> innerRootList = new List<GraphicalUiElement>();
         public static void Update(Game game, GameTime gameTime, GraphicalUiElement rootGue)
         {
+            innerRootList.Clear();
+            innerRootList.Add(rootGue);
+            Update(game, gameTime, innerRootList);
+        }
+
+        public static void Update(Game game, GameTime gameTime, IEnumerable<GraphicalUiElement> roots)
+        { 
             // tolerate null games for now...
             var shouldProcess = game == null || game.IsActive;
 
@@ -129,12 +137,15 @@ namespace MonoGameGum.Forms
             }
             else
             {
-                if(rootGue != null)
+
+                if(roots != null)
                 {
-                    innerList.Add(rootGue);
+                    innerList.AddRange(roots);
                 }
 
-                if (rootGue != FrameworkElement.PopupRoot && FrameworkElement.PopupRoot != null && FrameworkElement.PopupRoot.Children.Count > 0)
+                var isRootInRoots = roots?.Contains(FrameworkElement.PopupRoot) == true;
+
+                if (!isRootInRoots && FrameworkElement.PopupRoot.Children.Count > 0)
                 {
 #if DEBUG
                     if (FrameworkElement.PopupRoot.Managers == null)
