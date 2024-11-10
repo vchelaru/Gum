@@ -1,4 +1,5 @@
 ﻿using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using System;
 using System.Windows.Media.Imaging;
 
@@ -10,12 +11,16 @@ namespace Gum.Plugins.InternalPlugins.TreeView.ViewModels
         public static BitmapImage ComponentIcon;
         public static BitmapImage ScreenIcon;
         public static BitmapImage StandardIcon;
+        public static BitmapImage InstanceIcon;
+        public static BitmapImage BehaviorIcon;
 
         static SearchItemViewModel()
         {
             ComponentIcon = LoadIcon("Component");
             ScreenIcon = LoadIcon("screen");
             StandardIcon = LoadIcon("StandardElement");
+            InstanceIcon = LoadIcon("Instance");
+            BehaviorIcon = LoadIcon("behavior");
 
             BitmapImage LoadIcon(string iconName)
             {
@@ -34,6 +39,8 @@ namespace Gum.Plugins.InternalPlugins.TreeView.ViewModels
         public BitmapImage Image =>
             BackingObject is ScreenSave ? ScreenIcon
             : BackingObject is ComponentSave ? ComponentIcon
+            : BackingObject is InstanceSave ? InstanceIcon
+            : BackingObject is BehaviorSave ? BehaviorIcon
             : StandardIcon;
 
     }

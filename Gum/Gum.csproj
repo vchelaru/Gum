@@ -512,6 +512,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="Plugins\InternalPlugins\TreeView\Content\behavior.png" />
+    <Resource Include="Plugins\InternalPlugins\TreeView\Content\Instance.png" />
     <Resource Include="Plugins\InternalPlugins\TreeView\Content\Component.png" />
     <Resource Include="Plugins\InternalPlugins\TreeView\Content\screen.png" />
     <Resource Include="Plugins\InternalPlugins\TreeView\Content\StandardElement.png" />

@@ -1563,6 +1563,14 @@ namespace Gum.Managers
                     }
                 }
 
+                foreach(var behavior in project.Behaviors)
+                {
+                    if(behavior.Name.ToLower().Contains(filterTextLower))
+                    {
+                        AddToFlatList(behavior);
+                    }
+                }
+
                 if(FlatList.FlatList.Items.Count > 0)
                 {
                     FlatList.FlatList.SelectedIndex = 0;
@@ -1734,6 +1742,8 @@ namespace Gum.Managers
                     GumState.Self.SelectedState.SelectedInstance = asInstance;
                 else if (backingObject is VariableSave asVariable)
                     GumState.Self.SelectedState.SelectedBehaviorVariable = asVariable;
+                else if(backingObject is BehaviorSave asBehavior)
+                    GumState.Self.SelectedState.SelectedBehavior = asBehavior;
 
                 searchTextBox.Text = null;
                 FilterText = null;
