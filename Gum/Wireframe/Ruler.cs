@@ -458,6 +458,13 @@ namespace Gum.Wireframe
                 this.mCursor.SetWinformsCursor(cursorToSet);
             }
 
+            // Remove the guide if it is right-clicked
+            if (mCursor.IsInWindow && mCursor.SecondaryPush && guideOver != null)
+            {
+                mGuides.Remove(guideOver);
+                ShapeManager.Remove(guideOver);
+            }
+
             if (mCursor.IsInWindow && mCursor.PrimaryPush)
             {
                 mGrabbedGuide = guideOver;
