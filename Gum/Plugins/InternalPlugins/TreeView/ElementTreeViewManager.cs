@@ -1527,22 +1527,7 @@ namespace Gum.Managers
 
                     if (deepSearchCheckBox.Checked)
                     {
-                        foreach (var state in screen.States)
-                        {
-                            foreach (var variable in state.Variables)
-                            {
-                                if (variable == null)
-                                {
-                                    continue;
-                                }
-
-                                if (variable.Value != null && (variable.Value is string str) && str.ToLower().Contains(filterTextLower))
-                                {
-                                    var instance = screen.Instances.FirstOrDefault(item => item.Name == variable.SourceObject);
-                                    AddToFlatList(instance, $"{screen.Name}/{variable.SourceObject} ({variable.GetRootName()})");
-                                }
-                            }
-                        }
+                        SearchInstanceVariables(screen, filterTextLower);
                     }
                 }
                 foreach (var component in project.Components)
@@ -1562,17 +1547,7 @@ namespace Gum.Managers
 
                     if (deepSearchCheckBox.Checked)
                     {
-                        var textVariable = component.GetVariableFromThisOrBase("Text");
-
-                        if (textVariable == null)
-                        {
-                            continue;
-                        }
-
-                        if (textVariable.Value != null && (textVariable.Value as string).ToLower().Contains(filterTextLower))
-                        {
-                            AddToFlatList(component);
-                        }
+                        SearchInstanceVariables(component, filterTextLower);
                     }
                 }
                 foreach (var standard in project.StandardElements)
@@ -1580,6 +1555,11 @@ namespace Gum.Managers
                     if (standard.Name.ToLower().Contains(filterTextLower))
                     {
                         AddToFlatList(standard);
+                    }
+
+                    if (deepSearchCheckBox.Checked)
+                    {
+                        SearchInstanceVariables(standard, filterTextLower);
                     }
                 }
 
@@ -1610,6 +1590,33 @@ namespace Gum.Managers
 
             //    SelectedNode?.EnsureVisible();
             //}
+        }
+
+        private void SearchInstanceVariables(ElementSave element, string filterTextLower )
+        {
+            foreach (var state in element.AllStates)
+            {
+                foreach (var variable in state.Variables)
+                {
+                    if (variable == null)
+                    {
+                        continue;
+                    }
+
+                    if (variable.Value != null && (variable.Value is string str) && str.ToLower().Contains(filterTextLower))
+                    {
+                        var instance = element.Instances.FirstOrDefault(item => item.Name == variable.SourceObject);
+                        if(instance != null)
+                        {
+                            AddToFlatList(instance, $"{variable.Name}={variable.Value} on {element.Name}/{variable.SourceObject}");
+                        }
+                        else
+                        {
+                            AddToFlatList(element, $"{variable.Name}={variable.Value} on {element.Name}");
+                        }
+                    }
+                }
+            }
         }
 
         private void AddToFlatList(object element, string customName = "")
@@ -1700,7 +1707,8 @@ namespace Gum.Managers
             deepSearchCheckBox = new CheckBox();
             deepSearchCheckBox.Checked = false;
             deepSearchCheckBox.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            deepSearchCheckBox.Text = "Search instance properties";
+            deepSearchCheckBox.Width = 200;
+            deepSearchCheckBox.Text = "Search variables";
             deepSearchCheckBox.CheckedChanged += (object sender, EventArgs args) =>
             {
                 ReactToFilterTextChanged();
