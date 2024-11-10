@@ -449,7 +449,13 @@ namespace Gum.PropertyGridHelpers
 
                 property.TypeConverter = typeConverter;
                 property.Category = category;
+
+
                 property.Subtext = subtext;
+                if(!string.IsNullOrEmpty(defaultVariable?.DetailText))
+                {
+                    property.Subtext += "\n" + defaultVariable.DetailText;
+                }
                 pdc.Add(property);
             }
         }

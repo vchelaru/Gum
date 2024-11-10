@@ -21,6 +21,9 @@ namespace RenderingLibrary.Graphics
 
         BasicEffect basicEffect;
 
+        // This is used by GumBatch to force a matrix for all calls in its own Begin/End pair
+        public Microsoft.Xna.Framework.Matrix? ForcedMatrix { get; set; }
+
         public IEnumerable<BeginParameters> LastFrameDrawStates
         {
             get
@@ -153,7 +156,7 @@ namespace RenderingLibrary.Graphics
                 //    }
                 //}
 
-                basicEffect.World = Microsoft.Xna.Framework.Matrix.Identity;
+                basicEffect.World = ForcedMatrix ?? Microsoft.Xna.Framework.Matrix.Identity;
 
                 //effect.Projection = Matrix.CreateOrthographic(100, 100, 0.0001f, 1000);
                 basicEffect.Projection = Microsoft.Xna.Framework.Matrix.CreateOrthographic(
@@ -161,8 +164,7 @@ namespace RenderingLibrary.Graphics
                     -height,
                     -1, 1);
 
-                basicEffect.View =
-                    GetZoomAndMatrix(layer, camera);
+                basicEffect.View =  GetZoomAndMatrix(layer, camera);
 
                 if(Renderer.ApplyCameraZoomOnWorldTranslation || 
                     layer.LayerCameraSettings?.IsInScreenSpace == true)
@@ -208,7 +210,7 @@ namespace RenderingLibrary.Graphics
                     depthStencilState,
                     rasterizerState,
                     effectiveEffect,
-                    spriteBatchTransformMatrix,
+                    ForcedMatrix ?? spriteBatchTransformMatrix,
                     scissorRectangle);
             }
             else
@@ -219,7 +221,7 @@ namespace RenderingLibrary.Graphics
                     depthStencilState,
                     rasterizerState,
                     effectiveEffect,
-                    spriteBatchTransformMatrix,
+                    ForcedMatrix ?? spriteBatchTransformMatrix,
                     scissorRectangle);
             }
         }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MonoGameGum.Forms;
 using MonoGameGum.GueDeriving;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
@@ -26,6 +27,9 @@ namespace MonoGameGumImmediateMode
 
         RenderTarget2D renderTarget;
 
+        float xForMatrix = 0;
+        float yForMatrix = 0;
+
         public Game1()
         {
             _graphics = new GraphicsDeviceManager(this);
@@ -37,6 +41,9 @@ namespace MonoGameGumImmediateMode
         {
             SystemManagers.Default = new SystemManagers();
             SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
+
+            // Use FormsUtilities to get access to keyboard/mouse
+            FormsUtilities.InitializeDefaults();
 
             // "Runtime" objects such as TextRuntime, SpriteRuntime, and ColoredRectangleRuntime
             // are Gum objects which inherit from GraphicalUiElement. They have full support for
@@ -91,6 +98,16 @@ namespace MonoGameGumImmediateMode
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
+            FormsUtilities.Update(this, gameTime, null);
+
+            if(FormsUtilities.Keyboard.KeyPushed(Keys.Left))
+            {
+                xForMatrix -= 10;
+            }
+            if (FormsUtilities.Keyboard.KeyPushed(Keys.Right))
+            {
+                xForMatrix += 10;
+            }
 
             base.Update(gameTime);
         }
@@ -102,6 +119,8 @@ namespace MonoGameGumImmediateMode
             {
                 gumBatch.Begin();
                 gumBatch.Draw(redBackgroundRectangle);
+                gumBatch.Draw(redBackgroundRectangle);
+                gumBatch.Draw(halfTransparentRectangle);
                 gumBatch.Draw(halfTransparentRectangle);
                 gumBatch.End();
             }
@@ -109,13 +128,17 @@ namespace MonoGameGumImmediateMode
 
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            gumBatch.Begin();
+            var matrix= Matrix.CreateTranslation(xForMatrix, yForMatrix, 0);
+
+            gumBatch.Begin(matrix);
+
             // We can do immediate mode without creating any objects by calling DrawString:
-            gumBatch.DrawString(font, "This is using Gum Batch", new Vector2(10, 10), Color.White);
+            gumBatch.DrawString(font, $"This is using Gum Batch, with translation {xForMatrix}, {yForMatrix}", new Vector2(10, 10), Color.White);
+
             gumBatch.End();
 
             spriteBatch.Begin();
-            spriteBatch.Draw(renderTarget, new Vector2(50, 10), Color.White);
+            spriteBatch.Draw(renderTarget, new Vector2(50, 40), Color.White);
             spriteBatch.End();
 
             base.Draw(gameTime);

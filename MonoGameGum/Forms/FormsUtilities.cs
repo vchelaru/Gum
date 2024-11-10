@@ -129,7 +129,11 @@ namespace MonoGameGum.Forms
             }
             else
             {
-                innerList.Add(rootGue);
+                if(rootGue != null)
+                {
+                    innerList.Add(rootGue);
+                }
+
                 if (rootGue != FrameworkElement.PopupRoot && FrameworkElement.PopupRoot != null && FrameworkElement.PopupRoot.Children.Count > 0)
                 {
 #if DEBUG

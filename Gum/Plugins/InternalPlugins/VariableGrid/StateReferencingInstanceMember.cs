@@ -320,6 +320,8 @@ namespace Gum.PropertyGridHelpers
                         {
                             this.PreferredDisplayer = defaultStateVariable.PreferredDisplayer;
                         }
+                        this.DetailText = defaultStateVariable?.DetailText;
+
                         foreach (var kvp in defaultStateVariable.PropertiesToSetOnDisplayer)
                         {
                             this.PropertiesToSetOnDisplayer[kvp.Key] = kvp.Value;
