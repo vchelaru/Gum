@@ -4,9 +4,11 @@
 
 This value controls the number of letters that the Text object will show. This value is used when displaying the text, but is not used when calculating the Text size or line wrapping.
 
+If the value is **\<NULL>**, then there is no maximum - all letters are displayed.
+
 ## Example
 
-Max Letters To Show limits the number of characters (including spaces). By default this value is empty, which means a Text object will display its full string. Setting this value will adjust the display of the text, but it will not impact any layout values.
+Max Letters To Show limits the number of characters (including spaces). By default this value is **\<NULL>**, which means a Text object will display its full string. Setting this value will adjust the display of the text, but it will not impact any layout values.
 
 For example, by default a Text object displays all of its letters. Note that the Width is fixed, and the Height depends on the contained text - the Height is automatically set on the Text object according to the contents of the text.
 
