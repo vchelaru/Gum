@@ -112,14 +112,14 @@ namespace Gum.Wireframe
 
             var didMove = EditingManager.Self.MoveSelectedObjectsBy(effectiveXToMoveBy, effectiveYToMoveBy);
 
-            bool isShiftDown = InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift) ||
+            bool isLockedToAxis =  InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift) ||
                 InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.RightShift);
 
 
             if (SelectedState.Self.SelectedInstances.Count() == 0 &&
                 (SelectedState.Self.SelectedComponent != null || SelectedState.Self.SelectedStandardElement != null))
             {
-                if (isShiftDown)
+                if (isLockedToAxis)
                 {
                     var xOrY = grabbedState.AxisMovedFurthestAlong;
 
@@ -140,7 +140,7 @@ namespace Gum.Wireframe
             }
             else
             {
-                if (isShiftDown)
+                if (isLockedToAxis)
                 {
                     var selectedInstances = SelectedState.Self.SelectedInstances;
 

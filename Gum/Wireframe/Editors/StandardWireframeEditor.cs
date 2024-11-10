@@ -15,6 +15,7 @@ using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
 using Vector2 = System.Numerics.Vector2;
 using Color = System.Drawing.Color;
 using Matrix = System.Numerics.Matrix4x4;
+using System.Windows.Input;
 
 namespace Gum.Wireframe.Editors
 {
@@ -24,7 +25,7 @@ namespace Gum.Wireframe.Editors
 
         ResizeSide SideGrabbed = ResizeSide.None;
         ResizeSide SideOver;
-
+        private HotkeyManager _hotkeyManager;
         ResizeHandles mResizeHandles;
 
         List<GraphicalUiElement> selectedObjects = 
@@ -65,8 +66,10 @@ namespace Gum.Wireframe.Editors
 
         #endregion
 
-        public StandardWireframeEditor(Layer layer, Color color)
+        public StandardWireframeEditor(Layer layer, Color color, global::Gum.Managers.HotkeyManager hotkeyManager)
         {
+            _hotkeyManager = hotkeyManager;
+
             mResizeHandles = new ResizeHandles(layer, color);
             mResizeHandles.ShowOrigin = true;
             mResizeHandles.Visible = false;
@@ -93,18 +96,6 @@ namespace Gum.Wireframe.Editors
 
             widthDimensionDisplay.Destroy();
             heightDimensionDisplay.Destroy();
-        }
-
-        bool GetIsShiftDown()
-        {
-            return InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift) ||
-                    InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.RightShift);
-        }
-
-        bool GetIsAltDown()
-        {
-            return InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftAlt) ||
-                    InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.RightAlt);
         }
 
         #region Activity
@@ -190,7 +181,7 @@ namespace Gum.Wireframe.Editors
                 var rotationValueDegrees =
                     -MathHelper.ToDegrees(angleInRadians);
 
-                if(GetIsShiftDown())
+                if(_hotkeyManager.SnapRotationTo15Degrees.IsPressed(InputLibrary.Keyboard.Self))
                 {
                     rotationValueDegrees = MathFunctions.RoundFloat(rotationValueDegrees, 15);
                 }
@@ -301,12 +292,10 @@ namespace Gum.Wireframe.Editors
 
             if (cursor.PrimaryClick && mHasChangedAnythingSinceLastPush)
             {
-                bool isShiftDown = GetIsShiftDown();
-
-                // If the user resized with a shift, then released, we don't want to apply this, because they are not doing axis constrained movement
-                if (isShiftDown && SideGrabbed == ResizeSide.None)
+                // If the user resized with locked to axis, then released, we don't want to apply this, because they are not doing axis constrained movement
+                if (_hotkeyManager.LockMovementToAxis.IsPressed(InputLibrary.Keyboard.Self) && SideGrabbed == ResizeSide.None)
                 {
-                    ApplyShiftAxisLock();
+                    ApplyAxisLock();
                 }
 
                 // let's snap everything
@@ -323,7 +312,7 @@ namespace Gum.Wireframe.Editors
 
         }
 
-        private void ApplyShiftAxisLock()
+        private void ApplyAxisLock()
         {
             var axis = grabbedState.AxisMovedFurthestAlong;
 
@@ -497,7 +486,7 @@ namespace Gum.Wireframe.Editors
             float heightMultiplier;
             CalculateMultipliers(instanceSave, elementStack, out changeXMultiplier, out changeYMultiplier, out widthMultiplier, out heightMultiplier);
 
-            AdjustCursorChangeValuesForShiftDrag(ref cursorXChange, ref cursorYChange, instanceSave, elementStack);
+            AdjustCursorChangeValuesForAxisLockedDrag(ref cursorXChange, ref cursorYChange, instanceSave, elementStack);
 
             bool hasChangeOccurred = false;
 
@@ -803,7 +792,7 @@ namespace Gum.Wireframe.Editors
                 heightMultiplier *= (((IPositionedSizedObject)ipso).Height / mResizeHandles.Height);
             }
 
-            if (GetIsAltDown())
+            if (_hotkeyManager.ResizeFromCenter.IsPressed(InputLibrary.Keyboard.Self))
             {
                 if (widthMultiplier != 0)
                 {
@@ -1006,16 +995,16 @@ namespace Gum.Wireframe.Editors
 
 
 
-        private void AdjustCursorChangeValuesForShiftDrag(ref float cursorXChange, ref float cursorYChange, InstanceSave instanceSave, List<ElementWithState> elementStack)
+        private void AdjustCursorChangeValuesForAxisLockedDrag(ref float cursorXChange, ref float cursorYChange, InstanceSave instanceSave, List<ElementWithState> elementStack)
         {
-            if (InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift) ||
-                InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.RightShift))
+            var isAxisLocked = _hotkeyManager.LockMovementToAxis.IsPressed(InputLibrary.Keyboard.Self);
+            if (isAxisLocked)
             {
-                bool supportsShift =
+                bool supportsLockedAxis =
                     SideGrabbed == ResizeSide.TopLeft || SideGrabbed == ResizeSide.TopRight ||
                     SideGrabbed == ResizeSide.BottomLeft || SideGrabbed == ResizeSide.BottomRight;
 
-                if (supportsShift && instanceSave != null)
+                if (supportsLockedAxis && instanceSave != null)
                 {
                     IRenderableIpso ipso = WireframeObjectManager.Self.GetRepresentation(instanceSave, elementStack);
 

@@ -617,10 +617,12 @@ namespace Gum.Wireframe
                     {
                         WireframeEditor.Destroy();
                     }
-                    WireframeEditor = new StandardWireframeEditor(UiLayer, 
-                        Color.FromArgb(255, GumState.Self.ProjectState.GeneralSettings.OutlineColorR,
+
+                    var color = Color.FromArgb(255, GumState.Self.ProjectState.GeneralSettings.OutlineColorR,
                         GumState.Self.ProjectState.GeneralSettings.OutlineColorG,
-                        GumState.Self.ProjectState.GeneralSettings.OutlineColorB));
+                        GumState.Self.ProjectState.GeneralSettings.OutlineColorB);
+
+                    WireframeEditor = new StandardWireframeEditor(UiLayer, color, global::Gum.Managers.HotkeyManager.Self);
                 }
             }
             else if(WireframeEditor != null)

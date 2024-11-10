@@ -69,14 +69,6 @@ namespace Gum.Wireframe
 
         }
 
-        bool GetIsShiftDown()
-        {
-            return InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift) ||
-                    InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.RightShift);
-        }
-
-
-
         public bool ShouldSkipDraggingMovementOn(InstanceSave instanceSave)
         {
             ElementWithState element = new ElementWithState(SelectedState.Self.SelectedElement);
@@ -106,10 +98,6 @@ namespace Gum.Wireframe
 
             return shouldSkip;
         }
-
-
-
-
 
         public bool MoveSelectedObjectsBy(float xToMoveBy, float yToMoveBy)
         {
@@ -176,8 +164,6 @@ namespace Gum.Wireframe
 
             return hasChangeOccurred;
         }
-
-
 
         //public void UpdateSelectedObjectsPositionAndDimensions()
         //{

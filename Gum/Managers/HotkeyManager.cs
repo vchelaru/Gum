@@ -7,8 +7,122 @@ using System.Windows.Forms;
 
 namespace Gum.Managers
 {
+    #region KeyCombination Class
+    public class KeyCombination
+    {
+        public Keys? Key { get; set; }
+        public bool IsCtrlDown { get; set; }
+        public bool IsShiftDown { get; set; }
+        public bool IsAltDown { get; set; }
+
+        public static KeyCombination Pressed(Keys key) => new KeyCombination { Key = key };
+        public static KeyCombination Ctrl(Keys key) => new KeyCombination { Key = key, IsCtrlDown = true };
+        public static KeyCombination Alt(Keys? key = null) => new KeyCombination { Key = key, IsAltDown = true };
+        public static KeyCombination Shift(Keys? key = null) => new KeyCombination { Key = key, IsShiftDown = true };
+
+
+        public bool IsPressed(KeyEventArgs args)
+        {
+            if (IsCtrlDown && (args.Modifiers & Keys.Control) != Keys.Control) return false;
+            if (IsShiftDown && (args.Modifiers & Keys.Shift) != Keys.Shift) return false;
+            if (IsAltDown && (args.Modifiers & Keys.Alt) != Keys.Alt) return false;
+
+            return Key == null || args.KeyCode == Key;
+        }
+
+        public bool IsPressed(Keys keyData)
+        {
+            Keys extracted = keyData;
+
+            if (IsAltDown)
+            {
+                if (Key == null)
+                {
+                    return keyData == Keys.Alt;
+                }
+                else
+                {
+                    return keyData == (Keys.Alt | Key);
+                }
+            }
+            else
+            {
+                if (keyData >= Keys.KeyCode)
+                {
+                    int value = (int)(keyData) + (int)Keys.Modifiers;
+
+                    extracted = (Keys)value;
+                }
+
+                bool shiftDown = (keyData & Keys.Shift) == Keys.Shift;
+                bool ctrlDown = (keyData & Keys.Control) == Keys.Control;
+                bool altDown = (keyData & Keys.Alt) == Keys.Alt;
+
+                if (IsCtrlDown && !ctrlDown) return false;
+                if (IsShiftDown && !shiftDown) return false;
+                if (IsAltDown && !altDown) return false;
+
+                return Key == null || extracted == Key;
+
+            }
+
+        }
+
+        public bool IsPressed(InputLibrary.Keyboard keyboard)
+        {
+            if (IsShiftDown &&
+                !keyboard.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift) &&
+                !keyboard.KeyDown(Microsoft.Xna.Framework.Input.Keys.RightShift))
+            {
+                return false;
+            }
+
+            if (IsCtrlDown &&
+                !keyboard.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftControl) &&
+                !keyboard.KeyDown(Microsoft.Xna.Framework.Input.Keys.RightControl))
+            {
+                return false;
+            }
+
+            if (IsAltDown &&
+                !keyboard.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftAlt) &&
+                !keyboard.KeyDown(Microsoft.Xna.Framework.Input.Keys.RightAlt))
+            {
+                return false;
+            }
+
+            return Key == null ||
+                // Most keys are the same in XNA - is this enough?
+                keyboard.KeyDown((Microsoft.Xna.Framework.Input.Keys)Key);
+
+        }
+    }
+    #endregion
+
     public class HotkeyManager : Singleton<HotkeyManager>
     {
+        public KeyCombination Delete { get; private set; } = KeyCombination.Pressed(Keys.Delete);
+        public KeyCombination Copy { get; private set; } = KeyCombination.Ctrl(Keys.C);
+        public KeyCombination Paste { get; private set; } = KeyCombination.Ctrl(Keys.V);
+        public KeyCombination Cut { get; private set; } = KeyCombination.Ctrl(Keys.X);
+        public KeyCombination ReorderUp { get; private set; } = KeyCombination.Alt(Keys.Up);
+        public KeyCombination ReorderDown { get; private set; } = KeyCombination.Alt(Keys.Down);
+        public KeyCombination GoToDefinition { get; private set; } = KeyCombination.Pressed(Keys.F12);
+        public KeyCombination Search { get; private set; } = KeyCombination.Ctrl(Keys.F);
+        public KeyCombination NudgeUp { get; private set; } = KeyCombination.Pressed(Keys.Up);
+        public KeyCombination NudgeDown { get; private set; } = KeyCombination.Pressed(Keys.Down);
+        public KeyCombination NudgeRight { get; private set; } = KeyCombination.Pressed(Keys.Right);
+        public KeyCombination NudgeLeft { get; private set; } = KeyCombination.Pressed(Keys.Left);
+        public KeyCombination NudgeUp5 { get; private set; } = KeyCombination.Shift(Keys.Up);
+        public KeyCombination NudgeDown5 { get; private set; } = KeyCombination.Shift(Keys.Down);
+        public KeyCombination NudgeRight5 { get; private set; } = KeyCombination.Shift(Keys.Right);
+        public KeyCombination NudgeLeft5 { get; private set; } = KeyCombination.Shift(Keys.Left);
+
+        public KeyCombination LockMovementToAxis { get; private set; } = KeyCombination.Shift();
+        public KeyCombination MaintainResizeAspectRatio { get; private set; } = KeyCombination.Shift();
+        public KeyCombination SnapRotationTo15Degrees { get; private set; } = KeyCombination.Shift();
+        public KeyCombination ResizeFromCenter { get; private set; } = KeyCombination.Alt();
+
         #region Element Tree View
 
         public void HandleKeyDownElementTreeView(KeyEventArgs e)
@@ -27,40 +141,31 @@ namespace Gum.Managers
 
         private void TryHandleCtrlF(KeyEventArgs e)
         {
-            var ctrlDown = (e.Modifiers & Keys.Alt) == Keys.Control;
 
-            if(ctrlDown)
+            if(Search.IsPressed(e))
             {
-                if(e.KeyCode == Keys.F)
-                {
-                    GumCommands.Self.GuiCommands.FocusSearch();
-                    e.Handled = true;
-                }
+                GumCommands.Self.GuiCommands.FocusSearch();
+                e.Handled = true;
             }
         }
 
         private void HandleReorder(KeyEventArgs e)
         {
-            var altDown = (e.Modifiers & Keys.Alt) == Keys.Alt;
-
-            if (altDown)
+            if(ReorderUp.IsPressed(e))
             {
-                if (e.KeyCode == Keys.Up)
-                {
-                    ReorderLogic.Self.MoveSelectedInstanceBackward();
-                    e.Handled = true;
-                }
-                else if (e.KeyCode == Keys.Down)
-                {
-                    ReorderLogic.Self.MoveSelectedInstanceForward();
-                    e.Handled = true;
-                }
+                ReorderLogic.Self.MoveSelectedInstanceBackward();
+                e.Handled = true;
+            }
+            if(ReorderDown.IsPressed(e))
+            {
+                ReorderLogic.Self.MoveSelectedInstanceForward();
+                e.Handled = true;
             }
         }
 
         void HandleDelete(KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.Delete)
+            if (Delete.IsPressed(e))
             {
                 DeleteLogic.Self.HandleDelete();
 
@@ -71,7 +176,7 @@ namespace Gum.Managers
 
         void HandleGoToDefinition(KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.F12)
+            if (GoToDefinition.IsPressed(e))
             {
                 DataTypes.ElementSave elementToGoTo = null;
                 if (SelectedState.Self.SelectedInstance != null)
@@ -92,29 +197,23 @@ namespace Gum.Managers
 
         void HandleCopyCutPaste(KeyEventArgs e)
         {
-            if ((e.Modifiers & Keys.Control) == Keys.Control)
+            if(Copy.IsPressed(e))
             {
-                // copy, ctrl c, ctrl + c
-                if (e.KeyCode == Keys.C)
-                {
-                    CopyPasteLogic.OnCopy(CopyType.InstanceOrElement);
-                    e.Handled = true;
-                    e.SuppressKeyPress = true;
-                }
-                // paste, ctrl v, ctrl + v
-                else if (e.KeyCode == Keys.V)
-                {
-                    e.Handled = true;
-                    e.SuppressKeyPress = true;
-                    CopyPasteLogic.OnPaste(CopyType.InstanceOrElement);
-                }
-                // cut, ctrl x, ctrl + x
-                else if (e.KeyCode == Keys.X)
-                {
-                    CopyPasteLogic.OnCut(CopyType.InstanceOrElement);
-                    e.Handled = true;
-                    e.SuppressKeyPress = true;
-                }
+                CopyPasteLogic.OnCopy(CopyType.InstanceOrElement);
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+            }
+            if(Paste.IsPressed(e))
+            {
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+                CopyPasteLogic.OnPaste(CopyType.InstanceOrElement);
+            }
+            if(Cut.IsPressed(e))
+            {
+                CopyPasteLogic.OnCut(CopyType.InstanceOrElement);
+                e.Handled = true;
+                e.SuppressKeyPress = true;
             }
         }
 
@@ -148,43 +247,21 @@ namespace Gum.Managers
 
         private bool HandleNudge(Keys keyData)
         {
-            bool handled = false;
 
             int nudgeX = 0;
             int nudgeY = 0;
+            
+            if (NudgeUp5.IsPressed(keyData)) nudgeY = -5;
+            else if (NudgeDown5.IsPressed(keyData)) nudgeY = 5;
+            else if (NudgeUp.IsPressed(keyData)) nudgeY = -1;
+            else if (NudgeDown.IsPressed(keyData)) nudgeY = 1;
 
-            Keys extracted = keyData;
-            if (keyData >= Keys.KeyCode)
-            {
-                int value = (int)(keyData) + (int)Keys.Modifiers;
+            if (NudgeRight5.IsPressed(keyData)) nudgeX = 5;
+            else if (NudgeLeft5.IsPressed(keyData)) nudgeX = -5;
+            else if (NudgeRight.IsPressed(keyData)) nudgeX = 1;
+            else if (NudgeLeft.IsPressed(keyData)) nudgeX = -1;
 
-                extracted = (Keys)value;
-            }
-
-
-            if (extracted == Keys.Up)
-            {
-                nudgeY = -1;
-            }
-            if (extracted == Keys.Down)
-            {
-                nudgeY = 1;
-            }
-            if (extracted == Keys.Right)
-            {
-                nudgeX = 1;
-            }
-            if (extracted == Keys.Left)
-            {
-                nudgeX = -1;
-            }
-
-            bool shiftDown = (keyData & Keys.Shift) == Keys.Shift;
-            if (shiftDown)
-            {
-                nudgeX *= 5;
-                nudgeY *= 5;
-            }
+            bool handled = false;
 
             if (nudgeX != 0 || nudgeY != 0)
             {
@@ -224,33 +301,24 @@ namespace Gum.Managers
 
         internal bool TryHandleCmdKeyStateView(Keys keyData)
         {
-
-            switch (keyData)
+            if(ReorderUp.IsPressed(keyData))
             {
-                // CTRL+F, control f, search focus, ctrl f, ctrl + f
-                case Keys.Alt | Keys.Up:
-
-                    StateTreeViewManager.Self.MoveStateInDirection(-1);
-                    return true;
-
-                case Keys.Alt | Keys.Down:
-                    var stateSave = ProjectState.Self.Selected.SelectedStateSave;
-                    bool isDefault = stateSave != null &&
-                        stateSave == ProjectState.Self.Selected.SelectedElement.DefaultState;
-
-                    if (!isDefault)
-                    {
-                        StateTreeViewManager.Self.MoveStateInDirection(1);
-                    }
-                    return true;
-                //case Keys.Alt | Keys.Shift | Keys.Down:
-                //    return RightClickHelper.MoveToBottom();
-                //case Keys.Alt | Keys.Shift | Keys.Up:
-                //    return RightClickHelper.MoveToTop();
-                default:
-                    return false;
+                StateTreeViewManager.Self.MoveStateInDirection(-1);
+                return true;
             }
+            else if(ReorderDown.IsPressed(keyData))
+            {
+                var stateSave = ProjectState.Self.Selected.SelectedStateSave;
+                bool isDefault = stateSave != null &&
+                    stateSave == ProjectState.Self.Selected.SelectedElement.DefaultState;
 
+                if (!isDefault)
+                {
+                    StateTreeViewManager.Self.MoveStateInDirection(1);
+                }
+                return true;
+            }
+            return false;
         }
 
         internal void HandleKeyDownStateView(KeyEventArgs e)
@@ -260,29 +328,17 @@ namespace Gum.Managers
 
         private void HandleCopyCutPasteState(KeyEventArgs e)
         {
-            if ((e.Modifiers & Keys.Control) == Keys.Control)
+            if (Copy.IsPressed(e))
             {
-                // copy, ctrl c, ctrl + c
-                if (e.KeyCode == Keys.C)
-                {
-                    CopyPasteLogic.OnCopy(CopyType.State);
-                    e.Handled = true;
-                    e.SuppressKeyPress = true;
-                }
-                // paste, ctrl v, ctrl + v
-                else if (e.KeyCode == Keys.V)
-                {
-                    CopyPasteLogic.OnPaste(CopyType.State);
-                    e.Handled = true;
-                    e.SuppressKeyPress = true;
-                }
-                //// cut, ctrl x, ctrl + x
-                //else if (e.KeyCode == Keys.X)
-                //{
-                //    EditingManager.Self.OnCut(CopyType.Instance);
-                //    e.Handled = true;
-                //    e.SuppressKeyPress = true;
-                //}
+                CopyPasteLogic.OnCopy(CopyType.State);
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+            }
+            else if (Paste.IsPressed(e))
+            {
+                CopyPasteLogic.OnPaste(CopyType.State);
+                e.Handled = true;
+                e.SuppressKeyPress = true;
             }
         }
 
