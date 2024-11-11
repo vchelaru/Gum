@@ -285,7 +285,7 @@ namespace Gum
         //void HandleXnaInitialize(object sender, EventArgs e)
         void HandleXnaInitialize()
         {
-            this.wireframeControl1.Initialize(WireframeEditControl, gumEditorPanel);
+            this.wireframeControl1.Initialize(WireframeEditControl, gumEditorPanel, HotkeyManager.Self);
             PluginManager.Self.XnaInitialized();
 
 

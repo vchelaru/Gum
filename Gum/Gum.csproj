@@ -231,6 +231,11 @@
     <Compile Include="Plugins\ImportPlugin\Views\ImportFileView.xaml.cs">
       <DependentUpon>ImportFileView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Plugins\InternalPlugins\Hotkey\MainHotkeyPlugin.cs" />
+    <Compile Include="Plugins\InternalPlugins\Hotkey\ViewModels\HotkeyViewModel.cs" />
+    <Compile Include="Plugins\InternalPlugins\Hotkey\Views\HotkeyView.xaml.cs">
+      <DependentUpon>HotkeyView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Plugins\InternalPlugins\Inheritance\MainInheritancePlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\LoadRecentFilesPlugin\MainRecentFilesPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\LoadRecentFilesPlugin\ViewModels\LoadRecentViewModel.cs" />
@@ -767,6 +772,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Plugins\ImportPlugin\Views\ImportFileView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Plugins\InternalPlugins\Hotkey\Views\HotkeyView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

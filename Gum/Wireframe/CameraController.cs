@@ -3,6 +3,7 @@ using System.Windows.Forms;
 using RenderingLibrary;
 using FlatRedBall.AnimationEditorForms.Controls;
 using RenderingLibrary.Graphics;
+using Gum.Managers;
 
 namespace Gum.Wireframe
 {
@@ -18,9 +19,11 @@ namespace Gum.Wireframe
         System.Drawing.Point mLastMouseLocation;
 
         public event Action CameraChanged;
+        HotkeyManager _hotkeyManager;
 
-        public void Initialize(Camera camera, WireframeEditControl wireframeEditControl, int defaultWidth, int defaultHeight)
+        public void Initialize(Camera camera, WireframeEditControl wireframeEditControl, int defaultWidth, int defaultHeight, HotkeyManager hotkeyManager)
         {
+            _hotkeyManager = hotkeyManager;
             Camera = camera;
             mWireframeEditControl = wireframeEditControl;
 
@@ -92,39 +95,37 @@ namespace Gum.Wireframe
 
         internal void HandleKeyPress(KeyEventArgs e)
         {
-            if ((Control.ModifierKeys & Keys.Control) == Keys.Control)
+            if(_hotkeyManager.MoveCameraLeft.IsPressed(e))
             {
-                if (e.KeyCode == System.Windows.Forms.Keys.Up)
-                {
-                    SystemManagers.Default.Renderer.Camera.Y -= 10 / SystemManagers.Default.Renderer.Camera.Zoom;
-                    CameraChanged?.Invoke();
+                SystemManagers.Default.Renderer.Camera.X -= 10 / SystemManagers.Default.Renderer.Camera.Zoom;
+                CameraChanged?.Invoke();
+            }
+            if(_hotkeyManager.MoveCameraRight.IsPressed(e))
+            {
+                SystemManagers.Default.Renderer.Camera.X += 10 / SystemManagers.Default.Renderer.Camera.Zoom;
+                CameraChanged?.Invoke();
+            }
+            if (_hotkeyManager.MoveCameraUp.IsPressed(e))
+            {
+                SystemManagers.Default.Renderer.Camera.Y -= 10 / SystemManagers.Default.Renderer.Camera.Zoom;
+                CameraChanged?.Invoke();
+            }
+            if(_hotkeyManager.MoveCameraDown.IsPressed(e))
+            {
+                SystemManagers.Default.Renderer.Camera.Y += 10 / SystemManagers.Default.Renderer.Camera.Zoom;
+                CameraChanged?.Invoke();
+            }
 
-                }
-                else if (e.KeyCode == System.Windows.Forms.Keys.Down)
-                {
-                    SystemManagers.Default.Renderer.Camera.Y += 10 / SystemManagers.Default.Renderer.Camera.Zoom;
-                    CameraChanged?.Invoke();
-                }
-                else if (e.KeyCode == System.Windows.Forms.Keys.Left)
-                {
-                    SystemManagers.Default.Renderer.Camera.X -= 10 / SystemManagers.Default.Renderer.Camera.Zoom;
-                    CameraChanged?.Invoke();
-                }
-                else if (e.KeyCode == System.Windows.Forms.Keys.Right)
-                {
-                    SystemManagers.Default.Renderer.Camera.X += 10 / SystemManagers.Default.Renderer.Camera.Zoom;
-                    CameraChanged?.Invoke();
-                }
-                else if (e.KeyCode == Keys.Oemplus || e.KeyCode == Keys.Add)
-                {
-                    mWireframeEditControl.ZoomIn();
-                    CameraChanged?.Invoke();
-                }
-                else if (e.KeyCode == Keys.OemMinus || e.KeyCode == Keys.Subtract)
-                {
-                    mWireframeEditControl.ZoomOut();
-                    CameraChanged?.Invoke();
-                }
+            if(_hotkeyManager.ZoomCameraIn.IsPressed(e) || _hotkeyManager.ZoomCameraInAlternative.IsPressed(e))
+            {
+                mWireframeEditControl.ZoomIn();
+                CameraChanged?.Invoke();
+            }
+
+            if (_hotkeyManager.ZoomCameraOut.IsPressed(e) || _hotkeyManager.ZoomCameraOutAlternative.IsPressed(e))
+            {
+                mWireframeEditControl.ZoomOut();
+                CameraChanged?.Invoke();
             }
         }
     }

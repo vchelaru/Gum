@@ -218,7 +218,7 @@ namespace Gum.Plugins.BaseClasses
         }
 
 
-        protected ToolStripMenuItem AddMenuItemTo(string whatToAdd, EventHandler eventHandler, string container, int preferredIndex)
+        protected ToolStripMenuItem AddMenuItemTo(string whatToAdd, EventHandler eventHandler, string container, int? preferredIndex = null)
         {
             ToolStripMenuItem menuItem = new ToolStripMenuItem(whatToAdd, null, eventHandler);
             ToolStripMenuItem itemToAddTo = GetItem(container);
@@ -231,7 +231,11 @@ namespace Gum.Plugins.BaseClasses
             }
             else
             {
-                int indexToInsertAt = System.Math.Min(preferredIndex, itemToAddTo.DropDownItems.Count);
+                int indexToInsertAt = itemToAddTo.DropDownItems.Count;
+                if(preferredIndex != null)
+                {
+                    System.Math.Min(preferredIndex.Value, itemToAddTo.DropDownItems.Count);
+                }
 
                 itemToAddTo.DropDownItems.Insert(indexToInsertAt, menuItem);
             }
@@ -239,6 +243,10 @@ namespace Gum.Plugins.BaseClasses
             return menuItem;
         }
 
+        public PluginTab AddControl(System.Windows.FrameworkElement control, string tabName, TabLocation tabLocation)
+        {
+            return GumCommands.Self.GuiCommands.AddControl(control, tabName, tabLocation);
+        }
 
         #region Event calling
 
