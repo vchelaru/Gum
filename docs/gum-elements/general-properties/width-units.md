@@ -60,11 +60,11 @@ If a parent sets its Width Units to Relative to Children, then it must resize it
 
 For example, the following image shows a four by four grid, each containing one white rectangle. The first rectangle has an absolute width and height of 100, so each cell is sized to be 100x100. Note that the other rectangles are 50x50.
 
-<figure><img src="broken-reference" alt=""><figcaption><p>The largest child determines the width of the cell when the parent uses Relative to Children width</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/11_15 30 38.png" alt=""><figcaption><p>The largest child determines the width of the cell when the parent uses Relative to Children width</p></figcaption></figure>
 
 The largest child determines the cell size for all other children. Therefore, if a child is moved or resized so it outgrows its cell, then the parent width adjusts in response.
 
-<figure><img src="broken-reference" alt=""><figcaption><p>Resizing or moving a child can result in all cells growing or shrinking</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/11_15 34 05.gif" alt=""><figcaption><p>Resizing or moving a child can result in all cells growing or shrinking</p></figcaption></figure>
 
 #### Relative to Children and Text
 

@@ -96,7 +96,7 @@ For example, the following image shows a four by four grid, each containing one 
 
 
 
-<figure><img src="../../.gitbook/assets/11_15 30 38.png" alt=""><figcaption><p>The largest child determines the height of the cell when the parent uses Relative to Children height</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/11_15 30 38 (1).png" alt=""><figcaption><p>The largest child determines the height of the cell when the parent uses Relative to Children height</p></figcaption></figure>
 
 The largest child determines the cell size for all other children. Therefore, if a child is moved or resized so it outgrows its cell, then the parent height adjusts in response.
 
