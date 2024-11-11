@@ -88,6 +88,22 @@ A non-zero **Height** when using **RelativeToChildren** can be used to add addit
 
 ![Height is relative to the bottom-most child when using RelativeToChildren](<../../.gitbook/assets/13\_13 39 50.gif>)
 
+#### Relative to Children and Auto Grid Vertical
+
+If a parent sets its Height Units to Relative to Children, then it must resize itself to contain its children. Normally, the height of the entire parent is determined by the child which needs the most space vertically. If the parent uses an Auto Grid Vertical layout, then the children control the size of the _cells_ rather than the entire parent. Since all cells must be the same size, the child which needs the most amount of space vertically determines the height of all cells.
+
+For example, the following image shows a four by four grid, each containing one white rectangle. The first rectangle has an absolute width and height of 100, so each cell is sized to be 100x100. Note that the other rectangles are 50x50.
+
+
+
+<figure><img src="../../.gitbook/assets/11_15 30 38.png" alt=""><figcaption><p>The largest child determines the height of the cell when the parent uses Relative to Children height</p></figcaption></figure>
+
+The largest child determines the cell size for all other children. Therefore, if a child is moved or resized so it outgrows its cell, then the parent height adjusts in response.
+
+<figure><img src="../../.gitbook/assets/11_15 50 47.gif" alt=""><figcaption><p>Resizing or moving a child can result in all cells growing or shrinking</p></figcaption></figure>
+
+#### Relative to Children and Text
+
 The term "children" can refer to:
 
 * Instances added to a parent, such as ColoredRectangles added to a Container
@@ -97,7 +113,7 @@ The following animation shows a Text instance which has its Height Units set to 
 
 <figure><img src="../../.gitbook/assets/13_13 33 18.gif" alt=""><figcaption><p>Adding lines of text to a Text instance expands its height if its Height Units is set to RelativeToChildren</p></figcaption></figure>
 
-For more information on relative layout in regards to absolute vs. relative unit types, see the [Relative Layout Unit Type](relative-layout-unit-type.md) page.
+
 
 ### Percentage of Other Dimension
 

@@ -54,9 +54,19 @@ A non-zero **Width** when using **Relative to Children** can be used to add addi
 
 ![](<../../.gitbook/assets/LeftToRightStackSizeChildren (1).gif>)
 
-For more information on relative layout in regards to absolute vs. relative unit types, see the [Relative Layout Unit Type](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/Relative%20Layout%20Unit%20Type/README.md) page.
+#### Relative to Children and Auto Grid Horizontal
 
-### Relative to Children and Text
+If a parent sets its Width Units to Relative to Children, then it must resize itself to contain its children. Normally the width of the entire parent is determined by the child which needs the most space horizontally. If the parent uses an Auto Grid Horizontal layout, then the children control the size of the _cells_ rather than the entire parent. Since all cells must be the same size, the child which needs the most amount of space horizontally determines the width of all cells.
+
+For example, the following image shows a four by four grid, each containing one white rectangle. The first rectangle has an absolute width and height of 100, so each cell is sized to be 100x100. Note that the other rectangles are 50x50.
+
+<figure><img src="broken-reference" alt=""><figcaption><p>The largest child determines the width of the cell when the parent uses Relative to Children width</p></figcaption></figure>
+
+The largest child determines the cell size for all other children. Therefore, if a child is moved or resized so it outgrows its cell, then the parent width adjusts in response.
+
+<figure><img src="broken-reference" alt=""><figcaption><p>Resizing or moving a child can result in all cells growing or shrinking</p></figcaption></figure>
+
+#### Relative to Children and Text
 
 Setting a Text instance's **Width Units** to **Relative to Children** results in the Text object adjusting according to its text contents. For example, setting the **Width Units** to **Relative to Children** and setting the **Width** to 0 results in the Text object automatically adjusting its actual width according to the text it contains.
 
