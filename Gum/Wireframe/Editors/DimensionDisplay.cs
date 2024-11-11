@@ -66,13 +66,13 @@ namespace Gum.Wireframe.Editors
             AddLineToManagers(endCap2);
         }
 
-        public void SetColor(Color color)
+        public void SetColor(Color lineColor, Color textColor)
         {
-            endCap1.Color = color;
-            endCap2.Color = color;
+            endCap1.Color = lineColor;
+            endCap2.Color = lineColor;
 
-            middleLine.Color = color;
-            dimensionDisplayText.Color = color;
+            middleLine.Color = lineColor;
+            dimensionDisplayText.Color = textColor;
         }
 
         public void SetVisible(bool isVisible)

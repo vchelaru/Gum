@@ -66,11 +66,11 @@ namespace Gum.Wireframe.Editors
 
         #endregion
 
-        public StandardWireframeEditor(Layer layer, Color color, global::Gum.Managers.HotkeyManager hotkeyManager)
+        public StandardWireframeEditor(Layer layer, Color lineColor, Color textColor, global::Gum.Managers.HotkeyManager hotkeyManager)
         {
             _hotkeyManager = hotkeyManager;
 
-            mResizeHandles = new ResizeHandles(layer, color);
+            mResizeHandles = new ResizeHandles(layer, lineColor);
             mResizeHandles.ShowOrigin = true;
             mResizeHandles.Visible = false;
 
@@ -81,11 +81,11 @@ namespace Gum.Wireframe.Editors
 
             widthDimensionDisplay = new DimensionDisplay();
             widthDimensionDisplay.AddToManagers(SystemManagers.Default);
-            widthDimensionDisplay.SetColor(color);
+            widthDimensionDisplay.SetColor(lineColor, textColor);
 
             heightDimensionDisplay = new DimensionDisplay();
             heightDimensionDisplay.AddToManagers(SystemManagers.Default);
-            heightDimensionDisplay.SetColor(color);
+            heightDimensionDisplay.SetColor(lineColor, textColor);
         }
 
         public override void Destroy()

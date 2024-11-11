@@ -6,6 +6,7 @@ using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
 using Vector2 = System.Numerics.Vector2;
 using Matrix = System.Numerics.Matrix4x4;
 using Gum.Managers;
+using Microsoft.Xna.Framework;
 
 namespace Gum.Wireframe
 {
@@ -33,7 +34,21 @@ namespace Gum.Wireframe
 
         bool _visible;
 
+        public System.Drawing.Color TextColor
+        {
+            get => _distanceText.Color;
+            set => _distanceText.Color = value;
+        }
 
+        public System.Drawing.Color ArrowColor
+        {
+            get => Arrow1.Color;
+            set
+            {
+                Arrow1.Color = value;
+                Arrow2.Color = value;
+            }
+        }
 
         public float Zoom { get; set; } = 1;
 
@@ -159,6 +174,17 @@ namespace Gum.Wireframe
         Line endLine2;
         Line body;
 
+        public System.Drawing.Color Color
+        {
+            get => body.Color;
+            set
+            {
+                body.Color = value;
+                endLine1.Color = value;
+                endLine2.Color = value;
+            }
+        }
+
         bool visible;
         public bool Visible
         {
@@ -180,6 +206,8 @@ namespace Gum.Wireframe
                 UpdateEndlineVisibility();
             }
         }
+
+
 
         private void UpdateEndlineVisibility()
         {

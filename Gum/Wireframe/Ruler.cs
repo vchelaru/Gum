@@ -505,7 +505,7 @@ namespace Gum.Wireframe
 
             //mScreenSpaceLayer.LayerCameraSettings.Zoom = mManagers.Renderer.Camera.Zoom;
 
-            UpdateDistanceArrows(GuideTextColor);
+            UpdateDistanceArrows(GuideLineColor, GuideTextColor);
 
             if (!mCursor.PrimaryDown)
             {
@@ -522,7 +522,7 @@ namespace Gum.Wireframe
             return guideOver != null || mGrabbedGuide != null;
         }
 
-        private void UpdateDistanceArrows(Color guideTextColor)
+        private void UpdateDistanceArrows(Color guideLineColor, Color guideTextColor)
         {
             DistanceArrow1.Visible = false;
             DistanceArrow2.Visible = false;
@@ -532,7 +532,12 @@ namespace Gum.Wireframe
 
             if (mCursor.PrimaryDown && mGrabbedGuide != null)
             {
-                //mDistanceArrow.Color = guideTextColor;
+                DistanceArrow1.TextColor = guideTextColor;
+                DistanceArrow1.ArrowColor = guideLineColor;
+
+                DistanceArrow2.TextColor = guideTextColor;
+                DistanceArrow2.ArrowColor = guideLineColor;
+
                 if (this.RulerSide == Wireframe.RulerSide.Left)
                 {
                     var guideAbove = mGuides.OrderBy(item => item.Y).Where(item => item.RelativePoint.Y == 0 && item.Y < mGrabbedGuide.Y).LastOrDefault();

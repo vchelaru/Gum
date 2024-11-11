@@ -618,11 +618,15 @@ namespace Gum.Wireframe
                         WireframeEditor.Destroy();
                     }
 
-                    var color = Color.FromArgb(255, GumState.Self.ProjectState.GeneralSettings.OutlineColorR,
-                        GumState.Self.ProjectState.GeneralSettings.OutlineColorG,
-                        GumState.Self.ProjectState.GeneralSettings.OutlineColorB);
+                    var lineColor = Color.FromArgb(255, GumState.Self.ProjectState.GeneralSettings.GuideLineColorR,
+                        GumState.Self.ProjectState.GeneralSettings.GuideLineColorG,
+                        GumState.Self.ProjectState.GeneralSettings.GuideLineColorB);
 
-                    WireframeEditor = new StandardWireframeEditor(UiLayer, color, global::Gum.Managers.HotkeyManager.Self);
+                    var textColor = Color.FromArgb(255, GumState.Self.ProjectState.GeneralSettings.GuideTextColorR,
+                        GumState.Self.ProjectState.GeneralSettings.GuideTextColorG,
+                        GumState.Self.ProjectState.GeneralSettings.GuideTextColorB);
+
+                    WireframeEditor = new StandardWireframeEditor(UiLayer, lineColor, textColor, global::Gum.Managers.HotkeyManager.Self);
                 }
             }
             else if(WireframeEditor != null)
