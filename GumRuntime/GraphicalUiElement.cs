@@ -477,6 +477,8 @@ namespace Gum.Wireframe
 
         Layer mLayer;
 
+        public Layer Layer => mLayer;
+
         #endregion
 
         public GeneralUnitType XUnits

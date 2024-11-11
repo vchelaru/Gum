@@ -7,6 +7,7 @@ using MonoGameGum.Forms;
 using MonoGameGum.GueDeriving;
 using RenderingLibrary;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace GumFormsSample;
@@ -16,7 +17,7 @@ public class GumFormsSampleGame : Game
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
 
-    GraphicalUiElement Root;
+    List<GraphicalUiElement> Roots = new List<GraphicalUiElement>();
     public GumFormsSampleGame()
     {
         _graphics = new GraphicsDeviceManager(this);
@@ -65,38 +66,44 @@ public class GumFormsSampleGame : Game
     private void InitializeFromFileDemoScreen()
     {
         var screen = new FromFileDemoScreen();
-        screen.Initialize(ref Root);
+        GraphicalUiElement root = null;
+        screen.Initialize(ref root);
+        Roots.Add(root);
     }
 
     private void InitializeFormsCustomizationScreen()
     {
-        CreateRoot();
+        var root = CreateRoot();
         var screen = new FormsCustomizationScreen();
-        screen.Initialize(Root);
+        screen.Initialize(root);
+        Roots.Add(root);
     }
 
     private void InitializeFrameworkElementExampleScreen()
     {
-        CreateRoot();
+        var root = CreateRoot();
         var screen = new FrameworkElementExampleScreen();
-        screen.Initialize(Root);
+        Roots.Add(root);
+        screen.Initialize(Roots);
     }
 
 
     private void InitializeComplexListBoxItemScreen()
     {
-        CreateRoot();
+        var root = CreateRoot();
         var screen = new ComplexListBoxItemScreen();
-        screen.Initialize(Root);
+        screen.Initialize(root);
+        Roots.Add(root);
     }
 
-    private void CreateRoot()
+    private GraphicalUiElement CreateRoot()
     {
-        Root = new ContainerRuntime();
+        var root = new ContainerRuntime();
 
-        Root.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-        Root.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-        Root.AddToManagers(SystemManagers.Default, null);
+        root.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+        root.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+        root.AddToManagers(SystemManagers.Default, null);
+        return root;
     }
 
     protected override void Update(GameTime gameTime)
@@ -115,7 +122,7 @@ public class GumFormsSampleGame : Game
             int m = 3;
         }
 
-        FormsUtilities.Update(this, gameTime, Root);
+        FormsUtilities.Update(this, gameTime, Roots);
 
         // Set this to true to see WindowOver information in the output window
         bool printWindowOver = false;

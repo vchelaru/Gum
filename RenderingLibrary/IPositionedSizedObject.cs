@@ -165,6 +165,11 @@ namespace RenderingLibrary
         }
 
 
+        /// <summary>
+        /// Returns the topmost parent in the hierarchy, returning this if there is no parent.
+        /// </summary>
+        /// <param name="ipso">The argument ipso</param>
+        /// <returns>The top parent</returns>
         public static IRenderableIpso GetTopParent(this IRenderableIpso ipso)
         {
             if (ipso.Parent == null)
