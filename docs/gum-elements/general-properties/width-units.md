@@ -8,70 +8,80 @@ The **Width Units** variable controls how a unit is horizontally sized, which ma
 
 The following shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/Gum/coloredrectangle/ColoredRectangle.html) with 50 **Absolute** Width:
 
-![](<../../.gitbook/assets/50AbsoluteWidth (1).png>)
-
-## Percentage of Container
-
-The following shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/Gum/coloredrectangle/ColoredRectangle.html) with 100 **Percentage of Container** Width, which means it will have 100% of the width of its parent. Note that 100 **Percentage** is the same as 0 **Relative to Container**:
-
-![Rectangle using 100% of its container](<../../.gitbook/assets/02\_10 09 01.png>)
-
-If an object uses **Percentage** Width, but has no parent, it will size itself as a percentage of the entire screen's width.
-
-<figure><img src="../../.gitbook/assets/image (69).png" alt=""><figcaption></figcaption></figure>
+![Rectangle with an absolute width of 50](<../../.gitbook/assets/11\_05 35 01.png>)
 
 ## Relative to Container
 
-The following image shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/Gum/coloredrectangle/ColoredRectangle.html) with -10 **RelativeToContainer** Width, which means it will always be 10 pixels less wide than its parent.
+The following image shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/Gum/coloredrectangle/ColoredRectangle.html) with -10 **RelativeToContainer** Width, so it sizes itself 10 pixels less wide than its parent.
 
-![](../../.gitbook/assets/Negative10RelativeToContainer.png)
+![Rectangle using a Relative to Container width value of -10](<../../.gitbook/assets/11\_05 36 16.png>)
 
-If an object uses **RelativeToContainer** Width, but has no parent, it will size itself relative to the entire screen's width.
+If an object uses **Relative to Container** Width, but has no parent, its size is relative to the entire screen's width.
 
-<figure><img src="../../.gitbook/assets/image (70).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (70).png" alt=""><figcaption><p>Rectangle using 0 relative to container with no direct parent</p></figcaption></figure>
+
+## Percentage of Container
+
+The following shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/Gum/coloredrectangle/ColoredRectangle.html) with 100 **Percentage of Container** Width, which means it has 100% of the width of its parent. Note that 100 **Percentage** is the same as 0 **Relative to Container**:
+
+![Rectangle using 100% of its container](<../../.gitbook/assets/02\_10 09 01.png>)
+
+If an object uses **Percentage** Width, but has no parent, it sizes itself as a percentage of the entire screen's width.
+
+<figure><img src="../../.gitbook/assets/image (69).png" alt=""><figcaption><p>Rectangle using 100% of the screen when it has no direct parent</p></figcaption></figure>
 
 ## Ratio of Container
 
-Ratio of Container can be used to fill available space or to share available space with other objects using a ratio. It behaves similar to a Height Units of [Ratio of Container](height-units.md#ratio-of-container), but operates vertically rather than horizontally.
+Ratio of Container can be used to fill available space or to share available space with other objects using a ratio. It behaves similar to a Height Units of [Ratio of Container](height-units.md#ratio-of-container), but operates horizontally rather than vertically.
+
+<figure><img src="../../.gitbook/assets/image (1).png" alt=""><figcaption><p>Blue rectangle using a ratio value of 2, next to siblings each using a ratio value of 1</p></figcaption></figure>
 
 ## Relative to Children
 
-The following image shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/Gum/coloredrectangle/ColoredRectangle.html) with 50 **RelativeToChildren** Width, which means that it will always be 50 pixels wider than is necessary to contain its children. Since the rectangle has no children, this is the same as having 50 **Absolute** Width:
+The following image shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/Gum/coloredrectangle/ColoredRectangle.html) with 50 **Relative to Children** Width, which means that it is sized 50 pixels wider than is necessary to contain its children. Since the rectangle has no children, this is the same as having 50 **Absolute** Width:
 
-![](../../.gitbook/assets/RelativeToChildren1.png)
+![Rectangle with a width of 50 Relative to Children, but since it has no children it is 50 units wide](<../../.gitbook/assets/11\_05 46 44.png>)
 
-**RelativeToChildren** can be used to size an object based on the position and sizes of a container's children. The following image shows a container with 0 **RelativeToChildren** Width, which mans that its width is set just large enough to contain its children. Since the rectangle on the right is the furthest-right rectangle, the width of the container is set to be wide enough to contain the right-edge of the furthest-right blue rectangle.
+**Relative to Children** can be used to size an object based on the position and sizes of a container's children. The following image shows a container with 0 **Relative to Children** Width, which means that its width is set just large enough to contain its children.
 
-![](../../.gitbook/assets/RelativeToChildren3.png)
+![Rectangle set to 0 width, so its children decide its width](<../../.gitbook/assets/11\_05 48 45.png>)
 
-A non-zero **Width** when using **RelativeToChildren** can be used to add additional padding to a parent container. The following image shows a container with 20 pixels of padding width:
+A non-zero **Width** when using **Relative to Children** can be used to add additional padding to a parent container. The following image shows a container with 20 pixels of padding width:
 
-![](../../.gitbook/assets/RelativeToChildren4.png)
+![Width can be used to add padding to a container which has width Relative to Children](<../../.gitbook/assets/11\_05 49 45.png>)
 
-**RelativeToChildren** will dynamically adjust to changes in properties on the children. In the following animation the container has a **Children Layout** of **LeftToRightStack**. Adding additional children expands the container automatically:
+**Relative to Children** dynamically adjusts to changes in properties on the children. In the following animation the container has a **Children Layout** of **Left to Right Stack**. Adding additional children expands the container automatically:
 
 ![](<../../.gitbook/assets/LeftToRightStackSizeChildren (1).gif>)
 
 For more information on relative layout in regards to absolute vs. relative unit types, see the [Relative Layout Unit Type](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/Relative%20Layout%20Unit%20Type/README.md) page.
 
-### RelativeToChildren and Text
+### Relative to Children and Text
 
-Setting a Text instance's **Width Units** to **RelativeToChildren** results in the Text object adjusting according to its text contents. For example, setting the **Width Units** to **RelativeToChildren** and setting the **Width** to 0 results in the Text object automatically adjusting its actual width according to the text it contains.
+Setting a Text instance's **Width Units** to **Relative to Children** results in the Text object adjusting according to its text contents. For example, setting the **Width Units** to **Relative to Children** and setting the **Width** to 0 results in the Text object automatically adjusting its actual width according to the text it contains.
 
-![](<../../.gitbook/assets/TextRelativeToChildrenWidth (1).png>)
+![Text with Relative to Children width results in the contents of the Text instance controlling its size](<../../.gitbook/assets/11\_05 52 48.png>)
 
-## PercentageOfOtherDimension
+## Percentage of Other Dimension
 
-**PercentageOfOtherDimension** will adjust the object's effective width so it remains proportional to the Height value multiplied by the Width value (as a percentage). For example, if a Width value of 200 is entered, then the effective width will be 200% (2x) of the height.
+**Percentage of Other Dimension** adjusts the object's effective width so it remains proportional to the Height value multiplied by the Width value (as a percentage). For example, if a Width value of 200 is entered, then the effective width is 200% (2x) of the height.
 
-The following image shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/Gum/coloredrectangle/ColoredRectangle.html) with a Width of 200 **PercentageOfOtherDimension**. In this image, the **Height** value is 50 units, so the effective width is 100 units:
+The following image shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/Gum/coloredrectangle/ColoredRectangle.html) with a Width of 200 **Percentage of Other Dimension**. In this image, the **Height** value is 50 units, so the effective width is 100 units:
 
-![](<../../.gitbook/assets/PercentageOfOtherDimensionWidth (1).png>)
+![Rectangle displaying a width 200% of its height](<../../.gitbook/assets/11\_05 55 15.png>)
 
-## PercentageOfSourceFile
+## Percentage of Source File
 
-The [Sprite](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/Sprite/README.md) type has an extra **With Unit** called **PercentageOfSourceFile**, which will set the width of the Sprite according to the file that it is displaying. This is the default **Width Unit** for Sprites.
+The [Sprite](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/Sprite/README.md) type has an extra **With Unit** called **Percentage of Source File**, which sets the width of the Sprite according to the file that it is displaying. This is the default **Width Unit** for Sprites.
 
-The following image shows a child [Sprite](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/Sprite/README.md) with 200 **PercentageOfSourceFile** Width, which means it will draw two times as wide as its source image:
+The following image shows a child [Sprite](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/Sprite/README.md) with 200 **Percentage of Source File** Width, which means it draws two times as wide as its source image:
 
-![](<../../.gitbook/assets/Width Units\_PercentageOfSourceWidth (1) (1) (1) (3).png>)
+![Sprite using 200 Percentage of File width](<../../.gitbook/assets/11\_05 58 09.png>)
+
+### Absolute Multiplied by Font Scale
+
+Absolute Multiplied by Font Scale is a property which multiplies the Font Scale property at runtime with the width value. This can be used to create widths which are responsive to font scales for devices which may have variable text sizes.
+
+At the time of this writing, the Gum tool always uses a Font Scale of 1, so this cannot be previewed in the tool. However, when a Gum project is loaded at runtime, the runtime may apply a Font Scale value such as using the **Text size** from Windows.
+
+<figure><img src="../../.gitbook/assets/image (1) (1).png" alt=""><figcaption><p>Width of 100 using Absolute Multiplied by Font Scale results in an absolute width of 100 in the Gum tool</p></figcaption></figure>
