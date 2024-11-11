@@ -58,9 +58,9 @@ using System.Linq;
         /// <summary>
         /// For XamarinForms this would be the base screen type like
         /// MyProjectNamespace.Screens.MyBaseGumScreen. For other types
-        /// like a PDF renderer, this might just be BindableGraphicalUiElement. We'll default to that
+        /// like a PDF renderer, this might just be GraphicalUiElement.
         /// </summary>
-        public string DefaultScreenBase { get; set; } = "SkiaGum.GueDeriving.ContainerRuntime";
+        public string DefaultScreenBase { get; set; } = "Gum.Wireframe.GraphicalUiElement";
 
         public OutputLibrary OutputLibrary { get; set; }
 
