@@ -3330,6 +3330,13 @@ namespace Gum.Wireframe
                             }
                         }
 
+                        if (this.ChildrenLayout == ChildrenLayout.AutoGridHorizontal || this.ChildrenLayout == ChildrenLayout.AutoGridVertical)
+                        {
+                            // We got the largest size for one child, but that child must be contained within a cell, and all cells must be
+                            // at least that same size, so we multiply the size by the number of cells wide
+                            maxHeight *= this.AutoGridHorizontalCells;
+                        }
+
                     }
                 }
                 else
@@ -3650,6 +3657,13 @@ namespace Gum.Wireframe
                                 maxWidth = System.Math.Max(maxWidth, elementWidth);
                             }
                         }
+                    }
+
+                    if(this.ChildrenLayout == ChildrenLayout.AutoGridHorizontal || this.ChildrenLayout == ChildrenLayout.AutoGridVertical)
+                    {
+                        // We got the largest size for one child, but that child must be contained within a cell, and all cells must be
+                        // at least that same size, so we multiply the size by the number of cells wide
+                        maxWidth *= this.AutoGridHorizontalCells;
                     }
                 }
                 else
