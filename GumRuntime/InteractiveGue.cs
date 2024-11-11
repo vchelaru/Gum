@@ -25,6 +25,7 @@ using Rectangle = System.Drawing.Rectangle;
 using Matrix = System.Numerics.Matrix4x4;
 using GumRuntime;
 using System.Collections;
+using System.Reflection.Emit;
 
 namespace Gum.Wireframe
 {
@@ -206,19 +207,19 @@ namespace Gum.Wireframe
 
         #endregion
 
-        private bool DoUiActivityRecursively(ICursor cursor, HandledActions handledActions = null)
+        private bool DoUiActivityRecursively(ICursor cursor, Layer layer, HandledActions handledActions = null)
         {
-            return DoUiActivityRecursively(cursor, handledActions, this);
+            return DoUiActivityRecursively(cursor, handledActions, this, layer);
 
         }
 
-        internal static bool DoUiActivityRecursively(ICursor cursor, HandledActions handledActions, GraphicalUiElement currentItem)
+        internal static bool DoUiActivityRecursively(ICursor cursor, HandledActions handledActions, GraphicalUiElement currentItem, Layer layer)
         { 
             handledActions = handledActions ?? new HandledActions();
             bool handledByChild = false;
             bool handledByThis = false;
 
-            bool isOver = HasCursorOver(cursor, currentItem);
+            bool isOver = HasCursorOver(cursor, currentItem, layer);
             var asInteractive = currentItem as InteractiveGue;
 
             // Even though the cursor is over "this", we need to check if the cursor is over any children in case "this" exposes its children events:
@@ -232,9 +233,9 @@ namespace Gum.Wireframe
                     {
                         var child = currentItem.ContainedElements[i] as GraphicalUiElement;
 
-                        if (child != null && HasCursorOver(cursor, child))
+                        if (child != null && HasCursorOver(cursor, child, layer))
                         {
-                            handledByChild = DoUiActivityRecursively(cursor, handledActions, child);
+                            handledByChild = DoUiActivityRecursively(cursor, handledActions, child, layer);
 
                             if (handledByChild)
                             {
@@ -255,9 +256,9 @@ namespace Gum.Wireframe
 
                         // If the child either has events or exposes children events, then give it a chance to handle this activity.
 
-                        if (child != null &&  HasCursorOver(cursor, child))
+                        if (child != null &&  HasCursorOver(cursor, child, layer))
                         {
-                            handledByChild = DoUiActivityRecursively(cursor, handledActions, child);
+                            handledByChild = DoUiActivityRecursively(cursor, handledActions, child, layer);
 
                             if (handledByChild)
                             {
@@ -367,10 +368,11 @@ namespace Gum.Wireframe
 
         public bool HasCursorOver(ICursor cursor)
         {
-            return HasCursorOver(cursor, this);
+            var layer = (this.GetTopParent() as GraphicalUiElement).Layer;
+            return HasCursorOver(cursor, this, layer);
         }
 
-        private static bool HasCursorOver(ICursor cursor, GraphicalUiElement thisInstance)
+        private static bool HasCursorOver(ICursor cursor, GraphicalUiElement thisInstance, Layer layer)
         { 
             bool toReturn = false;
 
@@ -417,14 +419,14 @@ namespace Gum.Wireframe
 
                     var camera = managers.Renderer.Camera;
 
-                    //if (this.mLayer != null)
-                    //{
-                    //    mLayer.ScreenToWorld(
-                    //        camera,
-                    //        cursorScreenX, cursorScreenY,
-                    //        out worldX, out worldY);
-                    //}
-                    //else
+                    if (layer != null)
+                    {
+                        layer.ScreenToWorld(
+                            camera,
+                            cursorScreenX, cursorScreenY,
+                            out worldX, out worldY);
+                    }
+                    else
                     {
                         camera.ScreenToWorld(
                             cursorScreenX, cursorScreenY,
@@ -454,7 +456,7 @@ namespace Gum.Wireframe
                     // It's a screen
                     foreach(var child in thisInstance.ContainedElements)
                     {
-                        if (HasCursorOver(cursor, child))
+                        if (HasCursorOver(cursor, child, layer))
                         {
                             toReturn = true;
                             break;
@@ -467,7 +469,7 @@ namespace Gum.Wireframe
                     {
                         var child = thisInstance.Children[i] as GraphicalUiElement;
 
-                        if (child != null && HasCursorOver(cursor, child))
+                        if (child != null && HasCursorOver(cursor, child, layer))
                         {
                             toReturn = true;
                             break;
@@ -694,7 +696,8 @@ namespace Gum.Wireframe
             for(int i = gues.Count-1; i > -1; i--)
             {
                 var gue = gues[i];
-                InteractiveGue.DoUiActivityRecursively(cursor, actions, gue);
+                
+                InteractiveGue.DoUiActivityRecursively(cursor, actions, gue, gue.Layer);
                 if(cursor.WindowOver != null)
                 {
                     break;

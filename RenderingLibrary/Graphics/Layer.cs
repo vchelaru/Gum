@@ -200,19 +200,26 @@ namespace RenderingLibrary.Graphics
 
             Matrix transformationMatrix;
 
+            var effectiveCameraX = camera.X;
+            var effectiveCameraY = camera.Y;
+
+            if(LayerCameraSettings?.IsInScreenSpace == true)
+            {
+                effectiveCameraX = 0;
+                effectiveCameraY = 0;
+            }
+
             if (camera.CameraCenterOnScreen == RenderingLibrary.CameraCenterOnScreen.Center)
             {
                 // make local vars to make stepping in faster if debugging
-                var x = camera.X;
-                var y = camera.Y;
                 var zoom = effectiveZoom;
                 var width = camera.ClientWidth;
                 var height = camera.ClientHeight;
-                transformationMatrix = Camera.GetTransformationMatrix(x, y, zoom, width, height, false);
+                transformationMatrix = Camera.GetTransformationMatrix(effectiveCameraX, effectiveCameraY, zoom, width, height, false);
             }
             else
             {
-                transformationMatrix =  Matrix.CreateTranslation(-camera.X, -camera.Y, 0) *
+                transformationMatrix =  Matrix.CreateTranslation(-effectiveCameraX, -effectiveCameraY, 0) *
                                          Matrix.CreateScale(new Vector3(effectiveZoom, effectiveZoom, 1));
             }
 

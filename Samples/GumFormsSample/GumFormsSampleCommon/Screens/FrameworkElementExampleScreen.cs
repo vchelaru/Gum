@@ -240,31 +240,45 @@ namespace GumFormsSample.Screens
 
         void CreateLayeredUi(List<GraphicalUiElement> extraRoots)
         {
+            var layer = new Layer();
+            var layerCameraSettings = new LayerCameraSettings();
+            layerCameraSettings.Zoom = 1;
+            layerCameraSettings.IsInScreenSpace = true;
+            layer.LayerCameraSettings = layerCameraSettings;
+            SystemManagers.Default.Renderer.AddLayer(layer);
+
             var layeredContainer = new ContainerRuntime();
+            layeredContainer.Name = "Layered Container";
             layeredContainer.X = 0;
             layeredContainer.Y = 0;
             layeredContainer.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
-            layeredContainer.AddToManagers(SystemManagers.Default, null);
+            layeredContainer.AddToManagers(SystemManagers.Default, layer);
             layeredContainer.XUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
             layeredContainer.XOrigin = HorizontalAlignment.Right;
+            layeredContainer.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
             extraRoots.Add(layeredContainer);
-
-            //var layer = new Layer();
-            //SystemManagers.Default.Renderer.AddLayer(layer);
 
             var zoomInButton = new Button();
             zoomInButton.Text = "Zoom layer in";
             zoomInButton.Width = 0;
             zoomInButton.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
             zoomInButton.Height = 100;
+            zoomInButton.Click += (_,_) =>
+            {
+                layerCameraSettings.Zoom += 0.1f;
+            };
             layeredContainer.Children.Add(zoomInButton.Visual);
 
 
             var zoomOutButton = new Button();
-            zoomOutButton.Text = "Zoom layer in";
+            zoomOutButton.Text = "Zoom layer out";
             zoomOutButton.Width = 0;
             zoomOutButton.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
             zoomOutButton.Height = 100;
+            zoomOutButton.Click += (_, _) =>
+            {
+                layerCameraSettings.Zoom -= 0.1f;
+            };
             layeredContainer.Children.Add(zoomOutButton.Visual);
             //button.Visual.AddToManagers(SystemManagers.Default, null);
         }
