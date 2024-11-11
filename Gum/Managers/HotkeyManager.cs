@@ -96,6 +96,43 @@ namespace Gum.Managers
                 keyboard.KeyDown((Microsoft.Xna.Framework.Input.Keys)Key);
 
         }
+
+        public override string ToString()
+        {
+            string toReturn = "";
+
+            if (IsCtrlDown)
+            {
+                toReturn += "Ctrl";
+            }
+            if (IsShiftDown)
+            {
+                if(toReturn.Length != 0)
+                {
+                    toReturn += "+";
+                }
+                toReturn += "Shift";
+            }
+            if (IsAltDown)
+            {
+                if (toReturn.Length != 0)
+                {
+                    toReturn += "+";
+                }
+                toReturn += "Alt";
+            }
+
+            if (Key != null)
+            {
+                if (toReturn.Length != 0)
+                {
+                    toReturn += "+";
+                }
+                toReturn += Key.ToString();
+            }
+
+            return toReturn;
+        }
     }
     #endregion
 
@@ -122,6 +159,21 @@ namespace Gum.Managers
         public KeyCombination MaintainResizeAspectRatio { get; private set; } = KeyCombination.Shift();
         public KeyCombination SnapRotationTo15Degrees { get; private set; } = KeyCombination.Shift();
         public KeyCombination ResizeFromCenter { get; private set; } = KeyCombination.Alt();
+
+        public KeyCombination MoveCameraLeft { get; private set; } = KeyCombination.Ctrl(Keys.Left);
+        public KeyCombination MoveCameraRight { get; private set; } = KeyCombination.Ctrl(Keys.Right);
+        public KeyCombination MoveCameraUp { get; private set; } = KeyCombination.Ctrl(Keys.Up);
+        public KeyCombination MoveCameraDown { get; private set; } = KeyCombination.Ctrl(Keys.Down);
+
+        public KeyCombination ZoomCameraIn { get; private set; } = KeyCombination.Ctrl(Keys.Add);
+        public KeyCombination ZoomCameraInAlternative { get; private set; } = KeyCombination.Ctrl(Keys.Oemplus);
+
+        public KeyCombination ZoomCameraOut { get; private set; } = KeyCombination.Ctrl(Keys.Subtract);
+        public KeyCombination ZoomCameraOutAlternative { get; private set; } = KeyCombination.Ctrl(Keys.OemMinus);
+
+
+
+        // If adding any new keys here, modify HotkeyViewModel
 
         #region Element Tree View
 

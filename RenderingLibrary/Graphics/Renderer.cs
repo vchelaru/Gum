@@ -416,7 +416,7 @@ namespace RenderingLibrary.Graphics
 
 
         // Immediate mode calls:
-        public void Begin(Microsoft.Xna.Framework.Matrix? spriteBatchMatrix)
+        public void Begin(Microsoft.Xna.Framework.Matrix? spriteBatchMatrix = null)
         {
             SpriteBatchStack.PerformStartOfLayerRenderingLogic();
             spriteRenderer.ForcedMatrix = spriteBatchMatrix;

@@ -24,6 +24,8 @@ To add a renderable (such as a GraphicalUiElement) to a layer, the AddToManagers
 MyRenderable.AddToManagers(SystemManagers.Default, layer);
 ```
 
+All children within a layered renderable also draw on the same layer.
+
 ### LayerCameraSettings
 
 LayerCameraSettings can be used to override default behavior. If no LayerCameraSettings instance is created, then a Layer's zoom and screen-space behavior matches all unlayered objects.

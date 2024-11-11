@@ -120,7 +120,6 @@ namespace Gum.Controls
             page.Header = tabTitle;
             page.Content = control;
 
-
             tabControl.Items.Add(page);
 
             return new PluginTab()

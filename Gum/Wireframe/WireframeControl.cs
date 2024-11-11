@@ -130,7 +130,7 @@ namespace Gum.Wireframe
 
         #region Initialize Methods
 
-        public void Initialize(WireframeEditControl wireframeEditControl, Panel wireframeParentPanel)
+        public void Initialize(WireframeEditControl wireframeEditControl, Panel wireframeParentPanel, HotkeyManager hotkeyManager)
         {
             try
             {
@@ -150,7 +150,7 @@ namespace Gum.Wireframe
                 LoaderManager.Self.ContentLoader = new ContentLoader();
 
                 LoaderManager.Self.Initialize(null, "content/TestFont.fnt", Services, null);
-                CameraController.Self.Initialize(Camera, mWireframeEditControl, Width, Height);
+                CameraController.Self.Initialize(Camera, mWireframeEditControl, Width, Height, hotkeyManager);
                 CameraController.Self.CameraChanged += () => CameraChanged?.Invoke();
 
                 InputLibrary.Cursor.Self.Initialize(this);
