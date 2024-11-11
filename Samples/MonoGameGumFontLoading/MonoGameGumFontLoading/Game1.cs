@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGameGum.GueDeriving;
 using RenderingLibrary;
+using RenderingLibrary.Graphics;
 using System.IO;
 
 namespace MonoGameGumFontLoading
@@ -24,6 +25,8 @@ namespace MonoGameGumFontLoading
             SystemManagers.Default = new SystemManagers();
             SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
 
+            // fonts can be explicitly loaded too:
+            var bitmapFont = new BitmapFont("Fonts/Font18Arial.fnt", SystemManagers.Default);
 
             var text = new TextRuntime();
             text.UseCustomFont = true;
