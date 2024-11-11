@@ -144,7 +144,7 @@ gumBatch.Draw(buttonRectangle);
 gumBatch.End();
 ```
 
-<figure><img src="../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>buttonRectangle drawn with its child buttonText</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>buttonRectangle drawn with its child buttonText</p></figcaption></figure>
 
 ### RenderTargets
 

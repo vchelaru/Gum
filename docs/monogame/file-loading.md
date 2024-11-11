@@ -32,6 +32,26 @@ SpriteRuntimeInstance.Texture = MyTexture;
 
 In the case of the SourceFile assignment, the SpriteRuntime loads the Texture2D from disk. By default the file is loaded relative to the Content folder.
 
+### Example - Loading a Font File
+
+You can explicitly load font files if you would like to change fonts in custom code, or if you are using the GumBatch class to do your own Gum rendering.
+
+To load a file, first make sure that your font is added to Visual Studio, usually in the Content folder. In the case of fonts, you should have at least 2 files:
+
+1. A .png file
+2. A .fnt file
+
+Usually both files are added to the same directory. Be sure to mark both files as Copy if Newer.
+
+<figure><img src="../.gitbook/assets/image.png" alt=""><figcaption><p>.fnt file in Visual Studio set to Copy if newer</p></figcaption></figure>
+
+The file can be loaded using the BitmapFont constructor:
+
+```csharp
+// RelativeDirectory defaults to "Content/" so we leave that off
+var bitmapFont = new BitmapFont("Fonts/Font18Arial.fnt", SystemManagers.Default);
+```
+
 ### Setting FileManager.RelativeDirectory
 
 Whenever a file is assigned on a runtime object, Gum looks for the file in the `ToolsUtilities.FileManager.RelativeDirectory` directory. This directory defaults to your game's Content folder.
