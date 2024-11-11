@@ -1,22 +1,22 @@
 # Height Units
 
-## Introduction
+### Introduction
 
 The **Height Units** variable controls how a unit is vertically sized, which may be relative to its parent. By default an object uses **Absolute** height, where each unit represents 1 pixel of height in pixels. When using **Absolute**, an object ignores its parents' Width.
 
-## Absolute
+### Absolute
 
 The following shows a child [ColoredRectangle](../coloredrectangle.md) with 50 **Absolute** Height:
 
 ![Rectangle with an Absolute height of 50](<../../.gitbook/assets/11\_06 16 55.png>)
 
-## Relative to Container
+### Relative to Container
 
 The following shows a child [ColoredRectangle](../coloredrectangle.md) with -10 **Relative to Container** Height, which means is sized 10 pixels less tall than its parent.
 
 ![Rectangle using a Relative to Container height value of -10](<../../.gitbook/assets/11\_06 18 55.png>)
 
-## Percentage of Container
+### Percentage of Container
 
 The following shows a child [ColoredRectangle](../coloredrectangle.md) with 100 **Percentage** Height, which means it has 100% of the height of its parent. Note that 100 **Percentage** is the same as 0 **Relative to Container**:
 
@@ -26,7 +26,7 @@ If an object uses **Percentage** Height, but has no parent, it is sized as a per
 
 If an object uses **Relative to Container** Height, but has no parent, it is sized relative to the entire screen's height.
 
-## Ratio of Container
+### Ratio of Container
 
 Ratio of Container can be used to fill available space or to share available space with other objects using a ratio.
 
@@ -74,7 +74,7 @@ Ratio of Container also respects [Stack Spacing](../container/stack-spacing.md).
 
 <figure><img src="../../.gitbook/assets/13_06 20 22.gif" alt=""><figcaption><p>Increasing Stack Spacing reduces the available ratio space for all children</p></figcaption></figure>
 
-## Relative to Children
+### Relative to Children
 
 The following image shows a child [ColoredRectangle](height-units.md#relativetochildren) with 50 **RelativeToChildren** Height, which means that it is 50 pixels taller than is necessary to contain its children. Since the rectangle has no children, this is the same as having 50 **Absolute** Height:
 
@@ -99,7 +99,7 @@ The following animation shows a Text instance which has its Height Units set to 
 
 For more information on relative layout in regards to absolute vs. relative unit types, see the [Relative Layout Unit Type](relative-layout-unit-type.md) page.
 
-## Percentage of Other Dimension
+### Percentage of Other Dimension
 
 **Percentage of Other Dimension** adjusts the object's effective height so it remains proportional to the Width value multiplied by the Height value (as a percentage). For example, if a Height value of 200 is entered, then the effective height is 200% (2x) of the width.
 
@@ -107,7 +107,7 @@ The following image shows a child [ColoredRectangle](../coloredrectangle.md) wit
 
 <figure><img src="../../.gitbook/assets/11_06 29 41.png" alt=""><figcaption><p>Rectangle using Percentage of Other Dimension height of 200</p></figcaption></figure>
 
-## Percentage of Source File
+### Percentage of Source File
 
 The [Sprite](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/Sprite/README.md) type has an extra **Height Unit** called **Percentage of Source File**, which sets the height of the Sprite according to the file that it is displaying. This is the default **Height Unit** for Sprites.
 

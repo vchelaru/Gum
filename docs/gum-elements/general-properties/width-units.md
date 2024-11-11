@@ -1,16 +1,16 @@
 # Width Units
 
-## Introduction
+### Introduction
 
 The **Width Units** variable controls how a unit is horizontally sized, which may be relative to its parent. By default an object uses **Absolute** width, where each unit represents 1 pixel of width in absolute terms. When using **Absolute**, an object ignores its parents' Width.
 
-## Absolute
+### Absolute
 
 The following shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/Gum/coloredrectangle/ColoredRectangle.html) with 50 **Absolute** Width:
 
 ![Rectangle with an absolute width of 50](<../../.gitbook/assets/11\_05 35 01.png>)
 
-## Relative to Container
+### Relative to Container
 
 The following image shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/Gum/coloredrectangle/ColoredRectangle.html) with -10 **RelativeToContainer** Width, so it sizes itself 10 pixels less wide than its parent.
 
@@ -20,7 +20,7 @@ If an object uses **Relative to Container** Width, but has no parent, its size i
 
 <figure><img src="../../.gitbook/assets/image (70).png" alt=""><figcaption><p>Rectangle using 0 relative to container with no direct parent</p></figcaption></figure>
 
-## Percentage of Container
+### Percentage of Container
 
 The following shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/Gum/coloredrectangle/ColoredRectangle.html) with 100 **Percentage of Container** Width, which means it has 100% of the width of its parent. Note that 100 **Percentage** is the same as 0 **Relative to Container**:
 
@@ -30,13 +30,13 @@ If an object uses **Percentage** Width, but has no parent, it sizes itself as a 
 
 <figure><img src="../../.gitbook/assets/image (69).png" alt=""><figcaption><p>Rectangle using 100% of the screen when it has no direct parent</p></figcaption></figure>
 
-## Ratio of Container
+### Ratio of Container
 
 Ratio of Container can be used to fill available space or to share available space with other objects using a ratio. It behaves similar to a Height Units of [Ratio of Container](height-units.md#ratio-of-container), but operates horizontally rather than vertically.
 
 <figure><img src="../../.gitbook/assets/image (1).png" alt=""><figcaption><p>Blue rectangle using a ratio value of 2, next to siblings each using a ratio value of 1</p></figcaption></figure>
 
-## Relative to Children
+### Relative to Children
 
 The following image shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/Gum/coloredrectangle/ColoredRectangle.html) with 50 **Relative to Children** Width, which means that it is sized 50 pixels wider than is necessary to contain its children. Since the rectangle has no children, this is the same as having 50 **Absolute** Width:
 
@@ -62,7 +62,7 @@ Setting a Text instance's **Width Units** to **Relative to Children** results in
 
 ![Text with Relative to Children width results in the contents of the Text instance controlling its size](<../../.gitbook/assets/11\_05 52 48.png>)
 
-## Percentage of Other Dimension
+### Percentage of Other Dimension
 
 **Percentage of Other Dimension** adjusts the object's effective width so it remains proportional to the Height value multiplied by the Width value (as a percentage). For example, if a Width value of 200 is entered, then the effective width is 200% (2x) of the height.
 
@@ -70,7 +70,7 @@ The following image shows a child [ColoredRectangle](https://github.com/vchelaru
 
 ![Rectangle displaying a width 200% of its height](<../../.gitbook/assets/11\_05 55 15.png>)
 
-## Percentage of Source File
+### Percentage of Source File
 
 The [Sprite](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/Sprite/README.md) type has an extra **With Unit** called **Percentage of Source File**, which sets the width of the Sprite according to the file that it is displaying. This is the default **Width Unit** for Sprites.
 
