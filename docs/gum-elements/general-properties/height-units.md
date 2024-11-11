@@ -2,29 +2,29 @@
 
 ## Introduction
 
-The **Height Units** variable controls how a unit is vertically sized, which may be relative to its parent. By default an object uses **Absolute** height, where each unit represents 1 pixel of height in pixels. When using **Absolute**, an object ignores its parents' With.
+The **Height Units** variable controls how a unit is vertically sized, which may be relative to its parent. By default an object uses **Absolute** height, where each unit represents 1 pixel of height in pixels. When using **Absolute**, an object ignores its parents' Width.
 
 ## Absolute
 
 The following shows a child [ColoredRectangle](../coloredrectangle.md) with 50 **Absolute** Height:
 
-![](../../.gitbook/assets/50AbsoluteHeight.png)
+![Rectangle with an Absolute height of 50](<../../.gitbook/assets/11\_06 16 55.png>)
 
 ## Relative to Container
 
-The following shows a child [ColoredRectangle](../coloredrectangle.md) with -10 **RelativeToContainer** Height, which means it will always be 10 pixels less tall than its parent.
+The following shows a child [ColoredRectangle](../coloredrectangle.md) with -10 **Relative to Container** Height, which means is sized 10 pixels less tall than its parent.
 
-![](../../.gitbook/assets/Negative10HeightRelativeToContainer.png)
+![Rectangle using a Relative to Container height value of -10](<../../.gitbook/assets/11\_06 18 55.png>)
 
 ## Percentage of Container
 
-The following shows a child [ColoredRectangle](../coloredrectangle.md) with 100 **Percentage** Height, which means it will have 100% of the height of its parent. Note that 100 **Percentage** is the same as 0 **RelativeToContainer**:
+The following shows a child [ColoredRectangle](../coloredrectangle.md) with 100 **Percentage** Height, which means it has 100% of the height of its parent. Note that 100 **Percentage** is the same as 0 **Relative to Container**:
 
-![](<../../.gitbook/assets/100PercentageHeight (1).png>)
+![Rectangle using a Percentage of Container value of 100](<../../.gitbook/assets/11\_06 24 44.png>)
 
-If an object uses **Percentage** Height, but has no parent, it will size itself as a percentage of the entire screen's height.
+If an object uses **Percentage** Height, but has no parent, it is sized as a percentage of the entire screen's height.
 
-If an object uses **RelativeToContainer** Height, but has no parent, it will size itself relative to the entire screen's height.
+If an object uses **Relative to Container** Height, but has no parent, it is sized relative to the entire screen's height.
 
 ## Ratio of Container
 
@@ -32,7 +32,7 @@ Ratio of Container can be used to fill available space or to share available spa
 
 <figure><img src="../../.gitbook/assets/image (9).png" alt=""><figcaption><p>Ratio of Container Height Units</p></figcaption></figure>
 
-The simplest case is a single child in a container with its Height Units set to **Ratio of Continer**.
+The simplest case is a single child in a container with its Height Units set to **Ratio of Container**.
 
 <figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Ratio of Container set to 1</p></figcaption></figure>
 
@@ -76,9 +76,9 @@ Ratio of Container also respects [Stack Spacing](../container/stack-spacing.md).
 
 ## Relative to Children
 
-The following image shows a child [ColoredRectangle](height-units.md#relativetochildren) with 50 **RelativeToChildren** Height, which means that it will always be 50 pixels taller than is necessary to contain its children. Since the rectangle has no children, this is the same as having 50 **Absolute** Height:
+The following image shows a child [ColoredRectangle](height-units.md#relativetochildren) with 50 **RelativeToChildren** Height, which means that it is 50 pixels taller than is necessary to contain its children. Since the rectangle has no children, this is the same as having 50 **Absolute** Height:
 
-![](<../../.gitbook/assets/13\_13 35 18.png>)
+![Rectangle using Relative to Children height of 50, resulting in an absolute height of 50 since it has no children](<../../.gitbook/assets/13\_13 35 18.png>)
 
 **RelativeToChildren** can be used to size an object based on the position and sizes of a container's children. The following image shows a container with 0 **RelativeToChildren** Height, which mans that its height is set just large enough to contain its children. Notice that if the children are moved, the rectangle's height adjusts. Both children are considered so the container adjusts its height according to the bottom-most side of either child:
 
@@ -101,16 +101,16 @@ For more information on relative layout in regards to absolute vs. relative unit
 
 ## Percentage of Other Dimension
 
-**PercentageOfOtherDimension** will adjust the object's effective height so it remains proportional to the Width value multiplied by the Height value (as a percentage). For example, if a Height value of 200 is entered, then the effective height will be 200% (2x) of the width.
+**Percentage of Other Dimension** adjusts the object's effective height so it remains proportional to the Width value multiplied by the Height value (as a percentage). For example, if a Height value of 200 is entered, then the effective height is 200% (2x) of the width.
 
-The following image shows a child [ColoredRectangle](../coloredrectangle.md) with a Height of 200 **PercentageOfOtherDimension**. In this image, the **Width** value is 50 units, so the effective height is 100 units:
+The following image shows a child [ColoredRectangle](../coloredrectangle.md) with a Height of 200 **Percentage of Other Dimension**. In this image, the **Width** value is 50 units, so the effective height is 100 units:
 
-![](../../.gitbook/assets/PercentageOfOtherDimensionHeight.png)
+<figure><img src="../../.gitbook/assets/11_06 29 41.png" alt=""><figcaption><p>Rectangle using Percentage of Other Dimension height of 200</p></figcaption></figure>
 
-## PercentageOfSourceFile
+## Percentage of Source File
 
-The [Sprite](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/Sprite/README.md) type has an extra **Height Unit** called **PercentageOfSourceFile**, which will set the height of the Sprite according to the file that it is displaying. This is the default **Height Unit** for Sprites.
+The [Sprite](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/Sprite/README.md) type has an extra **Height Unit** called **Percentage of Source File**, which sets the height of the Sprite according to the file that it is displaying. This is the default **Height Unit** for Sprites.
 
-The following image shows a child [Sprite](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/Sprite/README.md) with 200 **PercentageOfSourceFile** Height, which means it will draw two times as tall as its source image:
+The following image shows a child [Sprite](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/Sprite/README.md) with 200 **Percentage of Source File** Height, which means it draws two times as tall as its source image:
 
-![](<../../.gitbook/assets/PercentageOfSourceHeight (1).png>)
+![Sprite using Percentage of Source height of 200](<../../.gitbook/assets/11\_06 31 44.png>)

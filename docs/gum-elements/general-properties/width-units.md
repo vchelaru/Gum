@@ -8,13 +8,13 @@ The **Width Units** variable controls how a unit is horizontally sized, which ma
 
 The following shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/Gum/coloredrectangle/ColoredRectangle.html) with 50 **Absolute** Width:
 
-![Rectangle with an absolute width value of 50](<../../.gitbook/assets/11\_05 35 01.png>)
+![Rectangle with an absolute width of 50](<../../.gitbook/assets/11\_05 35 01.png>)
 
 ## Relative to Container
 
 The following image shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/Gum/coloredrectangle/ColoredRectangle.html) with -10 **RelativeToContainer** Width, so it sizes itself 10 pixels less wide than its parent.
 
-![Rectangle using a relative width value of -10](<../../.gitbook/assets/11\_05 36 16.png>)
+![Rectangle using a Relative to Container width value of -10](<../../.gitbook/assets/11\_05 36 16.png>)
 
 If an object uses **Relative to Container** Width, but has no parent, its size is relative to the entire screen's width.
 
