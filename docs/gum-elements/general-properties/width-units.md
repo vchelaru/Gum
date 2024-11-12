@@ -16,7 +16,9 @@ The following image shows a child [ColoredRectangle](https://github.com/vchelaru
 
 ![Rectangle using a Relative to Container width value of -10](<../../.gitbook/assets/11\_05 36 16.png>)
 
-If an object uses **Relative to Container** Width, but has no parent, its size is relative to the entire screen's width.
+{% hint style="info" %}
+Despite the name referring to a "Container", the size is relative to the parent regardless of the parent's type. If the instance has no parent, then the size is relative to the canvas.
+{% endhint %}
 
 <figure><img src="../../.gitbook/assets/image (70).png" alt=""><figcaption><p>Rectangle using 0 relative to container with no direct parent</p></figcaption></figure>
 
@@ -26,7 +28,9 @@ The following shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/t
 
 ![Rectangle using 100% of its container](<../../.gitbook/assets/02\_10 09 01.png>)
 
-If an object uses **Percentage** Width, but has no parent, it sizes itself as a percentage of the entire screen's width.
+{% hint style="info" %}
+Despite the name referring to a "Container", the size is relative to the parent regardless of the parent's type. If the instance has no parent, then the size is relative to the canvas.
+{% endhint %}
 
 <figure><img src="../../.gitbook/assets/image (69).png" alt=""><figcaption><p>Rectangle using 100% of the screen when it has no direct parent</p></figcaption></figure>
 
@@ -35,6 +39,10 @@ If an object uses **Percentage** Width, but has no parent, it sizes itself as a 
 Ratio of Container can be used to fill available space or to share available space with other objects using a ratio. It behaves similar to a Height Units of [Ratio of Container](height-units.md#ratio-of-container), but operates horizontally rather than vertically.
 
 <figure><img src="../../.gitbook/assets/image (1).png" alt=""><figcaption><p>Blue rectangle using a ratio value of 2, next to siblings each using a ratio value of 1</p></figcaption></figure>
+
+{% hint style="info" %}
+Despite the name referring to a "Container", the total size available for ratios is relative to the parent regardless of the parent's type. If the instance has no parent, then the size is relative to the canvas.
+{% endhint %}
 
 ### Relative to Children
 

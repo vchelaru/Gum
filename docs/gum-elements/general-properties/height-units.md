@@ -16,21 +16,31 @@ The following shows a child [ColoredRectangle](../coloredrectangle.md) with -10 
 
 ![Rectangle using a Relative to Container height value of -10](<../../.gitbook/assets/11\_06 18 55.png>)
 
+
+
+{% hint style="info" %}
+Despite the name referring to a "Container", the size is relative to the parent regardless of the parent's type. If the instance has no parent, then the size is relative to the canvas.
+{% endhint %}
+
 ### Percentage of Container
 
 The following shows a child [ColoredRectangle](../coloredrectangle.md) with 100 **Percentage** Height, which means it has 100% of the height of its parent. Note that 100 **Percentage** is the same as 0 **Relative to Container**:
 
 ![Rectangle using a Percentage of Container value of 100](<../../.gitbook/assets/11\_06 24 44.png>)
 
-If an object uses **Percentage** Height, but has no parent, it is sized as a percentage of the entire screen's height.
-
-If an object uses **Relative to Container** Height, but has no parent, it is sized relative to the entire screen's height.
+{% hint style="info" %}
+Despite the name referring to a "Container", the size is relative to the parent regardless of the parent's type. If the instance has no parent, then the size is relative to the canvas.
+{% endhint %}
 
 ### Ratio of Container
 
 Ratio of Container can be used to fill available space or to share available space with other objects using a ratio.
 
 <figure><img src="../../.gitbook/assets/image (9).png" alt=""><figcaption><p>Ratio of Container Height Units</p></figcaption></figure>
+
+{% hint style="info" %}
+Despite the name referring to a "Container", the total size available for ratios is relative to the parent regardless of the parent's type. If the instance has no parent, then the size is relative to the canvas.
+{% endhint %}
 
 The simplest case is a single child in a container with its Height Units set to **Ratio of Container**.
 
