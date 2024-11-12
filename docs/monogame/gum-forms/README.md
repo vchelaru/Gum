@@ -70,7 +70,7 @@ public class Game1 : Game
     {
         if(IsActive)
         {
-            FormsUtilities.Update(gameTime, Root);
+            FormsUtilities.Update(this, gameTime, Root);
         }
         
         SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
