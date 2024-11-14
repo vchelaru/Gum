@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Gum.Wireframe;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Forms;
@@ -98,7 +99,7 @@ namespace MonoGameGumImmediateMode
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            FormsUtilities.Update(this, gameTime, null);
+            FormsUtilities.Update(this, gameTime, (GraphicalUiElement) null);
 
             if(FormsUtilities.Keyboard.KeyPushed(Keys.Left))
             {

@@ -86,7 +86,10 @@ namespace MonoGameGum.Forms
         public static void Update(Game game, GameTime gameTime, GraphicalUiElement rootGue)
         {
             innerRootList.Clear();
-            innerRootList.Add(rootGue);
+            if(rootGue != null)
+            {
+                innerRootList.Add(rootGue);
+            }
             Update(game, gameTime, innerRootList);
         }
 
