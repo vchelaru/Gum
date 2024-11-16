@@ -55,3 +55,31 @@ The entire text can be selected as shown in the following code:
 textBox.SelectionStart = 0;
 textBox.SelectionLength = textBox.Text?.Length ?? 0; // in case text is null
 ```
+
+Selection can also be performed by the user. Double-clicking the text box selects all text.
+
+<figure><img src="../../../.gitbook/assets/16_11 18 38.gif" alt=""><figcaption><p>Double-click selects all text</p></figcaption></figure>
+
+A push+drag with the mouse selects the text between the start and the current location of the drag.
+
+<figure><img src="../../../.gitbook/assets/16_11 20 19.gif" alt=""><figcaption><p>Push+drag to select text</p></figcaption></figure>
+
+Holding down the shift key and pressing the arrow keys adjusts the selection.
+
+<figure><img src="../../../.gitbook/assets/16_11 22 37.gif" alt=""><figcaption><p>Arrow keys + shift to select</p></figcaption></figure>
+
+### TextWrapping
+
+The TextWrapping property can be used to set whether the TextBox wraps text. By default this value is set to `TextWrapping.NoWrap` which means the text does not wrap, but instead extends horizontally.
+
+<figure><img src="../../../.gitbook/assets/16_11 32 07.gif" alt=""><figcaption><p>TextWrapping.NoWrap causes text to scroll</p></figcaption></figure>
+
+If TextWrapping is set to \`TextWrapping.Wrap, then text wraps to multiple lines. Note that usually this is combined with a taller text box so that multiple lines display properly.
+
+```csharp
+wrappedTextBox.TextWrapping = TextWrapping.Wrap;
+// If you have set up your TextBox in code, you may need to make it taller:
+wrappedTextBox.Height = 140;
+```
+
+<figure><img src="../../../.gitbook/assets/16_11 39 19.gif" alt=""><figcaption><p>TextWrapping.Wrap causes text to wrap</p></figcaption></figure>
