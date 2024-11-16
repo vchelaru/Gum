@@ -5,7 +5,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#if FRB
+namespace FlatRedBall.Forms.Controls
+#else
 namespace MonoGameGum.Forms.Controls
+#endif
 {
     public class TextBox : TextBoxBase
     {
@@ -40,6 +44,11 @@ namespace MonoGameGum.Forms.Controls
         }
 
         protected override string CategoryName => "TextBoxCategoryState";
+
+        public bool AcceptsReturn
+        {
+            get; set;
+        }
 
         #endregion
 
@@ -93,13 +102,16 @@ namespace MonoGameGum.Forms.Controls
                     // esc
                     || character == (char)27)
                 {
-                    // do nothing, handled with a backspace above
+                    // handled by TextBoxBase
                     //    HandleBackspace();
                 }
                 else if (character == '\r' || character == '\n')
                 {
-                    // We don't support multiline yet
-                    //this.Text += '\n';
+                    if (AcceptsReturn)
+                    {
+                        newText = newText.Insert(caretIndex, "\n");
+                        addedCharacter = true;
+                    }
                 }
                 else
                 {
@@ -118,8 +130,10 @@ namespace MonoGameGum.Forms.Controls
                     wasHandledByEvent = args.Handled;
                     if (!wasHandledByEvent)
                     {
+                        // set caretIndex before assigning Text so that the events are
+                        // raised with the new caretIndex value
+                        caretIndex = System.Math.Min(caretIndex + 1, newText.Length);
                         Text = newText;
-                        caretIndex = System.Math.Min(caretIndex + 1, Text.Length);
                     }
                 }
 
@@ -142,7 +156,7 @@ namespace MonoGameGum.Forms.Controls
                 }
                 else if (isCtrlDown)
                 {
-                    var indexBeforeNullable = GetSpaceIndexBefore(caretIndex);
+                    var indexBeforeNullable = GetCtrlBeforeTarget(caretIndex);
 
                     var indexToDeleteTo = indexBeforeNullable ?? 0;
 
@@ -222,7 +236,12 @@ namespace MonoGameGum.Forms.Controls
 
         public void DeleteSelection()
         {
-            this.Text = Text.Remove(selectionStart, selectionLength);
+            var lengthToRemove = selectionLength;
+            if (selectionStart + lengthToRemove > Text.Length)
+            {
+                lengthToRemove = Text.Length - selectionStart;
+            }
+            this.Text = Text.Remove(selectionStart, lengthToRemove);
             CaretIndex = selectionStart;
             SelectionLength = 0;
         }

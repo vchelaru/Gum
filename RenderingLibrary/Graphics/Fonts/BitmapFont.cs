@@ -384,6 +384,15 @@ namespace RenderingLibrary.Graphics
                         mCharacterInfo['\t'].ScaleX = space.ScaleX * 4;
                         mCharacterInfo['\t'].Spacing = space.Spacing * 4;
                     }
+                    if(mCharacterInfo.Length > (int)'\n')
+                    {
+                        mCharacterInfo['\n'].ScaleX = 0;
+                        mCharacterInfo['\n'].Spacing = 0;
+                        mCharacterInfo['\n'].TURight = 0;
+                        mCharacterInfo['\n'].TULeft = 0;
+                        mCharacterInfo['\n'].XOffset = 0;
+
+                    }
                 }
 
                 foreach (var charInfo in parsedData.Chars)
@@ -817,7 +826,7 @@ namespace RenderingLibrary.Graphics
         public Rectangle GetCharacterRect(char c, int lineNumber, ref Vector2 currentCharacterDrawPosition, out FloatRectangle destinationRectangle,
             out int pageIndex, float fontScale = 1, float lineHeightMultiplier = 1)
         {
-            if(Texture == null)
+            if (Texture == null)
             {
                 throw new InvalidOperationException("The bitmap font has a null texture so it cannot return a character rectangle");
             }
@@ -838,14 +847,20 @@ namespace RenderingLibrary.Graphics
 
             // Shift the point by the xOffset, which affects destination (drawing) but does not affect the advance of the position for the next letter
             currentCharacterDrawPosition.X += xOffset * fontScale;
-            currentCharacterDrawPosition.Y = lineNumber * EffectiveLineHeight(fontScale, lineHeightMultiplier) + distanceFromTop * fontScale;
+            currentCharacterDrawPosition.Y = GetCharacterTop(lineNumber, distanceFromTop, fontScale, lineHeightMultiplier);
             destinationRectangle = new FloatRectangle(currentCharacterDrawPosition.X, currentCharacterDrawPosition.Y, sourceWidth * fontScale, sourceHeight * fontScale);
 
             // Shift it back.
             currentCharacterDrawPosition.X -= xOffset * fontScale;
             currentCharacterDrawPosition.X += characterInfo.GetXAdvanceInPixels(mLineHeightInPixels) * fontScale;
 
+
             return sourceRectangle;
+        }
+
+        private float GetCharacterTop(int lineNumber, int distanceFromTop, float fontScale = 1, float lineHeightMultiplier = 1)
+        {
+            return lineNumber * EffectiveLineHeight(fontScale, lineHeightMultiplier) + distanceFromTop * fontScale;
         }
 
         public void GetRequiredWidthAndHeight(IEnumerable<string> lines, out int requiredWidth, out int requiredHeight)
@@ -1046,7 +1061,8 @@ namespace RenderingLibrary.Graphics
 
                 if (characterInfo != null)
                 {
-                    bool isLast = i == line.Length - 1;
+                    bool isLast = i == line.Length - 1 ||
+                        i == line.Length - 2 && line[i + 1] == '\n';
 
                     if (isLast)
                     {

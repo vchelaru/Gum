@@ -111,6 +111,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
                 var textboxCategory = new Gum.DataTypes.Variables.StateSaveCategory();
                 textboxCategory.Name = CategoryName;
+                this.AddCategory(textboxCategory);
                 textboxCategory.States.Add(new()
                 {
                     Name = "Enabled",
@@ -179,6 +180,66 @@ namespace MonoGameGum.Forms.DefaultVisuals
                         {
                             Name = "Background.Color",
                             Value = new Microsoft.Xna.Framework.Color(130,130,130),
+                        }
+                    }
+                });
+
+
+                var lineModeCategory = new Gum.DataTypes.Variables.StateSaveCategory();
+                lineModeCategory.Name = "LineModeCategory";
+                this.AddCategory(lineModeCategory);
+                lineModeCategory.States.Add(new()
+                {
+                    Name = "Single",
+                    Variables = new()
+                    {
+                        new ()
+                        {
+                            Name = "SelectionInstance.Height",
+                            Value = -4f
+                        },
+                        new ()
+                        {
+                            Name = "SelectionInstance.HeightUnits",
+                            Value = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer
+                        },
+                        new()
+                        {
+                            Name = "TextInstance.Width",
+                            Value = 0f
+                        },
+                        new()
+                        {
+                            Name = "TextInstance.WidthUnits",
+                            Value = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren
+                        }
+                    }
+                });
+
+                lineModeCategory.States.Add(new()
+                {
+                    Name = "Multi",
+                    Variables = new()
+                    {
+                        new ()
+                        {
+                            Name = "SelectionInstance.Height",
+                            Value = 20f
+                        },
+                        new ()
+                        {
+                            Name = "SelectionInstance.HeightUnits",
+                            Value = global::Gum.DataTypes.DimensionUnitType.Absolute
+                        },
+                        new()
+                        {
+                            Name = "TextInstance.Width",
+                            Value = -8f
+                        },
+                        new()
+                        {
+                            Name = "TextInstance.WidthUnits",
+                            Value = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer
                         }
                     }
                 });

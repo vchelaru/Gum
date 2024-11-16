@@ -635,6 +635,7 @@ namespace Gum.Wireframe
         /// </summary>
         bool PrimaryClickNoSlide { get; }
         bool PrimaryDoubleClick { get; }
+        bool PrimaryDoublePush { get; }
 
         bool SecondaryPush { get; }
         bool SecondaryDown { get; }

@@ -1317,10 +1317,12 @@ namespace Gum.Wireframe
             // better performance.
             SetPropertyThroughReflection;
 
+        public static Func<IRenderable, IRenderable> CloneRenderableFunction;
+
 
         #endregion
 
-        #region Constructor
+        #region Constructor / Clone
 
         public GraphicalUiElement()
             : this(null, null)
@@ -1397,6 +1399,20 @@ namespace Gum.Wireframe
                     childGue.ElementGueContainingThis = this;
                 }
             }
+        }
+
+        public GraphicalUiElement Clone()
+        {
+            if(CloneRenderableFunction == null)
+            {
+                throw new InvalidOperationException("GraphicalUiElement.CloneRenderableFunction must be set before calling clone");
+            }
+            var newClone = (GraphicalUiElement)this.MemberwiseClone();
+            var newRenderable = GraphicalUiElement.CloneRenderableFunction(this.mContainedObjectAsIpso);
+
+            newClone.SetContainedObject(newRenderable);
+            mWhatContainsThis = null;
+            return newClone;
         }
 
         #endregion
@@ -5020,6 +5036,12 @@ namespace Gum.Wireframe
 
         public void AddCategory(DataTypes.Variables.StateSaveCategory category)
         {
+#if DEBUG
+            if(string.IsNullOrEmpty(category.Name))
+            {
+                throw new ArgumentException("The category must have its Name set before being added to this");
+            }
+#endif
             //mCategories[category.Name] = category;
             // Why call "Add"? This makes Gum crash if there are duplicate catgories...
             //mCategories.Add(category.Name, category);

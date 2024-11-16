@@ -4124,6 +4124,17 @@ namespace CodeOutputPlugin.Manager
 
         private static object GetGumVariableName(VariableSave variable, CodeGenerationContext context)
         {
+#if DEBUG
+            if(variable == null)
+            {
+                throw new ArgumentNullException(nameof(variable));
+            }
+            if(context.CodeOutputProjectSettings == null)
+            {
+                throw new ArgumentNullException(nameof(context) + "." + nameof(context.CodeOutputProjectSettings));
+            }
+#endif
+
             if (variable.IsState(context.Element))
             {
                 return variable.GetRootName().Replace(" ", "");
