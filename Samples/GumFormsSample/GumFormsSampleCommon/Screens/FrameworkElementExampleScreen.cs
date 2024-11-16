@@ -168,7 +168,7 @@ namespace GumFormsSample.Screens
             wrappedTextBox.Y = currentY;
             wrappedTextBox.Width = 200;
             wrappedTextBox.TextWrapping = MonoGameGum.Forms.TextWrapping.Wrap;
-            wrappedTextBox.Height = 134;
+            wrappedTextBox.Height = 140;
             wrappedTextBox.Placeholder = "Placeholder Text...";
 
             currentY += wrappedTextBox.Height + 40;

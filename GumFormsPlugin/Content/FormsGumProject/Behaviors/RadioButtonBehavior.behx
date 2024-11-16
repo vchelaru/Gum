@@ -1,0 +1,64 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BehaviorSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Name>RadioButtonBehavior</Name>
+  <RequiredVariables />
+  <Category>
+    <Name>RadioButtonCategory</Name>
+    <State>
+      <Name>EnabledOn</Name>
+    </State>
+    <State>
+      <Name>EnabledOff</Name>
+    </State>
+    <State>
+      <Name>DisabledOn</Name>
+    </State>
+    <State>
+      <Name>DisabledOff</Name>
+    </State>
+    <State>
+      <Name>HighlightedOn</Name>
+    </State>
+    <State>
+      <Name>HighlightedOff</Name>
+    </State>
+    <State>
+      <Name>PushedOn</Name>
+    </State>
+    <State>
+      <Name>PushedOff</Name>
+    </State>
+    <State>
+      <Name>FocusedOn</Name>
+    </State>
+    <State>
+      <Name>FocusedOff</Name>
+    </State>
+    <State>
+      <Name>HighlightedFocusedOn</Name>
+    </State>
+    <State>
+      <Name>HighlightedFocusedOff</Name>
+    </State>
+    <State>
+      <Name>DisabledFocusedOn</Name>
+    </State>
+    <State>
+      <Name>DisabledFocusedOff</Name>
+    </State>
+  </Category>
+  <RequiredInstances>
+    <InstanceSave>
+      <Name>TextInstance</Name>
+      <BaseType>Text</BaseType>
+      <DefinedByBase>false</DefinedByBase>
+      <Behaviors />
+    </InstanceSave>
+    <InstanceSave>
+      <Name>CaretInstance</Name>
+      <DefinedByBase>false</DefinedByBase>
+      <Behaviors />
+    </InstanceSave>
+  </RequiredInstances>
+  <RequiredAnimations />
+</BehaviorSave>
