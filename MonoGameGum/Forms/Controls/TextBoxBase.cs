@@ -4,6 +4,7 @@ using MonoGameGum.Input;
 using RenderingLibrary;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -311,7 +312,7 @@ namespace MonoGameGum.Forms.Controls
             else
             {
                 indexPushed = GetCaretIndexAtCursor();
-
+                this.SelectionLength = 0;
                 UpdateCaretIndexFromCursor();
             }
         }
@@ -361,6 +362,10 @@ namespace MonoGameGum.Forms.Controls
             var isMouse = true;
             if (isMouse)
             {
+                if(this.SelectionLength != 0)
+                {
+                    Debug.WriteLine($"{MainCursor.WindowPushed == this.Visual} && {indexPushed != null} && {MainCursor.PrimaryDown} && {!MainCursor.PrimaryDoublePush}");
+                }
                 if (MainCursor.WindowPushed == this.Visual && indexPushed != null && MainCursor.PrimaryDown && !MainCursor.PrimaryDoublePush)
                 {
                     var currentIndex = GetCaretIndexAtCursor();
@@ -421,7 +426,7 @@ namespace MonoGameGum.Forms.Controls
         private int GetCaretIndexAtCursor()
         {
             var cursorScreenX = MainCursor.X;
-            var cursorScreenY = MainCursor.X;
+            var cursorScreenY = MainCursor.Y;
             return GetCaretIndexAtPosition(cursorScreenX, cursorScreenY);
         }
 
@@ -952,7 +957,18 @@ namespace MonoGameGum.Forms.Controls
                 float caretY = GetCenterOfYForLinePixelsFromSmall(
                     // lineNumber can be -1, so treat it as 0 if so:
                     System.Math.Max(0, lineNumber));
-                // this assumes the caret has a YOrigin of center
+                
+                switch(caretComponent.YOrigin)
+                {
+                    case global::RenderingLibrary.Graphics.VerticalAlignment.Center:
+                        // do nothing
+                        break;
+                    case global::RenderingLibrary.Graphics.VerticalAlignment.Top:
+                        caretY -= coreTextObject.LineHeightMultiplier * coreTextObject.BitmapFont.LineHeightInPixels / 2.0f;
+                        break;
+                }
+
+
                 switch (caretComponent.YUnits)
                 {
                     case global::Gum.Converters.GeneralUnitType.PixelsFromSmall:
@@ -1115,6 +1131,16 @@ namespace MonoGameGum.Forms.Controls
                     var selectionPosition = new SelectionPosition();
                     selectionPosition.XStart = startXForSelection;
                     var offsetPixelsFromSmall = GetCenterOfYForLinePixelsFromSmall(i);
+
+                    switch (selectionTemplate.YOrigin)
+                    {
+                        case global::RenderingLibrary.Graphics.VerticalAlignment.Center:
+                            // do nothing
+                            break;
+                        case global::RenderingLibrary.Graphics.VerticalAlignment.Top:
+                            offsetPixelsFromSmall -= coreTextObject.LineHeightMultiplier * coreTextObject.BitmapFont.LineHeightInPixels / 2.0f;
+                            break;
+                    }
 
                     switch (selectionTemplate.YUnits)
                     {

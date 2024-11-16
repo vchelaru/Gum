@@ -13,6 +13,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
 {
     public abstract class DefaultTextBoxBaseRuntime : InteractiveGue
     {
+        TextRuntime TextInstance;
         protected abstract string CategoryName { get; }
 
         public DefaultTextBoxBaseRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
@@ -25,8 +26,10 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 Background.Name = "Background";
                 var SelectionInstance = new ColoredRectangleRuntime();
                 SelectionInstance.Name = "SelectionInstance";
-                var TextInstance = new TextRuntime();
+                
+                TextInstance = new TextRuntime();
                 TextInstance.Name = "TextInstance";
+
                 var PlaceholderTextInstance = new TextRuntime();
                 PlaceholderTextInstance.Name = "PlaceholderTextInstance";
                 var FocusedIndicator = new ColoredRectangleRuntime();
@@ -61,7 +64,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
                 TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
                 TextInstance.Text = "";
-                TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+                TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
                 TextInstance.Width = 0f;
                 TextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
                 TextInstance.X = 4f;
@@ -77,7 +80,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 PlaceholderTextInstance.Height = -4f;
                 PlaceholderTextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
                 PlaceholderTextInstance.Text = "Text Placeholder";
-                PlaceholderTextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+                PlaceholderTextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
                 PlaceholderTextInstance.Width = -8f;
                 PlaceholderTextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
                 PlaceholderTextInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;

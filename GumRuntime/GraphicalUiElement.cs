@@ -4555,10 +4555,12 @@ namespace Gum.Wireframe
                     case "AutoGridVerticalCells":
                         this.AutoGridVerticalCells = (int)value;
                         break;
+                    case "ChildrenLayout":
                     case "Children Layout":
                         this.ChildrenLayout = (ChildrenLayout)value;
                         toReturn = true;
                         break;
+                    case "ClipsChildren":
                     case "Clips Children":
                         this.ClipsChildren = (bool)value;
                         toReturn = true;
@@ -4571,6 +4573,7 @@ namespace Gum.Wireframe
                         this.Height = (float)value;
                         toReturn = true;
                         break;
+                    case "HeightUnits":
                     case "Height Units":
                         this.HeightUnits = (DimensionUnitType)value;
                         toReturn = true;
@@ -4602,33 +4605,39 @@ namespace Gum.Wireframe
                         this.StackSpacing = (float)value;
                         toReturn = true;
                         break;
+                    case "TextureLeft":
                     case "Texture Left":
                         this.TextureLeft = (int)value;
                         toReturn = true;
                         break;
+                    case "TextureTop":
                     case "Texture Top":
                         this.TextureTop = (int)value;
                         toReturn = true;
                         break;
+                    case "TextureWidth":
                     case "Texture Width":
                         this.TextureWidth = (int)value;
                         toReturn = true;
                         break;
+                    case "TextureHeight":
                     case "Texture Height":
                         this.TextureHeight = (int)value;
                         toReturn = true;
 
                         break;
+                    case "TextureWidthScale":
                     case "Texture Width Scale":
                         this.TextureWidthScale = (float)value;
                         toReturn = true;
                         break;
+                    case "TextureHeightScale":
                     case "Texture Height Scale":
                         this.TextureHeightScale = (float)value;
                         toReturn = true;
                         break;
+                    case "TextureAddress":
                     case "Texture Address":
-
                         this.TextureAddress = (Gum.Managers.TextureAddress)value;
                         toReturn = true;
                         break;
@@ -4640,6 +4649,7 @@ namespace Gum.Wireframe
                         this.Width = (float)value;
                         toReturn = true;
                         break;
+                    case "WidthUnits":
                     case "Width Units":
                         this.WidthUnits = (DimensionUnitType)value;
                         toReturn = true;
@@ -4648,10 +4658,12 @@ namespace Gum.Wireframe
                         this.X = (float)value;
                         toReturn = true;
                         break;
+                    case "XOrigin":
                     case "X Origin":
                         this.XOrigin = (HorizontalAlignment)value;
                         toReturn = true;
                         break;
+                    case "XUnits":
                     case "X Units":
                         this.XUnits = UnitConverter.ConvertToGeneralUnit(value);
                         toReturn = true;
@@ -4660,10 +4672,12 @@ namespace Gum.Wireframe
                         this.Y = (float)value;
                         toReturn = true;
                         break;
+                    case "YOrigin":
                     case "Y Origin":
                         this.YOrigin = (VerticalAlignment)value;
                         toReturn = true;
                         break;
+                    case "YUnits":
                     case "Y Units":
 
                         this.YUnits = UnitConverter.ConvertToGeneralUnit(value);
@@ -4673,6 +4687,7 @@ namespace Gum.Wireframe
                         this.Wrap = (bool)value;
                         toReturn = true;
                         break;
+                    case "WrapsChildren":
                     case "Wraps Children":
                         this.WrapsChildren = (bool)value;
                         toReturn = true;
