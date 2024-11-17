@@ -98,6 +98,67 @@ child.X += 30;
 child.SetProperty("Text", "Hello world");
 ```
 
+A full Game1 class which loads a project might look like this:
+
+```csharp
+public class Game1 : Game
+{
+    private GraphicsDeviceManager _graphics;
+
+    // Gum renders and updates using a hierarchy. At least
+    // one object must have its AddToManagers method called.
+    // If not loading from-file, then the easiest way to do this
+    // is to create a ContainerRuntime and add it to the managers.
+    GraphicalUiElement Root;
+
+    public Game1()
+    {
+        _graphics = new GraphicsDeviceManager(this);
+        Content.RootDirectory = "Content";
+        IsMouseVisible = true;
+    }
+
+    protected override void Initialize()
+    {
+        SystemManagers.Default = new SystemManagers();
+        SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
+        FormsUtilities.InitializeDefaults();
+
+        var gumProject = GumProjectSave.Load("GumProject/GumProject.gumx");
+        ObjectFinder.Self.GumProjectSave = gumProject;
+        gumProject.Initialize();
+        FormsUtilities.RegisterFromFileFormRuntimeDefaults();
+
+        FileManager.RelativeDirectory = "Content/GumProject/";
+
+        // This assumes that your project has at least 1 screen
+        Root = gumProject.Screens.First().ToGraphicalUiElement(
+            SystemManagers.Default, addToManagers: true);
+
+        base.Initialize();
+    }
+
+    protected override void Update(GameTime gameTime)
+    {
+        if (IsActive)
+        {
+            FormsUtilities.Update(this, gameTime, Root);
+        }
+
+        SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
+        FormsUtilities.Update(this, gameTime, Root);
+        base.Update(gameTime);
+    }
+
+    protected override void Draw(GameTime gameTime)
+    {
+        GraphicsDevice.Clear(Color.CornflowerBlue);
+        SystemManagers.Default.Draw();
+        base.Draw(gameTime);
+    }
+}
+```
+
 ### Gum Projects in Different Folders
 
 The code above and most samples in the Gum repository assume a Gum project located in the Content folder. If you are placing your Gum project in a subfolder, you need to set the `FileManager.RelativeDirectory` to the sbufolder prior to calling `ToGraphicalUiElement`. For example:
