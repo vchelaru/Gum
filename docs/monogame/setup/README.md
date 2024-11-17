@@ -38,6 +38,10 @@ rectangle.AddToManagers(SystemManagers.Default, null);
 
 If everything is initialized correctly, you should see a white rectangle at the top-left of the screen.
 
+### Loading Gum Projects
+
+This page shows the minimum code needed to get Gum up and running in your project. If you want to load a Gum project created in the Gum tool, see the [Loading a Gum Project](../loading-.gumx-gum-project.md) page.
+
 ### Downloading the Gum Tool
 
 The Gum tool can be used to create Gum projects which can be loaded into your MonoGame project. To download and run the Gum tool, see the [Setup page](../../setup.md).
