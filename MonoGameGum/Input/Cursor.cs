@@ -90,6 +90,7 @@ namespace MonoGameGum.Input
         }
 
         public bool PrimaryDoubleClick { get; private set; }
+        public bool PrimaryDoublePush { get; private set; }
 
         // for now just return true, but we'll need to keep track of actual push/clicks eventually:
         public bool PrimaryClickNoSlide => PrimaryClick;
@@ -189,6 +190,7 @@ namespace MonoGameGum.Input
 
         public const float MaximumSecondsBetweenClickForDoubleClick = .25f;
         double mLastPrimaryClickTime = -999;
+        double mLastPrimaryPushTime = -999;
         double mLastSecondaryClickTime = -999;
         double mLastMiddleClickTime = -999;
 
@@ -208,6 +210,7 @@ namespace MonoGameGum.Input
             mLastFrameMouseState = _mouseState;
             _lastFrameTouchCollection = _touchCollection;
             PrimaryDoubleClick = false;
+            PrimaryDoublePush = false;
 
             LastX = X;
             LastY = Y;
@@ -249,6 +252,14 @@ namespace MonoGameGum.Input
             //    mPushedInWindow = IsInWindow;
             //}
 
+            if (PrimaryPush)
+            {
+                if (currentTime - mLastPrimaryPushTime < MaximumSecondsBetweenClickForDoubleClick)
+                {
+                    PrimaryDoublePush = true;
+                }
+                mLastPrimaryPushTime = currentTime;
+            }
 
             if (PrimaryClick)
             {

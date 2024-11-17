@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BehaviorSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Name>InputDeviceSelectionItemBehavior</Name>
+  <RequiredVariables />
+  <Category>
+    <Name>JoinedCategory</Name>
+    <IsSetRecursively>false</IsSetRecursively>
+    <State>
+      <Name>HasInputDevice</Name>
+    </State>
+    <State>
+      <Name>NoInputDevice</Name>
+    </State>
+  </Category>
+  <RequiredInstances />
+  <RequiredAnimations />
+</BehaviorSave>

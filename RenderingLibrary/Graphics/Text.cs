@@ -854,7 +854,11 @@ namespace RenderingLibrary.Graphics
                     {
                         startsWithNewline = word.StartsWith("\n");
 
-                        word = word.Substring(0, word.IndexOf('\n'));
+                        // Newline is an explicit character that the user might
+                        // enter in a textbox. We don't want to lose this character
+                        // becuse it can be deleted.
+                        //word = word.Substring(0, word.IndexOf('\n'));
+                        word = word.Substring(0, word.IndexOf('\n') + 1);
                         containsNewline = true;
                     }
 

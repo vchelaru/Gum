@@ -13,6 +13,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
 {
     public abstract class DefaultTextBoxBaseRuntime : InteractiveGue
     {
+        TextRuntime TextInstance;
         protected abstract string CategoryName { get; }
 
         public DefaultTextBoxBaseRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
@@ -25,8 +26,10 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 Background.Name = "Background";
                 var SelectionInstance = new ColoredRectangleRuntime();
                 SelectionInstance.Name = "SelectionInstance";
-                var TextInstance = new TextRuntime();
+                
+                TextInstance = new TextRuntime();
                 TextInstance.Name = "TextInstance";
+
                 var PlaceholderTextInstance = new TextRuntime();
                 PlaceholderTextInstance.Name = "PlaceholderTextInstance";
                 var FocusedIndicator = new ColoredRectangleRuntime();
@@ -61,7 +64,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
                 TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
                 TextInstance.Text = "";
-                TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+                TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
                 TextInstance.Width = 0f;
                 TextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
                 TextInstance.X = 4f;
@@ -77,7 +80,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 PlaceholderTextInstance.Height = -4f;
                 PlaceholderTextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
                 PlaceholderTextInstance.Text = "Text Placeholder";
-                PlaceholderTextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+                PlaceholderTextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
                 PlaceholderTextInstance.Width = -8f;
                 PlaceholderTextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
                 PlaceholderTextInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
@@ -111,6 +114,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
                 var textboxCategory = new Gum.DataTypes.Variables.StateSaveCategory();
                 textboxCategory.Name = CategoryName;
+                this.AddCategory(textboxCategory);
                 textboxCategory.States.Add(new()
                 {
                     Name = "Enabled",
@@ -179,6 +183,66 @@ namespace MonoGameGum.Forms.DefaultVisuals
                         {
                             Name = "Background.Color",
                             Value = new Microsoft.Xna.Framework.Color(130,130,130),
+                        }
+                    }
+                });
+
+
+                var lineModeCategory = new Gum.DataTypes.Variables.StateSaveCategory();
+                lineModeCategory.Name = "LineModeCategory";
+                this.AddCategory(lineModeCategory);
+                lineModeCategory.States.Add(new()
+                {
+                    Name = "Single",
+                    Variables = new()
+                    {
+                        new ()
+                        {
+                            Name = "SelectionInstance.Height",
+                            Value = -4f
+                        },
+                        new ()
+                        {
+                            Name = "SelectionInstance.HeightUnits",
+                            Value = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer
+                        },
+                        new()
+                        {
+                            Name = "TextInstance.Width",
+                            Value = 0f
+                        },
+                        new()
+                        {
+                            Name = "TextInstance.WidthUnits",
+                            Value = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren
+                        }
+                    }
+                });
+
+                lineModeCategory.States.Add(new()
+                {
+                    Name = "Multi",
+                    Variables = new()
+                    {
+                        new ()
+                        {
+                            Name = "SelectionInstance.Height",
+                            Value = 20f
+                        },
+                        new ()
+                        {
+                            Name = "SelectionInstance.HeightUnits",
+                            Value = global::Gum.DataTypes.DimensionUnitType.Absolute
+                        },
+                        new()
+                        {
+                            Name = "TextInstance.Width",
+                            Value = -8f
+                        },
+                        new()
+                        {
+                            Name = "TextInstance.WidthUnits",
+                            Value = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer
                         }
                     }
                 });

@@ -320,7 +320,7 @@ namespace Gum.Commands
 
         public void AddBehavior()
         {
-            if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
+            if (GumState.Self.ProjectState.NeedsToSaveProject)
             {
                 MessageBox.Show("You must first save the project before adding a new component");
             }

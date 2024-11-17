@@ -275,5 +275,14 @@ namespace RenderingLibrary.Graphics
         {
             return Name + " (SolidRectangle)";
         }
+
+        public SolidRectangle Clone()
+        {
+            var newInstance = (SolidRectangle)this.MemberwiseClone();
+            newInstance.mParent = null;
+            newInstance.mChildren = new ObservableCollection<IRenderableIpso>();
+
+            return newInstance;
+        }
     }
 }

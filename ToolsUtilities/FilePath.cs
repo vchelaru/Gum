@@ -143,6 +143,10 @@ namespace ToolsUtilities
             return otherFilePath.Standardized.StartsWith(this.Standardized) && otherFilePath != this;
         }
 
+        /// <summary>
+        /// Returns a new FilePath with no extension.
+        /// </summary>
+        /// <returns>The new FilePath which has its extension removed.</returns>
         public FilePath RemoveExtension()
         {
             var fileString = FileManager.RemoveExtension(Original);
@@ -221,7 +225,7 @@ namespace ToolsUtilities
 
         public string RelativeTo(FilePath otherFilePath)
         {
-            return FileManager.MakeRelative(this.FullPath, otherFilePath.FullPath);
+            return FileManager.MakeRelative(this.FullPath, otherFilePath.FullPath, preserveCase:true);
         }
     }
 }

@@ -39,7 +39,11 @@ namespace Gum.ToolCommands
         #endregion
 
         #region Screens
-
+        /// <summary>
+        /// Creates a new Screen using the argument as the name. This saves the newly created screen to disk and saves the project.
+        /// </summary>
+        /// <param name="screenName"></param>
+        /// <returns></returns>
         public ScreenSave AddScreen(string screenName)
         {
             ScreenSave screenSave = new ScreenSave();

@@ -924,6 +924,15 @@ namespace RenderingLibrary.Graphics
 
 
         void IRenderable.PreRender() { }
+
+        public NineSlice Clone()
+        {
+            var newInstance = (NineSlice)this.MemberwiseClone();
+            newInstance.mParent = null;
+            newInstance.mChildren = new ObservableCollection<IRenderableIpso>();
+
+            return newInstance;
+        }
         #endregion
     }
 }

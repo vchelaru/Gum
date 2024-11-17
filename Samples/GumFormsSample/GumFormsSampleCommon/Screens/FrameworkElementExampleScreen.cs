@@ -119,7 +119,7 @@ namespace GumFormsSample.Screens
 
         private void CreateColumn2Ui(GraphicalUiElement root)
         {
-            var currentY = 20;
+            var currentY = 20f;
 
             var scrollViewer = new ScrollViewer();
             root.Children.Add(scrollViewer.Visual);
@@ -162,15 +162,16 @@ namespace GumFormsSample.Screens
 
             currentY += 40;
 
-            var textBox2 = new TextBox();
-            root.Children.Add(textBox2.Visual);
-            textBox2.X = 260;
-            textBox2.Y = currentY;
-            textBox2.Width = 200;
-            textBox2.Height = 34;
-            textBox2.Placeholder = "Placeholder Text...";
+            var wrappedTextBox = new TextBox();
+            root.Children.Add(wrappedTextBox.Visual);
+            wrappedTextBox.X = 260;
+            wrappedTextBox.Y = currentY;
+            wrappedTextBox.Width = 200;
+            wrappedTextBox.TextWrapping = MonoGameGum.Forms.TextWrapping.Wrap;
+            wrappedTextBox.Height = 140;
+            wrappedTextBox.Placeholder = "Placeholder Text...";
 
-            currentY += 40;
+            currentY += wrappedTextBox.Height + 40;
 
             var passwordBox = new PasswordBox();
             root.Children.Add(passwordBox.Visual);
