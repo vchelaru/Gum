@@ -11,14 +11,18 @@ using Gum.Extensions;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Plugins.VariableGrid;
+using Gum.ToolCommands;
 
 namespace Gum.Commands
 {
     public class GuiCommands
     {
+        #region FieldsProperties
         FlowLayoutPanel mFlowLayoutPanel;
 
         MainPanelControl mainPanelControl;
+
+        #endregion
 
         internal void Initialize(MainWindow mainWindow, MainPanelControl mainPanelControl)
         {
@@ -44,6 +48,8 @@ namespace Gum.Commands
             PropertyGridManager.Self.RefreshVariablesDataGridValues();
         }
 
+        #region Add Tab Controls
+
         public PluginTab AddControl(System.Windows.FrameworkElement control, string tabTitle, TabLocation tabLocation = TabLocation.CenterBottom)
         {
             CheckForInitialization();
@@ -55,6 +61,7 @@ namespace Gum.Commands
             CheckForInitialization();
             return mainPanelControl.AddWinformsControl(control, tabTitle, tabLocation);
         }
+
 
         private void CheckForInitialization()
         {
@@ -68,6 +75,7 @@ namespace Gum.Commands
         {
             return mainPanelControl.AddWinformsControl(control, tabTitle, tabLocation);
         }
+        #endregion
         
         public void PositionWindowByCursor(System.Windows.Window window)
         {
@@ -124,12 +132,33 @@ namespace Gum.Commands
 
         public void RefreshElementTreeView(ElementSave element) => ElementTreeViewManager.Self.RefreshUi(element);
         public void RefreshElementTreeView(BehaviorSave behavior) => ElementTreeViewManager.Self.RefreshUi(behavior);
-        
+
+        #region Show/Hide Methods
 
         public void ShowMessage(string message)
         {
             MessageBox.Show(message);
         }
+
+        public System.Windows.MessageBoxResult ShowYesNoMessageBox(string message, string caption = "Confirm", Action yesAction = null, Action noAction = null)
+        {
+            caption ??= "Confirm";
+            var result = System.Windows.MessageBoxResult.None;
+
+            result = System.Windows.MessageBox.Show(message, caption, System.Windows.MessageBoxButton.YesNo);
+
+            if (result == System.Windows.MessageBoxResult.Yes)
+            {
+                yesAction?.Invoke();
+            }
+            else if (result == System.Windows.MessageBoxResult.No)
+            {
+                noAction?.Invoke();
+            }
+
+            return result;
+        }
+
 
         public System.Drawing.Point GetMousePosition()
         {
@@ -331,6 +360,8 @@ namespace Gum.Commands
                 }
             }
         }
+
+        #endregion
 
         private void ApplyChangesToInstances(ElementSave element, string oldName, string newName, string type)
         {

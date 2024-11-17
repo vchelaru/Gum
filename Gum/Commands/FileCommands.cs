@@ -56,12 +56,14 @@ namespace Gum.Commands
             WireframeObjectManager.Self.RefreshAll(true);
         }
 
-        public void TryAutoSaveProject(bool forceSaveContainedElements = false)
+        public bool TryAutoSaveProject(bool forceSaveContainedElements = false)
         {
             if (ProjectManager.Self.GeneralSettingsFile.AutoSave && !ProjectManager.Self.HaveErrorsOccurred)
             {
                 ForceSaveProject(forceSaveContainedElements);
+                return true;
             }
+            return false;
         }
 
         internal void ForceSaveProject(bool forceSaveContainedElements = false)

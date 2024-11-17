@@ -232,10 +232,12 @@ namespace Gum.DataTypes
             Screens = new List<ScreenSave>();
             Components = new List<ComponentSave>();
             StandardElements = new List<StandardElementSave>();
+            Behaviors = new List<BehaviorSave>();
 
             ScreenReferences = new List<ElementReference>();
             ComponentReferences = new List<ElementReference>();
             StandardElementReferences = new List<ElementReference>();
+            BehaviorReferences = new List<BehaviorReference>();
         }
 
         public static GumProjectSave Load(string fileName)
