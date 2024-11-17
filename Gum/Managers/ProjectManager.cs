@@ -719,6 +719,27 @@ namespace Gum
 
                 if (result == DialogResult.OK)
                 {
+                    FilePath desiredLocation = openFileDialog.FileName;
+                    var directory = desiredLocation.GetDirectoryContainingThis();
+
+                    if(directory.Exists())
+                    {
+                        var files = System.IO.Directory.GetFiles(directory.FullPath);
+                        var directories = System.IO.Directory.GetDirectories(directory.FullPath);
+
+                        if(files.Length > 0 || directories.Length > 0)
+                        {
+                            var areYouSure = GumCommands.Self.GuiCommands.ShowYesNoMessageBox(
+                                $"The location\n\n{directory}\n\nis not empty. It's best to save new Gum projects in " +
+                                $"an empty folder. Do you want to continue?");
+
+                            result = areYouSure == System.Windows.MessageBoxResult.Yes ? DialogResult.OK : DialogResult.Cancel;
+                        }
+                    }
+                }
+
+                if(result == DialogResult.OK)
+                { 
                     GumProjectSave.FullFileName = openFileDialog.FileName;
                     shouldSave = true;
                     isProjectNew = true;
