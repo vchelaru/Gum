@@ -4,42 +4,6 @@
   <State>
     <Name>Default</Name>
     <Variable>
-      <Type>string</Type>
-      <Name>AudioSettingsButton.ButtonDisplayText</Name>
-      <Value xsi:type="xsd:string">Audio Settings</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>IconCategory</Type>
-      <Name>AudioSettingsButton.ButtonIcon</Name>
-      <Value xsi:type="xsd:string">Music</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>AudioSettingsButton.Parent</Name>
-      <Value xsi:type="xsd:string">ListContainer</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>AudioSettingsButton.Width</Name>
-      <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>AudioSettingsButton.Width Units</Name>
-      <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>AudioSettingsButton.Y</Name>
-      <Value xsi:type="xsd:float">8</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>ColorCategory</Type>
       <Name>Background.ColorCategoryState</Name>
       <Value xsi:type="xsd:string">Primary</Value>
@@ -208,30 +172,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>string</Type>
-      <Name>ButtonConfirmInstance1.Parent</Name>
-      <Value xsi:type="xsd:string">MarginContainer</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>ButtonConfirmInstance1.X Origin</Name>
-      <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>ButtonConfirmInstance1.X Units</Name>
-      <Value xsi:type="xsd:int">4</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ButtonConfirmInstance1.Y</Name>
-      <Value xsi:type="xsd:float">16</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>ButtonContainer.Height</Name>
       <Value xsi:type="xsd:float">32</Value>
@@ -376,45 +316,9 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>string</Type>
-      <Name>CreditsButton.ButtonDisplayText</Name>
-      <Value xsi:type="xsd:string">Credits</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>IconCategory</Type>
-      <Name>CreditsButton.ButtonIcon</Name>
-      <Value xsi:type="xsd:string">Info</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>CreditsButton.Parent</Name>
-      <Value xsi:type="xsd:string">ListContainer</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>CreditsButton.Width</Name>
-      <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>CreditsButton.Width Units</Name>
-      <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>CreditsButton.Y</Name>
-      <Value xsi:type="xsd:float">8</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>DemoDialog.Height</Name>
-      <Value xsi:type="xsd:float">199</Value>
+      <Value xsi:type="xsd:float">320</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -474,7 +378,7 @@
     <Variable>
       <Type>float</Type>
       <Name>DemoHud.X</Name>
-      <Value xsi:type="xsd:float">427</Value>
+      <Value xsi:type="xsd:float">426</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -492,7 +396,7 @@
     <Variable>
       <Type>float</Type>
       <Name>DemoHud.Y</Name>
-      <Value xsi:type="xsd:float">239</Value>
+      <Value xsi:type="xsd:float">346</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -535,30 +439,6 @@
       <Type>float</Type>
       <Name>DemoSettingsMenu.Y</Name>
       <Value xsi:type="xsd:float">12</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>DemoTabbedMenu.Height</Name>
-      <Value xsi:type="xsd:float">256</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>DemoTabbedMenu.Width</Name>
-      <Value xsi:type="xsd:float">467</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>DemoTabbedMenu.X</Name>
-      <Value xsi:type="xsd:float">426</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>DemoTabbedMenu.Y</Name>
-      <Value xsi:type="xsd:float">452</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -618,7 +498,7 @@
     <Variable>
       <Type>float</Type>
       <Name>DialogBoxInstance.Y</Name>
-      <Value xsi:type="xsd:float">264</Value>
+      <Value xsi:type="xsd:float">376</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -839,42 +719,6 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>ExitButton.ButtonDisplayText</Name>
-      <Value xsi:type="xsd:string">Exit</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>IconCategory</Type>
-      <Name>ExitButton.ButtonIcon</Name>
-      <Value xsi:type="xsd:string">Power</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>ExitButton.Parent</Name>
-      <Value xsi:type="xsd:string">ListContainer</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ExitButton.Width</Name>
-      <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>ExitButton.Width Units</Name>
-      <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ExitButton.Y</Name>
-      <Value xsi:type="xsd:float">8</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
       <Name>FullScreenCheckbox.CheckboxDisplayText</Name>
       <Value xsi:type="xsd:string">Run Fullscreen</Value>
       <SetsValue>true</SetsValue>
@@ -1075,78 +919,6 @@
       <Type>float</Type>
       <Name>LabelInstance.Y</Name>
       <Value xsi:type="xsd:float">8</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>ChildrenLayout</Type>
-      <Name>ListContainer.Children Layout</Name>
-      <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ListContainer.Height</Name>
-      <Value xsi:type="xsd:float">-45</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>ListContainer.Height Units</Name>
-      <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>ListContainer.Parent</Name>
-      <Value xsi:type="xsd:string">TabMarginContainer</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ListContainer.Width</Name>
-      <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>ListContainer.Width Units</Name>
-      <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ListContainer.X</Name>
-      <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>ListContainer.X Origin</Name>
-      <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>ListContainer.X Units</Name>
-      <Value xsi:type="xsd:int">6</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>ListContainer.Y</Name>
-      <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>ListContainer.Y Origin</Name>
-      <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>ListContainer.Y Units</Name>
-      <Value xsi:type="xsd:int">5</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -1613,36 +1385,6 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>PlayButton.ButtonDisplayText</Name>
-      <Value xsi:type="xsd:string">Start Game</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>IconCategory</Type>
-      <Name>PlayButton.ButtonIcon</Name>
-      <Value xsi:type="xsd:string">Play</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>PlayButton.Parent</Name>
-      <Value xsi:type="xsd:string">ListContainer</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>PlayButton.Width</Name>
-      <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>PlayButton.Width Units</Name>
-      <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
       <Name>RadioButtonInstance.Parent</Name>
       <Value xsi:type="xsd:string">MenuItems</Value>
       <SetsValue>true</SetsValue>
@@ -1817,7 +1559,7 @@
     <Variable>
       <Type>float</Type>
       <Name>ShowDialogButton.Y</Name>
-      <Value xsi:type="xsd:float">236</Value>
+      <Value xsi:type="xsd:float">348</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -1917,246 +1659,6 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>Tab1.Parent</Name>
-      <Value xsi:type="xsd:string">TabMarginContainer</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Tab1.TabDisplayText</Name>
-      <Value xsi:type="xsd:string">Settings</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Tab1.X</Name>
-      <Value xsi:type="xsd:float">10</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>Tab1.X Origin</Name>
-      <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>Tab1.X Units</Name>
-      <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Tab1.Y</Name>
-      <Value xsi:type="xsd:float">36</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Tab2.Parent</Name>
-      <Value xsi:type="xsd:string">TabMarginContainer</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Tab2.TabDisplayText</Name>
-      <Value xsi:type="xsd:string">Tab 2</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Tab2.X</Name>
-      <Value xsi:type="xsd:float">71</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>Tab2.X Origin</Name>
-      <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>Tab2.X Units</Name>
-      <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Tab2.Y</Name>
-      <Value xsi:type="xsd:float">36</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Tab3.Parent</Name>
-      <Value xsi:type="xsd:string">TabMarginContainer</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Tab3.TabDisplayText</Name>
-      <Value xsi:type="xsd:string">Tab3</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Tab3.X</Name>
-      <Value xsi:type="xsd:float">117</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>Tab3.X Origin</Name>
-      <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>Tab3.X Units</Name>
-      <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Tab3.Y</Name>
-      <Value xsi:type="xsd:float">36</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TabHeaderDivider.Parent</Name>
-      <Value xsi:type="xsd:string">TabMarginContainer</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TabHeaderDivider.Width</Name>
-      <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>TabHeaderDivider.Width Units</Name>
-      <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TabHeaderDivider.X</Name>
-      <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TabHeaderDivider.Y</Name>
-      <Value xsi:type="xsd:float">35</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TabMarginContainer.Height</Name>
-      <Value xsi:type="xsd:float">-16</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>TabMarginContainer.Height Units</Name>
-      <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TabMarginContainer.Parent</Name>
-      <Value xsi:type="xsd:string">DemoTabbedMenu</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TabMarginContainer.Width</Name>
-      <Value xsi:type="xsd:float">-16</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>TabMarginContainer.Width Units</Name>
-      <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TabMarginContainer.X</Name>
-      <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>TabMarginContainer.X Origin</Name>
-      <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>TabMarginContainer.X Units</Name>
-      <Value xsi:type="xsd:int">6</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TabMarginContainer.Y</Name>
-      <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>TabMarginContainer.Y Origin</Name>
-      <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>TabMarginContainer.Y Units</Name>
-      <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>TabMenuBackground.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">Primary</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TabMenuBackground.Parent</Name>
-      <Value xsi:type="xsd:string">DemoTabbedMenu</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>TabMenuBackground.StyleCategoryState</Name>
-      <Value xsi:type="xsd:string">Panel</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TabMenuClose.Parent</Name>
-      <Value xsi:type="xsd:string">TabMarginContainer</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>TabMenuClose.X Origin</Name>
-      <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>TabMenuClose.X Units</Name>
-      <Value xsi:type="xsd:int">4</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
       <Name>TextBoxInstance.Parent</Name>
       <Value xsi:type="xsd:string">MarginContainer</Value>
       <SetsValue>true</SetsValue>
@@ -2200,6 +1702,48 @@
     <Variable>
       <Type>float</Type>
       <Name>TextBoxInstance1.Y</Name>
+      <Value xsi:type="xsd:float">7</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>MultiLineTextBox.Height</Name>
+      <Value xsi:type="xsd:float">174</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>LineModeCategory</Type>
+      <Name>MultiLineTextBox.LineModeCategoryState</Name>
+      <Value xsi:type="xsd:string">Multi</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>MultiLineTextBox.Parent</Name>
+      <Value xsi:type="xsd:string">MarginContainer</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>MultiLineTextBox.PlaceholderText</Name>
+      <Value xsi:type="xsd:string">Multi-line text box</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>MultiLineTextBox.Width</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>MultiLineTextBox.Width Units</Name>
+      <Value xsi:type="xsd:int">2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>MultiLineTextBox.Y</Name>
       <Value xsi:type="xsd:float">7</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -2297,42 +1841,6 @@
       <Type>float</Type>
       <Name>TreeViewInstance.Y</Name>
       <Value xsi:type="xsd:float">50</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>VideoSettingsButton.ButtonDisplayText</Name>
-      <Value xsi:type="xsd:string">Video Settings</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>IconCategory</Type>
-      <Name>VideoSettingsButton.ButtonIcon</Name>
-      <Value xsi:type="xsd:string">Monitor</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>VideoSettingsButton.Parent</Name>
-      <Value xsi:type="xsd:string">ListContainer</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>VideoSettingsButton.Width</Name>
-      <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>VideoSettingsButton.Width Units</Name>
-      <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>VideoSettingsButton.Y</Name>
-      <Value xsi:type="xsd:float">8</Value>
       <SetsValue>true</SetsValue>
     </Variable>
   </State>
@@ -2532,8 +2040,8 @@
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>
-    <Name>ButtonConfirmInstance1</Name>
-    <BaseType>Controls/ButtonConfirm</BaseType>
+    <Name>MultiLineTextBox</Name>
+    <BaseType>Controls/TextBox</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>
@@ -2609,76 +2117,6 @@
   <Instance>
     <Name>ContainerInstance</Name>
     <BaseType>Container</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>DemoTabbedMenu</Name>
-    <BaseType>Container</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>TabMenuBackground</Name>
-    <BaseType>NineSlice</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>TabMarginContainer</Name>
-    <BaseType>Container</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>TabMenuClose</Name>
-    <BaseType>Controls/ButtonClose</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>TabHeaderDivider</Name>
-    <BaseType>Elements/DividerHorizontal</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>ListContainer</Name>
-    <BaseType>Container</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>PlayButton</Name>
-    <BaseType>Controls/ButtonStandardIcon</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>VideoSettingsButton</Name>
-    <BaseType>Controls/ButtonStandardIcon</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>AudioSettingsButton</Name>
-    <BaseType>Controls/ButtonStandardIcon</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>CreditsButton</Name>
-    <BaseType>Controls/ButtonStandardIcon</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>ExitButton</Name>
-    <BaseType>Controls/ButtonStandardIcon</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Tab3</Name>
-    <BaseType>Controls/ButtonTab</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Tab2</Name>
-    <BaseType>Controls/ButtonTab</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Tab1</Name>
-    <BaseType>Controls/ButtonTab</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>
