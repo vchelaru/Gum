@@ -183,7 +183,7 @@ namespace MonoGameGum.Forms.Controls.Primitives
 #if DEBUG
             if(trackLocal == null)
             {
-                throw new Exception("Could not find a child named TrackInstance");
+                throw new Exception($"Could not find a child named TrackInstance when creating a {this.GetType()}");
             }
             else if(!(trackLocal is InteractiveGue))
             {
