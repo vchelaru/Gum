@@ -6,7 +6,8 @@
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.KNI</PackageId>
-		<Version>2024.11.12.1</Version>
+		<Version>2024.11.17.1</Version>
+
 
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 
@@ -48,6 +49,7 @@
 		<Compile Include="..\..\RenderingLibrary\Graphics\ImageData.cs" Link="RenderingLibrary\ImageData.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\NineSlice.cs" Link="Renderables\NineSlice.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\NineSliceExtensions.cs" Link="Renderables\NineSliceExtensions.cs" />
+		<Compile Include="..\..\RenderingLibrary\Graphics\RenderableCloneLogic.cs" Link="RenderingLibrary\RenderableCloneLogic.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Renderer.cs" Link="RenderingLibrary\Renderer.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\Sprite.cs" Link="Renderables\Sprite.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\SpriteBatchStack.cs" Link="RenderingLibrary\SpriteBatchStack.cs" />
@@ -84,6 +86,9 @@
 		<Compile Remove="..\obj\Debug\net6.0\KniGum.GlobalUsings.g.cs" />
 		<Compile Remove="..\obj\Debug\net6.0\MonoGameGum.AssemblyInfo.cs" />
 		<Compile Remove="..\obj\Debug\net6.0\MonoGameGum.GlobalUsings.g.cs" />
+		<Compile Remove="..\obj\Release\net6.0\.NETCoreApp,Version=v6.0.AssemblyAttributes.cs" />
+		<Compile Remove="..\obj\Release\net6.0\MonoGameGum.AssemblyInfo.cs" />
+		<Compile Remove="..\obj\Release\net6.0\MonoGameGum.GlobalUsings.g.cs" />
 		<Compile Remove="..\FnaGum\**" />
 	</ItemGroup>
 
