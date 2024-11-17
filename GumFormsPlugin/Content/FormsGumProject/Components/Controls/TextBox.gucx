@@ -565,20 +565,38 @@
         <SetsValue>true</SetsValue>
       </Variable>
       <Variable>
+        <Type>float</Type>
+        <Name>TextInstance.Width</Name>
+        <Value xsi:type="xsd:float">0</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
         <Type>DimensionUnitType</Type>
         <Name>TextInstance.Width Units</Name>
         <Value xsi:type="xsd:int">4</Value>
         <SetsValue>true</SetsValue>
       </Variable>
       <Variable>
-        <Type>float</Type>
-        <Name>TextInstance.Width</Name>
-        <Value xsi:type="xsd:float">0</Value>
+        <Type>VerticalAlignment</Type>
+        <Name>PlaceholderTextInstance.VerticalAlignment</Name>
+        <Value xsi:type="xsd:int">1</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>VerticalAlignment</Type>
+        <Name>TextInstance.VerticalAlignment</Name>
+        <Value xsi:type="xsd:int">1</Value>
         <SetsValue>true</SetsValue>
       </Variable>
     </State>
     <State>
       <Name>Multi</Name>
+      <Variable>
+        <Type>VerticalAlignment</Type>
+        <Name>PlaceholderTextInstance.VerticalAlignment</Name>
+        <Value xsi:type="xsd:int">0</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
       <Variable>
         <Type>float</Type>
         <Name>SelectionInstance.Height</Name>
@@ -590,6 +608,12 @@
         <Name>SelectionInstance.Height Units</Name>
         <Value xsi:type="xsd:int">0</Value>
         <Category>Dimensions</Category>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>VerticalAlignment</Type>
+        <Name>TextInstance.VerticalAlignment</Name>
+        <Value xsi:type="xsd:int">0</Value>
         <SetsValue>true</SetsValue>
       </Variable>
       <Variable>

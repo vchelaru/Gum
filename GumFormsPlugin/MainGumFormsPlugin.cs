@@ -20,6 +20,9 @@ internal class MainGumFormsPlugin : PluginBase
 {
     public override string FriendlyName => "Gum Forms Plugin";
 
+    // for now, we make this false, we can add screens later:
+    bool saveScreens = false;
+
     public override Version Version => new Version(1, 0);
 
     public override bool ShutDown(PluginShutDownReason shutDownReason)
@@ -108,7 +111,7 @@ internal class MainGumFormsPlugin : PluginBase
 
             var isGumx = extension == "gumx";
 
-            var shouldSave = isGumx == false;
+            var shouldSave = isGumx == false && extension != "gusx";
 
             if (shouldSave)
             {
@@ -136,6 +139,15 @@ internal class MainGumFormsPlugin : PluginBase
         foreach (var resourceName in resourcesToSave)
         {
             var extension = FileManager.GetExtension(resourceName);
+
+            if(extension == "gusx" && saveScreens == false)
+            {
+                continue;
+            }
+            if(extension == "gumx")
+            {
+                continue;
+            }
 
             var stripped = resourceName.Substring(resourcePrefix.Length);
 
