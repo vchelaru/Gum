@@ -70,61 +70,61 @@
     </Variable>
     <Variable>
       <Type>ColorCategory</Type>
-      <Name>ThumbContainer.ColorCategoryState</Name>
+      <Name>TrackInstance.ColorCategoryState</Name>
       <Value xsi:type="xsd:string">Gray</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>float</Type>
-      <Name>ThumbContainer.Height</Name>
+      <Name>TrackInstance.Height</Name>
       <Value xsi:type="xsd:float">-48</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>ThumbContainer.Height Units</Name>
+      <Name>TrackInstance.Height Units</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>StyleCategory</Type>
-      <Name>ThumbContainer.StyleCategoryState</Name>
+      <Name>TrackInstance.StyleCategoryState</Name>
       <Value xsi:type="xsd:string">Solid</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>float</Type>
-      <Name>ThumbContainer.Width</Name>
+      <Name>TrackInstance.Width</Name>
       <Value xsi:type="xsd:float">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>ThumbContainer.Width Units</Name>
+      <Name>TrackInstance.Width Units</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>ThumbContainer.X Origin</Name>
+      <Name>TrackInstance.X Origin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>ThumbContainer.X Units</Name>
+      <Name>TrackInstance.X Units</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>ThumbContainer.Y Origin</Name>
+      <Name>TrackInstance.Y Origin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>ThumbContainer.Y Units</Name>
+      <Name>TrackInstance.Y Units</Name>
       <Value xsi:type="xsd:int">7</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -137,7 +137,7 @@
     <Variable>
       <Type>string</Type>
       <Name>ThumbInstance.Parent</Name>
-      <Value xsi:type="xsd:string">ThumbContainer</Value>
+      <Value xsi:type="xsd:string">TrackInstance</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -197,7 +197,7 @@
     <Variable>
       <Type>string</Type>
       <Name>TrackBackground.Parent</Name>
-      <Value xsi:type="xsd:string">ThumbContainer</Value>
+      <Value xsi:type="xsd:string">TrackInstance</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -312,7 +312,7 @@
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>
-    <Name>ThumbContainer</Name>
+    <Name>TrackInstance</Name>
     <BaseType>Container</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
