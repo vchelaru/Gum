@@ -559,7 +559,14 @@ namespace Gum.Wireframe
         {
             // Text can be rendered on multiple lines. This can happen due to explicit newline characters, or by automatic line wrapping.
             // When line indexes are counted, newlines are not included. Therefore, we need to remove newlines here so that indexes match up.
-            var bbCodeNoNewlines = bbcode?.Replace("\n", "");
+            var bbCodeNoNewlines = 
+                // update November 18, 2024
+                // We now do include newline
+                // characters becuase those can
+                // be explicitly added for textboxes
+                // with multiple lines:
+                //bbcode?.Replace("\n", "");
+            bbcode;
 
             var resultsNoNewlines = BbCodeParser.Parse(bbCodeNoNewlines, Tags);
             var resultsWithNewlines = BbCodeParser.Parse(bbcode, Tags);

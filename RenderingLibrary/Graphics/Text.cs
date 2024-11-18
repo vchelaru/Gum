@@ -1173,7 +1173,7 @@ namespace RenderingLibrary.Graphics
 
         List<string> lineByLineList = new List<string>() { "" };
 
-        class StyledSubstring
+        public class StyledSubstring
         {
             public List<InlineVariable> Variables = new List<InlineVariable>();
             public string Substring;
@@ -1331,7 +1331,8 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        private List<StyledSubstring> GetStyledSubstrings(int startOfLineIndex, string lineOfText, Color color)
+        // made public for auto tests:
+        public List<StyledSubstring> GetStyledSubstrings(int startOfLineIndex, string lineOfText, Color color)
         {
             List<StyledSubstring> substrings = new List<StyledSubstring>();
             int currentSubstringStart = 0;
