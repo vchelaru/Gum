@@ -6,162 +6,161 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MonoGameGum.Forms.Controls
+namespace MonoGameGum.Forms.Controls;
+
+public class ToggleButton : ButtonBase
 {
-    public class ToggleButton : ButtonBase
+    #region Fields/Properties
+
+    public bool IsThreeState { get; set; }
+
+    private bool? isChecked = false;
+
+    public bool? IsChecked
     {
-        #region Fields/Properties
-
-        public bool IsThreeState { get; set; }
-
-        private bool? isChecked = false;
-
-        public bool? IsChecked
+        get
         {
-            get
+            return isChecked;
+        }
+        set
+        {
+            if (isChecked != value)
             {
-                return isChecked;
-            }
-            set
-            {
-                if (isChecked != value)
+                isChecked = value;
+                UpdateState();
+
+                if (isChecked == true)
                 {
-                    isChecked = value;
-                    UpdateState();
-
-                    if (isChecked == true)
-                    {
-                        OnChecked();
-                        Checked?.Invoke(this, null);
-                    }
-                    else if (isChecked == false)
-                    {
-                        Unchecked?.Invoke(this, null);
-                    }
-                    else if (isChecked == null)
-                    {
-                        Indeterminate?.Invoke(this, null);
-                    }
-
-                    //PushValueToViewModel();
+                    OnChecked();
+                    Checked?.Invoke(this, null);
                 }
+                else if (isChecked == false)
+                {
+                    Unchecked?.Invoke(this, null);
+                }
+                else if (isChecked == null)
+                {
+                    Indeterminate?.Invoke(this, null);
+                }
+
+                //PushValueToViewModel();
             }
         }
+    }
 
-        #endregion
+    #endregion
 
-        #region Events
-        /// <summary>
-        /// Event raised when the IsChecked value is set to true. Seperate events exist for Indeterminate and Unchecked.
-        /// </summary>
-        /// <remarks>
-        /// The Checked/Indeterminate/Unchecked event pattern follows wpf. For more info, see:
-        /// https://stackoverflow.com/questions/5574613/separate-events-for-checked-and-unchecked-state-of-wpf-checkbox-why
-        /// </remarks>
-        public event EventHandler Checked;
+    #region Events
+    /// <summary>
+    /// Event raised when the IsChecked value is set to true. Seperate events exist for Indeterminate and Unchecked.
+    /// </summary>
+    /// <remarks>
+    /// The Checked/Indeterminate/Unchecked event pattern follows wpf. For more info, see:
+    /// https://stackoverflow.com/questions/5574613/separate-events-for-checked-and-unchecked-state-of-wpf-checkbox-why
+    /// </remarks>
+    public event EventHandler Checked;
 
-        /// <summary>
-        /// Event raised when the IsChecked value is set to null.
-        /// </summary>
-        public event EventHandler Indeterminate;
+    /// <summary>
+    /// Event raised when the IsChecked value is set to null.
+    /// </summary>
+    public event EventHandler Indeterminate;
 
-        /// <summary>
-        /// Event raised when the IsChecked value is set to false;
-        /// </summary>
-        public event EventHandler Unchecked;
+    /// <summary>
+    /// Event raised when the IsChecked value is set to false;
+    /// </summary>
+    public event EventHandler Unchecked;
 
-        #endregion
+    #endregion
 
-        #region Initialize
+    #region Initialize
 
-        public ToggleButton() : base()
+    public ToggleButton() : base()
+    {
+        IsChecked = false;
+    }
+
+    public ToggleButton(InteractiveGue visual) : base(visual)
+    {
+        IsChecked = false;
+    }
+
+    protected override void ReactToVisualChanged()
+    {
+        base.ReactToVisualChanged();
+
+        // This forces the initial state to be correct, making sure the button is unchecked
+        UpdateState();
+    }
+
+    #endregion
+
+    #region Update To Methods
+
+    public override void UpdateState()
+    {
+        var cursor = FrameworkElement.MainCursor;
+
+        var isTouchScreen = false;
+
+        if (IsEnabled == false)
         {
-            IsChecked = false;
+            SetPropertyConsideringOn("Disabled");
         }
-
-        public ToggleButton(InteractiveGue visual) : base(visual)
+        //else if (HasFocus)
+        //{
+        //}
+        else if (GetIfIsOnThisOrChildVisual(cursor))
         {
-            IsChecked = false;
-        }
-
-        protected override void ReactToVisualChanged()
-        {
-            base.ReactToVisualChanged();
-
-            // This forces the initial state to be correct, making sure the button is unchecked
-            UpdateState();
-        }
-
-        #endregion
-
-        #region Update To Methods
-
-        public override void UpdateState()
-        {
-            var cursor = FrameworkElement.MainCursor;
-
-            var isTouchScreen = false;
-
-            if (IsEnabled == false)
+            if (cursor.WindowPushed == Visual && cursor.PrimaryDown)
             {
-                SetPropertyConsideringOn("Disabled");
+                SetPropertyConsideringOn("Pushed");
             }
-            //else if (HasFocus)
-            //{
-            //}
-            else if (GetIfIsOnThisOrChildVisual(cursor))
+            else if (!isTouchScreen)
             {
-                if (cursor.WindowPushed == Visual && cursor.PrimaryDown)
-                {
-                    SetPropertyConsideringOn("Pushed");
-                }
-                else if (!isTouchScreen)
-                {
-                    SetPropertyConsideringOn("Highlighted");
-                }
-                else
-                {
-                    SetPropertyConsideringOn("Enabled");
-                }
+                SetPropertyConsideringOn("Highlighted");
             }
             else
             {
                 SetPropertyConsideringOn("Enabled");
             }
         }
-
-        private void SetPropertyConsideringOn(string stateName)
+        else
         {
-            if (isChecked == true)
-            {
-                stateName += "On";
-            }
-            else
-            {
-                stateName += "Off";
-            }
-            Visual.SetProperty("ToggleCategoryState", stateName);
-
+            SetPropertyConsideringOn("Enabled");
         }
+    }
 
-        #endregion
-
-        protected virtual void OnChecked()
+    private void SetPropertyConsideringOn(string stateName)
+    {
+        if (isChecked == true)
         {
-
+            stateName += "On";
         }
-
-        protected override void OnClick()
+        else
         {
-            if (IsChecked == true)
-            {
-                IsChecked = false;
-            }
-            else // false or indeterminte
-            {
-                IsChecked = true;
-            }
+            stateName += "Off";
         }
+        Visual.SetProperty("ToggleCategoryState", stateName);
 
     }
+
+    #endregion
+
+    protected virtual void OnChecked()
+    {
+
+    }
+
+    protected override void OnClick()
+    {
+        if (IsChecked == true)
+        {
+            IsChecked = false;
+        }
+        else // false or indeterminte
+        {
+            IsChecked = true;
+        }
+    }
+
 }

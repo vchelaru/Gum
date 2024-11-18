@@ -120,6 +120,13 @@
         "ElementType": "Screens",
         "EventType": 7,
         "TimestampUtc": "2024-11-17T19:59:13.8272853Z"
+      },
+      {
+        "NewName": "Controls/ScrollBar (Container).TrackInstance",
+        "OldName": "Controls/ScrollBar (Container).ThumbContainer",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-11-17T22:42:47.9505938Z"
       }
     ]
   }

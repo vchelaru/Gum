@@ -7,270 +7,269 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MonoGameGum.Forms.Controls
+namespace MonoGameGum.Forms.Controls;
+
+public class ScrollBar : RangeBase
 {
-    public class ScrollBar : RangeBase
+    #region Fields/Properties
+
+    Button upButton;
+    Button downButton;
+
+    public float MinimumThumbSize { get; set; } = 16;
+
+    double viewportSize = .1;
+    public double ViewportSize
     {
-        #region Fields/Properties
-
-        Button upButton;
-        Button downButton;
-
-        public float MinimumThumbSize { get; set; } = 16;
-
-        double viewportSize = .1;
-        public double ViewportSize
+        get { return viewportSize; }
+        set
         {
-            get { return viewportSize; }
-            set
-            {
 #if DEBUG
-                if (double.IsNaN(value))
-                {
-                    throw new Exception("ScrollBar ViewportSize cannot be float.NaN");
-                }
-#endif
-                viewportSize = value;
-
-                UpdateThumbSize();
-                UpdateThumbPositionAccordingToValue();
-
-            }
-        }
-
-
-        float MinThumbPosition => 0;
-        float MaxThumbPosition => Track.GetAbsoluteHeight() - thumb.ActualHeight;
-
-
-        #endregion
-
-        #region Initialize
-
-        public ScrollBar() : base() { }
-
-        public ScrollBar(InteractiveGue visual) : base(visual) { }
-
-        protected override void ReactToVisualChanged()
-        {
-            var upButtonVisual = this.Visual.GetGraphicalUiElementByName("UpButtonInstance") as InteractiveGue;
-#if DEBUG
-            if (upButtonVisual == null)
+            if (double.IsNaN(value))
             {
-                throw new Exception("The ScrollBar Gum object must have a button called UpButtonInstance");
+                throw new Exception("ScrollBar ViewportSize cannot be float.NaN");
             }
 #endif
-            if (upButtonVisual.FormsControlAsObject == null)
-            {
-                upButton = new Button(upButtonVisual);
-            }
-            else
-            {
-                upButton = upButtonVisual.FormsControlAsObject as Button;
-            }
-
-            var downButtonVisual = this.Visual.GetGraphicalUiElementByName("DownButtonInstance") as InteractiveGue;
-#if DEBUG
-            if (downButtonVisual == null)
-            {
-                throw new Exception("The ScrollBar Gum object must have a button called DownButtonInstance");
-            }
-#endif
-            if (downButtonVisual.FormsControlAsObject == null)
-            {
-                downButton = new Button(downButtonVisual);
-            }
-            else
-            {
-                downButton = downButtonVisual.FormsControlAsObject as Button;
-            }
-
-
-            base.ReactToVisualChanged();
-
-
-            var thumbHeight = thumb.ActualHeight;
-
-            upButton.Push += (not, used) => this.Value -= this.SmallChange;
-            downButton.Push += (not, used) => this.Value += this.SmallChange;
-            Track.Push += HandleTrackPush;
-            Visual.SizeChanged += HandleVisualSizeChange;
-
-
-
-            var visibleTrackSpace = Track.Height - upButton.ActualHeight - downButton.ActualHeight;
-
-            if (visibleTrackSpace != 0)
-            {
-                var thumbRatio = thumbHeight / visibleTrackSpace;
-
-                ViewportSize = (Maximum - Minimum) * thumbRatio;
-                LargeChange = ViewportSize;
-
-                Value = Minimum;
-            }
-            else
-            {
-                ViewportSize = 10;
-                LargeChange = 10;
-                SmallChange = 2;
-            }
-        }
-
-        #endregion
-
-        #region Event Handlers
-        protected override void HandleThumbPush(object sender, EventArgs e)
-        {
-            var topOfThumb = this.thumb.AbsoluteTop;
-            // Does this need a GumY?
-            //var cursorScreen = GuiManager.Cursor.GumY();
-            var cursorScreen = MainCursor.Y;
-
-            cursorGrabOffsetRelativeToThumb = cursorScreen - topOfThumb;
-        }
-
-        private void HandleTrackPush(object sender, EventArgs e)
-        {
-            if (MainCursor.Y < thumb.AbsoluteTop)
-            {
-                Value -= LargeChange;
-            }
-            else if (MainCursor.Y > thumb.AbsoluteTop + thumb.ActualHeight)
-            {
-                Value += LargeChange;
-            }
-        }
-
-        private void HandleVisualSizeChange(object sender, EventArgs e)
-        {
-            UpdateThumbPositionAccordingToValue();
-            UpdateThumbSize();
-        }
-
-        protected override void OnMinimumChanged(double oldMinimum, double newMinimum)
-        {
-            base.OnMinimumChanged(oldMinimum, newMinimum);
+            viewportSize = value;
 
             UpdateThumbSize();
             UpdateThumbPositionAccordingToValue();
-        }
 
-        protected override void OnMaximumChanged(double oldMaximum, double newMaximum)
+        }
+    }
+
+
+    float MinThumbPosition => 0;
+    float MaxThumbPosition => Track.GetAbsoluteHeight() - thumb.ActualHeight;
+
+
+    #endregion
+
+    #region Initialize
+
+    public ScrollBar() : base() { }
+
+    public ScrollBar(InteractiveGue visual) : base(visual) { }
+
+    protected override void ReactToVisualChanged()
+    {
+        var upButtonVisual = this.Visual.GetGraphicalUiElementByName("UpButtonInstance") as InteractiveGue;
+#if DEBUG
+        if (upButtonVisual == null)
         {
-            base.OnMaximumChanged(oldMaximum, newMaximum);
-
-            UpdateThumbSize();
-            UpdateThumbPositionAccordingToValue();
+            throw new Exception("The ScrollBar Gum object must have a button called UpButtonInstance");
         }
-
-        protected override void OnValueChanged(double oldValue, double newValue)
+#endif
+        if (upButtonVisual.FormsControlAsObject == null)
         {
-            base.OnValueChanged(oldValue, newValue);
-
-            UpdateThumbPositionAccordingToValue();
+            upButton = new Button(upButtonVisual);
         }
-
-        #endregion
-
-        #region UpdateTo Methods
-
-        private void UpdateThumbPositionAccordingToValue()
+        else
         {
-            var ratioDown = (Value - Minimum) / (Maximum - Minimum);
-            ratioDown = System.Math.Max(0, ratioDown);
-            ratioDown = System.Math.Min(1, ratioDown);
-            if (Maximum <= Minimum)
-            {
-                ratioDown = 0;
-            }
-
-            thumb.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
-            thumb.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-
-            thumb.Visual.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Top;
-            thumb.Y = Microsoft.Xna.Framework.MathHelper.Lerp(MinThumbPosition, MaxThumbPosition,
-                (float)ratioDown);
-
+            upButton = upButtonVisual.FormsControlAsObject as Button;
         }
 
-        protected override void UpdateThumbPositionToCursorDrag(ICursor cursor)
+        var downButtonVisual = this.Visual.GetGraphicalUiElementByName("DownButtonInstance") as InteractiveGue;
+#if DEBUG
+        if (downButtonVisual == null)
         {
-            var cursorScreenY = cursor.Y;
-            var cursorYRelativeToTrack = cursorScreenY - Track.AbsoluteTop;
-
-
-            thumb.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
-            thumb.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-
-            thumb.Y = cursorYRelativeToTrack - cursorGrabOffsetRelativeToThumb;
-
-            float range = MaxThumbPosition - MinThumbPosition;
-
-            var valueBefore = Value;
-            if (range != 0)
-            {
-                var ratio = (thumb.Y) / range;
-                var ratioBefore = ratio;
-                ratio = System.Math.Max(0, ratio);
-                ratio = System.Math.Min(1, ratio);
-
-
-                Value = Minimum + (Maximum - Minimum) * ratio;
-
-                if (valueBefore != Value)
-                {
-                    RaiseValueChangedByUi();
-                }
-
-                if (ratioBefore != ratio)
-                {
-                    // we clamped it, so force the thumb:
-                    UpdateThumbPositionAccordingToValue();
-                }
-            }
-            else
-            {
-                // In this case the user may have dragged the thumb outside of its bounds. We are resetting
-                // the value back to the minimum, but the value may already be 0, so the if check will bypass
-                // the updating of the value...
-                var shouldForceUpdateThumb = Value == Minimum;
-
-                Value = Minimum;
-
-                if (valueBefore != Value)
-                {
-                    RaiseValueChangedByUi();
-                }
-
-                if (shouldForceUpdateThumb)
-                {
-                    UpdateThumbPositionAccordingToValue();
-                }
-            }
+            throw new Exception("The ScrollBar Gum object must have a button called DownButtonInstance");
         }
-
-        private void UpdateThumbSize()
+#endif
+        if (downButtonVisual.FormsControlAsObject == null)
         {
-            var desiredHeight = MinimumThumbSize;
-            if (ViewportSize != 0)
-            {
-                float trackHeight = Track.GetAbsoluteHeight();
-
-                var valueRange = (Maximum - Minimum) + ViewportSize;
-                if (valueRange > 0)
-                {
-                    var thumbRatio = ViewportSize / valueRange;
-
-                    thumb.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
-                    thumb.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-
-                    thumb.Height = System.Math.Max(MinimumThumbSize, (float)(trackHeight * thumbRatio));
-                }
-            }
+            downButton = new Button(downButtonVisual);
+        }
+        else
+        {
+            downButton = downButtonVisual.FormsControlAsObject as Button;
         }
 
-        #endregion
+
+        base.ReactToVisualChanged();
+
+
+        var thumbHeight = thumb.ActualHeight;
+
+        upButton.Push += (not, used) => this.Value -= this.SmallChange;
+        downButton.Push += (not, used) => this.Value += this.SmallChange;
+        Track.Push += HandleTrackPush;
+        Visual.SizeChanged += HandleVisualSizeChange;
+
+
+
+        var visibleTrackSpace = Track.Height - upButton.ActualHeight - downButton.ActualHeight;
+
+        if (visibleTrackSpace != 0)
+        {
+            var thumbRatio = thumbHeight / visibleTrackSpace;
+
+            ViewportSize = (Maximum - Minimum) * thumbRatio;
+            LargeChange = ViewportSize;
+
+            Value = Minimum;
+        }
+        else
+        {
+            ViewportSize = 10;
+            LargeChange = 10;
+            SmallChange = 2;
+        }
+    }
+
+    #endregion
+
+    #region Event Handlers
+    protected override void HandleThumbPush(object sender, EventArgs e)
+    {
+        var topOfThumb = this.thumb.AbsoluteTop;
+        // Does this need a GumY?
+        //var cursorScreen = GuiManager.Cursor.GumY();
+        var cursorScreen = MainCursor.Y;
+
+        cursorGrabOffsetRelativeToThumb = cursorScreen - topOfThumb;
+    }
+
+    private void HandleTrackPush(object sender, EventArgs e)
+    {
+        if (MainCursor.Y < thumb.AbsoluteTop)
+        {
+            Value -= LargeChange;
+        }
+        else if (MainCursor.Y > thumb.AbsoluteTop + thumb.ActualHeight)
+        {
+            Value += LargeChange;
+        }
+    }
+
+    private void HandleVisualSizeChange(object sender, EventArgs e)
+    {
+        UpdateThumbPositionAccordingToValue();
+        UpdateThumbSize();
+    }
+
+    protected override void OnMinimumChanged(double oldMinimum, double newMinimum)
+    {
+        base.OnMinimumChanged(oldMinimum, newMinimum);
+
+        UpdateThumbSize();
+        UpdateThumbPositionAccordingToValue();
+    }
+
+    protected override void OnMaximumChanged(double oldMaximum, double newMaximum)
+    {
+        base.OnMaximumChanged(oldMaximum, newMaximum);
+
+        UpdateThumbSize();
+        UpdateThumbPositionAccordingToValue();
+    }
+
+    protected override void OnValueChanged(double oldValue, double newValue)
+    {
+        base.OnValueChanged(oldValue, newValue);
+
+        UpdateThumbPositionAccordingToValue();
+    }
+
+    #endregion
+
+    #region UpdateTo Methods
+
+    private void UpdateThumbPositionAccordingToValue()
+    {
+        var ratioDown = (Value - Minimum) / (Maximum - Minimum);
+        ratioDown = System.Math.Max(0, ratioDown);
+        ratioDown = System.Math.Min(1, ratioDown);
+        if (Maximum <= Minimum)
+        {
+            ratioDown = 0;
+        }
+
+        thumb.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
+        thumb.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+
+        thumb.Visual.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Top;
+        thumb.Y = Microsoft.Xna.Framework.MathHelper.Lerp(MinThumbPosition, MaxThumbPosition,
+            (float)ratioDown);
 
     }
+
+    protected override void UpdateThumbPositionToCursorDrag(ICursor cursor)
+    {
+        var cursorScreenY = cursor.Y;
+        var cursorYRelativeToTrack = cursorScreenY - Track.AbsoluteTop;
+
+
+        thumb.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
+        thumb.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+
+        thumb.Y = cursorYRelativeToTrack - cursorGrabOffsetRelativeToThumb;
+
+        float range = MaxThumbPosition - MinThumbPosition;
+
+        var valueBefore = Value;
+        if (range != 0)
+        {
+            var ratio = (thumb.Y) / range;
+            var ratioBefore = ratio;
+            ratio = System.Math.Max(0, ratio);
+            ratio = System.Math.Min(1, ratio);
+
+
+            Value = Minimum + (Maximum - Minimum) * ratio;
+
+            if (valueBefore != Value)
+            {
+                RaiseValueChangedByUi();
+            }
+
+            if (ratioBefore != ratio)
+            {
+                // we clamped it, so force the thumb:
+                UpdateThumbPositionAccordingToValue();
+            }
+        }
+        else
+        {
+            // In this case the user may have dragged the thumb outside of its bounds. We are resetting
+            // the value back to the minimum, but the value may already be 0, so the if check will bypass
+            // the updating of the value...
+            var shouldForceUpdateThumb = Value == Minimum;
+
+            Value = Minimum;
+
+            if (valueBefore != Value)
+            {
+                RaiseValueChangedByUi();
+            }
+
+            if (shouldForceUpdateThumb)
+            {
+                UpdateThumbPositionAccordingToValue();
+            }
+        }
+    }
+
+    private void UpdateThumbSize()
+    {
+        var desiredHeight = MinimumThumbSize;
+        if (ViewportSize != 0)
+        {
+            float trackHeight = Track.GetAbsoluteHeight();
+
+            var valueRange = (Maximum - Minimum) + ViewportSize;
+            if (valueRange > 0)
+            {
+                var thumbRatio = ViewportSize / valueRange;
+
+                thumb.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
+                thumb.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+
+                thumb.Height = System.Math.Max(MinimumThumbSize, (float)(trackHeight * thumbRatio));
+            }
+        }
+    }
+
+    #endregion
+
 }
