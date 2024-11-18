@@ -25,6 +25,8 @@ public class ButtonBase : FrameworkElement, IInputReceiver
 
     #endregion
 
+    #region Events
+
     /// <summary>
     /// Event raised when the user pushes, then releases the control.
     /// This means the cursor is over the button, the button was originally pushed,
@@ -51,6 +53,8 @@ public class ButtonBase : FrameworkElement, IInputReceiver
 
     public event Action<FlatRedBall.Input.Mouse.MouseButtons> MouseButtonPushed;
 #endif
+
+    #endregion
 
     public ButtonBase() : base() { }
 
