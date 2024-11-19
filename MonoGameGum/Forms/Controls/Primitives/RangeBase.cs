@@ -1,15 +1,12 @@
 ﻿using Gum.Wireframe;
-using MonoGameGum.Input;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.AccessControl;
-using System.Text;
-using System.Threading.Tasks;
+
 
 #if FRB
+using FlatRedBall.Gui;
 namespace FlatRedBall.Forms.Controls.Primitives;
 #else
+using MonoGameGum.Input;
 namespace MonoGameGum.Forms.Controls.Primitives;
 #endif
 
@@ -102,12 +99,12 @@ public abstract class RangeBase : FrameworkElement
 
                 OnValueChanged(oldValue, this.value);
 
-                ValueChanged?.Invoke(this, null);
+                ValueChanged?.Invoke(this, EventArgs.Empty);
 
                 if (MainCursor.WindowPushed != thumb.Visual)
                 {
                     // Make sure the user isn't currently grabbing the thumb
-                    ValueChangeCompleted?.Invoke(this, null);
+                    ValueChangeCompleted?.Invoke(this, EventArgs.Empty);
                 }
 
                 PushValueToViewModel();
@@ -177,13 +174,13 @@ public abstract class RangeBase : FrameworkElement
             thumb = thumbVisual.FormsControlAsObject as Button;
         }
         thumb.Push += HandleThumbPush;
+#if FRB
+        thumb.Visual.DragOver += _=>HandleThumbRollOver(this, EventArgs.Empty);
+        Visual.RollOver += _=>HandleTrackRollOver(this, EventArgs.Empty);
+#else
         thumb.Visual.Dragging += HandleThumbRollOver;
-        // do this before assigning any values like Minimum, Maximum
-        var thumbHeight = thumb.ActualHeight;
-
         Visual.RollOver += HandleTrackRollOver;
-
-        // read the height values and infer the Value and ViewportSize based on a 0 - 100
+#endif
 
         // The attachments may not yet be set up, so set the explicitTrack's RaiseChildrenEventsOutsideOfBounds
         //var thumbParent = thumb.Visual.Parent as GraphicalUiElement;
@@ -231,8 +228,13 @@ public abstract class RangeBase : FrameworkElement
         base.ReactToVisualRemoved();
 
         thumb.Push -= HandleThumbPush;
+#if FRB
+        thumb.Visual.DragOver -= _=> HandleThumbRollOver(this, EventArgs.Empty);
+        Visual.RollOver -= _=>HandleTrackRollOver(this, EventArgs.Empty);
+#else
         thumb.Visual.Dragging -= HandleThumbRollOver;
         Visual.RollOver -= HandleTrackRollOver;
+#endif
     }
 
     #endregion
@@ -277,9 +279,9 @@ public abstract class RangeBase : FrameworkElement
 
     protected virtual void OnValueChanged(double oldValue, double newValue) { }
 
-    protected void RaiseValueChangeCompleted() => ValueChangeCompleted?.Invoke(this, null);
+    protected void RaiseValueChangeCompleted() => ValueChangeCompleted?.Invoke(this, EventArgs.Empty);
 
-    protected void RaiseValueChangedByUi() => ValueChangedByUi?.Invoke(this, null);
+    protected void RaiseValueChangedByUi() => ValueChangedByUi?.Invoke(this, EventArgs.Empty);
 
     protected abstract void UpdateThumbPositionToCursorDrag(ICursor cursor);
 
