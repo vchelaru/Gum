@@ -1,17 +1,22 @@
-﻿using Gum.Converters;
-using Gum.DataTypes;
-using Gum.Wireframe;
-using Microsoft.Xna.Framework.Input;
-using MonoGameGum.Input;
-using RenderingLibrary;
+﻿using Gum.Wireframe;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Gum.DataTypes;
+using Gum.Converters;
+using System.Collections;
+using Microsoft.Xna.Framework.Input;
 
+#if FRB
+using FlatRedBall.Gui;
+using FlatRedBall.Input;
+using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
+namespace FlatRedBall.Forms.Controls;
+#else
+using RenderingLibrary;
 namespace MonoGameGum.Forms.Controls;
+#endif
+
 
 public class ComboBox : FrameworkElement
 {
@@ -154,8 +159,10 @@ public class ComboBox : FrameworkElement
     #region Events
 
     public event Action<object, SelectionChangedEventArgs> SelectionChanged;
-    //public event FocusUpdateDelegate FocusUpdate;
-    //public event Action<Xbox360GamePad.Button> ControllerButtonPushed;
+    public event Action<IInputReceiver> FocusUpdate;
+#if FRB
+    public event Action<Xbox360GamePad.Button> ControllerButtonPushed;
+#endif
     public event Action<int> GenericGamepadButtonPushed;
 
 
@@ -208,11 +215,19 @@ public class ComboBox : FrameworkElement
         }
 
 
+#if FRB
+        Visual.Click += _=> this.HandleClick(this, EventArgs.Empty);
+        Visual.Push += _ => this.HandlePush(this, EventArgs.Empty);
+        Visual.LosePush += _ => this.HandleLosePush(this, EventArgs.Empty);
+        Visual.RollOn += _ => this.HandleRollOn(this, EventArgs.Empty);
+        Visual.RollOff += _ => this.HandleRollOff(this, EventArgs.Empty);
+#else
         Visual.Click += this.HandleClick;
         Visual.Push += this.HandlePush;
         Visual.LosePush += this.HandleLosePush;
         Visual.RollOn += this.HandleRollOn;
         Visual.RollOff += this.HandleRollOff;
+#endif
 
         var effectiveParent = listBox.Visual.EffectiveParentGue as InteractiveGue;
         if(effectiveParent != null)
