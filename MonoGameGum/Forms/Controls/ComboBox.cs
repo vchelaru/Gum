@@ -6,7 +6,7 @@ using Gum.DataTypes;
 using Gum.Converters;
 using System.Collections;
 using Microsoft.Xna.Framework.Input;
-using MonoGameGum.Input;
+using RenderingLibrary;
 
 
 #if FRB
@@ -15,16 +15,16 @@ using FlatRedBall.Input;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 namespace FlatRedBall.Forms.Controls;
 #else
+using MonoGameGum.Input;
 using RenderingLibrary;
 namespace MonoGameGum.Forms.Controls;
 #endif
 
-
-public class ComboBox : FrameworkElement
+public class ComboBox : FrameworkElement, IInputReceiver
 {
     #region Fields/Properties
 
-    public ListBox listBox;
+    ListBox listBox;
     GraphicalUiElement textComponent;
     RenderingLibrary.Graphics.Text coreTextObject;
 
@@ -167,7 +167,6 @@ public class ComboBox : FrameworkElement
 #endif
     public event Action<int> GenericGamepadButtonPushed;
 
-
     #endregion
 
     #region Initialize Methods
@@ -216,7 +215,6 @@ public class ComboBox : FrameworkElement
 #endif
         }
 
-
 #if FRB
         Visual.Click += _=> this.HandleClick(this, EventArgs.Empty);
         Visual.Push += _ => this.HandlePush(this, EventArgs.Empty);
@@ -232,7 +230,7 @@ public class ComboBox : FrameworkElement
 #endif
 
         var effectiveParent = listBox.Visual.EffectiveParentGue as InteractiveGue;
-        if(effectiveParent != null)
+        if (effectiveParent != null)
         {
             effectiveParent.RaiseChildrenEventsOutsideOfBounds = true;
         }
@@ -372,6 +370,7 @@ public class ComboBox : FrameworkElement
         listBox.RepositionToKeepInScreen();
 #else
         listBox.RepositionToKeepInScreen();
+
         if (this.Visual.GetTopParent() == FrameworkElement.ModalRoot)
         {
             FrameworkElement.ModalRoot.Children.Add(listBox.Visual);
@@ -437,12 +436,8 @@ public class ComboBox : FrameworkElement
             listBox.Visual.Height = listBoxHeight;
 
             Visual.EffectiveManagers.Renderer.MainLayer.Remove(listBox.Visual);
-
 #if FRB
-            Visual.Managers.Renderer.MainLayer.Remove(listBox.Visual);
 #else
-            Visual.EffectiveManagers.Renderer.MainLayer.Remove(listBox.Visual);
-
             listBox.Visual.GetTopParent()?.Children.Remove(listBox.Visual);
 #endif
 
@@ -662,7 +657,9 @@ public class ComboBox : FrameworkElement
     {
     }
 
-    public void LoseFocus()
+    [Obsolete("Use OnLoseFocus")]
+    public void LoseFocus() => OnLoseFocus();
+    public void OnLoseFocus()
     {
         IsFocused = false;
     }
@@ -678,6 +675,13 @@ public class ComboBox : FrameworkElement
     public void HandleCharEntered(char character)
     {
     }
+
+#if !FRB
+    public void DoKeyboardAction(IInputReceiverKeyboard keyboard)
+    {
+
+    }
+#endif
 
     #endregion
 }
