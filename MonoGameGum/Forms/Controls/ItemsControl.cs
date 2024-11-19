@@ -1,9 +1,16 @@
 ﻿using Gum.Wireframe;
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 
+#if FRB
+using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
+namespace FlatRedBall.Forms.Controls;
+#else
 namespace MonoGameGum.Forms.Controls;
+#endif
 
 public class ItemsControl : ScrollViewer
 {
@@ -182,8 +189,13 @@ public class ItemsControl : ScrollViewer
 
             if (listBoxFormsConstructor == null)
             {
+#if FRB
+                const string TyepName = "GraphicalUiElement";
+#else
+                const string TypeName = "InteractiveGue";
+#endif
                 string message =
-                    $"Could not find a constructor for {ItemFormsType} which takes a single InteractiveGue argument. " +
+                    $"Could not find a constructor for {ItemFormsType} which takes a single {TypeName} argument. " +
                     $"If you defined {ItemFormsType} without specifying a constructor, you need to add a constructor which takes a GraphicalUiElement and calls the base constructor.";
                 throw new Exception(message);
             }
@@ -356,7 +368,5 @@ public class ItemsControl : ScrollViewer
         base.HandleVisualBindingContextChanged(sender, args);
     }
 #endif
-
     #endregion
-
 }
