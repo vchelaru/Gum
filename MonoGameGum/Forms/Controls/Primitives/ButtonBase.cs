@@ -240,10 +240,12 @@ public class ButtonBase : FrameworkElement, IInputReceiver
         IsFocused = false;
     }
 
+#if !FRB
     public void DoKeyboardAction(IInputReceiverKeyboard keyboard)
     {
 
     }
+#endif
 
     public void ReceiveInput()
     {
