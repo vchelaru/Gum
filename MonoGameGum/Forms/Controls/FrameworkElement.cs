@@ -104,7 +104,7 @@ public class FrameworkElement
         get => null;
         set
         {
-            throw new NotImplementedException();
+            // todo....
             //if (value != BindingContext && Visual != null)
             //{
                 //Visual.BindingContext = value;

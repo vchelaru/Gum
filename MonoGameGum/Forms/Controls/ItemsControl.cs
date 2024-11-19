@@ -1,12 +1,7 @@
 ﻿using Gum.Wireframe;
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MonoGameGum.Forms.Controls;
 
@@ -151,7 +146,7 @@ public class ItemsControl : ScrollViewer
 
             item.UpdateToObject(o);
 
-            //item.BindingContext = o;
+            item.BindingContext = o;
 
         }
         // If the iuser added a ListBoxItem as a parameter,
@@ -308,7 +303,7 @@ public class ItemsControl : ScrollViewer
 
     private void HandleListBoxItemClicked(object sender, EventArgs e)
     {
-        OnItemClicked(sender, null);
+        OnItemClicked(sender, EventArgs.Empty);
     }
 
     protected virtual void OnItemSelected(object sender, SelectionChangedEventArgs args)
@@ -318,9 +313,7 @@ public class ItemsControl : ScrollViewer
             var listBoxItem = ListBoxItemsInternal[i];
             if (listBoxItem != sender && listBoxItem.IsSelected)
             {
-                var deselectedItem = 
-                    //listBoxItem.BindingContext ?? 
-                    listBoxItem;
+                var deselectedItem = listBoxItem.BindingContext ?? listBoxItem;
                 args.RemovedItems.Add(deselectedItem);
                 listBoxItem.IsSelected = false;
             }
@@ -348,19 +341,21 @@ public class ItemsControl : ScrollViewer
 
     #region Update To
 
-    //protected override void HandleVisualBindingContextChanged(object sender, BindingContextChangedEventArgs args)
-    //{
-    //    if (args.OldBindingContext != null && BindingContext == null)
-    //    {
-    //        // user removed the binding context, usually this happens when the object is removed
-    //        if (vmPropsToUiProps.ContainsValue(nameof(Items)))
-    //        {
-    //            // null out the items!
-    //            this.Items = null;
-    //        }
-    //    }
-    //    base.HandleVisualBindingContextChanged(sender, args);
-    //}
+#if FRB
+    protected override void HandleVisualBindingContextChanged(object sender, BindingContextChangedEventArgs args)
+    {
+        if(args.OldBindingContext != null && BindingContext == null)
+        {
+            // user removed the binding context, usually this happens when the object is removed
+            if(vmPropsToUiProps.ContainsValue(nameof(Items)))
+            {
+                // null out the items!
+                this.Items = null;
+            }
+        }
+        base.HandleVisualBindingContextChanged(sender, args);
+    }
+#endif
 
     #endregion
 
