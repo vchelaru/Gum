@@ -8,6 +8,10 @@ using System.Text;
 using System.Threading.Tasks;
 
 #if FRB
+using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
+#endif
+
+#if FRB
 namespace FlatRedBall.Forms.Controls.Primitives;
 #else
 namespace MonoGameGum.Forms.Controls.Primitives;
@@ -56,23 +60,36 @@ public class ButtonBase : FrameworkElement, IInputReceiver
 
     #endregion
 
+    #region Initialize
+
     public ButtonBase() : base() { }
 
     public ButtonBase(InteractiveGue visual) : base(visual) { }
 
     protected override void ReactToVisualChanged()
     {
+#if FRB
+        Visual.Click += _=>this.HandleClick(this, null);
+        Visual.Push += _ => this.HandlePush (this, null);
+        Visual.LosePush += _ => this.HandleLosePush (this, null);
+        Visual.RollOn += _ => this.HandleRollOn (this, null);
+        Visual.RollOff += _ => this.HandleRollOff(this, null);
+#else
         Visual.Click += this.HandleClick;
         Visual.Push += this.HandlePush;
         Visual.LosePush += this.HandleLosePush;
         Visual.RollOn += this.HandleRollOn;
         Visual.RollOff += this.HandleRollOff;
+#endif
 
         base.ReactToVisualChanged();
 
         UpdateState();
     }
 
+    #endregion
+
+    #region Event Handler Methods
 
     private void HandleClick(object sender, EventArgs args)
     {
@@ -107,6 +124,8 @@ public class ButtonBase : FrameworkElement, IInputReceiver
     {
         UpdateState();
     }
+
+    #endregion
 
     protected virtual void OnClick() { }
 
