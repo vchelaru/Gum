@@ -4,6 +4,7 @@ using System;
 
 #if FRB
 using FlatRedBall.Gui;
+using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 namespace FlatRedBall.Forms.Controls.Primitives;
 #else
 using MonoGameGum.Input;
@@ -140,16 +141,16 @@ public abstract class RangeBase : FrameworkElement
             var message =
                 $"The {this.GetType().Name} Gum object must have a button called ThumbInstance.";
 
-            if(Visual.Children != null)
+            if (Visual.Children != null)
             {
-                if(Visual.Children.Count == 0)
+                if (Visual.Children.Count == 0)
                 {
                     message += " This visual has no children";
                 }
                 else
                 {
                     message += " The visual has the following children:";
-                    foreach(var child in Visual.Children)
+                    foreach (var child in Visual.Children)
                     {
                         message += "\n" + child.Name;
                     }
@@ -161,7 +162,6 @@ public abstract class RangeBase : FrameworkElement
             }
 
             throw new Exception(message);
-
         }
 #endif
 
@@ -191,23 +191,23 @@ public abstract class RangeBase : FrameworkElement
 
 #if FRB
         explicitTrack = this.Visual.GetGraphicalUiElementByName("TrackInstance");
-        if(explicitTrack != null)
+        if (explicitTrack != null)
         {
             explicitTrack.RaiseChildrenEventsOutsideOfBounds = true;
         }
 #elif MONOGAME
         var trackLocal = this.Visual.GetGraphicalUiElementByName("TrackInstance");
 
-        #if DEBUG
-        if(trackLocal == null)
+#if DEBUG
+        if (trackLocal == null)
         {
             throw new Exception($"Could not find a child named TrackInstance when creating a {this.GetType()}");
         }
-        else if(!(trackLocal is InteractiveGue))
+        else if (!(trackLocal is InteractiveGue))
         {
             throw new Exception("Found a TrackInstance, but it is not an InteractiveGue");
         }
-        #endif
+#endif
 
         explicitTrack = (InteractiveGue)trackLocal;
         if (trackLocal is InteractiveGue trackAsInteractive)
@@ -238,7 +238,6 @@ public abstract class RangeBase : FrameworkElement
     }
 
     #endregion
-
 
     protected abstract void HandleThumbPush(object sender, EventArgs e);
 
@@ -283,6 +282,9 @@ public abstract class RangeBase : FrameworkElement
 
     protected void RaiseValueChangedByUi() => ValueChangedByUi?.Invoke(this, EventArgs.Empty);
 
+#if FRB
+    protected abstract void UpdateThumbPositionToCursorDrag(Cursor cursor);
+#else
     protected abstract void UpdateThumbPositionToCursorDrag(ICursor cursor);
-
+#endif
 }
