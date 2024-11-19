@@ -1,5 +1,6 @@
 ﻿using Gum.Wireframe;
 using Microsoft.Xna.Framework.Input;
+using MonoGameGum.Input;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
@@ -9,7 +10,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#if FRB
+using FlatRedBall.Input;
+using FlatRedBall.Math.Geometry;
+using FlatRedBall.Gui;
+using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
+namespace FlatRedBall.Forms.Controls;
+#else
 namespace MonoGameGum.Forms.Controls;
+#endif
 
 public enum ScrollIntoViewStyle
 {
@@ -26,7 +35,7 @@ public enum ScrollIntoViewStyle
     Bottom
 }
 
-public class ListBox : ItemsControl
+public class ListBox : ItemsControl, IInputReceiver
 {
     #region Fields/Properties
 
@@ -50,7 +59,39 @@ public class ListBox : ItemsControl
         }
     }
 
+    bool canListItemsLoseFocus = true;
+    /// <summary>
+    /// Whether pressing the B button (back/cancel) should result in individual items losing focus and
+    /// returning focus to the top level. This should be false if the list box is the only object in the 
+    /// screen which can receive focus.
+    /// </summary>
+    public bool CanListItemsLoseFocus
+    {
+        get => canListItemsLoseFocus;
+        set
+        {
+            canListItemsLoseFocus = value;
+            if (!canListItemsLoseFocus && IsFocused)
+            {
+                DoListItemsHaveFocus = true;
+            }
+        }
+    }
+
     int selectedIndex = -1;
+
+    public override bool IsFocused
+    {
+        get => base.IsFocused;
+        set
+        {
+            base.IsFocused = value;
+            if (IsFocused && canListItemsLoseFocus == false)
+            {
+                DoListItemsHaveFocus = true;
+            }
+        }
+    }
 
     public Type ListBoxItemGumType
     {
@@ -140,7 +181,7 @@ public class ListBox : ItemsControl
 
     public bool TakingInput => throw new NotImplementedException();
 
-    //public IInputReceiver NextInTabSequence { get; set; }
+    public IInputReceiver NextInTabSequence { get; set; }
 
     /// <summary>
     /// Whether the primary input button (usually the A button) results in the highlighted list box item
@@ -161,12 +202,14 @@ public class ListBox : ItemsControl
     /// contains information about the changed selected items.
     /// </summary>
     public event Action<object, SelectionChangedEventArgs> SelectionChanged;
-    //public event FocusUpdateDelegate FocusUpdate;
+    public event Action<IInputReceiver> FocusUpdate;
 
     /// <summary>
     /// Event raised when the user presses a button at the top-level (if the list box has focus, but the individual items do not)
     /// </summary>
-    //public event Action<Xbox360GamePad.Button> ControllerButtonPushed;
+#if FRB
+    public event Action<Xbox360GamePad.Button> ControllerButtonPushed;
+#endif
     public event Action<int> GenericGamepadButtonPushed;
 
     #endregion
@@ -301,7 +344,373 @@ public class ListBox : ItemsControl
         {
             Visual.SetProperty(category, "Enabled");
         }
+
+        // The default state may update the visibility of the scroll bar. Whenever setting the state
+        // we should forcefully apply the list box visibility:
+        base.UpdateVerticalScrollBarValues();
     }
 
-    // When we add keyboard and gamepad support, go back to FRB and add the IInputReceiver methods
+    #region IInputReceiver Methods
+
+    public void OnFocusUpdate()
+    {
+        if (DoListItemsHaveFocus)
+        {
+            DoListItemFocusUpdate();
+        }
+        else
+        {
+            DoTopLevelFocusUpdate();
+        }
+
+        FocusUpdate?.Invoke(this);
+    }
+
+    private void DoListItemFocusUpdate()
+    {
+        var xboxGamepads = GuiManager.GamePadsForUiControl;
+
+
+        for (int i = 0; i < xboxGamepads.Count; i++)
+        {
+            var gamepad = xboxGamepads[i];
+
+            RepositionDirections? direction = null;
+
+            if (gamepad.ButtonRepeatRate(FlatRedBall.Input.Xbox360GamePad.Button.DPadDown) ||
+                gamepad.LeftStick.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Down))
+            {
+                direction = RepositionDirections.Down;
+            }
+
+            if (gamepad.ButtonRepeatRate(FlatRedBall.Input.Xbox360GamePad.Button.DPadRight) ||
+                gamepad.LeftStick.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Right))
+            {
+                direction = RepositionDirections.Right;
+            }
+
+            if (gamepad.ButtonRepeatRate(FlatRedBall.Input.Xbox360GamePad.Button.DPadUp) ||
+                gamepad.LeftStick.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Up))
+            {
+                direction = RepositionDirections.Up;
+            }
+
+            if (gamepad.ButtonRepeatRate(FlatRedBall.Input.Xbox360GamePad.Button.DPadLeft) ||
+                gamepad.LeftStick.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Left))
+            {
+                direction = RepositionDirections.Left;
+            }
+
+
+            var pressedButton = (LoseListItemFocusOnPrimaryInput && gamepad.ButtonPushed(FlatRedBall.Input.Xbox360GamePad.Button.A)) ||
+                gamepad.ButtonPushed(FlatRedBall.Input.Xbox360GamePad.Button.B);
+
+            DoListItemFocusUpdate(direction, pressedButton);
+
+            void RaiseIfPushedAndEnabled(FlatRedBall.Input.Xbox360GamePad.Button button)
+            {
+                if (IsEnabled && gamepad.ButtonPushed(button))
+                {
+                    ControllerButtonPushed?.Invoke(button);
+                }
+            }
+
+            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.A);
+            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.B);
+            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.X);
+            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.Y);
+            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.Start);
+            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.Back);
+            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.DPadLeft);
+            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.DPadRight);
+
+            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.LeftStickAsDPadLeft);
+            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.LeftStickAsDPadRight);
+        }
+
+        var genericGamePads = GuiManager.GenericGamePadsForUiControl;
+
+        for (int i = 0; i < genericGamePads.Count; i++)
+        {
+            var gamepad = genericGamePads[i];
+
+            RepositionDirections? direction = null;
+
+            if (gamepad.DPadRepeatRate(Xbox360GamePad.DPadDirection.Down) ||
+                (gamepad.AnalogSticks.Length > 0 && gamepad.AnalogSticks[0].AsDPadPushedRepeatRate(Xbox360GamePad.DPadDirection.Down)))
+            {
+                direction = RepositionDirections.Down;
+            }
+
+            if (gamepad.DPadRepeatRate(Xbox360GamePad.DPadDirection.Right) ||
+                (gamepad.AnalogSticks.Length > 0 && gamepad.AnalogSticks[0].AsDPadPushedRepeatRate(Xbox360GamePad.DPadDirection.Right)))
+            {
+                direction = RepositionDirections.Right;
+            }
+
+            if (gamepad.DPadRepeatRate(Xbox360GamePad.DPadDirection.Up) ||
+                (gamepad.AnalogSticks.Length > 0 && gamepad.AnalogSticks[0].AsDPadPushedRepeatRate(Xbox360GamePad.DPadDirection.Up)))
+            {
+                direction = RepositionDirections.Up;
+            }
+
+            if (gamepad.DPadRepeatRate(Xbox360GamePad.DPadDirection.Left) ||
+                (gamepad.AnalogSticks.Length > 0 && gamepad.AnalogSticks[0].AsDPadPushedRepeatRate(Xbox360GamePad.DPadDirection.Left)))
+            {
+                direction = RepositionDirections.Left;
+            }
+
+            var inputDevice = gamepad as IInputDevice;
+
+            var pressedButton =
+                (LoseListItemFocusOnPrimaryInput && inputDevice.DefaultPrimaryActionInput.WasJustPressed) ||
+                inputDevice.DefaultBackInput.WasJustPressed;
+
+            DoListItemFocusUpdate(direction, pressedButton);
+
+        }
+
+    }
+
+    private int? GetListBoxIndexAt(float x, float y)
+    {
+        for (int i = 0; i < ListBoxItemsInternal.Count; i++)
+        {
+            ListBoxItem listBoxItem = ListBoxItemsInternal[i];
+            var item = listBoxItem.Visual;
+            if (item.Visible)
+            {
+                var widthHalf = item.GetAbsoluteWidth() / 2.0f;
+                var heightHalf = item.GetAbsoluteHeight() / 2.0f;
+
+                var absoluteX = item.GetAbsoluteCenterX();
+                var absoluteY = item.GetAbsoluteCenterY();
+
+                if (x > absoluteX - widthHalf && x < absoluteX + widthHalf &&
+                    y > absoluteY - heightHalf && y < absoluteY + heightHalf)
+                {
+                    return i;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// The additional offset to check when attempting to find a control when performing DPad navigation. This value is added
+    /// to the InnerPanel's StackSpacing. Increasing this value is useful if objects in the ListBox are not of uniform size, but
+    /// if the value is too large then navigation may skip rows or columns.
+    /// </summary>
+    public float AdditionalOffsetToCheckForDPadNavigation { get; set; } = 4;
+
+    private void DoListItemFocusUpdate(RepositionDirections? direction, bool pressedButton)
+    {
+        var wraps = InnerPanel.WrapsChildren;
+        var handledByWrapping = false;
+
+        if (direction != null)
+        {
+            LoseHighlight();
+        }
+
+        if (wraps && direction != null)
+        {
+
+            if (SelectedIndex > -1 && SelectedIndex < ListBoxItems.Count)
+            {
+                var currentSelection = this.ListBoxItemsInternal[SelectedIndex].Visual;
+
+                var offsetToCheck = InnerPanel.StackSpacing + AdditionalOffsetToCheckForDPadNavigation;
+
+                float xCenter = currentSelection.GetAbsoluteX() + currentSelection.GetAbsoluteWidth() / 2.0f;
+                float yCenter = currentSelection.GetAbsoluteY() + currentSelection.GetAbsoluteHeight() / 2.0f;
+
+                float x = xCenter;
+                float y = yCenter;
+                switch (direction.Value)
+                {
+                    case RepositionDirections.Left:
+                        x = currentSelection.GetAbsoluteLeft() - offsetToCheck;
+                        break;
+
+                    case RepositionDirections.Right:
+                        x = currentSelection.GetAbsoluteRight() + offsetToCheck;
+                        break;
+
+                    case RepositionDirections.Up:
+                        y = currentSelection.GetAbsoluteTop() - offsetToCheck;
+                        break;
+
+                    case RepositionDirections.Down:
+                        y = currentSelection.GetAbsoluteBottom() + offsetToCheck;
+                        break;
+                }
+
+                var index = GetListBoxIndexAt(x, y);
+
+                if (index != null)
+                {
+                    SelectedIndex = index.Value;
+                    this.ListBoxItemsInternal[SelectedIndex].IsFocused = true;
+                }
+            }
+            else
+            {
+                SelectedIndex = 0;
+                this.ListBoxItemsInternal[SelectedIndex].IsFocused = true;
+            }
+
+            // The fallback behavior is kinda confusing, so let's just handle it if it wraps.
+            // This could change in the future?
+            handledByWrapping = true;
+
+        }
+
+
+        if (!handledByWrapping)
+        {
+            if (direction == RepositionDirections.Down || direction == RepositionDirections.Right)
+            {
+                if (Items.Count > 0)
+                {
+                    if (SelectedIndex < 0 && Items.Count > 0)
+                    {
+                        SelectedIndex = 0;
+                    }
+                    else if (SelectedIndex < Items.Count - 1)
+                    {
+                        SelectedIndex++;
+                    }
+                    this.ListBoxItemsInternal[SelectedIndex].IsFocused = true;
+                }
+            }
+            else if (direction == RepositionDirections.Up || direction == RepositionDirections.Left)
+            {
+                if (Items.Count > 0)
+                {
+                    if (SelectedIndex < 0 && Items.Count > 0)
+                    {
+                        SelectedIndex = 0;
+                    }
+                    else if (SelectedIndex > 0)
+                    {
+                        SelectedIndex--;
+                    }
+
+                    this.ListBoxItemsInternal[SelectedIndex].IsFocused = true;
+                }
+            }
+        }
+
+        if (pressedButton)
+        {
+            if (CanListItemsLoseFocus)
+            {
+                DoListItemsHaveFocus = false;
+            }
+        }
+    }
+
+    private void LoseHighlight()
+    {
+        for (int i = 0; i < this.ListBoxItems.Count; i++)
+        {
+            var item = this.ListBoxItems[i];
+            item.IsHighlighted = false;
+        }
+    }
+
+    private void DoTopLevelFocusUpdate()
+    {
+        var gamepads = GuiManager.GamePadsForUiControl;
+
+        for (int i = 0; i < gamepads.Count; i++)
+        {
+            var gamepad = gamepads[i];
+
+            HandleGamepadNavigation(gamepad);
+
+            if (gamepad.ButtonPushed(FlatRedBall.Input.Xbox360GamePad.Button.A))
+            {
+                DoListItemsHaveFocus = true;
+            }
+
+            void RaiseIfPushedAndEnabled(FlatRedBall.Input.Xbox360GamePad.Button button)
+            {
+                if (IsEnabled && gamepad.ButtonPushed(button))
+                {
+                    ControllerButtonPushed?.Invoke(button);
+                }
+            }
+
+            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.B);
+            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.X);
+            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.Y);
+            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.Start);
+            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.Back);
+            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.DPadLeft);
+            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.DPadRight);
+
+            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.LeftStickAsDPadLeft);
+            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.LeftStickAsDPadRight);
+        }
+
+        var genericGamepads = GuiManager.GenericGamePadsForUiControl;
+
+        for (int i = 0; i < genericGamepads.Count; i++)
+        {
+            var gamepad = genericGamepads[i];
+
+            HandleGamepadNavigation(gamepad);
+
+            if ((gamepad as IInputDevice).DefaultConfirmInput.WasJustPressed)
+            {
+                DoListItemsHaveFocus = true;
+            }
+
+            if (IsEnabled)
+            {
+                for (var buttonIndex = 0; buttonIndex < gamepad.NumberOfButtons; i++)
+                {
+                    if (gamepad.ButtonPushed(buttonIndex))
+                    {
+                        GenericGamepadButtonPushed?.Invoke(buttonIndex);
+                    }
+                }
+            }
+        }
+
+    }
+
+    public void OnGainFocus()
+    {
+    }
+
+    /// <summary>
+    /// Removes focus from the ListBox, both at the top level and at the individual item level, even if CanListItemsLoseFocus is set to false.
+    /// </summary>
+    public void LoseFocus()
+    {
+        IsFocused = false;
+
+        if (DoListItemsHaveFocus)
+        {
+            DoListItemsHaveFocus = false;
+        }
+    }
+
+    public void ReceiveInput()
+    {
+    }
+
+    public void HandleKeyDown(Keys key, bool isShiftDown, bool isAltDown, bool isCtrlDown)
+    {
+    }
+
+    public void HandleCharEntered(char character)
+    {
+    }
+
+    #endregion
 }
