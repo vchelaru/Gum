@@ -1,11 +1,12 @@
 ﻿using Gum.Wireframe;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
+#if FRB
+using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
+namespace FlatRedBall.Forms.Controls;
+#else
 namespace MonoGameGum.Forms.Controls;
+#endif
 
 public class CheckBox : ToggleButton
 {
