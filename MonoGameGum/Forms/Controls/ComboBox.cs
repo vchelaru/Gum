@@ -6,6 +6,8 @@ using Gum.DataTypes;
 using Gum.Converters;
 using System.Collections;
 using Microsoft.Xna.Framework.Input;
+using MonoGameGum.Input;
+
 
 #if FRB
 using FlatRedBall.Gui;
@@ -340,9 +342,37 @@ public class ComboBox : FrameworkElement
                 }
             }
         }
-        listBox.RepositionToKeepInScreen();
 
-        if(this.Visual.GetTopParent() == FrameworkElement.ModalRoot)
+#if FRB
+        listBox.Visual.AddToManagers(Visual.Managers,
+            layerToAddListBoxTo);
+
+        var rootParent = listBox.Visual.GetParentRoot();
+
+        var parent = Visual.Parent as IWindow;
+        var isDominant = false;
+        while(parent != null)
+        {
+            if(GuiManager.DominantWindows.Contains(parent))
+            {
+                isDominant = true;
+                break;
+            }
+
+            parent = parent.Parent;
+        }
+
+        if(isDominant)
+        {
+            GuiManager.AddDominantWindow(listBox.Visual);
+        }
+
+        GuiManager.AddNextPushAction(TryHideFromPush);
+        GuiManager.SortZAndLayerBased();
+        listBox.RepositionToKeepInScreen();
+#else
+        listBox.RepositionToKeepInScreen();
+        if (this.Visual.GetTopParent() == FrameworkElement.ModalRoot)
         {
             FrameworkElement.ModalRoot.Children.Add(listBox.Visual);
         }
@@ -351,29 +381,8 @@ public class ComboBox : FrameworkElement
             FrameworkElement.PopupRoot.Children.Add(listBox.Visual);
         }
 
-        //var rootParent = listBox.Visual.GetParentRoot();
-
-        //var parent = Visual.Parent as IWindow;
-        //var isDominant = false;
-        //while (parent != null)
-        //{
-        //if (GuiManager.DominantWindows.Contains(parent))
-        //{
-        //    isDominant = true;
-        //    break;
-        //}
-
-        //parent = parent.Parent;
-        //}
-
-        //if (isDominant)
-        //{
-        //    GuiManager.AddDominantWindow(listBox.Visual);
-        //}
-
-        //GuiManager.AddNextPushAction(TryHideFromPush);
         InteractiveGue.AddNextPushAction(TryHideFromPush);
-        //GuiManager.SortZAndLayerBased();
+#endif
 
 
         UpdateState();
@@ -381,7 +390,7 @@ public class ComboBox : FrameworkElement
 
     private void TryHideFromPush()
     {
-        var cursor = FrameworkElement.MainCursor;
+        var cursor = MainCursor;
 
 
         var clickedOnThisOrChild =
@@ -396,7 +405,17 @@ public class ComboBox : FrameworkElement
         }
         else
         {
+            // not sure why we have to re-add this here on a push.
+            // Update - because when we click on something like the scroll
+            // view in the popup listbox, this event gets raised. We don't want
+            // to close this, but we may still want to next click if it's outside
+            // of the list box. If the user keeps clicking on the scrollbar, this event
+            // keeps getting raised, and it re-adds itself.
+#if FRB
+            GuiManager.AddNextPushAction(TryHideFromPush);
+#else
             InteractiveGue.AddNextPushAction(TryHideFromPush);
+#endif
         }
     }
 
@@ -419,7 +438,13 @@ public class ComboBox : FrameworkElement
 
             Visual.EffectiveManagers.Renderer.MainLayer.Remove(listBox.Visual);
 
+#if FRB
+            Visual.Managers.Renderer.MainLayer.Remove(listBox.Visual);
+#else
+            Visual.EffectiveManagers.Renderer.MainLayer.Remove(listBox.Visual);
+
             listBox.Visual.GetTopParent()?.Children.Remove(listBox.Visual);
+#endif
 
             UpdateState();
         }
@@ -433,11 +458,11 @@ public class ComboBox : FrameworkElement
     private void HandleSelectionChanged(object sender, SelectionChangedEventArgs args)
     {
         // If we bind the Text, then don't set this here, the binding will take care of it
-        //var isTextBound = vmPropsToUiProps?.Values.Any(item => item == nameof(Text)) == true;
-        //if (isTextBound == false)
-        //{
-        coreTextObject.RawText = listBox.SelectedObject?.ToString();
-        //}
+        var isTextBound = vmPropsToUiProps?.Values.Any(item => item == nameof(Text)) == true;
+        if (isTextBound == false)
+        {
+            coreTextObject.RawText = listBox.SelectedObject?.ToString();
+        }
 
         // Why do we hide the list box here? We don't want to do it if
         // the user uses the arrow keys to change a selection do we?
@@ -488,39 +513,41 @@ public class ComboBox : FrameworkElement
 
     private void DoOpenDropDownFocusUpdate()
     {
-        //var xboxGamepads = GuiManager.GamePadsForUiControl;
+#if FRB
+        var xboxGamepads = GuiManager.GamePadsForUiControl;
 
-        //for (int i = 0; i < xboxGamepads.Count; i++)
-        //{
-        //    var gamepad = xboxGamepads[i];
+        for (int i = 0; i < xboxGamepads.Count; i++)
+        {
+            var gamepad = xboxGamepads[i];
 
-        //    var movedDown = gamepad.ButtonRepeatRate(FlatRedBall.Input.Xbox360GamePad.Button.DPadDown) ||
-        //        gamepad.LeftStick.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Down);
+            var movedDown = gamepad.ButtonRepeatRate(FlatRedBall.Input.Xbox360GamePad.Button.DPadDown) ||
+                gamepad.LeftStick.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Down);
 
-        //    var movedUp = gamepad.ButtonRepeatRate(FlatRedBall.Input.Xbox360GamePad.Button.DPadUp) ||
-        //             gamepad.LeftStick.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Up);
+            var movedUp = gamepad.ButtonRepeatRate(FlatRedBall.Input.Xbox360GamePad.Button.DPadUp) ||
+                     gamepad.LeftStick.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Up);
 
-        //    var pressedButton = gamepad.ButtonPushed(FlatRedBall.Input.Xbox360GamePad.Button.A) ||
-        //        gamepad.ButtonPushed(FlatRedBall.Input.Xbox360GamePad.Button.B);
-        //    DoDropDownOpenFocusUpdate(movedDown, movedUp, pressedButton);
-        //}
+            var pressedButton = gamepad.ButtonPushed(FlatRedBall.Input.Xbox360GamePad.Button.A) ||
+                gamepad.ButtonPushed(FlatRedBall.Input.Xbox360GamePad.Button.B);
+            DoDropDownOpenFocusUpdate(movedDown, movedUp, pressedButton);
+        }
 
-        //var genericGamepads = GuiManager.GenericGamePadsForUiControl;
-        //for (int i = 0; i < genericGamepads.Count; i++)
-        //{
-        //    var gamepad = genericGamepads[i];
+        var genericGamepads = GuiManager.GenericGamePadsForUiControl;
+        for(int i = 0; i < genericGamepads.Count; i++)
+        {
+            var gamepad = genericGamepads[i];
 
-        //    var movedDown = gamepad.DPadRepeatRate(Xbox360GamePad.DPadDirection.Down) ||
-        //        (gamepad.AnalogSticks.Length > 0 && gamepad.AnalogSticks[0].AsDPadPushedRepeatRate(Xbox360GamePad.DPadDirection.Down));
-        //    var movedUp = gamepad.DPadRepeatRate(Xbox360GamePad.DPadDirection.Up) ||
-        //        (gamepad.AnalogSticks.Length > 0 && gamepad.AnalogSticks[0].AsDPadPushedRepeatRate(Xbox360GamePad.DPadDirection.Up));
+            var movedDown = gamepad.DPadRepeatRate(Xbox360GamePad.DPadDirection.Down) ||
+                (gamepad.AnalogSticks.Length > 0 && gamepad.AnalogSticks[0].AsDPadPushedRepeatRate(Xbox360GamePad.DPadDirection.Down));
+            var movedUp = gamepad.DPadRepeatRate(Xbox360GamePad.DPadDirection.Up) ||
+                (gamepad.AnalogSticks.Length > 0 && gamepad.AnalogSticks[0].AsDPadPushedRepeatRate(Xbox360GamePad.DPadDirection.Up));
 
-        //    var inputDevice = gamepad as IInputDevice;
+            var inputDevice = gamepad as IInputDevice;
 
-        //    var pressedButton = inputDevice.DefaultPrimaryActionInput.WasJustPressed || inputDevice.DefaultBackInput.WasJustPressed;
+            var pressedButton = inputDevice.DefaultPrimaryActionInput.WasJustPressed || inputDevice.DefaultBackInput.WasJustPressed;
 
-        //    DoDropDownOpenFocusUpdate(movedDown, movedUp, pressedButton);
-        //}
+            DoDropDownOpenFocusUpdate(movedDown, movedUp, pressedButton);
+        }
+#endif
     }
 
     private void DoDropDownOpenFocusUpdate(bool movedDown, bool movedUp, bool pressedButton)
@@ -566,67 +593,69 @@ public class ComboBox : FrameworkElement
 
     private void DoClosedDropDownFocusUpdate()
     {
-        //var gamepads = GuiManager.GamePadsForUiControl;
+#if FRB
+        var gamepads = GuiManager.GamePadsForUiControl;
 
-        //for (int i = 0; i < gamepads.Count; i++)
-        //{
-        //    var gamepad = gamepads[i];
+        for (int i = 0; i < gamepads.Count; i++)
+        {
+            var gamepad = gamepads[i];
 
-        //    HandleGamepadNavigation(gamepad);
+            HandleGamepadNavigation(gamepad);
 
-        //    if (gamepad.ButtonPushed(FlatRedBall.Input.Xbox360GamePad.Button.A))
-        //    {
-        //        IsDropDownOpen = IsDropDownOpen = true;
+            if (gamepad.ButtonPushed(FlatRedBall.Input.Xbox360GamePad.Button.A))
+            {
+                IsDropDownOpen = IsDropDownOpen = true;
 
-        //        if (SelectedIndex > -1 && SelectedIndex < this.Items.Count)
-        //        {
-        //            this.listBox.ListBoxItems[SelectedIndex].IsFocused = true;
-        //        }
-        //    }
+                if(SelectedIndex > -1 && SelectedIndex < this.Items.Count)
+                {
+                    this.listBox.ListBoxItems[SelectedIndex].IsFocused = true;
+                }
+            }
 
-        //    void RaiseIfPushedAndEnabled(FlatRedBall.Input.Xbox360GamePad.Button button)
-        //    {
-        //        if (IsEnabled && gamepad.ButtonPushed(button))
-        //        {
-        //            ControllerButtonPushed?.Invoke(button);
-        //        }
-        //    }
+            void RaiseIfPushedAndEnabled(FlatRedBall.Input.Xbox360GamePad.Button button)
+            {
+                if (IsEnabled && gamepad.ButtonPushed(button))
+                {
+                    ControllerButtonPushed?.Invoke(button);
+                }
+            }
 
-        //    RaiseIfPushedAndEnabled(Xbox360GamePad.Button.B);
-        //    RaiseIfPushedAndEnabled(Xbox360GamePad.Button.X);
-        //    RaiseIfPushedAndEnabled(Xbox360GamePad.Button.Y);
-        //    RaiseIfPushedAndEnabled(Xbox360GamePad.Button.Start);
-        //    RaiseIfPushedAndEnabled(Xbox360GamePad.Button.Back);
-        //}
+            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.B);
+            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.X);
+            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.Y);
+            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.Start);
+            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.Back);
+        }
 
-        //var genericGamepads = GuiManager.GenericGamePadsForUiControl;
-        //for (int i = 0; i < genericGamepads.Count; i++)
-        //{
-        //    var gamepad = genericGamepads[i];
+        var genericGamepads = GuiManager.GenericGamePadsForUiControl;
+        for(int i = 0; i < genericGamepads.Count; i++)
+        {
+            var gamepad = genericGamepads[i];
 
-        //    HandleGamepadNavigation(gamepad);
+            HandleGamepadNavigation(gamepad);
 
-        //    if ((gamepad as IInputDevice).DefaultConfirmInput.WasJustPressed)
-        //    {
-        //        IsDropDownOpen = IsDropDownOpen = true;
+            if ((gamepad as IInputDevice).DefaultConfirmInput.WasJustPressed)
+            {
+                IsDropDownOpen = IsDropDownOpen = true;
 
-        //        if (SelectedIndex > -1 && SelectedIndex < this.Items.Count)
-        //        {
-        //            this.listBox.ListBoxItems[SelectedIndex].IsFocused = true;
-        //        }
-        //    }
+                if (SelectedIndex > -1 && SelectedIndex < this.Items.Count)
+                {
+                    this.listBox.ListBoxItems[SelectedIndex].IsFocused = true;
+                }
+            }
 
-        //    if (IsEnabled)
-        //    {
-        //        for (int buttonIndex = 0; buttonIndex < gamepad.NumberOfButtons; i++)
-        //        {
-        //            if (gamepad.ButtonPushed(buttonIndex))
-        //            {
-        //                GenericGamepadButtonPushed?.Invoke(buttonIndex);
-        //            }
-        //        }
-        //    }
-        //}
+            if(IsEnabled)
+            {
+                for(int buttonIndex = 0; buttonIndex < gamepad.NumberOfButtons; i++)
+                {
+                    if(gamepad.ButtonPushed(buttonIndex))
+                    {
+                        GenericGamepadButtonPushed?.Invoke(buttonIndex);
+                    }
+                }
+            }
+        }
+#endif
     }
 
     public void OnGainFocus()
