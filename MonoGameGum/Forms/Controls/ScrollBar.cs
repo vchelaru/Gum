@@ -1,5 +1,7 @@
 ﻿using Gum.Wireframe;
 using System;
+using MonoGameGum.Input;
+
 
 #if FRB
 using FlatRedBall.Gui;
@@ -112,8 +114,7 @@ public class ScrollBar : RangeBase
             var thumbRatio = thumbHeight / visibleTrackSpace;
 
             ViewportSize = (Maximum - Minimum) * thumbRatio;
-
-            if(ViewportSize <= 0)
+            if (ViewportSize <= 0)
             {
                 LargeChange = 10;
             }
@@ -121,7 +122,6 @@ public class ScrollBar : RangeBase
             {
                 LargeChange = ViewportSize;
             }
-
 
             Value = Minimum;
         }
@@ -139,7 +139,6 @@ public class ScrollBar : RangeBase
     protected override void HandleThumbPush(object sender, EventArgs e)
     {
         var topOfThumb = this.thumb.AbsoluteTop;
-        
         var cursorScreen = MainCursor.YRespectingGumZoomAndBounds();
 
         cursorGrabOffsetRelativeToThumb = cursorScreen - topOfThumb;
@@ -209,10 +208,13 @@ public class ScrollBar : RangeBase
 
     }
 
+#if FRB
+    protected override void UpdateThumbPositionToCursorDrag(Cursor cursor)
+#else
     protected override void UpdateThumbPositionToCursorDrag(ICursor cursor)
+#endif
     {
         var cursorScreenY = cursor.YRespectingGumZoomAndBounds();
-
         var cursorYRelativeToTrack = cursorScreenY - Track.AbsoluteTop;
 
 
@@ -286,6 +288,5 @@ public class ScrollBar : RangeBase
         }
     }
 
-    #endregion
-
+#endregion
 }
