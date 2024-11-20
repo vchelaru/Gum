@@ -627,6 +627,9 @@ namespace Gum.Wireframe
         InputDevice LastInputDevice { get; }
         int X { get; }
         int Y { get; }
+        float XRespectingGumZoomAndBounds();
+        float YRespectingGumZoomAndBounds();
+
         int XChange { get; }
         int YChange { get; }
 

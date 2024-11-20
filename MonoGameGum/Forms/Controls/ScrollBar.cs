@@ -130,20 +130,19 @@ public class ScrollBar : RangeBase
     protected override void HandleThumbPush(object sender, EventArgs e)
     {
         var topOfThumb = this.thumb.AbsoluteTop;
-        // Does this need a GumY?
-        //var cursorScreen = GuiManager.Cursor.GumY();
-        var cursorScreen = MainCursor.Y;
+        
+        var cursorScreen = MainCursor.YRespectingGumZoomAndBounds();
 
         cursorGrabOffsetRelativeToThumb = cursorScreen - topOfThumb;
     }
 
-    private void HandleTrackPush(object sender, EventArgs e)
+    private void HandleTrackPush(object sender, EventArgs args)
     {
-        if (MainCursor.Y < thumb.AbsoluteTop)
+        if (MainCursor.YRespectingGumZoomAndBounds() < thumb.AbsoluteTop)
         {
             Value -= LargeChange;
         }
-        else if (MainCursor.Y > thumb.AbsoluteTop + thumb.ActualHeight)
+        else if (MainCursor.YRespectingGumZoomAndBounds() > thumb.AbsoluteTop + thumb.ActualHeight)
         {
             Value += LargeChange;
         }
@@ -203,7 +202,8 @@ public class ScrollBar : RangeBase
 
     protected override void UpdateThumbPositionToCursorDrag(ICursor cursor)
     {
-        var cursorScreenY = cursor.Y;
+        var cursorScreenY = cursor.YRespectingGumZoomAndBounds();
+
         var cursorYRelativeToTrack = cursorScreenY - Track.AbsoluteTop;
 
 
