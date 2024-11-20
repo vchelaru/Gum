@@ -1,11 +1,14 @@
 ﻿using Gum.Wireframe;
+using MonoGameGum.Input;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
+#if FRB
+using FlatRedBall.Gui;
+using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
+namespace FlatRedBall.Forms.Controls;
+#else
 namespace MonoGameGum.Forms.Controls;
+#endif
 
 public class ListBoxItem : FrameworkElement
 {
@@ -33,6 +36,22 @@ public class ListBoxItem : FrameworkElement
     GraphicalUiElement text;
     protected RenderingLibrary.Graphics.Text coreText;
 
+    internal bool IsHighlightSuppressed { get; set; } = false;
+
+    bool isHighlighted;
+    public bool IsHighlighted
+    {
+        get => isHighlighted;
+        set
+        {
+            if (isHighlighted != value)
+            {
+                isHighlighted = value;
+                UpdateState();
+            }
+        }
+    }
+
     #endregion
 
     #region Events
@@ -50,10 +69,19 @@ public class ListBoxItem : FrameworkElement
 
     protected override void ReactToVisualChanged()
     {
+#if FRB
+        Visual.Push += _=> this.HandlePush(this, EventArgs.Empty);
+        Visual.Click += _ => this.HandleClick(this, EventArgs.Empty);
+        Visual.RollOn += _ => this.HandleRollOn(this, EventArgs.Empty);
+        Visual.RollOff += _ => this.HandleRollOff(this, EventArgs.Empty);
+        Visual.RollOver += _ => this.HandleRollOver(this, EventArgs.Empty);
+#else
         Visual.Push += this.HandlePush;
         Visual.Click += this.HandleClick;
         Visual.RollOn += this.HandleRollOn;
         Visual.RollOff += this.HandleRollOff;
+        Visual.RollOver += this.HandleRollOver;
+#endif
 
         // optional
         text = Visual.GetGraphicalUiElementByName("TextInstance");
@@ -72,18 +100,49 @@ public class ListBoxItem : FrameworkElement
 
     private void HandleRollOn(object sender, EventArgs args)
     {
+        var cursor = MainCursor;
+
+        if (cursor.XChange != 0 || cursor.YChange != 0)
+        {
+            UpdateIsHighlightedFromCursor(cursor);
+        }
+
         UpdateState();
+    }
+
+    private void HandleRollOver(object sender, EventArgs args)
+    {
+        var cursor = MainCursor;
+
+        if (cursor.XChange != 0 || cursor.YChange != 0)
+        {
+            UpdateIsHighlightedFromCursor(cursor);
+        }
+
+        UpdateState();
+    }
+
+
+#if FRB
+    private void UpdateIsHighlightedFromCursor(Cursor cursor)
+#else
+    private void UpdateIsHighlightedFromCursor(ICursor cursor)
+#endif
+    {
+        IsHighlighted = cursor.LastInputDevice != InputDevice.TouchScreen &&
+            GetIfIsOnThisOrChildVisual(cursor) && IsEnabled;
     }
 
     private void HandleRollOff(object sender, EventArgs args)
     {
+        IsHighlighted = false;
+
         UpdateState();
     }
 
     private void HandlePush(object sender, EventArgs args)
     {
-        var isMouse = true;
-        if (isMouse)
+        if (MainCursor.LastInputDevice == InputDevice.Mouse)
         {
             IsSelected = true;
 
@@ -93,11 +152,8 @@ public class ListBoxItem : FrameworkElement
 
     private void HandleClick(object sender, EventArgs args)
     {
-        var isTouchScreen = false;
-        if (isTouchScreen &&
-            // FRB uses "no slide" here for touch screens
-            // We don't have that yet.
-            MainCursor.PrimaryClick)
+        if (MainCursor.LastInputDevice == InputDevice.TouchScreen &&
+            MainCursor.PrimaryClickNoSlide)
         {
             IsSelected = true;
 
@@ -120,7 +176,7 @@ public class ListBoxItem : FrameworkElement
     public override void UpdateState()
     {
         var cursor = MainCursor;
-        var isTouchScreen = false;
+
         const string category = "ListBoxItemCategoryState";
 
         //if(IsEnabled == false)
@@ -136,9 +192,17 @@ public class ListBoxItem : FrameworkElement
         {
             Visual.SetProperty(category, "Selected");
         }
-        else if (!isTouchScreen && GetIfIsOnThisOrChildVisual(cursor) && IsEnabled)
+        else if (IsHighlighted)
         {
-            Visual.SetProperty(category, "Highlighted");
+            // If the cursor has moved, highlight. This prevents highlighting from
+            // happening when the cursor is not moving, and the user is moving the focus
+            // with the gamepad. 
+            // Vic says - I'm not sure if this is the solution that I like, but let's start with it...
+            if (cursor.XChange != 0 || cursor.YChange != 0)
+            {
+                Visual.SetProperty(category, "Highlighted");
+            }
+            // otherwise - do nothing?
         }
         else
         {

@@ -616,8 +616,15 @@ namespace Gum.Wireframe
         void DoKeyboardAction(IInputReceiverKeyboard keyboard);
     }
 
+    public enum InputDevice
+    {
+        TouchScreen = 1,
+        Mouse = 2
+    }
+
     public interface ICursor
     {
+        InputDevice LastInputDevice { get; }
         int X { get; }
         int Y { get; }
         int XChange { get; }

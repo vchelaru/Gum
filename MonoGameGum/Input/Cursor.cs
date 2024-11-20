@@ -9,11 +9,7 @@ using System.Threading.Tasks;
 
 namespace MonoGameGum.Input
 {
-    public enum InputDevice
-    {
-        TouchScreen = 1,
-        Mouse = 2
-    }
+
 
     public class Cursor : ICursor
     {
