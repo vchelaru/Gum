@@ -1,13 +1,16 @@
 ﻿using Gum.Wireframe;
-using MonoGameGum.Forms.Controls.Primitives;
-using MonoGameGum.Input;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
+#if FRB
+using FlatRedBall.Gui;
+using FlatRedBall.Forms.GumExtensions;
+using FlatRedBall.Forms.Controls.Primitives;
+using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
+namespace FlatRedBall.Forms.Controls;
+#else
+using MonoGameGum.Forms.Controls.Primitives;
 namespace MonoGameGum.Forms.Controls;
+#endif
 
 public class ScrollBar : RangeBase
 {
@@ -93,7 +96,11 @@ public class ScrollBar : RangeBase
 
         upButton.Push += (not, used) => this.Value -= this.SmallChange;
         downButton.Push += (not, used) => this.Value += this.SmallChange;
+#if FRB
+        Track.Push += _ => HandleTrackPush(this, EventArgs.Empty);
+#else
         Track.Push += HandleTrackPush;
+#endif
         Visual.SizeChanged += HandleVisualSizeChange;
 
 

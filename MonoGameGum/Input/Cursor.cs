@@ -21,7 +21,21 @@ namespace MonoGameGum.Input
 
         public int X { get; private set; }
 
+        public float XRespectingGumZoomAndBounds()
+        {
+            var renderer = RenderingLibrary.SystemManagers.Default.Renderer;
+            var zoom = renderer.Camera.Zoom;
+            return (X / zoom) - renderer.GraphicsDevice.Viewport.Bounds.Left;
+        }
+
         public int Y { get; private set; }
+
+        public float YRespectingGumZoomAndBounds()
+        {
+            var renderer = RenderingLibrary.SystemManagers.Default.Renderer;
+            var zoom = renderer.Camera.Zoom;
+            return (Y / zoom) - renderer.GraphicsDevice.Viewport.Bounds.Top;
+        }
 
         public int LastX { get; private set; }
         public int LastY { get; private set; }

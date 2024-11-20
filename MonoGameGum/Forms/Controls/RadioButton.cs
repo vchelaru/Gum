@@ -1,12 +1,13 @@
-﻿using Gum.Wireframe;
-using MonoGameGum.Forms.Controls.Primitives;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Gum.Wireframe;
 
+#if FRB
+using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
+namespace FlatRedBall.Forms.Controls;
+#else
 namespace MonoGameGum.Forms.Controls;
+#endif
 
 public class RadioButton : ToggleButton
 {
@@ -215,6 +216,7 @@ public class RadioButton : ToggleButton
         Visual.SetProperty(category, state);
     }
 
+
     #endregion
 
     #region Event Handlers
@@ -255,5 +257,4 @@ public class RadioButton : ToggleButton
         // won't repeat indefinitely.
         SetThisAsOnlyCheckedInGroup();
     }
-
 }
