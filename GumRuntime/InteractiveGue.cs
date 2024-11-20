@@ -635,6 +635,8 @@ namespace Gum.Wireframe
 
         int ScrollWheelChange { get; }
 
+        float ZVelocity { get; }
+
         bool PrimaryPush { get; }
         bool PrimaryDown { get; }
         bool PrimaryClick { get; }

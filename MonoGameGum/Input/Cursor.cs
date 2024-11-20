@@ -52,6 +52,12 @@ namespace MonoGameGum.Input
 
         public int ScrollWheelChange => (_mouseState.ScrollWheelValue - mLastFrameMouseState.ScrollWheelValue) / 120;
 
+
+        /// <summary>
+        /// The movement rate of the controlling input (usually mouse) on the z axis. For the mouse this refers to the scroll wheel.
+        /// </summary>
+        public float ZVelocity => ScrollWheelChange;
+
         public bool PrimaryPush
         {
             get
