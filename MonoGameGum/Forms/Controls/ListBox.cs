@@ -35,6 +35,20 @@ public enum ScrollIntoViewStyle
     Bottom
 }
 
+#if !FRB
+
+public enum RepositionDirections
+{
+    None = 0,
+    Up = 1,
+    Down = 2,
+    Left = 4,
+    Right = 8,
+    All = 15,
+}
+
+#endif
+
 public class ListBox : ItemsControl, IInputReceiver
 {
     #region Fields/Properties
@@ -368,6 +382,7 @@ public class ListBox : ItemsControl, IInputReceiver
 
     private void DoListItemFocusUpdate()
     {
+#if FRB
         var xboxGamepads = GuiManager.GamePadsForUiControl;
 
 
@@ -382,7 +397,7 @@ public class ListBox : ItemsControl, IInputReceiver
             {
                 direction = RepositionDirections.Down;
             }
-
+            
             if (gamepad.ButtonRepeatRate(FlatRedBall.Input.Xbox360GamePad.Button.DPadRight) ||
                 gamepad.LeftStick.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Right))
             {
@@ -436,7 +451,7 @@ public class ListBox : ItemsControl, IInputReceiver
 
             RepositionDirections? direction = null;
 
-            if (gamepad.DPadRepeatRate(Xbox360GamePad.DPadDirection.Down) ||
+            if(gamepad.DPadRepeatRate(Xbox360GamePad.DPadDirection.Down) ||
                 (gamepad.AnalogSticks.Length > 0 && gamepad.AnalogSticks[0].AsDPadPushedRepeatRate(Xbox360GamePad.DPadDirection.Down)))
             {
                 direction = RepositionDirections.Down;
@@ -448,13 +463,13 @@ public class ListBox : ItemsControl, IInputReceiver
                 direction = RepositionDirections.Right;
             }
 
-            if (gamepad.DPadRepeatRate(Xbox360GamePad.DPadDirection.Up) ||
+            if(gamepad.DPadRepeatRate(Xbox360GamePad.DPadDirection.Up) ||
                 (gamepad.AnalogSticks.Length > 0 && gamepad.AnalogSticks[0].AsDPadPushedRepeatRate(Xbox360GamePad.DPadDirection.Up)))
             {
                 direction = RepositionDirections.Up;
             }
-
-            if (gamepad.DPadRepeatRate(Xbox360GamePad.DPadDirection.Left) ||
+            
+            if(gamepad.DPadRepeatRate(Xbox360GamePad.DPadDirection.Left) ||
                 (gamepad.AnalogSticks.Length > 0 && gamepad.AnalogSticks[0].AsDPadPushedRepeatRate(Xbox360GamePad.DPadDirection.Left)))
             {
                 direction = RepositionDirections.Left;
@@ -462,13 +477,14 @@ public class ListBox : ItemsControl, IInputReceiver
 
             var inputDevice = gamepad as IInputDevice;
 
-            var pressedButton =
-                (LoseListItemFocusOnPrimaryInput && inputDevice.DefaultPrimaryActionInput.WasJustPressed) ||
+            var pressedButton = 
+                (LoseListItemFocusOnPrimaryInput && inputDevice.DefaultPrimaryActionInput.WasJustPressed) || 
                 inputDevice.DefaultBackInput.WasJustPressed;
 
             DoListItemFocusUpdate(direction, pressedButton);
 
         }
+#endif
 
     }
 
@@ -623,6 +639,7 @@ public class ListBox : ItemsControl, IInputReceiver
 
     private void DoTopLevelFocusUpdate()
     {
+#if FRB
         var gamepads = GuiManager.GamePadsForUiControl;
 
         for (int i = 0; i < gamepads.Count; i++)
@@ -669,17 +686,18 @@ public class ListBox : ItemsControl, IInputReceiver
                 DoListItemsHaveFocus = true;
             }
 
-            if (IsEnabled)
+            if(IsEnabled)
             {
-                for (var buttonIndex = 0; buttonIndex < gamepad.NumberOfButtons; i++)
+                for(var buttonIndex = 0; buttonIndex < gamepad.NumberOfButtons; i++)
                 {
-                    if (gamepad.ButtonPushed(buttonIndex))
+                    if(gamepad.ButtonPushed(buttonIndex))
                     {
                         GenericGamepadButtonPushed?.Invoke(buttonIndex);
                     }
                 }
             }
         }
+#endif
 
     }
 
@@ -687,11 +705,13 @@ public class ListBox : ItemsControl, IInputReceiver
     {
     }
 
+    public void LoseFocus() => OnLoseFocus();
+
     /// <summary>
     /// Removes focus from the ListBox, both at the top level and at the individual item level, even if CanListItemsLoseFocus is set to false.
     /// </summary>
-    public void LoseFocus()
-    {
+    public void OnLoseFocus()
+    { 
         IsFocused = false;
 
         if (DoListItemsHaveFocus)
@@ -709,6 +729,10 @@ public class ListBox : ItemsControl, IInputReceiver
     }
 
     public void HandleCharEntered(char character)
+    {
+    }
+
+    public void DoKeyboardAction(IInputReceiverKeyboard keyboard)
     {
     }
 
