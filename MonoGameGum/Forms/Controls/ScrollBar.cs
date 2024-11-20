@@ -112,7 +112,16 @@ public class ScrollBar : RangeBase
             var thumbRatio = thumbHeight / visibleTrackSpace;
 
             ViewportSize = (Maximum - Minimum) * thumbRatio;
-            LargeChange = ViewportSize;
+
+            if(ViewportSize <= 0)
+            {
+                LargeChange = 10;
+            }
+            else
+            {
+                LargeChange = ViewportSize;
+            }
+
 
             Value = Minimum;
         }
