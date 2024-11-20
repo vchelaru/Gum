@@ -29,11 +29,9 @@ public enum ScrollBarVisibility
 
 #endregion
 
-
 public class ScrollViewer : FrameworkElement
 {
     public const string VerticalScrollBarInstanceName = "VerticalScrollBarInstance";
-
 
     #region Fields/Properties
 
@@ -87,15 +85,16 @@ public class ScrollViewer : FrameworkElement
     {
         var scrollBarVisualAsGue = Visual.GetGraphicalUiElementByName(VerticalScrollBarInstanceName);
 #if DEBUG
-        if(scrollBarVisualAsGue == null)
+        if (scrollBarVisualAsGue == null)
         {
             throw new InvalidOperationException($"Could not find a child with the name {VerticalScrollBarInstanceName}");
         }
 #endif
+
         var scrollBarVisual = scrollBarVisualAsGue as InteractiveGue;
 
 #if DEBUG
-        if(scrollBarVisual == null)
+        if (scrollBarVisual == null)
         {
             throw new InvalidOperationException($"The child with the name {VerticalScrollBarInstanceName} was found, but is not an InteractiveGue." +
                 $" Did you forget to set forms associations for this type?");
@@ -119,6 +118,7 @@ public class ScrollViewer : FrameworkElement
         // value causing confusion? If so, we'd need to store off a temp value.
         verticalScrollBar.SmallChange = 10;
         verticalScrollBar.LargeChange = verticalScrollBar.ViewportSize;
+
 
         // Depending on the height and width units, the scroll bar may get its update
         // called before or after this. We can't bet on the order, so we have to handle
@@ -172,7 +172,6 @@ public class ScrollViewer : FrameworkElement
     }
 
 
-
     #endregion
 
     #region Scroll Methods
@@ -180,6 +179,7 @@ public class ScrollViewer : FrameworkElement
     private void HandleMouseWheelScroll(object sender, RoutedEventArgs args)
     {
         var valueBefore = verticalScrollBar.Value;
+
         // Do we want to use the small change? Or have some separate value that the user can set?
         verticalScrollBar.Value -= MainCursor.ZVelocity * verticalScrollBar.SmallChange;
 
@@ -284,5 +284,4 @@ public class ScrollViewer : FrameworkElement
 
 
     #endregion
-
 }
