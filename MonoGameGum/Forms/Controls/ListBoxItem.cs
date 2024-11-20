@@ -1,5 +1,4 @@
 ﻿using Gum.Wireframe;
-using MonoGameGum.Input;
 using System;
 
 #if FRB
@@ -82,7 +81,6 @@ public class ListBoxItem : FrameworkElement
         Visual.RollOff += this.HandleRollOff;
         Visual.RollOver += this.HandleRollOver;
 #endif
-
         // optional
         text = Visual.GetGraphicalUiElementByName("TextInstance");
         coreText = text?.RenderableComponent as RenderingLibrary.Graphics.Text;
@@ -93,6 +91,7 @@ public class ListBoxItem : FrameworkElement
 
         base.ReactToVisualChanged();
     }
+
 
     #endregion
 
@@ -110,6 +109,7 @@ public class ListBoxItem : FrameworkElement
         UpdateState();
     }
 
+
     private void HandleRollOver(object sender, EventArgs args)
     {
         var cursor = MainCursor;
@@ -121,7 +121,6 @@ public class ListBoxItem : FrameworkElement
 
         UpdateState();
     }
-
 
 #if FRB
     private void UpdateIsHighlightedFromCursor(Cursor cursor)
@@ -220,6 +219,5 @@ public class ListBoxItem : FrameworkElement
     }
 
     #endregion
-
 
 }

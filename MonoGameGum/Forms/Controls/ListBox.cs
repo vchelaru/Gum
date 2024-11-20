@@ -1,14 +1,9 @@
 ﻿using Gum.Wireframe;
-using Microsoft.Xna.Framework.Input;
-using MonoGameGum.Input;
-using RenderingLibrary;
-using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using RenderingLibrary;
+using Microsoft.Xna.Framework.Input;
 
 #if FRB
 using FlatRedBall.Input;
@@ -34,6 +29,7 @@ public enum ScrollIntoViewStyle
     Center,
     Bottom
 }
+
 
 #if !FRB
 
@@ -219,8 +215,13 @@ public class ListBox : ItemsControl, IInputReceiver
     public event Action<IInputReceiver> FocusUpdate;
 
     /// <summary>
-    /// Event raised when the user presses a button at the top-level (if the list box has focus, but the individual items do not)
+    /// Event raised when the user presses a button, whether at the top level or internally on
+    /// an item.
     /// </summary>
+    /// <remarks>
+    /// Until July 2024 this was only firing at the top level. July 2024 version also raises
+    /// this event when a button is pushed on an item.
+    /// </remarks>
 #if FRB
     public event Action<Xbox360GamePad.Button> ControllerButtonPushed;
 #endif
@@ -485,7 +486,6 @@ public class ListBox : ItemsControl, IInputReceiver
 
         }
 #endif
-
     }
 
     private int? GetListBoxIndexAt(float x, float y)
@@ -698,20 +698,20 @@ public class ListBox : ItemsControl, IInputReceiver
             }
         }
 #endif
-
     }
 
     public void OnGainFocus()
     {
     }
 
+    [Obsolete("use OnLoseFocus instead")]
     public void LoseFocus() => OnLoseFocus();
 
     /// <summary>
     /// Removes focus from the ListBox, both at the top level and at the individual item level, even if CanListItemsLoseFocus is set to false.
     /// </summary>
     public void OnLoseFocus()
-    { 
+    {
         IsFocused = false;
 
         if (DoListItemsHaveFocus)
@@ -735,6 +735,7 @@ public class ListBox : ItemsControl, IInputReceiver
     public void DoKeyboardAction(IInputReceiverKeyboard keyboard)
     {
     }
+
 
     #endregion
 }
