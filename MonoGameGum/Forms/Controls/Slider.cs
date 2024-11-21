@@ -4,8 +4,6 @@ using Gum.Wireframe;
 using RenderingLibrary;
 using Microsoft.Xna.Framework.Input;
 
-
-
 #if FRB
 using FlatRedBall.Gui;
 using FlatRedBall.Input;
@@ -42,7 +40,6 @@ public class Slider : RangeBase, IInputReceiver
     #endregion
 
     #region Events
-
 
     public event Action<IInputReceiver> FocusUpdate;
 
@@ -81,6 +78,7 @@ public class Slider : RangeBase, IInputReceiver
         base.ReactToVisualChanged();
 
         Track.Push += HandleTrackPush;
+
 #if FRB
         base.thumb.Visual.RemovedAsPushedWindow += _ => HandleRemovedAsPushedWindow(this, EventArgs.Empty);
 #else
@@ -112,7 +110,7 @@ public class Slider : RangeBase, IInputReceiver
         {
             leftOfThumb += this.thumb.ActualWidth;
         }
-        var cursorScreen = MainCursor.X;
+        var cursorScreen = MainCursor.XRespectingGumZoomAndBounds();
 
         cursorGrabOffsetRelativeToThumb = cursorScreen - leftOfThumb;
 
@@ -217,7 +215,7 @@ public class Slider : RangeBase, IInputReceiver
 
         if (IsSnapToTickEnabled)
         {
-            newValue = MathFunctions.RoundDouble(newValue, TicksFrequency, Minimum);
+            newValue = Math.MathFunctions.RoundDouble(newValue, TicksFrequency, Minimum);
 
             var range = Maximum - Minimum;
             var lastTick = ((int)((Maximum - Minimum) / TicksFrequency)) * TicksFrequency;
@@ -288,11 +286,15 @@ public class Slider : RangeBase, IInputReceiver
         thumb.X = 100 * (float)ratioOver;
     }
 
+#if FRB
+    protected override void UpdateThumbPositionToCursorDrag(Cursor cursor)
+#else
     protected override void UpdateThumbPositionToCursorDrag(ICursor cursor)
+#endif
     {
         var valueBefore = Value;
 
-        var cursorScreenX = cursor.X;
+        var cursorScreenX = cursor.XRespectingGumZoomAndBounds();
 
         var cursorXRelativeToTrack = cursorScreenX - Track.AbsoluteLeft;
 
@@ -479,5 +481,4 @@ public class Slider : RangeBase, IInputReceiver
 
 
     #endregion
-
 }
