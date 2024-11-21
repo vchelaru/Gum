@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Gum.Wireframe;
 using RenderingLibrary;
 using Microsoft.Xna.Framework.Input;
+using RenderingLibrary.Math;
 
 #if FRB
 using FlatRedBall.Gui;
@@ -12,7 +13,6 @@ using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 namespace FlatRedBall.Forms.Controls;
 #else
 using MonoGameGum.Input;
-using RenderingLibrary.Math;
 using MonoGameGum.Forms.Controls.Primitives;
 namespace MonoGameGum.Forms.Controls;
 #endif
@@ -215,7 +215,7 @@ public class Slider : RangeBase, IInputReceiver
 
         if (IsSnapToTickEnabled)
         {
-            newValue = Math.MathFunctions.RoundDouble(newValue, TicksFrequency, Minimum);
+            newValue = MathFunctions.RoundDouble(newValue, TicksFrequency, Minimum);
 
             var range = Maximum - Minimum;
             var lastTick = ((int)((Maximum - Minimum) / TicksFrequency)) * TicksFrequency;
