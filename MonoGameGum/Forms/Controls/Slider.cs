@@ -1,15 +1,23 @@
-﻿using Gum.Wireframe;
+﻿using System;
+using System.Collections.Generic;
+using Gum.Wireframe;
+using RenderingLibrary;
 using Microsoft.Xna.Framework.Input;
-using MonoGameGum.Forms.Controls.Primitives;
+
+
+
+#if FRB
+using FlatRedBall.Gui;
+using FlatRedBall.Input;
+using FlatRedBall.Forms.Controls.Primitives;
+using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
+namespace FlatRedBall.Forms.Controls;
+#else
 using MonoGameGum.Input;
 using RenderingLibrary.Math;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
+using MonoGameGum.Forms.Controls.Primitives;
 namespace MonoGameGum.Forms.Controls;
+#endif
 
 public class Slider : RangeBase, IInputReceiver
 {
@@ -35,10 +43,13 @@ public class Slider : RangeBase, IInputReceiver
 
     #region Events
 
-    //public event FocusUpdateDelegate FocusUpdate;
 
-    //public event Action<Xbox360GamePad.Button> ControllerButtonPushed;
-    //public event Action<int> GenericGamepadButtonPushed;
+    public event Action<IInputReceiver> FocusUpdate;
+
+#if FRB
+    public event Action<Xbox360GamePad.Button> ControllerButtonPushed;
+#endif
+    public event Action<int> GenericGamepadButtonPushed;
 
     #endregion
 
@@ -70,7 +81,11 @@ public class Slider : RangeBase, IInputReceiver
         base.ReactToVisualChanged();
 
         Track.Push += HandleTrackPush;
+#if FRB
+        base.thumb.Visual.RemovedAsPushedWindow += _ => HandleRemovedAsPushedWindow(this, EventArgs.Empty);
+#else
         base.thumb.Visual.RemovedAsPushed += HandleRemovedAsPushedWindow;
+#endif
         UpdateState();
     }
 
@@ -122,15 +137,24 @@ public class Slider : RangeBase, IInputReceiver
         }
     }
 
+    // Normally we'd just make this use the standard EventHandler signature
+    // and handle it with a lambda wherever this is used. But for this case we
+    // need to -= the event, so we can't wrap the call in a lambda to fix for the
+    // different signatures in FRB vs MonoGame Gum. therefore, we have to #if the signature
+    // here on the method:
+#if FRB
+    private void HandleTrackPush(IWindow window)
+#else
     private void HandleTrackPush(object sender, EventArgs args)
+#endif
     {
         var valueBefore = Value;
         if (IsMoveToPointEnabled)
         {
-            var left = Track.AbsoluteLeft;
-            var right = Track.AbsoluteLeft + Track.GetAbsoluteWidth();
+            var left = Track.GetAbsoluteX();
+            var right = Track.GetAbsoluteX() + Track.GetAbsoluteWidth();
 
-            var screenX = MainCursor.X;
+            var screenX = MainCursor.XRespectingGumZoomAndBounds();
 
             var ratio = (screenX - left) / (right - left);
 
@@ -145,7 +169,7 @@ public class Slider : RangeBase, IInputReceiver
         {
             double newValue;
 
-            var gumX = MainCursor.X;
+            var gumX = MainCursor.XRespectingGumZoomAndBounds();
             if (gumX < thumb.AbsoluteLeft)
             {
                 newValue = Value - LargeChange;
@@ -318,80 +342,85 @@ public class Slider : RangeBase, IInputReceiver
 
     public void OnFocusUpdate()
     {
-        //var gamepads = GuiManager.GamePadsForUiControl;
+#if FRB
+        var gamepads = GuiManager.GamePadsForUiControl;
 
-        //for (int i = 0; i < gamepads.Count; i++)
-        //{
-        //    var gamepad = gamepads[i];
+        for (int i = 0; i < gamepads.Count; i++)
+        {
+            var gamepad = gamepads[i];
 
-        //    HandleGamepadNavigation(gamepad);
-
-
-        //    if (gamepad.ButtonRepeatRate(FlatRedBall.Input.Xbox360GamePad.Button.DPadLeft) ||
-        //        gamepad.LeftStick.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Left))
-        //    {
-        //        this.Value -= this.SmallChange;
-        //    }
-        //    else if (gamepad.ButtonRepeatRate(FlatRedBall.Input.Xbox360GamePad.Button.DPadRight) ||
-        //        gamepad.LeftStick.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Right))
-        //    {
-        //        this.Value += this.SmallChange;
-        //    }
+            HandleGamepadNavigation(gamepad);
 
 
-        //    void RaiseIfPushedAndEnabled(FlatRedBall.Input.Xbox360GamePad.Button button)
-        //    {
-        //        if (IsEnabled && gamepad.ButtonPushed(button))
-        //        {
-        //            ControllerButtonPushed?.Invoke(button);
-        //        }
-        //    }
+            if (gamepad.ButtonRepeatRate(FlatRedBall.Input.Xbox360GamePad.Button.DPadLeft) ||
+                gamepad.LeftStick.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Left))
+            {
+                this.Value -= this.SmallChange;
+            }
+            else if (gamepad.ButtonRepeatRate(FlatRedBall.Input.Xbox360GamePad.Button.DPadRight) ||
+                gamepad.LeftStick.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Right))
+            {
+                this.Value += this.SmallChange;
+            }
 
-        //    RaiseIfPushedAndEnabled(Xbox360GamePad.Button.B);
-        //    RaiseIfPushedAndEnabled(Xbox360GamePad.Button.X);
-        //    RaiseIfPushedAndEnabled(Xbox360GamePad.Button.Y);
-        //    RaiseIfPushedAndEnabled(Xbox360GamePad.Button.Start);
-        //    RaiseIfPushedAndEnabled(Xbox360GamePad.Button.Back);
-        //}
 
-        //var genericGamepads = GuiManager.GenericGamePadsForUiControl;
-        //for (int i = 0; i < genericGamepads.Count; i++)
-        //{
-        //    var gamepad = genericGamepads[i];
+            void RaiseIfPushedAndEnabled(FlatRedBall.Input.Xbox360GamePad.Button button)
+            {
+                if (IsEnabled && gamepad.ButtonPushed(button))
+                {
+                    ControllerButtonPushed?.Invoke(button);
+                }
+            }
 
-        //    HandleGamepadNavigation(gamepad);
+            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.B);
+            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.X);
+            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.Y);
+            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.Start);
+            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.Back);
+        }
 
-        //    var leftStick = gamepad.AnalogSticks.Length > 0
-        //        ? gamepad.AnalogSticks[0]
-        //        : null;
+        var genericGamepads = GuiManager.GenericGamePadsForUiControl;
+        for (int i = 0; i < genericGamepads.Count; i++)
+        {
+            var gamepad = genericGamepads[i];
 
-        //    if (gamepad.DPadRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Left) ||
-        //        leftStick?.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Left) == true)
-        //    {
-        //        this.Value -= this.SmallChange;
-        //    }
-        //    else if (gamepad.DPadRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Right) ||
-        //        leftStick?.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Right) == true)
-        //    {
-        //        this.Value += this.SmallChange;
-        //    }
+            HandleGamepadNavigation(gamepad);
 
-        //    if (IsEnabled)
-        //    {
-        //        for (int buttonIndex = 0; buttonIndex < gamepad.NumberOfButtons; i++)
-        //        {
-        //            if (gamepad.ButtonPushed(buttonIndex))
-        //            {
-        //                GenericGamepadButtonPushed?.Invoke(buttonIndex);
-        //            }
-        //        }
-        //    }
-        //}
+            var leftStick = gamepad.AnalogSticks.Length > 0
+                ? gamepad.AnalogSticks[0]
+                : null;
+
+            if (gamepad.DPadRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Left) ||
+                leftStick?.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Left) == true)
+            {
+                this.Value -= this.SmallChange;
+            }
+            else if (gamepad.DPadRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Right) ||
+                leftStick?.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Right) == true)
+            {
+                this.Value += this.SmallChange;
+            }
+
+            if (IsEnabled)
+            {
+                for (int buttonIndex = 0; buttonIndex < gamepad.NumberOfButtons; i++)
+                {
+                    if (gamepad.ButtonPushed(buttonIndex))
+                    {
+                        GenericGamepadButtonPushed?.Invoke(buttonIndex);
+                    }
+                }
+            }
+        }
+#endif
     }
 
     public void OnGainFocus()
     {
     }
+
+    [Obsolete("Use OnLoseFocus instead")]
+    public void LoseFocus() => OnLoseFocus();
 
     public void OnLoseFocus()
     {
@@ -402,6 +431,7 @@ public class Slider : RangeBase, IInputReceiver
     {
     }
 
+#if !FRB
     public void DoKeyboardAction(IInputReceiverKeyboard keyboard)
     {
         OnFocusUpdate();
@@ -437,6 +467,7 @@ public class Slider : RangeBase, IInputReceiver
             }
         }
     }
+#endif
 
     public void HandleKeyDown(Keys key, bool isShiftDown, bool isAltDown, bool isCtrlDown)
     {
