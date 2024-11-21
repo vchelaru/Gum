@@ -1,6 +1,5 @@
 ﻿using Gum.Wireframe;
 using System;
-using MonoGameGum.Input;
 
 
 #if FRB
@@ -10,6 +9,7 @@ using FlatRedBall.Forms.Controls.Primitives;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 namespace FlatRedBall.Forms.Controls;
 #else
+using MonoGameGum.Input;
 using MonoGameGum.Forms.Controls.Primitives;
 namespace MonoGameGum.Forms.Controls;
 #endif

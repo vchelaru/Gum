@@ -190,7 +190,7 @@ public class ItemsControl : ScrollViewer
             if (listBoxFormsConstructor == null)
             {
 #if FRB
-                const string TyepName = "GraphicalUiElement";
+                const string TypeName = "GraphicalUiElement";
 #else
                 const string TypeName = "InteractiveGue";
 #endif
