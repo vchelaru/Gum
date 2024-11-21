@@ -46,7 +46,7 @@ public class ToggleButton : ButtonBase
                     Indeterminate?.Invoke(this, null);
                 }
 
-                //PushValueToViewModel();
+                PushValueToViewModel();
             }
         }
     }
@@ -163,5 +163,4 @@ public class ToggleButton : ButtonBase
             IsChecked = true;
         }
     }
-
 }
