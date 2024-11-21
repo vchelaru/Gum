@@ -1,7 +1,6 @@
 ﻿using Gum.Wireframe;
 using System;
 
-
 #if FRB
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 namespace FlatRedBall.Forms.Controls;
@@ -54,7 +53,7 @@ public class TextBox : TextBoxBase
 
     public event EventHandler TextChanged;
 
-    #endregion 
+    #endregion
 
     #region Initialize Methods
 
@@ -86,7 +85,6 @@ public class TextBox : TextBoxBase
             {
                 DeleteSelection();
             }
-
 
             // If text is null force it to be an empty string so we can add characters
             string newText = Text ?? "";
