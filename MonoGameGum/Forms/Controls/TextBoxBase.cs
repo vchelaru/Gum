@@ -1,18 +1,18 @@
 ﻿using Gum.Wireframe;
 using Microsoft.Xna.Framework.Input;
-using MonoGameGum.Input;
 using RenderingLibrary;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ToolsUtilities;
 
 #if FRB
+using FlatRedBall.Forms.Input;
+using FlatRedBall.Gui;
+using FlatRedBall.Input;
+using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 namespace FlatRedBall.Forms.Controls;
 #else
+using MonoGameGum.Input;
 namespace MonoGameGum.Forms.Controls;
 #endif
 
@@ -257,12 +257,21 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
         if (caretComponent == null) throw new Exception("Gum object must have an object called \"Caret\"");
 #endif
 
+#if FRB
+        Visual.Click += _ => this.HandleClick(this, EventArgs.Empty);
+        Visual.Push += _ => this.HandlePush(this, EventArgs.Empty);
+        Visual.RollOn += _ => this.HandleRollOn(this, EventArgs.Empty);
+        Visual.RollOver += _ => this.HandleRollOver(this, EventArgs.Empty);
+        Visual.DragOver += _ => this.HandleDrag(this, EventArgs.Empty);
+        Visual.RollOff += _ => this.HandleRollOff(this, EventArgs.Empty);
+#else
         Visual.Click += this.HandleClick;
         Visual.Push += this.HandlePush;
         Visual.RollOn += this.HandleRollOn;
         Visual.RollOver += this.HandleRollOver;
         Visual.Dragging += this.HandleDrag;
         Visual.RollOff += this.HandleRollOff;
+#endif
         Visual.SizeChanged += HandleVisualSizeChanged;
 
         this.textComponent.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
@@ -359,13 +368,8 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
 
     private void HandleRollOver(object sender, EventArgs args)
     {
-        var isMouse = true;
-        if (isMouse)
+        if (MainCursor.LastInputDevice == InputDevice.Mouse)
         {
-            if(this.SelectionLength != 0)
-            {
-                Debug.WriteLine($"{MainCursor.WindowPushed == this.Visual} && {indexPushed != null} && {MainCursor.PrimaryDown} && {!MainCursor.PrimaryDoublePush}");
-            }
             if (MainCursor.WindowPushed == this.Visual && indexPushed != null && MainCursor.PrimaryDown && !MainCursor.PrimaryDoublePush)
             {
                 var currentIndex = GetCaretIndexAtCursor();
@@ -382,13 +386,11 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
 
     private void HandleDrag(object sender, EventArgs args)
     {
-        var isTouchScreen = false;
-        if (isTouchScreen)
+        if (MainCursor.LastInputDevice == InputDevice.TouchScreen)
         {
             if (MainCursor.WindowPushed == this.Visual && MainCursor.PrimaryDown)
             {
                 var xChange = MainCursor.XChange / RenderingLibrary.SystemManagers.Default.Renderer.Camera.Zoom;
-
 
                 var bitmapFont = this.coreTextObject.BitmapFont;
                 var stringLength = bitmapFont.MeasureString(DisplayedText);
@@ -425,8 +427,8 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
 
     private int GetCaretIndexAtCursor()
     {
-        var cursorScreenX = MainCursor.X;
-        var cursorScreenY = MainCursor.Y;
+        var cursorScreenX = MainCursor.XRespectingGumZoomAndBounds();
+        var cursorScreenY = MainCursor.YRespectingGumZoomAndBounds();
         return GetCaretIndexAtPosition(cursorScreenX, cursorScreenY);
     }
 
@@ -803,10 +805,12 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
         IsFocused = true;
     }
 
+    [Obsolete("Use OnLoseFocus instead")]
+    public void LoseFocus() => OnLoseFocus();
+
     public void OnLoseFocus()
     {
         IsFocused = false;
-
     }
 
     public void DoKeyboardAction(IInputReceiverKeyboard keyboard)
@@ -858,8 +862,6 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
     {
         var cursor = MainCursor;
 
-        var isTouchScreen = false;
-
         if (IsEnabled == false)
         {
             Visual.SetProperty(CategoryName, "Disabled");
@@ -868,7 +870,7 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
         {
             Visual.SetProperty(CategoryName, "Selected");
         }
-        else if (!isTouchScreen && Visual.Managers != null && Visual.HasCursorOver(cursor))
+        else if (cursor.LastInputDevice != InputDevice.TouchScreen && Visual.EffectiveManagers != null && Visual.HasCursorOver(cursor))
         {
             Visual.SetProperty(CategoryName, "Highlighted");
         }
