@@ -1,11 +1,9 @@
 ﻿using Gum.Wireframe;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 #if FRB
+using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 namespace FlatRedBall.Forms.Controls;
 #else
 namespace MonoGameGum.Forms.Controls;
@@ -34,7 +32,7 @@ public class TextBox : TextBoxBase
 
                 CaretIndex = System.Math.Min(CaretIndex, value?.Length ?? 0);
 
-                TextChanged?.Invoke(this, null);
+                TextChanged?.Invoke(this, EventArgs.Empty);
 
                 UpdatePlaceholderVisibility();
 

@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Forms;
 using MonoGameGum.GueDeriving;
 using RenderingLibrary;
+using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -25,8 +26,8 @@ public class GumFormsSampleGame : Game
         IsMouseVisible = true;
 
         // This sets the initial size:
-        _graphics.PreferredBackBufferWidth = 1024;
-        _graphics.PreferredBackBufferHeight = 768;
+        _graphics.PreferredBackBufferWidth = 3200;
+        _graphics.PreferredBackBufferHeight = 2400;
 
         _graphics.SupportedOrientations = DisplayOrientation.LandscapeLeft | DisplayOrientation.LandscapeRight;
 #if (ANDROID || iOS)
@@ -121,6 +122,8 @@ public class GumFormsSampleGame : Game
             // Put a breakpoint here if you want to pause the app when the user presses ESC
             int m = 3;
         }
+
+        Renderer.Self.Camera.Zoom = 2;
 
         FormsUtilities.Update(this, gameTime, Roots);
 
