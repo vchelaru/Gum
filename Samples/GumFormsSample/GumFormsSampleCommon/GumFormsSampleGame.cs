@@ -26,8 +26,8 @@ public class GumFormsSampleGame : Game
         IsMouseVisible = true;
 
         // This sets the initial size:
-        _graphics.PreferredBackBufferWidth = 3200;
-        _graphics.PreferredBackBufferHeight = 2400;
+        _graphics.PreferredBackBufferWidth = 1024;
+        _graphics.PreferredBackBufferHeight = 768;
 
         _graphics.SupportedOrientations = DisplayOrientation.LandscapeLeft | DisplayOrientation.LandscapeRight;
 #if (ANDROID || iOS)
@@ -123,7 +123,6 @@ public class GumFormsSampleGame : Game
             int m = 3;
         }
 
-        Renderer.Self.Camera.Zoom = 2;
 
         FormsUtilities.Update(this, gameTime, Roots);
 
