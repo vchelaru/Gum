@@ -153,10 +153,8 @@ public class ListBox : ItemsControl, IInputReceiver
                     ListBoxItemsInternal[value].IsSelected = true;
                 }
 
-                if (SelectedObject != null)
-                {
-                    ScrollIntoView(SelectedObject);
-                }
+                
+                ScrollIndexIntoView(SelectedIndex);
             }
             else if (value == -1)
             {
@@ -286,6 +284,11 @@ public class ListBox : ItemsControl, IInputReceiver
     {
         var itemIndex = Items.IndexOf(item);
 
+        ScrollIndexIntoView(itemIndex, scrollIntoViewStyle);
+    }
+
+    public void ScrollIndexIntoView(int itemIndex, ScrollIntoViewStyle scrollIntoViewStyle = ScrollIntoViewStyle.BringIntoView)
+    {
         if (itemIndex != -1)
         {
             var visual = ListBoxItemsInternal[itemIndex];
