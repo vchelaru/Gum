@@ -96,6 +96,23 @@ public class FrameworkElement
         }
     }
 
+    protected Dictionary<string, string> vmPropsToUiProps = new Dictionary<string, string>();
+
+    public object BindingContext
+    {
+        //get => Visual?.BindingContext;
+        get => null;
+        set
+        {
+            // todo....
+            //if (value != BindingContext && Visual != null)
+            //{
+                //Visual.BindingContext = value;
+            //}
+
+        }
+    }
+
     /// <summary>
     /// The height in pixels. This is a calculated value considering HeightUnits and Height.
     /// </summary>

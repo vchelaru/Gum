@@ -1,11 +1,13 @@
 ﻿using Gum.Wireframe;
 using Microsoft.Xna.Framework.Input;
-using MonoGameGum.Input;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
+#if FRB
+using FlatRedBall.Gui;
+using FlatRedBall.Input;
+using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
+#endif
 
 #if FRB
 namespace FlatRedBall.Forms.Controls.Primitives;
@@ -24,6 +26,8 @@ public class ButtonBase : FrameworkElement, IInputReceiver
     public IInputReceiver NextInTabSequence { get; set; }
 
     #endregion
+
+    #region Events
 
     /// <summary>
     /// Event raised when the user pushes, then releases the control.
@@ -52,23 +56,38 @@ public class ButtonBase : FrameworkElement, IInputReceiver
     public event Action<FlatRedBall.Input.Mouse.MouseButtons> MouseButtonPushed;
 #endif
 
+    #endregion
+
+    #region Initialize
+
     public ButtonBase() : base() { }
 
     public ButtonBase(InteractiveGue visual) : base(visual) { }
 
     protected override void ReactToVisualChanged()
     {
+#if FRB
+        Visual.Click += _=>this.HandleClick(this, EventArgs.Empty);
+        Visual.Push += _ => this.HandlePush (this, EventArgs.Empty);
+        Visual.LosePush += _ => this.HandleLosePush (this, EventArgs.Empty);
+        Visual.RollOn += _ => this.HandleRollOn (this, EventArgs.Empty);
+        Visual.RollOff += _ => this.HandleRollOff(this, EventArgs.Empty);
+#else
         Visual.Click += this.HandleClick;
         Visual.Push += this.HandlePush;
         Visual.LosePush += this.HandleLosePush;
         Visual.RollOn += this.HandleRollOn;
         Visual.RollOff += this.HandleRollOff;
+#endif
 
         base.ReactToVisualChanged();
 
         UpdateState();
     }
 
+    #endregion
+
+    #region Event Handler Methods
 
     private void HandleClick(object sender, EventArgs args)
     {
@@ -104,6 +123,8 @@ public class ButtonBase : FrameworkElement, IInputReceiver
         UpdateState();
     }
 
+    #endregion
+
     protected virtual void OnClick() { }
 
     public void PerformClick()
@@ -130,7 +151,7 @@ public class ButtonBase : FrameworkElement, IInputReceiver
                 IsEnabled)
             {
                 //this.HandlePush(null);
-                this.HandleClick(null);
+                this.HandleClick(this, EventArgs.Empty);
 
                 ControllerButtonPushed?.Invoke(Xbox360GamePad.Button.A);
             }
@@ -176,7 +197,7 @@ public class ButtonBase : FrameworkElement, IInputReceiver
             if ((gamepad as IInputDevice).DefaultConfirmInput.WasJustPressed && IsEnabled)
             {
                 //this.HandlePush(null);
-                this.HandleClick(null);
+                this.HandleClick(this, EventArgs.Empty);
             }
 
             if (IsEnabled)
@@ -200,7 +221,7 @@ public class ButtonBase : FrameworkElement, IInputReceiver
             if (inputDevice.DefaultConfirmInput.WasJustPressed && IsEnabled)
             {
                 //this.HandlePush(null);
-                this.HandleClick(null);
+                this.HandleClick(this, EventArgs.Empty);
             }
         }
 #endif
@@ -211,15 +232,20 @@ public class ButtonBase : FrameworkElement, IInputReceiver
     {
     }
 
+    [Obsolete("Use OnLoseFocus instead")]
+    public void LoseFocus() => OnLoseFocus();
+
     public void OnLoseFocus()
     {
         IsFocused = false;
     }
 
+#if !FRB
     public void DoKeyboardAction(IInputReceiverKeyboard keyboard)
     {
 
     }
+#endif
 
     public void ReceiveInput()
     {
@@ -242,3 +268,4 @@ public class ButtonBase : FrameworkElement, IInputReceiver
 
 
 }
+

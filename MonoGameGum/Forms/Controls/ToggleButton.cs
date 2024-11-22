@@ -1,12 +1,15 @@
 ﻿using Gum.Wireframe;
-using MonoGameGum.Forms.Controls.Primitives;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
+#if FRB
+using FlatRedBall.Forms.Controls.Primitives;
+using FlatRedBall.Gui;
+using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
+namespace FlatRedBall.Forms.Controls;
+#else
+using MonoGameGum.Forms.Controls.Primitives;
 namespace MonoGameGum.Forms.Controls;
+#endif
 
 public class ToggleButton : ButtonBase
 {
@@ -43,7 +46,7 @@ public class ToggleButton : ButtonBase
                     Indeterminate?.Invoke(this, null);
                 }
 
-                //PushValueToViewModel();
+                PushValueToViewModel();
             }
         }
     }
@@ -98,9 +101,7 @@ public class ToggleButton : ButtonBase
 
     public override void UpdateState()
     {
-        var cursor = FrameworkElement.MainCursor;
-
-        var isTouchScreen = false;
+        var cursor = MainCursor;
 
         if (IsEnabled == false)
         {
@@ -115,7 +116,7 @@ public class ToggleButton : ButtonBase
             {
                 SetPropertyConsideringOn("Pushed");
             }
-            else if (!isTouchScreen)
+            else if (cursor.LastInputDevice != InputDevice.TouchScreen)
             {
                 SetPropertyConsideringOn("Highlighted");
             }
@@ -162,5 +163,4 @@ public class ToggleButton : ButtonBase
             IsChecked = true;
         }
     }
-
 }

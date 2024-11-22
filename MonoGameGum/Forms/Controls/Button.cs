@@ -1,12 +1,14 @@
 ﻿using Gum.Wireframe;
-using MonoGameGum.Forms.Controls.Primitives;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
+#if FRB
+using FlatRedBall.Forms.Controls.Primitives;
+using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
+namespace FlatRedBall.Forms.Controls;
+#else
+using MonoGameGum.Forms.Controls.Primitives;
 namespace MonoGameGum.Forms.Controls;
+#endif
 
 public class Button : ButtonBase
 {
@@ -14,6 +16,7 @@ public class Button : ButtonBase
     /// The name of the Category containing visual states for the Button object.
     /// </summary>
     public const string ButtonCategoryState = "ButtonCategoryState";
+
     #region Fields/Properties
 
     GraphicalUiElement textComponent;

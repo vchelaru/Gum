@@ -1,13 +1,18 @@
 ﻿using Gum.Wireframe;
-using MonoGameGum.Forms.Controls.Primitives;
-using MonoGameGum.Input;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
+
+#if FRB
+using FlatRedBall.Gui;
+using FlatRedBall.Forms.GumExtensions;
+using FlatRedBall.Forms.Controls.Primitives;
+using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
+namespace FlatRedBall.Forms.Controls;
+#else
+using MonoGameGum.Input;
+using MonoGameGum.Forms.Controls.Primitives;
 namespace MonoGameGum.Forms.Controls;
+#endif
 
 public class ScrollBar : RangeBase
 {
@@ -93,7 +98,11 @@ public class ScrollBar : RangeBase
 
         upButton.Push += (not, used) => this.Value -= this.SmallChange;
         downButton.Push += (not, used) => this.Value += this.SmallChange;
+#if FRB
+        Track.Push += _ => HandleTrackPush(this, EventArgs.Empty);
+#else
         Track.Push += HandleTrackPush;
+#endif
         Visual.SizeChanged += HandleVisualSizeChange;
 
 
@@ -105,7 +114,14 @@ public class ScrollBar : RangeBase
             var thumbRatio = thumbHeight / visibleTrackSpace;
 
             ViewportSize = (Maximum - Minimum) * thumbRatio;
-            LargeChange = ViewportSize;
+            if (ViewportSize <= 0)
+            {
+                LargeChange = 10;
+            }
+            else
+            {
+                LargeChange = ViewportSize;
+            }
 
             Value = Minimum;
         }
@@ -123,20 +139,18 @@ public class ScrollBar : RangeBase
     protected override void HandleThumbPush(object sender, EventArgs e)
     {
         var topOfThumb = this.thumb.AbsoluteTop;
-        // Does this need a GumY?
-        //var cursorScreen = GuiManager.Cursor.GumY();
-        var cursorScreen = MainCursor.Y;
+        var cursorScreen = MainCursor.YRespectingGumZoomAndBounds();
 
         cursorGrabOffsetRelativeToThumb = cursorScreen - topOfThumb;
     }
 
-    private void HandleTrackPush(object sender, EventArgs e)
+    private void HandleTrackPush(object sender, EventArgs args)
     {
-        if (MainCursor.Y < thumb.AbsoluteTop)
+        if (MainCursor.YRespectingGumZoomAndBounds() < thumb.AbsoluteTop)
         {
             Value -= LargeChange;
         }
-        else if (MainCursor.Y > thumb.AbsoluteTop + thumb.ActualHeight)
+        else if (MainCursor.YRespectingGumZoomAndBounds() > thumb.AbsoluteTop + thumb.ActualHeight)
         {
             Value += LargeChange;
         }
@@ -194,9 +208,13 @@ public class ScrollBar : RangeBase
 
     }
 
+#if FRB
+    protected override void UpdateThumbPositionToCursorDrag(Cursor cursor)
+#else
     protected override void UpdateThumbPositionToCursorDrag(ICursor cursor)
+#endif
     {
-        var cursorScreenY = cursor.Y;
+        var cursorScreenY = cursor.YRespectingGumZoomAndBounds();
         var cursorYRelativeToTrack = cursorScreenY - Track.AbsoluteTop;
 
 
@@ -270,6 +288,5 @@ public class ScrollBar : RangeBase
         }
     }
 
-    #endregion
-
+#endregion
 }

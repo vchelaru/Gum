@@ -1,11 +1,8 @@
 ﻿using Gum.Wireframe;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 #if FRB
+using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 namespace FlatRedBall.Forms.Controls;
 #else
 namespace MonoGameGum.Forms.Controls;
@@ -34,7 +31,7 @@ public class TextBox : TextBoxBase
 
                 CaretIndex = System.Math.Min(CaretIndex, value?.Length ?? 0);
 
-                TextChanged?.Invoke(this, null);
+                TextChanged?.Invoke(this, EventArgs.Empty);
 
                 UpdatePlaceholderVisibility();
 
@@ -56,7 +53,7 @@ public class TextBox : TextBoxBase
 
     public event EventHandler TextChanged;
 
-    #endregion 
+    #endregion
 
     #region Initialize Methods
 
@@ -88,7 +85,6 @@ public class TextBox : TextBoxBase
             {
                 DeleteSelection();
             }
-
 
             // If text is null force it to be an empty string so we can add characters
             string newText = Text ?? "";

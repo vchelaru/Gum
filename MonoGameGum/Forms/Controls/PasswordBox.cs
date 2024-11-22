@@ -1,18 +1,18 @@
 ﻿using Gum.Wireframe;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security;
-using System.Text;
-using System.Threading.Tasks;
 
+#if FRB
+using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
+namespace FlatRedBall.Forms.Controls;
+#else
 namespace MonoGameGum.Forms.Controls;
+#endif
 
 public class PasswordBox : TextBoxBase
 {
     #region Fields/Properties
 
-#if !UWP
     SecureString securePassword = new SecureString();
     public SecureString SecurePassword
     {
@@ -52,25 +52,6 @@ public class PasswordBox : TextBoxBase
             System.Runtime.InteropServices.Marshal.ZeroFreeGlobalAllocUnicode(valuePtr);
         }
     }
-#else
-    string password;
-    public string Password
-    {
-        get
-        {
-            return password;
-        }
-        set
-        {
-            if(password != value)
-            {
-                password = value;
-
-                CallMethodsInResponseToPasswordChanged();
-            }
-        }
-    }
-#endif
 
 
     // Update Gum's default to include this first:
@@ -83,11 +64,7 @@ public class PasswordBox : TextBoxBase
     {
         get
         {
-#if UWP
-            return new string(PasswordChar, Password?.Length ?? 0);
-#else
             return new string(PasswordChar, SecurePassword.Length);
-#endif
         }
     }
 
@@ -159,22 +136,13 @@ public class PasswordBox : TextBoxBase
         OffsetTextToKeepCaretInView();
         UpdateDisplayedCharacters();
         UpdatePlaceholderVisibility();
-        PasswordChanged?.Invoke(this, null);
+        PasswordChanged?.Invoke(this, EventArgs.Empty);
         PushValueToViewModel();
     }
 
     private void InsertCharacterAtIndex(char character, int caretIndex)
     {
-#if UWP
-        if(password == null)
-        {
-            password = "";
-        }
-        password = this.password.Insert(caretIndex, character.ToString());
-#else
         this.SecurePassword.InsertAt(caretIndex, character);
-
-#endif
     }
 
     public override void HandleBackspace(bool isCtrlDown = false)
@@ -189,11 +157,7 @@ public class PasswordBox : TextBoxBase
             {
                 for (int i = caretIndex - 1; i > -1; i--)
                 {
-#if UWP
-                    password = password.Remove(i);
-#else
                     SecurePassword.RemoveAt(i);
-#endif
                 }
 
                 caretIndex = 0;
@@ -205,11 +169,7 @@ public class PasswordBox : TextBoxBase
                 // caret is at the end of the word, modifying the word will shift the caret to the left, 
                 // and that could cause it to shift over two times.
                 caretIndex--;
-#if UWP
-                password = password.Remove(whereToRemoveFrom);
-#else
                 SecurePassword.RemoveAt(whereToRemoveFrom);
-#endif
             }
             CallMethodsInResponseToPasswordChanged();
         }
@@ -219,11 +179,7 @@ public class PasswordBox : TextBoxBase
     {
         for (int i = 0; i < SelectionLength; i++)
         {
-#if UWP
-            password = password.Remove(selectionStart);
-#else
             SecurePassword.RemoveAt(selectionStart);
-#endif
 
         }
         CallMethodsInResponseToPasswordChanged();
@@ -234,30 +190,17 @@ public class PasswordBox : TextBoxBase
 
     protected override void HandleDelete()
     {
-#if UWP
-        if (caretIndex < (password?.Length ?? 0))
-        {
-            password = password.Remove(caretIndex);
-
-            CallMethodsInResponseToPasswordChanged();
-        }
-#else
         if (caretIndex < (SecurePassword?.Length ?? 0))
         {
             SecurePassword.RemoveAt(caretIndex);
 
             CallMethodsInResponseToPasswordChanged();
         }
-#endif
     }
 
     public void Clear()
     {
-#if UWP
-        password = null;
-#else
         SecurePassword.Clear();
-#endif
         CallMethodsInResponseToPasswordChanged();
     }
 
@@ -282,11 +225,7 @@ public class PasswordBox : TextBoxBase
 
     private void UpdateDisplayedCharacters()
     {
-#if UWP
-        var newText = new string(PasswordChar, password?.Length ?? 0);
-#else
         var newText = new string(PasswordChar, SecurePassword.Length);
-#endif
         if (this.coreTextObject.RawText != newText)
         {
             textComponent.SetProperty("Text", newText);
@@ -309,16 +248,9 @@ public class PasswordBox : TextBoxBase
 
     protected override void TruncateTextToMaxLength()
     {
-#if UWP
-        while(password.Length > MaxLength)
-        {
-            password = password.Remove(password.Length-1);
-        }
-#else
         while (SecurePassword.Length > MaxLength)
         {
             SecurePassword.RemoveAt(SecurePassword.Length - 1);
         }
-#endif
     }
 }

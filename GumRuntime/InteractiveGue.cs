@@ -616,14 +616,26 @@ namespace Gum.Wireframe
         void DoKeyboardAction(IInputReceiverKeyboard keyboard);
     }
 
+    public enum InputDevice
+    {
+        TouchScreen = 1,
+        Mouse = 2
+    }
+
     public interface ICursor
     {
+        InputDevice LastInputDevice { get; }
         int X { get; }
         int Y { get; }
+        float XRespectingGumZoomAndBounds();
+        float YRespectingGumZoomAndBounds();
+
         int XChange { get; }
         int YChange { get; }
 
         int ScrollWheelChange { get; }
+
+        float ZVelocity { get; }
 
         bool PrimaryPush { get; }
         bool PrimaryDown { get; }

@@ -1,15 +1,13 @@
 ﻿using Gum.Wireframe;
-using MonoGameGum.Input;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.AccessControl;
-using System.Text;
-using System.Threading.Tasks;
+
 
 #if FRB
+using FlatRedBall.Gui;
+using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 namespace FlatRedBall.Forms.Controls.Primitives;
 #else
+using MonoGameGum.Input;
 namespace MonoGameGum.Forms.Controls.Primitives;
 #endif
 
@@ -102,12 +100,12 @@ public abstract class RangeBase : FrameworkElement
 
                 OnValueChanged(oldValue, this.value);
 
-                ValueChanged?.Invoke(this, null);
+                ValueChanged?.Invoke(this, EventArgs.Empty);
 
                 if (MainCursor.WindowPushed != thumb.Visual)
                 {
                     // Make sure the user isn't currently grabbing the thumb
-                    ValueChangeCompleted?.Invoke(this, null);
+                    ValueChangeCompleted?.Invoke(this, EventArgs.Empty);
                 }
 
                 PushValueToViewModel();
@@ -143,16 +141,16 @@ public abstract class RangeBase : FrameworkElement
             var message =
                 $"The {this.GetType().Name} Gum object must have a button called ThumbInstance.";
 
-            if(Visual.Children != null)
+            if (Visual.Children != null)
             {
-                if(Visual.Children.Count == 0)
+                if (Visual.Children.Count == 0)
                 {
                     message += " This visual has no children";
                 }
                 else
                 {
                     message += " The visual has the following children:";
-                    foreach(var child in Visual.Children)
+                    foreach (var child in Visual.Children)
                     {
                         message += "\n" + child.Name;
                     }
@@ -164,7 +162,6 @@ public abstract class RangeBase : FrameworkElement
             }
 
             throw new Exception(message);
-
         }
 #endif
 
@@ -177,13 +174,13 @@ public abstract class RangeBase : FrameworkElement
             thumb = thumbVisual.FormsControlAsObject as Button;
         }
         thumb.Push += HandleThumbPush;
+#if FRB
+        thumb.Visual.DragOver += _=>HandleThumbRollOver(this, EventArgs.Empty);
+        Visual.RollOver += _=>HandleTrackRollOver(this, EventArgs.Empty);
+#else
         thumb.Visual.Dragging += HandleThumbRollOver;
-        // do this before assigning any values like Minimum, Maximum
-        var thumbHeight = thumb.ActualHeight;
-
         Visual.RollOver += HandleTrackRollOver;
-
-        // read the height values and infer the Value and ViewportSize based on a 0 - 100
+#endif
 
         // The attachments may not yet be set up, so set the explicitTrack's RaiseChildrenEventsOutsideOfBounds
         //var thumbParent = thumb.Visual.Parent as GraphicalUiElement;
@@ -194,23 +191,23 @@ public abstract class RangeBase : FrameworkElement
 
 #if FRB
         explicitTrack = this.Visual.GetGraphicalUiElementByName("TrackInstance");
-        if(explicitTrack != null)
+        if (explicitTrack != null)
         {
             explicitTrack.RaiseChildrenEventsOutsideOfBounds = true;
         }
 #elif MONOGAME
         var trackLocal = this.Visual.GetGraphicalUiElementByName("TrackInstance");
 
-        #if DEBUG
-        if(trackLocal == null)
+#if DEBUG
+        if (trackLocal == null)
         {
             throw new Exception($"Could not find a child named TrackInstance when creating a {this.GetType()}");
         }
-        else if(!(trackLocal is InteractiveGue))
+        else if (!(trackLocal is InteractiveGue))
         {
             throw new Exception("Found a TrackInstance, but it is not an InteractiveGue");
         }
-        #endif
+#endif
 
         explicitTrack = (InteractiveGue)trackLocal;
         if (trackLocal is InteractiveGue trackAsInteractive)
@@ -231,12 +228,16 @@ public abstract class RangeBase : FrameworkElement
         base.ReactToVisualRemoved();
 
         thumb.Push -= HandleThumbPush;
+#if FRB
+        thumb.Visual.DragOver -= _=> HandleThumbRollOver(this, EventArgs.Empty);
+        Visual.RollOver -= _=>HandleTrackRollOver(this, EventArgs.Empty);
+#else
         thumb.Visual.Dragging -= HandleThumbRollOver;
         Visual.RollOver -= HandleTrackRollOver;
+#endif
     }
 
     #endregion
-
 
     protected abstract void HandleThumbPush(object sender, EventArgs e);
 
@@ -277,10 +278,13 @@ public abstract class RangeBase : FrameworkElement
 
     protected virtual void OnValueChanged(double oldValue, double newValue) { }
 
-    protected void RaiseValueChangeCompleted() => ValueChangeCompleted?.Invoke(this, null);
+    protected void RaiseValueChangeCompleted() => ValueChangeCompleted?.Invoke(this, EventArgs.Empty);
 
-    protected void RaiseValueChangedByUi() => ValueChangedByUi?.Invoke(this, null);
+    protected void RaiseValueChangedByUi() => ValueChangedByUi?.Invoke(this, EventArgs.Empty);
 
+#if FRB
+    protected abstract void UpdateThumbPositionToCursorDrag(Cursor cursor);
+#else
     protected abstract void UpdateThumbPositionToCursorDrag(ICursor cursor);
-
+#endif
 }

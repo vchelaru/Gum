@@ -9,11 +9,7 @@ using System.Threading.Tasks;
 
 namespace MonoGameGum.Input
 {
-    public enum InputDevice
-    {
-        TouchScreen = 1,
-        Mouse = 2
-    }
+
 
     public class Cursor : ICursor
     {
@@ -25,7 +21,21 @@ namespace MonoGameGum.Input
 
         public int X { get; private set; }
 
+        public float XRespectingGumZoomAndBounds()
+        {
+            var renderer = RenderingLibrary.SystemManagers.Default.Renderer;
+            var zoom = renderer.Camera.Zoom;
+            return (X / zoom) - renderer.GraphicsDevice.Viewport.Bounds.Left;
+        }
+
         public int Y { get; private set; }
+
+        public float YRespectingGumZoomAndBounds()
+        {
+            var renderer = RenderingLibrary.SystemManagers.Default.Renderer;
+            var zoom = renderer.Camera.Zoom;
+            return (Y / zoom) - renderer.GraphicsDevice.Viewport.Bounds.Top;
+        }
 
         public int LastX { get; private set; }
         public int LastY { get; private set; }
@@ -41,6 +51,12 @@ namespace MonoGameGum.Input
         public int YChange => Y - LastY;
 
         public int ScrollWheelChange => (_mouseState.ScrollWheelValue - mLastFrameMouseState.ScrollWheelValue) / 120;
+
+
+        /// <summary>
+        /// The movement rate of the controlling input (usually mouse) on the z axis. For the mouse this refers to the scroll wheel.
+        /// </summary>
+        public float ZVelocity => ScrollWheelChange;
 
         public bool PrimaryPush
         {
