@@ -1376,6 +1376,13 @@ namespace Gum.Wireframe
                 mContainedObjectAsIpso.Children.CollectionChanged += HandleCollectionChanged;
             }
 
+            // in case this had been changed before the Text was assigned, or in case the text
+            // default differs.
+            if(containedObject is IText asText)
+            {
+                asText.TextOverflowVerticalMode = this.TextOverflowVerticalMode;
+            }
+
             if (containedObject != null)
             {
                 UpdateLayout();
