@@ -1399,7 +1399,10 @@ namespace Gum.Wireframe
 
                 if (childGue != null)
                 {
-                    if (!isScreen)
+                    // As of November 22, 2024 we now add children
+                    // to Screen GraphicalUiElements to make Entities
+                    // and Screens consistent.
+                    if (!isScreen || this.Children != null)
                     {
                         childGue.Parent = this;
                     }
