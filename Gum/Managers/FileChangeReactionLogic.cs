@@ -73,7 +73,20 @@ namespace Gum.Managers
 
         private void ReactToProjectChanged(FilePath file)
         {
+            var currentElement = GumState.Self.SelectedState.SelectedElement;
+            var elementName = currentElement?.Name;
+
             GumCommands.Self.FileCommands.LoadProject(file.Standardized);
+
+            if(!string.IsNullOrEmpty(elementName))
+            {
+                var elementToSelect = ObjectFinder.Self.GetElementSave(elementName);
+
+                if(elementToSelect != null)
+                {
+                    GumState.Self.SelectedState.SelectedElement = elementToSelect;
+                }
+            }
         }
 
         private void ReactToImageFileChanged(FilePath file)
