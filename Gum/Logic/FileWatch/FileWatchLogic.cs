@@ -29,8 +29,29 @@ namespace Gum.Logic.FileWatch
         {
             HashSet<FilePath> directories = new HashSet<FilePath>();
 
-            void AddRange(IEnumerable<FilePath> directoriesToAdd)
+            void AddRange(List<string> files)
             {
+                var directoriesToAdd = files
+                    .Select(item =>
+                    {
+                        FilePath filePath = null;
+                        try
+                        {
+                            filePath = ((FilePath)item).GetDirectoryContainingThis();
+                        }
+                        catch
+                        {
+                            // This can happen if there's an invalid file path like 
+                            // "..\..\..\..\..\" in a root
+                            // For info see https://github.com/vchelaru/Gum/issues/200
+                            // leave it as null, will filter out later
+                        }
+
+                        return filePath;
+                    })
+                    .Where(item => item != null)
+                    // to make it easier to debug:
+                    .ToHashSet();
                 foreach(var directory in directoriesToAdd)
                 {
                     // check if the root of this directory is already here:
@@ -45,33 +66,21 @@ namespace Gum.Logic.FileWatch
                 }
             }
 
-            //var allReferencedFiles = new List<FilePath>();
-
             foreach (var screen in ProjectState.Self.GumProjectSave.Screens)
             {
-                var screenPaths = ObjectFinder.Self.GetFilesReferencedBy(screen)
-                    .Select(item => ((FilePath)item).GetDirectoryContainingThis())
-                    // to make it easier to debug:
-                    .ToHashSet();
+                var filesReferenced = ObjectFinder.Self.GetFilesReferencedBy(screen);
 
-                AddRange(screenPaths);
-
+                AddRange(filesReferenced);
             }
             foreach (var component in ProjectState.Self.GumProjectSave.Components)
             {
-                var componentPaths = ObjectFinder.Self.GetFilesReferencedBy(component)
-                    .Select(item => ((FilePath)item).GetDirectoryContainingThis())
-                    .ToHashSet();
-
-                AddRange(componentPaths);
+                var filesReferenced = ObjectFinder.Self.GetFilesReferencedBy(component);
+                AddRange(filesReferenced);
             }
             foreach (var standardElement in ProjectState.Self.GumProjectSave.StandardElements)
             {
-                var standardElementPaths = ObjectFinder.Self.GetFilesReferencedBy(standardElement)
-                    .Select(item => ((FilePath)item).GetDirectoryContainingThis())
-                    .ToHashSet();
-
-                AddRange(standardElementPaths);
+                var filesReferenced = ObjectFinder.Self.GetFilesReferencedBy(standardElement);
+                AddRange(filesReferenced);
             }
 
             FilePath gumProjectFilePath = ProjectManager.Self.GumProjectSave.FullFileName;
