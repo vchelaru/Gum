@@ -3,15 +3,17 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 
+
 #if FRB
 using FlatRedBall.Gui;
 using FlatRedBall.Input;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
-#endif
-
-#if FRB
+using GamepadButton = FlatRedBall.Input.Xbox360GamePad.Button;
+using static FlatRedBall.Input.Xbox360GamePad;
 namespace FlatRedBall.Forms.Controls.Primitives;
 #else
+using MonoGameGum.Input;
+using GamepadButton = Microsoft.Xna.Framework.Input.Buttons;
 namespace MonoGameGum.Forms.Controls.Primitives;
 #endif
 
@@ -45,12 +47,12 @@ public class ButtonBase : FrameworkElement, IInputReceiver
     public event EventHandler Push;
     public event Action<IInputReceiver> FocusUpdate;
 
-#if FRB
     /// <summary>
     /// Event raised when any button is pressed on an Xbox360GamePad which is being used by the 
     /// GuiManager.GamePadsForUiControl.
     /// </summary>
-    public event Action<Xbox360GamePad.Button> ControllerButtonPushed;
+    public event Action<GamepadButton> ControllerButtonPushed;
+#if FRB
     public event Action<int> GenericGamepadButtonPushed;
 
     public event Action<FlatRedBall.Input.Mouse.MouseButtons> MouseButtonPushed;
@@ -136,15 +138,14 @@ public class ButtonBase : FrameworkElement, IInputReceiver
 
     public void OnFocusUpdate()
     {
-#if FRB
-        var gamepads = GuiManager.GamePadsForUiControl;
+        var gamepads = GamePadsForUiControl;
         for (int i = 0; i < gamepads.Count; i++)
         {
             var gamepad = gamepads[i];
 
             HandleGamepadNavigation(gamepad);
 
-            if (gamepad.ButtonPushed(FlatRedBall.Input.Xbox360GamePad.Button.A) &&
+            if (gamepad.ButtonPushed(GamepadButton.A) &&
                 // A button may be focused, then through the action of clicking the button
                 // (like buying items) it may lose its enabled state,but
                 // remain focused as to not focus a new item.
@@ -153,10 +154,10 @@ public class ButtonBase : FrameworkElement, IInputReceiver
                 //this.HandlePush(null);
                 this.HandleClick(this, EventArgs.Empty);
 
-                ControllerButtonPushed?.Invoke(Xbox360GamePad.Button.A);
+                ControllerButtonPushed?.Invoke(GamepadButton.A);
             }
 
-            void RaiseIfPushedAndEnabled(FlatRedBall.Input.Xbox360GamePad.Button button)
+            void RaiseIfPushedAndEnabled(GamepadButton button)
             {
                 if (IsEnabled && gamepad.ButtonPushed(button))
                 {
@@ -164,30 +165,31 @@ public class ButtonBase : FrameworkElement, IInputReceiver
                 }
             }
 
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.B);
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.X);
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.Y);
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.Start);
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.Back);
+            RaiseIfPushedAndEnabled(GamepadButton.B);
+            RaiseIfPushedAndEnabled(GamepadButton.X);
+            RaiseIfPushedAndEnabled(GamepadButton.Y);
+            RaiseIfPushedAndEnabled(GamepadButton.Start);
+            RaiseIfPushedAndEnabled(GamepadButton.Back);
 
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.DPadLeft);
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.DPadRight);
+            RaiseIfPushedAndEnabled(GamepadButton.DPadLeft);
+            RaiseIfPushedAndEnabled(GamepadButton.DPadRight);
 
-            if (IsEnabled && gamepad.LeftStick.AsDPadPushed(Xbox360GamePad.DPadDirection.Left))
+            if (IsEnabled && gamepad.LeftStick.AsDPadPushed(DPadDirection.Left))
             {
-                ControllerButtonPushed?.Invoke(Xbox360GamePad.Button.DPadLeft);
+                ControllerButtonPushed?.Invoke(GamepadButton.DPadLeft);
             }
-            if (IsEnabled && gamepad.LeftStick.AsDPadPushed(Xbox360GamePad.DPadDirection.Right))
+            if (IsEnabled && gamepad.LeftStick.AsDPadPushed(DPadDirection.Right))
             {
-                ControllerButtonPushed?.Invoke(Xbox360GamePad.Button.DPadRight);
+                ControllerButtonPushed?.Invoke(GamepadButton.DPadRight);
             }
 
 
-            if (gamepad.ButtonReleased(FlatRedBall.Input.Xbox360GamePad.Button.A))
+            if (gamepad.ButtonReleased(GamepadButton.A))
             {
             }
         }
 
+#if FRB
         for (int i = 0; i < GuiManager.GenericGamePadsForUiControl.Count; i++)
         {
             var gamepad = GuiManager.GenericGamePadsForUiControl[i];
@@ -211,7 +213,6 @@ public class ButtonBase : FrameworkElement, IInputReceiver
                 }
             }
         }
-
         for (int i = 0; i < GuiManager.InputDevicesForUiControl.Count; i++)
         {
             var inputDevice = GuiManager.InputDevicesForUiControl[i];
@@ -264,7 +265,7 @@ public class ButtonBase : FrameworkElement, IInputReceiver
     {
     }
 
-    #endregion
+#endregion
 
 
 }

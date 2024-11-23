@@ -1,4 +1,6 @@
 ﻿using Gum.Wireframe;
+using Microsoft.Xna.Framework.Input;
+using MonoGameGum.Input;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
@@ -37,6 +39,9 @@ public delegate void KeyEventHandler(object sender, KeyEventArgs e);
 public class FrameworkElement
 {
     public static ICursor MainCursor { get; set; }
+
+    public List<Input.GamePad> GamePadsForUiControl { get; private set; } = new List<Input.GamePad>();
+
 
     /// <summary>
     /// Container used to hold popups such as the ListBox which appears when clicking on a combo box.
@@ -599,6 +604,26 @@ public class FrameworkElement
     /// Whether to use left and right directions as navigation. If false, left and right directions are ignored for navigation.
     /// </summary>
     public bool IsUsingLeftAndRightGamepadDirectionsForNavigation { get; set; } = true;
+
+    protected void HandleGamepadNavigation(Input.GamePad gamepad)
+    {
+        if (gamepad.ButtonRepeatRate(Buttons.DPadDown) ||
+            (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.ButtonRepeatRate(Buttons.DPadRight)) ||
+            gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Down) ||
+            (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Right)))
+        {
+            this.HandleTab(TabDirection.Down, this);
+        }
+        else if (gamepad.ButtonRepeatRate(Buttons.DPadUp) ||
+            (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.ButtonRepeatRate(Buttons.DPadLeft)) ||
+            gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Up) ||
+            (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Left)))
+        {
+            this.HandleTab(TabDirection.Up, this);
+        }
+    }
+
+
     //protected void HandleGamepadNavigation(Xbox360GamePad gamepad)
     //{
     //    if (gamepad.ButtonRepeatRate(FlatRedBall.Input.Xbox360GamePad.Button.DPadDown) ||
