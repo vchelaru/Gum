@@ -34,8 +34,8 @@ internal class FromFileDemoScreen
 
     private void PopulateComboBox()
     {
-        var comboBox = (InteractiveGue)_root.GetGraphicalUiElementByName("ComboBoxInstance");
-        var comboBoxForms = comboBox.FormsControlAsObject as ComboBox;
+        //var comboBox = (InteractiveGue)_root.GetGraphicalUiElementByName("ComboBoxInstance");
+        var comboBoxForms = _root.GetFrameworkElementByName<ComboBox>("ComboBoxInstance");
 
         comboBoxForms.Items.Add("Easy");
         comboBoxForms.Items.Add("Medium");

@@ -9,7 +9,8 @@
 		<Title>GumCommon</Title>
 		<Description>Flexible layout tool for graphics in any .NET environment</Description>
 		<PackageId>FlatRedBall.GumCommon</PackageId>
-		<Version>2024.11.24.2</Version>
+		<Version>2024.11.24.3</Version>
+
 
 		<NoWarn>1591</NoWarn>
 
