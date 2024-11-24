@@ -91,6 +91,8 @@ namespace WpfDataUi.Controls
 
             mTextBoxLogic.RefreshDisplay();
 
+            HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
+            HintTextBlock.Text = InstanceMember?.DetailText;
 
             this.Label.Text = InstanceMember.DisplayName;
             this.RefreshContextMenu(TextBox.ContextMenu);

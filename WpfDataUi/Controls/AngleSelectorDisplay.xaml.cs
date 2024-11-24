@@ -164,7 +164,7 @@ namespace WpfDataUi.Controls
 
             mTextBoxLogic = new TextBoxDisplayLogic(this, this.TextBox);
 
-            this.RefreshContextMenu(MainGrid.ContextMenu);
+            this.RefreshContextMenu(TopRowGrid.ContextMenu);
 
             // do we have to refresh the context menu? We do in the TextBoxDisplay
         }
@@ -275,7 +275,10 @@ namespace WpfDataUi.Controls
 
             this.Label.Content = InstanceMember.DisplayName;
 
-            this.RefreshContextMenu(MainGrid.ContextMenu);
+            this.RefreshContextMenu(TopRowGrid.ContextMenu);
+
+            HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
+            HintTextBlock.Text = InstanceMember?.DetailText;
 
             if (InstanceMember.IsDefault)
             {

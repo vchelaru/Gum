@@ -47,12 +47,8 @@
             <StackPanel x:Name="AfterTextBoxUi" Orientation="Horizontal" Grid.Column="2" VerticalAlignment="Stretch">
             </StackPanel>
         </Grid>
-        <!--Vic says: If this is really long, it extends the entire control horizontally rather than wrapping. I don't know how to control this.
-        In Gum we would just mark this Width as RelativeToParent and be done with it-->
         <TextBlock x:Name="HintTextBlock" 
                     Padding="8,1,0,4" 
-                    Grid.Row="2" 
-                    Grid.ColumnSpan="3"  
                     TextWrapping="Wrap"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Top"

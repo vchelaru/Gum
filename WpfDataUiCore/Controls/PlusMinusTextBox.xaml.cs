@@ -92,10 +92,9 @@ namespace WpfDataUiCore.Controls
 
                 this.Label.Text = InstanceMember.DisplayName;
                 this.RefreshContextMenu(TextBox.ContextMenu);
-                //this.RefreshContextMenu(StackPanel.ContextMenu);
-
-                //HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
-                //HintTextBlock.Text = InstanceMember?.DetailText;
+                
+                HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
+                HintTextBlock.Text = InstanceMember?.DetailText;
 
                 RefreshIsEnabled();
 
