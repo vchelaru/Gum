@@ -53,7 +53,8 @@
                     TextWrapping="Wrap"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Top"
-                    Width="{Binding ElementName=TopRowGrid, Path=ActualWidth, Mode=OneWay}"
+                    MaxWidth="{Binding ActualWidth, ElementName=TopRowGrid}"
+                    Margin="0,0,-4,0"
                     FontSize="10">This is the bottommost text</TextBlock>
     </Grid>
 </UserControl>
