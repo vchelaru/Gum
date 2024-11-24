@@ -58,19 +58,22 @@ public class GumService
     private void RegisterRuntimeTypesThroughReflection()
     {
         // Get the currently executing assembly
-        Assembly executingAssembly = Assembly.GetExecutingAssembly();
+        Assembly executingAssembly = Assembly.GetEntryAssembly();
 
         // Get all types in the assembly
-        Type[] types = executingAssembly.GetTypes();
+        var types = executingAssembly?.GetTypes();
 
-        // Print each type
-        foreach (Type type in types)
+        if(types != null)
         {
-            var method = type.GetMethod("RegisterRuntimeType", BindingFlags.Static | BindingFlags.Public);
-
-            if (method != null)
+            // Print each type
+            foreach (Type type in types)
             {
-                method.Invoke(null, null);
+                var method = type.GetMethod("RegisterRuntimeType", BindingFlags.Static | BindingFlags.Public);
+
+                if (method != null)
+                {
+                    method.Invoke(null, null);
+                }
             }
         }
     }
