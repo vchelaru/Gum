@@ -4,13 +4,13 @@
 
 This page walks you through the basics of using the Gum UI tool (which we'll refer to simply as Gum for this and all other documentation).
 
-<figure><img src="../.gitbook/assets/image (10).png" alt=""><figcaption><p>Empty Gum Project</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (10) (3).png" alt=""><figcaption><p>Empty Gum Project</p></figcaption></figure>
 
 ## Gum Elements
 
 Gum separates its elements into three categories: Screens, Components, and Standard (Behaviors are an advanced topic that we'll skip for these tutorials):&#x20;
 
-<figure><img src="../.gitbook/assets/image (15).png" alt=""><figcaption><p>Screens, Components, and Standard folders</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (15) (1).png" alt=""><figcaption><p>Screens, Components, and Standard folders</p></figcaption></figure>
 
 Standard elements represent the building-blocks for screens and components, and all projects use the same set of standard elements. To see the list of elements, expand the Standard tree item. Clicking on any element will display it in the preview window.
 
@@ -55,7 +55,7 @@ To create a screen:
 2. Enter the name of the new screen - such as **MainMenu**
 3.  The newly-created screen is created and selected
 
-    <figure><img src="../.gitbook/assets/image (3) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>The MainMenu screen in Gum</p></figcaption></figure>
+    <figure><img src="../.gitbook/assets/image (3) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>The MainMenu screen in Gum</p></figcaption></figure>
 
 ## Adding instances
 

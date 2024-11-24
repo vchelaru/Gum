@@ -2,9 +2,9 @@
 
 ### Introduction
 
-A typical Gum project references many file types. Aside from the XML files created by the Gum tool (such as a .gumx file), a typical Gum project also references .png files and .fnt files.
+A typical Gum project references many file types. Aside from the XML files created by the Gum tool (such as a .gumx file), a Gum project also references .png files and .fnt files.
 
-Files which are referenced by your Gum project (as created in the Gum UI tool) automatically load their necessary dependencies assuming the files are part of the built file system. Typically this means that your project should copy all Gum XML, PNG, and FNT files to the output folder. Gum does not use the MonoGame content pipeline.
+Files referenced by your Gum project (as created in the Gum UI tool) automatically load their necessary dependencies assuming the files are part of the built file system. Usually your project game project should copy all Gum XML, PNG, and FNT files to the output folder. Gum does not use the MonoGame content pipeline.
 
 ### Files in Gum Projects
 
@@ -14,7 +14,7 @@ If all of your project files are located relative to the .gumx root project file
 
 The Gum runtime library performs all of its loading from-file, so all of your files must be present in the destination directory. As explained in the [Loading .gumx](loading-.gumx-gum-project.md) page, all of your files should be set to **Copy if newer** in Visual Studio.
 
-<figure><img src="../.gitbook/assets/image (4) (1) (1) (1) (1).png" alt=""><figcaption><p>bear.png file set to Copy if newer</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (4) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>bear.png file set to Copy if newer</p></figcaption></figure>
 
 ### Loading Files Through Runtime Objects
 
@@ -43,7 +43,7 @@ To load a file, first make sure that your font is added to Visual Studio, usuall
 
 Usually both files are added to the same directory. Be sure to mark both files as Copy if Newer.
 
-<figure><img src="../.gitbook/assets/image.png" alt=""><figcaption><p>.fnt file in Visual Studio set to Copy if newer</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (17).png" alt=""><figcaption><p>.fnt file in Visual Studio set to Copy if newer</p></figcaption></figure>
 
 The file can be loaded using the BitmapFont constructor:
 
@@ -56,24 +56,17 @@ var bitmapFont = new BitmapFont("Fonts/Font18Arial.fnt", SystemManagers.Default)
 
 Whenever a file is assigned on a runtime object, Gum looks for the file in the `ToolsUtilities.FileManager.RelativeDirectory` directory. This directory defaults to your game's Content folder.
 
-If your Gum project (.gumx) is located in the Content folder, then you should probably not change this value.
+If you call `GumService.Default.Initialize` and pass a .gumx file, then RelativeDirectory is set to the directory containing the Gum project.
+
+If your Gum project (.gumx) is located in the Content folder, RelativeDirectory is set to "Content/".
 
 <figure><img src="../.gitbook/assets/image (44).png" alt=""><figcaption><p>GumProject.gumx located in the Content folder</p></figcaption></figure>
 
-If your project is located in a subfolder of Content, then you must change the relative directory to be the location of your Gum project before you assign files. For example,  consider a situation where the Gum project is located in a folder called gum.
+If your project is located in a subfolder of Content, then RelativeDirectory is set to the folder containing the Gum project. In this case, RelativeDirectory would be set to "Content/gum/"
 
 <figure><img src="../.gitbook/assets/image (45).png" alt=""><figcaption><p>Gum project in a subfolder</p></figcaption></figure>
 
-To support this situation, you would want to set your relative directory as shown in the following code:
-
-```csharp
-ToolsUtilities.FileManager.RelativeDirectory = "content\\gum\\";
-
-gumProject.Screens.First()
-    .ToGraphicalUiElement(SystemManagers.Default, addToManagers:true);
-```
-
-Note that the following operations can result in files being loaded, so if your project is not located in the Content folder then you must set the RelativeDirectory before doing any of the following:
+RelativeDirectory is used whenever files are loaded. These operations include:
 
 * Calling ToGraphicalUiElement
 * Assigning SourceFileName

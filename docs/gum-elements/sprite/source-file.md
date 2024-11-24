@@ -12,7 +12,7 @@ The Source File property determines the file that is used by the Sprite. Sprite 
 
 If a Sprite has an empty Source File or if it references a missing file, then the missing file texture is displayed.
 
-<figure><img src="../../.gitbook/assets/image (2).png" alt=""><figcaption><p>Sprite with a missing or emtpy Source File</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (2) (1).png" alt=""><figcaption><p>Sprite with a missing or emtpy Source File</p></figcaption></figure>
 
 ### Setting a PNG Source File
 

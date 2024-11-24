@@ -39,7 +39,7 @@ To add the files to your .csproj:
 3.  Verify that all gum files (see the extension list above) are marked as Copy if newer in Visual Studio\
 
 
-    <figure><img src="../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Gum project set to Copy if newer</p></figcaption></figure>
+    <figure><img src="../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Gum project set to Copy if newer</p></figcaption></figure>
 
 The example above copies the entirety of the content folder to the output folder by using wildcards. If you do not want every file copied over, you can be more selective in what you copy by including only certain file types. For more information about wildcard support in .csproj files, see this page on how to include wildcards in your .csproj:
 
@@ -53,13 +53,22 @@ To load a Gum Project:
 2. Modify the Initialize method so that it has the following lines **after** initializing SystemManagers:
 
 ```csharp
-var gumProject = GumProjectSave.Load("GumProject.gumx");
-ObjectFinder.Self.GumProjectSave = gumProject;
-gumProject.Initialize();
+protected override void Initialize()
+{
+    var gumProject = MonoGameGum.GumService.Default.Initialize(
+        this.GraphicsDevice, 
+        "GumProject.gumx");
 
-// This assumes that your project has at least 1 screen
-gumProject.Screens.First().ToGraphicalUiElement(
-    SystemManagers.Default, addToManagers:true);
+    // This assumes that your project has at least 1 screen
+    gumProject.Screens.First().ToGraphicalUiElement(
+        SystemManagers.Default, addToManagers:true);
+    
+    base.Initialize();
+}
+
+
+
+
 ```
 
 Note that the ToGraphicalUiElement method has an `addToManage` parameter which determines whether the GraphicalUiElement is added to managers. If a GraphicalUiElement is not added to managers, it will not appear on screen.
@@ -104,33 +113,20 @@ A full Game1 class which loads a project might look like this:
 public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
-
     // Gum renders and updates using a hierarchy. At least
     // one object must have its AddToManagers method called.
     // If not loading from-file, then the easiest way to do this
     // is to create a ContainerRuntime and add it to the managers.
     GraphicalUiElement Root;
-
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
-        IsMouseVisible = true;
     }
 
     protected override void Initialize()
     {
-        SystemManagers.Default = new SystemManagers();
-        SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
-        FormsUtilities.InitializeDefaults();
-
-        var gumProject = GumProjectSave.Load("GumProject/GumProject.gumx");
-        ObjectFinder.Self.GumProjectSave = gumProject;
-        gumProject.Initialize();
-        FormsUtilities.RegisterFromFileFormRuntimeDefaults();
-
-        FileManager.RelativeDirectory = "Content/GumProject/";
-
+        var gumProject = MonoGameGum.GumService.Default.Initialize(this.GraphicsDevice, "GumProject.gumx");
         // This assumes that your project has at least 1 screen
         Root = gumProject.Screens.First().ToGraphicalUiElement(
             SystemManagers.Default, addToManagers: true);
@@ -140,38 +136,18 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
-        if (IsActive)
-        {
-            FormsUtilities.Update(this, gameTime, Root);
-        }
-
-        SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
-        FormsUtilities.Update(this, gameTime, Root);
+        MonoGameGum.GumService.Default.Update(this, gameTime, Root);
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
-        SystemManagers.Default.Draw();
+        MonoGameGum.GumService.Default.Draw();
         base.Draw(gameTime);
     }
 }
 ```
-
-### Gum Projects in Different Folders
-
-The code above and most samples in the Gum repository assume a Gum project located in the Content folder. If you are placing your Gum project in a subfolder, you need to set the `FileManager.RelativeDirectory` to the sbufolder prior to calling `ToGraphicalUiElement`. For example:
-
-```csharp
-FileManager.RelativeDirectory = "Content/MySubFolder/";
-
-var screen = gumProject.Screens.First().ToGraphicalUiElement(
-  SystemManagers.Default, 
-  addToManagers:true);
-```
-
-For a more detailed discussion on file loading and file locations, see the [File Loading](file-loading.md#loading-files-through-runtime-objects) page.
 
 ### Troubleshooting Gum Project Loading
 

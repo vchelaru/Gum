@@ -38,11 +38,8 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        SystemManagers.Default = new SystemManagers(); 
-        SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
-        FormsUtilities.InitializeDefaults();
-        // If you plan on loading Forms controls from Gum:
-        FormsUtilities.RegisterFromFileFormRuntimeDefaults();
+        var gumProject = MonoGameGum.GumService.Default.Initialize(
+            this.GraphicsDevice);
 
         Root = new ContainerRuntime();
         Root.Width = 0;
@@ -70,19 +67,14 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
-        if(IsActive)
-        {
-            FormsUtilities.Update(this, gameTime, Root);
-        }
-        
-        SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
+        MonoGameGum.GumService.Default.Update(this, gameTime, Root);
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
-        SystemManagers.Default.Draw();
+        MonoGameGum.GumService.Default.Draw();
         base.Draw(gameTime);
     }
 }
@@ -149,16 +141,10 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        SystemManagers.Default = new SystemManagers();
-        SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
-        FormsUtilities.InitializeDefaults();
-
-        var gumProject = GumProjectSave.Load("GumProject/GumProject.gumx");
-        ObjectFinder.Self.GumProjectSave = gumProject;
-        gumProject.Initialize();
-        FormsUtilities.RegisterFromFileFormRuntimeDefaults();
-
-        FileManager.RelativeDirectory = "Content/GumProject/";
+        var gumProject = MonoGameGum.GumService.Default.Initialize(
+            this.GraphicsDevice,
+            // This is relative to Content:
+            "GumProject/GumProject.gumx");
 
         // This assumes that your project has at least 1 screen
         Root = gumProject.Screens.First().ToGraphicalUiElement(
@@ -169,20 +155,14 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
-        if (IsActive)
-        {
-            FormsUtilities.Update(this, gameTime, Root);
-        }
-
-        SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
-        FormsUtilities.Update(this, gameTime, Root);
+        MonoGameGum.GumService.Default.Update(this, gameTime, Root);
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
-        SystemManagers.Default.Draw();
+        MonoGameGum.GumService.Default.Draw();
         base.Draw(gameTime);
     }
 }

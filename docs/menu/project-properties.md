@@ -14,7 +14,7 @@ Gum allows you to change the canvas width and height of a project. This canvas w
 
 The canvas width and height can be changed through the project properties page.
 
-![](<../.gitbook/assets/14\_15 17 26.gif>)
+![](<../.gitbook/assets/14_15 17 26.gif>)
 
 ## Localization
 
@@ -41,13 +41,13 @@ Notice that comments using two forward slashes (similar to languages like C#) ca
 
 Once you have created a CSV with the desired entries, you can reference this by clicking the ... button to browse for the file in Gum.
 
-<figure><img src="../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Selecting localization file</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Selecting localization file</p></figcaption></figure>
 
 After selecting the localization file, you can choose which language index is being displayed. Note that this is a 0-based index, with the left-most column being 0. For example, using the table above a Language Index of 1 would result in the English column being displayed.
 
 Once you have added a localization file, Gum recognizes this and displays Text properties as an editable drop-down. You can type in a string ID, or you can use the drop-down to select from available options.&#x20;
 
-<figure><img src="../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>The Text dropdown displaying available string IDs</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>The Text dropdown displaying available string IDs</p></figcaption></figure>
 
 Localized text appears in Gum based on the selected ID. You can change the Language Index at any time to see localization applied immediately in your screens and components.
 
@@ -59,7 +59,7 @@ The Font Ranges setting controls which characters are included in default fonts.
 
 The default Font Ranges value is `32-126,160-255` which maps to the first page of the Bitmap font generator character set, labeled as **Latin + Latin Supplement**.
 
-![](<../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png>)
+![](<../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png>)
 
 Various websites provide a list of unicode character sets such as [https://unicode-table.com/en/blocks/](https://unicode-table.com/en/blocks/)
 
@@ -69,6 +69,6 @@ Changing the font ranges immediately refreshes the page. Note that all fonts are
 
 The following animation shows the Ā character being included and excluded from the Font Range, causing it to appear and disappear in the displayed text.
 
-![](<../.gitbook/assets/14\_16 04 36.gif>)
+![](<../.gitbook/assets/14_16 04 36.gif>)
 
 Note that expanding the character set results in larger font PNG files which can impact the size and performance of games using the Gum files.&#x20;

@@ -6,7 +6,7 @@ The Variables tab in Gum displays all available variables when editing an instan
 
 The Variables tab shows variables for the selected instance or element.
 
-![Variables tab in Gum](<../.gitbook/assets/03\_09 14 53.png>)
+![Variables tab in Gum](<../.gitbook/assets/03_09 14 53.png>)
 
 ## Editing Variables
 
@@ -24,7 +24,7 @@ By default all instances are positioned by their top-left corner. For example, s
 
 We can change the origin of the Text object by setting its "X Origin" and "Y Origin" values. Notice that if X Origin is set to "Center" then the Text object is positioned by its center:
 
-![](<../.gitbook/assets/image (4) (1) (1) (1) (1) (1) (1) (1).png>)
+![](<../.gitbook/assets/image (4) (1) (1) (1) (1) (1) (1) (1) (1).png>)
 
 Notice that I had to pan the view to be able to see the Text object. Gum provides multiple ways to pan the view:
 
@@ -36,11 +36,11 @@ Changing the X Origin value changes the origin of the selected instance; however
 
 We can change the origin that the Text is relative to by changing the X Units. By default the X Units variable is set to **Pixels from Left** for X and **Pixels from Top** for Y.&#x20;
 
-![](<../.gitbook/assets/image (13) (1).png>)
+![](<../.gitbook/assets/image (13) (1) (1).png>)
 
 Changing the X Units to **Pixels from Right** will cause the Text to be positioned on the right-side of the screen.
 
-![](<../.gitbook/assets/06\_21 10 59.gif>)
+![](<../.gitbook/assets/06_21 10 59.gif>)
 
 ## Text Alignment
 
@@ -54,16 +54,16 @@ You may have noticed that some variables in the Variables tab have a green backg
 
 To see how this works, select the **Text** item under the **Standard** folder. Notice that all values have a white background. Notice the default values for **Horizontal Alignment** and **Vertical Alignment**:
 
-![](<../.gitbook/assets/image (8) (1) (1) (1).png>)
+![](<../.gitbook/assets/image (8) (1) (1) (1) (1).png>)
 
 If the default Horizontal Alignment and Vertical Alignment values are changed, the changes will immediately be reflected in the preview window for the default Text configuration:
 
-![](<../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png>)
+![](<../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png>)
 
 Now if we select the TextIntance we will see that the VerticalAlignment is visibly using the Bottom value; however the **Horizontal Alignment** is still using center - this is because a value that is explicitly set on an instance will always override the default value set in the Standard element. Notice that **Horizontal Alignment** has a white background (indicating a custom value) and **Vertical Alignment** has a green background (indicating a default value).
 
-![](<../.gitbook/assets/image (9) (1).png>)
+![](<../.gitbook/assets/image (9) (1) (1).png>)
 
 Values can be reverted back to their default simply by right-clicking on the variable name in the Variables tab and selecting **Make Default**
 
-![](<../.gitbook/assets/image (5) (1) (1) (1) (1).png>)
+![](<../.gitbook/assets/image (5) (1) (1) (1) (1) (1).png>)

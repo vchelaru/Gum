@@ -13,7 +13,7 @@ Usage of GumBatch is completely optional, and it is only needed if you want to d
 1. Open your MonoGame project in your preferred IDE.
 2. Add the `Gum.MonoGame` NuGet package
 
-<figure><img src="../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Add Gum.MonoGame NuGet Package to your project</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Add Gum.MonoGame NuGet Package to your project</p></figcaption></figure>
 
 ### GumBatch Quick Start
 
@@ -42,9 +42,8 @@ The following shows a simple Game1.cs file which renders Gum Text:
 
     protected override void Initialize()
     {
-        SystemManagers.Default = new SystemManagers();
-        SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
-
+        MonoGameGum.GumService.Default.Initialize(this.GraphicsDevice);
+        
         gumBatch = new GumBatch();
         font = new RenderingLibrary.Graphics.BitmapFont(
             "Fonts/Font18Caladea.fnt", 
