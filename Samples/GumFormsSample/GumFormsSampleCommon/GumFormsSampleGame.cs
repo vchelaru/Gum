@@ -1,8 +1,10 @@
-﻿using Gum.Wireframe;
+﻿using Gum.DataTypes;
+using Gum.Wireframe;
 using GumFormsSample.Screens;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MonoGameGum;
 using MonoGameGum.Forms;
 using MonoGameGum.GueDeriving;
 using RenderingLibrary;
@@ -38,16 +40,14 @@ public class GumFormsSampleGame : Game
 
     protected override void Initialize()
     {
-        SystemManagers.Default = new SystemManagers();
-        SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
-        FormsUtilities.InitializeDefaults();
+        var gumProject = GumService.Default.Initialize(_graphics.GraphicsDevice, "FormsGumProject/GumProject.gumx");
 
-        const int screenNumber = 1;
+        const int screenNumber = 3;
 
         switch (screenNumber)
         {
             case 0:
-                InitializeFromFileDemoScreen();
+                InitializeFromFileDemoScreen(gumProject);
                 break;
             case 1:
                 InitializeFrameworkElementExampleScreen();
@@ -64,11 +64,11 @@ public class GumFormsSampleGame : Game
     }
 
 
-    private void InitializeFromFileDemoScreen()
+    private void InitializeFromFileDemoScreen(GumProjectSave gumProject)
     {
         var screen = new FromFileDemoScreen();
         GraphicalUiElement root = null;
-        screen.Initialize(ref root);
+        screen.Initialize(gumProject, ref root);
         Roots.Add(root);
     }
 
@@ -124,7 +124,7 @@ public class GumFormsSampleGame : Game
         }
 
 
-        FormsUtilities.Update(this, gameTime, Roots);
+        GumService.Default.Update(this, gameTime, Roots);
 
         // Set this to true to see WindowOver information in the output window
         bool printWindowOver = false;
@@ -138,7 +138,6 @@ public class GumFormsSampleGame : Game
             Debug.WriteLine($"Window over: {windowOver} @ x:{cursor.WindowOver?.X}");
         }
 
-        SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
 
         base.Update(gameTime);
     }

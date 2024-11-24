@@ -18,17 +18,8 @@ namespace GumFormsSample.Screens;
 internal class FromFileDemoScreen
 {
     GraphicalUiElement _root;
-    public void Initialize(ref GraphicalUiElement root)
+    public void Initialize(GumProjectSave gumProject, ref GraphicalUiElement root)
     {
-
-        var gumProject = GumProjectSave.Load("FormsGumProject/GumProject.gumx");
-        ObjectFinder.Self.GumProjectSave = gumProject;
-        gumProject.Initialize();
-        FormsUtilities.RegisterFromFileFormRuntimeDefaults();
-
-        FileManager.RelativeDirectory = "Content/FormsGumProject/";
-
-        // This assumes that your project has at least 1 screen
 
         _root = gumProject.Screens.Find(item => item.Name == "DemoScreenGum").ToGraphicalUiElement(
             SystemManagers.Default, addToManagers: true);

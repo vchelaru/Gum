@@ -6,6 +6,7 @@ using GumRuntime;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MonoGameGum;
 using MonoGameGum.GueDeriving;
 using MonoGameGum.Input;
 using MonoGameGum.Renderables;
@@ -67,12 +68,9 @@ namespace MonoGameGumFromFileAndroid
 
         protected override void Initialize()
         {
-            SystemManagers.Default = new SystemManagers();
-            SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
+            GumService.Default.Initialize(_graphics.GraphicsDevice, "GumProject.gumx");
 
             //SetSinglePixelTexture();
-
-            LoadGumProject();
 
             InitializeRuntimeMapping();
 
@@ -91,15 +89,6 @@ namespace MonoGameGumFromFileAndroid
                 typeof(ClickableButton));
 
         }
-
-        private static GumProjectSave LoadGumProject()
-        {
-            var gumProject = GumProjectSave.Load("GumProject.gumx");
-            ObjectFinder.Self.GumProjectSave = gumProject;
-            gumProject.Initialize();
-            return gumProject;
-        }
-
 
         private void SetSinglePixelTexture()
         {
@@ -291,13 +280,10 @@ namespace MonoGameGumFromFileAndroid
         MouseState lastMouseState;
         protected override void Update(GameTime gameTime)
         {
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Microsoft.Xna.Framework.Input.Keyboard.GetState().IsKeyDown(Keys.Escape))
+            if (Microsoft.Xna.Framework.Input.GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Microsoft.Xna.Framework.Input.Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
-
-            cursor.Activity(gameTime.TotalGameTime.TotalSeconds);
-            gumKeyboard.Activity(gameTime.TotalGameTime.TotalSeconds);
+            GumService.Default.Update(this, gameTime, currentScreenGue);
 
             DoSwapScreenLogic();
 

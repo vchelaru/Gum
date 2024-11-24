@@ -22,6 +22,7 @@ internal class ComplexListBoxItemScreen
 
     public void Initialize(GraphicalUiElement root)
     {
+        FileManager.RelativeDirectory = "Content/";
 
         root.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
         root.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;

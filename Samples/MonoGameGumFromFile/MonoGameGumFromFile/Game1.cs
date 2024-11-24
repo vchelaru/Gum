@@ -6,6 +6,7 @@ using GumRuntime;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MonoGameGum;
 using MonoGameGum.Forms;
 using MonoGameGum.GueDeriving;
 using MonoGameGum.Input;
@@ -70,11 +71,9 @@ namespace MonoGameGumFromFile
         protected override void Initialize()
         {
             synchronizationContext = new SingleThreadSynchronizationContext();
-            SystemManagers.Default = new SystemManagers();
-            SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
-            FormsUtilities.InitializeDefaults();
+            GumService.Default.Initialize(_graphics.GraphicsDevice, "GumProject.gumx");
 
-            
+
             // This allows you to resize:
             Window.AllowUserResizing = true;
             // This event is raised whenever a resize occurs, allowing
@@ -89,7 +88,6 @@ namespace MonoGameGumFromFile
             ElementSaveExtensions.RegisterGueInstantiation("StartScreen",
                 () => new StartScreenRuntime());
 
-            LoadGumProject();
 
             InitializeRuntimeMapping();
 
@@ -129,15 +127,6 @@ namespace MonoGameGumFromFile
                 typeof(ClickableButton));
 
         }
-
-        private static GumProjectSave LoadGumProject()
-        {
-            var gumProject = GumProjectSave.Load("GumProject.gumx");
-            ObjectFinder.Self.GumProjectSave = gumProject;
-            gumProject.Initialize();
-            return gumProject;
-        }
-
 
         private void SetSinglePixelTexture()
         {
@@ -323,14 +312,13 @@ namespace MonoGameGumFromFile
         MouseState lastMouseState;
         protected override void Update(GameTime gameTime)
         {
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Microsoft.Xna.Framework.Input.Keyboard.GetState().IsKeyDown(Keys.Escape))
+            if (Microsoft.Xna.Framework.Input.GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Microsoft.Xna.Framework.Input.Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
+            GumService.Default.Update(this, gameTime, currentScreenGue);
 
             currentScreenGue.AnimateSelf(gameTime.ElapsedGameTime.TotalSeconds);
 
-            FormsUtilities.Update(this, gameTime, currentScreenGue);
 
             synchronizationContext.Update();
 

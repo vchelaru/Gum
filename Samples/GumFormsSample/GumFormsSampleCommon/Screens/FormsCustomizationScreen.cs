@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToolsUtilities;
 
 namespace GumFormsSample.Screens;
 
@@ -14,6 +15,7 @@ internal class FormsCustomizationScreen
 {
     public void Initialize(GraphicalUiElement Root)
     {
+        FileManager.RelativeDirectory = "Content/";
 
         var button = new Button();
 

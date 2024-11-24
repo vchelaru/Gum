@@ -157,7 +157,7 @@ namespace Gum.Wireframe
                                 {
                                     if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
                                     {
-                                        string message = $"Error setting SourceFile on NineSlice:\n{valueAsString}";
+                                        string message = $"Error setting SourceFile on NineSlice named {nineSlice.Name}:\n{valueAsString}";
                                         throw new System.IO.FileNotFoundException(message);
                                     }
                                     // do nothing?

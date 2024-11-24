@@ -11,6 +11,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToolsUtilities;
 
 namespace GumFormsSample.Screens
 {
@@ -18,6 +19,7 @@ namespace GumFormsSample.Screens
     {
         public void Initialize(List<GraphicalUiElement> roots)
         {
+            FileManager.RelativeDirectory = "Content/";
             var root = roots[0];
             root.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
             root.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
