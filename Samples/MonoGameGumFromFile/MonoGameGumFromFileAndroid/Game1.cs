@@ -58,7 +58,7 @@ namespace MonoGameGumFromFileAndroid
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            SystemManagers.Default.Draw();
+            GumService.Default.Draw();
 
             base.Draw(gameTime);
         }

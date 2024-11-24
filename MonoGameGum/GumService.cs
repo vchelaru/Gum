@@ -70,4 +70,9 @@ public class GumService
         FormsUtilities.Update(game, gameTime, roots);
         SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
     }
+
+    public void Draw()
+    {
+        SystemManagers.Default.Draw();
+    }
 }
