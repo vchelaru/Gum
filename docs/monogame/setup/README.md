@@ -10,28 +10,50 @@ At the time of this writing Gum + MonoGame has been tested on a variety of platf
 2.  Add the `Gum.MonoGame` NuGet package\
 
 
-    <figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Add Gum.MonoGame NuGet Package to your project</p></figcaption></figure>
+    <figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Add Gum.MonoGame NuGet Package to your project</p></figcaption></figure>
 
 ### Initializing Gum
 
-1. Open your Game class (usually Game1.cs)
-2. Add the following code to your Initialize method:\
-   `SystemManagers.Default = new SystemManagers(); SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);`
-3. Add the following to your Update method:\
-   `SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);`
-4. Add the following to your Draw method after you clear the graphics device:\
-   `SystemManagers.Default.Draw();`
+To initialize Gum, modify your Game project (such as Game1.cs) so that it includes the following calls:
+
+```csharp
+protected override void Initialize()
+{
+    MonoGameGum.GumService.Default.Initialize(this.GraphicsDevice);
+    base.Initialize();
+}
+
+protected override void Update(GameTime gameTime)
+{
+    MonoGameGum.GumService.Default.Update(this, gameTime);
+    base.Update(gameTime);
+}
+
+protected override void Draw(GameTime gameTime)
+{
+    GraphicsDevice.Clear(Color.CornflowerBlue);
+    MonoGameGum.GumService.Default.Draw();
+    base.Draw(gameTime);
+}
+```
 
 ### Testing Gum
 
-To test that you have successfully added Gum to the project, add the following code to your Initialize method after SystemManagers.Default.Initialize:
+To test that you have successfully added Gum to the project, modify your Initialize method:
 
 ```csharp
-var rectangle = new ColoredRectangleRuntime();
-rectangle.Width = 100;
-rectangle.Height = 100;
-rectangle.Color = Color.White;
-rectangle.AddToManagers(SystemManagers.Default, null);
+protected override void Initialize()
+{
+    MonoGameGum.GumService.Default.Initialize(this.GraphicsDevice);
+
+    var rectangle = new ColoredRectangleRuntime();
+    rectangle.Width = 100;
+    rectangle.Height = 100;
+    rectangle.Color = Color.White;
+    rectangle.AddToManagers(SystemManagers.Default, null);
+
+    base.Initialize();
+}
 ```
 
 <figure><img src="../../.gitbook/assets/image (25).png" alt=""><figcaption><p>White ColoredRectangleRuntime in game</p></figcaption></figure>

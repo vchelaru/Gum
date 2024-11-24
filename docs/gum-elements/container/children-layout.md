@@ -24,19 +24,19 @@ The following shows how to use the ChildrenLayout property to change the default
 
 Regular layout positions each child independent of every other child. The position of one child does not affect the position other children. This is the default layout for containers.
 
-<figure><img src="../../.gitbook/assets/image (4) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Two ColoredRectangles using regular layout</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (4) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Two ColoredRectangles using regular layout</p></figcaption></figure>
 
 ### Top to Bottom Stack
 
 Top to Bottom Stack results in each child being positioned after its previous sibling vertically. This can be used to create horizontal stacks.
 
-<figure><img src="../../.gitbook/assets/image (12).png" alt=""><figcaption><p>Text Instances in a top to bottom stack</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (12) (1).png" alt=""><figcaption><p>Text Instances in a top to bottom stack</p></figcaption></figure>
 
 ### Left to Right Stack
 
 Left to Right Stack results in each child being positioned after its previous sibling horizontally. This can be used to create vertical stacks.
 
-<figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Sprites in a left to right stack</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Sprites in a left to right stack</p></figcaption></figure>
 
 ### Stacking and X/Y Values
 
@@ -44,7 +44,7 @@ When children stack, each child's X or Y depends on the boundary of its previous
 
 For example, the following image shows a Text object with a Y value of 20. Notice that it is positioned 20 units below the item above it.
 
-<figure><img src="../../.gitbook/assets/image (3) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>A Text's Y value can be used to separate it from its previous sibling in a Top to Bottom Stack</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (3) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>A Text's Y value can be used to separate it from its previous sibling in a Top to Bottom Stack</p></figcaption></figure>
 
 This effect is easy to notice when dragging an object inside a stack, as shown in the following animation:
 

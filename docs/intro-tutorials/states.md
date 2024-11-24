@@ -14,7 +14,7 @@ This tutorial builds upon the previous tutorial where a Button component was cre
 
 ## Defining states
 
-First we'll define two new states. All components and screens have a "Default" state automatically. This Default state is _uncategorized**,**_ but all other states must be in a category. Therefore, we'll first add a new category:
+First we'll define two new states. All components and screens have a "Default" state automatically. This Default state is _uncategorize&#x64;**,**_ but all other states must be in a category. Therefore, we'll first add a new category:
 
 1. Right-click in the States tab
 2.  Select **Add Category**\
@@ -37,7 +37,7 @@ First we'll define two new states. All components and screens have a "Default" s
 
 The Button component will now have a new state called Highlighted:
 
-![](<../.gitbook/assets/30\_14 35 35.png>)
+![](<../.gitbook/assets/30_14 35 35.png>)
 
 ## Setting variables in states
 
@@ -51,7 +51,7 @@ For this example, we will make the button become a lighter blue when highlighted
 
 Notice that the Green and Red values are rendered with a white background rather than green - indicating that they are values that are explicitly set in the Highlight state.
 
-![Red and Green Variables in Highlighted State](<../.gitbook/assets/30\_14 37 18.png>)
+![Red and Green Variables in Highlighted State](<../.gitbook/assets/30_14 37 18.png>)
 
 ## Switching between states
 
