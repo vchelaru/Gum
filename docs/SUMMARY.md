@@ -129,6 +129,7 @@
       * [Setup](monogame/tutorials/gum-project-setup-tutorial/setup.md)
       * [Gum Screens](monogame/tutorials/gum-project-setup-tutorial/gum-screens.md)
       * [Gum Forms](monogame/tutorials/gum-project-setup-tutorial/gum-forms.md)
+      * [Strongly Typed Components Using Code Generation](monogame/tutorials/gum-project-setup-tutorial/strongly-typed-components-using-code-generation.md)
       * [Multiple Screens](monogame/tutorials/gum-project-setup-tutorial/multiple-screens.md)
   * [Setup for GumBatch (Optional)](monogame/setup-for-gumbatch.md)
   * [Loading a Gum Project (Optional)](monogame/loading-.gumx-gum-project.md)

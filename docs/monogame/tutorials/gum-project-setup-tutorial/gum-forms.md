@@ -65,4 +65,4 @@ The Forms types and properties are based on the WPF syntax. Developers familiar 
 
 This tutorial showed how to create Forms instances in a screen, interact with them in code, and how to work with the different forms types.
 
-The next tutorial covers how to create and destroy screens.
+The next tutorial covers how to generate code for custom components.

@@ -82,7 +82,8 @@ public class Game1 : Game
     protected override void Initialize()
     {
         ...
-        Root = screen.ToGraphicalUiElement(RenderingLibrary.SystemManagers.Default, addToManagers: true);
+        Root = screen.ToGraphicalUiElement(
+            RenderingLibrary.SystemManagers.Default, addToManagers: true);
         ...
     }
 
