@@ -10,7 +10,7 @@
 		<TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>FlatRedBall.ToolsUtilities.NetStandard</PackageId>
-		<Version>2024.11.17.2</Version>
+		<Version>2024.11.24.2</Version>
 
 
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
