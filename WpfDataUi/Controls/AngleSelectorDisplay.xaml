@@ -5,60 +5,80 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:decorators="clr-namespace:WpfDataUiCore.Decorators"
              mc:Ignorable="d" 
              >
-    <Grid DragOver="Grid_DragOver_1" x:Name="MainGrid">
-        <Grid.ContextMenu>
-            <ContextMenu></ContextMenu>
-        </Grid.ContextMenu>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"></ColumnDefinition>
-            <ColumnDefinition Width="Auto"></ColumnDefinition>
-            <ColumnDefinition></ColumnDefinition>
-        </Grid.ColumnDefinitions>
-        <Label x:Name="Label" Grid.Column="0" VerticalAlignment="Center">TitleText</Label>
-        <Canvas Grid.Column="1" Width="40" Height="40" Margin="6">
-            <Ellipse Grid.Column="0" Width="40" Height="40" Stroke="Gray" MouseMove="Ellipse_MouseMove_1" MouseLeftButtonDown="Ellipse_MouseLeftButtonDown_1">
-                <Ellipse.Fill>
-                    <LinearGradientBrush StartPoint=".5,0" EndPoint=".5,1">
-                        <GradientStop Color="White" Offset="0.0" />
-                        <GradientStop Color="LightGray" Offset="1.0" />
-                    </LinearGradientBrush>
-                </Ellipse.Fill>
-            </Ellipse>
-            <Line x:Name="Line" Canvas.Left="20" Canvas.Top="20" X1="0" Y1="0" X2="22" Y2="0" 
-                  StrokeThickness="3" StrokeEndLineCap="Triangle" RenderTransformOrigin="0,0" MouseMove="Ellipse_MouseMove_1">
-                <Line.RenderTransform>
-                    <TransformGroup>
-                        <ScaleTransform/>
-                        <SkewTransform/>
-                        <RotateTransform Angle="{Binding Path=NegativeAngle}"/>
-                        <TranslateTransform/>
-                    </TransformGroup>
-                </Line.RenderTransform>
-                <Line.Stroke>
-                    <SolidColorBrush Color="Black"></SolidColorBrush>
-                    
-                    
-                </Line.Stroke>
-                
-            </Line>
-            <Ellipse Name="CenterPoint" Grid.Column="0" Width="4" Height="4" Fill="Gray" Canvas.Left="18" Canvas.Top="18" />
+    <StackPanel>
 
-        </Canvas>
-        <Grid Grid.Column="2">
-            <Grid>
-                <TextBox x:Name="TextBox" MinWidth="50" Height="24" 
+        <Grid DragOver="Grid_DragOver_1" x:Name="TopRowGrid">
+            <Grid.ContextMenu>
+                <ContextMenu></ContextMenu>
+            </Grid.ContextMenu>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                <ColumnDefinition></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"></RowDefinition>
+                <RowDefinition Height="Auto"></RowDefinition>
+            </Grid.RowDefinitions>
+
+            <Label x:Name="Label" Grid.Column="0" VerticalAlignment="Center">TitleText</Label>
+            <Canvas Grid.Column="1" Width="40" Height="40" Margin="6">
+                <Ellipse Grid.Column="0" Width="40" Height="40" Stroke="Gray" MouseMove="Ellipse_MouseMove_1" MouseLeftButtonDown="Ellipse_MouseLeftButtonDown_1">
+                    <Ellipse.Fill>
+                        <LinearGradientBrush StartPoint=".5,0" EndPoint=".5,1">
+                            <GradientStop Color="White" Offset="0.0" />
+                            <GradientStop Color="LightGray" Offset="1.0" />
+                        </LinearGradientBrush>
+                    </Ellipse.Fill>
+                </Ellipse>
+                <Line x:Name="Line" Canvas.Left="20" Canvas.Top="20" X1="0" Y1="0" X2="22" Y2="0" 
+                  StrokeThickness="3" StrokeEndLineCap="Triangle" RenderTransformOrigin="0,0" MouseMove="Ellipse_MouseMove_1">
+                    <Line.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform/>
+                            <SkewTransform/>
+                            <RotateTransform Angle="{Binding Path=NegativeAngle}"/>
+                            <TranslateTransform/>
+                        </TransformGroup>
+                    </Line.RenderTransform>
+                    <Line.Stroke>
+                        <SolidColorBrush Color="Black"></SolidColorBrush>
+
+
+                    </Line.Stroke>
+
+                </Line>
+                <Ellipse Name="CenterPoint" Grid.Column="0" Width="4" Height="4" Fill="Gray" Canvas.Left="18" Canvas.Top="18" />
+
+            </Canvas>
+            <Grid Grid.Column="2">
+                <Grid>
+                    <TextBox x:Name="TextBox" MinWidth="50" Height="24" 
                          PreviewKeyDown="TextBox_PreviewKeyDown_1" 
                          LostFocus="TextBox_LostFocus_1"
                          Margin="0,0,13,0"
                          />
-                <decorators:NoSizeDecorator>
-                    <TextBlock IsHitTestVisible="False"
+                    <decorators:NoSizeDecorator>
+                        <TextBlock IsHitTestVisible="False"
                                VerticalAlignment="Center" 
                                Foreground="Gray" 
                                Margin="3,0,16,0" x:Name="PlaceholderText" ></TextBlock>
-                </decorators:NoSizeDecorator>
+                    </decorators:NoSizeDecorator>
+                </Grid>
+                <Label Content="&#186;" Height="32" HorizontalAlignment="Right"></Label>
             </Grid>
-            <Label Content="&#186;" Height="32" HorizontalAlignment="Right"></Label>
         </Grid>
-    </Grid>
+        <TextBlock x:Name="HintTextBlock" 
+                    Padding="8,1,0,4" 
+                    Grid.Row="2" 
+                    Grid.ColumnSpan="3"  
+                    TextWrapping="Wrap"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    MaxWidth="{Binding ActualWidth, ElementName=TopRowGrid}"
+                    Margin="0,0,-4,0"
+                    FontSize="10" Text="This is a property description. But what if it is longer?"/>
+
+    </StackPanel>
 </UserControl>

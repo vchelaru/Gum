@@ -4,39 +4,52 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" >
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Name="FirstColumn" Width="{Binding FirstGridLength}"></ColumnDefinition>
-            <ColumnDefinition Width="*"></ColumnDefinition>
-        </Grid.ColumnDefinitions>
+    <StackPanel>
 
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"></RowDefinition>
-            <RowDefinition Height="Auto"></RowDefinition>
-        </Grid.RowDefinitions>
-        
-        <TextBlock x:Name="Label" MinWidth="100" TextWrapping="Wrap" VerticalAlignment="Center">Property Label:</TextBlock>        
-        
-        <TextBox Grid.Column="1" x:Name="TextBox" 
+        <Grid x:Name="TopRowGrid">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Name="FirstColumn" Width="{Binding FirstGridLength}"></ColumnDefinition>
+                <ColumnDefinition Width="*"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"></RowDefinition>
+                <RowDefinition Height="Auto"></RowDefinition>
+            </Grid.RowDefinitions>
+
+            <TextBlock x:Name="Label" MinWidth="100" TextWrapping="Wrap" VerticalAlignment="Center">Property Label:</TextBlock>
+
+            <TextBox Grid.Column="1" x:Name="TextBox" 
                  Margin="0,0,51,0" LostFocus="TextBox_LostFocus_1" 
                  MinWidth="60" VerticalAlignment="Center">
-            <TextBox.ContextMenu>
-                <ContextMenu>
-                </ContextMenu>
-            </TextBox.ContextMenu>
-        </TextBox>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Column="1">
-            <Button Width="24"
+                <TextBox.ContextMenu>
+                    <ContextMenu>
+                    </ContextMenu>
+                </TextBox.ContextMenu>
+            </TextBox>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Column="1">
+                <Button Width="24"
                     Click="Button_Click_1" VerticalAlignment="Center"
                     >...</Button>
-            <Button Grid.Column="2"
+                <Button Grid.Column="2"
                     Width="24"
                     Height="20"
                     Margin="1,0,0,0" Click="ViewInExplorerClicked">
-                <Image Source="/WpfDataUi;component/Content/Icons/OpenFolder.png"></Image>
-            </Button>
-            
-        </StackPanel>
+                    <Image Source="/WpfDataUi;component/Content/Icons/OpenFolder.png"></Image>
+                </Button>
 
-    </Grid>
+            </StackPanel>
+
+        </Grid>
+        <TextBlock x:Name="HintTextBlock" 
+                    Padding="8,1,0,4" 
+                    Grid.Row="2" 
+                    Grid.ColumnSpan="3"  
+                    TextWrapping="Wrap"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    MaxWidth="{Binding ActualWidth, ElementName=TopRowGrid}"
+                    Margin="0,0,-4,0"
+                    FontSize="10" Text="This is a property description. But what if it is longer?"/>
+    </StackPanel>
 </UserControl>
