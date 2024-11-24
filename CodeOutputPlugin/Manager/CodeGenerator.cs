@@ -468,6 +468,32 @@ namespace CodeOutputPlugin.Manager
 
         #endregion
 
+        #region Register (MonoGame)
+
+        static void RegisterRuntimeType(CodeGenerationContext context)
+        {
+            if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
+            {
+                var builder = context.StringBuilder;
+
+                builder.AppendLine(context.Tabs + "public static void RegisterRuntimeType()");
+                builder.AppendLine(context.Tabs + "{");
+                context.TabCount++;
+
+                var className = CodeGenerator.GetClassNameForType(context.Element.Name, context.VisualApi);
+
+                builder.AppendLine(context.Tabs + $"GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType(\"{context.Element.Name}\", typeof({className}));");
+
+
+                context.TabCount--;
+                builder.AppendLine(context.Tabs + "}");
+            }
+        }
+
+        #endregion
+
+
+
         #region Position / Size
 
         private static void ProcessXamarinFormsPositionAndSize(List<VariableSave> variablesToConsider, StateSave state, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, CodeGenerationContext context)
@@ -2286,7 +2312,11 @@ namespace CodeOutputPlugin.Manager
             context.TabCount++;
             #endregion
 
+            #region Register
 
+            RegisterRuntimeType(context);
+
+            #endregion
 
             #region States
 

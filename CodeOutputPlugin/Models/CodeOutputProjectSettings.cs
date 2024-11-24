@@ -51,7 +51,7 @@ using System.Linq;
 
         public bool IsShowCodegenPreviewChecked { get; set; }
 
-        public InheritanceLocation InheritanceLocation { get; set; }
+        public InheritanceLocation InheritanceLocation { get; set; } = InheritanceLocation.InGeneratedCode;
 
         public ObjectInstantiationType ObjectInstantiationType { get; set; }
 

@@ -8,6 +8,7 @@ using RenderingLibrary;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using ToolsUtilities;
@@ -31,6 +32,7 @@ public class GumService
 
     public GumProjectSave? Initialize(GraphicsDevice graphicsDevice, string? gumProjectFile = null)
     {
+        RegisterRuntimeTypesThroughReflection();
         SystemManagers.Default = new SystemManagers();
         SystemManagers.Default.Initialize(graphicsDevice, fullInstantiation: true);
         FormsUtilities.InitializeDefaults();
@@ -51,6 +53,26 @@ public class GumService
         }
 
         return gumProject;
+    }
+
+    private void RegisterRuntimeTypesThroughReflection()
+    {
+        // Get the currently executing assembly
+        Assembly executingAssembly = Assembly.GetExecutingAssembly();
+
+        // Get all types in the assembly
+        Type[] types = executingAssembly.GetTypes();
+
+        // Print each type
+        foreach (Type type in types)
+        {
+            var method = type.GetMethod("RegisterRuntimeType", BindingFlags.Static | BindingFlags.Public);
+
+            if (method != null)
+            {
+                method.Invoke(null, null);
+            }
+        }
     }
 
     public void Update(Game game, GameTime gameTime)
