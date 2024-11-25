@@ -56,11 +56,11 @@ namespace MonoGameGum.Forms
                 throw new InvalidOperationException("You must call this method after initializing SystemManagers.Default");
             }
 
-            FrameworkElement.PopupRoot = CreateFullscreenContainer();
-            FrameworkElement.ModalRoot = CreateFullscreenContainer();
+            FrameworkElement.PopupRoot = CreateFullscreenContainer(nameof(FrameworkElement.PopupRoot));
+            FrameworkElement.ModalRoot = CreateFullscreenContainer(nameof(FrameworkElement.ModalRoot));
         }
 
-        static ContainerRuntime CreateFullscreenContainer()
+        static ContainerRuntime CreateFullscreenContainer(string name)
         {
             var container = new ContainerRuntime();
 
