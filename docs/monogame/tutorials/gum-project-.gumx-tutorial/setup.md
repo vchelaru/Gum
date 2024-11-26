@@ -59,7 +59,7 @@ This tutorial will not use the DemoScreenGum, so leave this option unchecked and
 
 Forms components modify your default components (such as Text) for styling. Click OK to apply these changes.
 
-<figure><img src="../../../.gitbook/assets/image (10).png" alt=""><figcaption><p>Click, OK to modify standards with the default Forms styling</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (10).png" alt=""><figcaption><p>Click, Yes to modify standards with the default Forms styling</p></figcaption></figure>
 
 Your project now includes Forms components.
 
