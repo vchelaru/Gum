@@ -12,7 +12,7 @@ MonoGameGum provides common _runtime_ types which can be used to build your layo
 
 Notice that at the time of this writing, only a subset of Gum standard types are available. This is likely to expand over time.
 
-<figure><img src="../../.gitbook/assets/image (4) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Gum "Standard" types</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (4) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Gum "Standard" types</p></figcaption></figure>
 
 All runtime objects inherit from GraphicalUiElement, which is the base class for all Gum objects. Therefore, all runtime objects share the same properties for position (such as X and XUnits), size (such as Width and WidthUnits), and rotation.
 

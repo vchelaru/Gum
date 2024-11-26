@@ -4,7 +4,7 @@
 
 The Font variable sets the font family used by the text.
 
-<figure><img src="../../.gitbook/assets/image (3) (1) (1).png" alt=""><figcaption><p>Text instance using Arial font family</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (3) (1) (1) (1).png" alt=""><figcaption><p>Text instance using Arial font family</p></figcaption></figure>
 
 &#x20;This dropdown appears only if [Use Custom Font](use-custom-font.md) is set to false.
 
@@ -14,7 +14,7 @@ The Font dropdown has access to any font which is installed locally.
 
 To use a font in Gum, download the font and install it by double-clicking or right-clicking on the font.
 
-<figure><img src="../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Right-click Install font option</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Right-click Install font option</p></figcaption></figure>
 
 ### Font Generation and Font Cache
 
@@ -22,11 +22,11 @@ Gum performs rendering using rasterized fonts. In other words, it renders using 
 
 You can view the Font Cache in your project by selecting **Content -> View Font Cache**.
 
-<figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>View Font Cache menu item</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>View Font Cache menu item</p></figcaption></figure>
 
 This folder contains all font files used by your project.
 
-<figure><img src="../../.gitbook/assets/image (2) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Font files in the FontCache folder</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Font files in the FontCache folder</p></figcaption></figure>
 
 Note that each font has three files:
 
@@ -36,7 +36,7 @@ Note that each font has three files:
 
 Each PNG can be opened in an image editor to view the packed characters. For example, the following shows the Arial 24 font. The blue background has been added manually to make the white characters visible:
 
-<figure><img src="../../.gitbook/assets/image (3) (1).png" alt=""><figcaption><p>Arial 24 font in a PNG with an added blue background for visibility</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (3) (1) (1).png" alt=""><figcaption><p>Arial 24 font in a PNG with an added blue background for visibility</p></figcaption></figure>
 
 #### Font Cache Generation
 

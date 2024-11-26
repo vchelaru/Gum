@@ -18,7 +18,7 @@ nineSlice.Height = 48;
 container.Children.Add(nineSlice);
 ```
 
-<figure><img src="../../.gitbook/assets/image (3) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>NineSlice using Frame.png</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (3) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>NineSlice using Frame.png</p></figcaption></figure>
 
 ### Assigning NineSlice Texture
 
@@ -26,7 +26,7 @@ NineSlice textures can be assigned using a string property or Texture2D instance
 
 For example, consider a file called Frame.png which is located in the Content directory:
 
-<figure><img src="../../.gitbook/assets/image (4) (1).png" alt=""><figcaption><p>Frame.png in Content</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (4) (1) (1).png" alt=""><figcaption><p>Frame.png in Content</p></figcaption></figure>
 
 This file can be used as a texture by assigning the RelativeDirectory and then loading Frame.png. Note that RelativeDirectory is usually set to Content, or to the location of the .gumx file.
 
