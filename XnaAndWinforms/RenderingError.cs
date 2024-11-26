@@ -32,6 +32,15 @@ namespace XnaAndWinforms
             set;
         }
 
+        /// <summary>
+        ///  Indicates that we previously tried to reset the graphics device and it failed to reset
+        /// </summary>
+        public bool GraphicsDeviceResetFailed
+        {
+            get;
+            set;
+        }
+
         public bool HasErrors
         {
             get

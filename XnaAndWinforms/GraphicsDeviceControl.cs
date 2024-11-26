@@ -211,7 +211,11 @@ namespace XnaAndWinforms
                             mRenderError.Message = exception.ToString();
                         }
                     }
-                    else
+                    else if (!mRenderError.GraphicsDeviceResetFailed)
+                    {
+                        TryHandleDeviceReset(mRenderError);
+
+                    } else
                     {
                         // If BeginDraw failed, show an error message using System.Drawing.
                         PaintUsingSystemDrawing(e.Graphics, mRenderError.ProcessedMessage);
@@ -299,6 +303,9 @@ namespace XnaAndWinforms
         /// </summary>
         void TryHandleDeviceReset(RenderingError error)
         {
+            // Don't attempt to reset if we failed resetting before
+            if (error.GraphicsDeviceResetFailed)
+                return;
 
             switch (GraphicsDevice.GraphicsDeviceStatus)
             {
@@ -341,6 +348,7 @@ namespace XnaAndWinforms
                 }
                 catch (Exception e)
                 {
+                    error.GraphicsDeviceResetFailed = true;
                     error.GraphicsDeviceNeedsReset = false;
                     error.Message = "Graphics device reset failed\n\n" + e;
                 }
