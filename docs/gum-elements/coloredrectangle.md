@@ -6,4 +6,4 @@ ColoredRectangles are used to display solid color rectangles. It can be used to 
 
 As the name suggests, ColoredRectangles have a Color property which can be modified.
 
-<figure><img src="../.gitbook/assets/image (8) (1) (1) (1).png" alt=""><figcaption><p>ColoredRectangle with a green color</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (8) (1) (1) (1) (1).png" alt=""><figcaption><p>ColoredRectangle with a green color</p></figcaption></figure>

@@ -95,7 +95,7 @@ Calling `ToGraphicalUiElement` on the StartScreen results in an instance of the 
 
 Once a custom runtime is defined, it needs to be associated with a Gum component. For example, consider a component named StandardButton inside a Buttons folder.
 
-<figure><img src="../.gitbook/assets/image (8) (1).png" alt=""><figcaption><p>StandardButton in Gum</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (8) (1) (1).png" alt=""><figcaption><p>StandardButton in Gum</p></figcaption></figure>
 
 Notice that the name StandardButton does not match the name ClickableButton, and this is often not desirable.
 

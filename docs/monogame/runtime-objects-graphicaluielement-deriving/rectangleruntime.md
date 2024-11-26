@@ -14,5 +14,5 @@ lineRectangle.Color = Color.Pink;  // This is a Microsoft.Xna.Framework.Color
 container.Children.Add(lineRectangle);
 ```
 
-<figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>RectangleRuntime instantiated in code</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>RectangleRuntime instantiated in code</p></figcaption></figure>
 

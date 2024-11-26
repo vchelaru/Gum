@@ -19,7 +19,7 @@ Before writing any code, we must add the Gum nuget package. Add the `Gum.MonoGam
 
 Once you are finished, your game project should reference the `Gum.MonoGam` project.
 
-<figure><img src="../../../.gitbook/assets/image (1).png" alt=""><figcaption><p>Gum.MonoGame NuGet package</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (1) (1).png" alt=""><figcaption><p>Gum.MonoGame NuGet package</p></figcaption></figure>
 
 ### Creating a new Gum Project
 
@@ -27,43 +27,43 @@ Next we'll create a project in the Gum UI tool. If you have not yet run the Gum 
 
 Once you have the tool downloaded, run it. You should have an empty project.
 
-<figure><img src="../../../.gitbook/assets/image (1) (1).png" alt=""><figcaption><p>Empty Gum Project</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (1) (1) (1).png" alt=""><figcaption><p>Empty Gum Project</p></figcaption></figure>
 
 We need to save our Gum project in the Content folder of our game. Gum projects include many files. it's best to keep a Gum project and all of its files in a dedicated folder.
 
 Add a new folder to your Game's Content folder which will contain the Gum project, such as GumProject.
 
-<figure><img src="../../../.gitbook/assets/image (2).png" alt=""><figcaption><p>GumProject folder in Visual Studio</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (2) (1).png" alt=""><figcaption><p>GumProject folder in Visual Studio</p></figcaption></figure>
 
 In the Gum tool click File -> Save Project.
 
-<figure><img src="../../../.gitbook/assets/image (3).png" alt=""><figcaption><p>File -> Save project menu item</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (3) (1).png" alt=""><figcaption><p>File -> Save project menu item</p></figcaption></figure>
 
 Select the GumProject folder created earlier as the target location. Give your Gum project a name such as GumProject.
 
-<figure><img src="../../../.gitbook/assets/image (4).png" alt=""><figcaption><p>Save GumProject in the newly-created GumProject folder</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (4) (1).png" alt=""><figcaption><p>Save GumProject in the newly-created GumProject folder</p></figcaption></figure>
 
 After your project is saved it should appear in Visual Studio.
 
-<figure><img src="../../../.gitbook/assets/image (5).png" alt=""><figcaption><p>Gum project in Visual Studio</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (5) (1).png" alt=""><figcaption><p>Gum project in Visual Studio</p></figcaption></figure>
 
 We can add default Forms components to our project. Forms components are premade components for standard UI elements such as Button, TextBox, and ListBox. We'll use these components in later tutorials.
 
 To add Gum Forms components in Gum, select Content -> Add Forms Components
 
-<figure><img src="../../../.gitbook/assets/image (6).png" alt=""><figcaption><p>Add Forms Components menu item</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (6) (1).png" alt=""><figcaption><p>Add Forms Components menu item</p></figcaption></figure>
 
 This tutorial will not use the DemoScreenGum, so leave this option unchecked and press OK.
 
-<figure><img src="../../../.gitbook/assets/image (7).png" alt=""><figcaption><p>Leave Include DemoScreenGum unchecked</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (7) (1).png" alt=""><figcaption><p>Leave Include DemoScreenGum unchecked</p></figcaption></figure>
 
 Forms components modify your default components (such as Text) for styling. Click OK to apply these changes.
 
-<figure><img src="../../../.gitbook/assets/image.png" alt=""><figcaption><p>Click, OK to modify standards with the default Forms styling</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (10).png" alt=""><figcaption><p>Click, OK to modify standards with the default Forms styling</p></figcaption></figure>
 
 Your project now includes Forms components.
 
-<figure><img src="../../../.gitbook/assets/image (8).png" alt=""><figcaption><p>Forms Components in Gum</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (8) (1).png" alt=""><figcaption><p>Forms Components in Gum</p></figcaption></figure>
 
 ### Modifying the Game .csproj
 

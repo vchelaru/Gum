@@ -32,7 +32,7 @@ Baseline refers to the bottom of the text for letters without descenders. For mo
 
 Baseline is often used to align fonts of different sizes. The following image shows two Text instances with different font sizes. Both are positioned by their baseline so their bottoms align properly (ignoring descenders, such as on the letter p and the comma).
 
-<figure><img src="../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>50,000 xp aligned by baseline</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>50,000 xp aligned by baseline</p></figcaption></figure>
 
 By contrast, the following image shows the same Text instances using bottom alignment.&#x20;
 
