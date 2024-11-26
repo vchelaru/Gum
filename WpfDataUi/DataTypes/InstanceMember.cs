@@ -251,7 +251,7 @@ namespace WpfDataUi.DataTypes
                 {
                     if(Instance == null)
                     {
-                        throw new NullReferenceException($"The member {this.Name} needs to have its Instance assigned, or needs to have its CustomGetTypeEvent assgned");
+                        throw new NullReferenceException($"The member {this.Name} needs to have its Instance assigned, or needs to have its CustomGetTypeEvent assgned so that the type can be determined when deciding which UI control to create.");
                     }
                     return IDataUiExtensionMethods.GetPropertyType(Name, Instance.GetType());
                 }

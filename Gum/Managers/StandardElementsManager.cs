@@ -210,6 +210,7 @@ namespace Gum.Managers
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "Wrap", Category = "Source" });
 
                 AddColorVariables(stateSave);
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "Blend", Value = Gum.RenderingLibrary.Blend.Normal, Name = "Blend", Category = "Rendering" });
 
                 AddEventVariables(stateSave);
 

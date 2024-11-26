@@ -355,7 +355,67 @@ namespace WpfDataUi
 
         private void HandleMembersToIgnoreChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            PopulateCategories();
+            // If we do this, we completely wipe all custom categories. No good!
+            switch(e.Action)
+            {
+                case NotifyCollectionChangedAction.Add:
+
+                    List<string> newItems = new List<string>();
+                    foreach (var item in e.NewItems)
+                    {
+                        newItems.Add(item as string);
+                    }
+
+                    foreach (var category in this.Categories)
+                    {
+                        // ignore was added, so try to remove it:
+                        for(int i = category.Members.Count - 1; i > -1; i--)
+                        {
+                            if (newItems.Contains( category.Members[i].Name))
+                            {
+                                category.Members.RemoveAt(i);
+                            }
+                        }
+
+                    }
+                    break;
+                case NotifyCollectionChangedAction.Remove:
+
+                    List<string> oldItems = new List<string>();
+                    foreach (var item in e.OldItems)
+                    {
+                        oldItems.Add(item as string);
+                    }
+
+                    if(Instance != null)
+                    {
+                        Type type = Instance.GetType();
+
+                        foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.Instance))
+                        {
+                            MemberInfo memberInfo = field as MemberInfo;
+                            if(oldItems.Contains( field.Name))
+                            {
+                                TryCreateCategoryAndInstanceFor(memberInfo);
+                            }
+                        }
+                        foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                        {
+                            if(oldItems.Contains(property.Name))
+                            {
+                                MemberInfo memberInfo = property as MemberInfo;
+                                TryCreateCategoryAndInstanceFor(memberInfo);
+                            }
+                        }
+                    }
+                    break;
+                default:
+                    // This is a destructive action, it removes previously-added custom members.
+                    // This is how things used to work, but Vic would like to get rid of it completely.
+                    // However, there may be cases that haven't been handled so we're keeping this as a fallback.
+                    PopulateCategories();
+                    break;
+            }
         }
 
         private void HandleTypesToIgnoreChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)

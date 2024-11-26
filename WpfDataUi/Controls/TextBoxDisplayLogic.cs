@@ -324,8 +324,17 @@ namespace WpfDataUi.Controls
                             {
                                 // This used to convert from invariant string, but we want to use commas if the native 
                                 // computer settings use commas
-                                value = converter.ConvertFromString(usableString);
-                                result = ApplyValueResult.Success;
+                                try
+                                {
+                                    value = converter.ConvertFromString(usableString);
+                                    result = ApplyValueResult.Success;
+                                }
+                                catch(NotSupportedException)
+                                {
+                                    // if we got here, then suppress the error if we are already working with a string:
+                                    value = usableString;
+                                    result = ApplyValueResult.Success;
+                                }
                             }
                         }
                         catch (FormatException)
