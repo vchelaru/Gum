@@ -2,7 +2,7 @@
 
 ### Introduction
 
-This tutorial walks you through adding a Gum project to an existing MonoGame project. The MonoGame project can be empty or it can be an existing game - the steps are the same either way.
+This tutorial walks you through creating a brand new Gum project and adding it to an existing MonoGame project. The MonoGame project can be empty or it can be an existing game - the steps are the same either way.
 
 This tutorial covers:
 
@@ -19,7 +19,7 @@ Before writing any code, we must add the Gum nuget package. Add the `Gum.MonoGam
 
 Once you are finished, your game project should reference the `Gum.MonoGam` project.
 
-<figure><img src="../../../.gitbook/assets/image.png" alt=""><figcaption><p>Gum.MonoGame NuGet package</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (1).png" alt=""><figcaption><p>Gum.MonoGame NuGet package</p></figcaption></figure>
 
 ### Creating a new Gum Project
 
@@ -27,7 +27,7 @@ Next we'll create a project in the Gum UI tool. If you have not yet run the Gum 
 
 Once you have the tool downloaded, run it. You should have an empty project.
 
-<figure><img src="../../../.gitbook/assets/image (1).png" alt=""><figcaption><p>Empty Gum Project</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (1) (1).png" alt=""><figcaption><p>Empty Gum Project</p></figcaption></figure>
 
 We need to save our Gum project in the Content folder of our game. Gum projects include many files. it's best to keep a Gum project and all of its files in a dedicated folder.
 
@@ -59,6 +59,8 @@ This tutorial will not use the DemoScreenGum, so leave this option unchecked and
 
 Forms components modify your default components (such as Text) for styling. Click OK to apply these changes.
 
+<figure><img src="../../../.gitbook/assets/image.png" alt=""><figcaption><p>Click, OK to modify standards with the default Forms styling</p></figcaption></figure>
+
 Your project now includes Forms components.
 
 <figure><img src="../../../.gitbook/assets/image (8).png" alt=""><figcaption><p>Forms Components in Gum</p></figcaption></figure>
@@ -81,7 +83,7 @@ First, we'll set up our project so all Gum files are copied when the project is 
 
 
     <figure><img src="../../../.gitbook/assets/image (13).png" alt=""><figcaption><p>Entry for GumProject.gumx in the csproj file.</p></figcaption></figure>
-5.  Modify the code so to use a wildcard for all files in the Gum project. In other words, change `Content\GumProject\GumProject.gumx` to `Content\GumProject\**\*.*`\
+5.  Modify the code to use a wildcard for all files in the Gum project. In other words, change `Content\GumProject\GumProject.gumx` to `Content\GumProject\**\*.*`\
 
 
     <figure><img src="../../../.gitbook/assets/image (14).png" alt=""><figcaption><p>Wildcard entry for all files in the GumProject folder</p></figcaption></figure>
@@ -89,6 +91,12 @@ First, we'll set up our project so all Gum files are copied when the project is 
 Now all files in your Gum project will be copied to the output folder whenever your project is built, including any files added later as you continue working in Gum.
 
 <figure><img src="../../../.gitbook/assets/image (15).png" alt=""><figcaption><p>All Gum files automatically are marked as Copy if newer.</p></figcaption></figure>
+
+{% hint style="info" %}
+At the time of this writing, Gum does not use the MonoGame Content Builder to build XNBs for any of its files. This means that referenced image files (.png) will also be copied to the output folder.
+
+Future versions may be expanded to support using either the .XNB file format or _raw_ PNGs.
+{% endhint %}
 
 ### Loading the Gum Project
 
@@ -133,8 +141,25 @@ public class Game1 : Game
 The code above has the following three calls on GumService:
 
 * Initialize - this loads the argument Gum project and sets appropriate defaults. Note that we are loading a Gum project here, but the gum project is optional. Projects which are using Gum only in code would not pass the second parameter.
+
+```csharp
+        var gumProject = MonoGameGum.GumService.Default.Initialize(
+            this.GraphicsDevice,
+            // This is relative to Content:
+            "GumProject/GumProject.gumx");
+```
+
 * Update - this updates the internal keyboard, mouse, and gamepad instances and applies default behavior to any components which implement Forms. For example, if a Button is added to the Screen, this code is responsible for checking if the cursor is overlapping the Button and adjusting the highlight/pressed state appropriately.
+
+```csharp
+MonoGameGum.GumService.Default.Update(this, gameTime);
+```
+
 * Draw - this method draws all Gum objects to the screen. Currently this method does not perform any drawing, but in the next tutorial we'll be adding a Gum screen which is drawn in this method.
+
+```csharp
+MonoGameGum.GumService.Default.Draw();
+```
 
 ### Conclusion
 

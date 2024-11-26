@@ -109,7 +109,7 @@ for (int i = 0; i < 20; i++)
 }
 ```
 
-<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>ListBox displaying integers</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>ListBox displaying integers</p></figcaption></figure>
 
 Often you may want to add a list of items which should not use their ToString method. For example you may have a list of IDs which represent weapons in a dictionary. The display can be customized by inheriting from ListBoxItem as shown in the following code:
 
