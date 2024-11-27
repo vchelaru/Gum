@@ -104,7 +104,7 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-        private static string ToTabs(int tabCount) => new string(' ', tabCount * 4);
+        private static string ToTabs(int tabCount) => new string(' ', System.Math.Max(0, tabCount) * 4);
 
         public string Tabs => new string(' ', TabCount * 4);
 
