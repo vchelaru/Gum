@@ -36,7 +36,7 @@ namespace Gum.Undo
         static UndoManager mSelf;
 
         UndoSnapshot recordedSnapshot;
-        public IEnumerable<UndoSnapshot> CurrentUndoStack
+        public IReadOnlyCollection<UndoSnapshot> CurrentUndoStack
         {
             get
             {

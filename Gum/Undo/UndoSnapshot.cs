@@ -22,29 +22,35 @@ namespace Gum.Undo
         {
             string toReturn = "";
 
-            if (AddedInstances.Count != 0)
+            if (AddedInstances?.Count > 0)
             {
-                toReturn += $"Added instances: {string.Join(", ", AddedInstances.Select(item => item.Name))}\n";
+                if (!string.IsNullOrEmpty(toReturn)) toReturn += '\n';
+                toReturn += $"Added instances: {string.Join(", ", AddedInstances.Select(item => item.Name))}";
             }
-            if (RemovedInstances.Count != 0)
+            if (RemovedInstances?.Count > 0)
             {
-                toReturn += $"Removed instances: {string.Join(", ", RemovedInstances.Select(item => item.Name))}\n";
+                if (!string.IsNullOrEmpty(toReturn)) toReturn += '\n';
+                toReturn += $"Removed instances: {string.Join(", ", RemovedInstances.Select(item => item.Name))}";
             }
-            if (AddedStates.Count != 0)
+            if (AddedStates?.Count > 0)
             {
-                toReturn += $"Added states: {string.Join(", ", AddedStates.Select(item => item.Name))}\n";
+                if (!string.IsNullOrEmpty(toReturn)) toReturn += '\n';
+                toReturn += $"Added states: {string.Join(", ", AddedStates.Select(item => item.Name))}";
             }
-            if (RemovedStates.Count != 0)
+            if (RemovedStates?.Count > 0)
             {
-                toReturn += $"Removed states: {string.Join(", ", RemovedStates.Select(item => item.Name))}\n";
+                if (!string.IsNullOrEmpty(toReturn)) toReturn += '\n';
+                toReturn += $"Removed states: {string.Join(", ", RemovedStates.Select(item => item.Name))}";
             }
-            if (ModifiedVariables.Count != 0)
+            if (ModifiedVariables?.Count > 0)
             {
-                toReturn += $"Modified variables: {string.Join(", ", ModifiedVariables.Select(item => item.Name))}\n";
+                if (!string.IsNullOrEmpty(toReturn)) toReturn += '\n';
+                toReturn += $"Modified variables: {string.Join(", ", ModifiedVariables.Select(item => item.Name + "=" + item.Value?.ToString() ?? "<null>"))}";
             }
-            if (ModifiedVariableLists.Count != 0)
+            if (ModifiedVariableLists?.Count > 0)
             {
-                toReturn += $"Modified variable lists: {string.Join(", ", ModifiedVariableLists.Select(item => item.Name))}\n";
+                if (!string.IsNullOrEmpty(toReturn)) toReturn += '\n';
+                toReturn += $"Modified variable lists: {string.Join(", ", ModifiedVariableLists.Select(item => item.Name))}";
             }
             return toReturn;
         }
@@ -75,43 +81,63 @@ namespace Gum.Undo
 
         public UndoComparison CompareAgainst(UndoSnapshot other)
         {
+            var thisElement = Element;
+            var oldElement = other.Element;
+            return CompareAgainst(thisElement, oldElement);
+        }
+
+        public UndoComparison CompareAgainst(ElementSave newElement, ElementSave oldElement)
+        {
             var toReturn = new UndoComparison();
 
             // check for instances that were added or removed
-            var thisInstances = Element.Instances;
-            var otherInstances = other.Element.Instances;
-            toReturn.AddedInstances = thisInstances.Except(otherInstances).ToList();
-            toReturn.RemovedInstances = otherInstances.Except(thisInstances).ToList();
+            var thisInstances = newElement.Instances;
+            var otherInstances = oldElement.Instances;
+            //toReturn.AddedInstances = thisInstances.Except(otherInstances).ToList();
+            //toReturn.RemovedInstances = otherInstances.Except(thisInstances).ToList();
 
             // Check for added or removed categories
-            var thisCategories = Element.Categories;
-            var otherCategories = other.Element.Categories;
-            var addedCategories = thisCategories.Except(otherCategories).ToList();
-            var removedCategories = otherCategories.Except(thisCategories).ToList();
+            var thisCategories = newElement.Categories;
+            var otherCategories = oldElement.Categories;
+            List<StateSaveCategory> addedCategories = null;
+
+            if(otherCategories != null)
+            {
+                addedCategories = thisCategories?.Except(otherCategories).ToList();
+            }
+
+            List<StateSaveCategory> removedCategories = null;
+            if (thisCategories != null)
+            {
+                removedCategories = otherCategories?.Except(thisCategories).ToList();
+            }
 
             toReturn.AddedInstances = new List<InstanceSave>();
             toReturn.RemovedInstances = new List<InstanceSave>();
             toReturn.ModifiedVariables = new List<VariableSave>();
             toReturn.ModifiedVariableLists = new List<VariableListSave>();
 
-            AddVariableModifications(this.Element.DefaultState, other.Element.DefaultState, toReturn);
-            
+            AddVariableModifications(newElement.DefaultState, oldElement.DefaultState, toReturn);
+
             // loop through each category, check for states that were added or removed:
-            foreach (var category in Element.Categories)
+            if (newElement.Categories != null)
             {
-                var matchingCategory = other.Element.Categories.FirstOrDefault(otherCategory => otherCategory.Name == category.Name);
-
-                if (matchingCategory != null)
+                foreach (var category in newElement.Categories)
                 {
-                    toReturn.AddedStates.AddRange(category.States.Except(matchingCategory.States).ToList());
-                    toReturn.RemovedStates.AddRange(matchingCategory.States.Except(category.States).ToList());
+                    var matchingCategory = oldElement.Categories?.FirstOrDefault(otherCategory => otherCategory.Name == category.Name);
 
-                    foreach(var state in category.States)
+                    if (matchingCategory != null)
                     {
-                        var matchingState = matchingCategory.States.FirstOrDefault(otherState => otherState.Name == state.Name);
-                        if (matchingState != null)
+                        toReturn.AddedStates.AddRange(category.States.Except(matchingCategory.States).ToList());
+                        toReturn.RemovedStates.AddRange(matchingCategory.States.Except(category.States).ToList());
+
+                        foreach (var state in category.States)
                         {
-                            AddVariableModifications(state, matchingState, toReturn);
+                            var matchingState = matchingCategory.States.FirstOrDefault(otherState => otherState.Name == state.Name);
+                            if (matchingState != null)
+                            {
+                                AddVariableModifications(state, matchingState, toReturn);
+                            }
                         }
                     }
                 }
@@ -120,45 +146,98 @@ namespace Gum.Undo
             return toReturn;
         }
 
-        private void AddVariableModifications(StateSave state1, StateSave state2, UndoComparison snapshot)
+        private void AddVariableModifications(StateSave newState, StateSave oldState, UndoComparison snapshot)
         {
-            var addedVariables = state1.Variables.Except(state2.Variables).ToList();
-            var removedVariables = state2.Variables.Except(state1.Variables).ToList();
-            var addedVariableLists = state1.VariableLists.Except(state2.VariableLists).ToList();
-            var removedVariableLists = state2.VariableLists.Except(state1.VariableLists).ToList();
-
-            snapshot.ModifiedVariables.AddRange(addedVariables);
-            snapshot.ModifiedVariableLists.AddRange(addedVariableLists);
-
-            foreach (var removedVariable in removedVariables)
+            if(newState == null || oldState == null)
             {
-                var variable = removedVariable.Clone();
-                variable.Value = null;
-                snapshot.ModifiedVariables.Add(removedVariable);
+                return;
+            }
+            var newVariableNameLists = newState.Variables.Select(item => item.Name).ToList();
+            newVariableNameLists.AddRange(newState.VariableLists.Select(item => item.Name));
+            var newVariableHash = newVariableNameLists.ToHashSet();
+
+            var oldVariableNameList = oldState.Variables.Select(item => item.Name).ToList();
+            oldVariableNameList.AddRange(oldState.VariableLists.Select(item => item.Name));
+            var oldVariableHash = oldVariableNameList.ToHashSet();
+
+            var addedVariables = newState.Variables.Where(item => oldVariableHash.Contains(item.Name) == false);
+            var removedVariables = oldState.Variables.Where(item => newVariableHash.Contains(item.Name) == false);
+            var addedVariableLists = newState.VariableLists.Where(item => oldVariableHash.Contains(item.Name) == false);
+            var removedVariableLists = oldState.VariableLists.Where(item => newVariableHash.Contains(item.Name) == false);
+
+            // if any variables were added, then undoing goes back to the default:
+            foreach(var variable in addedVariables)
+            {
+                var clone = variable.Clone();
+                clone.Value = null;
+                snapshot.ModifiedVariables.Add(clone);
+            }
+            foreach(var variableList in addedVariableLists)
+            {
+                var clone = variableList.Clone();
+                clone.ValueAsIList = null;
+                snapshot.ModifiedVariableLists.Add(clone);
+
             }
 
-            foreach (var removedVariableList in removedVariableLists)
-            {
-                var variableList = removedVariableList.Clone();
-                variableList.ValueAsIList = null;
-                snapshot.ModifiedVariableLists.Add(removedVariableList);
-            }
 
-            foreach (var variable in state1.Variables)
+            snapshot.ModifiedVariables.AddRange(removedVariables);
+            snapshot.ModifiedVariableLists.AddRange(removedVariableLists);
+
+            foreach (var newVariable in newState.Variables)
             {
-                var matchingVariable = state2.Variables.FirstOrDefault(otherVariable => otherVariable.Name == variable.Name);
-                if (matchingVariable != null && variable.Value != matchingVariable.Value)
+                var matchingOldVariable = oldState.Variables.FirstOrDefault(otherVariable => otherVariable.Name == newVariable.Name);
+                if (matchingOldVariable != null)
                 {
-                    snapshot.ModifiedVariables.Add(variable);
+                    var areEqual = (newVariable.Value == null && matchingOldVariable.Value == null) ||
+                        (newVariable.Value != null && newVariable.Value.Equals(matchingOldVariable.Value));
+                    if(!areEqual)
+                    {
+                        snapshot.ModifiedVariables.Add(matchingOldVariable);
+                    }
                 }
             }
 
-            foreach (var variableList in state1.VariableLists)
+            foreach (var variableList in newState.VariableLists)
             {
-                var matchingVariableList = state2.VariableLists.FirstOrDefault(otherVariableList => otherVariableList.Name == variableList.Name);
+                var matchingVariableList = oldState.VariableLists.FirstOrDefault(otherVariableList => otherVariableList.Name == variableList.Name);
                 if (matchingVariableList != null && variableList.ValueAsIList != matchingVariableList.ValueAsIList)
                 {
-                    snapshot.ModifiedVariableLists.Add(variableList);
+                    var areEqual = (variableList.ValueAsIList == null && matchingVariableList.ValueAsIList == null);
+
+                    if (!areEqual)
+                    {
+                        if(variableList.ValueAsIList != null && matchingVariableList.ValueAsIList != null)
+                        {
+                            var thisList = variableList.ValueAsIList;
+                            var otherList = matchingVariableList.ValueAsIList;
+
+                            if (thisList.Count != otherList.Count)
+                            {
+                                areEqual = false;
+                            }
+                            else
+                            {
+                                areEqual = true;
+                                for (int i = 0; i < thisList.Count; i++)
+                                {
+                                    if (thisList[i].Equals(otherList[i]) == false)
+                                    {
+                                        areEqual = false;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            areEqual = false;
+                        }
+                    }
+                    if(!areEqual)
+                    {
+                        snapshot.ModifiedVariableLists.Add(variableList);
+                    }
                 }
             }
         }
