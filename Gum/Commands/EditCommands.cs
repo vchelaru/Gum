@@ -8,6 +8,7 @@ using Gum.Plugins;
 using Gum.Responses;
 using Gum.ToolCommands;
 using Gum.ToolStates;
+using Gum.Undo;
 using StateAnimationPlugin.Views;
 using System;
 using System.Collections.Generic;
@@ -37,16 +38,19 @@ namespace Gum.Commands
                 {
                     string name = tiw.Result;
 
-                    StateSave stateSave = ElementCommands.Self.AddState(
-                        SelectedState.Self.SelectedElement, SelectedState.Self.SelectedStateCategorySave, name);
+                    using(UndoManager.Self.RequestLock())
+                    {
+                        StateSave stateSave = ElementCommands.Self.AddState(
+                            SelectedState.Self.SelectedElement, SelectedState.Self.SelectedStateCategorySave, name);
 
-                    PluginManager.Self.StateAdd(stateSave);
+                        PluginManager.Self.StateAdd(stateSave);
 
-                    StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedStateContainer);
+                        StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedStateContainer);
 
-                    SelectedState.Self.SelectedStateSave = stateSave;
+                        SelectedState.Self.SelectedStateSave = stateSave;
 
-                    GumCommands.Self.FileCommands.TryAutoSaveCurrentObject();
+                        GumCommands.Self.FileCommands.TryAutoSaveCurrentObject();
+                    }
                 }
             }
         }
@@ -104,7 +108,7 @@ namespace Gum.Commands
 
                 if (response == DialogResult.Yes)
                 {
-                    ObjectRemover.Self.Remove(stateSave);
+                    DeleteLogic.Self.Remove(stateSave);
                 }
             }
         }
@@ -638,7 +642,7 @@ namespace Gum.Commands
 
         public void DeleteSelection()
         {
-            DeleteLogic.Self.HandleDelete();
+            DeleteLogic.Self.HandleDeleteCommand();
         }
     }
 }

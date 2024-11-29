@@ -38,10 +38,10 @@ namespace Gum.Plugins.Undos
 
                         for (int i = 1; i < undos.Count; i++)
                         {
-                            var previous = undos.ElementAt(i - 1);
-                            var current = undos.ElementAt(i);
+                            var current = undos.ElementAt(i-1);
+                            var toApply = undos.ElementAt(i);
 
-                            var comparison = current.CompareAgainst(previous);
+                            var comparison = current.CompareAgainst(toApply);
 
                             toReturn += $"\n{i + 1}: {comparison}";
 

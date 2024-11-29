@@ -219,7 +219,7 @@ namespace Gum.Managers
         {
             if (Delete.IsPressed(e))
             {
-                DeleteLogic.Self.HandleDelete();
+                DeleteLogic.Self.HandleDeleteCommand();
 
                 e.Handled = true;
                 e.SuppressKeyPress = true;
