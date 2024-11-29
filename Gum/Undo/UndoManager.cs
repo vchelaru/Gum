@@ -141,15 +141,18 @@ namespace Gum.Undo
 
                 StateSave stateToCompareAgainst = null;
 
-                if(currentCategory != null)
+                if(currentStateSave != null)
                 {
-                    var category = recordedSnapshot.Element.Categories.Find(item => item.Name == currentCategory.Name);
-                    stateToCompareAgainst = category?.States.Find(item => item.Name == currentStateSave.Name);
-                }
-                else if(currentStateSave != null)
-                {
-                    var stateName = currentStateSave.Name;
-                    stateToCompareAgainst = recordedSnapshot.Element.States.Find(item => item.Name == stateName);
+                    if(currentCategory != null)
+                    {
+                        var category = recordedSnapshot.Element.Categories.Find(item => item.Name == currentCategory.Name);
+                        stateToCompareAgainst = category?.States.Find(item => item.Name == currentStateSave.Name);
+                    }
+                    else
+                    {
+                        var stateName = currentStateSave.Name;
+                        stateToCompareAgainst = recordedSnapshot.Element.States.Find(item => item.Name == stateName);
+                    }
                 }
 
 
@@ -161,13 +164,17 @@ namespace Gum.Undo
                 bool doTypesDiffer = recordedSnapshot.Element.BaseType != selectedElement.BaseType;
                 bool doNamesDiffer = recordedSnapshot.Element.Name != selectedElement.Name;
 
-                bool doesSelectedStateDiffer = recordedSnapshot.CategoryName != currentCategory?.Name ||
-                    recordedSnapshot.StateName != currentStateSave?.Name;
+                // Why do we care if the user selected a different state?
+                // This seems to cause bugs, and we don't care about undoing selections...
+                //bool doesSelectedStateDiffer = recordedSnapshot.CategoryName != currentCategory?.Name ||
+                //    recordedSnapshot.StateName != currentStateSave?.Name;
 
                 // todo : need to add behavior differences
 
 
-                bool didAnythingChange = doStatesDiffer || doStateCategoriesDiffer || doInstanceListsDiffer || doTypesDiffer || doNamesDiffer || doesSelectedStateDiffer;
+                bool didAnythingChange = doStatesDiffer || doStateCategoriesDiffer || doInstanceListsDiffer || doTypesDiffer || doNamesDiffer
+                    //|| doesSelectedStateDiffer
+                    ;
                 if (didAnythingChange)
                 {
                     if (mUndos.ContainsKey(SelectedState.Self.SelectedElement) == false)
@@ -183,6 +190,7 @@ namespace Gum.Undo
                     {
                         recordedSnapshot.Element.States = null;
                     }
+
                     if (!doStateCategoriesDiffer)
                     {
                         recordedSnapshot.Element.Categories = null;
@@ -230,81 +238,25 @@ namespace Gum.Undo
 
             if (stack != null && stack.Count != 0)
             {
-                ElementSave lastSelectedElementSave = SelectedState.Self.SelectedElement;
-
                 var undoSnapshot = stack.Pop();
-                var elementInUndoSnapshot = undoSnapshot.Element;
-
                 ElementSave toApplyTo = SelectedState.Self.SelectedElement;
 
-                bool shouldRefreshWireframe = false;
-                bool shouldRefreshStateTreeView = false;
+                bool shouldRefreshWireframe, shouldRefreshStateTreeView;
+                ApplyUndoSnapshotToElement(undoSnapshot, toApplyTo, out shouldRefreshWireframe, out shouldRefreshStateTreeView);
 
-                if (elementInUndoSnapshot.States != null)
-                {
-                    foreach(var state in elementInUndoSnapshot.States)
-                    {
-                        var matchingState = toApplyTo.States.Find(item => item.Name == state.Name);
-                        if(matchingState != null)
-                        {
-                            ApplyStateVariables(state, matchingState, toApplyTo);
-                        }
-                    }
-
-                }
-
-                if(elementInUndoSnapshot.Categories != null)
-                {
-                    foreach(var categoryInUndoSnapshot in elementInUndoSnapshot.Categories)
-                    {
-                        var matchingCategory = toApplyTo.Categories.Find(item => item.Name == categoryInUndoSnapshot.Name);
-
-                        if(matchingCategory != null)
-                        {
-                            shouldRefreshWireframe = true;
-                            shouldRefreshStateTreeView = true;
-                            AddAndRemoveStates(categoryInUndoSnapshot.States, matchingCategory.States, toApplyTo);
-                        }
-
-                        // do we even need this anymore?
-                        //foreach(var stateInUndoSnapshot in categoryInUndoSnapshot.States)
-                        //{
-                        //    var matchingState = matchingCategory?.States.Find(item => item.Name == stateInUndoSnapshot.Name);
-                        //    if(matchingState != null)
-                        //    {
-                        //        ApplyStateVariables(stateInUndoSnapshot, matchingState, toApplyTo);
-                        //    }
-                        //}
-                    }
-                }
-                if (elementInUndoSnapshot.Instances != null)
-                {
-                    AddAndRemoveInstances(elementInUndoSnapshot.Instances, toApplyTo.Instances, toApplyTo);
-                    shouldRefreshWireframe = true;
-                }
-                if (elementInUndoSnapshot.Name != null)
-                {
-                    string oldName = toApplyTo.Name;
-                    toApplyTo.Name = elementInUndoSnapshot.Name;
-                    RenameLogic.HandleRename(toApplyTo, (InstanceSave)null, oldName, NameChangeAction.Rename, askAboutRename:false);
-                }
-
-                if(undoSnapshot.CategoryName != SelectedState.Self.SelectedStateCategorySave?.Name ||
+                if (undoSnapshot.CategoryName != SelectedState.Self.SelectedStateCategorySave?.Name ||
                     undoSnapshot.StateName != SelectedState.Self.SelectedStateSave?.Name)
                 {
-                    var listOfStates = lastSelectedElementSave.States;
-                    if(!string.IsNullOrEmpty( undoSnapshot.CategoryName ))
-                    {
-                        listOfStates = lastSelectedElementSave.Categories
-                            .FirstOrDefault(item => item.Name == undoSnapshot.CategoryName)?.States;
-                    }
-
+                    var listOfStates = toApplyTo.States;
                     var state = listOfStates?.FirstOrDefault(item => item.Name == undoSnapshot.StateName);
 
-                    isRecordingUndos = false;
-                    SelectedState.Self.SelectedStateSave = state;
+                    if(state != null)
+                    {
+                        isRecordingUndos = false;
+                        SelectedState.Self.SelectedStateSave = state;
 
-                    isRecordingUndos = true;
+                        isRecordingUndos = true;
+                    }
 
                 }
 
@@ -333,7 +285,7 @@ namespace Gum.Undo
                 {
                     WireframeObjectManager.Self.RefreshAll(true);
                 }
-                if(shouldRefreshStateTreeView)
+                if (shouldRefreshStateTreeView)
                 {
                     GumCommands.Self.GuiCommands.RefreshStateTreeView();
                 }
@@ -344,9 +296,9 @@ namespace Gum.Undo
                 // through an undo and if that
                 // instance is the selected instance
                 // then we want to refresh that.
-                if (lastSelectedElementSave != null && SelectedState.Self.SelectedElement == null)
+                if (toApplyTo != null && SelectedState.Self.SelectedElement == null)
                 {
-                    SelectedState.Self.SelectedElement = lastSelectedElementSave;
+                    SelectedState.Self.SelectedElement = toApplyTo;
                 }
 
                 GumCommands.Self.FileCommands.TryAutoSaveProject();
@@ -354,6 +306,79 @@ namespace Gum.Undo
 
                 // Don't do this anymore due to filtering through search
                 //ElementTreeViewManager.Self.VerifyComponentsAreInTreeView(ProjectManager.Self.GumProjectSave);
+            }
+        }
+
+        public void ApplyUndoSnapshotToElement(UndoSnapshot undoSnapshot, ElementSave toApplyTo)
+        {
+            ApplyUndoSnapshotToElement(undoSnapshot, toApplyTo, out bool _, out bool _);
+        }
+
+        private void ApplyUndoSnapshotToElement(UndoSnapshot undoSnapshot, ElementSave toApplyTo, out bool shouldRefreshWireframe, out bool shouldRefreshStateTreeView)
+        {
+            var elementInUndoSnapshot = undoSnapshot.Element;
+
+
+            shouldRefreshWireframe = false;
+            shouldRefreshStateTreeView = false;
+            if (elementInUndoSnapshot.States != null)
+            {
+                foreach (var state in elementInUndoSnapshot.States)
+                {
+                    var matchingState = toApplyTo.States.Find(item => item.Name == state.Name);
+                    if (matchingState != null)
+                    {
+                        ApplyStateVariables(state, matchingState, toApplyTo);
+                    }
+                }
+
+            }
+
+            if (elementInUndoSnapshot.Categories != null)
+            {
+                foreach (var categoryInUndoSnapshot in elementInUndoSnapshot.Categories)
+                {
+                    var matchingCategory = toApplyTo.Categories.Find(item => item.Name == categoryInUndoSnapshot.Name);
+
+                    if (matchingCategory != null)
+                    {
+                        shouldRefreshWireframe = true;
+                        shouldRefreshStateTreeView = true;
+                        AddAndRemoveStates(categoryInUndoSnapshot.States, matchingCategory.States, toApplyTo);
+                    }
+
+                    // do we even need this anymore?
+                    //foreach(var stateInUndoSnapshot in categoryInUndoSnapshot.States)
+                    //{
+                    //    var matchingState = matchingCategory?.States.Find(item => item.Name == stateInUndoSnapshot.Name);
+                    //    if(matchingState != null)
+                    //    {
+                    //        ApplyStateVariables(stateInUndoSnapshot, matchingState, toApplyTo);
+                    //    }
+                    //}
+                }
+            }
+            if (elementInUndoSnapshot.Instances != null)
+            {
+                AddAndRemoveInstances(elementInUndoSnapshot.Instances, toApplyTo.Instances, toApplyTo);
+                shouldRefreshWireframe = true;
+            }
+            if (elementInUndoSnapshot.Name != null)
+            {
+                string oldName = toApplyTo.Name;
+                toApplyTo.Name = elementInUndoSnapshot.Name;
+                RenameLogic.HandleRename(toApplyTo, (InstanceSave)null, oldName, NameChangeAction.Rename, askAboutRename: false);
+            }
+
+            if (undoSnapshot.CategoryName != SelectedState.Self.SelectedStateCategorySave?.Name ||
+                undoSnapshot.StateName != SelectedState.Self.SelectedStateSave?.Name)
+            {
+                var listOfStates = toApplyTo.States;
+                if (!string.IsNullOrEmpty(undoSnapshot.CategoryName))
+                {
+                    listOfStates = toApplyTo.Categories
+                        .FirstOrDefault(item => item.Name == undoSnapshot.CategoryName)?.States;
+                }
             }
         }
 

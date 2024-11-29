@@ -1,8 +1,10 @@
-﻿using Gum.ToolStates;
+﻿using Gum.DataTypes;
+using Gum.ToolStates;
 using Gum.Undo;
 using System;
 using System.ComponentModel;
 using System.Linq;
+using ToolsUtilities;
 
 namespace Gum.Plugins.Undos
 {
@@ -31,19 +33,35 @@ namespace Gum.Plugins.Undos
                 {
                     var toReturn = $"Number of undos: {undos.Count()}";
 
-                    if (undos.Count > 0 && GumState.Self.SelectedState.SelectedElement != null)
+                    ElementSave selectedElementClone = null;
+
+
+                    if (GumState.Self.SelectedState.SelectedElement != null)
                     {
-                        var firstUndo = undos.First();
-                        toReturn += $"\n1: {firstUndo.CompareAgainst(GumState.Self.SelectedState.SelectedElement, firstUndo.Element)}";
-
-                        for (int i = 1; i < undos.Count; i++)
+                        if (GumState.Self.SelectedState.SelectedComponent != null)
                         {
-                            var current = undos.ElementAt(i-1);
-                            var toApply = undos.ElementAt(i);
+                            selectedElementClone = FileManager.CloneSaveObject(SelectedState.Self.SelectedComponent);
+                        }
+                        else if (GumState.Self.SelectedState.SelectedScreen != null)
+                        {
+                            selectedElementClone = FileManager.CloneSaveObject(SelectedState.Self.SelectedScreen);
+                        }
+                        else if (GumState.Self.SelectedState.SelectedStandardElement != null)
+                        {
+                            selectedElementClone = FileManager.CloneSaveObject(SelectedState.Self.SelectedStandardElement);
+                        }
+                    }
 
-                            var comparison = current.CompareAgainst(toApply);
+                    if (selectedElementClone != null)
+                    {
+                        for(int i = 0; i < undos.Count; i++)
+                        {
+                            var undo = undos.ElementAt(i);
+                            var comparisonInformation = undo.CompareAgainst(selectedElementClone, undo.Element);
+                            toReturn += $"\n{i+1}: {comparisonInformation}";
 
-                            toReturn += $"\n{i + 1}: {comparison}";
+                            // apply it to the selected element so we have a "running state" that we can continually compare against
+                            UndoManager.Self.ApplyUndoSnapshotToElement(undo, selectedElementClone);
 
                         }
                     }

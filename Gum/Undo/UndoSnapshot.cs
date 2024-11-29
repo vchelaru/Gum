@@ -16,8 +16,7 @@ namespace Gum.Undo
         public List<StateSave> AddedStates;
         public List<StateSave> RemovedStates;
 
-        public List<VariableSave> ModifiedVariables;
-        public List<VariableListSave> ModifiedVariableLists;
+        public List<StateSave> ModifiedStates;
 
         public override string ToString()
         {
@@ -43,15 +42,19 @@ namespace Gum.Undo
                 if (!string.IsNullOrEmpty(toReturn)) toReturn += '\n';
                 toReturn += $"Remove states: {string.Join(", ", RemovedStates.Select(item => item.Name))}";
             }
-            if (ModifiedVariables?.Count > 0)
+            foreach(var modifiedState in ModifiedStates)
             {
-                if (!string.IsNullOrEmpty(toReturn)) toReturn += '\n';
-                toReturn += $"Variables: {string.Join(", ", ModifiedVariables.Select(item => item.Name + "=" + item.Value?.ToString() ?? "<null>"))}";
-            }
-            if (ModifiedVariableLists?.Count > 0)
-            {
-                if (!string.IsNullOrEmpty(toReturn)) toReturn += '\n';
-                toReturn += $"Variable lists: {string.Join(", ", ModifiedVariableLists.Select(item => item.Name))}";
+                if (modifiedState.Variables?.Count > 0)
+                {
+                    if (!string.IsNullOrEmpty(toReturn)) toReturn += '\n';
+                    toReturn += $"Variables in {modifiedState.Name}: {string.Join(", ", modifiedState.Variables.Select(item => item.Name + "=" + item.Value?.ToString() ?? "<null>"))}";
+                }
+                if(modifiedState.VariableLists?.Count > 0)
+                {
+                    if (!string.IsNullOrEmpty(toReturn)) toReturn += '\n';
+                    toReturn += $"Variable lists in {modifiedState.Name}: {string.Join(", ", modifiedState.VariableLists.Select(item => item.Name + "=" + item.ValueAsIList?.ToString() ?? "<null>"))}";
+                }
+
             }
             return toReturn;
         }
@@ -87,6 +90,12 @@ namespace Gum.Undo
             return CompareAgainst(thisElement, oldElement);
         }
 
+        /// <summary>
+        /// Creates an undo comparison object which includes information about what the undo will perform if applied.
+        /// </summary>
+        /// <param name="currentElement">The current state before the undo is applied. This could be a snapshot or it could be the actual element if 
+        /// there is only 1 undo.</param>
+        /// <param name="snapshotToApply">The snapshot to apply.</param>
         public UndoComparison CompareAgainst(ElementSave currentElement, ElementSave snapshotToApply)
         {
             var toReturn = new UndoComparison();
@@ -109,12 +118,12 @@ namespace Gum.Undo
                 removedCategories = otherCategories?.Except(thisCategories).ToList();
             }
 
-            toReturn.ModifiedVariables = new List<VariableSave>();
-            toReturn.ModifiedVariableLists = new List<VariableListSave>();
+            toReturn.ModifiedStates = new List<StateSave>();
 
             var newState = snapshotToApply.DefaultState;
             var oldState = currentElement.DefaultState;
             AddVariableModifications(newState, oldState, toReturn);
+
 
             // loop through each category, check for states that were added or removed:
             if (currentElement.Categories != null)
@@ -218,21 +227,25 @@ namespace Gum.Undo
             var addedVariableLists = stateToApply.VariableLists.Where(item => oldVariableHash.Contains(item.Name) == false);
             var removedVariableLists = currentState.VariableLists.Where(item => newVariableHash.Contains(item.Name) == false);
 
-            snapshot.ModifiedVariables.AddRange(addedVariables);
-            snapshot.ModifiedVariableLists.AddRange(addedVariableLists);
+            var modifiedState = new StateSave();
+            modifiedState.Name = stateToApply.Name ?? "<default>";
+            snapshot.ModifiedStates.Add(modifiedState);
+
+            modifiedState.Variables.AddRange(addedVariables);
+            modifiedState.VariableLists.AddRange(addedVariableLists);
 
             // if any variables were added, then undoing goes back to the default:
             foreach (var variable in removedVariables)
             {
                 var clone = variable.Clone();
                 clone.Value = null;
-                snapshot.ModifiedVariables.Add(clone);
+                modifiedState.Variables.Add(clone);
             }
             foreach(var variableList in removedVariableLists)
             {
                 var clone = variableList.Clone();
                 clone.ValueAsIList = null;
-                snapshot.ModifiedVariableLists.Add(clone);
+                modifiedState.VariableLists.Add(clone);
 
             }
 
@@ -245,7 +258,7 @@ namespace Gum.Undo
                         (newVariable.Value != null && newVariable.Value.Equals(matchingOldVariable.Value));
                     if(!areEqual)
                     {
-                        snapshot.ModifiedVariables.Add(newVariable);
+                        modifiedState.Variables.Add(newVariable);
                     }
                 }
             }
@@ -288,7 +301,7 @@ namespace Gum.Undo
                     }
                     if(!areEqual)
                     {
-                        snapshot.ModifiedVariableLists.Add(newVariableList);
+                        modifiedState.VariableLists.Add(newVariableList);
                     }
                 }
             }
