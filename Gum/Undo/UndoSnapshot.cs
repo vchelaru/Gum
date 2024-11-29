@@ -21,37 +21,37 @@ namespace Gum.Undo
         public override string ToString()
         {
             string toReturn = "";
-
+            const string newlinePrefix = "\n    ";
             if (AddedInstances?.Count > 0)
             {
-                if (!string.IsNullOrEmpty(toReturn)) toReturn += '\n';
+                if (!string.IsNullOrEmpty(toReturn)) toReturn += newlinePrefix;
                 toReturn += $"Add instances: {string.Join(", ", AddedInstances.Select(item => item.Name))}";
             }
             if (RemovedInstances?.Count > 0)
             {
-                if (!string.IsNullOrEmpty(toReturn)) toReturn += '\n';
+                if (!string.IsNullOrEmpty(toReturn)) toReturn += newlinePrefix;
                 toReturn += $"Remove instances: {string.Join(", ", RemovedInstances.Select(item => item.Name))}";
             }
             if (AddedStates?.Count > 0)
             {
-                if (!string.IsNullOrEmpty(toReturn)) toReturn += '\n';
+                if (!string.IsNullOrEmpty(toReturn)) toReturn += newlinePrefix;
                 toReturn += $"Add states: {string.Join(", ", AddedStates.Select(item => item.Name))}";
             }
             if (RemovedStates?.Count > 0)
             {
-                if (!string.IsNullOrEmpty(toReturn)) toReturn += '\n';
+                if (!string.IsNullOrEmpty(toReturn)) toReturn += newlinePrefix;
                 toReturn += $"Remove states: {string.Join(", ", RemovedStates.Select(item => item.Name))}";
             }
             foreach(var modifiedState in ModifiedStates)
             {
                 if (modifiedState.Variables?.Count > 0)
                 {
-                    if (!string.IsNullOrEmpty(toReturn)) toReturn += '\n';
+                    if (!string.IsNullOrEmpty(toReturn)) toReturn += newlinePrefix;
                     toReturn += $"Variables in {modifiedState.Name}: {string.Join(", ", modifiedState.Variables.Select(item => item.Name + "=" + item.Value?.ToString() ?? "<null>"))}";
                 }
                 if(modifiedState.VariableLists?.Count > 0)
                 {
-                    if (!string.IsNullOrEmpty(toReturn)) toReturn += '\n';
+                    if (!string.IsNullOrEmpty(toReturn)) toReturn += newlinePrefix;
                     toReturn += $"Variable lists in {modifiedState.Name}: {string.Join(", ", modifiedState.VariableLists.Select(item => item.Name + "=" + item.ValueAsIList?.ToString() ?? "<null>"))}";
                 }
 
@@ -120,9 +120,11 @@ namespace Gum.Undo
 
             toReturn.ModifiedStates = new List<StateSave>();
 
-            var newState = snapshotToApply.DefaultState;
-            var oldState = currentElement.DefaultState;
-            AddVariableModifications(newState, oldState, toReturn);
+            {
+                var newState = snapshotToApply.DefaultState;
+                var oldState = currentElement.DefaultState;
+                AddVariableModifications(newState, oldState, toReturn);
+            }
 
 
             // loop through each category, check for states that were added or removed:
@@ -139,12 +141,12 @@ namespace Gum.Undo
                     {
                         AddStateModificationsInCategory(toReturn, currentCategory, categoryToApply);
 
-                        foreach (var state in currentCategory.States)
+                        foreach (var oldState in currentCategory.States)
                         {
-                            var matchingState = categoryToApply.States.FirstOrDefault(otherState => otherState.Name == state.Name);
-                            if (matchingState != null)
+                            var newState = categoryToApply.States.FirstOrDefault(otherState => otherState.Name == oldState.Name);
+                            if (newState != null)
                             {
-                                AddVariableModifications(state, matchingState, toReturn);
+                                AddVariableModifications(newState, oldState, toReturn);
                             }
                         }
                     }

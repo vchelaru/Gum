@@ -110,6 +110,10 @@ namespace Gum.Undo
 
             if(recordedSnapshot != null)
             {
+                foreach(var item in recordedSnapshot.Element.AllStates)
+                {
+                    item.FixEnumerations();
+                }
                 recordedSnapshot.StateName = SelectedState.Self.SelectedStateSave?.Name;
                 recordedSnapshot.CategoryName = SelectedState.Self.SelectedStateCategorySave?.Name;
             }

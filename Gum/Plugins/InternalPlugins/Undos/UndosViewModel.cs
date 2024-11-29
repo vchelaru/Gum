@@ -1,4 +1,5 @@
 ﻿using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.ToolStates;
 using Gum.Undo;
 using System;
@@ -54,6 +55,10 @@ namespace Gum.Plugins.Undos
 
                     if (selectedElementClone != null)
                     {
+                        foreach(var state in selectedElementClone.AllStates)
+                        {
+                            state.FixEnumerations();
+                        }
                         for(int i = 0; i < undos.Count; i++)
                         {
                             var undo = undos.ElementAt(i);
