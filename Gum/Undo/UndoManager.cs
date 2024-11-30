@@ -228,7 +228,7 @@ namespace Gum.Undo
                     var history = mUndos[SelectedState.Self.SelectedElement];
 
                     var isAtEndOfStack = history.UndoIndex == history.Undos.Count - 1;
-                    if(!isAtEndOfStack)
+                    if (!isAtEndOfStack)
                     {
                         // If we're not at the end of the stack, then we need to remove all the items after the current index
                         while (history.Undos.Count > history.UndoIndex + 1)
@@ -253,7 +253,7 @@ namespace Gum.Undo
         public ElementSave CloneWithFixedEnumerations(ElementSave elementSave)
         {
             ElementSave cloned = null;
-            if(elementSave is ScreenSave screenSave)
+            if (elementSave is ScreenSave screenSave)
             {
                 cloned = FileManager.CloneSaveObject(screenSave);
             }
@@ -298,6 +298,9 @@ namespace Gum.Undo
                 var isLast = elementHistory.UndoIndex == elementHistory.Undos.Count - 1;
 
                 var undoSnapshot = elementHistory.Undos.ElementAt(elementHistory.UndoIndex);
+
+
+
                 ElementSave toApplyTo = SelectedState.Self.SelectedElement;
 
                 bool shouldRefreshWireframe, shouldRefreshStateTreeView;
@@ -317,54 +320,113 @@ namespace Gum.Undo
                         isRecordingUndos = true;
                     }
                 }
-                
+
                 var newIndex = elementHistory.UndoIndex - 1;
 
-                if(isLast)
+                if (isLast)
                 {
                     RecordUndo();
                 }
 
                 elementHistory.UndoIndex = newIndex;
-
-                RecordState();
-
-                UndosChanged?.Invoke(this, null);
-
-                Plugins.PluginManager.Self.AfterUndo();
-
-                GumCommands.Self.GuiCommands.RefreshElementTreeView();
-                SelectedState.Self.UpdateToSelectedStateSave();
-
-                // The instances may have changed.  We will want 
-                // to refresh the wireframe since the IPSOs in the 
-                // wireframe have tags.
-                if (shouldRefreshWireframe)
-                {
-                    WireframeObjectManager.Self.RefreshAll(true);
-                }
-                if (shouldRefreshStateTreeView)
-                {
-                    GumCommands.Self.GuiCommands.RefreshStateTreeView();
-                }
-
-                //PrintStatus("PerformUndo");
-
-                // If an instance is removed
-                // through an undo and if that
-                // instance is the selected instance
-                // then we want to refresh that.
-                if (toApplyTo != null && SelectedState.Self.SelectedElement == null)
-                {
-                    SelectedState.Self.SelectedElement = toApplyTo;
-                }
-
-                GumCommands.Self.FileCommands.TryAutoSaveProject();
-                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-
-                // Don't do this anymore due to filtering through search
-                //ElementTreeViewManager.Self.VerifyComponentsAreInTreeView(ProjectManager.Self.GumProjectSave);
+                DoAfterUndoLogic(toApplyTo, shouldRefreshWireframe, shouldRefreshStateTreeView);
             }
+        }
+
+        private void DoAfterUndoLogic(ElementSave toApplyTo, bool shouldRefreshWireframe, bool shouldRefreshStateTreeView)
+        {
+            RecordState();
+
+            UndosChanged?.Invoke(this, null);
+
+            Plugins.PluginManager.Self.AfterUndo();
+
+            GumCommands.Self.GuiCommands.RefreshElementTreeView();
+            SelectedState.Self.UpdateToSelectedStateSave();
+
+            // The instances may have changed.  We will want 
+            // to refresh the wireframe since the IPSOs in the 
+            // wireframe have tags.
+            if (shouldRefreshWireframe)
+            {
+                WireframeObjectManager.Self.RefreshAll(true);
+            }
+            if (shouldRefreshStateTreeView)
+            {
+                GumCommands.Self.GuiCommands.RefreshStateTreeView();
+            }
+
+            //PrintStatus("PerformUndo");
+
+            // If an instance is removed
+            // through an undo and if that
+            // instance is the selected instance
+            // then we want to refresh that.
+            if (toApplyTo != null && SelectedState.Self.SelectedElement == null)
+            {
+                SelectedState.Self.SelectedElement = toApplyTo;
+            }
+
+            GumCommands.Self.FileCommands.TryAutoSaveProject();
+            GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+
+            // Don't do this anymore due to filtering through search
+            //ElementTreeViewManager.Self.VerifyComponentsAreInTreeView(ProjectManager.Self.GumProjectSave);
+        }
+
+        public void PerformRedo()
+        {
+            ElementHistory elementHistory = null;
+
+            if (SelectedState.Self.SelectedElement != null && mUndos.ContainsKey(SelectedState.Self.SelectedElement))
+            {
+                elementHistory = mUndos[SelectedState.Self.SelectedElement];
+            }
+            UndoSnapshot undoSnapshot = null;
+
+            if (elementHistory != null)
+            {
+                var indexToApply = elementHistory.UndoIndex + 2;
+
+
+                if (indexToApply < elementHistory.Undos.Count)
+                {
+                    undoSnapshot = elementHistory.Undos[indexToApply];
+                }
+            }
+
+            if(undoSnapshot != null)
+            {
+
+
+                ElementSave toApplyTo = SelectedState.Self.SelectedElement;
+
+                bool shouldRefreshWireframe, shouldRefreshStateTreeView;
+                ApplyUndoSnapshotToElement(undoSnapshot, toApplyTo, true, out shouldRefreshWireframe, out shouldRefreshStateTreeView);
+
+                if (undoSnapshot.CategoryName != SelectedState.Self.SelectedStateCategorySave?.Name ||
+                    undoSnapshot.StateName != SelectedState.Self.SelectedStateSave?.Name)
+                {
+                    var listOfStates = toApplyTo.States;
+                    var state = listOfStates?.FirstOrDefault(item => item.Name == undoSnapshot.StateName);
+
+                    if (state != null)
+                    {
+                        isRecordingUndos = false;
+                        SelectedState.Self.SelectedStateSave = state;
+
+                        isRecordingUndos = true;
+                    }
+                }
+
+                elementHistory.UndoIndex++;
+
+                DoAfterUndoLogic(toApplyTo, shouldRefreshWireframe, shouldRefreshStateTreeView);
+
+
+            }
+
+
         }
 
         public void ApplyUndoSnapshotToElement(UndoSnapshot undoSnapshot, ElementSave toApplyTo, bool propagateNameChanges)
