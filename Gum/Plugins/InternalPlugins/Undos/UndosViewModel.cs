@@ -86,9 +86,9 @@ namespace Gum.Plugins.Undos
 
             // now figure out the history going forward:
 
-            for(int i = count-1; i > -1; i--)
+            for(int i = 0; i < count; i++)
             {
-                var undo = undos.ElementAt(i);
+                var undo = undos[i];
                 var comparisonInformation = UndoSnapshot.CompareAgainst(selectedElementClone, undo.Element);
 
                 var comparisonInformationDisplay = comparisonInformation.ToString();
@@ -101,7 +101,7 @@ namespace Gum.Plugins.Undos
                 UndoManager.Self.ApplyUndoSnapshotToElement(undo, selectedElementClone, false);
             }
 
-            if(UndoManager.Self.RecordedSnapshot != null)
+            if(UndoManager.Self.RecordedSnapshot != null && elementHistory.UndoIndex == elementHistory.Undos.Count-1)
             {
                 var undo = UndoManager.Self.RecordedSnapshot;
 

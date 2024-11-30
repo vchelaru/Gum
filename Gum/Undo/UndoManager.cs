@@ -28,7 +28,7 @@ namespace Gum.Undo
     public class ElementHistory
     {
         public ElementSave InitialState { get; set; }
-        public Stack<UndoSnapshot> Undos { get; set; } = new Stack<UndoSnapshot>();
+        public List<UndoSnapshot> Undos { get; set; } = new List<UndoSnapshot>();
         public int UndoIndex { get; set; } = -1;
     }
 
@@ -159,33 +159,31 @@ namespace Gum.Undo
                 //SelectedState.Self.SelectedStateSave != null &&
                 UndoLocks.Count == 0;
 
-
-
             if (canUndo)
             {
                 StateSave currentStateSave = SelectedState.Self.SelectedStateSave;
                 var currentCategory = SelectedState.Self.SelectedStateCategorySave;
                 ElementSave selectedElement = SelectedState.Self.SelectedElement;
 
-                StateSave stateToCompareAgainst = null;
+                StateSave oldStateToCompareAgainst = null;
 
                 if (currentStateSave != null)
                 {
                     if (currentCategory != null)
                     {
                         var category = recordedSnapshot.Element.Categories.Find(item => item.Name == currentCategory.Name);
-                        stateToCompareAgainst = category?.States.Find(item => item.Name == currentStateSave.Name);
+                        oldStateToCompareAgainst = category?.States.Find(item => item.Name == currentStateSave.Name);
                     }
                     else
                     {
                         var stateName = currentStateSave.Name;
-                        stateToCompareAgainst = recordedSnapshot.Element.States.Find(item => item.Name == stateName);
+                        oldStateToCompareAgainst = recordedSnapshot.Element.States.Find(item => item.Name == stateName);
                     }
                 }
 
 
 
-                bool doStatesDiffer = FileManager.AreSaveObjectsEqual(stateToCompareAgainst, currentStateSave) == false;
+                bool doStatesDiffer = FileManager.AreSaveObjectsEqual(oldStateToCompareAgainst, currentStateSave) == false;
                 bool doStateCategoriesDiffer =
                     FileManager.AreSaveObjectsEqual(recordedSnapshot.Element.Categories, selectedElement.Categories) == false;
                 bool doInstanceListsDiffer = FileManager.AreSaveObjectsEqual(recordedSnapshot.Element.Instances, selectedElement.Instances) == false;
@@ -228,7 +226,18 @@ namespace Gum.Undo
                     }
 
                     var history = mUndos[SelectedState.Self.SelectedElement];
-                    history.Undos.Push(recordedSnapshot);
+
+                    var isAtEndOfStack = history.UndoIndex == history.Undos.Count - 1;
+                    if(!isAtEndOfStack)
+                    {
+                        // If we're not at the end of the stack, then we need to remove all the items after the current index
+                        while (history.Undos.Count > history.UndoIndex + 1)
+                        {
+                            history.Undos.RemoveAt(history.Undos.Count - 1);
+                        }
+                    }
+
+                    history.Undos.Add(recordedSnapshot);
                     history.UndoIndex = history.Undos.Count - 1;
                     RecordState();
 
@@ -284,9 +293,11 @@ namespace Gum.Undo
                 elementHistory = mUndos[SelectedState.Self.SelectedElement];
             }
 
-            if (elementHistory != null && elementHistory.Undos.Count != 0)
+            if (elementHistory != null && elementHistory.Undos.Count != 0 && elementHistory.UndoIndex > -1)
             {
-                var undoSnapshot = elementHistory.Undos.Pop();
+                var isLast = elementHistory.UndoIndex == elementHistory.Undos.Count - 1;
+
+                var undoSnapshot = elementHistory.Undos.ElementAt(elementHistory.UndoIndex);
                 ElementSave toApplyTo = SelectedState.Self.SelectedElement;
 
                 bool shouldRefreshWireframe, shouldRefreshStateTreeView;
@@ -305,19 +316,18 @@ namespace Gum.Undo
 
                         isRecordingUndos = true;
                     }
+                }
+                
+                var newIndex = elementHistory.UndoIndex - 1;
 
+                if(isLast)
+                {
+                    RecordUndo();
                 }
 
-                //if (undoObject.BaseType != null)
-                //{
-                //    string oldBaseType = toApplyTo.BaseType;
-                //    toApplyTo.BaseType = undoObject.BaseType;
-
-                //    toApplyTo.ReactToChangedBaseType(null, oldBaseType);
-                //}
+                elementHistory.UndoIndex = newIndex;
 
                 RecordState();
-
 
                 UndosChanged?.Invoke(this, null);
 
@@ -501,7 +511,7 @@ namespace Gum.Undo
 
         void PrintStatus(string reason)
         {
-            Stack<UndoSnapshot> stack = null;
+            List<UndoSnapshot> stack = null;
 
             if (SelectedState.Self.SelectedElement != null)
             {
