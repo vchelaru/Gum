@@ -7,7 +7,7 @@
              >
     <StackPanel>
 
-        <Grid DragOver="Grid_DragOver_1" x:Name="TopRowGrid">
+        <Grid DragOver="Grid_DragOver_1" x:Name="TopRowGrid" PreviewMouseUp="TopRowGrid_PreviewMouseUp">
             <Grid.ContextMenu>
                 <ContextMenu></ContextMenu>
             </Grid.ContextMenu>

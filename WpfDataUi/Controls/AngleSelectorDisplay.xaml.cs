@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Runtime.InteropServices.ComTypes;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -28,6 +29,7 @@ namespace WpfDataUi.Controls
         TextBoxDisplayLogic mTextBoxLogic;
 
         decimal? mAngle;
+        private bool needsToPushFullCommitOnMouseUp;
         #endregion
 
         #region Properties
@@ -56,19 +58,23 @@ namespace WpfDataUi.Controls
                     mAngle = (decimal)value;
                 }
 
-                ReactToAngleSetThroughProperty();
+                ReactToAngleSetThroughProperty(SetPropertyCommitType.Full);
 
             }
         }
 
-        private void ReactToAngleSetThroughProperty()
+        private void ReactToAngleSetThroughProperty(SetPropertyCommitType commitType)
         {
             NotifyPropertyChange(nameof(Angle));
             NotifyPropertyChange(nameof(NegativeAngle));
-
             UpdateUiToAngle();
 
-            this.TrySetValueOnInstance();
+            var getValueResult = TryGetValueOnUi(out object valueOnUi);
+
+            if(getValueResult == ApplyValueResult.Success)
+            {
+                this.TrySetValueOnInstance(valueOnUi, commitType);
+            }
         }
 
         public float? NegativeAngle
@@ -94,7 +100,7 @@ namespace WpfDataUi.Controls
                 {
                     mAngle = (decimal)value * -1;
                 }
-                ReactToAngleSetThroughProperty();
+                ReactToAngleSetThroughProperty(SetPropertyCommitType.Full);
 
             }
         }
@@ -437,8 +443,8 @@ namespace WpfDataUi.Controls
                         // in the text box displaying things like 1.00001 instead of 1
                         //Angle = angleAsInt;
                         mAngle = newAngle;
-                        ReactToAngleSetThroughProperty();
-
+                        ReactToAngleSetThroughProperty(SetPropertyCommitType.Intermediate);
+                        needsToPushFullCommitOnMouseUp = true;
                     }
                 }
             }
@@ -451,6 +457,15 @@ namespace WpfDataUi.Controls
         private void Ellipse_MouseLeftButtonDown_1(object sender, MouseButtonEventArgs e)
         {
             Ellipse_MouseMove_1(null, null);
+        }
+
+        private void TopRowGrid_PreviewMouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if(needsToPushFullCommitOnMouseUp)
+            {
+                needsToPushFullCommitOnMouseUp = false;
+                ReactToAngleSetThroughProperty(SetPropertyCommitType.Full);
+            }
         }
     }
 }
