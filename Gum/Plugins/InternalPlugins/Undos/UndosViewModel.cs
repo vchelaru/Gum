@@ -32,7 +32,7 @@ namespace Gum.Plugins.Undos
                 }
                 else
                 {
-                    var toReturn = $"Number of undos: {undos.Count()}";
+                    var toReturn = $"Number of undos for {SelectedState.Self.SelectedElement}: {undos.Count()}";
 
                     ElementSave selectedElementClone = null;
 
@@ -59,15 +59,22 @@ namespace Gum.Plugins.Undos
                         {
                             state.FixEnumerations();
                         }
-                        for(int i = 0; i < undos.Count; i++)
+
+                        var count = Math.Min(10, undos.Count);
+
+                        for(int i = 0; i < count; i++)
                         {
                             var undo = undos.ElementAt(i);
                             var comparisonInformation = undo.CompareAgainst(selectedElementClone, undo.Element);
                             toReturn += $"\n{i+1}: {comparisonInformation}";
 
                             // apply it to the selected element so we have a "running state" that we can continually compare against
-                            UndoManager.Self.ApplyUndoSnapshotToElement(undo, selectedElementClone);
+                            UndoManager.Self.ApplyUndoSnapshotToElement(undo, selectedElementClone, false);
+                        }
 
+                        if(undos.Count > 10)
+                        {
+                            toReturn += "\n...";
                         }
                     }
                     return toReturn;

@@ -1,11 +1,14 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Runtime.InteropServices.ComTypes;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using ColorPicker.Models;
 using WpfDataUi;
 using WpfDataUi.DataTypes;
+using static SkiaSharp.HarfBuzz.SKShaper;
 
 namespace Gum.Controls.DataUi
 {
@@ -18,6 +21,7 @@ namespace Gum.Controls.DataUi
 
         InstanceMember mInstanceMember;
         Type mInstancePropertyType;
+        private bool needsToPushFullCommitOnMouseUp;
 
         #endregion
 
@@ -167,37 +171,86 @@ namespace Gum.Controls.DataUi
             }
         }
 
-        private void HandleColorChange(object sender, RoutedEventArgs e) 
+        private void HandleColorChange(object sender, RoutedEventArgs e)
         {
             if (!(e is ColorRoutedEventArgs colorArgs)) return;
 
 
             var isColorSame = false;
 
-            if(mInstancePropertyType == typeof(Microsoft.Xna.Framework.Color))
+            if (mInstancePropertyType == typeof(Microsoft.Xna.Framework.Color))
             {
                 var colorPack = (uint)(colorArgs.Color.R | (colorArgs.Color.G << 8) | (colorArgs.Color.B << 16) | (colorArgs.Color.A << 24));
                 var prevColor = (Microsoft.Xna.Framework.Color)InstanceMember.Value;
                 isColorSame = colorPack == prevColor.PackedValue;
             }
-            else if(mInstancePropertyType == typeof(System.Drawing.Color))
+            else if (mInstancePropertyType == typeof(System.Drawing.Color))
             {
-                var prevColor = (System.Drawing.Color) InstanceMember.Value;
+                var prevColor = (System.Drawing.Color)InstanceMember.Value;
                 var newColor = colorArgs.Color;
 
                 isColorSame = newColor.A == prevColor.A &&
                     newColor.R == prevColor.R &&
                     newColor.G == prevColor.G &&
-                    newColor.B == prevColor.B;
+                newColor.B == prevColor.B;
+            }
+            if (isColorSame) return;
+
+
+            var isMouseDown = Mouse.LeftButton == MouseButtonState.Pressed;
+            var commitType = isMouseDown ? SetPropertyCommitType.Intermediate : SetPropertyCommitType.Full;
+
+            if(commitType == SetPropertyCommitType.Intermediate)
+            {
+                needsToPushFullCommitOnMouseUp = true;
             }
 
-            if(isColorSame) return;
+            SetCurrentColorValueOnInstance(commitType);
 
-            var settingResult = this.TrySetValueOnInstance();
+        }
 
-            if (settingResult == ApplyValueResult.NotSupported) {
-                this.IsEnabled = false;
+        private void SetCurrentColorValueOnInstance(SetPropertyCommitType commitType)
+        {
+            var getValueResult = TryGetValueOnUi(out object valueOnUi);
+
+            if (getValueResult == ApplyValueResult.Success)
+            {
+                var settingResult = this.TrySetValueOnInstance(valueOnUi, commitType);
+
+                if (settingResult == ApplyValueResult.NotSupported)
+                {
+                    this.IsEnabled = false;
+                }
             }
+            else
+            {
+                // do nothing?
+            }
+        }
+
+        private void ColorPicker_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            // This is not raised for all UI as discussed here:
+            //https://github.com/PixiEditor/ColorPicker/issues/52
+            // However, PreviewMouseUp works well
+            //if(needsToPushFullCommitOnMouseUp)
+            //{
+            //    needsToPushFullCommitOnMouseUp = false;
+            //    SetCurrentColorValueOnInstance(SetPropertyCommitType.Full);
+            //}
+            //System.Diagnostics.Debug.WriteLine($"Mouse up at {DateTime.Now}");
+        }
+
+        private void ColorPicker_PreviewMouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (needsToPushFullCommitOnMouseUp)
+            {
+                needsToPushFullCommitOnMouseUp = false;
+                SetCurrentColorValueOnInstance(SetPropertyCommitType.Full);
+            }
+            System.Diagnostics.Debug.WriteLine($"Preview Mouse up at {DateTime.Now}");
+
+            e.Handled = false;
         }
     }
 }

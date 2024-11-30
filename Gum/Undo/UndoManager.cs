@@ -246,7 +246,7 @@ namespace Gum.Undo
                 ElementSave toApplyTo = SelectedState.Self.SelectedElement;
 
                 bool shouldRefreshWireframe, shouldRefreshStateTreeView;
-                ApplyUndoSnapshotToElement(undoSnapshot, toApplyTo, out shouldRefreshWireframe, out shouldRefreshStateTreeView);
+                ApplyUndoSnapshotToElement(undoSnapshot, toApplyTo, true, out shouldRefreshWireframe, out shouldRefreshStateTreeView);
 
                 if (undoSnapshot.CategoryName != SelectedState.Self.SelectedStateCategorySave?.Name ||
                     undoSnapshot.StateName != SelectedState.Self.SelectedStateSave?.Name)
@@ -313,12 +313,13 @@ namespace Gum.Undo
             }
         }
 
-        public void ApplyUndoSnapshotToElement(UndoSnapshot undoSnapshot, ElementSave toApplyTo)
+        public void ApplyUndoSnapshotToElement(UndoSnapshot undoSnapshot, ElementSave toApplyTo, bool propagateNameChanges)
         {
-            ApplyUndoSnapshotToElement(undoSnapshot, toApplyTo, out bool _, out bool _);
+            ApplyUndoSnapshotToElement(undoSnapshot, toApplyTo, propagateNameChanges, out bool _, out bool _);
         }
 
-        private void ApplyUndoSnapshotToElement(UndoSnapshot undoSnapshot, ElementSave toApplyTo, out bool shouldRefreshWireframe, out bool shouldRefreshStateTreeView)
+        private void ApplyUndoSnapshotToElement(UndoSnapshot undoSnapshot, ElementSave toApplyTo, 
+            bool propagateNameChanges, out bool shouldRefreshWireframe, out bool shouldRefreshStateTreeView)
         {
             var elementInUndoSnapshot = undoSnapshot.Element;
 
@@ -340,26 +341,11 @@ namespace Gum.Undo
 
             if (elementInUndoSnapshot.Categories != null)
             {
-                foreach (var categoryInUndoSnapshot in elementInUndoSnapshot.Categories)
+                AddAndRemoveCategories(elementInUndoSnapshot.Categories, toApplyTo.Categories, toApplyTo);
+                // todo - need to handle renames
+                if(propagateNameChanges)
                 {
-                    var matchingCategory = toApplyTo.Categories.Find(item => item.Name == categoryInUndoSnapshot.Name);
 
-                    if (matchingCategory != null)
-                    {
-                        shouldRefreshWireframe = true;
-                        shouldRefreshStateTreeView = true;
-                        AddAndRemoveStates(categoryInUndoSnapshot.States, matchingCategory.States, toApplyTo);
-                    }
-
-                    // do we even need this anymore?
-                    //foreach(var stateInUndoSnapshot in categoryInUndoSnapshot.States)
-                    //{
-                    //    var matchingState = matchingCategory?.States.Find(item => item.Name == stateInUndoSnapshot.Name);
-                    //    if(matchingState != null)
-                    //    {
-                    //        ApplyStateVariables(stateInUndoSnapshot, matchingState, toApplyTo);
-                    //    }
-                    //}
                 }
             }
             if (elementInUndoSnapshot.Instances != null)
@@ -371,7 +357,10 @@ namespace Gum.Undo
             {
                 string oldName = toApplyTo.Name;
                 toApplyTo.Name = elementInUndoSnapshot.Name;
-                RenameLogic.HandleRename(toApplyTo, (InstanceSave)null, oldName, NameChangeAction.Rename, askAboutRename: false);
+                if(propagateNameChanges)
+                {
+                    RenameLogic.HandleRename(toApplyTo, (InstanceSave)null, oldName, NameChangeAction.Rename, askAboutRename: false);
+                }
             }
 
             if (undoSnapshot.CategoryName != SelectedState.Self.SelectedStateCategorySave?.Name ||
@@ -421,9 +410,25 @@ namespace Gum.Undo
 
         }
 
+        private void AddAndRemoveCategories(List<StateSaveCategory> undoList, List<StateSaveCategory> listToApplyTo, ElementSave parent)
+        {
+            if(listToApplyTo != null && undoList != null)
+            {
+                listToApplyTo.Clear();
+
+                foreach(var category in undoList)
+                {
+                    foreach(var state in category.States)
+                    {
+                        state.ParentContainer = parent;
+                    }
+                    listToApplyTo.Add(category);
+                }
+            }
+        }
+
         private void AddAndRemoveStates(List<StateSave> undoList, List<StateSave> listToApplyTo, ElementSave parent)
         {
-            // todo complete here
             if (listToApplyTo != null && undoList != null)
             {
                 listToApplyTo.Clear();

@@ -260,13 +260,13 @@ namespace Gum.Managers
 
         private static void RenameStateClick()
         {
-            GumCommands.Self.Edit.RenameState(SelectedState.Self.SelectedStateSave,
+            GumCommands.Self.Edit.AskToRenameState(SelectedState.Self.SelectedStateSave,
                 SelectedState.Self.SelectedStateContainer);
         }
 
         private static void RenameCategoryClick()
         {
-            GumCommands.Self.Edit.RenameStateCategory(
+            GumCommands.Self.Edit.AskToRenameStateCategory(
                 SelectedState.Self.SelectedStateCategorySave, 
                 SelectedState.Self.SelectedElement);
         }

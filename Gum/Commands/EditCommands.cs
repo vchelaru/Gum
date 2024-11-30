@@ -3,6 +3,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Gui.Windows;
+using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Responses;
@@ -113,7 +114,7 @@ namespace Gum.Commands
             }
         }
 
-        internal void RenameState(StateSave stateSave, IStateContainer stateContainer)
+        internal void AskToRenameState(StateSave stateSave, IStateContainer stateContainer)
         {
             var behaviorNeedingState = GetBehaviorsNeedingState(stateSave);
 
@@ -138,23 +139,12 @@ namespace Gum.Commands
 
                 if (result == DialogResult.OK)
                 {
-                    string oldName = stateSave.Name;
-
-                    stateSave.Name = tiw.Result;
-                    GumCommands.Self.GuiCommands.RefreshStateTreeView();
-                    // I don't think we need to save the project when renaming a state:
-                    //GumCommands.Self.FileCommands.TryAutoSaveProject();
-
-                    // Renaming the state should refresh the property grid
-                    // because it displays the state name at the top
-                    GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
-
-                    PluginManager.Self.StateRename(stateSave, oldName);
-
-                    GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+                    RenameLogic.RenameState(stateSave, tiw.Result);
                 }
             }
         }
+
+
         #endregion
 
         #region Category
@@ -225,7 +215,7 @@ namespace Gum.Commands
 
         }
 
-        internal void RenameStateCategory(StateSaveCategory category, ElementSave elementSave)
+        internal void AskToRenameStateCategory(StateSaveCategory category, ElementSave elementSave)
         {
             // This category can only be renamed if no behaviors require it
             var behaviorsNeedingCategory = DeleteLogic.Self.GetBehaviorsNeedingCategory(category, elementSave as ComponentSave);
@@ -252,19 +242,13 @@ namespace Gum.Commands
                 if (result == DialogResult.OK)
                 {
                     string oldName = category.Name;
+                    string newName = tiw.Result;
 
-                    category.Name = tiw.Result;
-
-                    GumCommands.Self.GuiCommands.RefreshStateTreeView();
-                    // I don't think we need to save the project when renaming a state:
-                    //GumCommands.Self.FileCommands.TryAutoSaveProject();
-
-                    PluginManager.Self.CategoryRename(category, oldName);
-
-                    GumCommands.Self.FileCommands.TryAutoSaveCurrentObject();
+                    RenameLogic.RenameCategory(category, oldName, newName);
                 }
             }
         }
+
 
         #endregion
 

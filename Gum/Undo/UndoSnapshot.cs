@@ -10,6 +10,11 @@ namespace Gum.Undo
 {
     public class UndoComparison
     {
+        public string? ChangedName;
+
+        public List<StateSaveCategory> AddedCategories;
+        public List<StateSaveCategory> RemovedCategories;
+
         public List<InstanceSave> AddedInstances;
         public List<InstanceSave> RemovedInstances;
 
@@ -22,6 +27,13 @@ namespace Gum.Undo
         {
             string toReturn = "";
             const string newlinePrefix = "\n    ";
+
+            if(ChangedName != null)
+            {
+                if (!string.IsNullOrEmpty(toReturn)) toReturn += newlinePrefix;
+                toReturn += $"Change name to {ChangedName}";
+            }
+
             if (AddedInstances?.Count > 0)
             {
                 if (!string.IsNullOrEmpty(toReturn)) toReturn += newlinePrefix;
@@ -32,6 +44,18 @@ namespace Gum.Undo
                 if (!string.IsNullOrEmpty(toReturn)) toReturn += newlinePrefix;
                 toReturn += $"Remove instances: {string.Join(", ", RemovedInstances.Select(item => item.Name))}";
             }
+
+            if(AddedCategories?.Count > 0)
+            {
+                if (!string.IsNullOrEmpty(toReturn)) toReturn += newlinePrefix;
+                toReturn += $"Add categories: {string.Join(", ", AddedCategories.Select(item => item.Name))}";
+            }
+            if (RemovedCategories?.Count > 0)
+            {
+                if (!string.IsNullOrEmpty(toReturn)) toReturn += newlinePrefix;
+                toReturn += $"Remove categories: {string.Join(", ", RemovedCategories.Select(item => item.Name))}";
+            }
+
             if (AddedStates?.Count > 0)
             {
                 if (!string.IsNullOrEmpty(toReturn)) toReturn += newlinePrefix;
@@ -100,23 +124,11 @@ namespace Gum.Undo
         {
             var toReturn = new UndoComparison();
 
+            AddElementRename(currentElement, snapshotToApply, toReturn);
+
             AddInstanceModifiations(currentElement, snapshotToApply, toReturn);
 
-            // Check for added or removed categories
-            var thisCategories = currentElement.Categories;
-            var otherCategories = snapshotToApply.Categories;
-            List<StateSaveCategory> addedCategories = null;
-
-            if (otherCategories != null)
-            {
-                addedCategories = thisCategories?.Except(otherCategories).ToList();
-            }
-
-            List<StateSaveCategory> removedCategories = null;
-            if (thisCategories != null)
-            {
-                removedCategories = otherCategories?.Except(thisCategories).ToList();
-            }
+            AddCategoryModifications(currentElement, snapshotToApply, toReturn);
 
             toReturn.ModifiedStates = new List<StateSave>();
 
@@ -154,6 +166,36 @@ namespace Gum.Undo
             }
 
             return toReturn;
+        }
+
+        private static void AddCategoryModifications(ElementSave currentElement, ElementSave snapshotToApply, UndoComparison undoComparison)
+        {
+            // Check for added or removed categories
+            var thisCategories = currentElement.Categories;
+            var otherCategories = snapshotToApply.Categories;
+
+
+
+            undoComparison.AddedCategories = null;
+
+            if (otherCategories != null)
+            {
+                undoComparison.AddedCategories = thisCategories?.Except(otherCategories).ToList();
+            }
+
+            undoComparison.RemovedCategories = null;
+            if (thisCategories != null)
+            {
+                undoComparison.RemovedCategories = otherCategories?.Except(thisCategories).ToList();
+            }
+        }
+
+        private void AddElementRename(ElementSave currentElement, ElementSave snapshotToApply, UndoComparison toReturn)
+        {
+            if(currentElement.Name != snapshotToApply.Name)
+            {
+                toReturn.ChangedName = snapshotToApply.Name;
+            }
         }
 
         private static void AddStateModificationsInCategory(UndoComparison toReturn, StateSaveCategory currentCategory, StateSaveCategory categoryToApply)
