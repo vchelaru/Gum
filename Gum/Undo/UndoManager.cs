@@ -23,6 +23,17 @@ namespace Gum.Undo
 
     #endregion
 
+    #region ElementHistory
+
+    public class ElementHistory
+    {
+        public ElementSave InitialState { get; set; }
+        public Stack<UndoSnapshot> Undos { get; set; } = new Stack<UndoSnapshot>();
+        public int UndoIndex { get; set; } = -1;
+    }
+
+    #endregion
+
     public class UndoManager
     {
         #region Fields
@@ -31,23 +42,24 @@ namespace Gum.Undo
 
         bool isRecordingUndos = true;
 
-        Dictionary<ElementSave, Stack<UndoSnapshot>> mUndos = new Dictionary<ElementSave, Stack<UndoSnapshot>>();
+        Dictionary<ElementSave, ElementHistory> mUndos = new Dictionary<ElementSave, ElementHistory>();
 
         static UndoManager mSelf;
 
         UndoSnapshot recordedSnapshot;
-        public IReadOnlyCollection<UndoSnapshot> CurrentUndoStack
+        public UndoSnapshot RecordedSnapshot => recordedSnapshot;
+        public ElementHistory CurrentElementHistory
         {
             get
             {
-                Stack<UndoSnapshot> stack = null;
+                ElementHistory history = null;
 
                 if (SelectedState.Self.SelectedElement != null && mUndos.ContainsKey(SelectedState.Self.SelectedElement))
                 {
-                    stack = mUndos[SelectedState.Self.SelectedElement];
+                    history = mUndos[SelectedState.Self.SelectedElement];
                 }
 
-                return stack;
+                return history;
             }
         }
 
@@ -70,7 +82,7 @@ namespace Gum.Undo
 
         private void HandleUndoLockChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            if(UndoLocks.Count == 0)
+            if (UndoLocks.Count == 0)
             {
                 RecordUndo();
             }
@@ -82,15 +94,27 @@ namespace Gum.Undo
         /// </summary>
         public void RecordState()
         {
-            if(UndoLocks.Count > 0)
+            if (UndoLocks.Count > 0)
             {
                 return;
             }
             recordedSnapshot = null;
-            
+
 
             if (SelectedState.Self.SelectedElement != null)
             {
+                if (mUndos.ContainsKey(SelectedState.Self.SelectedElement) == false)
+                {
+                    var cloned = CloneWithFixedEnumerations(SelectedState.Self.SelectedElement);
+
+                    var history = new ElementHistory
+                    {
+                        InitialState = cloned
+                    };
+
+                    mUndos.Add(SelectedState.Self.SelectedElement, history);
+                }
+
                 if (SelectedState.Self.SelectedComponent != null)
                 {
                     recordedSnapshot = new UndoSnapshot();
@@ -108,9 +132,9 @@ namespace Gum.Undo
                 }
             }
 
-            if(recordedSnapshot != null)
+            if (recordedSnapshot != null)
             {
-                foreach(var item in recordedSnapshot.Element.AllStates)
+                foreach (var item in recordedSnapshot.Element.AllStates)
                 {
                     item.FixEnumerations();
                 }
@@ -127,8 +151,8 @@ namespace Gum.Undo
         /// </summary>
         public void RecordUndo()
         {
-            var canUndo = recordedSnapshot != null && 
-                SelectedState.Self.SelectedElement != null && 
+            var canUndo = recordedSnapshot != null &&
+                SelectedState.Self.SelectedElement != null &&
                 isRecordingUndos &&
                 // We should allow undos when selected state is null. This can happen when
                 // the user deletes an existing state
@@ -145,9 +169,9 @@ namespace Gum.Undo
 
                 StateSave stateToCompareAgainst = null;
 
-                if(currentStateSave != null)
+                if (currentStateSave != null)
                 {
-                    if(currentCategory != null)
+                    if (currentCategory != null)
                     {
                         var category = recordedSnapshot.Element.Categories.Find(item => item.Name == currentCategory.Name);
                         stateToCompareAgainst = category?.States.Find(item => item.Name == currentStateSave.Name);
@@ -181,11 +205,6 @@ namespace Gum.Undo
                     ;
                 if (didAnythingChange)
                 {
-                    if (mUndos.ContainsKey(SelectedState.Self.SelectedElement) == false)
-                    {
-                        mUndos.Add(SelectedState.Self.SelectedElement, new Stack<UndoSnapshot>());
-                    }
-
                     if (!doInstanceListsDiffer)
                     {
                         recordedSnapshot.Element.Instances = null;
@@ -208,9 +227,9 @@ namespace Gum.Undo
                         recordedSnapshot.Element.BaseType = null;
                     }
 
-                    Stack<UndoSnapshot> stack = mUndos[SelectedState.Self.SelectedElement] ;
-
-                    stack.Push(recordedSnapshot);
+                    var history = mUndos[SelectedState.Self.SelectedElement];
+                    history.Undos.Push(recordedSnapshot);
+                    history.UndoIndex = history.Undos.Count - 1;
                     RecordState();
 
                     UndosChanged?.Invoke(this, null);
@@ -220,6 +239,31 @@ namespace Gum.Undo
                 //PrintStatus("RecordUndo");
             }
 
+        }
+
+        public ElementSave CloneWithFixedEnumerations(ElementSave elementSave)
+        {
+            ElementSave cloned = null;
+            if(elementSave is ScreenSave screenSave)
+            {
+                cloned = FileManager.CloneSaveObject(screenSave);
+            }
+            else if (elementSave is ComponentSave componentSave)
+            {
+                cloned = FileManager.CloneSaveObject(componentSave);
+            }
+            else if (elementSave is StandardElementSave standard)
+            {
+                cloned = FileManager.CloneSaveObject(standard);
+            }
+            if (cloned != null)
+            {
+                foreach (var state in cloned.AllStates)
+                {
+                    state.FixEnumerations();
+                }
+            }
+            return cloned;
         }
 
         public UndoLock RequestLock()
@@ -233,16 +277,16 @@ namespace Gum.Undo
 
         public void PerformUndo()
         {
-            Stack<UndoSnapshot> stack = null;
+            ElementHistory elementHistory = null;
 
             if (SelectedState.Self.SelectedElement != null && mUndos.ContainsKey(SelectedState.Self.SelectedElement))
             {
-                stack = mUndos[SelectedState.Self.SelectedElement];
+                elementHistory = mUndos[SelectedState.Self.SelectedElement];
             }
 
-            if (stack != null && stack.Count != 0)
+            if (elementHistory != null && elementHistory.Undos.Count != 0)
             {
-                var undoSnapshot = stack.Pop();
+                var undoSnapshot = elementHistory.Undos.Pop();
                 ElementSave toApplyTo = SelectedState.Self.SelectedElement;
 
                 bool shouldRefreshWireframe, shouldRefreshStateTreeView;
@@ -254,7 +298,7 @@ namespace Gum.Undo
                     var listOfStates = toApplyTo.States;
                     var state = listOfStates?.FirstOrDefault(item => item.Name == undoSnapshot.StateName);
 
-                    if(state != null)
+                    if (state != null)
                     {
                         isRecordingUndos = false;
                         SelectedState.Self.SelectedStateSave = state;
@@ -318,7 +362,7 @@ namespace Gum.Undo
             ApplyUndoSnapshotToElement(undoSnapshot, toApplyTo, propagateNameChanges, out bool _, out bool _);
         }
 
-        private void ApplyUndoSnapshotToElement(UndoSnapshot undoSnapshot, ElementSave toApplyTo, 
+        private void ApplyUndoSnapshotToElement(UndoSnapshot undoSnapshot, ElementSave toApplyTo,
             bool propagateNameChanges, out bool shouldRefreshWireframe, out bool shouldRefreshStateTreeView)
         {
             var elementInUndoSnapshot = undoSnapshot.Element;
@@ -343,7 +387,7 @@ namespace Gum.Undo
             {
                 AddAndRemoveCategories(elementInUndoSnapshot.Categories, toApplyTo.Categories, toApplyTo);
                 // todo - need to handle renames
-                if(propagateNameChanges)
+                if (propagateNameChanges)
                 {
 
                 }
@@ -357,7 +401,7 @@ namespace Gum.Undo
             {
                 string oldName = toApplyTo.Name;
                 toApplyTo.Name = elementInUndoSnapshot.Name;
-                if(propagateNameChanges)
+                if (propagateNameChanges)
                 {
                     RenameLogic.HandleRename(toApplyTo, (InstanceSave)null, oldName, NameChangeAction.Rename, askAboutRename: false);
                 }
@@ -412,13 +456,13 @@ namespace Gum.Undo
 
         private void AddAndRemoveCategories(List<StateSaveCategory> undoList, List<StateSaveCategory> listToApplyTo, ElementSave parent)
         {
-            if(listToApplyTo != null && undoList != null)
+            if (listToApplyTo != null && undoList != null)
             {
                 listToApplyTo.Clear();
 
-                foreach(var category in undoList)
+                foreach (var category in undoList)
                 {
-                    foreach(var state in category.States)
+                    foreach (var state in category.States)
                     {
                         state.ParentContainer = parent;
                     }
@@ -463,7 +507,7 @@ namespace Gum.Undo
             {
                 if (mUndos.ContainsKey(SelectedState.Self.SelectedElement))
                 {
-                    stack = mUndos[SelectedState.Self.SelectedElement];
+                    stack = mUndos[SelectedState.Self.SelectedElement].Undos;
                 }
 
                 if (stack == null)

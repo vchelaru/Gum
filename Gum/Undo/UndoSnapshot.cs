@@ -2,6 +2,7 @@
 using Gum.DataTypes.Variables;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -120,7 +121,7 @@ namespace Gum.Undo
         /// <param name="currentElement">The current state before the undo is applied. This could be a snapshot or it could be the actual element if 
         /// there is only 1 undo.</param>
         /// <param name="snapshotToApply">The snapshot to apply.</param>
-        public UndoComparison CompareAgainst(ElementSave currentElement, ElementSave snapshotToApply)
+        public static UndoComparison CompareAgainst(ElementSave currentElement, ElementSave snapshotToApply)
         {
             var toReturn = new UndoComparison();
 
@@ -171,26 +172,24 @@ namespace Gum.Undo
         private static void AddCategoryModifications(ElementSave currentElement, ElementSave snapshotToApply, UndoComparison undoComparison)
         {
             // Check for added or removed categories
-            var thisCategories = currentElement.Categories;
-            var otherCategories = snapshotToApply.Categories;
-
-
+            var currentCategories = currentElement.Categories;
+            var categoriesToApply = snapshotToApply.Categories;
 
             undoComparison.AddedCategories = null;
-
-            if (otherCategories != null)
-            {
-                undoComparison.AddedCategories = thisCategories?.Except(otherCategories).ToList();
-            }
-
             undoComparison.RemovedCategories = null;
-            if (thisCategories != null)
+
+            if(currentCategories != null && categoriesToApply != null)
             {
-                undoComparison.RemovedCategories = otherCategories?.Except(thisCategories).ToList();
+                var currentCategoryNames = currentCategories.Select(item => item.Name).ToArray();
+                var toApplyCategoryNames = categoriesToApply.Select(item => item.Name).ToArray();
+
+                undoComparison.AddedCategories = categoriesToApply.Where(item => !currentCategoryNames.Contains(item.Name)).ToList();
+
+                undoComparison.RemovedCategories = currentCategories.Where(item => !toApplyCategoryNames.Contains(item.Name)).ToList();
             }
         }
 
-        private void AddElementRename(ElementSave currentElement, ElementSave snapshotToApply, UndoComparison toReturn)
+        private static void AddElementRename(ElementSave currentElement, ElementSave snapshotToApply, UndoComparison toReturn)
         {
             if(currentElement.Name != snapshotToApply.Name)
             {
@@ -252,7 +251,7 @@ namespace Gum.Undo
             }
         }
 
-        private void AddVariableModifications(StateSave stateToApply, StateSave currentState, UndoComparison snapshot)
+        private static void AddVariableModifications(StateSave stateToApply, StateSave currentState, UndoComparison snapshot)
         {
             if(stateToApply == null || currentState == null)
             {
