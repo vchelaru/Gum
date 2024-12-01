@@ -155,26 +155,26 @@ namespace Gum.Undo
                 var currentCategory = SelectedState.Self.SelectedStateCategorySave;
                 ElementSave newElement = SelectedState.Self.SelectedElement;
 
-                StateSave oldStateToCompareAgainst = null;
+                StateSave oldState = null;
 
                 if (newStateSave != null)
                 {
                     if (currentCategory != null)
                     {
                         var category = recordedSnapshot.Element.Categories.Find(item => item.Name == currentCategory.Name);
-                        oldStateToCompareAgainst = category?.States.Find(item => item.Name == newStateSave.Name);
+                        oldState = category?.States.Find(item => item.Name == newStateSave.Name);
                     }
                     else
                     {
                         var stateName = newStateSave.Name;
-                        oldStateToCompareAgainst = recordedSnapshot.Element.States.Find(item => item.Name == stateName);
+                        oldState = recordedSnapshot.Element.States.Find(item => item.Name == stateName);
                     }
                 }
 
-                UndoSnapshot snapshotToAdd = GetUndoSnapshotToAdd(newStateSave, newElement, oldStateToCompareAgainst,
+                UndoSnapshot undoSnapshot = GetUndoSnapshotToAdd(newStateSave, newElement, oldState,
                     recordedSnapshot.Element, recordedSnapshot.CategoryName, recordedSnapshot.StateName);
 
-                if (snapshotToAdd != null)
+                if (undoSnapshot != null)
                 {
                     var history = mUndos[SelectedState.Self.SelectedElement];
 
@@ -188,10 +188,19 @@ namespace Gum.Undo
                         }
                     }
 
-                    var action = new HistoryAction { UndoState = snapshotToAdd };
+                    var action = new HistoryAction { UndoState = undoSnapshot };
 
                     history.Actions.Add(action);
                     history.UndoIndex = history.Actions.Count - 1;
+
+                    var redoSnapshot = GetUndoSnapshotToAdd(oldState, recordedSnapshot.Element, newStateSave, newElement, recordedSnapshot.CategoryName, recordedSnapshot.StateName);
+
+                    if(redoSnapshot != null)
+                    {
+                        action.RedoState = redoSnapshot;
+                    }
+
+
                     RecordState();
 
                     UndosChanged?.Invoke(this, null);
@@ -412,33 +421,33 @@ namespace Gum.Undo
             {
                 elementHistory = mUndos[SelectedState.Self.SelectedElement];
             }
-            UndoSnapshot undoSnapshot = null;
+            UndoSnapshot redoSnapshot = null;
 
             if (elementHistory != null)
             {
-                var indexToApply = elementHistory.UndoIndex + 1;
+                var indexToApply = elementHistory.UndoIndex;
 
 
-                if (indexToApply < elementHistory.Actions.Count)
+                if (indexToApply < elementHistory.Actions.Count-1)
                 {
-                    undoSnapshot = elementHistory.Actions[indexToApply].UndoState;
+                    redoSnapshot = elementHistory.Actions[indexToApply+1].RedoState;
                 }
             }
 
-            if(undoSnapshot != null)
+            if(redoSnapshot != null)
             {
 
 
                 ElementSave toApplyTo = SelectedState.Self.SelectedElement;
 
                 bool shouldRefreshWireframe, shouldRefreshStateTreeView;
-                ApplyUndoSnapshotToElement(undoSnapshot, toApplyTo, true, out shouldRefreshWireframe, out shouldRefreshStateTreeView);
+                ApplyUndoSnapshotToElement(redoSnapshot, toApplyTo, true, out shouldRefreshWireframe, out shouldRefreshStateTreeView);
 
-                if (undoSnapshot.CategoryName != SelectedState.Self.SelectedStateCategorySave?.Name ||
-                    undoSnapshot.StateName != SelectedState.Self.SelectedStateSave?.Name)
+                if (redoSnapshot.CategoryName != SelectedState.Self.SelectedStateCategorySave?.Name ||
+                    redoSnapshot.StateName != SelectedState.Self.SelectedStateSave?.Name)
                 {
                     var listOfStates = toApplyTo.States;
-                    var state = listOfStates?.FirstOrDefault(item => item.Name == undoSnapshot.StateName);
+                    var state = listOfStates?.FirstOrDefault(item => item.Name == redoSnapshot.StateName);
 
                     if (state != null)
                     {
