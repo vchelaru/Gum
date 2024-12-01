@@ -104,16 +104,22 @@ namespace Gum.DataTypes
         {
             get
             {
-                foreach (var state in States)
+                if(States != null)
                 {
-                    yield return state;
-                }
-
-                foreach (var category in Categories)
-                {
-                    foreach (var state in category.States)
+                    foreach (var state in States)
                     {
                         yield return state;
+                    }
+
+                }
+                if(Categories != null)
+                {
+                    foreach (var category in Categories)
+                    {
+                        foreach (var state in category.States)
+                        {
+                            yield return state;
+                        }
                     }
                 }
             }

@@ -27,7 +27,7 @@ namespace Gum.Undo
 
     public class ElementHistory
     {
-        public ElementSave InitialState { get; set; }
+        public ElementSave FinalState { get; set; }
         public List<UndoSnapshot> Undos { get; set; } = new List<UndoSnapshot>();
         public int UndoIndex { get; set; } = -1;
     }
@@ -105,31 +105,14 @@ namespace Gum.Undo
             {
                 if (mUndos.ContainsKey(SelectedState.Self.SelectedElement) == false)
                 {
-                    var cloned = CloneWithFixedEnumerations(SelectedState.Self.SelectedElement);
 
-                    var history = new ElementHistory
-                    {
-                        InitialState = cloned
-                    };
+                    var history = new ElementHistory();
 
                     mUndos.Add(SelectedState.Self.SelectedElement, history);
                 }
 
-                if (SelectedState.Self.SelectedComponent != null)
-                {
-                    recordedSnapshot = new UndoSnapshot();
-                    recordedSnapshot.Element = FileManager.CloneSaveObject(SelectedState.Self.SelectedComponent);
-                }
-                else if (SelectedState.Self.SelectedScreen != null)
-                {
-                    recordedSnapshot = new UndoSnapshot();
-                    recordedSnapshot.Element = FileManager.CloneSaveObject(SelectedState.Self.SelectedScreen);
-                }
-                else if (SelectedState.Self.SelectedStandardElement != null)
-                {
-                    recordedSnapshot = new UndoSnapshot();
-                    recordedSnapshot.Element = FileManager.CloneSaveObject(SelectedState.Self.SelectedStandardElement);
-                }
+                recordedSnapshot = new UndoSnapshot();
+                recordedSnapshot.Element = CloneWithFixedEnumerations(SelectedState.Self.SelectedElement);
             }
 
             if (recordedSnapshot != null)
@@ -161,70 +144,30 @@ namespace Gum.Undo
 
             if (canUndo)
             {
-                StateSave currentStateSave = SelectedState.Self.SelectedStateSave;
+                StateSave newStateSave = SelectedState.Self.SelectedStateSave;
                 var currentCategory = SelectedState.Self.SelectedStateCategorySave;
-                ElementSave selectedElement = SelectedState.Self.SelectedElement;
+                ElementSave newElement = SelectedState.Self.SelectedElement;
 
                 StateSave oldStateToCompareAgainst = null;
 
-                if (currentStateSave != null)
+                if (newStateSave != null)
                 {
                     if (currentCategory != null)
                     {
                         var category = recordedSnapshot.Element.Categories.Find(item => item.Name == currentCategory.Name);
-                        oldStateToCompareAgainst = category?.States.Find(item => item.Name == currentStateSave.Name);
+                        oldStateToCompareAgainst = category?.States.Find(item => item.Name == newStateSave.Name);
                     }
                     else
                     {
-                        var stateName = currentStateSave.Name;
+                        var stateName = newStateSave.Name;
                         oldStateToCompareAgainst = recordedSnapshot.Element.States.Find(item => item.Name == stateName);
                     }
                 }
 
+                UndoSnapshot snapshotToAdd = GetSnapshotToAdd(newStateSave, newElement, oldStateToCompareAgainst);
 
-
-                bool doStatesDiffer = FileManager.AreSaveObjectsEqual(oldStateToCompareAgainst, currentStateSave) == false;
-                bool doStateCategoriesDiffer =
-                    FileManager.AreSaveObjectsEqual(recordedSnapshot.Element.Categories, selectedElement.Categories) == false;
-                bool doInstanceListsDiffer = FileManager.AreSaveObjectsEqual(recordedSnapshot.Element.Instances, selectedElement.Instances) == false;
-                bool doTypesDiffer = recordedSnapshot.Element.BaseType != selectedElement.BaseType;
-                bool doNamesDiffer = recordedSnapshot.Element.Name != selectedElement.Name;
-
-                // Why do we care if the user selected a different state?
-                // This seems to cause bugs, and we don't care about undoing selections...
-                //bool doesSelectedStateDiffer = recordedSnapshot.CategoryName != currentCategory?.Name ||
-                //    recordedSnapshot.StateName != currentStateSave?.Name;
-
-                // todo : need to add behavior differences
-
-
-                bool didAnythingChange = doStatesDiffer || doStateCategoriesDiffer || doInstanceListsDiffer || doTypesDiffer || doNamesDiffer
-                    //|| doesSelectedStateDiffer
-                    ;
-                if (didAnythingChange)
+                if (snapshotToAdd != null)
                 {
-                    if (!doInstanceListsDiffer)
-                    {
-                        recordedSnapshot.Element.Instances = null;
-                    }
-                    if (!doStatesDiffer)
-                    {
-                        recordedSnapshot.Element.States = null;
-                    }
-
-                    if (!doStateCategoriesDiffer)
-                    {
-                        recordedSnapshot.Element.Categories = null;
-                    }
-                    if (!doNamesDiffer)
-                    {
-                        recordedSnapshot.Element.Name = null;
-                    }
-                    if (!doTypesDiffer)
-                    {
-                        recordedSnapshot.Element.BaseType = null;
-                    }
-
                     var history = mUndos[SelectedState.Self.SelectedElement];
 
                     var isAtEndOfStack = history.UndoIndex == history.Undos.Count - 1;
@@ -236,21 +179,69 @@ namespace Gum.Undo
                             history.Undos.RemoveAt(history.Undos.Count - 1);
                         }
                     }
-
-                    history.Undos.Add(recordedSnapshot);
+                    history.Undos.Add(snapshotToAdd);
                     history.UndoIndex = history.Undos.Count - 1;
                     RecordState();
 
                     UndosChanged?.Invoke(this, null);
                 }
-
-
-                //PrintStatus("RecordUndo");
             }
 
         }
 
-        public ElementSave CloneWithFixedEnumerations(ElementSave elementSave)
+        private UndoSnapshot GetSnapshotToAdd(StateSave currentStateSave, ElementSave selectedElement, StateSave oldStateToCompareAgainst)
+        {
+            bool doStatesDiffer = FileManager.AreSaveObjectsEqual(oldStateToCompareAgainst, currentStateSave) == false;
+            bool doStateCategoriesDiffer =
+                FileManager.AreSaveObjectsEqual(recordedSnapshot.Element.Categories, selectedElement.Categories) == false;
+            bool doInstanceListsDiffer = FileManager.AreSaveObjectsEqual(recordedSnapshot.Element.Instances, selectedElement.Instances) == false;
+            bool doTypesDiffer = recordedSnapshot.Element.BaseType != selectedElement.BaseType;
+            bool doNamesDiffer = recordedSnapshot.Element.Name != selectedElement.Name;
+
+            // Why do we care if the user selected a different state?
+            // This seems to cause bugs, and we don't care about undoing selections...
+            //bool doesSelectedStateDiffer = recordedSnapshot.CategoryName != currentCategory?.Name ||
+            //    recordedSnapshot.StateName != currentStateSave?.Name;
+
+            // todo : need to add behavior differences
+            UndoSnapshot snapshotToAdd = null;
+
+            bool didAnythingChange = doStatesDiffer || doStateCategoriesDiffer || doInstanceListsDiffer || doTypesDiffer || doNamesDiffer
+                //|| doesSelectedStateDiffer
+                ;
+            if (didAnythingChange)
+            {
+                if (!doInstanceListsDiffer)
+                {
+                    recordedSnapshot.Element.Instances = null;
+                }
+                if (!doStatesDiffer)
+                {
+                    recordedSnapshot.Element.States = null;
+                }
+
+                if (!doStateCategoriesDiffer)
+                {
+                    recordedSnapshot.Element.Categories = null;
+                }
+                if (!doNamesDiffer)
+                {
+                    recordedSnapshot.Element.Name = null;
+                }
+                if (!doTypesDiffer)
+                {
+                    recordedSnapshot.Element.BaseType = null;
+                }
+
+                snapshotToAdd = recordedSnapshot;
+
+
+            }
+
+            return snapshotToAdd;
+        }
+
+        public static ElementSave CloneWithFixedEnumerations(ElementSave elementSave)
         {
             ElementSave cloned = null;
             if (elementSave is ScreenSave screenSave)
@@ -267,10 +258,28 @@ namespace Gum.Undo
             }
             if (cloned != null)
             {
+                if(elementSave.States == null)
+                {
+                    cloned.States = null;
+                }
+                if(elementSave.Instances == null)
+                {
+                    cloned.Instances = null;
+                }    
+                if(elementSave.Categories == null)
+                {
+                    cloned.Categories = null;
+                }
+                if(elementSave.Events == null)
+                {
+                    cloned.Events = null;
+                }
+
                 foreach (var state in cloned.AllStates)
                 {
                     state.FixEnumerations();
                 }
+
             }
             return cloned;
         }
@@ -296,6 +305,11 @@ namespace Gum.Undo
             if (elementHistory != null && elementHistory.Undos.Count != 0 && elementHistory.UndoIndex > -1)
             {
                 var isLast = elementHistory.UndoIndex == elementHistory.Undos.Count - 1;
+
+                if(isLast)
+                {
+                    elementHistory.FinalState = CloneWithFixedEnumerations(SelectedState.Self.SelectedElement);
+                }
 
                 var undoSnapshot = elementHistory.Undos.ElementAt(elementHistory.UndoIndex);
 
@@ -323,10 +337,10 @@ namespace Gum.Undo
 
                 var newIndex = elementHistory.UndoIndex - 1;
 
-                if (isLast)
-                {
-                    RecordUndo();
-                }
+                //if (isLast)
+                //{
+                //    RecordUndo();
+                //}
 
                 elementHistory.UndoIndex = newIndex;
                 DoAfterUndoLogic(toApplyTo, shouldRefreshWireframe, shouldRefreshStateTreeView);
@@ -386,7 +400,7 @@ namespace Gum.Undo
 
             if (elementHistory != null)
             {
-                var indexToApply = elementHistory.UndoIndex + 2;
+                var indexToApply = elementHistory.UndoIndex + 1;
 
 
                 if (indexToApply < elementHistory.Undos.Count)
@@ -437,7 +451,17 @@ namespace Gum.Undo
         private void ApplyUndoSnapshotToElement(UndoSnapshot undoSnapshot, ElementSave toApplyTo,
             bool propagateNameChanges, out bool shouldRefreshWireframe, out bool shouldRefreshStateTreeView)
         {
+
             var elementInUndoSnapshot = undoSnapshot.Element;
+
+            // Undos can persist after they have been applied. When they persist, they are used
+            // to figure out the undo history, and when this happens instances within the undo snapshot
+            // may be modified. We want to make sure that we do not shrae any instances between the undo
+            // snapshot and the actual instance, so we should clone it if it is a full applicatoin (propagateNameChanges == true);
+            if(propagateNameChanges == true)
+            {
+                elementInUndoSnapshot = CloneWithFixedEnumerations(elementInUndoSnapshot);
+            }
 
 
             shouldRefreshWireframe = false;

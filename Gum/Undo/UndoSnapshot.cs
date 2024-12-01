@@ -191,7 +191,8 @@ namespace Gum.Undo
 
         private static void AddElementRename(ElementSave currentElement, ElementSave snapshotToApply, UndoComparison toReturn)
         {
-            if(currentElement.Name != snapshotToApply.Name)
+            // If it's null, no change was recorded so do not compare
+            if(currentElement.Name != null && snapshotToApply.Name != null && currentElement.Name != snapshotToApply.Name)
             {
                 toReturn.ChangedName = snapshotToApply.Name;
             }

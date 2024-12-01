@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using ToolsUtilities;
 
 namespace Gum.Plugins.Undos
@@ -33,7 +34,7 @@ namespace Gum.Plugins.Undos
                 }
                 else
                 {
-                    List<string> undoStringList = GetUndoStringList(elementHistory);
+                     List<string> undoStringList = GetUndoStringList(elementHistory);
 
                     return undoStringList;
                 }
@@ -57,22 +58,22 @@ namespace Gum.Plugins.Undos
             }
         }
 
-        private static List<string> GetUndoStringList(ElementHistory elementHistory)
+        private List<string> GetUndoStringList(ElementHistory elementHistory)
         {
+
             ElementSave selectedElementClone = null;
-            
-            if(elementHistory.InitialState is ScreenSave screenSave)
+
+            var elementToClone =
+                //elementHistory.InitialState;
+                GumState.Self.SelectedState.SelectedElement;
+
+            if(this.UndoIndex < elementHistory.Undos.Count-1)
             {
-                selectedElementClone = FileManager.CloneSaveObject(screenSave);
+                // we're viewing something before the end, so use the final state as the starting point:
+                elementToClone = elementHistory.FinalState;
             }
-            else if(elementHistory.InitialState is ComponentSave componentSave)
-            {
-                selectedElementClone = FileManager.CloneSaveObject(componentSave);
-            }
-            else if(elementHistory.InitialState is StandardElementSave standard)
-            {
-                selectedElementClone = FileManager.CloneSaveObject(standard);
-            }
+
+            selectedElementClone = UndoManager.CloneWithFixedEnumerations(elementToClone);
 
             foreach (var item in selectedElementClone.AllStates)
             {
@@ -84,36 +85,51 @@ namespace Gum.Plugins.Undos
             var undos = elementHistory.Undos;
             var count = undos.Count;
 
-            // now figure out the history going forward:
-
-            for(int i = 0; i < count; i++)
+            for(int i = undos.Count - 1; i > -1; i--)
             {
                 var undo = undos[i];
-                var comparisonInformation = UndoSnapshot.CompareAgainst(selectedElementClone, undo.Element);
-
-                var comparisonInformationDisplay = comparisonInformation.ToString();
-
-                if(!string.IsNullOrEmpty(comparisonInformationDisplay))
-                {
-                    undoStringList.Add(comparisonInformation.ToString());
-                }
-
-                UndoManager.Self.ApplyUndoSnapshotToElement(undo, selectedElementClone, false);
-            }
-
-            if(UndoManager.Self.RecordedSnapshot != null && elementHistory.UndoIndex == elementHistory.Undos.Count-1)
-            {
-                var undo = UndoManager.Self.RecordedSnapshot;
-
-                var comparisonInformation = UndoSnapshot.CompareAgainst(selectedElementClone, undo.Element);
+                var comparisonInformation = UndoSnapshot.CompareAgainst( undo.Element, selectedElementClone);
 
                 var comparisonInformationDisplay = comparisonInformation.ToString();
 
                 if (!string.IsNullOrEmpty(comparisonInformationDisplay))
                 {
-                    undoStringList.Add(comparisonInformation.ToString());
+                    undoStringList.Insert(0,comparisonInformation.ToString());
                 }
+
+                UndoManager.Self.ApplyUndoSnapshotToElement(undo, selectedElementClone, false);
             }
+
+            // the first snapshot always matches the initial state, so we can skip it
+            //for (int i = 0; i < count; i++)
+            //for (int i = 1; i < count; i++)
+            //{
+            //    var undo = undos[i];
+            //    var comparisonInformation = UndoSnapshot.CompareAgainst(selectedElementClone, undo.Element);
+
+            //    var comparisonInformationDisplay = comparisonInformation.ToString();
+
+            //    if(!string.IsNullOrEmpty(comparisonInformationDisplay))
+            //    {
+            //        undoStringList.Add(comparisonInformation.ToString());
+            //    }
+
+            //    UndoManager.Self.ApplyUndoSnapshotToElement(undo, selectedElementClone, false);
+            //}
+
+            //if(UndoManager.Self.RecordedSnapshot != null && elementHistory.UndoIndex == elementHistory.Undos.Count-1)
+            //{
+            //    var undo = UndoManager.Self.RecordedSnapshot;
+
+            //    var comparisonInformation = UndoSnapshot.CompareAgainst(selectedElementClone, undo.Element);
+
+            //    var comparisonInformationDisplay = comparisonInformation.ToString();
+
+            //    if (!string.IsNullOrEmpty(comparisonInformationDisplay))
+            //    {
+            //        undoStringList.Add(comparisonInformation.ToString());
+            //    }
+            //}
 
             return undoStringList;
         }
@@ -125,29 +141,10 @@ namespace Gum.Plugins.Undos
 
             if (GumState.Self.SelectedState.SelectedElement != null)
             {
-                if (GumState.Self.SelectedState.SelectedComponent != null)
-                {
-                    selectedElementClone = FileManager.CloneSaveObject(SelectedState.Self.SelectedComponent);
-                }
-                else if (GumState.Self.SelectedState.SelectedScreen != null)
-                {
-                    selectedElementClone = FileManager.CloneSaveObject(SelectedState.Self.SelectedScreen);
-                }
-                else if (GumState.Self.SelectedState.SelectedStandardElement != null)
-                {
-                    selectedElementClone = FileManager.CloneSaveObject(SelectedState.Self.SelectedStandardElement);
-                }
+                return UndoManager.CloneWithFixedEnumerations(GumState.Self.SelectedState.SelectedElement);
             }
 
-            if (selectedElementClone != null)
-            {
-                foreach (var state in selectedElementClone.AllStates)
-                {
-                    state.FixEnumerations();
-                }
-            }
-
-            return selectedElementClone;
+            return null;
         }
 
         public UndosViewModel()
