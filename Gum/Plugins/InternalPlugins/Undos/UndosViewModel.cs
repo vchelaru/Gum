@@ -28,7 +28,7 @@ namespace Gum.Plugins.Undos
             {
                 var elementHistory = UndoManager.Self.CurrentElementHistory;
 
-                if (elementHistory == null || elementHistory.Undos.Count() == 0)
+                if (elementHistory == null || elementHistory.Actions.Count() == 0)
                 {
                     return new List<string> { "No history" };
                 }
@@ -67,7 +67,7 @@ namespace Gum.Plugins.Undos
                 //elementHistory.InitialState;
                 GumState.Self.SelectedState.SelectedElement;
 
-            if(this.UndoIndex < elementHistory.Undos.Count-1)
+            if(this.UndoIndex < elementHistory.Actions.Count-1)
             {
                 // we're viewing something before the end, so use the final state as the starting point:
                 elementToClone = elementHistory.FinalState;
@@ -82,13 +82,13 @@ namespace Gum.Plugins.Undos
 
             List<string> undoStringList = new List<string>();
 
-            var undos = elementHistory.Undos;
+            var undos = elementHistory.Actions;
             var count = undos.Count;
 
             for(int i = undos.Count - 1; i > -1; i--)
             {
                 var undo = undos[i];
-                var comparisonInformation = UndoSnapshot.CompareAgainst( undo.Element, selectedElementClone);
+                var comparisonInformation = UndoSnapshot.CompareAgainst( undo.UndoState.Element, selectedElementClone);
 
                 var comparisonInformationDisplay = comparisonInformation.ToString();
 
@@ -97,7 +97,7 @@ namespace Gum.Plugins.Undos
                     undoStringList.Insert(0,comparisonInformation.ToString());
                 }
 
-                UndoManager.Self.ApplyUndoSnapshotToElement(undo, selectedElementClone, false);
+                UndoManager.Self.ApplyUndoSnapshotToElement(undo.UndoState, selectedElementClone, false);
             }
 
             // the first snapshot always matches the initial state, so we can skip it

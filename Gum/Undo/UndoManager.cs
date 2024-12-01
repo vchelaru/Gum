@@ -9,6 +9,7 @@ using ToolsUtilities;
 using Gum.Logic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Windows.Controls;
 
 namespace Gum.Undo
 {
@@ -25,10 +26,16 @@ namespace Gum.Undo
 
     #region ElementHistory
 
+    public class HistoryAction
+    {
+        public UndoSnapshot UndoState { get; set; }
+        public UndoSnapshot RedoState { get; set; }
+    }
+
     public class ElementHistory
     {
         public ElementSave FinalState { get; set; }
-        public List<UndoSnapshot> Undos { get; set; } = new List<UndoSnapshot>();
+        public List<HistoryAction> Actions { get; set; } = new List<HistoryAction>();
         public int UndoIndex { get; set; } = -1;
     }
 
@@ -164,23 +171,27 @@ namespace Gum.Undo
                     }
                 }
 
-                UndoSnapshot snapshotToAdd = GetSnapshotToAdd(newStateSave, newElement, oldStateToCompareAgainst);
+                UndoSnapshot snapshotToAdd = GetUndoSnapshotToAdd(newStateSave, newElement, oldStateToCompareAgainst,
+                    recordedSnapshot.Element, recordedSnapshot.CategoryName, recordedSnapshot.StateName);
 
                 if (snapshotToAdd != null)
                 {
                     var history = mUndos[SelectedState.Self.SelectedElement];
 
-                    var isAtEndOfStack = history.UndoIndex == history.Undos.Count - 1;
+                    var isAtEndOfStack = history.UndoIndex == history.Actions.Count - 1;
                     if (!isAtEndOfStack)
                     {
                         // If we're not at the end of the stack, then we need to remove all the items after the current index
-                        while (history.Undos.Count > history.UndoIndex + 1)
+                        while (history.Actions.Count > history.UndoIndex + 1)
                         {
-                            history.Undos.RemoveAt(history.Undos.Count - 1);
+                            history.Actions.RemoveAt(history.Actions.Count - 1);
                         }
                     }
-                    history.Undos.Add(snapshotToAdd);
-                    history.UndoIndex = history.Undos.Count - 1;
+
+                    var action = new HistoryAction { UndoState = snapshotToAdd };
+
+                    history.Actions.Add(action);
+                    history.UndoIndex = history.Actions.Count - 1;
                     RecordState();
 
                     UndosChanged?.Invoke(this, null);
@@ -189,14 +200,15 @@ namespace Gum.Undo
 
         }
 
-        private UndoSnapshot GetSnapshotToAdd(StateSave currentStateSave, ElementSave selectedElement, StateSave oldStateToCompareAgainst)
+        private UndoSnapshot GetUndoSnapshotToAdd(StateSave newState, ElementSave newElement, 
+            StateSave oldState, ElementSave oldElement, string categoryName, string stateName)
         {
-            bool doStatesDiffer = FileManager.AreSaveObjectsEqual(oldStateToCompareAgainst, currentStateSave) == false;
+            bool doStatesDiffer = FileManager.AreSaveObjectsEqual(oldState, newState) == false;
             bool doStateCategoriesDiffer =
-                FileManager.AreSaveObjectsEqual(recordedSnapshot.Element.Categories, selectedElement.Categories) == false;
-            bool doInstanceListsDiffer = FileManager.AreSaveObjectsEqual(recordedSnapshot.Element.Instances, selectedElement.Instances) == false;
-            bool doTypesDiffer = recordedSnapshot.Element.BaseType != selectedElement.BaseType;
-            bool doNamesDiffer = recordedSnapshot.Element.Name != selectedElement.Name;
+                FileManager.AreSaveObjectsEqual(oldElement.Categories, newElement.Categories) == false;
+            bool doInstanceListsDiffer = FileManager.AreSaveObjectsEqual(oldElement.Instances, newElement.Instances) == false;
+            bool doTypesDiffer = oldElement.BaseType != newElement.BaseType;
+            bool doNamesDiffer = oldElement.Name != newElement.Name;
 
             // Why do we care if the user selected a different state?
             // This seems to cause bugs, and we don't care about undoing selections...
@@ -211,31 +223,35 @@ namespace Gum.Undo
                 ;
             if (didAnythingChange)
             {
+                var clone = CloneWithFixedEnumerations(oldElement);
                 if (!doInstanceListsDiffer)
                 {
-                    recordedSnapshot.Element.Instances = null;
+                    clone.Instances = null;
                 }
                 if (!doStatesDiffer)
                 {
-                    recordedSnapshot.Element.States = null;
+                    clone.States = null;
                 }
 
                 if (!doStateCategoriesDiffer)
                 {
-                    recordedSnapshot.Element.Categories = null;
+                    clone.Categories = null;
                 }
                 if (!doNamesDiffer)
                 {
-                    recordedSnapshot.Element.Name = null;
+                    clone.Name = null;
                 }
                 if (!doTypesDiffer)
                 {
-                    recordedSnapshot.Element.BaseType = null;
+                    clone.BaseType = null;
                 }
 
-                snapshotToAdd = recordedSnapshot;
-
-
+                snapshotToAdd = new UndoSnapshot
+                {
+                    Element = clone,
+                    CategoryName = categoryName,
+                    StateName = stateName
+                };
             }
 
             return snapshotToAdd;
@@ -302,29 +318,29 @@ namespace Gum.Undo
                 elementHistory = mUndos[SelectedState.Self.SelectedElement];
             }
 
-            if (elementHistory != null && elementHistory.Undos.Count != 0 && elementHistory.UndoIndex > -1)
+            if (elementHistory != null && elementHistory.Actions.Count != 0 && elementHistory.UndoIndex > -1)
             {
-                var isLast = elementHistory.UndoIndex == elementHistory.Undos.Count - 1;
+                var isLast = elementHistory.UndoIndex == elementHistory.Actions.Count - 1;
 
                 if(isLast)
                 {
                     elementHistory.FinalState = CloneWithFixedEnumerations(SelectedState.Self.SelectedElement);
                 }
 
-                var undoSnapshot = elementHistory.Undos.ElementAt(elementHistory.UndoIndex);
+                var undoSnapshot = elementHistory.Actions.ElementAt(elementHistory.UndoIndex);
 
 
 
                 ElementSave toApplyTo = SelectedState.Self.SelectedElement;
 
                 bool shouldRefreshWireframe, shouldRefreshStateTreeView;
-                ApplyUndoSnapshotToElement(undoSnapshot, toApplyTo, true, out shouldRefreshWireframe, out shouldRefreshStateTreeView);
+                ApplyUndoSnapshotToElement(undoSnapshot.UndoState, toApplyTo, true, out shouldRefreshWireframe, out shouldRefreshStateTreeView);
 
-                if (undoSnapshot.CategoryName != SelectedState.Self.SelectedStateCategorySave?.Name ||
-                    undoSnapshot.StateName != SelectedState.Self.SelectedStateSave?.Name)
+                if (undoSnapshot.UndoState.CategoryName != SelectedState.Self.SelectedStateCategorySave?.Name ||
+                    undoSnapshot.UndoState.StateName != SelectedState.Self.SelectedStateSave?.Name)
                 {
                     var listOfStates = toApplyTo.States;
-                    var state = listOfStates?.FirstOrDefault(item => item.Name == undoSnapshot.StateName);
+                    var state = listOfStates?.FirstOrDefault(item => item.Name == undoSnapshot.UndoState.StateName);
 
                     if (state != null)
                     {
@@ -403,9 +419,9 @@ namespace Gum.Undo
                 var indexToApply = elementHistory.UndoIndex + 1;
 
 
-                if (indexToApply < elementHistory.Undos.Count)
+                if (indexToApply < elementHistory.Actions.Count)
                 {
-                    undoSnapshot = elementHistory.Undos[indexToApply];
+                    undoSnapshot = elementHistory.Actions[indexToApply].UndoState;
                 }
             }
 
@@ -597,13 +613,13 @@ namespace Gum.Undo
 
         void PrintStatus(string reason)
         {
-            List<UndoSnapshot> stack = null;
+            List<HistoryAction> stack = null;
 
             if (SelectedState.Self.SelectedElement != null)
             {
                 if (mUndos.ContainsKey(SelectedState.Self.SelectedElement))
                 {
-                    stack = mUndos[SelectedState.Self.SelectedElement].Undos;
+                    stack = mUndos[SelectedState.Self.SelectedElement].Actions;
                 }
 
                 if (stack == null)
