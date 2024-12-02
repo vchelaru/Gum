@@ -254,6 +254,8 @@
       <DependentUpon>FlatSearchListBox.xaml</DependentUpon>
     </Compile>
     <Compile Include="Plugins\InternalPlugins\TreeView\ViewModels\SearchItemViewModel.cs" />
+    <Compile Include="Plugins\InternalPlugins\Undos\Converters\UndoRedoToColorConverter.cs" />
+    <Compile Include="Plugins\InternalPlugins\Undos\UndoItemViewModel.cs" />
     <Compile Include="Plugins\InternalPlugins\VariableGrid\ExclusionsPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\VariableGrid\MainVariableGridPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\VariableGrid\StateSaveCategoryDisplayer.cs" />
