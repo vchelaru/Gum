@@ -88,11 +88,6 @@ namespace Gum.Plugins.Undos
 
             selectedElementClone = UndoManager.CloneWithFixedEnumerations(elementToClone);
 
-            foreach (var item in selectedElementClone.AllStates)
-            {
-                item.FixEnumerations();
-            }
-
             List<string> undoStringList = new List<string>();
 
             var undos = elementHistory.Actions;

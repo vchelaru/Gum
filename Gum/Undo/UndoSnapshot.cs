@@ -19,6 +19,8 @@ namespace Gum.Undo
         public List<InstanceSave> AddedInstances;
         public List<InstanceSave> RemovedInstances;
 
+        public List<VariableSave> ModifiedInstanceVariables = new List<VariableSave>();
+
         public List<StateSave> AddedStates;
         public List<StateSave> RemovedStates;
 
@@ -45,8 +47,13 @@ namespace Gum.Undo
                 if (!string.IsNullOrEmpty(toReturn)) toReturn += newlinePrefix;
                 toReturn += $"Remove instances: {string.Join(", ", RemovedInstances.Select(item => item.Name))}";
             }
+            if(ModifiedInstanceVariables?.Count > 0)
+            {
+                if (!string.IsNullOrEmpty(toReturn)) toReturn += newlinePrefix;
+                toReturn += $"Modify instance variables: {string.Join(", ", ModifiedInstanceVariables.Select(item => item.Name + "=" + item.Value?.ToString() ?? "<null>"))}";
+            }
 
-            if(AddedCategories?.Count > 0)
+            if (AddedCategories?.Count > 0)
             {
                 if (!string.IsNullOrEmpty(toReturn)) toReturn += newlinePrefix;
                 toReturn += $"Add categories: {string.Join(", ", AddedCategories.Select(item => item.Name))}";
@@ -232,12 +239,54 @@ namespace Gum.Undo
                 var instanceNamesToApply = instancesToApply?.Select(item => item.Name).ToHashSet();
                 var instanceNamesInCurrent = currentInstances?.Select(item => item.Name).ToHashSet();
 
-                foreach (var instance in instancesToApply)
+                foreach (var instanceToApply in instancesToApply)
                 {
-                    var matchingInCurrent = instanceNamesInCurrent.Contains(instance.Name);
-                    if (!matchingInCurrent)
+                    var isMatchingInCurrent = instanceNamesInCurrent.Contains(instanceToApply.Name);
+                    if (!isMatchingInCurrent)
                     {
-                        toReturn.AddedInstances.Add(instance);
+                        toReturn.AddedInstances.Add(instanceToApply);
+                    }
+                    else
+                    {
+                        // found a match, compare some values that don't get set on states:
+                        var matching = currentInstances.FirstOrDefault(item => item.Name == instanceToApply.Name);
+
+                        if (matching.BaseType != instanceToApply.BaseType)
+                        {
+                            toReturn.ModifiedInstanceVariables.Add(new VariableSave
+                            {
+                                Name = $"{instanceToApply.Name}.{nameof(instanceToApply.BaseType)}",
+                                Value = instanceToApply.BaseType
+                            });
+                        }
+                        if (matching.Locked != instanceToApply.Locked)
+                        {
+                            toReturn.ModifiedInstanceVariables.Add(new VariableSave
+                            {
+                                Name = $"{instanceToApply.Name}.{nameof(instanceToApply.Locked)}",
+                                Value = instanceToApply.Locked
+                            });
+                        }
+                    }
+                }
+
+                // check for reorders:
+                if(currentElement.Instances.Count == snapshotToApply.Instances.Count)
+                {
+                    for (int i = 0; i < currentElement.Instances.Count; i++)
+                    {
+                        if (currentElement.Instances[i].Name != snapshotToApply.Instances[i].Name)
+                        {
+                            var name = currentElement.Instances[i].Name;
+
+                            var newIndex = snapshotToApply.Instances.FindIndex(item => item.Name == name);
+
+                            toReturn.ModifiedInstanceVariables.Add(new VariableSave
+                            {
+                                Name = $"{currentElement.Instances[i].Name} Index",
+                                Value = $"{newIndex + 1}"
+                            });
+                        }
                     }
                 }
 
