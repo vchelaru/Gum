@@ -11,7 +11,8 @@ namespace Gum.Undo
 {
     public class UndoComparison
     {
-        public string? ChangedName;
+        public List<VariableSave> ModifiedElementProperties = new List<VariableSave>();
+        public List<VariableSave> ModifiedInstanceProperties = new List<VariableSave>();
 
         public List<StateSaveCategory> AddedCategories;
         public List<StateSaveCategory> RemovedCategories;
@@ -19,7 +20,6 @@ namespace Gum.Undo
         public List<InstanceSave> AddedInstances;
         public List<InstanceSave> RemovedInstances;
 
-        public List<VariableSave> ModifiedInstanceVariables = new List<VariableSave>();
 
         public List<StateSave> AddedStates;
         public List<StateSave> RemovedStates;
@@ -31,10 +31,10 @@ namespace Gum.Undo
             string toReturn = "";
             const string newlinePrefix = "\n    ";
 
-            if(ChangedName != null)
+            if(ModifiedElementProperties?.Count > 0)
             {
                 if (!string.IsNullOrEmpty(toReturn)) toReturn += newlinePrefix;
-                toReturn += $"Change name to {ChangedName}";
+                toReturn += $"Modify element variables: {string.Join(", ", ModifiedElementProperties.Select(item => item.Name + "=" + item.Value?.ToString() ?? "<null>"))}";
             }
 
             if (AddedInstances?.Count > 0)
@@ -47,10 +47,10 @@ namespace Gum.Undo
                 if (!string.IsNullOrEmpty(toReturn)) toReturn += newlinePrefix;
                 toReturn += $"Remove instances: {string.Join(", ", RemovedInstances.Select(item => item.Name))}";
             }
-            if(ModifiedInstanceVariables?.Count > 0)
+            if(ModifiedInstanceProperties?.Count > 0)
             {
                 if (!string.IsNullOrEmpty(toReturn)) toReturn += newlinePrefix;
-                toReturn += $"Modify instance variables: {string.Join(", ", ModifiedInstanceVariables.Select(item => item.Name + "=" + item.Value?.ToString() ?? "<null>"))}";
+                toReturn += $"Modify instance variables: {string.Join(", ", ModifiedInstanceProperties.Select(item => item.Name + "=" + item.Value?.ToString() ?? "<null>"))}";
             }
 
             if (AddedCategories?.Count > 0)
@@ -201,7 +201,20 @@ namespace Gum.Undo
             // If it's null, no change was recorded so do not compare
             if(currentElement.Name != null && snapshotToApply.Name != null && currentElement.Name != snapshotToApply.Name)
             {
-                toReturn.ChangedName = snapshotToApply.Name;
+                toReturn.ModifiedElementProperties.Add(new VariableSave
+                {
+                    Name = nameof(ElementSave.Name),
+                    Value = snapshotToApply.Name
+                });
+            }
+
+            if (currentElement.BaseType != null && snapshotToApply.BaseType != null && currentElement?.BaseType != snapshotToApply?.BaseType)
+            {
+                toReturn.ModifiedElementProperties.Add(new VariableSave
+                {
+                    Name = nameof(ElementSave.BaseType),
+                    Value = snapshotToApply.BaseType
+                });
             }
         }
 
@@ -253,7 +266,7 @@ namespace Gum.Undo
 
                         if (matching.BaseType != instanceToApply.BaseType)
                         {
-                            toReturn.ModifiedInstanceVariables.Add(new VariableSave
+                            toReturn.ModifiedInstanceProperties.Add(new VariableSave
                             {
                                 Name = $"{instanceToApply.Name}.{nameof(instanceToApply.BaseType)}",
                                 Value = instanceToApply.BaseType
@@ -261,7 +274,7 @@ namespace Gum.Undo
                         }
                         if (matching.Locked != instanceToApply.Locked)
                         {
-                            toReturn.ModifiedInstanceVariables.Add(new VariableSave
+                            toReturn.ModifiedInstanceProperties.Add(new VariableSave
                             {
                                 Name = $"{instanceToApply.Name}.{nameof(instanceToApply.Locked)}",
                                 Value = instanceToApply.Locked
@@ -281,7 +294,7 @@ namespace Gum.Undo
 
                             var newIndex = snapshotToApply.Instances.FindIndex(item => item.Name == name);
 
-                            toReturn.ModifiedInstanceVariables.Add(new VariableSave
+                            toReturn.ModifiedInstanceProperties.Add(new VariableSave
                             {
                                 Name = $"{currentElement.Instances[i].Name} Index",
                                 Value = $"{newIndex + 1}"

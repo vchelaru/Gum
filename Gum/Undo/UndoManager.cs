@@ -528,6 +528,14 @@ namespace Gum.Undo
                     RenameLogic.HandleRename(toApplyTo, (InstanceSave)null, oldName, NameChangeAction.Rename, askAboutRename: false);
                 }
             }
+            if(elementInUndoSnapshot.BaseType != null)
+            {
+                toApplyTo.BaseType = elementInUndoSnapshot.BaseType;
+                if(propagateNameChanges)
+                {
+                    // todo?
+                }
+            }
 
             if (undoSnapshot.CategoryName != SelectedState.Self.SelectedStateCategorySave?.Name ||
                 undoSnapshot.StateName != SelectedState.Self.SelectedStateSave?.Name)
