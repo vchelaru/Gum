@@ -507,6 +507,7 @@ namespace Gum.Undo
             if (elementInUndoSnapshot.Categories != null)
             {
                 AddAndRemoveCategories(elementInUndoSnapshot.Categories, toApplyTo.Categories, toApplyTo);
+                shouldRefreshStateTreeView = true;
                 // todo - need to handle renames
                 if (propagateNameChanges)
                 {

@@ -341,69 +341,73 @@ namespace Gum.Managers
 
         private void Remove(StateSaveCategory category)
         {
-            var stateCategoryListContainer =
-                SelectedState.Self.SelectedStateContainer as IStateCategoryListContainer;
-
-            stateCategoryListContainer.Categories.Remove(category);
-
-            if (SelectedState.Self.SelectedElement != null)
+            using (UndoManager.Self.RequestLock())
             {
-                var element = SelectedState.Self.SelectedElement;
 
-                foreach (var state in element.AllStates)
+                var stateCategoryListContainer =
+                    SelectedState.Self.SelectedStateContainer as IStateCategoryListContainer;
+
+                stateCategoryListContainer.Categories.Remove(category);
+
+                if (SelectedState.Self.SelectedElement != null)
                 {
-                    for (int i = state.Variables.Count - 1; i > -1; i--)
+                    var element = SelectedState.Self.SelectedElement;
+
+                    foreach (var state in element.AllStates)
                     {
-                        var variable = state.Variables[i];
-
-                        // Modern Gum now has the type match the state
-                        //if(variable.Type == category.Name + "State")
-                        if (variable.Type == category.Name)
+                        for (int i = state.Variables.Count - 1; i > -1; i--)
                         {
-                            state.Variables.RemoveAt(i);
-                        }
-                    }
-                }
+                            var variable = state.Variables[i];
 
-                var elementReferences = ObjectFinder.Self.GetElementReferences(element);
-
-                foreach (var reference in elementReferences)
-                {
-                    if (reference.ReferenceType == ReferenceType.InstanceOfType)
-                    {
-                        var shouldSave = false;
-
-                        var ownerOfInstance = reference.OwnerOfReferencingObject;
-                        var instance = reference.ReferencingObject as InstanceSave;
-
-                        var variableToRemove = $"{instance.Name}.{category.Name}State";
-
-                        foreach (var state in ownerOfInstance.AllStates)
-                        {
-                            var numberRemoved = state.Variables.RemoveAll(item => item.Name == variableToRemove);
-
-                            if (numberRemoved > 0)
+                            // Modern Gum now has the type match the state
+                            //if(variable.Type == category.Name + "State")
+                            if (variable.Type == category.Name)
                             {
-                                shouldSave = true;
+                                state.Variables.RemoveAt(i);
                             }
                         }
+                    }
 
-                        if (shouldSave)
+                    var elementReferences = ObjectFinder.Self.GetElementReferences(element);
+
+                    foreach (var reference in elementReferences)
+                    {
+                        if (reference.ReferenceType == ReferenceType.InstanceOfType)
                         {
-                            GumCommands.Self.FileCommands.TryAutoSaveElement(ownerOfInstance);
+                            var shouldSave = false;
+
+                            var ownerOfInstance = reference.OwnerOfReferencingObject;
+                            var instance = reference.ReferencingObject as InstanceSave;
+
+                            var variableToRemove = $"{instance.Name}.{category.Name}State";
+
+                            foreach (var state in ownerOfInstance.AllStates)
+                            {
+                                var numberRemoved = state.Variables.RemoveAll(item => item.Name == variableToRemove);
+
+                                if (numberRemoved > 0)
+                                {
+                                    shouldSave = true;
+                                }
+                            }
+
+                            if (shouldSave)
+                            {
+                                GumCommands.Self.FileCommands.TryAutoSaveElement(ownerOfInstance);
+                            }
                         }
                     }
                 }
+
+                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+
+                StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedStateContainer);
+                PropertyGridManager.Self.RefreshUI();
+                WireframeObjectManager.Self.RefreshAll(true);
+                SelectionManager.Self.Refresh();
+
+                PluginManager.Self.CategoryDelete(category);
             }
-
-            GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-
-            StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedStateContainer);
-            PropertyGridManager.Self.RefreshUI();
-            WireframeObjectManager.Self.RefreshAll(true);
-            SelectionManager.Self.Refresh();
-
-            PluginManager.Self.CategoryDelete(category);
         }
 
         public List<BehaviorSave> GetBehaviorsNeedingCategory(StateSaveCategory category, ComponentSave componentSave)

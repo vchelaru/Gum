@@ -39,7 +39,7 @@ namespace Gum.Commands
                 {
                     string name = tiw.Result;
 
-                    using(UndoManager.Self.RequestLock())
+                    using (UndoManager.Self.RequestLock())
                     {
                         StateSave stateSave = ElementCommands.Self.AddState(
                             SelectedState.Self.SelectedElement, SelectedState.Self.SelectedStateCategorySave, name);
@@ -198,18 +198,21 @@ namespace Gum.Commands
 
                 if (canAdd)
                 {
-                    StateSaveCategory category = ElementCommands.Self.AddCategory(
-                        target, name);
+                    using (UndoManager.Self.RequestLock())
+                    {
+                        StateSaveCategory category = ElementCommands.Self.AddCategory(
+                            target, name);
 
-                    ElementTreeViewManager.Self.RefreshUi(SelectedState.Self.SelectedStateContainer);
+                        ElementTreeViewManager.Self.RefreshUi(SelectedState.Self.SelectedStateContainer);
 
-                    StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedStateContainer);
+                        StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedStateContainer);
 
-                    PluginManager.Self.CategoryAdd(category);
+                        PluginManager.Self.CategoryAdd(category);
 
-                    SelectedState.Self.SelectedStateCategorySave = category;
+                        SelectedState.Self.SelectedStateCategorySave = category;
 
-                    GumCommands.Self.FileCommands.TryAutoSaveCurrentObject();
+                        GumCommands.Self.FileCommands.TryAutoSaveCurrentObject();
+                    }
                 }
             }
 
@@ -522,7 +525,7 @@ namespace Gum.Commands
 
                         StandardElementsManagerGumTool.Self.FixCustomTypeConverters(componentSave);
                         ProjectCommands.Self.AddComponent(componentSave);
-                        
+
                     }
                     else
                     {
@@ -530,7 +533,7 @@ namespace Gum.Commands
                         ShowCreateComponentFromInstancesDialog();
                     }
                 }
-            } 
+            }
         }
 
         public void DisplayReferencesTo(ElementSave element)
