@@ -17,8 +17,7 @@
     <BaseIntermediateOutputPath>objNetFramework\</BaseIntermediateOutputPath>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
-        <LangVersion>12.0</LangVersion>
-
+    <LangVersion>12.0</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -255,6 +254,8 @@
       <DependentUpon>FlatSearchListBox.xaml</DependentUpon>
     </Compile>
     <Compile Include="Plugins\InternalPlugins\TreeView\ViewModels\SearchItemViewModel.cs" />
+    <Compile Include="Plugins\InternalPlugins\Undos\Converters\UndoRedoToColorConverter.cs" />
+    <Compile Include="Plugins\InternalPlugins\Undos\UndoItemViewModel.cs" />
     <Compile Include="Plugins\InternalPlugins\VariableGrid\ExclusionsPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\VariableGrid\MainVariableGridPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\VariableGrid\StateSaveCategoryDisplayer.cs" />
@@ -295,7 +296,6 @@
     <Compile Include="Managers\FileLocations.cs" />
     <Compile Include="Managers\FontManager.cs" />
     <Compile Include="Managers\NameVerifier.cs" />
-    <Compile Include="Managers\ObjectRemover.cs" />
     <Compile Include="Managers\OutputManager.cs" />
     <Compile Include="Plugins\InternalPlugins\RenameLogicPlugin\MainRenameLogic.cs" />
     <Compile Include="Plugins\InternalPlugins\ScrollBarPlugin\MainScrollBarPlugin.cs" />
@@ -324,7 +324,7 @@
     </Compile>
     <Compile Include="Plugins\InternalPlugins\Behaviors\BehaviorsViewModel.cs" />
     <Compile Include="Plugins\InternalPlugins\Behaviors\CheckListBehaviorItem.cs" />
-    <Compile Include="Plugins\InternalPlugins\Behaviors\MainPlugin.cs" />
+    <Compile Include="Plugins\InternalPlugins\Behaviors\MainBehaviorsPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\ProjectPropertiesWindowPlugin\ProjectPropertiesViewModel.cs" />
     <Compile Include="Plugins\InternalPlugins\Undos\MainPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\Undos\UndoDisplay.xaml.cs">

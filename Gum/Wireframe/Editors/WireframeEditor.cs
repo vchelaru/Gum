@@ -177,12 +177,16 @@ namespace Gum.Wireframe
         protected void DoEndOfSettingValuesLogic()
         {
             var selectedElement = SelectedState.Self.SelectedElement;
+            var stateSave = SelectedState.Self.SelectedStateSave;
+            if(stateSave == null)
+            {
+                throw new System.InvalidOperationException("The SelectedStateSave is null, this should not happen");
+            }
 
             GumCommands.Self.FileCommands.TryAutoSaveElement(selectedElement);
 
             UndoManager.Self.RecordUndo();
 
-            var stateSave = SelectedState.Self.SelectedStateSave;
 
             var element = SelectedState.Self.SelectedElement;
 

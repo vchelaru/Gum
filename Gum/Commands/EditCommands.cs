@@ -3,11 +3,13 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Gui.Windows;
+using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Responses;
 using Gum.ToolCommands;
 using Gum.ToolStates;
+using Gum.Undo;
 using StateAnimationPlugin.Views;
 using System;
 using System.Collections.Generic;
@@ -37,16 +39,19 @@ namespace Gum.Commands
                 {
                     string name = tiw.Result;
 
-                    StateSave stateSave = ElementCommands.Self.AddState(
-                        SelectedState.Self.SelectedElement, SelectedState.Self.SelectedStateCategorySave, name);
+                    using (UndoManager.Self.RequestLock())
+                    {
+                        StateSave stateSave = ElementCommands.Self.AddState(
+                            SelectedState.Self.SelectedElement, SelectedState.Self.SelectedStateCategorySave, name);
 
-                    PluginManager.Self.StateAdd(stateSave);
+                        PluginManager.Self.StateAdd(stateSave);
 
-                    StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedStateContainer);
+                        StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedStateContainer);
 
-                    SelectedState.Self.SelectedStateSave = stateSave;
+                        SelectedState.Self.SelectedStateSave = stateSave;
 
-                    GumCommands.Self.FileCommands.TryAutoSaveCurrentObject();
+                        GumCommands.Self.FileCommands.TryAutoSaveCurrentObject();
+                    }
                 }
             }
         }
@@ -104,12 +109,12 @@ namespace Gum.Commands
 
                 if (response == DialogResult.Yes)
                 {
-                    ObjectRemover.Self.Remove(stateSave);
+                    DeleteLogic.Self.Remove(stateSave);
                 }
             }
         }
 
-        internal void RenameState(StateSave stateSave, IStateContainer stateContainer)
+        internal void AskToRenameState(StateSave stateSave, IStateContainer stateContainer)
         {
             var behaviorNeedingState = GetBehaviorsNeedingState(stateSave);
 
@@ -134,23 +139,12 @@ namespace Gum.Commands
 
                 if (result == DialogResult.OK)
                 {
-                    string oldName = stateSave.Name;
-
-                    stateSave.Name = tiw.Result;
-                    GumCommands.Self.GuiCommands.RefreshStateTreeView();
-                    // I don't think we need to save the project when renaming a state:
-                    //GumCommands.Self.FileCommands.TryAutoSaveProject();
-
-                    // Renaming the state should refresh the property grid
-                    // because it displays the state name at the top
-                    GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
-
-                    PluginManager.Self.StateRename(stateSave, oldName);
-
-                    GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+                    RenameLogic.RenameState(stateSave, tiw.Result);
                 }
             }
         }
+
+
         #endregion
 
         #region Category
@@ -204,24 +198,27 @@ namespace Gum.Commands
 
                 if (canAdd)
                 {
-                    StateSaveCategory category = ElementCommands.Self.AddCategory(
-                        target, name);
+                    using (UndoManager.Self.RequestLock())
+                    {
+                        StateSaveCategory category = ElementCommands.Self.AddCategory(
+                            target, name);
 
-                    ElementTreeViewManager.Self.RefreshUi(SelectedState.Self.SelectedStateContainer);
+                        ElementTreeViewManager.Self.RefreshUi(SelectedState.Self.SelectedStateContainer);
 
-                    StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedStateContainer);
+                        StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedStateContainer);
 
-                    PluginManager.Self.CategoryAdd(category);
+                        PluginManager.Self.CategoryAdd(category);
 
-                    SelectedState.Self.SelectedStateCategorySave = category;
+                        SelectedState.Self.SelectedStateCategorySave = category;
 
-                    GumCommands.Self.FileCommands.TryAutoSaveCurrentObject();
+                        GumCommands.Self.FileCommands.TryAutoSaveCurrentObject();
+                    }
                 }
             }
 
         }
 
-        internal void RenameStateCategory(StateSaveCategory category, ElementSave elementSave)
+        internal void AskToRenameStateCategory(StateSaveCategory category, ElementSave elementSave)
         {
             // This category can only be renamed if no behaviors require it
             var behaviorsNeedingCategory = DeleteLogic.Self.GetBehaviorsNeedingCategory(category, elementSave as ComponentSave);
@@ -248,19 +245,13 @@ namespace Gum.Commands
                 if (result == DialogResult.OK)
                 {
                     string oldName = category.Name;
+                    string newName = tiw.Result;
 
-                    category.Name = tiw.Result;
-
-                    GumCommands.Self.GuiCommands.RefreshStateTreeView();
-                    // I don't think we need to save the project when renaming a state:
-                    //GumCommands.Self.FileCommands.TryAutoSaveProject();
-
-                    PluginManager.Self.CategoryRename(category, oldName);
-
-                    GumCommands.Self.FileCommands.TryAutoSaveCurrentObject();
+                    RenameLogic.RenameCategory(category, oldName, newName);
                 }
             }
         }
+
 
         #endregion
 
@@ -534,7 +525,7 @@ namespace Gum.Commands
 
                         StandardElementsManagerGumTool.Self.FixCustomTypeConverters(componentSave);
                         ProjectCommands.Self.AddComponent(componentSave);
-                        
+
                     }
                     else
                     {
@@ -542,7 +533,7 @@ namespace Gum.Commands
                         ShowCreateComponentFromInstancesDialog();
                     }
                 }
-            } 
+            }
         }
 
         public void DisplayReferencesTo(ElementSave element)
@@ -638,7 +629,7 @@ namespace Gum.Commands
 
         public void DeleteSelection()
         {
-            DeleteLogic.Self.HandleDelete();
+            DeleteLogic.Self.HandleDeleteCommand();
         }
     }
 }

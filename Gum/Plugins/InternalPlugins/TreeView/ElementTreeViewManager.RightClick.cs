@@ -100,7 +100,7 @@ namespace Gum.Managers
 
         void HandleDeleteObjectClick(object sender, EventArgs e)
         {
-            DeleteLogic.Self.HandleDelete();
+            DeleteLogic.Self.HandleDeleteCommand();
         }
 
         void HandleDuplicateElementClick(object sender, EventArgs e)

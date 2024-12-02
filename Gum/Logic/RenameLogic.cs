@@ -7,6 +7,7 @@ using Gum.DataTypes.Variables;
 using System.Windows.Forms;
 using Gum.Plugins;
 using Gum.Managers;
+using Gum.Undo;
 
 namespace Gum.Logic
 {
@@ -23,6 +24,43 @@ namespace Gum.Logic
     public class RenameLogic
     {
         static bool isRenamingXmlFile;
+
+        public static void RenameState(StateSave stateSave, string newName)
+        {
+            using(UndoManager.Self.RequestLock())
+            {
+                string oldName = stateSave.Name;
+
+                stateSave.Name = newName;
+                GumCommands.Self.GuiCommands.RefreshStateTreeView();
+                // I don't think we need to save the project when renaming a state:
+                //GumCommands.Self.FileCommands.TryAutoSaveProject();
+
+                // Renaming the state should refresh the property grid
+                // because it displays the state name at the top
+                GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
+
+                PluginManager.Self.StateRename(stateSave, oldName);
+
+                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+            }
+        }
+
+        public static void RenameCategory(StateSaveCategory category, string oldName, string newName)
+        {
+            using (UndoManager.Self.RequestLock())
+            {
+                category.Name = newName;
+
+                GumCommands.Self.GuiCommands.RefreshStateTreeView();
+                // I don't think we need to save the project when renaming a state:
+                //GumCommands.Self.FileCommands.TryAutoSaveProject();
+
+                PluginManager.Self.CategoryRename(category, oldName);
+
+                GumCommands.Self.FileCommands.TryAutoSaveCurrentObject();
+            }
+        }
 
         public static void HandleRename(ElementSave elementSave, InstanceSave instance, string oldName, NameChangeAction action, bool askAboutRename = true)
         {
@@ -113,6 +151,7 @@ namespace Gum.Logic
             // Tell the GumProjectSave to react to the rename.
             // This changes the names of the ElementSave references.
             ProjectManager.Self.GumProjectSave.ReactToRenamed(elementSave, instance, oldName);
+            GumCommands.Self.FileCommands.TryAutoSaveProject();
 
             if(instance == null)
             {

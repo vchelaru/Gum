@@ -19,7 +19,10 @@
         <!--If this isn't avaiable, try "unblocking" your dlls: https://wpftoolkit.codeplex.com/discussions/572836-->
         <colorpicker:PortableColorPicker Grid.Column="1" Height="12"
                           Name="ColorPicker"
-                          ColorChanged="HandleColorChange" VerticalAlignment="Center">
+                          MouseUp="ColorPicker_MouseUp"
+                                         PreviewMouseUp="ColorPicker_PreviewMouseUp"
+                          ColorChanged="HandleColorChange" 
+                          VerticalAlignment="Center">
             
         </colorpicker:PortableColorPicker>
     </Grid>

@@ -3,6 +3,7 @@ using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.ToolStates;
+using Gum.Undo;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -142,33 +143,36 @@ namespace Gum.PropertyGridHelpers
 
             if (result == DialogResult.Yes)
             {
-                foreach (var state in stateCategory.States)
+                using(UndoManager.Self.RequestLock())
                 {
-                    var foundVariable = state.Variables.FirstOrDefault(item => item.Name == variableName);
+                    foreach (var state in stateCategory.States)
+                    {
+                        var foundVariable = state.Variables.FirstOrDefault(item => item.Name == variableName);
 
-                    if (foundVariable != null)
-                    {
-                        state.Variables.Remove(foundVariable);
-                    }
-                    else
-                    {
-                        // it's probably a list:
-                        var foundVariableList = state.VariableLists.FirstOrDefault(item => item.Name == variableName);
-                        if(foundVariableList != null)
+                        if (foundVariable != null)
                         {
-                            state.VariableLists.Remove(foundVariableList);
+                            state.Variables.Remove(foundVariable);
+                        }
+                        else
+                        {
+                            // it's probably a list:
+                            var foundVariableList = state.VariableLists.FirstOrDefault(item => item.Name == variableName);
+                            if(foundVariableList != null)
+                            {
+                                state.VariableLists.Remove(foundVariableList);
+                            }
                         }
                     }
+
+                    // save everything
+                    GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+                    GumCommands.Self.GuiCommands.RefreshStateTreeView();
+                    // no selection has changed, but we want to force refresh here because we know
+                    // we really need a refresh - something was removed.
+                    GumCommands.Self.GuiCommands.RefreshPropertyGrid(force:true);
+
+                    PluginManager.Self.VariableRemovedFromCategory(variableName, stateCategory);
                 }
-
-                // save everything
-                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-                GumCommands.Self.GuiCommands.RefreshStateTreeView();
-                // no selection has changed, but we want to force refresh here because we know
-                // we really need a refresh - something was removed.
-                GumCommands.Self.GuiCommands.RefreshPropertyGrid(force:true);
-
-                PluginManager.Self.VariableRemovedFromCategory(variableName, stateCategory);
             }
         }
 

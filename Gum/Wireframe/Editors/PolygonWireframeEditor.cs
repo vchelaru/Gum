@@ -226,11 +226,12 @@ namespace Gum.Wireframe.Editors
 
         private void UpdateSelectedNodeLineRectangle()
         {
-            selectedPointLineRectangle.Visible = selectedIndex != null;
+            var selectedPolygon = SelectedLinePolygon;
+            var hasSelection = selectedIndex != null && selectedIndex < selectedPolygon.PointCount;
+            selectedPointLineRectangle.Visible = hasSelection;
 
-            if(selectedIndex != null)
+            if(hasSelection)
             {
-                var selectedPolygon = SelectedLinePolygon;
                 var selectedVertexPosition = selectedPolygon.PointAt(selectedIndex.Value) +
                     new Vector2(selectedPolygon.GetAbsoluteLeft(), selectedPolygon.GetAbsoluteTop());
 
@@ -292,6 +293,8 @@ namespace Gum.Wireframe.Editors
                     grabbedState.HandlePush();
 
                     hasGrabbedBodyOrPoint = true;
+                    mHasChangedAnythingSinceLastPush = true;
+
                     grabbedIndex = newIndex;
                 }
                 else

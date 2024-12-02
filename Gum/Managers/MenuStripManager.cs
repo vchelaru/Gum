@@ -97,6 +97,8 @@ namespace Gum.Managers
 
             Add(editToolStripMenuItem, "Undo", UndoManager.Self.PerformUndo)
                 .ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Z)));
+            Add(editToolStripMenuItem, "Redo", UndoManager.Self.PerformRedo)
+                .ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Y)));
 
             AddSeparator(editToolStripMenuItem);
 

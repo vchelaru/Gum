@@ -1,9 +1,11 @@
-﻿using Gum.DataTypes;
+﻿using CommonFormsAndControls.Forms;
+using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Gui.Windows;
 using Gum.Plugins;
 using Gum.Responses;
+using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
@@ -15,10 +17,10 @@ namespace Gum.Managers
 {
     public class DeleteLogic : Singleton<DeleteLogic>
     {
-        public void HandleDelete()
+        public void HandleDeleteCommand()
         {
             var handled = SelectionManager.Self.TryHandleDelete();
-            if(!handled)
+            if (!handled)
             {
                 DoDeletingLogic();
             }
@@ -204,7 +206,7 @@ namespace Gum.Managers
             var deletableInstances = instances.Where(item => item.DefinedByBase == false).ToArray();
             var instancesFromBase = instances.Except(deletableInstances).ToArray();
 
-            if(deletableInstances.Any() && instancesFromBase.Any())
+            if (deletableInstances.Any() && instancesFromBase.Any())
             {
                 // has both
                 string message = "Are you sure you'd like to delete the following:";
@@ -235,7 +237,7 @@ namespace Gum.Managers
                     RefreshAndSaveAfterInstanceRemoval(selectedElement);
                 }
             }
-            else if(instancesFromBase.Any())
+            else if (instancesFromBase.Any())
             {
                 // only from base
                 var message = "All selected instances are defined in a base object, so cannot be deleted";
@@ -313,14 +315,14 @@ namespace Gum.Managers
             }
 
 
-            if(deleteResponse.ShouldDelete)
+            if (deleteResponse.ShouldDelete)
             {
                 deleteResponse = PluginManager.Self.GetDeleteStateCategoryResponse(category, stateCategoryListContainer);
             }
 
-            if(deleteResponse.ShouldDelete == false)
+            if (deleteResponse.ShouldDelete == false)
             {
-                if(deleteResponse.ShouldShowMessage)
+                if (deleteResponse.ShouldShowMessage)
                 {
                     GumCommands.Self.GuiCommands.ShowMessage(deleteResponse.Message);
                 }
@@ -339,69 +341,73 @@ namespace Gum.Managers
 
         private void Remove(StateSaveCategory category)
         {
-            var stateCategoryListContainer = 
-                SelectedState.Self.SelectedStateContainer as IStateCategoryListContainer;
-
-            stateCategoryListContainer.Categories.Remove(category);
-
-            if(SelectedState.Self.SelectedElement != null)
+            using (UndoManager.Self.RequestLock())
             {
-                var element = SelectedState.Self.SelectedElement;
 
-                foreach (var state in element.AllStates)
+                var stateCategoryListContainer =
+                    SelectedState.Self.SelectedStateContainer as IStateCategoryListContainer;
+
+                stateCategoryListContainer.Categories.Remove(category);
+
+                if (SelectedState.Self.SelectedElement != null)
                 {
-                    for(int i= state.Variables.Count - 1; i > -1; i--)
+                    var element = SelectedState.Self.SelectedElement;
+
+                    foreach (var state in element.AllStates)
                     {
-                        var variable = state.Variables[i];
-
-                        // Modern Gum now has the type match the state
-                        //if(variable.Type == category.Name + "State")
-                        if(variable.Type == category.Name)
+                        for (int i = state.Variables.Count - 1; i > -1; i--)
                         {
-                            state.Variables.RemoveAt(i);
-                        }
-                    }
-                }
+                            var variable = state.Variables[i];
 
-                var elementReferences = ObjectFinder.Self.GetElementReferences(element);
-
-                foreach(var reference in elementReferences)
-                {
-                    if (reference.ReferenceType == ReferenceType.InstanceOfType)
-                    {
-                        var shouldSave = false;
-
-                        var ownerOfInstance = reference.OwnerOfReferencingObject;
-                        var instance = reference.ReferencingObject as InstanceSave;
-
-                        var variableToRemove = $"{instance.Name}.{category.Name}State";
-
-                        foreach (var state in ownerOfInstance.AllStates)
-                        {
-                            var numberRemoved = state.Variables.RemoveAll(item => item.Name == variableToRemove);
-
-                            if (numberRemoved > 0)
+                            // Modern Gum now has the type match the state
+                            //if(variable.Type == category.Name + "State")
+                            if (variable.Type == category.Name)
                             {
-                                shouldSave = true;
+                                state.Variables.RemoveAt(i);
                             }
                         }
+                    }
 
-                        if (shouldSave)
+                    var elementReferences = ObjectFinder.Self.GetElementReferences(element);
+
+                    foreach (var reference in elementReferences)
+                    {
+                        if (reference.ReferenceType == ReferenceType.InstanceOfType)
                         {
-                            GumCommands.Self.FileCommands.TryAutoSaveElement(ownerOfInstance);
+                            var shouldSave = false;
+
+                            var ownerOfInstance = reference.OwnerOfReferencingObject;
+                            var instance = reference.ReferencingObject as InstanceSave;
+
+                            var variableToRemove = $"{instance.Name}.{category.Name}State";
+
+                            foreach (var state in ownerOfInstance.AllStates)
+                            {
+                                var numberRemoved = state.Variables.RemoveAll(item => item.Name == variableToRemove);
+
+                                if (numberRemoved > 0)
+                                {
+                                    shouldSave = true;
+                                }
+                            }
+
+                            if (shouldSave)
+                            {
+                                GumCommands.Self.FileCommands.TryAutoSaveElement(ownerOfInstance);
+                            }
                         }
                     }
                 }
+
+                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+
+                StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedStateContainer);
+                PropertyGridManager.Self.RefreshUI();
+                WireframeObjectManager.Self.RefreshAll(true);
+                SelectionManager.Self.Refresh();
+
+                PluginManager.Self.CategoryDelete(category);
             }
-
-            GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-
-            StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedStateContainer);
-            PropertyGridManager.Self.RefreshUI();
-            WireframeObjectManager.Self.RefreshAll(true);
-            SelectionManager.Self.Refresh();
-
-            PluginManager.Self.CategoryDelete(category);
         }
 
         public List<BehaviorSave> GetBehaviorsNeedingCategory(StateSaveCategory category, ComponentSave componentSave)
@@ -424,6 +430,75 @@ namespace Gum.Managers
             }
 
             return behaviors;
+        }
+
+        public void Remove(StateSave stateSave)
+        {
+            bool shouldProgress = TryAskForRemovalConfirmation(stateSave, SelectedState.Self.SelectedElement);
+            if (shouldProgress)
+            {
+                using (UndoManager.Self.RequestLock())
+                {
+                    ElementCommands.Self.RemoveState(stateSave, SelectedState.Self.SelectedStateContainer);
+                    PluginManager.Self.StateDelete(stateSave);
+                    StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedStateContainer);
+                    PropertyGridManager.Self.RefreshUI();
+                    WireframeObjectManager.Self.RefreshAll(true);
+                    SelectionManager.Self.Refresh();
+                }
+            }
+        }
+
+
+        private bool TryAskForRemovalConfirmation(StateSave stateSave, ElementSave elementSave)
+        {
+            bool shouldContinue = true;
+            // See if the element is used anywhere
+
+            List<InstanceSave> foundInstances = new List<InstanceSave>();
+
+            ObjectFinder.Self.GetElementsReferencing(elementSave, null, foundInstances);
+
+            foreach (var instance in foundInstances)
+            {
+                // We don't want to go recursively, just top level because
+                // I *think* that the lists will include copies of the instances
+                // recursively
+                ElementSave parent = instance.ParentContainer;
+
+                string variableToLookFor = instance.Name + ".State";
+
+                // loop through all of the states to see if any of the parents' states
+                // reference the state that is being removed.
+                foreach (var stateInContainer in parent.AllStates)
+                {
+                    var foundVariable = stateInContainer.Variables.FirstOrDefault(item => item.Name == variableToLookFor);
+
+                    if (foundVariable != null && foundVariable.Value == stateSave.Name)
+                    {
+                        MultiButtonMessageBox mbmb = new MultiButtonMessageBox();
+
+                        mbmb.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
+
+                        mbmb.Location = new System.Drawing.Point(MainWindow.MousePosition.X - mbmb.Width / 2,
+                             MainWindow.MousePosition.Y - mbmb.Height / 2);
+
+                        mbmb.MessageText = "The state " + stateSave.Name + " is used in the element " +
+                            elementSave + " in its state " + stateInContainer + ".\n  What would you like to do?";
+
+                        mbmb.AddButton("Do nothing - project may be in an invalid state", System.Windows.Forms.DialogResult.No);
+                        mbmb.AddButton("Change variable to default", System.Windows.Forms.DialogResult.OK);
+                        // eventually will want to add a cancel option
+
+                        if (mbmb.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                        {
+                            foundVariable.Value = "Default";
+                        }
+                    }
+                }
+            }
+
+            return shouldContinue;
         }
     }
 }

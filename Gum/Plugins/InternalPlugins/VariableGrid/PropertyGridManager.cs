@@ -878,7 +878,7 @@ namespace Gum.Managers
                                 instanceMember.PreferredDisplayer = typeof(Gum.Controls.DataUi.ColorDisplay);
                                 instanceMember.CustomGetTypeEvent += (arg) => typeof(Microsoft.Xna.Framework.Color);
                                 instanceMember.CustomGetEvent += (notUsed) => GetCurrentColor(redVariableName, greenVariableName, blueVariableName);
-                                instanceMember.CustomSetEvent += (unused, colorAsObject) => SetCurrentColor(colorAsObject, redVariableName, greenVariableName, blueVariableName);
+                                instanceMember.CustomSetPropertyEvent += (sender, args) => SetCurrentColor(args, redVariableName, greenVariableName, blueVariableName);
 
                                 // so color updates
                                 redVariable.PropertyChanged += (not, used) => instanceMember.SimulateValueChanged();
@@ -927,24 +927,17 @@ namespace Gum.Managers
             return new Microsoft.Xna.Framework.Color(red, green, blue);
         }
 
-        void SetCurrentColor(object colorAsObject, string redVariableName, string greenVariableName, string blueVariableName)
+        void SetCurrentColor(SetPropertyArgs args, string redVariableName, string greenVariableName, string blueVariableName)
         {
-            var oldColor = (Microsoft.Xna.Framework.Color)GetCurrentColor(redVariableName, greenVariableName, blueVariableName);
+            var newColor = (Microsoft.Xna.Framework.Color)GetCurrentColor(redVariableName, greenVariableName, blueVariableName);
             var state = SelectedState.Self.SelectedStateSave;
 
-            var color = (Microsoft.Xna.Framework.Color)colorAsObject;
+            var color = (Microsoft.Xna.Framework.Color)args.Value;
 
             state.SetValue(redVariableName, (int)color.R, "int");
 
             state.SetValue(greenVariableName, (int)color.G, "int");
             state.SetValue(blueVariableName, (int)color.B, "int");
-
-            // Only need to refresh on one of the colors, so do it on any that have changed:
-            // actually why not refresh all? It's fast now since it doesn't re-create the entire view, 
-            // and plugins may depend on it:
-            //var refreshRed = oldColor.R != color.R;
-            //var refreshGreen = !refreshRed && oldColor.G != color.G;
-            //var refreshBlue = !refreshRed && !refreshGreen && oldColor.B != color.B;
 
             var instance = SelectedState.Self.SelectedInstance;
             // These functions take unqualified:
@@ -979,9 +972,11 @@ namespace Gum.Managers
                 instance = SelectedState.Self.SelectedElement.GetInstance(redVariableName.Substring(0, redVariableName.IndexOf('.')));
             }
 
-            SetVariableLogic.Self.PropertyValueChanged(unqualifiedRed, (int)oldColor.R, instance, true);
-            SetVariableLogic.Self.PropertyValueChanged(unqualifiedGreen, (int)oldColor.G, instance, true);
-            SetVariableLogic.Self.PropertyValueChanged(unqualifiedBlue, (int)oldColor.B, instance, true);
+            var shouldSave = args.CommitType == SetPropertyCommitType.Full;
+
+            SetVariableLogic.Self.PropertyValueChanged(unqualifiedRed, (int)newColor.R, instance, refresh:true, recordUndo:shouldSave, trySave:shouldSave);
+            SetVariableLogic.Self.PropertyValueChanged(unqualifiedGreen, (int)newColor.G, instance, refresh: true, recordUndo: shouldSave, trySave: shouldSave);
+            SetVariableLogic.Self.PropertyValueChanged(unqualifiedBlue, (int)newColor.B, instance, refresh: true, recordUndo: shouldSave, trySave: shouldSave);
 
             RefreshUI();
         }

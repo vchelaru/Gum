@@ -2,6 +2,7 @@
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.ToolStates;
+using Gum.Undo;
 using Gum.Wireframe;
 
 namespace Gum.Logic
@@ -21,15 +22,19 @@ namespace Gum.Logic
 
                 if (!isLast)
                 {
-                    // remove it before getting the new index, or else the removal could impact the
-                    // index.
-                    element.Instances.Remove(instance);
-                    var nextSibling = siblingInstances[thisIndex + 1];
+                    using (UndoManager.Self.RequestLock())
+                    {
 
-                    var nextSiblingIndexInContainer = element.Instances.IndexOf(nextSibling);
+                        // remove it before getting the new index, or else the removal could impact the
+                        // index.
+                        element.Instances.Remove(instance);
+                        var nextSibling = siblingInstances[thisIndex + 1];
 
-                    element.Instances.Insert(nextSiblingIndexInContainer + 1, instance);
-                    RefreshInResponseToReorder(instance);
+                        var nextSiblingIndexInContainer = element.Instances.IndexOf(nextSibling);
+
+                        element.Instances.Insert(nextSiblingIndexInContainer + 1, instance);
+                        RefreshInResponseToReorder(instance);
+                    }
                 }
             }
         }
@@ -49,13 +54,17 @@ namespace Gum.Logic
 
                 if (!isFirst)
                 {
-                    element.Instances.Remove(instance);
-                    var previousSibling = siblingInstances[thisIndex - 1];
+                    using (UndoManager.Self.RequestLock())
+                    {
 
-                    var previousSiblingIndexInContainer = element.Instances.IndexOf(previousSibling);
+                        element.Instances.Remove(instance);
+                        var previousSibling = siblingInstances[thisIndex - 1];
 
-                    element.Instances.Insert(previousSiblingIndexInContainer, instance);
-                    RefreshInResponseToReorder(instance);
+                        var previousSiblingIndexInContainer = element.Instances.IndexOf(previousSibling);
+
+                        element.Instances.Insert(previousSiblingIndexInContainer, instance);
+                        RefreshInResponseToReorder(instance);
+                    }
                 }
             }
         }
@@ -67,11 +76,15 @@ namespace Gum.Logic
 
             if (instance != null)
             {
-                // to bring to back, we're going to remove, then add (at the end)
-                element.Instances.Remove(instance);
-                element.Instances.Add(instance);
+                using (UndoManager.Self.RequestLock())
+                {
 
-                RefreshInResponseToReorder(instance);
+                    // to bring to back, we're going to remove, then add (at the end)
+                    element.Instances.Remove(instance);
+                    element.Instances.Add(instance);
+
+                    RefreshInResponseToReorder(instance);
+                }
             }
         }
 
@@ -82,11 +95,15 @@ namespace Gum.Logic
 
             if (instance != null)
             {
-                // to bring to back, we're going to remove, then insert at index 0
-                element.Instances.Remove(instance);
-                element.Instances.Insert(0, instance);
+                using (UndoManager.Self.RequestLock())
+                {
 
-                RefreshInResponseToReorder(instance);
+                    // to bring to back, we're going to remove, then insert at index 0
+                    element.Instances.Remove(instance);
+                    element.Instances.Insert(0, instance);
+
+                    RefreshInResponseToReorder(instance);
+                }
             }
         }
 
@@ -96,13 +113,17 @@ namespace Gum.Logic
             var whatToInsert = SelectedState.Self.SelectedInstance;
             if (whatToInsert != null)
             {
-                element.Instances.Remove(whatToInsert);
-                int whereToInsert = element.Instances.IndexOf(whatToMoveInFrontOf) + 1;
+                using (UndoManager.Self.RequestLock())
+                {
 
-                element.Instances.Insert(whereToInsert, whatToInsert);
+                    element.Instances.Remove(whatToInsert);
+                    int whereToInsert = element.Instances.IndexOf(whatToMoveInFrontOf) + 1;
 
-                RefreshInResponseToReorder(whatToMoveInFrontOf);
-                GumCommands.Self.FileCommands.TryAutoSaveElement(element);
+                    element.Instances.Insert(whereToInsert, whatToInsert);
+
+                    RefreshInResponseToReorder(whatToMoveInFrontOf);
+                    GumCommands.Self.FileCommands.TryAutoSaveElement(element);
+                }
             }
         }
         private void RefreshInResponseToReorder(InstanceSave instance)

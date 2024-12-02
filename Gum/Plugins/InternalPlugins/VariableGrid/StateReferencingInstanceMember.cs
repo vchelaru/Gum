@@ -923,7 +923,7 @@ namespace Gum.PropertyGridHelpers
 
             bool effectiveRefresh = forceRefresh ?? IsCallingRefresh;
 
-            bool effectiveRecordUndo = IsCallingRefresh;
+            bool effectiveRecordUndo = IsCallingRefresh && trySave;
 
             // This might be a tunneled variable, and we want to react to the 
             // change using the underlying variable if so:
@@ -952,7 +952,8 @@ namespace Gum.PropertyGridHelpers
 
             if (!handledByExposedVariable)
             {
-                SetVariableLogic.Self.PropertyValueChanged(name, LastOldValue, gumElementOrInstanceSaveAsObject as InstanceSave, refresh: effectiveRefresh, recordUndo: effectiveRecordUndo,
+                SetVariableLogic.Self.PropertyValueChanged(name, LastOldValue, gumElementOrInstanceSaveAsObject as InstanceSave, refresh: effectiveRefresh, 
+                    recordUndo: effectiveRecordUndo,
                     trySave: trySave);
             }
         }
