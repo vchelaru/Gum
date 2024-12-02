@@ -100,7 +100,11 @@ namespace Gum.Plugins.Undos
 
                 var comparisonInformationDisplay = comparisonInformation.ToString();
 
-                if (!string.IsNullOrEmpty(comparisonInformationDisplay))
+                if(string.IsNullOrEmpty(comparisonInformationDisplay))
+                {
+                    undoStringList.Insert(0, "Unknown Undo");
+                }
+                else
                 {
                     undoStringList.Insert(0, comparisonInformation.ToString());
                 }

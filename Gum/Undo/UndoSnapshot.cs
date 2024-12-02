@@ -1,4 +1,5 @@
 ﻿using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using System;
 using System.Collections.Generic;
@@ -16,6 +17,9 @@ namespace Gum.Undo
 
         public List<StateSaveCategory> AddedCategories;
         public List<StateSaveCategory> RemovedCategories;
+
+        public List<ElementBehaviorReference> AddedBehaviors;
+        public List<ElementBehaviorReference> RemovedBehaviors;
 
         public List<InstanceSave> AddedInstances;
         public List<InstanceSave> RemovedInstances;
@@ -51,6 +55,18 @@ namespace Gum.Undo
             {
                 if (!string.IsNullOrEmpty(toReturn)) toReturn += newlinePrefix;
                 toReturn += $"Modify instance variables: {string.Join(", ", ModifiedInstanceProperties.Select(item => item.Name + "=" + item.Value?.ToString() ?? "<null>"))}";
+            }
+
+            if (AddedBehaviors?.Count > 0)
+            {
+                if (!string.IsNullOrEmpty(toReturn)) toReturn += newlinePrefix;
+                toReturn += $"Add behaviors: {string.Join(", ", AddedBehaviors.Select(item => item.BehaviorName))}";
+            }
+
+            if (RemovedBehaviors?.Count > 0)
+            {
+                if (!string.IsNullOrEmpty(toReturn)) toReturn += newlinePrefix;
+                toReturn += $"Remove behaviors: {string.Join(", ", RemovedBehaviors.Select(item => item.BehaviorName))}";
             }
 
             if (AddedCategories?.Count > 0)
@@ -136,6 +152,8 @@ namespace Gum.Undo
 
             AddInstanceModifiations(currentElement, snapshotToApply, toReturn);
 
+            AddBehaviorModifications(currentElement, snapshotToApply, toReturn);
+
             AddCategoryModifications(currentElement, snapshotToApply, toReturn);
 
             toReturn.ModifiedStates = new List<StateSave>();
@@ -174,6 +192,25 @@ namespace Gum.Undo
             }
 
             return toReturn;
+        }
+
+        private static void AddBehaviorModifications(ElementSave currentElement, ElementSave snapshotToApply, UndoComparison toReturn)
+        {
+            var currentBehaviors = currentElement.Behaviors;
+            var behaviorsToApply = snapshotToApply.Behaviors;
+
+            toReturn.AddedBehaviors = null;
+            toReturn.RemovedBehaviors = null;
+
+            if (currentBehaviors != null && behaviorsToApply != null)
+            {
+                var currentBehaviorNames = currentBehaviors.Select(item => item.BehaviorName).ToArray();
+                var toApplyBehaviorNames = behaviorsToApply.Select(item => item.BehaviorName).ToArray();
+
+                toReturn.AddedBehaviors = behaviorsToApply.Where(item => !currentBehaviorNames.Contains(item.BehaviorName)).ToList();
+
+                toReturn.RemovedBehaviors = currentBehaviors.Where(item => !toApplyBehaviorNames.Contains(item.BehaviorName)).ToList();
+            }
         }
 
         private static void AddCategoryModifications(ElementSave currentElement, ElementSave snapshotToApply, UndoComparison undoComparison)

@@ -35,6 +35,12 @@ namespace Gum.Commands
             StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedElement);
         }
 
+        internal void RefreshBehaviorView()
+        {
+            PluginManager.Self.BehaviorReferencesChanged(
+                SelectedState.Self.SelectedElement);
+        }
+
         public void RefreshPropertyGrid(bool force = false)
         {
             PropertyGridManager.Self.RefreshUI(force:force);
@@ -426,6 +432,5 @@ namespace Gum.Commands
         {
             mainPanelControl.Dispatcher.Invoke(action);
         }
-
     }
 }

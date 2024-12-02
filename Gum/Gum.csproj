@@ -324,7 +324,7 @@
     </Compile>
     <Compile Include="Plugins\InternalPlugins\Behaviors\BehaviorsViewModel.cs" />
     <Compile Include="Plugins\InternalPlugins\Behaviors\CheckListBehaviorItem.cs" />
-    <Compile Include="Plugins\InternalPlugins\Behaviors\MainPlugin.cs" />
+    <Compile Include="Plugins\InternalPlugins\Behaviors\MainBehaviorsPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\ProjectPropertiesWindowPlugin\ProjectPropertiesViewModel.cs" />
     <Compile Include="Plugins\InternalPlugins\Undos\MainPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\Undos\UndoDisplay.xaml.cs">

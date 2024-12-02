@@ -10,6 +10,7 @@ using Gum.Logic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Windows.Controls;
+using Gum.DataTypes.Behaviors;
 
 namespace Gum.Undo
 {
@@ -218,6 +219,7 @@ namespace Gum.Undo
             bool doInstanceListsDiffer = FileManager.AreSaveObjectsEqual(oldElement.Instances, newElement.Instances) == false;
             bool doTypesDiffer = oldElement.BaseType != newElement.BaseType;
             bool doNamesDiffer = oldElement.Name != newElement.Name;
+            bool doBehaviorsDiffer = FileManager.AreSaveObjectsEqual(oldElement.Behaviors, newElement.Behaviors) == false;
 
             // Why do we care if the user selected a different state?
             // This seems to cause bugs, and we don't care about undoing selections...
@@ -227,7 +229,8 @@ namespace Gum.Undo
             // todo : need to add behavior differences
             UndoSnapshot snapshotToAdd = null;
 
-            bool didAnythingChange = doStatesDiffer || doStateCategoriesDiffer || doInstanceListsDiffer || doTypesDiffer || doNamesDiffer
+            bool didAnythingChange = doStatesDiffer || doStateCategoriesDiffer || doInstanceListsDiffer || doTypesDiffer || doNamesDiffer ||
+                doBehaviorsDiffer
                 //|| doesSelectedStateDiffer
                 ;
             if (didAnythingChange)
@@ -253,6 +256,10 @@ namespace Gum.Undo
                 if (!doTypesDiffer)
                 {
                     clone.BaseType = null;
+                }
+                if(!doBehaviorsDiffer)
+                {
+                    clone.Behaviors = null;
                 }
 
                 snapshotToAdd = new UndoSnapshot
@@ -342,8 +349,10 @@ namespace Gum.Undo
 
                 ElementSave toApplyTo = SelectedState.Self.SelectedElement;
 
-                bool shouldRefreshWireframe, shouldRefreshStateTreeView;
-                ApplyUndoSnapshotToElement(undoSnapshot.UndoState, toApplyTo, true, out shouldRefreshWireframe, out shouldRefreshStateTreeView);
+                ApplyUndoSnapshotToElement(undoSnapshot.UndoState, toApplyTo, true, 
+                    out bool shouldRefreshWireframe, 
+                    out bool shouldRefreshStateTreeView,
+                    out bool shouldRefreshBehaviorView);
 
                 if (undoSnapshot.UndoState.CategoryName != SelectedState.Self.SelectedStateCategorySave?.Name ||
                     undoSnapshot.UndoState.StateName != SelectedState.Self.SelectedStateSave?.Name)
@@ -368,11 +377,14 @@ namespace Gum.Undo
                 //}
 
                 elementHistory.UndoIndex = newIndex;
-                DoAfterUndoLogic(toApplyTo, shouldRefreshWireframe, shouldRefreshStateTreeView);
+                DoAfterUndoLogic(toApplyTo, shouldRefreshWireframe, shouldRefreshStateTreeView, shouldRefreshBehaviorView);
             }
         }
 
-        private void DoAfterUndoLogic(ElementSave toApplyTo, bool shouldRefreshWireframe, bool shouldRefreshStateTreeView)
+        private void DoAfterUndoLogic(ElementSave toApplyTo,
+            bool shouldRefreshWireframe, 
+            bool shouldRefreshStateTreeView, 
+            bool shouldRefreshBehaviorView)
         {
             RecordState();
 
@@ -393,6 +405,11 @@ namespace Gum.Undo
             if (shouldRefreshStateTreeView)
             {
                 GumCommands.Self.GuiCommands.RefreshStateTreeView();
+            }
+
+            if(shouldRefreshBehaviorView)
+            {
+                GumCommands.Self.GuiCommands.RefreshBehaviorView();
             }
 
             //PrintStatus("PerformUndo");
@@ -440,8 +457,10 @@ namespace Gum.Undo
 
                 ElementSave toApplyTo = SelectedState.Self.SelectedElement;
 
-                bool shouldRefreshWireframe, shouldRefreshStateTreeView;
-                ApplyUndoSnapshotToElement(redoSnapshot, toApplyTo, true, out shouldRefreshWireframe, out shouldRefreshStateTreeView);
+                ApplyUndoSnapshotToElement(redoSnapshot, toApplyTo, true, 
+                    out bool shouldRefreshWireframe, 
+                    out bool shouldRefreshStateTreeView,
+                    out bool shouldRefreshBehaviorView);
 
                 if (redoSnapshot.CategoryName != SelectedState.Self.SelectedStateCategorySave?.Name ||
                     redoSnapshot.StateName != SelectedState.Self.SelectedStateSave?.Name)
@@ -460,7 +479,8 @@ namespace Gum.Undo
 
                 elementHistory.UndoIndex++;
 
-                DoAfterUndoLogic(toApplyTo, shouldRefreshWireframe, shouldRefreshStateTreeView);
+                DoAfterUndoLogic(toApplyTo, shouldRefreshWireframe, shouldRefreshStateTreeView, 
+                    shouldRefreshBehaviorView);
 
 
             }
@@ -470,11 +490,13 @@ namespace Gum.Undo
 
         public void ApplyUndoSnapshotToElement(UndoSnapshot undoSnapshot, ElementSave toApplyTo, bool propagateNameChanges)
         {
-            ApplyUndoSnapshotToElement(undoSnapshot, toApplyTo, propagateNameChanges, out bool _, out bool _);
+            ApplyUndoSnapshotToElement(undoSnapshot, toApplyTo, propagateNameChanges, out bool _, out bool _, out bool _);
         }
 
         private void ApplyUndoSnapshotToElement(UndoSnapshot undoSnapshot, ElementSave toApplyTo,
-            bool propagateNameChanges, out bool shouldRefreshWireframe, out bool shouldRefreshStateTreeView)
+            bool propagateNameChanges, out bool shouldRefreshWireframe, 
+            out bool shouldRefreshStateTreeView, 
+            out bool shouldRefreshBehaviorView)
         {
 
             var elementInUndoSnapshot = undoSnapshot.Element;
@@ -488,9 +510,10 @@ namespace Gum.Undo
                 elementInUndoSnapshot = CloneWithFixedEnumerations(elementInUndoSnapshot);
             }
 
-
             shouldRefreshWireframe = false;
             shouldRefreshStateTreeView = false;
+            shouldRefreshBehaviorView = false;
+
             if (elementInUndoSnapshot.States != null)
             {
                 foreach (var state in elementInUndoSnapshot.States)
@@ -514,6 +537,14 @@ namespace Gum.Undo
 
                 }
             }
+
+            if(elementInUndoSnapshot.Behaviors != null)
+            {
+                AddAndRemoveBehaviors(elementInUndoSnapshot.Behaviors, toApplyTo.Behaviors, toApplyTo);
+                shouldRefreshStateTreeView = true;
+                shouldRefreshBehaviorView = true;
+            }
+
             if (elementInUndoSnapshot.Instances != null)
             {
                 AddAndRemoveInstances(elementInUndoSnapshot.Instances, toApplyTo.Instances, toApplyTo);
@@ -582,6 +613,19 @@ namespace Gum.Undo
         {
             toApplyTo.SetFrom(undoStateSave);
 
+        }
+
+        private void AddAndRemoveBehaviors(List<ElementBehaviorReference> undoList, List<ElementBehaviorReference> listToApplyTo, ElementSave parent)
+        {
+            if (listToApplyTo != null && undoList != null)
+            {
+                listToApplyTo.Clear();
+
+                foreach (var behavior in undoList)
+                {
+                    listToApplyTo.Add(behavior);
+                }
+            }
         }
 
         private void AddAndRemoveCategories(List<StateSaveCategory> undoList, List<StateSaveCategory> listToApplyTo, ElementSave parent)
