@@ -100,7 +100,15 @@ namespace Gum.Undo
                 if(modifiedState.VariableLists?.Count > 0)
                 {
                     if (!string.IsNullOrEmpty(toReturn)) toReturn += newlinePrefix;
-                    toReturn += $"Variable lists in {modifiedState.Name}: {string.Join(", ", modifiedState.VariableLists.Select(item => item.Name + "=" + item.ValueAsIList?.ToString() ?? "<null>"))}";
+                    toReturn += $"Variable lists in {modifiedState.Name}: {string.Join(", ", modifiedState.VariableLists.Select(item =>
+                    {
+                        var rightSide = "<null>";
+                        if(item.ValueAsIList != null)
+                        {
+                            rightSide = $"{item.ValueAsIList?.Count.ToString()} items";
+                        }
+                        return $"{item.Name} = {rightSide}";
+                    }))}";
                 }
 
             }

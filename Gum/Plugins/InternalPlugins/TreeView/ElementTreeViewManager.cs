@@ -269,6 +269,25 @@ namespace Gum.Managers
             return null;
         }
 
+        public TreeNode GetInstanceTreeNodeByName(string name, TreeNode container)
+        {
+            foreach (TreeNode node in container.Nodes)
+            {
+                if (node.Tag is InstanceSave instanceSave && instanceSave.Name == name)
+                {
+                    return node;
+                }
+
+                TreeNode childNode = GetInstanceTreeNodeByName(name, node);
+                if (childNode != null)
+                {
+                    return childNode;
+                }
+            }
+
+            return null;
+        }
+
         public TreeNode GetTreeNodeFor(BehaviorSave behavior)
         {
             return GetTreeNodeForTag(behavior, RootBehaviorsTreeNode);
@@ -1171,7 +1190,8 @@ namespace Gum.Managers
 
             foreach (InstanceSave instance in allInstances)
             {
-                var treeNode = GetTreeNodeFor(instance, node);
+                // use name because an undo can change references. Same with reloads if were called there
+                var treeNode = GetInstanceTreeNodeByName(instance.Name, node);
 
                 if (treeNode?.Nodes.Count > 0 && treeNode?.IsExpanded == true)
                 {
@@ -1221,7 +1241,8 @@ namespace Gum.Managers
                     nodeForInstance.ImageIndex = DerivedInstanceImageIndex;
                 }
 
-                if (expandedInstances.Contains(instance))
+                // todo - do this after we have all the children created:
+                if (expandedInstances.Any(item => item.Name == instance.Name))
                 {
                     nodeForInstance.Expand();
                 }
@@ -1273,6 +1294,12 @@ namespace Gum.Managers
                 {
                     nodeForInstance.ImageIndex = desiredImageIndex;
                 }
+            }
+
+            foreach(var expandedInstance in expandedInstances)
+            {
+                var toExpand = GetInstanceTreeNodeByName(expandedInstance.Name, node);
+                toExpand?.Expand();
             }
         }
 

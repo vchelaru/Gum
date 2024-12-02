@@ -540,7 +540,7 @@ namespace StateAnimationPlugin
 
         private List<AnimationSave> GetAnimationsReferencingState(StateSave state, ElementSave element)
         {
-            List<AnimationSave> animatedStatesReferencingState = null;
+            List<AnimationSave> animatedStatesReferencingState = new List<AnimationSave>();
             if (element != null)
             {
                 SaveClasses.ElementAnimationsSave model;
