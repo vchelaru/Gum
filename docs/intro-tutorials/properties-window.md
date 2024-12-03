@@ -58,7 +58,7 @@ To see how this works, select the **Text** item under the **Standard** folder. N
 
 If the default Horizontal Alignment and Vertical Alignment values are changed, the changes will immediately be reflected in the preview window for the default Text configuration:
 
-![](<../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png>)
+![](<../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png>)
 
 Now if we select the TextIntance we will see that the VerticalAlignment is visibly using the Bottom value; however the **Horizontal Alignment** is still using center - this is because a value that is explicitly set on an instance will always override the default value set in the Standard element. Notice that **Horizontal Alignment** has a white background (indicating a custom value) and **Vertical Alignment** has a green background (indicating a default value).
 
