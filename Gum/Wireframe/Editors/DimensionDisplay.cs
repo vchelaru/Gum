@@ -51,7 +51,7 @@ namespace Gum.Wireframe.Editors
 
             dimensionDisplayText = new Text(systemManagers);
             dimensionDisplayText.RenderBoundary = false;
-            dimensionDisplayText.Width = 0;
+            dimensionDisplayText.Width = null; 
             dimensionDisplayText.Height = 0;
             dimensionDisplayText.Name = "Dimension display text";
             dimensionDisplayText.BitmapFont = _toolFontService.ToolFont;

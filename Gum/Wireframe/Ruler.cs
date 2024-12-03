@@ -641,7 +641,7 @@ namespace Gum.Wireframe
                 if (this.RulerSide == Wireframe.RulerSide.Left)
                 {
                     _grabbedGuideText.Y = mGrabbedGuide.Y - 21;
-                    _grabbedGuideText.X = Renderer.Camera.ClientWidth - distanceFromEdge - _grabbedGuideText.Width;
+                    _grabbedGuideText.X = Renderer.Camera.ClientWidth - distanceFromEdge - _grabbedGuideText.EffectiveWidth;
                     _grabbedGuideText.RawText = (mGrabbedGuide.Y / mZoomValue).ToString();
                     _grabbedGuideText.HorizontalAlignment = HorizontalAlignment.Right;
                 }

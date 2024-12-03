@@ -127,7 +127,7 @@ namespace RenderingLibrary.Graphics
 
         string mRawText;
         List<string> mWrappedText = new List<string>();
-        float mWidth = 200;
+        float? mWidth = 200;
         float mHeight = 200;
         LinePrimitive mBounds;
 
@@ -324,7 +324,7 @@ namespace RenderingLibrary.Graphics
 
         public float Rotation { get; set; }
 
-        public float Width
+        public float? Width
         {
             get
             {
@@ -371,7 +371,43 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        public float EffectiveWidth => Width;
+        public float EffectiveWidth
+        {
+            get
+            {
+                // I think we want to treat these individually so a 
+                // width could be set but height could be default
+                if (Width != null)
+                {
+                    return Width.Value;
+                }
+                // If there is a prerendered width/height, then that means that
+                // the width/height has updated but it hasn't yet made its way to the
+                // texture. This could happen when the text already has a texture, so give
+                // priority to the prerendered values as they may be more up-to-date.
+                else if (mPreRenderWidth.HasValue)
+                {
+                    return mPreRenderWidth.Value * mFontScale;
+                }
+                else if (mTextureToRender != null)
+                {
+                    if (mTextureToRender.Width == 0)
+                    {
+                        return 10;
+                    }
+                    else
+                    {
+                        return mTextureToRender.Width * mFontScale;
+                    }
+                }
+                else
+                {
+                    // This causes problems when the text object has no text:
+                    //return 32;
+                    return 0;
+                }
+            }
+        }
 
         public float EffectiveHeight
         {
@@ -705,15 +741,16 @@ namespace RenderingLibrary.Graphics
                 stringToUse = mRawText.Replace("\r\n", "\n");
             }
 
-            float wrappingWidth = mWidth / mFontScale;
+            float wrappingWidth;
 
-            // Update December 2, 2024
-            // We now treat 0 width as actual
-            // 0 width, rather than positive infinity.
-            //if (mWidth == 0)
-            //{
-            //    wrappingWidth = float.PositiveInfinity;
-            //}
+            if (mWidth == null)
+            {
+                wrappingWidth = float.PositiveInfinity;
+            }
+            else
+            {
+                wrappingWidth = mWidth.Value / mFontScale;
+            }
 
             if (UseNewLineWrapping)
             {
@@ -1519,11 +1556,11 @@ namespace RenderingLibrary.Graphics
 
                     if (HorizontalAlignment == Graphics.HorizontalAlignment.Right)
                     {
-                        offset.X = leftSide + (Width - font.MeasureString(line).X);
+                        offset.X = leftSide + (EffectiveWidth - font.MeasureString(line).X);
                     }
                     else if (HorizontalAlignment == Graphics.HorizontalAlignment.Center)
                     {
-                        offset.X = leftSide + (Width - font.MeasureString(line).X) / 2.0f;
+                        offset.X = leftSide + (EffectiveWidth - font.MeasureString(line).X) / 2.0f;
                     }
 
                     offset.X = (int)offset.X; // so we don't have half-pixels that render weird

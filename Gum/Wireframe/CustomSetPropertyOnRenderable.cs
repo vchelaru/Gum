@@ -327,7 +327,7 @@ namespace Gum.Wireframe
                     graphicalUiElement.HeightUnits == DimensionUnitType.RelativeToChildren)
                 {
                     // make it have no line wrap width before assignign the text:
-                    asText.Width = 0;
+                    asText.Width = null;
                 }
 
                 var valueAsString = value as string;
