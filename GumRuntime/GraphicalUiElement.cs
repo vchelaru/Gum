@@ -3628,14 +3628,13 @@ namespace Gum.Wireframe
                             if (
                                 // Skia text doesn't have a wrapped text, but we can just check if the text itself is not null or empty
                                 //asText.WrappedText.Count > 0 &&
-                                !string.IsNullOrEmpty(asText.RawText) &&
-                                (mContainedObjectAsIpso.Width != 0 && float.IsPositiveInfinity(mContainedObjectAsIpso.Width) == false))
+                                !string.IsNullOrEmpty(asText.RawText) && asText.Width != null)
                             {
                                 // this could be either because it wrapped, or because the raw text
                                 // actually has newlines. Vic says - this difference could maybe be tested
                                 // but I'm not sure it's worth the extra code for the minor savings here, so just
                                 // set the wrap width to positive infinity and refresh the text
-                                mContainedObjectAsIpso.Width = float.PositiveInfinity;
+                                asText.Width = null;
                             }
 
                             maxWidth = asText.WrappedTextWidth;
