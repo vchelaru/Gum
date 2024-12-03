@@ -146,6 +146,9 @@ namespace CommonFormsAndControls
 #endif
         }
 
+        // If false, then only select on a click
+        public bool IsSelectingOnPush { get; set; } = true;
+
         protected override void OnMouseDown(MouseEventArgs e)
         {
             // If the user clicks on a node that was not
@@ -182,8 +185,9 @@ namespace CommonFormsAndControls
                             // Potential Drag Operation
                             // Let Mouse Up do select
                         }
-                        else
+                        else if(IsSelectingOnPush)
                         {
+                            // For gum we want to prevent selection on a push. Should be on a click
                             ReactToClickedNode(node);
                         }
                     }
@@ -232,10 +236,11 @@ namespace CommonFormsAndControls
                 TreeNode node = this.GetNodeAt(e.Location);
                 if (node != null)
                 {
-                    if ((ModifierKeys == Keys.None && MultiSelectBehavior != MultiSelectBehavior.RegularClick) &&
-                        mSelectedNodes.Count > 1 &&
-                        mSelectedNodes.Contains(node) &&
-                        e.Button != MouseButtons.Right)
+                    var shouldSelect = (ModifierKeys == Keys.None && MultiSelectBehavior != MultiSelectBehavior.RegularClick) &&
+                        ((mSelectedNodes.Count > 1 && mSelectedNodes.Contains(node)) || IsSelectingOnPush == false) &&
+                        e.Button != MouseButtons.Right;
+
+                    if (shouldSelect)
                     {
                         int extraOnLeft = 0;
 
@@ -252,7 +257,7 @@ namespace CommonFormsAndControls
                         }
                     }
 
-                    if (mSelectedNodeChanged && AfterClickSelect != null)
+                    if ((mSelectedNodeChanged || IsSelectingOnPush == false ) && AfterClickSelect != null)
                     {
                         AfterClickSelect(this, new TreeViewEventArgs(node));
                     }
@@ -295,8 +300,8 @@ namespace CommonFormsAndControls
                 {
                     if (!mSelectedNodes.Contains(node))
                     {
-                        SelectSingleNode(node);
-                        SetNodeSelected(node, true);
+                        //SelectSingleNode(node);
+                        //SetNodeSelected(node, true);
                     }
                 }
 

@@ -204,6 +204,16 @@ namespace Gum.Managers
 
         System.Windows.Forms.Cursor AddCursor { get; set; }
 
+        public bool HasMouseOver
+        {
+            get
+            {
+                var mousePosition = Control.MousePosition;
+                var clientPoint = ObjectTreeView.PointToClient(mousePosition);
+                return ObjectTreeView.ClientRectangle.Contains(clientPoint);
+            }
+        }
+
         #endregion
 
         #region Methods
@@ -488,6 +498,7 @@ namespace Gum.Managers
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
             this.ObjectTreeView = new CommonFormsAndControls.MultiSelectTreeView();
+            this.ObjectTreeView.IsSelectingOnPush = false;
             this.ObjectTreeView.AllowDrop = true;
             this.ObjectTreeView.AlwaysHaveOneNodeSelected = false;
             this.ObjectTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
