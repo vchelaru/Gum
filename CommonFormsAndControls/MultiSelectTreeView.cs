@@ -185,7 +185,7 @@ namespace CommonFormsAndControls
                             // Potential Drag Operation
                             // Let Mouse Up do select
                         }
-                        else if(IsSelectingOnPush)
+                        else if(IsSelectingOnPush || ModifierKeys == Keys.Shift || ModifierKeys == Keys.Control)
                         {
                             // For gum we want to prevent selection on a push. Should be on a click
                             ReactToClickedNode(node);
