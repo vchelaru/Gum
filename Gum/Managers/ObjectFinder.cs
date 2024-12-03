@@ -231,7 +231,7 @@ namespace Gum.Managers
         {
             if (cachedDictionary != null)
             {
-                var nameInvariant = elementName.ToLowerInvariant();
+                var nameInvariant = elementName?.ToLowerInvariant();
                 if (nameInvariant != null && cachedDictionary.ContainsKey(nameInvariant))
                 {
                     return cachedDictionary[nameInvariant] as StandardElementSave;
