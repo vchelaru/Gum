@@ -606,7 +606,7 @@ namespace Gum.Wireframe
                     {
                         WireframeEditor.Destroy();
                     }
-                    WireframeEditor = new PolygonWireframeEditor(UiLayer);
+                    WireframeEditor = new PolygonWireframeEditor(UiLayer, global::Gum.Managers.HotkeyManager.Self);
                 }
             }
             else if(SelectedGues.Count > 0 && SelectedGue?.Tag is ScreenSave == false)

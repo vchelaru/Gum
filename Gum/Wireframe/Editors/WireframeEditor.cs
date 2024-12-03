@@ -11,11 +11,14 @@ using System.Linq;
 using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
 using Vector2 = System.Numerics.Vector2;
 using Matrix = System.Numerics.Matrix4x4;
+using Gum.Managers;
 
 namespace Gum.Wireframe
 {
     public abstract class WireframeEditor
     {
+        protected HotkeyManager _hotkeyManager { get; private set; }
+
         protected GrabbedState grabbedState = new GrabbedState();
 
         protected bool mHasChangedAnythingSinceLastPush = false;
@@ -23,6 +26,11 @@ namespace Gum.Wireframe
         protected float aspectRatioOnGrab;
 
         public bool RestrictToUnitValues { get; set; }
+
+        public WireframeEditor(global::Gum.Managers.HotkeyManager hotkeyManager)
+        {
+            _hotkeyManager = hotkeyManager;
+        }
 
         public abstract void UpdateToSelection(ICollection<GraphicalUiElement> selectedObjects);
 
@@ -112,8 +120,7 @@ namespace Gum.Wireframe
 
             var didMove = EditingManager.Self.MoveSelectedObjectsBy(effectiveXToMoveBy, effectiveYToMoveBy);
 
-            bool isLockedToAxis = InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift) ||
-                InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.RightShift);
+            bool isLockedToAxis = _hotkeyManager.LockMovementToAxis.IsPressed(InputLibrary.Keyboard.Self);
 
 
             if (SelectedState.Self.SelectedInstances.Count() == 0 &&

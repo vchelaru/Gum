@@ -25,7 +25,6 @@ namespace Gum.Wireframe.Editors
 
         ResizeSide SideGrabbed = ResizeSide.None;
         ResizeSide SideOver;
-        private HotkeyManager _hotkeyManager;
         ResizeHandles mResizeHandles;
 
         List<GraphicalUiElement> selectedObjects = 
@@ -67,9 +66,8 @@ namespace Gum.Wireframe.Editors
         #endregion
 
         public StandardWireframeEditor(Layer layer, Color lineColor, Color textColor, global::Gum.Managers.HotkeyManager hotkeyManager)
+            : base(hotkeyManager)
         {
-            _hotkeyManager = hotkeyManager;
-
             mResizeHandles = new ResizeHandles(layer, lineColor);
             mResizeHandles.ShowOrigin = true;
             mResizeHandles.Visible = false;

@@ -13,6 +13,7 @@ using ToolsUtilities;
 using Vector2 = System.Numerics.Vector2;
 using Color = System.Drawing.Color;
 using Matrix = System.Numerics.Matrix4x4;
+using Gum.Managers;
 
 namespace Gum.Wireframe.Editors
 {
@@ -102,7 +103,7 @@ namespace Gum.Wireframe.Editors
 
         #region Constructor/Update To
 
-        public PolygonWireframeEditor(Layer layer)
+        public PolygonWireframeEditor(Layer layer, HotkeyManager hotkeyManager) : base(hotkeyManager)
         {
             if(addPointTexture == null)
             {
