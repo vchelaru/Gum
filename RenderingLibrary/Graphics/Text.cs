@@ -371,49 +371,14 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        public float EffectiveWidth
-        {
-            get
-            {
-                // I think we want to treat these individually so a 
-                // width could be set but height could be default
-                if (Width != 0)
-                {
-                    return Width;
-                }
-                // If there is a prerendered width/height, then that means that
-                // the width/height has updated but it hasn't yet made its way to the
-                // texture. This could happen when the text already has a texture, so give
-                // priority to the prerendered values as they may be more up-to-date.
-                else if (mPreRenderWidth.HasValue)
-                {
-                    return mPreRenderWidth.Value * mFontScale;
-                }
-                else if (mTextureToRender != null)
-                {
-                    if (mTextureToRender.Width == 0)
-                    {
-                        return 10;
-                    }
-                    else
-                    {
-                        return mTextureToRender.Width * mFontScale;
-                    }
-                }
-                else
-                {
-                    // This causes problems when the text object has no text:
-                    //return 32;
-                    return 0;
-                }
-            }
-        }
+        public float EffectiveWidth => Width;
 
         public float EffectiveHeight
         {
             get
             {
-                // See comment in Width
+                // December 2, 2024
+                // Width now treats 0 width as a proper 0 width. Do we want to do the same for height? Not sure at this point...
                 if (Height != 0)
                 {
                     return Height;
@@ -741,10 +706,14 @@ namespace RenderingLibrary.Graphics
             }
 
             float wrappingWidth = mWidth / mFontScale;
-            if (mWidth == 0)
-            {
-                wrappingWidth = float.PositiveInfinity;
-            }
+
+            // Update December 2, 2024
+            // We now treat 0 width as actual
+            // 0 width, rather than positive infinity.
+            //if (mWidth == 0)
+            //{
+            //    wrappingWidth = float.PositiveInfinity;
+            //}
 
             if (UseNewLineWrapping)
             {
