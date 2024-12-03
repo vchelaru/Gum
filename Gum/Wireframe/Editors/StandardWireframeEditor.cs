@@ -295,7 +295,9 @@ namespace Gum.Wireframe.Editors
                 // If the user resized with locked to axis, then released, we don't want to apply this, because they are not doing axis constrained movement
                 if (_hotkeyManager.LockMovementToAxis.IsPressed(InputLibrary.Keyboard.Self) && SideGrabbed == ResizeSide.None)
                 {
-                    ApplyAxisLock();
+                    ApplyAxisLockToSelectedState();
+
+                    GumCommands.Self.GuiCommands.RefreshPropertyGrid();
                 }
 
                 // let's snap everything
@@ -312,48 +314,6 @@ namespace Gum.Wireframe.Editors
 
         }
 
-        private void ApplyAxisLock()
-        {
-            var axis = grabbedState.AxisMovedFurthestAlong;
-
-            bool isElementSelected = SelectedState.Self.SelectedInstances.Count() == 0 &&
-                     // check specifically for components or standard elements, since Screens can't be moved
-                     (SelectedState.Self.SelectedComponent != null || SelectedState.Self.SelectedStandardElement != null);
-
-
-            if (axis == XOrY.X)
-            {
-                // If the X axis is the furthest-moved, set the Y values back to what they were.
-                if (isElementSelected)
-                {
-                    SelectedState.Self.SelectedStateSave.SetValue("Y", grabbedState.ComponentPosition.Y, "float");
-                }
-                else
-                {
-                    foreach (var instance in SelectedState.Self.SelectedInstances)
-                    {
-                        SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".Y", grabbedState.InstancePositions[instance].Y, "float");
-                    }
-                }
-            }
-            else
-            {
-                // If the Y axis is the furthest-moved, set the X values back to what they were.
-                if (isElementSelected)
-                {
-                    SelectedState.Self.SelectedStateSave.SetValue("X", grabbedState.ComponentPosition.X, "float");
-                }
-                else
-                {
-                    foreach (var instance in SelectedState.Self.SelectedInstances)
-                    {
-                        SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".X", grabbedState.InstancePositions[instance].X, "float");
-                    }
-                }
-            }
-
-            GumCommands.Self.GuiCommands.RefreshPropertyGrid();
-        }
 
         private void HandlesActivity()
         {

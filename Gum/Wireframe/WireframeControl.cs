@@ -263,8 +263,6 @@ namespace Gum.Wireframe
                         var shouldForceNoHighlight = mouseHasEntered == false &&
                             // If the mouse is over the element tree view, we don't want to force unhlighlights since they can highlight when over the tree view items
                             ElementTreeViewManager.Self.HasMouseOver == false;
-                        System.Diagnostics.Debug.WriteLine("Is mouse over treeview " +
-                            ElementTreeViewManager.Self.HasMouseOver);
 
                         SelectionManager.Self.Activity(shouldForceNoHighlight);
                         // EditingManager activity must happen after SelectionManager activity

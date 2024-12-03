@@ -112,7 +112,7 @@ namespace Gum.Wireframe
 
             var didMove = EditingManager.Self.MoveSelectedObjectsBy(effectiveXToMoveBy, effectiveYToMoveBy);
 
-            bool isLockedToAxis =  InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift) ||
+            bool isLockedToAxis = InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift) ||
                 InputLibrary.Keyboard.Self.KeyDown(Microsoft.Xna.Framework.Input.Keys.RightShift);
 
 
@@ -129,7 +129,7 @@ namespace Gum.Wireframe
 
                         gue.Y = grabbedState.ComponentPosition.Y;
                     }
-                    else
+                    else if(xOrY == XOrY.Y)
                     {
 
                         var gue = WireframeObjectManager.Self.GetRepresentation(SelectedState.Self.SelectedElement);
@@ -153,14 +153,14 @@ namespace Gum.Wireframe
                         {
                             var gue = WireframeObjectManager.Self.GetRepresentation(instance);
 
-                            gue.Y = grabbedState.InstancePositions[instance].Y;
+                            gue.Y = grabbedState.InstancePositions[instance].AbsoluteY;
                         }
-                        else
+                        else if(xOrY == XOrY.Y)
                         {
 
                             var gue = WireframeObjectManager.Self.GetRepresentation(instance);
 
-                            gue.X = grabbedState.InstancePositions[instance].X;
+                            gue.X = grabbedState.InstancePositions[instance].AbsoluteX;
                         }
 
                     }
@@ -169,8 +169,68 @@ namespace Gum.Wireframe
 
             if (didMove)
             {
+                if(isLockedToAxis)
+                {
+                    // December 3, 2024 
+                    // Currently when the
+                    // user moves snapped to
+                    // an axis, the unsnapped
+                    // value is displayed in the 
+                    // UI. By calling ApplyAxisLockToSelectedState,
+                    // the values do get snapped to the UI, but this
+                    // causes the non-moved axis to snap back to the default
+                    // value, so switching axes (if the cursor has moved nearly
+                    // perfect diagonally), causes the object ot reset back to the
+                    // origin. The value does get snapped back when the cursor is let
+                    // go so we'll just deal with that problem for now.
+                    //ApplyAxisLockToSelectedState();
+
+                    //GumCommands.Self.GuiCommands.RefreshPropertyGrid();
+                }
                 mHasChangedAnythingSinceLastPush = true;
             }
+        }
+
+        protected void ApplyAxisLockToSelectedState()
+        {
+            var axis = grabbedState.AxisMovedFurthestAlong;
+
+            bool isElementSelected = SelectedState.Self.SelectedInstances.Count() == 0 &&
+                     // check specifically for components or standard elements, since Screens can't be moved
+                     (SelectedState.Self.SelectedComponent != null || SelectedState.Self.SelectedStandardElement != null);
+
+
+            if (axis == XOrY.X)
+            {
+                // If the X axis is the furthest-moved, set the Y values back to what they were.
+                if (isElementSelected)
+                {
+                    SelectedState.Self.SelectedStateSave.SetValue("Y", grabbedState.ComponentPosition.Y, "float");
+                }
+                else
+                {
+                    foreach (var instance in SelectedState.Self.SelectedInstances)
+                    {
+                        SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".Y", grabbedState.InstancePositions[instance].StateY, "float");
+                    }
+                }
+            }
+            else if(axis == XOrY.Y)
+            {
+                // If the Y axis is the furthest-moved, set the X values back to what they were.
+                if (isElementSelected)
+                {
+                    SelectedState.Self.SelectedStateSave.SetValue("X", grabbedState.ComponentPosition.X, "float");
+                }
+                else
+                {
+                    foreach (var instance in SelectedState.Self.SelectedInstances)
+                    {
+                        SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".X", grabbedState.InstancePositions[instance].StateX, "float");
+                    }
+                }
+            }
+
         }
 
 
