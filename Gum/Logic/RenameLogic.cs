@@ -25,24 +25,31 @@ namespace Gum.Logic
     {
         static bool isRenamingXmlFile;
 
-        public static void RenameState(StateSave stateSave, string newName)
+        public static void RenameState(StateSave stateSave, StateSaveCategory category, string newName)
         {
-            using(UndoManager.Self.RequestLock())
+            if(!NameVerifier.Self.IsStateNameValid(newName, category, stateSave, out string whyNotValid))
             {
-                string oldName = stateSave.Name;
+                GumCommands.Self.GuiCommands.ShowMessage(whyNotValid);
+            }
+            else
+            {
+                using(UndoManager.Self.RequestLock())
+                {
+                    string oldName = stateSave.Name;
 
-                stateSave.Name = newName;
-                GumCommands.Self.GuiCommands.RefreshStateTreeView();
-                // I don't think we need to save the project when renaming a state:
-                //GumCommands.Self.FileCommands.TryAutoSaveProject();
+                    stateSave.Name = newName;
+                    GumCommands.Self.GuiCommands.RefreshStateTreeView();
+                    // I don't think we need to save the project when renaming a state:
+                    //GumCommands.Self.FileCommands.TryAutoSaveProject();
 
-                // Renaming the state should refresh the property grid
-                // because it displays the state name at the top
-                GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
+                    // Renaming the state should refresh the property grid
+                    // because it displays the state name at the top
+                    GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
 
-                PluginManager.Self.StateRename(stateSave, oldName);
+                    PluginManager.Self.StateRename(stateSave, oldName);
 
-                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+                    GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+                }
             }
         }
 

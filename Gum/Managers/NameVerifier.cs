@@ -1,6 +1,8 @@
 ﻿using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
+using Gum.DataTypes.Variables;
 using Gum.Logic;
+using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Linq;
@@ -115,6 +117,23 @@ namespace Gum.Managers
                 IsNameAnExistingElement(componentName, folderName, component, out whyNotValid);
             }
 
+            return string.IsNullOrEmpty(whyNotValid);
+        }
+
+
+        internal bool IsStateNameValid(string name, StateSaveCategory category, StateSave stateSave, out string whyNotValid)
+        {
+            IsNameValidCommon(name, out whyNotValid);
+
+            if(string.IsNullOrEmpty(whyNotValid))
+            {
+                var existing = category?.States.Find(item => item.Name == name && item != stateSave);
+
+                if (existing != null)
+                {
+                    whyNotValid = $"The category {category.Name} already has a state named {name}";
+                }
+            }
             return string.IsNullOrEmpty(whyNotValid);
         }
 
@@ -324,5 +343,6 @@ namespace Gum.Managers
                 (c == '_') ||
                 (c >= '0' && c <= '9');
         }
+
     }
 }

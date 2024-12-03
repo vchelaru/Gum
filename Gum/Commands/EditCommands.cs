@@ -38,19 +38,26 @@ namespace Gum.Commands
                 if (tiw.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
                     string name = tiw.Result;
-
-                    using (UndoManager.Self.RequestLock())
+                    
+                    if(!NameVerifier.Self.IsStateNameValid(name, SelectedState.Self.SelectedStateCategorySave, null, out string whyNotValid))
                     {
-                        StateSave stateSave = ElementCommands.Self.AddState(
-                            SelectedState.Self.SelectedElement, SelectedState.Self.SelectedStateCategorySave, name);
+                        GumCommands.Self.GuiCommands.ShowMessage(whyNotValid);
+                    }
+                    else
+                    {
+                        using (UndoManager.Self.RequestLock())
+                        {
+                            StateSave stateSave = ElementCommands.Self.AddState(
+                                SelectedState.Self.SelectedElement, SelectedState.Self.SelectedStateCategorySave, name);
 
-                        PluginManager.Self.StateAdd(stateSave);
+                            PluginManager.Self.StateAdd(stateSave);
 
-                        StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedStateContainer);
+                            StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedStateContainer);
 
-                        SelectedState.Self.SelectedStateSave = stateSave;
+                            SelectedState.Self.SelectedStateSave = stateSave;
 
-                        GumCommands.Self.FileCommands.TryAutoSaveCurrentObject();
+                            GumCommands.Self.FileCommands.TryAutoSaveCurrentObject();
+                        }
                     }
                 }
             }
@@ -139,7 +146,8 @@ namespace Gum.Commands
 
                 if (result == DialogResult.OK)
                 {
-                    RenameLogic.RenameState(stateSave, tiw.Result);
+                    var category = stateContainer.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
+                    RenameLogic.RenameState(stateSave, category, tiw.Result);
                 }
             }
         }
