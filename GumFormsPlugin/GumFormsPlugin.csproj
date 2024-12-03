@@ -63,6 +63,7 @@
 		<None Remove="Content\FormsGumProject\Libraries\**" />
 	</ItemGroup>
 	<ItemGroup>
+		<ProjectReference Include="..\CodeOutputPlugin\CodeOutputPlugin.csproj" />
 		<ProjectReference Include="..\FlatRedBall.SpecializedXnaControls\FlatRedBall.SpecializedXnaControls.csproj">
 			<Project>{8c80ba7b-1cba-4579-9382-d9dc6c365070}</Project>
 			<Name>FlatRedBall.SpecializedXnaControls</Name>

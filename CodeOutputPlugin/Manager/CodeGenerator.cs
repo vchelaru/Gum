@@ -492,8 +492,6 @@ namespace CodeOutputPlugin.Manager
 
         #endregion
 
-
-
         #region Position / Size
 
         private static void ProcessXamarinFormsPositionAndSize(List<VariableSave> variablesToConsider, StateSave state, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, CodeGenerationContext context)
@@ -2524,63 +2522,6 @@ namespace CodeOutputPlugin.Manager
 
         #endregion
 
-        public static VisualApi GetVisualApiForElement(ElementSave element)
-        {
-            VisualApi visualApi;
-            //if(element is ScreenSave)
-            //{
-            // screens are always XamarinForms
-            //visualApi = VisualApi.XamarinForms;
-            // Update August 23, 2022
-            // No, the code gen may be 
-            // be used for entirely Skia
-            // pages such as PDF generation.
-            // Therefore, we should always look
-            // to the IsXamarinFormsControl value:
-            //visualApi = VisualApi.XamarinForms;
-            //}
-            //else
-            {
-                var defaultState = element.DefaultState;
-                var rvf = new RecursiveVariableFinder(defaultState);
-                var isXamForms = rvf.GetValue<bool>("IsXamarinFormsControl");
-                if (isXamForms == true)
-                {
-                    visualApi = VisualApi.XamarinForms;
-                }
-                else
-                {
-                    visualApi = VisualApi.Gum;
-                }
-            }
-            return visualApi;
-
-        }
-
-        static bool IsOfXamarinFormsType(InstanceSave instance, string xamarinFormsType)
-        {
-            var element = ObjectFinder.Self.GetElementSave(instance);
-            return IsOfXamarinFormsType(element, xamarinFormsType);
-        }
-
-        private static bool IsOfXamarinFormsType(ElementSave element, string xamarinFormsType)
-        {
-            bool isRightType = element?.Name.EndsWith("/" + xamarinFormsType) == true;
-            if (!isRightType)
-            {
-                var elementBaseType = element?.BaseType;
-
-                isRightType = elementBaseType?.EndsWith("/" + xamarinFormsType) == true;
-            }
-
-            if (!isRightType)
-            {
-                var baseElements = ObjectFinder.Self.GetBaseElements(element);
-                isRightType = baseElements.Any(item => item.BaseType?.EndsWith("/" + xamarinFormsType) == true);
-            }
-
-            return isRightType;
-        }
 
         private static void AddAbsoluteLayoutIfNecessary(ElementSave element, int tabCount, StringBuilder stringBuilder, CodeOutputProjectSettings projectSettings)
         {
@@ -3149,34 +3090,6 @@ namespace CodeOutputPlugin.Manager
             return code;
         }
 
-        public static VisualApi GetVisualApiForInstance(InstanceSave instance, ElementSave elementContainingInstance, bool considerDefaultContainer = false)
-        {
-            var defaultState = elementContainingInstance.DefaultState;
-
-            var isXamarinFormsControlVariable =
-                $"{instance.Name}.IsXamarinFormsControl";
-
-            if (considerDefaultContainer)
-            {
-                var instanceElement = ObjectFinder.Self.GetElementSave(instance);
-                var defaultParent = instanceElement.DefaultState.GetValueOrDefault<string>("DefaultChildContainer");
-
-                if (!string.IsNullOrEmpty(defaultParent))
-                {
-                    isXamarinFormsControlVariable = $"{instance.Name}.{defaultParent}.IsXamarinFormsControl";
-                }
-            }
-
-            var isXamForms = (defaultState.GetValueRecursive(isXamarinFormsControlVariable) as bool?) ?? false;
-            var visualApi = VisualApi.Gum;
-            if (isXamForms)
-            {
-                visualApi = VisualApi.XamarinForms;
-            }
-
-            return visualApi;
-        }
-
         #region Variable Assignments
 
         private static void FillWithVariableAssignments(VisualApi visualApi, StringBuilder stringBuilder, CodeGenerationContext context)
@@ -3261,6 +3174,7 @@ namespace CodeOutputPlugin.Manager
                     stringBuilder.AppendLine(tabs + suffixCodeLine);
                 }
             }
+
         }
 
         private static void FillWithNonParentVariableAssignments(CodeGenerationContext context)
@@ -3287,16 +3201,7 @@ namespace CodeOutputPlugin.Manager
 
             foreach (var variableList in variableListsToAssign)
             {
-                var codeLine = GetCodeLine(variableList, context, visualApi);
-
-
-                // the line of code could be " ", a string with a space. This happens
-                // if we want to skip a variable so we dont return null or empty.
-                // But we also don't want a ton of spaces generated.
-                if (!string.IsNullOrWhiteSpace(codeLine))
-                {
-                    stringBuilder.AppendLine(codeLine);
-                }
+                AddCodeLine(variableList, context, visualApi);
             }
         }
 
@@ -3356,11 +3261,36 @@ namespace CodeOutputPlugin.Manager
 
 
 
-        private static string GetCodeLine(VariableListSave variable, CodeGenerationContext context, VisualApi visualApi)
+        private static void AddCodeLine(VariableListSave variable, CodeGenerationContext context, VisualApi visualApi)
         {
             // for now we actually don't do anything with this - I used to think we would, but the variable lists are part of the Gum save objects, not rutnime.
 
-            return "";
+            // actually polygon points are so we need those:
+            var instance = context.Instance;
+            if(variable.GetRootName() == "Points")
+            {
+                bool isPolygon = false;
+                if(instance != null)
+                {
+                    var instanceType = ObjectFinder.Self.GetElementSave(instance.BaseType);
+                    isPolygon = (instanceType is StandardElementSave && instanceType.Name == "Polygon") ||
+                        ObjectFinder.Self.GetBaseElements(instanceType).Any(item => item is StandardElementSave && item.Name == "Polygon");
+
+                    if (isPolygon)
+                    {
+                        context.StringBuilder.AppendLine(context.Tabs + $"this.{instance.Name}.SetPoints(new System.Numerics.Vector2[]{{");
+                        context.TabCount++;
+                        foreach (System.Numerics.Vector2 point in variable.ValueAsIList)
+                        {
+                            context.StringBuilder.AppendLine(context.Tabs + $"new System.Numerics.Vector2(" +
+                                $"{point.X.ToString(CultureInfo.InvariantCulture)}f, {point.Y.ToString(CultureInfo.InvariantCulture)}f),");
+                        }
+                        context.TabCount--;
+                        context.StringBuilder.AppendLine(context.Tabs + "});");
+
+                    }
+                }
+            }
         }
 
         private static string VariableValueToGumCodeValue(VariableSave variable, ElementSave container, object forcedValue = null)
@@ -4249,6 +4179,94 @@ namespace CodeOutputPlugin.Manager
         }
 
         private static string ToTabs(int tabCount) => new string(' ', tabCount * 4);
+
+
+        public static VisualApi GetVisualApiForInstance(InstanceSave instance, ElementSave elementContainingInstance, bool considerDefaultContainer = false)
+        {
+            var defaultState = elementContainingInstance.DefaultState;
+
+            var isXamarinFormsControlVariable =
+                $"{instance.Name}.IsXamarinFormsControl";
+
+            if (considerDefaultContainer)
+            {
+                var instanceElement = ObjectFinder.Self.GetElementSave(instance);
+                var defaultParent = instanceElement.DefaultState.GetValueOrDefault<string>("DefaultChildContainer");
+
+                if (!string.IsNullOrEmpty(defaultParent))
+                {
+                    isXamarinFormsControlVariable = $"{instance.Name}.{defaultParent}.IsXamarinFormsControl";
+                }
+            }
+
+            var isXamForms = (defaultState.GetValueRecursive(isXamarinFormsControlVariable) as bool?) ?? false;
+            var visualApi = VisualApi.Gum;
+            if (isXamForms)
+            {
+                visualApi = VisualApi.XamarinForms;
+            }
+
+            return visualApi;
+        }
+
+
+        public static VisualApi GetVisualApiForElement(ElementSave element)
+        {
+            VisualApi visualApi;
+            //if(element is ScreenSave)
+            //{
+            // screens are always XamarinForms
+            //visualApi = VisualApi.XamarinForms;
+            // Update August 23, 2022
+            // No, the code gen may be 
+            // be used for entirely Skia
+            // pages such as PDF generation.
+            // Therefore, we should always look
+            // to the IsXamarinFormsControl value:
+            //visualApi = VisualApi.XamarinForms;
+            //}
+            //else
+            {
+                var defaultState = element.DefaultState;
+                var rvf = new RecursiveVariableFinder(defaultState);
+                var isXamForms = rvf.GetValue<bool>("IsXamarinFormsControl");
+                if (isXamForms == true)
+                {
+                    visualApi = VisualApi.XamarinForms;
+                }
+                else
+                {
+                    visualApi = VisualApi.Gum;
+                }
+            }
+            return visualApi;
+
+        }
+
+        static bool IsOfXamarinFormsType(InstanceSave instance, string xamarinFormsType)
+        {
+            var element = ObjectFinder.Self.GetElementSave(instance);
+            return IsOfXamarinFormsType(element, xamarinFormsType);
+        }
+
+        private static bool IsOfXamarinFormsType(ElementSave element, string xamarinFormsType)
+        {
+            bool isRightType = element?.Name.EndsWith("/" + xamarinFormsType) == true;
+            if (!isRightType)
+            {
+                var elementBaseType = element?.BaseType;
+
+                isRightType = elementBaseType?.EndsWith("/" + xamarinFormsType) == true;
+            }
+
+            if (!isRightType)
+            {
+                var baseElements = ObjectFinder.Self.GetBaseElements(element);
+                isRightType = baseElements.Any(item => item.BaseType?.EndsWith("/" + xamarinFormsType) == true);
+            }
+
+            return isRightType;
+        }
 
         #endregion
 

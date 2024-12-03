@@ -18,6 +18,13 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>Blend</Type>
+      <Name>Blend</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <Category>Rendering</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>int</Type>
       <Name>Blue</Name>
       <Value xsi:type="xsd:int">255</Value>

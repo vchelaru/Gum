@@ -30,6 +30,18 @@
     </Variable>
     <Variable>
       <Type>float</Type>
+      <Name>PolygonInstance.X</Name>
+      <Value xsi:type="xsd:float">545</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>PolygonInstance.Y</Name>
+      <Value xsi:type="xsd:float">55</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
       <Name>PopupInstance.X</Name>
       <Value xsi:type="xsd:float">2</Value>
       <SetsValue>true</SetsValue>
@@ -166,6 +178,37 @@
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
+    <VariableList xsi:type="VariableListSaveOfVector2">
+      <Name>PolygonInstance.Points</Name>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <Vector2>
+          <X>-32</X>
+          <Y>-32</Y>
+        </Vector2>
+        <Vector2>
+          <X>32</X>
+          <Y>-32</Y>
+        </Vector2>
+        <Vector2>
+          <X>108</X>
+          <Y>71</Y>
+        </Vector2>
+        <Vector2>
+          <X>-88</X>
+          <Y>86</Y>
+        </Vector2>
+        <Vector2>
+          <X>-83</X>
+          <Y>13</Y>
+        </Vector2>
+        <Vector2>
+          <X>-32</X>
+          <Y>-32</Y>
+        </Vector2>
+      </Value>
+    </VariableList>
   </State>
   <Instance>
     <Name>PopupInstance</Name>
@@ -180,6 +223,11 @@
   <Instance>
     <Name>TextWithLotsOfPropertiesSet</Name>
     <BaseType>Text</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>PolygonInstance</Name>
+    <BaseType>Polygon</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Behaviors />
