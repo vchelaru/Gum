@@ -481,6 +481,16 @@ namespace Gum.Managers
                 errorMessage = "The source file for " + target.Name + " is missing, so it cannot be edited";
             }
 
+            if(errorMessage == null && target == GumState.Self.SelectedState.SelectedElement)
+            {
+                if(GumState.Self.SelectedState.SelectedStateSave != GumState.Self.SelectedState.SelectedElement.DefaultState)
+                {
+                    errorMessage = $"Cannot add instances to " +
+                        $"{GumState.Self.SelectedState.SelectedElement} while the {GumState.Self.SelectedState.SelectedStateSave} " +
+                        $"state is selected. Select the Default state first.";
+                }
+            }
+
             return errorMessage;
         }
 
