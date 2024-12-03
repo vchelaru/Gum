@@ -978,7 +978,10 @@ namespace Gum.Managers
             SetVariableLogic.Self.PropertyValueChanged(unqualifiedGreen, (int)newColor.G, instance, refresh: true, recordUndo: shouldSave, trySave: shouldSave);
             SetVariableLogic.Self.PropertyValueChanged(unqualifiedBlue, (int)newColor.B, instance, refresh: true, recordUndo: shouldSave, trySave: shouldSave);
 
-            RefreshUI();
+            if(args.CommitType == SetPropertyCommitType.Full)
+            {
+                RefreshUI();
+            }
         }
 
         //private void ReactIfChangedMemberIsAnimation(ElementSave parentElement, string changedMember, object oldValue, out bool saveProject)
