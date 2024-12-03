@@ -18,29 +18,7 @@ namespace Gum.DataTypes
         {
             bool wasModified = false;
 
-            gumProjectSave.ScreenReferences?.Sort((first, second) => first.Name.CompareTo(second.Name));
-            gumProjectSave.ComponentReferences?.Sort((first, second) => first.Name.CompareTo(second.Name));
-            gumProjectSave.StandardElementReferences?.Sort((first, second) => first.Name.CompareTo(second.Name));
-            gumProjectSave.BehaviorReferences?.Sort((first, second) =>
-            {
-                if (first?.Name == null)
-                {
-                    return 0;
-                }
-                else if(second?.Name == null)
-                {
-                    return 0;
-                }
-                else
-                {
-                    return first?.Name.CompareTo(second?.Name) ?? 0;
-                }
-            });
-
-            gumProjectSave.Screens.Sort((first, second) => first.Name.CompareTo(second.Name));
-            gumProjectSave.Components.Sort((first, second) => first.Name.CompareTo(second.Name));
-            gumProjectSave.StandardElements.Sort((first, second) => first.Name.CompareTo(second.Name));
-            gumProjectSave.Behaviors.Sort((first, second) => first.Name?.CompareTo(second.Name) ?? 0);
+            SortElementAndBehaviors(gumProjectSave);
 
             // Do StandardElements first
             // because the values here are
@@ -73,7 +51,7 @@ namespace Gum.DataTypes
                 wasModified = screenSave.Initialize(stateSave) || wasModified;
             }
 
-            
+
 
             foreach (ComponentSave componentSave in gumProjectSave.Components)
             {
@@ -89,7 +67,7 @@ namespace Gum.DataTypes
                 // are rather preserved so that changing the
                 // type doesn't wipe out old values.
                 //componentSave.Initialize(null);
-                
+
                 // October 17, 2017
                 // We used to pass in
                 // the base StandardElementSave
@@ -105,12 +83,12 @@ namespace Gum.DataTypes
                 //    defaultStateSave = ses.DefaultState;
                 //}
 
-                if(componentSave.Initialize(new StateSave { Name = "Default" }))
+                if (componentSave.Initialize(new StateSave { Name = "Default" }))
                 {
                     wasModified = true;
                 }
 
-                if(componentSave.Initialize(StandardElementsManager.Self.GetDefaultStateFor("Component")))
+                if (componentSave.Initialize(StandardElementsManager.Self.GetDefaultStateFor("Component")))
                 {
                     wasModified = true;
                 }
@@ -125,7 +103,7 @@ namespace Gum.DataTypes
                 }
             }
 
-            if(gumProjectSave.Version < 1)
+            if (gumProjectSave.Version < 1)
             {
                 // This means that all default variables have SetValue = false
                 // We need to fix that
@@ -133,16 +111,16 @@ namespace Gum.DataTypes
                 {
                     var defaultState = standardElementSave.DefaultState;
 
-                    foreach(var variable in defaultState.Variables)
+                    foreach (var variable in defaultState.Variables)
                     {
-                        if(variable.IsState(standardElementSave) == false)
+                        if (variable.IsState(standardElementSave) == false)
                         {
                             variable.SetsValue = true;
                         }
                     }
                 }
 
-                foreach(var component in gumProjectSave.Components)
+                foreach (var component in gumProjectSave.Components)
                 {
                     // We only want to do this on components that don't inherit from other components:
                     var baseComponent = ObjectFinder.Self.GetComponent(component.BaseType);
@@ -167,6 +145,33 @@ namespace Gum.DataTypes
             }
 
             return wasModified;
+        }
+
+        public static void SortElementAndBehaviors(this GumProjectSave gumProjectSave)
+        {
+            gumProjectSave.ScreenReferences?.Sort((first, second) => first.Name.CompareTo(second.Name));
+            gumProjectSave.ComponentReferences?.Sort((first, second) => first.Name.CompareTo(second.Name));
+            gumProjectSave.StandardElementReferences?.Sort((first, second) => first.Name.CompareTo(second.Name));
+            gumProjectSave.BehaviorReferences?.Sort((first, second) =>
+            {
+                if (first?.Name == null)
+                {
+                    return 0;
+                }
+                else if (second?.Name == null)
+                {
+                    return 0;
+                }
+                else
+                {
+                    return first?.Name.CompareTo(second?.Name) ?? 0;
+                }
+            });
+
+            gumProjectSave.Screens.Sort((first, second) => first.Name.CompareTo(second.Name));
+            gumProjectSave.Components.Sort((first, second) => first.Name.CompareTo(second.Name));
+            gumProjectSave.StandardElements.Sort((first, second) => first.Name.CompareTo(second.Name));
+            gumProjectSave.Behaviors.Sort((first, second) => first.Name?.CompareTo(second.Name) ?? 0);
         }
 
         /// <summary>

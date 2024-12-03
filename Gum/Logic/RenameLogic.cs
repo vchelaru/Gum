@@ -76,6 +76,7 @@ namespace Gum.Logic
 
                 if (shouldContinue)
                 {
+
                     RenameAllReferencesTo(elementSave, instance, oldName);
 
                     // Even though this gets called from the PropertyGrid methods which eventually
@@ -148,9 +149,13 @@ namespace Gum.Logic
 
         private static void RenameAllReferencesTo(ElementSave elementSave, InstanceSave instance, string oldName)
         {
+            var project = ProjectManager.Self.GumProjectSave;
             // Tell the GumProjectSave to react to the rename.
             // This changes the names of the ElementSave references.
-            ProjectManager.Self.GumProjectSave.ReactToRenamed(elementSave, instance, oldName);
+            project.ReactToRenamed(elementSave, instance, oldName);
+
+            project.SortElementAndBehaviors();
+
             GumCommands.Self.FileCommands.TryAutoSaveProject();
 
             if(instance == null)
