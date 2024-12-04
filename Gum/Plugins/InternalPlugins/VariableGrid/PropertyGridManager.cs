@@ -329,7 +329,7 @@ namespace Gum.Managers
                         {
                             foreach(MultiSelectInstanceMember member in gridCategory.Members)
                             {
-                                member.CustomSetEvent += (owner, value) =>
+                                member.CustomSetPropertyEvent += (sender, args) =>
                                 {
                                     //do just one undo:
                                     Undo.UndoManager.Self.RecordUndo();
@@ -339,7 +339,7 @@ namespace Gum.Managers
                                     {
                                         if(item is StateReferencingInstanceMember srim)
                                         {
-                                            srim.NotifyVariableLogic((object)srim.InstanceSave ?? srim.ElementSave, forceRefresh:true);
+                                            srim.NotifyVariableLogic((object)srim.InstanceSave ?? srim.ElementSave, forceRefresh:args.CommitType == SetPropertyCommitType.Full);
 
                                         }
                                         //RefreshInResponseToVariableChange()
@@ -929,7 +929,7 @@ namespace Gum.Managers
 
         void SetCurrentColor(SetPropertyArgs args, string redVariableName, string greenVariableName, string blueVariableName)
         {
-            var newColor = (Microsoft.Xna.Framework.Color)GetCurrentColor(redVariableName, greenVariableName, blueVariableName);
+            var valueBeforeSet = (Microsoft.Xna.Framework.Color)GetCurrentColor(redVariableName, greenVariableName, blueVariableName);
             var state = SelectedState.Self.SelectedStateSave;
 
             var color = (Microsoft.Xna.Framework.Color)args.Value;
@@ -974,9 +974,9 @@ namespace Gum.Managers
 
             var shouldSave = args.CommitType == SetPropertyCommitType.Full;
 
-            SetVariableLogic.Self.PropertyValueChanged(unqualifiedRed, (int)newColor.R, instance, refresh:true, recordUndo:shouldSave, trySave:shouldSave);
-            SetVariableLogic.Self.PropertyValueChanged(unqualifiedGreen, (int)newColor.G, instance, refresh: true, recordUndo: shouldSave, trySave: shouldSave);
-            SetVariableLogic.Self.PropertyValueChanged(unqualifiedBlue, (int)newColor.B, instance, refresh: true, recordUndo: shouldSave, trySave: shouldSave);
+            SetVariableLogic.Self.PropertyValueChanged(unqualifiedRed, (int)valueBeforeSet.R, instance, refresh:true, recordUndo:shouldSave, trySave:shouldSave);
+            SetVariableLogic.Self.PropertyValueChanged(unqualifiedGreen, (int)valueBeforeSet.G, instance, refresh: true, recordUndo: shouldSave, trySave: shouldSave);
+            SetVariableLogic.Self.PropertyValueChanged(unqualifiedBlue, (int)valueBeforeSet.B, instance, refresh: true, recordUndo: shouldSave, trySave: shouldSave);
 
             if(args.CommitType == SetPropertyCommitType.Full)
             {

@@ -67,6 +67,10 @@ namespace Gum.Controls.DataUi
 
         public void Refresh(bool forceRefreshEvenIfFocused = false)
         {
+            // When dealing with multi-select, setting a value can result in this refreshing itself
+            // This prevents that from happening.
+            if (isSetting) return;
+
             SuppressSettingProperty = true;
 
             if (this.HasEnoughInformationToWork())
@@ -209,8 +213,10 @@ namespace Gum.Controls.DataUi
 
         }
 
+        bool isSetting = false;
         private void SetCurrentColorValueOnInstance(SetPropertyCommitType commitType)
         {
+            isSetting = true;
             var getValueResult = TryGetValueOnUi(out object valueOnUi);
 
             if (getValueResult == ApplyValueResult.Success)
@@ -226,6 +232,7 @@ namespace Gum.Controls.DataUi
             {
                 // do nothing?
             }
+            isSetting = false;
         }
 
         private void ColorPicker_MouseUp(object sender, MouseButtonEventArgs e)

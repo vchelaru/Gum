@@ -47,17 +47,19 @@ namespace WpfDataUi.DataTypes
 
         public MultiSelectInstanceMember() 
         {
-            CustomSetEvent += HandleCustomSetEvent;
+            //CustomSetEvent += HandleCustomSetEvent;
+            CustomSetPropertyEvent += HandleCustomSetEvent;
             CustomGetEvent += HandleCustomGetEvent;
             CustomGetTypeEvent += HandleCustomGetTypeEvent;
             SetValueError = HandleValueError;
         }
 
-        private void HandleCustomSetEvent(object owner, object value)
+        private void HandleCustomSetEvent(object owner, SetPropertyArgs value)
         {
             foreach(var innerMember in InstanceMembers)
             {
-                innerMember.Value = value;
+                //innerMember.Value = value;
+                innerMember.SetValue(value.Value, value.CommitType);
             }
         }
 
