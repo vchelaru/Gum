@@ -392,7 +392,7 @@ namespace Gum.Undo
 
             Plugins.PluginManager.Self.AfterUndo();
 
-            GumCommands.Self.GuiCommands.RefreshElementTreeView();
+            GumCommands.Self.GuiCommands.RefreshElementTreeView(toApplyTo);
             SelectedState.Self.UpdateToSelectedStateSave();
 
             // The instances may have changed.  We will want 

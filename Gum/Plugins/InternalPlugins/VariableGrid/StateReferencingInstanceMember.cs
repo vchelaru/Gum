@@ -655,7 +655,10 @@ namespace Gum.PropertyGridHelpers
             {
                 object oldValue = base.Value;
 
-
+                if (setPropertyArgs.CommitType == SetPropertyCommitType.Full)
+                {
+                    LastOldValue = oldValue;
+                }
 
                 //mPropertyDescriptor.SetValue(gumElementOrInstanceSaveAsObject, newValue);
                 ElementSave elementSave = null;
@@ -740,11 +743,7 @@ namespace Gum.PropertyGridHelpers
 
                 NotifyVariableLogic(gumElementOrInstanceSaveAsObject, trySave: setPropertyArgs.CommitType == SetPropertyCommitType.Full);
 
-                if (setPropertyArgs.CommitType == SetPropertyCommitType.Full)
-                {
 
-                    LastOldValue = oldValue;
-                }
 
             }
             else
