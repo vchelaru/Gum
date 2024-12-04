@@ -44,7 +44,7 @@ Despite the name referring to a "Container", the total size available for ratios
 
 The simplest case is a single child in a container with its Height Units set to **Ratio of Container**.
 
-<figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Ratio of Container set to 1</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Ratio of Container set to 1</p></figcaption></figure>
 
 In this case the blue [ColoredRectangle](../coloredrectangle.md) has no siblings (its container has no other children), so it occupies the entire parent height. If a second child is added (by copy/pasting the existing child), then each child is given 1 _ratio_ value, which means each is 1/2 of the size of the entire parent.
 
@@ -123,7 +123,11 @@ The following animation shows a Text instance which has its Height Units set to 
 
 <figure><img src="../../.gitbook/assets/13_13 33 18.gif" alt=""><figcaption><p>Adding lines of text to a Text instance expands its height if its Height Units is set to RelativeToChildren</p></figcaption></figure>
 
+The height of a Text instance using Relative to Children depends on the number of lines displayed by the Text instance and the maximum line height given the current font properties. Therefore, the height of a Text stance remains the same regardless of the contents of a single line.
 
+For example, the following image contains multiple Text instances. Each has a single line of text, but the line of text differs in the height of each character. Notice that the texts are all the same height even though the contents of their lines differ.
+
+<figure><img src="../../.gitbook/assets/image.png" alt=""><figcaption><p>Texts with the same height despite having different string</p></figcaption></figure>
 
 ### Percentage of Other Dimension
 
