@@ -130,18 +130,21 @@ namespace CodeOutputPlugin.Manager
 
             element.BaseType = newValue;
 
-            if (newCustomFileName != oldCustomFileName)
+            if(newCustomFileName != null)
             {
-                RegenerateAndMoveCode(element, element.Name, codeOutputProjectSettings, oldGeneratedFileName, oldCustomFileName, newCustomFileName, oldVisualApi);
-            }
-            else
-            {
-                // same file, which means we only changed the types:
-                string fileContents = FileManager.FromFileText(newCustomFileName.FullPath);
+                if (newCustomFileName != oldCustomFileName)
+                {
+                    RegenerateAndMoveCode(element, element.Name, codeOutputProjectSettings, oldGeneratedFileName, oldCustomFileName, newCustomFileName, oldVisualApi);
+                }
+                else
+                {
+                    // same file, which means we only changed the types:
+                    string fileContents = FileManager.FromFileText(newCustomFileName.FullPath);
 
-                RenameClassInCode(element, codeOutputProjectSettings, ref fileContents);
+                    RenameClassInCode(element, codeOutputProjectSettings, ref fileContents);
 
-                FileManager.SaveText(fileContents, newCustomFileName.FullPath);
+                    FileManager.SaveText(fileContents, newCustomFileName.FullPath);
+                }
             }
 
         }
