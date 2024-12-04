@@ -42,6 +42,22 @@ namespace Gum.Undo
 
     #endregion
 
+    #region UndoOperation
+
+    public enum UndoOperation
+    {
+        Undo,
+        Redo,
+        HistoryChange
+    }
+
+    public class UndoOperationEventArgs : EventArgs
+    {
+        public UndoOperation Operation { get; set; }
+    }
+
+    #endregion
+
     public class UndoManager
     {
         #region Fields
@@ -77,8 +93,10 @@ namespace Gum.Undo
 
         #endregion
 
-        public event EventHandler UndosChanged;
-        public void BroadcastUndosChanged() => UndosChanged?.Invoke(this, null);
+
+
+        public event EventHandler<UndoOperationEventArgs> UndosChanged;
+        public void BroadcastUndosChanged() => UndosChanged?.Invoke(this, new UndoOperationEventArgs { Operation= UndoOperation.HistoryChange});
 
         public static UndoManager Self { get; private set; } = new UndoManager();
 
@@ -204,7 +222,7 @@ namespace Gum.Undo
 
                     RecordState();
 
-                    UndosChanged?.Invoke(this, null);
+                    UndosChanged?.Invoke(this, new UndoOperationEventArgs { Operation = UndoOperation.HistoryChange});
                 }
             }
 
@@ -388,7 +406,7 @@ namespace Gum.Undo
         {
             RecordState();
 
-            UndosChanged?.Invoke(this, null);
+            UndosChanged?.Invoke(this, new UndoOperationEventArgs { Operation = UndoOperation.Undo});
 
             Plugins.PluginManager.Self.AfterUndo();
 
