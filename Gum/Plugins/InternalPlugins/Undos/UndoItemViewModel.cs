@@ -26,4 +26,6 @@ public class UndoItemViewModel : ViewModel
         get => Get<UndoOrRedo>();
         set => Set(value);
     }
+
+    public override string ToString() => Display;
 }

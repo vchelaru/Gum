@@ -36,7 +36,16 @@ namespace Gum.Undo
     public class ElementHistory
     {
         public ElementSave FinalState { get; set; }
+
+        /// <summary>
+        /// A list of actions for the current element, where the most recent action is at the end of the list.
+        /// </summary>
         public List<HistoryAction> Actions { get; set; } = new List<HistoryAction>();
+
+        /// <summary>
+        /// The index of the next undo to perform. If this is -1, then there are no undos to perform.
+        /// Note that this means that the next redo to perform is at UndoIndex + 1.
+        /// </summary>
         public int UndoIndex { get; set; } = -1;
     }
 
@@ -48,7 +57,8 @@ namespace Gum.Undo
     {
         Undo,
         Redo,
-        HistoryChange
+        EntireHistoryChange,
+        HistoryAppended
     }
 
     public class UndoOperationEventArgs : EventArgs
@@ -96,7 +106,8 @@ namespace Gum.Undo
 
 
         public event EventHandler<UndoOperationEventArgs> UndosChanged;
-        public void BroadcastUndosChanged() => UndosChanged?.Invoke(this, new UndoOperationEventArgs { Operation= UndoOperation.HistoryChange});
+        public void BroadcastUndosChanged() => InvokeUndosChanged(UndoOperation.EntireHistoryChange);
+        void InvokeUndosChanged(UndoOperation operation) => UndosChanged?.Invoke(this, new UndoOperationEventArgs { Operation = operation });
 
         public static UndoManager Self { get; private set; } = new UndoManager();
 
@@ -222,7 +233,7 @@ namespace Gum.Undo
 
                     RecordState();
 
-                    UndosChanged?.Invoke(this, new UndoOperationEventArgs { Operation = UndoOperation.HistoryChange});
+                    InvokeUndosChanged(UndoOperation.HistoryAppended);
                 }
             }
 
@@ -406,7 +417,7 @@ namespace Gum.Undo
         {
             RecordState();
 
-            UndosChanged?.Invoke(this, new UndoOperationEventArgs { Operation = UndoOperation.Undo});
+            InvokeUndosChanged(UndoOperation.Undo);
 
             Plugins.PluginManager.Self.AfterUndo();
 
@@ -460,12 +471,12 @@ namespace Gum.Undo
 
             if (elementHistory != null)
             {
-                var indexToApply = elementHistory.UndoIndex;
+                var indexToApply = elementHistory.UndoIndex + 1;
 
 
-                if (indexToApply < elementHistory.Actions.Count-1)
+                if (indexToApply < elementHistory.Actions.Count)
                 {
-                    redoSnapshot = elementHistory.Actions[indexToApply+1].RedoState;
+                    redoSnapshot = elementHistory.Actions[indexToApply].RedoState;
                 }
             }
 
