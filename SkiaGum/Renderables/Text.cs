@@ -18,6 +18,8 @@ namespace SkiaGum
 
         public static decimal ScreenDensity = 1;
 
+        float? mWidth = 200;
+
         //public SKTypeface Font { get; set; }
         public string FontName { get; set; } = "Arial";
 
@@ -127,10 +129,30 @@ namespace SkiaGum
             set;
         }
 
-        public float Width
+        public float? Width
         {
             get;
             set;
+        }
+
+        float IPositionedSizedObject.Width
+        {
+            get
+            {
+                return EffectiveWidth;
+            }
+            set
+            {
+                Width = value;
+            }
+        }
+
+        public float EffectiveWidth
+        {
+            get
+            {
+                return Width ?? 0;
+            }
         }
 
         public float Height
