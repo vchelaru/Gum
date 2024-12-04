@@ -2,7 +2,7 @@
 
 ### Introduction
 
-Gum provides simple controls for centering objects inside of their parents. This page shows how to center objects in a variety of situations. For brevity this document uses horizontal centering, but the same concepts apply to vertical centering.
+Gum provides simple controls for centering objects inside of their parents. This page shows how to center objects in a variety of situations. For brevity this document uses vertical centering, but the same concepts apply to horizontal centering.
 
 ### Centering with Anchors (Alignment Tab)
 
