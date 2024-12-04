@@ -274,7 +274,7 @@ namespace CodeOutputPlugin
 
                         if (state != null && selectedElement != null)
                         {
-                            string gumCode = CodeGenerator.GetCodeForState(selectedElement, state, VisualApi.Gum);
+                            string gumCode = CodeGenerator.GetCodeForState(selectedElement, state, codeOutputProjectSettings);
                             viewModel.Code = $"//State Code for {state.Name ?? "Default"}:\r\n{gumCode}";
                         }
                         break;

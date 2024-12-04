@@ -2649,12 +2649,14 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-        public static string GetCodeForState(ElementSave container, StateSave stateSave, VisualApi visualApi)
+        public static string GetCodeForState(ElementSave container, StateSave stateSave, CodeOutputProjectSettings codeOutputProjectSettings)
         {
             var stringBuilder = new StringBuilder();
 
             var context = new CodeGenerationContext();
             context.Element = container;
+            context.CodeOutputProjectSettings = codeOutputProjectSettings;
+
 
             FillWithVariablesInState(stateSave, stringBuilder, 0, context);
 
@@ -2664,6 +2666,12 @@ namespace CodeOutputPlugin.Manager
 
         private static void FillWithVariablesInState(StateSave stateSave, StringBuilder stringBuilder, int tabCount, CodeGenerationContext context)
         {
+#if DEBUG
+            if(context.CodeOutputProjectSettings == null)
+            {
+                throw new NullReferenceException("context.CodeOutputProjectSettings should not be null");
+            }
+#endif
             VariableSave[] variablesToConsider = GetVariablesToAssignOnState(stateSave);
 
             var variableGroups = variablesToConsider.GroupBy(item => item.SourceObject);

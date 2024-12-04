@@ -58,6 +58,16 @@ namespace Gum.Plugins.Undos
             }
         }
 
+        void TrimAtIndex()
+        {
+            // a new item has been added, and the new index is the one that should
+            // be highlighted. If there's any items past this index, we need to remove them
+            while(_historyItems.Count > UndoIndex)
+            {
+                _historyItems.RemoveAt(_historyItems.Count - 1);
+            }
+        }
+
         void AppendOneHistoryItem()
         {
             var elementHistory = UndoManager.Self.CurrentElementHistory;
@@ -191,6 +201,7 @@ namespace Gum.Plugins.Undos
             }
             else if (e.Operation == UndoOperation.HistoryAppended)
             {
+                TrimAtIndex();
                 AppendOneHistoryItem();
             }
             RefreshIndexes();
