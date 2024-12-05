@@ -2522,133 +2522,6 @@ namespace CodeOutputPlugin.Manager
 
         #endregion
 
-
-        private static void AddAbsoluteLayoutIfNecessary(ElementSave element, int tabCount, StringBuilder stringBuilder, CodeOutputProjectSettings projectSettings)
-        {
-
-            var shouldAddMainLayout =
-                GetIfShouldAddMainLayout(element, projectSettings);
-
-            if (shouldAddMainLayout)
-            {
-                ElementSave baseElement = null;
-                if (!string.IsNullOrEmpty(element.BaseType))
-                {
-                    baseElement = ObjectFinder.Self.GetElementSave(element.BaseType);
-                }
-
-                var baseHasMain = baseElement != null &&
-                    projectSettings?.BaseTypesNotCodeGenerated?.Contains(element.BaseType) != true &&
-                    GetIfShouldAddMainLayout(baseElement, projectSettings);
-                if (!baseHasMain)
-                {
-                    stringBuilder.Append(ToTabs(tabCount) + "protected AbsoluteLayout MainLayout{get; set;}");
-                }
-            }
-        }
-
-        private static void TryGenerateApplyLocalizationForInstance(CodeGenerationContext context, StringBuilder stringBuilder, InstanceSave instance)
-        {
-            var component = ObjectFinder.Self.GetComponent(instance);
-
-            if (component != null)
-            {
-                var instanceComponentSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(component);
-
-                if (instanceComponentSettings?.LocalizeElement == true)
-                {
-                    stringBuilder.AppendLine(context.Tabs + $"{instance.Name}.ApplyLocalization();");
-
-                }
-            }
-        }
-
-        private static void GenerateApplyLocalizationMethod(ElementSave element, int tabCount, StringBuilder stringBuilder)
-        {
-            if (LocalizationManager.HasDatabase)
-            {
-                // Vic says - we may want this to be recursive eventually, but that introduces
-                // some complexity. How do we know which views have a call available? 
-                var line = "public void ApplyLocalization()";
-                stringBuilder.AppendLine(ToTabs(tabCount) + line);
-                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-                tabCount++;
-                var context = new CodeGenerationContext();
-                context.TabCount = tabCount;
-                context.Element = element;
-                foreach (var variable in element.DefaultState.Variables)
-                {
-                    InstanceSave instance = null;
-                    if (!string.IsNullOrEmpty(variable.SourceObject))
-                    {
-                        instance = element.GetInstance(variable.SourceObject);
-                    }
-
-                    context.Instance = instance;
-                    if (instance != null)
-                    {
-                        if (GetIsShouldBeLocalized(variable, context.Element.DefaultState))
-                        {
-                            string assignment = GetLocaliedLine(instance, variable, context);
-                            stringBuilder.AppendLine(ToTabs(tabCount) + assignment);
-                        }
-                        //else if(!string.IsNullOrEmpty(instance.BaseType))
-                        //{
-                        //    var instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
-
-                        //    var isComponent = instanceBase is ComponentSave;
-
-                        //    var shouldCallLocalize = !isComponent;
-
-                        //    if(shouldCallLocalize)
-                        //    {
-                        //        stringBuilder.AppendLine(ToTabs(tabCount) + $"{instance.Name}.ApplyLocalization();");
-                        //    }
-                        //}
-                    }
-
-                    // if a component is a subcomponent which can be localized, call it:
-
-                }
-                // Why don't we call base.ApplyLocalization?
-                //stringBuilder.AppendLine(ToTabs(tabCount) + "base.ApplyLocalization();");
-
-                foreach (var instance in element.Instances)
-                {
-                    context.Instance = instance;
-
-                    TryGenerateApplyLocalizationForInstance(context, stringBuilder, instance);
-                }
-
-
-                tabCount--;
-                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
-            }
-        }
-
-        private static void FillWithVariableBinding(ElementSave element, StringBuilder stringBuilder, int tabCount)
-        {
-            var boundVariables = new List<VariableSave>();
-
-            foreach (var variable in element.DefaultState.Variables)
-            {
-                if (!string.IsNullOrEmpty(variable.ExposedAsName))
-                {
-                    var instanceName = variable.SourceObject;
-                    // make sure this instance is a XamForms object otherwise we don't need to set the binding
-                    var isXamForms = (element.DefaultState.GetValueRecursive($"{instanceName}.IsXamarinFormsControl") as bool?) ?? false;
-
-                    if (isXamForms)
-                    {
-                        var instance = element.GetInstance(instanceName);
-                        var instanceType = GetClassNameForType(instance.BaseType, VisualApi.XamarinForms);
-                        stringBuilder.AppendLine(ToTabs(tabCount) + $"{instanceName}.SetBinding({instanceType}.{variable.GetRootName()}Property, nameof({variable.ExposedAsName}));");
-                    }
-                }
-
-            }
-        }
-
         public static string GetCodeForState(ElementSave container, StateSave stateSave, CodeOutputProjectSettings codeOutputProjectSettings)
         {
             var stringBuilder = new StringBuilder();
@@ -3055,25 +2928,6 @@ namespace CodeOutputPlugin.Manager
 
             context.TabCount--;
             stringBuilder.AppendLine(ToTabs(context.TabCount) + "}");
-        }
-
-        private static BindingBehavior GetBindingBehavior(ElementSave container, string instanceName)
-        {
-            var isContainerXamarinForms = (container.DefaultState.GetValueRecursive("IsXamarinFormsControl") as bool?) ?? false;
-            var isInstanceXamarinForms = (container.DefaultState.GetValueRecursive($"{instanceName}.IsXamarinFormsControl") as bool?) ?? false;
-
-            if (isContainerXamarinForms && isInstanceXamarinForms)
-            {
-                return BindingBehavior.BindablePropertyWithBoundInstance;
-            }
-            else if (isContainerXamarinForms) // container xamforms, child is SkiaGum
-            {
-                return BindingBehavior.BindablePropertyWithEventAssignment;
-            }
-            else
-            {
-                return BindingBehavior.NoBinding;
-            }
         }
 
         public static string GetCodeForInstance(InstanceSave instance, ElementSave element, CodeOutputProjectSettings codeOutputProjectSettings)
@@ -3695,7 +3549,7 @@ namespace CodeOutputPlugin.Manager
 
             else if (GetIsShouldBeLocalized(variable, context.Element.DefaultState))
             {
-                string assignment = GetLocaliedLine(instance, variable, context);
+                string assignment = GetLocalizedLine(instance, variable, context);
 
                 return assignment;
             }
@@ -3926,32 +3780,6 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-
-        private static void ProcessXamarinFormsLabelBold(List<VariableSave> variablesToConsider, StateSave state, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, CodeGenerationContext context)
-        {
-            var boldName = context.GumVariablePrefix + "IsBold";
-
-            var isBold = state.GetValueOrDefault<bool>(boldName);
-
-            variablesToConsider.RemoveAll(item => item.Name == boldName);
-
-            if (isBold)
-            {
-                string prefix = "";
-                if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.XamarinForms)
-                {
-                    prefix = "Xamarin.Forms";
-                }
-                else if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Maui)
-                {
-                    prefix = "Microsoft.Maui.Controls";
-                }
-                stringBuilder.AppendLine($"{context.CodePrefix}.FontAttributes = {prefix}.FontAttributes.Bold;");
-
-            }
-
-        }
-
         private static bool GetIfStateSetsAnyPositionValues(StateSave state, string prefix, List<VariableSave> variablesToConsider)
         {
             return variablesToConsider.Any(item =>
@@ -3969,6 +3797,7 @@ namespace CodeOutputPlugin.Manager
 
                     );
         }
+
         private static void FillWithInstanceDeclaration(InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount = 0)
         {
             VisualApi visualApi = VisualApi.Gum;
@@ -3998,7 +3827,6 @@ namespace CodeOutputPlugin.Manager
             stringBuilder.AppendLine($"{tabs}{accessString}{className} {instance.Name} {{ get; protected set; }}");
         }
 
-
         private static string GetSuffixCodeLine(InstanceSave instance, VariableSave variable, VisualApi visualApi)
         {
             if (visualApi == VisualApi.XamarinForms)
@@ -4016,8 +3844,6 @@ namespace CodeOutputPlugin.Manager
             return null;
         }
 
-        public static string StringIdPrefix = "T_";
-        public static string FormattedLocalizationCode = "Strings.Get(\"{0}\")";
 
         public static bool DoesTypeHaveContent(string type)
         {
@@ -4026,27 +3852,6 @@ namespace CodeOutputPlugin.Manager
                     type?.EndsWith("/RefreshView") == true ||
                     type?.EndsWith("/View") == true ||
                     type?.EndsWith("/Frame") == true;
-        }
-
-        private static string GetLocaliedLine(InstanceSave instance, VariableSave variable, CodeGenerationContext context)
-        {
-            var valueAsString = variable.Value as string;
-            var formattedStringIdAssignment = string.Format(FormattedLocalizationCode, valueAsString);
-            var assignment = $"{context.CodePrefixNoTabs}.{variable.GetRootName()} = {formattedStringIdAssignment};";
-            return assignment;
-        }
-
-        private static bool GetIsShouldBeLocalized(VariableSave variable, StateSave defaultState)
-        {
-            var toReturn = LocalizationManager.HasDatabase &&
-                // This could be exposed of exposed, so the name wouldn't be "Text"
-                //variable.GetRootName() == "Text" && 
-                variable.Value is string valueAsString &&
-                valueAsString?.StartsWith(StringIdPrefix) == true &&
-                // This could be a leftover variable
-                ObjectFinder.Self.IsVariableOrphaned(variable, defaultState) == false;
-
-            return toReturn;
         }
 
         private static string TryGetFullGumLineReplacement(InstanceSave instance, VariableSave variable, CodeGenerationContext context)
@@ -4079,16 +3884,13 @@ namespace CodeOutputPlugin.Manager
             }
             else if (GetIsShouldBeLocalized(variable, context.Element.DefaultState))
             {
-                string assignment = GetLocaliedLine(instance, variable, context);
+                string assignment = GetLocalizedLine(instance, variable, context);
 
                 return assignment;
             }
 
             return null;
         }
-
-
-
 
         private static object GetGumVariableName(VariableSave variable, CodeGenerationContext context)
         {
@@ -4117,24 +3919,6 @@ namespace CodeOutputPlugin.Manager
             }
         }
 
-        private static string GetXamarinFormsVariableName(VariableSave variable)
-        {
-            var rootName = variable.GetRootName();
-
-            switch (rootName)
-            {
-                case "Height": return "HeightRequest";
-                case "Width": return "WidthRequest";
-                case "X": return "PixelX";
-                case "Y": return "PixelY";
-                case "Visible": return "IsVisible";
-                case "HorizontalAlignment": return "HorizontalTextAlignment";
-                case "VerticalAlignment": return "VerticalTextAlignment";
-                case "StackSpacing": return "Spacing";
-
-                default: return rootName;
-            }
-        }
 
         private static VariableSave[] GetVariablesForValueAssignmentCode(InstanceSave instance, ElementSave currentElement)
         {
@@ -4175,6 +3959,226 @@ namespace CodeOutputPlugin.Manager
 
             return shouldInclude;
         }
+
+        #region Localization
+
+
+        private static string GetLocalizedLine(InstanceSave instance, VariableSave variable, CodeGenerationContext context)
+        {
+            var valueAsString = variable.Value as string;
+            var formattedStringIdAssignment = string.Format(FormattedLocalizationCode, valueAsString);
+            var assignment = $"{context.CodePrefixNoTabs}.{variable.GetRootName()} = {formattedStringIdAssignment};";
+            return assignment;
+        }
+
+        private static bool GetIsShouldBeLocalized(VariableSave variable, StateSave defaultState)
+        {
+            var toReturn = LocalizationManager.HasDatabase &&
+                // This could be exposed of exposed, so the name wouldn't be "Text"
+                //variable.GetRootName() == "Text" && 
+                variable.Value is string valueAsString &&
+                valueAsString?.StartsWith(StringIdPrefix) == true &&
+                // This could be a leftover variable
+                ObjectFinder.Self.IsVariableOrphaned(variable, defaultState) == false;
+
+            return toReturn;
+        }
+        public static string StringIdPrefix = "T_";
+        public static string FormattedLocalizationCode = "Strings.Get(\"{0}\")";
+
+        private static void TryGenerateApplyLocalizationForInstance(CodeGenerationContext context, StringBuilder stringBuilder, InstanceSave instance)
+        {
+            var component = ObjectFinder.Self.GetComponent(instance);
+
+            if (component != null)
+            {
+                var instanceComponentSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(component);
+
+                if (instanceComponentSettings?.LocalizeElement == true)
+                {
+                    stringBuilder.AppendLine(context.Tabs + $"{instance.Name}.ApplyLocalization();");
+
+                }
+            }
+        }
+
+        private static void GenerateApplyLocalizationMethod(ElementSave element, int tabCount, StringBuilder stringBuilder)
+        {
+            if (LocalizationManager.HasDatabase)
+            {
+                // Vic says - we may want this to be recursive eventually, but that introduces
+                // some complexity. How do we know which views have a call available? 
+                var line = "public void ApplyLocalization()";
+                stringBuilder.AppendLine(ToTabs(tabCount) + line);
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
+                var context = new CodeGenerationContext();
+                context.TabCount = tabCount;
+                context.Element = element;
+                foreach (var variable in element.DefaultState.Variables)
+                {
+                    InstanceSave instance = null;
+                    if (!string.IsNullOrEmpty(variable.SourceObject))
+                    {
+                        instance = element.GetInstance(variable.SourceObject);
+                    }
+
+                    context.Instance = instance;
+                    if (instance != null)
+                    {
+                        if (GetIsShouldBeLocalized(variable, context.Element.DefaultState))
+                        {
+                            string assignment = GetLocalizedLine(instance, variable, context);
+                            stringBuilder.AppendLine(ToTabs(tabCount) + assignment);
+                        }
+                        //else if(!string.IsNullOrEmpty(instance.BaseType))
+                        //{
+                        //    var instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
+
+                        //    var isComponent = instanceBase is ComponentSave;
+
+                        //    var shouldCallLocalize = !isComponent;
+
+                        //    if(shouldCallLocalize)
+                        //    {
+                        //        stringBuilder.AppendLine(ToTabs(tabCount) + $"{instance.Name}.ApplyLocalization();");
+                        //    }
+                        //}
+                    }
+
+                    // if a component is a subcomponent which can be localized, call it:
+
+                }
+                // Why don't we call base.ApplyLocalization?
+                //stringBuilder.AppendLine(ToTabs(tabCount) + "base.ApplyLocalization();");
+
+                foreach (var instance in element.Instances)
+                {
+                    context.Instance = instance;
+
+                    TryGenerateApplyLocalizationForInstance(context, stringBuilder, instance);
+                }
+
+
+                tabCount--;
+                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+            }
+        }
+        #endregion
+
+        #region MAUI-specific
+
+        private static void FillWithVariableBinding(ElementSave element, StringBuilder stringBuilder, int tabCount)
+        {
+            var boundVariables = new List<VariableSave>();
+
+            foreach (var variable in element.DefaultState.Variables)
+            {
+                if (!string.IsNullOrEmpty(variable.ExposedAsName))
+                {
+                    var instanceName = variable.SourceObject;
+                    // make sure this instance is a XamForms object otherwise we don't need to set the binding
+                    var isXamForms = (element.DefaultState.GetValueRecursive($"{instanceName}.IsXamarinFormsControl") as bool?) ?? false;
+
+                    if (isXamForms)
+                    {
+                        var instance = element.GetInstance(instanceName);
+                        var instanceType = GetClassNameForType(instance.BaseType, VisualApi.XamarinForms);
+                        stringBuilder.AppendLine(ToTabs(tabCount) + $"{instanceName}.SetBinding({instanceType}.{variable.GetRootName()}Property, nameof({variable.ExposedAsName}));");
+                    }
+                }
+
+            }
+        }
+
+        private static string GetXamarinFormsVariableName(VariableSave variable)
+        {
+            var rootName = variable.GetRootName();
+
+            switch (rootName)
+            {
+                case "Height": return "HeightRequest";
+                case "Width": return "WidthRequest";
+                case "X": return "PixelX";
+                case "Y": return "PixelY";
+                case "Visible": return "IsVisible";
+                case "HorizontalAlignment": return "HorizontalTextAlignment";
+                case "VerticalAlignment": return "VerticalTextAlignment";
+                case "StackSpacing": return "Spacing";
+
+                default: return rootName;
+            }
+        }
+
+        private static void ProcessXamarinFormsLabelBold(List<VariableSave> variablesToConsider, StateSave state, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, CodeGenerationContext context)
+        {
+            var boldName = context.GumVariablePrefix + "IsBold";
+
+            var isBold = state.GetValueOrDefault<bool>(boldName);
+
+            variablesToConsider.RemoveAll(item => item.Name == boldName);
+
+            if (isBold)
+            {
+                string prefix = "";
+                if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.XamarinForms)
+                {
+                    prefix = "Xamarin.Forms";
+                }
+                else if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Maui)
+                {
+                    prefix = "Microsoft.Maui.Controls";
+                }
+                stringBuilder.AppendLine($"{context.CodePrefix}.FontAttributes = {prefix}.FontAttributes.Bold;");
+
+            }
+
+        }
+
+        private static void AddAbsoluteLayoutIfNecessary(ElementSave element, int tabCount, StringBuilder stringBuilder, CodeOutputProjectSettings projectSettings)
+        {
+
+            var shouldAddMainLayout =
+                GetIfShouldAddMainLayout(element, projectSettings);
+
+            if (shouldAddMainLayout)
+            {
+                ElementSave baseElement = null;
+                if (!string.IsNullOrEmpty(element.BaseType))
+                {
+                    baseElement = ObjectFinder.Self.GetElementSave(element.BaseType);
+                }
+
+                var baseHasMain = baseElement != null &&
+                    projectSettings?.BaseTypesNotCodeGenerated?.Contains(element.BaseType) != true &&
+                    GetIfShouldAddMainLayout(baseElement, projectSettings);
+                if (!baseHasMain)
+                {
+                    stringBuilder.Append(ToTabs(tabCount) + "protected AbsoluteLayout MainLayout{get; set;}");
+                }
+            }
+        }
+
+        private static BindingBehavior GetBindingBehavior(ElementSave container, string instanceName)
+        {
+            var isContainerXamarinForms = (container.DefaultState.GetValueRecursive("IsXamarinFormsControl") as bool?) ?? false;
+            var isInstanceXamarinForms = (container.DefaultState.GetValueRecursive($"{instanceName}.IsXamarinFormsControl") as bool?) ?? false;
+
+            if (isContainerXamarinForms && isInstanceXamarinForms)
+            {
+                return BindingBehavior.BindablePropertyWithBoundInstance;
+            }
+            else if (isContainerXamarinForms) // container xamforms, child is SkiaGum
+            {
+                return BindingBehavior.BindablePropertyWithEventAssignment;
+            }
+            else
+            {
+                return BindingBehavior.NoBinding;
+            }
+        }
+
+        #endregion
 
         #region Utilities
 
