@@ -148,6 +148,10 @@ namespace Gum.DataTypes
         /// <returns>The found instance, or null if no matches are found.</returns>
         public InstanceSave GetInstance(string name)
         {
+            if(string.IsNullOrEmpty(name))
+            {
+                return null;
+            }
             for(int i = Instances.Count-1; i > -1; i--)
             {
                 if(Instances[i].Name == name)

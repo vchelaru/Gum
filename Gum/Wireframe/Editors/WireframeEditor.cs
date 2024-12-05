@@ -12,6 +12,8 @@ using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
 using Vector2 = System.Numerics.Vector2;
 using Matrix = System.Numerics.Matrix4x4;
 using Gum.Managers;
+using System.Collections;
+using System;
 
 namespace Gum.Wireframe
 {
@@ -257,22 +259,25 @@ namespace Gum.Wireframe
 
             var element = SelectedState.Self.SelectedElement;
 
-            foreach (var newVariable in stateSave.Variables.ToList())
+            foreach (var possiblyChangedVariable in stateSave.Variables.ToList())
             {
-                var oldValue = grabbedState.StateSave.GetValue(newVariable.Name);
+                var oldValue = grabbedState.StateSave.GetValue(possiblyChangedVariable.Name);
 
-                if (DoValuesDiffer(stateSave, newVariable.Name, oldValue))
+                if (DoValuesDiffer(stateSave, possiblyChangedVariable.Name, oldValue))
                 {
-                    // report this:
-                    if (!string.IsNullOrEmpty(newVariable.SourceObject))
-                    {
-                        var instance = element.GetInstance(newVariable.SourceObject);
-                        PluginManager.Self.VariableSet(element, instance, newVariable.GetRootName(), oldValue);
-                    }
-                    else
-                    {
-                        PluginManager.Self.VariableSet(element, null, newVariable.GetRootName(), oldValue);
-                    }
+                    var instance = element.GetInstance(possiblyChangedVariable.SourceObject);
+                    PluginManager.Self.VariableSet(element, instance, possiblyChangedVariable.GetRootName(), oldValue);
+                }
+            }
+
+            foreach (var possiblyChangedVariableList in stateSave.VariableLists)
+            {
+                var oldValue = grabbedState.StateSave.GetVariableListSave(possiblyChangedVariableList.Name);
+
+                if (DoValuesDiffer(stateSave, possiblyChangedVariableList.Name, oldValue))
+                {
+                    var instance = element.GetInstance(possiblyChangedVariableList.SourceObject);
+                    PluginManager.Self.VariableSet(element, instance, possiblyChangedVariableList.GetRootName(), oldValue);
                 }
             }
 
@@ -320,6 +325,10 @@ namespace Gum.Wireframe
                 {
                     return (Vector2)oldValue != (Vector2)newValue;
                 }
+                else if(oldValue is IList oldList)
+                {
+                    return AreListsSame(oldList, (IList)newValue);
+                }
                 else
                 {
                     return oldValue.Equals(newValue) == false;
@@ -327,5 +336,25 @@ namespace Gum.Wireframe
             }
         }
 
+        private bool AreListsSame(IList oldList, IList newList)
+        {
+            if(oldList == null && newList == null)
+            {
+                return true;
+            }
+            if (oldList == null || newList == null)
+            {
+                return false;
+            }
+
+            for(int i = 0; i < oldList.Count; i++)
+            {
+                if (oldList[i].Equals(newList[i]) == false)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
     }
 }
