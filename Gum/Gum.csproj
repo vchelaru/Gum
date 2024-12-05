@@ -392,6 +392,8 @@
     <Compile Include="RenderingLibrary\BlendExtensions.cs" />
     <Compile Include="RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs" />
     <Compile Include="Responses\DeleteResponse.cs" />
+    <Compile Include="Services\Builder.cs" />
+    <Compile Include="Services\EditVariableService.cs" />
     <Compile Include="Settings\GeneralSettingsFile.cs" />
     <Compile Include="Plugins\InternalPlugins\VariableGrid\MainPropertyGrid.xaml.cs">
       <DependentUpon>MainPropertyGrid.xaml</DependentUpon>
@@ -847,6 +849,9 @@
     </PackageReference>
     <PackageReference Include="Microsoft.AppCenter.Crashes">
       <Version>4.2.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Hosting">
+      <Version>9.0.0</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
       <Version>13.0.1</Version>

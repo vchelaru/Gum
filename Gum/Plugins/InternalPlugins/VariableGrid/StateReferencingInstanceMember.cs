@@ -6,9 +6,11 @@ using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Reflection;
+using Gum.Services;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using GumRuntime;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -31,6 +33,7 @@ namespace Gum.PropertyGridHelpers
         public object LastOldValue { get; private set; }
 
         InstanceSavePropertyDescriptor mPropertyDescriptor;
+        private readonly IEditVariableService _editVariablesService;
         #endregion
 
         #region Properties
@@ -223,15 +226,19 @@ namespace Gum.PropertyGridHelpers
 
         public StateReferencingInstanceMember(InstanceSavePropertyDescriptor ispd, StateSave stateSave,
             StateSaveCategory stateSaveCategory,
-            string variableName, InstanceSave instanceSave, ElementSave elementSave) :
+            string variableName, InstanceSave instanceSave, IStateCategoryListContainer stateListCategoryContainer) :
             base(variableName, stateSave)
         {
+            _editVariablesService = Gum.Services.Builder.App.Services.GetRequiredService<IEditVariableService>();
+
+
+
             StateSaveCategory = stateSaveCategory;
             InstanceSave = instanceSave;
             mStateSave = stateSave;
             mVariableName = variableName;
             mPropertyDescriptor = ispd;
-            ElementSave = elementSave;
+            ElementSave = stateListCategoryContainer as ElementSave;
 
             if (ispd?.IsReadOnly == true)
             {
@@ -256,7 +263,7 @@ namespace Gum.PropertyGridHelpers
             }
             else
             {
-                this.Instance = elementSave;
+                this.Instance = stateListCategoryContainer;
             }
 
             var alreadyHasSpaces = RootVariableName?.Contains(" ");
@@ -273,7 +280,7 @@ namespace Gum.PropertyGridHelpers
 
             TryAddCopyVariableReferenceMenuOptions();
 
-            TryAddEditVariableOption();
+            _editVariablesService.TryAddEditVariableOptions(this, VariableSave, stateListCategoryContainer);
 
             // This could be slow since we have to check it for every variable in an object.
             // Maybe we'll want to pass this in to the function?
@@ -282,7 +289,7 @@ namespace Gum.PropertyGridHelpers
             {
                 standardElement = ObjectFinder.Self.GetRootStandardElementSave(instanceSave);
             }
-            else
+            else if(stateListCategoryContainer is ElementSave elementSave)
             {
                 standardElement = ObjectFinder.Self.GetRootStandardElementSave(elementSave);
             }
@@ -396,18 +403,6 @@ namespace Gum.PropertyGridHelpers
                         }
                     };
                 }
-            }
-        }
-
-        private void TryAddEditVariableOption()
-        {
-            var variable = this.VariableSave;
-            if (variable != null)
-            {
-                ContextMenuEvents.Add("Edit Variable", (sender, e) =>
-                {
-                    GumCommands.Self.GuiCommands.ShowEditVariableWindow(variable);
-                });
             }
         }
 

@@ -13,6 +13,7 @@ using Gum.Controls;
 using Gum.Logic.FileWatch;
 using Microsoft.AppCenter.Crashes;
 using Gum.DataTypes;
+using Gum.Services;
 
 namespace Gum
 {
@@ -52,6 +53,8 @@ namespace Gum
             System.Diagnostics.PresentationTraceSources.DataBindingSource.Switch.Level =
                 System.Diagnostics.SourceLevels.Critical;
 #endif
+            var builder = new Builder();
+            builder.Build();
 
             InitializeComponent();
 
