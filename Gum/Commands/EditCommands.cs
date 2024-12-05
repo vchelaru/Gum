@@ -228,36 +228,7 @@ namespace Gum.Commands
 
         internal void AskToRenameStateCategory(StateSaveCategory category, ElementSave elementSave)
         {
-            // This category can only be renamed if no behaviors require it
-            var behaviorsNeedingCategory = DeleteLogic.Self.GetBehaviorsNeedingCategory(category, elementSave as ComponentSave);
-
-            if (behaviorsNeedingCategory.Any())
-            {
-                string message =
-                    "This category cannot be renamed because it is needed by the following behavior(s):";
-
-                foreach (var behavior in behaviorsNeedingCategory)
-                {
-                    message += "\n" + behavior.Name;
-                }
-
-                MessageBox.Show(message);
-            }
-            else
-            {
-                TextInputWindow tiw = new TextInputWindow();
-                tiw.Message = "Enter new category name";
-                tiw.Result = category.Name;
-                var result = tiw.ShowDialog();
-
-                if (result == DialogResult.OK)
-                {
-                    string oldName = category.Name;
-                    string newName = tiw.Result;
-
-                    RenameLogic.RenameCategory(category, oldName, newName);
-                }
-            }
+            RenameLogic.AskToRenameStateCategory(category, elementSave);
         }
 
 

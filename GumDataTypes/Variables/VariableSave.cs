@@ -207,6 +207,11 @@ namespace Gum.DataTypes.Variables
             return toReturn;
         }
 
+        /// <summary>
+        /// Returns the name of the variable on the instance. For example "Rectangle.X" would return "X".
+        /// If this does not have a SourceObect, then the Name is returned.
+        /// </summary>
+        /// <returns>The root name (name on the instance)</returns>
         public string GetRootName() => rootName;
 
         public static string GetRootName(string variableName)

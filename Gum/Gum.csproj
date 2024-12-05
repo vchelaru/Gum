@@ -146,6 +146,9 @@
     <Compile Include="Controls\ColorDisplay.xaml.cs">
       <DependentUpon>ColorDisplay.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\CustomizableTextInputWindow.xaml.cs">
+      <DependentUpon>CustomizableTextInputWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\HeightUnitsControl.cs" />
     <Compile Include="Controls\ListBoxMessageBox.xaml.cs">
       <DependentUpon>ListBoxMessageBox.xaml</DependentUpon>
@@ -746,6 +749,10 @@
     <Page Include="Controls\ColorDisplay.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\CustomizableTextInputWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\ListBoxMessageBox.xaml">
       <Generator>MSBuild:Compile</Generator>
