@@ -17,6 +17,7 @@ internal class Builder
         var builder = Host.CreateApplicationBuilder();
 
         builder.Services.AddSingleton<IEditVariableService, EditVariableService>();
+        builder.Services.AddSingleton<IExposeVariableService, ExposeVariableService>();
 
         App = builder.Build();
     }

@@ -397,6 +397,7 @@
     <Compile Include="Responses\DeleteResponse.cs" />
     <Compile Include="Services\Builder.cs" />
     <Compile Include="Services\EditVariableService.cs" />
+    <Compile Include="Services\ExposeVariableService.cs" />
     <Compile Include="Settings\GeneralSettingsFile.cs" />
     <Compile Include="Plugins\InternalPlugins\VariableGrid\MainPropertyGrid.xaml.cs">
       <DependentUpon>MainPropertyGrid.xaml</DependentUpon>
