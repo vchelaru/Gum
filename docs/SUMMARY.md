@@ -27,6 +27,7 @@
     * [Base Type (Inheritance)](gum-elements/general-properties/base-type-inheritance.md)
     * [Clips Children](gum-elements/general-properties/clips-children.md)
     * [Height Units](gum-elements/general-properties/height-units.md)
+    * [Locked](gum-elements/general-properties/locked.md)
     * [Parent](gum-elements/general-properties/parent.md)
     * [Relative Layout Unit Type](gum-elements/general-properties/relative-layout-unit-type.md)
     * [Rotation](gum-elements/general-properties/rotation.md)
