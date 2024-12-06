@@ -527,8 +527,11 @@ namespace Gum.Wireframe
             return handled;
         }
 
-        public static HashSet<string> Tags { get; private set; } = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase) 
-        { 
+        // For some reason this crashes on web when uploading to itch:
+        //public static HashSet<string> Tags { get; private set; } = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase)
+        // OrdinalIgnoreCase works fine:
+        public static HashSet<string> Tags { get; private set; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
             "alpha",
             "red", 
             "blue", 
