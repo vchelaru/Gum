@@ -152,37 +152,11 @@ namespace WpfDataUi.Controls
             TrySetValueOnUi(InstanceMember.Value);
 
             this.RefreshContextMenu(ButtonWrapPanel.ContextMenu);
+            this.RefreshContextMenu(Grid.ContextMenu);
+
             RefreshButtonAppearance();
 
             RefreshIsEnabled();
-
-            // todo: adjust the background to be either green or gray depending on defaults
-
-            //if (this.HasEnoughInformationToWork())
-            //{
-            //    Type type = this.GetPropertyType();
-
-            //    mInstancePropertyType = type;
-            //}
-
-            //object valueOnInstance;
-            //bool successfulGet = this.TryGetValueOnInstance(out valueOnInstance);
-            //if (successfulGet)
-            //{
-            //    bool wasSet = false;
-            //    if (valueOnInstance != null)
-            //    {
-            //        wasSet = TrySetValueOnUi(valueOnInstance) == ApplyValueResult.Success;
-            //    }
-            //    if (!wasSet)
-            //    {
-            //        this.CheckBox.IsChecked = false;
-            //    }
-            //}
-            //this.CheckBox.Content = InstanceMember.DisplayName;
-            //this.RefreshContextMenu(CheckBox.ContextMenu);
-
-            //CheckBox.Foreground = DesiredForegroundBrush;
 
             SuppressSettingProperty = false;
         }

@@ -459,32 +459,40 @@ namespace Gum.PropertyGridHelpers
 
         private void TryAddExposeVariableMenuOptions(InstanceSave instance)
         {
+            bool canExpose = false;
+            bool canUnExpose = false;
+
             if (this.VariableSave != null)
             {
                 if (string.IsNullOrEmpty(VariableSave.ExposedAsName))
                 {
                     if (instance != null)
                     {
-                        ContextMenuEvents.Add("Expose Variable", HandleExposeVariableClick);
+                        canExpose = true;
                     }
                 }
                 else
                 {
-                    ContextMenuEvents.Add($"Un-expose Variable {VariableSave.ExposedAsName} ({VariableSave.Name})", HandleUnexposeVariableClick);
+                    canUnExpose = true;
                 }
             }
             else
             {
                 var rootName = Gum.DataTypes.Variables.VariableSave.GetRootName(mVariableName);
 
-                bool canExpose = rootName != "Name" && rootName != "Base Type"
+                canExpose = rootName != "Name" && rootName != "Base Type"
                     && instance != null;
 
-                if (canExpose)
-                {
-                    // Variable doesn't exist, so they can only expose it, not unexpose it.
-                    ContextMenuEvents.Add("Expose Variable", HandleExposeVariableClick);
-                }
+            }
+
+            if (canExpose)
+            {
+                // Variable doesn't exist, so they can only expose it, not unexpose it.
+                ContextMenuEvents.Add("Expose Variable", HandleExposeVariableClick);
+            }
+            if(canUnExpose)
+            {
+                ContextMenuEvents.Add($"Un-expose Variable {VariableSave.ExposedAsName} ({VariableSave.Name})", HandleUnexposeVariableClick);
             }
         }
 
