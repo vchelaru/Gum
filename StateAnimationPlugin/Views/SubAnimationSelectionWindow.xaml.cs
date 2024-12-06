@@ -32,6 +32,7 @@ namespace StateAnimationPlugin.Views
         #region Fields
 
         AnimationContainerViewModel mSelectedContainer;
+        private readonly AnimationFilePathService _animationFilePathService;
 
         #endregion
 
@@ -50,16 +51,16 @@ namespace StateAnimationPlugin.Views
                 if(SelectedContainer != null)
                 {
                     ElementSave elementSave;
-                    string fileName = GetFileNameForSelectedContainerAnimations(out elementSave);
+                    var fileName = GetFileNameForSelectedContainerAnimations(out elementSave);
 
 
-                    if (!string.IsNullOrEmpty(fileName) && FileManager.FileExists(fileName))
+                    if (fileName?.Exists() == true)
                     {
                         ElementAnimationsSave save = null;
 
                         try
                         {
-                            save = FileManager.XmlDeserialize<ElementAnimationsSave>(fileName);
+                            save = FileManager.XmlDeserialize<ElementAnimationsSave>(fileName.FullPath);
                         }
                         catch (Exception exception)
                         {
@@ -141,7 +142,7 @@ namespace StateAnimationPlugin.Views
         {
             InitializeComponent();
 
-
+            _animationFilePathService = new AnimationFilePathService();
 
             this.ContainersListBox.DataContext = this;
             this.AnimationsListBox.DataContext = this;
@@ -167,16 +168,16 @@ namespace StateAnimationPlugin.Views
         }
 
 
-        private string GetFileNameForSelectedContainerAnimations(out ElementSave element)
+        private FilePath GetFileNameForSelectedContainerAnimations(out ElementSave element)
         {
-            string fileName = null;
+            FilePath fileName = null;
             if (SelectedContainer.InstanceSave == null)
             {
                 element = SelectedContainer.ElementSave;
 
                 // Get all animations on "this" container
                 fileName =
-                    AnimationCollectionViewModelManager.Self.GetAbsoluteAnimationFileNameFor(SelectedContainer.ElementSave);
+                    _animationFilePathService.GetAbsoluteAnimationFileNameFor(SelectedContainer.ElementSave);
             }
             else
             {
@@ -187,7 +188,7 @@ namespace StateAnimationPlugin.Views
 
                 if (instanceElement != null)
                 {
-                    fileName = AnimationCollectionViewModelManager.Self.GetAbsoluteAnimationFileNameFor(
+                    fileName = _animationFilePathService.GetAbsoluteAnimationFileNameFor(
                         instanceElement);
 
                 }

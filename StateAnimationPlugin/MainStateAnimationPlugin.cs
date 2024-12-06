@@ -27,7 +27,9 @@ namespace StateAnimationPlugin
     public class MainStateAnimationPlugin : PluginBase
     {
         #region Fields
-
+        private readonly DuplicateService _duplicateService;
+        private readonly AnimationFilePathService _animationFilePathService;
+        private readonly ElementDeleteService _elementDeleteService;
         ElementAnimationsViewModel mCurrentViewModel;
 
         StateAnimationPlugin.Views.MainWindow mMainWindow;
@@ -53,8 +55,16 @@ namespace StateAnimationPlugin
 
         #region StartUp/ShutDown
 
+        public MainStateAnimationPlugin()
+        {
+            _duplicateService = new DuplicateService();
+            _animationFilePathService = new AnimationFilePathService();
+            _elementDeleteService = new ElementDeleteService(_animationFilePathService);
+        }
+
         public override void StartUp()
         {
+
             CreateMenuItems();
 
             AssignEvents();
@@ -76,7 +86,7 @@ namespace StateAnimationPlugin
         {
             this.ElementSelected += (_) => RefreshViewModel();
 
-            this.InstanceSelected += (_, __) => RefreshViewModel();
+            this.InstanceSelected += (_, _) => RefreshViewModel();
 
             this.InstanceRename += HandleInstanceRename;
             this.StateRename += HandleStateRename;
@@ -90,13 +100,17 @@ namespace StateAnimationPlugin
 
             this.GetDeleteStateResponse = HandleGetDeleteStateResponse;
             this.GetDeleteStateCategoryResponse = HandleGetDeleteStateCategoryResponse;
+
+            this.DeleteOptionsWindowShow += _elementDeleteService.HandleDeleteOptionsWindowShow;
+            this.DeleteConfirm += _elementDeleteService.HandleConfirmDelete;
         }
+
 
         #endregion
 
         private void HandleElementDuplicate(ElementSave oldElement, ElementSave newElement)
         {
-            DuplicateManager.Self.HandleDuplicate(oldElement, newElement);
+            _duplicateService.HandleDuplicate(oldElement, newElement);
         }
 
         private void HandleElementRename(ElementSave element, string oldName)

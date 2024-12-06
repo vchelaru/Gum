@@ -11,6 +11,7 @@
     <AssemblyName>StateAnimationPlugin</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <LangVersion>12.0</LangVersion>
     <TargetFrameworkProfile />
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
@@ -68,8 +69,10 @@
     <Compile Include="Managers\AnimationCollectionViewModelManager.cs" />
     <Compile Include="MainStateAnimationPlugin.cs" />
     <Compile Include="Managers\AnimationCopyPasteManager.cs" />
+    <Compile Include="Managers\AnimationFilePathService.cs" />
     <Compile Include="Managers\BitmapLoader.cs" />
-    <Compile Include="Managers\DuplicateManager.cs" />
+    <Compile Include="Managers\DuplicateService.cs" />
+    <Compile Include="Managers\ElementDeleteService.cs" />
     <Compile Include="Managers\RenameManager.cs" />
     <Compile Include="Managers\SettingsManager.cs" />
     <Compile Include="Models\AnimationPluginSettings.cs" />

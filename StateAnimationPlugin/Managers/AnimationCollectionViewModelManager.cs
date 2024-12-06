@@ -12,106 +12,81 @@ using System.Text;
 using System.Threading.Tasks;
 using ToolsUtilities;
 
-namespace StateAnimationPlugin.Managers
+namespace StateAnimationPlugin.Managers;
+
+public class AnimationCollectionViewModelManager : Singleton<AnimationCollectionViewModelManager>
 {
-    public class AnimationCollectionViewModelManager : Singleton<AnimationCollectionViewModelManager>
+    AnimationFilePathService _animationFilePathService;
+
+    public AnimationCollectionViewModelManager()
     {
+        _animationFilePathService = new AnimationFilePathService();
+    }
 
-        public ElementAnimationsViewModel GetAnimationCollectionViewModel(ElementSave element)
+    public ElementAnimationsViewModel GetAnimationCollectionViewModel(ElementSave element)
+    {
+        if(element == null)
         {
-            if(element == null)
+            return null;
+        }
+        else
+        {
+            var model = GetElementAnimationsSave(element);
+
+            ElementAnimationsViewModel toReturn;
+            if (model != null)
             {
-                return null;
+                toReturn = ElementAnimationsViewModel.FromSave(model, element);
             }
             else
             {
-                var model = GetElementAnimationsSave(element);
+                toReturn = new ElementAnimationsViewModel();
 
-                ElementAnimationsViewModel toReturn;
-                if (model != null)
-                {
-                    toReturn = ElementAnimationsViewModel.FromSave(model, element);
-                }
-                else
-                {
-                    toReturn = new ElementAnimationsViewModel();
-
-                }
-
-                toReturn.Element = element;
-
-                return toReturn;
             }
 
+            toReturn.Element = element;
+
+            return toReturn;
         }
 
-        public ElementAnimationsSave GetElementAnimationsSave(ElementSave element)
+    }
+
+    public ElementAnimationsSave GetElementAnimationsSave(ElementSave element)
+    {
+        ElementAnimationsSave model = null;
+        var fileName = _animationFilePathService.GetAbsoluteAnimationFileNameFor(element);
+
+
+        if (fileName.Exists())
         {
-            ElementAnimationsSave model = null;
-            var fileName = GetAbsoluteAnimationFileNameFor(element);
-
-
-            if (FileManager.FileExists(fileName))
+            try
             {
-                try
-                {
-                    model = FileManager.XmlDeserialize<ElementAnimationsSave>(fileName);
+                model = FileManager.XmlDeserialize<ElementAnimationsSave>(fileName.FullPath);
 
-                }
-                catch (Exception exception)
-                {
-                    OutputManager.Self.AddError(exception.ToString());
-                }
             }
-
-            return model;
-        }
-
-        public void Save(ElementAnimationsViewModel viewModel)
-        {
-            var currentElement = SelectedState.Self.SelectedElement;
-
-            var fileName = GetAbsoluteAnimationFileNameFor(currentElement);
-
-            if(fileName != null)
+            catch (Exception exception)
             {
-                var save = viewModel.ToSave();
-
-                FileWatchLogic.Self.IgnoreNextChangeOn(fileName);
-                FileManager.XmlSerialize(save, fileName);
+                OutputManager.Self.AddError(exception.ToString());
             }
         }
 
-        public string GetAbsoluteAnimationFileNameFor(string elementName)
+        return model;
+    }
+
+    public void Save(ElementAnimationsViewModel viewModel)
+    {
+        var currentElement = SelectedState.Self.SelectedElement;
+
+        var fileName = _animationFilePathService.GetAbsoluteAnimationFileNameFor(currentElement);
+
+        if(fileName != null)
         {
-            var fullPathXmlForElement = ElementSaveExtensionMethodsGumTool.GetFullPathXmlFile(SelectedState.Self.SelectedElement, elementName);
+            var save = viewModel.ToSave();
 
-            if (fullPathXmlForElement == null)
-            {
-                return null;
-            }
-            else
-            {
-                var absoluteFileName = fullPathXmlForElement.RemoveExtension() + "Animations.ganx";
-
-                return absoluteFileName;
-            }
-        }
-
-        public string GetAbsoluteAnimationFileNameFor(ElementSave elementSave)
-        {
-            var fullPathXmlForElement = elementSave.GetFullPathXmlFile();
-
-            if (fullPathXmlForElement == null)
-            {
-                return null;
-            }
-            else
-            {
-                var absoluteFileName = fullPathXmlForElement.RemoveExtension() + "Animations.ganx";
-
-                return absoluteFileName;
-            }
+            FileWatchLogic.Self.IgnoreNextChangeOn(fileName.FullPath);
+            FileManager.XmlSerialize(save, fileName.FullPath);
         }
     }
+
+
 }

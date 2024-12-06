@@ -16,6 +16,13 @@ namespace StateAnimationPlugin.Managers
 {
     class RenameManager : Singleton<RenameManager>
     {
+        private readonly AnimationFilePathService _animationFilePathService;
+
+        public RenameManager()
+        {
+            _animationFilePathService = new AnimationFilePathService();
+        }
+
         public void HandleRename(ElementSave elementSave, string oldName, ElementAnimationsViewModel viewModel)
         {
             if (elementSave == viewModel?.Element)
@@ -34,11 +41,11 @@ namespace StateAnimationPlugin.Managers
 
                 if (succeeded)
                 {
-                    var oldFileName = AnimationCollectionViewModelManager.Self.GetAbsoluteAnimationFileNameFor(oldName);
+                    var oldFileName = _animationFilePathService.GetAbsoluteAnimationFileNameFor(oldName);
 
-                    if (System.IO.File.Exists(oldFileName))
+                    if (oldFileName.Exists())
                     {
-                        System.IO.File.Delete(oldFileName);
+                        System.IO.File.Delete(oldFileName.FullPath);
                     }
                 }
             }
@@ -145,15 +152,15 @@ namespace StateAnimationPlugin.Managers
 
             foreach (var elementReferencing in elementsReferencingThis)
             {
-                var fileName = AnimationCollectionViewModelManager.Self.GetAbsoluteAnimationFileNameFor(elementReferencing);
+                var fileName = _animationFilePathService.GetAbsoluteAnimationFileNameFor(elementReferencing);
 
                 bool didChange = false;
 
-                if (FileManager.FileExists(fileName))
+                if (fileName.Exists())
                 {
                     try
                     {
-                        var animationSave = FileManager.XmlDeserialize<ElementAnimationsSave>(fileName);
+                        var animationSave = FileManager.XmlDeserialize<ElementAnimationsSave>(fileName.FullPath);
 
                         var potentialAnimations = animationSave.Animations
                             .SelectMany(item => item.Animations)
@@ -177,7 +184,7 @@ namespace StateAnimationPlugin.Managers
 
                         if(didChange)
                         {
-                            FileManager.XmlSerialize(animationSave, fileName);
+                            FileManager.XmlSerialize(animationSave, fileName.FullPath);
                         }
                     }
                     catch (Exception e)
