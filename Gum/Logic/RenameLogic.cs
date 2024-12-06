@@ -10,6 +10,8 @@ using Gum.Managers;
 using Gum.Undo;
 using CommonFormsAndControls;
 using Gum.Controls;
+using System.Drawing;
+using System.Windows.Documents.DocumentStructures;
 
 namespace Gum.Logic;
 
@@ -559,6 +561,81 @@ public class RenameLogic
 
 
 
+    }
+
+
+    #endregion
+
+    #region Variable
+
+    public static List<VariableChange> GetVariableChangesForRenamedVariable(IStateCategoryListContainer owner, VariableSave variableSave, string oldName)
+    {
+        List<VariableChange> toReturn = new List<VariableChange>();
+
+        var project = GumState.Self.ProjectState.GumProjectSave;
+
+        var ownerAsElement = owner as ElementSave;
+
+        // consider:
+        // Inheritance
+        // Instances using this
+
+        List<ElementSave>? inheritingElements = new List<ElementSave> ();
+        if (ownerAsElement != null)
+        {
+            inheritingElements.AddRange(ObjectFinder.Self.GetElementsInheritingFrom(ownerAsElement));
+        }
+
+        foreach (var item in inheritingElements)
+        {
+            foreach (var state in item.AllStates)
+            {
+                foreach (var variable in state.Variables)
+                {
+                    if (variable.ExposedAsName == oldName)
+                    {
+                        toReturn.Add(new VariableChange
+                        {
+                            Container = item,
+                            Category = item.Categories.FirstOrDefault(item => item.States.Contains(state)),
+                            State = state,
+                            Variable = variable
+                        });
+                    }
+                }
+
+            }
+        }
+
+        foreach (var element in project.AllElements)
+        {
+            foreach (var state in element.AllStates)
+            {
+                foreach (var variable in state.Variables)
+                {
+                    if (variable.GetRootName() == oldName && !string.IsNullOrEmpty(variable.SourceObject))
+                    {
+                        var instance = element.GetInstance(variable.SourceObject);
+                        if (instance != null)
+                        {
+                            var instanceElement = ObjectFinder.Self.GetElementSave(instance);
+                            if (inheritingElements.Contains(instanceElement) || instanceElement == ownerAsElement)
+                            {
+                                toReturn.Add(new VariableChange
+                                {
+                                    Container = element,
+                                    Category = element.Categories.FirstOrDefault(item => item.States.Contains(state)),
+                                    State = state,
+                                    Variable = variable
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return toReturn;
     }
 
 

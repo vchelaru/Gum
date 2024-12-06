@@ -174,6 +174,26 @@ namespace Gum.DataTypes
             get; set;
         } = new List<BehaviorSave>();
 
+        [XmlIgnore]
+        public IEnumerable<ElementSave> AllElements
+        {
+            get
+            {
+                foreach (var screen in Screens)
+                {
+                    yield return screen;
+                }
+                foreach (var component in Components)
+                {
+                    yield return component;
+                }
+                foreach (var standard in StandardElements)
+                {
+                    yield return standard;
+                }
+            }
+        }
+
         [XmlElement("ScreenReference")]
         public List<ElementReference> ScreenReferences
         {
@@ -244,16 +264,16 @@ namespace Gum.DataTypes
         {
             var toReturn = Load(fileName, out GumLoadResult result);
 
-            if(!string.IsNullOrEmpty(result.ErrorMessage) || result.MissingFiles?.Count > 0)
+            if (!string.IsNullOrEmpty(result.ErrorMessage) || result.MissingFiles?.Count > 0)
             {
                 var stringBuilder = new StringBuilder();
 
-                if(!string.IsNullOrEmpty(result.ErrorMessage))
+                if (!string.IsNullOrEmpty(result.ErrorMessage))
                 {
                     stringBuilder.AppendLine(result.ErrorMessage);
                 }
 
-                foreach(var missingFile in result.MissingFiles)
+                foreach (var missingFile in result.MissingFiles)
                 {
                     stringBuilder.AppendLine($"Missing file: {missingFile}");
                 }
@@ -281,7 +301,7 @@ namespace Gum.DataTypes
                 return null;
             }
 
-            if(FileManager.IsRelative(fileName))
+            if (FileManager.IsRelative(fileName))
             {
                 fileName = FileManager.MakeAbsolute(fileName);
             }
@@ -299,7 +319,7 @@ namespace Gum.DataTypes
 #endif
 
 
-            if(shouldLoadFromTitleContainer)
+            if (shouldLoadFromTitleContainer)
             {
                 using (var stream = FileManager.GetStreamForFile(fileName))
                 {
@@ -392,7 +412,7 @@ namespace Gum.DataTypes
             foreach (ElementReference reference in ComponentReferences)
             {
                 ComponentSave toAdd = null;
-                                
+
                 try
                 {
                     toAdd = reference.ToElementSave<ComponentSave>(projectRootDirectory, ComponentExtension, result);
@@ -424,7 +444,7 @@ namespace Gum.DataTypes
                 }
             }
 
-            if  (BehaviorReferences != null)
+            if (BehaviorReferences != null)
             {
                 foreach (var reference in BehaviorReferences)
                 {
@@ -452,12 +472,12 @@ namespace Gum.DataTypes
         public void ReloadBehavior(BehaviorSave behavior)
         {
             string projectRootDirectory = FileManager.GetDirectory(this.FullFileName);
-            
+
             var matchingReference = BehaviorReferences.FirstOrDefault(item => item.Name == behavior.Name);
 
             var newBehaviorSave = matchingReference?.ToBehaviorSave(projectRootDirectory);
 
-            if(newBehaviorSave != null)
+            if (newBehaviorSave != null)
             {
                 Behaviors.Remove(behavior);
                 Behaviors.Add(newBehaviorSave);
@@ -477,13 +497,13 @@ namespace Gum.DataTypes
                 ScreenSave newScreen = matchingReference?.ToElementSave<ScreenSave>(
                     projectRootDirectory, GumProjectSave.ScreenExtension, gumLoadResult);
 
-                if(newScreen != null)
+                if (newScreen != null)
                 {
                     Screens.Remove(element as ScreenSave);
                     Screens.Add(newScreen);
                 }
             }
-            else if(element is ComponentSave)
+            else if (element is ComponentSave)
             {
                 var matchingReference = ComponentReferences.FirstOrDefault(item => item.Name == element.Name);
 
@@ -496,7 +516,7 @@ namespace Gum.DataTypes
                     Components.Add(newComonent);
                 }
             }
-            else if(element is StandardElementSave)
+            else if (element is StandardElementSave)
             {
                 var matchingReference = StandardElementReferences.FirstOrDefault(item => item.Name == element.Name);
 
@@ -561,7 +581,7 @@ namespace Gum.DataTypes
                     }
                 }
 
-                if(!succeeded)
+                if (!succeeded)
                 {
                     throw exception;
                 }
@@ -599,7 +619,7 @@ namespace Gum.DataTypes
             }
         }
 
-#endregion
+        #endregion
 
     }
 }
