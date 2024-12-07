@@ -28,6 +28,8 @@ namespace GumFormsSample.Screens
             FrameworkElement.DefaultFormsComponents[typeof(Button)] =
                 typeof(FullyCustomizedButton);
 
+            CreateMenu(root);
+
             CreateColumn1Ui(root);
 
             CreateColumn2Ui(root);
@@ -36,14 +38,43 @@ namespace GumFormsSample.Screens
 
         }
 
+        private void CreateMenu(GraphicalUiElement root)
+        {
+            var menu = new Menu();
+
+            menu.Items.Add("File");
+            menu.Items.Add("Edit");
+            menu.Items.Add("Help");
+
+            root.Children.Add(menu.Visual);
+            //var file = new MenuItem { Header = "_File" };
+            //var edit = new MenuItem { Header = "_Edit" };
+            //var help = new MenuItem { Header = "_Help" };
+            //menu.Items.Add(file);
+            //menu.Items.Add(edit);
+            //menu.Items.Add(help);
+        }
+
         private void CreateColumn1Ui(GraphicalUiElement root)
         {
-            var currentY = 0;
+            var currentY = 40;
+            
+            var scrollBar = new ScrollBar();
+            root.Children.Add(scrollBar.Visual);
+            scrollBar.Width = 24;
+            scrollBar.Height = 200;
+            scrollBar.X = 200;
+            scrollBar.Y = currentY;
+
+            scrollBar.Minimum = 0;
+            scrollBar.Maximum = 150;
+            scrollBar.ViewportSize = 50;
+
 
             var button = new Button();
             root.Children.Add(button.Visual);
             button.X = 0;
-            button.Y = 0;
+            button.Y = currentY;
             button.Width = 100;
             button.Height = 50;
             button.Text = "Hello MonoGame!";
@@ -109,19 +140,12 @@ namespace GumFormsSample.Screens
             }
 
 
-            var scrollBar = new ScrollBar();
-            root.Children.Add(scrollBar.Visual);
-            scrollBar.Width = 24;
-            scrollBar.Height = 200;
-            scrollBar.X = 200;
-            scrollBar.Minimum = 0;
-            scrollBar.Maximum = 150;
-            scrollBar.ViewportSize = 50;
+
         }
 
         private void CreateColumn2Ui(GraphicalUiElement root)
         {
-            var currentY = 20f;
+            var currentY = 40f;
 
             var scrollViewer = new ScrollViewer();
             root.Children.Add(scrollViewer.Visual);
@@ -253,7 +277,7 @@ namespace GumFormsSample.Screens
             var layeredContainer = new ContainerRuntime();
             layeredContainer.Name = "Layered Container";
             layeredContainer.X = 0;
-            layeredContainer.Y = 0;
+            layeredContainer.Y = 40;
             layeredContainer.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
             layeredContainer.AddToManagers(SystemManagers.Default, layer);
             layeredContainer.XUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;

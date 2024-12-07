@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using RenderingLibrary;
 using Microsoft.Xna.Framework.Input;
+using System.Collections.ObjectModel;
+using System.Reflection;
 
 #if FRB
 using FlatRedBall.Input;
@@ -48,6 +50,21 @@ public enum RepositionDirections
 public class ListBox : ItemsControl, IInputReceiver
 {
     #region Fields/Properties
+
+    protected List<ListBoxItem> ListBoxItemsInternal = new List<ListBoxItem>();
+
+    ReadOnlyCollection<ListBoxItem> listBoxItemsReadOnly;
+    public ReadOnlyCollection<ListBoxItem> ListBoxItems
+    {
+        get
+        {
+            if (listBoxItemsReadOnly == null)
+            {
+                listBoxItemsReadOnly = new ReadOnlyCollection<ListBoxItem>(ListBoxItemsInternal);
+            }
+            return listBoxItemsReadOnly;
+        }
+    }
 
     bool doListBoxItemsHaveFocus;
     public bool DoListItemsHaveFocus
@@ -237,6 +254,128 @@ public class ListBox : ItemsControl, IInputReceiver
     {
     }
 
+    #endregion
+
+    #region Item Creation
+
+
+    protected override FrameworkElement CreateNewItemFrameworkElement(object o)
+    {
+        ListBoxItem item;
+        if (o is ListBoxItem)
+        {
+            // the user provided a list box item, so just use that directly instead of creating a new one
+            item = o as ListBoxItem;
+        }
+        else
+        {
+            var visual = CreateNewVisual(o);
+
+            item = CreateNewListBoxItem(visual);
+
+            item.UpdateToObject(o);
+
+            item.BindingContext = o;
+
+        }
+        // If the iuser added a ListBoxItem as a parameter,
+        // let's hope the item doesn't already have this event - if the user recycles them that could be a problem...
+        item.Selected += HandleItemSelected;
+        item.GotFocus += HandleItemFocused;
+        item.Clicked += HandleListBoxItemClicked;
+
+        return item;
+    }
+
+    private ListBoxItem CreateNewListBoxItem(InteractiveGue visual)
+    {
+        if (FrameworkElementTemplate != null)
+        {
+            var item = FrameworkElementTemplate.CreateContent();
+            if (item != null && item is ListBoxItem == false)
+            {
+                throw new InvalidOperationException($"Could not create an item of type {item.GetType()} because it must inherit from ListBoxItem.");
+            }
+            return item as ListBoxItem;
+        }
+        else
+        {
+#if DEBUG
+            if (ItemFormsType == null)
+            {
+                throw new Exception($"This {GetType().Name} named {this.Name} does not have a ItemFormsType specified. " +
+                    "This property must be set before adding any items");
+            }
+#endif
+            var listBoxFormsConstructor = ItemFormsType.GetConstructor(new Type[] { typeof(InteractiveGue) });
+
+            if (listBoxFormsConstructor == null)
+            {
+#if FRB
+                const string TypeName = "GraphicalUiElement";
+#else
+                const string TypeName = "InteractiveGue";
+#endif
+                string message =
+                    $"Could not find a constructor for {ItemFormsType} which takes a single {TypeName} argument. " +
+                    $"If you defined {ItemFormsType} without specifying a constructor, you need to add a constructor which takes a GraphicalUiElement and calls the base constructor.";
+                throw new Exception(message);
+            }
+
+            ListBoxItem item;
+            if (visual.FormsControlAsObject is ListBoxItem asListBoxItem && !isItemTypeSetExplicitly)
+            {
+                item = asListBoxItem;
+            }
+            else
+            {
+                item = listBoxFormsConstructor.Invoke(new object[] { visual }) as ListBoxItem;
+            }
+
+            return item;
+        }
+    }
+
+    private void HandleItemSelected(object sender, EventArgs e)
+    {
+        var args = new SelectionChangedEventArgs();
+
+        for (int i = 0; i < ListBoxItemsInternal.Count; i++)
+        {
+            var listBoxItem = ListBoxItemsInternal[i];
+            if (listBoxItem != sender && listBoxItem.IsSelected)
+            {
+                var deselectedItem = listBoxItem.BindingContext ?? listBoxItem;
+                args.RemovedItems.Add(deselectedItem);
+                listBoxItem.IsSelected = false;
+            }
+        }
+
+        selectedIndex = ListBoxItemsInternal.IndexOf(sender as ListBoxItem);
+        if (selectedIndex > -1)
+        {
+            args.AddedItems.Add(Items[selectedIndex]);
+        }
+
+        SelectionChanged?.Invoke(this, args);
+
+        PushValueToViewModel(nameof(SelectedObject));
+        PushValueToViewModel(nameof(SelectedIndex));
+    }
+    private void HandleItemFocused(object sender, EventArgs e)
+    {
+        OnItemFocused(sender, EventArgs.Empty);
+    }
+
+    private void HandleListBoxItemClicked(object sender, EventArgs e)
+    {
+        OnItemClicked(sender, EventArgs.Empty);
+    }
+
+    #endregion
+
+    #region Collection Changed
+
     protected override void HandleCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
     {
         base.HandleCollectionChanged(sender, e);
@@ -257,22 +396,42 @@ public class ListBox : ItemsControl, IInputReceiver
         }
     }
 
+    protected override void HandleCollectionNewItemCreated(FrameworkElement newItem, int newItemIndex)
+    {
+        if (newItem is ListBoxItem listBoxItem)
+        {
+            ListBoxItemsInternal.Insert(newItemIndex, listBoxItem);
+        }
+    }
+
+    protected override void HandleCollectionItemRemoved(int inexToRemoveFrom)
+    {
+        ListBoxItemsInternal.RemoveAt(inexToRemoveFrom);
+    }
+
+    protected override void HandleCollectionReset()
+    {
+        ListBoxItemsInternal.Clear();
+    }
+
+    protected override void HandleCollectionReplace(int index)
+    {
+        ListBoxItemsInternal[index].UpdateToObject(Items[index]);
+    }
+
+
     #endregion
 
-    protected override void OnItemSelected(object sender, SelectionChangedEventArgs args)
+    void OnItemFocused(object sender, EventArgs args)
     {
-        base.OnItemSelected(sender, args);
-
-        selectedIndex = ListBoxItemsInternal.IndexOf(sender as ListBoxItem);
-        if (selectedIndex > -1)
+        for (int i = 0; i < ListBoxItemsInternal.Count; i++)
         {
-            args.AddedItems.Add(Items[selectedIndex]);
+            var listBoxItem = ListBoxItemsInternal[i];
+            if (listBoxItem != sender && listBoxItem.IsFocused)
+            {
+                listBoxItem.IsFocused = false;
+            }
         }
-
-        SelectionChanged?.Invoke(this, args);
-
-        PushValueToViewModel(nameof(SelectedObject));
-        PushValueToViewModel(nameof(SelectedIndex));
     }
 
     /// <summary>

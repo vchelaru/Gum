@@ -27,7 +27,7 @@ public class ItemsControl : ScrollViewer
     // We'll use the list item forms type unless the list box has its value set
     // explicitly. then we'll go to the list box type. This eventually should get
     // marked as obsolete and we should instead go to a VM solution.
-    bool isItemTypeSetExplicitly = false;
+    protected bool isItemTypeSetExplicitly = false;
     protected Type ItemFormsType
     {
         get => itemFormsType;
@@ -75,20 +75,7 @@ public class ItemsControl : ScrollViewer
         }
     }
 
-    protected List<ListBoxItem> ListBoxItemsInternal = new List<ListBoxItem>();
 
-    ReadOnlyCollection<ListBoxItem> listBoxItemsReadOnly;
-    public ReadOnlyCollection<ListBoxItem> ListBoxItems
-    {
-        get
-        {
-            if (listBoxItemsReadOnly == null)
-            {
-                listBoxItemsReadOnly = new ReadOnlyCollection<ListBoxItem>(ListBoxItemsInternal);
-            }
-            return listBoxItemsReadOnly;
-        }
-    }
 
     public FrameworkElementTemplate FrameworkElementTemplate { get; set; }
 
@@ -137,84 +124,16 @@ public class ItemsControl : ScrollViewer
         Items = new ObservableCollection<object>();
     }
 
-    private ListBoxItem CreateNewListItemVisual(object o)
+    protected virtual FrameworkElement CreateNewItemFrameworkElement(object o)
     {
-        ListBoxItem item;
-        if (o is ListBoxItem)
-        {
-            // the user provided a list box item, so just use that directly instead of creating a new one
-            item = o as ListBoxItem;
-        }
-        else
-        {
-            var visual = CreateNewVisual(o);
-
-            item = CreateNewListBoxItem(visual);
-
-            item.UpdateToObject(o);
-
-            item.BindingContext = o;
-
-        }
-        // If the iuser added a ListBoxItem as a parameter,
-        // let's hope the item doesn't already have this event - if the user recycles them that could be a problem...
-        item.Selected += HandleItemSelected;
-        item.GotFocus += HandleItemFocused;
-        item.Clicked += HandleListBoxItemClicked;
-
-        return item;
+        var label = new Label();
+        label.Text = o?.ToString();
+        label.BindingContext = o;
+        return label;
     }
 
-    private ListBoxItem CreateNewListBoxItem(InteractiveGue visual)
-    {
-        if (FrameworkElementTemplate != null)
-        {
-            var item = FrameworkElementTemplate.CreateContent();
-            if (item != null && item is ListBoxItem == false)
-            {
-                throw new InvalidOperationException($"Could not create an item of type {item.GetType()} because it must inherit from ListBoxItem.");
-            }
-            return item as ListBoxItem;
-        }
-        else
-        {
-#if DEBUG
-            if (ItemFormsType == null)
-            {
-                throw new Exception($"This {GetType().Name} named {this.Name} does not have a ItemFormsType specified. " +
-                    "This property must be set before adding any items");
-            }
-#endif
-            var listBoxFormsConstructor = ItemFormsType.GetConstructor(new Type[] { typeof(InteractiveGue) });
 
-            if (listBoxFormsConstructor == null)
-            {
-#if FRB
-                const string TypeName = "GraphicalUiElement";
-#else
-                const string TypeName = "InteractiveGue";
-#endif
-                string message =
-                    $"Could not find a constructor for {ItemFormsType} which takes a single {TypeName} argument. " +
-                    $"If you defined {ItemFormsType} without specifying a constructor, you need to add a constructor which takes a GraphicalUiElement and calls the base constructor.";
-                throw new Exception(message);
-            }
-
-            ListBoxItem item;
-            if (visual.FormsControlAsObject is ListBoxItem asListBoxItem && !isItemTypeSetExplicitly)
-            {
-                item = asListBoxItem;
-            }
-            else
-            {
-                item = listBoxFormsConstructor.Invoke(new object[] { visual }) as ListBoxItem;
-            }
-
-            return item;
-        }
-    }
-
-    private InteractiveGue CreateNewVisual(object vm)
+    protected virtual InteractiveGue CreateNewVisual(object vm)
     {
         if (VisualTemplate != null)
         {
@@ -254,13 +173,13 @@ public class ItemsControl : ScrollViewer
                     int index = e.NewStartingIndex;
                     foreach (var item in e.NewItems)
                     {
-                        var newItem = CreateNewListItemVisual(item);
+                        var newItem = CreateNewItemFrameworkElement(item);
 
                         InnerPanel.Children.Insert(index, newItem.Visual);
 
                         newItem.Visual.Parent = base.InnerPanel;
+                        HandleCollectionNewItemCreated(newItem, index);
 
-                        ListBoxItemsInternal.Insert(index, newItem);
                         index++;
                     }
                 }
@@ -271,19 +190,20 @@ public class ItemsControl : ScrollViewer
                     var index = e.OldStartingIndex;
 
                     var listItem = InnerPanel.Children[index];
-                    ListBoxItemsInternal.RemoveAt(index);
+                    HandleCollectionItemRemoved(index);
                     listItem.Parent = null;
                 }
                 break;
             case NotifyCollectionChangedAction.Reset:
                 ClearVisualsInternal();
+                HandleCollectionReset();
                 break;
             case NotifyCollectionChangedAction.Replace:
                 {
                     var index = e.NewStartingIndex;
                     var listItem = InnerPanel.Children[index];
-
-                    ListBoxItemsInternal[e.NewStartingIndex].UpdateToObject(Items[index]);
+                    HandleCollectionReplace(index);
+                    
                 }
 
                 break;
@@ -292,57 +212,20 @@ public class ItemsControl : ScrollViewer
         ItemsCollectionChanged?.Invoke(sender, e);
     }
 
+    protected virtual void HandleCollectionNewItemCreated(FrameworkElement newItem, int newItemIndex) { }
+    protected virtual void HandleCollectionItemRemoved(int inexToRemoveFrom) { }
+    protected virtual void HandleCollectionReset() { }
+    protected virtual void HandleCollectionReplace(int index) { }
+
     private void ClearVisualsInternal()
     {
         for (int i = InnerPanel.Children.Count - 1; i > -1; i--)
         {
             InnerPanel.Children[i].Parent = null;
         }
-        ListBoxItemsInternal.Clear();
-    }
-
-    private void HandleItemSelected(object sender, EventArgs e)
-    {
-        OnItemSelected(sender, new SelectionChangedEventArgs());
-
-    }
-
-    private void HandleItemFocused(object sender, EventArgs e)
-    {
-        OnitemFocused(sender, EventArgs.Empty);
     }
 
 
-    private void HandleListBoxItemClicked(object sender, EventArgs e)
-    {
-        OnItemClicked(sender, EventArgs.Empty);
-    }
-
-    protected virtual void OnItemSelected(object sender, SelectionChangedEventArgs args)
-    {
-        for (int i = 0; i < ListBoxItemsInternal.Count; i++)
-        {
-            var listBoxItem = ListBoxItemsInternal[i];
-            if (listBoxItem != sender && listBoxItem.IsSelected)
-            {
-                var deselectedItem = listBoxItem.BindingContext ?? listBoxItem;
-                args.RemovedItems.Add(deselectedItem);
-                listBoxItem.IsSelected = false;
-            }
-        }
-    }
-
-    protected virtual void OnitemFocused(object sender, EventArgs args)
-    {
-        for (int i = 0; i < ListBoxItemsInternal.Count; i++)
-        {
-            var listBoxItem = ListBoxItemsInternal[i];
-            if (listBoxItem != sender && listBoxItem.IsFocused)
-            {
-                listBoxItem.IsFocused = false;
-            }
-        }
-    }
 
     protected void OnItemClicked(object sender, EventArgs args)
     {

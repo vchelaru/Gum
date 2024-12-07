@@ -91,47 +91,53 @@ public class ScrollViewer : FrameworkElement
     {
         var scrollBarVisualAsGue = Visual.GetGraphicalUiElementByName(VerticalScrollBarInstanceName);
 #if DEBUG
-        if (scrollBarVisualAsGue == null)
-        {
-            throw new InvalidOperationException($"Could not find a child with the name {VerticalScrollBarInstanceName}");
-        }
+        // Since ScrollViewer is the base for ItemsControl, and since ItemsControl is the base for Menu, we have to make
+        // scrollbars optional
+        //if (scrollBarVisualAsGue == null)
+        //{
+        //    throw new InvalidOperationException($"Could not find a child with the name {VerticalScrollBarInstanceName}");
+        //}
 #endif
 
         var scrollBarVisual = scrollBarVisualAsGue as InteractiveGue;
 
 #if DEBUG
-        if (scrollBarVisual == null)
-        {
-            throw new InvalidOperationException($"The child with the name {VerticalScrollBarInstanceName} was found, but is not an InteractiveGue." +
-                $" Did you forget to set forms associations for this type?");
-        }
+        //if (scrollBarVisual == null)
+        //{
+        //    throw new InvalidOperationException($"The child with the name {VerticalScrollBarInstanceName} was found, but is not an InteractiveGue." +
+        //        $" Did you forget to set forms associations for this type?");
+        //}
 #endif
 
-        if (scrollBarVisual.FormsControlAsObject == null)
+        if (scrollBarVisual != null)
         {
-            verticalScrollBar = new ScrollBar(scrollBarVisual);
+            if (scrollBarVisual.FormsControlAsObject == null)
+            {
+                verticalScrollBar = new ScrollBar(scrollBarVisual);
+            }
+            else
+            {
+                verticalScrollBar = scrollBarVisual.FormsControlAsObject as ScrollBar;
+            }
+
+            verticalScrollBar.ValueChanged += HandleVerticalScrollBarValueChanged;
+
+            // Not sure if we want to set these here. This was moved out of 
+            // UpdateVerticalScrollBarValues so that it's only set once before
+            // CustomInitialize for UI, so usually this is okay. But eventually 
+            // the user may want to swap out controls and doing so might reset this
+            // value causing confusion? If so, we'd need to store off a temp value.
+            verticalScrollBar.SmallChange = 10;
+            verticalScrollBar.LargeChange = verticalScrollBar.ViewportSize;
+
+
+            // Depending on the height and width units, the scroll bar may get its update
+            // called before or after this. We can't bet on the order, so we have to handle
+            // both this and the scroll bar's height value changes, and adjust according to both:
+            var thumbVisual =
+                verticalScrollBar.Visual.GetGraphicalUiElementByName("ThumbInstance");
+            verticalScrollBar.Visual.SizeChanged += HandleVerticalScrollBarThumbSizeChanged;
         }
-        else
-        {
-            verticalScrollBar = scrollBarVisual.FormsControlAsObject as ScrollBar;
-        }
-        verticalScrollBar.ValueChanged += HandleVerticalScrollBarValueChanged;
-
-        // Not sure if we want to set these here. This was moved out of 
-        // UpdateVerticalScrollBarValues so that it's only set once before
-        // CustomInitialize for UI, so usually this is okay. But eventually 
-        // the user may want to swap out controls and doing so might reset this
-        // value causing confusion? If so, we'd need to store off a temp value.
-        verticalScrollBar.SmallChange = 10;
-        verticalScrollBar.LargeChange = verticalScrollBar.ViewportSize;
-
-
-        // Depending on the height and width units, the scroll bar may get its update
-        // called before or after this. We can't bet on the order, so we have to handle
-        // both this and the scroll bar's height value changes, and adjust according to both:
-        var thumbVisual =
-            verticalScrollBar.Visual.GetGraphicalUiElementByName("ThumbInstance");
-        verticalScrollBar.Visual.SizeChanged += HandleVerticalScrollBarThumbSizeChanged;
 
 
         innerPanel = Visual.GetGraphicalUiElementByName("InnerPanelInstance");
@@ -250,6 +256,10 @@ public class ScrollViewer : FrameworkElement
     // handled internally and this can be made private.
     public void UpdateVerticalScrollBarValues()
     {
+        if(verticalScrollBar == null)
+        {
+            return;
+        }
         verticalScrollBar.Minimum = 0;
         verticalScrollBar.ViewportSize = clipContainer.GetAbsoluteHeight();
 

@@ -38,8 +38,11 @@ namespace MonoGameGum.Forms
             FrameworkElement.DefaultFormsComponents[typeof(Button)] = typeof(DefaultButtonRuntime);
             FrameworkElement.DefaultFormsComponents[typeof(CheckBox)] = typeof(DefaultCheckboxRuntime);
             FrameworkElement.DefaultFormsComponents[typeof(ComboBox)] = typeof(DefaultComboBoxRuntime);
+            FrameworkElement.DefaultFormsComponents[typeof(Label)] = typeof(DefaultLabelRuntime);
             FrameworkElement.DefaultFormsComponents[typeof(ListBox)] = typeof(DefaultListBoxRuntime);
             FrameworkElement.DefaultFormsComponents[typeof(ListBoxItem)] = typeof(DefaultListBoxItemRuntime);
+            FrameworkElement.DefaultFormsComponents[typeof(Menu)] = typeof(DefaultMenuRuntime);
+            FrameworkElement.DefaultFormsComponents[typeof(MenuItem)] = typeof(DefaultMenuItemRuntime);
             FrameworkElement.DefaultFormsComponents[typeof(ScrollBar)] = typeof(DefaultScrollBarRuntime);
             FrameworkElement.DefaultFormsComponents[typeof(ScrollViewer)] = typeof(DefaultScrollViewerRuntime);
             FrameworkElement.DefaultFormsComponents[typeof(TextBox)] = typeof(DefaultTextBoxRuntime);
