@@ -173,9 +173,13 @@ public class ItemsControl : ScrollViewer
                     int index = e.NewStartingIndex;
                     foreach (var item in e.NewItems)
                     {
-                        var newItem = CreateNewItemFrameworkElement(item);
+                        var newItem = item as FrameworkElement ?? CreateNewItemFrameworkElement(item);
 
-                        InnerPanel.Children.Insert(index, newItem.Visual);
+                        if (InnerPanel != null)
+                        {
+                            InnerPanel.Children.Insert(index, newItem.Visual);
+                        }
+
 
                         newItem.Visual.Parent = base.InnerPanel;
                         HandleCollectionNewItemCreated(newItem, index);
@@ -189,9 +193,13 @@ public class ItemsControl : ScrollViewer
                 {
                     var index = e.OldStartingIndex;
 
-                    var listItem = InnerPanel.Children[index];
+                    if(InnerPanel != null)
+                    {
+                        var listItem = InnerPanel.Children[index];
+                        listItem.Parent = null;
+                    }
+
                     HandleCollectionItemRemoved(index);
-                    listItem.Parent = null;
                 }
                 break;
             case NotifyCollectionChangedAction.Reset:

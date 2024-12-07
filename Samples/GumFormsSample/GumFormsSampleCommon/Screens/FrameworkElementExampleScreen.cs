@@ -30,11 +30,11 @@ namespace GumFormsSample.Screens
 
             CreateMenu(root);
 
-            CreateColumn1Ui(root);
+            //CreateColumn1Ui(root);
 
-            CreateColumn2Ui(root);
+            //CreateColumn2Ui(root);
 
-            CreateLayeredUi(roots);
+            //CreateLayeredUi(roots);
 
         }
 
@@ -42,17 +42,42 @@ namespace GumFormsSample.Screens
         {
             var menu = new Menu();
 
-            menu.Items.Add("File");
-            menu.Items.Add("Edit");
+            var fileMenuItem = new MenuItem();
+            fileMenuItem.Header = "File";
+
+            for(int i = 0; i < 10; i++)
+            {
+                var subItem = new MenuItem();
+                subItem.Header = $"File Item {i}";
+                for(int j = 0; j < 5; j++)
+                {
+                    var jItem = new MenuItem();
+                    for(int k = 0; k < 5; k++)
+                    {
+                        var kItem = new MenuItem();
+                        kItem.Header = $"Sub Sub Item {k}";
+                        jItem.Items.Add(kItem);
+                    }
+                    jItem.Header = $"Sub Item {j}";
+                    subItem.Items.Add(jItem);
+
+                }
+                fileMenuItem.Items.Add(subItem);
+            }
+
+            menu.Items.Add(fileMenuItem);
+
+            var editItem = new MenuItem();
+            editItem.Header = "Edit";
+            for (int i = 0; i < 10; i++)
+            {
+                editItem.Items.Add($"Edit Item {i}");
+            }
+            menu.Items.Add(editItem);
             menu.Items.Add("Help");
 
             root.Children.Add(menu.Visual);
-            //var file = new MenuItem { Header = "_File" };
-            //var edit = new MenuItem { Header = "_Edit" };
-            //var help = new MenuItem { Header = "_Help" };
-            //menu.Items.Add(file);
-            //menu.Items.Add(edit);
-            //menu.Items.Add(help);
+
         }
 
         private void CreateColumn1Ui(GraphicalUiElement root)

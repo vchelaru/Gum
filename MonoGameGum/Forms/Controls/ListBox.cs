@@ -6,6 +6,10 @@ using RenderingLibrary;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.ObjectModel;
 using System.Reflection;
+using Gum.Converters;
+using Gum.DataTypes;
+using RenderingLibrary.Graphics;
+
 
 #if FRB
 using FlatRedBall.Input;
@@ -525,6 +529,85 @@ public class ListBox : ItemsControl, IInputReceiver
         // The default state may update the visibility of the scroll bar. Whenever setting the state
         // we should forcefully apply the list box visibility:
         base.UpdateVerticalScrollBarValues();
+    }
+
+    public static void ShowPopupListBox(ScrollViewer popup, GraphicalUiElement listBoxParent)
+    {
+        popup.IsVisible = true;
+        // this thing is going to be in front of everything:
+        popup.Visual.Z = float.PositiveInfinity;
+
+
+
+        // and apply the absolutes:
+        popup.Visual.XUnits = GeneralUnitType.PixelsFromSmall;
+        popup.Visual.YUnits = GeneralUnitType.PixelsFromSmall;
+        popup.Visual.WidthUnits = DimensionUnitType.Absolute;
+        popup.Visual.HeightUnits = DimensionUnitType.Absolute;
+
+
+
+        // let's just make sure it's removed
+        popup.Visual.RemoveFromManagers();
+
+        var managers = listBoxParent.Managers ?? SystemManagers.Default;
+
+        var layerToAddListBoxTo = managers.Renderer.MainLayer;
+
+        var mainRoot = listBoxParent.ElementGueContainingThis ?? listBoxParent;
+
+        // do a search in the layers to see where this is held - expensive but we can at least look in non-main layers
+        foreach (var layer in managers.Renderer.Layers)
+        {
+            if (layer != managers.Renderer.MainLayer)
+            {
+                if (layer.Renderables.Contains(mainRoot) || layer.Renderables.Contains(mainRoot?.RenderableComponent as IRenderableIpso))
+                {
+                    layerToAddListBoxTo = layer;
+                    break;
+                }
+            }
+        }
+
+#if FRB
+        popup.Visual.AddToManagers(listBoxParent.Managers,
+            layerToAddListBoxTo);
+
+        var rootParent = popup.Visual.GetParentRoot();
+
+        var parent = listBoxParent.Parent as IWindow;
+        var isDominant = false;
+        while(parent != null)
+        {
+            if(GuiManager.DominantWindows.Contains(parent))
+            {
+                isDominant = true;
+                break;
+            }
+
+            parent = parent.Parent;
+        }
+
+        if(isDominant)
+        {
+            GuiManager.AddDominantWindow(popup.Visual);
+        }
+
+#else
+        popup.RepositionToKeepInScreen();
+
+        if (listBoxParent.GetTopParent() == FrameworkElement.ModalRoot)
+        {
+            FrameworkElement.ModalRoot.Children.Add(popup.Visual);
+        }
+        else
+        {
+            FrameworkElement.PopupRoot.Children.Add(popup.Visual);
+        }
+
+#endif
+
+
     }
 
     #region IInputReceiver Methods

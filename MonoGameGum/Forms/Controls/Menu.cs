@@ -1,4 +1,5 @@
 ﻿using Gum.Wireframe;
+using MonoGameGum.Input;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -16,7 +17,7 @@ namespace FlatRedBall.Forms.Controls;
 namespace MonoGameGum.Forms.Controls;
 #endif
 
-public class Menu : ItemsControl 
+public class Menu : ItemsControl
 {
     public const string MenuCategoryState = "MenuCategoryState";
     protected List<MenuItem> MenuItemsInternal = new List<MenuItem>();
@@ -91,16 +92,99 @@ public class Menu : ItemsControl
                 listBoxItem.IsSelected = false;
             }
         }
+
+        InteractiveGue.AddNextPushAction(HandleNextPush);
     }
 
+    private void HandleNextPush()
+    {
+        var itemPushed = MainCursor.WindowPushed;
+
+        var pushedOnThis = GetIfIsOnThisOrChildVisual(MainCursor);
+        var pushedOnChildItem = false;
+        if(!pushedOnThis)
+        {
+            foreach(var item in MenuItemsInternal)
+            {
+                if (item.IsRecursiveMenuItem(itemPushed))
+                {
+                    pushedOnChildItem = true;
+                    break;
+                }
+            }
+        }
+
+        var shouldCloseAll = true;
+        if (pushedOnThis)
+        {
+            var wasJustOpened = MenuItemsInternal.Any(item => item.timeOpened == MainCursor.LastPrimaryPushTime);
+            shouldCloseAll = !wasJustOpened;
+            if(wasJustOpened)
+            {
+                foreach (var item in MenuItemsInternal)
+                {
+                    item.SetSelectOnHighlightRecursively(true);
+                }
+            }
+        }
+        else if(pushedOnChildItem)
+        {
+            var menuItemPushed = MainCursor.WindowPushed.FormsControlAsObject as MenuItem;
+            shouldCloseAll = menuItemPushed.Items == null || menuItemPushed.Items.Count == 0;
+        }
+
+
+        if (shouldCloseAll)
+        {
+            // We can toggle the top menu item, but we don't want to close if it was
+            // just opened
+
+            // toggle list items recursively:
+            foreach (var item in MenuItemsInternal)
+            {
+                item.SetSelectOnHighlightRecursively(false);
+                item.IsSelected = false;
+            }
+        }
+        else
+        {
+            InteractiveGue.AddNextPushAction(HandleNextPush);
+        }
+    }
 
     protected override void HandleCollectionNewItemCreated(FrameworkElement newItem, int newItemIndex)
     {
         if (newItem is MenuItem menuItem)
         {
             MenuItemsInternal.Insert(newItemIndex, menuItem);
+            menuItem.Selected += HandleItemSelected;
         }
     }
+
+    //private void HandleMenuItemHighlightChanged(object? sender, EventArgs e)
+    //{
+    //    if (this.MenuItemsInternal.Any(item => item.IsPopupVisible))
+    //    {
+    //        var menuItem = sender as MenuItem;
+    //        if (menuItem.IsHighlighted)
+    //        {
+    //            var parentMenuItem = menuItem.ParentMenuItem;
+    //            if(parentMenuItem != null)
+    //            {
+    //                parentMenuItem.HideChildrenPopupsRecursively();
+    //            }
+    //            else
+    //            {
+    //                foreach(var item in this.MenuItemsInternal)
+    //                {
+    //                    item.HidePopupRecursively();
+    //                }
+    //            }
+
+    //            menuItem.TryShowPopup();
+    //        }
+    //    }
+    //}
 
     protected override void HandleCollectionItemRemoved(int inexToRemoveFrom)
     {
@@ -116,4 +200,5 @@ public class Menu : ItemsControl
     {
         MenuItemsInternal[index].UpdateToObject(Items[index]);
     }
+
 }

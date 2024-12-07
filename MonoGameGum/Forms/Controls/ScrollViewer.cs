@@ -43,6 +43,7 @@ public class ScrollViewer : FrameworkElement
     public GraphicalUiElement InnerPanel => innerPanel;
 
     protected GraphicalUiElement clipContainer;
+    public GraphicalUiElement ClipContainer => clipContainer;
 
     ScrollBarVisibility verticalScrollBarVisibility = ScrollBarVisibility.Auto;
     public ScrollBarVisibility VerticalScrollBarVisibility
@@ -139,10 +140,12 @@ public class ScrollViewer : FrameworkElement
             verticalScrollBar.Visual.SizeChanged += HandleVerticalScrollBarThumbSizeChanged;
         }
 
-
         innerPanel = Visual.GetGraphicalUiElementByName("InnerPanelInstance");
-        innerPanel.SizeChanged += HandleInnerPanelSizeChanged;
-        innerPanel.PositionChanged += HandleInnerPanelPositionChanged;
+        if(innerPanel != null)
+        {
+            innerPanel.SizeChanged += HandleInnerPanelSizeChanged;
+            innerPanel.PositionChanged += HandleInnerPanelPositionChanged;
+        }
         clipContainer = Visual.GetGraphicalUiElementByName("ClipContainerInstance");
 
         Visual.MouseWheelScroll += HandleMouseWheelScroll;
@@ -190,12 +193,15 @@ public class ScrollViewer : FrameworkElement
 
     private void HandleMouseWheelScroll(object sender, RoutedEventArgs args)
     {
-        var valueBefore = verticalScrollBar.Value;
+        if(verticalScrollBar != null)
+        {
+            var valueBefore = verticalScrollBar.Value;
 
-        // Do we want to use the small change? Or have some separate value that the user can set?
-        verticalScrollBar.Value -= MainCursor.ZVelocity * verticalScrollBar.SmallChange;
+            // Do we want to use the small change? Or have some separate value that the user can set?
+            verticalScrollBar.Value -= MainCursor.ZVelocity * verticalScrollBar.SmallChange;
 
-        args.Handled = verticalScrollBar.Value != valueBefore;
+            args.Handled = verticalScrollBar.Value != valueBefore;
+        }
     }
 
     public void ScrollToBottom()
