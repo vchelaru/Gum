@@ -194,7 +194,11 @@ namespace CodeOutputPlugin.Views
 
             member.CustomGetEvent += (owner) =>
             {
-                if (CodeOutputProjectSettings?.CodeProjectRoot != null && FileManager.IsRelative(CodeOutputProjectSettings?.CodeProjectRoot))
+                if(string.IsNullOrEmpty(CodeOutputProjectSettings?.CodeProjectRoot))
+                {
+                    return String.Empty;
+                }
+                else if (CodeOutputProjectSettings?.CodeProjectRoot != null && FileManager.IsRelative(CodeOutputProjectSettings?.CodeProjectRoot))
                 {
                     return FileManager.RemoveDotDotSlash( GumState.Self.ProjectState.ProjectDirectory + CodeOutputProjectSettings?.CodeProjectRoot);
                 }

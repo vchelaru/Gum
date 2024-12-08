@@ -10,8 +10,17 @@ using ToolsUtilities;
 
 namespace CodeOutputPlugin.Manager
 {
-    internal static class RenameManager
+    internal class RenameManager
     {
+        private static readonly CodeGenerationFileLocationsService _codeGenerationFileLocationsService;
+        private static readonly CodeGenerationService _codeGenerationService;
+
+        static RenameManager()
+        {
+            _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService();
+            _codeGenerationService = new CodeGenerationService();
+        }
+
         internal static void HandleRename(ElementSave element, string oldName, CodeOutputProjectSettings codeOutputProjectSettings)
         {
             /////////////////Early Out//////////////////////
@@ -23,9 +32,9 @@ namespace CodeOutputPlugin.Manager
 
             var elementSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(element);
 
-            var oldGeneratedFileName = CodeGenerator.GetGeneratedFileName(element, elementSettings, codeOutputProjectSettings, oldName);
-            var oldCustomFileName = CodeGenerator.GetCustomCodeFileName(element, elementSettings, codeOutputProjectSettings, oldName);
-            var newCustomFileName = CodeGenerator.GetCustomCodeFileName(element, elementSettings, codeOutputProjectSettings);
+            var oldGeneratedFileName = _codeGenerationFileLocationsService.GetGeneratedFileName(element, elementSettings, codeOutputProjectSettings, oldName);
+            var oldCustomFileName = _codeGenerationFileLocationsService.GetCustomCodeFileName(element, elementSettings, codeOutputProjectSettings, oldName);
+            var newCustomFileName = _codeGenerationFileLocationsService.GetCustomCodeFileName(element, elementSettings, codeOutputProjectSettings);
             RegenerateAndMoveCode(element, oldName, codeOutputProjectSettings, oldGeneratedFileName, oldCustomFileName, newCustomFileName);
 
         }
@@ -82,13 +91,13 @@ namespace CodeOutputPlugin.Manager
             foreach (var referencingElement in referencingElements)
             {
                 var elementOutputSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(referencingElement);
-                CodeGenerator.GenerateCodeForElement(referencingElement, elementOutputSettings, codeOutputProjectSettings, false);
+                _codeGenerationService.GenerateCodeForElement(referencingElement, elementOutputSettings, codeOutputProjectSettings, false);
             }
 
             var thisElementOutputSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(element);
 
             // 5. Regenerate this
-            CodeGenerator.GenerateCodeForElement(element, thisElementOutputSettings, codeOutputProjectSettings, false);
+            _codeGenerationService.GenerateCodeForElement(element, thisElementOutputSettings, codeOutputProjectSettings, false);
         }
 
         internal static void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue, CodeOutputProjectSettings codeOutputProjectSettings)
@@ -112,7 +121,7 @@ namespace CodeOutputPlugin.Manager
 
             // Vic - tomorrow keep testing this swapping back adn forth
             var newValue = element.BaseType;
-            var newCustomFileName = CodeGenerator.GetCustomCodeFileName(element, elementSettings, codeOutputProjectSettings);
+            var newCustomFileName = _codeGenerationFileLocationsService.GetCustomCodeFileName(element, elementSettings, codeOutputProjectSettings);
 
             if(oldValue is StandardElementTypes standardElementTypes)
             {
@@ -123,8 +132,8 @@ namespace CodeOutputPlugin.Manager
                 element.BaseType = (string)oldValue; 
             }
 
-            var oldGeneratedFileName = CodeGenerator.GetGeneratedFileName(element, elementSettings, codeOutputProjectSettings);
-            var oldCustomFileName = CodeGenerator.GetCustomCodeFileName(element, elementSettings, codeOutputProjectSettings);
+            var oldGeneratedFileName = _codeGenerationFileLocationsService.GetGeneratedFileName(element, elementSettings, codeOutputProjectSettings);
+            var oldCustomFileName = _codeGenerationFileLocationsService.GetCustomCodeFileName(element, elementSettings, codeOutputProjectSettings);
             var oldVisualApi = CodeGenerator.GetVisualApiForElement(element);
 
 

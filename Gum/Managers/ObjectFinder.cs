@@ -22,6 +22,10 @@ namespace Gum.Managers
 
     public class TypedElementReference
     {
+        /// <summary>
+        /// The owner of the reference. This may be the owner of the StateSave that has a variable referending the type, 
+        /// or the owner of the instance. If the element is an instance of the type, then this is the element that is referenced.
+        /// </summary>
         public ElementSave OwnerOfReferencingObject { get; set; }
         public StateSave StateSave { get; set; }
 
@@ -818,7 +822,12 @@ namespace Gum.Managers
 
         #endregion
 
-        public List<TypedElementReference> GetElementReferences(ElementSave element)
+        /// <summary>
+        /// Returns a list of TypedElementReferences which include all items that reference the argument element.
+        /// </summary>
+        /// <param name="element">The argument element.</param>
+        /// <returns>All referenced to this.</returns>
+        public List<TypedElementReference> GetElementReferencesToThis(ElementSave element)
         {
             var elementName = element.Name;
             var prefix =
@@ -922,6 +931,44 @@ namespace Gum.Managers
             }
 
             return references;
+        }
+
+        public List<ElementSave> GetElementsReferencedByThis(ElementSave elementSave)
+        {
+            Dictionary<string, ElementSave> elementNames = new();
+            GetElementReferencesByThisInternal(elementSave, elementNames);
+
+            return elementNames.Values.ToList();
+        }
+
+        private void GetElementReferencesByThisInternal(ElementSave elementSave, Dictionary<string, ElementSave> elementNames)
+        {
+            if (!string.IsNullOrEmpty(elementSave.BaseType) && elementNames.ContainsKey(elementSave.BaseType) == false)
+            {
+                elementNames.Add(elementSave.BaseType, null);
+            }
+
+            foreach (var instance in elementSave.Instances)
+            {
+                if(elementNames.ContainsKey(instance.BaseType) == false)
+                {
+                    elementNames.Add(instance.BaseType, null);
+                }
+            }
+
+            var names = elementNames.Keys.ToList();
+
+            foreach (var name in names)
+            {
+                if (elementNames[name] == null)
+                {
+                    var element = GetElementSave(name);
+
+                    elementNames[name] = element;
+
+                    GetElementReferencesByThisInternal(element, elementNames);
+                }
+            }
         }
 
         /// <summary>

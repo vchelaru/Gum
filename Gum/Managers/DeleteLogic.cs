@@ -368,7 +368,7 @@ namespace Gum.Managers
                         }
                     }
 
-                    var elementReferences = ObjectFinder.Self.GetElementReferences(element);
+                    var elementReferences = ObjectFinder.Self.GetElementReferencesToThis(element);
 
                     foreach (var reference in elementReferences)
                     {
