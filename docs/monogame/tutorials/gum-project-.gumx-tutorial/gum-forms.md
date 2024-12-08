@@ -17,6 +17,57 @@ Gum Forms provides a collection of standardized, fully functional UI elements. M
 
 We can use all of the types above by adding instances of components which map to these controls.
 
+{% hint style="info" %}
+This tutorial does not require any any of the instances from the previous tutorial. It assumes that you still have a Gum project and that you have set up your Game class to include the necessary Initialize, Draw, and Update calls.
+
+If you would like a simpler starting point, feel free to delete all content in your TitleScreen in Gum, and feel free to delete all code aside from the bare minimum for your project.
+
+In other words, you can reset your game screen to be as shown in the following code:
+
+```csharp
+public class Game1 : Game
+{
+    private GraphicsDeviceManager _graphics;
+    GraphicalUiElement Root;
+    public Game1()
+    {
+        _graphics = new GraphicsDeviceManager(this);
+        Content.RootDirectory = "Content";
+        IsMouseVisible = true;
+    }
+
+    protected override void Initialize()
+    {
+        var gumProject = MonoGameGum.GumService.Default.Initialize(
+            this.GraphicsDevice,
+            // This is relative to Content:
+            "GumProject/GumProject.gumx");
+
+        Root = screen.ToGraphicalUiElement(
+            RenderingLibrary.SystemManagers.Default, addToManagers: true);
+
+        base.Initialize();
+    }
+
+    protected override void Update(GameTime gameTime)
+    {
+        MonoGameGum.GumService.Default.Update(this, gameTime, Root);
+        base.Update(gameTime);
+    }
+
+    protected override void Draw(GameTime gameTime)
+    {
+        GraphicsDevice.Clear(Color.CornflowerBlue);
+        MonoGameGum.GumService.Default.Draw();
+        base.Draw(gameTime);
+    }
+}
+
+```
+{% endhint %}
+
+
+
 ### Adding Forms Instances to a Screen
 
 The previous tutorial showed how to add a Button instance to our screen. We can add other functional controls by drag+dropping instances into the TitleScreen. This tutorial shows how to interact with a ListBox, so you should drag+drop a ListBox instance into your screen. You can also add additional instances of other types if you would like to see them in action, such as CheckBox, ComboBox, Slider, and TextBox.

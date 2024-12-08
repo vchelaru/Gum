@@ -9,6 +9,14 @@ The types used in the previous tutorials fall into two categories:
 
 Games often need to interact with custom components which do not fall into either of these two categories. This tutorial shows how to create custom classes, which we refer to as _runtime types_ for custom components.
 
+{% hint style="info" %}
+This tutorial does not require any any of the instances from the previous tutorial. It assumes that you still have a Gum project and that you have set up your Game class to include the necessary Initialize, Draw, and Update calls.
+
+If you would like a simpler starting point, feel free to delete all content in your TitleScreen in Gum, and feel free to delete all code aside from the bare minimum for your project.
+
+For a full example of what your Game code might look like, see the start of the [Gum Forms](../../gum-forms/#introduction) tutorial.
+{% endhint %}
+
 ### Creating a Component
 
 For this tutorial we'll create a component which can be used to display score. To do this:

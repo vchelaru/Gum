@@ -4,11 +4,37 @@
 
 So far we've been working with a single Screen. This tutorial covers how to work with multiple screens, including how to add and destroy screens in response to UI events.
 
+{% hint style="info" %}
+This tutorial does not require any any of the instances from the previous tutorial. It assumes that you still have a Gum project and that you have set up your Game class to include the necessary Initialize, Draw, and Update calls.
+
+If you would like a simpler starting point, feel free to delete all content in your TitleScreen in Gum, and feel free to delete all code aside from the bare minimum for your project.
+
+For a full example of what your Game code might look like, see the start of the [Gum Forms](../../gum-forms/#introduction) tutorial.
+{% endhint %}
+
 ### Creating Multiple Screens
 
-Before we write any code, we'll create two screens. A real game might have screens like a TitleScreen, OptionsScreen, GameScreen (which includes hud and a pause menu), and a GameOverScreen. For this tutorial we'll create two simple screens, each with a single button and a Text.
+Before we write any code, we'll create two screens. A real game might have screens like a TitleScreen, OptionsScreen, GameScreen (which includes HUD and a pause menu), and a GameOverScreen. For this tutorial we'll create two simple screens, each with a single button and a Text.
+
+First we'll create Screen1:
+
+1. Add a new screen named Screen1
+2. Drag+drop a Text standard element into Screen1
+3. Set the Text property on the newly created TextInstance to **Screen 1** so that you can tell that you are on Screen1 when it is active in your game
+4. Drag+drop a ButtonStandard component into Screen1
+5. Set the Text property on the newly created ButtonStandardInstance to **Go to Screen 2**
+6. Arrange the two instances so they are not overlapping
 
 <figure><img src="../../../.gitbook/assets/image (118).png" alt=""><figcaption><p>Screen1 with a Text and Button</p></figcaption></figure>
+
+Next we'll create Screen2:
+
+1. Add a new Screen named Screen2
+2. Drag+drop a Text standard element into Screen2
+3. Set the Text property on the newly created TextInstance to **Screen 2** so that you can tell that you are in Screen2 when it is active in your game
+4. Drag+drop a ButtonStandard component into Screen2
+5. Set the Text property on the newly created ButtonStandardInstance to **Go to Screen 1**
+6. Arrange the two instances so they are not overlapping
 
 <figure><img src="../../../.gitbook/assets/image (119).png" alt=""><figcaption><p>Screen2 with a Text and Button</p></figcaption></figure>
 
@@ -19,7 +45,9 @@ Next we'll make the following modifications to Game1:
 * Change the first screen to Screen1
 * Make the Root property `public static` so that it can be accessed by the Screens
 
+{% hint style="info" %}
 A full game may keep the Root in a dedicated object which provides access to the Screens, but we're making it `public static` to keep the tutorial simple.
+{% endhint %}
 
 ```csharp
 public class Game1 : Game
