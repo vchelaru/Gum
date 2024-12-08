@@ -60,10 +60,17 @@
             <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" />
             <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
                 <StackPanel>
-                    <WpfDataUi:DataUiGrid Name="DataGrid"></WpfDataUi:DataUiGrid>
-                    <Button Click="HandleGenerateCodeClicked">Generate Code</Button>
-                    <!--Let's not do this ...it's dangerous for now until things stabilize (May 26, 2022)-->
-                    <!--<Button Click="HandleGenerateAllCodeClicked">Generate All Code</Button>-->
+                    <StackPanel Visibility="{Binding GenerateCodeUiVisibility}">
+                        <WpfDataUi:DataUiGrid Name="DataGrid"></WpfDataUi:DataUiGrid>
+                        <Button Click="HandleGenerateCodeClicked">Generate Code</Button>
+                        <!--Let's not do this ...it's dangerous for now until things stabilize (May 26, 2022)-->
+                        <!--<Button Click="HandleGenerateAllCodeClicked">Generate All Code</Button>-->
+                    </StackPanel>
+                    <StackPanel Visibility="{Binding ShowNoGenerationAvailableUiVisibility}">
+                        <TextBlock TextWrapping="Wrap">
+                            Standard Elements cannot be generated because the Gum NuGet packages linked by your project already include Standard Element runtime classes
+                        </TextBlock>
+                    </StackPanel>
                 </StackPanel>
             </ScrollViewer>
         </Grid>

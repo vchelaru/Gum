@@ -96,6 +96,18 @@ namespace CodeOutputPlugin.ViewModels
             }
         }
 
+        public bool IsViewingStandardElement
+        {
+            get => Get<bool>();
+            set => Set(value);
+        }
+
+        [DependsOn(nameof(IsViewingStandardElement))]
+        public Visibility GenerateCodeUiVisibility => (IsViewingStandardElement == false).ToVisibility();
+
+        [DependsOn(nameof(IsViewingStandardElement))]
+        public Visibility ShowNoGenerationAvailableUiVisibility => IsViewingStandardElement.ToVisibility();
+
         public string Code
         {
             get => Get<string>();
