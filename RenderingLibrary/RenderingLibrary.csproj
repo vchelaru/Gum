@@ -11,6 +11,8 @@
     <RootNamespace>RenderingLibrary</RootNamespace>
     <AssemblyName>RenderingLibrary</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <LangVersion>12.0</LangVersion>
+
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>

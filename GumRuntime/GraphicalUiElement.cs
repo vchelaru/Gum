@@ -3969,12 +3969,15 @@ namespace Gum.Wireframe
         /// Adds this as a renderable to the SystemManagers if not already added. If already added
         /// this does not perform any operations - it can be safely called multiple times.
         /// </summary>
-        //public virtual void AddToManagers()
-        //{
 
-        //    AddToManagers(ISystemManagers.Default, null);
+#if NET6_0_OR_GREATER
+        public virtual void AddToManagers()
+        {
 
-        //}
+            AddToManagers(ISystemManagers.Default, null);
+
+        }
+#endif
 
         /// <summary>
         /// Adds this as a renderable to the SystemManagers on the argument layer if not already added
@@ -3982,7 +3985,7 @@ namespace Gum.Wireframe
         /// this does not perform any operations - it can be safely called multiple times, but
         /// calling it multiple times will not move this to a different layer.
         /// </summary>
-        public virtual void AddToManagers(ISystemManagers managers, Layer layer)
+        public virtual void AddToManagers(ISystemManagers managers, Layer layer = null)
         {
 #if DEBUG
             if (managers == null)

@@ -34,6 +34,9 @@ public class GumService
     {
         RegisterRuntimeTypesThroughReflection();
         SystemManagers.Default = new SystemManagers();
+#if NET6_0_OR_GREATER
+        ISystemManagers.Default = SystemManagers.Default;
+#endif
         SystemManagers.Default.Initialize(graphicsDevice, fullInstantiation: true);
         FormsUtilities.InitializeDefaults();
 

@@ -39,6 +39,7 @@ namespace RenderingLibrary
         #region Properties
 
 
+
         static bool IsMobile =>
 #if NET6_0_OR_GREATER
             System.OperatingSystem.IsAndroid() ||
@@ -54,6 +55,8 @@ namespace RenderingLibrary
             get;
             set;
         }
+
+
 
         public Renderer Renderer
         {
