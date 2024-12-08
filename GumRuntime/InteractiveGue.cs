@@ -630,6 +630,9 @@ namespace Gum.Wireframe
         float XRespectingGumZoomAndBounds();
         float YRespectingGumZoomAndBounds();
 
+        double LastPrimaryPushTime { get; }
+        double LastPrimaryClickTime { get; }
+
         int XChange { get; }
         int YChange { get; }
 

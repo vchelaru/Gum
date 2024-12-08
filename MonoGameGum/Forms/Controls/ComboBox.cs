@@ -128,7 +128,7 @@ public class ComboBox : FrameworkElement, IInputReceiver
     // 3. Read the absolute x,y,width, and height (this happens in the show function)
     // 4. Detach the list box from its parent and add it with a positive infinity Z so it sorts on top
     // 5. Apply the absolute values to the list box
-    // This will result in the list box shown at the proper location and size. Then when the list
+    // This will result in the list box shown at the proper location and size.
     DimensionUnitType listBoxWidthUnits;
     DimensionUnitType listBoxHeightUnits;
     GeneralUnitType listBoxXUnits;
@@ -145,7 +145,7 @@ public class ComboBox : FrameworkElement, IInputReceiver
         {
             if (value && IsDropDownOpen == false)
             {
-                ShowListBox();
+                ShowListBoxInstance();
             }
             else if (!value && IsDropDownOpen)
             {
@@ -276,16 +276,14 @@ public class ComboBox : FrameworkElement, IInputReceiver
         }
         else
         {
-            ShowListBox();
+            ShowListBoxInstance();
         }
 
     }
 
-    private void ShowListBox()
+    private void ShowListBoxInstance()
     {
         listBox.IsVisible = true;
-        // this thing is going to be in front of everything:
-        listBox.Visual.Z = float.PositiveInfinity;
 
         // Adding this to the Visual will force a layout....
         this.Visual.Children.Add(listBox.Visual);
@@ -307,78 +305,19 @@ public class ComboBox : FrameworkElement, IInputReceiver
 
         // Now that we have the values, detach it:
         this.Visual.Children.Remove(listBox.Visual);
-
-        // and apply the absolutes:
-        listBox.Visual.XUnits = GeneralUnitType.PixelsFromSmall;
-        listBox.Visual.YUnits = GeneralUnitType.PixelsFromSmall;
-        listBox.Visual.WidthUnits = DimensionUnitType.Absolute;
-        listBox.Visual.HeightUnits = DimensionUnitType.Absolute;
-
         listBox.X = x;
         listBox.Y = y;
         listBox.Width = width;
         listBox.Height = height;
+        ListBox.ShowPopupListBox(listBox, this.Visual);
 
-        // let's just make sure it's removed
-        listBox.Visual.RemoveFromManagers();
-
-        var managers = Visual.Managers ?? SystemManagers.Default;
-
-        var layerToAddListBoxTo = managers.Renderer.MainLayer;
-
-        var mainRoot = Visual.ElementGueContainingThis ?? Visual;
-
-        // do a search in the layers to see where this is held - expensive but we can at least look in non-main layers
-        foreach (var layer in managers.Renderer.Layers)
-        {
-            if (layer != managers.Renderer.MainLayer)
-            {
-                if (layer.Renderables.Contains(mainRoot) || layer.Renderables.Contains(mainRoot?.RenderableComponent))
-                {
-                    layerToAddListBoxTo = layer;
-                    break;
-                }
-            }
-        }
 
 #if FRB
-        listBox.Visual.AddToManagers(Visual.Managers,
-            layerToAddListBoxTo);
-
-        var rootParent = listBox.Visual.GetParentRoot();
-
-        var parent = Visual.Parent as IWindow;
-        var isDominant = false;
-        while(parent != null)
-        {
-            if(GuiManager.DominantWindows.Contains(parent))
-            {
-                isDominant = true;
-                break;
-            }
-
-            parent = parent.Parent;
-        }
-
-        if(isDominant)
-        {
-            GuiManager.AddDominantWindow(listBox.Visual);
-        }
-
         GuiManager.AddNextPushAction(TryHideFromPush);
         GuiManager.SortZAndLayerBased();
         listBox.RepositionToKeepInScreen();
-#else
-        listBox.RepositionToKeepInScreen();
 
-        if (this.Visual.GetTopParent() == FrameworkElement.ModalRoot)
-        {
-            FrameworkElement.ModalRoot.Children.Add(listBox.Visual);
-        }
-        else
-        {
-            FrameworkElement.PopupRoot.Children.Add(listBox.Visual);
-        }
+#else
 
         InteractiveGue.AddNextPushAction(TryHideFromPush);
 #endif
@@ -476,7 +415,7 @@ public class ComboBox : FrameworkElement, IInputReceiver
         HideListBox();
     }
 
-    #endregion
+#endregion
 
     #region UpdateTo Methods
 

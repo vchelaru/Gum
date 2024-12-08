@@ -206,7 +206,9 @@ namespace MonoGameGum.Input
 
         public const float MaximumSecondsBetweenClickForDoubleClick = .25f;
         double mLastPrimaryClickTime = -999;
+        public double LastPrimaryClickTime => mLastPrimaryClickTime;
         double mLastPrimaryPushTime = -999;
+        public double LastPrimaryPushTime => mLastPrimaryPushTime;
         double mLastSecondaryClickTime = -999;
         double mLastMiddleClickTime = -999;
 

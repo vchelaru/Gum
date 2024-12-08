@@ -288,7 +288,11 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
     {
         if (selectionInstance != null)
         {
-            selectionTemplate = selectionInstance.Clone();
+            // We need to do an if-check to support older FRB games that don't have this
+            if (GraphicalUiElement.CloneRenderableFunction != null)
+            { 
+                selectionTemplate = selectionInstance.Clone();
+            }
 
             // Go to > 0 so that we don't delete the original
             for (int i = _selectionInstances.Count - 1; i > 0; i--)
