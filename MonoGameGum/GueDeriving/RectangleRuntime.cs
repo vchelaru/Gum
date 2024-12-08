@@ -43,6 +43,64 @@ namespace MonoGameGum.GueDeriving
             }
         }
 
+        public int Alpha
+        {
+            get
+            {
+                return ContainedLineRectangle.Color.A;
+            }
+            set
+            {
+                // The new version of Glue is moving away from XNA color values. This code converts color values. If this doesn't run, you need to upgrade your GLUX version.
+                // More info here: https://flatredball.com/documentation/tools/glue-reference/glujglux/
+                var color = ToolsUtilitiesStandard.Helpers.ColorExtensions.WithAlpha(ContainedLineRectangle.Color, (byte)value);
+                ContainedLineRectangle.Color = color;
+            }
+        }
+        public int Blue
+        {
+            get
+            {
+                return ContainedLineRectangle.Color.B;
+            }
+            set
+            {
+                // The new version of Glue is moving away from XNA color values. This code converts color values. If this doesn't run, you need to upgrade your GLUX version.
+                // More info here: https://flatredball.com/documentation/tools/glue-reference/glujglux/
+                var color = ToolsUtilitiesStandard.Helpers.ColorExtensions.WithBlue(ContainedLineRectangle.Color, (byte)value);
+                ContainedLineRectangle.Color = color;
+            }
+        }
+        public int Green
+        {
+            get
+            {
+                return ContainedLineRectangle.Color.G;
+            }
+            set
+            {
+                // The new version of Glue is moving away from XNA color values. This code converts color values. If this doesn't run, you need to upgrade your GLUX version.
+                // More info here: https://flatredball.com/documentation/tools/glue-reference/glujglux/
+                var color = ToolsUtilitiesStandard.Helpers.ColorExtensions.WithGreen(ContainedLineRectangle.Color, (byte)value);
+                ContainedLineRectangle.Color = color;
+            }
+        }
+
+        public int Red
+        {
+            get
+            {
+                return ContainedLineRectangle.Color.R;
+            }
+            set
+            {
+                // The new version of Glue is moving away from XNA color values. This code converts color values. If this doesn't run, you need to upgrade your GLUX version.
+                // More info here: https://flatredball.com/documentation/tools/glue-reference/glujglux/
+                var color = ToolsUtilitiesStandard.Helpers.ColorExtensions.WithRed(ContainedLineRectangle.Color, (byte)value);
+                ContainedLineRectangle.Color = color;
+            }
+        }
+
         public Microsoft.Xna.Framework.Color Color
         {
             get

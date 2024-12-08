@@ -13,16 +13,15 @@ namespace MonoGameGumCodeGeneration.Screens
 {
     public partial class MainMenuRuntime
     {
-        public static void RegisterRuntimeType()
-        {
-            GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("MainMenu", typeof(MainMenuRuntime));
-        }
         public PopupRuntime PopupInstance { get; protected set; }
         public ComponentWithStatesRuntime ComponentWithStatesInstance { get; protected set; }
         public TextRuntime TextWithLotsOfPropertiesSet { get; protected set; }
         public PolygonRuntime PolygonInstance { get; protected set; }
+        public CircleRuntime CircleInstance { get; protected set; }
+        public PolygonRuntime PolygonInstance1 { get; protected set; }
+        public RectangleRuntime RectangleInstance { get; protected set; }
 
-        public MainMenuRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
+        public MainMenuRuntime(bool fullInstantiation = true)
         {
             if(fullInstantiation)
             {
@@ -31,7 +30,10 @@ namespace MonoGameGumCodeGeneration.Screens
 
                 InitializeInstances();
 
-                ApplyDefaultVariables();
+                if(fullInstantiation)
+                {
+                    ApplyDefaultVariables();
+                }
                 AssignParents();
                 CustomInitialize();
             }
@@ -46,13 +48,22 @@ namespace MonoGameGumCodeGeneration.Screens
             TextWithLotsOfPropertiesSet.Name = "TextWithLotsOfPropertiesSet";
             PolygonInstance = new PolygonRuntime();
             PolygonInstance.Name = "PolygonInstance";
+            CircleInstance = new CircleRuntime();
+            CircleInstance.Name = "CircleInstance";
+            PolygonInstance1 = new PolygonRuntime();
+            PolygonInstance1.Name = "PolygonInstance1";
+            RectangleInstance = new RectangleRuntime();
+            RectangleInstance.Name = "RectangleInstance";
         }
         protected virtual void AssignParents()
         {
-            this.Children.Add(PopupInstance);
-            this.Children.Add(ComponentWithStatesInstance);
-            this.Children.Add(TextWithLotsOfPropertiesSet);
-            this.Children.Add(PolygonInstance);
+            this.WhatThisContains.Add(PopupInstance);
+            this.WhatThisContains.Add(ComponentWithStatesInstance);
+            this.WhatThisContains.Add(TextWithLotsOfPropertiesSet);
+            this.WhatThisContains.Add(PolygonInstance);
+            this.WhatThisContains.Add(CircleInstance);
+            this.WhatThisContains.Add(PolygonInstance1);
+            this.WhatThisContains.Add(RectangleInstance);
         }
         private void ApplyDefaultVariables()
         {
@@ -86,14 +97,37 @@ namespace MonoGameGumCodeGeneration.Screens
 
             this.PolygonInstance.X = 545f;
             this.PolygonInstance.Y = 55f;
-            this.PolygonInstance.SetPoints(new System.Numerics.Vector2[]{
-                new System.Numerics.Vector2(-32f, -32f),
-                new System.Numerics.Vector2(32f, -32f),
-                new System.Numerics.Vector2(108f, 71f),
-                new System.Numerics.Vector2(-88f, 86f),
-                new System.Numerics.Vector2(-83f, 13f),
-                new System.Numerics.Vector2(-32f, -32f),
-            });
+
+            this.CircleInstance.Alpha = 255;
+            this.CircleInstance.Blue = 255;
+            this.CircleInstance.Green = 0;
+            this.CircleInstance.Radius = 24f;
+            this.CircleInstance.Red = 128;
+            this.CircleInstance.Rotation = 0f;
+            this.CircleInstance.Visible = true;
+            this.CircleInstance.X = 664f;
+            this.CircleInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
+            this.CircleInstance.XUnits = GeneralUnitType.PixelsFromSmall;
+            this.CircleInstance.Y = 220f;
+            this.CircleInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+            this.CircleInstance.YUnits = GeneralUnitType.PixelsFromSmall;
+
+            this.PolygonInstance1.Blue = 0;
+            this.PolygonInstance1.Green = 255;
+            this.PolygonInstance1.Red = 255;
+            this.PolygonInstance1.Rotation = 0f;
+            this.PolygonInstance1.X = 623f;
+            this.PolygonInstance1.XUnits = GeneralUnitType.PixelsFromSmall;
+            this.PolygonInstance1.Y = 317f;
+
+            this.RectangleInstance.Blue = 219;
+            this.RectangleInstance.Green = 168;
+            this.RectangleInstance.Height = 94f;
+            this.RectangleInstance.Red = 74;
+            this.RectangleInstance.Rotation = 0f;
+            this.RectangleInstance.Width = 70f;
+            this.RectangleInstance.X = 677f;
+            this.RectangleInstance.Y = 408f;
 
         }
         partial void CustomInitialize();

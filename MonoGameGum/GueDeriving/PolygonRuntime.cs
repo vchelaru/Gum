@@ -37,6 +37,63 @@ namespace MonoGameGum.GueDeriving
             }
         }
 
+        public int Alpha
+        {
+            get
+            {
+                return ContainedPolygon.Color.A;
+            }
+            set
+            {
+                // The new version of Glue is moving away from XNA color values. This code converts color values. If this doesn't run, you need to upgrade your GLUX version.
+                // More info here: https://flatredball.com/documentation/tools/glue-reference/glujglux/
+                var color = ToolsUtilitiesStandard.Helpers.ColorExtensions.WithAlpha(ContainedPolygon.Color, (byte)value);
+                ContainedPolygon.Color = color;
+            }
+        }
+        public int Blue
+        {
+            get
+            {
+                return ContainedPolygon.Color.B;
+            }
+            set
+            {
+                // The new version of Glue is moving away from XNA color values. This code converts color values. If this doesn't run, you need to upgrade your GLUX version.
+                // More info here: https://flatredball.com/documentation/tools/glue-reference/glujglux/
+                var color = ToolsUtilitiesStandard.Helpers.ColorExtensions.WithBlue(ContainedPolygon.Color, (byte)value);
+                ContainedPolygon.Color = color;
+            }
+        }
+        public int Green
+        {
+            get
+            {
+                return ContainedPolygon.Color.G;
+            }
+            set
+            {
+                // The new version of Glue is moving away from XNA color values. This code converts color values. If this doesn't run, you need to upgrade your GLUX version.
+                // More info here: https://flatredball.com/documentation/tools/glue-reference/glujglux/
+                var color = ToolsUtilitiesStandard.Helpers.ColorExtensions.WithGreen(ContainedPolygon.Color, (byte)value);
+                ContainedPolygon.Color = color;
+            }
+        }
+
+        public int Red
+        {
+            get
+            {
+                return ContainedPolygon.Color.R;
+            }
+            set
+            {
+                // The new version of Glue is moving away from XNA color values. This code converts color values. If this doesn't run, you need to upgrade your GLUX version.
+                // More info here: https://flatredball.com/documentation/tools/glue-reference/glujglux/
+                var color = ToolsUtilitiesStandard.Helpers.ColorExtensions.WithRed(ContainedPolygon.Color, (byte)value);
+                ContainedPolygon.Color = color;
+            }
+        }
         public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 
         public PolygonRuntime(bool fullInstantiation = true)
