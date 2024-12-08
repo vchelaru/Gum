@@ -14,7 +14,7 @@ sprite.SourceFileName = "BearTexture.png";
 container.Children.Add(sprite);
 ```
 
-<figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>BearTexture.png displayed by a SpriteRuntime</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>BearTexture.png displayed by a SpriteRuntime</p></figcaption></figure>
 
 ### SpriteRuntime Texture
 
@@ -30,7 +30,7 @@ sprite.SourceFileName = "BearTexture.png";
 
 This code assumes that the file is relative to the project's Content folder, as shown in the following screenshot:
 
-<figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>BearTexture.png in the Content folder</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>BearTexture.png in the Content folder</p></figcaption></figure>
 
 For more information on working with files at runtime, see the [File Loading](../file-loading.md) page.
 

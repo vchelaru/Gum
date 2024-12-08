@@ -65,7 +65,11 @@ To show the screen in game, modify the Initialize method as shown in the followi
 }
 </code></pre>
 
-The game now displays the Gum screen. Notice that if you attempt to interact with the button, it does not show highlighted/clicked states. This is because we haven't yet passed the Screen to the Update method where UI interaction is performed. We'll do that in the next section.
+The game now displays the Gum screen.&#x20;
+
+{% hint style="info" %}
+If you attempt to interact with the button, it does not show highlighted/clicked states. This is because we haven't yet passed the Screen to the Update method where UI interaction is performed. We'll make these changes in the next section.
+{% endhint %}
 
 <figure><img src="../../../.gitbook/assets/image (103).png" alt=""><figcaption><p>Gum Screen loaded and displayed in a MonoGame project</p></figcaption></figure>
 
