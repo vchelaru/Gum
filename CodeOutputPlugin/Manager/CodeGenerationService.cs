@@ -72,6 +72,7 @@ internal class CodeGenerationService
                 }
                 else
                 {
+                    shouldGenerateMissingFiles = true;
                     GumCommands.Self.GuiCommands.PrintOutput(missingFileMessage);
                 }
 
