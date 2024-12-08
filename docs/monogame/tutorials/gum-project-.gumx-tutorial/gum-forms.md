@@ -19,7 +19,7 @@ We can use all of the types above by adding instances of components which map to
 
 ### Adding Forms Instances to a Screen
 
-The previous tutorial showed how to add a Button instance to our screen. We can add other functional controls by drag+dropping instances into the TitleScreen.
+The previous tutorial showed how to add a Button instance to our screen. We can add other functional controls by drag+dropping instances into the TitleScreen. This tutorial shows how to interact with a ListBox, so you should drag+drop a ListBox instance into your screen. You can also add additional instances of other types if you would like to see them in action, such as CheckBox, ComboBox, Slider, and TextBox.
 
 <figure><img src="../../../.gitbook/assets/24_12 02 10.gif" alt=""><figcaption><p>Drag+dropping Forms components into the TitleScreen</p></figcaption></figure>
 
@@ -29,13 +29,30 @@ Our forms controls already have some functionality even before we write any code
 
 ### Interacting with Forms Instances
 
-We can interact with any of the Forms instances by using `GetFrameworkElementByName`. For example, the following code can be used to add items to the ListBoxInstance:
+We can interact with any of the Forms instances by using `GetFrameworkElementByName`. For example, to interact with the ListBox that we added in the previous section, add the following code to your Initialize method to add items to the ListBox:
 
 ```csharp
-var listBox = Root.GetFrameworkElementByName<ListBox>("ListBoxInstance");
-for(int i = 0; i < 50; i++)
+protected override void Initialize()
 {
-    listBox.Items.Add("Item number " + i.ToString());
+    var gumProject = MonoGameGum.GumService.Default.Initialize(
+        this.GraphicsDevice,
+        // This is relative to Content:
+        "GumProject/GumProject.gumx");      
+        
+    var screen = gumProject.Screens.Find(item => item.Name == "TitleScreen");
+        
+    Root = screen.ToGraphicalUiElement(
+        RenderingLibrary.SystemManagers.Default, addToManagers: true);
+
+// Start of new code
+    var listBox = Root.GetFrameworkElementByName<ListBox>("ListBoxInstance");
+    for(int i = 0; i < 50; i++)
+    {
+        listBox.Items.Add("Item number " + i.ToString());
+    }
+// End of new code
+
+    base.Initialize();
 }
 ```
 

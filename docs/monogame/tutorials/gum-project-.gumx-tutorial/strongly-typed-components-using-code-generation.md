@@ -11,11 +11,13 @@ Games often need to interact with custom components which do not fall into eithe
 
 ### Creating a Component
 
-For this tutorial we'll create a component which can be used to display score. It has three parts:
+For this tutorial we'll create a component which can be used to display score. To do this:
 
-1. A NineSlice for the background
-2. A text for the "Score:" label
-3. A text for the score value
+1. Create a new component called ScoreComponent
+2. Drag+drop a NineSlice for the background into ScoreComponent
+3. Drag+drop a text for the "Score:" label into ScoreComponent
+4. Drag+drop a text for the score value into ScoreComponent
+5. Rearrange the instances so the two Text instances can be clearly seen as shown in the following image:
 
 <figure><img src="../../../.gitbook/assets/image (107).png" alt=""><figcaption><p>Score component in Gum</p></figcaption></figure>
 
@@ -25,7 +27,7 @@ If we add an instance of this component to our screen, we can interact with it a
 
 <figure><img src="../../../.gitbook/assets/image (108).png" alt=""><figcaption><p>ScoreComponentInstance in TitleScreen</p></figcaption></figure>
 
-We can interact with ScoreComponentInstance by using the following code:
+One way to intearct with this element is to call GetGraphicalUiElementByName. You do not need to do this in your code, this is provided simply as an example of how we might interact with it without strongly typed classes:
 
 ```csharp
 var scoreComponentInstance = 
