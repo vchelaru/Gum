@@ -248,6 +248,7 @@ namespace CodeOutputPlugin
             var instance = SelectedState.Self.SelectedInstance;
             var selectedElement = SelectedState.Self.SelectedElement;
 
+            viewModel.IsViewingStandardElement = selectedElement is StandardElementSave;
 
             var settings = control.CodeOutputElementSettings;
 
