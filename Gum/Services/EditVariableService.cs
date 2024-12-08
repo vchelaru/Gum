@@ -238,7 +238,7 @@ internal class EditVariableService : IEditVariableService
 
     private void ApplyChangesToInstances(ElementSave element, string oldName, string newName, string type)
     {
-        var references = ObjectFinder.Self.GetElementReferences(element)
+        var references = ObjectFinder.Self.GetElementReferencesToThis(element)
             .Where(item => item.ReferenceType == ReferenceType.InstanceOfType)
             .ToArray();
 

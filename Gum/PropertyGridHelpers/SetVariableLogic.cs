@@ -176,7 +176,7 @@ namespace Gum.PropertyGridHelpers
 
                 List<TypedElementReference> references = null;
 
-                references = ObjectFinder.Self.GetElementReferences(instanceElement);
+                references = ObjectFinder.Self.GetElementReferencesToThis(instanceElement);
                 var filteredReferences = references
                     .Where(item => item.ReferenceType == ReferenceType.VariableReference)
                     .ToArray();
@@ -269,7 +269,7 @@ namespace Gum.PropertyGridHelpers
             // values on all contained objects for this particular state
             // Maybe this could be slow? not sure, but this covers all cases so if
             // there are performance issues, will investigate later.
-            var references = ObjectFinder.Self.GetElementReferences(elementSave);
+            var references = ObjectFinder.Self.GetElementReferencesToThis(elementSave);
             var filteredReferences = references
                 .Where(item => item.ReferenceType == ReferenceType.VariableReference);
 

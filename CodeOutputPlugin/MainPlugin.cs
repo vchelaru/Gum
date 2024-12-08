@@ -31,7 +31,17 @@ namespace CodeOutputPlugin
         ViewModels.CodeWindowViewModel viewModel;
         Models.CodeOutputProjectSettings codeOutputProjectSettings;
 
+        private readonly CodeGenerationFileLocationsService _codeGenerationFileLocationsService;
+        private readonly CodeGenerationService _codeGenerationService;
+
         #endregion
+
+        public MainPlugin()
+        {
+            _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService();
+
+            _codeGenerationService = new CodeGenerationService();
+        }
 
         public override bool ShutDown(PluginShutDownReason shutDownReason)
         {
@@ -89,8 +99,8 @@ namespace CodeOutputPlugin
             var elementSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(element);
 
             // If it's deleted, ask the user if they also want to delete generated code files
-            var generatedFile = CodeGenerator.GetGeneratedFileName(element, elementSettings, codeOutputProjectSettings);
-            var customCodeFile = CodeGenerator.GetCustomCodeFileName(element, elementSettings, codeOutputProjectSettings);
+            var generatedFile = _codeGenerationFileLocationsService.GetGeneratedFileName(element, elementSettings, codeOutputProjectSettings);
+            var customCodeFile = _codeGenerationFileLocationsService.GetCustomCodeFileName(element, elementSettings, codeOutputProjectSettings);
 
             if(generatedFile?.Exists() == true || customCodeFile?.Exists() == true)
             {
@@ -366,12 +376,12 @@ namespace CodeOutputPlugin
             foreach (var screen in gumProject.Screens)
             {
                 var screenOutputSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(screen);
-                CodeGenerator.GenerateCodeForElement(screen, screenOutputSettings, codeOutputProjectSettings, showPopups: false);
+                _codeGenerationService.GenerateCodeForElement(screen, screenOutputSettings, codeOutputProjectSettings, showPopups: false);
             }
             foreach(var component in gumProject.Components)
             {
                 var componentOutputSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(component);
-                CodeGenerator.GenerateCodeForElement(component, componentOutputSettings, codeOutputProjectSettings, showPopups: false);
+                _codeGenerationService.GenerateCodeForElement(component, componentOutputSettings, codeOutputProjectSettings, showPopups: false);
             }
 
             GumCommands.Self.GuiCommands.ShowMessage($"Generated code\nScreens: {gumProject.Screens.Count}\nComponents: {gumProject.Components.Count}");
@@ -388,7 +398,7 @@ namespace CodeOutputPlugin
             var settings = control.CodeOutputElementSettings;
             if (element != null)
             {
-                CodeGenerator.GenerateCodeForElement(element, settings, codeOutputProjectSettings, showPopups);
+                _codeGenerationService.GenerateCodeForElement(element, settings, codeOutputProjectSettings, showPopups);
             }
         }
     }

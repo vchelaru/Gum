@@ -518,7 +518,7 @@ namespace Gum.Commands
         public void DisplayReferencesTo(ElementSave element)
         {
 
-            var references = ObjectFinder.Self.GetElementReferences(element);
+            var references = ObjectFinder.Self.GetElementReferencesToThis(element);
 
             if (references.Count > 0)
             {

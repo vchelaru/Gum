@@ -130,10 +130,11 @@ public struct CodeGenerationContext
 
 public class CodeGenerator
 {
+    static CodeGenerationFileLocationsService _codeGenerationFileLocationsService;
     // All the methods here need to not be static, then we can get rid of this and make it a proper constructor with DI
     static CodeGenerator()
     {
-
+        _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService();
     }
 
 
@@ -1857,59 +1858,6 @@ public class CodeGenerator
 
     #endregion
 
-    #region File Locations
-
-    public static FilePath GetGeneratedFileName(ElementSave selectedElement, CodeOutputElementSettings elementSettings,
-        CodeOutputProjectSettings codeOutputProjectSettings, string forcedElementName = null, VisualApi? visualApi = null)
-    {
-        var elementName = forcedElementName ?? selectedElement.Name;
-        var effectiveVisualApi = visualApi ?? CodeGenerator.GetVisualApiForElement(selectedElement);
-
-        string generatedFileName = elementSettings.GeneratedFileName;
-
-        if (string.IsNullOrEmpty(generatedFileName) && !string.IsNullOrEmpty(codeOutputProjectSettings.CodeProjectRoot))
-        {
-            string prefix = selectedElement is ScreenSave ? "Screens"
-                : selectedElement is ComponentSave ? "Components"
-                : "Standards";
-            var splitName = (prefix + "/" + elementName).Split('/');
-            var nameWithNamespaceArray = splitName.Take(splitName.Length - 1).Append(CodeGenerator.GetClassNameForType(elementName, effectiveVisualApi));
-
-            var folder = codeOutputProjectSettings.CodeProjectRoot;
-            if (FileManager.IsRelative(folder))
-            {
-                folder = GumState.Self.ProjectState.ProjectDirectory + folder;
-            }
-
-            generatedFileName = folder + string.Join("\\", nameWithNamespaceArray) + ".Generated.cs";
-        }
-
-        if (!string.IsNullOrEmpty(generatedFileName) && FileManager.IsRelative(generatedFileName))
-        {
-            generatedFileName = ProjectState.Self.ProjectDirectory + generatedFileName;
-        }
-
-        return generatedFileName;
-    }
-
-    public static FilePath GetCustomCodeFileName(ElementSave selectedElement, CodeOutputElementSettings elementSettings,
-        CodeOutputProjectSettings codeOutputProjectSettings, string forcedElementName = null, VisualApi? visualApi = null)
-    {
-        var generatedFileName = GetGeneratedFileName(selectedElement, elementSettings, codeOutputProjectSettings, forcedElementName, visualApi);
-        if (generatedFileName == null)
-        {
-            return null;
-        }
-        else
-        {
-            var fullPath = generatedFileName.FullPath;
-            var customCodeFileName = fullPath.Substring(0, fullPath.Length - ".Generated.cs".Length) + ".cs";
-            return customCodeFileName;
-        }
-    }
-
-    #endregion
-
     #region Namespace
 
     public static string GetElementNamespace(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
@@ -2394,94 +2342,6 @@ public class CodeGenerator
         return stringBuilder.ToString();
     }
 
-
-    public static void GenerateCodeForElement(ElementSave selectedElement, Models.CodeOutputElementSettings elementSettings, CodeOutputProjectSettings codeOutputProjectSettings, bool showPopups)
-    {
-        var generatedFileName = CodeGenerator.GetGeneratedFileName(selectedElement, elementSettings, codeOutputProjectSettings);
-
-        ////////////////////////////////////////Early Out/////////////////////////////
-        if (generatedFileName == null)
-        {
-            if (showPopups)
-            {
-                GumCommands.Self.GuiCommands.ShowMessage("Generated file name must be set first");
-            }
-            return;
-        }
-        //////////////////////////////////////End Early Out//////////////////////////
-
-        // We used to use the view model code, but the viewmodel may have
-        // an instance within the element selected. Instead, we want to output
-        // the code for the whole selected element.
-        //var contents = ViewModel.Code;
-
-        string contents = CodeGenerator.GetGeneratedCodeForElement(selectedElement, elementSettings, codeOutputProjectSettings);
-        contents = $"//Code for {selectedElement.ToString()}\r\n{contents}";
-
-        string message = string.Empty;
-
-        var codeDirectory = generatedFileName.GetDirectoryContainingThis();
-
-        var hasDirectory = true;
-
-        if (!System.IO.Directory.Exists(codeDirectory.FullPath))
-        {
-            hasDirectory = false;
-            try
-            {
-                GumCommands.Self.TryMultipleTimes(() =>
-                    System.IO.Directory.CreateDirectory(codeDirectory.FullPath));
-                hasDirectory = true;
-            }
-            catch (Exception e)
-            {
-                GumCommands.Self.GuiCommands.PrintOutput($"Error creating directory {codeDirectory}:\n{e.Message}");
-            }
-        }
-
-        if (hasDirectory)
-        {
-            GumCommands.Self.TryMultipleTimes(() => System.IO.File.WriteAllText(generatedFileName.FullPath, contents));
-
-            // show a message somewhere?
-            message += $"Generated code to {FileManager.RemovePath(generatedFileName.FullPath)}";
-
-            if (!string.IsNullOrEmpty(codeOutputProjectSettings.CodeProjectRoot))
-            {
-
-                // nope! This strips out periods in folders. We don't want to do that:
-                //var splitFileWithoutGenerated = generatedFileName.Split('.').ToArray();
-                //var customCodeFileName = string.Join("\\", splitFileWithoutGenerated.Take(splitFileWithoutGenerated.Length - 2)) + ".cs";
-                // Instead, just strip it off the end:
-                var fullPath = generatedFileName.FullPath;
-                var customCodeFileName = fullPath.Substring(0, fullPath.Length - ".Generated.cs".Length) + ".cs";
-
-                // todo - only save this if it doesn't already exist
-                if (!System.IO.File.Exists(customCodeFileName))
-                {
-                    var directory = FileManager.GetDirectory(customCodeFileName);
-                    if (!System.IO.Directory.Exists(directory))
-                    {
-                        System.IO.Directory.CreateDirectory(directory);
-                    }
-                    var customCodeContents = CustomCodeGenerator.GetCustomCodeForElement(selectedElement, elementSettings, codeOutputProjectSettings);
-                    System.IO.File.WriteAllText(customCodeFileName, customCodeContents);
-                }
-            }
-
-
-            if (showPopups)
-            {
-                GumCommands.Self.GuiCommands.ShowMessage(message);
-            }
-            else
-            {
-                GumCommands.Self.GuiCommands.PrintOutput(message);
-            }
-        }
-
-
-    }
 
     #endregion
 
