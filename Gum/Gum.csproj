@@ -257,6 +257,7 @@
     <Compile Include="Plugins\InternalPlugins\StatePlugin\StateView.Designer.cs">
       <DependentUpon>StateView.cs</DependentUpon>
     </Compile>
+    <Compile Include="Plugins\InternalPlugins\StatePlugin\ViewModels\StateItemViewModel.cs" />
     <Compile Include="Plugins\InternalPlugins\StatePlugin\Views\StateTreeView.xaml.cs">
       <DependentUpon>StateTreeView.xaml</DependentUpon>
     </Compile>

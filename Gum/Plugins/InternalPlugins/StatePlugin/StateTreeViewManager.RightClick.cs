@@ -251,7 +251,7 @@ namespace Gum.Managers
                 newState.Name = StringFunctions.IncrementNumberAtEnd(newState.Name);
             }
 
-            StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedElement);
+            GumCommands.Self.GuiCommands.RefreshStateTreeView();
 
             SelectedState.Self.SelectedStateSave = newState;
 
