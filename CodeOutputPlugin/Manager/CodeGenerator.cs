@@ -2404,90 +2404,6 @@ public class CodeGenerator
         return code;
     }
 
-    private static void FillWithVariablesInState(StateSave stateSave, StringBuilder stringBuilder, int tabCount, CodeGenerationContext context)
-    {
-#if DEBUG
-        if(context.CodeOutputProjectSettings == null)
-        {
-            throw new NullReferenceException("context.CodeOutputProjectSettings should not be null");
-        }
-#endif
-        VariableSave[] variablesToConsider = GetVariablesToAssignOnState(stateSave);
-
-        var variableGroups = variablesToConsider.GroupBy(item => item.SourceObject);
-
-        foreach (var group in variableGroups)
-        {
-            InstanceSave instance = null;
-            var instanceName = group.Key;
-
-            if (instanceName != null)
-            {
-                instance = context.Element.GetInstance(instanceName);
-            }
-            context.Instance = instance;
-
-            #region Determine visual API (Gum or Forms)
-
-            VisualApi visualApi = VisualApi.Gum;
-
-            var defaultState = context.Element.DefaultState;
-            bool? isXamForms = false;
-            if (instance == null)
-            {
-                isXamForms = defaultState.GetValueRecursive($"IsXamarinFormsControl") as bool?;
-            }
-            else
-            {
-                isXamForms = defaultState.GetValueRecursive($"{instance.Name}.IsXamarinFormsControl") as bool?;
-            }
-            if (isXamForms == true)
-            {
-                visualApi = VisualApi.XamarinForms;
-            }
-
-            #endregion
-
-            ElementSave baseElement = null;
-            if (instance == null)
-            {
-                baseElement = Gum.Managers.ObjectFinder.Self.GetElementSave(context.Element.BaseType) ?? context.Element;
-            }
-            else
-            {
-                baseElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance?.BaseType);
-            }
-
-            // could be null if the element references an element that doesn't exist.
-            if (baseElement != null)
-            {
-                var baseDefaultState = baseElement?.DefaultState;
-                RecursiveVariableFinder baseRecursiveVariableFinder = new RecursiveVariableFinder(baseDefaultState);
-
-
-                List<VariableSave> variablesForThisInstance = group
-                    .Where(item => GetIfVariableShouldBeIncludedForInstance(instance, item, baseRecursiveVariableFinder))
-                    .ToList();
-
-
-                ProcessVariableGroups(variablesForThisInstance, stateSave, visualApi, stringBuilder, context);
-
-                // Now that they've been processed, we can process the remainder regularly
-                foreach (var variable in variablesForThisInstance)
-                {
-                    var codeLine = GetCodeLine(variable, context.Element, visualApi, stateSave, context);
-                    stringBuilder.AppendLine(ToTabs(tabCount) + codeLine);
-                    var suffixCodeLine = GetSuffixCodeLine(instance, variable, visualApi);
-                    if (!string.IsNullOrEmpty(suffixCodeLine))
-                    {
-                        stringBuilder.AppendLine(ToTabs(tabCount) + suffixCodeLine);
-                    }
-                }
-            }
-
-        }
-    }
-
     private static VariableSave[] GetVariablesToAssignOnState(StateSave stateSave)
     {
         VariableSave[] variablesToConsider = stateSave.Variables
@@ -2748,6 +2664,112 @@ public class CodeGenerator
         }
     }
 
+    private static void CreateStateVariableAssignmentSwitch(StringBuilder stringBuilder, StateSaveCategory category, CodeGenerationContext context)
+    {
+        stringBuilder.AppendLine(ToTabs(context.TabCount) + $"switch (value)");
+        stringBuilder.AppendLine(ToTabs(context.TabCount) + "{");
+        context.TabCount++;
+
+        foreach (var state in category.States)
+        {
+            stringBuilder.AppendLine(ToTabs(context.TabCount) + $"case {category.Name}.{state.Name}:");
+            context.TabCount++;
+
+            FillWithVariablesInState(state, stringBuilder, context.TabCount, context);
+
+            stringBuilder.AppendLine(ToTabs(context.TabCount) + $"break;");
+            context.TabCount--;
+        }
+
+        context.TabCount--;
+        stringBuilder.AppendLine(ToTabs(context.TabCount) + "}");
+    }
+
+    private static void FillWithVariablesInState(StateSave stateSave, StringBuilder stringBuilder, int tabCount, CodeGenerationContext context)
+    {
+#if DEBUG
+        if (context.CodeOutputProjectSettings == null)
+        {
+            throw new NullReferenceException("context.CodeOutputProjectSettings should not be null");
+        }
+#endif
+        VariableSave[] variablesToConsider = GetVariablesToAssignOnState(stateSave);
+
+        var variableGroups = variablesToConsider.GroupBy(item => item.SourceObject);
+
+        foreach (var group in variableGroups)
+        {
+            InstanceSave instance = null;
+            var instanceName = group.Key;
+
+            if (instanceName != null)
+            {
+                instance = context.Element.GetInstance(instanceName);
+            }
+            context.Instance = instance;
+
+            #region Determine visual API (Gum or Forms)
+
+            VisualApi visualApi = VisualApi.Gum;
+
+            var defaultState = context.Element.DefaultState;
+            bool? isXamForms = false;
+            if (instance == null)
+            {
+                isXamForms = defaultState.GetValueRecursive($"IsXamarinFormsControl") as bool?;
+            }
+            else
+            {
+                isXamForms = defaultState.GetValueRecursive($"{instance.Name}.IsXamarinFormsControl") as bool?;
+            }
+            if (isXamForms == true)
+            {
+                visualApi = VisualApi.XamarinForms;
+            }
+
+            #endregion
+
+            ElementSave baseElement = null;
+            if (instance == null)
+            {
+                baseElement = Gum.Managers.ObjectFinder.Self.GetElementSave(context.Element.BaseType) ?? context.Element;
+            }
+            else
+            {
+                baseElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance?.BaseType);
+            }
+
+            // could be null if the element references an element that doesn't exist.
+            if (baseElement != null)
+            {
+                var baseDefaultState = baseElement?.DefaultState;
+                RecursiveVariableFinder baseRecursiveVariableFinder = new RecursiveVariableFinder(baseDefaultState);
+
+
+                List<VariableSave> variablesForThisInstance = group
+                    .Where(item => GetIfVariableShouldBeIncludedForInstance(instance, item, baseRecursiveVariableFinder))
+                    .ToList();
+
+
+                ProcessVariableGroups(variablesForThisInstance, stateSave, visualApi, stringBuilder, context);
+
+                // Now that they've been processed, we can process the remainder regularly
+                foreach (var variable in variablesForThisInstance)
+                {
+                    var codeLine = GetCodeLine(variable, context.Element, visualApi, stateSave, context);
+                    stringBuilder.AppendLine(ToTabs(tabCount) + codeLine);
+                    var suffixCodeLine = GetSuffixCodeLine(instance, variable, visualApi);
+                    if (!string.IsNullOrEmpty(suffixCodeLine))
+                    {
+                        stringBuilder.AppendLine(ToTabs(tabCount) + suffixCodeLine);
+                    }
+                }
+            }
+
+        }
+    }
+
+
     #endregion
 
     private static void GenerateGumSaveObjects(CodeGenerationContext context, StringBuilder stringBuilder)
@@ -2774,27 +2796,6 @@ public class CodeGenerator
                 stringBuilder.AppendLine(context.Tabs + "}");
             }
         }
-    }
-
-    private static void CreateStateVariableAssignmentSwitch(StringBuilder stringBuilder, StateSaveCategory category, CodeGenerationContext context)
-    {
-        stringBuilder.AppendLine(ToTabs(context.TabCount) + $"switch (value)");
-        stringBuilder.AppendLine(ToTabs(context.TabCount) + "{");
-        context.TabCount++;
-
-        foreach (var state in category.States)
-        {
-            stringBuilder.AppendLine(ToTabs(context.TabCount) + $"case {category.Name}.{state.Name}:");
-            context.TabCount++;
-
-            FillWithVariablesInState(state, stringBuilder, context.TabCount, context);
-
-            stringBuilder.AppendLine(ToTabs(context.TabCount) + $"break;");
-            context.TabCount--;
-        }
-
-        context.TabCount--;
-        stringBuilder.AppendLine(ToTabs(context.TabCount) + "}");
     }
 
     public static string GetCodeForInstance(InstanceSave instance, ElementSave element, CodeOutputProjectSettings codeOutputProjectSettings)
@@ -2941,7 +2942,7 @@ public class CodeGenerator
     {
         if (visualApi == VisualApi.Gum)
         {
-            var fullLineReplacement = TryGetFullGumLineReplacement(context.Instance, variable, context);
+            var fullLineReplacement = TryGetFullGumLineReplacement(variable, context);
 
             if (fullLineReplacement != null)
             {
@@ -3721,8 +3722,9 @@ public class CodeGenerator
                 type?.EndsWith("/Frame") == true;
     }
 
-    private static string TryGetFullGumLineReplacement(InstanceSave instance, VariableSave variable, CodeGenerationContext context)
+    private static string TryGetFullGumLineReplacement(VariableSave variable, CodeGenerationContext context)
     {
+        InstanceSave instance = context.Instance;
         var rootName = variable.GetRootName();
         #region Parent
 
@@ -3748,6 +3750,29 @@ public class CodeGenerator
             {
                 return " ";
             }
+        }
+        else if(variable.IsState(context.Element) && context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame && context.Instance != null)
+        {
+            var rootVariable = ObjectFinder.Self.GetRootVariable(variable.GetRootName(), instance);
+            var isVariableDefinedByStandardElement = false;
+            if (rootVariable != null)
+            {
+                var element = ObjectFinder.Self.GetContainerOf(rootVariable);
+
+                isVariableDefinedByStandardElement = element is StandardElementSave;
+            }
+
+            // If the element type is of type standard element, we can't assign states because there is no codegen for it that has
+            // the state enums. Instead, we have to do it through the SetState method:
+
+            //var isInstanceStandardElement = ObjectFinder.Self.GetElementSave(instance.BaseType) is StandardElementSave;
+
+            if(isVariableDefinedByStandardElement)
+            {
+                return $"{instance.Name}.SetProperty(\"{variable.GetRootName()}\", \"{variable.Value}\");";
+            }
+
+
         }
         else if (GetIsShouldBeLocalized(variable, context.Element.DefaultState))
         {
