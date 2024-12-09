@@ -39,7 +39,7 @@ namespace Gum.Managers
 
         public TreeNode SelectedNode
         {
-            get { return mTreeView.SelectedNode; }
+            get { return mTreeView?.SelectedNode; }
         }
 
         #endregion

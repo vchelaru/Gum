@@ -39,7 +39,6 @@ namespace Gum
         private Wireframe.WireframeControl wireframeControl1;
         public System.Windows.Forms.FlowLayoutPanel ToolbarPanel;
         Panel gumEditorPanel;
-        StateView stateView;
 
         MainPanelControl mainPanelControl;
 
@@ -72,10 +71,6 @@ namespace Gum
             // Initialize before the StateView is created...
             GumCommands.Self.Initialize(this, mainPanelControl);
 
-            stateView = new StateView();
-            GumCommands.Self.GuiCommands.AddControl(stateView, "States", TabLocation.CenterTop);
-
-            ((SelectedState)SelectedState.Self).Initialize(stateView);
             GumCommands.Self.GuiCommands.AddControl(gumEditorPanel, "Editor", TabLocation.RightTop);
 
             TypeManager.Self.Initialize();
@@ -91,8 +86,7 @@ namespace Gum
             // I move it to custom code. Oh well, maybe one day I'll move
             // to a wpf window and can get rid of this
             ElementTreeViewManager.Self.Initialize(this.components, ElementTreeImages, addCursor);
-            // State Tree ViewManager needs init before MenuStripManager
-            StateTreeViewManager.Self.Initialize(this.stateView.TreeView, this.stateView.StateContextMenuStrip);
+
             // ProperGridManager before MenuStripManager
             PropertyGridManager.Self.InitializeEarly();
             // menu strip manager needs to be initialized before plugins:

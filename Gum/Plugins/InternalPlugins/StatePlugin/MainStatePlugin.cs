@@ -1,7 +1,10 @@
-﻿using Gum.DataTypes.Variables;
+﻿using Gum.Controls;
+using Gum.DataTypes.Variables;
+using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using Gum.PropertyGridHelpers;
 using Gum.ToolStates;
+using System;
 using System.ComponentModel.Composition;
 using System.Windows.Forms;
 
@@ -12,9 +15,36 @@ namespace Gum.Plugins.StatePlugin
     [Export(typeof(Gum.Plugins.BaseClasses.PluginBase))]
     public class MainStatePlugin : InternalPlugin
     {
+        StateView stateView;
+
+        PluginTab pluginTab;
+
         public override void StartUp()
         {
             this.StateWindowTreeNodeSelected += HandleStateSelected;
+            this.TreeNodeSelected += HandleTreeNodeSelected;
+
+            stateView = new StateView();
+            pluginTab = GumCommands.Self.GuiCommands.AddControl(stateView, "States", TabLocation.CenterTop);
+
+            ((SelectedState)SelectedState.Self).StateView = stateView;
+
+            // State Tree ViewManager needs init before MenuStripManager
+            StateTreeViewManager.Self.Initialize(this.stateView.TreeView, this.stateView.StateContextMenuStrip);
+        }
+
+        private void HandleTreeNodeSelected(TreeNode node)
+        {
+            var element = SelectedState.Self.SelectedElement;
+            if(element != null)
+            {
+                pluginTab.Title = $"{element.Name} States";
+
+            }
+            else
+            {
+                pluginTab.Title = "States";
+            }
         }
 
         private void HandleStateSelected(TreeNode stateTreeNode)

@@ -23,7 +23,11 @@ namespace Gum.ToolStates
         VariableSave mSelectedVariableSave;
 
         StateView stateView;
-        
+        public StateView StateView
+        {
+            get => stateView;
+            set => stateView = value;
+        }
 
         #endregion
 
@@ -509,14 +513,6 @@ namespace Gum.ToolStates
         private SelectedState()
         {
 
-        }
-
-        public void Initialize(StateView stateView)
-        {
-            this.stateView = stateView;
-
-            // I don't think we need to do anything here yet, but we may want to know
-            // when the state stacking mode changes..
         }
 
         public void UpdateToSelectedElement()
