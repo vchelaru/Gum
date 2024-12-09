@@ -56,9 +56,7 @@ public class WebGlTest1Game : Game
 
     protected override void Initialize()
     {
-        SystemManagers.Default = new SystemManagers();
-        SystemManagers.Default.Initialize(graphics.GraphicsDevice, fullInstantiation: true);
-
+        MonoGameGum.GumService.Default.Initialize(this.GraphicsDevice);
 
         var rectangle = new ColoredRectangleRuntime();
         rectangle.Width = 100;
@@ -72,15 +70,14 @@ public class WebGlTest1Game : Game
 
     protected override void Update(GameTime gameTime)
     {
-        SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
+        MonoGameGum.GumService.Default.Update(this, gameTime);
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
-        SystemManagers.Default.Draw();
-
+        MonoGameGum.GumService.Default.Draw();
         base.Draw(gameTime);
     }
 }
