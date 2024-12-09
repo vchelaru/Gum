@@ -109,12 +109,12 @@ public struct CodeGenerationContext
     public string Tabs => new string(' ', TabCount * 4);
 
     int _tabs;
-    public int TabCount 
+    public int TabCount
     {
         get => _tabs;
         set
         {
-            if(_tabs < 0)
+            if (_tabs < 0)
             {
                 throw new InvalidOperationException();
             }
@@ -318,11 +318,49 @@ public class CodeGenerator
         else
         {
 
+            var shouldSetStateByString = false;
+            var isState = exposedVariable.IsState(context.Element);
+            if(isState && context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
+            {
+                // see if the state is defined by a standard element. If so, we 
+                var rootVariable = ObjectFinder.Self.GetRootVariable(exposedVariable.Name, context.Element);
+
+                if(rootVariable != null && ObjectFinder.Self.GetContainerOf(rootVariable) is StandardElementSave)
+                {
+                    shouldSetStateByString = true;
+                }
+            }
+
+            if(shouldSetStateByString)
+            {
+                type = "string";
+            }
+
             stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {exposedVariable.ExposedAsName}");
             stringBuilder.AppendLine(ToTabs(tabCount) + "{");
             tabCount++;
-            stringBuilder.AppendLine(ToTabs(tabCount) + $"get => {exposedVariable.Name.Replace(" ", "")};");
-            stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {exposedVariable.Name.Replace(" ", "")} = value;");
+            var hasGetter = true;
+            if (isState)
+            {
+                if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
+                {
+                    hasGetter = false;
+                }
+            }
+            if (hasGetter)
+            {
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => {exposedVariable.Name.Replace(" ", "")};");
+            }
+
+            if(shouldSetStateByString)
+            {
+                var rightSide = $"{exposedVariable.SourceObject}.SetProperty(\"{exposedVariable.GetRootName()}\", value?.ToString())";
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {rightSide};");
+            }
+            else
+            {
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {exposedVariable.Name.Replace(" ", "")} = value;");
+            }
             tabCount--;
 
             stringBuilder.AppendLine(ToTabs(tabCount) + "}");
@@ -410,7 +448,7 @@ public class CodeGenerator
             context.Instance = null;
         }
 
-        if(!isFullyInstantiatingInCode)
+        if (!isFullyInstantiatingInCode)
         {
             context.StringBuilder.AppendLine(context.Tabs + "CustomInitialize();");
         }
@@ -480,7 +518,7 @@ public class CodeGenerator
 
     static void RegisterRuntimeType(CodeGenerationContext context)
     {
-        if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
+        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
         {
             var builder = context.StringBuilder;
 
@@ -1780,7 +1818,7 @@ public class CodeGenerator
                 // add it to "this"
                 if (container is ScreenSave)
                 {
-                    if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
+                    if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
                     {
                         context.StringBuilder.AppendLine($"{context.Tabs}this.Children.Add({instance.Name});");
                     }
@@ -1904,7 +1942,7 @@ public class CodeGenerator
         var header =
             $"{access} partial class {GetClassNameForType(context.Element.Name, context.VisualApi)}";
 
-        if(context.CodeOutputProjectSettings.InheritanceLocation == InheritanceLocation.InGeneratedCode)
+        if (context.CodeOutputProjectSettings.InheritanceLocation == InheritanceLocation.InGeneratedCode)
         {
             var inheritance = GetInheritance(context.Element, context.CodeOutputProjectSettings);
             header += ":" + inheritance;
@@ -1963,7 +2001,7 @@ public class CodeGenerator
         }
         else if (element.BaseType == "Container")
         {
-            if(projectSettings.OutputLibrary == OutputLibrary.MonoGame)
+            if (projectSettings.OutputLibrary == OutputLibrary.MonoGame)
             {
                 inheritance = "ContainerRuntime";
             }
@@ -1979,12 +2017,12 @@ public class CodeGenerator
             {
                 inheritance = inheritance.Substring(inheritance.LastIndexOf('/') + 1);
             }
-            if(projectSettings.OutputLibrary == OutputLibrary.MonoGame)
+            if (projectSettings.OutputLibrary == OutputLibrary.MonoGame)
             {
                 // for standards, append "Runtime"
                 var isStandard = ObjectFinder.Self.GetStandardElement(inheritance) != null;
 
-                if(isStandard)
+                if (isStandard)
                 {
                     inheritance = inheritance + "Runtime";
                 }
@@ -2013,7 +2051,7 @@ public class CodeGenerator
         {
             #region Constructor Header
 
-            if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
+            if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
             {
                 // MonoGame expects 0 or 2-arg constructors. We'll start with 0 for now, and eventually go to 2 if we need Forms support
                 // Update November 3, 2024 - there's code that is generated that expects fullInstantiation. Also the docs recommend a 2-arg
@@ -2039,7 +2077,7 @@ public class CodeGenerator
                 stringBuilder.AppendLine(context.Tabs + "{");
                 context.TabCount++;
 
-                if (element.BaseType == "Container" && 
+                if (element.BaseType == "Container" &&
                     // In MonoGame the Container is a ContainerRuntime which handles this already
                     projectSettings.OutputLibrary != OutputLibrary.MonoGame)
                 {
@@ -2094,7 +2132,7 @@ public class CodeGenerator
         }
 
         context.Instance = null;
-        
+
         if (context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
         {
             FillWithVariableAssignments(visualApi, stringBuilder, context);
@@ -2104,7 +2142,7 @@ public class CodeGenerator
 
         if (!DoesElementInheritFromCodeGeneratedElement(element, projectSettings))
         {
-            if(context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
+            if (context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
             {
                 stringBuilder.AppendLine(context.Tabs + "InitializeInstances();");
             }
@@ -2872,12 +2910,12 @@ public class CodeGenerator
                     }
 
                 }
-                if(shouldInclude)
+                if (shouldInclude)
                 {
                     var rootName = item.GetRootName();
 
                     // these are excluded from codegen for now:
-                    if(rootName == "Contained Type")
+                    if (rootName == "Contained Type")
                     {
                         shouldInclude = false;
                     }
@@ -2997,10 +3035,10 @@ public class CodeGenerator
 
         // actually polygon points are so we need those:
         var instance = context.Instance;
-        if(variable.GetRootName() == "Points")
+        if (variable.GetRootName() == "Points")
         {
             bool isPolygon = false;
-            if(instance != null)
+            if (instance != null)
             {
                 var instanceType = ObjectFinder.Self.GetElementSave(instance.BaseType);
                 isPolygon = (instanceType is StandardElementSave && instanceType.Name == "Polygon") ||
@@ -3743,15 +3781,15 @@ public class CodeGenerator
         {
             return " ";
         }
-        else if(rootName == "HasEvents")
+        else if (rootName == "HasEvents")
         {
             // if this is a MonoGame project, do not return " ";
-            if(context.CodeOutputProjectSettings.OutputLibrary != OutputLibrary.MonoGame)
+            if (context.CodeOutputProjectSettings.OutputLibrary != OutputLibrary.MonoGame)
             {
                 return " ";
             }
         }
-        else if(variable.IsState(context.Element) && context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame && context.Instance != null)
+        else if (variable.IsState(context.Element) && context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame && context.Instance != null)
         {
             var rootVariable = ObjectFinder.Self.GetRootVariable(variable.GetRootName(), instance);
             var isVariableDefinedByStandardElement = false;
@@ -3767,7 +3805,7 @@ public class CodeGenerator
 
             //var isInstanceStandardElement = ObjectFinder.Self.GetElementSave(instance.BaseType) is StandardElementSave;
 
-            if(isVariableDefinedByStandardElement)
+            if (isVariableDefinedByStandardElement)
             {
                 return $"{instance.Name}.SetProperty(\"{variable.GetRootName()}\", \"{variable.Value}\");";
             }
@@ -3787,11 +3825,11 @@ public class CodeGenerator
     private static object GetGumVariableName(VariableSave variable, CodeGenerationContext context)
     {
 #if DEBUG
-        if(variable == null)
+        if (variable == null)
         {
             throw new ArgumentNullException(nameof(variable));
         }
-        if(context.CodeOutputProjectSettings == null)
+        if (context.CodeOutputProjectSettings == null)
         {
             throw new ArgumentNullException(nameof(context) + "." + nameof(context.CodeOutputProjectSettings));
         }
@@ -3801,7 +3839,7 @@ public class CodeGenerator
         {
             return variable.GetRootName().Replace(" ", "");
         }
-        else if(variable.GetRootName() == "SourceFile" && context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
+        else if (variable.GetRootName() == "SourceFile" && context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
         {
             return "SourceFileName";
         }
