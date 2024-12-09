@@ -1,12 +1,14 @@
 # 4 - Components
 
-## ction
+## Introduction
 
-Components are objects which are created in Gum which can contain instances of other components and of standard objects. Examples of components include:
+Components can contain instances of other components and of standard objects. Examples of components include:
 
 * Check boxes
 * Buttons
 * Popup Menus
+
+Components can also be simple (such as a button) or more complex UI elements such as a full Options screen with dozens of instances.
 
 ## Simple Button Example - Creating the Entity
 
@@ -17,7 +19,7 @@ To understand how components work, we'll create a simple Button component. To do
 3. Drag+drop a "ColoredRectangle" standard element into the Button component
 4. Drag+drop a "Text" standard element into the Button component
 
-![GUM screenshot showing a single Button Component with ColoredRectangle and Text](../.gitbook/assets/Gum\_HeL31coO2B.png)
+![GUM screenshot showing a single Button Component with ColoredRectangle and Text. Note that the text is white.](../.gitbook/assets/Gum_HeL31coO2B.png)
 
 Since both the ColoredRectangleInstance and TextInstance are using white text you may not be able to see the Text. Let's change the ColoredRectangleInstance's color:
 
@@ -28,7 +30,7 @@ Since both the ColoredRectangleInstance and TextInstance are using white text yo
 
 Now you should be able to see the Text on top of the rectangle:
 
-![](../.gitbook/assets/Gum\_URVP5vRzNF.png)
+![](../.gitbook/assets/Gum_URVP5vRzNF.png)
 
 ## Sizing the colored rectangle
 
@@ -37,20 +39,39 @@ At this point we have what will eventually become a button, but it still needs s
 To do this:
 
 1. Select the ColoredRectangleInstance
+2. Select the Alignment tab
+3. Click the Fill Dock button
+
+<figure><img src="../.gitbook/assets/image.png" alt=""><figcaption><p>Fill Dock expands the ColoredRectangleInstance to occupy its full parent</p></figcaption></figure>
+
+Alternatively you can adjust the individual values:
+
+1. Select the ColoredRectangleInstance
 2. Change Height Units to "Relative to Container"
 3. Change the Width Units to "Relative to Container"
 4. Change the Height to 0. This means that the Height of the ColoredRectangleInstance will match the Height of its container (the Button Component) since it's using "Relative to Container" Height Units.
 5. Change the Width to 0. Just like with Height, this means that the Width of the ColoredRectangleInstance will match the Width of its container.
 
-Now the ColoredRectangleInstance will automatically match the Button's Width and Height:
+Now the ColoredRectangleInstance automatically matches the Button's Width and Height:
 
-![](../.gitbook/assets/Gum\_rL5aAQWKVB.png)
+![](../.gitbook/assets/Gum_rL5aAQWKVB.png)
 
 ## Positioning the Text
 
-Next we'll position the Text. We'll want to adjust the Text so that it is always centered, and line-wraps with the size of the button. First let's center the Text:
+Next we'll position the Text. We'll want to adjust the Text so that it is always centered, and line-wraps with the size of the button.&#x20;
 
-1. Select the TextInstance
+To do this:
+
+1. Select TextInstance
+2. Click the Alignment tab
+3. Set the Margin to 20
+4. Click the Fill Dock button
+
+<figure><img src="../.gitbook/assets/image (1).png" alt=""><figcaption></figcaption></figure>
+
+Alternatively you can set each individual value on the Text by following these steps:
+
+1. Select TextInstance
 2. Change its HorizontalAlignment to Center
 3. Change its VerticalAlignment to Center
 
@@ -68,7 +89,7 @@ Now let's make it centered on the Y as well:
 3. Change the Y Origin to "Center"
 4. Change Y to 0
 
-![](<../.gitbook/assets/Gum\_rL5aAQWKVB (1).png>)
+![](<../.gitbook/assets/Gum_rL5aAQWKVB (1).png>)
 
 Finally, let's make the width of the text match the width of the button. For the Text we'll actually leave a border around the edge so the Text doesn't line wrap right against the edge of the button. To do this:
 
@@ -76,7 +97,7 @@ Finally, let's make the width of the text match the width of the button. For the
 2. Change the Width Units to "Relative to Container"&#x20;
 3. Change Width to -40. This means that the width of the Text will be 40 pixels less than the width of its container. Since the button is centered this means a 20 pixel border on the left and 20 on the right (20+20=40).
 
-![](../.gitbook/assets/Gum\_Pz8MUKGk5c.png)
+![](../.gitbook/assets/Gum_Pz8MUKGk5c.png)
 
 ## Setting the Button default values
 
@@ -88,7 +109,7 @@ Buttons are typically wider than they are tall. To match this common layout, let
 
 Notice that whenever you change these values, the contained objects (text and colored rectangle) adjust automatically.
 
-![](../.gitbook/assets/Gum\_HiigFcls0X.png)
+![](../.gitbook/assets/Gum_HiigFcls0X.png)
 
 ## Using components as instances
 
@@ -101,4 +122,4 @@ You can now resize and position the Button instance. You can also add multiple b
 
 See the section (Exposing Variables) to learn how to change the text independently for each button!
 
-![](../.gitbook/assets/Gum\_mQ20VxDf31.png)
+![](../.gitbook/assets/Gum_mQ20VxDf31.png)

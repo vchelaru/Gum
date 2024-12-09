@@ -39,7 +39,7 @@ To add the files to your .csproj:
 3.  Verify that all gum files (see the extension list above) are marked as Copy if newer in Visual Studio\
 
 
-    <figure><img src="../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Gum project set to Copy if newer</p></figcaption></figure>
+    <figure><img src="../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Gum project set to Copy if newer</p></figcaption></figure>
 
 The example above copies the entirety of the content folder to the output folder by using wildcards. If you do not want every file copied over, you can be more selective in what you copy by including only certain file types. For more information about wildcard support in .csproj files, see this page on how to include wildcards in your .csproj:
 
