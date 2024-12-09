@@ -29,13 +29,27 @@ For this tutorial we'll create a component which can be used to display score. T
 
 <figure><img src="../../../.gitbook/assets/image (107).png" alt=""><figcaption><p>Score component in Gum</p></figcaption></figure>
 
+The exact layout of your component does not need to match the layout displayed in the image above. If you are new to Gum and would like to learn more about creating components, see the [Components tutorial](../../../intro-tutorials/components.md).
+
+The NineSlice in the image above may look different than your default NineSlice. You can modify its appearance by changing its texture coordinates:
+
+1. Select NineSliceInstance
+2. Click the Texture Coordinates Tab
+3. Check the Snap to Grid option
+4. Set the grid snapping value to 8
+5. Drag the Texture Coordinates box to the desired region
+
+<figure><img src="../../../.gitbook/assets/09_05 00 58.gif" alt=""><figcaption><p>Dragging the Texture Coordinates rectangle</p></figcaption></figure>
+
+For more information on working with texture coordinates, see the NineSlice [Texture Left](../../../gum-elements/nineslice/texture-left.md) and [Texture Top](../../../gum-elements/nineslice/texture-top.md) pages.
+
 ### Interacting with Custom Components in code
 
 If we add an instance of this component to our screen, we can interact with it as shown in code. First, we need to drag+drop an instance of the ScoreComponent into our Screen.
 
 <figure><img src="../../../.gitbook/assets/image (108).png" alt=""><figcaption><p>ScoreComponentInstance in TitleScreen</p></figcaption></figure>
 
-One way to intearct with this element is to call GetGraphicalUiElementByName. You do not need to do this in your code, this is provided simply as an example of how we might interact with it without strongly typed classes:
+One way to interact with this element is to call GetGraphicalUiElementByName. You do not need to do this in your code, this is provided simply as an example of how we might interact with it without strongly typed classes:
 
 ```csharp
 var scoreComponentInstance = 
@@ -49,7 +63,7 @@ scoreValue.Text = "999";
 
 Although this code is functional, it can be difficult to maintain in a larger project. We are relying on values like `"ScoreValue"` to find the text object. If we spell this wrong, or if we change the name of our Text in Gum, this code breaks. Also, this code is quite verbose and it can be difficult to write from memory.
 
-We can use strongly-typed classes to solve these problemsl
+We can use strongly-typed classes to solve these problems.
 
 ### Enabling Code Generation
 
@@ -61,7 +75,7 @@ This produces a fully-generated class named ScoreComponentRuntime. In this case,
 
 Since our project loads from disk, we'll switch to using **FindByName** as our Object Instantiation Type. By switching to this Object Instantiation Type, the generated code is modified to look for instances by name.
 
-<figure><img src="../../../.gitbook/assets/image.png" alt=""><figcaption><p>Set Object Instantiation Type to FindByName since we are loading our project from file at runtime</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (2).png" alt=""><figcaption><p>Set Object Instantiation Type to FindByName since we are loading our project from file at runtime</p></figcaption></figure>
 
 The code should look similar to the following block:
 
@@ -191,7 +205,7 @@ As mentioned above, if you do not need any customization for your control, you c
 
 Gum generates using statements in the generated code file. These using statements can be modified in the Code tab. Initially Gum includes a best-guess of the type of using statements needed in your project.
 
-<figure><img src="../../../.gitbook/assets/image (1).png" alt=""><figcaption><p>Using statements in Gum result in generated code using statements</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (1) (1).png" alt=""><figcaption><p>Using statements in Gum result in generated code using statements</p></figcaption></figure>
 
 At times your generated code may include types which are not handled by using statements. If necessary you may need to add additional project-wide using statments as your Screens or Components grow.
 
