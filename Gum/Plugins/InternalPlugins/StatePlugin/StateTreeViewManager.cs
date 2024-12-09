@@ -218,6 +218,7 @@ namespace Gum.Managers
             }
         }
 
+        [Obsolete("Use GumCommands.Self.GuiCommands.RefreshStateTreeView instead")]
         public void RefreshUI(IStateContainer stateContainer)
         {
 

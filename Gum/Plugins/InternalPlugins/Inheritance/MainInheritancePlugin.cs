@@ -169,7 +169,7 @@ namespace Gum.Plugins.Inheritance
             // since the type might change:
             GumCommands.Self.GuiCommands.RefreshElementTreeView(asElementSave);
             PropertyGridManager.Self.RefreshUI(fullRefresh);
-            StateTreeViewManager.Self.RefreshUI(asElementSave);
+            GumCommands.Self.GuiCommands.RefreshStateTreeView();
         }
 
         private void HandleInstanceReordered(InstanceSave instance)

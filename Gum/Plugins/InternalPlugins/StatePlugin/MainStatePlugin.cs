@@ -2,6 +2,7 @@
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
+using Gum.Plugins.InternalPlugins.StatePlugin.Views;
 using Gum.PropertyGridHelpers;
 using Gum.ToolStates;
 using System;
@@ -16,16 +17,22 @@ namespace Gum.Plugins.StatePlugin
     public class MainStatePlugin : InternalPlugin
     {
         StateView stateView;
+        StateTreeView stateTreeView;
 
         PluginTab pluginTab;
+        PluginTab newPluginTab;
 
         public override void StartUp()
         {
             this.StateWindowTreeNodeSelected += HandleStateSelected;
             this.TreeNodeSelected += HandleTreeNodeSelected;
+            this.RefreshStateTreeView += HandleRefreshStateTreeView;
 
             stateView = new StateView();
             pluginTab = GumCommands.Self.GuiCommands.AddControl(stateView, "States", TabLocation.CenterTop);
+
+            stateTreeView = new StateTreeView();
+            newPluginTab = GumCommands.Self.GuiCommands.AddControl(stateTreeView, "States", TabLocation.CenterTop);
 
             ((SelectedState)SelectedState.Self).StateView = stateView;
 
@@ -33,18 +40,22 @@ namespace Gum.Plugins.StatePlugin
             StateTreeViewManager.Self.Initialize(this.stateView.TreeView, this.stateView.StateContextMenuStrip);
         }
 
+        private void HandleRefreshStateTreeView()
+        {
+            StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedStateContainer);
+        }
+
         private void HandleTreeNodeSelected(TreeNode node)
         {
             var element = SelectedState.Self.SelectedElement;
+            string desiredTitle = "States";
             if(element != null)
             {
-                pluginTab.Title = $"{element.Name} States";
+                desiredTitle = $"{element.Name} States";
+            }
 
-            }
-            else
-            {
-                pluginTab.Title = "States";
-            }
+            pluginTab.Title = desiredTitle;
+            newPluginTab.Title = desiredTitle + " Preview";
         }
 
         private void HandleStateSelected(TreeNode stateTreeNode)
@@ -72,5 +83,7 @@ namespace Gum.Plugins.StatePlugin
                 VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(variable.Name);
             }
         }
+
+
     }
 }

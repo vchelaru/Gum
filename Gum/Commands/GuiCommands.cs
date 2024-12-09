@@ -32,7 +32,7 @@ namespace Gum.Commands
 
         internal void RefreshStateTreeView()
         {
-            StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedElement);
+            PluginManager.Self.RefreshStateTreeView();
         }
 
         internal void RefreshBehaviorView()

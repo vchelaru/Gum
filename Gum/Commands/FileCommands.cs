@@ -51,7 +51,7 @@ namespace Gum.Commands
             ProjectManager.Self.CreateNewProject();
 
             GumCommands.Self.GuiCommands.RefreshElementTreeView();
-            StateTreeViewManager.Self.RefreshUI(null);
+            GumCommands.Self.GuiCommands.RefreshStateTreeView();
             PropertyGridManager.Self.RefreshUI();
             WireframeObjectManager.Self.RefreshAll(true);
         }

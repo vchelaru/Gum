@@ -160,12 +160,6 @@
     <Compile Include="Controls\MainPanelControl.xaml.cs">
       <DependentUpon>MainPanelControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\StateView.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Controls\StateView.Designer.cs">
-      <DependentUpon>StateView.cs</DependentUpon>
-    </Compile>
     <Compile Include="Controls\TextHorizontalAlignmentControl.cs" />
     <Compile Include="Controls\TextOverflowHorizontalModeControl.cs" />
     <Compile Include="Controls\TextVerticalAlignmentControl.cs" />
@@ -257,6 +251,15 @@
     <Compile Include="Plugins\InternalPlugins\Output\MainOutputPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\ParentPlugin\MainParentPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\ScreenshotPlugin\MainScreenshotPlugin.cs" />
+    <Compile Include="Plugins\InternalPlugins\StatePlugin\StateView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Plugins\InternalPlugins\StatePlugin\StateView.Designer.cs">
+      <DependentUpon>StateView.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Plugins\InternalPlugins\StatePlugin\Views\StateTreeView.xaml.cs">
+      <DependentUpon>StateTreeView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Plugins\InternalPlugins\TreeView\FlatSearchListBox.xaml.cs">
       <DependentUpon>FlatSearchListBox.xaml</DependentUpon>
     </Compile>
@@ -443,9 +446,6 @@
     <Compile Include="Wireframe\WireframeObjectManager.cs" />
     <Compile Include="Wireframe\WireframeObjectManager.Guide.cs" />
     <Compile Include="Wireframe\WireframeObjectManager.RepresentationCreation.cs" />
-    <EmbeddedResource Include="Controls\StateView.resx">
-      <DependentUpon>StateView.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="Gui\Controls\WireframeEditControl.resx">
       <DependentUpon>WireframeEditControl.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -461,6 +461,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="MainWindow.resx">
       <DependentUpon>MainWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Plugins\InternalPlugins\StatePlugin\StateView.resx">
+      <DependentUpon>StateView.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -822,6 +825,10 @@
     <Page Include="Plugins\InternalPlugins\Behaviors\BehaviorsControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Plugins\InternalPlugins\StatePlugin\Views\StateTreeView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Plugins\InternalPlugins\TreeView\FlatSearchListBox.xaml">
       <SubType>Designer</SubType>

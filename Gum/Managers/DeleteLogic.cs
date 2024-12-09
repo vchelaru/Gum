@@ -401,7 +401,7 @@ namespace Gum.Managers
 
                 GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
 
-                StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedStateContainer);
+                GumCommands.Self.GuiCommands.RefreshStateTreeView();
                 PropertyGridManager.Self.RefreshUI();
                 WireframeObjectManager.Self.RefreshAll(true);
                 SelectionManager.Self.Refresh();
@@ -441,7 +441,7 @@ namespace Gum.Managers
                 {
                     ElementCommands.Self.RemoveState(stateSave, SelectedState.Self.SelectedStateContainer);
                     PluginManager.Self.StateDelete(stateSave);
-                    StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedStateContainer);
+                    GumCommands.Self.GuiCommands.RefreshStateTreeView();
                     PropertyGridManager.Self.RefreshUI();
                     WireframeObjectManager.Self.RefreshAll(true);
                     SelectionManager.Self.Refresh();

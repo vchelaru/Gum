@@ -517,7 +517,7 @@ namespace Gum.ToolStates
 
         public void UpdateToSelectedElement()
         {
-            StateTreeViewManager.Self.RefreshUI(SelectedElement);
+            GumCommands.Self.GuiCommands.RefreshStateTreeView();
 
             var stateBefore = SelectedStateSave;
 
@@ -553,7 +553,7 @@ namespace Gum.ToolStates
 
         public void UpdateToSelectedBehavior()
         {
-            StateTreeViewManager.Self.RefreshUI(SelectedBehavior);
+            GumCommands.Self.GuiCommands.RefreshStateTreeView();
 
             PropertyGridManager.Self.RefreshUI();
 
@@ -626,8 +626,8 @@ namespace Gum.ToolStates
 
                 SelectedElement = SelectedInstance.ParentContainer;
             }
-            
-            StateTreeViewManager.Self.RefreshUI(SelectedElement);
+
+            GumCommands.Self.GuiCommands.RefreshStateTreeView();
 
             if (SelectedElement != null && (SelectedStateSave == null || SelectedElement.AllStates.Contains(SelectedStateSave) == false))
             {

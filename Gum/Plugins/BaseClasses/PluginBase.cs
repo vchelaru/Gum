@@ -48,6 +48,7 @@ namespace Gum.Plugins.BaseClasses
         public event Action<StateSave, string> StateRename;
         public event Action<StateSave> StateAdd;
         public event Action<StateSave> StateDelete;
+        public event Action RefreshStateTreeView;
 
         public event Action AfterUndo;
 
@@ -311,8 +312,9 @@ namespace Gum.Plugins.BaseClasses
 
         public void CallStateRename(StateSave stateSave, string oldName) => StateRename?.Invoke(stateSave, oldName);
         
-
         public void CallStateAdd(StateSave stateSave) => StateAdd?.Invoke(stateSave);
+
+        public void CallRefreshStateTreeView() => RefreshStateTreeView?.Invoke();
 
         public void CallAfterUndo() => AfterUndo?.Invoke();
 

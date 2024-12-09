@@ -52,7 +52,7 @@ namespace Gum.Commands
 
                             PluginManager.Self.StateAdd(stateSave);
 
-                            StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedStateContainer);
+                            GumCommands.Self.GuiCommands.RefreshStateTreeView();
 
                             SelectedState.Self.SelectedStateSave = stateSave;
 
@@ -213,7 +213,7 @@ namespace Gum.Commands
 
                         ElementTreeViewManager.Self.RefreshUi(SelectedState.Self.SelectedStateContainer);
 
-                        StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedStateContainer);
+                        GumCommands.Self.GuiCommands.RefreshStateTreeView();
 
                         PluginManager.Self.CategoryAdd(category);
 
