@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using ToolsUtilities;
 
@@ -18,28 +19,8 @@ namespace GumFormsSample.Screens;
 
 internal class ComplexListBoxItemScreen
 {
-    GraphicalUiElement _root;
-
     public void Initialize(GraphicalUiElement root)
     {
-        FileManager.RelativeDirectory = "Content/";
-
-        root.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-        root.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-        root.Width = 0;
-        root.Height = 0;
-
-        // Load the Gum project to get the ListBoxItem
-
-        var gumProject = GumProjectSave.Load("FormsGumProject/GumProject.gumx");
-        ObjectFinder.Self.GumProjectSave = gumProject;
-        gumProject.Initialize();
-        FormsUtilities.RegisterFromFileFormRuntimeDefaults();
-
-        FileManager.RelativeDirectory = "Content/FormsGumProject/";
-
-        _root = root;
-
         var listBox = new ListBox();
         root.Children.Add(listBox.Visual);
         listBox.X = 30;
@@ -52,7 +33,7 @@ internal class ComplexListBoxItemScreen
             new MonoGameGum.Forms.VisualTemplate(() =>
                 // do not create a forms object because this template will be
                 // automatically added to a ListBoxItem by the ListBox:
-                new WeaponListBoxItemRuntime(fullInstantiation:true, tryCreateFormsObject: false));
+                new WeaponListBoxItemRuntime(fullInstantiation: true, tryCreateFormsObject: false));
 
         listBox.ListBoxItemFormsType = typeof(WeaponListBoxItem);
 
