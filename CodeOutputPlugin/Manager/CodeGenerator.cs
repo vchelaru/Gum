@@ -4188,7 +4188,14 @@ public class CodeGenerator
     static bool IsOfXamarinFormsType(InstanceSave instance, string xamarinFormsType)
     {
         var element = ObjectFinder.Self.GetElementSave(instance);
-        return IsOfXamarinFormsType(element, xamarinFormsType);
+        if(element == null)
+        {
+            return false;
+        }
+        else
+        {
+            return IsOfXamarinFormsType(element, xamarinFormsType);
+        }
     }
 
     private static bool IsOfXamarinFormsType(ElementSave element, string xamarinFormsType)
