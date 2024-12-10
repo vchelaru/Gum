@@ -17,8 +17,7 @@ public class Game1 : Core
     {
         base.Initialize();
 
-        SystemManagers.Default = new SystemManagers();
-        SystemManagers.Default.Initialize(Core.GraphicsDevice, fullInstantiation: true);
+        MonoGameGum.GumService.Default.Initialize(Core.GraphicsDevice);
         
         // Optional - adding a colored rectangle to make sure it all works:
         var rectangle = new ColoredRectangleRuntime();
@@ -41,7 +40,7 @@ public class Game1 : Core
     {
         base.Draw(gameTime);
         // Add System.Default.Draw after base.Draw or else graphics won't show up
-        SystemManagers.Default.Draw();
+        MonoGameGum.GumService.Default.Draw();
     }
 }
 ```

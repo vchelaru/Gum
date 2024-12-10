@@ -151,6 +151,7 @@
         * [IsFocused](monogame/gum-forms/controls/frameworkelement/isfocused.md)
         * [ModalRoot and PopupRoot](monogame/gum-forms/controls/frameworkelement/modalroot-and-popuproot.md)
       * [ListBox](monogame/gum-forms/controls/listbox.md)
+      * [ListBoxItem](monogame/gum-forms/controls/listboxitem.md)
       * [PasswordBox](monogame/gum-forms/controls/passwordbox.md)
       * [ScrollViewer](monogame/gum-forms/controls/scrollviewer.md)
       * [Slider](monogame/gum-forms/controls/slider.md)

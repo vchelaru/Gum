@@ -42,7 +42,7 @@ public class GumFormsSampleGame : Game
     {
         var gumProject = GumService.Default.Initialize(_graphics.GraphicsDevice, "FormsGumProject/GumProject.gumx");
 
-        const int screenNumber = 1;
+        const int screenNumber = 3;
 
         switch (screenNumber)
         {
