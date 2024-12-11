@@ -19,6 +19,7 @@ namespace Gum.Managers
         MultiSelectTreeView mTreeView;
 
         ContextMenuStrip mMenuStrip;
+        StateTreeViewRightClickService _stateTreeViewRightClickService;
 
         #endregion
 
@@ -68,9 +69,10 @@ namespace Gum.Managers
             return null;
         }
 
-        public void Initialize(MultiSelectTreeView treeView, ContextMenuStrip menuStrip)
+        public void Initialize(MultiSelectTreeView treeView, ContextMenuStrip menuStrip, StateTreeViewRightClickService stateTreeViewRightClickService)
         {
-            if(treeView == null)
+            _stateTreeViewRightClickService = stateTreeViewRightClickService;
+            if (treeView == null)
             {
                 throw new ArgumentNullException(nameof(treeView));
             }
@@ -116,13 +118,13 @@ namespace Gum.Managers
                     {
                         if(SelectedState.Self.SelectedElement?.DefaultState != SelectedState.Self.SelectedStateSave)
                         {
-                            RenameStateClick();
+                            _stateTreeViewRightClickService.RenameStateClick();
 
                         }
                     }
                     else if(SelectedState.Self.SelectedStateCategorySave != null)
                     {
-                        RenameCategoryClick();
+                        _stateTreeViewRightClickService.RenameCategoryClick();
                     }
                     break;
                 case Keys.Delete:
@@ -130,13 +132,13 @@ namespace Gum.Managers
                     {
                         if (SelectedState.Self.SelectedElement?.DefaultState != SelectedState.Self.SelectedStateSave)
                         {
-                            DeleteStateClick();
+                            _stateTreeViewRightClickService.DeleteStateClick();
 
                         }
                     }
                     else if (SelectedState.Self.SelectedStateCategorySave != null)
                     {
-                        DeleteCategoryClick();
+                        _stateTreeViewRightClickService.DeleteCategoryClick();
                     }
                     break;
             }

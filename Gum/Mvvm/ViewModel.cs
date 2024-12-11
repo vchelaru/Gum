@@ -64,7 +64,9 @@ namespace Gum.Mvvm
                 var shouldNotify = true;
                 if (e.Action == NotifyCollectionChangedAction.Reset)
                 {
-                    shouldNotify = e.OldItems != null || e.NewItems != null;
+                    // weirdly enough in Gum, resetting has nulls here even when we 
+                    // call clear. Not sure why so let's return true even if these are null
+                    //shouldNotify = e.OldItems != null || e.NewItems != null;
                 }
                 if (shouldNotify)
                 {

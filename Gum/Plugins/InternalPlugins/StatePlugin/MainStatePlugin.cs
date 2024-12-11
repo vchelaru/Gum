@@ -27,28 +27,38 @@ public class MainStatePlugin : InternalPlugin
     PluginTab pluginTab;
     PluginTab newPluginTab;
 
+    StateTreeViewRightClickService _stateTreeViewRightClickService;
+
+    public MainStatePlugin()
+    {
+        _stateTreeViewRightClickService = new StateTreeViewRightClickService();
+    }
+
     public override void StartUp()
     {
         this.StateWindowTreeNodeSelected += HandleStateSelected;
         this.TreeNodeSelected += HandleTreeNodeSelected;
         this.RefreshStateTreeView += HandleRefreshStateTreeView;
         this.ReactToStateSaveSelected += HandleStateSelected;
+        this.ReactToStateSaveCategorySelected += HandleStateSaveCategorySelected;
 
-        stateView = new StateView();
+        stateView = new StateView(_stateTreeViewRightClickService);
+        _stateTreeViewRightClickService.OldMenuStrip = stateView.TreeViewContextMenu;
 
-
-        stateTreeViewModel = new StateTreeViewModel();
+        stateTreeViewModel = new StateTreeViewModel(_stateTreeViewRightClickService);
 
         pluginTab = GumCommands.Self.GuiCommands.AddControl(stateView, "States", TabLocation.CenterTop);
 
 
         stateTreeView = new StateTreeView(stateTreeViewModel);
+        _stateTreeViewRightClickService.NewMenuStrip = stateTreeView.TreeViewContextMenu;
+
         newPluginTab = GumCommands.Self.GuiCommands.AddControl(stateTreeView, "States", TabLocation.CenterTop);
 
         ((SelectedState)SelectedState.Self).StateView = stateView;
 
         // State Tree ViewManager needs init before MenuStripManager
-        StateTreeViewManager.Self.Initialize(this.stateView.TreeView, this.stateView.StateContextMenuStrip);
+        StateTreeViewManager.Self.Initialize(this.stateView.TreeView, this.stateView.StateContextMenuStrip, _stateTreeViewRightClickService);
     }
 
     private void HandleStateSelected(StateSave state)
@@ -56,6 +66,13 @@ public class MainStatePlugin : InternalPlugin
         StateTreeViewManager.Self.Select(state);
 
         stateTreeViewModel.SetSelectedState(state);
+    }
+
+    private void HandleStateSaveCategorySelected(StateSaveCategory stateSaveCategory)
+    {
+        StateTreeViewManager.Self.Select(stateSaveCategory);
+
+        stateTreeViewModel.SetSelectedStateSaveCategory(stateSaveCategory);
     }
 
     private void HandleRefreshStateTreeView()

@@ -49,6 +49,7 @@ namespace Gum.Plugins.BaseClasses
         public event Action<StateSave> StateAdd;
         public event Action<StateSave> StateDelete;
         public event Action<StateSave> ReactToStateSaveSelected;
+
         public event Action RefreshStateTreeView;
 
         public event Action AfterUndo;
@@ -58,6 +59,7 @@ namespace Gum.Plugins.BaseClasses
         public event Action<StateSaveCategory> CategoryAdd;
         public event Action<StateSaveCategory> CategoryDelete;
         public event Action<string, StateSaveCategory> VariableRemovedFromCategory;
+        public event Action<StateSaveCategory> ReactToStateSaveCategorySelected;
 
         public event Action<VariableSave, List<Attribute>> FillVariableAttributes;
         public event Action<string, StateSave> AddAndRemoveVariablesForType;
@@ -322,7 +324,7 @@ namespace Gum.Plugins.BaseClasses
         public void CallStateDelete(StateSave stateSave) => StateDelete?.Invoke(stateSave);
 
         public void CallReactToStateSaveSelected(StateSave stateSave) => ReactToStateSaveSelected?.Invoke(stateSave);
-
+        public void CallReactToStateSaveCategorySelected(StateSaveCategory category) => ReactToStateSaveCategorySelected?.Invoke(category);
         public void CallStateCategoryRename(StateSaveCategory category, string oldName) => CategoryRename?.Invoke(category, oldName);
 
         public void CallStateCategoryAdd(StateSaveCategory category) => CategoryAdd?.Invoke(category);

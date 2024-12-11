@@ -275,25 +275,6 @@ public class SelectedState : ISelectedState
         }
     }
 
-    private void UpdateToSetSelectedStateSave(StateSave selectedStateSave)
-    {
-        var isSame = snapshot.SelectedStateSave == selectedStateSave;
-        if(!isSame)
-        {
-            TakeSnapshot(selectedStateSave);
-            PluginManager.Self.ReactToStateSaveSelected(selectedStateSave);
-        }
-    }
-
-    private void TakeSnapshot(StateSave selectedStateSave)
-    {
-        snapshot.SelectedStateSave = selectedStateSave;
-        var elementContainer = ObjectFinder.Self.GetContainerOf(selectedStateSave);
-        StateSaveCategory category = null;
-        category = elementContainer?.Categories.FirstOrDefault(item => item.States.Contains(selectedStateSave));
-        snapshot.SelectedStateCategorySave = category;
-    }
-
     public StateSave SelectedStateSaveOrDefault
     {
         get
@@ -317,24 +298,11 @@ public class SelectedState : ISelectedState
     {
         get
         {
-            var node = StateTreeViewManager.Self.SelectedNode;
-            if (node != null)
-            {
-                if (node.Tag is StateSaveCategory)
-                {
-                    return node.Tag as StateSaveCategory;
-                }
-                else if (node.Tag is StateSave && node.Parent != null)
-                {
-                    return node.Parent.Tag as StateSaveCategory;
-                }
-            }
-
-            return null;
+            return snapshot.SelectedStateCategorySave;
         }
         set
         {
-            StateTreeViewManager.Self.Select(value);
+            UpdateToSetSelectedStateSaveCategory(value);
         }
     }
 
@@ -522,6 +490,45 @@ public class SelectedState : ISelectedState
         {
             PropertyGridManager.Self.SelectedBehaviorVariable = value;
         }
+    }
+
+    #endregion
+
+    #region Snapshot
+
+    private void UpdateToSetSelectedStateSaveCategory(StateSaveCategory selectedStateSaveCategory)
+    {
+        var isSame = snapshot.SelectedStateCategorySave == selectedStateSaveCategory;
+        if (!isSame)
+        {
+            TakeSnapshot(selectedStateSaveCategory);
+            PluginManager.Self.ReactToStateSaveCategorySelected(selectedStateSaveCategory);
+        }
+    }
+
+    private void UpdateToSetSelectedStateSave(StateSave selectedStateSave)
+    {
+        var isSame = snapshot.SelectedStateSave == selectedStateSave;
+        if (!isSame)
+        {
+            TakeSnapshot(selectedStateSave);
+            PluginManager.Self.ReactToStateSaveSelected(selectedStateSave);
+        }
+    }
+
+    private void TakeSnapshot(StateSaveCategory stateSaveCategory)
+    {
+        snapshot.SelectedStateCategorySave = stateSaveCategory;
+        snapshot.SelectedStateSave = null;
+    }
+
+    private void TakeSnapshot(StateSave selectedStateSave)
+    {
+        snapshot.SelectedStateSave = selectedStateSave;
+        var elementContainer = ObjectFinder.Self.GetContainerOf(selectedStateSave);
+        StateSaveCategory category = null;
+        category = elementContainer?.Categories.FirstOrDefault(item => item.States.Contains(selectedStateSave));
+        snapshot.SelectedStateCategorySave = category;
     }
 
     #endregion

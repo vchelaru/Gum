@@ -28,21 +28,16 @@ namespace Gum.Plugins.InternalPlugins.StatePlugin.Views
 
         public object SelectedItem => TreeViewInstance.SelectedItem;
 
+        public ContextMenu TreeViewContextMenu
+        {
+            get => TreeViewInstance.ContextMenu;
+        }
+
         public StateTreeView(StateTreeViewModel viewModel)
         {
             InitializeComponent();
-
+            TreeViewInstance.ContextMenu = new ContextMenu();
             this.DataContext = viewModel;
-
-            viewModel.PropertyChanged += HandleViewModelPropertyChanged;
-        }
-
-        private void HandleViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == nameof(ViewModel.SelectedItem))
-            {
-
-            }
         }
 
         private void TreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)

@@ -8,6 +8,8 @@ namespace Gum.Controls
     public partial class StateView : UserControl
     {
         public event EventHandler StateStackingModeChange;
+        StateTreeViewRightClickService _stateTreeViewRightClickService;
+        public ContextMenuStrip TreeViewContextMenu => TreeView.ContextMenuStrip;
 
         public StateStackingMode StateStackingMode
         {
@@ -35,8 +37,9 @@ namespace Gum.Controls
             }
         }
 
-        public StateView()
+        public StateView(StateTreeViewRightClickService stateTreeViewRightClickService)
         {
+            _stateTreeViewRightClickService = stateTreeViewRightClickService;
             InitializeComponent();
 
             this.TreeView.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.StateTreeView_AfterSelect);
@@ -58,6 +61,7 @@ namespace Gum.Controls
         private void StateTreeView_AfterSelect(object sender, TreeViewEventArgs e)
         {
             StateTreeViewManager.Self.OnSelect();
+            
         }
 
         // We have to use ProcessCmdKey to intercept the key when moving objects
@@ -65,7 +69,7 @@ namespace Gum.Controls
         // in and selects the node above/below the selected node
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
-            bool isHandled = HotkeyManager.Self.TryHandleCmdKeyStateView(keyData);
+            bool isHandled = TryHandleCmdKeyStateView(keyData);
 
 
             if (isHandled)
@@ -78,18 +82,40 @@ namespace Gum.Controls
             }
         }
 
+        internal bool TryHandleCmdKeyStateView(Keys keyData)
+        {
+            if (HotkeyManager.Self.ReorderUp.IsPressed(keyData))
+            {
+                _stateTreeViewRightClickService.MoveStateInDirection(-1);
+                return true;
+            }
+            else if (HotkeyManager.Self.ReorderDown.IsPressed(keyData))
+            {
+                var stateSave = ProjectState.Self.Selected.SelectedStateSave;
+                bool isDefault = stateSave != null &&
+                    stateSave == ProjectState.Self.Selected.SelectedElement.DefaultState;
+
+                if (!isDefault)
+                {
+                    _stateTreeViewRightClickService.MoveStateInDirection(1);
+                }
+                return true;
+            }
+            return false;
+        }
+
         private void StateTreeView_MouseClick(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Right)
             {
-                StateTreeViewManager.Self.PopulateMenuStrip();
+                _stateTreeViewRightClickService.PopulateMenuStrip();
             }
         }
         private void HandleMouseDown(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Right)
             {
-                StateTreeViewManager.Self.PopulateMenuStrip();
+                _stateTreeViewRightClickService.PopulateMenuStrip();
             }
         }
 

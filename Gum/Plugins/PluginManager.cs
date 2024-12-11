@@ -657,6 +657,9 @@ namespace Gum.Plugins
         internal void CategoryDelete(StateSaveCategory category) =>
             CallMethodOnPlugin((plugin) => plugin.CallStateCategoryDelete(category));
 
+        internal void ReactToStateSaveCategorySelected(StateSaveCategory category) =>
+            CallMethodOnPlugin((plugin) => plugin.CallReactToStateSaveCategorySelected(category));
+
         internal void VariableAdd(ElementSave elementSave, string variableName) =>
             CallMethodOnPlugin((plugin) => plugin.CallVariableAdd(elementSave, variableName));
 

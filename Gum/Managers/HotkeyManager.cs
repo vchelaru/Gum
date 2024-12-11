@@ -353,28 +353,6 @@ namespace Gum.Managers
 
         #region State Tree View
 
-        internal bool TryHandleCmdKeyStateView(Keys keyData)
-        {
-            if(ReorderUp.IsPressed(keyData))
-            {
-                StateTreeViewManager.Self.MoveStateInDirection(-1);
-                return true;
-            }
-            else if(ReorderDown.IsPressed(keyData))
-            {
-                var stateSave = ProjectState.Self.Selected.SelectedStateSave;
-                bool isDefault = stateSave != null &&
-                    stateSave == ProjectState.Self.Selected.SelectedElement.DefaultState;
-
-                if (!isDefault)
-                {
-                    StateTreeViewManager.Self.MoveStateInDirection(1);
-                }
-                return true;
-            }
-            return false;
-        }
-
         internal void HandleKeyDownStateView(KeyEventArgs e)
         {
             HandleCopyCutPasteState(e);
