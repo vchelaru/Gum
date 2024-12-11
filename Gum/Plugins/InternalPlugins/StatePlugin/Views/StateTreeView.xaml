@@ -20,7 +20,7 @@
 
         <RadioButton Content="Single State"/>
         <RadioButton Content="Combine States" Grid.Row="1"/>
-        <TreeView x:Name="TreeViewInstance" Grid.Row="2" ItemsSource="{Binding Items}" SelectedItemChanged="TreeView_SelectedItemChanged">
+        <TreeView x:Name="TreeViewInstance" Grid.Row="2" ItemsSource="{Binding Items}" SelectedItemChanged="TreeView_SelectedItemChanged" KeyDown="TreeViewInstance_KeyDown">
             <TreeView.Resources>
                 <HierarchicalDataTemplate DataType="{x:Type viewmodels:CategoryViewModel}" ItemsSource="{Binding States}">
                     <StackPanel Orientation="Horizontal" Margin="0,2,0,2">

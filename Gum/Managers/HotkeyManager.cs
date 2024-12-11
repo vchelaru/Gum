@@ -30,6 +30,24 @@ namespace Gum.Managers
             return Key == null || args.KeyCode == Key;
         }
 
+        public bool IsPressed(System.Windows.Input.KeyEventArgs args)
+        {
+            if (IsCtrlDown && (args.KeyboardDevice.Modifiers & System.Windows.Input.ModifierKeys.Control) != System.Windows.Input.ModifierKeys.Control) return false;
+            if (IsShiftDown && (args.KeyboardDevice.Modifiers & System.Windows.Input.ModifierKeys.Shift) != System.Windows.Input.ModifierKeys.Shift) return false;
+            if (IsAltDown && (args.KeyboardDevice.Modifiers & System.Windows.Input.ModifierKeys.Alt) != System.Windows.Input.ModifierKeys.Alt) return false;
+
+            if(Key == null)
+            {
+                return true;
+            }
+            else
+            {
+                var expectedWpfKey = System.Windows.Input.KeyInterop.KeyFromVirtualKey((int)Key);
+                return args.Key == expectedWpfKey || args.SystemKey == expectedWpfKey;
+
+            }
+        }
+
         public bool IsPressed(Keys keyData)
         {
             Keys extracted = keyData;

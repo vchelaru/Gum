@@ -203,6 +203,35 @@ public class StateTreeViewModel : ViewModel
 
     }
 
+    public void FixNodeOrderInCategory(IStateContainer stateContainer)
+    {
+        int desiredIndex = 0;
+        foreach (var category in stateContainer.Categories.OrderBy(item => item.Name))
+        {
+            var categoryViewModel = Categories[desiredIndex];
+            if (categoryViewModel.Data != category)
+            {
+                Categories.Remove(categoryViewModel);
+                Categories.Insert(desiredIndex, categoryViewModel);
+            }
+
+            for (int stateIndex = 0; stateIndex < category.States.Count; stateIndex++)
+            {
+                var state = category.States[stateIndex];
+                if (categoryViewModel.States[stateIndex].Data != state)
+                {
+                    var itemToMove = categoryViewModel.States.FirstOrDefault(item => item.Data == state);
+                    if(itemToMove != null)
+                    {
+                        var oldIndex = categoryViewModel.States.IndexOf(itemToMove);
+                        categoryViewModel.States.Move(oldIndex, stateIndex);
+                    }
+                }
+            }
+
+        }
+    }
+
     private void HandleItemVmPropertyChanged(object sender, PropertyChangedEventArgs e)
     {
         if(e.PropertyName == nameof(StateTreeViewItem.IsSelected))

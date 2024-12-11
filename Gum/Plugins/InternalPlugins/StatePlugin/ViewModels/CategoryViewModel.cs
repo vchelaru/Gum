@@ -18,6 +18,8 @@ public abstract class StateTreeViewItem : ViewModel
         get => Get<bool>();
         set => Set(value);
     }
+
+    public override string ToString() => DataAsObject?.ToString();
 }
 
 public class CategoryViewModel : StateTreeViewItem

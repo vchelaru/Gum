@@ -193,7 +193,7 @@ namespace Gum.Managers
             SelectedState.Self.UpdateToSelectedStateSave();
             // refreshes the yellow highlights
 
-            GumCommands.Self.GuiCommands.RefreshStateTreeView();
+            //GumCommands.Self.GuiCommands.RefreshStateTreeView();
 
             PluginManager.Self.StateWindowTreeNodeSelected(treeNode);
         }

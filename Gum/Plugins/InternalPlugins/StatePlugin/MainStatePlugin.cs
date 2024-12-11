@@ -50,7 +50,7 @@ public class MainStatePlugin : InternalPlugin
         pluginTab = GumCommands.Self.GuiCommands.AddControl(stateView, "States", TabLocation.CenterTop);
 
 
-        stateTreeView = new StateTreeView(stateTreeViewModel);
+        stateTreeView = new StateTreeView(stateTreeViewModel, _stateTreeViewRightClickService);
         _stateTreeViewRightClickService.NewMenuStrip = stateTreeView.TreeViewContextMenu;
 
         newPluginTab = GumCommands.Self.GuiCommands.AddControl(stateTreeView, "States", TabLocation.CenterTop);
@@ -295,6 +295,8 @@ public class MainStatePlugin : InternalPlugin
         // first make sure categories come first
         int desiredIndex = 0;
 
+        stateTreeViewModel.FixNodeOrderInCategory(stateContainer);
+
         foreach (var category in stateContainer.Categories.OrderBy(item => item.Name))
         {
             {
@@ -315,27 +317,7 @@ public class MainStatePlugin : InternalPlugin
                 FixNodeOrderInCategory(category);
             }
 
-            {
-                var categoryViewModel = stateTreeViewModel.Categories[desiredIndex];
-                if (categoryViewModel.Data != category)
-                {
-                    stateTreeViewModel.Categories.Remove(categoryViewModel);
-                    stateTreeViewModel.Categories.Insert(desiredIndex, categoryViewModel);
-                }
-
-                for(int stateIndex = 0; stateIndex < category.States.Count; stateIndex++)
-                {
-                    var state = category.States[stateIndex];
-                    var stateViewModel = categoryViewModel.States[stateIndex];
-                    if (stateViewModel.Data != state)
-                    {
-                        categoryViewModel.States.Remove(stateViewModel);
-                        categoryViewModel.States.Insert(stateIndex, stateViewModel);
-                    }
-                }
-
-                desiredIndex++;
-            }
+            desiredIndex++;
         }
 
         // do uncategorized states

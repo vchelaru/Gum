@@ -1,4 +1,6 @@
-﻿using Gum.Plugins.InternalPlugins.StatePlugin.ViewModels;
+﻿using Gum.Managers;
+using Gum.Plugins.InternalPlugins.StatePlugin.ViewModels;
+using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -22,6 +24,8 @@ namespace Gum.Plugins.InternalPlugins.StatePlugin.Views
     /// </summary>
     public partial class StateTreeView : UserControl
     {
+        private readonly StateTreeViewRightClickService _stateTreeViewRightClickService;
+
         StateTreeViewModel ViewModel => DataContext as StateTreeViewModel;
 
         public event EventHandler SelectedItemChanged;
@@ -33,8 +37,9 @@ namespace Gum.Plugins.InternalPlugins.StatePlugin.Views
             get => TreeViewInstance.ContextMenu;
         }
 
-        public StateTreeView(StateTreeViewModel viewModel)
+        public StateTreeView(StateTreeViewModel viewModel, StateTreeViewRightClickService stateTreeViewRightClickService)
         {
+            _stateTreeViewRightClickService = stateTreeViewRightClickService;
             InitializeComponent();
             TreeViewInstance.ContextMenu = new ContextMenu();
             this.DataContext = viewModel;
@@ -47,6 +52,27 @@ namespace Gum.Plugins.InternalPlugins.StatePlugin.Views
             //ViewModel.SelectedItem = treeView.SelectedItem as StateTreeViewItem;
 
             //SelectedItemChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void TreeViewInstance_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (HotkeyManager.Self.ReorderUp.IsPressed(e))
+            {
+                _stateTreeViewRightClickService.MoveStateInDirection(-1);
+                e.Handled = true;
+            }
+            else if (HotkeyManager.Self.ReorderDown.IsPressed(e))
+            {
+                var stateSave = ProjectState.Self.Selected.SelectedStateSave;
+                bool isDefault = stateSave != null &&
+                    stateSave == ProjectState.Self.Selected.SelectedElement.DefaultState;
+
+                if (!isDefault)
+                {
+                    _stateTreeViewRightClickService.MoveStateInDirection(1);
+                }
+                e.Handled = true;
+            }
         }
     }
 }
