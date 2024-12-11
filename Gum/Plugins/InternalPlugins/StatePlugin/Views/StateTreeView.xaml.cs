@@ -1,6 +1,7 @@
 ﻿using Gum.Plugins.InternalPlugins.StatePlugin.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -32,15 +33,25 @@ namespace Gum.Plugins.InternalPlugins.StatePlugin.Views
             InitializeComponent();
 
             this.DataContext = viewModel;
+
+            viewModel.PropertyChanged += HandleViewModelPropertyChanged;
+        }
+
+        private void HandleViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(ViewModel.SelectedItem))
+            {
+
+            }
         }
 
         private void TreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            var treeView = sender as System.Windows.Controls.TreeView;
+            //var treeView = sender as System.Windows.Controls.TreeView;
 
-            ViewModel.SelectedItem = treeView.SelectedItem as StateTreeViewItem;
+            //ViewModel.SelectedItem = treeView.SelectedItem as StateTreeViewItem;
 
-            SelectedItemChanged?.Invoke(this, EventArgs.Empty);
+            //SelectedItemChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 }

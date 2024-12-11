@@ -2,6 +2,7 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.Mvvm;
 using Gum.Plugins.BaseClasses;
 using Gum.Plugins.InternalPlugins.StatePlugin.ViewModels;
 using Gum.Plugins.InternalPlugins.StatePlugin.Views;
@@ -31,6 +32,7 @@ public class MainStatePlugin : InternalPlugin
         this.StateWindowTreeNodeSelected += HandleStateSelected;
         this.TreeNodeSelected += HandleTreeNodeSelected;
         this.RefreshStateTreeView += HandleRefreshStateTreeView;
+        this.ReactToStateSaveSelected += HandleStateSelected;
 
         stateView = new StateView();
 
@@ -47,6 +49,13 @@ public class MainStatePlugin : InternalPlugin
 
         // State Tree ViewManager needs init before MenuStripManager
         StateTreeViewManager.Self.Initialize(this.stateView.TreeView, this.stateView.StateContextMenuStrip);
+    }
+
+    private void HandleStateSelected(StateSave state)
+    {
+        StateTreeViewManager.Self.Select(state);
+
+        stateTreeViewModel.SetSelectedState(state);
     }
 
     private void HandleRefreshStateTreeView()
@@ -116,11 +125,9 @@ public class MainStatePlugin : InternalPlugin
 
             FixNodeOrder(stateContainer);
 
-            bool wasAnythingSelected = false;
-
             foreach (var state in stateContainer.AllStates)
             {
-                wasAnythingSelected = UpdateStateTreeNode(lastStateSave, instance, wasAnythingSelected, state);
+                UpdateStateTreeNode(lastStateSave, instance, state);
             }
 
             foreach (var category in stateContainer.Categories)
@@ -225,6 +232,8 @@ public class MainStatePlugin : InternalPlugin
 
     private void AddNeededNodes(IStateContainer stateContainer)
     {
+        stateTreeViewModel.AddMissingItems(stateContainer);
+
         foreach (var category in stateContainer.Categories)
         {
             if (GetTreeNodeForTag(category) == null)
@@ -232,11 +241,6 @@ public class MainStatePlugin : InternalPlugin
                 var treeNode = this.stateView.TreeView.Nodes.Add(category.Name);
                 treeNode.Tag = category;
                 treeNode.ImageIndex = ElementTreeViewManager.FolderImageIndex;
-            }
-
-            if (stateTreeViewModel.Categories.Any(item => item.Data == category) == false)
-            {
-                stateTreeViewModel.Categories.Add(new CategoryViewModel() { Data = category });
             }
         }
 
@@ -248,11 +252,6 @@ public class MainStatePlugin : InternalPlugin
                 var treeNode = this.stateView.TreeView.Nodes.Add(state.Name);
                 treeNode.Tag = state;
                 treeNode.ImageIndex = ElementTreeViewManager.StateImageIndex;
-            }
-
-            if (stateTreeViewModel.States.Any(item => item.Data == state) == false)
-            {
-                stateTreeViewModel.States.Add(new StateViewModel() { Data = state });
             }
         }
 
@@ -270,20 +269,8 @@ public class MainStatePlugin : InternalPlugin
 
                     treeNode.Tag = state;
                 }
-
-                var categoryViewModel = stateTreeViewModel.Categories.FirstOrDefault(item => item.Data == category);
-                if (categoryViewModel != null)
-                {
-                    var stateViewModel = categoryViewModel.States.FirstOrDefault(item => item.Data == state);
-
-                    if (stateViewModel == null)
-                    {
-                        categoryViewModel.States.Add(new StateViewModel() { Data = state });
-                    }
-                }
             }
         }
-
     }
 
     private void FixNodeOrder(IStateContainer stateContainer)
@@ -360,7 +347,7 @@ public class MainStatePlugin : InternalPlugin
     }
 
 
-    private bool UpdateStateTreeNode(StateSave lastStateSave, InstanceSave instance, bool wasAnythingSelected, StateSave state)
+    private void UpdateStateTreeNode(StateSave lastStateSave, InstanceSave instance, StateSave state)
     {
         stateTreeViewModel.RefreshBackgroundToVariables();
         string stateName = state.Name;
@@ -384,10 +371,6 @@ public class MainStatePlugin : InternalPlugin
 
         if (state == lastStateSave)
         {
-
-            SelectedState.Self.SelectedStateSave = state;
-
-            wasAnythingSelected = true;
         }
         else if (!node.IsSelected && this.stateView.TreeView.SelectedNode != node)
         {
@@ -403,7 +386,6 @@ public class MainStatePlugin : InternalPlugin
             }
         }
 
-        return wasAnythingSelected;
     }
 
     private TreeNodeCollection ParentOf(TreeNode node)

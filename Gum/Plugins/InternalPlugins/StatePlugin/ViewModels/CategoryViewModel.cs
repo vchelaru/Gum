@@ -13,6 +13,11 @@ public abstract class StateTreeViewItem : ViewModel
 {
     public abstract object DataAsObject { get; }
     public abstract string Title { get; }
+    public bool IsSelected
+    {
+        get => Get<bool>();
+        set => Set(value);
+    }
 }
 
 public class CategoryViewModel : StateTreeViewItem

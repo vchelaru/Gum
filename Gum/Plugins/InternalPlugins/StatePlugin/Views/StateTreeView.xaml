@@ -32,6 +32,11 @@
                     <TextBlock Text="{Binding Title}" Background="{Binding IncludesVariablesForSelectedInstance, Converter={StaticResource BackgroundConverter}}"/>
                 </DataTemplate>
             </TreeView.Resources>
+            <TreeView.ItemContainerStyle>
+                <Style TargetType="TreeViewItem">
+                    <Setter Property="IsSelected" Value="{Binding IsSelected}" />
+                </Style>
+            </TreeView.ItemContainerStyle>
         </TreeView>
     </Grid>
 </UserControl>

@@ -176,6 +176,18 @@ namespace Gum.Managers
                 }
             }
             SelectedState.Self.CustomCurrentStateSave = null;
+
+            var selectedItem = mTreeView.SelectedNode.Tag;
+            if(selectedItem is StateSave stateSave)
+            {
+                SelectedState.Self.SelectedStateSave = stateSave;
+            }
+            else if(selectedItem is StateSaveCategory category)
+            {
+                // todo:
+                //SelectedState.Self.SelectedStateCategorySave = category;
+            }
+
             SelectedState.Self.UpdateToSelectedStateSave();
             // refreshes the yellow highlights
 

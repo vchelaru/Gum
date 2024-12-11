@@ -1,4 +1,7 @@
-﻿using Gum.Mvvm;
+﻿using Gum.DataTypes;
+using Gum.DataTypes.Variables;
+using Gum.Managers;
+using Gum.Mvvm;
 using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
@@ -83,6 +86,104 @@ public class StateTreeViewModel : ViewModel
                     stateVm.IncludesVariablesForSelectedInstance = 
                         state.Variables.Any(item => string.IsNullOrEmpty(item.SourceObject));
                 }
+            }
+        }
+    }
+
+    public void SetSelectedState(StateSave stateSave)
+    {
+        var foundState = States.FirstOrDefault(item => item.Data == stateSave);
+        if (foundState == null)
+        {
+            foundState = Categories.SelectMany(item => item.States).FirstOrDefault(item => item.Data == stateSave);
+        }
+
+
+        foreach(var category in Categories)
+        {
+            foreach (var state in category.States)
+            {
+                if (state.IsSelected && state != foundState)
+                {
+                    state.IsSelected = false;
+                }
+            }
+        }
+        foreach(var state in States)
+        {
+            if (state.IsSelected && state != foundState)
+            {
+                state.IsSelected = false;
+            }
+        }
+
+        if (foundState != null)
+        {
+
+            SelectedItem = foundState;
+            foundState.IsSelected = true;
+        }
+        else
+        {
+            SelectedItem = null;
+        }
+    }
+
+    public void AddMissingItems(IStateContainer stateContainer)
+    {
+        foreach (var category in stateContainer.Categories)
+        {
+            if (Categories.Any(item => item.Data == category) == false)
+            {
+                Categories.Add(new CategoryViewModel() { Data = category });
+            }
+        }
+
+
+        foreach (var state in stateContainer.UncategorizedStates)
+        {
+            if (States.Any(item => item.Data == state) == false)
+            {
+                var stateVm = new StateViewModel() { Data = state };
+                stateVm.PropertyChanged += HandleStateVmPropertyChanged;
+                States.Add(stateVm);
+            }
+        }
+
+
+        foreach (var category in stateContainer.Categories)
+        {
+            foreach (var state in category.States)
+            {
+                var categoryViewModel = Categories.FirstOrDefault(item => item.Data == category);
+                if (categoryViewModel != null)
+                {
+                    var stateViewModel = categoryViewModel.States.FirstOrDefault(item => item.Data == state);
+
+                    if (stateViewModel == null)
+                    {
+                        var stateVm = new StateViewModel() { Data = state };
+                        stateVm.PropertyChanged += HandleStateVmPropertyChanged;
+                        categoryViewModel.States.Add(stateVm);
+                    }
+                }
+            }
+        }
+
+
+    }
+
+    private void HandleStateVmPropertyChanged(object sender, PropertyChangedEventArgs e)
+    {
+        if(e.PropertyName == nameof(StateTreeViewItem.IsSelected))
+        {
+            if (sender is StateViewModel stateVm && stateVm.IsSelected == true)
+            {
+                GumState.Self.SelectedState.SelectedStateSave = stateVm.Data;
+            }
+            else if(sender is CategoryViewModel categoryVm && categoryVm.IsSelected)
+            {
+                //GumState.Self.SelectedState.SelectedStateCategorySave = categoryVm.Data;
             }
         }
     }
