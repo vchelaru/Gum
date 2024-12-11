@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Gum.Plugins.InternalPlugins.StatePlugin.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,9 +21,26 @@ namespace Gum.Plugins.InternalPlugins.StatePlugin.Views
     /// </summary>
     public partial class StateTreeView : UserControl
     {
-        public StateTreeView()
+        StateTreeViewModel ViewModel => DataContext as StateTreeViewModel;
+
+        public event EventHandler SelectedItemChanged;
+
+        public object SelectedItem => TreeViewInstance.SelectedItem;
+
+        public StateTreeView(StateTreeViewModel viewModel)
         {
             InitializeComponent();
+
+            this.DataContext = viewModel;
+        }
+
+        private void TreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            var treeView = sender as System.Windows.Controls.TreeView;
+
+            ViewModel.SelectedItem = treeView.SelectedItem as StateTreeViewItem;
+
+            SelectedItemChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 }

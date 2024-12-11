@@ -251,13 +251,16 @@
     <Compile Include="Plugins\InternalPlugins\Output\MainOutputPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\ParentPlugin\MainParentPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\ScreenshotPlugin\MainScreenshotPlugin.cs" />
+    <Compile Include="Plugins\InternalPlugins\StatePlugin\Converters\BackgroundConverter.cs" />
     <Compile Include="Plugins\InternalPlugins\StatePlugin\StateView.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Plugins\InternalPlugins\StatePlugin\StateView.Designer.cs">
       <DependentUpon>StateView.cs</DependentUpon>
     </Compile>
+    <Compile Include="Plugins\InternalPlugins\StatePlugin\ViewModels\CategoryViewModel.cs" />
     <Compile Include="Plugins\InternalPlugins\StatePlugin\ViewModels\StateItemViewModel.cs" />
+    <Compile Include="Plugins\InternalPlugins\StatePlugin\ViewModels\StateTreeViewModel.cs" />
     <Compile Include="Plugins\InternalPlugins\StatePlugin\Views\StateTreeView.xaml.cs">
       <DependentUpon>StateTreeView.xaml</DependentUpon>
     </Compile>
@@ -702,6 +705,7 @@
     <Content Include="Content\Fonts\Font18Arial_o1_0.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Resource Include="Content\Icons\folder.png" />
     <Content Include="Content\Icons\Origins\Baseline.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

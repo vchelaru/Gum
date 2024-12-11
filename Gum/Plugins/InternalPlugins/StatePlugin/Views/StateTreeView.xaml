@@ -4,8 +4,13 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Gum.Plugins.InternalPlugins.StatePlugin.Views"
+             xmlns:converters="clr-namespace:Gum.Plugins.InternalPlugins.StatePlugin.Converters"
              mc:Ignorable="d" 
+             xmlns:viewmodels="clr-namespace:Gum.Plugins.InternalPlugins.StatePlugin.ViewModels"
              d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <converters:BackgroundConverter x:Key="BackgroundConverter"/>
+    </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -15,8 +20,18 @@
 
         <RadioButton Content="Single State"/>
         <RadioButton Content="Combine States" Grid.Row="1"/>
-        <TreeView Grid.Row="2">
-            
+        <TreeView x:Name="TreeViewInstance" Grid.Row="2" ItemsSource="{Binding Items}" SelectedItemChanged="TreeView_SelectedItemChanged">
+            <TreeView.Resources>
+                <HierarchicalDataTemplate DataType="{x:Type viewmodels:CategoryViewModel}" ItemsSource="{Binding States}">
+                    <StackPanel Orientation="Horizontal" Margin="0,2,0,2">
+                        <Image Source="/Content/Icons/folder.png" Width="16" Height="16" VerticalAlignment="Center"/>
+                        <TextBlock Margin="4,0,0,0" Text="{Binding Title}" VerticalAlignment="Center"  />
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+                <DataTemplate DataType="{x:Type viewmodels:StateViewModel}">
+                    <TextBlock Text="{Binding Title}" Background="{Binding IncludesVariablesForSelectedInstance, Converter={StaticResource BackgroundConverter}}"/>
+                </DataTemplate>
+            </TreeView.Resources>
         </TreeView>
     </Grid>
 </UserControl>

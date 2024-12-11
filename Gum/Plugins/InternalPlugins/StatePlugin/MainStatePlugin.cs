@@ -3,6 +3,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
+using Gum.Plugins.InternalPlugins.StatePlugin.ViewModels;
 using Gum.Plugins.InternalPlugins.StatePlugin.Views;
 using Gum.PropertyGridHelpers;
 using Gum.ToolStates;
@@ -20,6 +21,7 @@ public class MainStatePlugin : InternalPlugin
 {
     StateView stateView;
     StateTreeView stateTreeView;
+    StateTreeViewModel stateTreeViewModel;
 
     PluginTab pluginTab;
     PluginTab newPluginTab;
@@ -31,9 +33,14 @@ public class MainStatePlugin : InternalPlugin
         this.RefreshStateTreeView += HandleRefreshStateTreeView;
 
         stateView = new StateView();
+
+
+        stateTreeViewModel = new StateTreeViewModel();
+
         pluginTab = GumCommands.Self.GuiCommands.AddControl(stateView, "States", TabLocation.CenterTop);
 
-        stateTreeView = new StateTreeView();
+
+        stateTreeView = new StateTreeView(stateTreeViewModel);
         newPluginTab = GumCommands.Self.GuiCommands.AddControl(stateTreeView, "States", TabLocation.CenterTop);
 
         ((SelectedState)SelectedState.Self).StateView = stateView;
@@ -51,7 +58,7 @@ public class MainStatePlugin : InternalPlugin
     {
         var element = SelectedState.Self.SelectedElement;
         string desiredTitle = "States";
-        if(element != null)
+        if (element != null)
         {
             desiredTitle = $"{element.Name} States";
         }
@@ -65,22 +72,24 @@ public class MainStatePlugin : InternalPlugin
         var currentCategory = SelectedState.Self.SelectedStateCategorySave;
         var currentState = SelectedState.Self.SelectedStateSave;
 
-        if(currentCategory != null && currentState != null)
+        if (currentCategory != null && currentState != null)
         {
             PropagateVariableForCategorizedState(currentState);
         }
-        else if(currentCategory != null)
+        else if (currentCategory != null)
         {
-            foreach(var state in currentCategory.States)
+            foreach (var state in currentCategory.States)
             {
                 PropagateVariableForCategorizedState(state);
             }
         }
+
+
     }
 
     private void PropagateVariableForCategorizedState(StateSave currentState)
     {
-        foreach(var variable in currentState.Variables)
+        foreach (var variable in currentState.Variables)
         {
             VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(variable.Name);
         }
@@ -123,6 +132,9 @@ public class MainStatePlugin : InternalPlugin
         else
         {
             this.stateView.TreeView.Nodes.Clear();
+
+            this.stateTreeViewModel.Categories.Clear();
+            this.stateTreeViewModel.States.Clear();
         }
 
 
@@ -176,6 +188,38 @@ public class MainStatePlugin : InternalPlugin
                 }
             }
         }
+
+        for (int i = 0; i < stateTreeViewModel.Categories.Count; i++)
+        {
+            if (stateContainer.Categories.Contains(stateTreeViewModel.Categories[i].Data) == false)
+            {
+                stateTreeViewModel.Categories.RemoveAt(i);
+                i--;
+            }
+            else
+            {
+                var categoryViewModel = stateTreeViewModel.Categories[i];
+                var category = categoryViewModel.Data;
+                for (int j = 0; j < categoryViewModel.States.Count; j++)
+                {
+                    var stateViewModel = categoryViewModel.States[j];
+
+                    if (category.States.Contains(stateViewModel.Data) == false)
+                    {
+                        stateTreeViewModel.Categories[i].States.RemoveAt(j);
+                        j--;
+                    }
+                }
+            }
+        }
+        for(int i = 0; i < stateTreeViewModel.States.Count; i++)
+        {
+            var stateViewModel = stateTreeViewModel.States[i];
+            if(stateContainer.UncategorizedStates.Contains(stateViewModel.Data) == false)
+            {
+                stateTreeViewModel.States.RemoveAt(i);
+            }
+        }
     }
 
 
@@ -189,6 +233,11 @@ public class MainStatePlugin : InternalPlugin
                 treeNode.Tag = category;
                 treeNode.ImageIndex = ElementTreeViewManager.FolderImageIndex;
             }
+
+            if (stateTreeViewModel.Categories.Any(item => item.Data == category) == false)
+            {
+                stateTreeViewModel.Categories.Add(new CategoryViewModel() { Data = category });
+            }
         }
 
         foreach (var state in stateContainer.UncategorizedStates)
@@ -199,6 +248,11 @@ public class MainStatePlugin : InternalPlugin
                 var treeNode = this.stateView.TreeView.Nodes.Add(state.Name);
                 treeNode.Tag = state;
                 treeNode.ImageIndex = ElementTreeViewManager.StateImageIndex;
+            }
+
+            if (stateTreeViewModel.States.Any(item => item.Data == state) == false)
+            {
+                stateTreeViewModel.States.Add(new StateViewModel() { Data = state });
             }
         }
 
@@ -216,6 +270,17 @@ public class MainStatePlugin : InternalPlugin
 
                     treeNode.Tag = state;
                 }
+
+                var categoryViewModel = stateTreeViewModel.Categories.FirstOrDefault(item => item.Data == category);
+                if (categoryViewModel != null)
+                {
+                    var stateViewModel = categoryViewModel.States.FirstOrDefault(item => item.Data == state);
+
+                    if (stateViewModel == null)
+                    {
+                        categoryViewModel.States.Add(new StateViewModel() { Data = state });
+                    }
+                }
             }
         }
 
@@ -228,22 +293,45 @@ public class MainStatePlugin : InternalPlugin
 
         foreach (var category in stateContainer.Categories.OrderBy(item => item.Name))
         {
-            var node = GetTreeNodeForTag(category);
-
-            var parent = ParentOf(node);
-
-            var nodeIndex = parent.IndexOf(node);
-
-            if (nodeIndex != desiredIndex)
             {
-                parent.Remove(node);
-                parent.Insert(desiredIndex, node);
+
+                var node = GetTreeNodeForTag(category);
+
+                var parent = ParentOf(node);
+
+                var nodeIndex = parent.IndexOf(node);
+
+                if (nodeIndex != desiredIndex)
+                {
+                    parent.Remove(node);
+                    parent.Insert(desiredIndex, node);
+                }
+
+
+                FixNodeOrderInCategory(category);
             }
 
+            {
+                var categoryViewModel = stateTreeViewModel.Categories[desiredIndex];
+                if (categoryViewModel.Data != category)
+                {
+                    stateTreeViewModel.Categories.Remove(categoryViewModel);
+                    stateTreeViewModel.Categories.Insert(desiredIndex, categoryViewModel);
+                }
 
-            FixNodeOrderInCategory(category);
+                for(int stateIndex = 0; stateIndex < category.States.Count; stateIndex++)
+                {
+                    var state = category.States[stateIndex];
+                    var stateViewModel = categoryViewModel.States[stateIndex];
+                    if (stateViewModel.Data != state)
+                    {
+                        categoryViewModel.States.Remove(stateViewModel);
+                        categoryViewModel.States.Insert(stateIndex, stateViewModel);
+                    }
+                }
 
-            desiredIndex++;
+                desiredIndex++;
+            }
         }
 
         // do uncategorized states
@@ -274,6 +362,7 @@ public class MainStatePlugin : InternalPlugin
 
     private bool UpdateStateTreeNode(StateSave lastStateSave, InstanceSave instance, bool wasAnythingSelected, StateSave state)
     {
+        stateTreeViewModel.RefreshBackgroundToVariables();
         string stateName = state.Name;
         if (string.IsNullOrEmpty(stateName))
         {
