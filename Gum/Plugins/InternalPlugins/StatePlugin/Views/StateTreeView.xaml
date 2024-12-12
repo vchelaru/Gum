@@ -18,9 +18,10 @@
             <RowDefinition/>
         </Grid.RowDefinitions>
 
-        <RadioButton Content="Single State"/>
-        <RadioButton Content="Combine States" Grid.Row="1"/>
-        <TreeView x:Name="TreeViewInstance" Grid.Row="2" ItemsSource="{Binding Items}" SelectedItemChanged="TreeView_SelectedItemChanged" KeyDown="TreeViewInstance_KeyDown">
+        <RadioButton Content="Single State" IsChecked="{Binding IsSingleStateSelected}"/>
+        <RadioButton Content="Combine States" IsChecked="{Binding IsCombinedStateSelected}" Grid.Row="1"/>
+        <TreeView x:Name="TreeViewInstance" Grid.Row="2" ItemsSource="{Binding Items}" SelectedItemChanged="TreeView_SelectedItemChanged" 
+                  KeyDown="TreeViewInstance_KeyDown" PreviewMouseRightButtonDown="TreeViewInstance_PreviewMouseRightButtonDown">
             <TreeView.Resources>
                 <HierarchicalDataTemplate DataType="{x:Type viewmodels:CategoryViewModel}" ItemsSource="{Binding States}">
                     <StackPanel Orientation="Horizontal" Margin="0,2,0,2">
@@ -29,25 +30,26 @@
                     </StackPanel>
                 </HierarchicalDataTemplate>
                 <DataTemplate DataType="{x:Type viewmodels:StateViewModel}">
-          <TextBlock Text="{Binding Title}">
-            <TextBlock.Style>
-              <Style TargetType="{x:Type TextBlock}">
-                <Style.Resources>
-                  <SolidColorBrush x:Key="IncludesVariablesBgBrush" Color="Yellow" Opacity=".64" />
-                </Style.Resources>
-                <Style.Triggers>
-                  <DataTrigger Binding="{Binding IncludesVariablesForSelectedInstance}" Value="True">
-                    <Setter Property="Background" Value="{StaticResource IncludesVariablesBgBrush}" />
-                  </DataTrigger>
-                </Style.Triggers>
-              </Style>
-            </TextBlock.Style>
-          </TextBlock>
+                    <TextBlock Text="{Binding Title}">
+                        <TextBlock.Style>
+                            <Style TargetType="{x:Type TextBlock}">
+                                <Style.Resources>
+                                    <SolidColorBrush x:Key="IncludesVariablesBgBrush" Color="Yellow" Opacity=".64" />
+                                </Style.Resources>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IncludesVariablesForSelectedInstance}" Value="True">
+                                        <Setter Property="Background" Value="{StaticResource IncludesVariablesBgBrush}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
                 </DataTemplate>
             </TreeView.Resources>
             <TreeView.ItemContainerStyle>
                 <Style TargetType="TreeViewItem">
                     <Setter Property="IsSelected" Value="{Binding IsSelected}" />
+                    <Setter Property="IsExpanded" Value="{Binding IsExpanded}" />
                 </Style>
             </TreeView.ItemContainerStyle>
         </TreeView>

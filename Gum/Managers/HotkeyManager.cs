@@ -191,6 +191,7 @@ namespace Gum.Managers
         public KeyCombination ZoomCameraOut { get; private set; } = KeyCombination.Ctrl(Keys.Subtract);
         public KeyCombination ZoomCameraOutAlternative { get; private set; } = KeyCombination.Ctrl(Keys.OemMinus);
 
+        public KeyCombination Rename { get; private set; } = KeyCombination.Pressed(Keys.F2);
 
 
         // If adding any new keys here, modify HotkeyViewModel

@@ -19,7 +19,16 @@ public abstract class StateTreeViewItem : ViewModel
         set => Set(value);
     }
 
+    public bool IsExpanded
+    {
+        get => Get<bool>();
+        set => Set(value);
+    }
+
     public override string ToString() => DataAsObject?.ToString();
+
+
+    internal void ForceRefreshTitle() => NotifyPropertyChanged(nameof(Title));
 }
 
 public class CategoryViewModel : StateTreeViewItem

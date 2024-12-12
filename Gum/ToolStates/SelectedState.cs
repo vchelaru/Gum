@@ -23,13 +23,6 @@ public class SelectedState : ISelectedState
 
     VariableSave mSelectedVariableSave;
 
-    StateView stateView;
-    public StateView StateView
-    {
-        get => stateView;
-        set => stateView = value;
-    }
-
     SelectedStateSnapshot snapshot = new SelectedStateSnapshot();
 
     #endregion
@@ -467,15 +460,11 @@ public class SelectedState : ISelectedState
     {
         get
         {
-            if(stateView == null)
-            {
-                throw new Exception("Need to call Initialize first");
-            }
-            return stateView.StateStackingMode;
+            return snapshot.StateStackingMode;
         }
         set
         {
-            stateView.StateStackingMode = value;
+            UpdateToSetSelectedStackingMode(value);
         }
     }
 
@@ -495,6 +484,16 @@ public class SelectedState : ISelectedState
     #endregion
 
     #region Snapshot
+
+    private void UpdateToSetSelectedStackingMode(StateStackingMode value)
+    {
+        var isSame = snapshot.StateStackingMode == value;
+        if (!isSame)
+        {
+            snapshot.StateStackingMode = value;
+            PluginManager.Self.ReactToStateStackingModeChange(value);
+        }
+    }
 
     private void UpdateToSetSelectedStateSaveCategory(StateSaveCategory selectedStateSaveCategory)
     {

@@ -20,6 +20,7 @@ namespace Gum.Managers
 
         ContextMenuStrip mMenuStrip;
         StateTreeViewRightClickService _stateTreeViewRightClickService;
+        HotkeyManager _hotkeyManager;
 
         #endregion
 
@@ -69,9 +70,12 @@ namespace Gum.Managers
             return null;
         }
 
-        public void Initialize(MultiSelectTreeView treeView, ContextMenuStrip menuStrip, StateTreeViewRightClickService stateTreeViewRightClickService)
+        public void Initialize(MultiSelectTreeView treeView, ContextMenuStrip menuStrip, 
+            StateTreeViewRightClickService stateTreeViewRightClickService,
+            HotkeyManager hotkeyManager)
         {
             _stateTreeViewRightClickService = stateTreeViewRightClickService;
+            _hotkeyManager = hotkeyManager;
             if (treeView == null)
             {
                 throw new ArgumentNullException(nameof(treeView));
@@ -111,36 +115,35 @@ namespace Gum.Managers
 
         private void HandleKeyDown(object sender, KeyEventArgs e)
         {
-            switch(e.KeyCode)
+            if(_hotkeyManager.Rename.IsPressed(e))
             {
-                case Keys.F2:
-                    if(SelectedState.Self.SelectedStateSave != null )
+                if(SelectedState.Self.SelectedStateSave != null )
+                {
+                    if(SelectedState.Self.SelectedElement?.DefaultState != SelectedState.Self.SelectedStateSave)
                     {
-                        if(SelectedState.Self.SelectedElement?.DefaultState != SelectedState.Self.SelectedStateSave)
-                        {
-                            _stateTreeViewRightClickService.RenameStateClick();
+                        _stateTreeViewRightClickService.RenameStateClick();
 
-                        }
                     }
-                    else if(SelectedState.Self.SelectedStateCategorySave != null)
+                }
+                else if(SelectedState.Self.SelectedStateCategorySave != null)
+                {
+                    _stateTreeViewRightClickService.RenameCategoryClick();
+                }
+            }
+            else if(_hotkeyManager.Delete.IsPressed(e))
+            {
+                if (SelectedState.Self.SelectedStateSave != null)
+                {
+                    if (SelectedState.Self.SelectedElement?.DefaultState != SelectedState.Self.SelectedStateSave)
                     {
-                        _stateTreeViewRightClickService.RenameCategoryClick();
-                    }
-                    break;
-                case Keys.Delete:
-                    if (SelectedState.Self.SelectedStateSave != null)
-                    {
-                        if (SelectedState.Self.SelectedElement?.DefaultState != SelectedState.Self.SelectedStateSave)
-                        {
-                            _stateTreeViewRightClickService.DeleteStateClick();
+                        _stateTreeViewRightClickService.DeleteStateClick();
 
-                        }
                     }
-                    else if (SelectedState.Self.SelectedStateCategorySave != null)
-                    {
-                        _stateTreeViewRightClickService.DeleteCategoryClick();
-                    }
-                    break;
+                }
+                else if (SelectedState.Self.SelectedStateCategorySave != null)
+                {
+                    _stateTreeViewRightClickService.DeleteCategoryClick();
+                }
             }
         }
 

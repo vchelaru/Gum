@@ -189,10 +189,11 @@ namespace Gum.Managers
                 .Where(item=>item != SelectedState.Self.SelectedStateCategorySave)
                 .Select(item => item.Name).ToList();
 
-            if(SelectedState.Self.SelectedStateCategorySave != null)
-            {
-                categoryNames.Insert(0, mNoCategory);
-            }
+            // As of before 2024 we no longer allow uncategorized non-default states
+            //if(SelectedState.Self.SelectedStateCategorySave != null)
+            //{
+            //    categoryNames.Insert(0, mNoCategory);
+            //}
 
             if(categoryNames.Count != 0)
             {
@@ -247,7 +248,10 @@ namespace Gum.Managers
                 Header = text,
                 InputGestureText = shortcut,
             };
-            menuItem.Click += (_, _) => clickAction();
+            if(clickAction != null)
+            {
+                menuItem.Click += (_, _) => clickAction();
+            }
             return menuItem;
         }
 

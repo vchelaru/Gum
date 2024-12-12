@@ -8,7 +8,9 @@ namespace Gum.Controls
     public partial class StateView : UserControl
     {
         public event EventHandler StateStackingModeChange;
-        StateTreeViewRightClickService _stateTreeViewRightClickService;
+        private readonly StateTreeViewRightClickService _stateTreeViewRightClickService;
+        private readonly HotkeyManager _hotkeyManager;
+
         public ContextMenuStrip TreeViewContextMenu => TreeView.ContextMenuStrip;
 
         public StateStackingMode StateStackingMode
@@ -37,15 +39,18 @@ namespace Gum.Controls
             }
         }
 
-        public StateView(StateTreeViewRightClickService stateTreeViewRightClickService)
+        public StateView(StateTreeViewRightClickService stateTreeViewRightClickService, HotkeyManager hotkeyManager)
         {
             _stateTreeViewRightClickService = stateTreeViewRightClickService;
+            _hotkeyManager = hotkeyManager;
             InitializeComponent();
 
             this.TreeView.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.StateTreeView_AfterSelect);
             this.TreeView.KeyDown += new System.Windows.Forms.KeyEventHandler(this.StateTreeView_KeyDown);
             this.TreeView.MouseClick += new System.Windows.Forms.MouseEventHandler(this.StateTreeView_MouseClick);
             this.TreeView.MouseDown += HandleMouseDown;
+
+
         }
 
         private void SingleStateRadio_CheckedChanged(object sender, EventArgs e)
@@ -84,12 +89,12 @@ namespace Gum.Controls
 
         internal bool TryHandleCmdKeyStateView(Keys keyData)
         {
-            if (HotkeyManager.Self.ReorderUp.IsPressed(keyData))
+            if (_hotkeyManager.ReorderUp.IsPressed(keyData))
             {
                 _stateTreeViewRightClickService.MoveStateInDirection(-1);
                 return true;
             }
-            else if (HotkeyManager.Self.ReorderDown.IsPressed(keyData))
+            else if (_hotkeyManager.ReorderDown.IsPressed(keyData))
             {
                 var stateSave = ProjectState.Self.Selected.SelectedStateSave;
                 bool isDefault = stateSave != null &&
@@ -100,6 +105,40 @@ namespace Gum.Controls
                     _stateTreeViewRightClickService.MoveStateInDirection(1);
                 }
                 return true;
+            }
+            else if (_hotkeyManager.Rename.IsPressed(keyData))
+            {
+                if (SelectedState.Self.SelectedStateSave != null)
+                {
+                    if (SelectedState.Self.SelectedElement?.DefaultState != SelectedState.Self.SelectedStateSave)
+                    {
+                        _stateTreeViewRightClickService.RenameStateClick();
+
+                    }
+                    return true;
+                }
+                else if (SelectedState.Self.SelectedStateCategorySave != null)
+                {
+                    _stateTreeViewRightClickService.RenameCategoryClick();
+                    return true;
+                }
+            }
+            else if (_hotkeyManager.Delete.IsPressed(keyData))
+            {
+                if (SelectedState.Self.SelectedStateSave != null)
+                {
+                    if (SelectedState.Self.SelectedElement?.DefaultState != SelectedState.Self.SelectedStateSave)
+                    {
+                        _stateTreeViewRightClickService.DeleteStateClick();
+
+                    }
+                    return true;
+                }
+                else if (SelectedState.Self.SelectedStateCategorySave != null)
+                {
+                    _stateTreeViewRightClickService.DeleteCategoryClick();
+                    return true;
+                }
             }
             return false;
         }
@@ -122,7 +161,7 @@ namespace Gum.Controls
 
         private void StateTreeView_KeyDown(object sender, KeyEventArgs e)
         {
-            HotkeyManager.Self.HandleKeyDownStateView(e);
+            _hotkeyManager.HandleKeyDownStateView(e);
         }
 
     }

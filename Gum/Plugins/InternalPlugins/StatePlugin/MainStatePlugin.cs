@@ -8,6 +8,7 @@ using Gum.Plugins.InternalPlugins.StatePlugin.ViewModels;
 using Gum.Plugins.InternalPlugins.StatePlugin.Views;
 using Gum.PropertyGridHelpers;
 using Gum.ToolStates;
+using Newtonsoft.Json.Linq;
 using System;
 using System.ComponentModel.Composition;
 using System.Linq;
@@ -28,10 +29,12 @@ public class MainStatePlugin : InternalPlugin
     PluginTab newPluginTab;
 
     StateTreeViewRightClickService _stateTreeViewRightClickService;
+    private HotkeyManager _hotkeyManager;
 
     public MainStatePlugin()
     {
         _stateTreeViewRightClickService = new StateTreeViewRightClickService();
+        _hotkeyManager = HotkeyManager.Self;
     }
 
     public override void StartUp()
@@ -41,24 +44,52 @@ public class MainStatePlugin : InternalPlugin
         this.RefreshStateTreeView += HandleRefreshStateTreeView;
         this.ReactToStateSaveSelected += HandleStateSelected;
         this.ReactToStateSaveCategorySelected += HandleStateSaveCategorySelected;
-
-        stateView = new StateView(_stateTreeViewRightClickService);
-        _stateTreeViewRightClickService.OldMenuStrip = stateView.TreeViewContextMenu;
-
+        this.StateRename += HandleStateRename;
+        this.CategoryRename += HandleCategoryRename;
+        this.ReactToStateStackingModeChange += HandleStateStackingModeChanged;
         stateTreeViewModel = new StateTreeViewModel(_stateTreeViewRightClickService);
 
-        pluginTab = GumCommands.Self.GuiCommands.AddControl(stateView, "States", TabLocation.CenterTop);
+        CreateNewStateTab();
 
-
-        stateTreeView = new StateTreeView(stateTreeViewModel, _stateTreeViewRightClickService);
-        _stateTreeViewRightClickService.NewMenuStrip = stateTreeView.TreeViewContextMenu;
-
-        newPluginTab = GumCommands.Self.GuiCommands.AddControl(stateTreeView, "States", TabLocation.CenterTop);
-
-        ((SelectedState)SelectedState.Self).StateView = stateView;
+        CreateOldStateTab();
 
         // State Tree ViewManager needs init before MenuStripManager
-        StateTreeViewManager.Self.Initialize(this.stateView.TreeView, this.stateView.StateContextMenuStrip, _stateTreeViewRightClickService);
+        StateTreeViewManager.Self.Initialize(this.stateView.TreeView,
+            this.stateView.StateContextMenuStrip,
+            _stateTreeViewRightClickService,
+            _hotkeyManager);
+    }
+
+    private void HandleStateStackingModeChanged(StateStackingMode mode)
+    {
+        stateView.StateStackingMode = mode;
+        stateTreeViewModel.StateStackingMode = mode;
+    }
+
+    private void CreateOldStateTab()
+    {
+        stateView = new StateView(_stateTreeViewRightClickService, _hotkeyManager);
+        _stateTreeViewRightClickService.OldMenuStrip = stateView.TreeViewContextMenu;
+        stateView.StateStackingModeChange += (_, _) => GumState.Self.SelectedState.StateStackingMode = stateView.StateStackingMode;
+
+        pluginTab = GumCommands.Self.GuiCommands.AddControl(stateView, "States", TabLocation.CenterTop);
+    }
+
+    private void CreateNewStateTab()
+    {
+        stateTreeView = new StateTreeView(stateTreeViewModel, _stateTreeViewRightClickService, _hotkeyManager);
+        _stateTreeViewRightClickService.NewMenuStrip = stateTreeView.TreeViewContextMenu;
+        newPluginTab = GumCommands.Self.GuiCommands.AddControl(stateTreeView, "States", TabLocation.CenterTop);
+    }
+
+    private void HandleCategoryRename(StateSaveCategory category, string arg2)
+    {
+        stateTreeViewModel.HandleRename(category);
+    }
+
+    private void HandleStateRename(StateSave save, string oldName)
+    {
+        stateTreeViewModel.HandleRename(save);
     }
 
     private void HandleStateSelected(StateSave state)
@@ -89,8 +120,8 @@ public class MainStatePlugin : InternalPlugin
             desiredTitle = $"{element.Name} States";
         }
 
-        pluginTab.Title = desiredTitle;
-        newPluginTab.Title = desiredTitle + " Preview";
+        pluginTab.Title = desiredTitle + " (old)";
+        newPluginTab.Title = desiredTitle;
     }
 
     private void HandleStateSelected(TreeNode stateTreeNode)
@@ -213,37 +244,7 @@ public class MainStatePlugin : InternalPlugin
             }
         }
 
-        for (int i = 0; i < stateTreeViewModel.Categories.Count; i++)
-        {
-            if (stateContainer.Categories.Contains(stateTreeViewModel.Categories[i].Data) == false)
-            {
-                stateTreeViewModel.Categories.RemoveAt(i);
-                i--;
-            }
-            else
-            {
-                var categoryViewModel = stateTreeViewModel.Categories[i];
-                var category = categoryViewModel.Data;
-                for (int j = 0; j < categoryViewModel.States.Count; j++)
-                {
-                    var stateViewModel = categoryViewModel.States[j];
-
-                    if (category.States.Contains(stateViewModel.Data) == false)
-                    {
-                        stateTreeViewModel.Categories[i].States.RemoveAt(j);
-                        j--;
-                    }
-                }
-            }
-        }
-        for(int i = 0; i < stateTreeViewModel.States.Count; i++)
-        {
-            var stateViewModel = stateTreeViewModel.States[i];
-            if(stateContainer.UncategorizedStates.Contains(stateViewModel.Data) == false)
-            {
-                stateTreeViewModel.States.RemoveAt(i);
-            }
-        }
+        stateTreeViewModel.RemoveUnnecessaryNodes(stateContainer);
     }
 
 

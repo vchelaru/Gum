@@ -25,6 +25,7 @@ namespace Gum.Plugins.InternalPlugins.StatePlugin.Views
     public partial class StateTreeView : UserControl
     {
         private readonly StateTreeViewRightClickService _stateTreeViewRightClickService;
+        private readonly HotkeyManager _hotkeyManager;
 
         StateTreeViewModel ViewModel => DataContext as StateTreeViewModel;
 
@@ -37,9 +38,12 @@ namespace Gum.Plugins.InternalPlugins.StatePlugin.Views
             get => TreeViewInstance.ContextMenu;
         }
 
-        public StateTreeView(StateTreeViewModel viewModel, StateTreeViewRightClickService stateTreeViewRightClickService)
+        public StateTreeView(StateTreeViewModel viewModel, 
+            StateTreeViewRightClickService stateTreeViewRightClickService,
+            HotkeyManager hotkeyManager)
         {
             _stateTreeViewRightClickService = stateTreeViewRightClickService;
+            _hotkeyManager = hotkeyManager;
             InitializeComponent();
             TreeViewInstance.ContextMenu = new ContextMenu();
             this.DataContext = viewModel;
@@ -56,12 +60,12 @@ namespace Gum.Plugins.InternalPlugins.StatePlugin.Views
 
         private void TreeViewInstance_KeyDown(object sender, KeyEventArgs e)
         {
-            if (HotkeyManager.Self.ReorderUp.IsPressed(e))
+            if (_hotkeyManager.ReorderUp.IsPressed(e))
             {
                 _stateTreeViewRightClickService.MoveStateInDirection(-1);
                 e.Handled = true;
             }
-            else if (HotkeyManager.Self.ReorderDown.IsPressed(e))
+            else if (_hotkeyManager.ReorderDown.IsPressed(e))
             {
                 var stateSave = ProjectState.Self.Selected.SelectedStateSave;
                 bool isDefault = stateSave != null &&
@@ -73,6 +77,67 @@ namespace Gum.Plugins.InternalPlugins.StatePlugin.Views
                 }
                 e.Handled = true;
             }
+            else if (_hotkeyManager.Rename.IsPressed(e))
+            {
+                if (SelectedState.Self.SelectedStateSave != null)
+                {
+                    if (SelectedState.Self.SelectedElement?.DefaultState != SelectedState.Self.SelectedStateSave)
+                    {
+                        _stateTreeViewRightClickService.RenameStateClick();
+
+                    }
+                    e.Handled = true;
+
+                }
+                else if (SelectedState.Self.SelectedStateCategorySave != null)
+                {
+                    _stateTreeViewRightClickService.RenameCategoryClick();
+                    e.Handled = true;
+
+                }
+            }
+            else if (_hotkeyManager.Delete.IsPressed(e))
+            {
+                if (SelectedState.Self.SelectedStateSave != null)
+                {
+                    if (SelectedState.Self.SelectedElement?.DefaultState != SelectedState.Self.SelectedStateSave)
+                    {
+                        _stateTreeViewRightClickService.DeleteStateClick();
+
+                    }
+                    e.Handled = true;
+
+                }
+                else if (SelectedState.Self.SelectedStateCategorySave != null)
+                {
+                    _stateTreeViewRightClickService.DeleteCategoryClick();
+                    e.Handled = true;
+
+                }
+            }
+        }
+
+        private void TreeViewInstance_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            // Find the TreeViewItem that was clicked
+            var clickedItem = VisualUpwardSearch<TreeViewItem>(e.OriginalSource as DependencyObject);
+
+            if (clickedItem != null)
+            {
+                // Select the clicked item
+                clickedItem.IsSelected = true;
+                e.Handled = true; // Prevent further processing if necessary
+            }
+        }
+
+        // Helper method to search upward in the visual tree for the specified type
+        private static T VisualUpwardSearch<T>(DependencyObject source) where T : DependencyObject
+        {
+            while (source != null && source.GetType() != typeof(T))
+            {
+                source = VisualTreeHelper.GetParent(source);
+            }
+            return source as T;
         }
     }
 }

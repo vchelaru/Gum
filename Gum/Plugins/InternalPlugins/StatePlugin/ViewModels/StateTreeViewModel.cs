@@ -15,6 +15,34 @@ namespace Gum.Plugins.InternalPlugins.StatePlugin.ViewModels;
 
 public class StateTreeViewModel : ViewModel
 {
+    #region Fields/Properties
+
+    public StateStackingMode StateStackingMode
+    {
+        get => Get<StateStackingMode>();
+        set => Set(value);
+    }
+
+    [DependsOn(nameof(StateStackingMode))]
+    public bool IsSingleStateSelected
+    {
+        get => StateStackingMode == StateStackingMode.SingleState;
+        set
+        {
+            if (value) StateStackingMode = StateStackingMode.SingleState;
+        }
+    }
+
+    [DependsOn(nameof(StateStackingMode))]
+    public bool IsCombinedStateSelected
+    {
+        get => StateStackingMode == StateStackingMode.CombineStates;
+        set
+        {
+            if (value) StateStackingMode = StateStackingMode.CombineStates;
+        }
+    }
+
     [DependsOn(nameof(Categories))]
     [DependsOn(nameof(States))]
     public IEnumerable<StateTreeViewItem> Items => Categories.Concat<StateTreeViewItem>(States);
@@ -32,11 +60,10 @@ public class StateTreeViewModel : ViewModel
         set => Set(value);
     }
 
-    //public StateTreeViewItem SelectedItem
-    //{
-    //    get => Get<StateTreeViewItem>();
-    //    set => Set(value);
-    //}
+
+    #endregion
+
+    #region Initialize
 
     public StateTreeViewModel(StateTreeViewRightClickService stateTreeViewRightClickService)
     {
@@ -44,30 +71,43 @@ public class StateTreeViewModel : ViewModel
         Categories = new ObservableCollection<CategoryViewModel>();
         States = new ObservableCollection<StateViewModel>();
 
-
+        PropertyChanged += HandlePropertyChanged;
     }
 
-    //private void HandlePropertyChanged(object sender, PropertyChangedEventArgs e)
-    //{
-    //    switch(e.PropertyName)
-    //    {
-    //        case nameof(SelectedItem):
-    //            PushSelectionToGum();
-    //            break;
-    //    }
-    //}
+    private void HandlePropertyChanged(object sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(StateStackingMode))
+        {
+            GumState.Self.SelectedState.StateStackingMode = StateStackingMode;
+        }
+    }
 
-    //private void PushSelectionToGum()
-    //{
-    //    if (SelectedItem is CategoryViewModel categoryViewModel)
-    //    {
-    //        GumState.Self.SelectedState.SelectedStateCategorySave = categoryViewModel.Data;
-    //    }
-    //    else if (SelectedItem is StateViewModel stateViewModel)
-    //    {
-    //        GumState.Self.SelectedState.SelectedStateSave = stateViewModel.Data;
-    //    }
-    //}
+    #endregion
+
+    private void HandleItemVmPropertyChanged(object sender, PropertyChangedEventArgs e)
+    {
+        if(e.PropertyName == nameof(StateTreeViewItem.IsSelected))
+        {
+            if (sender is StateViewModel stateVm && stateVm.IsSelected == true)
+            {
+                GumState.Self.SelectedState.SelectedStateSave = stateVm.Data;
+            }
+            else if(sender is CategoryViewModel categoryVm && categoryVm.IsSelected)
+            {
+                // If a state was selected, we need to deselect everything and forcefully select the state:
+                if(GumState.Self.SelectedState.SelectedStateSave != null)
+                {
+                    GumState.Self.SelectedState.SelectedStateSave = null;
+                    GumState.Self.SelectedState.SelectedStateCategorySave = null;
+                }
+                GumState.Self.SelectedState.SelectedStateCategorySave = categoryVm.Data;
+            }
+            _stateTreeViewRightClickService.PopulateMenuStrip();
+        }
+        
+    }
+
+    #region Methods
 
     internal void RefreshBackgroundToVariables()
     {
@@ -97,7 +137,15 @@ public class StateTreeViewModel : ViewModel
         var foundState = States.FirstOrDefault(item => item.Data == stateSave);
         if (foundState == null)
         {
-            foundState = Categories.SelectMany(item => item.States).FirstOrDefault(item => item.Data == stateSave);
+            foreach (var category in Categories)
+            {
+                foundState = category.States.FirstOrDefault(item => item.Data == stateSave);
+                if (foundState != null)
+                {
+                    category.IsExpanded = true;
+                    break;
+                }
+            }
         }
 
 
@@ -203,18 +251,60 @@ public class StateTreeViewModel : ViewModel
 
     }
 
+    public void RemoveUnnecessaryNodes(IStateContainer stateContainer)
+    {
+
+        for (int i = 0; i < Categories.Count; i++)
+        {
+            if (stateContainer.Categories.Contains(Categories[i].Data) == false)
+            {
+                Categories.RemoveAt(i);
+                i--;
+            }
+            else
+            {
+                var categoryViewModel = Categories[i];
+                var category = categoryViewModel.Data;
+                for (int j = 0; j < categoryViewModel.States.Count; j++)
+                {
+                    var stateViewModel = categoryViewModel.States[j];
+
+                    if (category.States.Contains(stateViewModel.Data) == false)
+                    {
+                        Categories[i].States.RemoveAt(j);
+                        j--;
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < States.Count; i++)
+        {
+            var stateViewModel = States[i];
+            if (stateContainer.UncategorizedStates.Contains(stateViewModel.Data) == false)
+            {
+                States.RemoveAt(i);
+            }
+        }
+    }
+
     public void FixNodeOrderInCategory(IStateContainer stateContainer)
     {
-        int desiredIndex = 0;
-        foreach (var category in stateContainer.Categories.OrderBy(item => item.Name))
+        for (int categoryIndex = 0; categoryIndex < stateContainer.Categories.Count(); categoryIndex++)
         {
-            var categoryViewModel = Categories[desiredIndex];
+            var categoryViewModel = Categories[categoryIndex];
+            var category = stateContainer.Categories.ElementAt(categoryIndex);
             if (categoryViewModel.Data != category)
             {
-                Categories.Remove(categoryViewModel);
-                Categories.Insert(desiredIndex, categoryViewModel);
+                var categoryToMove = Categories.FirstOrDefault(item => item.Data == category);
+                var oldIndex = Categories.IndexOf(categoryToMove);
+                Categories.Move(oldIndex, categoryIndex);
             }
+        }
 
+        for (int categoryIndex = 0; categoryIndex < stateContainer.Categories.Count(); categoryIndex++)
+        {
+            var categoryViewModel = Categories[categoryIndex];
+            var category = stateContainer.Categories.ElementAt(categoryIndex);
             for (int stateIndex = 0; stateIndex < category.States.Count; stateIndex++)
             {
                 var state = category.States[stateIndex];
@@ -232,25 +322,23 @@ public class StateTreeViewModel : ViewModel
         }
     }
 
-    private void HandleItemVmPropertyChanged(object sender, PropertyChangedEventArgs e)
+
+    #endregion
+
+    #region Rename
+
+    internal void HandleRename(StateSave state)
     {
-        if(e.PropertyName == nameof(StateTreeViewItem.IsSelected))
-        {
-            if (sender is StateViewModel stateVm && stateVm.IsSelected == true)
-            {
-                GumState.Self.SelectedState.SelectedStateSave = stateVm.Data;
-            }
-            else if(sender is CategoryViewModel categoryVm && categoryVm.IsSelected)
-            {
-                // If a state was selected, we need to deselect everything and forcefully select the state:
-                if(GumState.Self.SelectedState.SelectedStateSave != null)
-                {
-                    GumState.Self.SelectedState.SelectedStateSave = null;
-                    GumState.Self.SelectedState.SelectedStateCategorySave = null;
-                }
-                GumState.Self.SelectedState.SelectedStateCategorySave = categoryVm.Data;
-            }
-            _stateTreeViewRightClickService.PopulateMenuStrip();
-        }
+        var stateVm = Categories.SelectMany(item => item.States).FirstOrDefault(item => item.Data == state);
+
+        stateVm?.ForceRefreshTitle();
     }
+
+    internal void HandleRename(StateSaveCategory category)
+    {
+        var categoryVm = Categories.FirstOrDefault(item => item.Data == category);
+        categoryVm?.ForceRefreshTitle();
+    }
+
+    #endregion
 }

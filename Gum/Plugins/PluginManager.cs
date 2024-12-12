@@ -17,6 +17,7 @@ using RenderingLibrary.Graphics;
 using Gum.Responses;
 using System.Runtime.CompilerServices;
 using Gum.Wireframe;
+using Gum.ToolStates;
 
 namespace Gum.Plugins
 {
@@ -659,6 +660,9 @@ namespace Gum.Plugins
 
         internal void ReactToStateSaveCategorySelected(StateSaveCategory category) =>
             CallMethodOnPlugin((plugin) => plugin.CallReactToStateSaveCategorySelected(category));
+
+        internal void ReactToStateStackingModeChange(StateStackingMode value) =>
+            CallMethodOnPlugin((plugin) => plugin.CallReactToStateStackingModeChange(value));
 
         internal void VariableAdd(ElementSave elementSave, string variableName) =>
             CallMethodOnPlugin((plugin) => plugin.CallVariableAdd(elementSave, variableName));
