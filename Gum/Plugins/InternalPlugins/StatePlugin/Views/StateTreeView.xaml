@@ -29,7 +29,20 @@
                     </StackPanel>
                 </HierarchicalDataTemplate>
                 <DataTemplate DataType="{x:Type viewmodels:StateViewModel}">
-                    <TextBlock Text="{Binding Title}" Background="{Binding IncludesVariablesForSelectedInstance, Converter={StaticResource BackgroundConverter}}"/>
+          <TextBlock Text="{Binding Title}">
+            <TextBlock.Style>
+              <Style TargetType="{x:Type TextBlock}">
+                <Style.Resources>
+                  <SolidColorBrush x:Key="IncludesVariablesBgBrush" Color="Yellow" Opacity=".64" />
+                </Style.Resources>
+                <Style.Triggers>
+                  <DataTrigger Binding="{Binding IncludesVariablesForSelectedInstance}" Value="True">
+                    <Setter Property="Background" Value="{StaticResource IncludesVariablesBgBrush}" />
+                  </DataTrigger>
+                </Style.Triggers>
+              </Style>
+            </TextBlock.Style>
+          </TextBlock>
                 </DataTemplate>
             </TreeView.Resources>
             <TreeView.ItemContainerStyle>
