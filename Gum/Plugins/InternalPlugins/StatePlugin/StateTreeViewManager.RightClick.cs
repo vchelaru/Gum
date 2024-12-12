@@ -10,17 +10,24 @@ using Gum.PropertyGridHelpers;
 namespace Gum.Managers
 {
 
-    public partial class StateTreeViewManager
+    public class StateTreeViewRightClickService
     {
         const string mNoCategory = "<no category>";
+        public ContextMenuStrip OldMenuStrip { get; internal set; }
+
+        public System.Windows.Controls.ContextMenu NewMenuStrip { get; internal set; }
+
+        public StateTreeViewRightClickService()
+        {
+        }
 
         #region Add to menu
 
         internal void PopulateMenuStrip()
         {
-            mMenuStrip.Items.Clear();
+            ClearMenuStrip();
 
-            if(SelectedState.Self.SelectedStateCategorySave != null)
+            if (SelectedState.Self.SelectedStateCategorySave != null)
             {
                 // As of 5/24/2023, we no longer support uncategorized states
                 AddMenuItem("Add State", GumCommands.Self.Edit.AddState);
@@ -30,18 +37,21 @@ namespace Gum.Managers
 
             if (SelectedState.Self.SelectedStateSave != null)
             {
-                bool isDefault = SelectedState.Self.SelectedStateSave == SelectedState.Self.SelectedElement?.DefaultState; 
+                bool isDefault = SelectedState.Self.SelectedStateSave == SelectedState.Self.SelectedElement?.DefaultState;
+                
+                AddSplitter();
 
-                mMenuStrip.Items.Add("-");
-
-                if(!isDefault)
+                if (!isDefault)
                 {
                     AddMenuItem("Rename State", RenameStateClick);
                 }
 
-                AddMenuItem("Duplicate State", DuplicateStateClick);
+                if (SelectedState.Self.SelectedStateCategorySave != null)
+                {
+                    AddMenuItem("Duplicate State", DuplicateStateClick);
+                }
 
-                if(!isDefault)
+                if (!isDefault)
                 {
                     AddMenuItem("Delete " + SelectedState.Self.SelectedStateSave.Name, DeleteStateClick);
                 }
@@ -50,11 +60,11 @@ namespace Gum.Managers
 
                 if (SelectedState.Self.SelectedElement != null && SelectedState.Self.SelectedStateSave != SelectedState.Self.SelectedElement.DefaultState)
                 {
-                    mMenuStrip.Items.Add("-");
+                    AddSplitter();
 
                     AddMoveToCategoryItems();
 
-                    mMenuStrip.Items.Add("-");
+                    AddSplitter();
 
                     if (GetIfCanMoveUp(SelectedState.Self.SelectedStateSave, SelectedState.Self.SelectedStateCategorySave))
                     {
@@ -67,10 +77,10 @@ namespace Gum.Managers
             // (if a state is selected, a category is implicitly selected too). Now we
             // check if a category is highlighted (not state)
             //if(SelectedState.Self.SelectedStateCategorySave != null)
-            if(SelectedState.Self.SelectedStateCategorySave != null && SelectedState.Self.SelectedStateSave == null)
+            if (SelectedState.Self.SelectedStateCategorySave != null && SelectedState.Self.SelectedStateSave == null)
             {
 
-                mMenuStrip.Items.Add("-");
+                AddSplitter();
 
                 AddMenuItem("Rename Category", RenameCategoryClick);
 
@@ -79,6 +89,17 @@ namespace Gum.Managers
             }
         }
 
+        private void AddSplitter()
+        {
+            OldMenuStrip.Items.Add("-");
+            NewMenuStrip.Items.Add(new System.Windows.Controls.Separator());
+        }
+
+        private void ClearMenuStrip()
+        {
+            OldMenuStrip.Items.Clear();
+            NewMenuStrip.Items.Clear();
+        }
 
         private void MoveUpClick()
         {
@@ -148,14 +169,14 @@ namespace Gum.Managers
         }
 
 
-        private void DeleteCategoryClick()
+        public void DeleteCategoryClick()
         {
             GumCommands.Self.Edit.RemoveStateCategory(
                 SelectedState.Self.SelectedStateCategorySave,
                 SelectedState.Self.SelectedStateContainer as IStateCategoryListContainer);
         }
 
-        private void DeleteStateClick()
+        public void DeleteStateClick()
         {
             GumCommands.Self.Edit.RemoveState(
                 SelectedState.Self.SelectedStateSave,
@@ -168,10 +189,11 @@ namespace Gum.Managers
                 .Where(item=>item != SelectedState.Self.SelectedStateCategorySave)
                 .Select(item => item.Name).ToList();
 
-            if(SelectedState.Self.SelectedStateCategorySave != null)
-            {
-                categoryNames.Insert(0, mNoCategory);
-            }
+            // As of before 2024 we no longer allow uncategorized non-default states
+            //if(SelectedState.Self.SelectedStateCategorySave != null)
+            //{
+            //    categoryNames.Insert(0, mNoCategory);
+            //}
 
             if(categoryNames.Count != 0)
             {
@@ -179,35 +201,72 @@ namespace Gum.Managers
 
                 foreach(var categoryName in categoryNames)
                 {
-                    var categorySpecificItem = new ToolStripMenuItem();
-                    categorySpecificItem.Text = categoryName;
-                    rootItem.DropDownItems.Add(categorySpecificItem);
 
                     // make a local var to prevent problems with delayed evaluation
                     string categoryNameEvaluated = categoryName;
-
-                    categorySpecificItem.Click += delegate
-                    {
-                        MoveToCategory(categoryNameEvaluated);
-
-                    };
+                    AddChildMenuItem("Move to category", categoryName, () => MoveToCategory(categoryName));
                 }
             }
         }
 
+        private void AddChildMenuItem(string parent, string text, Action clickAction, string shortcut = null)
+        {
+            ToolStripMenuItem tsmi = CreateOldToolStripMenuItem(text, clickAction, shortcut);
+            ToolStripMenuItem oldParentItem = null;
+            foreach(var oldItem in OldMenuStrip.Items)
+            {
+                if(oldItem is ToolStripMenuItem itemTsmi && itemTsmi.Text == parent)
+                {
+                    oldParentItem = itemTsmi;
+                    break;
+                }
+            }
+            oldParentItem.DropDownItems.Add(tsmi);
+
+            System.Windows.Controls.MenuItem menuItem = CreateNewToolStripMenuItem(text, clickAction, shortcut);
+            var parentItem = NewMenuStrip.Items.FirstOrDefault(item => item is System.Windows.Controls.MenuItem itemMenu && itemMenu.Header.ToString() == parent)
+                as System.Windows.Controls.MenuItem;
+            parentItem.Items.Add(menuItem);
+        }
+
         private ToolStripMenuItem AddMenuItem(string text, Action clickAction, string shortcut = null)
+        {
+            ToolStripMenuItem tsmi = CreateOldToolStripMenuItem(text, clickAction, shortcut);
+            OldMenuStrip.Items.Add(tsmi);
+            System.Windows.Controls.MenuItem menuItem = CreateNewToolStripMenuItem(text, clickAction, shortcut);
+            NewMenuStrip.Items.Add(menuItem);
+
+
+
+            return tsmi;
+        }
+
+        private static System.Windows.Controls.MenuItem CreateNewToolStripMenuItem(string text, Action clickAction, string shortcut)
+        {
+            var menuItem = new System.Windows.Controls.MenuItem
+            {
+                Header = text,
+                InputGestureText = shortcut,
+            };
+            if(clickAction != null)
+            {
+                menuItem.Click += (_, _) => clickAction();
+            }
+            return menuItem;
+        }
+
+        private static ToolStripMenuItem CreateOldToolStripMenuItem(string text, Action clickAction, string shortcut)
         {
             var tsmi = new ToolStripMenuItem();
             tsmi.Text = text;
             tsmi.ShortcutKeyDisplayString = shortcut;
-            if(clickAction != null)
+            if (clickAction != null)
             {
                 tsmi.Click += delegate
                 {
                     clickAction();
                 };
             }
-            mMenuStrip.Items.Add(tsmi);
 
             return tsmi;
         }
@@ -251,20 +310,20 @@ namespace Gum.Managers
                 newState.Name = StringFunctions.IncrementNumberAtEnd(newState.Name);
             }
 
-            StateTreeViewManager.Self.RefreshUI(SelectedState.Self.SelectedElement);
+            GumCommands.Self.GuiCommands.RefreshStateTreeView();
 
             SelectedState.Self.SelectedStateSave = newState;
 
             GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
         }
 
-        private static void RenameStateClick()
+        public void RenameStateClick()
         {
             GumCommands.Self.Edit.AskToRenameState(SelectedState.Self.SelectedStateSave,
                 SelectedState.Self.SelectedStateContainer);
         }
 
-        private static void RenameCategoryClick()
+        public void RenameCategoryClick()
         {
             GumCommands.Self.Edit.AskToRenameStateCategory(
                 SelectedState.Self.SelectedStateCategorySave, 

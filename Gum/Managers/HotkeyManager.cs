@@ -30,6 +30,24 @@ namespace Gum.Managers
             return Key == null || args.KeyCode == Key;
         }
 
+        public bool IsPressed(System.Windows.Input.KeyEventArgs args)
+        {
+            if (IsCtrlDown && (args.KeyboardDevice.Modifiers & System.Windows.Input.ModifierKeys.Control) != System.Windows.Input.ModifierKeys.Control) return false;
+            if (IsShiftDown && (args.KeyboardDevice.Modifiers & System.Windows.Input.ModifierKeys.Shift) != System.Windows.Input.ModifierKeys.Shift) return false;
+            if (IsAltDown && (args.KeyboardDevice.Modifiers & System.Windows.Input.ModifierKeys.Alt) != System.Windows.Input.ModifierKeys.Alt) return false;
+
+            if(Key == null)
+            {
+                return true;
+            }
+            else
+            {
+                var expectedWpfKey = System.Windows.Input.KeyInterop.KeyFromVirtualKey((int)Key);
+                return args.Key == expectedWpfKey || args.SystemKey == expectedWpfKey;
+
+            }
+        }
+
         public bool IsPressed(Keys keyData)
         {
             Keys extracted = keyData;
@@ -173,6 +191,7 @@ namespace Gum.Managers
         public KeyCombination ZoomCameraOut { get; private set; } = KeyCombination.Ctrl(Keys.Subtract);
         public KeyCombination ZoomCameraOutAlternative { get; private set; } = KeyCombination.Ctrl(Keys.OemMinus);
 
+        public KeyCombination Rename { get; private set; } = KeyCombination.Pressed(Keys.F2);
 
 
         // If adding any new keys here, modify HotkeyViewModel
@@ -352,28 +371,6 @@ namespace Gum.Managers
         #endregion
 
         #region State Tree View
-
-        internal bool TryHandleCmdKeyStateView(Keys keyData)
-        {
-            if(ReorderUp.IsPressed(keyData))
-            {
-                StateTreeViewManager.Self.MoveStateInDirection(-1);
-                return true;
-            }
-            else if(ReorderDown.IsPressed(keyData))
-            {
-                var stateSave = ProjectState.Self.Selected.SelectedStateSave;
-                bool isDefault = stateSave != null &&
-                    stateSave == ProjectState.Self.Selected.SelectedElement.DefaultState;
-
-                if (!isDefault)
-                {
-                    StateTreeViewManager.Self.MoveStateInDirection(1);
-                }
-                return true;
-            }
-            return false;
-        }
 
         internal void HandleKeyDownStateView(KeyEventArgs e)
         {

@@ -17,6 +17,7 @@ using RenderingLibrary.Graphics;
 using Gum.Responses;
 using System.Runtime.CompilerServices;
 using Gum.Wireframe;
+using Gum.ToolStates;
 
 namespace Gum.Plugins
 {
@@ -642,6 +643,12 @@ namespace Gum.Plugins
         internal void StateDelete(StateSave stateSave) =>
             CallMethodOnPlugin((plugin) => plugin.CallStateDelete(stateSave));
 
+        internal void ReactToStateSaveSelected(StateSave stateSave) =>
+            CallMethodOnPlugin((plugin) => plugin.CallReactToStateSaveSelected(stateSave));
+
+        internal void RefreshStateTreeView() =>
+            CallMethodOnPlugin((plugin) => plugin.CallRefreshStateTreeView());
+
         internal void CategoryRename(StateSaveCategory category, string oldName) =>
             CallMethodOnPlugin((plugin) => plugin.CallStateCategoryRename(category, oldName));
 
@@ -650,6 +657,12 @@ namespace Gum.Plugins
 
         internal void CategoryDelete(StateSaveCategory category) =>
             CallMethodOnPlugin((plugin) => plugin.CallStateCategoryDelete(category));
+
+        internal void ReactToStateSaveCategorySelected(StateSaveCategory category) =>
+            CallMethodOnPlugin((plugin) => plugin.CallReactToStateSaveCategorySelected(category));
+
+        internal void ReactToStateStackingModeChange(StateStackingMode value) =>
+            CallMethodOnPlugin((plugin) => plugin.CallReactToStateStackingModeChange(value));
 
         internal void VariableAdd(ElementSave elementSave, string variableName) =>
             CallMethodOnPlugin((plugin) => plugin.CallVariableAdd(elementSave, variableName));

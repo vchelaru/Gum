@@ -307,7 +307,7 @@ namespace Gum.Logic
                 container.States.Add(newStateSave);
             }
 
-            StateTreeViewManager.Self.RefreshUI(container);
+            GumCommands.Self.GuiCommands.RefreshStateTreeView();
 
 
 

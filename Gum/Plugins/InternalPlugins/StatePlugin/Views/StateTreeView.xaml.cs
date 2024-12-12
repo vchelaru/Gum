@@ -1,0 +1,143 @@
+﻿using Gum.Managers;
+using Gum.Plugins.InternalPlugins.StatePlugin.ViewModels;
+using Gum.ToolStates;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+
+namespace Gum.Plugins.InternalPlugins.StatePlugin.Views
+{
+    /// <summary>
+    /// Interaction logic for StateTreeView.xaml
+    /// </summary>
+    public partial class StateTreeView : UserControl
+    {
+        private readonly StateTreeViewRightClickService _stateTreeViewRightClickService;
+        private readonly HotkeyManager _hotkeyManager;
+
+        StateTreeViewModel ViewModel => DataContext as StateTreeViewModel;
+
+        public event EventHandler SelectedItemChanged;
+
+        public object SelectedItem => TreeViewInstance.SelectedItem;
+
+        public ContextMenu TreeViewContextMenu
+        {
+            get => TreeViewInstance.ContextMenu;
+        }
+
+        public StateTreeView(StateTreeViewModel viewModel, 
+            StateTreeViewRightClickService stateTreeViewRightClickService,
+            HotkeyManager hotkeyManager)
+        {
+            _stateTreeViewRightClickService = stateTreeViewRightClickService;
+            _hotkeyManager = hotkeyManager;
+            InitializeComponent();
+            TreeViewInstance.ContextMenu = new ContextMenu();
+            this.DataContext = viewModel;
+        }
+
+        private void TreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            //var treeView = sender as System.Windows.Controls.TreeView;
+
+            //ViewModel.SelectedItem = treeView.SelectedItem as StateTreeViewItem;
+
+            //SelectedItemChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void TreeViewInstance_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (_hotkeyManager.ReorderUp.IsPressed(e))
+            {
+                _stateTreeViewRightClickService.MoveStateInDirection(-1);
+                e.Handled = true;
+            }
+            else if (_hotkeyManager.ReorderDown.IsPressed(e))
+            {
+                var stateSave = ProjectState.Self.Selected.SelectedStateSave;
+                bool isDefault = stateSave != null &&
+                    stateSave == ProjectState.Self.Selected.SelectedElement.DefaultState;
+
+                if (!isDefault)
+                {
+                    _stateTreeViewRightClickService.MoveStateInDirection(1);
+                }
+                e.Handled = true;
+            }
+            else if (_hotkeyManager.Rename.IsPressed(e))
+            {
+                if (SelectedState.Self.SelectedStateSave != null)
+                {
+                    if (SelectedState.Self.SelectedElement?.DefaultState != SelectedState.Self.SelectedStateSave)
+                    {
+                        _stateTreeViewRightClickService.RenameStateClick();
+
+                    }
+                    e.Handled = true;
+
+                }
+                else if (SelectedState.Self.SelectedStateCategorySave != null)
+                {
+                    _stateTreeViewRightClickService.RenameCategoryClick();
+                    e.Handled = true;
+
+                }
+            }
+            else if (_hotkeyManager.Delete.IsPressed(e))
+            {
+                if (SelectedState.Self.SelectedStateSave != null)
+                {
+                    if (SelectedState.Self.SelectedElement?.DefaultState != SelectedState.Self.SelectedStateSave)
+                    {
+                        _stateTreeViewRightClickService.DeleteStateClick();
+
+                    }
+                    e.Handled = true;
+
+                }
+                else if (SelectedState.Self.SelectedStateCategorySave != null)
+                {
+                    _stateTreeViewRightClickService.DeleteCategoryClick();
+                    e.Handled = true;
+
+                }
+            }
+        }
+
+        private void TreeViewInstance_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            // Find the TreeViewItem that was clicked
+            var clickedItem = VisualUpwardSearch<TreeViewItem>(e.OriginalSource as DependencyObject);
+
+            if (clickedItem != null)
+            {
+                // Select the clicked item
+                clickedItem.IsSelected = true;
+                e.Handled = true; // Prevent further processing if necessary
+            }
+        }
+
+        // Helper method to search upward in the visual tree for the specified type
+        private static T VisualUpwardSearch<T>(DependencyObject source) where T : DependencyObject
+        {
+            while (source != null && source.GetType() != typeof(T))
+            {
+                source = VisualTreeHelper.GetParent(source);
+            }
+            return source as T;
+        }
+    }
+}

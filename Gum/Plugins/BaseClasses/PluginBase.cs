@@ -10,6 +10,7 @@ using RenderingLibrary.Graphics;
 using Gum.Responses;
 using Gum.Wireframe;
 using ToolsUtilities;
+using Gum.ToolStates;
 
 namespace Gum.Plugins.BaseClasses
 {
@@ -48,14 +49,19 @@ namespace Gum.Plugins.BaseClasses
         public event Action<StateSave, string> StateRename;
         public event Action<StateSave> StateAdd;
         public event Action<StateSave> StateDelete;
+        public event Action<StateSave> ReactToStateSaveSelected;
+
+        public event Action RefreshStateTreeView;
 
         public event Action AfterUndo;
 
+        public event Action<StateStackingMode> ReactToStateStackingModeChange;
 
         public event Action<StateSaveCategory, string> CategoryRename;
         public event Action<StateSaveCategory> CategoryAdd;
         public event Action<StateSaveCategory> CategoryDelete;
         public event Action<string, StateSaveCategory> VariableRemovedFromCategory;
+        public event Action<StateSaveCategory> ReactToStateSaveCategorySelected;
 
         public event Action<VariableSave, List<Attribute>> FillVariableAttributes;
         public event Action<string, StateSave> AddAndRemoveVariablesForType;
@@ -311,13 +317,16 @@ namespace Gum.Plugins.BaseClasses
 
         public void CallStateRename(StateSave stateSave, string oldName) => StateRename?.Invoke(stateSave, oldName);
         
-
         public void CallStateAdd(StateSave stateSave) => StateAdd?.Invoke(stateSave);
+
+        public void CallRefreshStateTreeView() => RefreshStateTreeView?.Invoke();
 
         public void CallAfterUndo() => AfterUndo?.Invoke();
 
         public void CallStateDelete(StateSave stateSave) => StateDelete?.Invoke(stateSave);
 
+        public void CallReactToStateSaveSelected(StateSave stateSave) => ReactToStateSaveSelected?.Invoke(stateSave);
+        public void CallReactToStateSaveCategorySelected(StateSaveCategory category) => ReactToStateSaveCategorySelected?.Invoke(category);
         public void CallStateCategoryRename(StateSaveCategory category, string oldName) => CategoryRename?.Invoke(category, oldName);
 
         public void CallStateCategoryAdd(StateSaveCategory category) => CategoryAdd?.Invoke(category);
@@ -411,6 +420,9 @@ namespace Gum.Plugins.BaseClasses
 
         public bool CallIsExtensionValid(string extension, ElementSave parentElement, InstanceSave instance, string changedMember) =>
             IsExtensionValid?.Invoke(extension, parentElement, instance, changedMember) ?? false;
+
+        internal void CallReactToStateStackingModeChange(StateStackingMode value) =>
+            ReactToStateStackingModeChange?.Invoke(value);
 
         #endregion
     }

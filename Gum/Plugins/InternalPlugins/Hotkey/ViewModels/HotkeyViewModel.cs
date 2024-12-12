@@ -53,6 +53,9 @@ namespace Gum.Plugins.InternalPlugins.Hotkey.ViewModels
 
             Add(_hotkeyManager.ZoomCameraIn, "Zoom In");
             Add(_hotkeyManager.ZoomCameraOut, "Zoom Out");
+
+            Add(_hotkeyManager.Rename, "Rename State");
+
         }
 
         private void Add(KeyCombination keyCombination, string action)
