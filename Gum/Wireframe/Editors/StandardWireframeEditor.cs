@@ -203,7 +203,8 @@ namespace Gum.Wireframe.Editors
                 SelectedState.Self.SelectedStateSave.SetValue(nameWithInstance, rotationValueDegrees - parentRotation, 
                     SelectedState.Self.SelectedInstance, "float");
 
-                VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(nameWithInstance);
+                VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(nameWithInstance,
+                    GumState.Self.SelectedState.SelectedElement, GumState.Self.SelectedState.SelectedStateCategorySave);
 
                 GumCommands.Self.GuiCommands.RefreshPropertyGridValues();
 

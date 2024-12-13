@@ -139,7 +139,11 @@ namespace Gum.PropertyGridHelpers
                         GumCommands.Self.FileCommands.TryAutoSaveElement(parentElement);
                     }
 
-                    VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(qualifiedName);
+                    VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(qualifiedName, parentElement,
+                        // This code used to not specify the category, so it defaulted to the selected category.
+                        // I'm maintaining this behavior but I'm not sure if it's what should happen - maybe we should
+                        // serach for the owner category of the state?
+                        GumState.Self.SelectedState.SelectedStateCategorySave);
 
                     // Need to record undo before refreshing and reselecting the UI
                     if (recordUndo)

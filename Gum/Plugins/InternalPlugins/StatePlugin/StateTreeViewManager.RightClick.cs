@@ -378,7 +378,8 @@ namespace Gum.Managers
                 // also move all existing variables to the new state (use the first)
                 foreach(var variable in stateToMove.Variables)
                 {
-                    VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(variable.Name);
+                    VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(variable.Name,
+                        GumState.Self.SelectedState.SelectedElement, GumState.Self.SelectedState.SelectedStateCategorySave);
                 }
 
                 var firstState = categoryToMoveTo.States.FirstOrDefault();
@@ -386,7 +387,8 @@ namespace Gum.Managers
                 {
                     foreach (var variable in firstState.Variables)
                     {
-                        VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(variable.Name);
+                        VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(variable.Name,
+                            GumState.Self.SelectedState.SelectedElement, GumState.Self.SelectedState.SelectedStateCategorySave);
                     }
                 }
             }

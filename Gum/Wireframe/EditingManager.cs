@@ -272,7 +272,8 @@ namespace Gum.Wireframe
 
                 WireframeObjectManager.Self.RootGue?.ApplyVariableReferences(SelectedState.Self.SelectedStateSave);
 
-                VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(nameWithInstance);
+                VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(nameWithInstance,
+                    GumState.Self.SelectedState.SelectedElement, GumState.Self.SelectedState.SelectedStateCategorySave);
 
 
                 return newValue;
@@ -303,7 +304,9 @@ namespace Gum.Wireframe
             var ipso = WireframeObjectManager.Self.GetRepresentation(elementSave);
             ipso.SetProperty(baseVariableName, newValue);
 
-            VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(baseVariableName);
+            VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(baseVariableName,
+                elementSave,
+                GumState.Self.SelectedState.SelectedStateCategorySave);
 
             return newValue;
         }

@@ -148,7 +148,8 @@ public class MainStatePlugin : InternalPlugin
     {
         foreach (var variable in currentState.Variables)
         {
-            VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(variable.Name);
+            VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(variable.Name, 
+                GumState.Self.SelectedState.SelectedElement, GumState.Self.SelectedState.SelectedStateCategorySave);
         }
     }
 

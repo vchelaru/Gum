@@ -1043,7 +1043,7 @@ namespace Gum.Managers
             return toReturn;
         }
 
-        public ElementSave GetContainerOf(StateSave stateSave)
+        public ElementSave GetElementContainerOf(StateSave stateSave)
         {
             if (GumProjectSave != null)
             {
@@ -1072,6 +1072,9 @@ namespace Gum.Managers
 
             return null;
         }
+
+        [Obsolete("GetElementContainerOf to clearly indicate that the method does return behaviors. ")]
+        public ElementSave GetContainerOf(StateSave stateSave) => GetElementContainerOf(stateSave);
 
         public bool IsVariableOrphaned(VariableSave variable, StateSave defaultState)
         {

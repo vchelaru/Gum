@@ -8,6 +8,10 @@ using Gum.DataTypes.Behaviors;
 using WpfDataUi;
 using System.Windows.Forms;
 using Gum.Undo;
+using Gum.DataTypes.Variables;
+using Gum.Managers;
+using System.Collections.Generic;
+using Gum.ToolCommands;
 
 namespace Gum.Plugins.Behaviors;
 
@@ -23,19 +27,58 @@ public class MainBehaviorsPlugin : InternalPlugin
         viewModel = new BehaviorsViewModel();
         viewModel.ApplyChangedValues += HandleApplyBehaviorChanges;
 
+
         control = new BehaviorsControl();
         control.DataContext = viewModel;
         GumCommands.Self.GuiCommands.AddControl(control, "Behaviors");
         GumCommands.Self.GuiCommands.RemoveControl(control);
-        this.ElementSelected += HandleElementSelected;
 
         stateDataUiGrid = new DataUiGrid();
 
+        this.ElementSelected += HandleElementSelected;
         this.BehaviorSelected += HandleBehaviorSelected;
         this.StateWindowTreeNodeSelected += HandleStateSelected;
         this.BehaviorReferencesChanged += HandleBehaviorReferencesChanged;
+        this.StateAdd += HandleStateAdd;
     }
 
+    private void HandleStateAdd(StateSave stateSave)
+    {
+        var behavior = ObjectFinder.Self.GumProjectSave.Behaviors
+            .FirstOrDefault(item => item.AllStates.Contains(stateSave));
+
+        if (behavior != null)
+        {
+            var category = behavior.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
+
+            var elementsUsingBehavior = ObjectFinder.Self.GumProjectSave.AllElements
+                .Where(item => item.Behaviors.Any(b => b.BehaviorName == behavior.Name))
+                .ToList();
+
+            var categoryName = category?.Name;
+
+            List<ElementSave> elementsToSave = new List<ElementSave>();
+
+            foreach (var element in elementsUsingBehavior)
+            {
+                var categoryInElement = element.Categories.FirstOrDefault(item => item.Name == categoryName);
+
+                if (categoryInElement != null)
+                {
+                    var existingState = categoryInElement.States.FirstOrDefault(item => item.Name == stateSave.Name);
+
+                    if (existingState == null)
+                    {
+                        // add a new state to this category
+                        ElementCommands.Self.AddState(
+                            element, categoryInElement, stateSave.Name);
+
+                        elementsToSave.Add(element);
+                    }
+                }
+            }
+        }
+    }
 
     private void HandleStateSelected(TreeNode obj)
     {

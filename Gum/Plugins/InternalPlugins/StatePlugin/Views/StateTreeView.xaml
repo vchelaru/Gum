@@ -25,7 +25,7 @@
             <TreeView.Resources>
                 <HierarchicalDataTemplate DataType="{x:Type viewmodels:CategoryViewModel}" ItemsSource="{Binding States}">
                     <StackPanel Orientation="Horizontal" Margin="0,2,0,2">
-                        <Image Source="/Content/Icons/folder.png" Width="16" Height="16" VerticalAlignment="Center"/>
+                        <Image SnapsToDevicePixels="True" Source="/Content/Icons/folder.png" Width="16" Height="16" VerticalAlignment="Center"/>
                         <TextBlock Margin="4,0,0,0" Text="{Binding Title}" VerticalAlignment="Center"  />
                     </StackPanel>
                 </HierarchicalDataTemplate>

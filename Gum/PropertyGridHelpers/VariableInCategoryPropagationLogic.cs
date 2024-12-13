@@ -11,17 +11,16 @@ namespace Gum.PropertyGridHelpers
 {
     public class VariableInCategoryPropagationLogic : Singleton<VariableInCategoryPropagationLogic> 
     {
-        public void PropagateVariablesInCategory(string memberName)
+        public void PropagateVariablesInCategory(string memberName, ElementSave element, StateSaveCategory categoryToPropagate)
         {
-            var currentCategory = SelectedState.Self.SelectedStateCategorySave;
             /////////////////////Early Out//////////////////////////
-            if (currentCategory == null)
+            if (categoryToPropagate == null)
             {
                 return;
             }
             ///////////////////End Early Out////////////////////////
 
-            var defaultState = SelectedState.Self.SelectedElement.DefaultState;
+            var defaultState = element.DefaultState;
             var defaultVariable = defaultState.GetVariableSave(memberName);
             if (defaultVariable == null)
             {
@@ -38,7 +37,7 @@ namespace Gum.PropertyGridHelpers
             // as the default so that values are always set:
             if(defaultVariable != null && defaultVariable.Value == null)
             {
-                var variableContainer = SelectedState.Self.SelectedElement;
+                var variableContainer = element;
 
 
                 var sourceObjectName = VariableSave.GetSourceObject(memberName);
@@ -53,9 +52,8 @@ namespace Gum.PropertyGridHelpers
                     }
                 }
 
-                ElementSave categoryContainer;
                 StateSaveCategory category;
-                var isState = defaultVariable.IsState(variableContainer, out categoryContainer, out category);
+                var isState = defaultVariable.IsState(variableContainer, out _, out category);
 
                 if(isState)
                 {
@@ -82,7 +80,7 @@ namespace Gum.PropertyGridHelpers
 
             var defaultValue = defaultVariable?.Value ?? defaultVariableList?.ValueAsIList;
 
-            foreach (var state in currentCategory.States)
+            foreach (var state in categoryToPropagate.States)
             {
 
                 if(defaultVariable != null)
@@ -100,7 +98,7 @@ namespace Gum.PropertyGridHelpers
                             state.Variables.Add(newVariable);
 
                             GumCommands.Self.GuiCommands.PrintOutput(
-                                $"Adding {memberName} to {currentCategory.Name}/{state.Name}");
+                                $"Adding {memberName} to {categoryToPropagate.Name}/{state.Name}");
                         }
                     }
                     else if (existingVariable.SetsValue == false)
@@ -121,7 +119,7 @@ namespace Gum.PropertyGridHelpers
                             newVariableList.Name = memberName;
                             state.VariableLists.Add(newVariableList);
                             GumCommands.Self.GuiCommands.PrintOutput(
-                                $"Adding {memberName} to {currentCategory.Name}/{state.Name}");
+                                $"Adding {memberName} to {categoryToPropagate.Name}/{state.Name}");
                         }
                     }
                 }

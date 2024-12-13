@@ -160,14 +160,14 @@ namespace Gum.ToolCommands
                 foreach(var variable in otherState.Variables)
                 {
                     VariableInCategoryPropagationLogic.Self
-                        .PropagateVariablesInCategory(variable.Name);
+                        .PropagateVariablesInCategory(variable.Name, elementToAddTo, category);
                 }
             }
 
             return stateSave;
         }
 
-        public void AddState(ElementSave elementToAddTo, StateSaveCategory category, StateSave stateSave)
+        private void AddState(ElementSave elementToAddTo, StateSaveCategory category, StateSave stateSave)
         {
             stateSave.ParentContainer = elementToAddTo;
 
