@@ -457,7 +457,10 @@ namespace Gum.Managers
 
             List<InstanceSave> foundInstances = new List<InstanceSave>();
 
-            ObjectFinder.Self.GetElementsReferencing(elementSave, null, foundInstances);
+            if(elementSave != null)
+            {
+                ObjectFinder.Self.GetElementsReferencing(elementSave, null, foundInstances);
+            }
 
             foreach (var instance in foundInstances)
             {

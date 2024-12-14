@@ -93,7 +93,7 @@ namespace Gum.Managers
             tsmi.Click += ((obj, arg) =>
             {
 
-                GumCommands.Self.Edit.AddState();
+                GumCommands.Self.GuiCommands.ShowAddStateWindow();
             });
             mMenuStrip.Items.Add(tsmi);
 
@@ -102,7 +102,7 @@ namespace Gum.Managers
             tsmi.Click += ((obj, arg) =>
             {
 
-                GumCommands.Self.Edit.AddCategory();
+                GumCommands.Self.GuiCommands.ShowAddCategoryWindow();
             });
             mMenuStrip.Items.Add(tsmi);
         }
@@ -182,7 +182,7 @@ namespace Gum.Managers
             }
             SelectedState.Self.CustomCurrentStateSave = null;
 
-            var selectedItem = mTreeView.SelectedNode.Tag;
+            var selectedItem = mTreeView.SelectedNode?.Tag;
             if(selectedItem is StateSave stateSave)
             {
                 SelectedState.Self.SelectedStateSave = stateSave;

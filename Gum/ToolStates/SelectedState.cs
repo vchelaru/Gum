@@ -525,7 +525,8 @@ public class SelectedState : ISelectedState
     private void TakeSnapshot(StateSave selectedStateSave)
     {
         snapshot.SelectedStateSave = selectedStateSave;
-        var elementContainer = ObjectFinder.Self.GetContainerOf(selectedStateSave);
+        var elementContainer = 
+            ObjectFinder.Self.GetStateContainerOf(selectedStateSave);
         StateSaveCategory category = null;
         category = elementContainer?.Categories.FirstOrDefault(item => item.States.Contains(selectedStateSave));
         snapshot.SelectedStateCategorySave = category;

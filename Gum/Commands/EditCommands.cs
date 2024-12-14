@@ -24,45 +24,6 @@ namespace Gum.Commands
     {
         #region State
 
-        public void AddState()
-        {
-            if (SelectedState.Self.SelectedStateCategorySave == null && SelectedState.Self.SelectedElement == null)
-            {
-                MessageBox.Show("You must first select an element or a behavior category to add a state");
-            }
-            else
-            {
-                TextInputWindow tiw = new TextInputWindow();
-                tiw.Message = "Enter new state name:";
-
-                if (tiw.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                {
-                    string name = tiw.Result;
-                    
-                    if(!NameVerifier.Self.IsStateNameValid(name, SelectedState.Self.SelectedStateCategorySave, null, out string whyNotValid))
-                    {
-                        GumCommands.Self.GuiCommands.ShowMessage(whyNotValid);
-                    }
-                    else
-                    {
-                        using (UndoManager.Self.RequestLock())
-                        {
-                            StateSave stateSave = ElementCommands.Self.AddState(
-                                SelectedState.Self.SelectedElement, SelectedState.Self.SelectedStateCategorySave, name);
-
-                            PluginManager.Self.StateAdd(stateSave);
-
-                            GumCommands.Self.GuiCommands.RefreshStateTreeView();
-
-                            SelectedState.Self.SelectedStateSave = stateSave;
-
-                            GumCommands.Self.FileCommands.TryAutoSaveCurrentObject();
-                        }
-                    }
-                }
-            }
-        }
-
         public void RemoveState(StateSave stateSave, IStateContainer stateContainer)
         {
             var deleteResponse = new DeleteResponse();
@@ -162,69 +123,6 @@ namespace Gum.Commands
             DeleteLogic.Self.RemoveStateCategory(category, stateCategoryListContainer);
         }
 
-        public void AddCategory()
-        {
-
-            var target = SelectedState.Self.SelectedStateContainer as IStateCategoryListContainer;
-            if (target == null)
-            {
-                MessageBox.Show("You must first select an element or behavior to add a state category");
-            }
-            else
-            {
-                TextInputWindow tiw = new TextInputWindow();
-                tiw.Message = "Enter new category name:";
-
-                var canAdd = true;
-
-                var result = tiw.ShowDialog();
-
-                if (result != DialogResult.OK)
-                {
-                    canAdd = false;
-                }
-
-                string name = null;
-
-                if (canAdd)
-                {
-                    name = tiw.Result;
-
-                    // see if any base elements have thsi category
-                    if (target is ElementSave element)
-                    {
-                        var existingCategory = element.GetStateSaveCategoryRecursively(name, out ElementSave categoryContainer);
-
-                        if (existingCategory != null)
-                        {
-                            MessageBox.Show($"Cannot add category - a category with the name {name} is already defined in {categoryContainer}");
-                            canAdd = false;
-                        }
-                    }
-                }
-
-
-                if (canAdd)
-                {
-                    using (UndoManager.Self.RequestLock())
-                    {
-                        StateSaveCategory category = ElementCommands.Self.AddCategory(
-                            target, name);
-
-                        ElementTreeViewManager.Self.RefreshUi(SelectedState.Self.SelectedStateContainer);
-
-                        GumCommands.Self.GuiCommands.RefreshStateTreeView();
-
-                        PluginManager.Self.CategoryAdd(category);
-
-                        SelectedState.Self.SelectedStateCategorySave = category;
-
-                        GumCommands.Self.FileCommands.TryAutoSaveCurrentObject();
-                    }
-                }
-            }
-
-        }
 
         internal void AskToRenameStateCategory(StateSaveCategory category, ElementSave elementSave)
         {

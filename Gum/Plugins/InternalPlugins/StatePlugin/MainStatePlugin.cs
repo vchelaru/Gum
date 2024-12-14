@@ -30,11 +30,13 @@ public class MainStatePlugin : InternalPlugin
 
     StateTreeViewRightClickService _stateTreeViewRightClickService;
     private HotkeyManager _hotkeyManager;
+    private readonly ISelectedState _selectedState;
 
     public MainStatePlugin()
     {
-        _stateTreeViewRightClickService = new StateTreeViewRightClickService();
+        _stateTreeViewRightClickService = new StateTreeViewRightClickService(GumState.Self.SelectedState);
         _hotkeyManager = HotkeyManager.Self;
+        _selectedState = GumState.Self.SelectedState;
     }
 
     public override void StartUp()
@@ -77,7 +79,7 @@ public class MainStatePlugin : InternalPlugin
 
     private void CreateNewStateTab()
     {
-        stateTreeView = new StateTreeView(stateTreeViewModel, _stateTreeViewRightClickService, _hotkeyManager);
+        stateTreeView = new StateTreeView(stateTreeViewModel, _stateTreeViewRightClickService, _hotkeyManager, _selectedState);
         _stateTreeViewRightClickService.NewMenuStrip = stateTreeView.TreeViewContextMenu;
         newPluginTab = GumCommands.Self.GuiCommands.AddControl(stateTreeView, "States", TabLocation.CenterTop);
     }

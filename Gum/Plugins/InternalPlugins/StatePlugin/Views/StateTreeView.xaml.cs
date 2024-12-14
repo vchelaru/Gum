@@ -26,6 +26,7 @@ namespace Gum.Plugins.InternalPlugins.StatePlugin.Views
     {
         private readonly StateTreeViewRightClickService _stateTreeViewRightClickService;
         private readonly HotkeyManager _hotkeyManager;
+        private readonly ISelectedState _selectedState;
 
         StateTreeViewModel ViewModel => DataContext as StateTreeViewModel;
 
@@ -40,10 +41,11 @@ namespace Gum.Plugins.InternalPlugins.StatePlugin.Views
 
         public StateTreeView(StateTreeViewModel viewModel, 
             StateTreeViewRightClickService stateTreeViewRightClickService,
-            HotkeyManager hotkeyManager)
+            HotkeyManager hotkeyManager, ISelectedState selectedState)
         {
             _stateTreeViewRightClickService = stateTreeViewRightClickService;
             _hotkeyManager = hotkeyManager;
+            _selectedState = selectedState;
             InitializeComponent();
             TreeViewInstance.ContextMenu = new ContextMenu();
             this.DataContext = viewModel;
@@ -67,11 +69,11 @@ namespace Gum.Plugins.InternalPlugins.StatePlugin.Views
             }
             else if (_hotkeyManager.ReorderDown.IsPressed(e))
             {
-                var stateSave = ProjectState.Self.Selected.SelectedStateSave;
-                bool isDefault = stateSave != null &&
-                    stateSave == ProjectState.Self.Selected.SelectedElement.DefaultState;
+                var stateSave = _selectedState.SelectedStateSave;
+                bool isUncategorized = stateSave != null &&
+                    _selectedState.SelectedStateContainer.UncategorizedStates.Contains(stateSave);
 
-                if (!isDefault)
+                if (!isUncategorized)
                 {
                     _stateTreeViewRightClickService.MoveStateInDirection(1);
                 }
@@ -79,9 +81,12 @@ namespace Gum.Plugins.InternalPlugins.StatePlugin.Views
             }
             else if (_hotkeyManager.Rename.IsPressed(e))
             {
-                if (SelectedState.Self.SelectedStateSave != null)
+                if (_selectedState.SelectedStateSave != null)
                 {
-                    if (SelectedState.Self.SelectedElement?.DefaultState != SelectedState.Self.SelectedStateSave)
+                    var isUncategorized = _selectedState.SelectedStateContainer?.UncategorizedStates
+                        .Contains(_selectedState.SelectedStateSave) == true;
+
+                    if (!isUncategorized)
                     {
                         _stateTreeViewRightClickService.RenameStateClick();
 
@@ -89,7 +94,7 @@ namespace Gum.Plugins.InternalPlugins.StatePlugin.Views
                     e.Handled = true;
 
                 }
-                else if (SelectedState.Self.SelectedStateCategorySave != null)
+                else if (_selectedState.SelectedStateCategorySave != null)
                 {
                     _stateTreeViewRightClickService.RenameCategoryClick();
                     e.Handled = true;
@@ -98,9 +103,11 @@ namespace Gum.Plugins.InternalPlugins.StatePlugin.Views
             }
             else if (_hotkeyManager.Delete.IsPressed(e))
             {
-                if (SelectedState.Self.SelectedStateSave != null)
+                if (_selectedState.SelectedStateSave != null)
                 {
-                    if (SelectedState.Self.SelectedElement?.DefaultState != SelectedState.Self.SelectedStateSave)
+                    var isDefault = _selectedState.SelectedElement?.DefaultState == _selectedState.SelectedStateSave;
+
+                    if (!isDefault)
                     {
                         _stateTreeViewRightClickService.DeleteStateClick();
 
@@ -108,7 +115,7 @@ namespace Gum.Plugins.InternalPlugins.StatePlugin.Views
                     e.Handled = true;
 
                 }
-                else if (SelectedState.Self.SelectedStateCategorySave != null)
+                else if (_selectedState.SelectedStateCategorySave != null)
                 {
                     _stateTreeViewRightClickService.DeleteCategoryClick();
                     e.Handled = true;

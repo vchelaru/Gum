@@ -19,7 +19,7 @@ using ToolsUtilities;
 namespace CodeOutputPlugin
 {
     [Export(typeof(PluginBase))]
-    public class MainPlugin : PluginBase
+    public class MainCodeOutputPlugin : PluginBase
     {
         #region Fields/Properties
 
@@ -36,7 +36,7 @@ namespace CodeOutputPlugin
 
         #endregion
 
-        public MainPlugin()
+        public MainCodeOutputPlugin()
         {
             _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService();
 
