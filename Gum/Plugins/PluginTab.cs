@@ -15,8 +15,8 @@ namespace Gum.Plugins
             get; set;
         } = TabLocation.RightBottom;
 
-        System.Windows.Controls.TabItem page;
-        internal System.Windows.Controls.TabItem Page
+        PluginTabItem page;
+        internal PluginTabItem Page
         {
             get => page;
             set
@@ -24,8 +24,23 @@ namespace Gum.Plugins
                 if (page != value)
                 {
                     page = value;
+
+                    if(page != null)
+                    {
+                        page.MiddleMouseClicked += (_, _) => HandleMiddleMouseClicked();
+                    }
+
+
                     //page.TabSelected = RaiseTabShown;
                 }
+            }
+        }
+
+        private void HandleMiddleMouseClicked()
+        {
+            if(CanClose)
+            {
+                Hide();
             }
         }
 
@@ -43,11 +58,14 @@ namespace Gum.Plugins
         //    }
         //}
 
-
+        public void Show() => GumCommands.Self.GuiCommands.ShowTab(this);
+        public void Hide() => GumCommands.Self.GuiCommands.HideTab(this);
 
         public void RaiseTabShown() => TabShown?.Invoke();
-
         public event Action TabShown;
+
+        public void RaiseTabHidden() => TabHidden?.Invoke();
+        public event Action TabHidden;
 
         //public void Hide()
         //{
@@ -72,11 +90,7 @@ namespace Gum.Plugins
             Page.Focus();
         }
 
-        //public bool CanClose
-        //{
-        //    get => Page.DrawX;
-        //    set => Page.DrawX = value;
-        //}
+        public bool CanClose { get; set; }
 
         //public void ForceLocation(TabLocation tabLocation)
         //{

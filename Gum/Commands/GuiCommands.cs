@@ -54,7 +54,7 @@ namespace Gum.Commands
             PropertyGridManager.Self.RefreshVariablesDataGridValues();
         }
 
-        #region Add Tab Controls
+        #region Tab Controls
 
         public PluginTab AddControl(System.Windows.FrameworkElement control, string tabTitle, TabLocation tabLocation = TabLocation.CenterBottom)
         {
@@ -62,12 +62,21 @@ namespace Gum.Commands
             return mainPanelControl.AddWpfControl(control, tabTitle, tabLocation);
         }
 
+        public void ShowTab(PluginTab tab)
+        {
+            mainPanelControl.ShowTab(tab);
+        }
+
+        public void HideTab(PluginTab tab)
+        {
+            mainPanelControl.HideTab(tab);
+        }
+
         public PluginTab AddControl(System.Windows.Forms.Control control, string tabTitle, TabLocation tabLocation )
         {
             CheckForInitialization();
             return mainPanelControl.AddWinformsControl(control, tabTitle, tabLocation);
         }
-
 
         private void CheckForInitialization()
         {
@@ -81,6 +90,12 @@ namespace Gum.Commands
         {
             return mainPanelControl.AddWinformsControl(control, tabTitle, tabLocation);
         }
+
+        public bool IsTabVisible(PluginTab pluginTab)
+        {
+            return mainPanelControl.IsTabVisible(pluginTab);
+        }
+
         #endregion
         
         public void PositionWindowByCursor(System.Windows.Window window)
