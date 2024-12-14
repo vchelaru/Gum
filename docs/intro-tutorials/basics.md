@@ -2,19 +2,19 @@
 
 ## Introduction
 
-This page walks you through the basics of using the Gum UI tool (which we'll refer to simply as Gum for this and all other documentation).
+This page walks you through the basics of using the _Gum UI tool,_ which we'll refer to simply as Gum for this and all other documentation.
 
 <figure><img src="../.gitbook/assets/image (10) (3).png" alt=""><figcaption><p>Empty Gum Project</p></figcaption></figure>
 
 ## Gum Elements
 
-Gum separates its elements into three categories: Screens, Components, and Standard (Behaviors are an advanced topic that we'll skip for these tutorials):&#x20;
+Gum separates its elements into three categories: Screens, Components, and Standard. Behaviors are an advanced topic that we'll skip for these tutorials.&#x20;
 
 <figure><img src="../.gitbook/assets/image (15) (1).png" alt=""><figcaption><p>Screens, Components, and Standard folders</p></figcaption></figure>
 
-Standard elements represent the building-blocks for screens and components, and all projects use the same set of standard elements. To see the list of elements, expand the Standard tree item. Clicking on any element will display it in the preview window.
+Standard elements represent the building-blocks for screens and components, and all projects use the same set of standard elements. To see the list of elements, expand the Standard tree item. Clicking on any element displays it in the preview window.
 
-<figure><img src="../.gitbook/assets/image (5) (2).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (5) (2).png" alt=""><figcaption><p>A Sprite standard element with no source file set</p></figcaption></figure>
 
 Sprite element is selected in the image above. Notice that since a **SourceFile** is not set, the Sprite renders as a red X.
 
@@ -27,17 +27,19 @@ Sprite element is selected in the image above. Notice that since a **SourceFile*
 * ![](<../.gitbook/assets/image (56).png>) Polygon - polygon outline which can have any number of points. These are usually not used for UI, but can be used if you are defining collision in your Gum objects for a game.
 * ![](<../.gitbook/assets/image (57).png>) Rectangle - rectangle outline. These can be used for single-line frames or if you are defining collision in your Gum objects for a game.
 * ![](<../.gitbook/assets/image (58).png>) Sprite - a visual object which displays a source PNG (or a portion of a PNG). These are used for icons, backgrounds, and other visual objects which are usually not resized dynamically.
-* ![](<../.gitbook/assets/image (59).png>) Text - a visual object which can display charcters. These are used for any situation where text needs to be displayed such as labels and paragraphs.
+* ![](<../.gitbook/assets/image (59).png>) Text - a visual object which can display characters. These are used for any situation where text needs to be displayed such as labels and paragraphs.
 
-Note that through plugins the Standard list can be expanded. For example, Gum supports additional standard types through a Skia plugin.
+{% hint style="info" %}
+Plugins can add additional standard elements. The list above is the default list of standard elements before plugins have made any changes.
+{% endhint %}
 
 ## Components
 
-Components are objects which can contain standard elements and instances of other components. Components can be very simple, such as a Label, or very complex, such as an options menu with dozens of items.
+Components are objects which can contain standard elements and instances of other components. Components can be very simple, such as a Label, or very complex, such as an options menu with dozens of _instances_. Items added to components or screens are called _instances_.
 
 ### Screens
 
-Screens are objects which can contain standard elements and instances of other components. Unlike Components, Screens cannot be added to other Screens. Screens exist mainly for organization.
+Screens are objects which can contain standard elements and instances of other components. Unlike Components, Screens cannot be added to other Screens. Screens exist mainly for organization. Screens can be simple, such as a loading screen, or complex such as a HUD in an RTS game.
 
 ## Components vs. Screens
 
@@ -62,11 +64,19 @@ To create a screen:
 Instances of standard and component elements can be added to screens and components. To add an instance:
 
 1. Select the destination screen or component. For example, select the **MainMenu** screen
-2. Push the left mouse button (but don't release it) on the Text item. If you happen to release the mouse button, this will select the Text item, so you need to re-select the destination (MainMenu).
-3. Drag the Text item onto the preview window
+2. Push the left mouse button (but don't release it) on the Text item. If you happen to release the mouse button, this selects the Text item, so you need to re-select the destination (MainMenu).
+3. Drag the Text item onto the Editor tab
 4.  Release the mouse button. A new text instance appears in your screen.
 
-    <figure><img src="../.gitbook/assets/02_20 51 44.gif" alt=""><figcaption><p>Adding a Text instance to the MainMenu screen</p></figcaption></figure>
+    <figure><img src="../.gitbook/assets/02_20 51 44.gif" alt=""><figcaption><p>Adding a Text instance to the MainMenu screen in the Editor tab</p></figcaption></figure>
+
+Alternatively, you can also drag+drop a standard element into a screen in the tree view.
+
+<figure><img src="../.gitbook/assets/13_09 17 10.gif" alt=""><figcaption><p>Adding a Text instance to the MainMenu screen in the Project tab</p></figcaption></figure>
+
+{% hint style="info" %}
+If an element is dropped in the Editor window, it appears at the location where it has been droped - setting its X and Y values. If an element is dropped in the Project tab, then it preserves its default X and Y values.
+{% endhint %}
 
 ## Editing in the preview window
 
@@ -79,3 +89,7 @@ In the case of the Text object, the resize handles are used to control how the t
 You can use the resize handles to resize the instance, or you can simply push the mouse button and drag inside the instance to change its position. Notice that an object's outline is displayed when the cursor is hovering over the instance.
 
 <figure><img src="../.gitbook/assets/03_09 10 50.gif" alt=""><figcaption><p>Moving and resizing a Text object.</p></figcaption></figure>
+
+### Conclusion
+
+This tutorial introduces the basics of working with standard elements and adding them to Screens. The next tutorial covers the Variables tab which can be used to access all element variables.

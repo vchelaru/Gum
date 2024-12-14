@@ -2,7 +2,7 @@
 
 ## Introduction
 
-The Variables tab in Gum displays all available variables when editing an instance. While the visual editor is very handy for quick edits such as positioning and resizing instances, the Variables tab exposes all variables. It is also useful for making fine changes to instances, such as by moving an instance by a single pixel.
+The Variables tab in Gum displays all available variables when editing an instance or element. While the visual editor is handy for quick edits such as positioning and resizing instances, the Variables tab exposes all variables. It is also useful for making fine changes to instances, such as by moving an instance by a single pixel.
 
 The Variables tab shows variables for the selected instance or element.
 
