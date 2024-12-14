@@ -54,8 +54,15 @@ namespace SkiaPlugin
             var item = this.AddMenuItem(new List<string>() { "Plugins", "Add Skia Standard Elements" });
             item.Click += (not, used) =>
             {
-                StandardAdder.AddAllStandards();
-                GumCommands.Self.GuiCommands.RefreshElementTreeView();
+                if(GumState.Self.ProjectState.NeedsToSaveProject)
+                {
+                    GumCommands.Self.GuiCommands.ShowMessage("You must first save your project before adding Skia Standard Elements");
+                }
+                else
+                {
+                    StandardAdder.AddAllStandards();
+                    GumCommands.Self.GuiCommands.RefreshElementTreeView();
+                }
             };
         }
 
