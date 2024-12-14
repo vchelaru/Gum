@@ -117,7 +117,7 @@ namespace Gum.Managers
 
                 AddDimensionsVariables(stateSave, 100, 50, DimensionVariableAction.ExcludeFileOptions);
 
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
 
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "Hello", Name = "Text", Category = "Text" });
 
@@ -183,7 +183,7 @@ namespace Gum.Managers
                 AddPositioningVariables(stateSave);
                 AddDimensionsVariables(stateSave, 100, 100, DimensionVariableAction.DefaultToPercentageOfFile);
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Category = "Animation", Name = "Animate" });
 
                 var currentChainNameVariable = new VariableSave { SetsValue = true, Type = "string", Value = null, Category = "Animation", Name = "CurrentChainName" };
@@ -258,7 +258,7 @@ namespace Gum.Managers
 
                 AddClipsChildren(stateSave);
 
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
 
                 AddRotationVariable(stateSave);
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Category = "Flip and Rotation", Name = "FlipHorizontal" });
@@ -289,7 +289,7 @@ namespace Gum.Managers
 
                 AddRotationVariable(stateSave);
 
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
 
                 AddColorVariables(stateSave, true);
 
@@ -319,11 +319,11 @@ namespace Gum.Managers
 
                 AddPositioningVariables(stateSave);
 
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 16.0f, Name = "Radius" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 16.0f, Name = "Radius", Category = "Dimensions" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 16.0f, Name = "Width", IsHiddenInPropertyGrid = true });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 16.0f, Name = "Height", IsHiddenInPropertyGrid = true });
 
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
                 AddColorVariables(stateSave, true);
 
                 // Although rotating a circle about its center does nothing we add rotation because you can rotate it about a different origin
@@ -353,7 +353,7 @@ namespace Gum.Managers
 
                 AddDimensionsVariables(stateSave, 16, 16, DimensionVariableAction.ExcludeFileOptions);
 
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
                 AddColorVariables(stateSave, true);
 
                 AddRotationVariable(stateSave);
@@ -381,7 +381,7 @@ namespace Gum.Managers
 
                 AddPositioningVariables(stateSave, addOriginVariables: false);
 
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
                 AddColorVariables(stateSave, true);
 
                 AddRotationVariable(stateSave);
@@ -416,8 +416,8 @@ namespace Gum.Managers
                 stateSave.Name = "Default";
                 AddPositioningVariables(stateSave);
                 AddDimensionsVariables(stateSave, 64, 64, DimensionVariableAction.ExcludeFileOptions);
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true, Category = "Source" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
 
                 AddColorVariables(stateSave);
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "Blend", Value = Gum.RenderingLibrary.Blend.Normal, Name = "Blend", Category = "Rendering" });
@@ -539,7 +539,8 @@ namespace Gum.Managers
                 SetsValue = false, 
                 Type = "State",
                 Value = "Default",
-                Name = "State"
+                Name = "State",
+                Category = "States and Visibility"
             });
         }
 
