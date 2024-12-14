@@ -168,6 +168,8 @@ namespace Gum.Plugins.BaseClasses
         public abstract void StartUp();
         public abstract bool ShutDown(PluginShutDownReason shutDownReason);
 
+        #region Menu Items
+
         /// <summary>
         /// Adds a menu item using the path specified by the menuAndSubmenus. 
         /// </summary>
@@ -224,6 +226,21 @@ namespace Gum.Plugins.BaseClasses
             return null;
         }
 
+        public ToolStripMenuItem GetChildMenuItem(string parentText, string childText)
+        {
+            ToolStripMenuItem parentItem = GetItem(parentText);
+            if (parentItem != null)
+            {
+                ToolStripMenuItem childMenuItem = parentItem.DropDown.Items
+                    .Cast<ToolStripMenuItem>()
+                    .FirstOrDefault(item => item.Text == childText);
+
+                return childMenuItem;
+            }
+
+            return null;
+        }
+
 
         protected ToolStripMenuItem AddMenuItemTo(string whatToAdd, EventHandler eventHandler, string container, int? preferredIndex = null)
         {
@@ -250,10 +267,46 @@ namespace Gum.Plugins.BaseClasses
             return menuItem;
         }
 
+        #endregion
+
+        #region Plugin Tabs
+
+
+        public PluginTab CreateTab(System.Windows.FrameworkElement control, string tabName, TabLocation defaultLocation = TabLocation.RightBottom)
+        {
+            //System.Windows.Forms.Integration.ElementHost wpfHost;
+            //wpfHost = new System.Windows.Forms.Integration.ElementHost();
+            //wpfHost.Dock = DockStyle.Fill;
+            //wpfHost.Child = control;
+
+            //return CreateTab(wpfHost, tabName);
+
+            var page = new PluginTabItem();
+            page.Header = tabName;
+            page.Content = control;
+
+
+            PluginTab pluginTab = new PluginTab();
+            pluginTab.Page = page;
+            pluginTab.Title = tabName;
+
+            pluginTab.SuggestedLocation = defaultLocation;
+
+            return pluginTab;
+
+        }
+
         public PluginTab AddControl(System.Windows.FrameworkElement control, string tabName, TabLocation tabLocation)
         {
             return GumCommands.Self.GuiCommands.AddControl(control, tabName, tabLocation);
         }
+
+        public void RemoveControl(System.Windows.Controls.UserControl control)
+        {
+            GumCommands.Self.GuiCommands.RemoveControl(control);
+        }
+
+        #endregion
 
         #region Event calling
 

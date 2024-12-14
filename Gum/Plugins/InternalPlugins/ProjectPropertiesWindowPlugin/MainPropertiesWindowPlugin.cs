@@ -68,7 +68,8 @@ namespace Gum.Plugins.PropertiesWindowPlugin
 
                 if(!wasShown)
                 {
-                    GumCommands.Self.GuiCommands.AddControl(control, "Project Properties");
+                    var tab = GumCommands.Self.GuiCommands.AddControl(control, "Project Properties");
+                    tab.CanClose = true;
                     control.ViewModel = viewModel;
                     GumCommands.Self.GuiCommands.ShowTabForControl(control);
                 }

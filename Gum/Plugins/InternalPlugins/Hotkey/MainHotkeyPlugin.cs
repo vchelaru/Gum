@@ -1,10 +1,8 @@
 ﻿using Gum.Plugins.BaseClasses;
+using Gum.Plugins.InternalPlugins.Hotkey.Views;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace Gum.Plugins.InternalPlugins.Hotkey
 {
@@ -12,21 +10,42 @@ namespace Gum.Plugins.InternalPlugins.Hotkey
     public class MainHotkeyPlugin : InternalPlugin
     {
         PluginTab pluginTab;
+        HotkeyView hotkeyView;
+        ToolStripMenuItem menuItem;
 
         public override void StartUp()
         {
-            this.AddMenuItemTo("View Hotkeys", HandleViewHotkeys, "View");
+            menuItem = this.AddMenuItemTo("View Hotkeys", HandleToggleTabVisibility, "View");
+            hotkeyView = new Views.HotkeyView();
+            pluginTab = base.CreateTab(hotkeyView, "Hotkeys", TabLocation.CenterBottom);
+            pluginTab.TabShown += HandleTabShown;
+            pluginTab.TabHidden += HandleTabHidden;
+            pluginTab.CanClose = true;
         }
 
-        private void HandleViewHotkeys(object sender, EventArgs e)
+        private void HandleTabShown()
         {
-            if(pluginTab == null)
-            {
-                var view = new Views.HotkeyView();
-                pluginTab = base.AddControl(view, "Hotkeys", TabLocation.CenterBottom);
-            }
-            pluginTab.Focus();
+            menuItem.Text = "Hide Hotkeys";
+        }
 
+        private void HandleTabHidden()
+        {
+            menuItem.Text = "View Hotkeys";
+        }
+
+
+        private void HandleToggleTabVisibility(object sender, EventArgs e)
+        {
+            if(!GumCommands.Self.GuiCommands.IsTabVisible(pluginTab))
+            {
+                pluginTab.Show();
+            } 
+            else
+            {
+                pluginTab.Hide();
+
+
+            }
         }
     }
 }

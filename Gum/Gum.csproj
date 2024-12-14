@@ -352,6 +352,7 @@
     <Compile Include="Plugins\InternalPlugins\VariableGrid\VariableRemoveButton.xaml.cs">
       <DependentUpon>VariableRemoveButton.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Plugins\PluginTabItem.cs" />
     <Compile Include="PropertyGridHelpers\Converters\AvailableAnimationNamesConverter.cs" />
     <Compile Include="PropertyGridHelpers\Converters\AvailableContainedTypeConverter.cs" />
     <Compile Include="PropertyGridHelpers\Converters\AvailableGuidesTypeConverter.cs" />
