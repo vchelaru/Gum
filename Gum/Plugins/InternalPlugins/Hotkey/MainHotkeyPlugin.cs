@@ -35,8 +35,8 @@ namespace Gum.Plugins.InternalPlugins.Hotkey
                 if (viewMenuItem != null)
                 {
                     viewMenuItem.Text = "View Hotkeys";
-                    System.Windows.Controls.UserControl panelConrol = (System.Windows.Controls.UserControl)pluginTab.Page.Content;
-                    base.RemoveControl(panelConrol);
+                    System.Windows.Controls.UserControl panelControl = (System.Windows.Controls.UserControl)pluginTab.Page.Content;
+                    base.RemoveControl(panelControl);
                     pluginTab = null;
                 }
             }
