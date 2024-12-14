@@ -371,7 +371,7 @@
     <Compile Include="MainWindow.Designer.cs">
       <DependentUpon>MainWindow.cs</DependentUpon>
     </Compile>
-    <Compile Include="Plugins\InternalPlugins\StatePlugin\StateTreeViewManager.RightClick.cs" />
+    <Compile Include="Plugins\InternalPlugins\StatePlugin\StateTreeViewRightClickService.cs" />
     <Compile Include="Plugins\BaseClasses\PluginBase.cs" />
     <Compile Include="Plugins\IPlugin.cs" />
     <Compile Include="Plugins\PluginContainer.cs" />

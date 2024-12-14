@@ -48,6 +48,7 @@ namespace Gum.Plugins.BaseClasses
         /// </summary>
         public event Action<StateSave, string> StateRename;
         public event Action<StateSave> StateAdd;
+        public event Action<StateSave, StateSaveCategory, StateSaveCategory> StateMovedToCategory;
         public event Action<StateSave> StateDelete;
         public event Action<StateSave> ReactToStateSaveSelected;
 
@@ -372,6 +373,9 @@ namespace Gum.Plugins.BaseClasses
         public void CallStateRename(StateSave stateSave, string oldName) => StateRename?.Invoke(stateSave, oldName);
         
         public void CallStateAdd(StateSave stateSave) => StateAdd?.Invoke(stateSave);
+
+        public void CallStateMovedToCategory(StateSave stateSave, StateSaveCategory newCategory, StateSaveCategory oldCategory) =>
+            StateMovedToCategory?.Invoke(stateSave, newCategory, oldCategory);
 
         public void CallRefreshStateTreeView() => RefreshStateTreeView?.Invoke();
 

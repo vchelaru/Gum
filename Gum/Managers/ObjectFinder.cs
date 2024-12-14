@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Navigation;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
@@ -323,6 +324,10 @@ namespace Gum.Managers
         /// <returns>A List containing all Elements</returns>
         public List<ElementSave> GetElementsReferencing(ElementSave elementSave, List<ElementSave> list = null, List<InstanceSave> foundInstances = null)
         {
+            if(elementSave == null)
+            {
+                throw new ArgumentNullException(nameof(elementSave));
+            }
             if (list == null)
             {
                 list = new List<ElementSave>();
@@ -1070,6 +1075,30 @@ namespace Gum.Managers
                 }
             }
 
+            return null;
+        }
+
+        public IStateContainer? GetStateContainerOf(StateSave stateSave)
+        {
+            var element = GetElementContainerOf(stateSave);
+
+            if(element != null)
+            {
+                return element;
+            }
+            else
+            {
+                if(GumProjectSave != null)
+                {
+                    foreach(var behavior in GumProjectSave.Behaviors)
+                    {
+                        if (behavior.AllStates.Contains(stateSave))
+                        {
+                            return behavior;
+                        }
+                    }
+                }
+            }
             return null;
         }
 

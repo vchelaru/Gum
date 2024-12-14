@@ -142,42 +142,75 @@ namespace Gum.ToolCommands
         #region State
 
 
-        public StateSave AddState(ElementSave elementToAddTo, StateSaveCategory category, string name)
+        public StateSave AddState(IStateContainer stateContainer, StateSaveCategory category, string name)
         {
             // elementToAddTo may be null if category is not null
-            if (elementToAddTo == null && category == null)
+            if (stateContainer == null && category == null)
             {
                 throw new Exception("Could not add state named " + name + " because no element is selected");
             }
 
             StateSave stateSave = new StateSave();
             stateSave.Name = name;
-            AddState(elementToAddTo, category, stateSave);
-
-            var otherState = category?.States.FirstOrDefault(item => item != stateSave);
-            if(otherState != null)
-            {
-                foreach(var variable in otherState.Variables)
-                {
-                    VariableInCategoryPropagationLogic.Self
-                        .PropagateVariablesInCategory(variable.Name, elementToAddTo, category);
-                }
-            }
+            AddState(stateContainer, category, stateSave);
 
             return stateSave;
         }
 
-        private void AddState(ElementSave elementToAddTo, StateSaveCategory category, StateSave stateSave)
+        public void AddState(IStateContainer stateContainer, StateSaveCategory category, StateSave stateSave, int? desiredIndex = null)
         {
-            stateSave.ParentContainer = elementToAddTo;
+            AddStateInternal(stateContainer, category, stateSave);
 
-            if (category == null)
+            var otherState = category?.States.FirstOrDefault(item => item != stateSave);
+            if (otherState != null && stateContainer is ElementSave elementSave)
             {
-                elementToAddTo.States.Add(stateSave);
+                foreach (var variable in otherState.Variables)
+                {
+                    VariableInCategoryPropagationLogic.Self
+                        .PropagateVariablesInCategory(variable.Name, elementSave, category);
+                }
+            }
+
+
+            PluginManager.Self.StateAdd(stateSave);
+
+            GumCommands.Self.GuiCommands.RefreshStateTreeView();
+
+            if(stateContainer is BehaviorSave behavior)
+            {
+                GumCommands.Self.FileCommands.TryAutoSaveBehavior(behavior);
             }
             else
             {
-                category.States.Add(stateSave);
+                GumCommands.Self.FileCommands.TryAutoSaveElement(stateContainer as ElementSave);
+            }
+        }
+
+        private void AddStateInternal(IStateContainer stateContainer, StateSaveCategory category, StateSave stateSave, int? desiredIndex = null)
+        {
+            stateSave.ParentContainer = stateContainer as ElementSave;
+
+            if (category == null)
+            {
+                if(desiredIndex != null)
+                {
+                    stateContainer.UncategorizedStates.Insert(desiredIndex.Value, stateSave);
+                }
+                else
+                {
+                    stateContainer.UncategorizedStates.Add(stateSave);
+                }
+            }
+            else
+            {
+                if (desiredIndex != null)
+                {
+                    category.States.Insert(desiredIndex.Value, stateSave);
+                }
+                else
+                {
+                    category.States.Add(stateSave);
+                }
             }
         }
 
@@ -191,7 +224,14 @@ namespace Gum.ToolCommands
                 category.States.Remove(stateSave);
             }
 
-            GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+            if(elementToRemoveFrom is BehaviorSave behaviorSave)
+            {
+                GumCommands.Self.FileCommands.TryAutoSaveBehavior(behaviorSave);
+            }
+            else if(elementToRemoveFrom is ElementSave elementSave)
+            {
+                GumCommands.Self.FileCommands.TryAutoSaveElement(elementSave);
+            }
         }
         #endregion
 
@@ -249,10 +289,18 @@ namespace Gum.ToolCommands
                 foreach(var component in componentsUsingBehavior)
                 {
                     AddCategoriesFromBehavior(behaviorSave, component);
+
+                    GumCommands.Self.FileCommands.TryAutoSaveElement(component);
                 }
             }
 
+            ElementTreeViewManager.Self.RefreshUi(SelectedState.Self.SelectedStateContainer);
 
+            GumCommands.Self.GuiCommands.RefreshStateTreeView();
+
+            PluginManager.Self.CategoryAdd(category);
+
+            GumCommands.Self.FileCommands.TryAutoSaveCurrentObject();
 
             return category;
         }

@@ -41,11 +41,23 @@ public class MainBehaviorsPlugin : InternalPlugin
         this.BehaviorReferencesChanged += HandleBehaviorReferencesChanged;
         this.RefreshBehaviorView += HandleRefreshBehaviorView;
         this.StateAdd += HandleStateAdd;
+        this.StateMovedToCategory += HandleStateMovedToCategory;
     }
 
     private void HandleRefreshBehaviorView()
     {
         HandleElementSelected(GumState.Self.SelectedState.SelectedElement);
+    }
+
+    private void HandleStateMovedToCategory(StateSave stateSave, StateSaveCategory newCategory, StateSaveCategory oldCategory)
+    {
+        var behavior = ObjectFinder.Self.GumProjectSave.Behaviors
+            .FirstOrDefault(item => item.AllStates.Contains(stateSave));
+
+        if (behavior != null)
+        {
+            AddStateToElementsImplementingBehavior(stateSave, behavior);
+        }
     }
 
     private void HandleStateAdd(StateSave stateSave)
@@ -55,32 +67,37 @@ public class MainBehaviorsPlugin : InternalPlugin
 
         if (behavior != null)
         {
-            var category = behavior.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
+            AddStateToElementsImplementingBehavior(stateSave, behavior);
+        }
+    }
 
-            var elementsUsingBehavior = ObjectFinder.Self.GumProjectSave.AllElements
-                .Where(item => item.Behaviors.Any(b => b.BehaviorName == behavior.Name))
-                .ToList();
+    private static void AddStateToElementsImplementingBehavior(StateSave stateSave, BehaviorSave behavior)
+    {
+        var category = behavior.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
 
-            var categoryName = category?.Name;
+        var elementsUsingBehavior = ObjectFinder.Self.GumProjectSave.AllElements
+            .Where(item => item.Behaviors.Any(b => b.BehaviorName == behavior.Name))
+            .ToList();
 
-            List<ElementSave> elementsToSave = new List<ElementSave>();
+        var categoryName = category?.Name;
 
-            foreach (var element in elementsUsingBehavior)
+        List<ElementSave> elementsToSave = new List<ElementSave>();
+
+        foreach (var element in elementsUsingBehavior)
+        {
+            var categoryInElement = element.Categories.FirstOrDefault(item => item.Name == categoryName);
+
+            if (categoryInElement != null)
             {
-                var categoryInElement = element.Categories.FirstOrDefault(item => item.Name == categoryName);
+                var existingState = categoryInElement.States.FirstOrDefault(item => item.Name == stateSave.Name);
 
-                if (categoryInElement != null)
+                if (existingState == null)
                 {
-                    var existingState = categoryInElement.States.FirstOrDefault(item => item.Name == stateSave.Name);
+                    // add a new state to this category
+                    ElementCommands.Self.AddState(
+                        element, categoryInElement, stateSave.Name);
 
-                    if (existingState == null)
-                    {
-                        // add a new state to this category
-                        ElementCommands.Self.AddState(
-                            element, categoryInElement, stateSave.Name);
-
-                        elementsToSave.Add(element);
-                    }
+                    elementsToSave.Add(element);
                 }
             }
         }

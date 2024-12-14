@@ -20,6 +20,9 @@ namespace Gum.Commands
             this.mainWindow = mainWindow;
         }
 
+        /// <summary>
+        /// Saves the current Behavior or Element
+        /// </summary>
         public void TryAutoSaveCurrentObject()
         {
             if(SelectedState.Self.SelectedBehavior != null)

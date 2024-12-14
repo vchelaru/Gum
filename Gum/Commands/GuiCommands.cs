@@ -12,6 +12,8 @@ using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Plugins.VariableGrid;
 using Gum.ToolCommands;
+using CommonFormsAndControls;
+using Gum.Undo;
 
 namespace Gum.Commands
 {
@@ -258,6 +260,8 @@ namespace Gum.Commands
             window.ShiftWindowOntoScreen();
         }
 
+        #endregion
+
         public void ShowAddVariableWindow()
         {
             var canShow = SelectedState.Self.SelectedBehavior != null || SelectedState.Self.SelectedElement != null;
@@ -316,7 +320,96 @@ namespace Gum.Commands
             }
         }
 
-        #endregion
+        public void ShowAddCategoryWindow()
+        {
+
+            var target = SelectedState.Self.SelectedStateContainer as IStateCategoryListContainer;
+            if (target == null)
+            {
+                MessageBox.Show("You must first select an element or behavior to add a state category");
+            }
+            else
+            {
+                var tiw = new CustomizableTextInputWindow();
+                tiw.Message = "Enter new category name:";
+
+                var canAdd = true;
+
+                var result = tiw.ShowDialog();
+
+                if (result != true)
+                {
+                    canAdd = false;
+                }
+
+                string name = null;
+
+                if (canAdd)
+                {
+                    name = tiw.Result;
+
+                    // see if any base elements have thsi category
+                    if (target is ElementSave element)
+                    {
+                        var existingCategory = element.GetStateSaveCategoryRecursively(name, out ElementSave categoryContainer);
+
+                        if (existingCategory != null)
+                        {
+                            MessageBox.Show($"Cannot add category - a category with the name {name} is already defined in {categoryContainer}");
+                            canAdd = false;
+                        }
+                    }
+                }
+
+
+                if (canAdd)
+                {
+                    using (UndoManager.Self.RequestLock())
+                    {
+                        StateSaveCategory category = ElementCommands.Self.AddCategory(
+                            target, name);
+
+                        SelectedState.Self.SelectedStateCategorySave = category;
+                    }
+                }
+            }
+
+        }
+
+        public void ShowAddStateWindow()
+        {
+            if (SelectedState.Self.SelectedStateCategorySave == null && SelectedState.Self.SelectedElement == null)
+            {
+                MessageBox.Show("You must first select an element or a behavior category to add a state");
+            }
+            else
+            {
+                var tiw = new CustomizableTextInputWindow();
+                tiw.Message = "Enter new state name:";
+
+                if (tiw.ShowDialog() == true)
+                {
+                    string name = tiw.Result;
+
+                    if (!NameVerifier.Self.IsStateNameValid(name, SelectedState.Self.SelectedStateCategorySave, null, out string whyNotValid))
+                    {
+                        GumCommands.Self.GuiCommands.ShowMessage(whyNotValid);
+                    }
+                    else
+                    {
+                        using (UndoManager.Self.RequestLock())
+                        {
+                            StateSave stateSave = ElementCommands.Self.AddState(
+                                SelectedState.Self.SelectedStateContainer, SelectedState.Self.SelectedStateCategorySave, name);
+
+
+                            SelectedState.Self.SelectedStateSave = stateSave;
+
+                        }
+                    }
+                }
+            }
+        }
 
         public void DoOnUiThread(Action action)
         {

@@ -640,6 +640,9 @@ namespace Gum.Plugins
         internal void StateAdd(StateSave stateSave) =>
             CallMethodOnPlugin((plugin) => plugin.CallStateAdd(stateSave));
 
+        internal void StateMovedToCategory(StateSave stateSave, StateSaveCategory newCategory, StateSaveCategory oldCategory) =>
+            CallMethodOnPlugin(plugin => plugin.CallStateMovedToCategory(stateSave, newCategory, oldCategory));
+
         internal void StateDelete(StateSave stateSave) =>
             CallMethodOnPlugin((plugin) => plugin.CallStateDelete(stateSave));
 

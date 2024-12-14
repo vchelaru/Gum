@@ -76,7 +76,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MainPlugin.cs" />
+    <Compile Include="MainCodeOutputPlugin.cs" />
     <Compile Include="Manager\CodeGenerationFileLocationsService.cs" />
     <Compile Include="Manager\CodeGenerationService.cs" />
     <Compile Include="Manager\CodeGenerator.cs" />
