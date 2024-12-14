@@ -90,7 +90,11 @@ namespace Gum
             // ProperGridManager before MenuStripManager
             PropertyGridManager.Self.InitializeEarly();
             // menu strip manager needs to be initialized before plugins:
-            MenuStripManager.Self.Initialize(this);
+
+            var menuStripManager = new MenuStripManager();
+            menuStripManager.Initialize(this);
+
+            ((SelectedState)SelectedState.Self).Initialize(menuStripManager);
 
             PluginManager.Self.Initialize(this);
 

@@ -84,10 +84,15 @@ public class StateTreeViewModel : ViewModel
 
     #endregion
 
+    bool IsPushingChangesToGum = true;
+
     private void HandleItemVmPropertyChanged(object sender, PropertyChangedEventArgs e)
     {
+
         if(e.PropertyName == nameof(StateTreeViewItem.IsSelected))
         {
+            if (!IsPushingChangesToGum) return;
+
             if (sender is StateViewModel stateVm && stateVm.IsSelected == true)
             {
                 GumState.Self.SelectedState.SelectedStateSave = stateVm.Data;
@@ -107,7 +112,175 @@ public class StateTreeViewModel : ViewModel
         
     }
 
-    #region Methods
+    #region Refresh
+
+    public void RefreshTo(IStateContainer stateContainer, ISelectedState selectedState)
+    {
+        if(stateContainer != null)
+        {
+            IsPushingChangesToGum = false;
+            var expandedNodes = Items.Where(item => item.IsExpanded).ToList();
+
+            RemoveUnnecessaryNodes(stateContainer);
+            AddMissingItems(stateContainer, selectedState);
+            FixNodeOrderInCategory(stateContainer);
+            RefreshBackgroundToVariables();
+
+            ApplyExpanded(expandedNodes);
+
+            IsPushingChangesToGum = true;
+
+        }
+        else
+        {
+            Categories.Clear();
+            States.Clear();
+        }
+    }
+
+    private void ApplyExpanded(List<StateTreeViewItem> expandedNodes)
+    {
+        foreach (var item in expandedNodes)
+        {
+            if (item is CategoryViewModel categoryViewModel)
+            {
+                var categoryName = categoryViewModel.Data.Name;
+
+                var category = Categories.FirstOrDefault(item => item.Data.Name == categoryName);
+                if (category != null)
+                {
+                    category.IsExpanded = true;
+                }
+            }
+        }
+    }
+
+    public void RemoveUnnecessaryNodes(IStateContainer stateContainer)
+    {
+
+        for (int i = 0; i < Categories.Count; i++)
+        {
+            if (stateContainer.Categories.Contains(Categories[i].Data) == false)
+            {
+                var categoryVm = Categories[i];
+                        // Remove this so they don't push any changes to Gum
+                categoryVm.PropertyChanged -= HandleItemVmPropertyChanged;
+                Categories.RemoveAt(i);
+                i--;
+            }
+            else
+            {
+                var categoryViewModel = Categories[i];
+                var category = categoryViewModel.Data;
+                for (int j = 0; j < categoryViewModel.States.Count; j++)
+                {
+                    var stateViewModel = categoryViewModel.States[j];
+
+                    if (category.States.Contains(stateViewModel.Data) == false)
+                    {
+                        // Remove this so they don't push any changes to Gum
+                        stateViewModel.PropertyChanged -= HandleItemVmPropertyChanged;
+                        Categories[i].States.RemoveAt(j);
+                        j--;
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < States.Count; i++)
+        {
+            var stateViewModel = States[i];
+            if (stateContainer.UncategorizedStates.Contains(stateViewModel.Data) == false)
+            {
+                States.RemoveAt(i);
+            }
+        }
+    }
+
+    public void AddMissingItems(IStateContainer stateContainer, ISelectedState selectedState)
+    {
+        foreach (var category in stateContainer.Categories)
+        {
+            if (Categories.Any(item => item.Data == category) == false)
+            {
+                var categoryVm = new CategoryViewModel() { Data = category };
+                categoryVm.PropertyChanged += HandleItemVmPropertyChanged;
+
+                categoryVm.IsSelected = selectedState.SelectedStateSave == null && selectedState.SelectedStateCategorySave == category;
+
+                Categories.Add(categoryVm);
+            }
+        }
+
+
+        foreach (var state in stateContainer.UncategorizedStates)
+        {
+            if (States.Any(item => item.Data == state) == false)
+            {
+                var stateVm = new StateViewModel() { Data = state };
+                stateVm.IsSelected = selectedState.SelectedStateSave == state;
+                stateVm.PropertyChanged += HandleItemVmPropertyChanged;
+                States.Add(stateVm);
+            }
+        }
+
+
+        foreach (var category in stateContainer.Categories)
+        {
+            foreach (var state in category.States)
+            {
+                var categoryViewModel = Categories.FirstOrDefault(item => item.Data == category);
+                if (categoryViewModel != null)
+                {
+                    var stateViewModel = categoryViewModel.States.FirstOrDefault(item => item.Data == state);
+
+                    if (stateViewModel == null)
+                    {
+                        var stateVm = new StateViewModel() { Data = state };
+                        stateVm.IsSelected = selectedState.SelectedStateSave == state;
+                        stateVm.PropertyChanged += HandleItemVmPropertyChanged;
+                        categoryViewModel.States.Add(stateVm);
+                    }
+                }
+            }
+        }
+
+
+    }
+
+    public void FixNodeOrderInCategory(IStateContainer stateContainer)
+    {
+        for (int categoryIndex = 0; categoryIndex < stateContainer.Categories.Count(); categoryIndex++)
+        {
+            var categoryViewModel = Categories[categoryIndex];
+            var category = stateContainer.Categories.ElementAt(categoryIndex);
+            if (categoryViewModel.Data != category)
+            {
+                var categoryToMove = Categories.FirstOrDefault(item => item.Data == category);
+                var oldIndex = Categories.IndexOf(categoryToMove);
+                Categories.Move(oldIndex, categoryIndex);
+            }
+        }
+
+        for (int categoryIndex = 0; categoryIndex < stateContainer.Categories.Count(); categoryIndex++)
+        {
+            var categoryViewModel = Categories[categoryIndex];
+            var category = stateContainer.Categories.ElementAt(categoryIndex);
+            for (int stateIndex = 0; stateIndex < category.States.Count; stateIndex++)
+            {
+                var state = category.States[stateIndex];
+                if (categoryViewModel.States[stateIndex].Data != state)
+                {
+                    var itemToMove = categoryViewModel.States.FirstOrDefault(item => item.Data == state);
+                    if(itemToMove != null)
+                    {
+                        var oldIndex = categoryViewModel.States.IndexOf(itemToMove);
+                        categoryViewModel.States.Move(oldIndex, stateIndex);
+                    }
+                }
+            }
+
+        }
+    }
 
     internal void RefreshBackgroundToVariables()
     {
@@ -131,6 +304,10 @@ public class StateTreeViewModel : ViewModel
             }
         }
     }
+
+    #endregion
+
+    #region Methods
 
     public void SetSelectedState(StateSave stateSave)
     {
@@ -202,123 +379,6 @@ public class StateTreeViewModel : ViewModel
         if (foundCategory != null)
         {
             foundCategory.IsSelected = true;
-        }
-    }
-
-    public void AddMissingItems(IStateContainer stateContainer)
-    {
-        foreach (var category in stateContainer.Categories)
-        {
-            if (Categories.Any(item => item.Data == category) == false)
-            {
-                var categoryVm = new CategoryViewModel() { Data = category };
-                categoryVm.PropertyChanged += HandleItemVmPropertyChanged;
-                Categories.Add(categoryVm);
-            }
-        }
-
-
-        foreach (var state in stateContainer.UncategorizedStates)
-        {
-            if (States.Any(item => item.Data == state) == false)
-            {
-                var stateVm = new StateViewModel() { Data = state };
-                stateVm.PropertyChanged += HandleItemVmPropertyChanged;
-                States.Add(stateVm);
-            }
-        }
-
-
-        foreach (var category in stateContainer.Categories)
-        {
-            foreach (var state in category.States)
-            {
-                var categoryViewModel = Categories.FirstOrDefault(item => item.Data == category);
-                if (categoryViewModel != null)
-                {
-                    var stateViewModel = categoryViewModel.States.FirstOrDefault(item => item.Data == state);
-
-                    if (stateViewModel == null)
-                    {
-                        var stateVm = new StateViewModel() { Data = state };
-                        stateVm.PropertyChanged += HandleItemVmPropertyChanged;
-                        categoryViewModel.States.Add(stateVm);
-                    }
-                }
-            }
-        }
-
-
-    }
-
-    public void RemoveUnnecessaryNodes(IStateContainer stateContainer)
-    {
-
-        for (int i = 0; i < Categories.Count; i++)
-        {
-            if (stateContainer.Categories.Contains(Categories[i].Data) == false)
-            {
-                Categories.RemoveAt(i);
-                i--;
-            }
-            else
-            {
-                var categoryViewModel = Categories[i];
-                var category = categoryViewModel.Data;
-                for (int j = 0; j < categoryViewModel.States.Count; j++)
-                {
-                    var stateViewModel = categoryViewModel.States[j];
-
-                    if (category.States.Contains(stateViewModel.Data) == false)
-                    {
-                        Categories[i].States.RemoveAt(j);
-                        j--;
-                    }
-                }
-            }
-        }
-        for (int i = 0; i < States.Count; i++)
-        {
-            var stateViewModel = States[i];
-            if (stateContainer.UncategorizedStates.Contains(stateViewModel.Data) == false)
-            {
-                States.RemoveAt(i);
-            }
-        }
-    }
-
-    public void FixNodeOrderInCategory(IStateContainer stateContainer)
-    {
-        for (int categoryIndex = 0; categoryIndex < stateContainer.Categories.Count(); categoryIndex++)
-        {
-            var categoryViewModel = Categories[categoryIndex];
-            var category = stateContainer.Categories.ElementAt(categoryIndex);
-            if (categoryViewModel.Data != category)
-            {
-                var categoryToMove = Categories.FirstOrDefault(item => item.Data == category);
-                var oldIndex = Categories.IndexOf(categoryToMove);
-                Categories.Move(oldIndex, categoryIndex);
-            }
-        }
-
-        for (int categoryIndex = 0; categoryIndex < stateContainer.Categories.Count(); categoryIndex++)
-        {
-            var categoryViewModel = Categories[categoryIndex];
-            var category = stateContainer.Categories.ElementAt(categoryIndex);
-            for (int stateIndex = 0; stateIndex < category.States.Count; stateIndex++)
-            {
-                var state = category.States[stateIndex];
-                if (categoryViewModel.States[stateIndex].Data != state)
-                {
-                    var itemToMove = categoryViewModel.States.FirstOrDefault(item => item.Data == state);
-                    if(itemToMove != null)
-                    {
-                        var oldIndex = categoryViewModel.States.IndexOf(itemToMove);
-                        categoryViewModel.States.Move(oldIndex, stateIndex);
-                    }
-                }
-            }
-
         }
     }
 

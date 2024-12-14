@@ -750,6 +750,9 @@ namespace Gum.Plugins
             return toReturn;
         }
 
+        internal void RefreshBehaviorView(ElementSave elementSave) =>
+            CallMethodOnPlugin(plugin => plugin.CallRefreshBehaviorUi());
+
         internal void BehaviorReferencesChanged(ElementSave elementSave) => 
             CallMethodOnPlugin(plugin => plugin.CallBehaviorReferencesChanged(elementSave));
 

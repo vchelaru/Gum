@@ -1,6 +1,8 @@
 ﻿using Gum.Plugins.BaseClasses;
 using System.ComponentModel.Composition;
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
+using System;
 
 namespace Gum.Undo
 {
@@ -15,8 +17,14 @@ namespace Gum.Undo
             this.InstanceAdd += HandleInstanceAdd;
             this.InstanceDelete += HandleInstanceDelete;
             this.InstancesDelete += HandleInstancesDelete;
+            this.ReactToStateSaveSelected += HandleStateSelected;
 
             this.BehaviorReferencesChanged += HandleBehaviorReferencesChanged;
+        }
+
+        private void HandleStateSelected(StateSave save)
+        {
+            UndoManager.Self.RecordState();
         }
 
         private void HandleBehaviorReferencesChanged(ElementSave obj)

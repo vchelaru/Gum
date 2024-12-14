@@ -39,7 +39,13 @@ public class MainBehaviorsPlugin : InternalPlugin
         this.BehaviorSelected += HandleBehaviorSelected;
         this.StateWindowTreeNodeSelected += HandleStateSelected;
         this.BehaviorReferencesChanged += HandleBehaviorReferencesChanged;
+        this.RefreshBehaviorView += HandleRefreshBehaviorView;
         this.StateAdd += HandleStateAdd;
+    }
+
+    private void HandleRefreshBehaviorView()
+    {
+        HandleElementSelected(GumState.Self.SelectedState.SelectedElement);
     }
 
     private void HandleStateAdd(StateSave stateSave)

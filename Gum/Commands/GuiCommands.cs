@@ -35,7 +35,13 @@ namespace Gum.Commands
             PluginManager.Self.RefreshStateTreeView();
         }
 
-        internal void RefreshBehaviorView()
+        internal void BroadcastRefreshBehaviorView()
+        {
+            PluginManager.Self.RefreshBehaviorView(
+                SelectedState.Self.SelectedElement);
+        }
+
+        internal void BroadcastBehaviorReferencesChanged()
         {
             PluginManager.Self.BehaviorReferencesChanged(
                 SelectedState.Self.SelectedElement);

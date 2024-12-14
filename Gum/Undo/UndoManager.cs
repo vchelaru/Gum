@@ -31,6 +31,11 @@ namespace Gum.Undo
     {
         public UndoSnapshot UndoState { get; set; }
         public UndoSnapshot RedoState { get; set; }
+
+        public override string ToString()
+        {
+            return $"Undo:{UndoState}";
+        }
     }
 
     public class ElementHistory
@@ -383,20 +388,31 @@ namespace Gum.Undo
                     out bool shouldRefreshStateTreeView,
                     out bool shouldRefreshBehaviorView);
 
-                if (undoSnapshot.UndoState.CategoryName != SelectedState.Self.SelectedStateCategorySave?.Name ||
-                    undoSnapshot.UndoState.StateName != SelectedState.Self.SelectedStateSave?.Name)
+                //if (undoSnapshot.UndoState.CategoryName != SelectedState.Self.SelectedStateCategorySave?.Name ||
+                //    undoSnapshot.UndoState.StateName != SelectedState.Self.SelectedStateSave?.Name)
+                //{
+
+                StateSave stateToSelect = null;
+                if(!string.IsNullOrEmpty(undoSnapshot.UndoState.CategoryName))
                 {
-                    var listOfStates = toApplyTo.States;
-                    var state = listOfStates?.FirstOrDefault(item => item.Name == undoSnapshot.UndoState.StateName);
-
-                    if (state != null)
+                    var category = toApplyTo.Categories.FirstOrDefault(item => item.Name == undoSnapshot.UndoState.CategoryName);
+                    if(category != null)
                     {
-                        isRecordingUndos = false;
-                        SelectedState.Self.SelectedStateSave = state;
-
-                        isRecordingUndos = true;
+                        stateToSelect = category.States.FirstOrDefault(item => item.Name == undoSnapshot.UndoState.StateName);
                     }
                 }
+                else
+                {
+                    stateToSelect = toApplyTo.States.FirstOrDefault(item => item.Name == undoSnapshot.UndoState.StateName);
+                }
+                if (stateToSelect != null)
+                {
+                    isRecordingUndos = false;
+                    SelectedState.Self.SelectedStateSave = stateToSelect;
+
+                    isRecordingUndos = true;
+                }
+                //}
 
                 var newIndex = elementHistory.UndoIndex - 1;
 
@@ -438,7 +454,7 @@ namespace Gum.Undo
 
             if(shouldRefreshBehaviorView)
             {
-                GumCommands.Self.GuiCommands.RefreshBehaviorView();
+                GumCommands.Self.GuiCommands.BroadcastRefreshBehaviorView();
             }
 
             //PrintStatus("PerformUndo");

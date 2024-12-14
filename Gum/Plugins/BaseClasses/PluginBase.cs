@@ -118,6 +118,7 @@ namespace Gum.Plugins.BaseClasses
         public event Action<InstanceSave> InstanceReordered;
 
         public event Action<ElementSave> BehaviorReferencesChanged;
+        public event Action RefreshBehaviorView;
 
         /// <summary>
         /// Method which allows a plugin to provide a default StateSave for a given type. This can be used
@@ -371,6 +372,8 @@ namespace Gum.Plugins.BaseClasses
         public void CallInstanceAdd(ElementSave elementSave, InstanceSave instance) => InstanceAdd?.Invoke(elementSave, instance);
 
         public void CallBehaviorReferencesChanged(ElementSave element) => BehaviorReferencesChanged?.Invoke(element);
+
+        public void CallRefreshBehaviorUi() => RefreshBehaviorView?.Invoke();
 
         public void CallInstanceDelete(ElementSave elementSave, InstanceSave instance) => InstanceDelete?.Invoke(elementSave, instance);
 

@@ -24,6 +24,7 @@ public class SelectedState : ISelectedState
     VariableSave mSelectedVariableSave;
 
     SelectedStateSnapshot snapshot = new SelectedStateSnapshot();
+    private MenuStripManager _menuStripManager;
 
     #endregion
 
@@ -539,6 +540,11 @@ public class SelectedState : ISelectedState
 
     }
 
+    public void Initialize(MenuStripManager menuStripManager)
+    {
+        _menuStripManager = menuStripManager;
+    }
+
     public void UpdateToSelectedElement()
     {
         GumCommands.Self.GuiCommands.RefreshStateTreeView();
@@ -568,8 +574,8 @@ public class SelectedState : ISelectedState
         WireframeObjectManager.Self.RefreshAll(false);
 
         SelectionManager.Self.Refresh();
-        
-        MenuStripManager.Self.RefreshUI();
+
+        _menuStripManager.RefreshUI();
 
         PluginManager.Self.ElementSelected(SelectedElement);
 
@@ -583,7 +589,7 @@ public class SelectedState : ISelectedState
 
         WireframeObjectManager.Self.RefreshAll(false);
 
-        MenuStripManager.Self.RefreshUI();
+        _menuStripManager.RefreshUI();
 
         // Although plugins could just listen for behavior changes, and
         // assume that means no elements are selected, that's a bit of a pain.
@@ -595,7 +601,7 @@ public class SelectedState : ISelectedState
 
     public void UpdateToSelectedBehaviorVariable()
     {
-        MenuStripManager.Self.RefreshUI();
+        _menuStripManager.RefreshUI();
     }
 
     public void UpdateToSelectedStateSave()
@@ -637,7 +643,7 @@ public class SelectedState : ISelectedState
 
         PropertyGridManager.Self.RefreshUI();
 
-        MenuStripManager.Self.RefreshUI();
+        _menuStripManager.RefreshUI();
     }
 
     public void UpdateToSelectedInstanceSave()
@@ -665,7 +671,7 @@ public class SelectedState : ISelectedState
 
         SelectionManager.Self.Refresh();
 
-        MenuStripManager.Self.RefreshUI();
+        _menuStripManager.RefreshUI();
 
         //PropertyGridManager.Self.RefreshUI();
         GumCommands.Self.GuiCommands.RefreshPropertyGrid();

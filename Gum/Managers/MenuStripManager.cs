@@ -38,23 +38,6 @@ namespace Gum.Managers
 
         #endregion
 
-        #region Properties
-
-        public static MenuStripManager Self
-        {
-            get
-            {
-                if (mSelf == null)
-                {
-                    mSelf = new MenuStripManager();
-                }
-                return mSelf;
-            }
-        }
-
-        #endregion
-
-
         public void Initialize(Form mainWindow)
         {
             // Load Recent handled in MainRecentFilesPlugin
@@ -95,10 +78,11 @@ namespace Gum.Managers
             this.editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
             this.editToolStripMenuItem.Text = "Edit";
 
-            Add(editToolStripMenuItem, "Undo", UndoManager.Self.PerformUndo)
-                .ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Z)));
-            Add(editToolStripMenuItem, "Redo", UndoManager.Self.PerformRedo)
-                .ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Y)));
+            var undoMenuItem = Add(editToolStripMenuItem, "Undo", UndoManager.Self.PerformUndo);
+            undoMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Z)));
+
+            var redoMenuItem = Add(editToolStripMenuItem, "Redo", UndoManager.Self.PerformRedo);
+            redoMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Y)));
 
             AddSeparator(editToolStripMenuItem);
 

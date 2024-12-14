@@ -108,7 +108,7 @@ public class MainStatePlugin : InternalPlugin
 
     private void HandleRefreshStateTreeView()
     {
-        RefreshUI(SelectedState.Self.SelectedStateContainer);
+        RefreshUI(SelectedState.Self.SelectedStateContainer, SelectedState.Self);
     }
 
     private void HandleTreeNodeSelected(TreeNode node)
@@ -155,7 +155,7 @@ public class MainStatePlugin : InternalPlugin
 
 
     IStateContainer mLastElementRefreshedTo;
-    void RefreshUI(IStateContainer stateContainer)
+    void RefreshUI(IStateContainer stateContainer, ISelectedState selectedState)
     {
 
         bool changed = stateContainer != mLastElementRefreshedTo;
@@ -165,9 +165,11 @@ public class MainStatePlugin : InternalPlugin
         StateSave lastStateSave = SelectedState.Self.SelectedStateSave;
         InstanceSave instance = SelectedState.Self.SelectedInstance;
 
+        stateTreeViewModel.RefreshTo(stateContainer, selectedState);
 
         if (stateContainer != null)
         {
+
             RemoveUnnecessaryNodes(stateContainer);
 
             AddNeededNodes(stateContainer);
@@ -188,9 +190,6 @@ public class MainStatePlugin : InternalPlugin
         else
         {
             this.stateView.TreeView.Nodes.Clear();
-
-            this.stateTreeViewModel.Categories.Clear();
-            this.stateTreeViewModel.States.Clear();
         }
 
 
@@ -245,13 +244,11 @@ public class MainStatePlugin : InternalPlugin
             }
         }
 
-        stateTreeViewModel.RemoveUnnecessaryNodes(stateContainer);
     }
 
 
     private void AddNeededNodes(IStateContainer stateContainer)
     {
-        stateTreeViewModel.AddMissingItems(stateContainer);
 
         foreach (var category in stateContainer.Categories)
         {
@@ -259,6 +256,8 @@ public class MainStatePlugin : InternalPlugin
             {
                 var treeNode = this.stateView.TreeView.Nodes.Add(category.Name);
                 treeNode.Tag = category;
+
+                
                 treeNode.ImageIndex = ElementTreeViewManager.FolderImageIndex;
             }
         }
@@ -297,7 +296,6 @@ public class MainStatePlugin : InternalPlugin
         // first make sure categories come first
         int desiredIndex = 0;
 
-        stateTreeViewModel.FixNodeOrderInCategory(stateContainer);
 
         foreach (var category in stateContainer.Categories.OrderBy(item => item.Name))
         {
@@ -350,7 +348,6 @@ public class MainStatePlugin : InternalPlugin
 
     private void UpdateStateTreeNode(StateSave lastStateSave, InstanceSave instance, StateSave state)
     {
-        stateTreeViewModel.RefreshBackgroundToVariables();
         string stateName = state.Name;
         if (string.IsNullOrEmpty(stateName))
         {
