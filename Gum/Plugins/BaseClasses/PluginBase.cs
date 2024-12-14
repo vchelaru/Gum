@@ -223,6 +223,21 @@ namespace Gum.Plugins.BaseClasses
             return null;
         }
 
+        public ToolStripMenuItem GetChildMenuItem(string parentText, string childText)
+        {
+            ToolStripMenuItem parentItem = GetItem(parentText);
+            if (parentItem != null)
+            {
+                ToolStripMenuItem childMenuItem = parentItem.DropDown.Items
+                    .Cast<ToolStripMenuItem>()
+                    .FirstOrDefault(item => item.Text == childText);
+
+                return childMenuItem;
+            }
+
+            return null;
+        }
+
 
         protected ToolStripMenuItem AddMenuItemTo(string whatToAdd, EventHandler eventHandler, string container, int? preferredIndex = null)
         {
@@ -252,6 +267,11 @@ namespace Gum.Plugins.BaseClasses
         public PluginTab AddControl(System.Windows.FrameworkElement control, string tabName, TabLocation tabLocation)
         {
             return GumCommands.Self.GuiCommands.AddControl(control, tabName, tabLocation);
+        }
+
+        public void RemoveControl(System.Windows.Controls.UserControl control)
+        {
+            GumCommands.Self.GuiCommands.RemoveControl(control);
         }
 
         #region Event calling

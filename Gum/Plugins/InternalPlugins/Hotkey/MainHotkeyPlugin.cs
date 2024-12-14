@@ -1,10 +1,7 @@
 ﻿using Gum.Plugins.BaseClasses;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace Gum.Plugins.InternalPlugins.Hotkey
 {
@@ -24,9 +21,25 @@ namespace Gum.Plugins.InternalPlugins.Hotkey
             {
                 var view = new Views.HotkeyView();
                 pluginTab = base.AddControl(view, "Hotkeys", TabLocation.CenterBottom);
-            }
-            pluginTab.Focus();
+                pluginTab.Focus();
 
+                ToolStripMenuItem viewMenuItem = this.GetChildMenuItem("View", "View Hotkeys");
+                if (viewMenuItem != null)
+                {
+                    viewMenuItem.Text = "Hide Hotkeys";
+                }
+            } 
+            else
+            {
+                ToolStripMenuItem viewMenuItem = this.GetChildMenuItem("View", "Hide Hotkeys");
+                if (viewMenuItem != null)
+                {
+                    viewMenuItem.Text = "View Hotkeys";
+                    System.Windows.Controls.UserControl panelConrol = (System.Windows.Controls.UserControl)pluginTab.Page.Content;
+                    base.RemoveControl(panelConrol);
+                    pluginTab = null;
+                }
+            }
         }
     }
 }
