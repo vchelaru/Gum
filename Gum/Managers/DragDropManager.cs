@@ -809,7 +809,7 @@ namespace Gum.Managers
         private static void SaveAndRefresh()
         {
             GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-            PropertyGridManager.Self.RefreshUI();
+            GumCommands.Self.GuiCommands.RefreshVariables();
             GumCommands.Self.GuiCommands.RefreshElementTreeView();
 
             WireframeObjectManager.Self.RefreshAll(true);

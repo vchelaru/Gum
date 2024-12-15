@@ -157,7 +157,7 @@ internal class EditVariableService : IEditVariableService
             }
         }
 
-        GumCommands.Self.GuiCommands.RefreshPropertyGrid(force:true);
+        GumCommands.Self.GuiCommands.RefreshVariables(force:true);
         foreach(var element in changedElements)
         {
             GumCommands.Self.FileCommands.TryAutoSaveElement(element);
@@ -231,7 +231,7 @@ internal class EditVariableService : IEditVariableService
                         ApplyChangesToInstances(derived, oldName, newName, type);
                     }
                 }
-                GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
+                GumCommands.Self.GuiCommands.RefreshVariables(force: true);
             }
         }
     }

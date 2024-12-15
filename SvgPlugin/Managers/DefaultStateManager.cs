@@ -314,7 +314,7 @@ namespace SkiaPlugin.Managers
 
             if(shouldRefresh)
             {
-                GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
+                GumCommands.Self.GuiCommands.RefreshVariables(force: true);
             }
         }
         internal static bool GetIfVariableIsExcluded(VariableSave variable, RecursiveVariableFinder recursiveVariableFinder)

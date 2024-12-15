@@ -316,7 +316,7 @@ namespace Gum.PropertyGridHelpers
             if (needsToRefreshEntireElement)
             {
                 GumCommands.Self.GuiCommands.RefreshElementTreeView(parentElement);
-                GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
+                GumCommands.Self.GuiCommands.RefreshVariables(force: true);
             }
 
             var value = SelectedState.Self.SelectedStateSave.GetValue(qualifiedName);
@@ -458,7 +458,7 @@ namespace Gum.PropertyGridHelpers
 
                         GumCommands.Self.GuiCommands.PrintOutput($"BaseType assignment on {instance.Name} is not allowed - reverting to previous value");
 
-                        GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
+                        GumCommands.Self.GuiCommands.RefreshVariables(force: true);
                     }
                 }
             }
@@ -683,7 +683,7 @@ namespace Gum.PropertyGridHelpers
                 {
                     gue.SetProperty(unqualifiedVariableToSet, valueToSet);
                 }
-                GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
+                GumCommands.Self.GuiCommands.RefreshVariables(force: true);
 
 
             }
@@ -753,7 +753,7 @@ namespace Gum.PropertyGridHelpers
                     if (filePath.Extension == "achx")
                     {
                         stateSave.SetValue($"{instancePrefix}Texture Address", Gum.Managers.TextureAddress.Custom);
-                        GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
+                        GumCommands.Self.GuiCommands.RefreshVariables(force: true);
                     }
                 }
 
@@ -920,7 +920,7 @@ namespace Gum.PropertyGridHelpers
                 }
                 else
                 {
-                    GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
+                    GumCommands.Self.GuiCommands.RefreshVariables(force: true);
                 }
             }
         }
@@ -946,7 +946,7 @@ namespace Gum.PropertyGridHelpers
 
             if (didChange)
             {
-                GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
+                GumCommands.Self.GuiCommands.RefreshVariables(force: true);
             }
         }
 

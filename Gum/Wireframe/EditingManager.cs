@@ -158,7 +158,7 @@ namespace Gum.Wireframe
                 {
                     //UpdateSelectedObjectsPositionAndDimensions();
 
-                    PropertyGridManager.Self.RefreshUI();
+                    GumCommands.Self.GuiCommands.RefreshVariables();
                 }
             }
 

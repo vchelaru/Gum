@@ -207,7 +207,7 @@ namespace Gum.Wireframe
             GumCommands.Self.GuiCommands.RefreshElementTreeView();
             GumCommands.Self.GuiCommands.RefreshStateTreeView();
             
-            PropertyGridManager.Self.RefreshUI();
+            GumCommands.Self.GuiCommands.RefreshVariables();
             Wireframe.WireframeObjectManager.Self.RefreshAll(true);
 
             GumCommands.Self.FileCommands.TryAutoSaveProject();
@@ -221,7 +221,7 @@ namespace Gum.Wireframe
 
             GumCommands.Self.GuiCommands.RefreshElementTreeView();
             GumCommands.Self.GuiCommands.RefreshStateTreeView();
-            PropertyGridManager.Self.RefreshUI();
+            GumCommands.Self.GuiCommands.RefreshVariables();
             // I don't think we have to refresh the wireframe since nothing is being shown
             //Wireframe.WireframeObjectManager.Self.RefreshAll(true);
 

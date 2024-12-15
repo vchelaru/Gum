@@ -167,7 +167,7 @@ namespace Gum.PropertyGridHelpers
                     GumCommands.Self.GuiCommands.RefreshStateTreeView();
                     // no selection has changed, but we want to force refresh here because we know
                     // we really need a refresh - something was removed.
-                    GumCommands.Self.GuiCommands.RefreshPropertyGrid(force:true);
+                    GumCommands.Self.GuiCommands.RefreshVariables(force:true);
 
                     PluginManager.Self.VariableRemovedFromCategory(variableName, stateCategory);
                 }

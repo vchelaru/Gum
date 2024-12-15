@@ -569,7 +569,7 @@ public class SelectedState : ISelectedState
         if(stateBefore == SelectedStateSave)
         {
             // If the state changed (element changed) then no need to force the UI again
-            PropertyGridManager.Self.RefreshUI();
+            GumCommands.Self.GuiCommands.RefreshVariables();
         }
 
         WireframeObjectManager.Self.RefreshAll(false);
@@ -586,7 +586,7 @@ public class SelectedState : ISelectedState
     {
         GumCommands.Self.GuiCommands.RefreshStateTreeView();
 
-        PropertyGridManager.Self.RefreshUI();
+        GumCommands.Self.GuiCommands.RefreshVariables();
 
         WireframeObjectManager.Self.RefreshAll(false);
 
@@ -642,7 +642,7 @@ public class SelectedState : ISelectedState
             StateTreeViewManager.Self.Select(SelectedStateCategorySave);
         }
 
-        PropertyGridManager.Self.RefreshUI();
+        GumCommands.Self.GuiCommands.RefreshVariables();
 
         _menuStripManager.RefreshUI();
     }
@@ -675,7 +675,7 @@ public class SelectedState : ISelectedState
         _menuStripManager.RefreshUI();
 
         //PropertyGridManager.Self.RefreshUI();
-        GumCommands.Self.GuiCommands.RefreshPropertyGrid();
+        GumCommands.Self.GuiCommands.RefreshVariables();
 
         PluginManager.Self.InstanceSelected(SelectedElement, SelectedInstance);
     }

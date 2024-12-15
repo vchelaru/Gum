@@ -451,7 +451,7 @@ namespace Gum.PropertyGridHelpers
                         ElementSave.DefaultState.Variables.Remove(this.VariableSave);
 
                         GumCommands.Self.FileCommands.TryAutoSaveElement(ElementSave);
-                        GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
+                        GumCommands.Self.GuiCommands.RefreshVariables(force: true);
                     }
                 });
             }
@@ -508,7 +508,7 @@ namespace Gum.PropertyGridHelpers
 
                 PluginManager.Self.VariableDelete(ElementSave, oldExposedName);
                 GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-                PropertyGridManager.Self.RefreshUI(force: true);
+                GumCommands.Self.GuiCommands.RefreshVariables(force: true);
             }
         }
 
@@ -798,7 +798,7 @@ namespace Gum.PropertyGridHelpers
                 if (wasChangeMade)
                 {
                     Undo.UndoManager.Self.RecordUndo();
-                    PropertyGridManager.Self.RefreshUI(force: true);
+                    GumCommands.Self.GuiCommands.RefreshVariables(force: true);
                     WireframeObjectManager.Self.RefreshAll(true);
                     SelectionManager.Self.Refresh();
 

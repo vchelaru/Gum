@@ -215,7 +215,7 @@ namespace Gum.Logic
 
                 GumCommands.Self.FileCommands.TryAutoSaveElement(sourceElement);
                 WireframeObjectManager.Self.RefreshAll(true);
-                PropertyGridManager.Self.RefreshUI();
+                GumCommands.Self.GuiCommands.RefreshVariables();
                 GumCommands.Self.GuiCommands.RefreshElementTreeView();
             }
 

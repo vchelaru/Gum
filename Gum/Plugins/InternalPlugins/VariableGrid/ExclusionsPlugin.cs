@@ -21,7 +21,7 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid
             if(variableName == "Children Layout")
             {
                 // Changing children layout can result in different values being shown in the property grid
-                GumCommands.Self.GuiCommands.RefreshPropertyGrid(force:true);
+                GumCommands.Self.GuiCommands.RefreshVariables(force:true);
             }
         }
 

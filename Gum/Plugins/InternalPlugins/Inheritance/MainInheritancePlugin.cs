@@ -168,7 +168,7 @@ namespace Gum.Plugins.Inheritance
             const bool fullRefresh = true;
             // since the type might change:
             GumCommands.Self.GuiCommands.RefreshElementTreeView(asElementSave);
-            PropertyGridManager.Self.RefreshUI(fullRefresh);
+            GumCommands.Self.GuiCommands.RefreshVariables(fullRefresh);
             GumCommands.Self.GuiCommands.RefreshStateTreeView();
         }
 

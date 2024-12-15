@@ -296,7 +296,7 @@ namespace Gum.Wireframe.Editors
                 {
                     ApplyAxisLockToSelectedState();
 
-                    GumCommands.Self.GuiCommands.RefreshPropertyGrid();
+                    GumCommands.Self.GuiCommands.RefreshVariables();
                 }
 
                 // let's snap everything
@@ -391,7 +391,7 @@ namespace Gum.Wireframe.Editors
             if (hasChangeOccurred)
             {
                 //UpdateSelectedObjectsPositionAndDimensions();
-                PropertyGridManager.Self.RefreshUI();
+                GumCommands.Self.GuiCommands.RefreshVariables();
 
                 // I don't think we need this anymore because they're updated automatically in SelectionManager
                 //SelectionManager.Self.ShowSizeHandlesFor(WireframeObjectManager.Self.GetSelectedRepresentation());
@@ -627,7 +627,7 @@ namespace Gum.Wireframe.Editors
 
             if (wasAnythingModified)
             {
-                GumCommands.Self.GuiCommands.RefreshPropertyGrid(true);
+                GumCommands.Self.GuiCommands.RefreshVariables(true);
             }
         }
 

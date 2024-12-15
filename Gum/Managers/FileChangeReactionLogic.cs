@@ -202,7 +202,7 @@ namespace Gum.Managers
                 Wireframe.WireframeObjectManager.Self.RefreshAll(true, true);
 
                 // todo - this isn't working if I rename a variable...
-                PropertyGridManager.Self.RefreshUI(force: true);
+                GumCommands.Self.GuiCommands.RefreshVariables(force: true);
             }
         }
 
@@ -232,7 +232,7 @@ namespace Gum.Managers
                         item.Name.ToLowerInvariant() == file.StandardizedNoPathNoExtension.ToLowerInvariant());
                     ElementTreeViewManager.Self.Select(behavior);
 
-                    PropertyGridManager.Self.RefreshUI(force: true);
+                    GumCommands.Self.GuiCommands.RefreshVariables(force: true);
                 }
 
                 // no need to reload wirefreame like we do for elements because they don't show up visually...

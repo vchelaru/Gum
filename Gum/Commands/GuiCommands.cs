@@ -49,7 +49,7 @@ namespace Gum.Commands
                 SelectedState.Self.SelectedElement);
         }
 
-        public void RefreshPropertyGrid(bool force = false)
+        public void RefreshVariables(bool force = false)
         {
             PropertyGridManager.Self.RefreshUI(force:force);
         }
@@ -314,7 +314,7 @@ namespace Gum.Commands
                         element.DefaultState.Variables.Add(newVariable);
                         GumCommands.Self.FileCommands.TryAutoSaveElement(element);
                     }
-                    GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
+                    GumCommands.Self.GuiCommands.RefreshVariables(force: true);
 
                 }
             }

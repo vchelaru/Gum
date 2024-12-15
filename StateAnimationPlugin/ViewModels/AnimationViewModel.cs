@@ -1,4 +1,5 @@
 ﻿using FlatRedBall.Glue.StateInterpolation;
+using Gum;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
@@ -560,7 +561,7 @@ namespace StateAnimationPlugin.ViewModels
 
             Gum.ToolStates.SelectedState.Self.CustomCurrentStateSave = combined;
             Gum.ToolStates.SelectedState.Self.SelectedStateSave = null;
-            PropertyGridManager.Self.RefreshUI();
+            GumCommands.Self.GuiCommands.RefreshVariables();
         }
 
         private double ProcessRatio(FlatRedBall.Glue.StateInterpolation.InterpolationType interpolationType, FlatRedBall.Glue.StateInterpolation.Easing easing, double linearRatio)

@@ -1467,7 +1467,7 @@ namespace Gum.Managers
                 PropertyGridManager.Self.ObjectsSuppressingRefresh.Remove(this);
             }
 
-            PropertyGridManager.Self.RefreshUI();
+            GumCommands.Self.GuiCommands.RefreshVariables();
         }
 
         public void VerifyComponentsAreInTreeView(GumProjectSave gumProject)

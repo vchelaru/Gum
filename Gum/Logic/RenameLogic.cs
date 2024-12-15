@@ -59,7 +59,7 @@ public class RenameLogic
 
                 // Renaming the state should refresh the property grid
                 // because it displays the state name at the top
-                GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
+                GumCommands.Self.GuiCommands.RefreshVariables(force: true);
 
                 PluginManager.Self.StateRename(stateSave, oldName);
 

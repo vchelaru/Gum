@@ -183,7 +183,7 @@ namespace Gum.Commands
         {
             container.RequiredVariables.Variables.Remove(variable);
             GumCommands.Self.FileCommands.TryAutoSaveBehavior(container);
-            PropertyGridManager.Self.RefreshUI();
+            GumCommands.Self.GuiCommands.RefreshVariables();
         }
 
         public void AddBehavior()

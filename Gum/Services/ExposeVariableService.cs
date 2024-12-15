@@ -125,7 +125,7 @@ internal class ExposeVariableService : IExposeVariableService
                     PluginManager.Self.VariableAdd(elementSave, tiw.Result);
 
                     GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-                    GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
+                    GumCommands.Self.GuiCommands.RefreshVariables(force: true);
                 }
             }
         }

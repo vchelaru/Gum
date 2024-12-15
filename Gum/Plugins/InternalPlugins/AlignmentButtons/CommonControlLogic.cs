@@ -69,7 +69,7 @@ namespace Gum.Plugins.AlignmentButtons
 
         public static void RefreshAndSave()
         {
-            GumCommands.Self.GuiCommands.RefreshPropertyGrid(force: true);
+            GumCommands.Self.GuiCommands.RefreshVariables(force: true);
             GumCommands.Self.WireframeCommands.Refresh();
             GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
         }
