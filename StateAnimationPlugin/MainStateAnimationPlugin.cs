@@ -21,6 +21,10 @@ using System.ComponentModel;
 using Gum.Responses;
 using StateAnimationPlugin.SaveClasses;
 
+using Gum.Plugins;
+using System.Windows.Forms;
+
+
 namespace StateAnimationPlugin
 {
     [Export(typeof(PluginBase))]
@@ -33,6 +37,8 @@ namespace StateAnimationPlugin
         ElementAnimationsViewModel mCurrentViewModel;
 
         StateAnimationPlugin.Views.MainWindow mMainWindow;
+        private PluginTab pluginTab;
+        private ToolStripMenuItem menuItem;
 
         #endregion
 
@@ -66,7 +72,7 @@ namespace StateAnimationPlugin
         {
 
             CreateMenuItems();
-
+            CreateAnimationWindow();
             AssignEvents();
         }
 
@@ -77,9 +83,9 @@ namespace StateAnimationPlugin
 
         private void CreateMenuItems()
         {
-            var menuItem = AddMenuItem(new List<string> { "State Animation", "View Animations" });
+            menuItem = AddMenuItem(new List<string> { "State Animation", "View Animations" });
 
-            menuItem.Click += HandleViewAnimationsClick;
+            menuItem.Click += HandleToggleTabVisibility;
         }
 
         private void AssignEvents()
@@ -171,8 +177,19 @@ namespace StateAnimationPlugin
 
         }
 
+        private void HandleToggleTabVisibility(object sender, EventArgs e)
+        {
+            if (!GumCommands.Self.GuiCommands.IsTabVisible(pluginTab))
+            {
+                pluginTab.Show();
+            }
+            else
+            {
+                pluginTab.Hide();
+            }
+        }
 
-        private void HandleViewAnimationsClick(object sender, EventArgs e)
+        private void CreateAnimationWindow()
         {
             var shouldCreate = mMainWindow == null;
             if (mMainWindow == null)
@@ -194,10 +211,13 @@ namespace StateAnimationPlugin
 
             if(!wasShown)
             {
-                var pluginTab = GumCommands.Self.GuiCommands.AddControl(mMainWindow, "Animations", 
+                pluginTab = GumCommands.Self.GuiCommands.AddControl(mMainWindow, "Animations", 
                     TabLocation.RightBottom);
-                GumCommands.Self.GuiCommands.ShowTabForControl(mMainWindow);
-                pluginTab.Focus();
+
+                pluginTab.TabShown += HandleTabShown;
+                pluginTab.TabHidden += HandleTabHidden;
+                pluginTab.CanClose = true;
+                pluginTab.Hide();
             }
 
             // forces a refresh:
@@ -224,7 +244,7 @@ namespace StateAnimationPlugin
 
             if (!string.IsNullOrEmpty(whyIsntValid))
             {
-                MessageBox.Show(whyIsntValid);
+                System.Windows.MessageBox.Show(whyIsntValid);
 
             }
             else
@@ -309,6 +329,15 @@ namespace StateAnimationPlugin
                 whyIsntValid = "You must first select a Screen or Component";
             }
             return whyIsntValid;
+        }
+
+        private void HandleTabShown()
+        {
+            menuItem.Text = "Hide Animations";
+        }
+        private void HandleTabHidden()
+        {
+            menuItem.Text = "View Animations";
         }
 
         private void RefreshViewModel()
@@ -502,7 +531,7 @@ namespace StateAnimationPlugin
                     message += animation.Name;
                 }
 
-                var result = MessageBox.Show(message, "Delete state?", MessageBoxButton.YesNo);
+                var result = System.Windows.MessageBox.Show(message, "Delete state?", MessageBoxButton.YesNo);
 
                 if (result != MessageBoxResult.Yes)
                 {
@@ -539,7 +568,7 @@ namespace StateAnimationPlugin
                     message += animation.Name;
                 }
 
-                var result = MessageBox.Show(message, "Delete category?", MessageBoxButton.YesNo);
+                var result = System.Windows.MessageBox.Show(message, "Delete category?", MessageBoxButton.YesNo);
 
                 if (result != MessageBoxResult.Yes)
                 {
