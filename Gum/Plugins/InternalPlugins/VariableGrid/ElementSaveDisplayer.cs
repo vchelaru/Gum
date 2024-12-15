@@ -413,6 +413,10 @@ namespace Gum.PropertyGridHelpers
                 {
                     category = "Exposed";
                 }
+                else if(defaultVariable.IsState(elementSave))
+                {
+                    category = "States and Visibility";
+                }
 
                 //Type type = typeof(string);
                 Type type = Gum.Reflection.TypeManager.Self.GetTypeFromString(defaultVariable.Type);
