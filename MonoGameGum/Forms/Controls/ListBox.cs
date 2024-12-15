@@ -169,12 +169,35 @@ public class ListBox : ItemsControl, IInputReceiver
         {
             if (value > -1 && value < ListBoxItemsInternal.Count)
             {
-                if (ListBoxItemsInternal[value].IsEnabled)
+                selectedIndex = value;
+
+                var selectionChangedArgs = new SelectionChangedEventArgs();
+
+                var item = ListBoxItemsInternal[value];
+                if (item.IsEnabled)
                 {
-                    ListBoxItemsInternal[value].IsSelected = true;
+                    for (int i = 0; i < ListBoxItemsInternal.Count; i++)
+                    {
+                        var listBoxItem = ListBoxItemsInternal[i];
+
+                        if (listBoxItem.IsSelected && listBoxItem != item)
+                        {
+                            selectionChangedArgs.RemovedItems.Add(ListBoxItemsInternal[i]);
+                            listBoxItem.IsSelected = false;
+                        }
+                    }
+
+                    if (item.IsSelected == false)
+                    {
+                        selectionChangedArgs.AddedItems.Add(item);
+                        item.IsSelected = true;
+                    }
+                    item.IsSelected = true;
                 }
 
-                
+                SelectionChanged?.Invoke(this, selectionChangedArgs);
+
+
                 ScrollIndexIntoView(SelectedIndex);
             }
             else if (value == -1)
