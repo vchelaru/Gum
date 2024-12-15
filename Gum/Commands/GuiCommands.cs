@@ -57,7 +57,7 @@ namespace Gum.Commands
         /// <summary>
         /// Refreshes the displayed values without clearing and recreating the grid
         /// </summary>
-        public void RefreshPropertyGridValues()
+        public void RefreshVariableValues()
         {
             PropertyGridManager.Self.RefreshVariablesDataGridValues();
         }

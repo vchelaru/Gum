@@ -280,21 +280,7 @@ namespace Gum.Wireframe.Editors
                 mHasChangedAnythingSinceLastPush = false;
                 if(IsPointOverAddPointSprite(x, y))
                 {
-                    var newIndex = GetClosestLineOver(x, y) + 1;
-
-                    var selectedPoly = SelectedLinePolygon;
-
-                    var newPoint = (selectedPoly.PointAt(newIndex - 1) + selectedPoly.PointAt(newIndex)) / 2.0f;
-
-                    selectedPoly.InsertPointAt(newPoint, newIndex);
-
-                    // fall through to the next part, to grab the point automatically
-
-
-                    grabbedState.HandlePush();
-
-                    hasGrabbedBodyOrPoint = true;
-                    mHasChangedAnythingSinceLastPush = true;
+                    int newIndex = AddPointAt(x, y);
 
                     grabbedIndex = newIndex;
                 }
@@ -308,6 +294,29 @@ namespace Gum.Wireframe.Editors
                 selectedIndex = grabbedIndex;
 
             }
+        }
+
+        private int AddPointAt(float x, float y)
+        {
+            var newIndex = GetClosestLineOver(x, y) + 1;
+
+            var selectedPoly = SelectedLinePolygon;
+
+            var newPoint = (selectedPoly.PointAt(newIndex - 1) + selectedPoly.PointAt(newIndex)) / 2.0f;
+
+            selectedPoly.InsertPointAt(newPoint, newIndex);
+
+            // fall through to the next part, to grab the point automatically
+
+
+            grabbedState.HandlePush();
+
+            hasGrabbedBodyOrPoint = true;
+            mHasChangedAnythingSinceLastPush = true;
+
+            GumCommands.Self.GuiCommands.RefreshVariableValues();
+
+            return newIndex;
         }
 
         private void ClickActivity()
@@ -392,34 +401,41 @@ namespace Gum.Wireframe.Editors
                 }
             }
 
-            if(grabbedIndex != null && linePolygon != null)
+            if(grabbedIndex != null && linePolygon != null && (cursor.XChange != 0 || cursor.YChange != 0))
             {
-
-                if(cursor.XChange != 0 || cursor.YChange != 0)
-                {
-                    mHasChangedAnythingSinceLastPush = true;
-
-                    var pointAtIndex = linePolygon.PointAt(grabbedIndex.Value);
-
-                    var zoom = Renderer.Self.Camera.Zoom;
-
-                    pointAtIndex.X += cursor.XChange / zoom;
-                    pointAtIndex.Y += cursor.YChange / zoom;
-
-                    var shouldSetFirstAndLast = (grabbedIndex == 0 || grabbedIndex == linePolygon.PointCount - 1) &&
-                        linePolygon.PointAt(0) == linePolygon.PointAt(linePolygon.PointCount - 1);
-
-                    if(shouldSetFirstAndLast)
-                    {
-                        linePolygon.SetPointAt(pointAtIndex, 0);
-                        linePolygon.SetPointAt(pointAtIndex, linePolygon.PointCount-1);
-                    }
-                    else
-                    {
-                        linePolygon.SetPointAt(pointAtIndex, grabbedIndex.Value);
-                    }
-                }
+                MoveGrabbedPoint(cursor);
             }
+        }
+
+        private void MoveGrabbedPoint(InputLibrary.Cursor cursor)
+        {
+            var linePolygon = SelectedLinePolygon;
+            mHasChangedAnythingSinceLastPush = true;
+
+            var pointAtIndex = linePolygon.PointAt(grabbedIndex.Value);
+
+            var zoom = Renderer.Self.Camera.Zoom;
+
+            pointAtIndex.X += cursor.XChange / zoom;
+            pointAtIndex.Y += cursor.YChange / zoom;
+
+            var shouldSetFirstAndLast = (grabbedIndex == 0 || grabbedIndex == linePolygon.PointCount - 1) &&
+                linePolygon.PointAt(0) == linePolygon.PointAt(linePolygon.PointCount - 1);
+
+            if (shouldSetFirstAndLast)
+            {
+                linePolygon.SetPointAt(pointAtIndex, 0);
+                linePolygon.SetPointAt(pointAtIndex, linePolygon.PointCount - 1);
+            }
+            else
+            {
+                linePolygon.SetPointAt(pointAtIndex, grabbedIndex.Value);
+            }
+
+            // The values haven't yet been pushed up to the 
+            // element/Instance, so this won't do anything yet.
+            // Instead we rely on DoEndOfSettingValuesLogic 
+            GumCommands.Self.GuiCommands.RefreshVariableValues();
         }
 
         private void BodyGrabbingActivity()

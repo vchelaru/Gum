@@ -256,6 +256,7 @@ namespace Gum.Wireframe
 
             UndoManager.Self.RecordUndo();
 
+            GumCommands.Self.GuiCommands.RefreshVariableValues();
 
             var element = SelectedState.Self.SelectedElement;
 

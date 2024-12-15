@@ -206,7 +206,7 @@ namespace Gum.Wireframe.Editors
                 VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(nameWithInstance,
                     GumState.Self.SelectedState.SelectedElement, GumState.Self.SelectedState.SelectedStateCategorySave);
 
-                GumCommands.Self.GuiCommands.RefreshPropertyGridValues();
+                GumCommands.Self.GuiCommands.RefreshVariableValues();
 
             }
         }

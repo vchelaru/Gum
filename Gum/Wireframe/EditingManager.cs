@@ -158,7 +158,9 @@ namespace Gum.Wireframe
                 {
                     //UpdateSelectedObjectsPositionAndDimensions();
 
-                    GumCommands.Self.GuiCommands.RefreshVariables();
+                    // It might be faster to only refresh values
+                    //GumCommands.Self.GuiCommands.RefreshVariables();
+                    GumCommands.Self.GuiCommands.RefreshVariableValues();
                 }
             }
 

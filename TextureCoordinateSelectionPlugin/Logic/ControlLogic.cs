@@ -383,7 +383,7 @@ namespace TextureCoordinateSelectionPlugin.Logic
                 state.SetValue($"{instancePrefix}Texture Height", graphicalUiElement.TextureHeight, "int");
 
                 
-                GumCommands.Self.GuiCommands.RefreshPropertyGridValues();
+                GumCommands.Self.GuiCommands.RefreshVariableValues();
             }
 
             RefreshNineSliceGuides();

@@ -265,7 +265,7 @@ namespace Gum.PropertyGridHelpers
 
             if (unqualifiedName == "VariableReferences")
             {
-                GumCommands.Self.GuiCommands.RefreshPropertyGridValues();
+                GumCommands.Self.GuiCommands.RefreshVariableValues();
             }
 
             // Oct 13, 2022
