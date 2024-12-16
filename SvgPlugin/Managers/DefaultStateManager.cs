@@ -269,7 +269,7 @@ namespace SkiaPlugin.Managers
 
         private static void AddVisibleVariable(StateSave state)
         {
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible" });
+            state.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
         }
 
         private static void AddVariableReferenceList(StateSave stateSave)

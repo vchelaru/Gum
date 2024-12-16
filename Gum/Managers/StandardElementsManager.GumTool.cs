@@ -29,7 +29,7 @@ namespace Gum.Managers
             {
                 foreach(var variable in state.Variables)
                 {
-                    if(variable.Type == "float" && variable.Name == "Rotation")
+                    if (variable.Type == "float" && variable.Name == "Rotation")
                     {
                         MakeDegreesAngle(variable);
                     }
@@ -40,6 +40,7 @@ namespace Gum.Managers
                     }
                     else if(variable.Type == "State" && variable.Name == "State")
                     {
+                        variable.Category = "States and Visibility";
                         variable.CustomTypeConverter = new AvailableStatesConverter(null);
                     }
                 }
