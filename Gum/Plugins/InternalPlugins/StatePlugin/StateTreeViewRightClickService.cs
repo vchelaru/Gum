@@ -56,7 +56,7 @@ public class StateTreeViewRightClickService
             {
                 AddSplitter();
                 AddMenuItem("Rename State", RenameStateClick);
-                AddMenuItem("Delete " + _selectedState.SelectedStateSave.Name, DeleteStateClick);
+                AddMenuItem("Delete [" + _selectedState.SelectedStateSave.Name + "]", DeleteStateClick);
                 AddMenuItem("Duplicate State", DuplicateStateClick);
 
                 AddMoveToCategoryItems();
@@ -67,7 +67,10 @@ public class StateTreeViewRightClickService
                 {
                     AddMenuItem("^ Move Up", MoveUpClick, "Alt+Up");
                 }
-                AddMenuItem("v Move Down", MoveDownClick, "Alt+Down");
+                if (GetIfCanMoveDown(_selectedState.SelectedStateSave, _selectedState.SelectedStateCategorySave))
+                {
+                    AddMenuItem("v Move Down", MoveDownClick, "Alt+Down");
+                }
             }
         }
         // We used to show the category editing commands if a state was selected 
@@ -82,7 +85,7 @@ public class StateTreeViewRightClickService
             AddMenuItem("Rename Category", RenameCategoryClick);
 
 
-            AddMenuItem("Delete " + _selectedState.SelectedStateCategorySave.Name, DeleteCategoryClick);
+            AddMenuItem("Delete [" + _selectedState.SelectedStateCategorySave.Name + "]", DeleteCategoryClick);
         }
     }
 
@@ -129,7 +132,7 @@ public class StateTreeViewRightClickService
                 list.Insert(oldIndex - 1, state);
                 shouldSave = true;
             }
-            else if(direction == 1 &&  oldIndex != list.Count-1)
+            else if(direction == 1 && GetIfCanMoveDown(state, _selectedState.SelectedStateCategorySave))
             {
                 list.RemoveAt(oldIndex);
                 list.Insert(oldIndex + 1, state);
@@ -141,6 +144,8 @@ public class StateTreeViewRightClickService
                 GumCommands.Self.GuiCommands.RefreshStateTreeView();
 
                 GumCommands.Self.FileCommands.TryAutoSaveCurrentObject();
+
+                PopulateMenuStrip();
             }
         }
     }
@@ -163,6 +168,19 @@ public class StateTreeViewRightClickService
         }
 
         return stateIndex > indexToBeGreaterThan;
+    }
+
+    bool GetIfCanMoveDown(StateSave state, StateSaveCategory category)
+    {
+        //var list = _selectedState.SelectedStateContainer.UncategorizedStates;
+        var list = _selectedState.SelectedStateCategorySave.States;
+        if (category != null)
+        {
+            list = category.States;
+        }
+
+        int oldIndex = list.IndexOf(state);
+        return oldIndex != list.Count - 1;
     }
 
 
