@@ -80,11 +80,17 @@ namespace Gum.Reflection
                 if (typeAsString == "decimal") return typeof(decimal);
                 if (typeAsString == "decimal?") return typeof(decimal?);
                 if (typeAsString == "string") return typeof(string);
-                if (typeAsString == "List<string>") return typeof(List<string>);
                 if (typeAsString == "long") return typeof(long);
                 if (typeAsString == "long?") return typeof(long?);
                 if (typeAsString == "char") return typeof(char);
 
+                if (typeAsString == "List<string>") return typeof(List<string>);
+                if (typeAsString == "List<int>") return typeof(List<int>);
+                if (typeAsString == "List<double>") return typeof(List<double>);
+                if (typeAsString == "List<bool>") return typeof(List<bool>);
+                if (typeAsString == "List<float>") return typeof(List<float>);
+                if (typeAsString == "List<Vector2>") return typeof(List<System.Numerics.Vector2>);
+                if (typeAsString == "List<System.Numerics.Vector2>") return typeof(List<System.Numerics.Vector2>);
 
                 foreach (Type type in mTypes)
                 {

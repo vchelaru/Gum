@@ -598,11 +598,7 @@ namespace Gum.PropertyGridHelpers
                     }
                     else
                     {
-                        var listVariableType = elementSave.GetVariableListFromThisOrBase(Name)?.Type;
-                        if (!string.IsNullOrEmpty(listVariableType))
-                        {
-                            variableType = $"List<{listVariableType}>";
-                        }
+                        variableType = elementSave.GetVariableListFromThisOrBase(Name)?.Type;
                     }
 
 
@@ -933,8 +929,10 @@ namespace Gum.PropertyGridHelpers
 
             if (InstanceSave != null)
             {
-                typeName = InstanceSave?.GetVariableListFromThisOrBase(
-                    InstanceSave.ParentContainer, RootVariableName)?.Type;
+                var variableList = InstanceSave?.GetVariableListFromThisOrBase(
+                    InstanceSave.ParentContainer, RootVariableName);
+
+                typeName = variableList?.Type;
             }
             else
             {

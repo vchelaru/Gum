@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Numerics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -125,6 +126,19 @@ namespace WpfDataUi.Controls
                 result = value;
                 return ApplyValueResult.Success;
             }
+            else if (propertyType == typeof(List<Vector2>))
+            {
+                var value = new List<Vector2>();
+                foreach (var item in ListBox.Items)
+                {
+                    if (TryParse(item?.ToString(), out Vector2? vectorResult))
+                    {
+                        value.Add(vectorResult.Value);
+                    }
+                }
+                result = value;
+                return ApplyValueResult.Success;
+            }
             else
             {
                 result = null;
@@ -219,25 +233,35 @@ namespace WpfDataUi.Controls
             var listToAddTo = ListBox.ItemsSource as IList;
             if (listToAddTo != null)
             {
-                if(listToAddTo is List<string>)
+                if(listToAddTo is List<string> stringList)
                 {
-                    var list = listToAddTo as List<string>;
-                    list.Add(text);
+                    stringList.Add(text);
                 }
-                else if (listToAddTo is List<int>)
+                else if (listToAddTo is List<int> intList)
                 {
-                    var list = listToAddTo as List<int>;
                     if (int.TryParse(text, out int intResult))
                     {
-                        list.Add(intResult);
+                        intList.Add(intResult);
                     }
                 }
-                else if (listToAddTo is List<float>)
+                else if (listToAddTo is List<float> floatList)
                 {
-                    var list = listToAddTo as List<float>;
                     if (float.TryParse(text, out float floatResult))
                     {
-                        list.Add(floatResult);
+                        floatList.Add(floatResult);
+                    }
+                }
+                else if(listToAddTo is List<System.Numerics.Vector2> vector2List)
+                {
+                    Vector2? toAdd = null;
+
+                    if(TryParse(text, out toAdd))
+                    {
+                        vector2List.Add(toAdd.Value);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Could not parse the values. Value must be two numbers separated by a comma, such as \"10,20\"");
                     }
                 }
             }
@@ -247,6 +271,35 @@ namespace WpfDataUi.Controls
             this.TrySetValueOnInstance();
 
             TryDoManualRefresh();
+        }
+
+        private static bool TryParse(string text, out Vector2? parsedValue)
+        {
+            parsedValue = null;
+
+            if(text?.StartsWith("<") == true)
+            {
+                text = text.Substring(1);
+            }
+            if(text?.EndsWith(">") == true)
+            {
+                text = text.Substring(0, text.Length - 1);
+            }
+
+            if (text?.Contains(",") == true)
+            {
+                var splitValues = text.Split(',');
+
+                if (splitValues.Length == 2)
+                {
+                    if (float.TryParse(splitValues[0], out float firstValue) &&
+                        float.TryParse(splitValues[1], out float secondValue))
+                    {
+                        parsedValue = new Vector2(firstValue, secondValue);
+                    }
+                }
+            }
+            return parsedValue != null;
         }
 
         private void TryDoManualRefresh()

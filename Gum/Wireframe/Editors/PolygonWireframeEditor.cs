@@ -365,6 +365,7 @@ namespace Gum.Wireframe.Editors
                 {
                     pointsVariableList = new VariableListSave<Vector2>();
                     pointsVariableList.Name = variableName;
+                    pointsVariableList.Type = "Vector2";
                     SelectedState.Self.SelectedStateSave.VariableLists.Add(pointsVariableList);
                 }
                 pointsVariableList.ValueAsIList = vectors;

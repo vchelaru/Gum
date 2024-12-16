@@ -180,6 +180,15 @@ namespace Gum.DataTypes
                         // See the VariableSave section on why we don't set
                         // wasModified = true here
                         existingList.Category = variableList.Category;
+
+                        // on December 16, 2024 the Polygon class was given a
+                        // new "Vector2" type. Old projects do not have this type
+                        // so we should check and add it if not:
+                        if(existingList.Type != variableList.Type)
+                        {
+                            existingList.Type = variableList.Type;
+                            wasModified = true;
+                        }
                     }
                 }
 

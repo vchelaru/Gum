@@ -387,7 +387,7 @@ namespace Gum.Managers
                 AddRotationVariable(stateSave);
 
                 var pointsVariable = new VariableListSave<Vector2>()
-                { Name = "Points", Category = "Points" };
+                { Name = "Points", Category = "Points" , Type = "Vector2"};
 
                 pointsVariable.Value.Add(new Vector2(-32, -32));
                 pointsVariable.Value.Add(new Vector2(32, -32));

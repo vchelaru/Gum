@@ -17,7 +17,7 @@ namespace Gum.DataTypes.Variables
     public abstract class VariableListSave
     {
         /// <summary>
-        ///  The type of each individual item in the list
+        ///  The type of each individual item in the list. For example, this should be "int" rather than a list of int
         /// </summary>
         public string Type
         {

@@ -5,6 +5,7 @@ using Gum.Managers;
 using System.Collections;
 using ToolsUtilities;
 using System.CodeDom;
+using System.Reflection.Emit;
 //using Gum.Wireframe;
 
 
@@ -483,7 +484,14 @@ namespace Gum.DataTypes.Variables
 
 
 
-
+        /// <summary>
+        /// Sets the value on the argument instance save, determining internally if it is a VariableSave or VariableListSave.
+        /// </summary>
+        /// <param name="stateSave">The StateSave which contains the variable, or which will be given the new variable.</param>
+        /// <param name="variableName">The name of the variable</param>
+        /// <param name="value">The value of the variable</param>
+        /// <param name="instanceSave">The instance modified by the variable.</param>
+        /// <param name="variableType">The type of the variable. If this is a VariableList, then the type of the items inside the list (like int)</param>
         public static void SetValue(this StateSave stateSave, string variableName, object value,
             InstanceSave instanceSave = null, string variableType = null)
         {
@@ -542,7 +550,11 @@ namespace Gum.DataTypes.Variables
 
                 if (value != null && value is IList)
                 {
-                    stateSave.AssignVariableListSave(variableName, value, instanceSave);
+                    // This should already be the type
+                    // in the list like "int" and not "List<int>"
+                    string typeInList = variableType;
+
+                    stateSave.AssignVariableListSave(variableName, value, instanceSave, typeInList);
                 }
                 else
                 {
@@ -625,7 +637,7 @@ namespace Gum.DataTypes.Variables
         }
 
 
-        private static void AssignVariableListSave(this StateSave stateSave, string variableName, object value, InstanceSave instanceSave)
+        private static void AssignVariableListSave(this StateSave stateSave, string variableName, object value, InstanceSave instanceSave, string? typeInList = null)
         {
             VariableListSave variableListSave = stateSave.GetVariableListSave(variableName);
 
@@ -635,7 +647,15 @@ namespace Gum.DataTypes.Variables
                 {
                     variableListSave = new VariableListSave<string>();
                 }
-                variableListSave.Type = "string";
+                else if (value is List<System.Numerics.Vector2>)
+                {
+                    variableListSave = new VariableListSave<System.Numerics.Vector2>();
+                }
+                else
+                {
+                    throw new NotImplementedException($"Error setting List value to type {value?.GetType()} - need to add explicit support for this type");
+                }
+                variableListSave.Type = typeInList ?? "string";
 
                 variableListSave.Name = variableName;
 
