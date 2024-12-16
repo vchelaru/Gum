@@ -392,12 +392,14 @@ public class StateTreeViewModel : ViewModel
         var stateVm = Categories.SelectMany(item => item.States).FirstOrDefault(item => item.Data == state);
 
         stateVm?.ForceRefreshTitle();
+        _stateTreeViewRightClickService.PopulateMenuStrip();
     }
 
     internal void HandleRename(StateSaveCategory category)
     {
         var categoryVm = Categories.FirstOrDefault(item => item.Data == category);
         categoryVm?.ForceRefreshTitle();
+        _stateTreeViewRightClickService.PopulateMenuStrip();
     }
 
     #endregion
