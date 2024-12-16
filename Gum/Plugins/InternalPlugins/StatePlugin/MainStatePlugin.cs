@@ -1,5 +1,6 @@
 ﻿using Gum.Controls;
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Mvvm;
@@ -49,6 +50,7 @@ public class MainStatePlugin : InternalPlugin
         this.StateRename += HandleStateRename;
         this.CategoryRename += HandleCategoryRename;
         this.ReactToStateStackingModeChange += HandleStateStackingModeChanged;
+        this.BehaviorSelected += HandleBehaviorSelected;
         stateTreeViewModel = new StateTreeViewModel(_stateTreeViewRightClickService);
 
         CreateNewStateTab();
@@ -60,6 +62,11 @@ public class MainStatePlugin : InternalPlugin
             this.stateView.StateContextMenuStrip,
             _stateTreeViewRightClickService,
             _hotkeyManager);
+    }
+
+    private void HandleBehaviorSelected(BehaviorSave behavior)
+    {
+        _stateTreeViewRightClickService.PopulateMenuStrip();
     }
 
     private void HandleStateStackingModeChanged(StateStackingMode mode)
