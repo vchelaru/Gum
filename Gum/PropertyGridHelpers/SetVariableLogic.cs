@@ -741,16 +741,28 @@ namespace Gum.PropertyGridHelpers
                         shouldAskToCopy = false;
                     }
 
+                    var cancel = false;
+
                     if (shouldAskToCopy)
                     {
-                        bool shouldCopy = AskIfShouldCopy(variable, value);
-                        if (shouldCopy)
+                        var shouldCopy = AskIfShouldCopy(variable, value);
+                        if (shouldCopy == true)
                         {
                             PerformCopy(variable, value);
                         }
+                        else if(shouldCopy == null)
+                        {
+                            cancel = true;
+                        }
                     }
 
-                    if (filePath.Extension == "achx")
+                    if(cancel)
+                    {
+                        variable.Value = oldValue;
+                        GumCommands.Self.GuiCommands.RefreshVariableValues();
+                    }
+
+                    if (!cancel && filePath.Extension == "achx")
                     {
                         stateSave.SetValue($"{instancePrefix}Texture Address", Gum.Managers.TextureAddress.Custom);
                         GumCommands.Self.GuiCommands.RefreshVariables(force: true);
@@ -811,7 +823,7 @@ namespace Gum.PropertyGridHelpers
             return whyInvalid;
         }
 
-        private static bool AskIfShouldCopy(VariableSave variable, string value)
+        private static bool? AskIfShouldCopy(VariableSave variable, string value)
         {
             // Ask the user what to do - make it relative?
             MultiButtonMessageBox mbmb = new
@@ -828,7 +840,7 @@ namespace Gum.PropertyGridHelpers
 
             var dialogResult = mbmb.ShowDialog();
 
-            bool shouldCopy = false;
+            bool? shouldCopy = false;
 
             string directory = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
             string targetAbsoluteFile = directory + FileManager.RemovePath(value);
@@ -845,11 +857,30 @@ namespace Gum.PropertyGridHelpers
                     mbmb.AddButton("Yes", DialogResult.Yes);
                     mbmb.AddButton("No, use the original file", DialogResult.No);
 
-                    shouldCopy = mbmb.ShowDialog() == DialogResult.Yes;
+                    var overwriteResult = mbmb.ShowDialog();
+
+                    if(overwriteResult == DialogResult.Yes)
+                    {
+                        shouldCopy = true;
+                    }
+                    else if(overwriteResult == DialogResult.No)
+                    {
+                        shouldCopy = false;
+                    }
+                    else 
+                    {
+                        shouldCopy = null;
+                    }
                 }
-
             }
-
+            else if (dialogResult == DialogResult.OK)
+            {
+                shouldCopy = false;
+            }
+            else
+            {
+                shouldCopy = null;
+            }
             return shouldCopy;
         }
 
