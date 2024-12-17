@@ -631,7 +631,13 @@ namespace Gum.Managers
                 stateSave.Variables.Add(verticalAlignmentVariable);
             }
 
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = null, Name = "Guide", Category = "Position" });
+            // Removed December 16, 2024
+            // This duplicates functionality
+            // that you can get from adding containers
+            // to a screen. It's not documente, hasn't been
+            // tested, and probably doesn't work in some environments
+            // like MonoGame
+            //stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = null, Name = "Guide", Category = "Position" });
             AddParentVariables(stateSave);
         }
 
