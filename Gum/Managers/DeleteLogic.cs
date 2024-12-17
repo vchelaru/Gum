@@ -36,6 +36,9 @@ namespace Gum.Managers
 
                 var selectedElement = SelectedState.Self.SelectedElement;
                 var selectedInstance = SelectedState.Self.SelectedInstance;
+                var selectedBehavior = SelectedState.Self.SelectedBehavior;
+
+                var selectedStateContainer = (IStateContainer)selectedElement ?? selectedBehavior;
 
                 if (SelectedState.Self.SelectedInstances.Count() > 1)
                 {
@@ -67,19 +70,22 @@ namespace Gum.Managers
                             // but we don't want that, we want to only do that if the user wants to do it, which 
                             // will be handled in a plugin
                             //Gum.ToolCommands.ElementCommands.Self.RemoveInstance(instance, selectedElement);
-                            selectedElement.Instances.Remove(selectedInstance);
                             var instanceName = selectedInstance.Name;
-
-                            selectedElement.Events.RemoveAll(item => item.GetSourceObject() == instanceName);
+                            if(selectedElement != null)
+                            {
+                                selectedElement.Instances.Remove(selectedInstance);
+                                selectedElement.Events.RemoveAll(item => item.GetSourceObject() == instanceName);
+                            }
+                            else if(selectedBehavior != null)
+                            {
+                                selectedBehavior.RequiredInstances.Remove(selectedInstance as BehaviorInstanceSave);
+                            }
 
                             // March 17, 2019
                             // Let's also delete
                             // any variables referencing
                             // this object
-                            var objectName = selectedInstance.Name;
-
-
-                            foreach (var state in selectedElement.AllStates)
+                            foreach (var state in selectedStateContainer.AllStates)
                             {
                                 state.Variables.RemoveAll(item => item.SourceObject == instanceName);
                                 state.VariableLists.RemoveAll(item => item.SourceObject == instanceName);
@@ -91,7 +97,7 @@ namespace Gum.Managers
 
                             var deletedSelection = SelectedState.Self.SelectedInstance == selectedInstance;
 
-                            RefreshAndSaveAfterInstanceRemoval(selectedElement);
+                            RefreshAndSaveAfterInstanceRemoval(selectedElement, selectedBehavior);
 
                             if (deletedSelection)
                             {
@@ -227,14 +233,13 @@ namespace Gum.Managers
                 if (result == DialogResult.Yes)
                 {
                     ElementSave selectedElement = SelectedState.Self.SelectedElement;
-
                     foreach (var instance in deletableInstances)
                     {
                         Gum.ToolCommands.ElementCommands.Self.RemoveInstance(instance,
                             selectedElement);
                     }
 
-                    RefreshAndSaveAfterInstanceRemoval(selectedElement);
+                    RefreshAndSaveAfterInstanceRemoval(selectedElement, null);
                 }
             }
             else if (instancesFromBase.Any())
@@ -265,25 +270,41 @@ namespace Gum.Managers
                     Gum.ToolCommands.ElementCommands.Self.RemoveInstances(instancesToRemove,
                         selectedElement);
 
-                    RefreshAndSaveAfterInstanceRemoval(selectedElement);
+                    RefreshAndSaveAfterInstanceRemoval(selectedElement, null);
                 }
             }
         }
 
-        private static void RefreshAndSaveAfterInstanceRemoval(ElementSave selectedElement)
+        private static void RefreshAndSaveAfterInstanceRemoval(ElementSave selectedElement, BehaviorSave behavior)
         {
-            GumCommands.Self.FileCommands.TryAutoSaveElement(selectedElement);
+            if(selectedElement != null)
+            {
+                GumCommands.Self.FileCommands.TryAutoSaveElement(selectedElement);
+            }
+            else if(behavior != null)
+            {
+                GumCommands.Self.FileCommands.TryAutoSaveBehavior(behavior);
+            }
 
             ElementSave elementToReselect = selectedElement;
+            BehaviorSave behaviorToReselect = behavior;
+
             // Deselect before selecting the new
             // selected element and before refreshing everything
             SelectionManager.Self.Deselect();
 
             SelectedState.Self.SelectedInstance = null;
-            SelectedState.Self.SelectedElement = elementToReselect;
+            if(selectedElement != null)
+            {
+                SelectedState.Self.SelectedElement = elementToReselect;
+                GumCommands.Self.GuiCommands.RefreshElementTreeView(selectedElement);
+            }
+            else if(behavior != null)
+            {
+                SelectedState.Self.SelectedBehavior = behaviorToReselect;
+                GumCommands.Self.GuiCommands.RefreshElementTreeView(behavior);
+            }
 
-
-            GumCommands.Self.GuiCommands.RefreshElementTreeView(selectedElement);
             WireframeObjectManager.Self.RefreshAll(true);
 
             SelectionManager.Self.Refresh();

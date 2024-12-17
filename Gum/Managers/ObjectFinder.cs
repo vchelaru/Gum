@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Management.Instrumentation;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
@@ -497,20 +498,20 @@ namespace Gum.Managers
             return null;
         }
 
-        public ElementSave GetContainerOf(InstanceSave instance)
+        public ElementSave GetElementContainerOf(InstanceSave instanceSave)
         {
-            if(GumProjectSave != null)
+            if (GumProjectSave != null)
             {
-                foreach(var screen in GumProjectSave.Screens)
+                foreach (var screen in GumProjectSave.Screens)
                 {
-                    if(screen.Instances.Contains(instance))
+                    if (screen.Instances.Contains(instanceSave))
                     {
                         return screen;
                     }
                 }
                 foreach (var component in GumProjectSave.Components)
                 {
-                    if (component.Instances.Contains(instance))
+                    if (component.Instances.Contains(instanceSave))
                     {
                         return component;
                     }
@@ -526,6 +527,10 @@ namespace Gum.Managers
             }
             return null;
         }
+
+        [Obsolete("GetElementContainerOf to clearly indicate that the method does return behaviors. ")]
+        public ElementSave GetContainerOf(InstanceSave instance) =>
+            GetElementContainerOf(instance);
 
         public ElementSave GetContainerOf(VariableSave variable)
         {
@@ -607,6 +612,11 @@ namespace Gum.Managers
 
         private void FillListWithElementsInheriting(ElementSave element, List<ElementSave> listToAddTo)
         {
+            if(element == null)
+            {
+                throw new ArgumentNullException(nameof(element));
+            }
+
             if(element is ScreenSave)
             {
                 var screensInheriting = GumProjectSave.Screens
@@ -1220,57 +1230,93 @@ namespace Gum.Managers
         public static InstanceSave GetParentInstance(this InstanceSave instanceSave)
         {
             var container = instanceSave.ParentContainer;
-            var defaultState = container.DefaultState;
-            var thisParentValue = defaultState.GetValueOrDefault<string>($"{instanceSave.Name}.Parent");
+            if(container == null)
+            {
+                // do something with behaviors?
+                return null;
+            }
+            else
+            {
+                var defaultState = container.DefaultState;
+                var thisParentValue = defaultState.GetValueOrDefault<string>($"{instanceSave.Name}.Parent");
 
-            return container.Instances.FirstOrDefault(item => item.Name == thisParentValue);
+                return container.Instances.FirstOrDefault(item => item.Name == thisParentValue);
+
+            }
 
         }
 
         public static List<InstanceSave> GetSiblingsIncludingThis(this InstanceSave thisInstance)
         {
             var container = thisInstance.ParentContainer;
+            BehaviorSave containerBehavior = null;
 
-            List<InstanceSave> toReturn = new List<InstanceSave>();
-
-            var defaultState = container.DefaultState;
-            var rfv = new RecursiveVariableFinder(defaultState);
-
-            var thisParentValueIgnoringInnerParents = rfv.GetValue($"{thisInstance.Name}.Parent") as string;
-
-            if(thisParentValueIgnoringInnerParents?.Contains(".") == true)
+            StateSave defaultState = null;
+            if(container != null)
             {
-                thisParentValueIgnoringInnerParents = 
-                    thisParentValueIgnoringInnerParents.Substring(0, thisParentValueIgnoringInnerParents.IndexOf("."));
-            }
+                defaultState = container.DefaultState;
 
-            // Need to only consider the parent if it actually exists (also done below)
-            if(container.GetInstance(thisParentValueIgnoringInnerParents) == null)
-            {
-                thisParentValueIgnoringInnerParents = null;
-            }
 
-            foreach (var instance in container.Instances)
-            {
-                var parentVariableName = $"{instance.Name}.Parent";
-                //var instanceParentVariable = defaultState.GetValueOrDefault<string>(parentVariableName);
-                var instanceParentVariable = rfv.GetValue(parentVariableName) as string;
-                if(instanceParentVariable?.Contains(".") == true)
+                List<InstanceSave> toReturn = new List<InstanceSave>();
+
+                var rfv = new RecursiveVariableFinder(defaultState);
+
+                var thisParentValueIgnoringInnerParents = rfv.GetValue($"{thisInstance.Name}.Parent") as string;
+
+                if (thisParentValueIgnoringInnerParents?.Contains(".") == true)
                 {
-                    instanceParentVariable = instanceParentVariable.Substring(0, instanceParentVariable.IndexOf("."));
-                }
-                if(container.GetInstance(instanceParentVariable) == null)
-                {
-                    instanceParentVariable = null;
+                    thisParentValueIgnoringInnerParents =
+                        thisParentValueIgnoringInnerParents.Substring(0, thisParentValueIgnoringInnerParents.IndexOf("."));
                 }
 
-                if (thisParentValueIgnoringInnerParents == instanceParentVariable)
+                // Need to only consider the parent if it actually exists (also done below)
+                if (container.GetInstance(thisParentValueIgnoringInnerParents) == null)
                 {
-                    toReturn.Add(instance);
+                    thisParentValueIgnoringInnerParents = null;
+                }
+
+                foreach (var instance in container.Instances)
+                {
+                    var parentVariableName = $"{instance.Name}.Parent";
+                    //var instanceParentVariable = defaultState.GetValueOrDefault<string>(parentVariableName);
+                    var instanceParentVariable = rfv.GetValue(parentVariableName) as string;
+                    if (instanceParentVariable?.Contains(".") == true)
+                    {
+                        instanceParentVariable = instanceParentVariable.Substring(0, instanceParentVariable.IndexOf("."));
+                    }
+                    if (container.GetInstance(instanceParentVariable) == null)
+                    {
+                        instanceParentVariable = null;
+                    }
+
+                    if (thisParentValueIgnoringInnerParents == instanceParentVariable)
+                    {
+                        toReturn.Add(instance);
+                    }
+                }
+
+                return toReturn;
+            }
+            else
+            {
+                foreach(var behavior in ObjectFinder.Self.GumProjectSave.Behaviors)
+                {
+                    if(behavior.RequiredInstances.Contains(thisInstance))
+                    {
+                        containerBehavior = behavior;
+                        break;
+                    }
+                }
+
+                if(containerBehavior != null)
+                {
+                    return containerBehavior.RequiredInstances.ToList<InstanceSave>();
+                }
+                else
+                {
+                    return new List<InstanceSave>() { thisInstance};
                 }
             }
-
-            return toReturn;
         }
     }
 }

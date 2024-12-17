@@ -50,15 +50,18 @@ namespace Gum.Plugins.Inheritance
 
         private void HandleInstanceDeleted(ElementSave container, InstanceSave instance)
         {
-            var elementsInheritingFromContainer =
-                ObjectFinder.Self.GetElementsInheritingFrom(container);
-
-            foreach(var inheritingElement in elementsInheritingFromContainer)
+            if(container != null)
             {
-                inheritingElement.Instances.RemoveAll(item => item.Name == instance.Name);
+                var elementsInheritingFromContainer =
+                    ObjectFinder.Self.GetElementsInheritingFrom(container);
 
-                GumCommands.Self.FileCommands.TryAutoSaveElement(inheritingElement);
-                GumCommands.Self.GuiCommands.RefreshElementTreeView(inheritingElement);
+                foreach(var inheritingElement in elementsInheritingFromContainer)
+                {
+                    inheritingElement.Instances.RemoveAll(item => item.Name == instance.Name);
+
+                    GumCommands.Self.FileCommands.TryAutoSaveElement(inheritingElement);
+                    GumCommands.Self.GuiCommands.RefreshElementTreeView(inheritingElement);
+                }
             }
         }
 

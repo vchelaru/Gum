@@ -67,6 +67,26 @@ public class SelectedState : ISelectedState
         return null;
     }
 
+    TreeNode GetBehaviorTreeNodeRoot(TreeNode treeNode)
+    {
+        while(treeNode != null)
+        {
+            if (treeNode.Tag is BehaviorSave)
+            {
+                return treeNode;
+            }
+            else if (!treeNode.IsTopBehaviorTreeNode())
+            {
+                treeNode = treeNode.Parent;
+            }
+            else
+            {
+                return null;
+            }
+        }
+        return null;
+    }
+
     public ScreenSave SelectedScreen
     {
         get
@@ -104,16 +124,7 @@ public class SelectedState : ISelectedState
     {
         get
         {
-            TreeNode treeNode = ElementTreeViewManager.Self.SelectedNode;
-
-            if (treeNode != null && treeNode.IsBehaviorTreeNode())
-            {
-                return treeNode.Tag as BehaviorSave;
-            }
-            else
-            {
-                return null;
-            }
+            return GetBehaviorTreeNodeRoot(ElementTreeViewManager.Self.SelectedNode)?.Tag as BehaviorSave;
         }
         set
         {

@@ -191,7 +191,7 @@ namespace Gum.Gui.Plugins
         void HandleDeleteOptionsShow(Windows.DeleteOptionsWindow deleteWindow, object objectToDelete)
         {
             var objectAsInstance = objectToDelete as InstanceSave;
-            if(objectAsInstance != null)
+            if(objectAsInstance?.ParentContainer != null)
             {
                 var parentContainer = objectAsInstance.ParentContainer;
 

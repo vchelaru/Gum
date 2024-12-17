@@ -311,7 +311,7 @@ public partial class ElementTreeViewManager
                 mMenuStrip.Items.Add(mAddParentInstance);
 
                 var container = SelectedState.Self.SelectedElement;
-                if(!string.IsNullOrEmpty(container.BaseType))
+                if(!string.IsNullOrEmpty(container?.BaseType))
                 {
                     var containerBase = ObjectFinder.Self.GetElementSave(container.BaseType);
 
