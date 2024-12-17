@@ -549,6 +549,12 @@ namespace Gum.Managers
             ///////////////End Early Out//////////////
 
             GumCommands.Self.ProjectCommands.ElementCommands.AddBehaviorTo(behavior, targetComponent);
+
+            if(targetComponent == SelectedState.Self.SelectedComponent)
+            {
+                GumCommands.Self.GuiCommands.RefreshStateTreeView();
+                GumCommands.Self.GuiCommands.BroadcastRefreshBehaviorView();
+            }
         }
 
         #endregion

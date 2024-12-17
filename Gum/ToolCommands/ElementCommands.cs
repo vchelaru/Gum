@@ -8,6 +8,7 @@ using Gum.Plugins;
 using Gum.ToolStates;
 using Gum.PropertyGridHelpers;
 using Gum.DataTypes.Behaviors;
+using System.ComponentModel;
 
 namespace Gum.ToolCommands
 {
@@ -369,6 +370,11 @@ namespace Gum.ToolCommands
             var behaviorReference = new ElementBehaviorReference();
             behaviorReference.BehaviorName = behaviorName;
             componentSave.Behaviors.Add(behaviorReference);
+
+            var project = ProjectManager.Self.GumProjectSave;
+            var behaviorSave = project.Behaviors.FirstOrDefault(item => item.Name == behaviorName);
+
+            GumCommands.Self.ProjectCommands.ElementCommands.AddCategoriesFromBehavior(behaviorSave, componentSave);
 
             GumCommands.Self.GuiCommands.PrintOutput($"Added behavior {behaviorName} to {componentSave}");
 

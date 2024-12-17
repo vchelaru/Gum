@@ -164,23 +164,14 @@ public class MainBehaviorsPlugin : InternalPlugin
             // ask the user what to do
         }
 
-        foreach (var behaviorName in addedBehaviors)
-        {
-            var project = ProjectManager.Self.GumProjectSave;
-            var behaviorSave = project.Behaviors.FirstOrDefault(item => item.Name == behaviorName);
-
-            GumCommands.Self.ProjectCommands.ElementCommands.AddCategoriesFromBehavior(behaviorSave, component);
-        }
-
         component.Behaviors.Clear();
         foreach (var behavior in viewModel.AllBehaviors.Where(item => item.IsChecked))
         {
-
             GumCommands.Self.ProjectCommands.ElementCommands.AddBehaviorTo(behavior.Name, component, performSave: false);
         }
 
         GumCommands.Self.GuiCommands.RefreshStateTreeView();
-        GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+        GumCommands.Self.FileCommands.TryAutoSaveElement(component);
 
         viewModel.UpdateTo(component);
 
