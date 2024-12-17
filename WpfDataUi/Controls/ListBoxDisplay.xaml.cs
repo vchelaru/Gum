@@ -193,10 +193,15 @@ namespace WpfDataUi.Controls
                 if(selectedItem > -1)
                 {
                     var listToRemoveFrom = ListBox.ItemsSource as IList;
-
+                    
                     if(ListBox.SelectedIndex < listToRemoveFrom.Count)
                     {
-                        listToRemoveFrom.RemoveAt(ListBox.SelectedIndex);
+                        // Don't let a user delete the last 3 points in a Polygon (4th point is to close the shape)
+                        int minValue = ListIsPolygonPoints(listToRemoveFrom) ? 4 : 0;
+                        if (listToRemoveFrom.Count > minValue)
+                        {
+                            listToRemoveFrom.RemoveAt(ListBox.SelectedIndex);
+                        }
                     }
                 }
                 this.TrySetValueOnInstance();
@@ -221,6 +226,12 @@ namespace WpfDataUi.Controls
                     HandleAddTextItem(text);
                 }
             }
+        }
+
+        // TODO: Find a better way to determine if the ListView is Polygon Points
+        private bool ListIsPolygonPoints(IList testList)
+        {
+            return testList is List<System.Numerics.Vector2>;
         }
 
         private void OkButton_Click(object sender, RoutedEventArgs e)
