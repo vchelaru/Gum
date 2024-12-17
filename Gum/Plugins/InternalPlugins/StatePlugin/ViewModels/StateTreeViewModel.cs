@@ -96,6 +96,7 @@ public class StateTreeViewModel : ViewModel
             if (sender is StateViewModel stateVm && stateVm.IsSelected == true)
             {
                 GumState.Self.SelectedState.SelectedStateSave = stateVm.Data;
+                _stateTreeViewRightClickService.PopulateMenuStrip();
             }
             else if(sender is CategoryViewModel categoryVm && categoryVm.IsSelected)
             {
@@ -106,8 +107,8 @@ public class StateTreeViewModel : ViewModel
                     GumState.Self.SelectedState.SelectedStateCategorySave = null;
                 }
                 GumState.Self.SelectedState.SelectedStateCategorySave = categoryVm.Data;
+                _stateTreeViewRightClickService.PopulateMenuStrip();
             }
-            _stateTreeViewRightClickService.PopulateMenuStrip();
         }
         
     }

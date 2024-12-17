@@ -104,7 +104,7 @@ namespace Gum.Managers
 
         private void HandleBehaviorVariableSelected(object sender, EventArgs e)
         {
-            SelectedState.Self.UpdateToSelectedBehaviorVariable();
+            SelectedState.Self.SelectedBehaviorVariable = PropertyGridManager.Self.SelectedBehaviorVariable;
         }
 
         private void HandleAddVariable(object sender, EventArgs e)

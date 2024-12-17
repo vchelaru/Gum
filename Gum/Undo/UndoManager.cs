@@ -11,6 +11,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Windows.Controls;
 using Gum.DataTypes.Behaviors;
+using Gum.Managers;
 
 namespace Gum.Undo
 {
@@ -86,6 +87,8 @@ namespace Gum.Undo
         static UndoManager mSelf;
 
         UndoSnapshot recordedSnapshot;
+        private MenuStripManager _menuStripManager;
+
         public UndoSnapshot RecordedSnapshot => recordedSnapshot;
         public ElementHistory CurrentElementHistory
         {
@@ -120,6 +123,11 @@ namespace Gum.Undo
         {
             UndoLocks = new ObservableCollection<UndoLock>();
             UndoLocks.CollectionChanged += HandleUndoLockChanged;
+        }
+
+        public void Initialize(MenuStripManager menuStripManager)
+        {
+            _menuStripManager = menuStripManager;
         }
 
         private void HandleUndoLockChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -438,7 +446,7 @@ namespace Gum.Undo
             Plugins.PluginManager.Self.AfterUndo();
 
             GumCommands.Self.GuiCommands.RefreshElementTreeView(toApplyTo);
-            SelectedState.Self.UpdateToSelectedStateSave();
+            UpdateToSelectedStateSave();
 
             // The instances may have changed.  We will want 
             // to refresh the wireframe since the IPSOs in the 
@@ -473,6 +481,48 @@ namespace Gum.Undo
 
             // Don't do this anymore due to filtering through search
             //ElementTreeViewManager.Self.VerifyComponentsAreInTreeView(ProjectManager.Self.GumProjectSave);
+        }
+
+        private void UpdateToSelectedStateSave()
+        {
+            if (SelectedState.Self.StateStackingMode == StateStackingMode.SingleState)
+            {
+                // reset everything. This is slow, but is easy
+                WireframeObjectManager.Self.RefreshAll(true);
+            }
+            else
+            {
+
+                var currentGue = WireframeObjectManager.Self.GetSelectedRepresentation();
+
+                if (currentGue == null)
+                {
+                    currentGue = WireframeObjectManager.Self.RootGue;
+                }
+
+                if (currentGue != null && SelectedState.Self.SelectedStateSave != null)
+                {
+                    // Applying a state just stacks it on top of the current
+                    currentGue.ApplyState(SelectedState.Self.SelectedStateSave);
+                }
+            }
+
+            SelectionManager.Self.Refresh();
+
+
+
+            if (SelectedState.Self.SelectedStateSave != null)
+            {
+                StateTreeViewManager.Self.Select(SelectedState.Self.SelectedStateSave);
+            }
+            else if (SelectedState.Self.SelectedStateCategorySave != null)
+            {
+                StateTreeViewManager.Self.Select(SelectedState.Self.SelectedStateCategorySave);
+            }
+
+            GumCommands.Self.GuiCommands.RefreshVariables();
+
+            _menuStripManager.RefreshUI();
         }
 
         public void PerformRedo()

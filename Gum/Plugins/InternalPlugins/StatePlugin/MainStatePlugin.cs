@@ -51,6 +51,9 @@ public class MainStatePlugin : InternalPlugin
         this.CategoryRename += HandleCategoryRename;
         this.ReactToStateStackingModeChange += HandleStateStackingModeChanged;
         this.BehaviorSelected += HandleBehaviorSelected;
+        this.InstanceSelected += HandleInstanceSelected;
+        this.ElementSelected += HandleElementSelected;
+
         stateTreeViewModel = new StateTreeViewModel(_stateTreeViewRightClickService);
 
         CreateNewStateTab();
@@ -62,6 +65,20 @@ public class MainStatePlugin : InternalPlugin
             this.stateView.StateContextMenuStrip,
             _stateTreeViewRightClickService,
             _hotkeyManager);
+    }
+
+    private void HandleElementSelected(ElementSave save)
+    {
+        RefreshUI(SelectedState.Self.SelectedStateContainer, SelectedState.Self);
+    }
+
+    private void HandleInstanceSelected(ElementSave save1, InstanceSave save2)
+    {
+        // A user could directly select an instance in
+        // a different container such as going from a component
+        // to a selected instance in a behavior. In that case we
+        // still want to refresh the menu items.
+        _stateTreeViewRightClickService.PopulateMenuStrip();
     }
 
     private void HandleBehaviorSelected(BehaviorSave behavior)

@@ -190,10 +190,9 @@ namespace Gum.Managers
             else if(selectedItem is StateSaveCategory category)
             {
                 // todo:
-                //SelectedState.Self.SelectedStateCategorySave = category;
+                SelectedState.Self.SelectedStateCategorySave = category;
             }
 
-            SelectedState.Self.UpdateToSelectedStateSave();
             // refreshes the yellow highlights
 
             //GumCommands.Self.GuiCommands.RefreshStateTreeView();

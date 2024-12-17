@@ -1441,22 +1441,22 @@ namespace Gum.Managers
             {
                 if (selectedObject == null)
                 {
-                    SelectedState.Self.UpdateToSelectedElement();
+                    SelectedState.Self.SelectedElement = null;
+
                     // do nothing
                 }
-                else if(selectedObject is ElementSave)
+                else if(selectedObject is ElementSave elementSave)
                 {
-                    SelectedState.Self.UpdateToSelectedElement();
+                    SelectedState.Self.SelectedInstance = null;
+                    SelectedState.Self.SelectedElement = elementSave;
                 }
-                else if (selectedObject is InstanceSave)
+                else if (selectedObject is InstanceSave selectedInstance)
                 {
-                    SelectedState.Self.UpdateToSelectedInstanceSave();
-
-                    GumEvents.Self.CallInstanceSelected();
+                    SelectedState.Self.SelectedInstance = selectedInstance;
                 }
-                else if(selectedObject is BehaviorSave)
+                else if(selectedObject is BehaviorSave behavior)
                 {
-                    SelectedState.Self.UpdateToSelectedBehavior();
+                    SelectedState.Self.SelectedBehavior = behavior;
                 }
 
                 PluginManager.Self.TreeNodeSelected(selectedTreeNode);

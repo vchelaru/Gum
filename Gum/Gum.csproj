@@ -267,6 +267,7 @@
     <Compile Include="Plugins\InternalPlugins\TreeView\FlatSearchListBox.xaml.cs">
       <DependentUpon>FlatSearchListBox.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Plugins\InternalPlugins\TreeView\MainTreeViewPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\TreeView\ViewModels\SearchItemViewModel.cs" />
     <Compile Include="Plugins\InternalPlugins\Undos\Converters\UndoRedoToColorConverter.cs" />
     <Compile Include="Plugins\InternalPlugins\Undos\UndoItemViewModel.cs" />
