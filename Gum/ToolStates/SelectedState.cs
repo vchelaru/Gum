@@ -46,46 +46,6 @@ public class SelectedState : ISelectedState
         }
     }
 
-    TreeNode GetComponentTreeNodeRoot(TreeNode treeNode)
-    {
-        while (treeNode != null)
-        {
-            if (treeNode.Tag is ElementSave)
-            {
-                return treeNode;
-            }
-            else if (!treeNode.IsTopElementContainerTreeNode())
-            {
-                treeNode = treeNode.Parent;
-            }
-            else
-            {
-                return null;
-            }
-        }
-        return null;
-    }
-
-    TreeNode GetBehaviorTreeNodeRoot(TreeNode treeNode)
-    {
-        while (treeNode != null)
-        {
-            if (treeNode.Tag is BehaviorSave)
-            {
-                return treeNode;
-            }
-            else if (!treeNode.IsTopBehaviorTreeNode())
-            {
-                treeNode = treeNode.Parent;
-            }
-            else
-            {
-                return null;
-            }
-        }
-        return null;
-    }
-
     public ScreenSave SelectedScreen
     {
         get
@@ -679,7 +639,14 @@ public class SelectedState : ISelectedState
 /// </remarks>
 class SelectedStateSnapshot : ISelectedState
 {
-    public ScreenSave SelectedScreen { get; set; }
+    public ScreenSave SelectedScreen
+    {
+        get => SelectedElement as ScreenSave;
+        set
+        {
+            SelectedElement = value;
+        }
+    }
     public ElementSave SelectedElement
     {
         get => selectedElements.FirstOrDefault();
@@ -712,9 +679,18 @@ class SelectedStateSnapshot : ISelectedState
         get => (IStateContainer)SelectedElement ?? SelectedBehavior;
         set
         {
-            if(value is ElementSave elementSave)
+            if (value is ElementSave elementSave)
             {
-                Sele
+                SelectedElement = elementSave;
+            }
+            else if (value is BehaviorSave behaviorSave)
+            {
+                SelectedBehavior = behaviorSave;
+            }
+            else
+            {
+                SelectedElement = null;
+                SelectedBehavior = null;
             }
         }
     }
@@ -726,7 +702,14 @@ class SelectedStateSnapshot : ISelectedState
     public StateSave SelectedStateSaveOrDefault { get; set; }
 
     public StateSaveCategory SelectedStateCategorySave { get; set; }
-    public ComponentSave SelectedComponent { get; set; }
+    public ComponentSave SelectedComponent
+    {
+        get => SelectedElement as ComponentSave;
+        set
+        {
+            SelectedElement = value;
+        }
+    }
     //public InstanceSave SelectedInstance { get; set; }
     public InstanceSave SelectedInstance
     {
@@ -760,7 +743,14 @@ class SelectedStateSnapshot : ISelectedState
 
     public string SelectedVariableName { get; set; }
 
-    public StandardElementSave SelectedStandardElement { get; set; }
+    public StandardElementSave SelectedStandardElement
+    {
+        get => SelectedElement as StandardElementSave;
+        set
+        {
+            SelectedElement = value;
+        }
+    }
     public VariableSave SelectedVariableSave { get; set; }
     public VariableSave SelectedBehaviorVariable { get; set; }
 
@@ -773,31 +763,6 @@ class SelectedStateSnapshot : ISelectedState
     public StateStackingMode StateStackingMode { get; set; }
 
     public List<ElementWithState> GetTopLevelElementStack()
-    {
-        throw new NotImplementedException();
-    }
-
-    public void UpdateToSelectedBehavior()
-    {
-        throw new NotImplementedException();
-    }
-
-    public void UpdateToSelectedBehaviorVariable()
-    {
-        throw new NotImplementedException();
-    }
-
-    public void UpdateToSelectedElement()
-    {
-        throw new NotImplementedException();
-    }
-
-    public void UpdateToSelectedInstanceSave()
-    {
-        throw new NotImplementedException();
-    }
-
-    public void UpdateToSelectedStateSave()
     {
         throw new NotImplementedException();
     }
