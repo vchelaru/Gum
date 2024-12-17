@@ -17,13 +17,25 @@ internal class MainTreeViewPlugin : InternalPlugin
     public override void StartUp()
     {
         this.InstanceSelected += MainTreeViewPlugin_InstanceSelected;
+        this.ElementSelected += HandleElementSelected;
+    }
+
+    private void HandleElementSelected(ElementSave save)
+    {
+        if(save != null)
+        {
+            ElementTreeViewManager.Self.Select(save);
+        }
     }
 
     private void MainTreeViewPlugin_InstanceSelected(DataTypes.ElementSave element, DataTypes.InstanceSave instance)
     {
         if(element != null || instance != null)
         {
-            ElementTreeViewManager.Self.Select(instance, element);
+            if(instance != null)
+            {
+                ElementTreeViewManager.Self.Select(instance, element);
+            }
 
             if(instance == null && element != null)
             {

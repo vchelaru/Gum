@@ -213,7 +213,6 @@ public class SelectedState : ISelectedState
         }
     }
 
-
     public IEnumerable<InstanceSave> SelectedInstances
     {
         get
@@ -371,63 +370,65 @@ public class SelectedState : ISelectedState
         if (!isSame)
         {
             snapshot.SelectedInstance = value;
-
-            if (value != null)
-            {
-                var elementAfter = ObjectFinder.Self.GetElementContainerOf(value);
-                var behaviorAfter = ObjectFinder.Self.GetBehaviorContainerOf(value);
-
-                if (elementAfter != null)
-                {
-                    UpdateToSelectedElement(elementAfter);
-                }
-                if (behaviorAfter != null)
-                {
-                    UpdateToSelectedBehavior(behaviorAfter);
-                }
-            }
-            if (SelectedInstance != null)
-            {
-                ElementSave parent = SelectedInstance.ParentContainer;
-
-                ProjectVerifier.Self.AssertIsPartOfProject(parent);
-
-                SelectedElement = SelectedInstance.ParentContainer;
-            }
-
-
-            GumCommands.Self.GuiCommands.RefreshStateTreeView();
-
-            if (SelectedElement != null && (SelectedStateSave == null || SelectedElement.AllStates.Contains(SelectedStateSave) == false))
-            {
-                SelectedStateSave = SelectedElement.States[0];
-            }
-
-            if (WireframeObjectManager.Self.ElementShowing != this.SelectedElement)
-            {
-                WireframeObjectManager.Self.RefreshAll(false);
-            }
-
-            SelectionManager.Self.Refresh();
-
-            _menuStripManager.RefreshUI();
-
-            //PropertyGridManager.Self.RefreshUI();
-            GumCommands.Self.GuiCommands.RefreshVariables();
-
-
-            // This is needed for the wireframe manager, but this should be moved to a plugin
-            GumEvents.Self.CallInstanceSelected();
-
-            var element = ObjectFinder.Self.GetElementContainerOf(value);
-            PluginManager.Self.InstanceSelected(element, value);
+            PerformAfterSelectInstanceLogic();
         }
     }
 
+    private void PerformAfterSelectInstanceLogic()
+    {
+        if (snapshot.SelectedInstance != null)
+        {
+            ElementSave parent = snapshot.SelectedInstance.ParentContainer;
+            var elementAfter = ObjectFinder.Self.GetElementContainerOf(snapshot.SelectedInstance);
+            var behaviorAfter = ObjectFinder.Self.GetBehaviorContainerOf(snapshot.SelectedInstance);
+
+            if (elementAfter != null)
+            {
+                UpdateToSelectedElement(elementAfter);
+            }
+            if (behaviorAfter != null)
+            {
+                UpdateToSelectedBehavior(behaviorAfter);
+            }
+
+            ProjectVerifier.Self.AssertIsPartOfProject(parent);
+
+            SelectedElement = parent;
+        }
+
+        GumCommands.Self.GuiCommands.RefreshStateTreeView();
+
+        if (SelectedElement != null && (SelectedStateSave == null || SelectedElement.AllStates.Contains(SelectedStateSave) == false))
+        {
+            SelectedStateSave = SelectedElement.States[0];
+        }
+
+        if (WireframeObjectManager.Self.ElementShowing != this.SelectedElement)
+        {
+            WireframeObjectManager.Self.RefreshAll(false);
+        }
+
+        SelectionManager.Self.Refresh();
+
+        _menuStripManager.RefreshUI();
+
+        //PropertyGridManager.Self.RefreshUI();
+        GumCommands.Self.GuiCommands.RefreshVariables();
 
 
+        // This is needed for the wireframe manager, but this should be moved to a plugin
+        GumEvents.Self.CallInstanceSelected();
 
-
+        if (snapshot.SelectedInstance != null)
+        {
+            var element = ObjectFinder.Self.GetElementContainerOf(snapshot.SelectedInstance);
+            PluginManager.Self.InstanceSelected(element, snapshot.SelectedInstance);
+        }
+        else if (SelectedElement != null)
+        {
+            PluginManager.Self.ElementSelected(SelectedElement);
+        }
+    }
 
     private void TakeSnapshot(StateSaveCategory stateSaveCategory)
     {
@@ -596,7 +597,7 @@ public class SelectedState : ISelectedState
         snapshot.SelectedInstances = instances ?? new List<InstanceSave>();
         if (instances?.Count() > 0)
         {
-            UpdateToSetSelectedInstance(instances.First());
+            PerformAfterSelectInstanceLogic();
         }
         else
         {

@@ -971,6 +971,7 @@ namespace Gum.Managers
         // in the Select methods where a Save object is selected.
         public void Select(InstanceSave instanceSave, ElementSave parent)
         {
+            if (IsInUiInitiatedSelection) return;
             if (instanceSave != null)
             {
                 TreeNode parentTreeNode = GetTreeNodeFor(parent);
@@ -1022,6 +1023,8 @@ namespace Gum.Managers
 
         public void Select(ElementSave elementSave)
         {
+            if (IsInUiInitiatedSelection) return;
+
             if (elementSave == null)
             {
                 if (ObjectTreeView.SelectedNode != null && ObjectTreeView.SelectedNode.Tag != null && ObjectTreeView.SelectedNode.Tag is ElementSave)
@@ -1421,6 +1424,7 @@ namespace Gum.Managers
             return null;
         }
 
+        bool IsInUiInitiatedSelection = false;
         internal void OnSelect(TreeNode selectedTreeNode)
         {
             TreeNode treeNode = ObjectTreeView.SelectedNode;
@@ -1439,6 +1443,7 @@ namespace Gum.Managers
             PropertyGridManager.Self.ObjectsSuppressingRefresh.Add(this);
             try
             {
+                IsInUiInitiatedSelection = true;
                 if (selectedObject == null)
                 {
                     SelectedState.Self.SelectedElement = null;
@@ -1452,7 +1457,12 @@ namespace Gum.Managers
                 }
                 else if (selectedObject is InstanceSave selectedInstance)
                 {
-                    SelectedState.Self.SelectedInstance = selectedInstance;
+                    var instances = this.SelectedNodes.Select(item => item.Tag)
+                        .Where(item => item is InstanceSave)
+                        .Select(item => item as InstanceSave);
+
+                    //SelectedState.Self.SelectedInstance = selectedInstance;
+                    SelectedState.Self.SelectedInstances = instances;
                 }
                 else if(selectedObject is BehaviorSave behavior)
                 {
@@ -1464,6 +1474,7 @@ namespace Gum.Managers
             }
             finally
             {
+                IsInUiInitiatedSelection = false;
                 PropertyGridManager.Self.ObjectsSuppressingRefresh.Remove(this);
             }
 
