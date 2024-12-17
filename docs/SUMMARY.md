@@ -53,6 +53,8 @@
     * [Texture Address](gum-elements/nineslice/nineslice.texture-address.md)
     * [Texture Left](gum-elements/nineslice/texture-left.md)
     * [Texture Top](gum-elements/nineslice/texture-top.md)
+  * [Polygon](gum-elements/polygon/README.md)
+    * [Points](gum-elements/polygon/points.md)
   * [Sprite](gum-elements/sprite/README.md)
     * [Blend](gum-elements/sprite/blend.md)
     * [Color](gum-elements/sprite/color.md)

@@ -19,7 +19,7 @@ Before writing any code, we must add the Gum nuget package. Add the `Gum.MonoGam
 
 Once you are finished, your game project should reference the `Gum.MonoGam` project.
 
-<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Gum.MonoGame NuGet package</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Gum.MonoGame NuGet package</p></figcaption></figure>
 
 ### Creating a new Gum Project
 
@@ -27,7 +27,7 @@ Next we'll create a project in the Gum UI tool. If you have not yet run the Gum 
 
 Once you have the tool downloaded, run it. You should have an empty project.
 
-<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Empty Gum Project</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Empty Gum Project</p></figcaption></figure>
 
 We need to save our Gum project in the Content folder of our game. Gum projects include many files. it's best to keep a Gum project and all of its files in a dedicated folder.
 
