@@ -290,11 +290,15 @@ public partial class ElementTreeViewManager
             // InstanceSave selected
             if (SelectedState.Self.SelectedInstance != null)
             {
+                var containerElement = SelectedState.Self.SelectedElement;
                 mMenuStrip.Items.Add(mGoToDefinition);
 
-                mMenuStrip.Items.Add("-");
+                if(containerElement != null)
+                {
+                    mMenuStrip.Items.Add("-");
 
-                mMenuStrip.Items.Add(mCreateComponent);
+                    mMenuStrip.Items.Add(mCreateComponent);
+                }
 
                 mMenuStrip.Items.Add("-");
 
@@ -303,26 +307,30 @@ public partial class ElementTreeViewManager
                     : $"Delete {SelectedState.Self.SelectedInstance.Name}";
                 mMenuStrip.Items.Add(deleteText, null, (not, used) => GumCommands.Self.Edit.DeleteSelection());
 
-                mMenuStrip.Items.Add("-");
 
-                mAddInstance.Text = $"Add child object to '{SelectedState.Self.SelectedInstance.Name}'";
-                mMenuStrip.Items.Add(mAddInstance);
-                mAddParentInstance.Text = $"Add parent object to '{SelectedState.Self.SelectedInstance.Name}'";
-                mMenuStrip.Items.Add(mAddParentInstance);
 
-                var container = SelectedState.Self.SelectedElement;
-                if(!string.IsNullOrEmpty(container?.BaseType))
+                if(containerElement != null)
                 {
-                    var containerBase = ObjectFinder.Self.GetElementSave(container.BaseType);
+                    mMenuStrip.Items.Add("-");
 
-                    if(containerBase is ScreenSave || containerBase is ComponentSave)
+                    mAddInstance.Text = $"Add child object to '{SelectedState.Self.SelectedInstance.Name}'";
+                    mMenuStrip.Items.Add(mAddInstance);
+                    mAddParentInstance.Text = $"Add parent object to '{SelectedState.Self.SelectedInstance.Name}'";
+                    mMenuStrip.Items.Add(mAddParentInstance);
+
+                    if(!string.IsNullOrEmpty(containerElement?.BaseType))
                     {
-                        mMenuStrip.Items.Add($"Add {SelectedState.Self.SelectedInstance.Name} to base {containerBase}", 
-                            null, 
-                            (not, used) => HandleMoveToBase(SelectedState.Self.SelectedInstances, SelectedState.Self.SelectedElement, containerBase));
-                    }
-                }
+                        var containerBase = ObjectFinder.Self.GetElementSave(containerElement.BaseType);
 
+                        if(containerBase is ScreenSave || containerBase is ComponentSave)
+                        {
+                            mMenuStrip.Items.Add($"Add {SelectedState.Self.SelectedInstance.Name} to base {containerBase}", 
+                                null, 
+                                (not, used) => HandleMoveToBase(SelectedState.Self.SelectedInstances, SelectedState.Self.SelectedElement, containerBase));
+                        }
+                    }
+
+                }
                 AddPasteMenuItems();
             }
 
