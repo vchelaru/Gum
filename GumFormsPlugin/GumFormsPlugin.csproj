@@ -48,6 +48,7 @@
 	<ItemGroup>
 		<Compile Include="MainGumFormsPlugin.cs" />
 		<Compile Include="Properties\AssemblyInfo.cs" />
+		<Compile Include="Services\FormsFileService.cs" />
 		<Compile Include="ViewModels\AddFormsViewModel.cs" />
 		<Compile Include="Views\AddFormsWindow.xaml.cs" />
 	</ItemGroup>

@@ -8,23 +8,28 @@ using System.Threading.Tasks;
 using Gum.Plugins.ImportPlugin.Manager;
 using ToolsUtilities;
 using Gum.Mvvm;
+using GumFormsPlugin.Services;
 
 namespace GumFormsPlugin.ViewModels;
 
-internal class AddFormsViewModel : ViewModel
+public class AddFormsViewModel : ViewModel
 {
+    private readonly FormsFileService _formsFileService;
+
     public bool IsIncludeDemoScreenGum
     {
         get => Get<bool>();
         set => Set(value);
     }
 
-    // for now, we make this false, we can add screens later:
-    bool saveScreens = false;
+    public AddFormsViewModel(FormsFileService formsFileService)
+    {
+        _formsFileService = formsFileService;
+    }
 
     public void DoIt()
     {
-        var sourceDestinations = GetSourceDestinations();
+        var sourceDestinations = _formsFileService.GetSourceDestinations(IsIncludeDemoScreenGum);
         bool canSaveFiles = GetIfShouldSave(sourceDestinations);
 
         if (canSaveFiles)
@@ -100,52 +105,6 @@ internal class AddFormsViewModel : ViewModel
     }
 
 
-    private Dictionary<string, FilePath> GetSourceDestinations()
-    {
-        var assembly = GetType().Assembly;
-
-        var resourceNames = assembly.GetManifestResourceNames();
-
-        var destinationFolder = GumState.Self.ProjectState.ProjectDirectory;
-
-        const string resourcePrefix =
-            "GumFormsPlugin.Content.FormsGumProject.";
-
-        var resourcesToSave = resourceNames.Where(item =>
-            item.StartsWith(resourcePrefix));
-
-        Dictionary<string, FilePath> sourceDestinations = new Dictionary<string, FilePath>();
-
-        foreach (var resourceName in resourcesToSave)
-        {
-            var extension = FileManager.GetExtension(resourceName);
-
-            if (extension == "gusx" && saveScreens == false)
-            {
-                var shouldInclude = resourceName.Contains("DemoScreenGum.gusx") && IsIncludeDemoScreenGum;
-
-                if(!shouldInclude)
-                {
-                    continue;
-                }
-            }
-            if (extension == "gumx")
-            {
-                continue;
-            }
-
-            var stripped = resourceName.Substring(resourcePrefix.Length);
-
-            var name = FileManager.RemoveExtension(stripped).Replace(".", "/")
-                + "." + extension;
-
-            var absoluteDestination = destinationFolder + name;
-
-            sourceDestinations.Add(resourceName, absoluteDestination);
-        }
-
-        return sourceDestinations;
-    }
     private static bool GetIfShouldSave(Dictionary<string, FilePath> sourceDestinations)
     {
         var existingFiles = sourceDestinations.Values.Where(item => item.Exists());

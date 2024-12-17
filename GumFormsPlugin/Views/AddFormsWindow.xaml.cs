@@ -22,11 +22,11 @@ namespace GumFormsPlugin.Views
     public partial class AddFormsWindow : Window
     {
         AddFormsViewModel ViewModel => DataContext as AddFormsViewModel;
-        public AddFormsWindow()
+        public AddFormsWindow(AddFormsViewModel addFormsViewModel)
         {
             InitializeComponent();
 
-            DataContext = new ViewModels.AddFormsViewModel();
+            DataContext = addFormsViewModel;
         }
 
         private void OkButtonClicked(object sender, RoutedEventArgs e)

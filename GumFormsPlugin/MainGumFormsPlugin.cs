@@ -4,6 +4,8 @@ using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
 using Gum.Plugins.ImportPlugin.Manager;
 using Gum.ToolStates;
+using GumFormsPlugin.Services;
+using GumFormsPlugin.ViewModels;
 using GumFormsPlugin.Views;
 using System;
 using System.Collections.Generic;
@@ -23,9 +25,50 @@ internal class MainGumFormsPlugin : PluginBase
     public override Version Version => new Version(1, 0);
     public override bool ShutDown(PluginShutDownReason shutDownReason) => true;
 
+    System.Windows.Forms.ToolStripMenuItem _addFormsMenuItem;
+    private readonly FormsFileService _formsFileService;
+
+    public MainGumFormsPlugin()
+    {
+        _formsFileService = new FormsFileService();
+    }
+
     public override void StartUp()
     {
-        this.AddMenuItemTo("Add Forms Components", HandleAddFormsComponents, "Content");
+        _addFormsMenuItem = 
+            this.AddMenuItemTo("Add Forms Components", HandleAddFormsComponents, "Content");
+
+        this.ProjectLoad += HandleProjectLoaded;
+    }
+
+    private void HandleProjectLoaded(GumProjectSave save)
+    {
+        // see if it already has forms
+        var hasForms = GetIfProjectHasForms();
+
+        var parent = _addFormsMenuItem.GetCurrentParent();
+        if(hasForms)
+        {
+            if(parent != null)
+            {
+                parent.Items.Remove(_addFormsMenuItem);
+            }
+        }
+        else
+        {
+            if(parent == null)
+            {
+                _addFormsMenuItem =
+                    this.AddMenuItemTo("Add Forms Components", HandleAddFormsComponents, "Content");
+            }
+        }
+    }
+
+    private bool GetIfProjectHasForms()
+    {
+        var files = _formsFileService.GetSourceDestinations(false);
+
+        return files.Values.Any(item => item.Exists());
     }
 
     private void HandleAddFormsComponents(object sender, EventArgs e)
@@ -39,7 +82,9 @@ internal class MainGumFormsPlugin : PluginBase
         }
         #endregion
 
-        var view = new AddFormsWindow();
+        var viewModel = new AddFormsViewModel(_formsFileService);
+
+        var view = new AddFormsWindow(viewModel);
         view.ShowDialog();
 
     }
