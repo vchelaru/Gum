@@ -48,34 +48,32 @@ For example, consider the following polygon:
 
 The points for this polygon defined in the MainMenu XML file might look like this:
 
-````markup
-```xml
-    <VariableList xsi:type="VariableListSaveOfVector2">
-      <Type>Vector2</Type>
-      <Name>PolygonInstance.Points</Name>
-      <IsFile>false</IsFile>
-      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-      <Value>
-        <Vector2>
-          <X>0</X>
-          <Y>46</Y>
-        </Vector2>
-        <Vector2>
-          <X>32</X>
-          <Y>32</Y>
-        </Vector2>
-        <Vector2>
-          <X>10</X>
-          <Y>0</Y>
-        </Vector2>
-        <Vector2>
-          <X>0</X>
-          <Y>46</Y>
-        </Vector2>
-      </Value>
-    </VariableList>
+```markup
+<VariableList xsi:type="VariableListSaveOfVector2">
+  <Type>Vector2</Type>
+  <Name>PolygonInstance.Points</Name>
+  <IsFile>false</IsFile>
+  <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+  <Value>
+    <Vector2>
+      <X>0</X>
+      <Y>46</Y>
+    </Vector2>
+    <Vector2>
+      <X>32</X>
+      <Y>32</Y>
+    </Vector2>
+    <Vector2>
+      <X>10</X>
+      <Y>0</Y>
+    </Vector2>
+    <Vector2>
+      <X>0</X>
+      <Y>46</Y>
+    </Vector2>
+  </Value>
+</VariableList>
 ```
-````
 
 These points can be changed in the XML file. If the file is changed then Gum automatically reloads this file.
 
