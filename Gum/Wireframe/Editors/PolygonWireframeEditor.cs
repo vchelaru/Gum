@@ -236,8 +236,10 @@ namespace Gum.Wireframe.Editors
                 var selectedVertexPosition = selectedPolygon.PointAt(selectedIndex.Value) +
                     new Vector2(selectedPolygon.GetAbsoluteLeft(), selectedPolygon.GetAbsoluteTop());
 
-                selectedPointLineRectangle.Width = NodeDisplayWidth + 6;
-                selectedPointLineRectangle.Height = NodeDisplayWidth + 6;
+                var zoom = Renderer.Self.Camera.Zoom;
+
+                selectedPointLineRectangle.Width = NodeDisplayWidth + 6/zoom;
+                selectedPointLineRectangle.Height = NodeDisplayWidth + 6 / zoom;
 
                 selectedPointLineRectangle.X = selectedVertexPosition.X - selectedPointLineRectangle.Width / 2;
                 selectedPointLineRectangle.Y = selectedVertexPosition.Y - selectedPointLineRectangle.Height / 2;
@@ -246,25 +248,38 @@ namespace Gum.Wireframe.Editors
 
         private void UpdateAddPointSprite()
         {
-            addPointSprite.Visible = grabbedIndex == null && hasGrabbedBodyOrPoint == false;
+            var canUpdatePoint = grabbedIndex == null && hasGrabbedBodyOrPoint == false;
 
-            if(addPointSprite.Visible)
+            addPointSprite.Visible = false;
+
+            const int maxPixelsForAddPoint = 15;
+
+            if (canUpdatePoint)
             {
+
                 var worldX = InputLibrary.Cursor.Self.GetWorldX();
                 var worldY = InputLibrary.Cursor.Self.GetWorldY();
 
                 this.addPointSprite.X = worldX;
                 this.addPointSprite.Y = worldY;
 
-                this.addPointSprite.Width = this.addPointSprite.Height = 16;
+                var zoom = Renderer.Self.Camera.Zoom;
 
-                var index = GetClosestLineOver(worldX, worldY);
+                this.addPointSprite.Width = this.addPointSprite.Height = 16 / zoom;
 
-                var selectedPolygon = SelectedLinePolygon;
-                var addPointPosition = (selectedPolygon.PointAt(index) + selectedPolygon.PointAt(index + 1)) / 2.0f;
+                var closestResult = GetClosestLineOver(worldX, worldY);
 
-                addPointSprite.X = addPointPosition.X - addPointSprite.Width / 2.0f + selectedPolygon.GetAbsoluteLeft();
-                addPointSprite.Y = addPointPosition.Y - addPointSprite.Height / 2.0f + selectedPolygon.GetAbsoluteTop();
+
+                addPointSprite.Visible = closestResult.MinDistance < (maxPixelsForAddPoint / zoom);
+
+                if(addPointSprite.Visible)
+                {
+                    var selectedPolygon = SelectedLinePolygon;
+                    var addPointPosition = (selectedPolygon.PointAt(closestResult.ClosestIndex) + selectedPolygon.PointAt(closestResult.ClosestIndex+ 1)) / 2.0f;
+
+                    addPointSprite.X = addPointPosition.X - addPointSprite.Width / 2.0f + selectedPolygon.GetAbsoluteLeft();
+                    addPointSprite.Y = addPointPosition.Y - addPointSprite.Height / 2.0f + selectedPolygon.GetAbsoluteTop();
+                }
 
             }
         }
@@ -298,7 +313,7 @@ namespace Gum.Wireframe.Editors
 
         private int AddPointAt(float x, float y)
         {
-            var newIndex = GetClosestLineOver(x, y) + 1;
+            var newIndex = GetClosestLineOver(x, y).ClosestIndex + 1;
 
             var selectedPoly = SelectedLinePolygon;
 
@@ -550,7 +565,7 @@ namespace Gum.Wireframe.Editors
             return null;
         }
 
-        private int GetClosestLineOver(float worldXAt, float worldYAt)
+        private (int ClosestIndex, float MinDistance) GetClosestLineOver(float worldXAt, float worldYAt)
         {
             float minSoFar = float.MaxValue;
 
@@ -578,7 +593,7 @@ namespace Gum.Wireframe.Editors
                 }
             }
 
-            return closestIndex;
+            return (closestIndex, minSoFar);
         }
 
         private float DistanceTo(Vector2 point1, Vector2 point2, float x, float y)
