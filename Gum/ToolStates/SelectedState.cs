@@ -710,6 +710,13 @@ class SelectedStateSnapshot : ISelectedState
     public IStateContainer SelectedStateContainer
     {
         get => (IStateContainer)SelectedElement ?? SelectedBehavior;
+        set
+        {
+            if(value is ElementSave elementSave)
+            {
+                Sele
+            }
+        }
     }
 
     public BehaviorSave SelectedBehavior { get; set; }
