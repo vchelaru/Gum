@@ -378,6 +378,8 @@ public class SelectedState : ISelectedState
     {
         if (snapshot.SelectedInstance != null)
         {
+            var stateContainerBefore = snapshot.SelectedStateContainer;
+
             ElementSave parent = snapshot.SelectedInstance.ParentContainer;
             var elementAfter = ObjectFinder.Self.GetElementContainerOf(snapshot.SelectedInstance);
             var behaviorAfter = ObjectFinder.Self.GetBehaviorContainerOf(snapshot.SelectedInstance);
@@ -394,9 +396,16 @@ public class SelectedState : ISelectedState
             ProjectVerifier.Self.AssertIsPartOfProject(parent);
 
             SelectedElement = parent;
+
+            if(elementAfter != null || behaviorAfter != null)
+            {
+                if(stateContainerBefore != elementAfter && stateContainerBefore != behaviorAfter)
+                {
+                    GumCommands.Self.GuiCommands.RefreshStateTreeView();
+                }
+            }
         }
 
-        GumCommands.Self.GuiCommands.RefreshStateTreeView();
 
         if (SelectedElement != null && (SelectedStateSave == null || SelectedElement.AllStates.Contains(SelectedStateSave) == false))
         {
