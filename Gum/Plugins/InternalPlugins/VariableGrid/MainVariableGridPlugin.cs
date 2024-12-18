@@ -16,10 +16,17 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid
         {
             this.TreeNodeSelected += HandleTreeNodeSelected;
             this.ReactToStateSaveSelected += HandleStateSelected;
-            this.StateMovedToCategory += HandleCategorySelected;
+            this.ReactToStateSaveCategorySelected += MainVariableGridPlugin_ReactToStateSaveCategorySelected;
+            this.StateMovedToCategory += HandleStateMovedToCategory;
         }
 
-        private void HandleCategorySelected(StateSave save, StateSaveCategory category1, StateSaveCategory category2)
+        private void MainVariableGridPlugin_ReactToStateSaveCategorySelected(StateSaveCategory obj)
+        {
+            PropertyGridManager.Self.RefreshUI(force: true);
+
+        }
+
+        private void HandleStateMovedToCategory(StateSave save, StateSaveCategory category1, StateSaveCategory category2)
         {
             PropertyGridManager.Self.RefreshUI(force: true);
         }
