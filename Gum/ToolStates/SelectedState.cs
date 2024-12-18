@@ -497,6 +497,11 @@ public class SelectedState : ISelectedState
 
             }
 
+            if(element != null)
+            {
+                SelectedBehavior = null;
+            }
+
             if (stateBefore == SelectedStateSave)
             {
                 // If the state changed (element changed) then no need to force the UI again
@@ -530,11 +535,14 @@ public class SelectedState : ISelectedState
 
             SelectedStateSave = null;
             SelectedStateCategorySave = null;
+            if(SelectedBehavior != null)
+            {
+                SelectedElement = null;
+            }
 
             // Although plugins could just listen for behavior changes, and
             // assume that means no elements are selected, that's a bit of a pain.
             // A behavior may just care about whether an element is selected or not.
-            PluginManager.Self.ElementSelected(null);
             PluginManager.Self.BehaviorSelected(SelectedBehavior);
         }
 

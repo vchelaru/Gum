@@ -84,6 +84,7 @@ public class MainStatePlugin : InternalPlugin
     private void HandleBehaviorSelected(BehaviorSave behavior)
     {
         _stateTreeViewRightClickService.PopulateMenuStrip();
+        HandleRefreshStateTreeView();
     }
 
     private void HandleStateStackingModeChanged(StateStackingMode mode)
