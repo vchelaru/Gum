@@ -51,6 +51,8 @@ namespace CodeOutputPlugin
         public override void StartUp()
         {
             AssignEvents();
+
+            CreateControl();
         }
 
         private void AssignEvents()
