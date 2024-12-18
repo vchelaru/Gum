@@ -51,14 +51,6 @@ namespace CodeOutputPlugin
         public override void StartUp()
         {
             AssignEvents();
-
-            var item = this.AddMenuItem("Plugins", "View Code");
-            item.Click += HandleViewCodeClicked;
-
-            if (control == null)
-            {
-                CreateControl();
-            }
         }
 
         private void AssignEvents()
