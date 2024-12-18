@@ -1540,6 +1540,8 @@ namespace Gum.Managers
         {
             if (e.Button == MouseButtons.Right)
             {
+                ElementTreeViewManager.Self.OnSelect(ObjectTreeView.SelectedNode);
+
                 ElementTreeViewManager.Self.PopulateMenuStrip();
             }
         }
