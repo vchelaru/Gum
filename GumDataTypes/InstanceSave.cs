@@ -19,6 +19,9 @@ namespace Gum.DataTypes
             return Locked == true;
         }
 
+        /// <summary>
+        /// The ElementSave which contains this instance.
+        /// </summary>
         [XmlIgnore]
         public ElementSave ParentContainer
         {

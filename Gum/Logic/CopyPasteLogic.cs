@@ -337,10 +337,16 @@ namespace Gum.Logic
 
                 if(sourceElementInstanceNames == null)
                 {
-                    sourceElementInstanceNames = sourceElement.Instances.Select(item => item.Name).ToList();
+                    sourceElementInstanceNames = sourceElement?.Instances.Select(item => item.Name).ToList();
                 }
 
-                InstanceSave newInstance = sourceInstance.Clone();
+                // This could be an instance in a behavior, so we can't clone:
+                //InstanceSave newInstance = sourceInstance.Clone();
+                InstanceSave newInstance = new InstanceSave();
+                newInstance.Name = sourceInstance.Name;
+                newInstance.BaseType = sourceInstance.BaseType;
+                newInstance.DefinedByBase = sourceInstance.DefinedByBase;
+                newInstance.Locked = sourceInstance.Locked;
 
                 // the original may have been defined in a base component. The new instance will not be
                 // derived in the base, so let's get rid of that:
@@ -361,7 +367,7 @@ namespace Gum.Logic
                     if(targetElement == sourceElement)
                     {
                         int newIndex = -1;
-                        if(sourceElementInstanceNames.Contains(sourceInstance.Name))
+                        if(sourceElementInstanceNames?.Contains(sourceInstance.Name) == true)
                         {
                             newIndex = sourceElementInstanceNames.IndexOf(sourceInstance.Name);
                         }
@@ -377,7 +383,7 @@ namespace Gum.Logic
                         if(newIndex != -1)
                         {
                             targetElement.Instances.Insert(newIndex+1, newInstance);
-                            sourceElementInstanceNames.Insert(newIndex + 1, newInstance.Name);
+                            sourceElementInstanceNames?.Insert(newIndex + 1, newInstance.Name);
 
                         }
                         else
@@ -429,7 +435,7 @@ namespace Gum.Logic
                         // We now have to copy over the states
                         if (targetElement != sourceElement)
                         {
-                            if (sourceElement.States.Count != 1)
+                            if (sourceElement != null && sourceElement.States.Count != 1)
                             {
                                 MessageBox.Show("Only the default state variables will be copied since the source and target elements differ.");
                             }

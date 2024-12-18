@@ -70,6 +70,7 @@
     <Compile Include="EventSave.cs" />
     <Compile Include="GuideRectangle.cs" />
     <Compile Include="GumProjectSave.cs" />
+    <Compile Include="IInstanceContainer.cs" />
     <Compile Include="InstanceSave.cs" />
     <Compile Include="IStateContainer.cs" />
     <Compile Include="NamedRectangle.cs" />

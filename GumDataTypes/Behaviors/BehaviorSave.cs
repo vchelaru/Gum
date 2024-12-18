@@ -6,7 +6,7 @@ using ToolsUtilities;
 
 namespace Gum.DataTypes.Behaviors
 {
-    public class BehaviorSave : IStateContainer, IStateCategoryListContainer
+    public class BehaviorSave : IStateContainer, IStateCategoryListContainer, IInstanceContainer
     {
         public string Name { get; set; }
 
@@ -37,6 +37,9 @@ namespace Gum.DataTypes.Behaviors
         [XmlArray("RequiredInstances")]
         [XmlArrayItem(ElementName = "InstanceSave")]
         public List<BehaviorInstanceSave> RequiredInstances { get; set; } = new List<BehaviorInstanceSave>();
+
+        [XmlIgnore]
+        IEnumerable<InstanceSave> IInstanceContainer.Instances => RequiredInstances.ToList<InstanceSave>();
 
         // Normally we reference the model type, but animations are in a plugin, so we can't do that here.
         // I did try moving the animation classes (just the models) from the plugin into the GumDataTypes, but

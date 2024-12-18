@@ -587,8 +587,13 @@ namespace Gum.Managers
                 else
                 {
                     List<InstanceSave> instances = new List<InstanceSave>() { draggedAsInstanceSave };
+                    List<StateSave> stateWithVariablesForOriginalInstance = new List<StateSave>
+                    {
+                        draggedAsInstanceSave.ParentContainer?.DefaultState.Clone() ?? new StateSave()
+                    };
+                        
                     CopyPasteLogic.PasteInstanceSaves(instances,
-                        new List<StateSave>() { draggedAsInstanceSave.ParentContainer.DefaultState.Clone() },
+                        stateWithVariablesForOriginalInstance,
                         targetElementSave, targetInstanceSave);
                 }
             }

@@ -7,7 +7,7 @@ using Gum.DataTypes.Behaviors;
 namespace Gum.DataTypes
 {
 
-    public abstract class ElementSave : IStateContainer, IStateCategoryListContainer
+    public abstract class ElementSave : IStateContainer, IStateCategoryListContainer, IInstanceContainer
     {
 
         #region Properties
@@ -53,6 +53,9 @@ namespace Gum.DataTypes
             get;
             set;
         }
+
+        [XmlIgnore]
+        IEnumerable<InstanceSave> IInstanceContainer.Instances => Instances;
 
         [XmlElement("Event")]
         public List<EventSave> Events
