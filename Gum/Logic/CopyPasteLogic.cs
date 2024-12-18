@@ -113,27 +113,28 @@ namespace Gum.Logic
                 // a state may not be selected if the user selected a category.
                 if(state == null)
                 {
-                    state = element.DefaultState;
+                    state = element?.DefaultState;
                 }
 
                 CopiedData.CopiedStates.Clear();
     
-                var baseElementsDerivedFirst = ObjectFinder.Self.GetBaseElements(element);
+                var baseElementsDerivedFirst = element != null ? ObjectFinder.Self.GetBaseElements(element) : new List<ElementSave>();
                 // reverse loop:
                 for(int i = baseElementsDerivedFirst.Count - 1; i > -1; i--)
                 {
                     CopiedData.CopiedStates.Add(baseElementsDerivedFirst[i].DefaultState.Clone());
                 }
 
-                CopiedData.CopiedStates.Add(state.Clone());
+                if(state != null)
+                {
+                    CopiedData.CopiedStates.Add(state.Clone());
+                }
 
-                if(SelectedState.Self.SelectedStateCategorySave != null && SelectedState.Self.SelectedStateSave != null)
+                if(SelectedState.Self.SelectedStateCategorySave != null && SelectedState.Self.SelectedStateSave != null && element != null)
                 {
                     // it's categorized, so add the default:
                     CopiedData.CopiedStates.Add(element.DefaultState.Clone());
                 }
-
-                RecursiveVariableFinder rfv = new RecursiveVariableFinder(state);
 
                 List<InstanceSave> selected = new List<InstanceSave>();
                 // When copying we want to grab all instances in the order that they are in their container.
@@ -143,15 +144,19 @@ namespace Gum.Logic
                 CopiedData.CopiedInstancesSelected.Clear();
                 CopiedData.CopiedInstancesSelected.AddRange(SelectedState.Self.SelectedInstances);
 
-                CopiedData.CopiedInstancesRecursive = GetAllInstancesAndChildrenOf(selected, selected.FirstOrDefault()?.ParentContainer)
-                    // Sort by index in parent at the end so the children are sorted properly:
-                            .OrderBy(item =>
-                            {
-                                return element.Instances.IndexOf(item);
-                            })
-                            // clone after doing OrderBy
-                            .Select(item => item.Clone())
-                            .ToList();
+                var parentContainer = selected.FirstOrDefault()?.ParentContainer;
+                if(parentContainer != null)
+                {
+                    CopiedData.CopiedInstancesRecursive = GetAllInstancesAndChildrenOf(selected, selected.FirstOrDefault()?.ParentContainer)
+                        // Sort by index in parent at the end so the children are sorted properly:
+                                .OrderBy(item =>
+                                {
+                                    return element?.Instances.IndexOf(item) ?? 0;
+                                })
+                                // clone after doing OrderBy
+                                .Select(item => item.Clone())
+                                .ToList();
+                }
 
 
                 // Clear out any variables that don't pertain to the selected instance:
