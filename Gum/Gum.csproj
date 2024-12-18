@@ -212,6 +212,7 @@
     <Compile Include="Plugins\InternalPlugins\AlignmentButtons\ViewModels\AlignmentViewModel.cs" />
     <Compile Include="Plugins\InternalPlugins\CirclePlugin\MainCirclePlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\DuplicateVariablePlugin\MainDuplicateVariablePlugin.cs" />
+    <Compile Include="Plugins\InternalPlugins\EditorTab\MainEditorTabPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\Errors\AllErrorsViewModel.cs" />
     <Compile Include="Plugins\InternalPlugins\Errors\ErrorChecker.cs" />
     <Compile Include="Plugins\InternalPlugins\Errors\ErrorDisplay.xaml.cs">
