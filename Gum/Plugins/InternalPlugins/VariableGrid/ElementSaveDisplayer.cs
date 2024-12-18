@@ -57,6 +57,129 @@ namespace Gum.PropertyGridHelpers
             return propertyList;
         }
 
+        private static void DisplayCurrentElement(List<InstanceSavePropertyDescriptor> pdc, ElementSave elementSave,
+            InstanceSave instanceSave, StateSave defaultState, AmountToDisplay amountToDisplay = AmountToDisplay.AllVariables)
+        {
+            var currentState = SelectedState.Self.SelectedStateSave;
+            bool isDefault = currentState == SelectedState.Self.SelectedElement.DefaultState;
+            if (instanceSave?.DefinedByBase == true)
+            {
+                isDefault = false;
+            }
+
+            bool isCustomType = (elementSave is StandardElementSave) == false;
+            if (isCustomType || instanceSave != null)
+            {
+                AddNameAndBaseTypeProperties(pdc, elementSave, instanceSave, isReadOnly: isDefault == false);
+            }
+
+            if (instanceSave != null)
+            {
+                mHelper.AddProperty(pdc, "Locked", typeof(bool)).IsReadOnly = !isDefault;
+            }
+
+            if(elementSave is ComponentSave && instanceSave == null)
+            {
+                var defaultChildContainerProperty = mHelper.AddProperty(pdc, nameof(ComponentSave.DefaultChildContainer), typeof(string));
+                defaultChildContainerProperty.IsReadOnly = !isDefault;
+                defaultChildContainerProperty.TypeConverter = new AvailableInstancesConverter();
+            }
+
+            var recursiveVariableFinder = new RecursiveVariableFinder(currentState);
+            var variableListName = "VariableReferences";
+            if (instanceSave != null)
+            {
+                variableListName = instanceSave.Name + "." + variableListName;
+            }
+            var variableReference = recursiveVariableFinder.GetVariableList(variableListName);
+            Dictionary<string, string> variablesSetThroughReference = new Dictionary<string, string>();
+
+            if(variableReference?.ValueAsIList != null)
+            {
+                foreach(var item in variableReference.ValueAsIList)
+                {
+                    var assignment = item as string;
+                    if(assignment?.Contains("=") == true)
+                    {
+                        var indexOfEquals = assignment.IndexOf("=");
+                        var variableName = assignment.Substring(0, indexOfEquals).Trim();
+                        var rightSideEquals = assignment.Substring(indexOfEquals + 1).Trim();
+                        variablesSetThroughReference[variableName] = rightSideEquals;
+                    }
+                }
+            }
+
+
+            // if component
+            if (instanceSave == null && elementSave as ComponentSave != null)
+            {
+                var defaultElementState = StandardElementsManager.Self.GetDefaultStateFor("Component");
+                var variables = defaultElementState.Variables;
+                foreach (var item in variables)
+                {
+                    // Don't add states here, because they're handled below from this object's Default:
+                    if (item.IsState(elementSave) == false)
+                    {
+                        string variableName = item.Name;
+                        var isReadonly = false;
+                        string subtext = null;
+                        if(variablesSetThroughReference.ContainsKey(variableName))
+                        {
+                            isReadonly = true;
+                            subtext = variablesSetThroughReference[variableName];
+                        }
+                        TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, item, isReadonly, subtext);
+                    }
+                }
+            }
+            // else if screen
+            else if (instanceSave == null && elementSave as ScreenSave != null)
+            {
+                var screenDefaultState = StandardElementsManager.Self.GetDefaultStateFor("Screen");
+                foreach (var item in screenDefaultState.Variables)
+                {
+                    string variableName = item.Name;
+                    var isReadonly = false;
+                    string subtext = null;
+                    if (variablesSetThroughReference.ContainsKey(variableName))
+                    {
+                        isReadonly = true;
+                        subtext = variablesSetThroughReference[variableName];
+                    }
+                    TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, item, isReadonly, subtext);
+                }
+            }
+
+
+
+
+
+            #region Loop through all variables
+
+            // We want to use the default state to get all possible
+            // variables because the default state will always set all
+            // variables.  We then look at the current state to get the
+            // actual value
+            for (int i = 0; i < defaultState.Variables.Count; i++)
+            {
+                VariableSave defaultVariable = defaultState.Variables[i];
+
+                string variableName = defaultVariable.Name;
+                var isReadonly = false;
+                string subtext = null;
+                if (variablesSetThroughReference.ContainsKey(variableName))
+                {
+                    isReadonly = true;
+                    subtext = variablesSetThroughReference[variableName];
+                }
+                TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, defaultVariable, isReadonly, subtext);
+            }
+
+            #endregion
+
+           
+        }
+
         public void GetCategories(ElementSave element, InstanceSave instance, List<MemberCategory> categories, StateSave stateSave, StateSaveCategory stateSaveCategory)
         {
             var properties = GetProperties(element, instance, stateSave);
@@ -254,129 +377,6 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        private static void DisplayCurrentElement(List<InstanceSavePropertyDescriptor> pdc, ElementSave elementSave,
-            InstanceSave instanceSave, StateSave defaultState, AmountToDisplay amountToDisplay = AmountToDisplay.AllVariables)
-        {
-            var currentState = SelectedState.Self.SelectedStateSave;
-            bool isDefault = currentState == SelectedState.Self.SelectedElement.DefaultState;
-            if (instanceSave?.DefinedByBase == true)
-            {
-                isDefault = false;
-            }
-
-            bool isCustomType = (elementSave is StandardElementSave) == false;
-            if (isCustomType || instanceSave != null)
-            {
-                AddNameAndBaseTypeProperties(pdc, elementSave, instanceSave, isReadOnly: isDefault == false);
-            }
-
-            if (instanceSave != null)
-            {
-                mHelper.AddProperty(pdc, "Locked", typeof(bool)).IsReadOnly = !isDefault;
-            }
-
-            if(elementSave is ComponentSave && instanceSave == null)
-            {
-                var defaultChildContainerProperty = mHelper.AddProperty(pdc, nameof(ComponentSave.DefaultChildContainer), typeof(string));
-                defaultChildContainerProperty.IsReadOnly = !isDefault;
-                defaultChildContainerProperty.TypeConverter = new AvailableInstancesConverter();
-            }
-
-            var recursiveVariableFinder = new RecursiveVariableFinder(currentState);
-            var variableListName = "VariableReferences";
-            if (instanceSave != null)
-            {
-                variableListName = instanceSave.Name + "." + variableListName;
-            }
-            var variableReference = recursiveVariableFinder.GetVariableList(variableListName);
-            Dictionary<string, string> variablesSetThroughReference = new Dictionary<string, string>();
-
-            if(variableReference?.ValueAsIList != null)
-            {
-                foreach(var item in variableReference.ValueAsIList)
-                {
-                    var assignment = item as string;
-                    if(assignment?.Contains("=") == true)
-                    {
-                        var indexOfEquals = assignment.IndexOf("=");
-                        var variableName = assignment.Substring(0, indexOfEquals).Trim();
-                        var rightSideEquals = assignment.Substring(indexOfEquals + 1).Trim();
-                        variablesSetThroughReference[variableName] = rightSideEquals;
-                    }
-                }
-            }
-
-
-            // if component
-            if (instanceSave == null && elementSave as ComponentSave != null)
-            {
-                var defaultElementState = StandardElementsManager.Self.GetDefaultStateFor("Component");
-                var variables = defaultElementState.Variables;
-                foreach (var item in variables)
-                {
-                    // Don't add states here, because they're handled below from this object's Default:
-                    if (item.IsState(elementSave) == false)
-                    {
-                        string variableName = item.Name;
-                        var isReadonly = false;
-                        string subtext = null;
-                        if(variablesSetThroughReference.ContainsKey(variableName))
-                        {
-                            isReadonly = true;
-                            subtext = variablesSetThroughReference[variableName];
-                        }
-                        TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, item, isReadonly, subtext);
-                    }
-                }
-            }
-            // else if screen
-            else if (instanceSave == null && elementSave as ScreenSave != null)
-            {
-                var screenDefaultState = StandardElementsManager.Self.GetDefaultStateFor("Screen");
-                foreach (var item in screenDefaultState.Variables)
-                {
-                    string variableName = item.Name;
-                    var isReadonly = false;
-                    string subtext = null;
-                    if (variablesSetThroughReference.ContainsKey(variableName))
-                    {
-                        isReadonly = true;
-                        subtext = variablesSetThroughReference[variableName];
-                    }
-                    TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, item, isReadonly, subtext);
-                }
-            }
-
-
-
-
-
-            #region Loop through all variables
-
-            // We want to use the default state to get all possible
-            // variables because the default state will always set all
-            // variables.  We then look at the current state to get the
-            // actual value
-            for (int i = 0; i < defaultState.Variables.Count; i++)
-            {
-                VariableSave defaultVariable = defaultState.Variables[i];
-
-                string variableName = defaultVariable.Name;
-                var isReadonly = false;
-                string subtext = null;
-                if (variablesSetThroughReference.ContainsKey(variableName))
-                {
-                    isReadonly = true;
-                    subtext = variablesSetThroughReference[variableName];
-                }
-                TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, defaultVariable, isReadonly, subtext);
-            }
-
-            #endregion
-
-           
-        }
-
         private static void TryDisplayVariableSave(List<InstanceSavePropertyDescriptor> pdc, ElementSave elementSave, InstanceSave instanceSave, 
             AmountToDisplay amountToDisplay, VariableSave defaultVariable, bool forceReadOnly, string subtext)
         {
@@ -398,6 +398,14 @@ namespace Gum.PropertyGridHelpers
 
             shouldInclude &= pdc.Any(item => item.Name == defaultVariable.Name) == false;
 
+            var isState = defaultVariable.IsState(elementSave, out ElementSave categoryContainer, out StateSaveCategory categorySave);
+
+            if(isState && shouldInclude)
+            {
+                // uncategorized states are only default, so don't show it:
+                shouldInclude = categorySave != null;
+            }
+
             if (shouldInclude)
             {
                 TypeConverter typeConverter = defaultVariable.GetTypeConverter(elementSave);
@@ -413,7 +421,7 @@ namespace Gum.PropertyGridHelpers
                 {
                     category = "Exposed";
                 }
-                else if(defaultVariable.IsState(elementSave))
+                else if(isState)
                 {
                     category = "States and Visibility";
                 }
