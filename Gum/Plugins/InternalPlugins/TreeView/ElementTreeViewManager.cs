@@ -1006,7 +1006,21 @@ namespace Gum.Managers
 
             if (list.Count() != 0)
             {
-                TreeNode parentContainer = GetTreeNodeFor(list.First().ParentContainer);
+                var firstItem = list.First();
+
+                TreeNode parentContainer = null;
+                if(firstItem.ParentContainer != null)
+                {
+                    parentContainer = GetTreeNodeFor(firstItem.ParentContainer);
+                }
+                else
+                {
+                    var behavior = ObjectFinder.Self.GetBehaviorContainerOf(firstItem);
+                    if(behavior != null)
+                    {
+                        parentContainer = GetTreeNodeFor(behavior);
+                    }
+                }
 
                 List<TreeNode> treeNodeList = new List<TreeNode>();
 
