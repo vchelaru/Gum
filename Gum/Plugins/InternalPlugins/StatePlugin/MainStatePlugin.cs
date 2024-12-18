@@ -74,6 +74,8 @@ public class MainStatePlugin : InternalPlugin
 
     private void HandleInstanceSelected(ElementSave save1, InstanceSave save2)
     {
+        RefreshUI(SelectedState.Self.SelectedStateContainer, SelectedState.Self);
+
         // A user could directly select an instance in
         // a different container such as going from a component
         // to a selected instance in a behavior. In that case we
