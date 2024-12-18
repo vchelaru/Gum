@@ -990,7 +990,9 @@ namespace Gum.Managers
 
         public void Select(BehaviorSave behavior)
         {
-            if(behavior != null)
+            if (IsInUiInitiatedSelection) return;
+
+            if (behavior != null)
             {
                 var treeNode = GetTreeNodeFor(behavior);
 
@@ -1000,6 +1002,8 @@ namespace Gum.Managers
 
         public void Select(IEnumerable<InstanceSave> list)
         {
+            if (IsInUiInitiatedSelection) return;
+
             if (list.Count() != 0)
             {
                 TreeNode parentContainer = GetTreeNodeFor(list.First().ParentContainer);
@@ -1052,6 +1056,8 @@ namespace Gum.Managers
 
         private void Select(TreeNode treeNode)
         {
+            if (IsInUiInitiatedSelection) return;
+
             if (ObjectTreeView.SelectedNode != treeNode)
             {
                 // See comment above about why we have to manually raise the AfterClick
@@ -1069,6 +1075,8 @@ namespace Gum.Managers
 
         private void Select(List<TreeNode> treeNodes)
         {
+            if (IsInUiInitiatedSelection) return;
+
             ObjectTreeView.SelectedNodes = treeNodes;
 
             if (treeNodes.Count != 0)

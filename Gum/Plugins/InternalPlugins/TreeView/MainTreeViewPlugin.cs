@@ -1,6 +1,7 @@
 ﻿using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
+using Gum.ToolStates;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -34,7 +35,8 @@ internal class MainTreeViewPlugin : InternalPlugin
         {
             if(instance != null)
             {
-                ElementTreeViewManager.Self.Select(instance, element);
+
+                ElementTreeViewManager.Self.Select(SelectedState.Self.SelectedInstances);
             }
 
             if(instance == null && element != null)
