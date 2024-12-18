@@ -85,8 +85,7 @@ public class SelectedState : ISelectedState
         }
         set
         {
-            UpdateToSelectedBehavior(value);
-
+            HandleBehaviorSelected(value);
         }
     }
 
@@ -526,6 +525,15 @@ public class SelectedState : ISelectedState
             PluginManager.Self.ElementSelected(SelectedElement);
         }
 
+    }
+
+    private void HandleBehaviorSelected(BehaviorSave behavior)
+    {
+        if(behavior != null && SelectedInstance != null)
+        {
+            SelectedInstance = null;
+        }
+        UpdateToSelectedBehavior(behavior);
     }
 
     private void UpdateToSelectedBehavior(BehaviorSave behavior)
