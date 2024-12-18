@@ -1469,6 +1469,8 @@ namespace Gum.Managers
                 if (selectedObject == null)
                 {
                     SelectedState.Self.SelectedElement = null;
+                    SelectedState.Self.SelectedBehavior = null;
+                    SelectedState.Self.SelectedInstance = null;
 
                     // do nothing
                 }
