@@ -157,6 +157,10 @@ namespace Gum.Logic
                                 .Select(item => item.Clone())
                                 .ToList();
                 }
+                else
+                {
+                    CopiedData.CopiedInstancesRecursive.AddRange(CopiedData.CopiedInstancesSelected);
+                }
 
 
                 // Clear out any variables that don't pertain to the selected instance:
