@@ -137,7 +137,7 @@ public class SelectedState : ISelectedState
         }
         set
         {
-            UpdateToSelectedElement(value);
+            HandleElementSelected(value);
         }
     }
 
@@ -351,6 +351,16 @@ public class SelectedState : ISelectedState
             TakeSnapshot(selectedStateSaveCategory);
             PluginManager.Self.ReactToStateSaveCategorySelected(selectedStateSaveCategory);
         }
+    }
+
+    private void HandleElementSelected(ElementSave value)
+    {
+        if(value != null)
+        {
+            snapshot.SelectedInstance = null;
+        }
+        UpdateToSelectedElement(value);
+
     }
 
     private void HandleStateSaveSelected(StateSave stateSave)
