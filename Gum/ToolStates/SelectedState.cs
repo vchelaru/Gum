@@ -87,6 +87,55 @@ public class SelectedState : ISelectedState
         }
     }
 
+    private void HandleElementSelected(ElementSave value)
+    {
+        if(value != null)
+        {
+            snapshot.SelectedInstance = null;
+            snapshot.SelectedBehavior = null;
+        }
+        UpdateToSelectedElement(value);
+    }
+
+
+    private void UpdateToSelectedElement(ElementSave element)
+    {
+        if (snapshot.SelectedElement != element)
+        {
+            snapshot.SelectedElement = element;
+
+            var stateBefore = SelectedStateSave;
+
+            if (SelectedElement != null &&
+                (SelectedStateSave == null || SelectedElement.AllStates.Contains(SelectedStateSave) == false) &&
+                SelectedElement.States.Count > 0
+                )
+            {
+
+                SelectedStateSave = SelectedElement.States[0];
+            }
+            else if (SelectedElement == null)
+            {
+                SelectedStateSave = null;
+            }
+
+            if (stateBefore == SelectedStateSave)
+            {
+                // If the state changed (element changed) then no need to force the UI again
+                GumCommands.Self.GuiCommands.RefreshVariables();
+            }
+
+            WireframeObjectManager.Self.RefreshAll(true);
+
+            SelectionManager.Self.Refresh();
+
+            _menuStripManager.RefreshUI();
+
+            PluginManager.Self.ElementSelected(SelectedElement);
+        }
+
+    }
+
     #endregion
 
     #region Properties
@@ -371,16 +420,6 @@ public class SelectedState : ISelectedState
         UpdateToSelectedInstances(value);
     }
 
-    private void HandleElementSelected(ElementSave value)
-    {
-        if(value != null)
-        {
-            snapshot.SelectedInstance = null;
-        }
-        UpdateToSelectedElement(value);
-
-    }
-
     private void HandleStateSaveSelected(StateSave stateSave)
     {
         StateSaveCategory category = null;
@@ -512,51 +551,6 @@ public class SelectedState : ISelectedState
         }
     }
 
-    private void UpdateToSelectedElement(ElementSave element)
-    {
-        if (snapshot.SelectedElement != element)
-        {
-            snapshot.SelectedElement = element;
-
-            GumCommands.Self.GuiCommands.RefreshStateTreeView();
-
-            var stateBefore = SelectedStateSave;
-
-            if (SelectedElement != null &&
-                (SelectedStateSave == null || SelectedElement.AllStates.Contains(SelectedStateSave) == false) &&
-                SelectedElement.States.Count > 0
-                )
-            {
-
-                SelectedStateSave = SelectedElement.States[0];
-            }
-            else if (SelectedElement == null)
-            {
-                SelectedStateSave = null;
-
-            }
-
-            if(element != null)
-            {
-                SelectedBehavior = null;
-            }
-
-            if (stateBefore == SelectedStateSave)
-            {
-                // If the state changed (element changed) then no need to force the UI again
-                GumCommands.Self.GuiCommands.RefreshVariables();
-            }
-
-            WireframeObjectManager.Self.RefreshAll(true);
-
-            SelectionManager.Self.Refresh();
-
-            _menuStripManager.RefreshUI();
-
-            PluginManager.Self.ElementSelected(SelectedElement);
-        }
-
-    }
 
     private void HandleBehaviorSelected(BehaviorSave behavior)
     {
