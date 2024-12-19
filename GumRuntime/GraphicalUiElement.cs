@@ -4577,7 +4577,7 @@ namespace Gum.Wireframe
                         this.ClipsChildren = (bool)value;
                         toReturn = true;
                         break;
-#if !FRB
+#if !FRB && NET6_0_OR_GREATER
                     case "ExposeChildrenEvents":
                         {
                             if(this is InteractiveGue interactiveGue)
@@ -4592,7 +4592,7 @@ namespace Gum.Wireframe
                         this.FlipHorizontal = (bool)value;
                         toReturn = true;
                         break;
-#if !FRB
+#if !FRB && NET6_0_OR_GREATER
                     case "HasEvents":
                         {
                             if(this is InteractiveGue interactiveGue)
