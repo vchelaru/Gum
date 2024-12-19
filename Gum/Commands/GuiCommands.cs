@@ -14,6 +14,10 @@ using Gum.Plugins.VariableGrid;
 using Gum.ToolCommands;
 using CommonFormsAndControls;
 using Gum.Undo;
+using Gum.Logic;
+using static System.ComponentModel.Design.ObjectSelectorEditor;
+using System.IO;
+using ToolsUtilities;
 
 namespace Gum.Commands
 {
@@ -51,7 +55,7 @@ namespace Gum.Commands
 
         public void RefreshVariables(bool force = false)
         {
-            PropertyGridManager.Self.RefreshUI(force:force);
+            PropertyGridManager.Self.RefreshUI(force: force);
         }
 
         /// <summary>
@@ -80,7 +84,7 @@ namespace Gum.Commands
             mainPanelControl.HideTab(tab);
         }
 
-        public PluginTab AddControl(System.Windows.Forms.Control control, string tabTitle, TabLocation tabLocation )
+        public PluginTab AddControl(System.Windows.Forms.Control control, string tabTitle, TabLocation tabLocation)
         {
             CheckForInitialization();
             return mainPanelControl.AddWinformsControl(control, tabTitle, tabLocation);
@@ -88,7 +92,7 @@ namespace Gum.Commands
 
         private void CheckForInitialization()
         {
-            if(mainPanelControl == null)
+            if (mainPanelControl == null)
             {
                 throw new InvalidOperationException("Need to call Initialize first");
             }
@@ -105,7 +109,7 @@ namespace Gum.Commands
         }
 
         #endregion
-        
+
         public void PositionWindowByCursor(System.Windows.Window window)
         {
             window.WindowStartupLocation = System.Windows.WindowStartupLocation.Manual;
@@ -299,7 +303,7 @@ namespace Gum.Commands
                     var behavior = SelectedState.Self.SelectedBehavior;
 
                     var newVariable = new VariableSave();
-                    
+
                     newVariable.Name = name;
                     newVariable.Type = type;
                     if (behavior != null)
@@ -415,5 +419,105 @@ namespace Gum.Commands
         {
             mainPanelControl.Dispatcher.Invoke(action);
         }
+
+        public void ShowRenameFolderWindow(TreeNode node)
+        {
+            var tiw = new TextInputWindow();
+            tiw.Message = "Enter new folder name";
+            tiw.Result = node.Text;
+            var dialogResult = tiw.ShowDialog();
+
+            if (dialogResult != DialogResult.OK || tiw.Result == node.Text)
+            {
+                return;
+            }
+
+
+            bool isValid = true;
+            string whyNotValid;
+            if (!NameVerifier.Self.IsFolderNameValid(tiw.Result, out whyNotValid))
+            {
+                isValid = false;
+            }
+
+
+            // see if it already exists:
+            FilePath newFullPath = FileManager.GetDirectory(node.GetFullFilePath().FullPath) + tiw.Result + "\\";
+
+            if (System.IO.Directory.Exists(newFullPath.FullPath))
+            {
+                whyNotValid = $"Folder {tiw.Result} already exists.";
+                isValid = false;
+            }
+
+            if (!isValid)
+            {
+                MessageBox.Show(whyNotValid);
+            }
+            else
+            {
+                string rootForElement;
+                if (node.IsScreensFolderTreeNode())
+                {
+                    rootForElement = FileLocations.Self.ScreensFolder;
+                }
+                else if (node.IsComponentsFolderTreeNode())
+                {
+                    rootForElement = FileLocations.Self.ComponentsFolder;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+
+                var oldFullPath = node.GetFullFilePath();
+
+                string oldPathRelativeToElementsRoot = FileManager.MakeRelative(node.GetFullFilePath().FullPath, rootForElement, preserveCase: true);
+                node.Text = tiw.Result;
+                string newPathRelativeToElementsRoot = FileManager.MakeRelative(node.GetFullFilePath().FullPath, rootForElement, preserveCase: true);
+
+                if (node.IsScreensFolderTreeNode())
+                {
+                    foreach (var screen in ProjectState.Self.GumProjectSave.Screens)
+                    {
+                        if (screen.Name.StartsWith(oldPathRelativeToElementsRoot))
+                        {
+                            string oldVaue = screen.Name;
+                            string newName = newPathRelativeToElementsRoot + screen.Name.Substring(oldPathRelativeToElementsRoot.Length);
+
+                            screen.Name = newName;
+                            RenameLogic.HandleRename(screen, (InstanceSave)null, oldVaue, NameChangeAction.Move, askAboutRename: false);
+                        }
+                    }
+                }
+                else if (node.IsComponentsFolderTreeNode())
+                {
+                    foreach (var component in ProjectState.Self.GumProjectSave.Components)
+                    {
+                        if (component.Name.ToLowerInvariant().StartsWith(oldPathRelativeToElementsRoot.ToLowerInvariant()))
+                        {
+                            string oldVaue = component.Name;
+                            string newName = newPathRelativeToElementsRoot + component.Name.Substring(oldPathRelativeToElementsRoot.Length);
+                            component.Name = newName;
+
+                            RenameLogic.HandleRename(component, (InstanceSave)null, oldVaue, NameChangeAction.Move, askAboutRename: false);
+                        }
+                    }
+                }
+
+                try
+                {
+                    Directory.Move(oldFullPath.FullPath, newFullPath.FullPath);
+                    GumCommands.Self.GuiCommands.RefreshElementTreeView();
+                }
+                catch (Exception e)
+                {
+                    var message = "Could not move the old folder." +
+                        $" Additional information: \n{e}";
+                    MessageBox.Show(message);
+                }
+            }
+        }
+
     }
 }
