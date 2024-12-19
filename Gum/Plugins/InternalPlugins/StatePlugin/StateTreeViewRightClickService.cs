@@ -9,6 +9,7 @@ using Gum.PropertyGridHelpers;
 using Gum.ToolCommands;
 using Gum.DataTypes.Behaviors;
 using Gum.Plugins;
+using Gum.Commands;
 
 namespace Gum.Managers;
 
@@ -359,59 +360,7 @@ public class StateTreeViewRightClickService
     {
         var stateToMove = SelectedState.Self.SelectedStateSave;
         var stateContainer = SelectedState.Self.SelectedStateContainer;
-
-        var newCategory = stateContainer.Categories
-            .FirstOrDefault(item=>item.Name == categoryNameToMoveTo);
-
-        var oldCategory = stateContainer.Categories
-            .FirstOrDefault(item=>item.States.Contains(stateToMove));
-        ////////////////////Early Out //////////////////////
-        if(stateToMove == null || categoryNameToMoveTo == null || oldCategory == null)
-        {
-            return;
-        }
-        //////////////////End Early Out /////////////////////
-
-
-
-        oldCategory.States.Remove(stateToMove);
-        newCategory.States.Add(stateToMove);
-
-        GumCommands.Self.GuiCommands.RefreshStateTreeView();
-        SelectedState.Self.SelectedStateSave = stateToMove;
-
-        // make sure to propagate all variables in this new state and
-        // also move all existing variables to the new state (use the first)
-        if(stateContainer is ElementSave element)
-        {
-            foreach(var variable in stateToMove.Variables)
-            {
-                VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(variable.Name,
-                    element, GumState.Self.SelectedState.SelectedStateCategorySave);
-            }
-
-
-            var firstState = newCategory.States.FirstOrDefault();
-            if (firstState != stateToMove)
-            {
-                foreach (var variable in firstState.Variables)
-                {
-                    VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(variable.Name,
-                        element, GumState.Self.SelectedState.SelectedStateCategorySave);
-                }
-            }
-        }
-
-        PluginManager.Self.StateMovedToCategory(stateToMove, newCategory, oldCategory);
-
-        if (stateContainer is BehaviorSave behavior)
-        {
-            GumCommands.Self.FileCommands.TryAutoSaveBehavior(behavior);
-
-        }
-        else if(stateContainer is ElementSave asElement)
-        {
-            GumCommands.Self.FileCommands.TryAutoSaveElement(asElement);
-        }
+        GumCommands.Self.Edit.MoveToCategory(categoryNameToMoveTo, stateToMove, stateContainer);
     }
-}
+
+ }

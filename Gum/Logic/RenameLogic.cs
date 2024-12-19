@@ -80,7 +80,7 @@ public class RenameLogic
         if (behaviorsNeedingCategory.Any())
         {
             string message =
-                "This category cannot be renamed because it is needed by the following behavior(s):";
+                $"The category {category.Name} cannot be renamed because it is needed by the following behavior(s):";
 
             foreach (var behavior in behaviorsNeedingCategory)
             {

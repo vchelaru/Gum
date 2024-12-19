@@ -1,4 +1,5 @@
 ﻿using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using Gum.ToolStates;
@@ -19,6 +20,15 @@ internal class MainTreeViewPlugin : InternalPlugin
     {
         this.InstanceSelected += MainTreeViewPlugin_InstanceSelected;
         this.ElementSelected += HandleElementSelected;
+        this.BehaviorSelected += HandleBehaviorSelected;
+    }
+
+    private void HandleBehaviorSelected(BehaviorSave save)
+    {
+        if(save != null)
+        {
+            ElementTreeViewManager.Self.Select(save);
+        }
     }
 
     private void HandleElementSelected(ElementSave save)

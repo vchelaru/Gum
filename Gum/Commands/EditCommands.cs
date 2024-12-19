@@ -6,6 +6,7 @@ using Gum.Gui.Windows;
 using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins;
+using Gum.PropertyGridHelpers;
 using Gum.Responses;
 using Gum.ToolCommands;
 using Gum.ToolStates;
@@ -37,7 +38,7 @@ namespace Gum.Commands
                 deleteResponse.ShouldDelete = false;
                 deleteResponse.ShouldShowMessage = true;
                 string message =
-                    "This state cannot be removed because it is needed by the following behavior(s):";
+                    $"The state {stateSave.Name} cannot be removed because it is needed by the following behavior(s):";
 
                 foreach (var behavior in behaviorNeedingState)
                 {
@@ -89,7 +90,7 @@ namespace Gum.Commands
             if (behaviorNeedingState.Any())
             {
                 string message =
-                    "This state cannot be renamed because it is needed by the following behavior(s):";
+                    $"The state {stateSave.Name} cannot be renamed because it is needed by the following behavior(s):";
 
                 foreach (var behavior in behaviorNeedingState)
                 {
@@ -110,6 +111,78 @@ namespace Gum.Commands
                     var category = stateContainer.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
                     RenameLogic.RenameState(stateSave, category, tiw.Result);
                 }
+            }
+        }
+
+        public void MoveToCategory(string categoryNameToMoveTo, StateSave stateToMove, IStateContainer stateContainer)
+        {
+            var newCategory = stateContainer.Categories
+                .FirstOrDefault(item => item.Name == categoryNameToMoveTo);
+
+            var oldCategory = stateContainer.Categories
+                .FirstOrDefault(item => item.States.Contains(stateToMove));
+            ////////////////////Early Out //////////////////////
+            if (stateToMove == null || categoryNameToMoveTo == null || oldCategory == null)
+            {
+                return;
+            }
+            var behaviorsNeedingState = GetBehaviorsNeedingState(stateToMove);
+            if (behaviorsNeedingState.Count > 0)
+            {
+                string message =
+                    $"The state {stateToMove.Name} cannot be moved to a different category because it is needed by the following behavior(s):";
+
+                foreach (var behaviorNeedingState in behaviorsNeedingState)
+                {
+                    message += "\n" + behaviorNeedingState.Name;
+                }
+
+                MessageBox.Show(message);
+            }
+
+            //////////////////End Early Out /////////////////////
+
+
+
+
+                oldCategory.States.Remove(stateToMove);
+            newCategory.States.Add(stateToMove);
+
+            GumCommands.Self.GuiCommands.RefreshStateTreeView();
+            SelectedState.Self.SelectedStateSave = stateToMove;
+
+            // make sure to propagate all variables in this new state and
+            // also move all existing variables to the new state (use the first)
+            if (stateContainer is ElementSave element)
+            {
+                foreach (var variable in stateToMove.Variables)
+                {
+                    VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(variable.Name,
+                        element, GumState.Self.SelectedState.SelectedStateCategorySave);
+                }
+
+
+                var firstState = newCategory.States.FirstOrDefault();
+                if (firstState != stateToMove)
+                {
+                    foreach (var variable in firstState.Variables)
+                    {
+                        VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(variable.Name,
+                            element, GumState.Self.SelectedState.SelectedStateCategorySave);
+                    }
+                }
+            }
+
+            PluginManager.Self.StateMovedToCategory(stateToMove, newCategory, oldCategory);
+
+            if (stateContainer is BehaviorSave behavior)
+            {
+                GumCommands.Self.FileCommands.TryAutoSaveBehavior(behavior);
+
+            }
+            else if (stateContainer is ElementSave asElement)
+            {
+                GumCommands.Self.FileCommands.TryAutoSaveElement(asElement);
             }
         }
 
@@ -191,41 +264,40 @@ namespace Gum.Commands
             if (GumState.Self.ProjectState.NeedsToSaveProject)
             {
                 MessageBox.Show("You must first save the project before adding a new component");
+                return;
             }
-            else
+
+            TextInputWindow tiw = new TextInputWindow();
+            tiw.Message = "Enter new behavior name:";
+
+            if (tiw.ShowDialog() == DialogResult.OK)
             {
-                TextInputWindow tiw = new TextInputWindow();
-                tiw.Message = "Enter new behavior name:";
+                string name = tiw.Result;
 
-                if (tiw.ShowDialog() == DialogResult.OK)
+                string whyNotValid;
+
+                NameVerifier.Self.IsBehaviorNameValid(name, null, out whyNotValid);
+
+                if (!string.IsNullOrEmpty(whyNotValid))
                 {
-                    string name = tiw.Result;
+                    MessageBox.Show(whyNotValid);
+                }
+                else
+                {
+                    var behavior = new BehaviorSave();
+                    behavior.Name = name;
 
-                    string whyNotValid;
-
-                    NameVerifier.Self.IsBehaviorNameValid(name, null, out whyNotValid);
-
-                    if (!string.IsNullOrEmpty(whyNotValid))
-                    {
-                        MessageBox.Show(whyNotValid);
-                    }
-                    else
-                    {
-                        var behavior = new BehaviorSave();
-                        behavior.Name = name;
-
-                        ProjectManager.Self.GumProjectSave.BehaviorReferences.Add(new BehaviorReference { Name = name });
-                        ProjectManager.Self.GumProjectSave.BehaviorReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
-                        ProjectManager.Self.GumProjectSave.Behaviors.Add(behavior);
-                        ProjectManager.Self.GumProjectSave.Behaviors.Sort((first, second) => first.Name.CompareTo(second.Name));
+                    ProjectManager.Self.GumProjectSave.BehaviorReferences.Add(new BehaviorReference { Name = name });
+                    ProjectManager.Self.GumProjectSave.BehaviorReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
+                    ProjectManager.Self.GumProjectSave.Behaviors.Add(behavior);
+                    ProjectManager.Self.GumProjectSave.Behaviors.Sort((first, second) => first.Name.CompareTo(second.Name));
 
 
-                        GumCommands.Self.GuiCommands.RefreshElementTreeView();
-                        SelectedState.Self.SelectedBehavior = behavior;
+                    GumCommands.Self.GuiCommands.RefreshElementTreeView();
+                    SelectedState.Self.SelectedBehavior = behavior;
 
-                        GumCommands.Self.FileCommands.TryAutoSaveProject();
-                        GumCommands.Self.FileCommands.TryAutoSaveBehavior(behavior);
-                    }
+                    GumCommands.Self.FileCommands.TryAutoSaveProject();
+                    GumCommands.Self.FileCommands.TryAutoSaveBehavior(behavior);
                 }
             }
         }

@@ -325,7 +325,7 @@ namespace Gum.Managers
                 deleteResponse.ShouldShowMessage = true;
 
                 string message =
-                    "This category cannot be removed because it is needed by the following behavior(s):";
+                    $"The category {category.Name} cannot be removed because it is needed by the following behavior(s):";
 
                 foreach (var behavior in behaviorsNeedingCategory)
                 {
