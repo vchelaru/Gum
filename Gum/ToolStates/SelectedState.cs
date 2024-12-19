@@ -27,6 +27,68 @@ public class SelectedState : ISelectedState
 
     #endregion
 
+    #region Elements (Screen, Component, StandardElement)
+
+    public ScreenSave SelectedScreen
+    {
+        get
+        {
+            return snapshot.SelectedScreen;
+        }
+        set
+        {
+            // We don't want this to unset selected components or standards if this is set to null
+            if (value != SelectedScreen && (value != null || SelectedScreen == null || SelectedScreen is ScreenSave))
+            {
+                SelectedElement = value;
+            }
+        }
+    }
+
+    public ComponentSave SelectedComponent
+    {
+        get
+        {
+            return snapshot.SelectedComponent;
+        }
+        set
+        {
+            if (value != SelectedComponent && (value != null || SelectedComponent == null || SelectedComponent is ComponentSave))
+            {
+                SelectedElement = value;
+            }
+        }
+    }
+
+    public StandardElementSave SelectedStandardElement
+    {
+        get
+        {
+            return snapshot.SelectedStandardElement;
+        }
+        set
+        {
+            if (value != SelectedStandardElement && (value != null || SelectedStandardElement == null || SelectedStandardElement is StandardElementSave))
+            {
+                SelectedElement = value;
+            }
+        }
+    }
+
+    public ElementSave SelectedElement
+    {
+        get
+        {
+            return snapshot.SelectedElement;
+        }
+        set
+        {
+            HandleElementSelected(value);
+        }
+    }
+
+    #endregion
+
     #region Properties
 
     public static ISelectedState Self
@@ -43,37 +105,6 @@ public class SelectedState : ISelectedState
                 mSelf = new SelectedState();
             }
             return mSelf;
-        }
-    }
-
-    public ScreenSave SelectedScreen
-    {
-        get
-        {
-            return snapshot.SelectedScreen;
-        }
-        set
-        {
-            // We don't want this to unset selected components or standards if this is set to null
-            if (value != SelectedScreen && (value != null || SelectedScreen == null || SelectedScreen is ScreenSave))
-            {
-                UpdateToSelectedElement(value);
-            }
-        }
-    }
-
-    public ComponentSave SelectedComponent
-    {
-        get
-        {
-            return snapshot.SelectedComponent;
-        }
-        set
-        {
-            if (value != SelectedComponent && (value != null || SelectedComponent == null || SelectedComponent is ComponentSave))
-            {
-                UpdateToSelectedElement(value);
-            }
         }
     }
 
@@ -111,33 +142,6 @@ public class SelectedState : ISelectedState
             }
 
             return null;
-        }
-    }
-
-    public StandardElementSave SelectedStandardElement
-    {
-        get
-        {
-            return snapshot.SelectedStandardElement;
-        }
-        set
-        {
-            if (value != SelectedStandardElement && (value != null || SelectedStandardElement == null || SelectedStandardElement is StandardElementSave))
-            {
-                UpdateToSelectedElement(value);
-            }
-        }
-    }
-
-    public ElementSave SelectedElement
-    {
-        get
-        {
-            return snapshot.SelectedElement;
-        }
-        set
-        {
-            HandleElementSelected(value);
         }
     }
 
@@ -332,8 +336,6 @@ public class SelectedState : ISelectedState
 
     #endregion
 
-    #region Snapshot
-
     private void UpdateToSetSelectedStackingMode(StateStackingMode value)
     {
         var isSame = snapshot.StateStackingMode == value;
@@ -486,9 +488,6 @@ public class SelectedState : ISelectedState
         snapshot.SelectedStateCategorySave = category;
     }
 
-    #endregion
-
-    #region Methods
 
     private SelectedState()
     {
@@ -642,7 +641,6 @@ public class SelectedState : ISelectedState
         return toReturn;
     }
 
-    #endregion
 
 }
 
