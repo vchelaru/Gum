@@ -234,6 +234,7 @@
     <Compile Include="Plugins\ImportPlugin\Views\ImportFileView.xaml.cs">
       <DependentUpon>ImportFileView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Plugins\InternalPlugins\HideShowTools\MainHideShowToolsPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\Hotkey\MainHotkeyPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\Hotkey\ViewModels\HotkeyViewModel.cs" />
     <Compile Include="Plugins\InternalPlugins\Hotkey\Views\HotkeyView.xaml.cs">

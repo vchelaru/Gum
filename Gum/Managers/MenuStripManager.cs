@@ -237,15 +237,15 @@ namespace Gum.Managers
             this.viewToolStripMenuItem = new ToolStripMenuItem();
             viewToolStripMenuItem.Text = "View";
 
-            Add(viewToolStripMenuItem, "Hide Tools", () =>
-            {
-                GumCommands.Self.GuiCommands.HideTools();
-            });
+            //Add(viewToolStripMenuItem, "Hide Tools", () =>
+            //{
+            //    GumCommands.Self.GuiCommands.HideTools();
+            //});
 
-            Add(viewToolStripMenuItem, "Show Tools", () =>
-            {
-                GumCommands.Self.GuiCommands.ShowTools();
-            });
+            //Add(viewToolStripMenuItem, "Show Tools", () =>
+            //{
+            //    GumCommands.Self.GuiCommands.ShowTools();
+            //});
 
 
 
