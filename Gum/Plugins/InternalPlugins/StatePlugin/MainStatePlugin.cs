@@ -53,6 +53,7 @@ public class MainStatePlugin : InternalPlugin
         this.BehaviorSelected += HandleBehaviorSelected;
         this.InstanceSelected += HandleInstanceSelected;
         this.ElementSelected += HandleElementSelected;
+        this.StateMovedToCategory += HandleStateMovedToCategory;
 
         stateTreeViewModel = new StateTreeViewModel(_stateTreeViewRightClickService);
 
@@ -65,6 +66,11 @@ public class MainStatePlugin : InternalPlugin
             this.stateView.StateContextMenuStrip,
             _stateTreeViewRightClickService,
             _hotkeyManager);
+    }
+
+    private void HandleStateMovedToCategory(StateSave save, StateSaveCategory category1, StateSaveCategory category2)
+    {
+        _stateTreeViewRightClickService.PopulateMenuStrip();
     }
 
     private void HandleElementSelected(ElementSave save)

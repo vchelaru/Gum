@@ -174,7 +174,8 @@ public class SelectedState : ISelectedState
         }
         set
         {
-            UpdateToSetSelectedStateSave(value);
+
+            HandleStateSaveSelected(value);
         }
     }
 
@@ -350,6 +351,22 @@ public class SelectedState : ISelectedState
             TakeSnapshot(selectedStateSaveCategory);
             PluginManager.Self.ReactToStateSaveCategorySelected(selectedStateSaveCategory);
         }
+    }
+
+    private void HandleStateSaveSelected(StateSave stateSave)
+    {
+        StateSaveCategory category = null;
+        var elementContainer =
+            ObjectFinder.Self.GetStateContainerOf(stateSave);
+
+        category = elementContainer?.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
+
+        if(category != null && category != snapshot.SelectedStateCategorySave)
+        {
+            snapshot.SelectedStateCategorySave = category;
+        }
+
+        UpdateToSetSelectedStateSave(stateSave);
     }
 
     private void UpdateToSetSelectedStateSave(StateSave selectedStateSave)
@@ -575,47 +592,6 @@ public class SelectedState : ISelectedState
         }
     }
 
-    private void UpdateToSelectedStateSave()
-    {
-        if (StateStackingMode == StateStackingMode.SingleState)
-        {
-            // reset everything. This is slow, but is easy
-            WireframeObjectManager.Self.RefreshAll(true);
-        }
-        else
-        {
-
-            var currentGue = WireframeObjectManager.Self.GetSelectedRepresentation();
-
-            if (currentGue == null)
-            {
-                currentGue = WireframeObjectManager.Self.RootGue;
-            }
-
-            if (currentGue != null && this.SelectedStateSave != null)
-            {
-                // Applying a state just stacks it on top of the current
-                currentGue.ApplyState(this.SelectedStateSave);
-            }
-        }
-
-        SelectionManager.Self.Refresh();
-
-
-
-        if (SelectedStateSave != null)
-        {
-            StateTreeViewManager.Self.Select(SelectedStateSave);
-        }
-        else if (SelectedStateCategorySave != null)
-        {
-            StateTreeViewManager.Self.Select(SelectedStateCategorySave);
-        }
-
-        GumCommands.Self.GuiCommands.RefreshVariables();
-
-        _menuStripManager.RefreshUI();
-    }
 
     private void UpdateToSelectedInstances(IEnumerable<InstanceSave> instances)
     {

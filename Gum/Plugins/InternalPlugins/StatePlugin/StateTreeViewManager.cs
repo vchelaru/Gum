@@ -26,6 +26,8 @@ namespace Gum.Managers
 
         #region Properties
 
+        bool IsInUiInitiatedSelection = false;
+
         public static StateTreeViewManager Self
         {
             get
@@ -154,6 +156,7 @@ namespace Gum.Managers
 
         internal void OnSelect()
         {
+            IsInUiInitiatedSelection = true;
 
             TreeNode treeNode = mTreeView.SelectedNode;
 
@@ -198,10 +201,14 @@ namespace Gum.Managers
             //GumCommands.Self.GuiCommands.RefreshStateTreeView();
 
             PluginManager.Self.StateWindowTreeNodeSelected(treeNode);
+
+            IsInUiInitiatedSelection = false;
         }
 
         public void Select(StateSave stateSave)
         {
+            if (IsInUiInitiatedSelection) return;
+
             TreeNode treeNode = GetTreeNodeForTag(stateSave);
 
             Select(treeNode);
@@ -215,6 +222,8 @@ namespace Gum.Managers
 
         public void Select(StateSaveCategory stateSaveCategory)
         {
+            if (IsInUiInitiatedSelection) return;
+
             TreeNode treeNode = GetTreeNodeForTag(stateSaveCategory);
 
             Select(treeNode);
@@ -222,6 +231,9 @@ namespace Gum.Managers
 
         public void Select(TreeNode treeNode)
         {
+            if (IsInUiInitiatedSelection) return;
+
+
             if (mTreeView.SelectedNode != treeNode)
             {
                 mTreeView.SelectedNode = treeNode;
