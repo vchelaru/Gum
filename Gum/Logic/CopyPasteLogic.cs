@@ -328,6 +328,12 @@ namespace Gum.Logic
 
         public static void PasteInstanceSaves(List<InstanceSave> instancesToCopy, List<StateSave> copiedStates, ElementSave targetElement, InstanceSave selectedInstance)
         {
+            if(targetElement is StandardElementSave)
+            {
+                GumCommands.Self.GuiCommands.ShowMessage($"Cannot create an instance in {targetElement} because it is a standard element");
+                return;
+            }
+
             if(LastPastedInstances.Contains(selectedInstance))
             {
                 selectedInstance = selectedInstance?.GetParentInstance();
