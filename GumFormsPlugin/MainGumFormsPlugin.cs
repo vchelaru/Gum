@@ -68,7 +68,7 @@ internal class MainGumFormsPlugin : PluginBase
     {
         var files = _formsFileService.GetSourceDestinations(false);
 
-        return files.Values.Any(item => item.Exists());
+        return files.Values.Any(item => item.Extension != "png" && item.Extension != "gutx" && item.Exists());
     }
 
     private void HandleAddFormsComponents(object sender, EventArgs e)
