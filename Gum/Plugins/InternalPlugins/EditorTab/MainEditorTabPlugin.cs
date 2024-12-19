@@ -1,4 +1,5 @@
-﻿using Gum.DataTypes.Variables;
+﻿using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Plugins.BaseClasses;
 using Gum.Wireframe;
 using System;
@@ -21,6 +22,12 @@ internal class MainEditorTabPlugin : InternalPlugin
     private void AssignEvents()
     {
         this.ReactToStateSaveSelected += HandleStateSelected;
+        this.InstanceSelected += HandleInstanceSelected;
+    }
+
+    private void HandleInstanceSelected(ElementSave element, InstanceSave instance)
+    {
+        WireframeObjectManager.Self.RefreshAll(forceLayout: false);
     }
 
     private void HandleStateSelected(StateSave save)

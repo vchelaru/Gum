@@ -209,7 +209,7 @@ public class SelectedState : ISelectedState
         }
         set
         {
-            HandleSelectedInstance(value);
+            SelectedInstances = new List<InstanceSave> { value };
         }
     }
 
@@ -221,6 +221,7 @@ public class SelectedState : ISelectedState
         }
         set
         {
+            HandleSelectedInstances(value?.ToList());
             UpdateToSelectedInstances(value);
         }
 
@@ -353,18 +354,19 @@ public class SelectedState : ISelectedState
         }
     }
 
-    private void HandleSelectedInstance(InstanceSave value)
+    private void HandleSelectedInstances(List<InstanceSave> value)
     {
-        if(value != null)
+        var instance = value?.FirstOrDefault();
+        if(instance != null)
         {
-            var elementAfter = ObjectFinder.Self.GetElementContainerOf(value);
-            var behaviorAfter = ObjectFinder.Self.GetBehaviorContainerOf(value);
+            var elementAfter = ObjectFinder.Self.GetElementContainerOf(instance);
+            var behaviorAfter = ObjectFinder.Self.GetBehaviorContainerOf(instance);
 
             snapshot.SelectedElement = elementAfter;
             snapshot.SelectedBehavior = behaviorAfter;
         }
 
-        UpdateToSetSelectedInstance(value);
+        UpdateToSelectedInstances(value);
     }
 
     private void HandleElementSelected(ElementSave value)
