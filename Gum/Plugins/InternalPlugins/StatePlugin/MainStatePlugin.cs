@@ -22,6 +22,8 @@ namespace Gum.Plugins.StatePlugin;
 [Export(typeof(Gum.Plugins.BaseClasses.PluginBase))]
 public class MainStatePlugin : InternalPlugin
 {
+    #region Fields/Properties
+
     StateView stateView;
     StateTreeView stateTreeView;
     StateTreeViewModel stateTreeViewModel;
@@ -33,6 +35,10 @@ public class MainStatePlugin : InternalPlugin
     private HotkeyManager _hotkeyManager;
     private readonly ISelectedState _selectedState;
 
+    #endregion
+
+    #region Initialize
+
     public MainStatePlugin()
     {
         _stateTreeViewRightClickService = new StateTreeViewRightClickService(GumState.Self.SelectedState);
@@ -42,18 +48,7 @@ public class MainStatePlugin : InternalPlugin
 
     public override void StartUp()
     {
-        this.StateWindowTreeNodeSelected += HandleStateSelected;
-        this.TreeNodeSelected += HandleTreeNodeSelected;
-        this.RefreshStateTreeView += HandleRefreshStateTreeView;
-        this.ReactToStateSaveSelected += HandleStateSelected;
-        this.ReactToStateSaveCategorySelected += HandleStateSaveCategorySelected;
-        this.StateRename += HandleStateRename;
-        this.CategoryRename += HandleCategoryRename;
-        this.ReactToStateStackingModeChange += HandleStateStackingModeChanged;
-        this.BehaviorSelected += HandleBehaviorSelected;
-        this.InstanceSelected += HandleInstanceSelected;
-        this.ElementSelected += HandleElementSelected;
-        this.StateMovedToCategory += HandleStateMovedToCategory;
+        AssignEvents();
 
         stateTreeViewModel = new StateTreeViewModel(_stateTreeViewRightClickService);
 
@@ -68,9 +63,47 @@ public class MainStatePlugin : InternalPlugin
             _hotkeyManager);
     }
 
-    private void HandleStateMovedToCategory(StateSave save, StateSaveCategory category1, StateSaveCategory category2)
+    private void AssignEvents()
+    {
+        this.StateWindowTreeNodeSelected += HandleStateSelected;
+        this.TreeNodeSelected += HandleTreeNodeSelected;
+        this.RefreshStateTreeView += HandleRefreshStateTreeView;
+        this.ReactToStateSaveSelected += HandleStateSelected;
+        this.ReactToStateSaveCategorySelected += HandleStateSaveCategorySelected;
+        this.StateRename += HandleStateRename;
+        this.CategoryRename += HandleCategoryRename;
+        this.ReactToStateStackingModeChange += HandleStateStackingModeChanged;
+        this.BehaviorSelected += HandleBehaviorSelected;
+        this.InstanceSelected += HandleInstanceSelected;
+        this.ElementSelected += HandleElementSelected;
+        this.StateMovedToCategory += HandleStateMovedToCategory;
+        this.VariableSet += HandleVariableSet;
+    }
+
+    private void CreateOldStateTab()
+    {
+        stateView = new StateView(_stateTreeViewRightClickService, _hotkeyManager);
+        _stateTreeViewRightClickService.OldMenuStrip = stateView.TreeViewContextMenu;
+        stateView.StateStackingModeChange += (_, _) => GumState.Self.SelectedState.StateStackingMode = stateView.StateStackingMode;
+
+        pluginTab = GumCommands.Self.GuiCommands.AddControl(stateView, "States", TabLocation.CenterTop);
+    }
+
+    private void CreateNewStateTab()
+    {
+        stateTreeView = new StateTreeView(stateTreeViewModel, _stateTreeViewRightClickService, _hotkeyManager, _selectedState);
+        _stateTreeViewRightClickService.NewMenuStrip = stateTreeView.TreeViewContextMenu;
+        newPluginTab = GumCommands.Self.GuiCommands.AddControl(stateTreeView, "States", TabLocation.CenterTop);
+    }
+
+    #endregion
+
+    #region Event Handlers
+
+    private void HandleStateMovedToCategory(StateSave stateSave, StateSaveCategory newCategory, StateSaveCategory oldCategory)
     {
         _stateTreeViewRightClickService.PopulateMenuStrip();
+        stateTreeViewModel.RefreshTo(GumState.Self.SelectedState.SelectedStateContainer, GumState.Self.SelectedState);
     }
 
     private void HandleElementSelected(ElementSave save)
@@ -99,22 +132,6 @@ public class MainStatePlugin : InternalPlugin
     {
         stateView.StateStackingMode = mode;
         stateTreeViewModel.StateStackingMode = mode;
-    }
-
-    private void CreateOldStateTab()
-    {
-        stateView = new StateView(_stateTreeViewRightClickService, _hotkeyManager);
-        _stateTreeViewRightClickService.OldMenuStrip = stateView.TreeViewContextMenu;
-        stateView.StateStackingModeChange += (_, _) => GumState.Self.SelectedState.StateStackingMode = stateView.StateStackingMode;
-
-        pluginTab = GumCommands.Self.GuiCommands.AddControl(stateView, "States", TabLocation.CenterTop);
-    }
-
-    private void CreateNewStateTab()
-    {
-        stateTreeView = new StateTreeView(stateTreeViewModel, _stateTreeViewRightClickService, _hotkeyManager, _selectedState);
-        _stateTreeViewRightClickService.NewMenuStrip = stateTreeView.TreeViewContextMenu;
-        newPluginTab = GumCommands.Self.GuiCommands.AddControl(stateTreeView, "States", TabLocation.CenterTop);
     }
 
     private void HandleCategoryRename(StateSaveCategory category, string arg2)
@@ -179,6 +196,13 @@ public class MainStatePlugin : InternalPlugin
 
     }
 
+    private void HandleVariableSet(ElementSave elementSave, InstanceSave instance, string variableName, object oldValue)
+    {
+        // Do this to refresh the yellow highlights - We may not need to do more than this:
+        stateTreeViewModel.RefreshTo(elementSave, GumState.Self.SelectedState);
+    }
+    #endregion
+
     private void PropagateVariableForCategorizedState(StateSave currentState)
     {
         foreach (var variable in currentState.Variables)
@@ -187,7 +211,6 @@ public class MainStatePlugin : InternalPlugin
                 GumState.Self.SelectedState.SelectedElement, GumState.Self.SelectedState.SelectedStateCategorySave);
         }
     }
-
 
     IStateContainer mLastElementRefreshedTo;
     void RefreshUI(IStateContainer stateContainer, ISelectedState selectedState)
@@ -204,7 +227,6 @@ public class MainStatePlugin : InternalPlugin
 
         if (stateContainer != null)
         {
-
             RemoveUnnecessaryNodes(stateContainer);
 
             AddNeededNodes(stateContainer);
@@ -226,8 +248,6 @@ public class MainStatePlugin : InternalPlugin
         {
             this.stateView.TreeView.Nodes.Clear();
         }
-
-
     }
 
     private void RemoveUnnecessaryNodes(IStateContainer stateContainer)
@@ -280,7 +300,6 @@ public class MainStatePlugin : InternalPlugin
         }
 
     }
-
 
     private void AddNeededNodes(IStateContainer stateContainer)
     {
@@ -379,7 +398,6 @@ public class MainStatePlugin : InternalPlugin
 
 
     }
-
 
     private void UpdateStateTreeNode(StateSave lastStateSave, InstanceSave instance, StateSave state)
     {

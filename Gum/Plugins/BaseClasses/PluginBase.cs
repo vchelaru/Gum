@@ -48,6 +48,10 @@ namespace Gum.Plugins.BaseClasses
         /// </summary>
         public event Action<StateSave, string> StateRename;
         public event Action<StateSave> StateAdd;
+
+        /// <summary>
+        /// Event raised when a state is moved to a new category. First argument is the state, second is the new category, third is the old category.
+        /// </summary>
         public event Action<StateSave, StateSaveCategory, StateSaveCategory> StateMovedToCategory;
         public event Action<StateSave> StateDelete;
         public event Action<StateSave> ReactToStateSaveSelected;
