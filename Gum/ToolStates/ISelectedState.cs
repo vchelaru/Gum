@@ -34,13 +34,13 @@ namespace Gum.ToolStates
         RecursiveVariableFinder SelectedRecursiveVariableFinder { get; }
         StateStackingMode StateStackingMode { get; set; }
 
-        void UpdateToSelectedStateSave();
         List<ElementWithState> GetTopLevelElementStack();
 
-        void UpdateToSelectedElement();
-        void UpdateToSelectedInstanceSave();
-        void UpdateToSelectedBehavior();
-        void UpdateToSelectedBehaviorVariable();
+        //void UpdateToSelectedStateSave();
+        //void UpdateToSelectedElement();
+        //void UpdateToSelectedInstanceSave();
+        //void UpdateToSelectedBehavior();
+        //void UpdateToSelectedBehaviorVariable();
 
     }
 }

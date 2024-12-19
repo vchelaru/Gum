@@ -21,6 +21,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\EventSave.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\GuideRectangle.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\GumProjectSave.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\IInstanceContainer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\InstanceSave.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\IStateContainer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GumDataTypes\NamedRectangle.cs" />

@@ -971,6 +971,7 @@ namespace Gum.Managers
         // in the Select methods where a Save object is selected.
         public void Select(InstanceSave instanceSave, ElementSave parent)
         {
+            if (IsInUiInitiatedSelection) return;
             if (instanceSave != null)
             {
                 TreeNode parentTreeNode = GetTreeNodeFor(parent);
@@ -989,7 +990,9 @@ namespace Gum.Managers
 
         public void Select(BehaviorSave behavior)
         {
-            if(behavior != null)
+            if (IsInUiInitiatedSelection) return;
+
+            if (behavior != null)
             {
                 var treeNode = GetTreeNodeFor(behavior);
 
@@ -999,9 +1002,25 @@ namespace Gum.Managers
 
         public void Select(IEnumerable<InstanceSave> list)
         {
+            if (IsInUiInitiatedSelection) return;
+
             if (list.Count() != 0)
             {
-                TreeNode parentContainer = GetTreeNodeFor(list.First().ParentContainer);
+                var firstItem = list.First();
+
+                TreeNode parentContainer = null;
+                if(firstItem.ParentContainer != null)
+                {
+                    parentContainer = GetTreeNodeFor(firstItem.ParentContainer);
+                }
+                else
+                {
+                    var behavior = ObjectFinder.Self.GetBehaviorContainerOf(firstItem);
+                    if(behavior != null)
+                    {
+                        parentContainer = GetTreeNodeFor(behavior);
+                    }
+                }
 
                 List<TreeNode> treeNodeList = new List<TreeNode>();
 
@@ -1022,6 +1041,8 @@ namespace Gum.Managers
 
         public void Select(ElementSave elementSave)
         {
+            if (IsInUiInitiatedSelection) return;
+
             if (elementSave == null)
             {
                 if (ObjectTreeView.SelectedNode != null && ObjectTreeView.SelectedNode.Tag != null && ObjectTreeView.SelectedNode.Tag is ElementSave)
@@ -1049,6 +1070,8 @@ namespace Gum.Managers
 
         private void Select(TreeNode treeNode)
         {
+            if (IsInUiInitiatedSelection) return;
+
             if (ObjectTreeView.SelectedNode != treeNode)
             {
                 // See comment above about why we have to manually raise the AfterClick
@@ -1066,6 +1089,8 @@ namespace Gum.Managers
 
         private void Select(List<TreeNode> treeNodes)
         {
+            if (IsInUiInitiatedSelection) return;
+
             ObjectTreeView.SelectedNodes = treeNodes;
 
             if (treeNodes.Count != 0)
@@ -1421,6 +1446,7 @@ namespace Gum.Managers
             return null;
         }
 
+        bool IsInUiInitiatedSelection = false;
         internal void OnSelect(TreeNode selectedTreeNode)
         {
             TreeNode treeNode = ObjectTreeView.SelectedNode;
@@ -1439,24 +1465,32 @@ namespace Gum.Managers
             PropertyGridManager.Self.ObjectsSuppressingRefresh.Add(this);
             try
             {
+                IsInUiInitiatedSelection = true;
                 if (selectedObject == null)
                 {
-                    SelectedState.Self.UpdateToSelectedElement();
+                    SelectedState.Self.SelectedElement = null;
+                    SelectedState.Self.SelectedBehavior = null;
+                    SelectedState.Self.SelectedInstance = null;
+
                     // do nothing
                 }
-                else if(selectedObject is ElementSave)
+                else if(selectedObject is ElementSave elementSave)
                 {
-                    SelectedState.Self.UpdateToSelectedElement();
+                    SelectedState.Self.SelectedInstance = null;
+                    SelectedState.Self.SelectedElement = elementSave;
                 }
-                else if (selectedObject is InstanceSave)
+                else if (selectedObject is InstanceSave selectedInstance)
                 {
-                    SelectedState.Self.UpdateToSelectedInstanceSave();
+                    var instances = this.SelectedNodes.Select(item => item.Tag)
+                        .Where(item => item is InstanceSave)
+                        .Select(item => item as InstanceSave);
 
-                    GumEvents.Self.CallInstanceSelected();
+                    //SelectedState.Self.SelectedInstance = selectedInstance;
+                    SelectedState.Self.SelectedInstances = instances;
                 }
-                else if(selectedObject is BehaviorSave)
+                else if(selectedObject is BehaviorSave behavior)
                 {
-                    SelectedState.Self.UpdateToSelectedBehavior();
+                    SelectedState.Self.SelectedBehavior = behavior;
                 }
 
                 PluginManager.Self.TreeNodeSelected(selectedTreeNode);
@@ -1464,6 +1498,7 @@ namespace Gum.Managers
             }
             finally
             {
+                IsInUiInitiatedSelection = false;
                 PropertyGridManager.Self.ObjectsSuppressingRefresh.Remove(this);
             }
 
@@ -1507,6 +1542,8 @@ namespace Gum.Managers
         {
             if (e.Button == MouseButtons.Right)
             {
+                ElementTreeViewManager.Self.OnSelect(ObjectTreeView.SelectedNode);
+
                 ElementTreeViewManager.Self.PopulateMenuStrip();
             }
         }

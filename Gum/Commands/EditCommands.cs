@@ -380,8 +380,16 @@ namespace Gum.Commands
                         // Clone instances
                         foreach (var instance in instances)
                         {
-                            var instanceSave = instance.Clone();
+                            // Clone will fail if we are cloning an InstanceSave
+                            // in a behavior because its type is BehaviorInstanceSave.
+                            // Therefore, we will just manually create a copy:
+                            //var instanceSave = instance.Clone();
+                            //var instanceSave = instance.Clone();
+                            var instanceSave = new InstanceSave();
+                            instanceSave.Name = instance.Name;
                             instanceSave.BaseType = instance.BaseType;
+                            instanceSave.DefinedByBase = instance.DefinedByBase;
+                            instanceSave.Locked = instance.Locked;
                             instanceSave.ParentContainer = componentSave;
 
                             componentSave.Instances.Add(instanceSave);

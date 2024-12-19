@@ -14,6 +14,7 @@ using Gum.Logic.FileWatch;
 using Microsoft.AppCenter.Crashes;
 using Gum.DataTypes;
 using Gum.Services;
+using Gum.Undo;
 
 namespace Gum
 {
@@ -93,6 +94,8 @@ namespace Gum
 
             var menuStripManager = new MenuStripManager();
             menuStripManager.Initialize(this);
+
+            UndoManager.Self.Initialize(menuStripManager);
 
             ((SelectedState)SelectedState.Self).Initialize(menuStripManager);
 

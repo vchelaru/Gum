@@ -152,10 +152,15 @@ public class StateTreeViewRightClickService
 
     bool GetIfCanMoveUp(StateSave state, StateSaveCategory category)
     {
-        var list = _selectedState.SelectedStateCategorySave.States;
+        var list = _selectedState.SelectedStateCategorySave?.States;
         if (category != null)
         {
             list = category.States;
+        }
+
+        if(list == null)
+        {
+            return false;
         }
 
         int stateIndex = list.IndexOf(state);
@@ -173,10 +178,15 @@ public class StateTreeViewRightClickService
     bool GetIfCanMoveDown(StateSave state, StateSaveCategory category)
     {
         //var list = _selectedState.SelectedStateContainer.UncategorizedStates;
-        var list = _selectedState.SelectedStateCategorySave.States;
+        var list = _selectedState.SelectedStateCategorySave?.States;
         if (category != null)
         {
             list = category.States;
+        }
+
+        if(list == null)
+        {
+            return false;
         }
 
         int oldIndex = list.IndexOf(state);

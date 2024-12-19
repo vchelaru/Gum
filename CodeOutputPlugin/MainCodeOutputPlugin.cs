@@ -52,13 +52,7 @@ namespace CodeOutputPlugin
         {
             AssignEvents();
 
-            var item = this.AddMenuItem("Plugins", "View Code");
-            item.Click += HandleViewCodeClicked;
-
-            if (control == null)
-            {
-                CreateControl();
-            }
+            CreateControl();
         }
 
         private void AssignEvents()

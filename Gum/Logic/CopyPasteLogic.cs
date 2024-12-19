@@ -113,27 +113,28 @@ namespace Gum.Logic
                 // a state may not be selected if the user selected a category.
                 if(state == null)
                 {
-                    state = element.DefaultState;
+                    state = element?.DefaultState;
                 }
 
                 CopiedData.CopiedStates.Clear();
     
-                var baseElementsDerivedFirst = ObjectFinder.Self.GetBaseElements(element);
+                var baseElementsDerivedFirst = element != null ? ObjectFinder.Self.GetBaseElements(element) : new List<ElementSave>();
                 // reverse loop:
                 for(int i = baseElementsDerivedFirst.Count - 1; i > -1; i--)
                 {
                     CopiedData.CopiedStates.Add(baseElementsDerivedFirst[i].DefaultState.Clone());
                 }
 
-                CopiedData.CopiedStates.Add(state.Clone());
+                if(state != null)
+                {
+                    CopiedData.CopiedStates.Add(state.Clone());
+                }
 
-                if(SelectedState.Self.SelectedStateCategorySave != null && SelectedState.Self.SelectedStateSave != null)
+                if(SelectedState.Self.SelectedStateCategorySave != null && SelectedState.Self.SelectedStateSave != null && element != null)
                 {
                     // it's categorized, so add the default:
                     CopiedData.CopiedStates.Add(element.DefaultState.Clone());
                 }
-
-                RecursiveVariableFinder rfv = new RecursiveVariableFinder(state);
 
                 List<InstanceSave> selected = new List<InstanceSave>();
                 // When copying we want to grab all instances in the order that they are in their container.
@@ -143,15 +144,23 @@ namespace Gum.Logic
                 CopiedData.CopiedInstancesSelected.Clear();
                 CopiedData.CopiedInstancesSelected.AddRange(SelectedState.Self.SelectedInstances);
 
-                CopiedData.CopiedInstancesRecursive = GetAllInstancesAndChildrenOf(selected, selected.FirstOrDefault()?.ParentContainer)
-                    // Sort by index in parent at the end so the children are sorted properly:
-                            .OrderBy(item =>
-                            {
-                                return element.Instances.IndexOf(item);
-                            })
-                            // clone after doing OrderBy
-                            .Select(item => item.Clone())
-                            .ToList();
+                var parentContainer = selected.FirstOrDefault()?.ParentContainer;
+                if(parentContainer != null)
+                {
+                    CopiedData.CopiedInstancesRecursive = GetAllInstancesAndChildrenOf(selected, selected.FirstOrDefault()?.ParentContainer)
+                        // Sort by index in parent at the end so the children are sorted properly:
+                                .OrderBy(item =>
+                                {
+                                    return element?.Instances.IndexOf(item) ?? 0;
+                                })
+                                // clone after doing OrderBy
+                                .Select(item => item.Clone())
+                                .ToList();
+                }
+                else
+                {
+                    CopiedData.CopiedInstancesRecursive.AddRange(CopiedData.CopiedInstancesSelected);
+                }
 
 
                 // Clear out any variables that don't pertain to the selected instance:
@@ -319,6 +328,12 @@ namespace Gum.Logic
 
         public static void PasteInstanceSaves(List<InstanceSave> instancesToCopy, List<StateSave> copiedStates, ElementSave targetElement, InstanceSave selectedInstance)
         {
+            if(targetElement is StandardElementSave)
+            {
+                GumCommands.Self.GuiCommands.ShowMessage($"Cannot create an instance in {targetElement} because it is a standard element");
+                return;
+            }
+
             if(LastPastedInstances.Contains(selectedInstance))
             {
                 selectedInstance = selectedInstance?.GetParentInstance();
@@ -337,10 +352,16 @@ namespace Gum.Logic
 
                 if(sourceElementInstanceNames == null)
                 {
-                    sourceElementInstanceNames = sourceElement.Instances.Select(item => item.Name).ToList();
+                    sourceElementInstanceNames = sourceElement?.Instances.Select(item => item.Name).ToList();
                 }
 
-                InstanceSave newInstance = sourceInstance.Clone();
+                // This could be an instance in a behavior, so we can't clone:
+                //InstanceSave newInstance = sourceInstance.Clone();
+                InstanceSave newInstance = new InstanceSave();
+                newInstance.Name = sourceInstance.Name;
+                newInstance.BaseType = sourceInstance.BaseType;
+                newInstance.DefinedByBase = sourceInstance.DefinedByBase;
+                newInstance.Locked = sourceInstance.Locked;
 
                 // the original may have been defined in a base component. The new instance will not be
                 // derived in the base, so let's get rid of that:
@@ -361,7 +382,7 @@ namespace Gum.Logic
                     if(targetElement == sourceElement)
                     {
                         int newIndex = -1;
-                        if(sourceElementInstanceNames.Contains(sourceInstance.Name))
+                        if(sourceElementInstanceNames?.Contains(sourceInstance.Name) == true)
                         {
                             newIndex = sourceElementInstanceNames.IndexOf(sourceInstance.Name);
                         }
@@ -377,7 +398,7 @@ namespace Gum.Logic
                         if(newIndex != -1)
                         {
                             targetElement.Instances.Insert(newIndex+1, newInstance);
-                            sourceElementInstanceNames.Insert(newIndex + 1, newInstance.Name);
+                            sourceElementInstanceNames?.Insert(newIndex + 1, newInstance.Name);
 
                         }
                         else
@@ -429,7 +450,7 @@ namespace Gum.Logic
                         // We now have to copy over the states
                         if (targetElement != sourceElement)
                         {
-                            if (sourceElement.States.Count != 1)
+                            if (sourceElement != null && sourceElement.States.Count != 1)
                             {
                                 MessageBox.Show("Only the default state variables will be copied since the source and target elements differ.");
                             }

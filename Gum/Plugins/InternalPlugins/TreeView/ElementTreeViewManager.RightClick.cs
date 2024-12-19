@@ -39,7 +39,7 @@ public partial class ElementTreeViewManager
 
     ToolStripMenuItem duplicateElement;
 
-    
+
 
     #endregion
 
@@ -105,7 +105,7 @@ public partial class ElementTreeViewManager
 
     void HandleDuplicateElementClick(object sender, EventArgs e)
     {
-        if(SelectedState.Self.SelectedScreen != null ||
+        if (SelectedState.Self.SelectedScreen != null ||
             SelectedState.Self.SelectedComponent != null)
         {
             GumCommands.Self.Edit.DuplicateSelectedElement();
@@ -184,7 +184,7 @@ public partial class ElementTreeViewManager
             {
                 fullFile = elementSave.GetFullPathXmlFile().FullPath;
             }
-            else if(treeNode.Tag is BehaviorSave behaviorSave)
+            else if (treeNode.Tag is BehaviorSave behaviorSave)
             {
                 fullFile =
                     GumCommands.Self.FileCommands.GetFullPathXmlFile(behaviorSave).FullPath;
@@ -201,10 +201,10 @@ public partial class ElementTreeViewManager
                 {
                     var doesExist = System.IO.File.Exists(fullFile);
 
-                    if(!doesExist)
+                    if (!doesExist)
                     {
                         // file doesn't exist, but if it's a standard folder we can make one:
-                        if(treeNode.IsTopComponentContainerTreeNode() ||
+                        if (treeNode.IsTopComponentContainerTreeNode() ||
                             treeNode.IsTopScreenContainerTreeNode())
                         {
                             System.IO.Directory.CreateDirectory(fullFile);
@@ -212,7 +212,7 @@ public partial class ElementTreeViewManager
                     }
                     Process.Start(fullFile);
                 }
-                catch(Exception exc)
+                catch (Exception exc)
                 {
                     MessageBox.Show("Could not open location:\n\n" + exc.ToString());
                 }
@@ -293,7 +293,7 @@ public partial class ElementTreeViewManager
                 var containerElement = SelectedState.Self.SelectedElement;
                 mMenuStrip.Items.Add(mGoToDefinition);
 
-                if(containerElement != null)
+                if (containerElement != null)
                 {
                     mMenuStrip.Items.Add("-");
 
@@ -309,7 +309,7 @@ public partial class ElementTreeViewManager
 
 
 
-                if(containerElement != null)
+                if (containerElement != null)
                 {
                     mMenuStrip.Items.Add("-");
 
@@ -318,14 +318,14 @@ public partial class ElementTreeViewManager
                     mAddParentInstance.Text = $"Add parent object to '{SelectedState.Self.SelectedInstance.Name}'";
                     mMenuStrip.Items.Add(mAddParentInstance);
 
-                    if(!string.IsNullOrEmpty(containerElement?.BaseType))
+                    if (!string.IsNullOrEmpty(containerElement?.BaseType))
                     {
                         var containerBase = ObjectFinder.Self.GetElementSave(containerElement.BaseType);
 
-                        if(containerBase is ScreenSave || containerBase is ComponentSave)
+                        if (containerBase is ScreenSave || containerBase is ComponentSave)
                         {
-                            mMenuStrip.Items.Add($"Add {SelectedState.Self.SelectedInstance.Name} to base {containerBase}", 
-                                null, 
+                            mMenuStrip.Items.Add($"Add {SelectedState.Self.SelectedInstance.Name} to base {containerBase}",
+                                null,
                                 (not, used) => HandleMoveToBase(SelectedState.Self.SelectedInstances, SelectedState.Self.SelectedElement, containerBase));
                         }
                     }
@@ -349,7 +349,7 @@ public partial class ElementTreeViewManager
                 mAddInstance.Text = "Add object to " + SelectedState.Self.SelectedElement.Name;
                 mMenuStrip.Items.Add(mAddInstance);
                 mMenuStrip.Items.Add(mSaveObject);
-                if(SelectedState.Self.SelectedScreen != null)
+                if (SelectedState.Self.SelectedScreen != null)
                 {
                     duplicateElement.Text = $"Duplicate {SelectedState.Self.SelectedScreen.Name}";
                 }
@@ -387,7 +387,7 @@ public partial class ElementTreeViewManager
             else if (SelectedState.Self.SelectedStandardElement != null)
             {
                 mMenuStrip.Items.Add("View in explorer", null, HandleViewInExplorer);
-                
+
                 mMenuStrip.Items.Add("-");
 
                 mMenuStrip.Items.Add(mSaveObject);
@@ -475,7 +475,7 @@ public partial class ElementTreeViewManager
 
     private void HandleMoveToBase(IEnumerable<InstanceSave> instances, ElementSave derivedElement, ElementSave baseElement)
     {
-        foreach(var instance in instances)
+        foreach (var instance in instances)
         {
             instance.DefinedByBase = true;
         }
@@ -484,7 +484,7 @@ public partial class ElementTreeViewManager
         CopyPasteLogic.PasteInstanceSaves(
             instances.ToList(),
             new List<DataTypes.Variables.StateSave> { derivedElement.DefaultState.Clone() },
-            baseElement, 
+            baseElement,
             null);
     }
 
@@ -505,96 +505,9 @@ public partial class ElementTreeViewManager
 
     private void HandleRenameFolder(object sender, EventArgs e)
     {
-        var tiw = new TextInputWindow();
-        tiw.Message = "Enter new folder name";
-        tiw.Result = SelectedNode.Text;
-        var dialogResult = tiw.ShowDialog();
+        var node = SelectedNode;
 
-        if(dialogResult == DialogResult.OK && tiw.Result != SelectedNode.Text)
-        {
-            bool isValid = true;
-            string whyNotValid;
-            if(!NameVerifier.Self.IsFolderNameValid(tiw.Result, out whyNotValid))
-            {
-                isValid = false;
-            }
-
-
-            // see if it already exists:
-            string fullFilePath = FileManager.GetDirectory( SelectedNode.GetFullFilePath().FullPath) + tiw.Result + "\\";
-
-            if(System.IO.Directory.Exists(fullFilePath))
-            {
-                whyNotValid = $"Folder {tiw.Result} already exists.";
-                isValid = false;
-            }
-
-            if(!isValid)
-            {
-                MessageBox.Show(whyNotValid);
-            }
-            else
-            {
-                string rootForElement;
-                if(SelectedNode.IsScreensFolderTreeNode())
-                {
-                    rootForElement = FileLocations.Self.ScreensFolder;
-                }
-                else if(SelectedNode.IsComponentsFolderTreeNode())
-                {
-                    rootForElement = FileLocations.Self.ComponentsFolder;
-                }
-                else
-                {
-                    throw new InvalidOperationException();
-                }
-
-                var oldFullPath = SelectedNode.GetFullFilePath();
-
-                string oldPathRelativeToElementsRoot = FileManager.MakeRelative(SelectedNode.GetFullFilePath().FullPath, rootForElement, preserveCase:true);
-                SelectedNode.Text = tiw.Result;
-                string newPathRelativeToElementsRoot = FileManager.MakeRelative(SelectedNode.GetFullFilePath().FullPath, rootForElement, preserveCase:true);
-
-                if (SelectedNode.IsScreensFolderTreeNode())
-                {
-                    foreach(var screen in ProjectState.Self.GumProjectSave.Screens)
-                    {
-                        if(screen.Name.StartsWith(oldPathRelativeToElementsRoot))
-                        {
-                            string oldVaue = screen.Name;
-                            string newName = newPathRelativeToElementsRoot + screen.Name.Substring(oldPathRelativeToElementsRoot.Length);
-
-                            screen.Name = newName;
-                            RenameLogic.HandleRename(screen, (InstanceSave)null, oldVaue, NameChangeAction.Move, askAboutRename: false);
-                        }
-                    }
-                }
-                else if (SelectedNode.IsComponentsFolderTreeNode())
-                {
-                    foreach (var component in ProjectState.Self.GumProjectSave.Components)
-                    {
-                        if(component.Name.ToLowerInvariant().StartsWith(oldPathRelativeToElementsRoot.ToLowerInvariant()))
-                        {
-                            string oldVaue = component.Name;
-                            string newName = newPathRelativeToElementsRoot + component.Name.Substring(oldPathRelativeToElementsRoot.Length);
-                            component.Name = newName;
-
-                            RenameLogic.HandleRename(component, (InstanceSave)null, oldVaue, NameChangeAction.Move, askAboutRename:false);
-                        }
-                    }
-                }
-
-                bool isNowEmpty = Directory.GetFiles(oldFullPath.FullPath).Length == 0;
-                if(isNowEmpty)
-                {
-                    Directory.Delete(oldFullPath.FullPath);
-                    GumCommands.Self.GuiCommands.RefreshElementTreeView();
-
-                }
-
-
-            }
-        }
+        GumCommands.Self.GuiCommands.ShowRenameFolderWindow(node);
     }
 
     private void HandleAddBehavior(object sender, EventArgs e)
@@ -745,10 +658,12 @@ public partial class ElementTreeViewManager
         var result = tiw.ShowDialog() == System.Windows.Forms.DialogResult.OK;
         name = result ? tiw.Result : null;
 
-        if (result) {
+        if (result)
+        {
             string whyNotValid;
 
-            if (!NameVerifier.Self.IsInstanceNameValid(name, null, SelectedState.Self.SelectedElement, out whyNotValid)) {
+            if (!NameVerifier.Self.IsInstanceNameValid(name, null, SelectedState.Self.SelectedElement, out whyNotValid))
+            {
                 MessageBox.Show(whyNotValid);
 
                 return false;
@@ -766,7 +681,8 @@ public partial class ElementTreeViewManager
         var focusedInstance = SelectedState.Self.SelectedInstance;
         var newInstance = GumCommands.Self.ProjectCommands.ElementCommands.AddInstance(SelectedState.Self.SelectedElement, name, StandardElementsManager.Self.DefaultType);
 
-        if (focusedInstance != null) {
+        if (focusedInstance != null)
+        {
             SetInstanceParent(SelectedState.Self.SelectedElement, newInstance, focusedInstance);
         }
     }
@@ -823,7 +739,7 @@ public partial class ElementTreeViewManager
 
         string newParent = parent.Name;
         var suffix = ObjectFinder.Self.GetDefaultChildName(parent);
-        if(!string.IsNullOrEmpty(suffix))
+        if (!string.IsNullOrEmpty(suffix))
         {
             newParent = parent.Name + "." + suffix;
         }

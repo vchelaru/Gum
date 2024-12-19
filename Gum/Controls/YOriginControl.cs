@@ -29,13 +29,16 @@ namespace Gum.Controls
             {
                 var variable = state.Variables.FirstOrDefault(item => item.Name == "Y Origin");
 
-                foreach (var toExclude in variable.ExcludedValuesForEnum)
+                if(variable != null)
                 {
-                    var matchingOption = toReturn.FirstOrDefault(item => (VerticalAlignment)item.Value == (VerticalAlignment)toExclude);
-
-                    if (matchingOption != null)
+                    foreach (var toExclude in variable.ExcludedValuesForEnum)
                     {
-                        toReturn.Remove(matchingOption);
+                        var matchingOption = toReturn.FirstOrDefault(item => (VerticalAlignment)item.Value == (VerticalAlignment)toExclude);
+
+                        if (matchingOption != null)
+                        {
+                            toReturn.Remove(matchingOption);
+                        }
                     }
                 }
             }

@@ -55,6 +55,7 @@ namespace Gum.Wireframe
         {
             RightClickInitialize(contextMenuStrip);
 
+            // this should be moved to a plugin.
             GumEvents.Self.InstanceSelected +=
                 () =>
                 {

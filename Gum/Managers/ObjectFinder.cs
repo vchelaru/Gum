@@ -497,6 +497,21 @@ namespace Gum.Managers
             return null;
         }
 
+        public BehaviorSave GetBehaviorContainerOf(InstanceSave instance)
+        {
+            if (GumProjectSave != null)
+            {
+                foreach (var behavior in GumProjectSave.Behaviors)
+                {
+                    if (behavior.RequiredInstances.Contains(instance))
+                    {
+                        return behavior;
+                    }
+                }
+            }
+            return null;
+        }
+
         public ElementSave GetElementContainerOf(InstanceSave instanceSave)
         {
             if (GumProjectSave != null)

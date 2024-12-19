@@ -83,7 +83,7 @@ namespace StateAnimationPlugin
 
         private void CreateMenuItems()
         {
-            menuItem = AddMenuItem(new List<string> { "State Animation", "View Animations" });
+            menuItem = AddMenuItem("View", "View Animations" );
 
             menuItem.Click += HandleToggleTabVisibility;
         }

@@ -12,6 +12,7 @@ using RenderingLibrary;
 using Gum.DataTypes.Behaviors;
 using Gum.Controls;
 using Newtonsoft.Json.Linq;
+using Gum.Events;
 
 namespace Gum.ToolStates;
 
@@ -20,8 +21,6 @@ public class SelectedState : ISelectedState
     #region Fields
 
     static ISelectedState mSelf;
-
-    VariableSave mSelectedVariableSave;
 
     SelectedStateSnapshot snapshot = new SelectedStateSnapshot();
     private MenuStripManager _menuStripManager;
@@ -47,59 +46,18 @@ public class SelectedState : ISelectedState
         }
     }
 
-    TreeNode GetComponentTreeNodeRoot(TreeNode treeNode)
-    {
-        while (treeNode != null)
-        {
-            if (treeNode.Tag is ElementSave)
-            {
-                return treeNode;
-            }
-            else if (!treeNode.IsTopElementContainerTreeNode())
-            {
-                treeNode = treeNode.Parent;
-            }
-            else
-            {
-                return null;
-            }
-        }
-        return null;
-    }
-
-    TreeNode GetBehaviorTreeNodeRoot(TreeNode treeNode)
-    {
-        while(treeNode != null)
-        {
-            if (treeNode.Tag is BehaviorSave)
-            {
-                return treeNode;
-            }
-            else if (!treeNode.IsTopBehaviorTreeNode())
-            {
-                treeNode = treeNode.Parent;
-            }
-            else
-            {
-                return null;
-            }
-        }
-        return null;
-    }
-
     public ScreenSave SelectedScreen
     {
         get
         {
-            return GetComponentTreeNodeRoot(ElementTreeViewManager.Self.SelectedNode)
-                ?.Tag as ScreenSave;
+            return snapshot.SelectedScreen;
         }
         set
         {
             // We don't want this to unset selected components or standards if this is set to null
             if (value != SelectedScreen && (value != null || SelectedScreen == null || SelectedScreen is ScreenSave))
             {
-                ElementTreeViewManager.Self.Select(value);
+                UpdateToSelectedElement(value);
             }
         }
     }
@@ -108,14 +66,13 @@ public class SelectedState : ISelectedState
     {
         get
         {
-            return GetComponentTreeNodeRoot(ElementTreeViewManager.Self.SelectedNode)
-                ?.Tag as ComponentSave;
+            return snapshot.SelectedComponent;
         }
         set
         {
             if (value != SelectedComponent && (value != null || SelectedComponent == null || SelectedComponent is ComponentSave))
             {
-                ElementTreeViewManager.Self.Select(value);
+                UpdateToSelectedElement(value);
             }
         }
     }
@@ -124,21 +81,11 @@ public class SelectedState : ISelectedState
     {
         get
         {
-            return GetBehaviorTreeNodeRoot(ElementTreeViewManager.Self.SelectedNode)?.Tag as BehaviorSave;
+            return snapshot.SelectedBehavior;
         }
         set
         {
-            if (value != SelectedBehavior)
-            {
-                if (value != null)
-                {
-                    ElementTreeViewManager.Self.Select(value);
-                }
-                else if (value == null && SelectedBehavior != null)
-                {
-                    ElementTreeViewManager.Self.SelectedNode = null;
-                }
-            }
+            HandleBehaviorSelected(value);
         }
     }
 
@@ -146,19 +93,19 @@ public class SelectedState : ISelectedState
     {
         get
         {
-            if(SelectedComponent != null)
+            if (SelectedComponent != null)
             {
                 return SelectedComponent;
             }
-            else if(SelectedScreen != null)
+            else if (SelectedScreen != null)
             {
                 return SelectedScreen;
             }
-            else if(SelectedStandardElement != null)
+            else if (SelectedStandardElement != null)
             {
                 return SelectedStandardElement;
             }
-            else if(SelectedBehavior != null)
+            else if (SelectedBehavior != null)
             {
                 return SelectedBehavior;
             }
@@ -171,14 +118,13 @@ public class SelectedState : ISelectedState
     {
         get
         {
-            return GetComponentTreeNodeRoot(ElementTreeViewManager.Self.SelectedNode)
-                ?.Tag as StandardElementSave;
+            return snapshot.SelectedStandardElement;
         }
         set
         {
             if (value != SelectedStandardElement && (value != null || SelectedStandardElement == null || SelectedStandardElement is StandardElementSave))
             {
-                ElementTreeViewManager.Self.Select(value);
+                UpdateToSelectedElement(value);
             }
         }
     }
@@ -187,71 +133,23 @@ public class SelectedState : ISelectedState
     {
         get
         {
-            return (ElementSave)SelectedScreen ??
-                (ElementSave)SelectedComponent ??
-                (ElementSave)SelectedStandardElement;
+            return snapshot.SelectedElement;
         }
         set
         {
-            if (value != SelectedElement)
-            {
-                if (value == null)
-                {
-                    SelectedScreen = null;
-                    SelectedStandardElement = null;
-                    SelectedComponent = null;
-                }
-                else if (value is ScreenSave)
-                {
-                    SelectedScreen = value as ScreenSave;
-
-                    if(SelectedTreeNode == null && SelectedScreen != null)
-                    {
-                        // we tried to select something (like through a re-select) that no longer exists:
-                        SelectedScreen = null;
-                    }
-                }
-                else if (value is ComponentSave)
-                {
-                    SelectedComponent = value as ComponentSave;
-                    if(SelectedTreeNode == null && SelectedComponent != null)
-                    {
-                        SelectedComponent = null;
-                    }
-                }
-                else if (value is StandardElementSave)
-                {
-                    SelectedStandardElement = value as StandardElementSave;
-                    if(SelectedTreeNode == null && SelectedStandardElement != null)
-                    {
-                        SelectedStandardElement = null;
-                    }
-                }
-                else
-                {
-                    throw new InvalidOperationException();
-                }
-            }
+            UpdateToSelectedElement(value);
         }
     }
 
     public List<ElementSave> SelectedElements
     {
+        set
+        {
+            UpdateToSelectedElements(value);
+        }
         get
         {
-            var hashSet = new HashSet<ElementSave>();
-
-            foreach (TreeNode node in ElementTreeViewManager.Self.SelectedNodes)
-            {
-                var item = GetComponentTreeNodeRoot(node)
-                    ?.Tag as ElementSave;
-                if(item != null)
-                {
-                    hashSet.Add(item);
-                }
-            }
-
-            return hashSet.ToList();
+            return snapshot.SelectedElements;
         }
     }
 
@@ -276,7 +174,8 @@ public class SelectedState : ISelectedState
         }
         set
         {
-            UpdateToSetSelectedStateSave(value);
+
+            HandleStateSaveSelected(value);
         }
     }
 
@@ -284,18 +183,7 @@ public class SelectedState : ISelectedState
     {
         get
         {
-            if (SelectedStateSave != null)
-            {
-                return SelectedStateSave;
-            }
-            else if (SelectedElement != null)
-            {
-                return SelectedElement.DefaultState;
-            }
-            else
-            {
-                return null;
-            }
+            return SelectedStateSave ?? SelectedElement?.DefaultState;
         }
     }
 
@@ -308,6 +196,8 @@ public class SelectedState : ISelectedState
         set
         {
             UpdateToSetSelectedStateSaveCategory(value);
+            UpdateToSetSelectedStateSave(SelectedStateSave);
+
         }
     }
 
@@ -315,39 +205,11 @@ public class SelectedState : ISelectedState
     {
         get
         {
-            if (ElementTreeViewManager.Self.SelectedNode != null && ElementTreeViewManager.Self.SelectedNode.IsInstanceTreeNode())
-            {
-                return ElementTreeViewManager.Self.SelectedNode.Tag as InstanceSave;
-            }
-            else
-            {
-                return null;
-            }
+            return snapshot.SelectedInstance;
         }
         set
         {
-            if (value != SelectedInstance)
-            {
-                if (value != null)
-                {
-                    ElementSave parent = value.ParentContainer;
-
-                    ElementTreeViewManager.Self.Select(value, parent);
-
-                    if(parent != null && SelectedElement == null)
-                    {
-                        SelectedElement = parent;
-                    }
-                }
-                else if (value == null && SelectedInstance != null)
-                {
-                    ElementSave selected = SelectedElement;
-
-                    ElementTreeViewManager.Self.SelectedNode = null;
-
-                    SelectedElement = selected;
-                }
-            }
+            UpdateToSetSelectedInstance(value);
         }
     }
 
@@ -355,30 +217,11 @@ public class SelectedState : ISelectedState
     {
         get
         {
-            // For performance reasons I was creating the instances here, but now I'm going to
-            // simply return a copy of the list so that loops don't throw exceptions in foreach's if the list modifies
-            List<InstanceSave> list = new List<InstanceSave>();
-
-            foreach (TreeNode node in ElementTreeViewManager.Self.SelectedNodes)
-            {
-                if (node.IsInstanceTreeNode())
-                {
-                    list.Add(node.Tag as InstanceSave);
-                }
-            }
-
-            return list;
+            return snapshot.SelectedInstances;
         }
         set
         {
-            List<InstanceSave> list = new List<InstanceSave>();
-
-            foreach (var item in value)
-            {
-                list.Add(item);
-            }
-
-            ElementTreeViewManager.Self.Select(list);
+            UpdateToSelectedInstances(value);
         }
 
     }
@@ -387,11 +230,11 @@ public class SelectedState : ISelectedState
     {
         set
         {
-            mSelectedVariableSave = value;
+            snapshot.SelectedVariableSave = value;
         }
         get
         {
-            return mSelectedVariableSave;
+            return snapshot.SelectedVariableSave;
         }
 
     }
@@ -405,14 +248,7 @@ public class SelectedState : ISelectedState
     {
         get
         {
-            if (SelectedVariableSave != null)
-            {
-                return SelectedVariableSave.GetRootName();
-            }
-            else
-            {
-                return null;
-            }
+            return SelectedVariableSave?.GetRootName();
         }
     }
 
@@ -484,12 +320,12 @@ public class SelectedState : ISelectedState
     {
         get
         {
-            return PropertyGridManager.Self.SelectedBehaviorVariable;
+            return snapshot.SelectedBehaviorVariable;
         }
 
         set
         {
-            PropertyGridManager.Self.SelectedBehaviorVariable = value;
+            UpdateToSelectedBehaviorVariable(value);
         }
     }
 
@@ -517,6 +353,22 @@ public class SelectedState : ISelectedState
         }
     }
 
+    private void HandleStateSaveSelected(StateSave stateSave)
+    {
+        StateSaveCategory category = null;
+        var elementContainer =
+            ObjectFinder.Self.GetStateContainerOf(stateSave);
+
+        category = elementContainer?.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
+
+        if(category != null && category != snapshot.SelectedStateCategorySave)
+        {
+            snapshot.SelectedStateCategorySave = category;
+        }
+
+        UpdateToSetSelectedStateSave(stateSave);
+    }
+
     private void UpdateToSetSelectedStateSave(StateSave selectedStateSave)
     {
         var isSame = snapshot.SelectedStateSave == selectedStateSave;
@@ -524,6 +376,82 @@ public class SelectedState : ISelectedState
         {
             TakeSnapshot(selectedStateSave);
             PluginManager.Self.ReactToStateSaveSelected(selectedStateSave);
+        }
+    }
+
+
+    private void UpdateToSetSelectedInstance(InstanceSave value)
+    {
+        var isSame = snapshot.SelectedInstance == value;
+        if (!isSame)
+        {
+            snapshot.SelectedInstance = value;
+            PerformAfterSelectInstanceLogic();
+        }
+    }
+
+    private void PerformAfterSelectInstanceLogic()
+    {
+        if (snapshot.SelectedInstance != null)
+        {
+            var stateContainerBefore = snapshot.SelectedStateContainer;
+
+            ElementSave parent = snapshot.SelectedInstance.ParentContainer;
+            var elementAfter = ObjectFinder.Self.GetElementContainerOf(snapshot.SelectedInstance);
+            var behaviorAfter = ObjectFinder.Self.GetBehaviorContainerOf(snapshot.SelectedInstance);
+
+            if (elementAfter != null)
+            {
+                UpdateToSelectedElement(elementAfter);
+            }
+            if (behaviorAfter != null)
+            {
+                UpdateToSelectedBehavior(behaviorAfter);
+            }
+
+            ProjectVerifier.Self.AssertIsPartOfProject(parent);
+
+            SelectedElement = parent;
+
+            if(elementAfter != null || behaviorAfter != null)
+            {
+                if(stateContainerBefore != elementAfter && stateContainerBefore != behaviorAfter)
+                {
+                    GumCommands.Self.GuiCommands.RefreshStateTreeView();
+                }
+            }
+        }
+
+
+        if (SelectedElement != null && (SelectedStateSave == null || SelectedElement.AllStates.Contains(SelectedStateSave) == false))
+        {
+            SelectedStateSave = SelectedElement.States[0];
+        }
+
+        if (WireframeObjectManager.Self.ElementShowing != this.SelectedElement)
+        {
+            WireframeObjectManager.Self.RefreshAll(false);
+        }
+
+        SelectionManager.Self.Refresh();
+
+        _menuStripManager.RefreshUI();
+
+        //PropertyGridManager.Self.RefreshUI();
+        GumCommands.Self.GuiCommands.RefreshVariables();
+
+
+        // This is needed for the wireframe manager, but this should be moved to a plugin
+        GumEvents.Self.CallInstanceSelected();
+
+        if (snapshot.SelectedInstance != null)
+        {
+            var element = ObjectFinder.Self.GetElementContainerOf(snapshot.SelectedInstance);
+            PluginManager.Self.InstanceSelected(element, snapshot.SelectedInstance);
+        }
+        else if (SelectedElement != null)
+        {
+            PluginManager.Self.ElementSelected(SelectedElement);
         }
     }
 
@@ -536,7 +464,7 @@ public class SelectedState : ISelectedState
     private void TakeSnapshot(StateSave selectedStateSave)
     {
         snapshot.SelectedStateSave = selectedStateSave;
-        var elementContainer = 
+        var elementContainer =
             ObjectFinder.Self.GetStateContainerOf(selectedStateSave);
         StateSaveCategory category = null;
         category = elementContainer?.Categories.FirstOrDefault(item => item.States.Contains(selectedStateSave));
@@ -557,139 +485,128 @@ public class SelectedState : ISelectedState
         _menuStripManager = menuStripManager;
     }
 
-    public void UpdateToSelectedElement()
+    private void UpdateToSelectedElements(List<ElementSave> elements)
     {
-        GumCommands.Self.GuiCommands.RefreshStateTreeView();
-
-        var stateBefore = SelectedStateSave;
-
-        if (SelectedElement != null && 
-            (SelectedStateSave == null || SelectedElement.AllStates.Contains(SelectedStateSave) == false) &&
-            SelectedElement.States.Count > 0
-            )
+        snapshot.SelectedElements = elements;
+        if (elements?.Count > 0)
         {
-            
-            SelectedStateSave = SelectedElement.States[0];
-        }
-        else if (SelectedElement == null)
-        {
-            SelectedStateSave = null;
-
-        }
-
-        if(stateBefore == SelectedStateSave)
-        {
-            // If the state changed (element changed) then no need to force the UI again
-            GumCommands.Self.GuiCommands.RefreshVariables();
-        }
-
-        WireframeObjectManager.Self.RefreshAll(false);
-
-        SelectionManager.Self.Refresh();
-
-        _menuStripManager.RefreshUI();
-
-        PluginManager.Self.ElementSelected(SelectedElement);
-
-    }
-
-    public void UpdateToSelectedBehavior()
-    {
-        GumCommands.Self.GuiCommands.RefreshStateTreeView();
-
-        GumCommands.Self.GuiCommands.RefreshVariables();
-
-        WireframeObjectManager.Self.RefreshAll(false);
-
-        _menuStripManager.RefreshUI();
-
-        // Although plugins could just listen for behavior changes, and
-        // assume that means no elements are selected, that's a bit of a pain.
-        // A behavior may just care about whether an element is selected or not.
-        PluginManager.Self.ElementSelected(null);
-        PluginManager.Self.BehaviorSelected(SelectedBehavior);
-
-    }
-
-    public void UpdateToSelectedBehaviorVariable()
-    {
-        _menuStripManager.RefreshUI();
-    }
-
-    public void UpdateToSelectedStateSave()
-    {
-        if(StateStackingMode == StateStackingMode.SingleState)
-        {
-            // reset everything. This is slow, but is easy
-            WireframeObjectManager.Self.RefreshAll(true);
+            UpdateToSelectedElement(elements[0]);
         }
         else
         {
-
-            var currentGue = WireframeObjectManager.Self.GetSelectedRepresentation();
-
-            if(currentGue == null)
-            {
-                currentGue = WireframeObjectManager.Self.RootGue;
-            }
-
-            if(currentGue != null && this.SelectedStateSave != null)
-            {
-                // Applying a state just stacks it on top of the current
-                currentGue.ApplyState(this.SelectedStateSave);
-            }
+            UpdateToSelectedElement(null);
         }
-
-        SelectionManager.Self.Refresh();
-
-
-
-        if (SelectedStateSave != null)
-        {
-            StateTreeViewManager.Self.Select(SelectedStateSave);
-        }
-        else if (SelectedStateCategorySave != null)
-        {
-            StateTreeViewManager.Self.Select(SelectedStateCategorySave);
-        }
-
-        GumCommands.Self.GuiCommands.RefreshVariables();
-
-        _menuStripManager.RefreshUI();
     }
 
-    public void UpdateToSelectedInstanceSave()
+    private void UpdateToSelectedElement(ElementSave element)
     {
-        if (SelectedInstance != null)
+        if (snapshot.SelectedElement != element)
         {
-            ElementSave parent = SelectedInstance.ParentContainer;
+            snapshot.SelectedElement = element;
 
-            ProjectVerifier.Self.AssertIsPartOfProject(parent);
+            GumCommands.Self.GuiCommands.RefreshStateTreeView();
 
-            SelectedElement = SelectedInstance.ParentContainer;
+            var stateBefore = SelectedStateSave;
+
+            if (SelectedElement != null &&
+                (SelectedStateSave == null || SelectedElement.AllStates.Contains(SelectedStateSave) == false) &&
+                SelectedElement.States.Count > 0
+                )
+            {
+
+                SelectedStateSave = SelectedElement.States[0];
+            }
+            else if (SelectedElement == null)
+            {
+                SelectedStateSave = null;
+
+            }
+
+            if(element != null)
+            {
+                SelectedBehavior = null;
+            }
+
+            if (stateBefore == SelectedStateSave)
+            {
+                // If the state changed (element changed) then no need to force the UI again
+                GumCommands.Self.GuiCommands.RefreshVariables();
+            }
+
+            WireframeObjectManager.Self.RefreshAll(true);
+
+            SelectionManager.Self.Refresh();
+
+            _menuStripManager.RefreshUI();
+
+            PluginManager.Self.ElementSelected(SelectedElement);
         }
 
-        GumCommands.Self.GuiCommands.RefreshStateTreeView();
-
-        if (SelectedElement != null && (SelectedStateSave == null || SelectedElement.AllStates.Contains(SelectedStateSave) == false))
-        {
-            SelectedStateSave = SelectedElement.States[0];
-        }
-
-        if (WireframeObjectManager.Self.ElementShowing != this.SelectedElement)
-        {
-            WireframeObjectManager.Self.RefreshAll(false);
-        }
-
-        SelectionManager.Self.Refresh();
-
-        _menuStripManager.RefreshUI();
-
-        //PropertyGridManager.Self.RefreshUI();
-        GumCommands.Self.GuiCommands.RefreshVariables();
-
-        PluginManager.Self.InstanceSelected(SelectedElement, SelectedInstance);
     }
+
+    private void HandleBehaviorSelected(BehaviorSave behavior)
+    {
+        if(behavior != null && SelectedInstance != null)
+        {
+            SelectedInstance = null;
+        }
+        UpdateToSelectedBehavior(behavior);
+    }
+
+    private void UpdateToSelectedBehavior(BehaviorSave behavior)
+    {
+        if (behavior != snapshot.SelectedBehavior)
+        {
+            snapshot.SelectedBehavior = behavior;
+            GumCommands.Self.GuiCommands.RefreshStateTreeView();
+
+            GumCommands.Self.GuiCommands.RefreshVariables();
+
+            WireframeObjectManager.Self.RefreshAll(false);
+
+            _menuStripManager.RefreshUI();
+
+
+            SelectedStateSave = null;
+            SelectedStateCategorySave = null;
+            if(SelectedBehavior != null)
+            {
+                SelectedElement = null;
+            }
+
+            // Although plugins could just listen for behavior changes, and
+            // assume that means no elements are selected, that's a bit of a pain.
+            // A behavior may just care about whether an element is selected or not.
+            PluginManager.Self.BehaviorSelected(SelectedBehavior);
+        }
+
+    }
+
+    private void UpdateToSelectedBehaviorVariable(VariableSave variable)
+    {
+        if (variable != snapshot.SelectedBehaviorVariable)
+        {
+            snapshot.SelectedBehaviorVariable = variable;
+            PropertyGridManager.Self.SelectedBehaviorVariable = variable;
+            _menuStripManager.RefreshUI();
+        }
+    }
+
+
+    private void UpdateToSelectedInstances(IEnumerable<InstanceSave> instances)
+    {
+        snapshot.SelectedInstances = instances ?? new List<InstanceSave>();
+        if (instances?.Count() > 0)
+        {
+            PerformAfterSelectInstanceLogic();
+        }
+        else
+        {
+            UpdateToSetSelectedInstance(null);
+        }
+    }
+
+
 
     public List<ElementWithState> GetTopLevelElementStack()
     {
@@ -724,12 +641,61 @@ public class SelectedState : ISelectedState
 /// </remarks>
 class SelectedStateSnapshot : ISelectedState
 {
-    public ScreenSave SelectedScreen { get; set; }
-    public ElementSave SelectedElement { get; set; }
+    public ScreenSave SelectedScreen
+    {
+        get => SelectedElement as ScreenSave;
+        set
+        {
+            SelectedElement = value;
+        }
+    }
+    public ElementSave SelectedElement
+    {
+        get => selectedElements.FirstOrDefault();
+        set
+        {
+            selectedElements.Clear();
+            if(value != null)
+            {
+                selectedElements.Add(value);
+            }
+        }
+    }
 
-    public List<ElementSave> SelectedElements { get; set; }
+    List<ElementSave> selectedElements = new List<ElementSave>();
+    public List<ElementSave> SelectedElements 
+    {
+        get => selectedElements;
+        set
+        {
+            selectedElements.Clear();
+            if(value?.Count > 0)
+            {
+                selectedElements.AddRange(value);
+            }
+        }
+    }
 
-    public IStateContainer SelectedStateContainer { get; set; }
+    public IStateContainer SelectedStateContainer
+    {
+        get => (IStateContainer)SelectedElement ?? SelectedBehavior;
+        set
+        {
+            if (value is ElementSave elementSave)
+            {
+                SelectedElement = elementSave;
+            }
+            else if (value is BehaviorSave behaviorSave)
+            {
+                SelectedBehavior = behaviorSave;
+            }
+            else
+            {
+                SelectedElement = null;
+                SelectedBehavior = null;
+            }
+        }
+    }
 
     public BehaviorSave SelectedBehavior { get; set; }
     public StateSave CustomCurrentStateSave { get; set; }
@@ -738,17 +704,55 @@ class SelectedStateSnapshot : ISelectedState
     public StateSave SelectedStateSaveOrDefault { get; set; }
 
     public StateSaveCategory SelectedStateCategorySave { get; set; }
-    public ComponentSave SelectedComponent { get; set; }
-    public InstanceSave SelectedInstance { get; set; }
+    public ComponentSave SelectedComponent
+    {
+        get => SelectedElement as ComponentSave;
+        set
+        {
+            SelectedElement = value;
+        }
+    }
+    //public InstanceSave SelectedInstance { get; set; }
+    public InstanceSave SelectedInstance
+    {
+        get => SelectedInstances.FirstOrDefault();
+        set
+        {
+            selectedInstances.Clear();
+            if(value != null)
+            {
+                selectedInstances.Add(value);
+            }
+        }
+    }
     public IPositionedSizedObject SelectedIpso { get; set; }
 
     public List<GraphicalUiElement> SelectedIpsos { get; set; }
 
-    public IEnumerable<InstanceSave> SelectedInstances { get; set; }
+    List<InstanceSave> selectedInstances = new List<InstanceSave>();
+    public IEnumerable<InstanceSave> SelectedInstances
+    {
+        get => selectedInstances;
+        set
+        {
+            selectedInstances.Clear();
+            if (value?.Count() > 0)
+            {
+                selectedInstances.AddRange(value);
+            }
+        }
+    }
 
     public string SelectedVariableName { get; set; }
 
-    public StandardElementSave SelectedStandardElement { get; set; }
+    public StandardElementSave SelectedStandardElement
+    {
+        get => SelectedElement as StandardElementSave;
+        set
+        {
+            SelectedElement = value;
+        }
+    }
     public VariableSave SelectedVariableSave { get; set; }
     public VariableSave SelectedBehaviorVariable { get; set; }
 
@@ -761,31 +765,6 @@ class SelectedStateSnapshot : ISelectedState
     public StateStackingMode StateStackingMode { get; set; }
 
     public List<ElementWithState> GetTopLevelElementStack()
-    {
-        throw new NotImplementedException();
-    }
-
-    public void UpdateToSelectedBehavior()
-    {
-        throw new NotImplementedException();
-    }
-
-    public void UpdateToSelectedBehaviorVariable()
-    {
-        throw new NotImplementedException();
-    }
-
-    public void UpdateToSelectedElement()
-    {
-        throw new NotImplementedException();
-    }
-
-    public void UpdateToSelectedInstanceSave()
-    {
-        throw new NotImplementedException();
-    }
-
-    public void UpdateToSelectedStateSave()
     {
         throw new NotImplementedException();
     }
