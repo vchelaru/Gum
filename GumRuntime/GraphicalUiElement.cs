@@ -4577,10 +4577,32 @@ namespace Gum.Wireframe
                         this.ClipsChildren = (bool)value;
                         toReturn = true;
                         break;
+#if !FRB
+                    case "ExposeChildrenEvents":
+                        {
+                            if(this is InteractiveGue interactiveGue)
+                            {
+                                interactiveGue.ExposeChildrenEvents = (bool)value;
+                                toReturn = true;
+                            }
+                        }
+                        break;
+#endif
                     case "FlipHorizontal":
                         this.FlipHorizontal = (bool)value;
                         toReturn = true;
                         break;
+#if !FRB
+                    case "HasEvents":
+                        {
+                            if(this is InteractiveGue interactiveGue)
+                            {
+                                interactiveGue.HasEvents = (bool)value;
+                                toReturn = true;
+                            }
+                        }
+                        break;
+#endif
                     case "Height":
                         this.Height = (float)value;
                         toReturn = true;

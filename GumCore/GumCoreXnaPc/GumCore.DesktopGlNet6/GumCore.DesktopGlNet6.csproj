@@ -6,10 +6,10 @@
 
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<DefineConstants>$(DefineConstants)TRACE;MONOGAME</DefineConstants>
+		<DefineConstants>$(DefineConstants)TRACE;MONOGAME;FRB</DefineConstants>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-		<DefineConstants>$(DefineConstants)TRACE;MONOGAME</DefineConstants>
+		<DefineConstants>$(DefineConstants)TRACE;MONOGAME;FRB</DefineConstants>
 	</PropertyGroup>
 	<ItemGroup>
 		<Compile Remove="Content\**" />

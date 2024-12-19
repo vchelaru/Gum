@@ -1,5 +1,41 @@
 {
   "UserEvents": {
-    "Owner": []
+    "Owner": [
+      {
+        "NewName": "DemoScreenGum.ButtonConfirmInstance2",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-19T11:45:11.1857033Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "DemoScreenGum.Controls/ButtonConfirm ButtonConfirmInstance2 in DemoScreenGum",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2024-12-19T11:45:22.723784Z"
+      },
+      {
+        "NewName": "DemoScreenGum.ContainerInstance1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-19T11:45:33.6998424Z"
+      },
+      {
+        "NewName": "DemoScreenGum.ButtonConfirmInstance2",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-19T11:46:05.1293261Z"
+      },
+      {
+        "NewName": "DemoScreenGum.ButtonWithNoEvents",
+        "OldName": "DemoScreenGum.ButtonConfirmInstance2",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-19T11:46:39.1008004Z"
+      }
+    ]
   }
 }
