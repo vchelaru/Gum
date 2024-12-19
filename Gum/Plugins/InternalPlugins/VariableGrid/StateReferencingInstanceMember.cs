@@ -204,7 +204,7 @@ namespace Gum.PropertyGridHelpers
         {
             get
             {
-                return mStateSave.Variables.FirstOrDefault(item =>
+                return mStateSave?.Variables.FirstOrDefault(item =>
                     item.Name == mVariableName || item.ExposedAsName == mVariableName);
             }
         }
@@ -533,6 +533,7 @@ namespace Gum.PropertyGridHelpers
                 if (toReturn == null)
                 {
                     var effectiveVariableName = VariableSave?.Name ?? mVariableName;
+                    
                     toReturn = mStateSave.GetValueRecursive(effectiveVariableName);
                 }
 
@@ -911,8 +912,19 @@ namespace Gum.PropertyGridHelpers
 
             if (InstanceSave != null)
             {
-                variableSave = InstanceSave.GetVariableFromThisOrBase(
-                     new ElementWithState(InstanceSave.ParentContainer), RootVariableName);
+                if(InstanceSave.ParentContainer == null)
+                {
+                    // this is an instance in a behavior
+                    var elementBaseType = ObjectFinder.Self.GetElementSave(InstanceSave);
+
+                    variableSave = elementBaseType?.GetVariableFromThisOrBase(RootVariableName);
+                }
+                else
+                {
+
+                    variableSave = InstanceSave.GetVariableFromThisOrBase(
+                         new ElementWithState(InstanceSave.ParentContainer), RootVariableName);
+                }
             }
             else
             {

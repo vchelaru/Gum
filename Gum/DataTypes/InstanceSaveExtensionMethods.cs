@@ -258,7 +258,7 @@ namespace Gum.DataTypes
             // instanceBase can be null here because the instance could reference a type that has been deleted
             ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
 
-            VariableListSave variableListSave = parentContainer.DefaultState.GetVariableListRecursive(instance.Name + "." + variable);
+            VariableListSave variableListSave = parentContainer?.DefaultState.GetVariableListRecursive(instance.Name + "." + variable);
             if (variableListSave == null)
             {
 

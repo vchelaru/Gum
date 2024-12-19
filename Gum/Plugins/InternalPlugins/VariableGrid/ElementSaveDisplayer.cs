@@ -14,6 +14,8 @@ using WpfDataUi.DataTypes;
 using Gum.Wireframe;
 using WpfDataUi.Controls;
 using GumRuntime;
+using Gum.DataTypes.Behaviors;
+using Newtonsoft.Json.Linq;
 
 namespace Gum.PropertyGridHelpers
 {
@@ -176,9 +178,40 @@ namespace Gum.PropertyGridHelpers
             }
 
             #endregion
-
-           
         }
+
+        public void GetCategories(BehaviorSave behavior, InstanceSave instance, List<MemberCategory> categories)
+        {
+            if (instance != null)
+            {
+                var propertyLists = new List<InstanceSavePropertyDescriptor>();
+                AddNameAndBaseTypeProperties(propertyLists, null, instance, isReadOnly: false);
+
+                foreach(var item in propertyLists)
+                {
+                    var srim = ToStateReferencingInstanceMember(null, instance, null, null, item);
+
+                    if (srim == null)
+                    {
+                        continue;
+                    }
+                    string category = item.Category?.Trim();
+
+                    var categoryToAddTo = categories.FirstOrDefault(item => item.Name == category);
+
+                    if (categoryToAddTo == null)
+                    {
+                        categoryToAddTo = new MemberCategory(category);
+                        categories.Add(categoryToAddTo);
+                    }
+
+                    categoryToAddTo.Members.Add(srim);
+                }
+
+            }
+
+        }
+
 
         public void GetCategories(ElementSave element, InstanceSave instance, List<MemberCategory> categories, StateSave stateSave, StateSaveCategory stateSaveCategory)
         {
@@ -198,30 +231,12 @@ namespace Gum.PropertyGridHelpers
 
             foreach (InstanceSavePropertyDescriptor propertyDescriptor in properties)
             {
-                // early continue
-                var browsableAttribute = propertyDescriptor.Attributes?.FirstOrDefault(item => item is BrowsableAttribute);
+                var srim = ToStateReferencingInstanceMember(element, instance, stateSave, stateSaveCategory, propertyDescriptor);
 
-                var isMarkedAsNotBrowsable = browsableAttribute != null && (browsableAttribute as BrowsableAttribute).Browsable == false;
-                if (isMarkedAsNotBrowsable)
+                if(srim == null)
                 {
-                    continue;
+                    return;
                 }
-
-                StateReferencingInstanceMember srim;
-
-                if (instance != null)
-                {
-                    srim = new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, instance.Name + "." + propertyDescriptor.Name, instance, element);
-                }
-                else
-                {
-                    srim =
-                        new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, propertyDescriptor.Name, instance, element);
-                }
-
-                // moved to internal
-                //srim.SetToDefault += (memberName) => ResetVariableToDefault(srim);
-                srim.DetailText = propertyDescriptor.Subtext;
                 string category = propertyDescriptor.Category?.Trim();
 
                 var categoryToAddTo = categories.FirstOrDefault(item => item.Name == category);
@@ -281,8 +296,35 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
+        private static StateReferencingInstanceMember ToStateReferencingInstanceMember(ElementSave element, InstanceSave instance, StateSave stateSave, StateSaveCategory stateSaveCategory, InstanceSavePropertyDescriptor propertyDescriptor)
+        {
+            StateReferencingInstanceMember srim;
+
+            // early continue
+            var browsableAttribute = propertyDescriptor.Attributes?.FirstOrDefault(item => item is BrowsableAttribute);
+
+            var isMarkedAsNotBrowsable = browsableAttribute != null && (browsableAttribute as BrowsableAttribute).Browsable == false;
+            if (isMarkedAsNotBrowsable)
+            {
+                return null;
+            }
 
 
+            if (instance != null)
+            {
+                srim = new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, instance.Name + "." + propertyDescriptor.Name, instance, element);
+            }
+            else
+            {
+                srim =
+                    new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, propertyDescriptor.Name, instance, element);
+            }
+
+            // moved to internal
+            //srim.SetToDefault += (memberName) => ResetVariableToDefault(srim);
+            srim.DetailText = propertyDescriptor.Subtext;
+            return srim;
+        }
 
         private static StateSave GetRecursiveStateFor(ElementSave elementSave, StateSave stateToAddTo = null)
         {

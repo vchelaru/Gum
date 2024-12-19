@@ -1,4 +1,5 @@
-﻿using Gum.DataTypes.Variables;
+﻿using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Mvvm;
 using Gum.Plugins.BaseClasses;
@@ -18,6 +19,12 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid
             this.ReactToStateSaveSelected += HandleStateSelected;
             this.ReactToStateSaveCategorySelected += MainVariableGridPlugin_ReactToStateSaveCategorySelected;
             this.StateMovedToCategory += HandleStateMovedToCategory;
+            this.InstanceSelected += HandleInstanceSelected;
+        }
+
+        private void HandleInstanceSelected(ElementSave save1, InstanceSave save2)
+        {
+            PropertyGridManager.Self.RefreshUI(force: true);
         }
 
         private void MainVariableGridPlugin_ReactToStateSaveCategorySelected(StateSaveCategory obj)

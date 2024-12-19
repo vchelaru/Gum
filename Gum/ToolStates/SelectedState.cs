@@ -209,7 +209,7 @@ public class SelectedState : ISelectedState
         }
         set
         {
-            UpdateToSetSelectedInstance(value);
+            HandleSelectedInstance(value);
         }
     }
 
@@ -353,6 +353,20 @@ public class SelectedState : ISelectedState
         }
     }
 
+    private void HandleSelectedInstance(InstanceSave value)
+    {
+        if(value != null)
+        {
+            var elementAfter = ObjectFinder.Self.GetElementContainerOf(value);
+            var behaviorAfter = ObjectFinder.Self.GetBehaviorContainerOf(value);
+
+            snapshot.SelectedElement = elementAfter;
+            snapshot.SelectedBehavior = behaviorAfter;
+        }
+
+        UpdateToSetSelectedInstance(value);
+    }
+
     private void HandleElementSelected(ElementSave value)
     {
         if(value != null)
@@ -410,18 +424,7 @@ public class SelectedState : ISelectedState
             var elementAfter = ObjectFinder.Self.GetElementContainerOf(snapshot.SelectedInstance);
             var behaviorAfter = ObjectFinder.Self.GetBehaviorContainerOf(snapshot.SelectedInstance);
 
-            if (elementAfter != null)
-            {
-                UpdateToSelectedElement(elementAfter);
-            }
-            if (behaviorAfter != null)
-            {
-                UpdateToSelectedBehavior(behaviorAfter);
-            }
-
             ProjectVerifier.Self.AssertIsPartOfProject(parent);
-
-            SelectedElement = parent;
 
             if(elementAfter != null || behaviorAfter != null)
             {

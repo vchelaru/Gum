@@ -216,9 +216,23 @@ namespace Gum.Managers
             {
                 foreach(var instance in newInstances)
                 {
-                    List<MemberCategory> categories = element == null
-                        ? new List<MemberCategory>()
-                        : GetMemberCategories(element, state, stateCategory, instance);
+                    List<MemberCategory> categories = new List<MemberCategory>();
+                    
+                    if(element == null)
+                    {
+                        categories = new List<MemberCategory>();
+
+                        var behavior = ObjectFinder.Self.GetBehaviorContainerOf(instance);
+                        if(behavior != null)
+                        {
+                            categories = GetMemberCategories(behavior, instance);
+                        }
+
+                    }
+                    else
+                    {
+                        categories = GetMemberCategories(element, state, stateCategory, instance);
+                    }
 
                     if(newInstances.Count > 1)
                     {
@@ -235,6 +249,8 @@ namespace Gum.Managers
                 if (element == null)
                 {
                     // do nothing....
+                    mLastInstanceSaves.Clear();
+                    mLastInstanceSaves.AddRange(newInstances);
                 }
                 else
                 {
@@ -521,6 +537,23 @@ namespace Gum.Managers
             return false;
         }
 
+        private List<MemberCategory> GetMemberCategories(BehaviorSave behavior, InstanceSave instance)
+        {
+            List<MemberCategory> categories = new List<MemberCategory>();
+
+            mLastElement = null;
+            mLastState = null;
+            mLastInstanceSaves.Clear();
+            if (instance != null)
+            {
+                mLastInstanceSaves.Add(instance);
+            }
+            mLastCategory = null;
+
+            GetMemberCategoriesForBehaviorInstance(behavior, instance, categories);
+
+            return categories;
+        }
 
         private List<MemberCategory> GetMemberCategories(ElementSave element, StateSave state, StateSaveCategory stateCategory, InstanceSave instance)
         {
@@ -546,6 +579,13 @@ namespace Gum.Managers
             }
             return categories;
 
+        }
+
+        private void GetMemberCategoriesForBehaviorInstance(BehaviorSave behavior, InstanceSave instance, List<MemberCategory> categories)
+        {
+            categories.Clear();
+
+            mPropertyGridDisplayer.GetCategories(behavior, instance, categories);
         }
 
         private void GetMemberCategoriesForState(ElementSave element, InstanceSave instance, List<MemberCategory> categories, StateSave stateSave, StateSaveCategory stateSaveCategory)
