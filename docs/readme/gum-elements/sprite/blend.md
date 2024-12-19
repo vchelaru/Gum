@@ -14,7 +14,7 @@ If a Normal Blend Sprite has an Alpha of 255, then the Sprite completely replace
 
 If a Sprite has an alpha of 128 (roughly half of 255), then it averages its color with whatever it is drawn on top of.
 
-<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Normal Blend Sprite with an Alpha of 128</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Normal Blend Sprite with an Alpha of 128</p></figcaption></figure>
 
 A Sprite with 25 alpha (roughly 10%) will blend with whatever it is drawn on top of, but its color is given a weight of roughly 10%.
 

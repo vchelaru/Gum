@@ -2,17 +2,17 @@
 
 ### Introduction
 
-Behaviors can define requirements which can be reused across multiple components to standardize instance names and behaviors. If a component uses a behavior, then it is forced to include categories and instances according to the behavior definition.
+Behaviors can define requirements which are resuable across multiple components to standardize instance names and behaviors. If a component uses a behavior, then it is forced to include categories and instances according to the behavior definition.
 
 Behaviors are used to define requirements for components, to simplify the creation of new components, and to reduce the chances of spelling and implementation mistakes.
 
 {% hint style="info" %}
-Currently the Gum tool supports instance requirements on behaviors, but these requirements must be added by modifying the behavior XML file rather than adding instances through the tool. This will likely change in future versions of Gum
-{% endhint %}
-
-{% hint style="info" %}
 C# programmers may find the concept of behaviors to be similar to interfaces in code. Behaviors define requirements for components, but they give components the flexibility to implement these requirements, just like interfaces define required properties and methods which classes can implement.
 {% endhint %}
+
+### Common Behavior Usage
+
+Behaviors are used to standardize state, category, and instance names. The most common usage of behaviors is with Gum Forms. Of course, behaviors can also be used to standardize names in your project for components which are not intended to be with Gum Forms.
 
 ### Creating a Behavior
 
@@ -29,7 +29,9 @@ New behaviors appear in the Project tab.
 
 <figure><img src="../../.gitbook/assets/image (83).png" alt=""><figcaption><p>ButtonBehavior in the Behaviors folder</p></figcaption></figure>
 
-Once a behavior has been created, it can be given categories and states. Any component which uses this behavior is required to have the same categories and states. States can be added and removed the same as when working with states in other elements. For more information, see the [States](states/) page.
+Once a behavior has been created, it can be given categories, states, and instances. Any component which uses this behavior is required to have the same categories and states.&#x20;
+
+The process of adding and removing states to behaviors is the same as adding and removing states in other elements. For more information, see the [States](states/) page.
 
 For example, the ButtonBehavior may have the following:
 
@@ -39,11 +41,15 @@ For example, the ButtonBehavior may have the following:
   * Focused (State)
   * Pushed (State)
 
-<figure><img src="../../.gitbook/assets/image (84).png" alt=""><figcaption><p>ButtonCategory defined on ButtonBehavior</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/19_05 44 01.png" alt=""><figcaption><p>ButtonCategory defined on ButtonBehavior</p></figcaption></figure>
 
 A behavior can have as many categories and states as needed.
 
-Once a behavior is added, it can be used in a component. To add a behavior to a component
+Once a behavior is added, it can be used in a component. To add a behavior to a component, drag+drop the behavior onto the component in the tree view.
+
+<figure><img src="../../.gitbook/assets/19_05 44 59.gif" alt=""><figcaption><p>Add a behavior to a component by drag+dropping the behavior on the component in the Project tab</p></figcaption></figure>
+
+Behaviors can also be added and removed on the component's Behaviors tab:
 
 1. Select a component which should use the behavior
 2. Click the Behaviors tab
@@ -55,4 +61,18 @@ Once a behavior is added, it can be used in a component. To add a behavior to a 
 
 Notice that once a behavior is added to a component, the component automatically creates the matching categories and states.
 
-These categories cannot be removed as long as the component continues to use the behavior.
+These categories cannot be removed as long as the component uses the behavior.
+
+### Category and State Requirements
+
+As mentioned above, if a component uses a behavior, then the component is required to include all of the states and categories defined by the behavior.  If a behavior is added to a component, then all states and categories in the behavior are automatically added to the component. Keep in mind that newly-added states do not automatically assign any values. The behavior only requires that the states exist but it does not decide which variables are assigned by the states. These required states can even be left to their default  so they have no affect on the component.
+
+Required states and categories cannot be removed or renamed. Required states cannot be moved to different categories.
+
+<figure><img src="../../.gitbook/assets/image.png" alt=""><figcaption><p>Renaming and deleting states and categories required by behaviors is not allowed</p></figcaption></figure>
+
+If a new category or state is added to a behavior, all components which use the behavior also have the new category or state added.
+
+<figure><img src="../../.gitbook/assets/19_06 02 42.gif" alt=""><figcaption><p>Adding states and categories in a component adds the states and categories to all components using the behavior</p></figcaption></figure>
+
+If a state or category is removed from a behavior, Gum does not remove the state or category from components which implement the behavior. Behaviors only define what is required, but they do not prevent components from defining additional states and categories. Also, the states on components may still be needed even if the behavior is removed. Therefore, if you remove any states or categories from a behavior, you may need to manually remove the same states and categories from components which use the behavior if these are no longer needed.
