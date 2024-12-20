@@ -11,11 +11,13 @@ using Gum.ToolStates;
 using Gum.Wireframe;
 using GumRuntime;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
+using ToolsUtilities;
 using WpfDataUi.Controls;
 using WpfDataUi.DataTypes;
 
@@ -291,7 +293,7 @@ namespace Gum.PropertyGridHelpers
             {
                 standardElement = ObjectFinder.Self.GetRootStandardElementSave(instanceSave);
             }
-            else if(stateListCategoryContainer is ElementSave elementSave)
+            else if (stateListCategoryContainer is ElementSave elementSave)
             {
                 standardElement = ObjectFinder.Self.GetRootStandardElementSave(elementSave);
             }
@@ -490,7 +492,7 @@ namespace Gum.PropertyGridHelpers
                 // Variable doesn't exist, so they can only expose it, not unexpose it.
                 ContextMenuEvents.Add("Expose Variable", HandleExposeVariableClick);
             }
-            if(canUnExpose)
+            if (canUnExpose)
             {
                 ContextMenuEvents.Add($"Un-expose Variable {VariableSave.ExposedAsName} ({VariableSave.Name})", HandleUnexposeVariableClick);
             }
@@ -525,7 +527,7 @@ namespace Gum.PropertyGridHelpers
             {
                 return asInstanceSave.Name;
             }
-            else if(RootVariableName == "Base Type" && instance is InstanceSave asInstanceForBehavior)
+            else if (RootVariableName == "Base Type" && instance is InstanceSave asInstanceForBehavior)
             {
                 return asInstanceForBehavior.BaseType;
             }
@@ -536,8 +538,8 @@ namespace Gum.PropertyGridHelpers
                 if (toReturn == null)
                 {
                     var effectiveVariableName = VariableSave?.Name ?? mVariableName;
-                    
-                    if(mStateSave != null)
+
+                    if (mStateSave != null)
                     {
                         toReturn = mStateSave.GetValueRecursive(effectiveVariableName);
                     }
@@ -583,32 +585,49 @@ namespace Gum.PropertyGridHelpers
                     elementSave = gumElementOrInstanceSaveAsObject as ElementSave;
                 }
 
-                if (stateSave != null && elementSave != null)
+                // <None> is a reserved 
+                // value for when we want
+                // to allow the user to reset
+                // a value through a combo box.
+                // If the value is "<None>" then 
+                // let's set it to null
+                if (newValue is string && ((string)newValue) == "<None>")
                 {
+                    newValue = null;
+                }
+                string variableType = null;
+                var existingVariable = elementSave?.GetVariableFromThisOrBase(Name);
+                if (existingVariable != null)
+                {
+                    variableType = existingVariable.Type;
+                }
+                else
+                {
+                    variableType = elementSave?.GetVariableListFromThisOrBase(Name)?.Type;
+                }
 
-                    // <None> is a reserved 
-                    // value for when we want
-                    // to allow the user to reset
-                    // a value through a combo box.
-                    // If the value is "<None>" then 
-                    // let's set it to null
-                    if (newValue is string && ((string)newValue) == "<None>")
+
+                // the stateSave.SetValue method handles Name and Base Type internally just fine,
+                // but if we are on an instance in a behavior, that won't have a state save, so let's do that out here:
+                // Check for reserved names
+                var isReservedName = false;
+                if (instanceSave != null)
+                {
+                    // This is a variable on an instance
+                    if (RootVariableName == "Name")
                     {
-                        newValue = null;
+                        instanceSave.Name = (string)newValue;
+                        isReservedName = true;
                     }
-
-                    string variableType = null;
-                    var existingVariable = elementSave.GetVariableFromThisOrBase(Name);
-                    if (existingVariable != null)
+                    else if (RootVariableName == "Base Type")
                     {
-                        variableType = existingVariable.Type;
+                        instanceSave.BaseType = newValue.ToString();
+                        isReservedName = true;
                     }
-                    else
-                    {
-                        variableType = elementSave.GetVariableListFromThisOrBase(Name)?.Type;
-                    }
+                }
 
-
+                if (stateSave != null && elementSave != null && !isReservedName)
+                {
                     VariableSave foundAtComponentOrBase = null;
 
                     if (!string.IsNullOrEmpty(existingVariable?.ExposedAsName))
@@ -635,6 +654,7 @@ namespace Gum.PropertyGridHelpers
                             }
                         }
                     }
+
 
                     stateSave.SetValue(Name, newValue, instanceSave, variableType);
                     if (!string.IsNullOrEmpty(existingVariable?.ExposedAsName) && foundAtComponentOrBase != null)
@@ -757,7 +777,7 @@ namespace Gum.PropertyGridHelpers
                         else
                         {
                             // If it's a state, we can un-set that back to null, that's okay:
-                            if(variable.IsState(selectedElement))
+                            if (variable.IsState(selectedElement))
                             {
                                 variable.Value = null;
                                 variable.SetsValue = true;
@@ -861,7 +881,7 @@ namespace Gum.PropertyGridHelpers
 
             if (!handledByExposedVariable)
             {
-                SetVariableLogic.Self.PropertyValueChanged(name, LastOldValue, gumElementOrInstanceSaveAsObject as InstanceSave, refresh: effectiveRefresh, 
+                SetVariableLogic.Self.PropertyValueChanged(name, LastOldValue, gumElementOrInstanceSaveAsObject as InstanceSave, refresh: effectiveRefresh,
                     recordUndo: effectiveRecordUndo,
                     trySave: trySave);
             }
@@ -918,7 +938,7 @@ namespace Gum.PropertyGridHelpers
 
             if (InstanceSave != null)
             {
-                if(InstanceSave.ParentContainer == null)
+                if (InstanceSave.ParentContainer == null)
                 {
                     // this is an instance in a behavior
                     var elementBaseType = ObjectFinder.Self.GetElementSave(InstanceSave);

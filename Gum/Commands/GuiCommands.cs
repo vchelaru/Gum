@@ -163,8 +163,12 @@ namespace Gum.Commands
             ElementTreeViewManager.Self.RefreshUi();
         }
 
-        public void RefreshElementTreeView(ElementSave element) => ElementTreeViewManager.Self.RefreshUi(element);
-        public void RefreshElementTreeView(BehaviorSave behavior) => ElementTreeViewManager.Self.RefreshUi(behavior);
+
+
+        public void RefreshElementTreeView(IInstanceContainer instanceContainer)
+        {
+            ElementTreeViewManager.Self.RefreshUi(instanceContainer);
+        }
 
         #region Show/Hide Methods
 

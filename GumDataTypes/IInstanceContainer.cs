@@ -8,6 +8,7 @@ namespace Gum.DataTypes
 {
     public interface IInstanceContainer
     {
+        string Name { get; }
         IEnumerable<InstanceSave> Instances { get; }
     }
 }

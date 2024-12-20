@@ -258,7 +258,7 @@ public class RenameLogic
 
     #region Element
 
-    public static void HandleRename(ElementSave elementSave, InstanceSave instance, string oldName, NameChangeAction action, bool askAboutRename = true)
+    public static void HandleRename(IInstanceContainer instanceContainer, InstanceSave instance, string oldName, NameChangeAction action, bool askAboutRename = true)
     {
         try
         {
@@ -266,26 +266,30 @@ public class RenameLogic
 
             bool shouldContinue = true;
 
-            shouldContinue = ValidateWithPopup(elementSave, instance, shouldContinue);
+            shouldContinue = ValidateWithPopup(instanceContainer, instance, shouldContinue);
 
+
+            var elementSave = instanceContainer as ElementSave;
             shouldContinue = AskIfToRenameElement(oldName, askAboutRename, action, shouldContinue);
 
             if (shouldContinue)
             {
-
-                RenameAllReferencesTo(elementSave, instance, oldName);
+                if(elementSave != null)
+                {
+                    RenameAllReferencesTo(elementSave, instance, oldName);
+                }
 
                 // Even though this gets called from the PropertyGrid methods which eventually
                 // save this object, we want to force a save here to make sure it worked.  If it
                 // does, then we're safe to delete the old files.
-                GumCommands.Self.FileCommands.TryAutoSaveElement(elementSave);
+                GumCommands.Self.FileCommands.TryAutoSaveObject(instanceContainer);
 
                 if (isRenamingXmlFile)
                 {
                     RenameXml(elementSave, oldName);
                 }
 
-                GumCommands.Self.GuiCommands.RefreshElementTreeView(elementSave);
+                GumCommands.Self.GuiCommands.RefreshElementTreeView(instanceContainer);
             }
 
             if (!shouldContinue && isRenamingXmlFile)
@@ -299,7 +303,7 @@ public class RenameLogic
         }
         catch (Exception e)
         {
-            MessageBox.Show("Error renaming element " + elementSave.ToString() + "\n\n" + e.ToString());
+            MessageBox.Show("Error renaming instance container " + instanceContainer.ToString() + "\n\n" + e.ToString());
         }
         finally
         {
@@ -522,12 +526,12 @@ public class RenameLogic
         return shouldContinue;
     }
 
-    private static bool ValidateWithPopup(ElementSave elementSave, InstanceSave instance, bool shouldContinue)
+    private static bool ValidateWithPopup(IInstanceContainer instanceContainer, InstanceSave instance, bool shouldContinue)
     {
         if (instance != null)
         {
             string whyNot;
-            if (NameVerifier.Self.IsInstanceNameValid(instance.Name, instance, elementSave, out whyNot) == false)
+            if (NameVerifier.Self.IsInstanceNameValid(instance.Name, instance, instanceContainer, out whyNot) == false)
             {
                 MessageBox.Show(whyNot);
                 shouldContinue = false;

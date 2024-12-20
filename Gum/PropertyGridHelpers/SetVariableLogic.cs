@@ -78,11 +78,12 @@ namespace Gum.PropertyGridHelpers
         {
             var selectedStateSave = SelectedState.Self.SelectedStateSave;
 
-            ElementSave parentElement = null;
+            IInstanceContainer instanceContainer = null;
 
             if (selectedStateSave != null)
             {
-                parentElement = selectedStateSave.ParentContainer;
+                instanceContainer = selectedStateSave.ParentContainer;
+
 
                 if (instance != null)
                 {
@@ -93,7 +94,14 @@ namespace Gum.PropertyGridHelpers
                     SelectedState.Self.SelectedVariableSave = SelectedState.Self.SelectedStateSave.GetVariableSave(unqualifiedMemberName);
                 }
             }
-            ReactToPropertyValueChanged(unqualifiedMemberName, oldValue, parentElement, instance, selectedStateSave, refresh, recordUndo: recordUndo, trySave: trySave);
+
+            if (instance != null && instanceContainer == null)
+            {
+                instanceContainer = ObjectFinder.Self.GetBehaviorContainerOf(instance);
+            }
+
+
+            ReactToPropertyValueChanged(unqualifiedMemberName, oldValue, instanceContainer, instance, selectedStateSave, refresh, recordUndo: recordUndo, trySave: trySave);
         }
 
         /// <summary>
@@ -104,22 +112,24 @@ namespace Gum.PropertyGridHelpers
         /// <param name="parentElement"></param>
         /// <param name="instance"></param>
         /// <param name="refresh"></param>
-        public void ReactToPropertyValueChanged(string unqualifiedMember, object oldValue, ElementSave parentElement,
+        public void ReactToPropertyValueChanged(string unqualifiedMember, object oldValue, IInstanceContainer instanceContainer,
             InstanceSave instance, StateSave stateSave, bool refresh, bool recordUndo = true, bool trySave = true)
         {
-            if (parentElement != null)
+            ObjectFinder.Self.EnableCache();
+            try
             {
-                ObjectFinder.Self.EnableCache();
-                try
+                // This code calls plugin methods and may generate code. We want to generate code
+                // after the variable references are assigned. Moving this line of code down:
+                //ReactToChangedMember(unqualifiedMember, oldValue, parentElement, instance, stateSave);
+                // Update - ReactToChangedMember expands variable reference names like "Color" and it fills
+                // in implied assignments such as "Refernce.X" to "X = Reference.X"
+                // It must be called first before applying references
+                ReactToChangedMember(unqualifiedMember, oldValue, instanceContainer, instance, stateSave);
+                var parentElement = instanceContainer as ElementSave;
+
+                if (parentElement != null)
                 {
 
-                    // This code calls plugin methods and may generate code. We want to generate code
-                    // after the variable references are assigned. Moving this line of code down:
-                    //ReactToChangedMember(unqualifiedMember, oldValue, parentElement, instance, stateSave);
-                    // Update - ReactToChangedMember expands variable reference names like "Color" and it fills
-                    // in implied assignments such as "Refernce.X" to "X = Reference.X"
-                    // It must be called first before applying references
-                    ReactToChangedMember(unqualifiedMember, oldValue, parentElement, instance, stateSave);
 
                     string qualifiedName = unqualifiedMember;
                     if (instance != null)
@@ -159,10 +169,10 @@ namespace Gum.PropertyGridHelpers
                             forceWireframeRefresh: didSetDeepReference, trySave: trySave);
                     }
                 }
-                finally
-                {
-                    ObjectFinder.Self.DisableCache();
-                }
+            }
+            finally
+            {
+                ObjectFinder.Self.DisableCache();
             }
         }
 
@@ -355,12 +365,12 @@ namespace Gum.PropertyGridHelpers
                 // if that will cause problems now, so instead I'm going
                 // to do it one by one:
                 var handledByDirectSet = false;
-                if (forceWireframeRefresh == false && 
+                if (forceWireframeRefresh == false &&
                     PropertiesSupportingIncrementalChange.Contains(unqualifiedMember) &&
                     // June 19, 2024 - if the value is null (from default assignment), we
                     // can't set this single value - it requires a recursive variable finder.
                     // for simplicity (for now?) we will just refresh all:
-                    value != null && 
+                    value != null &&
 
                     (instance != null || SelectedState.Self.SelectedComponent != null || SelectedState.Self.SelectedStandardElement != null))
                 {
@@ -402,9 +412,9 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        private void ReactToChangedMember(string rootVariableName, object oldValue, ElementSave parentElement, InstanceSave instance, StateSave stateSave)
+        private void ReactToChangedMember(string rootVariableName, object oldValue, IInstanceContainer instanceContainer, InstanceSave instance, StateSave stateSave)
         {
-            ReactIfChangedMemberIsName(parentElement, instance, rootVariableName, oldValue);
+            ReactIfChangedMemberIsName(instanceContainer, instance, rootVariableName, oldValue);
 
             // Handled in a plugin
             //ReactIfChangedMemberIsBaseType(parentElement, changedMember, oldValue);
@@ -415,42 +425,46 @@ namespace Gum.PropertyGridHelpers
             {
                 changedMemberWithPrefix = instance.Name + "." + rootVariableName;
             }
-            var rfv = new RecursiveVariableFinder(stateSave);
-            var value = rfv.GetValue(changedMemberWithPrefix);
 
-            List<ElementWithState> elementStack = new List<ElementWithState>();
-            elementStack.Add(new ElementWithState(parentElement) { StateName = stateSave?.Name, InstanceName = instance?.Name });
-            ReactIfChangedMemberIsFont(elementStack, instance, rootVariableName, oldValue, value);
+            var parentElement = instanceContainer as ElementSave;
+            if (parentElement != null)
+            {
+                var rfv = new RecursiveVariableFinder(stateSave);
+                var value = rfv.GetValue(changedMemberWithPrefix);
+                List<ElementWithState> elementStack = new List<ElementWithState>();
+                elementStack.Add(new ElementWithState(parentElement) { StateName = stateSave?.Name, InstanceName = instance?.Name });
+                ReactIfChangedMemberIsFont(elementStack, instance, rootVariableName, oldValue, value);
 
-            ReactIfChangedMemberIsCustomFont(parentElement, rootVariableName, oldValue);
+                ReactIfChangedMemberIsCustomFont(parentElement, rootVariableName, oldValue);
 
-            ReactIfChangedMemberIsUnitType(parentElement, rootVariableName, oldValue);
+                ReactIfChangedMemberIsUnitType(parentElement, rootVariableName, oldValue);
 
-            ReactIfChangedMemberIsSourceFile(parentElement, instance, rootVariableName, oldValue);
+                ReactIfChangedMemberIsSourceFile(parentElement, instance, rootVariableName, oldValue);
 
-            ReactIfChangedMemberIsTextureAddress(parentElement, rootVariableName, oldValue);
+                ReactIfChangedMemberIsTextureAddress(parentElement, rootVariableName, oldValue);
 
-            ReactIfChangedMemberIsParent(parentElement, instance, rootVariableName, oldValue);
+                ReactIfChangedMemberIsParent(parentElement, instance, rootVariableName, oldValue);
 
-            ReactIfChangedMemberIsDefaultChildContainer(parentElement, instance, rootVariableName, oldValue);
+                ReactIfChangedMemberIsDefaultChildContainer(parentElement, instance, rootVariableName, oldValue);
 
-            ReactIfChangedMemberIsVariableReference(parentElement, instance, stateSave, rootVariableName, oldValue);
-
-            ReactIfChangedBaseType(parentElement, instance, stateSave, rootVariableName, oldValue);
+                ReactIfChangedMemberIsVariableReference(parentElement, instance, stateSave, rootVariableName, oldValue);
+            }
+            ReactIfChangedBaseType(instanceContainer, instance, stateSave, rootVariableName, oldValue);
 
             PluginManager.Self.VariableSet(parentElement, instance, rootVariableName, oldValue);
         }
 
-        private void ReactIfChangedBaseType(ElementSave parentElement, InstanceSave instance, StateSave stateSave, string rootVariableName, object oldValue)
+        private void ReactIfChangedBaseType(IInstanceContainer instanceContainer, InstanceSave instance, StateSave stateSave, string rootVariableName, object oldValue)
         {
 
             if (rootVariableName == "Base Type")
             {
                 VariableSave variable = SelectedState.Self.SelectedVariableSave;
 
-                if(instance != null)
+                if (instance != null)
                 {
-                    if(ObjectFinder.Self.IsInstanceRecursivelyReferencingElement(instance, parentElement))
+                    var parentElement = instanceContainer as ElementSave;
+                    if (parentElement != null &&  ObjectFinder.Self.IsInstanceRecursivelyReferencingElement(instance, parentElement))
                     {
                         MessageBox.Show("This assignment would create a circular reference, which is not allowed.");
                         //stateSave.SetValue("BaseType", oldValue, instance);
@@ -459,6 +473,11 @@ namespace Gum.PropertyGridHelpers
                         GumCommands.Self.GuiCommands.PrintOutput($"BaseType assignment on {instance.Name} is not allowed - reverting to previous value");
 
                         GumCommands.Self.GuiCommands.RefreshVariables(force: true);
+                    }
+
+                    if(instanceContainer != null)
+                    {
+                        GumCommands.Self.FileCommands.TryAutoSaveObject(instanceContainer);
                     }
                 }
             }
@@ -478,11 +497,11 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        private static void ReactIfChangedMemberIsName(ElementSave container, InstanceSave instance, string changedMember, object oldValue)
+        private static void ReactIfChangedMemberIsName(IInstanceContainer instanceContainer, InstanceSave instance, string changedMember, object oldValue)
         {
             if (changedMember == "Name")
             {
-                RenameLogic.HandleRename(container, instance, (string)oldValue, NameChangeAction.Rename);
+                RenameLogic.HandleRename(instanceContainer, instance, (string)oldValue, NameChangeAction.Rename);
             }
         }
 
@@ -750,13 +769,13 @@ namespace Gum.PropertyGridHelpers
                         {
                             PerformCopy(variable, value);
                         }
-                        else if(shouldCopy == null)
+                        else if (shouldCopy == null)
                         {
                             cancel = true;
                         }
                     }
 
-                    if(cancel)
+                    if (cancel)
                     {
                         variable.Value = oldValue;
                         GumCommands.Self.GuiCommands.RefreshVariableValues();
@@ -859,15 +878,15 @@ namespace Gum.PropertyGridHelpers
 
                     var overwriteResult = mbmb.ShowDialog();
 
-                    if(overwriteResult == DialogResult.Yes)
+                    if (overwriteResult == DialogResult.Yes)
                     {
                         shouldCopy = true;
                     }
-                    else if(overwriteResult == DialogResult.No)
+                    else if (overwriteResult == DialogResult.No)
                     {
                         shouldCopy = false;
                     }
-                    else 
+                    else
                     {
                         shouldCopy = null;
                     }

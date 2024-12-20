@@ -1121,16 +1121,12 @@ namespace Gum.Managers
             SelectRecordedSelection();
         }
 
-        /// <summary>
-        /// Refreshes the tree nodes for the argument ElementSave. This includes the displayed text and contained nodes, and the parent
-        /// folder node.
-        /// </summary>
-        /// <param name="elementSave">The ElementSave to refresh.</param>
-        public void RefreshUi(ElementSave elementSave)
-        {
-            TreeNode foundNode = GetTreeNodeFor(elementSave);
 
-            if (foundNode != null)
+        public void RefreshUi(IInstanceContainer instanceContainer)
+        {
+            var foundNode = GetTreeNodeForTag(instanceContainer);
+
+            if(foundNode != null)
             {
                 RecordSelection();
                 RefreshUi(foundNode);
@@ -1138,6 +1134,11 @@ namespace Gum.Managers
             }
         }
 
+        /// <summary>
+        /// Refreshes the tree nodes for the argument stateContainer. This includes the displayed text and contained nodes, and the parent
+        /// folder node.
+        /// </summary>
+        /// <param name="stateContainer">The StateContainer to refresh.</param>
         public void RefreshUi(IStateContainer stateContainer)
         {
             var foundNode = GetTreeNodeForTag(stateContainer);

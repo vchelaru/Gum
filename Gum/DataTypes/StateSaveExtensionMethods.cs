@@ -42,7 +42,7 @@ namespace Gum.DataTypes.Variables
             object value = stateSave.GetValue(variableName);
 
             ElementSave elementContainingState = stateSave.ParentContainer;
-            if(value == null && elementContainingState != null)
+            if (value == null && elementContainingState != null)
             {
                 // See if variableName is an alias from exposing:
                 //var variable = elementContainingState.GetVariableFromThisOrBase(variableName);
@@ -59,7 +59,7 @@ namespace Gum.DataTypes.Variables
             {
 
                 var foundVariable = stateSave.GetVariableRecursive(variableName);
-                
+
                 bool wasFound = false;
                 if (elementContainingState != null && stateSave != elementContainingState.DefaultState)
                 {
@@ -85,7 +85,7 @@ namespace Gum.DataTypes.Variables
 
                 // The variable could be "LabelVisible", but the rest of this method expects
                 // the name to include '.' and not have the exposed alias:
-                if(variableName.Contains(".") == false && foundVariable?.ExposedAsName != null)
+                if (variableName.Contains(".") == false && foundVariable?.ExposedAsName != null)
                 {
                     variableName = foundVariable.Name;
                 }
@@ -138,7 +138,7 @@ namespace Gum.DataTypes.Variables
                             }
 
                             // Now that we did non-recursive (top level only), then let's do recursive:
-                            if(!wasFound)
+                            if (!wasFound)
                             {
                                 for (int i = 0; i < stateSave.Variables.Count; i++)
                                 {
@@ -470,7 +470,7 @@ namespace Gum.DataTypes.Variables
                                 }
                             }
 
-                            if(!wasFound)
+                            if (!wasFound)
                             {
                                 variableListSave = instanceType.DefaultState.GetVariableListRecursive(nameInBase);
                             }
@@ -497,23 +497,23 @@ namespace Gum.DataTypes.Variables
         {
             bool isReservedName = TrySetReservedValues(stateSave, variableName, value, instanceSave);
 
-            VariableSave variableSave = stateSave.GetVariableSave(variableName);
-            var coreVariableDefinition = stateSave.GetVariableRecursive(variableName);
-            VariableSave? rootVariable = null;
-            var element = instanceSave?.ParentContainer ?? stateSave.ParentContainer;
-            if(element != null)
-            {
-                rootVariable = ObjectFinder.Self.GetRootVariable(variableName, instanceSave?.ParentContainer ?? stateSave.ParentContainer);
-            }
-
-            string exposedVariableSourceName = null;
-            if (!string.IsNullOrEmpty(coreVariableDefinition?.ExposedAsName) && instanceSave == null)
-            {
-                exposedVariableSourceName = coreVariableDefinition.Name;
-            }
 
             if (!isReservedName)
             {
+                VariableSave variableSave = stateSave.GetVariableSave(variableName);
+                var coreVariableDefinition = stateSave.GetVariableRecursive(variableName);
+                VariableSave? rootVariable = null;
+                var element = instanceSave?.ParentContainer ?? stateSave.ParentContainer;
+                if (element != null)
+                {
+                    rootVariable = ObjectFinder.Self.GetRootVariable(variableName, instanceSave?.ParentContainer ?? stateSave.ParentContainer);
+                }
+
+                string exposedVariableSourceName = null;
+                if (!string.IsNullOrEmpty(coreVariableDefinition?.ExposedAsName) && instanceSave == null)
+                {
+                    exposedVariableSourceName = coreVariableDefinition.Name;
+                }
                 bool isFile = false;
 
                 // Why might instanceSave be null?
@@ -540,13 +540,13 @@ namespace Gum.DataTypes.Variables
                         temp = new VariableSave();
                         temp.Name = variableName;
                     }
-                    if(stateSave.ParentContainer != null)
+                    if (stateSave.ParentContainer != null)
                     {
                         isFile = temp.GetIsFileFromRoot(stateSave.ParentContainer);
                     }
                 }
 
-                
+
 
                 if (value != null && value is IList)
                 {

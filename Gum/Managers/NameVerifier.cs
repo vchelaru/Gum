@@ -137,7 +137,7 @@ namespace Gum.Managers
             return string.IsNullOrEmpty(whyNotValid);
         }
 
-        public bool IsInstanceNameValid(string instanceName, InstanceSave instanceSave, ElementSave elementSave, out string whyNotValid)
+        public bool IsInstanceNameValid(string instanceName, InstanceSave instanceSave, IInstanceContainer instanceContainer, out string whyNotValid)
         {
             IsNameValidCommon(instanceName, out whyNotValid);
 
@@ -148,7 +148,7 @@ namespace Gum.Managers
 
             if (string.IsNullOrEmpty(whyNotValid))
             {
-                IsNameAlreadyUsed(instanceName, instanceSave, elementSave, out whyNotValid);
+                IsNameAlreadyUsed(instanceName, instanceSave, instanceContainer, out whyNotValid);
             }
             return string.IsNullOrEmpty(whyNotValid);
         }
@@ -259,28 +259,30 @@ namespace Gum.Managers
             return ObjectFinder.Self.GetComponent(name) != null;
         }
 
-        private void IsNameAlreadyUsed(string name, object objectToIgnore, ElementSave elementSave, out string whyNotValid)
+        private void IsNameAlreadyUsed(string name, object objectToIgnore, IInstanceContainer instanceContainer, out string whyNotValid)
         {
             whyNotValid = null;
 
-            if (objectToIgnore != elementSave && name == elementSave.Name)
+            if (objectToIgnore != instanceContainer && name == instanceContainer.Name)
             {
-                whyNotValid = $"The element is named '{elementSave.Name}'";
+                whyNotValid = $"The element is named '{instanceContainer.Name}'";
             }
 
-            var instance = elementSave.Instances.FirstOrDefault(item => item != objectToIgnore && item.Name == name);
+            var instance = instanceContainer.Instances.FirstOrDefault(item => item != objectToIgnore && item.Name == name);
             if (instance != null)
             {
                 whyNotValid = $"There is already an instance named '{instance.Name}'";
             }
 
-            var state = elementSave.States.FirstOrDefault(item => item != objectToIgnore && item.Name == name);
+            var stateContainer = instanceContainer as IStateContainer;
+
+            var state = stateContainer?.AllStates.FirstOrDefault(item => item != objectToIgnore && item.Name == name);
             if (state != null)
             {
                 whyNotValid = $"There is already a state named '{state.Name}'";
             }
             
-            var variable = elementSave.AllStates.SelectMany(item => item.Variables).FirstOrDefault(item => item != objectToIgnore && item.ExposedAsName == name);
+            var variable = stateContainer?.AllStates.SelectMany(item => item.Variables).FirstOrDefault(item => item != objectToIgnore && item.ExposedAsName == name);
             if (variable != null)
             {
                 whyNotValid = $"There is already a variable named '{variable.Name}'";

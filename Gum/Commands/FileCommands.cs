@@ -49,6 +49,27 @@ namespace Gum.Commands
             }
         }
 
+        public void TryAutoSaveBehavior(BehaviorSave behavior)
+        {
+            if(ProjectManager.Self.GeneralSettingsFile.AutoSave && behavior != null)
+            {
+                ForceSaveBehavior(behavior);
+            }
+        }
+
+        public void TryAutoSaveObject(object objectToSave)
+        {
+            if(objectToSave is ElementSave elementSave)
+            {
+                TryAutoSaveElement(elementSave);
+            }
+            if(objectToSave is BehaviorSave behaviorSave)
+            {
+                TryAutoSaveBehavior(behaviorSave);
+            }
+        }
+
+
         internal void NewProject()
         {
             ProjectManager.Self.CreateNewProject();
@@ -178,13 +199,6 @@ namespace Gum.Commands
             return element.GetFullPathXmlFile();
         }
 
-        internal void TryAutoSaveBehavior(BehaviorSave behavior)
-        {
-            if(ProjectManager.Self.GeneralSettingsFile.AutoSave && behavior != null)
-            {
-                ForceSaveBehavior(behavior);
-            }
-        }
 
         internal void LoadLocalizationFile()
         {
