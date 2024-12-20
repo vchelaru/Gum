@@ -95,8 +95,12 @@ public class SelectedState : ISelectedState
             snapshot.SelectedBehavior = null;
         }
         UpdateToSelectedElement(value);
-    }
 
+        if(value != null)
+        {
+            PluginManager.Self.ElementSelected(SelectedElement);
+        }
+    }
 
     private void UpdateToSelectedElement(ElementSave element)
     {
@@ -130,10 +134,7 @@ public class SelectedState : ISelectedState
             SelectionManager.Self.Refresh();
 
             _menuStripManager.RefreshUI();
-
-            PluginManager.Self.ElementSelected(SelectedElement);
         }
-
     }
 
     #endregion
@@ -409,6 +410,25 @@ public class SelectedState : ISelectedState
 
     #endregion
 
+    #region Instance
+
+    private void HandleSelectedInstances(List<InstanceSave> value)
+    {
+        var instance = value?.FirstOrDefault();
+        if(instance != null)
+        {
+            var elementAfter = ObjectFinder.Self.GetElementContainerOf(instance);
+            var behaviorAfter = ObjectFinder.Self.GetBehaviorContainerOf(instance);
+
+            snapshot.SelectedElement = elementAfter;
+            snapshot.SelectedBehavior = behaviorAfter;
+        }
+
+        UpdateToSelectedInstances(value);
+    }
+
+    #endregion
+
     private void UpdateToSetSelectedStackingMode(StateStackingMode value)
     {
         var isSame = snapshot.StateStackingMode == value;
@@ -429,20 +449,6 @@ public class SelectedState : ISelectedState
         }
     }
 
-    private void HandleSelectedInstances(List<InstanceSave> value)
-    {
-        var instance = value?.FirstOrDefault();
-        if(instance != null)
-        {
-            var elementAfter = ObjectFinder.Self.GetElementContainerOf(instance);
-            var behaviorAfter = ObjectFinder.Self.GetBehaviorContainerOf(instance);
-
-            snapshot.SelectedElement = elementAfter;
-            snapshot.SelectedBehavior = behaviorAfter;
-        }
-
-        UpdateToSelectedInstances(value);
-    }
 
     private void HandleStateSaveSelected(StateSave stateSave)
     {

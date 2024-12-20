@@ -21,7 +21,13 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid
             this.ReactToStateSaveCategorySelected += MainVariableGridPlugin_ReactToStateSaveCategorySelected;
             this.StateMovedToCategory += HandleStateMovedToCategory;
             this.InstanceSelected += HandleInstanceSelected;
+            this.ElementSelected += HandleElementSelected;
             this.BehaviorSelected += HandleBehaviorSelected;
+        }
+
+        private void HandleElementSelected(ElementSave save)
+        {
+            PropertyGridManager.Self.RefreshUI(force: true);
         }
 
         private void HandleBehaviorSelected(BehaviorSave save)
