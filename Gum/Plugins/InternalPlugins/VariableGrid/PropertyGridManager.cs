@@ -387,7 +387,7 @@ namespace Gum.Managers
 
             RefreshStateLabel(element, stateCategory, state);
 
-            RefreshBehaviorUi(behaviorSave, state, stateCategory);
+            RefreshBehaviorUi(behaviorSave, newInstances, state, stateCategory);
 
             mVariablesDataGrid.Refresh();
             
@@ -435,20 +435,23 @@ namespace Gum.Managers
             mVariablesDataGrid.Refresh();
         }
 
-        private void RefreshBehaviorUi(BehaviorSave behaviorSave, StateSave state, StateSaveCategory category)
+        private void RefreshBehaviorUi(BehaviorSave behaviorSave, List<InstanceSave> instances, StateSave state, StateSaveCategory category)
         {
 
             this.VariableViewModel.BehaviorVariables.Clear();
-            if(behaviorSave != null)
+
+            var isShown = behaviorSave != null && (instances == null || instances.Count == 0);
+
+            if(isShown)
             {
                 this.VariableViewModel.BehaviorVariables.AddRange(behaviorSave.RequiredVariables.Variables);
             }
 
 
-            this.VariableViewModel.ShowBehaviorUi = behaviorSave != null ?
+            this.VariableViewModel.ShowBehaviorUi = isShown ?
                 System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
 
-            if(behaviorSave != null)
+            if(isShown)
             {
                 mainControl.BehaviorDataGrid.Instance = behaviorSave;
                 mainControl.BehaviorDataGrid.Categories.Clear();

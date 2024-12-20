@@ -174,13 +174,10 @@ namespace Gum.Wireframe
 
                 this.MouseEnter += (not, used) =>
                 {
-                    System.Diagnostics.Debug.WriteLine("Entered");
                     mouseHasEntered = true;
                 };
                 this.MouseLeave += (not, used) =>
                 {
-                    System.Diagnostics.Debug.WriteLine("Left");
-
                     mouseHasEntered = false;
                 };
 

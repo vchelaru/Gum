@@ -138,6 +138,36 @@ public class SelectedState : ISelectedState
 
     #endregion
 
+    #region Behavior
+
+    public BehaviorSave SelectedBehavior
+    {
+        get
+        {
+            return snapshot.SelectedBehavior;
+        }
+        set
+        {
+            HandleBehaviorSelected(value);
+        }
+    }
+
+
+    private void HandleBehaviorSelected(BehaviorSave behavior)
+    {
+        if (behavior != null && SelectedInstance != null)
+        {
+            SelectedInstance = null;
+        }
+        UpdateToSelectedBehavior(behavior);
+        if(behavior != null)
+        {
+            PluginManager.Self.BehaviorSelected(SelectedBehavior);
+        }
+    }
+
+    #endregion
+
     #region Properties
 
     public static ISelectedState Self
@@ -154,18 +184,6 @@ public class SelectedState : ISelectedState
                 mSelf = new SelectedState();
             }
             return mSelf;
-        }
-    }
-
-    public BehaviorSave SelectedBehavior
-    {
-        get
-        {
-            return snapshot.SelectedBehavior;
-        }
-        set
-        {
-            HandleBehaviorSelected(value);
         }
     }
 
@@ -262,7 +280,14 @@ public class SelectedState : ISelectedState
         }
         set
         {
-            SelectedInstances = new List<InstanceSave> { value };
+            if(value == null)
+            {
+                SelectedInstances = new List<InstanceSave> ();
+            }
+            else
+            {
+                SelectedInstances = new List<InstanceSave> { value };
+            }
         }
     }
 
@@ -275,7 +300,6 @@ public class SelectedState : ISelectedState
         set
         {
             HandleSelectedInstances(value?.ToList());
-            UpdateToSelectedInstances(value);
         }
 
     }
@@ -493,9 +517,6 @@ public class SelectedState : ISelectedState
 
         _menuStripManager.RefreshUI();
 
-        //PropertyGridManager.Self.RefreshUI();
-        GumCommands.Self.GuiCommands.RefreshVariables();
-
 
         // This is needed for the wireframe manager, but this should be moved to a plugin
         GumEvents.Self.CallInstanceSelected();
@@ -552,14 +573,6 @@ public class SelectedState : ISelectedState
     }
 
 
-    private void HandleBehaviorSelected(BehaviorSave behavior)
-    {
-        if(behavior != null && SelectedInstance != null)
-        {
-            SelectedInstance = null;
-        }
-        UpdateToSelectedBehavior(behavior);
-    }
 
     private void UpdateToSelectedBehavior(BehaviorSave behavior)
     {
@@ -567,8 +580,6 @@ public class SelectedState : ISelectedState
         {
             snapshot.SelectedBehavior = behavior;
             GumCommands.Self.GuiCommands.RefreshStateTreeView();
-
-            GumCommands.Self.GuiCommands.RefreshVariables();
 
             WireframeObjectManager.Self.RefreshAll(false);
 
@@ -581,11 +592,6 @@ public class SelectedState : ISelectedState
             {
                 SelectedElement = null;
             }
-
-            // Although plugins could just listen for behavior changes, and
-            // assume that means no elements are selected, that's a bit of a pain.
-            // A behavior may just care about whether an element is selected or not.
-            PluginManager.Self.BehaviorSelected(SelectedBehavior);
         }
 
     }

@@ -525,7 +525,10 @@ namespace Gum.PropertyGridHelpers
             {
                 return asInstanceSave.Name;
             }
-
+            else if(RootVariableName == "Base Type" && instance is InstanceSave asInstanceForBehavior)
+            {
+                return asInstanceForBehavior.BaseType;
+            }
             else if (mPropertyDescriptor != null)
             {
                 var toReturn = GetValueStrictlyOnSelectedState(instance);

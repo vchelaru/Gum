@@ -1458,11 +1458,7 @@ namespace Gum.Managers
                 selectedObject = treeNode.Tag;
             }
 
-            // Refreshes happen whenever a user selects a node in this tree view, but also
-            // whenever selecting a new state. Selecting a node here also selects a state,
-            // so we don't want double-selections. Suppressing and explicitly calling 
-            // RefreshUi
-            PropertyGridManager.Self.ObjectsSuppressingRefresh.Add(this);
+
             try
             {
                 IsInUiInitiatedSelection = true;
@@ -1499,10 +1495,7 @@ namespace Gum.Managers
             finally
             {
                 IsInUiInitiatedSelection = false;
-                PropertyGridManager.Self.ObjectsSuppressingRefresh.Remove(this);
             }
-
-            GumCommands.Self.GuiCommands.RefreshVariables();
         }
 
         public void VerifyComponentsAreInTreeView(GumProjectSave gumProject)

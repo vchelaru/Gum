@@ -1,4 +1,5 @@
 ﻿using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Mvvm;
@@ -20,6 +21,12 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid
             this.ReactToStateSaveCategorySelected += MainVariableGridPlugin_ReactToStateSaveCategorySelected;
             this.StateMovedToCategory += HandleStateMovedToCategory;
             this.InstanceSelected += HandleInstanceSelected;
+            this.BehaviorSelected += HandleBehaviorSelected;
+        }
+
+        private void HandleBehaviorSelected(BehaviorSave save)
+        {
+            PropertyGridManager.Self.RefreshUI(force: true);
         }
 
         private void HandleInstanceSelected(ElementSave save1, InstanceSave save2)
@@ -45,15 +52,21 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid
 
         private void HandleTreeNodeSelected(TreeNode node)
         {
-            var shouldShowButton = (GumState.Self.SelectedState.SelectedBehavior != null ||
-                GumState.Self.SelectedState.SelectedComponent != null ||
-                GumState.Self.SelectedState.SelectedScreen != null);
+            var selectedState = GumState.Self.SelectedState;
+            var shouldShowButton = (selectedState.SelectedBehavior != null ||
+                selectedState.SelectedComponent != null ||
+                selectedState.SelectedScreen != null);
             if(shouldShowButton)
             {
                 shouldShowButton = GumState.Self.SelectedState.SelectedInstance == null;
             }
             PropertyGridManager.Self.VariableViewModel.AddVariableButtonVisibility =
                 shouldShowButton.ToVisibility();
+
+            if(selectedState.SelectedBehavior == null && selectedState.SelectedInstance == null && selectedState.SelectedElement == null)
+            {
+                PropertyGridManager.Self.RefreshUI(force: true);
+            }
         }
     }
 }
