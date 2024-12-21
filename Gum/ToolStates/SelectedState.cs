@@ -362,19 +362,15 @@ public class SelectedState : ISelectedState
         }
 
         UpdateToSelectedInstances(value);
-    }
 
+        ElementSave element = null;
 
-    private void UpdateToSetSelectedInstance(InstanceSave value)
-    {
-        var isSame = snapshot.SelectedInstance == value;
-        if (!isSame)
+        if (instance != null)
         {
-            snapshot.SelectedInstance = value;
-            PerformAfterSelectInstanceLogic();
+            element = ObjectFinder.Self.GetElementContainerOf(instance);
         }
+        PluginManager.Self.InstanceSelected(element, instance);
     }
-
 
     private void UpdateToSelectedInstances(IEnumerable<InstanceSave> instances)
     {
@@ -385,9 +381,56 @@ public class SelectedState : ISelectedState
         }
         else
         {
-            UpdateToSetSelectedInstance(null);
+            var isSame = snapshot.SelectedInstance == null;
+            if (!isSame)
+            {
+                snapshot.SelectedInstance = null;
+                PerformAfterSelectInstanceLogic();
+            }
         }
     }
+
+    private void PerformAfterSelectInstanceLogic()
+    {
+        if (snapshot.SelectedInstance != null)
+        {
+            var stateContainerBefore = snapshot.SelectedStateContainer;
+
+            ElementSave parent = snapshot.SelectedInstance.ParentContainer;
+            var elementAfter = ObjectFinder.Self.GetElementContainerOf(snapshot.SelectedInstance);
+            var behaviorAfter = ObjectFinder.Self.GetBehaviorContainerOf(snapshot.SelectedInstance);
+
+            ProjectVerifier.Self.AssertIsPartOfProject(parent);
+
+            if (elementAfter != null || behaviorAfter != null)
+            {
+                if (stateContainerBefore != elementAfter && stateContainerBefore != behaviorAfter)
+                {
+                    GumCommands.Self.GuiCommands.RefreshStateTreeView();
+                }
+            }
+        }
+
+
+        if (SelectedElement != null && (SelectedStateSave == null || SelectedElement.AllStates.Contains(SelectedStateSave) == false))
+        {
+            SelectedStateSave = SelectedElement.States[0];
+        }
+
+        if (WireframeObjectManager.Self.ElementShowing != this.SelectedElement)
+        {
+            WireframeObjectManager.Self.RefreshAll(false);
+        }
+
+        SelectionManager.Self.Refresh();
+
+        _menuStripManager.RefreshUI();
+
+
+        // This is needed for the wireframe manager, but this should be moved to a plugin
+        GumEvents.Self.CallInstanceSelected();
+    }
+
 
     #endregion
 
@@ -586,58 +629,6 @@ public class SelectedState : ISelectedState
     }
 
     #endregion
-
-    private void PerformAfterSelectInstanceLogic()
-    {
-        if (snapshot.SelectedInstance != null)
-        {
-            var stateContainerBefore = snapshot.SelectedStateContainer;
-
-            ElementSave parent = snapshot.SelectedInstance.ParentContainer;
-            var elementAfter = ObjectFinder.Self.GetElementContainerOf(snapshot.SelectedInstance);
-            var behaviorAfter = ObjectFinder.Self.GetBehaviorContainerOf(snapshot.SelectedInstance);
-
-            ProjectVerifier.Self.AssertIsPartOfProject(parent);
-
-            if(elementAfter != null || behaviorAfter != null)
-            {
-                if(stateContainerBefore != elementAfter && stateContainerBefore != behaviorAfter)
-                {
-                    GumCommands.Self.GuiCommands.RefreshStateTreeView();
-                }
-            }
-        }
-
-
-        if (SelectedElement != null && (SelectedStateSave == null || SelectedElement.AllStates.Contains(SelectedStateSave) == false))
-        {
-            SelectedStateSave = SelectedElement.States[0];
-        }
-
-        if (WireframeObjectManager.Self.ElementShowing != this.SelectedElement)
-        {
-            WireframeObjectManager.Self.RefreshAll(false);
-        }
-
-        SelectionManager.Self.Refresh();
-
-        _menuStripManager.RefreshUI();
-
-
-        // This is needed for the wireframe manager, but this should be moved to a plugin
-        GumEvents.Self.CallInstanceSelected();
-
-        if (snapshot.SelectedInstance != null)
-        {
-            var element = ObjectFinder.Self.GetElementContainerOf(snapshot.SelectedInstance);
-            PluginManager.Self.InstanceSelected(element, snapshot.SelectedInstance);
-        }
-        else if (SelectedElement != null)
-        {
-            PluginManager.Self.ElementSelected(SelectedElement);
-        }
-    }
-
 
     private SelectedState()
     {
