@@ -345,7 +345,8 @@ namespace Gum.Managers
                 {
                     var projectFolder = FileManager.GetDirectory(ProjectManager.Self.GumProjectSave.FullFileName);
 
-                    string nodeRelativeToProject = FileManager.MakeRelative(fullFolderPath.FullPath, projectFolder + draggedAsElementSave.Subfolder + "\\", preserveCase:true);
+                    string nodeRelativeToProject = FileManager.MakeRelative(fullFolderPath.FullPath, projectFolder + draggedAsElementSave.Subfolder + "/", preserveCase:true)
+                        .Replace("\\", "/");
 
                     string oldName = draggedAsElementSave.Name;
                     draggedAsElementSave.Name = nodeRelativeToProject + FileManager.RemovePath(draggedAsElementSave.Name);

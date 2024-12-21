@@ -16,6 +16,8 @@ using Gum.CommandLine;
 using Gum.DataTypes.Variables;
 using System.Linq;
 using System.Reflection;
+using System.ComponentModel;
+using System.Management.Instrumentation;
 
 namespace Gum
 {
@@ -241,6 +243,11 @@ namespace Gum
 
             // Deselect everything
             SelectedState.Self.SelectedElement = null;
+            SelectedState.Self.SelectedInstance = null;
+            SelectedState.Self.SelectedBehavior = null;
+            SelectedState.Self.SelectedStateCategorySave = null;
+            SelectedState.Self.SelectedStateSave = null;
+
             // Now that a new project is loaded, refresh the UI!
             GumCommands.Self.GuiCommands.RefreshElementTreeView();
 
@@ -368,7 +375,7 @@ namespace Gum
 
             foreach (var reference in gumProjectSave.ScreenReferences)
             {
-                if (reference.Name.Contains("\\"))
+                if (reference.Name?.Contains("\\") == true)
                 {
                     reference.Name = reference.Name.Replace("\\", "/");
                     didAnythingChange = true;
@@ -377,27 +384,52 @@ namespace Gum
 
             foreach (var reference in gumProjectSave.ComponentReferences)
             {
-                if (reference.Name.Contains("\\"))
+                if (reference?.Name.Contains("\\") == true)
                 {
                     reference.Name = reference.Name.Replace("\\", "/");
                     didAnythingChange = true;
                 }
             }
 
-            foreach (var screen in gumProjectSave.Screens)
+            foreach(var reference in gumProjectSave.BehaviorReferences)
             {
-                if (screen.Name.Contains("\\"))
+                if(reference.Name?.Contains("\\") == true)
                 {
-                    screen.Name = screen.Name.Replace("\\", "/");
+                    reference.Name = reference.Name.Replace("\\", "/");
                     didAnythingChange = true;
                 }
             }
 
 
+            foreach (var screen in gumProjectSave.Screens)
+            {
+                if (screen.Name?.Contains("\\") == true)
+                {
+                    screen.Name = screen.Name.Replace("\\", "/");
+                    didAnythingChange = true;
+                }
+                foreach (var instance in screen.Instances)
+                {
+                    if (instance.BaseType?.Contains("\\") == true)
+                    {
+                        instance.BaseType = instance.BaseType.Replace("\\", "/");
+                        didAnythingChange = true;
+                    }
+                }
+
+                foreach (var behavior in screen.Behaviors)
+                {
+                    if (behavior.BehaviorName?.Contains("\\") == true)
+                    {
+                        behavior.BehaviorName = behavior.BehaviorName.Replace("\\", "/");
+                        didAnythingChange = true;
+                    }
+                }
+            }
 
             foreach (var component in gumProjectSave.Components)
             {
-                if (component.Name.Contains("\\"))
+                if (component.Name?.Contains("\\") == true)
                 {
                     component.Name = component.Name.Replace("\\", "/");
                     didAnythingChange = true;
@@ -405,7 +437,34 @@ namespace Gum
 
                 foreach (var instance in component.Instances)
                 {
-                    if (instance.BaseType.Contains("\\"))
+                    if (instance.BaseType?.Contains("\\") == true)
+                    {
+                        instance.BaseType = instance.BaseType.Replace("\\", "/");
+                        didAnythingChange = true;
+                    }
+                }
+
+                foreach(var behavior in component.Behaviors)
+                {
+                    if(behavior.BehaviorName?.Contains("\\") == true)
+                    {
+                        behavior.BehaviorName = behavior.BehaviorName.Replace("\\", "/");
+                        didAnythingChange = true;
+                    }
+                }
+            }
+
+            foreach (var behavior in gumProjectSave.Behaviors)
+            {
+                if(behavior.Name?.Contains("\\") == true)
+                {
+                    behavior.Name = behavior.Name.Replace("\\", "/");
+                    didAnythingChange = true;
+                }
+
+                foreach (var instance in behavior.RequiredInstances)
+                {
+                    if (instance.BaseType?.Contains("\\") == true)
                     {
                         instance.BaseType = instance.BaseType.Replace("\\", "/");
                         didAnythingChange = true;
