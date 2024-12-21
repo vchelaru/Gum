@@ -189,6 +189,18 @@ public class ItemsControl : ScrollViewer
                 }
 
                 break;
+            case NotifyCollectionChangedAction.Move:
+                var oldIndex = e.OldStartingIndex;
+                var newIndex = e.NewStartingIndex;
+
+                object? itemToMove = default;
+                // need to move the item to the new index:
+                if(oldIndex < InnerPanel.Children.Count)
+                {
+                    InnerPanel.Children.Move(oldIndex, newIndex);
+                }
+
+                break;
             case NotifyCollectionChangedAction.Remove:
                 {
                     var index = e.OldStartingIndex;
@@ -202,10 +214,6 @@ public class ItemsControl : ScrollViewer
                     HandleCollectionItemRemoved(index);
                 }
                 break;
-            case NotifyCollectionChangedAction.Reset:
-                ClearVisualsInternal();
-                HandleCollectionReset();
-                break;
             case NotifyCollectionChangedAction.Replace:
                 {
                     var index = e.NewStartingIndex;
@@ -213,7 +221,10 @@ public class ItemsControl : ScrollViewer
                     HandleCollectionReplace(index);
                     
                 }
-
+                break;
+            case NotifyCollectionChangedAction.Reset:
+                ClearVisualsInternal();
+                HandleCollectionReset();
                 break;
         }
 

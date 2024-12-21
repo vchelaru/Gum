@@ -421,6 +421,22 @@ public class ListBox : ItemsControl, IInputReceiver
             SelectedIndex = -1;
             PushValueToViewModel(nameof(SelectedObject));
         }
+        else if(e.Action == NotifyCollectionChangedAction.Move)
+        {
+
+            var itemToMove = ListBoxItemsInternal[e.OldStartingIndex];
+
+            ListBoxItemsInternal.RemoveAt(e.OldStartingIndex);
+            ListBoxItemsInternal.Insert(e.NewStartingIndex, itemToMove);
+            if(SelectedIndex == e.OldStartingIndex)
+            {
+                SelectedIndex = e.NewStartingIndex;
+            }
+            else if(SelectedIndex == e.NewStartingIndex)
+            {
+                SelectedIndex = e.OldStartingIndex;
+            }
+        }
     }
 
     protected override void HandleCollectionNewItemCreated(FrameworkElement newItem, int newItemIndex)

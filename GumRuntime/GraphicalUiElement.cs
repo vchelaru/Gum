@@ -4073,6 +4073,11 @@ namespace Gum.Wireframe
                     }
                 }
             }
+            else if(e.Action == NotifyCollectionChangedAction.Move)
+            {
+                // for now let's just do a layout on this and the children
+                UpdateLayout();
+            }
             else if (e.Action == NotifyCollectionChangedAction.Remove)
             {
                 foreach (IRenderableIpso ipso in e.OldItems)
