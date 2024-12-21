@@ -76,3 +76,30 @@ If a new category or state is added to a behavior, all components which use the 
 <figure><img src="../../.gitbook/assets/19_06 02 42.gif" alt=""><figcaption><p>Adding states and categories in a component adds the states and categories to all components using the behavior</p></figcaption></figure>
 
 If a state or category is removed from a behavior, Gum does not remove the state or category from components which implement the behavior. Behaviors only define what is required, but they do not prevent components from defining additional states and categories. Also, the states on components may still be needed even if the behavior is removed. Therefore, if you remove any states or categories from a behavior, you may need to manually remove the same states and categories from components which use the behavior if these are no longer needed.
+
+### Instance Requirements
+
+Behaviors can include instances, resulting in required instances existing in components which use the behavior. Instances in behaviors only include two properties:
+
+* Name
+* Base Type
+
+Instances in behaviors only require that instances in components have these two matching properties. All other properties can be set to any value.
+
+To add an instance to a behavior, drag+drop a standard element or component onto the behavior in the Project tab.
+
+<figure><img src="../../.gitbook/assets/21_07 01 58.gif" alt=""><figcaption><p>Drag+drop standard elements or components onto behaviors to create instances in the behavior</p></figcaption></figure>
+
+An instance can have its Name changed, Base Type changed, or removed.
+
+<figure><img src="../../.gitbook/assets/21_07 04 12.gif" alt=""><figcaption><p>The Variables tab lets you change Name and Base Type. Right-click to delete an instance.</p></figcaption></figure>
+
+If a component is missing a behavior then the Error window provides information about the missing requirement.
+
+<figure><img src="../../.gitbook/assets/image (128).png" alt=""><figcaption><p>Button component is missing a SpriteInstance which is required by the ButtonBehavior</p></figcaption></figure>
+
+{% hint style="info" %}
+At this time Gum does not automatically add required instances to components which need them. This may change in future versions of Gum. For now, instances must be manually added to resolve errors.
+
+<img src="../../.gitbook/assets/21_07 08 10.gif" alt="" data-size="original">
+{% endhint %}
