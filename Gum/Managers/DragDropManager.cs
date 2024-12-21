@@ -316,6 +316,10 @@ namespace Gum.Managers
             {
                 HandleDroppedElementOnBehavior(draggedAsElementSave, targetBehavior);
             }
+            else if(draggedAsElementSave is ScreenSave && targetTag is BehaviorSave)
+            {
+                MessageBox.Show("Screens cannot be added as requiered instances in behaviors");
+            }
             else
             {
                 MessageBox.Show("You must drop " + draggedAsElementSave.Name + " on either a Screen or an Component");
