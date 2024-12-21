@@ -743,7 +743,7 @@ namespace Gum.Wireframe
                     
                     if (hasChanged)
                     {
-                        if (SelectedState.Self.SelectedInstances.GetCount() > 1)
+                        if (SelectedState.Self.SelectedInstances.Count() > 1)
                         {
                             List<GraphicalUiElement> selectedIpsos = new List<GraphicalUiElement>();
                             foreach (var instance in SelectedState.Self.SelectedInstances)
@@ -809,7 +809,7 @@ namespace Gum.Wireframe
             List<GraphicalUiElement> representations = new List<GraphicalUiElement>();
 
             var elementStack = SelectedState.Self.GetTopLevelElementStack();
-            if (SelectedState.Self.SelectedInstances.GetCount() != 0)
+            if (SelectedState.Self.SelectedInstances.Count() != 0)
             {
                 
                 foreach (var instance in SelectedState.Self.SelectedInstances)

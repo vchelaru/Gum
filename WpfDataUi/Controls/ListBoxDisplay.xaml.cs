@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -166,10 +167,17 @@ namespace WpfDataUi.Controls
                 newList.AddRange(valueAsFloatList);
                 ListBox.ItemsSource = newList;
             }
+            else if(value is List<Vector2> valueAsVectorList)
+            {
+                var newList = new List<Vector2>();
+                newList.AddRange(valueAsVectorList);
+                ListBox.ItemsSource = newList;
+            }
             else
             {
                 // todo - we may want to clone the list here too to prevent unintentional editing of the underlying list
-                ListBox.ItemsSource = value as IEnumerable;
+                //ListBox.ItemsSource = value as IEnumerable;
+                throw new InvalidOperationException($"need to support a list of type {value?.GetType()} to support cloning");
             }
             return ApplyValueResult.Success;
         }

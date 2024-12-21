@@ -669,7 +669,7 @@ public class SelectedState : ISelectedState
 /// This is similar to how Glue stores its selections, and we're migrating to this
 /// so that the UI can be swapped out more easily.
 /// </remarks>
-class SelectedStateSnapshot : ISelectedState
+class SelectedStateSnapshot
 {
     public ScreenSave SelectedScreen
     {
@@ -787,28 +787,5 @@ class SelectedStateSnapshot : ISelectedState
 
     public IEnumerable<TreeNode> SelectedTreeNodes { get; set; }
 
-    public RecursiveVariableFinder SelectedRecursiveVariableFinder { get; set; }
-
     public StateStackingMode StateStackingMode { get; set; }
-
-    public List<ElementWithState> GetTopLevelElementStack()
-    {
-        throw new NotImplementedException();
-    }
-}
-
-public static class IEnumerableExtensionMethods
-{
-    public static int GetCount(this IEnumerable<InstanceSave> enumerable)
-    {
-        int toReturn = 0;
-
-
-        foreach (var item in enumerable)
-        {
-            toReturn++;
-        }
-
-        return toReturn;
-    }
 }

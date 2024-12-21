@@ -687,7 +687,21 @@ namespace Gum.DataTypes.Variables
                 variableListSave.Name = variableName;
             }
 
-            variableListSave.ValueAsIList = value as IList;
+            // Don't assign the actual reference. Doing so may result in an element instance 
+            // sharing the same IList reference as the StandardElement:
+            //variableListSave.ValueAsIList = value as IList;
+            variableListSave.ValueAsIList.Clear();
+            if(value as IList == null)
+            {
+                variableListSave.ValueAsIList = null;
+            }
+            else
+            {
+                foreach(var item in value as IList)
+                {
+                    variableListSave.ValueAsIList.Add(item);
+                }
+            }
         }
 
         /// <summary>

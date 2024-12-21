@@ -545,6 +545,8 @@ namespace Gum.PropertyGridHelpers
                     }
                 }
 
+                // we want to do this by value:
+
                 return toReturn;
             }
             else
