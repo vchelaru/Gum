@@ -66,7 +66,7 @@ namespace WpfDataUi.Controls
                 }
                 else
                 {
-                    ClearValue(BackgroundProperty);
+                    this.ListBox.ClearValue(BackgroundProperty);
                 }
 
                 //HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
