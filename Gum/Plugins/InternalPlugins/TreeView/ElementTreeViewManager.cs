@@ -1026,8 +1026,11 @@ namespace Gum.Managers
 
                 foreach (var item in list)
                 {
-                    TreeNode itemTreeNode = GetTreeNodeFor(item, parentContainer);
-                    treeNodeList.Add(itemTreeNode);
+                    if(parentContainer != null)
+                    {
+                        TreeNode itemTreeNode = GetTreeNodeFor(item, parentContainer);
+                        treeNodeList.Add(itemTreeNode);
+                    }
                 }
 
                 Select(treeNodeList);
