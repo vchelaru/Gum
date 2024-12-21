@@ -460,12 +460,49 @@ namespace Gum.Managers
             {
                 using (UndoManager.Self.RequestLock())
                 {
+                    var stateCategory = SelectedState.Self.SelectedStateCategorySave;
+                    var shouldSelectAfterRemoval = stateSave == SelectedState.Self.SelectedStateSave;
+                    int index = stateCategory?.States.IndexOf(stateSave) ?? -1;
+
                     ElementCommands.Self.RemoveState(stateSave, SelectedState.Self.SelectedStateContainer);
                     PluginManager.Self.StateDelete(stateSave);
                     GumCommands.Self.GuiCommands.RefreshStateTreeView();
                     GumCommands.Self.GuiCommands.RefreshVariables();
                     WireframeObjectManager.Self.RefreshAll(true);
                     SelectionManager.Self.Refresh();
+
+                    if (shouldSelectAfterRemoval)
+                    {
+                        int? newIndex = null;
+                        if (index != -1)
+                        {
+                            if (index < stateCategory.States.Count)
+                            {
+                                newIndex = index;
+                            }
+                            else if (stateCategory.States.Count > 0)
+                            {
+                                newIndex = stateCategory.States.Count - 1;
+                            }
+                        }
+
+                        if(newIndex == null && stateCategory != null)
+                        {
+                            SelectedState.Self.SelectedStateCategorySave = stateCategory;
+                        }
+                        else if(newIndex != null)
+                        {
+                            SelectedState.Self.SelectedStateSave = stateCategory.States[newIndex.Value];
+                        }
+                        else if(SelectedState.Self.SelectedElement != null)
+                        {
+                            SelectedState.Self.SelectedStateSave = SelectedState.Self.SelectedElement.DefaultState;
+                        }
+                        else
+                        {
+                            SelectedState.Self.SelectedStateSave = null;
+                        }
+                    }
                 }
             }
         }

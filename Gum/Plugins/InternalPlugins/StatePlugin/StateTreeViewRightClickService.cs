@@ -204,7 +204,7 @@ public class StateTreeViewRightClickService
 
     public void DeleteStateClick()
     {
-        GumCommands.Self.Edit.RemoveState(
+        GumCommands.Self.Edit.AskToDeleteState(
             SelectedState.Self.SelectedStateSave,
             SelectedState.Self.SelectedStateContainer);
     }

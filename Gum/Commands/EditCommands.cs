@@ -25,7 +25,7 @@ namespace Gum.Commands
     {
         #region State
 
-        public void RemoveState(StateSave stateSave, IStateContainer stateContainer)
+        public void AskToDeleteState(StateSave stateSave, IStateContainer stateContainer)
         {
             var deleteResponse = new DeleteResponse();
             deleteResponse.ShouldDelete = true;

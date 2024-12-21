@@ -154,6 +154,7 @@ public class MainStatePlugin : InternalPlugin
 
     private void HandleStateSaveCategorySelected(StateSaveCategory stateSaveCategory)
     {
+        _stateTreeViewRightClickService.PopulateMenuStrip();
         StateTreeViewManager.Self.Select(stateSaveCategory);
 
         stateTreeViewModel.SetSelectedStateSaveCategory(stateSaveCategory);

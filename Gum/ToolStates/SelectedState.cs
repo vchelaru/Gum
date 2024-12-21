@@ -87,6 +87,18 @@ public class SelectedState : ISelectedState
         }
     }
 
+    public List<ElementSave> SelectedElements
+    {
+        set
+        {
+            UpdateToSelectedElements(value);
+        }
+        get
+        {
+            return snapshot.SelectedElements;
+        }
+    }
+
     private void HandleElementSelected(ElementSave value)
     {
         if(value != null)
@@ -134,6 +146,19 @@ public class SelectedState : ISelectedState
         }
     }
 
+    private void UpdateToSelectedElements(List<ElementSave> elements)
+    {
+        snapshot.SelectedElements = elements;
+        if (elements?.Count > 0)
+        {
+            UpdateToSelectedElement(elements[0]);
+        }
+        else
+        {
+            UpdateToSelectedElement(null);
+        }
+    }
+
     #endregion
 
     #region Behavior
@@ -163,6 +188,28 @@ public class SelectedState : ISelectedState
             PluginManager.Self.BehaviorSelected(SelectedBehavior);
         }
     }
+
+    private void UpdateToSelectedBehavior(BehaviorSave behavior)
+    {
+        if (behavior != snapshot.SelectedBehavior)
+        {
+            snapshot.SelectedBehavior = behavior;
+            GumCommands.Self.GuiCommands.RefreshStateTreeView();
+
+            WireframeObjectManager.Self.RefreshAll(false);
+
+            _menuStripManager.RefreshUI();
+
+
+            SelectedStateSave = null;
+            SelectedStateCategorySave = null;
+            if (SelectedBehavior != null)
+            {
+                SelectedElement = null;
+            }
+        }
+    }
+
 
     #endregion
 
@@ -210,123 +257,6 @@ public class SelectedState : ISelectedState
         }
     }
 
-    public List<ElementSave> SelectedElements
-    {
-        set
-        {
-            UpdateToSelectedElements(value);
-        }
-        get
-        {
-            return snapshot.SelectedElements;
-        }
-    }
-
-    public StateSave CustomCurrentStateSave
-    {
-        get;
-        set;
-    }
-
-    public StateSave SelectedStateSave
-    {
-        get
-        {
-            if (CustomCurrentStateSave != null)
-            {
-                return CustomCurrentStateSave;
-            }
-            else
-            {
-                return snapshot.SelectedStateSave;
-            }
-        }
-        set
-        {
-
-            HandleStateSaveSelected(value);
-        }
-    }
-
-    public StateSave SelectedStateSaveOrDefault
-    {
-        get
-        {
-            return SelectedStateSave ?? SelectedElement?.DefaultState;
-        }
-    }
-
-    public StateSaveCategory SelectedStateCategorySave
-    {
-        get
-        {
-            return snapshot.SelectedStateCategorySave;
-        }
-        set
-        {
-            UpdateToSetSelectedStateSaveCategory(value);
-            UpdateToSetSelectedStateSave(SelectedStateSave);
-
-        }
-    }
-
-    public InstanceSave SelectedInstance
-    {
-        get
-        {
-            return snapshot.SelectedInstance;
-        }
-        set
-        {
-            if(value == null)
-            {
-                SelectedInstances = new List<InstanceSave> ();
-            }
-            else
-            {
-                SelectedInstances = new List<InstanceSave> { value };
-            }
-        }
-    }
-
-    public IEnumerable<InstanceSave> SelectedInstances
-    {
-        get
-        {
-            return snapshot.SelectedInstances;
-        }
-        set
-        {
-            HandleSelectedInstances(value?.ToList());
-        }
-
-    }
-
-    public VariableSave SelectedVariableSave
-    {
-        set
-        {
-            snapshot.SelectedVariableSave = value;
-        }
-        get
-        {
-            return snapshot.SelectedVariableSave;
-        }
-
-    }
-
-    /// <summary>
-    /// Returns the name of the selected entry in the property grid.
-    /// There may not be a VariableSave backing the selection as the 
-    /// value may be null in the StateSave
-    /// </summary>
-    public string SelectedVariableName
-    {
-        get
-        {
-            return SelectedVariableSave?.GetRootName();
-        }
-    }
 
     public TreeNode SelectedTreeNode
     {
@@ -380,34 +310,44 @@ public class SelectedState : ISelectedState
 
     }
 
-    public StateStackingMode StateStackingMode
-    {
-        get
-        {
-            return snapshot.StateStackingMode;
-        }
-        set
-        {
-            UpdateToSetSelectedStackingMode(value);
-        }
-    }
 
-    public VariableSave SelectedBehaviorVariable
-    {
-        get
-        {
-            return snapshot.SelectedBehaviorVariable;
-        }
-
-        set
-        {
-            UpdateToSelectedBehaviorVariable(value);
-        }
-    }
 
     #endregion
 
     #region Instance
+
+
+    public InstanceSave SelectedInstance
+    {
+        get
+        {
+            return snapshot.SelectedInstance;
+        }
+        set
+        {
+            if (value == null)
+            {
+                SelectedInstances = new List<InstanceSave>();
+            }
+            else
+            {
+                SelectedInstances = new List<InstanceSave> { value };
+            }
+        }
+    }
+
+    public IEnumerable<InstanceSave> SelectedInstances
+    {
+        get
+        {
+            return snapshot.SelectedInstances;
+        }
+        set
+        {
+            HandleSelectedInstances(value?.ToList());
+        }
+
+    }
 
     private void HandleSelectedInstances(List<InstanceSave> value)
     {
@@ -424,16 +364,57 @@ public class SelectedState : ISelectedState
         UpdateToSelectedInstances(value);
     }
 
-    #endregion
 
-    private void UpdateToSetSelectedStackingMode(StateStackingMode value)
+    private void UpdateToSetSelectedInstance(InstanceSave value)
     {
-        var isSame = snapshot.StateStackingMode == value;
+        var isSame = snapshot.SelectedInstance == value;
         if (!isSame)
         {
-            snapshot.StateStackingMode = value;
-            PluginManager.Self.ReactToStateStackingModeChange(value);
+            snapshot.SelectedInstance = value;
+            PerformAfterSelectInstanceLogic();
         }
+    }
+
+
+    private void UpdateToSelectedInstances(IEnumerable<InstanceSave> instances)
+    {
+        snapshot.SelectedInstances = instances ?? new List<InstanceSave>();
+        if (instances?.Count() > 0)
+        {
+            PerformAfterSelectInstanceLogic();
+        }
+        else
+        {
+            UpdateToSetSelectedInstance(null);
+        }
+    }
+
+    #endregion
+
+    #region StateSaveCategory
+
+
+    public StateSaveCategory SelectedStateCategorySave
+    {
+        get
+        {
+            return snapshot.SelectedStateCategorySave;
+        }
+        set
+        {
+            HandleSelectedStateCategorySave(value);
+        }
+    }
+
+    private void HandleSelectedStateCategorySave(StateSaveCategory value)
+    {
+        if(value != null)
+        {
+            snapshot.SelectedStateSave = null;
+        }
+        UpdateToSetSelectedStateSaveCategory(value);
+
+        PluginManager.Self.ReactToStateSaveCategorySelected(value);
     }
 
     private void UpdateToSetSelectedStateSaveCategory(StateSaveCategory selectedStateSaveCategory)
@@ -442,10 +423,54 @@ public class SelectedState : ISelectedState
         if (!isSame)
         {
             TakeSnapshot(selectedStateSaveCategory);
-            PluginManager.Self.ReactToStateSaveCategorySelected(selectedStateSaveCategory);
         }
     }
 
+
+    private void TakeSnapshot(StateSaveCategory stateSaveCategory)
+    {
+        snapshot.SelectedStateCategorySave = stateSaveCategory;
+        snapshot.SelectedStateSave = null;
+    }
+
+    #endregion
+
+    #region StateSave
+
+
+    public StateSave CustomCurrentStateSave
+    {
+        get;
+        set;
+    }
+
+    public StateSave SelectedStateSave
+    {
+        get
+        {
+            if (CustomCurrentStateSave != null)
+            {
+                return CustomCurrentStateSave;
+            }
+            else
+            {
+                return snapshot.SelectedStateSave;
+            }
+        }
+        set
+        {
+
+            HandleStateSaveSelected(value);
+        }
+    }
+
+    public StateSave SelectedStateSaveOrDefault
+    {
+        get
+        {
+            return SelectedStateSave ?? SelectedElement?.DefaultState;
+        }
+    }
 
     private void HandleStateSaveSelected(StateSave stateSave)
     {
@@ -455,7 +480,7 @@ public class SelectedState : ISelectedState
 
         category = elementContainer?.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
 
-        if(category != null && category != snapshot.SelectedStateCategorySave)
+        if (category != null && category != snapshot.SelectedStateCategorySave)
         {
             snapshot.SelectedStateCategorySave = category;
         }
@@ -473,16 +498,94 @@ public class SelectedState : ISelectedState
         }
     }
 
-
-    private void UpdateToSetSelectedInstance(InstanceSave value)
+    public StateStackingMode StateStackingMode
     {
-        var isSame = snapshot.SelectedInstance == value;
-        if (!isSame)
+        get
         {
-            snapshot.SelectedInstance = value;
-            PerformAfterSelectInstanceLogic();
+            return snapshot.StateStackingMode;
+        }
+        set
+        {
+            UpdateToSetSelectedStackingMode(value);
         }
     }
+
+    private void UpdateToSetSelectedStackingMode(StateStackingMode value)
+    {
+        var isSame = snapshot.StateStackingMode == value;
+        if (!isSame)
+        {
+            snapshot.StateStackingMode = value;
+            PluginManager.Self.ReactToStateStackingModeChange(value);
+        }
+    }
+
+    private void TakeSnapshot(StateSave selectedStateSave)
+    {
+        snapshot.SelectedStateSave = selectedStateSave;
+        var elementContainer =
+            ObjectFinder.Self.GetStateContainerOf(selectedStateSave);
+        StateSaveCategory category = null;
+        category = elementContainer?.Categories.FirstOrDefault(item => item.States.Contains(selectedStateSave));
+        snapshot.SelectedStateCategorySave = category;
+    }
+
+    #endregion
+
+    #region Variables
+
+    public VariableSave SelectedVariableSave
+    {
+        set
+        {
+            snapshot.SelectedVariableSave = value;
+        }
+        get
+        {
+            return snapshot.SelectedVariableSave;
+        }
+
+    }
+
+
+    public VariableSave SelectedBehaviorVariable
+    {
+        get
+        {
+            return snapshot.SelectedBehaviorVariable;
+        }
+
+        set
+        {
+            UpdateToSelectedBehaviorVariable(value);
+        }
+    }
+
+    /// <summary>
+    /// Returns the name of the selected entry in the property grid.
+    /// There may not be a VariableSave backing the selection as the 
+    /// value may be null in the StateSave
+    /// </summary>
+    public string SelectedVariableName
+    {
+        get
+        {
+            return SelectedVariableSave?.GetRootName();
+        }
+    }
+
+
+    private void UpdateToSelectedBehaviorVariable(VariableSave variable)
+    {
+        if (variable != snapshot.SelectedBehaviorVariable)
+        {
+            snapshot.SelectedBehaviorVariable = variable;
+            PropertyGridManager.Self.SelectedBehaviorVariable = variable;
+            _menuStripManager.RefreshUI();
+        }
+    }
+
+    #endregion
 
     private void PerformAfterSelectInstanceLogic()
     {
@@ -535,22 +638,6 @@ public class SelectedState : ISelectedState
         }
     }
 
-    private void TakeSnapshot(StateSaveCategory stateSaveCategory)
-    {
-        snapshot.SelectedStateCategorySave = stateSaveCategory;
-        snapshot.SelectedStateSave = null;
-    }
-
-    private void TakeSnapshot(StateSave selectedStateSave)
-    {
-        snapshot.SelectedStateSave = selectedStateSave;
-        var elementContainer =
-            ObjectFinder.Self.GetStateContainerOf(selectedStateSave);
-        StateSaveCategory category = null;
-        category = elementContainer?.Categories.FirstOrDefault(item => item.States.Contains(selectedStateSave));
-        snapshot.SelectedStateCategorySave = category;
-    }
-
 
     private SelectedState()
     {
@@ -561,69 +648,6 @@ public class SelectedState : ISelectedState
     {
         _menuStripManager = menuStripManager;
     }
-
-    private void UpdateToSelectedElements(List<ElementSave> elements)
-    {
-        snapshot.SelectedElements = elements;
-        if (elements?.Count > 0)
-        {
-            UpdateToSelectedElement(elements[0]);
-        }
-        else
-        {
-            UpdateToSelectedElement(null);
-        }
-    }
-
-
-
-    private void UpdateToSelectedBehavior(BehaviorSave behavior)
-    {
-        if (behavior != snapshot.SelectedBehavior)
-        {
-            snapshot.SelectedBehavior = behavior;
-            GumCommands.Self.GuiCommands.RefreshStateTreeView();
-
-            WireframeObjectManager.Self.RefreshAll(false);
-
-            _menuStripManager.RefreshUI();
-
-
-            SelectedStateSave = null;
-            SelectedStateCategorySave = null;
-            if(SelectedBehavior != null)
-            {
-                SelectedElement = null;
-            }
-        }
-
-    }
-
-    private void UpdateToSelectedBehaviorVariable(VariableSave variable)
-    {
-        if (variable != snapshot.SelectedBehaviorVariable)
-        {
-            snapshot.SelectedBehaviorVariable = variable;
-            PropertyGridManager.Self.SelectedBehaviorVariable = variable;
-            _menuStripManager.RefreshUI();
-        }
-    }
-
-
-    private void UpdateToSelectedInstances(IEnumerable<InstanceSave> instances)
-    {
-        snapshot.SelectedInstances = instances ?? new List<InstanceSave>();
-        if (instances?.Count() > 0)
-        {
-            PerformAfterSelectInstanceLogic();
-        }
-        else
-        {
-            UpdateToSetSelectedInstance(null);
-        }
-    }
-
-
 
     public List<ElementWithState> GetTopLevelElementStack()
     {
@@ -644,7 +668,6 @@ public class SelectedState : ISelectedState
         return toReturn;
     }
 
-
 }
 
 /// <summary>
@@ -660,10 +683,7 @@ class SelectedStateSnapshot : ISelectedState
     public ScreenSave SelectedScreen
     {
         get => SelectedElement as ScreenSave;
-        set
-        {
-            SelectedElement = value;
-        }
+        set => SelectedElement = value;
     }
     public ElementSave SelectedElement
     {

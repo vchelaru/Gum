@@ -374,7 +374,7 @@ namespace Gum.Managers
         {
             if (SelectedState.Self.SelectedStateSave != null)
             {
-                GumCommands.Self.Edit.RemoveState(
+                GumCommands.Self.Edit.AskToDeleteState(
                     SelectedState.Self.SelectedStateSave, SelectedState.Self.SelectedStateContainer);
             }
             else if (SelectedState.Self.SelectedStateCategorySave != null)
