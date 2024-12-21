@@ -2,13 +2,17 @@
 
 ### Introduction
 
-The **Height Units** variable controls how a unit is vertically sized, which may be relative to its parent. By default an object uses **Absolute** height, where each unit represents 1 pixel of height in pixels. When using **Absolute**, an object ignores its parents' Width.
+The **Height Units** variable controls how a unit is vertically sized, which may be relative to its parent. By default most types uses **Absolute** height, where each unit represents 1 pixel of height in pixels. When using **Absolute**, an object ignores its parent's Height.
 
 ### Absolute
 
 The following shows a child [ColoredRectangle](../coloredrectangle.md) with 50 **Absolute** Height:
 
 ![Rectangle with an Absolute height of 50](<../../../.gitbook/assets/11_06 16 55.png>)
+
+{% hint style="warning" %}
+Text instances which use an Absolute height of 0 size themselves to be the height of their contained text. This behavior will likely change in future versions of Gum so this combination is not recommended. Instead, to size a Text instance according to its contained text, Set **Height Units** to **Relative to Children**.
+{% endhint %}
 
 ### Relative to Container
 
