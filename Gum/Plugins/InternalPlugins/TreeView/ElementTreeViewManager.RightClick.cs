@@ -267,9 +267,10 @@ public partial class ElementTreeViewManager
                             Directory.Delete(fullFile);
                             GumCommands.Self.GuiCommands.RefreshElementTreeView();
                         }
-                        catch
+                        catch(Exception exception)
                         {
-                            MessageBox.Show("Could not delete folder");
+                            GumCommands.Self.GuiCommands.PrintOutput($"Exception attempting to delete folder:\n{e}");
+                            MessageBox.Show("Could not delete folder\nSee the output tab for more info");
                         }
                     }
                 }
