@@ -1233,7 +1233,9 @@ namespace Gum.Managers
         {
             if (string.IsNullOrEmpty(instanceSave.BaseType))
             {
-                throw new InvalidOperationException("The instance with the name " + instanceSave.Name + " doesn't have a BaseType");
+                // We tolerate instances with empty base types in behaviors...but should we?
+                //throw new InvalidOperationException("The instance with the name " + instanceSave.Name + " doesn't have a BaseType");
+                return null;
             }
             else
             {
