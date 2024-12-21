@@ -110,6 +110,7 @@ public class MainStatePlugin : InternalPlugin
     {
         _stateTreeViewRightClickService.PopulateMenuStrip();
         HandleRefreshStateTreeView();
+        RefreshTabHeaders();
     }
 
     private void HandleInstanceSelected(ElementSave save1, InstanceSave save2)
@@ -167,6 +168,20 @@ public class MainStatePlugin : InternalPlugin
 
     private void HandleTreeNodeSelected(TreeNode node)
     {
+        RefreshTabHeaders();
+
+        var selectedState = SelectedState.Self;
+        if (selectedState.SelectedBehavior == null &&
+            selectedState.SelectedElement == null)
+        {
+
+            _stateTreeViewRightClickService.PopulateMenuStrip();
+            HandleRefreshStateTreeView();
+        }
+    }
+
+    private ISelectedState RefreshTabHeaders()
+    {
         var selectedState = SelectedState.Self;
         var element = selectedState.SelectedElement;
         string desiredTitle = "States";
@@ -177,14 +192,7 @@ public class MainStatePlugin : InternalPlugin
 
         pluginTab.Title = desiredTitle + " (old)";
         newPluginTab.Title = desiredTitle;
-
-        if(selectedState.SelectedBehavior == null && 
-            selectedState.SelectedElement == null)
-        {
-
-            _stateTreeViewRightClickService.PopulateMenuStrip();
-            HandleRefreshStateTreeView();
-        }
+        return selectedState;
     }
 
     private void HandleStateSelected(TreeNode stateTreeNode)

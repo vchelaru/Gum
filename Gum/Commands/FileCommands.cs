@@ -72,6 +72,12 @@ namespace Gum.Commands
 
         internal void NewProject()
         {
+            SelectedState.Self.SelectedElement = null;
+            SelectedState.Self.SelectedInstance = null;
+            SelectedState.Self.SelectedBehavior = null;
+            SelectedState.Self.SelectedStateCategorySave = null;
+            SelectedState.Self.SelectedStateSave = null;
+
             ProjectManager.Self.CreateNewProject();
 
             GumCommands.Self.GuiCommands.RefreshElementTreeView();
