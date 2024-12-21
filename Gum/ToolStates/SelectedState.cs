@@ -96,10 +96,7 @@ public class SelectedState : ISelectedState
         }
         UpdateToSelectedElement(value);
 
-        if(value != null)
-        {
-            PluginManager.Self.ElementSelected(SelectedElement);
-        }
+        PluginManager.Self.ElementSelected(SelectedElement);
     }
 
     private void UpdateToSelectedElement(ElementSave element)

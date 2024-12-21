@@ -108,7 +108,8 @@ public class MainStatePlugin : InternalPlugin
 
     private void HandleElementSelected(ElementSave save)
     {
-        RefreshUI(SelectedState.Self.SelectedStateContainer, SelectedState.Self);
+        _stateTreeViewRightClickService.PopulateMenuStrip();
+        HandleRefreshStateTreeView();
     }
 
     private void HandleInstanceSelected(ElementSave save1, InstanceSave save2)
@@ -165,7 +166,8 @@ public class MainStatePlugin : InternalPlugin
 
     private void HandleTreeNodeSelected(TreeNode node)
     {
-        var element = SelectedState.Self.SelectedElement;
+        var selectedState = SelectedState.Self;
+        var element = selectedState.SelectedElement;
         string desiredTitle = "States";
         if (element != null)
         {
@@ -174,6 +176,14 @@ public class MainStatePlugin : InternalPlugin
 
         pluginTab.Title = desiredTitle + " (old)";
         newPluginTab.Title = desiredTitle;
+
+        if(selectedState.SelectedBehavior == null && 
+            selectedState.SelectedElement == null)
+        {
+
+            _stateTreeViewRightClickService.PopulateMenuStrip();
+            HandleRefreshStateTreeView();
+        }
     }
 
     private void HandleStateSelected(TreeNode stateTreeNode)

@@ -188,6 +188,8 @@ namespace Gum.Wireframe
         public void RemoveSelectedElement()
         {
             RemoveElement(SelectedState.Self.SelectedElement);
+
+            SelectedState.Self.SelectedElement = null;
         }
 
         private void RemoveElement(ElementSave elementToRemove)
