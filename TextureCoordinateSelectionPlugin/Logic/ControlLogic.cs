@@ -524,8 +524,8 @@ namespace TextureCoordinateSelectionPlugin.Logic
                     var absoluteWidth = graphicalUiElement.GetAbsoluteWidth();
                     var absoluteHeight = graphicalUiElement.GetAbsoluteHeight();
 
-                    selector.Width = absoluteWidth * widthScale;
-                    selector.Height = absoluteHeight * heightScale;
+                    selector.Width = absoluteWidth / widthScale;
+                    selector.Height = absoluteHeight / heightScale;
 
                     selector.Visible = true;
                     selector.ShowHandles = false;
