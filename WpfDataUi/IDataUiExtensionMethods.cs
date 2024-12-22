@@ -47,9 +47,11 @@ namespace WpfDataUi
                     if(dataUi.InstanceMember.Value != valueOnUi)
                     {
                         //dataUi.InstanceMember.Value = valueOnUi;
-                        dataUi.InstanceMember.SetValue(valueOnUi, SetPropertyCommitType.Full);
-                        result = ApplyValueResult.Success;
-                        dataUi.InstanceMember.CallAfterSetByUi();
+                        result = dataUi.InstanceMember.SetValue(valueOnUi, SetPropertyCommitType.Full);
+                        if(result == ApplyValueResult.Success)
+                        {
+                            dataUi.InstanceMember.CallAfterSetByUi();
+                        }
                     }
                     else
                     {

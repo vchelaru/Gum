@@ -21,6 +21,7 @@ namespace WpfDataUi.DataTypes
     {
         public SetPropertyCommitType CommitType { get; set; }
         public object Value { get; set; }
+        public bool IsAssignmentCancelled { get; set; }
     }
 
     public class InstanceMember : DependencyObject
@@ -137,8 +138,10 @@ namespace WpfDataUi.DataTypes
 
         }
 
-        public void SetValue(object value, SetPropertyCommitType commitType)
+        public ApplyValueResult SetValue(object value, SetPropertyCommitType commitType)
         {
+            ApplyValueResult result = ApplyValueResult.Success;
+
             if (CustomSetPropertyEvent != null)
             {
                 var args = new SetPropertyArgs
@@ -147,6 +150,11 @@ namespace WpfDataUi.DataTypes
                     Value = value
                 };
                 CustomSetPropertyEvent(Instance, args);
+
+                if(args.IsAssignmentCancelled)
+                {
+                    result = ApplyValueResult.UnknownError;
+                }
             }
             else if (CustomSetEvent != null)
             {
@@ -157,6 +165,7 @@ namespace WpfDataUi.DataTypes
                 LateBinder.GetInstance(Instance.GetType()).SetValue(Instance, Name, value);
             }
             OnPropertyChanged("Value");
+            return result;
         }
 
         public bool IsDefined 

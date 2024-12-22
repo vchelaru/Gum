@@ -1,4 +1,5 @@
 ﻿using CommonFormsAndControls;
+using ExCSS;
 using Gum.DataTypes;
 using Gum.DataTypes.ComponentModel;
 using Gum.DataTypes.Variables;
@@ -561,6 +562,15 @@ namespace Gum.PropertyGridHelpers
 
         private void HandleCustomSet(object gumElementOrInstanceSaveAsObject, SetPropertyArgs setPropertyArgs)
         {
+            ////////////////////Early Out/////////////////////////
+            if (!CanSetValue(gumElementOrInstanceSaveAsObject, setPropertyArgs))
+            {
+                setPropertyArgs.IsAssignmentCancelled = true;
+                return;
+            }
+            /////////////////End Early Out////////////////////////
+
+
             object newValue = setPropertyArgs.Value;
             if (mPropertyDescriptor != null)
             {
@@ -676,6 +686,21 @@ namespace Gum.PropertyGridHelpers
                 mStateSave.SetValue(mVariableName, newValue);
             }
             // set the value
+        }
+
+        private bool CanSetValue(object gumElementOrInstanceSaveAsObject, SetPropertyArgs setPropertyArgs)
+        {
+            if(this.RootVariableName == "Points")
+            {
+                var value = setPropertyArgs.Value as List<System.Numerics.Vector2>;
+
+                if(value?.Count < 4)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private void HandleSetToDefault(string obj)

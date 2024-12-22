@@ -514,39 +514,7 @@ namespace Gum.DataTypes.Variables
                 {
                     exposedVariableSourceName = coreVariableDefinition.Name;
                 }
-                bool isFile = false;
-
-                // Why might instanceSave be null?
-                // The reason is because StateSaves
-                // are used both for actual game data
-                // as well as temporary variable containers.
-                // If a StateSave is a temporary container then
-                // instanceSave may (probably will be) null.
-                if (instanceSave != null)
-                {
-                    VariableSave temp = variableSave;
-                    if (variableSave == null)
-                    {
-                        temp = new VariableSave();
-                        temp.Name = variableName;
-                    }
-                    isFile = temp.GetIsFileFromRoot(instanceSave);
-                }
-                else
-                {
-                    VariableSave temp = variableSave;
-                    if (variableSave == null)
-                    {
-                        temp = new VariableSave();
-                        temp.Name = variableName;
-                    }
-                    if (stateSave.ParentContainer != null)
-                    {
-                        isFile = temp.GetIsFileFromRoot(stateSave.ParentContainer);
-                    }
-                }
-
-
+                bool isFile = DetermineIfIsFile(stateSave, variableName, instanceSave, variableSave);
 
                 if (value != null && value is IList)
                 {
@@ -592,6 +560,43 @@ namespace Gum.DataTypes.Variables
                 }
             }
 
+        }
+
+        private static bool DetermineIfIsFile(StateSave stateSave, string variableName, InstanceSave instanceSave, VariableSave variableSave)
+        {
+            bool isFile = false;
+
+            // Why might instanceSave be null?
+            // The reason is because StateSaves
+            // are used both for actual game data
+            // as well as temporary variable containers.
+            // If a StateSave is a temporary container then
+            // instanceSave may (probably will be) null.
+            if (instanceSave != null)
+            {
+                VariableSave temp = variableSave;
+                if (variableSave == null)
+                {
+                    temp = new VariableSave();
+                    temp.Name = variableName;
+                }
+                isFile = temp.GetIsFileFromRoot(instanceSave);
+            }
+            else
+            {
+                VariableSave temp = variableSave;
+                if (variableSave == null)
+                {
+                    temp = new VariableSave();
+                    temp.Name = variableName;
+                }
+                if (stateSave.ParentContainer != null)
+                {
+                    isFile = temp.GetIsFileFromRoot(stateSave.ParentContainer);
+                }
+            }
+
+            return isFile;
         }
 
         private static bool TrySetReservedValues(StateSave stateSave, string variableName, object value, InstanceSave instanceSave)
