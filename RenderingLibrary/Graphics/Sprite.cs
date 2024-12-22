@@ -410,7 +410,7 @@ namespace RenderingLibrary.Graphics
 
             for(int textureCoordinateTop = currentSourceY; textureCoordinateTop < bottomTextureCoordinate; )
             {
-                xIterations = SourceRectangle.Value.Left / Texture.Width;
+                xIterations = oldSource.Left / Texture.Width;
                 for(int textureCoordinateLeft = currentSourceX; textureCoordinateLeft < rightTextureCoordinate;)
                 {
                     System.Numerics.Vector3 position;
