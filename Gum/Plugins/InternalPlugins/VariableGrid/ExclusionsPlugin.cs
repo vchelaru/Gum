@@ -3,6 +3,7 @@ using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using Gum.ToolStates;
+using System;
 using System.ComponentModel.Composition;
 
 namespace Gum.Plugins.InternalPlugins.VariableGrid
@@ -27,31 +28,54 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid
 
         private bool HandleGetIfVariableIsExcluded(VariableSave variable, RecursiveVariableFinder finder)
         {
-
-            if(variable.Name == "AutoGridHorizontalCells" || variable.Name == "AutoGridVerticalCells")
+            switch(variable.Name)
             {
-                var childrenLayoutVariable = finder.GetVariable("Children Layout");
+                case "AutoGridHorizontalCells":
+                case "AutoGridVerticalCells":
+                    return GetIfAutoGridIsExcluded(finder);
+                case "StackSpacing":
+                case "Wraps Children":
+                    return GetIfSpacingAndWrapsChildrenIsExcluded(finder);
 
-                var isAuto = false;
-                if(childrenLayoutVariable?.Value is ChildrenLayout childrenLayout)
-                { 
-                    isAuto = childrenLayout == ChildrenLayout.AutoGridHorizontal || childrenLayout == ChildrenLayout.AutoGridVertical;
-                }
-                return !isAuto;
+                case "Wrap":
+                    return GetIfWrapIsExcluded(finder);
             }
-            else if(variable.Name == "StackSpacing" || variable.Name == "Wraps Children")
-            {
-                var childrenLayoutVariable = finder.GetVariable("Children Layout");
-                var isStack = false;
-                if(childrenLayoutVariable?.Value is ChildrenLayout childrenLayout)
-                {
-                    isStack = childrenLayout == ChildrenLayout.LeftToRightStack || childrenLayout == ChildrenLayout.TopToBottomStack;
-                }
-                return !isStack;
-            }
-
 
             return false;
+        }
+
+        private bool GetIfWrapIsExcluded(RecursiveVariableFinder finder)
+        {
+            var textureAddress = finder.GetVariable("Texture Address")?.Value;
+
+            if(textureAddress is TextureAddress.EntireTexture)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        private static bool GetIfSpacingAndWrapsChildrenIsExcluded(RecursiveVariableFinder finder)
+        {
+            var childrenLayoutVariable = finder.GetVariable("Children Layout");
+            var isStack = false;
+            if (childrenLayoutVariable?.Value is ChildrenLayout childrenLayout)
+            {
+                isStack = childrenLayout == ChildrenLayout.LeftToRightStack || childrenLayout == ChildrenLayout.TopToBottomStack;
+            }
+            return !isStack;
+        }
+
+        private static bool GetIfAutoGridIsExcluded(RecursiveVariableFinder finder)
+        {
+            var childrenLayoutVariable = finder.GetVariable("Children Layout");
+
+            var isAuto = false;
+            if (childrenLayoutVariable?.Value is ChildrenLayout childrenLayout)
+            {
+                isAuto = childrenLayout == ChildrenLayout.AutoGridHorizontal || childrenLayout == ChildrenLayout.AutoGridVertical;
+            }
+            return !isAuto;
         }
     }
 }
