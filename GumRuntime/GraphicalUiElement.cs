@@ -126,8 +126,8 @@ namespace Gum.Wireframe
 
         bool mWrapsChildren = false;
 
-        float mTextureWidthScale;
-        float mTextureHeightScale;
+        float mTextureWidthScale = 1;
+        float mTextureHeightScale = 1;
 
         TextureAddress mTextureAddress;
 
@@ -2498,8 +2498,21 @@ namespace Gum.Wireframe
         {
             int left = mTextureLeft;
             int top = mTextureTop;
-            int width = (int)(mContainedObjectAsIpso.Width / mTextureWidthScale);
-            int height = (int)(mContainedObjectAsIpso.Height / mTextureHeightScale);
+
+            int width = 0;
+
+            if(mTextureWidthScale != 0)
+            {
+                width = (int)(mContainedObjectAsIpso.Width / mTextureWidthScale);
+            }
+
+            int height = 0;
+
+            if(mTextureHeightScale != 0)
+            {
+                height = (int)(mContainedObjectAsIpso.Height / mTextureHeightScale);
+            }
+
 
             if (mContainedObjectAsIpso is ITextureCoordinate containedTextureCoordinateObject)
             {

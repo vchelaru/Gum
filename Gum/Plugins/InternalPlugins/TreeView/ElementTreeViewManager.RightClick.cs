@@ -274,7 +274,7 @@ public partial class ElementTreeViewManager
                         }
                         catch(Exception exception)
                         {
-                            GumCommands.Self.GuiCommands.PrintOutput($"Exception attempting to delete folder:\n{e}");
+                            GumCommands.Self.GuiCommands.PrintOutput($"Exception attempting to delete folder:\n{exception}");
                             MessageBox.Show("Could not delete folder\nSee the output tab for more info");
                         }
                     }

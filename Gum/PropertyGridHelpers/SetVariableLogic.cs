@@ -1187,36 +1187,6 @@ namespace Gum.PropertyGridHelpers
                         }
                     }
                 }
-                if (textureAddress == TextureAddress.DimensionsBased)
-                {
-                    // if the values are 0, then we should set them to 1:
-                    float widthScale = rvf.GetValue<float>("Texture Width Scale");
-                    float heightScale = rvf.GetValue<float>("Texture Height Scale");
-
-                    if (widthScale == 0)
-                    {
-                        if (instance != null)
-                        {
-                            SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".Texture Width Scale", 1.0f);
-                        }
-                        else
-                        {
-                            SelectedState.Self.SelectedStateSave.SetValue("Texture Width Scale", 1.0f);
-                        }
-                    }
-
-                    if (heightScale == 0)
-                    {
-                        if (instance != null)
-                        {
-                            SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".Texture Height Scale", 1.0f);
-                        }
-                        else
-                        {
-                            SelectedState.Self.SelectedStateSave.SetValue("Texture Height Scale", 1.0f);
-                        }
-                    }
-                }
             }
         }
 
