@@ -44,14 +44,14 @@ namespace Gum.PropertyGridHelpers
 
             if (instanceSave != null && stateSave != null)
             {
-                DisplayCurrentInstance(propertyList, instanceSave);
+                FillPropertyList(propertyList, instanceSave);
 
             }
             else if (elementSave != null && stateSave != null)
             {
                 StateSave defaultState = GetRecursiveStateFor(elementSave);
 
-                DisplayCurrentElement(propertyList, elementSave, null, defaultState);
+                FillPropertyList(propertyList, elementSave, null, defaultState);
 
 
             }
@@ -59,7 +59,7 @@ namespace Gum.PropertyGridHelpers
             return propertyList;
         }
 
-        private static void DisplayCurrentElement(List<InstanceSavePropertyDescriptor> pdc, ElementSave elementSave,
+        private static void FillPropertyList(List<InstanceSavePropertyDescriptor> pdc, ElementSave elementSave,
             InstanceSave instanceSave, StateSave defaultState, AmountToDisplay amountToDisplay = AmountToDisplay.AllVariables)
         {
             var currentState = SelectedState.Self.SelectedStateSave;
@@ -130,7 +130,7 @@ namespace Gum.PropertyGridHelpers
                             isReadonly = true;
                             subtext = variablesSetThroughReference[variableName];
                         }
-                        TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, item, isReadonly, subtext);
+                        TryAddPropertyToList(pdc, elementSave, instanceSave, amountToDisplay, item, isReadonly, subtext);
                     }
                 }
             }
@@ -148,7 +148,7 @@ namespace Gum.PropertyGridHelpers
                         isReadonly = true;
                         subtext = variablesSetThroughReference[variableName];
                     }
-                    TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, item, isReadonly, subtext);
+                    TryAddPropertyToList(pdc, elementSave, instanceSave, amountToDisplay, item, isReadonly, subtext);
                 }
             }
 
@@ -174,7 +174,7 @@ namespace Gum.PropertyGridHelpers
                     isReadonly = true;
                     subtext = variablesSetThroughReference[variableName];
                 }
-                TryDisplayVariableSave(pdc, elementSave, instanceSave, amountToDisplay, defaultVariable, isReadonly, subtext);
+                TryAddPropertyToList(pdc, elementSave, instanceSave, amountToDisplay, defaultVariable, isReadonly, subtext);
             }
 
             #endregion
@@ -235,7 +235,7 @@ namespace Gum.PropertyGridHelpers
 
                 if(srim == null)
                 {
-                    return;
+                    continue;
                 }
                 string category = propertyDescriptor.Category?.Trim();
 
@@ -378,13 +378,13 @@ namespace Gum.PropertyGridHelpers
             return stateToAddTo;
         }
 
-        private void DisplayCurrentInstance(List<InstanceSavePropertyDescriptor> pdc, InstanceSave instanceSave)
+        private void FillPropertyList(List<InstanceSavePropertyDescriptor> pdc, InstanceSave instanceSave)
         {
             ElementSave elementSave;
             StateSave defaultState;
             GetDefaultState(instanceSave, out elementSave, out defaultState);
 
-            DisplayCurrentElement(pdc, elementSave, instanceSave, defaultState, AmountToDisplay.ElementAndExposedOnly);
+            FillPropertyList(pdc, elementSave, instanceSave, defaultState, AmountToDisplay.ElementAndExposedOnly);
 
         }
 
@@ -419,7 +419,7 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        private static void TryDisplayVariableSave(List<InstanceSavePropertyDescriptor> pdc, ElementSave elementSave, InstanceSave instanceSave, 
+        private static void TryAddPropertyToList(List<InstanceSavePropertyDescriptor> pdc, ElementSave elementSave, InstanceSave instanceSave, 
             AmountToDisplay amountToDisplay, VariableSave defaultVariable, bool forceReadOnly, string subtext)
         {
             ElementSave container = elementSave;
@@ -477,9 +477,6 @@ namespace Gum.PropertyGridHelpers
                 {
                     name = defaultVariable.ExposedAsName;
                 }
-
-                // if it already contains, do nothing
-                var alreadyContains = pdc.Any(item => item.Name == name);
 
                 InstanceSavePropertyDescriptor property = new InstanceSavePropertyDescriptor(name, type, customAttributes);
 
