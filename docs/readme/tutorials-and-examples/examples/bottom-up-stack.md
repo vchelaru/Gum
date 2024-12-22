@@ -11,11 +11,11 @@ For this container to stack we'll set the following variables:
 *   Children Layout set to Top to Bottom Stack so all children stack vertically\
 
 
-    <figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Children Layout set to Top to Bottom Stack</p></figcaption></figure>
+    <figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Children Layout set to Top to Bottom Stack</p></figcaption></figure>
 *   Height Units set to Relative to Children so the container resizes itself as more children are added\
 
 
-    <figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Height Units set to </p></figcaption></figure>
+    <figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Height Units set to </p></figcaption></figure>
 *   Height set to 0 so the height of the container is based purely on its children\
 
 

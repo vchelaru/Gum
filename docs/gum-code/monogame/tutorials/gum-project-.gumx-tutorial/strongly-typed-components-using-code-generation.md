@@ -75,7 +75,7 @@ This produces a fully-generated class named ScoreComponentRuntime. In this case,
 
 Since our project loads from disk, we'll switch to using **FindByName** as our Object Instantiation Type. By switching to this Object Instantiation Type, the generated code is modified to look for instances by name.
 
-<figure><img src="../../../../.gitbook/assets/image (2) (1) (1).png" alt=""><figcaption><p>Set Object Instantiation Type to FindByName since we are loading our project from file at runtime</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (2) (1) (1) (1).png" alt=""><figcaption><p>Set Object Instantiation Type to FindByName since we are loading our project from file at runtime</p></figcaption></figure>
 
 The code should look similar to the following block:
 
@@ -205,7 +205,7 @@ As mentioned above, if you do not need any customization for your control, you c
 
 Gum generates using statements in the generated code file. These using statements can be modified in the Code tab. Initially Gum includes a best-guess of the type of using statements needed in your project.
 
-<figure><img src="../../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Using statements in Gum result in generated code using statements</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Using statements in Gum result in generated code using statements</p></figcaption></figure>
 
 At times your generated code may include types which are not handled by using statements. If necessary you may need to add additional project-wide using statments as your Screens or Components grow.
 
