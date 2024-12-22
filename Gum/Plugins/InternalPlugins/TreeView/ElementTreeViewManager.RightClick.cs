@@ -264,6 +264,11 @@ public partial class ElementTreeViewManager
                     {
                         try
                         {
+                            // Set the folder to NORMAL so it doesn't retain READONLY or ARCHIVE attributes
+                            // This happens because of OneDrive
+                            DirectoryInfo dir = new DirectoryInfo(fullFile);
+                            dir.Attributes = FileAttributes.Normal;
+
                             Directory.Delete(fullFile);
                             GumCommands.Self.GuiCommands.RefreshElementTreeView();
                         }
