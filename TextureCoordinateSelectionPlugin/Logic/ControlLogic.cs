@@ -14,10 +14,7 @@ using System;
 using System.ComponentModel;
 using TextureCoordinateSelectionPlugin.ViewModels;
 using TextureCoordinateSelectionPlugin.Views;
-using Vector2 = System.Numerics.Vector2;
-using Vector3 = System.Numerics.Vector3;
 using Color = System.Drawing.Color;
-using Matrix = System.Numerics.Matrix4x4;
 
 namespace TextureCoordinateSelectionPlugin.Logic
 {
@@ -107,7 +104,7 @@ namespace TextureCoordinateSelectionPlugin.Logic
 
         private void CreateNineSliceLines()
         {
-            for(int i = 0; i < 4; i++)
+            for (int i = 0; i < 4; i++)
             {
                 nineSliceGuideLines[i] = new Line(mainControl.InnerControl.SystemManagers);
                 nineSliceGuideLines[i].Visible = false;
@@ -117,7 +114,7 @@ namespace TextureCoordinateSelectionPlugin.Logic
 
                 var alpha = (int)(0.6f * 0xFF);
 
-                nineSliceGuideLines[i].Color = 
+                nineSliceGuideLines[i].Color =
                     Color.FromArgb(alpha, alpha, alpha, alpha);
 
                 mainControl.InnerControl.SystemManagers.Renderer.MainLayer.Add(nineSliceGuideLines[i]);
@@ -191,14 +188,14 @@ namespace TextureCoordinateSelectionPlugin.Logic
 
         private void RefreshNineSliceGuides()
         {
-            for(int i = 0; i < 4; i++)
+            for (int i = 0; i < 4; i++)
             {
                 nineSliceGuideLines[i].Visible = showNineSliceGuides;
             }
 
             // todo - this hasn't been tested extensively to make sure it aligns
             // pixel-perfect with how NineSlices work, but it's a good initial guess
-            if(showNineSliceGuides && CurrentTexture != null && mainControl?.InnerControl?.RectangleSelector != null)
+            if (showNineSliceGuides && CurrentTexture != null && mainControl?.InnerControl?.RectangleSelector != null)
             {
                 var texture = CurrentTexture;
 
@@ -218,7 +215,7 @@ namespace TextureCoordinateSelectionPlugin.Logic
                 var guideTop = selector.Top + selector.Height / 3.0f;
                 var guideBottom = selector.Top + selector.Height * 2.0f / 3.0f;
 
-                if(customFrameTextureCoordinateWidth != null)
+                if (customFrameTextureCoordinateWidth != null)
                 {
                     guideLeft = left + customFrameTextureCoordinateWidth.Value;
                     guideRight = right - customFrameTextureCoordinateWidth.Value;
@@ -265,7 +262,7 @@ namespace TextureCoordinateSelectionPlugin.Logic
                 var totalWidth = CurrentTexture.Width;
 
                 var columnCount = (totalWidth / lineGrid.ColumnWidth);
-                if(columnCount != (int)columnCount)
+                if (columnCount != (int)columnCount)
                 {
                     columnCount++;
                 }
@@ -275,7 +272,7 @@ namespace TextureCoordinateSelectionPlugin.Logic
 
                 var totalHeight = CurrentTexture.Height;
                 var rowCount = (totalHeight / lineGrid.RowWidth);
-                if(rowCount != (int)rowCount)
+                if (rowCount != (int)rowCount)
                 {
                     rowCount++;
                 }
@@ -286,6 +283,8 @@ namespace TextureCoordinateSelectionPlugin.Logic
 
         public void HandleRegionDoubleClicked(ImageRegionSelectionControl control, ref LineRectangle textureOutlineRectangle)
         {
+            using var undoLock = UndoManager.Self.RequestLock();
+
             var state = SelectedState.Self.SelectedStateSave;
             var instancePrefix = SelectedState.Self.SelectedInstance?.Name;
             var graphicalUiElement = SelectedState.Self.SelectedIpso as GraphicalUiElement;
@@ -327,6 +326,9 @@ namespace TextureCoordinateSelectionPlugin.Logic
                 RefreshOutline(control, ref textureOutlineRectangle);
 
                 RefreshSelector(RefreshType.Force);
+
+                GumCommands.Self.GuiCommands.RefreshVariableValues();
+
             }
 
 
@@ -382,7 +384,7 @@ namespace TextureCoordinateSelectionPlugin.Logic
                 state.SetValue($"{instancePrefix}Texture Width", graphicalUiElement.TextureWidth, "int");
                 state.SetValue($"{instancePrefix}Texture Height", graphicalUiElement.TextureHeight, "int");
 
-                
+
                 GumCommands.Self.GuiCommands.RefreshVariableValues();
             }
 
@@ -441,7 +443,7 @@ namespace TextureCoordinateSelectionPlugin.Logic
 
         public void RefreshSelector(RefreshType refreshType)
         {
-            if(mainControl.InnerControl.CurrentTexture == null)
+            if (mainControl.InnerControl.CurrentTexture == null)
             {
                 return;
             }
@@ -456,12 +458,12 @@ namespace TextureCoordinateSelectionPlugin.Logic
                 return;
             }
 
-            if(shouldRefreshAccordingToVariableSets == false)
+            if (shouldRefreshAccordingToVariableSets == false)
             {
                 return;
             }
 
-            if(SelectedState.Self.SelectedElement == null)
+            if (SelectedState.Self.SelectedElement == null)
             {
                 // in case a behavior is selected:
                 return;
@@ -507,7 +509,7 @@ namespace TextureCoordinateSelectionPlugin.Logic
                         selector.Top + selector.Height / 2.0f;
 
                 }
-                else if(textureAddress == TextureAddress.DimensionsBased)
+                else if (textureAddress == TextureAddress.DimensionsBased)
                 {
                     shouldClearOut = false;
                     control.DesiredSelectorCount = 1;
