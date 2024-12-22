@@ -204,8 +204,10 @@ namespace Gum.Managers
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Width", Category = "Source" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int", Value = 0, Name = "Texture Height", Category = "Source" });
 
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 1.0f, Name = "Texture Width Scale", Category = "Source" });
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 1.0f, Name = "Texture Height Scale", Category = "Source" });
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 1.0f, Name = "Texture Width Scale", Category = "Source",
+                    DetailText="Multiplies the size of the displayed image. e.g. a value of 2 makes the image show twice as wide"});
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 1.0f, Name = "Texture Height Scale", Category = "Source",
+                    DetailText = "Multiplies the size of the displayed image. e.g. a value of 2 makes the image show twice as tall"});
 
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "Wrap", Category = "Source" });
 
