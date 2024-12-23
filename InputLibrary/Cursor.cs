@@ -210,7 +210,10 @@ namespace InputLibrary
 
             if (PrimaryClick)
             {
-                if (currentTime - mLastClickTime < MaximumSecondsBetweenClickForDoubleClick)
+                var timeSinceLastClick =
+                    currentTime - mLastClickTime;
+
+                if (timeSinceLastClick < MaximumSecondsBetweenClickForDoubleClick)
                 {
                     PrimaryDoubleClick = true;
                 }

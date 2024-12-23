@@ -220,9 +220,6 @@ namespace Gum.Managers
 
                 AddVariableReferenceList(stateSave);
 
-                List<string> list = new List<string>();
-                stateSave.VariableLists.Add(new VariableListSave<string> { Type = "string", Value = list, Category = "Animation", Name = "AnimationFrames" });
-
                 ApplySortValuesFromOrderInState(stateSave);
 
 

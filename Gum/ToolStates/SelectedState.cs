@@ -89,26 +89,32 @@ public class SelectedState : ISelectedState
 
     public List<ElementSave> SelectedElements
     {
-        set
-        {
-            UpdateToSelectedElements(value);
-        }
         get
         {
             return snapshot.SelectedElements;
+        }
+        set
+        {
+            UpdateToSelectedElements(value);
         }
     }
 
     private void HandleElementSelected(ElementSave value)
     {
-        if(value != null)
+        var elementBefore = SelectedElement;
+        var instancesBefore = SelectedInstances.ToList();
+
+        if (value != null)
         {
             snapshot.SelectedInstance = null;
             snapshot.SelectedBehavior = null;
         }
         UpdateToSelectedElement(value);
 
-        PluginManager.Self.ElementSelected(SelectedElement);
+        if (value != elementBefore || instancesBefore.Count > 0 && SelectedScreen.Instances.Count == 0)
+        {
+            PluginManager.Self.ElementSelected(SelectedElement);
+        }
     }
 
     private void UpdateToSelectedElement(ElementSave element)
@@ -178,12 +184,15 @@ public class SelectedState : ISelectedState
 
     private void HandleBehaviorSelected(BehaviorSave behavior)
     {
+        var behaviorBefore = SelectedBehavior;
+        var instancesBefore = SelectedInstances.ToList();
+
         if (behavior != null && SelectedInstance != null)
         {
             SelectedInstance = null;
         }
         UpdateToSelectedBehavior(behavior);
-        if(behavior != null)
+        if(behavior != behaviorBefore || instancesBefore.Count != 0 && SelectedInstances.Count() == 0)
         {
             PluginManager.Self.BehaviorSelected(SelectedBehavior);
         }
@@ -351,8 +360,10 @@ public class SelectedState : ISelectedState
 
     private void HandleSelectedInstances(List<InstanceSave> value)
     {
+        var instancesBefore = snapshot.SelectedInstances.ToList();
+
         var instance = value?.FirstOrDefault();
-        if(instance != null)
+        if (instance != null)
         {
             var elementAfter = ObjectFinder.Self.GetElementContainerOf(instance);
             var behaviorAfter = ObjectFinder.Self.GetBehaviorContainerOf(instance);
@@ -369,7 +380,43 @@ public class SelectedState : ISelectedState
         {
             element = ObjectFinder.Self.GetElementContainerOf(instance);
         }
-        PluginManager.Self.InstanceSelected(element, instance);
+
+        if (!AreSame(value, instancesBefore))
+        {
+            PluginManager.Self.InstanceSelected(element, instance);
+
+            if(instance == null)
+            {
+                // If we forcefully set null instances, let's forcefully select the current element or behavior:
+                if(SelectedElement != null)
+                {
+                    PluginManager.Self.ElementSelected(SelectedElement);
+                }
+                else if(SelectedBehavior != null)
+                {
+                    PluginManager.Self.BehaviorSelected(SelectedBehavior);
+                }
+            }
+        }
+
+    }
+
+    private static bool AreSame(List<InstanceSave> value, IEnumerable<InstanceSave> instancesBefore)
+    {
+        if(value.Count != instancesBefore.Count())
+        {
+            return false;
+        }
+
+        for(int i = 0; i < value.Count; i++)
+        {
+            if (value[i] != instancesBefore.ElementAt(i))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private void UpdateToSelectedInstances(IEnumerable<InstanceSave> instances)
