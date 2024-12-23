@@ -19,125 +19,168 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace TextureCoordinateSelectionPlugin
+namespace TextureCoordinateSelectionPlugin;
+
+[Export(typeof(PluginBase))]
+public class MainTextureCoordinatePlugin : PluginBase
 {
-    [Export(typeof(PluginBase))]
-    public class MainTextureCoordinatePlugin : PluginBase
+    #region Fields/Properties
+
+    PluginTab textureCoordinatePluginTab;
+    ISelectedState _selectedState;
+
+    public override string FriendlyName
     {
-        #region Fields/Properties
-
-        public override string FriendlyName
+        get
         {
-            get
+            return "Texture Coordinate Selection Plugin";
+        }
+    }
+
+    public override Version Version
+    {
+        get => new Version(1, 0, 0);
+    }
+
+    #endregion
+
+    public MainTextureCoordinatePlugin()
+    {
+        _selectedState = SelectedState.Self;
+    }
+
+    public override bool ShutDown(PluginShutDownReason shutDownReason)
+    {
+        // todo - hide the window
+        return true;
+    }
+
+    public override void StartUp()
+    {
+        textureCoordinatePluginTab = Logic.ControlLogic.Self.CreateControl();
+        textureCoordinatePluginTab.Hide();
+
+        AssignEvents();
+    }
+
+    private void AssignEvents()
+    {
+        this.TreeNodeSelected += HandleTreeNodeSelected;
+        this.VariableSet += HandleVariableSet;
+        // This is needed for when undos happen
+        this.WireframeRefreshed += HandleWireframeRefreshed;
+    }
+
+    private void HandleWireframeRefreshed()
+    {
+        var element = _selectedState.SelectedElement;
+        if(_selectedState.SelectedInstance != null)
+        {
+            element = ObjectFinder.Self.GetElementSave(_selectedState.SelectedInstance);
+        }
+
+        var hasTextureCoordinates = false;
+
+        // Sprite and NineSlice have texture coords:
+        if(element != null)
+        {
+            if(element is StandardElementSave)
             {
-                return "Texture Coordinate Selection Plugin";
+                hasTextureCoordinates = element.Name == "Sprite" || element.Name == "NineSlice";
+            }
+            else
+            {
+                var baseElements = ObjectFinder.Self.GetBaseElements(element);
+
+                hasTextureCoordinates = baseElements.Any(item =>
+                {
+                    return element is StandardElementSave && (element.Name == "Sprite" || element.Name == "NineSlice");
+                });
             }
         }
 
-        public override Version Version
+        if(hasTextureCoordinates)
         {
-            get
-            {
-                return new Version(1, 0, 0);
-            }
-        }
-
-        #endregion
-
-        public override bool ShutDown(PluginShutDownReason shutDownReason)
-        {
-            // todo - hide the window
-            return true;
-        }
-
-        public override void StartUp()
-        {
-            Logic.ControlLogic.Self.CreateControl();
-
-
-            this.TreeNodeSelected += HandleTreeNodeSelected;
-            this.VariableSet += HandleVariableSet;
-            // This is needed for when undos happen
-            this.WireframeRefreshed += HandleWireframeRefreshed;
-        }
-
-        private void HandleWireframeRefreshed()
-        {
+            textureCoordinatePluginTab.Show(focus:false);
             RefreshControl();
         }
-
-        private void HandleTreeNodeSelected(TreeNode treeNode)
+        else
         {
-            RefreshControl();
+            textureCoordinatePluginTab.Hide();
         }
+    }
 
-        private void RefreshControl()
+    private void HandleTreeNodeSelected(TreeNode treeNode)
+    {
+        RefreshControl();
+    }
+
+    private void RefreshControl()
+    {
+        Texture2D textureToAssign = GetTextureToAssign(out bool isNineslice, out float? customFrameTextureCoordinateWidth);
+
+        Logic.ControlLogic.Self.Refresh(textureToAssign, isNineslice, customFrameTextureCoordinateWidth);
+    }
+
+    private void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue)
+    {
+        var shouldRefresh = true;
+
+        if(shouldRefresh)
         {
-            Texture2D textureToAssign = GetTextureToAssign(out bool isNineslice, out float? customFrameTextureCoordinateWidth);
-
-            Logic.ControlLogic.Self.Refresh(textureToAssign, isNineslice, customFrameTextureCoordinateWidth);
+            Logic.ControlLogic.Self.RefreshSelector(Logic.RefreshType.Force);
         }
+    }
 
-        private void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue)
+
+
+    private static Texture2D GetTextureToAssign(out bool isNineslice, out float? customFrameTextureCoordinateWidth)
+    {
+        var graphicalUiElement = SelectedState.Self.SelectedIpso as GraphicalUiElement;
+        isNineslice = false;
+        customFrameTextureCoordinateWidth = null;
+        Texture2D textureToAssign = null;
+
+        if (graphicalUiElement != null)
         {
-            var shouldRefresh = true;
+            var containedRenderable = graphicalUiElement.RenderableComponent;
 
-            if(shouldRefresh)
+            if (containedRenderable is Sprite)
             {
-                Logic.ControlLogic.Self.RefreshSelector(Logic.RefreshType.Force);
+                var sprite = containedRenderable as Sprite;
+
+                textureToAssign = sprite.Texture;
             }
-        }
-
-
-
-        private static Texture2D GetTextureToAssign(out bool isNineslice, out float? customFrameTextureCoordinateWidth)
-        {
-            var graphicalUiElement = SelectedState.Self.SelectedIpso as GraphicalUiElement;
-            isNineslice = false;
-            customFrameTextureCoordinateWidth = null;
-            Texture2D textureToAssign = null;
-
-            if (graphicalUiElement != null)
+            else if (containedRenderable is NineSlice)
             {
-                var containedRenderable = graphicalUiElement.RenderableComponent;
+                var nineSlice = containedRenderable as NineSlice;
+                isNineslice = true;
+                customFrameTextureCoordinateWidth = nineSlice.CustomFrameTextureCoordinateWidth;
+                var isUsingSameTextures =
+                    nineSlice.TopLeftTexture == nineSlice.CenterTexture &&
+                    nineSlice.TopTexture == nineSlice.CenterTexture &&
+                    nineSlice.TopRightTexture == nineSlice.CenterTexture &&
 
-                if (containedRenderable is Sprite)
+                    nineSlice.LeftTexture == nineSlice.CenterTexture &&
+                    //nineSlice.TopLeftTexture ==
+                    nineSlice.RightTexture == nineSlice.CenterTexture &&
+
+                    nineSlice.BottomLeftTexture == nineSlice.CenterTexture &&
+                    nineSlice.BottomTexture == nineSlice.CenterTexture &&
+                    nineSlice.BottomRightTexture == nineSlice.CenterTexture;
+
+                if (isUsingSameTextures)
                 {
-                    var sprite = containedRenderable as Sprite;
-
-                    textureToAssign = sprite.Texture;
-                }
-                else if (containedRenderable is NineSlice)
-                {
-                    var nineSlice = containedRenderable as NineSlice;
-                    isNineslice = true;
-                    customFrameTextureCoordinateWidth = nineSlice.CustomFrameTextureCoordinateWidth;
-                    var isUsingSameTextures =
-                        nineSlice.TopLeftTexture == nineSlice.CenterTexture &&
-                        nineSlice.TopTexture == nineSlice.CenterTexture &&
-                        nineSlice.TopRightTexture == nineSlice.CenterTexture &&
-
-                        nineSlice.LeftTexture == nineSlice.CenterTexture &&
-                        //nineSlice.TopLeftTexture ==
-                        nineSlice.RightTexture == nineSlice.CenterTexture &&
-
-                        nineSlice.BottomLeftTexture == nineSlice.CenterTexture &&
-                        nineSlice.BottomTexture == nineSlice.CenterTexture &&
-                        nineSlice.BottomRightTexture == nineSlice.CenterTexture;
-
-                    if (isUsingSameTextures)
-                    {
-                        textureToAssign = nineSlice.CenterTexture;
-                    }
+                    textureToAssign = nineSlice.CenterTexture;
                 }
             }
-
-            if (textureToAssign?.IsDisposed == true)
-            {
-                textureToAssign = null;
-            }
-
-            return textureToAssign;
         }
+
+        if (textureToAssign?.IsDisposed == true)
+        {
+            textureToAssign = null;
+        }
+
+        return textureToAssign;
     }
 }

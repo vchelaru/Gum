@@ -277,7 +277,7 @@ public partial class MainPanelControl : UserControl
         //tabControl.SelectedIndex = index;
     }
     
-    public void ShowTab(PluginTab pluginTab)
+    public void ShowTab(PluginTab pluginTab, bool focus = true)
     {
         if(!IsTabVisible(pluginTab))
         {
@@ -287,7 +287,11 @@ public partial class MainPanelControl : UserControl
 
             pluginTab.RaiseTabShown();
         }
-        pluginTab.Focus();
+
+        if(focus)
+        {
+            pluginTab.Focus();
+        }
     }
 
     public void HideTab(PluginTab pluginTab)

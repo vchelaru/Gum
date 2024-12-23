@@ -58,7 +58,7 @@ namespace Gum.Plugins
         //    }
         //}
 
-        public void Show() => GumCommands.Self.GuiCommands.ShowTab(this);
+        public void Show(bool focus = true) => GumCommands.Self.GuiCommands.ShowTab(this, focus);
         public void Hide() => GumCommands.Self.GuiCommands.HideTab(this);
 
         public void RaiseTabShown() => TabShown?.Invoke();

@@ -74,10 +74,8 @@ namespace Gum.Commands
             return mainPanelControl.AddWpfControl(control, tabTitle, tabLocation);
         }
 
-        public void ShowTab(PluginTab tab)
-        {
-            mainPanelControl.ShowTab(tab);
-        }
+        public void ShowTab(PluginTab tab, bool focus = true) =>
+            mainPanelControl.ShowTab(tab, focus);
 
         public void HideTab(PluginTab tab)
         {
