@@ -122,8 +122,12 @@ namespace Gum.PropertyGridHelpers
                 // after the variable references are assigned. Moving this line of code down:
                 //ReactToChangedMember(unqualifiedMember, oldValue, parentElement, instance, stateSave);
                 // Update - ReactToChangedMember expands variable reference names like "Color" and it fills
-                // in implied assignments such as "Refernce.X" to "X = Reference.X"
+                // in implied assignments such as "Reference.X" to "X = Reference.X"
                 // It must be called first before applying references
+                // Update December 23 2024
+                // So does that mean that we want to call this code before we update variable references, but
+                // we can still raise the plugin event after? If so, I'm going to move the plugin manager call
+                // out of ReactToChangedMember and call it here.
                 ReactToChangedMember(unqualifiedMember, oldValue, instanceContainer, instance, stateSave);
                 var parentElement = instanceContainer as ElementSave;
 
@@ -169,6 +173,12 @@ namespace Gum.PropertyGridHelpers
                             forceWireframeRefresh: didSetDeepReference, trySave: trySave);
                     }
                 }
+
+                // see comment by ReactToChangedMember about why we make this call here
+                // Also this should happen after we update the wireframe so that plugins like
+                // the texture window which depend on the wireframe will have the correct values
+                PluginManager.Self.VariableSet(parentElement, instance, unqualifiedMember, oldValue);
+
             }
             finally
             {
@@ -450,8 +460,6 @@ namespace Gum.PropertyGridHelpers
                 ReactIfChangedMemberIsVariableReference(parentElement, instance, stateSave, rootVariableName, oldValue);
             }
             ReactIfChangedBaseType(instanceContainer, instance, stateSave, rootVariableName, oldValue);
-
-            PluginManager.Self.VariableSet(parentElement, instance, rootVariableName, oldValue);
         }
 
         private void ReactIfChangedBaseType(IInstanceContainer instanceContainer, InstanceSave instance, StateSave stateSave, string rootVariableName, object oldValue)
