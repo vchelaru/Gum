@@ -17,6 +17,7 @@ using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Graphics;
 using Gum.Logic;
 using GumRuntime;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 
 namespace Gum.PropertyGridHelpers
 {
@@ -318,21 +319,9 @@ namespace Gum.PropertyGridHelpers
         public void RefreshInResponseToVariableChange(string unqualifiedMember, object oldValue, ElementSave parentElement,
             InstanceSave instance, string qualifiedName, bool forceWireframeRefresh = false, bool trySave = true)
         {
-            // These properties may require some changes to the grid, so we refresh the tree view
-            // and entire grid.
-            // There's lots of work that can/should be done here:
-            // 1. We should have the plugins that handle excluding variables also
-            //    report whether a variable requires refreshing
-            // 2. We could only refresh the grid for some variables like UseCustomFont
-            // 3. We could have only certain variable refresh themselves instead of the entire 
-            //    grid.
-            var needsToRefreshEntireElement =
-                unqualifiedMember == "Parent" ||
-                unqualifiedMember == "Name" ||
-                unqualifiedMember == "UseCustomFont" ||
-                unqualifiedMember == "Texture Address" ||
-                unqualifiedMember == "Base Type"
-                ;
+
+            var needsToRefreshEntireElement = ExclusionsPlugin.VariablesRequiringRefresh.Contains(unqualifiedMember);
+
             if (needsToRefreshEntireElement)
             {
                 GumCommands.Self.GuiCommands.RefreshElementTreeView(parentElement);

@@ -281,12 +281,6 @@
     <Compile Include="Plugins\InternalPlugins\ProjectPropertiesWindowPlugin\ProjectPropertiesControl.xaml.cs">
       <DependentUpon>ProjectPropertiesControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Gui\Forms\UndoList.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Gui\Forms\UndoList.Designer.cs">
-      <DependentUpon>UndoList.cs</DependentUpon>
-    </Compile>
     <Compile Include="Gui\Controls\WireframeEditControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -359,7 +353,7 @@
     <Compile Include="PropertyGridHelpers\Converters\AvailableAnimationNamesConverter.cs" />
     <Compile Include="PropertyGridHelpers\Converters\AvailableContainedTypeConverter.cs" />
     <Compile Include="PropertyGridHelpers\Converters\AvailableGuidesTypeConverter.cs" />
-    <Compile Include="Input\CursorExtensionMethods.cs" />
+    <Compile Include="Extensions\CursorExtensionMethods.cs" />
     <Compile Include="Managers\DragDropManager.cs" />
     <Compile Include="Plugins\InternalPlugins\TreeView\ElementTreeViewManager.cs" />
     <Compile Include="Plugins\InternalPlugins\TreeView\ElementTreeViewManager.RightClick.cs" />
@@ -400,7 +394,7 @@
     <Compile Include="PropertyGridHelpers\Excluders\TextPropertyGridVariableExcluder.cs" />
     <Compile Include="Plugins\InternalPlugins\VariableGrid\InstanceSavePropertyDescriptor.cs" />
     <Compile Include="PropertyGridHelpers\PropertyDescriptorHelper.cs" />
-    <Compile Include="PropertyGridHelpers\SetVariableLogic.cs" />
+    <Compile Include="Plugins\InternalPlugins\VariableGrid\SetVariableLogic.cs" />
     <Compile Include="Plugins\InternalPlugins\VariableGrid\StateReferencingInstanceMember.cs" />
     <Compile Include="PropertyGridHelpers\UiTypeConverters\ModalTypeConverter.cs" />
     <Compile Include="PropertyGridHelpers\VariableInCategoryPropagationLogic.cs" />
@@ -463,9 +457,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Gui\Forms\PluginsWindow.resx">
       <DependentUpon>PluginsWindow.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Gui\Forms\UndoList.resx">
-      <DependentUpon>UndoList.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MainWindow.resx">
       <DependentUpon>MainWindow.cs</DependentUpon>
