@@ -58,7 +58,12 @@
                          PreviewKeyDown="TextBox_PreviewKeyDown_1" 
                          LostFocus="TextBox_LostFocus_1"
                          Margin="0,0,13,0"
-                         />
+                         >
+                        <TextBox.ContextMenu>
+                            <ContextMenu>
+                            </ContextMenu>
+                        </TextBox.ContextMenu>
+                    </TextBox>
                     <decorators:NoSizeDecorator>
                         <TextBlock IsHitTestVisible="False"
                                VerticalAlignment="Center" 
