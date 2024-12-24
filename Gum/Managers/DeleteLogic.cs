@@ -368,6 +368,8 @@ namespace Gum.Managers
                 var stateCategoryListContainer =
                     SelectedState.Self.SelectedStateContainer as IStateCategoryListContainer;
 
+                var isRemovingSelectedCategory = SelectedState.Self.SelectedStateCategorySave == category;
+
                 stateCategoryListContainer.Categories.Remove(category);
 
                 if (SelectedState.Self.SelectedElement != null)
@@ -417,6 +419,14 @@ namespace Gum.Managers
                                 GumCommands.Self.FileCommands.TryAutoSaveElement(ownerOfInstance);
                             }
                         }
+                    }
+                }
+
+                if(isRemovingSelectedCategory)
+                {
+                    if(SelectedState.Self.SelectedElement != null)
+                    {
+                        SelectedState.Self.SelectedStateSave = SelectedState.Self.SelectedElement.DefaultState;
                     }
                 }
 
