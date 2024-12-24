@@ -599,10 +599,17 @@ namespace Gum.Plugins
         internal void AfterElementSave(ElementSave savedElement) =>
             CallMethodOnPlugin(plugin => plugin.CallAfterElementSave(savedElement));
 
-
-
         internal void BeforeProjectSave(GumProjectSave savedProject) =>
             CallMethodOnPlugin(plugin => plugin.CallBeforeProjectSave(savedProject));
+
+        internal void ProjectLoad(GumProjectSave newlyLoadedProject) =>
+            CallMethodOnPlugin(plugin => plugin.CallProjectLoad(newlyLoadedProject));
+
+        internal void ProjectSave(GumProjectSave savedProject) =>
+            CallMethodOnPlugin(plugin => plugin.CallProjectSave(savedProject));
+
+        internal void ProjectLocationSet(FilePath filePath) =>
+            CallMethodOnPlugin(plugin => plugin.CallProjectLocationSet(filePath));
 
         internal void Export(ElementSave elementToExport) =>
             CallMethodOnPlugin(plugin => plugin.CallExport(elementToExport));
@@ -687,12 +694,6 @@ namespace Gum.Plugins
 
         internal void GuidesChanged() => 
             CallMethodOnPlugin(plugin => plugin.CallGuidesChanged());
-
-        internal void ProjectLoad(GumProjectSave newlyLoadedProject) =>
-            CallMethodOnPlugin(plugin => plugin.CallProjectLoad(newlyLoadedProject));
-
-        internal void ProjectSave(GumProjectSave savedProject) =>
-            CallMethodOnPlugin(plugin => plugin.CallProjectSave(savedProject));
 
         internal List<Attribute> GetAttributesFor(VariableSave variableSave)
         {
