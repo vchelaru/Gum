@@ -21,6 +21,8 @@ namespace Gum.Plugins.BaseClasses
         public event Action<GumProjectSave> ProjectLoad;
         public event Action<GumProjectSave> AfterProjectSave;
         public event Action<GumProjectSave> BeforeProjectSave;
+        public event Action<FilePath> ProjectLocationSet;
+
         public event Action<ElementSave> BeforeElementSave;
         public event Action<ElementSave> AfterElementSave;
         public event Action GuidesChanged;
@@ -315,66 +317,44 @@ namespace Gum.Plugins.BaseClasses
 
         #region Event calling
 
-        public void CallProjectLoad(GumProjectSave newlyLoadedProject)
-        {
-            if (ProjectLoad != null)
-            {
-                ProjectLoad(newlyLoadedProject);
-            }
-        }
+        public void CallProjectLoad(GumProjectSave newlyLoadedProject) =>
+            ProjectLoad?.Invoke(newlyLoadedProject);
 
-        public void CallProjectSave(GumProjectSave savedProject)
-        {
-            if (AfterProjectSave != null)
-            {
-                AfterProjectSave(savedProject);
-            }
-        }
+        public void CallProjectSave(GumProjectSave savedProject) =>
+            AfterProjectSave?.Invoke(savedProject);
 
-        public void CallGuidesChanged()
-        {
+        public void CallProjectLocationSet(FilePath filePath) =>
+            ProjectLocationSet?.Invoke(filePath);
+
+        public void CallGuidesChanged() =>
             GuidesChanged?.Invoke();
-        }
+        
 
-        public void CallExport(ElementSave elementSave)
-        {
+        public void CallExport(ElementSave elementSave) =>
             Export?.Invoke(elementSave);
-        }
 
-        public void CallDeleteOptionsWindowShow(DeleteOptionsWindow optionsWindow, object objectToDelete)
-        {
-            if (DeleteOptionsWindowShow != null)
-            {
-                DeleteOptionsWindowShow(optionsWindow, objectToDelete);
-            }
-        }
 
-        public void CallDeleteConfirm(DeleteOptionsWindow optionsWindow, object deletedObject)
-        {
+        public void CallDeleteOptionsWindowShow(DeleteOptionsWindow optionsWindow, object objectToDelete) =>
+                DeleteOptionsWindowShow?.Invoke(optionsWindow, objectToDelete);
+
+        public void CallDeleteConfirm(DeleteOptionsWindow optionsWindow, object deletedObject) =>
             DeleteConfirm?.Invoke(optionsWindow, deletedObject);
-        }
-
-        public void CallElementAdd(ElementSave element)
-        {
+        
+        public void CallElementAdd(ElementSave element) =>
             ElementAdd?.Invoke(element);
-        }
-
-        public void CallElementDelete(ElementSave element)
-        {
+        
+        public void CallElementDelete(ElementSave element) =>
             ElementDelete?.Invoke(element);
-        }
+        
 
-        public void CallElementDuplicate(ElementSave oldElement, ElementSave newElement)
-        {
+        public void CallElementDuplicate(ElementSave oldElement, ElementSave newElement) =>
             ElementDuplicate?.Invoke(oldElement, newElement);
-        }
 
-        public void CallElementRename(ElementSave elementSave, string oldName)
-        {
+        public void CallElementRename(ElementSave elementSave, string oldName) =>
             ElementRename?.Invoke(elementSave, oldName);
-        }
 
-        public void CallStateRename(StateSave stateSave, string oldName) => StateRename?.Invoke(stateSave, oldName);
+        public void CallStateRename(StateSave stateSave, string oldName) => 
+            StateRename?.Invoke(stateSave, oldName);
         
         public void CallStateAdd(StateSave stateSave) => StateAdd?.Invoke(stateSave);
 

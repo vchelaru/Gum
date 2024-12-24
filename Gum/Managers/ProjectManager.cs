@@ -110,8 +110,6 @@ namespace Gum
 
         public void CreateNewProject()
         {
-            FileWatchLogic.Self.HandleProjectUnloaded();
-
             mGumProjectSave = new GumProjectSave();
             ObjectFinder.Self.GumProjectSave = mGumProjectSave;
 
@@ -232,8 +230,6 @@ namespace Gum
 
                 GraphicalUiElement.CanvasWidth = mGumProjectSave.DefaultCanvasWidth;
                 GraphicalUiElement.CanvasHeight = mGumProjectSave.DefaultCanvasHeight;
-
-                FileWatchLogic.Self.HandleProjectLoaded();
             }
             else
             {
@@ -667,6 +663,8 @@ namespace Gum
                                 PluginManager.Self.BeforeElementSave(standardElementSave);
                             }
                         }
+
+                        // todo - this should go through the plugin...
                         FileWatchLogic.Self.IgnoreNextChangeOn(GumProjectSave.FullFileName);
 
                         GumCommands.Self.TryMultipleTimes(() => GumProjectSave.Save(GumProjectSave.FullFileName, saveContainedElements));
@@ -732,7 +730,6 @@ namespace Gum
                         GeneralSettingsFile.AddToRecentFilesIfNew(GumProjectSave.FullFileName);
                         GeneralSettingsFile.LastProject = GumProjectSave.FullFileName;
                         GeneralSettingsFile.Save();
-                        FileWatchLogic.Self.HandleProjectLoaded();
                     }
                 }
             }
@@ -801,6 +798,7 @@ namespace Gum
                 if(result == DialogResult.OK)
                 { 
                     GumProjectSave.FullFileName = openFileDialog.FileName;
+                    PluginManager.Self.ProjectLocationSet(new FilePath(openFileDialog.FileName));
                     shouldSave = true;
                     isProjectNew = true;
                 }
