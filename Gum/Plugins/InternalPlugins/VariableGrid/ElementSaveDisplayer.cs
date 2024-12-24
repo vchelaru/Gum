@@ -524,11 +524,40 @@ namespace Gum.PropertyGridHelpers
 
             var baseTypeConverter = new AvailableBaseTypeConverter(elementSave, instance);
 
-                // We may want to support Screens inheriting from other Screens in the future, but for now we won't allow it
-            var baseTypeProperty = mHelper.AddProperty(pdc,
-                "Base Type", typeof(string), baseTypeConverter);
+            // create a fake variable here to see if it's excluded:
 
-            baseTypeProperty.IsReadOnly = isReadOnly;
+
+            var isExcluded = false;
+
+            if(elementSave != null)
+            {
+                RecursiveVariableFinder rfv = null;
+                if (instance != null)
+                {
+                    rfv = new RecursiveVariableFinder(instance, elementSave);
+                }
+                else
+                {
+                    rfv = new RecursiveVariableFinder(elementSave.DefaultState);
+                }
+                var fakeBaseTypeVariable = new VariableSave
+                {
+                    Name = "Base Type",
+                };
+
+                isExcluded = PluginManager.Self.ShouldExclude(
+                    fakeBaseTypeVariable, rfv);
+            }
+
+
+            if (!isExcluded)
+            {
+                // We may want to support Screens inheriting from other Screens in the future, but for now we won't allow it
+                var baseTypeProperty = mHelper.AddProperty(pdc,
+                    "Base Type", typeof(string), baseTypeConverter);
+
+                baseTypeProperty.IsReadOnly = isReadOnly;
+            }
         }
 
         private static bool GetIfShouldInclude(VariableListSave variableList, ElementSave container, InstanceSave currentInstance)

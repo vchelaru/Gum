@@ -32,6 +32,14 @@ public class ExclusionsPlugin : InternalPlugin
         "TextOverflowVerticalMode",
 
     };
+    private readonly ISelectedState _selectedState;
+    private ObjectFinder _objectFinder;
+
+    public ExclusionsPlugin()
+    {
+        _selectedState = SelectedState.Self;
+        _objectFinder = ObjectFinder.Self;
+    }
 
     public override void StartUp()
     {
@@ -55,13 +63,33 @@ public class ExclusionsPlugin : InternalPlugin
             case "AutoGridHorizontalCells":
             case "AutoGridVerticalCells":
                 return GetIfAutoGridIsExcluded(finder);
-            case "TextOverflowHorizontalMode":
-                return GetIfOverflowHorizontalModeExcluded(finder);
+            case "Base Type":
+                return GetIfBaseTypeIsExcluded(finder);
             case "StackSpacing":
             case "Wraps Children":
                 return GetIfSpacingAndWrapsChildrenIsExcluded(finder);
+            case "TextOverflowHorizontalMode":
+                return GetIfOverflowHorizontalModeExcluded(finder);
             case "Wrap":
                 return GetIfWrapIsExcluded(finder);
+
+        }
+
+        return false;
+    }
+
+    private bool GetIfBaseTypeIsExcluded(RecursiveVariableFinder finder)
+    {
+        // only if we are dealing with a screen:
+        var currentElement = _selectedState.SelectedScreen;
+
+        if(currentElement is ScreenSave currentScreen)
+        {
+            // exclude it if the value is null and there is only one screen:
+            var isOnlyScreen = _objectFinder.GumProjectSave.Screens.Count == 1;
+            var isEmpty = string.IsNullOrEmpty(currentScreen.BaseType);
+
+            return isOnlyScreen && isEmpty;
         }
 
         return false;

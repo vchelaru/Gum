@@ -47,6 +47,18 @@ namespace Gum.DataTypes
 
         #endregion
 
+        /// <summary>
+        /// Creates a new RecursiveVariableFinder for the argument InstanceSave and Container. The InstanceSave
+        /// should not be null.
+        /// </summary>
+        /// <remarks>
+        /// If a RecursiveVariableFinder is created with an instance parameter, then GetValue calls
+        /// should be performed with the unqualified variable name. In other words, to get the X value
+        /// on the instnace, the "X" value should be passed rather than "InstanceName.X"
+        /// </remarks>
+        /// <param name="instanceSave">The InstanceSave which has variables that will be requested.</param>
+        /// <param name="container">The container of the instance.</param>
+        /// <exception cref="ArgumentException">Thrown if the instance is null</exception>
         public RecursiveVariableFinder(InstanceSave instanceSave, ElementSave container)
         {
             if (instanceSave == null)
