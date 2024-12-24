@@ -1,21 +1,27 @@
-﻿using Gum.Logic.FileWatch;
+﻿using Gum.DataTypes;
+using Gum.Logic.FileWatch;
 using Gum.Plugins.BaseClasses;
 using System;
 using System.ComponentModel.Composition;
 using System.Linq;
 using System.Timers;
+using ToolsUtilities;
 
 namespace Gum.Plugins.FileWatchPlugin;
 
 [Export(typeof(PluginBase))]
 public class MainFileWatchPlugin : InternalPlugin
 {
+    #region Fields/Properties
+
     System.Timers.Timer timer;
 
     FileWatchViewModel viewModel;
 
     PluginTab pluginTab;
     System.Windows.Forms.ToolStripMenuItem showFileWatchMenuItem;
+
+    #endregion
 
     public override void StartUp()
     {
@@ -37,6 +43,31 @@ public class MainFileWatchPlugin : InternalPlugin
         timer = new System.Timers.Timer(millisecondsTimerFrequency);
         timer.Elapsed += HandleElapsed;
         timer.Start();
+
+        AssignEvents();
+    }
+
+    private void AssignEvents()
+    {
+        this.ProjectLoad += HandleProjectLoad;
+        this.ProjectLocationSet += HandleProjectLocationSet;
+    }
+
+    private void HandleProjectLocationSet(FilePath path)
+    {
+        FileWatchLogic.Self.HandleProjectLoaded();
+    }
+
+    private void HandleProjectLoad(GumProjectSave save)
+    {
+        if(save.FullFileName == null)
+        {
+            FileWatchLogic.Self.HandleProjectUnloaded();
+        }
+        else
+        {
+            FileWatchLogic.Self.HandleProjectLoaded();
+        }
     }
 
     private void HandleTabShown()
@@ -74,12 +105,21 @@ public class MainFileWatchPlugin : InternalPlugin
                 return;
             }
 
-            var filePathsWatchingText = $"File paths watching ({fileWatchManager.CurrentFilePathsWatching?.Count ?? 0}):";
-            foreach(var item in fileWatchManager.CurrentFilePathsWatching)
+            string filePathsWatchingText = "";
+            
+            if(fileWatchManager.Enabled)
             {
-                filePathsWatchingText += $"\n\t{item}";
+                filePathsWatchingText = $"File paths watching ({fileWatchManager.CurrentFilePathsWatching?.Count ?? 0}):";
+                foreach(var item in fileWatchManager.CurrentFilePathsWatching)
+                {
+                    filePathsWatchingText += $"\n\t{item}";
+                }
+                viewModel.WatchFolderInformation = filePathsWatchingText;
             }
-            viewModel.WatchFolderInformation = filePathsWatchingText;
+            else
+            {
+                viewModel.WatchFolderInformation = "File watching is disabled";
+            }
 
             viewModel.NumberOfFilesToFlush = fileWatchManager.ChangedFilesWaitingForFlush.Count.ToString();
 

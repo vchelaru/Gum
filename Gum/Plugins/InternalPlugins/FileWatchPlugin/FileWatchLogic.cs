@@ -10,6 +10,8 @@ namespace Gum.Logic.FileWatch
     {
         FileWatchManager fileWatchManager;
 
+        public bool Enabled { get { return fileWatchManager.Enabled; } }
+
         public FileWatchLogic()
         {
             fileWatchManager = FileWatchManager.Self;
@@ -22,7 +24,14 @@ namespace Gum.Logic.FileWatch
 
             var directories = GetFileWatchRootDirectories();
 
-            fileWatchManager.EnableWithDirectories(directories);
+            if(ProjectManager.Self.GumProjectSave?.FullFileName != null)
+            {
+                fileWatchManager.EnableWithDirectories(directories);
+            }
+            else
+            {
+                fileWatchManager.Disable();
+            }
         }
 
         private static HashSet<FilePath> GetFileWatchRootDirectories()
@@ -85,24 +94,27 @@ namespace Gum.Logic.FileWatch
 
             FilePath gumProjectFilePath = ProjectManager.Self.GumProjectSave.FullFileName;
 
-            char gumProjectDrive = gumProjectFilePath.Standardized[0];
-
-            directories.Add(gumProjectFilePath.GetDirectoryContainingThis());
-            // why are we adding the deep ones, isn't it enough to add the roots?
-
-            //directories.Add(gumProjectFilePath.GetDirectoryContainingThis() + "Screens/");
-            //directories.Add(gumProjectFilePath.GetDirectoryContainingThis() + "Components/");
-            //directories.Add(gumProjectFilePath.GetDirectoryContainingThis() + "Standards/");
-            //directories.Add(gumProjectFilePath.GetDirectoryContainingThis() + "Behaviors/");
-            //directories.Add(gumProjectFilePath.GetDirectoryContainingThis() + "FontCache/");
-
-            var gumProject = GumState.Self.ProjectState.GumProjectSave;
-            if (!string.IsNullOrEmpty(gumProject.LocalizationFile))
+            if(gumProjectFilePath != null)
             {
-                var localizationDirectory = new FilePath(
-                        GumState.Self.ProjectState.ProjectDirectory + gumProject.LocalizationFile)
-                    .GetDirectoryContainingThis();
-                directories.Add(localizationDirectory);
+                char gumProjectDrive = gumProjectFilePath.Standardized[0];
+                directories.Add(gumProjectFilePath.GetDirectoryContainingThis());
+
+                // why are we adding the deep ones, isn't it enough to add the roots?
+
+                //directories.Add(gumProjectFilePath.GetDirectoryContainingThis() + "Screens/");
+                //directories.Add(gumProjectFilePath.GetDirectoryContainingThis() + "Components/");
+                //directories.Add(gumProjectFilePath.GetDirectoryContainingThis() + "Standards/");
+                //directories.Add(gumProjectFilePath.GetDirectoryContainingThis() + "Behaviors/");
+                //directories.Add(gumProjectFilePath.GetDirectoryContainingThis() + "FontCache/");
+
+                var gumProject = GumState.Self.ProjectState.GumProjectSave;
+                if (!string.IsNullOrEmpty(gumProject.LocalizationFile))
+                {
+                    var localizationDirectory = new FilePath(
+                            GumState.Self.ProjectState.ProjectDirectory + gumProject.LocalizationFile)
+                        .GetDirectoryContainingThis();
+                    directories.Add(localizationDirectory);
+                }
             }
 
             return directories;
