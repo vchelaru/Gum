@@ -570,6 +570,9 @@ namespace Gum.PropertyGridHelpers
             }
             /////////////////End Early Out////////////////////////
 
+            var stateSave = SelectedState.Self.SelectedStateSave;
+            var instanceSave = gumElementOrInstanceSaveAsObject as InstanceSave;
+            var elementSave = instanceSave?.ParentContainer ?? gumElementOrInstanceSaveAsObject as ElementSave;
 
             object newValue = setPropertyArgs.Value;
             if (mPropertyDescriptor != null)
@@ -580,30 +583,13 @@ namespace Gum.PropertyGridHelpers
                 {
                     LastOldValue = oldValue;
                 }
-
-                //mPropertyDescriptor.SetValue(gumElementOrInstanceSaveAsObject, newValue);
-                ElementSave elementSave = null;
-                StateSave stateSave = SelectedState.Self.SelectedStateSave;
-                //InstanceSave instanceSave = SelectedState.Self.SelectedInstance;
-
-                var instanceSave = gumElementOrInstanceSaveAsObject as InstanceSave;
-
-                if (instanceSave != null)
-                {
-                    elementSave = instanceSave.ParentContainer;
-                }
-                else // instance is null, so assign the element
-                {
-                    elementSave = gumElementOrInstanceSaveAsObject as ElementSave;
-                }
-
                 // <None> is a reserved 
                 // value for when we want
                 // to allow the user to reset
                 // a value through a combo box.
                 // If the value is "<None>" then 
                 // let's set it to null
-                if (newValue is string && ((string)newValue) == "<None>")
+                if (newValue is "<None>")
                 {
                     newValue = null;
                 }
@@ -622,70 +608,72 @@ namespace Gum.PropertyGridHelpers
                 // the stateSave.SetValue method handles Name and Base Type internally just fine,
                 // but if we are on an instance in a behavior, that won't have a state save, so let's do that out here:
                 // Check for reserved names
-                var isReservedName = false;
-                if (instanceSave != null)
+                // This is a variable on an instance
+                if (instanceSave != null && RootVariableName == "Name")
                 {
-                    // This is a variable on an instance
-                    if (RootVariableName == "Name")
-                    {
-                        instanceSave.Name = (string)newValue;
-                        isReservedName = true;
-                    }
-                    else if (RootVariableName == "Base Type")
-                    {
-                        instanceSave.BaseType = newValue.ToString();
-                        isReservedName = true;
-                    }
+                    instanceSave.Name = (string)newValue;
                 }
-
-                if (stateSave != null && elementSave != null && !isReservedName)
+                else if (instanceSave != null && RootVariableName == "Base Type")
                 {
-                    VariableSave foundAtComponentOrBase = null;
-
-                    if (!string.IsNullOrEmpty(existingVariable?.ExposedAsName))
+                    instanceSave.BaseType = newValue.ToString();
+                }
+                else if (stateSave != null && elementSave != null)
+                {
+                    // If we are creating a new variable, we need to make sure it carries the same exposed
+                    // name as the variable in base that defines it. We need to first get that variable...
+                    VariableSave variableDefinedInThisOrBase = null;
+                    if(!string.IsNullOrEmpty(existingVariable?.ExposedAsName))
                     {
-                        // need to set the exposed name on the variable, but only if it is defined in this component or in
-                        // a base component:
-
-                        foundAtComponentOrBase = SelectedState.Self.SelectedStateSave.GetVariableSave(Name);
-                        if (foundAtComponentOrBase == null && SelectedState.Self.SelectedStateSave != SelectedState.Self.SelectedElement.DefaultState)
-                        {
-                            foundAtComponentOrBase = SelectedState.Self.SelectedElement.DefaultState.GetVariableSave(Name);
-                        }
-
-                        if (foundAtComponentOrBase == null)
-                        {
-                            var allBase = ObjectFinder.Self.GetBaseElements(SelectedState.Self.SelectedElement);
-                            foreach (var baseElement in allBase)
-                            {
-                                foundAtComponentOrBase = baseElement.DefaultState.GetVariableSave(Name);
-                                if (foundAtComponentOrBase != null)
-                                {
-                                    break;
-                                }
-                            }
-                        }
+                        variableDefinedInThisOrBase = GetVariableDefinedInThisOrBase(existingVariable);
                     }
-
-
+                    // ...set variable after getting it from base, or else we'd get the variable we just set...
                     stateSave.SetValue(Name, newValue, instanceSave, variableType);
-                    if (!string.IsNullOrEmpty(existingVariable?.ExposedAsName) && foundAtComponentOrBase != null)
+                    if (!string.IsNullOrEmpty(existingVariable?.ExposedAsName) && variableDefinedInThisOrBase != null)
                     {
+                        //... then assign it here if we found it:
                         var variable = stateSave.GetVariableSave(Name);
                         variable.ExposedAsName = existingVariable.ExposedAsName;
                     }
                 }
 
                 NotifyVariableLogic(gumElementOrInstanceSaveAsObject, trySave: setPropertyArgs.CommitType == SetPropertyCommitType.Full);
-
-
-
             }
             else
             {
                 mStateSave.SetValue(mVariableName, newValue);
             }
-            // set the value
+        }
+
+        private VariableSave GetVariableDefinedInThisOrBase(VariableSave existingVariable)
+        {
+            VariableSave variableDefinedInThisOrBase = null;
+
+            if (!string.IsNullOrEmpty(existingVariable?.ExposedAsName))
+            {
+                // need to set the exposed name on the variable, but only if it is defined in this component or in
+                // a base component:
+
+                variableDefinedInThisOrBase = SelectedState.Self.SelectedStateSave.GetVariableSave(Name);
+                if (variableDefinedInThisOrBase == null && SelectedState.Self.SelectedStateSave != SelectedState.Self.SelectedElement.DefaultState)
+                {
+                    variableDefinedInThisOrBase = SelectedState.Self.SelectedElement.DefaultState.GetVariableSave(Name);
+                }
+
+                if (variableDefinedInThisOrBase == null)
+                {
+                    var allBase = ObjectFinder.Self.GetBaseElements(SelectedState.Self.SelectedElement);
+                    foreach (var baseElement in allBase)
+                    {
+                        variableDefinedInThisOrBase = baseElement.DefaultState.GetVariableSave(Name);
+                        if (variableDefinedInThisOrBase != null)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return variableDefinedInThisOrBase;
         }
 
         private bool CanSetValue(object gumElementOrInstanceSaveAsObject, SetPropertyArgs setPropertyArgs)

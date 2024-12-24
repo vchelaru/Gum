@@ -323,11 +323,6 @@ namespace Gum
 
         }
 
-        private void VariablePropertyGrid_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
-        {
-            SetVariableLogic.Self.PropertyValueChanged(s, e);
-        }
-
         private void wireframeControl1_MouseClick(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Right)

@@ -65,14 +65,6 @@ namespace Gum.PropertyGridHelpers
             "Y Units",
         };
 
-        internal void PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
-        {
-            string changedMember = e.ChangedItem.PropertyDescriptor.Name;
-            object oldValue = e.OldValue;
-
-            PropertyValueChanged(changedMember, oldValue, SelectedState.Self.SelectedInstance);
-        }
-
         // added instance property so we can change values even if a tree view is selected
         public void PropertyValueChanged(string unqualifiedMemberName, object oldValue, InstanceSave instance, bool refresh = true, bool recordUndo = true,
             bool trySave = true)
