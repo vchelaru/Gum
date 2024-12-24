@@ -25,9 +25,8 @@ namespace Gum.Logic.FileWatch
 
         bool IsFlushing;
 
-        HashSet<FilePath> filePathsToWatch;
 
-        public IReadOnlyCollection<FilePath> CurrentFilePathsWatching => filePathsToWatch;
+        public FilePath CurrentFilePathWatching { get; private set; }
 
         #endregion
 
@@ -54,8 +53,6 @@ namespace Gum.Logic.FileWatch
 
         public void EnableWithDirectories(HashSet<FilePath> directories)
         {
-            filePathsToWatch = directories;
-
             FilePath gumProjectFilePath = ProjectManager.Self.GumProjectSave.FullFileName;
 
             char gumProjectDrive = gumProjectFilePath.Standardized[0];
@@ -78,6 +75,8 @@ namespace Gum.Logic.FileWatch
             // Gum standard is to have a trailing slash, 
             // but FileSystemWatcher expects no trailing slash:
             fileSystemWatcher.Path = filePathAsString.Substring(0, filePathAsString.Length - 1);
+            CurrentFilePathWatching = fileSystemWatcher.Path;
+
             fileSystemWatcher.EnableRaisingEvents = true;
         }
 
@@ -121,7 +120,7 @@ namespace Gum.Logic.FileWatch
                 if(!wasIgnored)
                 {
                     var directoryContainingThis = fileName.GetDirectoryContainingThis();
-                    var isFolderConsidered = filePathsToWatch.Any(item => item == directoryContainingThis || item.IsRootOf(fileName));
+                    var isFolderConsidered = CurrentFilePathWatching == directoryContainingThis || CurrentFilePathWatching.IsRootOf(fileName);
 
                     if(!isFolderConsidered)
                     {

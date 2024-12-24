@@ -100,7 +100,7 @@ public class MainFileWatchPlugin : InternalPlugin
             // stuff stuff
             var fileWatchManager = FileWatchManager.Self;
 
-            if(fileWatchManager.CurrentFilePathsWatching == null)
+            if(fileWatchManager.CurrentFilePathWatching == null)
             {
                 return;
             }
@@ -109,11 +109,8 @@ public class MainFileWatchPlugin : InternalPlugin
             
             if(fileWatchManager.Enabled)
             {
-                filePathsWatchingText = $"File paths watching ({fileWatchManager.CurrentFilePathsWatching?.Count ?? 0}):";
-                foreach(var item in fileWatchManager.CurrentFilePathsWatching)
-                {
-                    filePathsWatchingText += $"\n\t{item}";
-                }
+                filePathsWatchingText = $"File path watching ({fileWatchManager.CurrentFilePathWatching}):";
+
                 viewModel.WatchFolderInformation = filePathsWatchingText;
             }
             else
