@@ -798,7 +798,10 @@ namespace Gum
                 if(result == DialogResult.OK)
                 { 
                     GumProjectSave.FullFileName = openFileDialog.FileName;
-                    PluginManager.Self.ProjectLocationSet(new FilePath(openFileDialog.FileName));
+                    var filePath = new FilePath(openFileDialog.FileName);
+                    PluginManager.Self.ProjectLocationSet(filePath);
+                    WpfDataUi.Controls.FileSelectionDisplay.FolderRelativeTo = filePath.GetDirectoryContainingThis().FullPath;
+
                     shouldSave = true;
                     isProjectNew = true;
                 }
