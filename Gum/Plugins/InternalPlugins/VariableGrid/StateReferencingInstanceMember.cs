@@ -14,6 +14,7 @@ using GumRuntime;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -577,12 +578,7 @@ namespace Gum.PropertyGridHelpers
             object newValue = setPropertyArgs.Value;
             if (mPropertyDescriptor != null)
             {
-                object oldValue = base.Value;
-
-                if (setPropertyArgs.CommitType == SetPropertyCommitType.Full)
-                {
-                    LastOldValue = oldValue;
-                }
+                AssignLastOldValue(setPropertyArgs);
                 // <None> is a reserved 
                 // value for when we want
                 // to allow the user to reset
@@ -622,7 +618,7 @@ namespace Gum.PropertyGridHelpers
                     // If we are creating a new variable, we need to make sure it carries the same exposed
                     // name as the variable in base that defines it. We need to first get that variable...
                     VariableSave variableDefinedInThisOrBase = null;
-                    if(!string.IsNullOrEmpty(existingVariable?.ExposedAsName))
+                    if (!string.IsNullOrEmpty(existingVariable?.ExposedAsName))
                     {
                         variableDefinedInThisOrBase = GetVariableDefinedInThisOrBase(existingVariable);
                     }
@@ -641,6 +637,29 @@ namespace Gum.PropertyGridHelpers
             else
             {
                 mStateSave.SetValue(mVariableName, newValue);
+            }
+        }
+
+        private void AssignLastOldValue(SetPropertyArgs setPropertyArgs)
+        {
+            object oldValue = base.Value;
+
+            if (setPropertyArgs.CommitType == SetPropertyCommitType.Full)
+            {
+                LastOldValue = oldValue;
+
+                // if the value changes was a list, we want to store off a copy of it or else the modified 
+                // list will simply add to the existing list and later checks for equality will always return true:
+                if (oldValue is IList oldList)
+                {
+                    var newList = Activator.CreateInstance(oldList.GetType()) as IList;
+
+                    foreach (var item in oldList as IList)
+                    {
+                        newList.Add(item);
+                    }
+                    LastOldValue = newList;
+                }
             }
         }
 

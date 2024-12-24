@@ -175,9 +175,13 @@ namespace WpfDataUi.Controls
             }
             else
             {
-                // todo - we may want to clone the list here too to prevent unintentional editing of the underlying list
-                //ListBox.ItemsSource = value as IEnumerable;
-                throw new InvalidOperationException($"need to support a list of type {value?.GetType()} to support cloning");
+                var newList = Activator.CreateInstance(value.GetType()) as IList;
+
+                foreach(var item in value as IList)
+                {
+                    newList.Add(item);
+                }
+                ListBox.ItemsSource = newList;
             }
             return ApplyValueResult.Success;
         }
