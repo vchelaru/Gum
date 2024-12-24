@@ -103,6 +103,7 @@ namespace WpfDataUi.Controls
             //this.ComboBox.IsEditable = true;
 
             this.RefreshContextMenu(ComboBox.ContextMenu);
+            this.RefreshContextMenu(TextBlock.ContextMenu);
 
             this.ComboBox.IsKeyboardFocusWithinChanged += HandleIsKeyboardFocusChanged;
 

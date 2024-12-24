@@ -81,6 +81,7 @@ namespace WpfDataUi.Controls
             mTextBoxLogic = new TextBoxDisplayLogic(this, TextBox);
 
             this.RefreshContextMenu(TextBox.ContextMenu);
+            this.RefreshContextMenu(Label.ContextMenu);
         }
 
 
@@ -96,6 +97,7 @@ namespace WpfDataUi.Controls
 
             this.Label.Text = InstanceMember.DisplayName;
             this.RefreshContextMenu(TextBox.ContextMenu);
+            this.RefreshContextMenu(Label.ContextMenu);
 
             SuppressSettingProperty = false;
         }
