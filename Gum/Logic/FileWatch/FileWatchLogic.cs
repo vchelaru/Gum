@@ -10,6 +10,8 @@ namespace Gum.Logic.FileWatch
     {
         FileWatchManager fileWatchManager;
 
+        public bool Enabled { get { return fileWatchManager.Enabled; } }
+
         public FileWatchLogic()
         {
             fileWatchManager = FileWatchManager.Self;

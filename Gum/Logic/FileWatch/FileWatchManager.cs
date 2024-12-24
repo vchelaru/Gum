@@ -17,6 +17,7 @@ namespace Gum.Logic.FileWatch
         List<FilePath> filesCurrentlyFlushing = new List<FilePath>();
 
         FileSystemWatcher fileSystemWatcher;
+        public bool Enabled { get { return fileSystemWatcher.EnableRaisingEvents; } }
 
         DateTime LastFileChange;
 

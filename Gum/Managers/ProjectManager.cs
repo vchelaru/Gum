@@ -732,6 +732,7 @@ namespace Gum
                         GeneralSettingsFile.AddToRecentFilesIfNew(GumProjectSave.FullFileName);
                         GeneralSettingsFile.LastProject = GumProjectSave.FullFileName;
                         GeneralSettingsFile.Save();
+                        FileWatchLogic.Self.HandleProjectLoaded();
                     }
                 }
             }
