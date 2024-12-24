@@ -28,7 +28,6 @@ public class MainStatePlugin : InternalPlugin
     StateTreeView stateTreeView;
     StateTreeViewModel stateTreeViewModel;
 
-    PluginTab pluginTab;
     PluginTab newPluginTab;
 
     StateTreeViewRightClickService _stateTreeViewRightClickService;
@@ -86,7 +85,6 @@ public class MainStatePlugin : InternalPlugin
         _stateTreeViewRightClickService.OldMenuStrip = stateView.TreeViewContextMenu;
         stateView.StateStackingModeChange += (_, _) => GumState.Self.SelectedState.StateStackingMode = stateView.StateStackingMode;
 
-        pluginTab = GumCommands.Self.GuiCommands.AddControl(stateView, "States", TabLocation.CenterTop);
     }
 
     private void CreateNewStateTab()
@@ -190,7 +188,6 @@ public class MainStatePlugin : InternalPlugin
             desiredTitle = $"{element.Name} States";
         }
 
-        pluginTab.Title = desiredTitle + " (old)";
         newPluginTab.Title = desiredTitle;
         return selectedState;
     }
