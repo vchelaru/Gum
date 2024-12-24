@@ -37,7 +37,3 @@ The following suffixes can be added to create nine slice graphics. For example, 
 * Image\_TopCenter.png
 * Image\_TopLeft.png
 * Image\_TopRight.png
-
-NineSlice Properties
-
-* [NineSlice.Texture Address](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/NineSlice/NineSlice.Texture%20Address)
