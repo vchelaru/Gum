@@ -33,19 +33,20 @@ namespace CodeOutputPlugin
 
         private readonly CodeGenerationFileLocationsService _codeGenerationFileLocationsService;
         private readonly CodeGenerationService _codeGenerationService;
+        private readonly ISelectedState _selectedState;
+        PluginTab pluginTab;
 
         #endregion
+
+        #region Init/Startup
 
         public MainCodeOutputPlugin()
         {
             _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService();
 
             _codeGenerationService = new CodeGenerationService();
-        }
 
-        public override bool ShutDown(PluginShutDownReason shutDownReason)
-        {
-            return true;
+            _selectedState = SelectedState.Self;
         }
 
         public override void StartUp()
@@ -87,6 +88,8 @@ namespace CodeOutputPlugin
 
             this.ProjectLoad += HandleProjectLoaded;
         }
+
+        #endregion
 
         private void HandleElementDeleted(ElementSave element)
         {
@@ -237,6 +240,18 @@ namespace CodeOutputPlugin
 
         private void RefreshCodeDisplay()
         {
+            var shouldShow = _selectedState.SelectedElement != null &&
+                _selectedState.SelectedElement is not StandardElementSave;
+
+            if(shouldShow)
+            {
+                pluginTab.Show(focus:false);
+            }
+            else
+            {
+                pluginTab.Hide();
+            }
+
             control.CodeOutputProjectSettings = codeOutputProjectSettings;
             if(control.CodeOutputElementSettings == null)
             {
@@ -309,10 +324,7 @@ namespace CodeOutputPlugin
 
             control.DataContext = viewModel;
 
-            // We don't actually want it to show, just associate, so add and immediately remove.
-            // Eventually we want this to be done with a single call but I don't know if there's Gum
-            // support for it yet
-            GumCommands.Self.GuiCommands.AddControl(control, "Code", TabLocation.RightBottom);
+            pluginTab = GumCommands.Self.GuiCommands.AddControl(control, "Code", TabLocation.RightBottom);
         }
 
         private void HandleMainViewModelPropertyChanged(string propertyName)
@@ -395,5 +407,7 @@ namespace CodeOutputPlugin
                 _codeGenerationService.GenerateCodeForElement(element, settings, codeOutputProjectSettings, showPopups);
             }
         }
+
+        public override bool ShutDown(PluginShutDownReason shutDownReason) => true;
     }
 }
