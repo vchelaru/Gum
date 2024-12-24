@@ -591,12 +591,6 @@ namespace Gum
             }
         }
 
-        public static string GetExecutingDirectory()
-        {
-            string path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            return path;
-        }
-
         internal void SaveProject(bool forceSaveContainedElements = false)
         {
             bool succeeded = false;
@@ -614,34 +608,7 @@ namespace Gum
                 {
                     PluginManager.Self.BeforeProjectSave(GumProjectSave);
 
-                    foreach (var elementSave in GumProjectSave.Screens)
-                    {
-                        foreach (var stateSave in elementSave.AllStates)
-                        {
-                            stateSave.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
-                        }
-                    }
-                    foreach (var elementSave in GumProjectSave.Components)
-                    {
-                        foreach (var stateSave in elementSave.AllStates)
-                        {
-                            stateSave.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
-                        }
-                    }
-                    foreach (var elementSave in GumProjectSave.StandardElements)
-                    {
-                        foreach (var stateSave in elementSave.AllStates)
-                        {
-                            stateSave.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
-                        }
-                    }
-                    foreach (var behavior in GumProjectSave.Behaviors)
-                    {
-                        foreach (var stateSave in behavior.AllStates)
-                        {
-                            stateSave.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
-                        }
-                    }
+                    SortVariables();
 
                     bool saveContainedElements = isNewProject || forceSaveContainedElements;
 
@@ -668,25 +635,6 @@ namespace Gum
                         FileWatchLogic.Self.IgnoreNextChangeOn(GumProjectSave.FullFileName);
 
                         GumCommands.Self.TryMultipleTimes(() => GumProjectSave.Save(GumProjectSave.FullFileName, saveContainedElements));
-
-                        if (isNewProject)
-                        {
-
-                            var sourceFile = Path.Combine(GetExecutingDirectory(), "Content\\ExampleSpriteFrame.png");
-                            var destinationFile = FileManager.GetDirectory(GumProjectSave.FullFileName) + "ExampleSpriteFrame.png";
-                            try
-                            {
-                                System.IO.File.Copy(sourceFile, destinationFile);
-
-                                var nineSliceStandard = GumProjectSave.StandardElements.Find(item => item.Name == "NineSlice");
-                                nineSliceStandard.DefaultState.SetValue("SourceFile", "ExampleSpriteFrame.png", "string");
-                            }
-                            catch (Exception e)
-                            {
-                                GumCommands.Self.GuiCommands.PrintOutput($"Error copying ExampleSpriteFrame.png: {e}");
-                            }
-                        }
-
                         succeeded = true;
 
                         if (succeeded && saveContainedElements)
@@ -731,6 +679,38 @@ namespace Gum
                         GeneralSettingsFile.LastProject = GumProjectSave.FullFileName;
                         GeneralSettingsFile.Save();
                     }
+                }
+            }
+        }
+
+        private void SortVariables()
+        {
+            foreach (var elementSave in GumProjectSave.Screens)
+            {
+                foreach (var stateSave in elementSave.AllStates)
+                {
+                    stateSave.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
+                }
+            }
+            foreach (var elementSave in GumProjectSave.Components)
+            {
+                foreach (var stateSave in elementSave.AllStates)
+                {
+                    stateSave.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
+                }
+            }
+            foreach (var elementSave in GumProjectSave.StandardElements)
+            {
+                foreach (var stateSave in elementSave.AllStates)
+                {
+                    stateSave.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
+                }
+            }
+            foreach (var behavior in GumProjectSave.Behaviors)
+            {
+                foreach (var stateSave in behavior.AllStates)
+                {
+                    stateSave.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
                 }
             }
         }
