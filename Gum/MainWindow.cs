@@ -15,6 +15,7 @@ using Microsoft.AppCenter.Crashes;
 using Gum.DataTypes;
 using Gum.Services;
 using Gum.Undo;
+using Gum.Logic;
 
 namespace Gum
 {
@@ -86,7 +87,7 @@ namespace Gum
             // beyond the generation of code which isn't working when
             // I move it to custom code. Oh well, maybe one day I'll move
             // to a wpf window and can get rid of this
-            ElementTreeViewManager.Self.Initialize(this.components, ElementTreeImages, addCursor);
+            ElementTreeViewManager.Self.Initialize(this.components, ElementTreeImages, addCursor, CopyPasteLogic.Self);
 
             // ProperGridManager before MenuStripManager
             PropertyGridManager.Self.InitializeEarly();

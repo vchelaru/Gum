@@ -463,14 +463,14 @@ public partial class ElementTreeViewManager
 
     private void AddPasteMenuItems()
     {
-        if (CopyPasteLogic.CopiedData.CopiedInstancesRecursive.Count > 0)
+        if (_copyPasteLogic.CopiedData.CopiedInstancesRecursive.Count > 0)
         {
             mMenuStrip.Items.Add("Paste", null, HandlePaste);
         }
-        if (CopyPasteLogic.CopiedData.CopiedInstancesSelected.Count > 0)
+        if (_copyPasteLogic.CopiedData.CopiedInstancesSelected.Count > 0)
         {
             string text;
-            if (CopyPasteLogic.CopiedData.CopiedInstancesSelected.Count == 0)
+            if (_copyPasteLogic.CopiedData.CopiedInstancesSelected.Count == 0)
                 text = "Paste Top Level Instance";
             else
                 text = "Paste Top Level Instances";
@@ -487,7 +487,7 @@ public partial class ElementTreeViewManager
         }
 
 
-        CopyPasteLogic.PasteInstanceSaves(
+        _copyPasteLogic.PasteInstanceSaves(
             instances.ToList(),
             new List<DataTypes.Variables.StateSave> { derivedElement.DefaultState.Clone() },
             baseElement,
@@ -496,12 +496,12 @@ public partial class ElementTreeViewManager
 
     private void HandlePaste(object sender, EventArgs e)
     {
-        CopyPasteLogic.OnPaste(CopyType.InstanceOrElement, TopOrRecursive.Recursive);
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement, TopOrRecursive.Recursive);
     }
 
     private void HandlePasteTopLevel(object sender, EventArgs e)
     {
-        CopyPasteLogic.OnPaste(CopyType.InstanceOrElement, TopOrRecursive.Top);
+        _copyPasteLogic.OnPaste(CopyType.InstanceOrElement, TopOrRecursive.Top);
     }
 
     private void HandleViewReferences(object sender, EventArgs e)

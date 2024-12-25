@@ -17,6 +17,18 @@ namespace Gum.DataTypes
             set;
         }
 
+        public string StrippedName
+        {
+            get
+            {
+                if(Name.Contains("/"))
+                {
+                    return Name.Substring(Name.LastIndexOf("/") + 1);
+                }
+                return Name;                        
+            }
+        }
+
         public string BaseType
         {
             get;
@@ -129,6 +141,8 @@ namespace Gum.DataTypes
         }
 
         public List<ElementBehaviorReference> Behaviors { get; set; } = new List<ElementBehaviorReference>();
+
+
 
         #endregion
 

@@ -22,6 +22,7 @@ using Gum.Plugins.InternalPlugins.TreeView.ViewModels;
 using RenderingLibrary.Graphics;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolTip;
 using System.Management.Instrumentation;
+using Gum.Logic;
 
 namespace Gum.Managers
 {
@@ -201,6 +202,8 @@ namespace Gum.Managers
         public TreeNode RootStandardElementsTreeNode => mStandardElementsTreeNode;
 
         public TreeNode RootBehaviorsTreeNode => mBehaviorsTreeNode;
+
+        private CopyPasteLogic _copyPasteLogic;
 
         System.Windows.Forms.Cursor AddCursor { get; set; }
 
@@ -421,8 +424,10 @@ namespace Gum.Managers
 
 
         public void Initialize(IContainer components, ImageList ElementTreeImages,
-            System.Windows.Forms.Cursor addCursor)
+            System.Windows.Forms.Cursor addCursor, CopyPasteLogic copyPasteLogic)
         {
+            _copyPasteLogic = copyPasteLogic;
+
             AddCursor = addCursor;
 
             CreateObjectTreeView(ElementTreeImages);
