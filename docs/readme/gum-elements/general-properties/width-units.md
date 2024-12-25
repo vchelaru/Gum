@@ -90,9 +90,9 @@ The following image shows a child ColoredRectangle with a Width of 200 **Percent
 
 ### Percentage of Source File
 
-The [Sprite](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/Sprite/README.md) type has an extra **With Unit** called **Percentage of Source File**, which sets the width of the Sprite according to the file that it is displaying. This is the default **Width Unit** for Sprites.
+The [Sprite](../sprite/) type has an extra **With Unit** called **Percentage of Source File**, which sets the width of the Sprite according to the file that it is displaying. This is the default **Width Unit** for Sprites.
 
-The following image shows a child [Sprite](../sprite/) with 200 **Percentage of Source File** Width, which means it draws two times as wide as its source image:
+The following image shows a child Sprite with 200 **Percentage of Source File** Width, which means it draws two times as wide as its source image:
 
 ![Sprite using 200 Percentage of File width](<../../../.gitbook/assets/11_05 58 09.png>)
 
