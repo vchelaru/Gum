@@ -10,7 +10,7 @@ Gum uses the following technologies:
 
 * .NET 4.6 (included with Visual Studio)
 * Windows Forms (included with .NET 4.0)
-* XNA Game Studio 4.0 [https://msxna.codeplex.com/](https://msxna.codeplex.com/)
+* XNA Game Studio 4.0 [https://www.microsoft.com/en-us/download/details.aspx?id=20914](https://www.microsoft.com/en-us/download/details.aspx?id=20914)
 
 ## Running from source
 
