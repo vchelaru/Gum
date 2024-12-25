@@ -5,6 +5,8 @@ using RenderingLibrary.Graphics;
 using Vector2 = System.Numerics.Vector2;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
+using System.Numerics;
+using ToolsUtilitiesStandard.Helpers;
 
 namespace RenderingLibrary.Math.Geometry
 {
@@ -158,14 +160,20 @@ namespace RenderingLibrary.Math.Geometry
             Render(spriteRenderer, managers, mTexture, .2f);
         }
 
-        internal bool IsPointInside(float worldX, float worldY)
+        internal bool IsPointInside(float worldX, float worldY, System.Numerics.Matrix4x4 rotationMatrix)
         {
             bool b = false;
 
+            var right = rotationMatrix.Right().ToVector2();
+            var up = rotationMatrix.Up().ToVector2();
+
             for (int i = 0, j = mVectors.Count - 1; i < mVectors.Count; j = i++)
             {
-                var atI = mVectors[i] + Position;
-                var atJ = mVectors[j] + Position;
+                var atIRelative = mVectors[i];
+                var atJRelative = mVectors[j];
+
+                var atI = atIRelative.X * right + atIRelative.Y * up + Position;
+                var atJ =atJRelative.X * right + atJRelative.Y * up + Position;
 
                 if ((((atI.Y <= worldY) && (worldY < atJ.Y)) || ((atJ.Y <= worldY) && (worldY < atI.Y))) &&
                     (worldX < (atJ.X - atI.X) * (worldY - atI.Y) / (atJ.Y - atI.Y) + atI.X)) b = !b;
@@ -179,7 +187,8 @@ namespace RenderingLibrary.Math.Geometry
             mVectors[index] = point;
         }
 
-        public void Render(SpriteRenderer spriteRenderer, SystemManagers managers, Texture2D textureToUse, float repetitionsPerLength, System.Drawing.Rectangle? sourceRectangle = null)
+        public void Render(SpriteRenderer spriteRenderer, SystemManagers managers, 
+            Texture2D textureToUse, float repetitionsPerLength, System.Drawing.Rectangle? sourceRectangle = null, float rotation = 0)
         {
             if (mVectors.Count < 2)
                 return;
@@ -213,6 +222,11 @@ namespace RenderingLibrary.Math.Geometry
 
             var sourceRectangleToUse = sourceRectangle;
 
+            var matrix = Matrix4x4.CreateRotationZ(-MathHelper.ToRadians(rotation));
+
+            var right = new Vector2(matrix.M11, matrix.M12);
+            var up = new Vector2(matrix.M21, matrix.M22);
+
             for (int i = startIndex; i < endIndex; i++)
             {
                 Vector2 vector1 = mVectors[i - 1];
@@ -220,19 +234,20 @@ namespace RenderingLibrary.Math.Geometry
 
 
                 // rotation should be handled in the object creating "this"
-                //if(rotation != 0)
-                //{
-                //    var matrix = Matrix.CreateRotationZ(-MathHelper.ToRadians(rotation));
+                // Update December 24, 2024
+                // why? that makes it much harder
+                // to manage points.
+                if (rotation != 0)
+                {
+                    var new1 = vector1.X * right + vector1.Y * up;
+                    var new2 = vector2.X * right + vector2.Y * up;
 
-                //    var new1 = vector1.X * matrix.Right + vector1.Y * matrix.Up;
-                //    var new2 = vector2.X * matrix.Right + vector2.Y * matrix.Up;
+                    vector1.X = new1.X;
+                    vector1.Y = new1.Y;
 
-                //    vector1.X = new1.X;
-                //    vector1.Y = new1.Y;
-
-                //    vector2.X = new2.X;
-                //    vector2.Y = new2.Y;
-                //}
+                    vector2.X = new2.X;
+                    vector2.Y = new2.Y;
+                }
 
                 // calculate the distance between the two vectors
                 float distance = Vector2.Distance(vector1, vector2);

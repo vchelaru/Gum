@@ -5,6 +5,8 @@ using System.Collections.ObjectModel;
 using BlendState = Gum.BlendState;
 using Vector2 = System.Numerics.Vector2;
 using Color = System.Drawing.Color;
+using System.Numerics;
+using ToolsUtilitiesStandard.Helpers;
 
 namespace RenderingLibrary.Math.Geometry
 {
@@ -125,12 +127,10 @@ namespace RenderingLibrary.Math.Geometry
             }
         }
 
+        float rotation;
         public float Rotation
         {
-            // even though it doesn't rotate itself, its children
-            // can rotate, so it should store rotation values:
-            get;
-            set;
+            get; set;
         }
 
         public bool FlipHorizontal { get; set; }
@@ -177,6 +177,7 @@ namespace RenderingLibrary.Math.Geometry
         {
             mLinePrimitive.ClearVectors();
 
+
             if(points != null)
             {
                 foreach(var point in points)
@@ -197,7 +198,7 @@ namespace RenderingLibrary.Math.Geometry
             // position has to be updated:
             mLinePrimitive.Position.X = this.GetAbsoluteLeft();
             mLinePrimitive.Position.Y = this.GetAbsoluteTop();
-            return mLinePrimitive.IsPointInside(worldX, worldY);
+            return mLinePrimitive.IsPointInside(worldX, worldY, this.GetAbsoluteRotationMatrix());
             // see if point is inside
         }
 
@@ -209,6 +210,17 @@ namespace RenderingLibrary.Math.Geometry
         public Vector2 PointAt(int index)
         {
             return mLinePrimitive.PointAt(index);
+        }
+
+        public Vector2 AbsolutePointAt(int index)
+        {
+            var relativePoint = mLinePrimitive.PointAt(index);
+
+            var rotationMatrix = this.GetAbsoluteRotationMatrix();
+
+            return relativePoint.X * rotationMatrix.Right().ToVector2() + 
+                relativePoint.Y * rotationMatrix.Up().ToVector2() +  
+                new Vector2(this.GetAbsoluteX(), this.GetAbsoluteY());
         }
 
         public void InsertPointAt(Vector2 point, int index)
@@ -244,23 +256,24 @@ namespace RenderingLibrary.Math.Geometry
                     renderer = Renderer.Self;
                 }
 
+                var absoluteRotation = this.GetAbsoluteRotation();
 
                 if (IsDotted)
                 {
                     var textureToUse = renderer.DottedLineTexture;
 
-                    mLinePrimitive.Render(renderer.SpriteRenderer, systemManagers, textureToUse, .1f * renderer.Camera.Zoom);
+                    mLinePrimitive.Render(renderer.SpriteRenderer, systemManagers, textureToUse, .1f * renderer.Camera.Zoom, rotation: absoluteRotation);
                 }
                 else
                 {
                     var textureToUse = renderer.SinglePixelTexture;
                     if(renderer.SinglePixelSourceRectangle != null)
                     {
-                        mLinePrimitive.Render(renderer.SpriteRenderer, systemManagers, textureToUse, 0, renderer.SinglePixelSourceRectangle);
+                        mLinePrimitive.Render(renderer.SpriteRenderer, systemManagers, textureToUse, 0, renderer.SinglePixelSourceRectangle, rotation: absoluteRotation);
                     }
                     else
                     {
-                        mLinePrimitive.Render(renderer.SpriteRenderer, systemManagers, textureToUse, .1f * renderer.Camera.Zoom);
+                        mLinePrimitive.Render(renderer.SpriteRenderer, systemManagers, textureToUse, .1f * renderer.Camera.Zoom, rotation: absoluteRotation);
                     }
                 }
 

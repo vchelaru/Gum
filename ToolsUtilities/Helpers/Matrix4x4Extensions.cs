@@ -1,7 +1,9 @@
 ﻿using System.Numerics;
 
-namespace ToolsUtilitiesStandard.Helpers {
-	public static class Matrix4x4Extensions {
+namespace ToolsUtilitiesStandard.Helpers 
+{
+	public static class Matrix4x4Extensions 
+	{
 		public static Vector3 Up(this Matrix4x4 matrix) {
 			Vector3 up;
 			up.X = matrix.M21;

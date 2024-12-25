@@ -1,6 +1,7 @@
 ﻿using System;
 
-namespace ToolsUtilitiesStandard.Helpers {
+namespace ToolsUtilitiesStandard.Helpers 
+{
 	public static class MathHelper {
 		public const float PiOver2 = (float)(Math.PI / 2);
 		public const float PiOver4 = (float)(Math.PI / 4);

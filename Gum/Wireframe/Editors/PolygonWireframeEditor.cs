@@ -14,6 +14,7 @@ using Vector2 = System.Numerics.Vector2;
 using Color = System.Drawing.Color;
 using Matrix = System.Numerics.Matrix4x4;
 using Gum.Managers;
+using ToolsUtilitiesStandard.Helpers;
 
 namespace Gum.Wireframe.Editors
 {
@@ -183,19 +184,17 @@ namespace Gum.Wireframe.Editors
             if(linePolygon != null)
             {
                 var nodeDimension = NodeDisplayWidth;
-                var linePolygonXY = new Vector2(linePolygon.GetAbsoluteX(), linePolygon.GetAbsoluteY());
                 // position circles
                 for (int i = 0; i < linePolygon.PointCount; i++)
                 {
-                    var worldPositionPoint = linePolygon.PointAt(i) + linePolygonXY;
+                    var point = linePolygon.AbsolutePointAt(i);
 
-                    pointNodes[i].X = worldPositionPoint.X - nodeDimension/2;
-                    pointNodes[i].Y = worldPositionPoint.Y - nodeDimension/2;
+                    pointNodes[i].X = point.X - nodeDimension/2;
+                    pointNodes[i].Y = point.Y - nodeDimension/2;
 
                     pointNodes[i].Width = nodeDimension;
                     pointNodes[i].Height = nodeDimension;
                 }
-
             }
         }
 
@@ -233,13 +232,11 @@ namespace Gum.Wireframe.Editors
 
             if(hasSelection)
             {
-                var selectedVertexPosition = selectedPolygon.PointAt(selectedIndex.Value) +
-                    new Vector2(selectedPolygon.GetAbsoluteLeft(), selectedPolygon.GetAbsoluteTop());
-
                 var zoom = Renderer.Self.Camera.Zoom;
-
                 selectedPointLineRectangle.Width = NodeDisplayWidth + 6/zoom;
                 selectedPointLineRectangle.Height = NodeDisplayWidth + 6 / zoom;
+
+                var selectedVertexPosition = selectedPolygon.AbsolutePointAt(selectedIndex.Value);
 
                 selectedPointLineRectangle.X = selectedVertexPosition.X - selectedPointLineRectangle.Width / 2;
                 selectedPointLineRectangle.Y = selectedVertexPosition.Y - selectedPointLineRectangle.Height / 2;
@@ -260,25 +257,28 @@ namespace Gum.Wireframe.Editors
                 var worldX = InputLibrary.Cursor.Self.GetWorldX();
                 var worldY = InputLibrary.Cursor.Self.GetWorldY();
 
-                this.addPointSprite.X = worldX;
-                this.addPointSprite.Y = worldY;
-
                 var zoom = Renderer.Self.Camera.Zoom;
 
                 this.addPointSprite.Width = this.addPointSprite.Height = 16 / zoom;
 
                 var closestResult = GetClosestLineOver(worldX, worldY);
 
-
                 addPointSprite.Visible = closestResult.MinDistance < (maxPixelsForAddPoint / zoom);
 
                 if(addPointSprite.Visible)
                 {
-                    var selectedPolygon = SelectedLinePolygon;
-                    var addPointPosition = (selectedPolygon.PointAt(closestResult.ClosestIndex) + selectedPolygon.PointAt(closestResult.ClosestIndex+ 1)) / 2.0f;
+                    // give preverential treatment to existing points:
+                    var existingPointIndexOver = GetIndexOver(worldX, worldY);
+                    addPointSprite.Visible = existingPointIndexOver == null;
+                }
 
-                    addPointSprite.X = addPointPosition.X - addPointSprite.Width / 2.0f + selectedPolygon.GetAbsoluteLeft();
-                    addPointSprite.Y = addPointPosition.Y - addPointSprite.Height / 2.0f + selectedPolygon.GetAbsoluteTop();
+                if (addPointSprite.Visible)
+                {
+                    var selectedPolygon = SelectedLinePolygon;
+                    var addPointPosition = (selectedPolygon.AbsolutePointAt(closestResult.ClosestIndex) + selectedPolygon.AbsolutePointAt(closestResult.ClosestIndex+ 1)) / 2.0f;
+
+                    addPointSprite.X = addPointPosition.X - addPointSprite.Width / 2.0f;
+                    addPointSprite.Y = addPointPosition.Y - addPointSprite.Height / 2.0f;
                 }
 
             }
@@ -293,21 +293,26 @@ namespace Gum.Wireframe.Editors
                 var y = cursor.GetWorldY();
 
                 mHasChangedAnythingSinceLastPush = false;
-                if(IsPointOverAddPointSprite(x, y))
-                {
-                    int newIndex = AddPointAt(x, y);
 
-                    grabbedIndex = newIndex;
-                }
-                else
+                var existingPointIndexOver = GetIndexOver(x, y);
+
+                var isAddPointSpriteVisible = IsPointOverAddPointSprite(x, y);
+
+                if (existingPointIndexOver != null || isAddPointSpriteVisible == false)
                 {
                     grabbedState.HandlePush();
 
-                    hasGrabbedBodyOrPoint = HasCursorOver;
                     grabbedIndex = GetIndexOver(x, y);
                 }
-                selectedIndex = grabbedIndex;
+                else if (isAddPointSpriteVisible)
+                {
+                    int newIndex = AddPointAt(x, y);
+                    grabbedIndex = newIndex;
+                }
+                
+                hasGrabbedBodyOrPoint = HasCursorOver;
 
+                selectedIndex = grabbedIndex;
             }
         }
 
@@ -432,8 +437,14 @@ namespace Gum.Wireframe.Editors
 
             var zoom = Renderer.Self.Camera.Zoom;
 
-            pointAtIndex.X += cursor.XChange / zoom;
-            pointAtIndex.Y += cursor.YChange / zoom;
+            Matrix.Invert(linePolygon.GetAbsoluteRotationMatrix(), out Matrix rotationMatrix);
+
+            var change = 
+                (cursor.XChange * rotationMatrix.Right().ToVector2() +
+                cursor.YChange * rotationMatrix.Up().ToVector2()) / zoom;
+
+            pointAtIndex.X += change.X;
+            pointAtIndex.Y += change.Y;
 
             var shouldSetFirstAndLast = (grabbedIndex == 0 || grabbedIndex == linePolygon.PointCount - 1) &&
                 linePolygon.PointAt(0) == linePolygon.PointAt(linePolygon.PointCount - 1);
@@ -456,6 +467,7 @@ namespace Gum.Wireframe.Editors
 
         private void BodyGrabbingActivity()
         {
+            System.Diagnostics.Debug.WriteLine("Grabbed Index" + grabbedIndex);
             var cursor = InputLibrary.Cursor.Self;
             if (cursor.PrimaryDown && hasGrabbedBodyOrPoint &&
                 grabbedState.HasMovedEnough && grabbedIndex == null)
@@ -574,17 +586,14 @@ namespace Gum.Wireframe.Editors
 
             var linePolygon = SelectedLinePolygon;
             var linePolygonPosition = new Vector2(linePolygon.GetAbsoluteLeft(), linePolygon.GetAbsoluteTop());
+
             for (int i = 0; i < linePolygon.PointCount - 1; i++)
             {
-                var point1 = linePolygon.PointAt(i) + linePolygonPosition;
-                var point2 = linePolygon.PointAt(i + 1) + linePolygonPosition;
-
+                var point1 = linePolygon.AbsolutePointAt(i);
+                var point2 = linePolygon.AbsolutePointAt(i + 1);
                 var average = (point1 + point2) / 2.0f;
 
                 var distance = (cursorPosition - average).Length();
-
-                // 
-                //var distance = DistanceTo(point1, point2, worldXAt, worldYAt);
 
                 if(distance < minSoFar)
                 {
