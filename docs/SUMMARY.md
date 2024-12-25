@@ -104,6 +104,7 @@
     * [DataUiGrid](gum-code/gum-code-reference/datauigrid/README.md)
       * [Reflection](gum-code/gum-code-reference/datauigrid/reflection.md)
       * [Categories](gum-code/gum-code-reference/datauigrid/categories.md)
+    * [ElementSave](gum-code/gum-code-reference/elementsave.md)
     * [GraphicalUiElement](gum-code/gum-code-reference/graphicaluielement/README.md)
       * [AddToManagers](gum-code/gum-code-reference/graphicaluielement/addtomanagers.md)
       * [AnimateSelf](gum-code/gum-code-reference/graphicaluielement/animateself.md)

@@ -2,7 +2,7 @@
 
 ### Introduction
 
-The **Children Layout** property determines how a container positions its children. The default value is "Regular" which means that children are positioned according to their [X Units](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/X%20Units/README.md) and [Y Units](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/Y%20Units/README.md).
+The **Children Layout** property determines how a container positions its children. The default value is "Regular" which means that children are positioned according to their [X Units](../general-properties/x-units.md) and [Y Units](../general-properties/y-units.md).
 
 <figure><img src="../../../.gitbook/assets/image (47).png" alt=""><figcaption><p>Children Layout showing Regular, Top to Bottom Stack, Left to Right Stack, Auto Grid Horizontal, and Auto Grid Vertical</p></figcaption></figure>
 
@@ -70,17 +70,17 @@ Top to Bottom and Left to Right stacks separate their children using the Stack S
 
 ### Stacking and Children Origin
 
-In most cases children which are stacked should use a Left [X Origin](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/X%20Origin/README.md) if the parent uses a **LeftToRightStack** and should use a Top [Y Origin](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/Y%20Origin/README.md) if the parent uses a **Top To Bottom Stack**.
+In most cases children which are stacked should use a Left [X Origin](../general-properties/x-origin.md) if the parent uses a **LeftToRightStack** and should use a Top [Y Origin](../general-properties/y-origin.md) if the parent uses a **Top To Bottom Stack**.
 
 For example, consider a parent which contains two children - a blue and a red rectangle.
 
 ![](<../../../.gitbook/assets/LeftToRightStackLeftOrigin (1).png>)
 
-In the image shown above, the red rectangle is positioned directly to the right of the blue rectangle. Notice that if the red rectangle's [X Origin](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/X%20Origin/README.md) is changed to **Center**, the red rectangle overlaps the blue rectangle.
+In the image shown above, the red rectangle is positioned directly to the right of the blue rectangle. Notice that if the red rectangle's [X Origin](../general-properties/x-origin.md) is changed to **Center**, the red rectangle overlaps the blue rectangle.
 
 ![](<../../../.gitbook/assets/LeftToRightOverlapping (1).png>)
 
-If the red rectangle's [X Origin](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/X%20Origin/README.md) is changed to **Right**, then its right side will align with the right side of the blue rectangle, resulting in the red overlapping the blue completely. In this case the stacking is essentially cancelled out by the [X Origin](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/X%20Origin/README.md).
+If the red rectangle's [X Origin](../general-properties/x-origin.md) is changed to **Right**, then its right side will align with the right side of the blue rectangle, resulting in the red overlapping the blue completely. In this case the stacking is essentially cancelled out by the [X Origin](../general-properties/x-origin.md).
 
 ![](../../../.gitbook/assets/LeftToRightCompleteOverlap.png)
 

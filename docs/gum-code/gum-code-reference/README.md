@@ -14,20 +14,8 @@ Gum uses the following technologies:
 
 ## Running from source
 
-For information on running from source, see [Running from Source](https://flatredball.gitbook.io/gum/gum-code-reference/running-from-source).
+For information on running from source, see [Running from Source](./#running-from-source).
 
 ## Writing Plugins
 
-For information on how to write Gum plugins, visit this page: [Plugins](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Code%20Reference/Plugins/README.md)
-
-## Code Reference
-
-* [Gum Class Overview](gum-class-overview.md)
-* [Gum.DataTypes.GumProjectSave](gumprojectsave.md)
-* [Gum.DataTypes.InstanceSave](instancesave.md)
-* [Gum.DataTypes.VariableSave](variablesave.md)
-* [Gum.ToolStates.SelectedState](selectedstate.md)
-* [Gum.Wireframe.GraphicalUiElement](graphicaluielement/)
-* [RenderingLibrary.IPositionedSizedObject](ipositionedsizedobject.md)
-* [WpfDataUi.DataUiGrid](datauigrid/)
-* [WpfDataUi.IDataUi](idataui.md)
+For information on how to write Gum plugins, visit this page: [Plugins](../../readme/plugins/)

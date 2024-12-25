@@ -6,13 +6,13 @@ The **Width Units** variable controls how a unit is horizontally sized, which ma
 
 ### Absolute
 
-The following shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/Gum/coloredrectangle/ColoredRectangle.html) with 50 **Absolute** Width:
+The following shows a child [ColoredRectangle](../coloredrectangle.md) with 50 **Absolute** Width:
 
 ![Rectangle with an absolute width of 50](<../../../.gitbook/assets/11_05 35 01.png>)
 
 ### Relative to Container
 
-The following image shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/Gum/coloredrectangle/ColoredRectangle.html) with -10 **RelativeToContainer** Width, so it sizes itself 10 pixels less wide than its parent.
+The following image shows a child ColoredRectangle with -10 **RelativeToContainer** Width, so it sizes itself 10 pixels less wide than its parent.
 
 ![Rectangle using a Relative to Container width value of -10](<../../../.gitbook/assets/11_05 36 16.png>)
 
@@ -24,7 +24,7 @@ Despite the name referring to a "Container", the size is relative to the parent 
 
 ### Percentage of Container
 
-The following shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/Gum/coloredrectangle/ColoredRectangle.html) with 100 **Percentage of Container** Width, which means it has 100% of the width of its parent. Note that 100 **Percentage** is the same as 0 **Relative to Container**:
+The following shows a child ColoredRectangle with 100 **Percentage of Container** Width, which means it has 100% of the width of its parent. Note that 100 **Percentage** is the same as 0 **Relative to Container**:
 
 ![Rectangle using 100% of its container](<../../../.gitbook/assets/02_10 09 01.png>)
 
@@ -46,7 +46,7 @@ Despite the name referring to a "Container", the total size available for ratios
 
 ### Relative to Children
 
-The following image shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/Gum/coloredrectangle/ColoredRectangle.html) with 50 **Relative to Children** Width, which means that it is sized 50 pixels wider than is necessary to contain its children. Since the rectangle has no children, this is the same as having 50 **Absolute** Width:
+The following image shows a child ColoredRectangle with 50 **Relative to Children** Width, which means that it is sized 50 pixels wider than is necessary to contain its children. Since the rectangle has no children, this is the same as having 50 **Absolute** Width:
 
 ![Rectangle with a width of 50 Relative to Children, but since it has no children it is 50 units wide](<../../../.gitbook/assets/11_05 46 44.png>)
 
@@ -84,7 +84,7 @@ Setting a Text instance's **Width Units** to **Relative to Children** results in
 
 **Percentage of Other Dimension** adjusts the object's effective width so it remains proportional to the Height value multiplied by the Width value (as a percentage). For example, if a Width value of 200 is entered, then the effective width is 200% (2x) of the height.
 
-The following image shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/Gum/coloredrectangle/ColoredRectangle.html) with a Width of 200 **Percentage of Other Dimension**. In this image, the **Height** value is 50 units, so the effective width is 100 units:
+The following image shows a child ColoredRectangle with a Width of 200 **Percentage of Other Dimension**. In this image, the **Height** value is 50 units, so the effective width is 100 units:
 
 ![Rectangle displaying a width 200% of its height](<../../../.gitbook/assets/11_05 55 15.png>)
 
@@ -92,7 +92,7 @@ The following image shows a child [ColoredRectangle](https://github.com/vchelaru
 
 The [Sprite](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/Sprite/README.md) type has an extra **With Unit** called **Percentage of Source File**, which sets the width of the Sprite according to the file that it is displaying. This is the default **Width Unit** for Sprites.
 
-The following image shows a child [Sprite](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/Sprite/README.md) with 200 **Percentage of Source File** Width, which means it draws two times as wide as its source image:
+The following image shows a child [Sprite](../sprite/) with 200 **Percentage of Source File** Width, which means it draws two times as wide as its source image:
 
 ![Sprite using 200 Percentage of File width](<../../../.gitbook/assets/11_05 58 09.png>)
 

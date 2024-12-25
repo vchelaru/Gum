@@ -16,7 +16,7 @@ Text instances which use an Absolute height of 0 size themselves to be the heigh
 
 ### Relative to Container
 
-The following shows a child [ColoredRectangle](../coloredrectangle.md) with -10 **Relative to Container** Height, which means is sized 10 pixels less tall than its parent.
+The following shows a child ColoredRectangle with -10 **Relative to Container** Height, which means is sized 10 pixels less tall than its parent.
 
 ![Rectangle using a Relative to Container height value of -10](<../../../.gitbook/assets/11_06 18 55.png>)
 
@@ -28,7 +28,7 @@ Despite the name referring to a "Container", the size is relative to the parent 
 
 ### Percentage of Container
 
-The following shows a child [ColoredRectangle](../coloredrectangle.md) with 100 **Percentage** Height, which means it has 100% of the height of its parent. Note that 100 **Percentage** is the same as 0 **Relative to Container**:
+The following shows a child ColoredRectangle with 100 **Percentage** Height, which means it has 100% of the height of its parent. Note that 100 **Percentage** is the same as 0 **Relative to Container**:
 
 ![Rectangle using a Percentage of Container value of 100](<../../../.gitbook/assets/11_06 24 44.png>)
 
@@ -137,14 +137,14 @@ For example, the following image contains multiple Text instances. Each has a si
 
 **Percentage of Other Dimension** adjusts the object's effective height so it remains proportional to the Width value multiplied by the Height value (as a percentage). For example, if a Height value of 200 is entered, then the effective height is 200% (2x) of the width.
 
-The following image shows a child [ColoredRectangle](../coloredrectangle.md) with a Height of 200 **Percentage of Other Dimension**. In this image, the **Width** value is 50 units, so the effective height is 100 units:
+The following image shows a child ColoredRectangle with a Height of 200 **Percentage of Other Dimension**. In this image, the **Width** value is 50 units, so the effective height is 100 units:
 
 <figure><img src="../../../.gitbook/assets/11_06 29 41.png" alt=""><figcaption><p>Rectangle using Percentage of Other Dimension height of 200</p></figcaption></figure>
 
 ### Percentage of Source File
 
-The [Sprite](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/Sprite/README.md) type has an extra **Height Unit** called **Percentage of Source File**, which sets the height of the Sprite according to the file that it is displaying. This is the default **Height Unit** for Sprites.
+The [Sprite](../sprite/) type has an extra **Height Unit** called **Percentage of Source File**, which sets the height of the Sprite according to the file that it is displaying. This is the default **Height Unit** for Sprites.
 
-The following image shows a child [Sprite](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/Sprite/README.md) with 200 **Percentage of Source File** Height, which means it draws two times as tall as its source image:
+The following image shows a child Sprite with 200 **Percentage of Source File** Height, which means it draws two times as tall as its source image:
 
 ![Sprite using Percentage of Source height of 200](<../../../.gitbook/assets/11_06 31 44.png>)

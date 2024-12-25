@@ -12,72 +12,72 @@ The Export delegate allows you to create a custom export for Gum elements. This 
 
 The following code will show a message box whenever an element is exported. Keep in mind this is only for demonstration purposes. By default Gum auto-saves every change made by the user, and showing a message box after every save can be very annoying for users of your plugin.
 
-```text
-        public override void StartUp()
-        {
-            this.Export += HandleElementExport;
-        }
+```csharp
+public override void StartUp()
+{
+    this.Export += HandleElementExport;
+}
 
-        void HandleElementExport(Gum.DataTypes.ElementSave element)
-        {
-            System.Windows.Forms.MessageBox.Show("Handling export of " + element);
-        }
+void HandleElementExport(Gum.DataTypes.ElementSave element)
+{
+    System.Windows.Forms.MessageBox.Show("Handling export of " + element);
+}
 ```
 
 ## Accessing properties
 
 The above example shows how to react to a component being exported, but it doesn't get at the heart of what an export plugin does.
 
-The first thing that an export plugin needs to do is to access properties on an element \(such as its position and size\) as well as the instances contained within the element. This information is available through the ElementSave class.
+The first thing that an export plugin needs to do is to access properties on an element (such as its position and size) as well as the instances contained within the element. This information is available through the ElementSave class.
 
-For more information on how to access properties and instances from the ElementSave, see the [Gum Class Overview](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Plugins/Gum%20Class%20Overview/README.md) page.
+For more information on how to access properties and instances from the ElementSave, see the [Gum Class Overview](../../gum-code/gum-code-reference/gum-class-overview.md) page.
 
 ## Example Export Code
 
 The following shows what a very simple exporter might look like:
 
-```text
-        void HandleElementExport(Gum.DataTypes.ElementSave element)
+```csharp
+void HandleElementExport(Gum.DataTypes.ElementSave element)
+{
+
+    StringBuilder stringBuilder = new StringBuilder();
+
+    foreach(var instance in element.Instances)
+    {
+        stringBuilder.AppendFormat("{0} {1} = new {0}();", 
+             instance.BaseType, instance.Name);   
+    }
+
+    stringBuilder.AppendLine();
+
+    // We'll just use the default state for this example:
+    foreach(var variable in element.DefaultState.Variables)
+    {
+        if(variable.Value != null && variable.SetsValue)
         {
+           // You may want to process the Value.  For example,
+           // if it's a float, the string representation of the 
+           // value might be "1.23", but you may want to convert that to
+           // "1.23f"
+           // Similarly strings may need to be wrapped in quotes, and values like
+           // coordinate types may need to be qualified as enumerations or
+           // translated into whatever system the given engine uses.
+           string rightSideOfEquals = variable.Value.ToString();
 
-            StringBuilder stringBuilder = new StringBuilder();
-
-            foreach(var instance in element.Instances)
-            {
-                stringBuilder.AppendFormat("{0} {1} = new {0}();", 
-                     instance.BaseType, instance.Name);   
-            }
-
-            stringBuilder.AppendLine();
-
-            // We'll just use the default state for this example:
-            foreach(var variable in element.DefaultState.Variables)
-            {
-                if(variable.Value != null && variable.SetsValue)
-                {
-                   // You may want to process the Value.  For example,
-                   // if it's a float, the string representation of the 
-                   // value might be "1.23", but you may want to convert that to
-                   // "1.23f"
-                   // Similarly strings may need to be wrapped in quotes, and values like
-                   // coordinate types may need to be qualified as enumerations or
-                   // translated into whatever system the given engine uses.
-                   string rightSideOfEquals = variable.Value.ToString();
-
-                   stringBuilder.AppendFormat("{0} = {1};", 
-                          variable.Name, rightSideOfEquals);
-                }
-            }
-
-            string textToSave = stringBuilder.ToString();
-
-            // Now the textToSave would get saved to disk wherever you want it exported
+           stringBuilder.AppendFormat("{0} = {1};", 
+                  variable.Name, rightSideOfEquals);
         }
+    }
+
+    string textToSave = stringBuilder.ToString();
+
+    // Now the textToSave would get saved to disk wherever you want it exported
+}
 ```
 
 This may produce output that looks like this:
 
-```text
+```csharp
 Sprite SpriteInstance1 = new Sprite();
 Sprite SpriteInstance2 = new Sprite();
 Text TextInstance1 = new Text();
@@ -87,4 +87,3 @@ SpriteInstance1.Y = 4;
 SpriteInstance2.Width = 10;
 Text.X = 3;
 ```
-

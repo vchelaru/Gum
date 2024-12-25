@@ -20,12 +20,12 @@ As implied by the name, the NineSlice object is composed of nine Sprites. First 
 
 Next, we'll add corner Sprite instances to our CustomNineSlice. We'll be using the alignment tab to position Sprites. The alignment tab provides a quick way to place objects, but the same can be achieved using the following variables individually:
 
-* [Width Units](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Examples/Width-Units/README.md)
-* [X Origin](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Examples/X-Origin/README.md)
-* [X Units](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Examples/X-Units/README.md)
-* [Height Units](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Examples/Height-Units/README.md)
-* [Y Origin](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Examples/Y-Origin/README.md)
-* [Y Units](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Examples/Y-Units/README.md)
+* [Width Units](../../gum-elements/general-properties/width-units.md)
+* [X Origin](../../gum-elements/general-properties/x-origin.md)
+* [X Units](../../gum-elements/general-properties/x-units.md)
+* [Height Units](../../gum-elements/general-properties/height-units.md)
+* [Y Origin](../../gum-elements/general-properties/y-origin.md)
+* [Y Units](../../gum-elements/general-properties/y-units.md)
 * Drag+drop a Sprite element onto the CustomNineSlice component
 * Click the Alignment tab
 * Anchor the newly-created Sprite to the top-left of its container ![](<../../../.gitbook/assets/AnchorTopLeft (1).png>)

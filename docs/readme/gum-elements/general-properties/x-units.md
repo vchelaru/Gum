@@ -4,24 +4,24 @@ The **X Units** variable controls how a unit is horizontally positioned relative
 
 ## PixelsFromLeft
 
-The following shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/ColoredRectangle/README.md) positioned 50 **PixelsFromLeft** relative to its parent:
+The following shows a child [ColoredRectangle](../coloredrectangle.md) positioned 50 **PixelsFromLeft** relative to its parent:
 
 ![](<../../../.gitbook/assets/PixelsFromLeftGum (1).png>)
 
 ## PixelsFromCenterX
 
-The following shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/ColoredRectangle/README.md) positioned 50 **PixelsFromCenterX** relative to its parent:
+The following shows a child ColoredRectangle positioned 50 **PixelsFromCenterX** relative to its parent:
 
 ![](<../../../.gitbook/assets/PixelsFromCenterXGum (1).png>)
 
 ## PixelsFromRight
 
-The following shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/ColoredRectangle/README.md) positioned 50 **PixelsFromRight** relative to its Parent:
+The following shows a child ColoredRectangle positioned 50 **PixelsFromRight** relative to its Parent:
 
 ![](<../../../.gitbook/assets/PixelsFromRightGum (1).png>)
 
 ## PercentageWidth
 
-The following shows a child [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/ColoredRectangle/README.md) positioned 50 **PercentageWidth** relative to its Parent. In other words, it will be positioned halfway between the left and right edges of the Parent:
+The following shows a child ColoredRectangle positioned 50 **PercentageWidth** relative to its Parent. In other words, it will be positioned halfway between the left and right edges of the Parent:
 
 ![](../../../.gitbook/assets/PercentageWidthGum.png)

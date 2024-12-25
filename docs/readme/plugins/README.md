@@ -54,26 +54,26 @@ Next you'll want to add a Plugin class. This is a class that inherits from Plugi
 5. Modify your plugin so it's public and inherits from PluginBase:
 6. Add the following implementation into your plugin class:
 
-```
-        public override string FriendlyName
-        {
-            get { return "My Plugin Name"; }
-        }
+```csharp
+public override string FriendlyName
+{
+    get { return "My Plugin Name"; }
+}
 
-        public override Version Version
-        {
-            get { return new Version(0, 0, 0, 0); }
-        }
+public override Version Version
+{
+    get { return new Version(0, 0, 0, 0); }
+}
 
-        public override void StartUp()
-        {
-            // Add startup logic here:
-        }
+public override void StartUp()
+{
+    // Add startup logic here:
+}
 
-        public override bool ShutDown(Gum.Plugins.PluginShutDownReason shutDownReason)
-        {
-            return true;
-        }
+public override bool ShutDown(Gum.Plugins.PluginShutDownReason shutDownReason)
+{
+    return true;
+}
 ```
 
 ## Getting your plugin into Gum
@@ -88,9 +88,9 @@ Now that you have a simple plugin, you need to do two things to test this plugin
 6. Add the following using statement to your plugin class: `using System.ComponentModel.Composition;`
 7. Modify your class definition so it looks like this (we're making it public and also adding the Export attribute:
 
-```
-  [Export(typeof(PluginBase))](Export(typeof(PluginBase)))
-  public class MyPlugin : PluginBase
+```csharp
+[Export(typeof(PluginBase))](Export(typeof(PluginBase)))
+public class MyPlugin : PluginBase
 ```
 
 Now you can right-click on your project and select Build and it will generate a .dll for your project. This .dll file needs to be in the Plugins folder under the Gum binary. That is, from the location of your .sln file, you can go to . Once there, you will need to create a folder for your plugin (like MyPlugin) and place your .dll there.
@@ -112,10 +112,3 @@ This may happen if you are targeting different versions of the .NET framework. A
 2. Select "Properties"
 3. Select the "Application" tab
 4. Verify that the "Target Framework:" is set to .NET Framework 4.5 (or whatever version Gum is currently on)
-
-## Subsections
-
-* [Setting Up Post Build Events](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Plugins/Setting%20Up%20Post%20Build%20Events/README.md)
-* [PluginBase.AddAndRemoveVariablesForType](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Plugins/PluginBase.AddAndRemoveVariablesForType)
-* [PluginBase.AddMenuItem](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Plugins/PluginBase.AddMenuItem)
-* [PluginBase.Export](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Plugins/PluginBase.Export)

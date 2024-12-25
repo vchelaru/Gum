@@ -6,19 +6,19 @@ The **Y Origin** variable controls the point which an object is positioned by. B
 
 ## Top
 
-The following image shows a [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/ColoredRectangle/README.md) with its **Y Origin** set to **Top**:
+The following image shows a [ColoredRectangle](../coloredrectangle.md) with its **Y Origin** set to **Top**:
 
 ![ColoredRectangle with Top Y Origin](<../../../.gitbook/assets/25_19 38 16.png>)
 
 ## Center
 
-The following image shows a [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/ColoredRectangle/README.md) with its **Y Origin** set to **Center**:
+The following image shows a ColoredRectangle with its **Y Origin** set to **Center**:
 
 ![ColoredRectangle with Center Y Origin](<../../../.gitbook/assets/25_19 39 18.png>)
 
 ## Bottom
 
-The following image shows a [ColoredRectangle](https://github.com/vchelaru/Gum/tree/8c293a405185cca0e819b810220de684b436daf9/docs/Gum%20Elements/General%20Properties/ColoredRectangle/README.md) with its **Y Origin** set to **Bottom**:
+The following image shows a ColoredRectangle with its **Y Origin** set to **Bottom**:
 
 ![ColoredRectangle with Bottom Y Origin](<../../../.gitbook/assets/25_19 39 56.png>)
 
