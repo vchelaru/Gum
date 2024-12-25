@@ -1035,6 +1035,55 @@ namespace Gum.Managers
             }
         }
 
+        public VariableListSave GetRootVariableList(string name, ElementSave element)
+        {
+            var effectiveName = name;
+
+            VariableListSave toReturn = null;
+
+            if (effectiveName.Contains('.'))
+            {
+                var beforeDot = effectiveName.Substring(0, effectiveName.IndexOf('.'));
+                var instance = element.GetInstance(beforeDot);
+
+                if (instance != null)
+                {
+                    return GetRootVariableList(effectiveName, instance);
+                }
+                // this has a dot, but no instance, so it's a bad variable...
+            }
+            else
+            {
+                var baseElement = GetElementSave(element.BaseType);
+
+                if (baseElement != null)
+                {
+                    toReturn = GetRootVariableList(effectiveName, baseElement);
+                }
+                else
+                {
+                    toReturn = element.DefaultState.VariableLists.FirstOrDefault(item => item.Name == effectiveName);
+                }
+            }
+
+            return toReturn;
+        }
+
+        public VariableListSave GetRootVariableList(string name, InstanceSave instance)
+        {
+            // This could be referencing an invalid type
+            var instanceElement = GetElementSave(instance.BaseType);
+            var afterDot = name.Substring(name.IndexOf('.') + 1);
+            if (instanceElement == null)
+            {
+                return null;
+            }
+            else
+            {
+                return GetRootVariableList(afterDot, instanceElement);
+            }
+        }
+
         public VariableSave GetRootVariable(string name, ElementSave element)
         {
             var exposedVariable = element.DefaultState.Variables.FirstOrDefault(item => item.ExposedAsName == name);

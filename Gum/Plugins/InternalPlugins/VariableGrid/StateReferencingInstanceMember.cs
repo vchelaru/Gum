@@ -29,6 +29,8 @@ namespace Gum.PropertyGridHelpers
     {
         #region Fields
 
+        ObjectFinder _objectFinder;
+        private readonly HotkeyManager _hotkeyManager;
         StateSave mStateSave;
         string mVariableName;
         public InstanceSave InstanceSave { get; private set; }
@@ -237,7 +239,8 @@ namespace Gum.PropertyGridHelpers
         {
             _editVariablesService = Gum.Services.Builder.App.Services.GetRequiredService<IEditVariableService>();
             _exposeVariableService = Gum.Services.Builder.App.Services.GetRequiredService<IExposeVariableService>();
-
+            _objectFinder = ObjectFinder.Self;
+            _hotkeyManager = HotkeyManager.Self;
 
             StateSaveCategory = stateSaveCategory;
             InstanceSave = instanceSave;
@@ -293,11 +296,11 @@ namespace Gum.PropertyGridHelpers
             StandardElementSave standardElement = null;
             if (instanceSave != null)
             {
-                standardElement = ObjectFinder.Self.GetRootStandardElementSave(instanceSave);
+                standardElement = _objectFinder.GetRootStandardElementSave(instanceSave);
             }
             else if (stateListCategoryContainer is ElementSave elementSave)
             {
-                standardElement = ObjectFinder.Self.GetRootStandardElementSave(elementSave);
+                standardElement = _objectFinder.GetRootStandardElementSave(elementSave);
             }
 
 
@@ -359,55 +362,59 @@ namespace Gum.PropertyGridHelpers
                 {
                     asTextBox.KeyDown += (s, e) =>
                     {
-                        if (e.Key == System.Windows.Input.Key.F12)
+                        if(_hotkeyManager.GoToDefinition.IsPressed(e))
                         {
-                            var text = asTextBox.GetCurrentLineText();
-
-                            if (text?.Contains("=") == true)
-                            {
-                                var rightSideOfEquals = text.Substring(text.IndexOf("=") + 1).Trim();
-
-                                if (rightSideOfEquals.Contains("."))
-                                {
-                                    var beforeDot = rightSideOfEquals.Substring(0, rightSideOfEquals.IndexOf("."));
-
-                                    if (beforeDot.Contains("/"))
-                                    {
-                                        beforeDot = beforeDot.Substring(beforeDot.LastIndexOf("/") + 1);
-                                    }
-
-                                    var element = ObjectFinder.Self.GetElementSave(beforeDot);
-
-                                    if (element != null)
-                                    {
-                                        var afterDot = rightSideOfEquals.Substring(rightSideOfEquals.IndexOf(".") + 1);
-
-                                        var instanceName = afterDot;
-
-                                        if (afterDot.Contains("."))
-                                        {
-                                            instanceName = afterDot.Substring(0, afterDot.IndexOf("."));
-                                        }
-
-                                        InstanceSave instance = null;
-                                        if (!string.IsNullOrEmpty(instanceName))
-                                        {
-                                            instance = element.GetInstance(instanceName);
-                                        }
-                                        if (instance != null)
-                                        {
-                                            SelectedState.Self.SelectedInstance = instance;
-                                        }
-                                        else
-                                        {
-                                            SelectedState.Self.SelectedElement = element;
-                                        }
-                                    }
-                                }
-                            }
-
+                            HandleGotoDefinition(asTextBox);
                         }
                     };
+                }
+            }
+        }
+
+        private void HandleGotoDefinition(StringListTextBoxDisplay asTextBox)
+        {
+            var text = asTextBox.GetCurrentLineText();
+
+            if (text?.Contains("=") == true)
+            {
+                var rightSideOfEquals = text.Substring(text.IndexOf("=") + 1).Trim();
+
+                if (rightSideOfEquals.Contains("."))
+                {
+                    var beforeDot = rightSideOfEquals.Substring(0, rightSideOfEquals.IndexOf("."));
+
+                    if (beforeDot.Contains("/"))
+                    {
+                        beforeDot = beforeDot.Substring(beforeDot.LastIndexOf("/") + 1);
+                    }
+
+                    var element = _objectFinder.GetElementSave(beforeDot);
+
+                    if (element != null)
+                    {
+                        var afterDot = rightSideOfEquals.Substring(rightSideOfEquals.IndexOf(".") + 1);
+
+                        var instanceName = afterDot;
+
+                        if (afterDot.Contains("."))
+                        {
+                            instanceName = afterDot.Substring(0, afterDot.IndexOf("."));
+                        }
+
+                        InstanceSave instance = null;
+                        if (!string.IsNullOrEmpty(instanceName))
+                        {
+                            instance = element.GetInstance(instanceName);
+                        }
+                        if (instance != null)
+                        {
+                            SelectedState.Self.SelectedInstance = instance;
+                        }
+                        else
+                        {
+                            SelectedState.Self.SelectedElement = element;
+                        }
+                    }
                 }
             }
         }
@@ -484,7 +491,14 @@ namespace Gum.PropertyGridHelpers
             {
                 var rootName = Gum.DataTypes.Variables.VariableSave.GetRootName(mVariableName);
 
-                canExpose = rootName != "Name" && rootName != "Base Type"
+                var isVariableList = false;
+                if(instance.ParentContainer != null)
+                {
+                    var rootVariableList = _objectFinder.GetRootVariableList(mVariableName, instance.ParentContainer);
+                    isVariableList = rootVariableList != null;
+                }
+
+                canExpose = !isVariableList && rootName != "Name" && rootName != "Base Type"
                     && instance != null;
 
             }
@@ -680,7 +694,7 @@ namespace Gum.PropertyGridHelpers
 
                 if (variableDefinedInThisOrBase == null)
                 {
-                    var allBase = ObjectFinder.Self.GetBaseElements(SelectedState.Self.SelectedElement);
+                    var allBase = _objectFinder.GetBaseElements(SelectedState.Self.SelectedElement);
                     foreach (var baseElement in allBase)
                     {
                         variableDefinedInThisOrBase = baseElement.DefaultState.GetVariableSave(Name);
@@ -975,7 +989,7 @@ namespace Gum.PropertyGridHelpers
                 if (InstanceSave.ParentContainer == null)
                 {
                     // this is an instance in a behavior
-                    var elementBaseType = ObjectFinder.Self.GetElementSave(InstanceSave);
+                    var elementBaseType = _objectFinder.GetElementSave(InstanceSave);
 
                     variableSave = elementBaseType?.GetVariableFromThisOrBase(RootVariableName);
                 }
