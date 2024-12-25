@@ -71,7 +71,7 @@ namespace Gum.Logic.FileWatch
                 }
             }
 
-            var filePathAsString = rootmostDirectory.Standardized;
+            var filePathAsString = rootmostDirectory.StandardizedCaseSensitive;
             // Gum standard is to have a trailing slash, 
             // but FileSystemWatcher expects no trailing slash:
             fileSystemWatcher.Path = filePathAsString.Substring(0, filePathAsString.Length - 1);
