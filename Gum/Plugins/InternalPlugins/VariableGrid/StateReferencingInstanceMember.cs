@@ -492,7 +492,7 @@ namespace Gum.PropertyGridHelpers
                 var rootName = Gum.DataTypes.Variables.VariableSave.GetRootName(mVariableName);
 
                 var isVariableList = false;
-                if(instance.ParentContainer != null)
+                if(instance?.ParentContainer != null)
                 {
                     var rootVariableList = _objectFinder.GetRootVariableList(mVariableName, instance.ParentContainer);
                     isVariableList = rootVariableList != null;
