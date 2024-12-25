@@ -1,7 +1,9 @@
 ﻿using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math.Geometry;
+using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Color = System.Drawing.Color;
 using Matrix = System.Numerics.Matrix4x4;
 
@@ -57,7 +59,7 @@ namespace Gum.Wireframe
 
         public GraphicalOutline(Layer uiLayer)
         {
-            SelectionBorder = 0;
+            SelectionBorder = 2;
             mUiLayer = uiLayer;
         }
 
@@ -143,13 +145,51 @@ namespace Gum.Wireframe
             float adjustedSelectionBorder = SelectionBorder / Renderer.Self.Camera.Zoom;
 
             rectangle.Visible = true;
-            rectangle.X = pso.GetAbsoluteX() - adjustedSelectionBorder;
-            rectangle.Y = pso.GetAbsoluteY() - adjustedSelectionBorder;
 
-            rectangle.Width = pso.Width + adjustedSelectionBorder * 2;
-            rectangle.Height = pso.Height + adjustedSelectionBorder * 2;
+            float left, top, width, height;
+            GetDimensions(pso, out left, out top, out width, out height);
+
+            rectangle.X = left - adjustedSelectionBorder;
+            rectangle.Y = top - adjustedSelectionBorder;
+
+            rectangle.Width = width + adjustedSelectionBorder * 2;
+            rectangle.Height = height + adjustedSelectionBorder * 2;
 
             rectangle.Rotation = pso.GetAbsoluteRotation();
+        }
+
+        private static void GetDimensions(IRenderableIpso pso, out float left, out float top, out float width, out float height)
+        {
+            left = pso.GetAbsoluteX();
+            top = pso.GetAbsoluteY();
+
+
+            float right = left;
+            float bottom = top;
+
+            if(pso is GraphicalUiElement gue && gue.RenderableComponent is LinePolygon linePolygon)
+            {
+                var absolutePosition = new Vector2(left, top);
+
+                for(int i = 0; i < linePolygon.PointCount; i++)
+                {
+                    var absolutePoint = linePolygon.PointAt(i) + absolutePosition;
+
+                    left = Math.Min(left, absolutePoint.X);
+                    top = Math.Min(top, absolutePoint.Y);
+
+                    right = Math.Max(right, absolutePoint.X);
+                    bottom = Math.Max(bottom, absolutePoint.Y);
+                }
+            }
+            else
+            {
+                right = pso.GetAbsoluteRight();
+                bottom = pso.GetAbsoluteBottom();
+            }
+
+            width = right - left;
+            height = bottom - top;
         }
 
         LineRectangle GetOrMakeRectangleAtIndex(int i)

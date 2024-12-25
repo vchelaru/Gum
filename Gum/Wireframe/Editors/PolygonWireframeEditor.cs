@@ -24,7 +24,6 @@ namespace Gum.Wireframe.Editors
 
         OriginDisplay originDisplay;
 
-
         const float RadiusAtNoZoom = 5;
 
         int? grabbedIndex = null;
