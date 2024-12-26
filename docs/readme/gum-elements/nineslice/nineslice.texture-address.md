@@ -4,6 +4,10 @@
 
 The **Texture Address** variable can be used to define the area that the NineSlice displays. By default the **Texture Address** is set to **Entire Texture** which means the NineSlice will display the entire source file (split up among the nine pieces).
 
+{% hint style="info" %}
+NineSlice only supports **Entire Texture** and **Custom** for the Texture Address value. It does not support **Dimension Based,** which is only available on the [Sprite](../sprite/) element.
+{% endhint %}
+
 ### Entire Texture
 
 The following screenshot shows an entire texture being used for a NineSlice.
