@@ -69,7 +69,7 @@ As mentioned above, if a component uses a behavior, then the component is requir
 
 Required states and categories cannot be removed or renamed. Required states cannot be moved to different categories.
 
-<figure><img src="../../../.gitbook/assets/image (2).png" alt=""><figcaption><p>Renaming and deleting states and categories required by behaviors is not allowed</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (2) (1).png" alt=""><figcaption><p>Renaming and deleting states and categories required by behaviors is not allowed</p></figcaption></figure>
 
 If a new category or state is added to a behavior, all components which use the behavior also have the new category or state added.
 
