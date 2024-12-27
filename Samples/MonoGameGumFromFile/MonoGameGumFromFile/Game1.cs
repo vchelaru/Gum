@@ -240,6 +240,10 @@ namespace MonoGameGumFromFile
             {
                 ShowScreen("ResizeScreen");
             }
+            else if(state.IsKeyDown(Keys.D0))
+            {
+                ShowScreen("MvvmScreen");
+            }
         }
 
         private void InitializeInteractiveGueScreen()

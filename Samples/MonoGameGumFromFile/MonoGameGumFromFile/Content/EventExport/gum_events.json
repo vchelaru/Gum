@@ -1,27 +1,1011 @@
 {
   "UserEvents": {
+    "justi": [
+      {
+        "NewName": null,
+        "OldName": "EditorScreenGum.Controls/ButtonIcon FillButton in EditorScreenGum",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2024-12-13T23:40:20.3632617Z"
+      },
+      {
+        "NewName": "SquareFilled",
+        "OldName": "Speech1",
+        "ElementType": "Components",
+        "EventType": 3,
+        "TimestampUtc": "2024-12-13T23:43:18.3804282Z"
+      },
+      {
+        "NewName": "SquareUnfilled",
+        "OldName": "SquareFilled1",
+        "ElementType": "Components",
+        "EventType": 3,
+        "TimestampUtc": "2024-12-13T23:43:44.1523493Z"
+      }
+    ],
+    "jusjohns": [
+      {
+        "NewName": null,
+        "OldName": "Custom/LayerEditDialog (Container).Elements/Label LayerPackLabel in Custom/LayerEditDialog (Container)",
+        "ElementType": "Components",
+        "EventType": 6,
+        "TimestampUtc": "2024-12-17T16:16:57.2328871Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "Custom/LayerEditDialog (Container).Controls/ComboBox LayerPackComboBox in Custom/LayerEditDialog (Container)",
+        "ElementType": "Components",
+        "EventType": 6,
+        "TimestampUtc": "2024-12-17T16:16:59.2524764Z"
+      },
+      {
+        "NewName": "Custom/LayerEditDialog (Container).LayerTileSetLabel",
+        "OldName": "Custom/LayerEditDialog (Container).LayerSetLabel",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-17T16:17:09.1287013Z"
+      },
+      {
+        "NewName": "Custom/LayerEditDialog (Container).LayerTileSetComboBox",
+        "OldName": "Custom/LayerEditDialog (Container).LayerSetComboBox",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-17T16:17:13.271446Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).MapNameLabel1",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-17T16:18:17.6705888Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "Custom/EditorPanel (Container).Elements/Label MapNameLabel1 in Custom/EditorPanel (Container)",
+        "ElementType": "Components",
+        "EventType": 6,
+        "TimestampUtc": "2024-12-17T16:18:27.3149274Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).LayerList",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-17T16:20:37.7622741Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).LayerActionsContainer",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-17T16:20:41.0688981Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "Custom/EditorPanel (Container).Container LayerActionsContainer in Custom/EditorPanel (Container)",
+        "ElementType": "Components",
+        "EventType": 6,
+        "TimestampUtc": "2024-12-17T16:21:03.5945689Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).AddButton",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-17T16:21:05.1736138Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).VisibleButton",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-17T16:21:05.1822038Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).MoveUpButton",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-17T16:21:05.2035577Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).MoveDownButton",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-17T16:21:05.214694Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).EditButton",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-17T16:21:05.2259406Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).TrashButton",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-17T16:21:05.2403739Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).LayerActionsContainer",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-17T16:21:05.2557284Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "Custom/EditorPanel (Container).Custom/LayersPanel LayerPanel in Custom/EditorPanel (Container)",
+        "ElementType": "Components",
+        "EventType": 6,
+        "TimestampUtc": "2024-12-17T16:21:13.800555Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).LayerList1",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-17T16:21:19.5638174Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).ItemsList",
+        "OldName": "Custom/EditorPanel (Container).LayerList1",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-17T16:21:25.6169049Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "Custom/LayersPanel",
+        "ElementType": "Components",
+        "EventType": 1,
+        "TimestampUtc": "2024-12-17T16:21:53.4706146Z"
+      },
+      {
+        "NewName": "Controls/ListBoxItem1",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 0,
+        "TimestampUtc": "2024-12-17T16:22:09.6208544Z"
+      },
+      {
+        "NewName": "Custom\\ListBoxItem1",
+        "OldName": "Controls/ListBoxItem1",
+        "ElementType": "Components",
+        "EventType": 2,
+        "TimestampUtc": "2024-12-17T16:22:16.7858632Z"
+      },
+      {
+        "NewName": "Custom\\ItemListBoxItem",
+        "OldName": "Custom\\ListBoxItem1",
+        "ElementType": "Components",
+        "EventType": 2,
+        "TimestampUtc": "2024-12-17T16:23:45.8500503Z"
+      },
+      {
+        "NewName": "EditorScreenGum.EmptyButton1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-17T17:11:49.2495622Z"
+      },
+      {
+        "NewName": "EditorScreenGum.ItemButton",
+        "OldName": "EditorScreenGum.EmptyButton1",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-17T17:11:53.7525432Z"
+      },
+      {
+        "NewName": "EditorScreenGum.ItemButton1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-17T17:18:09.1308927Z"
+      },
+      {
+        "NewName": "EditorScreenGum.SelectButton",
+        "OldName": "EditorScreenGum.ItemButton1",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-17T17:18:14.7524514Z"
+      },
+      {
+        "NewName": "EditorScreenGum.IconInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-17T17:52:31.440592Z"
+      },
+      {
+        "NewName": "EditorScreenGum.IconInstance1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-17T17:53:17.380689Z"
+      },
+      {
+        "NewName": "Custom/LayerEditDialog (Container).ButtonConfirmInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-17T22:13:40.885196Z"
+      },
+      {
+        "NewName": "Custom/LayerEditDialog (Container).ApplyButton",
+        "OldName": "Custom/LayerEditDialog (Container).ButtonConfirmInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-17T22:13:52.3891033Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).ContainerInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-18T21:35:44.7569871Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).TabButtons",
+        "OldName": "Custom/EditorPanel (Container).ContainerInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-18T21:35:54.3640354Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).ButtonTabInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-18T21:36:22.5165384Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).MapTab",
+        "OldName": "Custom/EditorPanel (Container).ButtonTabInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-18T21:38:25.3443275Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).MapTab1",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-18T21:38:30.5451092Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).ItemsTab",
+        "OldName": "Custom/EditorPanel (Container).MapTab1",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-18T21:38:35.5999943Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).ItemsTab1",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-18T21:38:37.7281194Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).LayersTab",
+        "OldName": "Custom/EditorPanel (Container).ItemsTab1",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-18T21:38:41.5762586Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).DividerInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-18T21:39:41.6326551Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).ContainerInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-18T21:40:00.2609279Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).MapPane",
+        "OldName": "Custom/EditorPanel (Container).ContainerInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-18T21:40:04.9753236Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).ContainerInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-18T21:41:35.8342953Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).ItemsPane",
+        "OldName": "Custom/EditorPanel (Container).ContainerInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-18T21:41:40.5848044Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).ContainerInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-18T21:43:01.2936683Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).LayersPane",
+        "OldName": "Custom/EditorPanel (Container).ContainerInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-18T21:43:05.1946487Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).TextBoxInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-18T21:46:01.4734823Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).ToolButtonContainer",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-18T22:00:22.0150977Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "Custom/EditorPanel (Container).Container ToolButtonContainer in Custom/EditorPanel (Container)",
+        "ElementType": "Components",
+        "EventType": 6,
+        "TimestampUtc": "2024-12-18T22:00:29.7915574Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).ToolButtonContainer",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-18T22:00:32.8036366Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).ToolsBackground",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-18T22:00:32.8270315Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).SolidButton",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-18T22:00:32.8456568Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).EmptyButton",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-18T22:00:32.8656251Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).DividerInstance1",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-18T22:00:32.8859645Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).SelectButton",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-18T22:00:32.9062548Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).IconInstance1",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-18T22:00:32.9277168Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).ItemButton",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-18T22:00:32.9490313Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).PencilButton",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-18T22:00:32.9729014Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).RectButton",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-18T22:00:32.997046Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).DividerInstance2",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-18T22:00:33.0217409Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).GridButton",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-18T22:00:33.046075Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).ButtonStack",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-18T22:00:33.0729917Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).IconInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-18T22:00:33.1004665Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "Custom/EditorPanel (Container).Container ToolButtonContainer in Custom/EditorPanel (Container)",
+        "ElementType": "Components",
+        "EventType": 6,
+        "TimestampUtc": "2024-12-18T22:00:48.0889259Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "Custom/EditorPanel (Container).Container ButtonStack in Custom/EditorPanel (Container)",
+        "ElementType": "Components",
+        "EventType": 6,
+        "TimestampUtc": "2024-12-18T22:01:03.0565158Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "Custom/EditorPanel (Container).Elements/Icon IconInstance in Custom/EditorPanel (Container)",
+        "ElementType": "Components",
+        "EventType": 6,
+        "TimestampUtc": "2024-12-18T22:01:04.136547Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "Custom/EditorPanel (Container).Controls/ButtonConfirm SolidButton in Custom/EditorPanel (Container)",
+        "ElementType": "Components",
+        "EventType": 6,
+        "TimestampUtc": "2024-12-18T22:01:04.1390324Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "Custom/EditorPanel (Container).Elements/Icon IconInstance1 in Custom/EditorPanel (Container)",
+        "ElementType": "Components",
+        "EventType": 6,
+        "TimestampUtc": "2024-12-18T22:01:04.1491684Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "Custom/EditorPanel (Container).Controls/ButtonDeny EmptyButton in Custom/EditorPanel (Container)",
+        "ElementType": "Components",
+        "EventType": 6,
+        "TimestampUtc": "2024-12-18T22:01:04.159076Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "Custom/EditorPanel (Container).Elements/Divider DividerInstance1 in Custom/EditorPanel (Container)",
+        "ElementType": "Components",
+        "EventType": 6,
+        "TimestampUtc": "2024-12-18T22:01:04.1682538Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "Custom/EditorPanel (Container).Controls/ButtonIcon SelectButton in Custom/EditorPanel (Container)",
+        "ElementType": "Components",
+        "EventType": 6,
+        "TimestampUtc": "2024-12-18T22:01:04.178355Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "Custom/EditorPanel (Container).Controls/ButtonIcon ItemButton in Custom/EditorPanel (Container)",
+        "ElementType": "Components",
+        "EventType": 6,
+        "TimestampUtc": "2024-12-18T22:01:04.1900253Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "Custom/EditorPanel (Container).Controls/ButtonIcon PencilButton in Custom/EditorPanel (Container)",
+        "ElementType": "Components",
+        "EventType": 6,
+        "TimestampUtc": "2024-12-18T22:01:04.1992079Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "Custom/EditorPanel (Container).Controls/ButtonIcon RectButton in Custom/EditorPanel (Container)",
+        "ElementType": "Components",
+        "EventType": 6,
+        "TimestampUtc": "2024-12-18T22:01:04.2080198Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "Custom/EditorPanel (Container).Elements/Divider DividerInstance2 in Custom/EditorPanel (Container)",
+        "ElementType": "Components",
+        "EventType": 6,
+        "TimestampUtc": "2024-12-18T22:01:04.2163473Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "Custom/EditorPanel (Container).Controls/ButtonIcon GridButton in Custom/EditorPanel (Container)",
+        "ElementType": "Components",
+        "EventType": 6,
+        "TimestampUtc": "2024-12-18T22:01:04.2263495Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "Custom/EditorPanel (Container).Container PanelContainer in Custom/EditorPanel (Container)",
+        "ElementType": "Components",
+        "EventType": 6,
+        "TimestampUtc": "2024-12-18T22:03:21.8275014Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).TabButtonContainer",
+        "OldName": "Custom/EditorPanel (Container).TabButtons",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-18T22:03:40.6757588Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).TabButtonContainer",
+        "OldName": "Custom/EditorPanel (Container).TabButtons",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-18T22:03:40.6777751Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).TabButtonContainer",
+        "OldName": "Custom/EditorPanel (Container).TabButtons",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-18T22:03:40.6860228Z"
+      },
+      {
+        "NewName": "Custom/EditorPanel (Container).TabButtonContainer",
+        "OldName": "Custom/EditorPanel (Container).TabButtons",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-18T22:03:40.6916693Z"
+      },
+      {
+        "NewName": "IShowable/ConfirmDeny (Container).Background",
+        "OldName": "IShowable/ConfirmDeny (Container).NineSliceInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-21T20:41:50.3268056Z"
+      },
+      {
+        "NewName": "IShowable/ConfirmDeny (Container).Background1",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-21T20:42:19.7056337Z"
+      },
+      {
+        "NewName": "IShowable/ConfirmDeny (Container).Border",
+        "OldName": "IShowable/ConfirmDeny (Container).Background1",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-21T20:42:22.7425743Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "IShowable/ConfirmDeny (Container).NineSlice Background in IShowable/ConfirmDeny (Container)",
+        "ElementType": "Components",
+        "EventType": 6,
+        "TimestampUtc": "2024-12-21T20:42:58.6094576Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "IShowable/ConfirmDeny (Container).NineSlice Border in IShowable/ConfirmDeny (Container)",
+        "ElementType": "Components",
+        "EventType": 6,
+        "TimestampUtc": "2024-12-21T20:43:02.4965821Z"
+      },
+      {
+        "NewName": "IShowable/ConfirmDeny (Container).DialogBackgroundInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-21T20:43:04.8435611Z"
+      },
+      {
+        "NewName": "IShowable/ConfirmDeny (Container).ContainerInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-21T20:43:50.7824376Z"
+      },
+      {
+        "NewName": "IShowable/ConfirmDeny (Container).MarginContainer",
+        "OldName": "IShowable/ConfirmDeny (Container).ContainerInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-21T20:44:56.1551807Z"
+      },
+      {
+        "NewName": "IShowable/ConfirmDeny (Container).TextInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-21T20:45:43.6291392Z"
+      },
+      {
+        "NewName": "IShowable/ConfirmDeny (Container).ContainerInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-21T20:45:53.8013979Z"
+      },
+      {
+        "NewName": "IShowable/ConfirmDeny (Container).ButtonsContainer",
+        "OldName": "IShowable/ConfirmDeny (Container).ContainerInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-21T20:47:32.7901267Z"
+      },
+      {
+        "NewName": "IShowable/ConfirmDeny (Container).DialogText",
+        "OldName": "IShowable/ConfirmDeny (Container).TextInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-21T20:49:29.9198297Z"
+      },
+      {
+        "NewName": "IShowable/ConfirmDeny (Container).ButtonConfirmInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-21T20:49:35.270292Z"
+      },
+      {
+        "NewName": "IShowable/ConfirmDeny (Container).ButtonDenyInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-21T20:49:39.0330942Z"
+      },
+      {
+        "NewName": "IShowable/ConfirmDeny (Container).ConfirmButton",
+        "OldName": "IShowable/ConfirmDeny (Container).ButtonConfirmInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-21T20:49:51.0248375Z"
+      },
+      {
+        "NewName": "IShowable/ConfirmDeny (Container).DenyButton",
+        "OldName": "IShowable/ConfirmDeny (Container).ButtonDenyInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-21T20:49:56.5434147Z"
+      },
+      {
+        "NewName": "MapScreenBaseGum.ConfirmDenyInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-21T20:54:38.2962115Z"
+      },
+      {
+        "NewName": "MapScreenBaseGum.ToastInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-21T20:54:47.9935562Z"
+      },
+      {
+        "NewName": "MapScreenBaseGum.ConfirmDenyDialog",
+        "OldName": "MapScreenBaseGum.ConfirmDenyInstance",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-21T20:55:15.2346168Z"
+      },
+      {
+        "NewName": "Elements\\ConfirmDeny",
+        "OldName": "IShowable/ConfirmDeny",
+        "ElementType": "Components",
+        "EventType": 2,
+        "TimestampUtc": "2024-12-21T20:58:55.3020025Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "Custom/LayerListBoxItem (Container).Elements/Icon TypeIcon in Custom/LayerListBoxItem (Container)",
+        "ElementType": "Components",
+        "EventType": 6,
+        "TimestampUtc": "2024-12-21T22:33:57.50344Z"
+      }
+    ],
     "vchel": [],
     "Owner": [
       {
-        "NewName": "StartScreen.SpriteInstance3",
+        "NewName": "ConfirmDeny",
+        "OldName": "Elements/ConfirmDeny",
+        "ElementType": "Components",
+        "EventType": 2,
+        "TimestampUtc": "2024-12-21T22:55:18.6083898Z"
+      },
+      {
+        "NewName": "Custom/ConfirmDeny",
+        "OldName": "ConfirmDeny",
+        "ElementType": "Components",
+        "EventType": 2,
+        "TimestampUtc": "2024-12-21T22:55:24.5938061Z"
+      },
+      {
+        "NewName": "MyComponent (Container).PolygonInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-22T00:14:13.622033Z"
+      },
+      {
+        "NewName": "TestScreen.PolygonInstance",
         "OldName": null,
         "ElementType": "Screens",
         "EventType": 5,
-        "TimestampUtc": "2024-10-30T23:55:05.2911155Z"
+        "TimestampUtc": "2024-12-22T10:33:39.8120295Z"
       },
       {
-        "NewName": "StartScreen.TextInstance10",
+        "NewName": "TestScreen.CircleInstance",
         "OldName": null,
         "ElementType": "Screens",
         "EventType": 5,
-        "TimestampUtc": "2024-10-30T23:56:09.5683539Z"
+        "TimestampUtc": "2024-12-22T11:32:01.442975Z"
       },
       {
-        "NewName": "StartScreen.AnimatedSprite",
-        "OldName": "StartScreen.SpriteInstance3",
+        "NewName": "TestScreen",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 0,
+        "TimestampUtc": "2024-12-22T12:49:56.4426153Z"
+      },
+      {
+        "NewName": "TestScreen.SpriteInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-22T12:50:03.6997926Z"
+      },
+      {
+        "NewName": "TestScreen.SpriteInstance1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-22T14:16:30.7893571Z"
+      },
+      {
+        "NewName": "TestScreen.Frb Logo",
+        "OldName": "TestScreen.SpriteInstance1",
         "ElementType": "Screens",
         "EventType": 7,
-        "TimestampUtc": "2024-10-31T00:00:09.1652143Z"
+        "TimestampUtc": "2024-12-22T14:16:36.3487347Z"
+      },
+      {
+        "NewName": "TestScreen.FrbLogo",
+        "OldName": "TestScreen.Frb Logo",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-22T14:26:19.3821992Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "TestScreen.Sprite FrbLogo in TestScreen",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2024-12-22T14:26:35.9489547Z"
+      },
+      {
+        "NewName": "TestScreen.SpriteInstance1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-22T14:26:41.8899139Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "TestScreen.Sprite SpriteInstance1 in TestScreen",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2024-12-22T14:38:59.365463Z"
+      },
+      {
+        "NewName": "TestScreen.SpriteInstance1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-22T14:39:35.2017454Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "TestScreen.Sprite SpriteInstance in TestScreen",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2024-12-22T14:48:02.4044194Z"
+      },
+      {
+        "NewName": "TestScreen.SpriteInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-22T14:48:09.1340079Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "TestScreen.Sprite SpriteInstance1 in TestScreen",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2024-12-22T14:48:12.3493997Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "TestScreen.Sprite SpriteInstance in TestScreen",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2024-12-22T16:09:17.0753843Z"
+      },
+      {
+        "NewName": "Screen1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 0,
+        "TimestampUtc": "2024-12-22T16:15:19.5589974Z"
+      },
+      {
+        "NewName": "Screen1.SpriteInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-22T16:15:29.0667531Z"
+      },
+      {
+        "NewName": "Screen1.SpriteInstance1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-22T16:29:24.2055448Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "Screen1.Sprite SpriteInstance in Screen1",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2024-12-22T17:43:31.5235388Z"
+      },
+      {
+        "NewName": "Screen1.SpriteInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-22T22:04:07.0253473Z"
+      },
+      {
+        "NewName": "Screen1.TextInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-22T22:07:00.4613301Z"
+      },
+      {
+        "NewName": "ManiScreen",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 0,
+        "TimestampUtc": "2024-12-22T22:38:38.1751894Z"
+      },
+      {
+        "NewName": "MainScreen",
+        "OldName": "ManiScreen",
+        "ElementType": "Screens",
+        "EventType": 2,
+        "TimestampUtc": "2024-12-22T22:38:47.9241976Z"
+      },
+      {
+        "NewName": "MainScreen.SpriteInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-22T22:38:51.9092267Z"
+      },
+      {
+        "NewName": "MainScreen.TextInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-22T22:39:07.170072Z"
+      },
+      {
+        "NewName": "UITestScreenGum.HeartInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-23T11:26:31.7298466Z"
+      },
+      {
+        "NewName": "UITestScreenGum.HeartInstance1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-23T11:26:34.7347325Z"
+      },
+      {
+        "NewName": "CalloutIcon (Container).NineSliceInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-27T13:18:09.1733522Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "CalloutIcon (Container).NineSlice NineSliceInstance in CalloutIcon (Container)",
+        "ElementType": "Components",
+        "EventType": 6,
+        "TimestampUtc": "2024-12-27T13:25:56.1298359Z"
+      },
+      {
+        "NewName": "OptionsScreenGum.KeyboardLayoutTextInstance1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-27T21:42:22.5660548Z"
+      },
+      {
+        "NewName": "OptionsScreenGum.SkipIntroTextInstance",
+        "OldName": "OptionsScreenGum.KeyboardLayoutTextInstance1",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-27T21:42:45.5888803Z"
+      },
+      {
+        "NewName": "OptionsScreenGum.KeyboardLayoutValue1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-27T21:43:46.8478906Z"
+      },
+      {
+        "NewName": "OptionsScreenGum.SkipIntroValue",
+        "OldName": "OptionsScreenGum.KeyboardLayoutValue1",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-27T21:43:58.7719689Z"
+      },
+      {
+        "NewName": "MvvmScreen",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 0,
+        "TimestampUtc": "2024-12-27T23:28:54.7308509Z"
+      },
+      {
+        "NewName": "MvvmScreen.ColoredRectangleInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-27T23:29:00.2549291Z"
       }
     ]
   }
