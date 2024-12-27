@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace MonoGameGum.GueDeriving
 {
-    public class RectangleRuntime : GraphicalUiElement
+    public class RectangleRuntime : BindableGue
     {
         RenderingLibrary.Math.Geometry.LineRectangle containedLineRectangle;
         RenderingLibrary.Math.Geometry.LineRectangle ContainedLineRectangle

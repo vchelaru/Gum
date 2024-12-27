@@ -14,6 +14,7 @@ using MonoGameGum.Renderables;
 using MonoGameGumFromFile.ComponentRuntimes;
 using MonoGameGumFromFile.Managers;
 using MonoGameGumFromFile.ScreenRuntimes;
+using MonoGameGumFromFile.Screens;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
@@ -346,6 +347,10 @@ namespace MonoGameGumFromFile
             else if(currentGumScreenSave?.Name == "OffsetLayerScreen")
             {
                 DoOffsetLayerScreenLogic(mouseState);
+            }
+            else if(currentScreenGue is MvvmScreenRuntime asMvvmScreen)
+            {
+                asMvvmScreen.CustomActivity();
             }
 
             if(mouseState.LeftButton == ButtonState.Pressed && lastMouseState.LeftButton == ButtonState.Released)

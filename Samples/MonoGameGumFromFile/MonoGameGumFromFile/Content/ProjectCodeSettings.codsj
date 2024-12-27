@@ -1,11 +1,11 @@
 {
-  "CommonUsingStatements": "using Gum.Converters;\r\nusing Gum.DataTypes;\r\nusing Gum.Managers;\r\nusing Gum.Wireframe;\r\n\r\nusing RenderingLibrary.Graphics;\r\n\r\nusing SkiaGum;\r\nusing SkiaGum.GueDeriving;\r\nusing SkiaGum.Renderables;\r\n",
+  "CommonUsingStatements": "using Gum.Converters;\nusing Gum.DataTypes;\nusing Gum.Managers;\nusing Gum.Wireframe;\n\nusing RenderingLibrary.Graphics;\n\nusing MonoGameGum.GueDeriving;\n",
   "CodeProjectRoot": "..\\",
   "RootNamespace": "MonoGameGumFromFile",
   "IsCodeGenPluginEnabled": true,
   "IsShowCodegenPreviewChecked": true,
   "InheritanceLocation": 0,
-  "ObjectInstantiationType": 0,
+  "ObjectInstantiationType": 1,
   "DefaultScreenBase": "Gum.Wireframe.InteractiveGue",
   "OutputLibrary": 4,
   "AdjustPixelValuesForDensity": false,

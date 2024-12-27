@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace MonoGameGum.GueDeriving
 {
-    public class ColoredRectangleRuntime : GraphicalUiElement
+    public class ColoredRectangleRuntime : BindableGue
     {
         RenderingLibrary.Graphics.SolidRectangle mContainedColoredRectangle;
         RenderingLibrary.Graphics.SolidRectangle ContainedColoredRectangle

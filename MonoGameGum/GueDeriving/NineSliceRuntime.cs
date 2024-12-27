@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace MonoGameGum.GueDeriving
 {
-    public class NineSliceRuntime : GraphicalUiElement
+    public class NineSliceRuntime : BindableGue
     {
         RenderingLibrary.Graphics.NineSlice mContainedNineSlice;
         RenderingLibrary.Graphics.NineSlice ContainedNineSlice
