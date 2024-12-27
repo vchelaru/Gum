@@ -59,6 +59,7 @@
       * [Points](readme/gum-elements/polygon/points.md)
     * [Skia Standard Elements](readme/gum-elements/skia-standard-elements/README.md)
       * [Arc](readme/gum-elements/skia-standard-elements/arc/README.md)
+        * [Start Angle](readme/gum-elements/skia-standard-elements/arc/start-angle.md)
         * [Thickness](readme/gum-elements/skia-standard-elements/arc/thickness.md)
       * [Canvas](readme/gum-elements/skia-standard-elements/canvas.md)
       * [ColoredCircle](readme/gum-elements/skia-standard-elements/coloredcircle.md)
