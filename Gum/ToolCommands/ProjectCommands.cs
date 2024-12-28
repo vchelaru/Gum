@@ -102,23 +102,6 @@ namespace Gum.ToolCommands
 
         #endregion
 
-        #region Behaviors
-
-        internal void RemoveBehavior(BehaviorSave behavior)
-        {
-            GumProjectSave gps = ProjectManager.Self.GumProjectSave;
-            string name = behavior.Name;
-            List<BehaviorReference> references = gps.BehaviorReferences;
-
-            references.RemoveAll(item => item.Name == behavior.Name);
-
-            gps.Behaviors.Remove(behavior);
-        }
-
-        #endregion
-
-
-
         private static void RemoveElementReferencesFromList(string name, List<ElementReference> references)
         {
             for (int i = 0; i < references.Count; i++)

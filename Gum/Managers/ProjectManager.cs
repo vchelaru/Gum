@@ -29,7 +29,7 @@ namespace Gum
 
         static ProjectManager mSelf;
 
-        bool mHaveErrorsOccurred = false;
+        bool mHaveErrorsOccurredLoadingProject = false;
 
         #endregion
 
@@ -61,11 +61,11 @@ namespace Gum
             private set;
         }
 
-        public bool HaveErrorsOccurred
+        public bool HaveErrorsOccurredLoadingProject
         {
             get
             {
-                return mHaveErrorsOccurred;
+                return mHaveErrorsOccurredLoadingProject;
             }
         }
         #endregion
@@ -164,7 +164,7 @@ namespace Gum
                 // But if it does exist, we want to be careful and not allow overwriting because they could be wiping out good data
                 if (fileName.Exists())
                 {
-                    mHaveErrorsOccurred = true;
+                    mHaveErrorsOccurredLoadingProject = true;
                 }
 
                 // We used to not load the project, but maybe we still should, just disable autosaving
@@ -173,7 +173,7 @@ namespace Gum
             }
             else
             {
-                mHaveErrorsOccurred = false;
+                mHaveErrorsOccurredLoadingProject = false;
             }
 
             ObjectFinder.Self.GumProjectSave = mGumProjectSave;
@@ -595,7 +595,7 @@ namespace Gum
         {
             bool succeeded = false;
 
-            if (mHaveErrorsOccurred)
+            if (mHaveErrorsOccurredLoadingProject)
             {
                 MessageBox.Show("Can't save project because errors occurred when the project was last loaded");
             }

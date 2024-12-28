@@ -5,6 +5,9 @@ using Gum.DataTypes;
 using Gum.Managers;
 using Gum.ToolCommands;
 using Gum.Logic;
+using Gum.DataTypes.Behaviors;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Gum.Wireframe
 {
@@ -219,7 +222,29 @@ namespace Gum.Wireframe
         public void RemoveSelectedBehavior()
         {
             var behavior = SelectedState.Self.SelectedBehavior;
-            ProjectCommands.Self.RemoveBehavior(behavior);
+            string behaviorName = behavior.Name;
+
+            GumProjectSave gps = ProjectManager.Self.GumProjectSave;
+            List<BehaviorReference> references = gps.BehaviorReferences;
+
+            references.RemoveAll(item => item.Name == behavior.Name);
+
+            gps.Behaviors.Remove(behavior);
+
+            List<ElementSave> elementsReferencingBehavior = new List<ElementSave>();
+
+            foreach(var element in ObjectFinder.Self.GumProjectSave.AllElements)
+            {
+                var matchingBehavior = element.Behaviors.FirstOrDefault(item =>
+                    item.BehaviorName == behaviorName);
+
+                if(matchingBehavior != null)
+                {
+                    element.Behaviors.Remove(matchingBehavior);
+                    elementsReferencingBehavior.Add(element);
+                }
+            }
+
 
             GumCommands.Self.GuiCommands.RefreshElementTreeView();
             GumCommands.Self.GuiCommands.RefreshStateTreeView();
@@ -228,6 +253,11 @@ namespace Gum.Wireframe
             //Wireframe.WireframeObjectManager.Self.RefreshAll(true);
 
             GumCommands.Self.FileCommands.TryAutoSaveProject();
+
+            foreach(var element in elementsReferencingBehavior)
+            {
+                GumCommands.Self.FileCommands.TryAutoSaveElement(element);
+            }
         }
     }
 }

@@ -86,9 +86,16 @@ namespace Gum.Commands
             WireframeObjectManager.Self.RefreshAll(true);
         }
 
+        /// <summary>
+        /// Attempts to save the project (gumx) and optionally all contained elements.
+        /// Does not save if auto save is turned off, or if there were errors loading the
+        /// project.
+        /// </summary>
+        /// <param name="forceSaveContainedElements">Whether to also save all elements.</param>
+        /// <returns>Whether a save occurred.</returns>
         public bool TryAutoSaveProject(bool forceSaveContainedElements = false)
         {
-            if (ProjectManager.Self.GeneralSettingsFile.AutoSave && !ProjectManager.Self.HaveErrorsOccurred)
+            if (ProjectManager.Self.GeneralSettingsFile.AutoSave && !ProjectManager.Self.HaveErrorsOccurredLoadingProject)
             {
                 ForceSaveProject(forceSaveContainedElements);
                 return true;
@@ -98,7 +105,7 @@ namespace Gum.Commands
 
         internal void ForceSaveProject(bool forceSaveContainedElements = false)
         {
-            if (!ProjectManager.Self.HaveErrorsOccurred)
+            if (!ProjectManager.Self.HaveErrorsOccurredLoadingProject)
             {
                 ProjectManager.Self.SaveProject(forceSaveContainedElements);
                 OutputManager.Self.AddOutput("Saved Gum project to " + ProjectState.Self.GumProjectSave.FullFileName);
