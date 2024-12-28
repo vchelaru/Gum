@@ -19,7 +19,7 @@ namespace Gum.Extensions
         public static void ShiftWindowOntoScreen(this Window window)
         {
             var heightToUse = window.Height;
-            if(double.IsNaN(heightToUse))
+            if (double.IsNaN(heightToUse))
             {
                 heightToUse = 50; // just assume it has *some* height...
             }
@@ -171,5 +171,26 @@ namespace Gum.Extensions
 
             return dockedRects;
         }
+
+
     }
+}
+
+namespace Gum.Mvvm
+{ 
+    public static class BoolExtensions
+    {
+        public static System.Windows.Visibility ToVisibility(this bool value)
+        {
+            if (value)
+            {
+                return System.Windows.Visibility.Visible;
+            }
+            else
+            {
+                return System.Windows.Visibility.Collapsed;
+            }
+        }
+    }
+
 }

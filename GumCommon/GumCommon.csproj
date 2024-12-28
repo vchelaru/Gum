@@ -22,10 +22,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Compile Include="..\GumRuntime\BindableGue.cs" Link="BindableGue.cs" />
 		<Compile Include="..\GumRuntime\ElementSaveExtensions.GumRuntime.cs" Link="Wireframe\ElementSaveExtensions.GumRuntime.cs" />
 		<Compile Include="..\GumRuntime\InstanceSaveExtensionMethods.GumRuntime.cs" Link="Wireframe\InstanceSaveExtensionMethods.GumRuntime.cs" />
 		<Compile Include="..\GumRuntime\InteractiveGue.cs" Link="InteractiveGue.cs" />
 		<Compile Include="..\Gum\Managers\ObjectFinder.cs" Link="Managers\ObjectFinder.cs" />
+		<Compile Include="..\Gum\Mvvm\ViewModel.cs" Link="Mvvm\ViewModel.cs" />
 		<Compile Include="..\RenderingLibrary\Content\IContentLoader.cs" Link="Content\IContentLoader.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\IAnimatable.cs" Link="RenderingLibrary\IAnimatable.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\InvisibleRenderable.cs" Link="RenderingLibrary\InvisibleRenderable.cs" />
@@ -43,6 +45,7 @@
 	<ItemGroup>
 		<Folder Include="Content\" />
 		<Folder Include="Managers\" />
+		<Folder Include="Mvvm\" />
 		<Folder Include="RenderingLibrary\" />
 	</ItemGroup>
 

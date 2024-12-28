@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace MonoGameGum.GueDeriving
 {
-    public class SpriteRuntime : global::Gum.Wireframe.GraphicalUiElement
+    public class SpriteRuntime : global::Gum.Wireframe.BindableGue
     {
         RenderingLibrary.Graphics.Sprite mContainedSprite;
         RenderingLibrary.Graphics.Sprite ContainedSprite

@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace MonoGameGum.GueDeriving
 {
-    public class TextRuntime : GraphicalUiElement
+    public class TextRuntime : BindableGue
     {
         Text mContainedText;
         Text ContainedText

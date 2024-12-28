@@ -4271,7 +4271,7 @@ namespace Gum.Wireframe
             }
         }
 
-        public void RemoveFromManagers()
+        public virtual void RemoveFromManagers()
         {
             foreach (var child in this.mWhatThisContains)
             {

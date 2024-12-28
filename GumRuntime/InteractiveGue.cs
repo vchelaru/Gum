@@ -26,6 +26,8 @@ using Matrix = System.Numerics.Matrix4x4;
 using GumRuntime;
 using System.Collections;
 using System.Reflection.Emit;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace Gum.Wireframe
 {
@@ -40,17 +42,13 @@ namespace Gum.Wireframe
         public IList AddedItems { get; private set; } = new List<Object>();
     }
 
-    public class BindingContextChangedEventArgs : EventArgs
-    {
-        public object OldBindingContext { get; set; }
-    }
 
     /// <summary>
     /// The base object for all Gum runtime objects. It contains functionality for
     /// setting variables, states, and performing layout. The GraphicalUiElement can
     /// wrap an underlying rendering object.
     /// </summary>
-    public partial class InteractiveGue : GraphicalUiElement
+    public partial class InteractiveGue : BindableGue
     {
         static List<Action> nextPushActions = new List<Action>();
         static List<Action> nextClickActions = new List<Action>();
@@ -596,6 +594,7 @@ namespace Gum.Wireframe
                 }
             }
         }
+
     }
 
     public interface IInputReceiver

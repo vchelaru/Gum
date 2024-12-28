@@ -99,7 +99,7 @@ public class RenameLogic
             string oldName = category.Name;
             var changes = GetVariableChangesForCategoryRename(elementSave, category, oldName);
 
-            if(changes.Count > 0)
+            if (changes.Count > 0)
             {
                 tiw.Message += "\n\nThe following variables will be affected:";
                 foreach (var change in changes)
@@ -130,17 +130,17 @@ public class RenameLogic
 
             HashSet<ElementSave> elementsWithChangedVariables = new HashSet<ElementSave>();
 
-            foreach(var change in variableChanges)
+            foreach (var change in variableChanges)
             {
                 var containerElement = change.Container as ElementSave;
-                if(containerElement != null)
+                if (containerElement != null)
                 {
                     elementsWithChangedVariables.Add(change.Container as ElementSave);
                 }
                 change.Variable.Type = newName;
                 if (change.Variable.GetRootName() == $"{oldName}State")
                 {
-                    if(string.IsNullOrEmpty(change.Variable.SourceObject))
+                    if (string.IsNullOrEmpty(change.Variable.SourceObject))
                     {
                         change.Variable.Name = $"{newName}State";
                     }
@@ -159,7 +159,7 @@ public class RenameLogic
 
             GumCommands.Self.FileCommands.TryAutoSaveCurrentObject();
 
-            if(owner is ElementSave ownerAsElementSave)
+            if (owner is ElementSave ownerAsElementSave)
             {
                 StandardElementsManagerGumTool.Self.FixCustomTypeConverters(ownerAsElementSave);
             }
@@ -181,7 +181,7 @@ public class RenameLogic
 
         var ownerAsElement = owner as ElementSave;
 
-        List<ElementSave>? inheritingElements = new List<ElementSave> ();
+        List<ElementSave>? inheritingElements = new List<ElementSave>();
         if (ownerAsElement != null)
         {
             inheritingElements.Add(ownerAsElement);
@@ -225,7 +225,7 @@ public class RenameLogic
                         {
                             // only do it if the instance is in the inheritance chain
                             var instance = element.GetInstance(variable.SourceObject);
-                            if(instance != null)
+                            if (instance != null)
                             {
                                 var instanceElement = ObjectFinder.Self.GetElementSave(instance);
                                 if (inheritingElements?.Contains(instanceElement) == true)
@@ -274,7 +274,7 @@ public class RenameLogic
 
             if (shouldContinue)
             {
-                if(elementSave != null)
+                if (elementSave != null)
                 {
                     RenameAllReferencesTo(elementSave, instance, oldName);
                 }
@@ -429,74 +429,78 @@ public class RenameLogic
         }
         if (instance != null)
         {
-            string newName = SelectedState.Self.SelectedInstance.Name;
+            string newName = instance.Name;
 
-            foreach (StateSave stateSave in SelectedState.Self.SelectedElement.AllStates)
+            if (SelectedState.Self.SelectedElement != null)
             {
-                stateSave.ReactToInstanceNameChange(instance, oldName, newName);
-            }
-
-            foreach (var eventSave in SelectedState.Self.SelectedElement.Events)
-            {
-                if (eventSave.GetSourceObject() == oldName)
+                foreach (StateSave stateSave in SelectedState.Self.SelectedElement.AllStates)
                 {
-                    eventSave.Name = instance.Name + "." + eventSave.GetRootName();
+                    stateSave.ReactToInstanceNameChange(instance, oldName, newName);
                 }
-            }
 
-            var renamedDefaultChildContainer = false;
-            foreach (var state in SelectedState.Self.SelectedElement.AllStates)
-            {
-                var variable = state.Variables.FirstOrDefault(item => item.Name == nameof(ComponentSave.DefaultChildContainer));
-
-                if (variable?.Value as string != null)
+                foreach (var eventSave in SelectedState.Self.SelectedElement.Events)
                 {
-                    var value = variable.Value as string;
-                    if (value == oldName)
+                    if (eventSave.GetSourceObject() == oldName)
                     {
-                        variable.Value = newName;
-                        renamedDefaultChildContainer = true;
+                        eventSave.Name = instance.Name + "." + eventSave.GetRootName();
                     }
                 }
-            }
 
-            if (renamedDefaultChildContainer)
-            {
-                var elementsToConsider = ObjectFinder.Self.GetElementsReferencing(elementSave);
-
-                foreach (var elementToCheckParent in elementsToConsider)
+                var renamedDefaultChildContainer = false;
+                foreach (var state in SelectedState.Self.SelectedElement.AllStates)
                 {
-                    var shouldSaveElement = false;
+                    var variable = state.Variables.FirstOrDefault(item => item.Name == nameof(ComponentSave.DefaultChildContainer));
 
-                    foreach (var state in elementToCheckParent.AllStates)
+                    if (variable?.Value as string != null)
                     {
-                        foreach (var variable in state.Variables)
+                        var value = variable.Value as string;
+                        if (value == oldName)
                         {
-                            if (variable.GetRootName() == "Parent" && (variable.Value as string)?.Contains(".") == true)
+                            variable.Value = newName;
+                            renamedDefaultChildContainer = true;
+                        }
+                    }
+                }
+
+                if (renamedDefaultChildContainer)
+                {
+                    var elementsToConsider = ObjectFinder.Self.GetElementsReferencing(elementSave);
+
+                    foreach (var elementToCheckParent in elementsToConsider)
+                    {
+                        var shouldSaveElement = false;
+
+                        foreach (var state in elementToCheckParent.AllStates)
+                        {
+                            foreach (var variable in state.Variables)
                             {
-                                var value = variable.Value as string;
-                                var valueBeforeDot = value.Substring(0, value.IndexOf("."));
-                                var valueAfterDot = value.Substring(value.IndexOf(".") + 1);
-                                if (valueAfterDot == oldName)
+                                if (variable.GetRootName() == "Parent" && (variable.Value as string)?.Contains(".") == true)
                                 {
-                                    // let's be safe, see if the instance is of the type elementSave
-                                    var parentInstance = elementToCheckParent.GetInstance(valueBeforeDot);
-                                    var parentInstanceElement = ObjectFinder.Self.GetElementSave(parentInstance);
-                                    if (parentInstanceElement == elementSave)
+                                    var value = variable.Value as string;
+                                    var valueBeforeDot = value.Substring(0, value.IndexOf("."));
+                                    var valueAfterDot = value.Substring(value.IndexOf(".") + 1);
+                                    if (valueAfterDot == oldName)
                                     {
-                                        variable.Value = parentInstance.Name + "." + newName;
-                                        shouldSaveElement = true;
+                                        // let's be safe, see if the instance is of the type elementSave
+                                        var parentInstance = elementToCheckParent.GetInstance(valueBeforeDot);
+                                        var parentInstanceElement = ObjectFinder.Self.GetElementSave(parentInstance);
+                                        if (parentInstanceElement == elementSave)
+                                        {
+                                            variable.Value = parentInstance.Name + "." + newName;
+                                            shouldSaveElement = true;
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
-                    if (shouldSaveElement)
-                    {
-                        GumCommands.Self.FileCommands.TryAutoSaveElement(elementToCheckParent);
-                    }
+                        if (shouldSaveElement)
+                        {
+                            GumCommands.Self.FileCommands.TryAutoSaveElement(elementToCheckParent);
+                        }
 
+                    }
                 }
+
             }
         }
     }
@@ -584,7 +588,7 @@ public class RenameLogic
         // Inheritance
         // Instances using this
 
-        List<ElementSave>? inheritingElements = new List<ElementSave> ();
+        List<ElementSave>? inheritingElements = new List<ElementSave>();
         if (ownerAsElement != null)
         {
             inheritingElements.AddRange(ObjectFinder.Self.GetElementsInheritingFrom(ownerAsElement));

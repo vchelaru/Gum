@@ -1,6 +1,7 @@
 ﻿using Gum.DataTypes;
 using Gum.Wireframe;
 using GumFormsSample.Screens;
+using GumRuntime;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -66,10 +67,12 @@ public class GumFormsSampleGame : Game
 
     private void InitializeFromFileDemoScreen(GumProjectSave gumProject)
     {
-        var screen = new FromFileDemoScreen();
-        GraphicalUiElement root = null;
-        screen.Initialize(gumProject, ref root);
-        Roots.Add(root);
+        var screenSave = gumProject.Screens.Find(item => item.Name == "DemoScreenGum");
+
+        var screen = screenSave.ToGraphicalUiElement(
+            SystemManagers.Default, addToManagers: true) as DemoScreenGumRuntime;
+        screen.Initialize();
+        Roots.Add(screen);
     }
 
     private void InitializeFormsCustomizationScreen()

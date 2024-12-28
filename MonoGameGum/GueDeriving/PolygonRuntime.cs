@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace MonoGameGum.GueDeriving
 {
-    public class PolygonRuntime : GraphicalUiElement
+    public class PolygonRuntime : BindableGue
     {
         RenderingLibrary.Math.Geometry.LinePolygon containedPolygon;
         RenderingLibrary.Math.Geometry.LinePolygon ContainedPolygon

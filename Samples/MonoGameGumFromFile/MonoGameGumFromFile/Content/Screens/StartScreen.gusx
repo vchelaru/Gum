@@ -4,6 +4,55 @@
   <State>
     <Name>Default</Name>
     <Variable>
+      <Type>bool</Type>
+      <Name>AnimatedSprite.Animate</Name>
+      <Value xsi:type="xsd:boolean">true</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>AnimatedSprite.CurrentChainName</Name>
+      <Value xsi:type="xsd:string">IdleRight</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>AnimatedSprite.Height</Name>
+      <Value xsi:type="xsd:float">300</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <IsFile>true</IsFile>
+      <Type>string</Type>
+      <Name>AnimatedSprite.SourceFile</Name>
+      <Value xsi:type="xsd:string">CharacterAnimations.achx</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>Gum.Managers.TextureAddress</Type>
+      <Name>AnimatedSprite.Texture Address</Name>
+      <Value xsi:type="xsd:int">1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>AnimatedSprite.Width</Name>
+      <Value xsi:type="xsd:float">300</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>AnimatedSprite.X</Name>
+      <Value xsi:type="xsd:float">229</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>AnimatedSprite.Y</Name>
+      <Value xsi:type="xsd:float">483</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>float</Type>
       <Name>CircleInstance.Height</Name>
       <Value xsi:type="xsd:float">104</Value>
@@ -444,55 +493,6 @@
       <Type>float</Type>
       <Name>SpriteInstance2.Y</Name>
       <Value xsi:type="xsd:float">462</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>bool</Type>
-      <Name>AnimatedSprite.Animate</Name>
-      <Value xsi:type="xsd:boolean">true</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>AnimatedSprite.CurrentChainName</Name>
-      <Value xsi:type="xsd:string">IdleRight</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>AnimatedSprite.Height</Name>
-      <Value xsi:type="xsd:float">300</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <IsFile>true</IsFile>
-      <Type>string</Type>
-      <Name>AnimatedSprite.SourceFile</Name>
-      <Value xsi:type="xsd:string">CharacterAnimations.achx</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>Gum.Managers.TextureAddress</Type>
-      <Name>AnimatedSprite.Texture Address</Name>
-      <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>AnimatedSprite.Width</Name>
-      <Value xsi:type="xsd:float">300</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>AnimatedSprite.X</Name>
-      <Value xsi:type="xsd:float">229</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>AnimatedSprite.Y</Name>
-      <Value xsi:type="xsd:float">483</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
