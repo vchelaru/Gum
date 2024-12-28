@@ -16,18 +16,26 @@ using ToolsUtilities;
 
 namespace GumFormsSample.Screens;
 
-public class FromFileDemoScreen : BindableGue
+public class DemoScreenGumRuntime : BindableGue
 {
     [ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("DemoScreenGum", typeof(FromFileDemoScreen));
+        GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("DemoScreenGum", typeof(DemoScreenGumRuntime));
     }
-
-    GraphicalUiElement _root;
-    public void Initialize(GumProjectSave gumProject)
+    
+    public void Initialize()
     {
+        var viewModel = new GumFormsSample.ViewModels.DemoScreenViewModel();
+        this.BindingContext = viewModel;
 
+        this.GetFrameworkElementByName<Button>("BindingButton").SetBinding(
+            nameof(Button.IsEnabled),
+            nameof(viewModel.IsButtonEnabled));
+
+        this.GetFrameworkElementByName<CheckBox>("BindingCheckbox").SetBinding(
+            nameof(CheckBox.IsChecked),
+            nameof(viewModel.IsButtonEnabled));
 
         PopulateListBox();
 

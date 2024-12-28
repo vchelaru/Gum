@@ -514,11 +514,16 @@ public class BindableGue : GraphicalUiElement
             for (int i = 0; i < WhatThisContains.Count; i++)
             {
                 var gue = WhatThisContains[i] as BindableGue;
-                if (gue != null && gue.BindingContextBinding == vmPropertyName && gue.BindingContextBindingPropertyOwner == EffectiveBindingContext)
+                if (gue != null )
                 {
-                    gue.UpdateToVmProperty(vmPropertyName);
+                    if( gue.BindingContextBinding == vmPropertyName && 
+                        gue.BindingContextBindingPropertyOwner == EffectiveBindingContext)
+                    {
+
+                        gue.UpdateToVmProperty(vmPropertyName);
+                    }
+                    gue.TryPushBindingContextChangeToChildren(vmPropertyName);
                 }
-                gue.TryPushBindingContextChangeToChildren(vmPropertyName);
             }
         }
     }
