@@ -139,7 +139,8 @@ public partial class ElementTreeViewManager
     void AddFolderClick(object sender, EventArgs e)
     {
         TextInputWindow tiw = new TextInputWindow();
-        tiw.Message = "Enter new folder name";
+        tiw.Message = "Enter new folder name:";
+        tiw.Title = "Add folder";
 
         DialogResult result = tiw.ShowDialog();
 
@@ -536,6 +537,7 @@ public partial class ElementTreeViewManager
         {
             TextInputWindow tiw = new TextInputWindow();
             tiw.Message = "Enter new Screen name:";
+            tiw.Title = "Add Screen";
 
             if (tiw.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
@@ -660,6 +662,7 @@ public partial class ElementTreeViewManager
     {
         var tiw = new TextInputWindow();
         tiw.Message = "Enter new object name:";
+        tiw.Title = "New Instance";
 
         var result = tiw.ShowDialog() == System.Windows.Forms.DialogResult.OK;
         name = result ? tiw.Result : null;

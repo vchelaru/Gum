@@ -6,7 +6,7 @@
              xmlns:local="clr-namespace:Gum.Gui.Windows"
              mc:Ignorable="d" 
              Height="Auto"  MinHeight="60" Width="350" SizeToContent="Height"
-        KeyDown="HandleKeyDown">
+        KeyDown="HandleKeyDown" Title="Confirm Delete">
     <Grid Height="Auto" Margin="3">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"></RowDefinition>

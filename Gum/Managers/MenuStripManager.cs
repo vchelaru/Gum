@@ -170,6 +170,7 @@ namespace Gum.Managers
             {
                 CommonFormsAndControls.TextInputWindow tiw = new CommonFormsAndControls.TextInputWindow();
                 tiw.Message = "Enter entire or partial file name:";
+                tiw.Title = "Find file references";
                 var dialogResult = tiw.ShowDialog();
 
                 if (dialogResult == System.Windows.Forms.DialogResult.OK)
@@ -231,7 +232,7 @@ namespace Gum.Managers
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
             this.aboutToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
             this.aboutToolStripMenuItem.Text = "About...";
-            this.aboutToolStripMenuItem.Click += (not, used) => MessageBox.Show("Gum version " + Application.ProductVersion); 
+            this.aboutToolStripMenuItem.Click += (not, used) => MessageBox.Show("Gum version " + Application.ProductVersion, "About"); 
 
 
             this.viewToolStripMenuItem = new ToolStripMenuItem();

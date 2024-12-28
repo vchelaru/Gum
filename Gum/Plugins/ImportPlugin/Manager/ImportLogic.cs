@@ -98,6 +98,7 @@ public static class ImportLogic
     private static ImportFileViewModel ShowImportScreenView()
     {
         var view = new ImportFileView();
+		view.Title = "Import Screen";
 
         var viewModel = new ImportFileViewModel();
 
@@ -230,6 +231,7 @@ public static class ImportLogic
     private static ImportFileViewModel ShowImportComponentView()
     {
         var view = new ImportFileView();
+		view.Title = "Import Component";
 
         var viewModel = new ImportFileViewModel();
 
@@ -358,6 +360,7 @@ public static class ImportLogic
     private static ImportFileViewModel ShowImportBehaviorView()
     {
         var view = new ImportFileView();
+		view.Title = "Import Behavior";
 
         var viewModel = new ImportFileViewModel();
 

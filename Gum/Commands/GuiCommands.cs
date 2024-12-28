@@ -338,6 +338,7 @@ namespace Gum.Commands
             {
                 var tiw = new CustomizableTextInputWindow();
                 tiw.Message = "Enter new category name:";
+				tiw.Title = "New Category";
 
                 var canAdd = true;
 
@@ -392,6 +393,7 @@ namespace Gum.Commands
             {
                 var tiw = new CustomizableTextInputWindow();
                 tiw.Message = "Enter new state name:";
+				tiw.Title = "Add State";
 
                 if (tiw.ShowDialog() == true)
                 {
@@ -425,7 +427,8 @@ namespace Gum.Commands
         public void ShowRenameFolderWindow(TreeNode node)
         {
             var tiw = new TextInputWindow();
-            tiw.Message = "Enter new folder name";
+            tiw.Message = "Enter new folder name:";
+            tiw.Title = "Rename folder";
             tiw.Result = node.Text;
             var dialogResult = tiw.ShowDialog();
 
