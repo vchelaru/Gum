@@ -12,7 +12,7 @@
             <RowDefinition Height="Auto"></RowDefinition>
         </Grid.RowDefinitions>
         <StackPanel>
-            <TextBlock TextWrapping="Wrap" >The current state is part of a category so variables canot be removed from this state.</TextBlock>
+            <TextBlock TextWrapping="Wrap" >The current state is part of a category so variables cannot be removed from this state.</TextBlock>
             <TextBlock TextWrapping="Wrap" Padding="0,10,1,1">For more information, see this page:</TextBlock>
             <TextBlock>           
             <Hyperlink NavigateUri="http://vchelaru.github.io/Gum/states/Categories.html" RequestNavigate="Hyperlink_RequestNavigate">
