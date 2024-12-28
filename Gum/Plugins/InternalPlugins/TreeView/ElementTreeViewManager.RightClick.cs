@@ -662,7 +662,7 @@ public partial class ElementTreeViewManager
     {
         var tiw = new TextInputWindow();
         tiw.Message = "Enter new object name:";
-        tiw.Title = "New Instance";
+        tiw.Title = "New object";
 
         var result = tiw.ShowDialog() == System.Windows.Forms.DialogResult.OK;
         name = result ? tiw.Result : null;

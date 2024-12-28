@@ -252,7 +252,7 @@ namespace StateAnimationPlugin
                 ListBoxMessageBox lbmb = new ListBoxMessageBox();
                 lbmb.RequiresSelection = true;
                 lbmb.Message = "Select a state";
-				lbmb.Title = "Add a state";
+                lbmb.Title = "Add a state";
 
                 var element = SelectedState.Self.SelectedElement;
 

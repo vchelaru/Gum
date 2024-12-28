@@ -338,7 +338,7 @@ namespace Gum.Commands
             {
                 var tiw = new CustomizableTextInputWindow();
                 tiw.Message = "Enter new category name:";
-                tiw.Title = "New Category";
+                tiw.Title = "New category";
 
                 var canAdd = true;
 
@@ -393,7 +393,7 @@ namespace Gum.Commands
             {
                 var tiw = new CustomizableTextInputWindow();
                 tiw.Message = "Enter new state name:";
-				tiw.Title = "Add State";
+                tiw.Title = "Add state";
 
                 if (tiw.ShowDialog() == true)
                 {
