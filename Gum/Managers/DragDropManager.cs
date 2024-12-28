@@ -318,7 +318,7 @@ public class DragDropManager
         }
         else if(draggedAsElementSave is ScreenSave && targetTag is BehaviorSave)
         {
-            MessageBox.Show("Screens cannot be added as requiered instances in behaviors");
+            MessageBox.Show("Screens cannot be added as required instances in behaviors");
         }
         else
         {
