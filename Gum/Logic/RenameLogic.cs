@@ -93,6 +93,7 @@ public class RenameLogic
         {
             CustomizableTextInputWindow tiw = new();
             tiw.Message = "Enter new category name";
+            tiw.Title = "New Category";
             tiw.Width = 600;
 
             tiw.Result = category.Name;

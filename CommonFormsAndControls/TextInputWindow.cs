@@ -25,10 +25,19 @@ namespace CommonFormsAndControls
             set { textBox1.Text = value; }
         }
 
+        // Added title because WPF has "title" and I wanted
+        // the feel/behavior to be the same in all win forms also
+        public string Title
+        {
+            get { return this.Text; }
+            set { this.Text = value; }
+        }
+
         #endregion
 
         public TextInputWindow()
         {
+            this.
             InitializeComponent();
 
             DialogResult = DialogResult.Cancel;

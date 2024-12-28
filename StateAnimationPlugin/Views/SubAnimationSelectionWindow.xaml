@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
-             Height="300" Width="500">
+             Height="300" Width="500" Title="Add Sub-animation">
     <Grid>
       <Grid.RowDefinitions>
         <RowDefinition></RowDefinition>

@@ -145,6 +145,7 @@ namespace Gum.ToolCommands
             {
                 TextInputWindow tiw = new TextInputWindow();
                 tiw.Message = "Enter new Component name:";
+                tiw.Title = "Add Component";
 
                 if (tiw.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {

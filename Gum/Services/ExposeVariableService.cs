@@ -79,6 +79,7 @@ internal class ExposeVariableService : IExposeVariableService
         {
             TextInputWindow tiw = new TextInputWindow();
             tiw.Message = "Enter variable name:";
+            tiw.Title = "Expose variable";
             // We want to use the name without the dots.
             // So something like TextInstance.Text would be
             // TextInstanceText

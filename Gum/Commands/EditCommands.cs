@@ -103,6 +103,7 @@ namespace Gum.Commands
             {
                 TextInputWindow tiw = new TextInputWindow();
                 tiw.Message = "Enter new state name";
+                tiw.Title = "Rename state";
                 tiw.Result = SelectedState.Self.SelectedStateSave.Name;
                 var result = tiw.ShowDialog();
 
@@ -269,6 +270,7 @@ namespace Gum.Commands
 
             TextInputWindow tiw = new TextInputWindow();
             tiw.Message = "Enter new behavior name:";
+            tiw.Title = "Add behavior";
 
             if (tiw.ShowDialog() == DialogResult.OK)
             {
@@ -322,6 +324,7 @@ namespace Gum.Commands
             {
                 TextInputWindow tiw = new TextInputWindow();
                 tiw.Message = "Enter new Screen name:";
+                tiw.Title = "Duplicate Screen";
 
                 // todo - handle folders... do we support folders?
 
@@ -365,6 +368,7 @@ namespace Gum.Commands
             {
                 TextInputWindow tiw = new TextInputWindow();
                 tiw.Message = "Enter new Component name:";
+                tiw.Title = "Duplicate Component";
 
                 FilePath filePath = element.Name;
                 var nameWithoutPath = filePath.FileNameNoPath;
@@ -512,6 +516,7 @@ namespace Gum.Commands
                 ListBoxMessageBox lbmb = new ListBoxMessageBox();
                 lbmb.RequiresSelection = true;
                 lbmb.Message = $"The following objects reference {element}";
+                lbmb.Title = "References";
                 lbmb.ItemSelected += (not, used) =>
                 {
                     var reference = lbmb.SelectedItem as TypedElementReference;

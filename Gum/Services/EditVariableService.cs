@@ -96,6 +96,7 @@ internal class EditVariableService : IEditVariableService
         var tiw = new CustomizableTextInputWindow();
         tiw.Message = "Enter new exposed variable name.";
         tiw.Width = 600;
+        tiw.Title = "New exposed variable";
 
         var changes = RenameLogic.GetVariableChangesForRenamedVariable(container, variable, variable.ExposedAsName);
         if (changes.Count > 0)

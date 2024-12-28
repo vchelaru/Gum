@@ -158,6 +158,7 @@ namespace StateAnimationPlugin.Views
 
                 TextInputWindow tiw = new TextInputWindow();
                 tiw.Message = "Enter new animation name:";
+                tiw.Title = "New animation";
 
                 var dialogResult = tiw.ShowDialog();
 
@@ -254,6 +255,7 @@ namespace StateAnimationPlugin.Views
             
             var textInputWindow = new TextInputWindow();
             textInputWindow.Message = "Enter new event name";
+            textInputWindow.Title = "New event";
             var result = textInputWindow.ShowDialog();
 
             if(result == System.Windows.Forms.DialogResult.OK)
