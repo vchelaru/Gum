@@ -858,6 +858,11 @@ namespace ToolsUtilities
             System.IO.DirectoryInfo info = new System.IO.DirectoryInfo(dir);
             if (!info.Exists) return;
 
+            // Set the folder to NORMAL so it doesn't retain READONLY or ARCHIVE attributes
+            // This happens because of OneDrive
+            // Shouldn't matter if we change the attributes, we're going to delete the folder anyways
+            info.Attributes = FileAttributes.Normal;
+
             string[] files = System.IO.Directory.GetFiles(dir);
             for (int i = 0; i < files.Length; i++)
             {
