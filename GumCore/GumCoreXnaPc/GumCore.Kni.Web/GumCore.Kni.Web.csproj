@@ -4,7 +4,7 @@
 		<TargetFramework>net8.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<DefineConstants>$(DefineConstants)TRACE;FNA;XNA4;WEB;BLAZORGL;KNI</DefineConstants>
+		<DefineConstants>$(DefineConstants)TRACE;FNA;XNA4;WEB;BLAZORGL;KNI;FRB</DefineConstants>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<NoWarn>1591</NoWarn>
 
