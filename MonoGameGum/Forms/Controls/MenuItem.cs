@@ -255,25 +255,32 @@ public class MenuItem : ItemsControl
             foreach (var item in Items)
             {
                 MenuItem menuItem;
-                if (item is MenuItem asMenuitem)
+                FrameworkElement frameworkElementItem;
+
+                if (item is FrameworkElement asFrameworkElement)
                 {
-                    menuItem = asMenuitem;
+                    frameworkElementItem = asFrameworkElement;
+                    menuItem = frameworkElementItem as MenuItem;
                 }
                 else
                 {
                     menuItem = new MenuItem();
+                    frameworkElementItem = menuItem;
                     menuItem.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
                     menuItem.UpdateToObject(item);
                     menuItem.BindingContext = item;
                 }
                 
-                menuItem.SelectOnHighlight = this.SelectOnHighlight;
+                if(menuItem != null)
+                {
+                    menuItem.SelectOnHighlight = this.SelectOnHighlight;
+                    MenuItemsInternal.Add(menuItem);
+                    menuItem.ParentMenuItem = this;
+                    menuItem.Selected += HandleSubItemSelected;
+                }
 
-                MenuItemsInternal.Add(menuItem);
-                menuItem.ParentMenuItem = this;
-                menuItem.Selected += HandleSubItemSelected;
 
-                itemsPopup.InnerPanel.Children.Add(menuItem.Visual);
+                itemsPopup.InnerPanel.Children.Add(frameworkElementItem.Visual);
             }
 
             itemsPopup.Visual.X = this.Visual.AbsoluteLeft;
