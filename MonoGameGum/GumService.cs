@@ -68,7 +68,6 @@ public class GumService
 
         if(types != null)
         {
-            // Print each type
             foreach (Type type in types)
             {
                 var method = type.GetMethod("RegisterRuntimeType", BindingFlags.Static | BindingFlags.Public);

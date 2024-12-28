@@ -9,21 +9,25 @@ using RenderingLibrary;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using ToolsUtilities;
 
 namespace GumFormsSample.Screens;
 
-internal class FromFileDemoScreen
+public class FromFileDemoScreen : BindableGue
 {
+    [ModuleInitializer]
+    public static void RegisterRuntimeType()
+    {
+        GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("DemoScreenGum", typeof(FromFileDemoScreen));
+    }
+
     GraphicalUiElement _root;
-    public void Initialize(GumProjectSave gumProject, ref GraphicalUiElement root)
+    public void Initialize(GumProjectSave gumProject)
     {
 
-        _root = gumProject.Screens.Find(item => item.Name == "DemoScreenGum").ToGraphicalUiElement(
-            SystemManagers.Default, addToManagers: true);
-        root = _root;
 
         PopulateListBox();
 
@@ -35,7 +39,7 @@ internal class FromFileDemoScreen
     private void PopulateComboBox()
     {
         //var comboBox = (InteractiveGue)_root.GetGraphicalUiElementByName("ComboBoxInstance");
-        var comboBoxForms = _root.GetFrameworkElementByName<ComboBox>("ComboBoxInstance");
+        var comboBoxForms = this.GetFrameworkElementByName<ComboBox>("ComboBoxInstance");
 
         comboBoxForms.Items.Add("Easy");
         comboBoxForms.Items.Add("Medium");
@@ -45,14 +49,14 @@ internal class FromFileDemoScreen
 
     private void InitializeRadioButtons()
     {
-        var radioButton = (InteractiveGue)_root.GetGraphicalUiElementByName("RadioButtonInstance");
+        var radioButton = (InteractiveGue)this.GetGraphicalUiElementByName("RadioButtonInstance");
         var radioButtonForms = radioButton.FormsControlAsObject as RadioButton;
         radioButtonForms.IsChecked = true;
     }
 
     private void PopulateListBox()
     {
-        var listBoxVisual = (InteractiveGue)_root.GetGraphicalUiElementByName("ResolutionBox");
+        var listBoxVisual = (InteractiveGue)this.GetGraphicalUiElementByName("ResolutionBox");
         var listBox = listBoxVisual.FormsControlAsObject as ListBox;
 
         listBox.Items.Add("400x300");

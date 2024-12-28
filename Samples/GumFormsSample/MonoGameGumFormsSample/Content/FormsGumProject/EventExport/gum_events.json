@@ -35,6 +35,41 @@
         "ElementType": "Screens",
         "EventType": 7,
         "TimestampUtc": "2024-12-19T11:46:39.1008004Z"
+      },
+      {
+        "NewName": "DemoScreenGum.FullScreenCheckbox1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-28T12:05:40.7695332Z"
+      },
+      {
+        "NewName": "DemoScreenGum.ContainerInstance2",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-28T12:06:03.4104667Z"
+      },
+      {
+        "NewName": "DemoScreenGum.BindingCheckbox",
+        "OldName": "DemoScreenGum.FullScreenCheckbox1",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-28T12:07:06.4830574Z"
+      },
+      {
+        "NewName": "DemoScreenGum.DetectResolutionsButton1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-28T12:07:12.629529Z"
+      },
+      {
+        "NewName": "DemoScreenGum.BindingButton",
+        "OldName": "DemoScreenGum.DetectResolutionsButton1",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-28T12:09:14.4369375Z"
       }
     ]
   }
