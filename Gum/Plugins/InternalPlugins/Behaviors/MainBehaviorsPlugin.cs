@@ -19,11 +19,18 @@ namespace Gum.Plugins.Behaviors;
 public class MainBehaviorsPlugin : InternalPlugin
 {
     BehaviorsControl control;
+    private readonly ISelectedState _selectedState;
     BehaviorsViewModel viewModel = new BehaviorsViewModel();
     DataUiGrid stateDataUiGrid;
 
+    public MainBehaviorsPlugin()
+    {
+        _selectedState = SelectedState.Self;
+    }
+
     public override void StartUp()
     {
+
         viewModel = new BehaviorsViewModel();
         viewModel.ApplyChangedValues += HandleApplyBehaviorChanges;
 
@@ -34,8 +41,13 @@ public class MainBehaviorsPlugin : InternalPlugin
         GumCommands.Self.GuiCommands.RemoveControl(control);
 
         stateDataUiGrid = new DataUiGrid();
+        AssignEvents();
+    }
 
+    private void AssignEvents()
+    {
         this.ElementSelected += HandleElementSelected;
+        this.InstanceSelected += HandleInstanceSelected;
         this.BehaviorSelected += HandleBehaviorSelected;
         this.StateWindowTreeNodeSelected += HandleStateSelected;
         this.BehaviorReferencesChanged += HandleBehaviorReferencesChanged;
@@ -189,14 +201,24 @@ public class MainBehaviorsPlugin : InternalPlugin
     bool hasBehaviorsControlBeenAdded = false;
     private void HandleElementSelected(ElementSave element)
     {
-        var asComponent = element as ComponentSave;
-
-        bool shouldShow = asComponent != null;
-
         // In case the user left without clicking "OK" on the previous edit:
         viewModel.IsEditing = false;
+        
+        
+        UpdateTabPresence();
+    }
 
-        if (asComponent != null)
+    private void UpdateTabPresence()
+    {
+        var asComponent = _selectedState.SelectedComponent;
+
+
+        bool shouldShow = asComponent != null &&
+            // Don't show behaviors if an instance is selected since that can be confusing
+            // Only show it on the element to be clear that behaviors are element-wide.
+            _selectedState.SelectedInstance == null;
+
+        if (shouldShow)
         {
             viewModel.UpdateTo(asComponent);
             if (!hasBehaviorsControlBeenAdded)
@@ -204,13 +226,17 @@ public class MainBehaviorsPlugin : InternalPlugin
                 GumCommands.Self.GuiCommands.AddControl(control, "Behaviors");
                 hasBehaviorsControlBeenAdded = true;
             }
-
         }
         else
         {
             GumCommands.Self.GuiCommands.RemoveControl(control);
             hasBehaviorsControlBeenAdded = false;
         }
+    }
+
+    private void HandleInstanceSelected(ElementSave save1, InstanceSave save2)
+    {
+        UpdateTabPresence();
     }
 
 
