@@ -2,6 +2,7 @@
 using System.ComponentModel.Composition;
 using Gum.DataTypes;
 using Gum.ToolStates;
+using System;
 
 namespace Gum.Plugins.Errors
 {
@@ -25,10 +26,17 @@ namespace Gum.Plugins.Errors
             tabPage = GumCommands.Self.GuiCommands.AddControl(control, "Errors", TabLocation.RightBottom);
 
             this.ElementSelected += HandleElementSelected;
+            this.InstanceSelected += HandleInstanceSelected;
+
             this.InstanceAdd += HandleInstanceAdd;
             this.InstanceDelete += HandleInstanceDelete;
             this.VariableSet += HandleVariableSet;
             this.BehaviorReferencesChanged += HandleBehaviorReferencesChanged;
+        }
+
+        private void HandleInstanceSelected(ElementSave element, InstanceSave instance)
+        {
+            UpdateErrorsForElement(element);
         }
 
         private void HandleBehaviorReferencesChanged(ElementSave element)

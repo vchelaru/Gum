@@ -37,7 +37,6 @@ namespace CommonFormsAndControls
 
         public TextInputWindow()
         {
-            this.
             InitializeComponent();
 
             DialogResult = DialogResult.Cancel;
