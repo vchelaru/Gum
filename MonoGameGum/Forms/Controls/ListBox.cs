@@ -609,7 +609,7 @@ public class ListBox : ItemsControl, IInputReceiver
         }
 
 #if FRB
-        popup.Visual.AddToManagers(listBoxParent.Managers,
+        popup.Visual.AddToManagers(listBoxParent.EffectiveManagers,
             layerToAddListBoxTo);
 
         var rootParent = popup.Visual.GetParentRoot();

@@ -249,6 +249,9 @@ public class MenuItem : ItemsControl
             //itemsPopup.InnerPanel.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
             //itemsPopup.InnerPanel.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
 
+            // sometimes the Gum project includes children, so let's remove them:
+            itemsPopup.InnerPanel.Children.Clear();
+
             foreach (var item in Items)
             {
                 MenuItem menuItem;
@@ -259,7 +262,7 @@ public class MenuItem : ItemsControl
                 else
                 {
                     menuItem = new MenuItem();
-                    menuItem.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+                    menuItem.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
                     menuItem.UpdateToObject(item);
                     menuItem.BindingContext = item;
                 }
@@ -278,7 +281,7 @@ public class MenuItem : ItemsControl
             var parent = this.Visual.Parent;
             if (parent != null)
             {
-                if (parent is GraphicalUiElement asGue && asGue.ChildrenLayout == Gum.Managers.ChildrenLayout.TopToBottomStack)
+                if (parent is GraphicalUiElement asGue && asGue.ChildrenLayout == global::Gum.Managers.ChildrenLayout.TopToBottomStack)
                 {
                     itemsPopup.Visual.X = this.Visual.GetAbsoluteRight();
                     itemsPopup.Visual.Y = this.Visual.AbsoluteTop;
@@ -291,21 +294,21 @@ public class MenuItem : ItemsControl
 
             ListBox.ShowPopupListBox(itemsPopup, this.Visual);
 
-            itemsPopup.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+            itemsPopup.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
             itemsPopup.Visual.Height = 0;
-            itemsPopup.ClipContainer.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+            itemsPopup.ClipContainer.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
             itemsPopup.ClipContainer.Height = 0;
 
-            itemsPopup.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+            itemsPopup.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
             itemsPopup.Visual.Width = 0;
-            itemsPopup.ClipContainer.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+            itemsPopup.ClipContainer.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
             itemsPopup.ClipContainer.Width = 0;
-            itemsPopup.InnerPanel.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+            itemsPopup.InnerPanel.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
             itemsPopup.InnerPanel.Width = 0;
 
 #if FRB
-                GuiManager.SortZAndLayerBased();
-                listBox.RepositionToKeepInScreen();
+            GuiManager.SortZAndLayerBased();
+            itemsPopup.RepositionToKeepInScreen();
 #endif
         }
     }

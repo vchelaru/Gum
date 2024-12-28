@@ -1,5 +1,4 @@
 ﻿using Gum.Wireframe;
-using MonoGameGum.Input;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -14,6 +13,7 @@ using FlatRedBall.Gui;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 namespace FlatRedBall.Forms.Controls;
 #else
+using MonoGameGum.Input;
 namespace MonoGameGum.Forms.Controls;
 #endif
 
@@ -98,7 +98,7 @@ public class Menu : ItemsControl
 
     private void HandleNextPush()
     {
-        var itemPushed = MainCursor.WindowPushed;
+        var itemPushed = MainCursor.WindowPushed as GraphicalUiElement;
 
         var pushedOnThis = GetIfIsOnThisOrChildVisual(MainCursor);
         var pushedOnChildItem = false;
@@ -129,7 +129,8 @@ public class Menu : ItemsControl
         }
         else if(pushedOnChildItem)
         {
-            var menuItemPushed = MainCursor.WindowPushed.FormsControlAsObject as MenuItem;
+            var menuItemPushed = (MainCursor.WindowPushed as InteractiveGue)?.FormsControlAsObject 
+                as MenuItem;
             shouldCloseAll = menuItemPushed.Items == null || menuItemPushed.Items.Count == 0;
         }
 
