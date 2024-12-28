@@ -35,6 +35,7 @@ public class MainFileWatchPlugin : InternalPlugin
 
         pluginTab.TabHidden += HandleTabHidden;
         pluginTab.TabShown += HandleTabShown;
+        pluginTab.CanClose = true;
 
         showFileWatchMenuItem = this.AddMenuItem("View", "Show File Watch");
         showFileWatchMenuItem.Click += HandleShowFileWatch;
