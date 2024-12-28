@@ -37,45 +37,24 @@ public class DemoScreenGumRuntime : BindableGue
             nameof(CheckBox.IsChecked),
             nameof(viewModel.IsButtonEnabled));
 
-        PopulateListBox();
+        this.GetFrameworkElementByName<ComboBox>("ComboBoxInstance").SetBinding(
+            nameof(ComboBox.Items),
+            nameof(viewModel.ComboBoxItems));
 
-        PopulateComboBox();
+        this.GetFrameworkElementByName<ListBox>("ResolutionBox").SetBinding(
+            nameof(ListBox.Items),
+            nameof(viewModel.ListBoxItems));
 
-        InitializeRadioButtons();
+        this.GetFrameworkElementByName<RadioButton>("KeyboardRadioButton").SetBinding(
+            nameof(RadioButton.IsChecked),
+            nameof(viewModel.IsKeyboardAndMouseChecked));
+
+        this.GetFrameworkElementByName<RadioButton>("GamepadRadioButton").SetBinding(
+            nameof(RadioButton.IsChecked),
+            nameof(viewModel.IsGamepadChecked));
+
+        this.GetFrameworkElementByName<RadioButton>("TouchScreenRadioButton").SetBinding(
+            nameof(RadioButton.IsChecked),
+            nameof(viewModel.IsTouchscreenChecked));
     }
-
-    private void PopulateComboBox()
-    {
-        //var comboBox = (InteractiveGue)_root.GetGraphicalUiElementByName("ComboBoxInstance");
-        var comboBoxForms = this.GetFrameworkElementByName<ComboBox>("ComboBoxInstance");
-
-        comboBoxForms.Items.Add("Easy");
-        comboBoxForms.Items.Add("Medium");
-        comboBoxForms.Items.Add("Hard");
-        comboBoxForms.Items.Add("Impossible");
-    }
-
-    private void InitializeRadioButtons()
-    {
-        var radioButton = (InteractiveGue)this.GetGraphicalUiElementByName("RadioButtonInstance");
-        var radioButtonForms = radioButton.FormsControlAsObject as RadioButton;
-        radioButtonForms.IsChecked = true;
-    }
-
-    private void PopulateListBox()
-    {
-        var listBoxVisual = (InteractiveGue)this.GetGraphicalUiElementByName("ResolutionBox");
-        var listBox = listBoxVisual.FormsControlAsObject as ListBox;
-
-        listBox.Items.Add("400x300");
-        listBox.Items.Add("600x800");
-        listBox.Items.Add("1024x768");
-        listBox.Items.Add("1280x720");
-        listBox.Items.Add("1920x1080");
-        listBox.Items.Add("2560x1440");
-        listBox.Items.Add("3840x2160");
-        listBox.Items.Add("7680x4320");
-    }
-
-
 }

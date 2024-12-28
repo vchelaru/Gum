@@ -70,6 +70,20 @@
         "ElementType": "Screens",
         "EventType": 7,
         "TimestampUtc": "2024-12-28T12:09:14.4369375Z"
+      },
+      {
+        "NewName": "DemoScreenGum.GamepadRadioButton",
+        "OldName": "DemoScreenGum.RadioButtonInstance1",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-28T17:11:12.2477137Z"
+      },
+      {
+        "NewName": "DemoScreenGum.TouchScreenRadioButton",
+        "OldName": "DemoScreenGum.RadioButtonInstance2",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-28T17:11:21.6043495Z"
       }
     ]
   }

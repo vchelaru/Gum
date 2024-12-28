@@ -137,6 +137,66 @@
     </Variable>
     <Variable>
       <Type>string</Type>
+      <Name>BindingButton.ButtonDisplayText</Name>
+      <Value xsi:type="xsd:string">Enabled/Disabled Button</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>BindingButton.Height</Name>
+      <Value xsi:type="xsd:float">24</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>BindingButton.Parent</Name>
+      <Value xsi:type="xsd:string">ContainerInstance2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>BindingButton.Width</Name>
+      <Value xsi:type="xsd:float">187</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>BindingButton.X</Name>
+      <Value xsi:type="xsd:float">-0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HorizontalAlignment</Type>
+      <Name>BindingButton.X Origin</Name>
+      <Value xsi:type="xsd:int">2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>PositionUnitType</Type>
+      <Name>BindingButton.X Units</Name>
+      <Value xsi:type="xsd:int">4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>BindingButton.Y</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>VerticalAlignment</Type>
+      <Name>BindingButton.Y Origin</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>PositionUnitType</Type>
+      <Name>BindingButton.Y Units</Name>
+      <Value xsi:type="xsd:int">1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
       <Name>BindingCheckbox.CheckboxDisplayText</Name>
       <Value xsi:type="xsd:string">Is Button Enabled</Value>
       <SetsValue>true</SetsValue>
@@ -820,66 +880,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>string</Type>
-      <Name>BindingButton.ButtonDisplayText</Name>
-      <Value xsi:type="xsd:string">Enabled/Disabled Button</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BindingButton.Height</Name>
-      <Value xsi:type="xsd:float">24</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>BindingButton.Parent</Name>
-      <Value xsi:type="xsd:string">ContainerInstance2</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BindingButton.Width</Name>
-      <Value xsi:type="xsd:float">187</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BindingButton.X</Name>
-      <Value xsi:type="xsd:float">-0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>BindingButton.X Origin</Name>
-      <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>BindingButton.X Units</Name>
-      <Value xsi:type="xsd:int">4</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>BindingButton.Y</Name>
-      <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>BindingButton.Y Origin</Name>
-      <Value xsi:type="xsd:int">0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>BindingButton.Y Units</Name>
-      <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>DialogBoxInstance.X</Name>
       <Value xsi:type="xsd:float">722</Value>
@@ -1168,6 +1168,42 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>string</Type>
+      <Name>GamepadRadioButton.Parent</Name>
+      <Value xsi:type="xsd:string">MenuItems</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>RadioButtonCategory</Type>
+      <Name>GamepadRadioButton.RadioButtonCategoryState</Name>
+      <Value xsi:type="xsd:string">EnabledOn</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>GamepadRadioButton.RadioDisplayText</Name>
+      <Value xsi:type="xsd:string">Gamepad</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>GamepadRadioButton.Width</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>GamepadRadioButton.Width Units</Name>
+      <Value xsi:type="xsd:int">2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>GamepadRadioButton.Y</Name>
+      <Value xsi:type="xsd:float">4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>ColorCategory</Type>
       <Name>HitpointsBar1.BarColor</Name>
       <Value xsi:type="xsd:string">Success</Value>
@@ -1327,6 +1363,49 @@
       <Type>float</Type>
       <Name>HitpointsBar3.Y</Name>
       <Value xsi:type="xsd:float">31</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>bool</Type>
+      <Name>IsOverrideInCodeGen</Name>
+      <Value xsi:type="xsd:boolean">false</Value>
+      <Category>Xamarin Forms</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>bool</Type>
+      <Name>IsXamarinFormsControl</Name>
+      <Category>Xamarin Forms</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>KeyboardRadioButton.Parent</Name>
+      <Value xsi:type="xsd:string">MenuItems</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>RadioButtonCategory</Type>
+      <Name>KeyboardRadioButton.RadioButtonCategoryState</Name>
+      <Value xsi:type="xsd:string">EnabledOff</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>KeyboardRadioButton.RadioDisplayText</Name>
+      <Value xsi:type="xsd:string">Keyboard &amp; Mouse</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>KeyboardRadioButton.Width</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>KeyboardRadioButton.Width Units</Name>
+      <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -1913,103 +1992,37 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>RadioButtonInstance.Parent</Name>
+      <Name>TouchScreenRadioButton.Parent</Name>
       <Value xsi:type="xsd:string">MenuItems</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>RadioButtonCategory</Type>
-      <Name>RadioButtonInstance.RadioButtonCategoryState</Name>
+      <Name>TouchScreenRadioButton.RadioButtonCategoryState</Name>
       <Value xsi:type="xsd:string">EnabledOff</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>RadioButtonInstance.RadioDisplayText</Name>
-      <Value xsi:type="xsd:string">Keyboard &amp; Mouse</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>RadioButtonInstance.Width</Name>
-      <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>RadioButtonInstance.Width Units</Name>
-      <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>RadioButtonInstance1.Parent</Name>
-      <Value xsi:type="xsd:string">MenuItems</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>RadioButtonCategory</Type>
-      <Name>RadioButtonInstance1.RadioButtonCategoryState</Name>
-      <Value xsi:type="xsd:string">EnabledOn</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>RadioButtonInstance1.RadioDisplayText</Name>
-      <Value xsi:type="xsd:string">Gamepad</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>RadioButtonInstance1.Width</Name>
-      <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>RadioButtonInstance1.Width Units</Name>
-      <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>RadioButtonInstance1.Y</Name>
-      <Value xsi:type="xsd:float">4</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>RadioButtonInstance2.Parent</Name>
-      <Value xsi:type="xsd:string">MenuItems</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>RadioButtonCategory</Type>
-      <Name>RadioButtonInstance2.RadioButtonCategoryState</Name>
-      <Value xsi:type="xsd:string">EnabledOff</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>RadioButtonInstance2.RadioDisplayText</Name>
+      <Name>TouchScreenRadioButton.RadioDisplayText</Name>
       <Value xsi:type="xsd:string">Touchscreen</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>float</Type>
-      <Name>RadioButtonInstance2.Width</Name>
+      <Name>TouchScreenRadioButton.Width</Name>
       <Value xsi:type="xsd:float">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>RadioButtonInstance2.Width Units</Name>
+      <Name>TouchScreenRadioButton.Width Units</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>float</Type>
-      <Name>RadioButtonInstance2.Y</Name>
+      <Name>TouchScreenRadioButton.Y</Name>
       <Value xsi:type="xsd:float">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -2727,17 +2740,17 @@
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>
-    <Name>RadioButtonInstance</Name>
+    <Name>KeyboardRadioButton</Name>
     <BaseType>Controls/RadioButton</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>
-    <Name>RadioButtonInstance1</Name>
+    <Name>GamepadRadioButton</Name>
     <BaseType>Controls/RadioButton</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>
-    <Name>RadioButtonInstance2</Name>
+    <Name>TouchScreenRadioButton</Name>
     <BaseType>Controls/RadioButton</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
