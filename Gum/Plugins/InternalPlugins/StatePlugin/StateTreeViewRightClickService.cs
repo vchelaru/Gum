@@ -10,6 +10,9 @@ using Gum.ToolCommands;
 using Gum.DataTypes.Behaviors;
 using Gum.Plugins;
 using Gum.Commands;
+using Gum.Mvvm;
+using System.Windows;
+using Gum.Plugins.InternalPlugins.StatePlugin.Views;
 
 namespace Gum.Managers;
 
@@ -19,11 +22,33 @@ public class StateTreeViewRightClickService
     const string mNoCategory = "<no category>";
     private readonly ISelectedState _selectedState;
 
-    public System.Windows.Controls.ContextMenu NewMenuStrip { get; internal set; }
+    System.Windows.Controls.ContextMenu _menuStrip;
+    GumCommands _gumCommands;
 
-    public StateTreeViewRightClickService(ISelectedState selectedState)
+    public StateTreeViewRightClickService(ISelectedState selectedState, GumCommands gumCommands)
     {
         _selectedState = selectedState;
+        _gumCommands = gumCommands;
+    }
+
+    public void SetMenuStrip(System.Windows.Controls.ContextMenu menuStrip, FrameworkElement contextMenuOwner)
+    {
+        contextMenuOwner.ContextMenuOpening += (_, args) =>
+        {
+            if (_menuStrip.Items.Count == 0)
+            {
+                args.Handled = true;
+            }
+        };
+
+        _menuStrip = menuStrip;
+        _menuStrip.ContextMenuOpening += (s, e) =>
+        {
+            if (_menuStrip.Items.Count == 0)
+            {
+                e.Handled = true; // Prevent the menu from opening
+            }
+        };
     }
 
     #region Add to menu
@@ -32,70 +57,70 @@ public class StateTreeViewRightClickService
     {
         ClearMenuStrip();
 
-        ///////////////////////early out/////////////////////////
-        if(_selectedState.SelectedStateContainer == null)
+        if (_selectedState.SelectedStateContainer != null)
         {
-            return;
-        }
-        /////////////////////end early out///////////////////////
 
-        if (_selectedState.SelectedStateCategorySave != null)
-        {
-            // As of 5/24/2023, we no longer support uncategorized states
-            AddMenuItem("Add State", GumCommands.Self.GuiCommands.ShowAddStateWindow);
-        }
-
-        AddMenuItem("Add Category", GumCommands.Self.GuiCommands.ShowAddCategoryWindow);
-
-        if (_selectedState.SelectedStateSave != null)
-        {
-            bool isDefault = _selectedState.SelectedStateSave == _selectedState.SelectedElement?.DefaultState;
-            
-            if (!isDefault)
+            if (_selectedState.SelectedStateCategorySave != null)
             {
-                AddSplitter();
-                AddMenuItem("Rename State", RenameStateClick);
-                AddMenuItem("Delete [" + _selectedState.SelectedStateSave.Name + "]", DeleteStateClick);
-                AddMenuItem("Duplicate State", DuplicateStateClick);
+                // As of 5/24/2023, we no longer support uncategorized states
+                AddMenuItem("Add State", _gumCommands.GuiCommands.ShowAddStateWindow);
+            }
 
-                AddMoveToCategoryItems();
+            AddMenuItem("Add Category", _gumCommands.GuiCommands.ShowAddCategoryWindow);
 
-                AddSplitter();
+            if (_selectedState.SelectedStateSave != null)
+            {
+                bool isDefault = _selectedState.SelectedStateSave == _selectedState.SelectedElement?.DefaultState;
 
-                if (GetIfCanMoveUp(_selectedState.SelectedStateSave, _selectedState.SelectedStateCategorySave))
+                if (!isDefault)
                 {
-                    AddMenuItem("^ Move Up", MoveUpClick, "Alt+Up");
-                }
-                if (GetIfCanMoveDown(_selectedState.SelectedStateSave, _selectedState.SelectedStateCategorySave))
-                {
-                    AddMenuItem("v Move Down", MoveDownClick, "Alt+Down");
+                    AddSplitter();
+                    AddMenuItem("Rename State", RenameStateClick);
+                    AddMenuItem("Delete [" + _selectedState.SelectedStateSave.Name + "]", DeleteStateClick);
+                    AddMenuItem("Duplicate State", DuplicateStateClick);
+
+                    AddMoveToCategoryItems();
+
+                    AddSplitter();
+
+                    if (GetIfCanMoveUp(_selectedState.SelectedStateSave, _selectedState.SelectedStateCategorySave))
+                    {
+                        AddMenuItem("^ Move Up", MoveUpClick, "Alt+Up");
+                    }
+                    if (GetIfCanMoveDown(_selectedState.SelectedStateSave, _selectedState.SelectedStateCategorySave))
+                    {
+                        AddMenuItem("v Move Down", MoveDownClick, "Alt+Down");
+                    }
                 }
             }
+            // We used to show the category editing commands if a state was selected 
+            // (if a state is selected, a category is implicitly selected too). Now we
+            // check if a category is highlighted (not state)
+            //if(SelectedState.Self.SelectedStateCategorySave != null)
+            if (_selectedState.SelectedStateCategorySave != null && _selectedState.SelectedStateSave == null)
+            {
+
+                AddSplitter();
+
+                AddMenuItem("Rename Category", RenameCategoryClick);
+
+
+                AddMenuItem("Delete [" + _selectedState.SelectedStateCategorySave.Name + "]", DeleteCategoryClick);
+            }
         }
-        // We used to show the category editing commands if a state was selected 
-        // (if a state is selected, a category is implicitly selected too). Now we
-        // check if a category is highlighted (not state)
-        //if(SelectedState.Self.SelectedStateCategorySave != null)
-        if (_selectedState.SelectedStateCategorySave != null && _selectedState.SelectedStateSave == null)
-        {
-
-            AddSplitter();
-
-            AddMenuItem("Rename Category", RenameCategoryClick);
 
 
-            AddMenuItem("Delete [" + _selectedState.SelectedStateCategorySave.Name + "]", DeleteCategoryClick);
-        }
+        //NewMenuStrip.Visibility = (NewMenuStrip.Items.Count > 0).ToVisibility();
     }
 
     private void AddSplitter()
     {
-        NewMenuStrip.Items.Add(new System.Windows.Controls.Separator());
+        _menuStrip.Items.Add(new System.Windows.Controls.Separator());
     }
 
     private void ClearMenuStrip()
     {
-        NewMenuStrip.Items.Clear();
+        _menuStrip.Items.Clear();
     }
 
     private void MoveUpClick()
@@ -112,35 +137,35 @@ public class StateTreeViewRightClickService
     {
         var state = _selectedState.SelectedStateSave;
         var list = _selectedState.SelectedStateContainer.UncategorizedStates;
-        if(_selectedState.SelectedStateCategorySave != null)
+        if (_selectedState.SelectedStateCategorySave != null)
         {
             list = _selectedState.SelectedStateCategorySave.States;
         }
 
-        if(list != null && list.Contains(state))
+        if (list != null && list.Contains(state))
         {
             int oldIndex = list.IndexOf(state);
 
             bool shouldSave = false;
 
-            if(direction == -1 && GetIfCanMoveUp(state, _selectedState.SelectedStateCategorySave))
+            if (direction == -1 && GetIfCanMoveUp(state, _selectedState.SelectedStateCategorySave))
             {
                 list.RemoveAt(oldIndex);
                 list.Insert(oldIndex - 1, state);
                 shouldSave = true;
             }
-            else if(direction == 1 && GetIfCanMoveDown(state, _selectedState.SelectedStateCategorySave))
+            else if (direction == 1 && GetIfCanMoveDown(state, _selectedState.SelectedStateCategorySave))
             {
                 list.RemoveAt(oldIndex);
                 list.Insert(oldIndex + 1, state);
                 shouldSave = true;
             }
 
-            if(shouldSave)
+            if (shouldSave)
             {
-                GumCommands.Self.GuiCommands.RefreshStateTreeView();
+                _gumCommands.GuiCommands.RefreshStateTreeView();
 
-                GumCommands.Self.FileCommands.TryAutoSaveCurrentObject();
+                _gumCommands.FileCommands.TryAutoSaveCurrentObject();
 
                 PopulateMenuStrip();
             }
@@ -155,7 +180,7 @@ public class StateTreeViewRightClickService
             list = category.States;
         }
 
-        if(list == null)
+        if (list == null)
         {
             return false;
         }
@@ -181,7 +206,7 @@ public class StateTreeViewRightClickService
             list = category.States;
         }
 
-        if(list == null)
+        if (list == null)
         {
             return false;
         }
@@ -193,23 +218,23 @@ public class StateTreeViewRightClickService
 
     public void DeleteCategoryClick()
     {
-        GumCommands.Self.Edit.RemoveStateCategory(
-            SelectedState.Self.SelectedStateCategorySave,
-            SelectedState.Self.SelectedStateContainer as IStateCategoryListContainer);
+        _gumCommands.Edit.RemoveStateCategory(
+            _selectedState.SelectedStateCategorySave,
+            _selectedState.SelectedStateContainer as IStateCategoryListContainer);
     }
 
     public void DeleteStateClick()
     {
-        GumCommands.Self.Edit.AskToDeleteState(
-            SelectedState.Self.SelectedStateSave,
-            SelectedState.Self.SelectedStateContainer);
+        _gumCommands.Edit.AskToDeleteState(
+            _selectedState.SelectedStateSave,
+            _selectedState.SelectedStateContainer);
     }
 
     private void AddMoveToCategoryItems()
     {
 
-        var categoryNames = SelectedState.Self.SelectedStateContainer?.Categories
-            .Where(item=>item != SelectedState.Self.SelectedStateCategorySave)
+        var categoryNames = _selectedState.SelectedStateContainer?.Categories
+            .Where(item => item != _selectedState.SelectedStateCategorySave)
             .Select(item => item.Name).ToList();
 
         // As of before 2024 we no longer allow uncategorized non-default states
@@ -218,13 +243,13 @@ public class StateTreeViewRightClickService
         //    categoryNames.Insert(0, mNoCategory);
         //}
 
-        if(categoryNames?.Count != 0)
+        if (categoryNames?.Count != 0)
         {
             AddSplitter();
 
             AddMenuItem("Move to category", null);
 
-            foreach(var categoryName in categoryNames)
+            foreach (var categoryName in categoryNames)
             {
 
                 // make a local var to prevent problems with delayed evaluation
@@ -237,7 +262,7 @@ public class StateTreeViewRightClickService
     private void AddChildMenuItem(string parent, string text, Action clickAction, string shortcut = null)
     {
         System.Windows.Controls.MenuItem menuItem = CreateNewToolStripMenuItem(text, clickAction, shortcut);
-        var parentItem = NewMenuStrip.Items.FirstOrDefault(item => item is System.Windows.Controls.MenuItem itemMenu && itemMenu.Header.ToString() == parent)
+        var parentItem = _menuStrip.Items.FirstOrDefault(item => item is System.Windows.Controls.MenuItem itemMenu && itemMenu.Header.ToString() == parent)
             as System.Windows.Controls.MenuItem;
         parentItem.Items.Add(menuItem);
     }
@@ -245,7 +270,7 @@ public class StateTreeViewRightClickService
     private void AddMenuItem(string text, Action clickAction, string shortcut = null)
     {
         System.Windows.Controls.MenuItem menuItem = CreateNewToolStripMenuItem(text, clickAction, shortcut);
-        NewMenuStrip.Items.Add(menuItem);
+        _menuStrip.Items.Add(menuItem);
     }
 
     private static System.Windows.Controls.MenuItem CreateNewToolStripMenuItem(string text, Action clickAction, string shortcut)
@@ -255,7 +280,7 @@ public class StateTreeViewRightClickService
             Header = text,
             InputGestureText = shortcut,
         };
-        if(clickAction != null)
+        if (clickAction != null)
         {
             menuItem.Click += (_, _) => clickAction();
         }
@@ -267,20 +292,20 @@ public class StateTreeViewRightClickService
 
     internal void AddStateClick()
     {
-        GumCommands.Self.GuiCommands.ShowAddStateWindow();
+        _gumCommands.GuiCommands.ShowAddStateWindow();
     }
-    
+
     private void DuplicateStateClick()
     {
         // Is there a "custom" current state save, like an interpolation or animation?
-        if(_selectedState.CustomCurrentStateSave != null)
+        if (_selectedState.CustomCurrentStateSave != null)
         {
-            GumCommands.Self.GuiCommands.ShowMessage("Cannot duplicate state while a custom state is displaying. Are you creating or playing animations?");
+            _gumCommands.GuiCommands.ShowMessage("Cannot duplicate state while a custom state is displaying. Are you creating or playing animations?");
             return;
         }
-        if(_selectedState.SelectedStateCategorySave == null)
+        if (_selectedState.SelectedStateCategorySave == null)
         {
-            GumCommands.Self.GuiCommands.ShowMessage("Cannot duplicate uncategorized states. Select a state in a category first.");
+            _gumCommands.GuiCommands.ShowMessage("Cannot duplicate uncategorized states. Select a state in a category first.");
             return;
         }
         ////////End Early Out///////////////
@@ -299,31 +324,31 @@ public class StateTreeViewRightClickService
 
         ElementCommands.Self.AddState(_selectedState.SelectedStateContainer, _selectedState.SelectedStateCategorySave, newState, index + 1);
 
-        GumCommands.Self.GuiCommands.RefreshStateTreeView();
+        _gumCommands.GuiCommands.RefreshStateTreeView();
 
         _selectedState.SelectedStateSave = newState;
 
-        GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+        _gumCommands.FileCommands.TryAutoSaveCurrentElement();
     }
 
     public void RenameStateClick()
     {
-        GumCommands.Self.Edit.AskToRenameState(SelectedState.Self.SelectedStateSave,
+        _gumCommands.Edit.AskToRenameState(SelectedState.Self.SelectedStateSave,
             SelectedState.Self.SelectedStateContainer);
     }
 
     public void RenameCategoryClick()
     {
-        GumCommands.Self.Edit.AskToRenameStateCategory(
-            SelectedState.Self.SelectedStateCategorySave, 
+        _gumCommands.Edit.AskToRenameStateCategory(
+            SelectedState.Self.SelectedStateCategorySave,
             SelectedState.Self.SelectedElement);
     }
 
-    private static void MoveToCategory(string categoryNameToMoveTo)
+    private void MoveToCategory(string categoryNameToMoveTo)
     {
         var stateToMove = SelectedState.Self.SelectedStateSave;
         var stateContainer = SelectedState.Self.SelectedStateContainer;
-        GumCommands.Self.Edit.MoveToCategory(categoryNameToMoveTo, stateToMove, stateContainer);
+        _gumCommands.Edit.MoveToCategory(categoryNameToMoveTo, stateToMove, stateContainer);
     }
 
- }
+}
