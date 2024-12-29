@@ -1,3 +1,3 @@
 ﻿
-using var game = new MonoGameGumFromFileDX.Game1();
+using var game = new MonoGameGumFromFile.Game1();
 game.Run();

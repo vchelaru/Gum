@@ -34,7 +34,7 @@ namespace MonoGameGumFromFile
 
         ScreenSave currentGumScreenSave;
 
-        GraphicalUiElement currentScreenGue;
+        GraphicalUiElement Root;
 
         SingleThreadSynchronizationContext synchronizationContext;
 
@@ -114,7 +114,7 @@ namespace MonoGameGumFromFile
             GraphicalUiElement.CanvasHeight = _graphics.GraphicsDevice.Viewport.Height/zoom;
 
             // Grab the rootmost object and tell it to resize:
-            currentScreenGue.UpdateLayout();
+            Root.UpdateLayout();
 
             // If you are using Gum Forms, you should also notify GumForms:
             //MonoGameGum.Forms.Controls.FrameworkElement.Root.UpdateLayout();
@@ -169,7 +169,7 @@ namespace MonoGameGumFromFile
                 var justShowed = ShowScreen("StateScreen");
                 if (justShowed)
                 {
-                    var setMeInCode = currentScreenGue.GetGraphicalUiElementByName("SetMeInCode");
+                    var setMeInCode = Root.GetGraphicalUiElementByName("SetMeInCode");
 
                     // States can be found in the Gum element's Categories and applied:
                     var stateToSet = setMeInCode.ElementSave.Categories
@@ -245,6 +245,20 @@ namespace MonoGameGumFromFile
             {
                 ShowScreen("MvvmScreen");
             }
+            else if (state.IsKeyDown(Keys.Escape))
+            {
+                RemoveScreenAndLayers();
+            }
+        }
+
+        private void RemoveScreenAndLayers()
+        {
+            Root?.RemoveFromManagers();
+            var layers = SystemManagers.Default.Renderer.Layers;
+            while (layers.Count > 1)
+            {
+                SystemManagers.Default.Renderer.RemoveLayer(SystemManagers.Default.Renderer.Layers.LastOrDefault());
+            }
         }
 
         private void InitializeInteractiveGueScreen()
@@ -254,7 +268,7 @@ namespace MonoGameGumFromFile
 
         private void InitializeZoomScreen()
         {
-            var layered = currentScreenGue.GetGraphicalUiElementByName("Layered");
+            var layered = Root.GetGraphicalUiElementByName("Layered");
             var layer = SystemManagers.Default.Renderer.AddLayer();
             layer.Name = "Zoomed-in Layer";
             layered.MoveToLayer(layer);
@@ -275,7 +289,7 @@ namespace MonoGameGumFromFile
                 IsInScreenSpace= true
             };
 
-            var layeredText = currentScreenGue.GetGraphicalUiElementByName("LayeredText");
+            var layeredText = Root.GetGraphicalUiElementByName("LayeredText");
             layeredText.MoveToLayer(layer);
         }
 
@@ -283,11 +297,7 @@ namespace MonoGameGumFromFile
         {
             var newScreenElement = ObjectFinder.Self.GumProjectSave.Screens.FirstOrDefault(item => item.Name == screenName);
 
-            var isAlreadyShown = false;
-            if (currentScreenGue != null)
-            {
-                isAlreadyShown = currentScreenGue.Tag == newScreenElement;
-            }
+            var isAlreadyShown = Root?.Tag == newScreenElement && Root?.EffectiveManagers != null;
 
             return isAlreadyShown;
         }
@@ -300,14 +310,14 @@ namespace MonoGameGumFromFile
                 var newScreenElement = ObjectFinder.Self.GumProjectSave.Screens.FirstOrDefault(item => item.Name == screenName);
                 FileManager.RelativeDirectory = "Content" + Path.DirectorySeparatorChar;
                 currentGumScreenSave = newScreenElement;
-                currentScreenGue?.RemoveFromManagers();
+                Root?.RemoveFromManagers();
                 var layers = SystemManagers.Default.Renderer.Layers;
                 while(layers.Count > 1)
                 {
                     SystemManagers.Default.Renderer.RemoveLayer(SystemManagers.Default.Renderer.Layers.LastOrDefault());
                 }
 
-                currentScreenGue = currentGumScreenSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
+                Root = currentGumScreenSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
             }
             return !isAlreadyShown;
         }
@@ -317,12 +327,9 @@ namespace MonoGameGumFromFile
         MouseState lastMouseState;
         protected override void Update(GameTime gameTime)
         {
-            if (Microsoft.Xna.Framework.Input.GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Microsoft.Xna.Framework.Input.Keyboard.GetState().IsKeyDown(Keys.Escape))
-                Exit();
+            GumService.Default.Update(this, gameTime, Root);
 
-            GumService.Default.Update(this, gameTime, currentScreenGue);
-
-            currentScreenGue.AnimateSelf(gameTime.ElapsedGameTime.TotalSeconds);
+            Root.AnimateSelf(gameTime.ElapsedGameTime.TotalSeconds);
 
 
             synchronizationContext.Update();
@@ -348,7 +355,7 @@ namespace MonoGameGumFromFile
             {
                 DoOffsetLayerScreenLogic(mouseState);
             }
-            else if(currentScreenGue is MvvmScreenRuntime asMvvmScreen)
+            else if(Root is MvvmScreenRuntime asMvvmScreen)
             {
                 asMvvmScreen.CustomActivity();
             }
@@ -369,7 +376,7 @@ namespace MonoGameGumFromFile
         int clickCount = 0;
         private void DoInteractiveGueScreenLogic(double currentGameTimeInSeconds)
         {
-            currentScreenGue.DoUiActivityRecursively(FormsUtilities.Cursor, FormsUtilities.Keyboard, currentGameTimeInSeconds);
+            Root.DoUiActivityRecursively(FormsUtilities.Cursor, FormsUtilities.Keyboard, currentGameTimeInSeconds);
         }
 
         private void DoOffsetLayerScreenLogic(MouseState mouseState)
@@ -403,13 +410,13 @@ namespace MonoGameGumFromFile
                 GraphicalUiElement.CanvasHeight = 600 / camera.Zoom;
 
                 // need to update the layout in response to the canvas size changing:
-                currentScreenGue?.UpdateLayout();
+                Root?.UpdateLayout();
             }
         }
 
         private void HandleMousePush(MouseState mouseState)
         {
-            var itemOver = GetItemOver(mouseState.X, mouseState.Y, currentScreenGue);
+            var itemOver = GetItemOver(mouseState.X, mouseState.Y, Root);
 
             if(itemOver?.Tag is InstanceSave instanceSave && instanceSave.Name == "ToggleFontSizes")
             {

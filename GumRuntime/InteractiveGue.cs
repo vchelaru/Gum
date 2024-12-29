@@ -711,8 +711,13 @@ namespace Gum.Wireframe
             for(int i = gues.Count-1; i > -1; i--)
             {
                 var gue = gues[i];
-                
-                InteractiveGue.DoUiActivityRecursively(cursor, actions, gue, gue.Layer);
+
+                // This check allows the user to remove a GUE from managers and not null it out.
+                // Even though it might be proper to null it out, this removes "yet another thing to remember"
+                if(gue.EffectiveManagers != null)
+                {
+                    InteractiveGue.DoUiActivityRecursively(cursor, actions, gue, gue.Layer);
+                }
                 if(cursor.WindowOver != null)
                 {
                     break;

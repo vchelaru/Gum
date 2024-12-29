@@ -280,9 +280,6 @@ namespace MonoGameGumFromFileAndroid
         MouseState lastMouseState;
         protected override void Update(GameTime gameTime)
         {
-            if (Microsoft.Xna.Framework.Input.GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Microsoft.Xna.Framework.Input.Keyboard.GetState().IsKeyDown(Keys.Escape))
-                Exit();
-
             GumService.Default.Update(this, gameTime, currentScreenGue);
 
             DoSwapScreenLogic();

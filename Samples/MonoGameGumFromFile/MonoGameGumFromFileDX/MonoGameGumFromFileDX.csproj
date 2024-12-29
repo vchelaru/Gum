@@ -19,6 +19,14 @@
 		<None Remove="Icon.ico" />
 	</ItemGroup>
 	<ItemGroup>
+	  <Compile Include="..\MonoGameGumFromFile\Game1.cs" Link="Game1.cs" />
+	  <Compile Include="..\MonoGameGumFromFile\Managers\SingleThreadSynchronizationContext.cs" Link="Managers\SingleThreadSynchronizationContext.cs" />
+	  <Compile Include="..\MonoGameGumFromFile\ScreenRuntimes\StartScreenRuntime.cs" Link="ScreenRuntimes\StartScreenRuntime.cs" />
+	  <Compile Include="..\MonoGameGumFromFile\Screens\MvvmScreenRuntime.cs" Link="Screens\MvvmScreenRuntime.cs" />
+	  <Compile Include="..\MonoGameGumFromFile\Screens\MvvmScreenRuntime.Generated.cs" Link="Screens\MvvmScreenRuntime.Generated.cs" />
+	  <Compile Include="..\MonoGameGumFromFile\ViewModels\MvvmScreenViewModel.cs" Link="ViewModels\MvvmScreenViewModel.cs" />
+	</ItemGroup>
+	<ItemGroup>
 		<EmbeddedResource Include="Icon.ico" />
 	</ItemGroup>
 
@@ -49,6 +57,12 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
+  <ItemGroup>
+    <Folder Include="Managers\" />
+    <Folder Include="ViewModels\" />
+    <Folder Include="Screens\" />
+    <Folder Include="ScreenRuntimes\" />
+  </ItemGroup>
 	<Target Name="RestoreDotnetTools" BeforeTargets="Restore">
 		<Message Text="Restoring dotnet tools" Importance="High" />
 		<Exec Command="dotnet tool restore" />
