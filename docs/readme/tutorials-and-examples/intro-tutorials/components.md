@@ -42,7 +42,7 @@ To do this:
 2. Select the Alignment tab
 3. Click the Fill Dock button
 
-<figure><img src="../../../.gitbook/assets/image (2) (1) (1).png" alt=""><figcaption><p>Fill Dock expands the ColoredRectangleInstance to occupy its full parent</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1).png" alt=""><figcaption><p>Fill Dock expands the ColoredRectangleInstance to occupy its full parent</p></figcaption></figure>
 
 Alternatively you can adjust the individual values:
 
@@ -67,7 +67,7 @@ To do this:
 3. Set the Margin to 20
 4. Click the Fill Dock button
 
-<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
 
 Alternatively you can set each individual value on the Text by following these steps:
 

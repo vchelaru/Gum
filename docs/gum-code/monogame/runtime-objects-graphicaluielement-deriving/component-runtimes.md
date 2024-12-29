@@ -72,7 +72,7 @@ myTextInstance.SetProperty("Text", "I'm set in code");
 
 If a component has an exposed variable, then this variable can be assigned through SetProperty. For example, consider the following component which exposes its Text variable:
 
-<figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Component exposing a Text variable</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Component exposing a Text variable</p></figcaption></figure>
 
 This can be assigned through the SetProperty. Be sure to use the name exactly as it appears in Gum:
 
