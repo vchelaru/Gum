@@ -62,8 +62,6 @@ namespace Gum.Plugins.BaseClasses
 
         public event Action AfterUndo;
 
-        public event Action<StateStackingMode> ReactToStateStackingModeChange;
-
         public event Action<StateSaveCategory, string> CategoryRename;
         public event Action<StateSaveCategory> CategoryAdd;
         public event Action<StateSaveCategory> CategoryDelete;
@@ -461,8 +459,6 @@ namespace Gum.Plugins.BaseClasses
         public bool CallIsExtensionValid(string extension, ElementSave parentElement, InstanceSave instance, string changedMember) =>
             IsExtensionValid?.Invoke(extension, parentElement, instance, changedMember) ?? false;
 
-        internal void CallReactToStateStackingModeChange(StateStackingMode value) =>
-            ReactToStateStackingModeChange?.Invoke(value);
 
         #endregion
     }

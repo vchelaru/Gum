@@ -492,40 +492,10 @@ namespace Gum.Undo
 
         private void UpdateToSelectedStateSave()
         {
-            if (SelectedState.Self.StateStackingMode == StateStackingMode.SingleState)
-            {
-                // reset everything. This is slow, but is easy
-                WireframeObjectManager.Self.RefreshAll(true);
-            }
-            else
-            {
-
-                var currentGue = WireframeObjectManager.Self.GetSelectedRepresentation();
-
-                if (currentGue == null)
-                {
-                    currentGue = WireframeObjectManager.Self.RootGue;
-                }
-
-                if (currentGue != null && SelectedState.Self.SelectedStateSave != null)
-                {
-                    // Applying a state just stacks it on top of the current
-                    currentGue.ApplyState(SelectedState.Self.SelectedStateSave);
-                }
-            }
+            // reset everything. This is slow, but is easy
+            WireframeObjectManager.Self.RefreshAll(true);
 
             SelectionManager.Self.Refresh();
-
-
-
-            if (SelectedState.Self.SelectedStateSave != null)
-            {
-                StateTreeViewManager.Self.Select(SelectedState.Self.SelectedStateSave);
-            }
-            else if (SelectedState.Self.SelectedStateCategorySave != null)
-            {
-                StateTreeViewManager.Self.Select(SelectedState.Self.SelectedStateCategorySave);
-            }
 
             GumCommands.Self.GuiCommands.RefreshVariables();
 

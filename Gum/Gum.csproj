@@ -255,12 +255,6 @@
     <Compile Include="Plugins\InternalPlugins\ParentPlugin\MainParentPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\ScreenshotPlugin\MainScreenshotPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\StatePlugin\Converters\BackgroundConverter.cs" />
-    <Compile Include="Plugins\InternalPlugins\StatePlugin\StateView.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Plugins\InternalPlugins\StatePlugin\StateView.Designer.cs">
-      <DependentUpon>StateView.cs</DependentUpon>
-    </Compile>
     <Compile Include="Plugins\InternalPlugins\StatePlugin\ViewModels\CategoryViewModel.cs" />
     <Compile Include="Plugins\InternalPlugins\StatePlugin\ViewModels\StateItemViewModel.cs" />
     <Compile Include="Plugins\InternalPlugins\StatePlugin\ViewModels\StateTreeViewModel.cs" />
@@ -419,7 +413,6 @@
     <Compile Include="ToolStates\ISelectedState.cs" />
     <Compile Include="ToolStates\ProjectState.cs" />
     <Compile Include="ToolStates\SelectedState.cs" />
-    <Compile Include="ToolStates\StateStackingMode.cs" />
     <Compile Include="Undo\UndoManager.cs" />
     <Compile Include="Undo\UndoObject.cs" />
     <Compile Include="Undo\UndoPlugin.cs" />
@@ -461,9 +454,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="MainWindow.resx">
       <DependentUpon>MainWindow.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Plugins\InternalPlugins\StatePlugin\StateView.resx">
-      <DependentUpon>StateView.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

@@ -12,15 +12,7 @@
         <converters:BackgroundConverter x:Key="BackgroundConverter"/>
     </UserControl.Resources>
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition/>
-        </Grid.RowDefinitions>
-
-        <RadioButton Content="Single State" IsChecked="{Binding IsSingleStateSelected}"/>
-        <RadioButton Content="Combine States" IsChecked="{Binding IsCombinedStateSelected}" Grid.Row="1"/>
-        <TreeView x:Name="TreeViewInstance" Grid.Row="2" ItemsSource="{Binding Items}" SelectedItemChanged="TreeView_SelectedItemChanged" 
+        <TreeView x:Name="TreeViewInstance" ItemsSource="{Binding Items}" SelectedItemChanged="TreeView_SelectedItemChanged" 
                   KeyDown="TreeViewInstance_KeyDown" PreviewMouseRightButtonDown="TreeViewInstance_PreviewMouseRightButtonDown">
             <TreeView.Resources>
                 <HierarchicalDataTemplate DataType="{x:Type viewmodels:CategoryViewModel}" ItemsSource="{Binding States}">

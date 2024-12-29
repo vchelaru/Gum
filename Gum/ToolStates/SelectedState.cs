@@ -588,27 +588,6 @@ public class SelectedState : ISelectedState
         }
     }
 
-    public StateStackingMode StateStackingMode
-    {
-        get
-        {
-            return snapshot.StateStackingMode;
-        }
-        set
-        {
-            UpdateToSetSelectedStackingMode(value);
-        }
-    }
-
-    private void UpdateToSetSelectedStackingMode(StateStackingMode value)
-    {
-        var isSame = snapshot.StateStackingMode == value;
-        if (!isSame)
-        {
-            snapshot.StateStackingMode = value;
-            PluginManager.Self.ReactToStateStackingModeChange(value);
-        }
-    }
 
     private void TakeSnapshot(StateSave selectedStateSave)
     {
@@ -834,5 +813,4 @@ class SelectedStateSnapshot
 
     public IEnumerable<TreeNode> SelectedTreeNodes { get; set; }
 
-    public StateStackingMode StateStackingMode { get; set; }
 }

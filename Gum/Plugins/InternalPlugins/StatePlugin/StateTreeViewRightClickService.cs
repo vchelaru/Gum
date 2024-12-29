@@ -19,8 +19,6 @@ public class StateTreeViewRightClickService
     const string mNoCategory = "<no category>";
     private readonly ISelectedState _selectedState;
 
-    public ContextMenuStrip OldMenuStrip { get; internal set; }
-
     public System.Windows.Controls.ContextMenu NewMenuStrip { get; internal set; }
 
     public StateTreeViewRightClickService(ISelectedState selectedState)
@@ -92,13 +90,11 @@ public class StateTreeViewRightClickService
 
     private void AddSplitter()
     {
-        OldMenuStrip.Items.Add("-");
         NewMenuStrip.Items.Add(new System.Windows.Controls.Separator());
     }
 
     private void ClearMenuStrip()
     {
-        OldMenuStrip.Items.Clear();
         NewMenuStrip.Items.Clear();
     }
 
@@ -226,7 +222,7 @@ public class StateTreeViewRightClickService
         {
             AddSplitter();
 
-            var rootItem = AddMenuItem("Move to category", null);
+            AddMenuItem("Move to category", null);
 
             foreach(var categoryName in categoryNames)
             {
@@ -240,34 +236,16 @@ public class StateTreeViewRightClickService
 
     private void AddChildMenuItem(string parent, string text, Action clickAction, string shortcut = null)
     {
-        ToolStripMenuItem tsmi = CreateOldToolStripMenuItem(text, clickAction, shortcut);
-        ToolStripMenuItem oldParentItem = null;
-        foreach(var oldItem in OldMenuStrip.Items)
-        {
-            if(oldItem is ToolStripMenuItem itemTsmi && itemTsmi.Text == parent)
-            {
-                oldParentItem = itemTsmi;
-                break;
-            }
-        }
-        oldParentItem.DropDownItems.Add(tsmi);
-
         System.Windows.Controls.MenuItem menuItem = CreateNewToolStripMenuItem(text, clickAction, shortcut);
         var parentItem = NewMenuStrip.Items.FirstOrDefault(item => item is System.Windows.Controls.MenuItem itemMenu && itemMenu.Header.ToString() == parent)
             as System.Windows.Controls.MenuItem;
         parentItem.Items.Add(menuItem);
     }
 
-    private ToolStripMenuItem AddMenuItem(string text, Action clickAction, string shortcut = null)
+    private void AddMenuItem(string text, Action clickAction, string shortcut = null)
     {
-        ToolStripMenuItem tsmi = CreateOldToolStripMenuItem(text, clickAction, shortcut);
-        OldMenuStrip.Items.Add(tsmi);
         System.Windows.Controls.MenuItem menuItem = CreateNewToolStripMenuItem(text, clickAction, shortcut);
         NewMenuStrip.Items.Add(menuItem);
-
-
-
-        return tsmi;
     }
 
     private static System.Windows.Controls.MenuItem CreateNewToolStripMenuItem(string text, Action clickAction, string shortcut)
@@ -284,21 +262,6 @@ public class StateTreeViewRightClickService
         return menuItem;
     }
 
-    private static ToolStripMenuItem CreateOldToolStripMenuItem(string text, Action clickAction, string shortcut)
-    {
-        var tsmi = new ToolStripMenuItem();
-        tsmi.Text = text;
-        tsmi.ShortcutKeyDisplayString = shortcut;
-        if (clickAction != null)
-        {
-            tsmi.Click += delegate
-            {
-                clickAction();
-            };
-        }
-
-        return tsmi;
-    }
 
     #endregion
 

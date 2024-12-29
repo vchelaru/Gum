@@ -17,32 +17,6 @@ public class StateTreeViewModel : ViewModel
 {
     #region Fields/Properties
 
-    public StateStackingMode StateStackingMode
-    {
-        get => Get<StateStackingMode>();
-        set => Set(value);
-    }
-
-    [DependsOn(nameof(StateStackingMode))]
-    public bool IsSingleStateSelected
-    {
-        get => StateStackingMode == StateStackingMode.SingleState;
-        set
-        {
-            if (value) StateStackingMode = StateStackingMode.SingleState;
-        }
-    }
-
-    [DependsOn(nameof(StateStackingMode))]
-    public bool IsCombinedStateSelected
-    {
-        get => StateStackingMode == StateStackingMode.CombineStates;
-        set
-        {
-            if (value) StateStackingMode = StateStackingMode.CombineStates;
-        }
-    }
-
     [DependsOn(nameof(Categories))]
     [DependsOn(nameof(States))]
     public IEnumerable<StateTreeViewItem> Items => Categories.Concat<StateTreeViewItem>(States);
@@ -76,10 +50,6 @@ public class StateTreeViewModel : ViewModel
 
     private void HandlePropertyChanged(object sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(StateStackingMode))
-        {
-            GumState.Self.SelectedState.StateStackingMode = StateStackingMode;
-        }
     }
 
     #endregion

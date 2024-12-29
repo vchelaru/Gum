@@ -671,9 +671,6 @@ namespace Gum.Plugins
         internal void ReactToStateSaveCategorySelected(StateSaveCategory category) =>
             CallMethodOnPlugin((plugin) => plugin.CallReactToStateSaveCategorySelected(category));
 
-        internal void ReactToStateStackingModeChange(StateStackingMode value) =>
-            CallMethodOnPlugin((plugin) => plugin.CallReactToStateStackingModeChange(value));
-
         internal void VariableAdd(ElementSave elementSave, string variableName) =>
             CallMethodOnPlugin((plugin) => plugin.CallVariableAdd(elementSave, variableName));
 

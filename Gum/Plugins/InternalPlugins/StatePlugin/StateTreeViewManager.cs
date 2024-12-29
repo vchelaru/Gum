@@ -16,9 +16,6 @@ namespace Gum.Managers
 
         static StateTreeViewManager mSelf;
 
-        MultiSelectTreeView mTreeView;
-
-        ContextMenuStrip mMenuStrip;
         StateTreeViewRightClickService _stateTreeViewRightClickService;
         HotkeyManager _hotkeyManager;
 
@@ -40,79 +37,14 @@ namespace Gum.Managers
             }
         }
 
-        public TreeNode SelectedNode
-        {
-            get { return mTreeView?.SelectedNode; }
-        }
-
         #endregion
 
-        public TreeNode GetTreeNodeForTag(object tag)
-        {
-            if (tag == null)
-            {
-                return null;
-            }
-            // Will need to expand this when we add categories
-            foreach (TreeNode node in mTreeView.Nodes)
-            {
-                if (node.Tag == tag)
-                {
-                    return node;
-                }
-
-                foreach (TreeNode subnode in node.Nodes)
-                {
-                    if (subnode.Tag == tag)
-                    {
-                        return subnode;
-                    }
-                }
-            }
-            return null;
-        }
-
-        public void Initialize(MultiSelectTreeView treeView, ContextMenuStrip menuStrip, 
+        public void Initialize(
             StateTreeViewRightClickService stateTreeViewRightClickService,
             HotkeyManager hotkeyManager)
         {
             _stateTreeViewRightClickService = stateTreeViewRightClickService;
             _hotkeyManager = hotkeyManager;
-            if (treeView == null)
-            {
-                throw new ArgumentNullException(nameof(treeView));
-            }
-            mMenuStrip = menuStrip;
-            mTreeView = treeView;
-
-            InitializeKeyboardShortcuts(treeView);
-
-
-            mMenuStrip.Items.Clear();
-
-            var tsmi = new ToolStripMenuItem();
-            tsmi.Text = "Add State";
-            tsmi.Click += ((obj, arg) =>
-            {
-
-                GumCommands.Self.GuiCommands.ShowAddStateWindow();
-            });
-            mMenuStrip.Items.Add(tsmi);
-
-            tsmi = new ToolStripMenuItem();
-            tsmi.Text = "Add Category";
-            tsmi.Click += ((obj, arg) =>
-            {
-
-                GumCommands.Self.GuiCommands.ShowAddCategoryWindow();
-            });
-            mMenuStrip.Items.Add(tsmi);
-        }
-
-        private void InitializeKeyboardShortcuts(MultiSelectTreeView treeView)
-        {
-            treeView.KeyDown += HandleKeyDown;
-            //treeView.KeyPress += HandleTreeViewKeyPressed;
         }
 
         private void HandleKeyDown(object sender, KeyEventArgs e)
@@ -154,97 +86,6 @@ namespace Gum.Managers
         //    switch(e.)
         //}
 
-        internal void OnSelect()
-        {
-            IsInUiInitiatedSelection = true;
-
-            TreeNode treeNode = mTreeView.SelectedNode;
-
-            object selectedObject = null;
-
-            if (treeNode != null)
-            {
-                selectedObject = treeNode.Tag;
-            }
-
-            if (selectedObject == null)
-            {
-                // What do we do?  This is invalid.  A State should always be selected...
-                // What we do is select the first one if it exists
-                if (mTreeView.Nodes.Count != 0)
-                {
-                    var newlySelectedNode = mTreeView.Nodes.FirstOrDefault(item=> 
-                        {
-                            TreeNode itemAsNode = item as TreeNode;
-                            return itemAsNode.Tag is StateSave && (itemAsNode.Tag as StateSave).Name == "Default";
-                        }) as TreeNode;
-
-                    selectedObject = newlySelectedNode?.Tag;
-                    mTreeView.SelectedNode = newlySelectedNode;
-                }
-            }
-            SelectedState.Self.CustomCurrentStateSave = null;
-
-            var selectedItem = mTreeView.SelectedNode?.Tag;
-            if(selectedItem is StateSave stateSave)
-            {
-                SelectedState.Self.SelectedStateSave = stateSave;
-            }
-            else if(selectedItem is StateSaveCategory category)
-            {
-                // todo:
-                SelectedState.Self.SelectedStateCategorySave = category;
-            }
-
-            // refreshes the yellow highlights
-
-            //GumCommands.Self.GuiCommands.RefreshStateTreeView();
-
-            PluginManager.Self.StateWindowTreeNodeSelected(treeNode);
-
-            IsInUiInitiatedSelection = false;
-        }
-
-        public void Select(StateSave stateSave)
-        {
-            if (IsInUiInitiatedSelection) return;
-
-            TreeNode treeNode = GetTreeNodeForTag(stateSave);
-
-            Select(treeNode);
-
-            // Vic says - why is this recording an undo?
-            // Shouldn't this only happen whenever you end 
-            // some kind of edit?
-            // This change causes incorrect undos to register.
-            //UndoManager.Self.RecordUndo();
-        }
-
-        public void Select(StateSaveCategory stateSaveCategory)
-        {
-            if (IsInUiInitiatedSelection) return;
-
-            TreeNode treeNode = GetTreeNodeForTag(stateSaveCategory);
-
-            Select(treeNode);
-        }
-
-        public void Select(TreeNode treeNode)
-        {
-            if (IsInUiInitiatedSelection) return;
-
-
-            if (mTreeView.SelectedNode != treeNode)
-            {
-                mTreeView.SelectedNode = treeNode;
-
-                if (treeNode != null)
-                {
-                    treeNode.EnsureVisible();
-                }
-
-            }
-        }
     }
 
 

@@ -32,7 +32,6 @@ namespace Gum.ToolStates
         TreeNode SelectedTreeNode { get; }
         IEnumerable<TreeNode> SelectedTreeNodes { get; }
         RecursiveVariableFinder SelectedRecursiveVariableFinder { get; }
-        StateStackingMode StateStackingMode { get; set; }
 
         List<ElementWithState> GetTopLevelElementStack();
 
