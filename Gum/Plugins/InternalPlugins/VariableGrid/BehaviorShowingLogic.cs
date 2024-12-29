@@ -29,14 +29,19 @@ namespace Gum.Plugins.VariableGrid
 
                 instanceMember.Name = name;
                 instanceMember.CustomGetEvent += (notUsed) => getter();
-                instanceMember.CustomSetEvent += (instance, value) =>
+                instanceMember.CustomSetPropertyEvent += (sender, args) =>
                 {
-                    setter(value);
+                    setter(args.Value);
 
                     GumCommands.Self.FileCommands.TryAutoSaveBehavior(behavior);
                 };
-                var options = 
-                    GumState.Self.ProjectState.GumProjectSave.Components.Select(item => (object)item.Name).ToList();
+
+                var componentsImplementingBehavior = GumState.Self.ProjectState.GumProjectSave.Components
+                    .Where(item => item.Behaviors.Any(behaviorSave => behaviorSave.BehaviorName == behavior.Name));
+
+                var options = componentsImplementingBehavior
+                    .Select(item => (object)item.Name).ToList();
+
                 options.Insert(0, null);
                 instanceMember.CustomOptions = options;
                 instanceMember.CustomGetTypeEvent += (notused) => typeof(T);

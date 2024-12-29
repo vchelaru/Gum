@@ -245,6 +245,7 @@ namespace Gum.Wireframe
                 }
             }
 
+            SelectedState.Self.SelectedBehavior = null;
 
             GumCommands.Self.GuiCommands.RefreshElementTreeView();
             GumCommands.Self.GuiCommands.RefreshStateTreeView();
