@@ -5,6 +5,7 @@ using Gum.DataTypes;
 using Gum.Wireframe;
 using Gum.Undo;
 using Gum.Gui.Forms;
+using System.Diagnostics;
 
 namespace Gum.Managers
 {
@@ -28,6 +29,7 @@ namespace Gum.Managers
         private ToolStripMenuItem RemoveElementMenuItem;
         private ToolStripMenuItem RemoveVariableMenuItem;
         private ToolStripMenuItem aboutToolStripMenuItem;
+        private ToolStripMenuItem documentationToolStripMenuItem;
         private ToolStripMenuItem saveAllToolStripMenuItem;
         private ToolStripMenuItem newProjectToolStripMenuItem;
         private ToolStripMenuItem findFileReferencesToolStripMenuItem;
@@ -66,6 +68,7 @@ namespace Gum.Managers
             this.RemoveStateMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.RemoveVariableMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.documentationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.newProjectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -232,8 +235,21 @@ namespace Gum.Managers
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
             this.aboutToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
             this.aboutToolStripMenuItem.Text = "About...";
-            this.aboutToolStripMenuItem.Click += (not, used) => MessageBox.Show("Gum version " + Application.ProductVersion, "About"); 
+            this.aboutToolStripMenuItem.Click += (not, used) => MessageBox.Show("Gum version " + Application.ProductVersion, "About");
 
+            string documentationLink = "https://docs.flatredball.com/gum";
+            this.documentationToolStripMenuItem.Name = "documentationToolStripMenuItem";
+            this.documentationToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
+            this.documentationToolStripMenuItem.Text = $"View Docs ({documentationLink})";
+            this.documentationToolStripMenuItem.ToolTipText = "External link to Gum documentation";
+            this.documentationToolStripMenuItem.Click += (not, used) =>
+            {
+                System.Diagnostics.Process.Start(new ProcessStartInfo
+                {
+                    FileName = documentationLink,
+                    UseShellExecute = true
+                });
+            };
 
             this.viewToolStripMenuItem = new ToolStripMenuItem();
             viewToolStripMenuItem.Text = "View";
@@ -253,7 +269,7 @@ namespace Gum.Managers
 
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-                this.aboutToolStripMenuItem});
+                this.aboutToolStripMenuItem, this.documentationToolStripMenuItem});
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
             this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.helpToolStripMenuItem.Text = "Help";
