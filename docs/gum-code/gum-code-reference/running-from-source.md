@@ -16,6 +16,12 @@ Gum is an open source project so you can run it from source instead of running t
 
 <figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Gum repository in Github Desktop</p></figcaption></figure>
 
+{% hint style="info" %}
+Due to the way GitBook handles image files, some file names are very long. You may need to modify your git config file to allow long file names. More info can be found here:
+
+[https://stackoverflow.com/a/75429694/789380](https://stackoverflow.com/a/75429694/789380)
+{% endhint %}
+
 ## Running the code
 
 1. Locate the Gum.sln file
