@@ -409,7 +409,7 @@ Components defined in Gum can contain almost anything you want; however, Buttons
 
 The following image shows the a component named StandardButton which contains a ColoredRectangle, a Rectangle, and a Text instance. For other controls, see the DefaultVisuals page linked above.
 
-<figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Example Button in Gum</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Example Button in Gum</p></figcaption></figure>
 
 #### Adding Button States to the Component
 
@@ -417,7 +417,7 @@ All Gum Forms components react to various properties by assigning states. For a 
 
 For Buttons, we can add a ButtonCategory state. You are free to implement as many or as few states as you want. For the full list of states see above in the [Available States](control-customization.md#available-states) section.
 
-<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Example of a ButtonStateCategory implementing only Normal, Highlighted, and Pushed</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Example of a ButtonStateCategory implementing only Normal, Highlighted, and Pushed</p></figcaption></figure>
 
 #### Defining a Custom Runtime for the Forms Control
 

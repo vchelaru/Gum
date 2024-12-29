@@ -47,6 +47,7 @@
       * [Default Child Container](readme/gum-elements/component/default-child-container.md)
     * [Container](readme/gum-elements/container/README.md)
       * [Children Layout](readme/gum-elements/container/children-layout.md)
+      * [Contained Type](readme/gum-elements/container/contained-type.md)
       * [Stack Spacing](readme/gum-elements/container/stack-spacing.md)
       * [Wraps Children](readme/gum-elements/container/wraps-children.md)
     * [NineSlice](readme/gum-elements/nineslice/README.md)
