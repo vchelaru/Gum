@@ -358,6 +358,9 @@ public class SelectedState : ISelectedState
         var instancesBefore = snapshot.SelectedInstances.ToList();
 
         var instance = value?.FirstOrDefault();
+
+        var behaviorBefore = SelectedBehavior;
+
         if (instance != null)
         {
             var elementAfter = ObjectFinder.Self.GetElementContainerOf(instance);
@@ -365,6 +368,12 @@ public class SelectedState : ISelectedState
 
             snapshot.SelectedElement = elementAfter;
             snapshot.SelectedBehavior = behaviorAfter;
+        }
+
+        if(behaviorBefore != SelectedBehavior && SelectedBehavior != null)
+        {
+            snapshot.SelectedStateCategorySave = null;
+            snapshot.SelectedStateSave = null;
         }
 
         UpdateToSelectedInstances(value);
@@ -520,7 +529,6 @@ public class SelectedState : ISelectedState
 
     #region StateSave
 
-
     public StateSave CustomCurrentStateSave
     {
         get;
@@ -580,7 +588,6 @@ public class SelectedState : ISelectedState
             PluginManager.Self.ReactToStateSaveSelected(selectedStateSave);
         }
     }
-
 
     private void TakeSnapshot(StateSave selectedStateSave)
     {
@@ -678,7 +685,6 @@ public class SelectedState : ISelectedState
 
         return toReturn;
     }
-
 }
 
 /// <summary>
