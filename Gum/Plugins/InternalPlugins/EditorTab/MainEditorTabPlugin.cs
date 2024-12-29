@@ -135,7 +135,7 @@ internal class MainEditorTabPlugin : InternalPlugin
         // I don't think we need this for docking:
         //WireframeEditControl.Width = WireframeEditControl.Parent.Width / 2;
 
-        _toolbarPanel.Width = _toolbarPanel.Parent.Width;
+        //_toolbarPanel.Width = _toolbarPanel.Parent.Width;
 
         _wireframeControl.Width = _wireframeControl.Parent.Width;
 

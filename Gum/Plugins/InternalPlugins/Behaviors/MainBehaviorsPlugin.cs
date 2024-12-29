@@ -22,6 +22,7 @@ public class MainBehaviorsPlugin : InternalPlugin
     private readonly ISelectedState _selectedState;
     BehaviorsViewModel viewModel = new BehaviorsViewModel();
     DataUiGrid stateDataUiGrid;
+    PluginTab behaviorsTab;
 
     public MainBehaviorsPlugin()
     {
@@ -37,8 +38,8 @@ public class MainBehaviorsPlugin : InternalPlugin
 
         control = new BehaviorsControl();
         control.DataContext = viewModel;
-        GumCommands.Self.GuiCommands.AddControl(control, "Behaviors");
-        GumCommands.Self.GuiCommands.RemoveControl(control);
+        behaviorsTab = GumCommands.Self.GuiCommands.AddControl(control, "Behaviors");
+        behaviorsTab.Hide();
 
         stateDataUiGrid = new DataUiGrid();
         AssignEvents();
@@ -117,38 +118,12 @@ public class MainBehaviorsPlugin : InternalPlugin
 
     private void HandleStateSelected(TreeNode obj)
     {
-        RefreshStateVariables();
+
     }
 
-    bool isStateTabShown;
     private void HandleBehaviorSelected(BehaviorSave obj)
     {
-        RefreshStateVariables();
-    }
 
-    private void RefreshStateVariables()
-    {
-        //var shouldShow =
-        //    SelectedState.Self.SelectedBehavior != null &&
-        //    SelectedState.Self.SelectedStateSave != null;
-
-        //if (!shouldShow)
-        //{
-        //    if(isStateTabShown)
-        //    {
-        //        GumCommands.Self.GuiCommands.RemoveControl(stateDataUiGrid);
-        //        isStateTabShown = false;
-        //    }
-        //}
-        //else
-        //{
-        //    if(!isStateTabShown)
-        //    {
-        //        GumCommands.Self.GuiCommands.AddControl(stateDataUiGrid, "State Properties");
-        //        isStateTabShown = true;
-        //    }
-        //    stateDataUiGrid.Instance = SelectedState.Self.SelectedStateSave;
-        //}
     }
 
     private void HandleApplyBehaviorChanges(object sender, EventArgs e)
@@ -198,13 +173,11 @@ public class MainBehaviorsPlugin : InternalPlugin
     {
         HandleElementSelected(element);
     }
-    bool hasBehaviorsControlBeenAdded = false;
+
     private void HandleElementSelected(ElementSave element)
     {
         // In case the user left without clicking "OK" on the previous edit:
         viewModel.IsEditing = false;
-        
-        
         UpdateTabPresence();
     }
 
@@ -221,16 +194,12 @@ public class MainBehaviorsPlugin : InternalPlugin
         if (shouldShow)
         {
             viewModel.UpdateTo(asComponent);
-            if (!hasBehaviorsControlBeenAdded)
-            {
-                GumCommands.Self.GuiCommands.AddControl(control, "Behaviors");
-                hasBehaviorsControlBeenAdded = true;
-            }
+
+            this.behaviorsTab.Show();
         }
         else
         {
-            GumCommands.Self.GuiCommands.RemoveControl(control);
-            hasBehaviorsControlBeenAdded = false;
+            this.behaviorsTab.Hide();
         }
     }
 

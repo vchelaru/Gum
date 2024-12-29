@@ -229,6 +229,10 @@ namespace Gum.Plugins
 
         private static void LoadPlugins(PluginManager instance, MainWindow mainWindow)
         {
+            if(mainWindow.MainMenuStrip == null)
+            {
+                throw new InvalidOperationException("MainMenuStrip must be set before loading plugins");
+            }
             #region Get the Catalog
 
 
@@ -711,6 +715,9 @@ namespace Gum.Plugins
 
         internal void BehaviorSelected(BehaviorSave behaviorSave) =>
             CallMethodOnPlugin(plugin => plugin.CallBehaviorSelected(behaviorSave));
+
+        internal void BehaviorVariableSelected(VariableSave variable) =>
+            CallMethodOnPlugin(plugin => plugin.CallBehaviorVariableSelected(variable));
 
         internal void InstanceSelected(ElementSave elementSave, InstanceSave instance) =>
             CallMethodOnPlugin(plugin => plugin.CallInstanceSelected(elementSave, instance));

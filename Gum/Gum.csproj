@@ -250,6 +250,7 @@
     <Compile Include="Plugins\InternalPlugins\LoadRecentFilesPlugin\Views\RecentFileItem.xaml.cs">
       <DependentUpon>RecentFileItem.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Plugins\InternalPlugins\MenuStripPlugin\MainMenuStripPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\NineSlicePlugin\MainNineSlicePlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\Output\MainOutputPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\ParentPlugin\MainParentPlugin.cs" />
@@ -352,7 +353,7 @@
     <Compile Include="Managers\DragDropManager.cs" />
     <Compile Include="Plugins\InternalPlugins\TreeView\ElementTreeViewManager.cs" />
     <Compile Include="Plugins\InternalPlugins\TreeView\ElementTreeViewManager.RightClick.cs" />
-    <Compile Include="Managers\MenuStripManager.cs" />
+    <Compile Include="Plugins\InternalPlugins\MenuStripPlugin\MenuStripManager.cs" />
     <Compile Include="Managers\ObjectFinder.cs" />
     <Compile Include="Plugins\InternalPlugins\VariableGrid\PropertyGridManager.cs" />
     <Compile Include="Managers\StandardElementsManager.cs" />

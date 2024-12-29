@@ -26,12 +26,15 @@ namespace Gum.Commands
         #region FieldsProperties
         FlowLayoutPanel mFlowLayoutPanel;
 
+        public MainWindow MainWindow { get; private set; }
+
         MainPanelControl mainPanelControl;
 
         #endregion
 
         internal void Initialize(MainWindow mainWindow, MainPanelControl mainPanelControl)
         {
+            this.MainWindow = mainWindow;
             this.mainPanelControl = mainPanelControl;
             mFlowLayoutPanel = mainWindow.ToolbarPanel;
         }
