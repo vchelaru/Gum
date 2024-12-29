@@ -385,7 +385,7 @@ namespace Gum.ToolCommands
         }
 
 
-        public void AddCategoriesFromBehavior(BehaviorSave behaviorSave, ElementSave element)
+        void AddCategoriesFromBehavior(BehaviorSave behaviorSave, ElementSave element)
         {
             foreach (var behaviorCategory in behaviorSave.Categories)
             {

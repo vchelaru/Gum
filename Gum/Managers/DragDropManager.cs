@@ -29,6 +29,7 @@ public class DragDropManager
     static DragDropManager mSelf;
 
     object mDraggedItem;
+    private readonly ISelectedState _selectedState;
 
     #endregion
 
@@ -52,6 +53,11 @@ public class DragDropManager
     }
 
     #endregion
+
+    public DragDropManager()
+    {
+        _selectedState = SelectedState.Self;
+    }
 
     internal void HandleDragDropEvent(object sender, DragEventArgs e)
     {
@@ -553,6 +559,14 @@ public class DragDropManager
             return;
         }
         ///////////////End Early Out//////////////
+
+        // This can happen if the user drags a behavior onto a component
+        // which is not currently selected. We need it to be selected for
+        // undos to record properly, so let's select it first:
+        _selectedState.SelectedComponent = targetComponent;
+        
+        using var undoLock = UndoManager.Self.RequestLock();
+
 
         GumCommands.Self.ProjectCommands.ElementCommands.AddBehaviorTo(behavior, targetComponent);
 
