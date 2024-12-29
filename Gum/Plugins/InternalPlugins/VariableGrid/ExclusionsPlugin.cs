@@ -83,7 +83,7 @@ public class ExclusionsPlugin : InternalPlugin
         // only if we are dealing with a screen:
         var currentElement = _selectedState.SelectedScreen;
 
-        if(currentElement is ScreenSave currentScreen)
+        if(currentElement is ScreenSave currentScreen && _selectedState.SelectedInstance == null)
         {
             // exclude it if the value is null and there is only one screen:
             var isOnlyScreen = _objectFinder.GumProjectSave.Screens.Count == 1;
