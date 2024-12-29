@@ -109,15 +109,18 @@ namespace Gum.Undo
         //StateSave mRecordedStateSave;
         //List<InstanceSave> mRecordedInstanceList;
 
+        public static UndoManager Self { get; private set; } = new UndoManager();
         #endregion
 
-
+        #region Events/Invokations
 
         public event EventHandler<UndoOperationEventArgs> UndosChanged;
+
         public void BroadcastUndosChanged() => InvokeUndosChanged(UndoOperation.EntireHistoryChange);
+
         void InvokeUndosChanged(UndoOperation operation) => UndosChanged?.Invoke(this, new UndoOperationEventArgs { Operation = operation });
 
-        public static UndoManager Self { get; private set; } = new UndoManager();
+        #endregion
 
         public UndoManager()
         {
@@ -347,6 +350,10 @@ namespace Gum.Undo
                 if(elementSave.Events == null)
                 {
                     cloned.Events = null;
+                }
+                if(elementSave.Behaviors == null)
+                {
+                    cloned.Behaviors = null;
                 }
 
                 foreach (var state in cloned.AllStates)

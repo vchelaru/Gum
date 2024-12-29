@@ -111,7 +111,7 @@ public class SelectedState : ISelectedState
         }
         UpdateToSelectedElement(value);
 
-        if (value != elementBefore || instancesBefore.Count > 0 && SelectedScreen.Instances.Count == 0)
+        if (value != elementBefore || (instancesBefore.Count > 0 && SelectedElement?.Instances.Count == 0))
         {
             PluginManager.Self.ElementSelected(SelectedElement);
         }
