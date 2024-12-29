@@ -40,10 +40,19 @@ namespace Gum.Wireframe
         }
 
 
+
+        SystemManagers managers;
         public SystemManagers Managers
         {
-            get;
-            set;
+            get => managers;
+            set
+            {
+                if(value == null)
+                {
+                    throw new ArgumentNullException("Managers value should not be null");
+                }
+                managers = value;
+            }
         }
 
         #endregion

@@ -90,9 +90,19 @@ namespace Gum.PropertyGridHelpers
 
             if (instance != null && instanceContainer == null)
             {
-                instanceContainer = ObjectFinder.Self.GetBehaviorContainerOf(instance);
+                // This can happen if the user hasn't selected a state
+                //  (if the user opens the app and drag+drops immediately before selecting anything)
+                // --or--
+                // the user hasn't selected a behavior.
+                // case we should look to the instance and get its container:
+                instanceContainer = 
+                    (IInstanceContainer)ObjectFinder.Self.GetElementContainerOf(instance) ?? 
+                    ObjectFinder.Self.GetBehaviorContainerOf(instance);
             }
-
+            if(selectedStateSave == null && instanceContainer is ElementSave containerElement)
+            {
+                selectedStateSave = containerElement.DefaultState;
+            }
 
             ReactToPropertyValueChanged(unqualifiedMemberName, oldValue, instanceContainer, instance, selectedStateSave, refresh, recordUndo: recordUndo, trySave: trySave);
         }
@@ -320,7 +330,9 @@ namespace Gum.PropertyGridHelpers
                 GumCommands.Self.GuiCommands.RefreshVariables(force: true);
             }
 
-            var value = SelectedState.Self.SelectedStateSave.GetValue(qualifiedName);
+            var state = SelectedState.Self.SelectedStateSave ?? parentElement.DefaultState;
+
+            var value = state.GetValue(qualifiedName);
 
             var areSame = value == null && oldValue == null;
             if (!areSame && value != null)

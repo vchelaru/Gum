@@ -18,6 +18,7 @@ using Gum.Converters;
 using Gum.Logic;
 using Gum.Plugins.ImportPlugin.Manager;
 using Gum.DataTypes.Behaviors;
+using Gum.Undo;
 
 namespace Gum.Managers;
 
@@ -412,7 +413,7 @@ public class DragDropManager
         return newInstance;
     }
 
-    private static InstanceSave HandleDroppedElementInElement(ElementSave draggedAsElementSave, ElementSave target, InstanceSave parentInstance, out bool handled)
+    private InstanceSave HandleDroppedElementInElement(ElementSave draggedAsElementSave, ElementSave target, InstanceSave parentInstance, out bool handled)
     {
         InstanceSave newInstance = null;
 
@@ -448,7 +449,7 @@ public class DragDropManager
         return newInstance;
     }
 
-    private static string GetDropElementErrorMessage(ElementSave draggedAsElementSave, ElementSave target, string errorMessage)
+    private string GetDropElementErrorMessage(ElementSave draggedAsElementSave, ElementSave target, string errorMessage)
     {
         if (target == null)
         {
@@ -499,7 +500,7 @@ public class DragDropManager
         return errorMessage;
     }
 
-    private static string GetUniqueNameForNewInstance(ElementSave elementSaveForNewInstance, ElementSave element)
+    private string GetUniqueNameForNewInstance(ElementSave elementSaveForNewInstance, ElementSave element)
     {
 #if DEBUG
         if (elementSaveForNewInstance == null)
@@ -515,7 +516,7 @@ public class DragDropManager
     }
 
 
-    private static string GetUniqueNameForNewInstance(ElementSave elementSaveForNewInstance, BehaviorSave container)
+    private string GetUniqueNameForNewInstance(ElementSave elementSaveForNewInstance, BehaviorSave container)
     {
 #if DEBUG
         if (elementSaveForNewInstance == null)
@@ -566,7 +567,7 @@ public class DragDropManager
 
     #region Drop Instance on TreeNode
 
-    private static void HandleDroppedInstance(object draggedObject, TreeNode targetTreeNode)
+    private void HandleDroppedInstance(object draggedObject, TreeNode targetTreeNode)
     {
         object targetObject = targetTreeNode.Tag;
 
@@ -608,7 +609,7 @@ public class DragDropManager
         }
     }
 
-    private static void HandleDroppingInstanceOnBehaviorSave(InstanceSave draggedAsInstanceSave, BehaviorSave asBehaviorSave)
+    private void HandleDroppingInstanceOnBehaviorSave(InstanceSave draggedAsInstanceSave, BehaviorSave asBehaviorSave)
     {
         var behaviorInstanceSave = new BehaviorInstanceSave();
         behaviorInstanceSave.Name = draggedAsInstanceSave.Name;
@@ -619,7 +620,7 @@ public class DragDropManager
 
     }
 
-    private static void HandleDroppingInstanceOnTarget(object targetObject, InstanceSave dragDroppedInstance, ElementSave targetElementSave, TreeNode targetTreeNode)
+    private void HandleDroppingInstanceOnTarget(object targetObject, InstanceSave dragDroppedInstance, ElementSave targetElementSave, TreeNode targetTreeNode)
     {
         var instanceDefinedByBase = dragDroppedInstance.DefinedByBase;
 
@@ -651,10 +652,13 @@ public class DragDropManager
             // Since the Parent property can only be set in the default state, we will
             // set the Parent variable on that instead of the SelectedState.Self.SelectedStateSave
             var stateToAssignOn = targetElementSave.DefaultState;
-            Gum.Undo.UndoManager.Self.RecordState();
+
+            using var undoLock = UndoManager.Self.RequestLock();
+
             var oldValue = stateToAssignOn.GetValue(variableName) as string;
             stateToAssignOn.SetValue(variableName, parentName, "string");
-            Gum.Undo.UndoManager.Self.RecordUndo();
+            
+
             SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue, dragDroppedInstance);
             targetTreeNode?.Expand();
         }
@@ -822,7 +826,7 @@ public class DragDropManager
         }
     }
 
-    private static void SaveAndRefresh()
+    private void SaveAndRefresh()
     {
         GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
         GumCommands.Self.GuiCommands.RefreshVariables();
@@ -842,7 +846,7 @@ public class DragDropManager
     #endregion
 
 
-    private static void AddNewInstanceForDrop(string fileName, float worldX, float worldY)
+    private void AddNewInstanceForDrop(string fileName, float worldX, float worldY)
     {
         string nameToAdd = FileManager.RemovePath(FileManager.RemoveExtension(fileName));
 
@@ -867,7 +871,7 @@ public class DragDropManager
 
     }
 
-    private static void SetInstanceToPosition(float worldX, float worldY, InstanceSave instance)
+    private void SetInstanceToPosition(float worldX, float worldY, InstanceSave instance)
     {
         var component = SelectedState.Self.SelectedComponent;
 

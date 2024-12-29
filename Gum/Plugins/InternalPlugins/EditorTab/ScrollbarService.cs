@@ -10,22 +10,11 @@ using System.ComponentModel.Composition;
 
 namespace Gum.Plugins.ScrollBarPlugin
 {
-    [Export(typeof(Gum.Plugins.BaseClasses.PluginBase))]
-    public class MainScrollBarPlugin : InternalPlugin
+    public class ScrollbarService
     {
         ScrollBarControlLogic scrollBarControlLogic;
 
-        public override void StartUp()
-        {
-            
-            this.WireframeInitialized += HandleWireframeInitialized;
-            this.CameraChanged += HandleCameraChanged;
-            this.XnaInitialized += HandleXnaInitialized;
-            this.WireframeResized += HandleWireframeResized;
-            this.ElementSelected += HandleElementSelected;
-        }
-
-        private void HandleElementSelected(ElementSave obj)
+        public void HandleElementSelected(ElementSave obj)
         {
 
             var ipso = GumState.Self.SelectedState.SelectedIpso;
@@ -79,7 +68,7 @@ namespace Gum.Plugins.ScrollBarPlugin
             }
         }
 
-        void HandleWireframeInitialized(WireframeControl wireframeControl1, System.Windows.Forms.Panel gumEditorPanel)
+        public void HandleWireframeInitialized(WireframeControl wireframeControl1, System.Windows.Forms.Panel gumEditorPanel)
         {
             // this used to be in MainWindow.cs,
             // but was moved to a plugin. This changes
@@ -91,7 +80,7 @@ namespace Gum.Plugins.ScrollBarPlugin
             scrollBarControlLogic.SetDisplayedArea(800, 600);
         }
 
-        void HandleCameraChanged()
+        public void HandleCameraChanged()
         {
             // I don't think we need to update
             // the canvas width or height anymore.
@@ -112,13 +101,13 @@ namespace Gum.Plugins.ScrollBarPlugin
             scrollBarControlLogic.UpdateScrollBarsToCameraPosition();
         }
 
-        void HandleXnaInitialized()
+        public void HandleXnaInitialized()
         {
             scrollBarControlLogic.Managers = global::RenderingLibrary.SystemManagers.Default;
             scrollBarControlLogic.UpdateScrollBars();
         }
 
-        void HandleWireframeResized()
+        public void HandleWireframeResized()
         {
             scrollBarControlLogic.UpdateScrollBars();
         }

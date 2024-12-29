@@ -310,7 +310,7 @@
     <Compile Include="Managers\NameVerifier.cs" />
     <Compile Include="Managers\OutputManager.cs" />
     <Compile Include="Plugins\InternalPlugins\RenameLogicPlugin\MainRenameLogic.cs" />
-    <Compile Include="Plugins\InternalPlugins\ScrollBarPlugin\MainScrollBarPlugin.cs" />
+    <Compile Include="Plugins\InternalPlugins\EditorTab\ScrollbarService.cs" />
     <Compile Include="Plugins\InternalPlugins\StatePlugin\MainStatePlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\VariableGrid\BehaviorShowingLogic.cs" />
     <Compile Include="Plugins\InternalPlugins\VariableGrid\DeletingVariablesInCategoriesMessageBox.xaml.cs">

@@ -61,7 +61,6 @@
             this.PropertyGridMenuStrip.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.PropertyGridMenuStrip.Name = "PropertyGridMenuStrip";
             this.PropertyGridMenuStrip.Size = new System.Drawing.Size(61, 4);
-            this.PropertyGridMenuStrip.Opening += new System.ComponentModel.CancelEventHandler(this.PropertyGridMenuStrip_Opening);
             // 
             // MainWindow
             // 

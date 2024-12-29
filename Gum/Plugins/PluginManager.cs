@@ -871,9 +871,6 @@ namespace Gum.Plugins
         internal void HandleWireframeResized() =>
             CallMethodOnPlugin(plugin => plugin.CallWireframeResized());
 
-        internal void WireframeInitialized(WireframeControl wireframeControl1, Panel gumEditorPanel) =>
-            CallMethodOnPlugin(plugin => plugin.CallWireframeInitialized(wireframeControl1, gumEditorPanel));
-
         internal void CameraChanged() =>
             CallMethodOnPlugin(plugin => plugin.CallCameraChanged());
 

@@ -78,9 +78,13 @@ namespace Gum
 
         }
 
-        public void Initialize()
+        public void LoadSettings()
         {
             GeneralSettingsFile = GeneralSettingsFile.LoadOrCreateNew();
+        }
+
+        public void Initialize()
+        {
 
             CommandLineManager.Self.ReadCommandLine();
 

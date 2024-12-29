@@ -11,11 +11,11 @@ using Gum.PropertyGridHelpers;
 using System.Windows.Forms.Integration;
 using Gum.Controls;
 using Gum.Logic.FileWatch;
-using Microsoft.AppCenter.Crashes;
 using Gum.DataTypes;
 using Gum.Services;
 using Gum.Undo;
 using Gum.Logic;
+using Gum.Plugins.InternalPlugins.EditorTab;
 
 namespace Gum
 {
@@ -38,8 +38,8 @@ namespace Gum
 
         private System.Windows.Forms.Timer FileWatchTimer;
         private FlatRedBall.AnimationEditorForms.Controls.WireframeEditControl WireframeEditControl;
-        private Wireframe.WireframeControl wireframeControl1;
         public System.Windows.Forms.FlowLayoutPanel ToolbarPanel;
+        private Wireframe.WireframeControl wireframeControl1;
         Panel gumEditorPanel;
 
         MainPanelControl mainPanelControl;
@@ -73,9 +73,11 @@ namespace Gum
             // Initialize before the StateView is created...
             GumCommands.Self.Initialize(this, mainPanelControl);
 
-            GumCommands.Self.GuiCommands.AddControl(gumEditorPanel, "Editor", TabLocation.RightTop);
-
             TypeManager.Self.Initialize();
+
+            // This has to happen before plugins are loaded since they may depend on settings...
+            ProjectManager.Self.LoadSettings();
+
 
             var addCursor = new System.Windows.Forms.Cursor(this.GetType(), "Content.Cursors.AddCursor.cur");
             // Vic says - I tried
@@ -108,10 +110,11 @@ namespace Gum
 
             GraphicalUiElement.AddRenderableToManagers = CustomSetPropertyOnRenderable.AddRenderableToManagers;
             GraphicalUiElement.RemoveRenderableFromManagers = CustomSetPropertyOnRenderable.RemoveRenderableFromManagers;
+
             // do this after initializing the plugins. This is separate from where the initialize call is made, but it must
             // happen after plugins are created:
-            PluginManager.Self.WireframeInitialized(wireframeControl1, gumEditorPanel);
-
+            MainEditorTabPlugin.Self.HandleWireframeInitialized(wireframeControl1, WireframeEditControl, 
+                addCursor, gumEditorPanel, ToolbarPanel);
 
             StandardElementsManager.Self.Initialize();
             StandardElementsManager.Self.CustomGetDefaultState = 
@@ -119,19 +122,7 @@ namespace Gum
 
             StandardElementsManagerGumTool.Self.Initialize();
 
-
-            ToolCommands.GuiCommands.Self.Initialize(wireframeControl1);
-
-
-            Wireframe.WireframeObjectManager.Self.Initialize(WireframeEditControl, wireframeControl1, addCursor);
-
             VariableSaveExtensionMethods.CustomFixEnumerations = VariableSaveExtensionMethodsGumTool.FixEnumerationsWithReflection;
-
-            wireframeControl1.XnaUpdate += () =>
-            {
-                Wireframe.WireframeObjectManager.Self.Activity();
-                ToolLayerService.Self.Activity();
-            };
 
 
             EditingManager.Self.Initialize(this.WireframeContextMenuStrip);
@@ -140,13 +131,10 @@ namespace Gum
             // ProjectManager.Initialize may load a project, and if it
             // does, then we need to make sure that the wireframe controls
             // are set up properly before that happens.
-            HandleXnaInitialize();
-
+            PluginManager.Self.XnaInitialized();
 
 
             InitializeFileWatchTimer();
-
-
         }
 
         private void CreateMainWpfPanel()
@@ -187,6 +175,7 @@ namespace Gum
             this.ToolbarPanel.TabIndex = 2;
         }
 
+        // todo - a lot of this has moved to MainEditorTabPlugin. Need to finish that migration...
         private void CreateWireframeControl()
         {
             this.wireframeControl1 = new Gum.Wireframe.WireframeControl();
@@ -207,46 +196,8 @@ namespace Gum
             this.wireframeControl1.TabIndex = 0;
             this.wireframeControl1.Text = "wireframeControl1";
 
-            this.wireframeControl1.DragDrop += DragDropManager.Self.HandleFileDragDrop;
-            this.wireframeControl1.DragEnter += DragDropManager.Self.HandleFileDragEnter;
-            this.wireframeControl1.DragOver += (sender, e) =>
-            {
-                //this.DoDragDrop(e.Data, DragDropEffects.Move | DragDropEffects.Copy);
-                //DragDropManager.Self.HandleDragOver(sender, e);
-
-            };
-
-                
-            wireframeControl1.ErrorOccurred += (exception) => Crashes.TrackError(exception);
-
-            this.wireframeControl1.QueryContinueDrag += (sender, args) =>
-            {
-                args.Action = DragAction.Continue;
-            };
-
-            this.wireframeControl1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.wireframeControl1_MouseClick);
-
-            this.wireframeControl1.KeyDown += (o, args) =>
-            {
-                if(args.KeyCode == Keys.Tab)
-                {
-                    GumCommands.Self.GuiCommands.ToggleToolVisibility();
-                }
-            };
-
             gumEditorPanel = new Panel();
 
-            // place the scrollbars first so they are in front of everything
-            // Update October 6, 2021
-            // The scrollbars have been moved
-            // to a plugin. So now they are not 
-            // added in the same order. This seems
-            // to be okay...
-
-            wireframeControl1.CameraChanged += () =>
-            {
-                PluginManager.Self.CameraChanged();
-            };
 
             //... add it here, so it can be done after scroll bars and other controls
             gumEditorPanel.Controls.Add(this.wireframeControl1);
@@ -282,58 +233,8 @@ namespace Gum
             var gumProject = ProjectState.Self.GumProjectSave;
             if (gumProject != null && !string.IsNullOrEmpty(gumProject.FullFileName))
             {
-
                 FileWatchManager.Self.Flush();
             }
-        }
-
-        //void HandleXnaInitialize(object sender, EventArgs e)
-        void HandleXnaInitialize()
-        {
-            this.wireframeControl1.Initialize(WireframeEditControl, gumEditorPanel, HotkeyManager.Self);
-            PluginManager.Self.XnaInitialized();
-
-
-            this.wireframeControl1.Parent.Resize += (not, used) =>
-            {
-                UpdateWireframeControlSizes();
-                PluginManager.Self.HandleWireframeResized();
-            };
-
-            UpdateWireframeControlSizes();
-        }
-
-        /// <summary>
-        /// Refreshes the wifreframe control size - for some reason this is necessary if windows has a non-100% scale (for higher resolution displays)
-        /// </summary>
-        private void UpdateWireframeControlSizes()
-        {
-            // I don't think we need this for docking:
-            //WireframeEditControl.Width = WireframeEditControl.Parent.Width / 2;
-
-            ToolbarPanel.Width = ToolbarPanel.Parent.Width;
-
-            wireframeControl1.Width = wireframeControl1.Parent.Width;
-
-            // Add location.Y to account for the shortcut bar at the top.
-            wireframeControl1.Height = wireframeControl1.Parent.Height - wireframeControl1.Location.Y;
-        }
-
-        private void VariableCenterAndEverythingRight_SplitterMoved(object sender, SplitterEventArgs e)
-        {
-
-        }
-
-        private void wireframeControl1_MouseClick(object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Right)
-            {
-                EditingManager.Self.OnRightClick();
-            }
-        }
-
-        private void PropertyGridMenuStrip_Opening(object sender, CancelEventArgs e)
-        {
         }
 
         private void MainWindow_Load(object sender, EventArgs e)
@@ -342,11 +243,6 @@ namespace Gum
 
             if(CommandLine.CommandLineManager.Self.ShouldExitImmediately == false)
             {
-
-                // Apply FrameRate, but keep it within sane limits
-                float FrameRate = Math.Max(Math.Min(ProjectManager.Self.GeneralSettingsFile.FrameRate, 60), 10);
-                wireframeControl1.DesiredFramesPerSecond = FrameRate;
-
                 var settings = ProjectManager.Self.GeneralSettingsFile;
 
                 // Apply the window position and size settings only if a large enough portion of the
@@ -358,13 +254,6 @@ namespace Gum
                     DesktopBounds = settings.MainWindowBounds;
                     WindowState = settings.MainWindowState;
                 }
-
-                //LeftAndEverythingContainer.SplitterDistance
-                //    = Math.Max(0, settings.LeftAndEverythingSplitterDistance);
-                //PreviewSplitContainer.SplitterDistance
-                //    = Math.Max(0, settings.PreviewSplitterDistance);
-                //StatesAndVariablesContainer.SplitterDistance
-                //    = Math.Max(0, settings.StatesAndVariablesSplitterDistance);
             }
         }
 
@@ -375,19 +264,7 @@ namespace Gum
             settings.MainWindowBounds = DesktopBounds;
             settings.MainWindowState = WindowState;
 
-            //settings.LeftAndEverythingSplitterDistance
-            //    = LeftAndEverythingContainer.SplitterDistance;
-            //settings.PreviewSplitterDistance
-            //    = PreviewSplitContainer.SplitterDistance;
-            //settings.StatesAndVariablesSplitterDistance
-            //    = StatesAndVariablesContainer.SplitterDistance;
-
             settings.Save();
-        }
-
-        private void VariablesAndEverythingElse_SplitterMoved(object sender, SplitterEventArgs e)
-        {
-
         }
     }
 }

@@ -146,7 +146,6 @@ namespace Gum.Plugins.BaseClasses
         public Func<StateSave, IStateContainer, DeleteResponse> GetDeleteStateResponse;
         public Func<StateSaveCategory, IStateCategoryListContainer, DeleteResponse> GetDeleteStateCategoryResponse;
 
-        public event Action<WireframeControl, Panel> WireframeInitialized;
         public event Action CameraChanged;
         public event Action XnaInitialized;
         public event Action WireframeResized;
@@ -449,9 +448,6 @@ namespace Gum.Plugins.BaseClasses
 
         internal bool GetIfVariableIsExcluded(VariableSave defaultVariable, RecursiveVariableFinder rvf) =>
             VariableExcluded?.Invoke(defaultVariable, rvf) ?? false;
-
-        public void CallWireframeInitialized(WireframeControl wireframeControl1, Panel gumEditorPanel) => 
-            WireframeInitialized?.Invoke(wireframeControl1, gumEditorPanel);
 
         public void CallCameraChanged() => CameraChanged?.Invoke();
         public void CallXnaInitialized() => XnaInitialized?.Invoke();
