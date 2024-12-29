@@ -66,5 +66,5 @@ This page shows the minimum code needed to get Gum up and running in your projec
 
 ### Downloading the Gum Tool
 
-The Gum tool can be used to create Gum projects which can be loaded into your MonoGame project. To download and run the Gum tool, see the [Setup page](../../../readme/setup.md).
+The Gum tool can be used to create Gum projects which can be loaded into your MonoGame project. To download and run the Gum tool, see the [Setup page](../../../readme/setup/).
 

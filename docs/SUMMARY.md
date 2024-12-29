@@ -1,7 +1,8 @@
 # Table of contents
 
 * [Gum Tool](README.md)
-  * [Setup](readme/setup.md)
+  * [Setup](readme/setup/README.md)
+    * [Running from Source](readme/setup/running-from-source.md)
   * [Tutorials and Examples](readme/tutorials-and-examples/README.md)
     * [Intro Tutorials](readme/tutorials-and-examples/intro-tutorials/README.md)
       * [1 - The Basics](readme/tutorials-and-examples/intro-tutorials/basics.md)
@@ -108,7 +109,6 @@
     * [Setting Up Post Build Events](readme/plugins/setting-up-post-build-events.md)
 * [Gum Code](gum-code/README.md)
   * [Gum Code Reference](gum-code/gum-code-reference/README.md)
-    * [Running from Source](gum-code/gum-code-reference/running-from-source.md)
     * [Camera](gum-code/gum-code-reference/camera.md)
     * [Gum Class Overview](gum-code/gum-code-reference/gum-class-overview.md)
     * [DataUiGrid](gum-code/gum-code-reference/datauigrid/README.md)

@@ -6,7 +6,7 @@ title: Running From Source
 
 ## Introduction
 
-Gum is an open source project so you can run it from source instead of running the pre-compiled project.
+Gum is an open source project so you can run it from source instead of running the pre-compiled project. Running from source is not a requirement, and is only needed if you intend to contribute to Gum or if you'd like to diagnose problems in a debugger.
 
 ## Obtaining the source code
 
