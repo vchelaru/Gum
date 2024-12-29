@@ -16,6 +16,7 @@ using Gum.Services;
 using Gum.Undo;
 using Gum.Logic;
 using Gum.Plugins.InternalPlugins.EditorTab;
+using Gum.Plugins.InternalPlugins.MenuStripPlugin;
 
 namespace Gum
 {
@@ -68,7 +69,7 @@ namespace Gum
             CreateWireframeControl();
 
             CreateWireframeEditControl();
-            CreateEditorToolbarPanel();
+            //CreateEditorToolbarPanel();
 
             // Initialize before the StateView is created...
             GumCommands.Self.Initialize(this, mainPanelControl);
@@ -93,14 +94,9 @@ namespace Gum
 
             // ProperGridManager before MenuStripManager
             PropertyGridManager.Self.InitializeEarly();
-            // menu strip manager needs to be initialized before plugins:
 
-            var menuStripManager = new MenuStripManager();
-            menuStripManager.Initialize(this);
-
-            UndoManager.Self.Initialize(menuStripManager);
-
-            ((SelectedState)SelectedState.Self).Initialize(menuStripManager);
+            // bah we have to do this before initializing all plugins because we need the menu strip to exist:
+            MainMenuStripPlugin.InitializeMenuStrip();
 
             PluginManager.Self.Initialize(this);
 
@@ -159,21 +155,21 @@ namespace Gum
             }
         }
 
-        private void CreateEditorToolbarPanel()
-        {
-            this.ToolbarPanel = new System.Windows.Forms.FlowLayoutPanel();
-            gumEditorPanel.Controls.Add(this.ToolbarPanel);
-            // 
-            // ToolbarPanel
-            // 
-            //this.ToolbarPanel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-            //| System.Windows.Forms.AnchorStyles.Right)));
-            this.ToolbarPanel.Dock = DockStyle.Top;
-            this.ToolbarPanel.Location = new System.Drawing.Point(0, 22);
-            this.ToolbarPanel.Name = "ToolbarPanel";
-            this.ToolbarPanel.Size = new System.Drawing.Size(532, 31);
-            this.ToolbarPanel.TabIndex = 2;
-        }
+        //private void CreateEditorToolbarPanel()
+        //{
+        //    this.ToolbarPanel = new System.Windows.Forms.FlowLayoutPanel();
+        //    gumEditorPanel.Controls.Add(this.ToolbarPanel);
+        //    // 
+        //    // ToolbarPanel
+        //    // 
+        //    //this.ToolbarPanel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+        //    //| System.Windows.Forms.AnchorStyles.Right)));
+        //    this.ToolbarPanel.Dock = DockStyle.Top;
+        //    this.ToolbarPanel.Location = new System.Drawing.Point(0, 22);
+        //    this.ToolbarPanel.Name = "ToolbarPanel";
+        //    this.ToolbarPanel.Size = new System.Drawing.Size(532, 31);
+        //    this.ToolbarPanel.TabIndex = 2;
+        //}
 
         // todo - a lot of this has moved to MainEditorTabPlugin. Need to finish that migration...
         private void CreateWireframeControl()

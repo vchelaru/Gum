@@ -23,7 +23,6 @@ public class SelectedState : ISelectedState
     static ISelectedState mSelf;
 
     SelectedStateSnapshot snapshot = new SelectedStateSnapshot();
-    private MenuStripManager _menuStripManager;
 
     #endregion
 
@@ -148,7 +147,6 @@ public class SelectedState : ISelectedState
 
             SelectionManager.Self.Refresh();
 
-            _menuStripManager.RefreshUI();
         }
     }
 
@@ -206,9 +204,6 @@ public class SelectedState : ISelectedState
             GumCommands.Self.GuiCommands.RefreshStateTreeView();
 
             WireframeObjectManager.Self.RefreshAll(false);
-
-            _menuStripManager.RefreshUI();
-
 
             SelectedStateSave = null;
             SelectedStateCategorySave = null;
@@ -471,8 +466,6 @@ public class SelectedState : ISelectedState
 
         SelectionManager.Self.Refresh();
 
-        _menuStripManager.RefreshUI();
-
 
         // This is needed for the wireframe manager, but this should be moved to a plugin
         GumEvents.Self.CallInstanceSelected();
@@ -626,8 +619,15 @@ public class SelectedState : ISelectedState
 
         set
         {
-            UpdateToSelectedBehaviorVariable(value);
+            HandleSelectedBehaviorVariable(value);
         }
+    }
+
+    private void HandleSelectedBehaviorVariable(VariableSave value)
+    {
+        UpdateToSelectedBehaviorVariable(value);
+
+        PluginManager.Self.BehaviorVariableSelected(value);
     }
 
     /// <summary>
@@ -650,7 +650,6 @@ public class SelectedState : ISelectedState
         {
             snapshot.SelectedBehaviorVariable = variable;
             PropertyGridManager.Self.SelectedBehaviorVariable = variable;
-            _menuStripManager.RefreshUI();
         }
     }
 
@@ -659,11 +658,6 @@ public class SelectedState : ISelectedState
     private SelectedState()
     {
 
-    }
-
-    public void Initialize(MenuStripManager menuStripManager)
-    {
-        _menuStripManager = menuStripManager;
     }
 
     public List<ElementWithState> GetTopLevelElementStack()

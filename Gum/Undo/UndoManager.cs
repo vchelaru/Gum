@@ -87,8 +87,7 @@ namespace Gum.Undo
         static UndoManager mSelf;
 
         UndoSnapshot recordedSnapshot;
-        private MenuStripManager _menuStripManager;
-
+        
         public UndoSnapshot RecordedSnapshot => recordedSnapshot;
         public ElementHistory CurrentElementHistory
         {
@@ -126,11 +125,6 @@ namespace Gum.Undo
         {
             UndoLocks = new ObservableCollection<UndoLock>();
             UndoLocks.CollectionChanged += HandleUndoLockChanged;
-        }
-
-        public void Initialize(MenuStripManager menuStripManager)
-        {
-            _menuStripManager = menuStripManager;
         }
 
         private void HandleUndoLockChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -498,8 +492,6 @@ namespace Gum.Undo
             SelectionManager.Self.Refresh();
 
             GumCommands.Self.GuiCommands.RefreshVariables();
-
-            _menuStripManager.RefreshUI();
         }
 
         public void PerformRedo()

@@ -34,12 +34,12 @@ namespace Gum.Managers
         private ToolStripMenuItem pluginsToolStripMenuItem;
         private ToolStripMenuItem managePluginsToolStripMenuItem;
 
-        static MenuStripManager mSelf;
 
         #endregion
 
-        public void Initialize(Form mainWindow)
+        public void Initialize()
         {
+            var mainWindow = GumCommands.Self.GuiCommands.MainWindow;
             // Load Recent handled in MainRecentFilesPlugin
 
             #region Local Functions
