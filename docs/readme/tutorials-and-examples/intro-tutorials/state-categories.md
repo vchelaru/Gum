@@ -109,7 +109,7 @@ If a variable is changed in one of the states in the category, then that variabl
 
 For example, we can select the Big category and change the ColoredRectangle.Width property to 150.
 
-<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Setting ColoredRectangleInstance Width to 150</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Setting ColoredRectangleInstance Width to 150</p></figcaption></figure>
 
 Once this value is changed, the RectangleSizeCategory lists this as a variable that it modifies in the Variables tab.
 

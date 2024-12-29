@@ -417,7 +417,7 @@ All Gum Forms components react to various properties by assigning states. For a 
 
 For Buttons, we can add a ButtonCategory state. You are free to implement as many or as few states as you want. For the full list of states see above in the [Available States](control-customization.md#available-states) section.
 
-<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Example of a ButtonStateCategory implementing only Normal, Highlighted, and Pushed</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Example of a ButtonStateCategory implementing only Normal, Highlighted, and Pushed</p></figcaption></figure>
 
 #### Defining a Custom Runtime for the Forms Control
 

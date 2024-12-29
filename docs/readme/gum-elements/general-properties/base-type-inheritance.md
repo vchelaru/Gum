@@ -2,7 +2,11 @@
 
 ### Introduction
 
-Gum Screens and Components support defining a base type. By setting a base type, a screen or component automatically inherits the following from the base type:
+The Base Type variable can be used to specify both inheritance but also the type of an instance.
+
+Base Type on an instance indicates its type. This is usually automatically set when an instance is first created - usually by drag+dropping a component or standard element onto its target component or screen.
+
+Gum Screens and Components support changing Base Type to specify inheritance. By setting a base type, a screen or component automatically inherits the following from the base type:
 
 * Variable values
 * Exposed variables
@@ -10,6 +14,22 @@ Gum Screens and Components support defining a base type. By setting a base type,
 * Available variables, such as stacking if inheriting from a container
 
 Inheritance is useful if your project needs multiple screens or components which share common variables or instances.
+
+### Instance Base Type
+
+All instances must have a Base Type set. For example, the following instance is of type Container.
+
+<figure><img src="../../../.gitbook/assets/image.png" alt=""><figcaption><p>Instance named ContainerInstance is of type Container</p></figcaption></figure>
+
+Base Type is automatically assigned when a new instance is created. For example, the following animation shows a new ColoredRectangle instance created. Note that its Base Type is automatically assigned to ColoredRectangle.
+
+<figure><img src="../../../.gitbook/assets/29_05 46 26.gif" alt=""><figcaption><p>Creating a new ColoredRectangle instance assigns the base type to ColoredRectangle</p></figcaption></figure>
+
+Base Type can be changed after an instance is created. Keep in mind that doing so does not change its name or any other properties, so you may need to manually adust properties when converting between different Base Types. Also, note that default values may change when switching from one Base Type to another.
+
+The following shows a ColoredRectangle changed to a Container. Since Container and ColoredRectangle have different default width and height values, changing the Base Type changes its default size too.
+
+<figure><img src="../../../.gitbook/assets/29_05 48 42.gif" alt=""><figcaption><p>Changing Base Type can change other variables such as Width and Height</p></figcaption></figure>
 
 ### Component Inheritance
 
