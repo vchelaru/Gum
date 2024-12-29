@@ -74,18 +74,6 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid
             var memberCategory = new MemberCategory($"{category.Name} Properties");
             memberCategories.Add(memberCategory);
 
-            // maybe eventually add name here?
-
-            var recursiveMember = new InstanceMember();
-            recursiveMember.CustomGetTypeEvent += (member) => typeof(bool);
-            recursiveMember.CustomGetEvent += (member) => category.IsSetRecursively;
-            recursiveMember.DisplayName = nameof(category.IsSetRecursively);
-            recursiveMember.CustomSetEvent += (owne, value) =>
-            {
-                category.IsSetRecursively = (bool)value;
-                GumCommands.Self.FileCommands.TryAutoSaveBehavior(behavior);
-            };
-            memberCategory.Members.Add(recursiveMember);
 
             return memberCategories;
         }

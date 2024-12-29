@@ -11,8 +11,6 @@ namespace Gum.DataTypes.Variables
             set;
         }
 
-        public bool IsSetRecursively { get; set; }
-
         [XmlElement("State")]
         public List<StateSave> States
         {

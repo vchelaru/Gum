@@ -114,19 +114,6 @@ public class GumFormsSampleGame : Game
     {
         var cursor = FormsUtilities.Cursor;
 
-        GamePadState gamePadState = default;
-        try { gamePadState = GamePad.GetState(PlayerIndex.One); }
-        catch (NotImplementedException) { /* ignore gamePadState */ }
-
-
-        if (FormsUtilities.Keyboard.KeyDown(Keys.Escape) ||
-            gamePadState.Buttons.Back == ButtonState.Pressed)
-        {
-            // Put a breakpoint here if you want to pause the app when the user presses ESC
-            int m = 3;
-        }
-
-
         GumService.Default.Update(this, gameTime, Roots);
 
         // Set this to true to see WindowOver information in the output window
