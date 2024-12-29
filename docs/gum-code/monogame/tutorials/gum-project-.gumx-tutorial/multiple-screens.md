@@ -131,6 +131,17 @@ Each screen removes itself from managers when its button is clicked, then create
 
 <figure><img src="../../../../.gitbook/assets/24_18 29 52.gif" alt=""><figcaption><p>The Go to Screen button destroys the current Screen and shows the next Screen</p></figcaption></figure>
 
+### Showing No Screen
+
+This tutorial assumes that a Gum screen is always displayed. Whenever the Screen changes, the Game1.Root is changed to a new screen.
+
+Games can also completely remove Gum screens altogether. To do this:
+
+1. Call `Game1.Root.RemoveFromManagers();` Of course, if you have organized your code differently, you will need to access the Root object through whatever pattern you have implemented (such as a service).
+2. Set `Game1.Root = null;` So that you can check for null when calling Update.
+
+No changes are needed to the Update method - `GumService.Update` can receive a null Root object.
+
 ### Conclusion
 
 This tutorial showed how to switch between two screens by removing the old screen with RemoveFromManagers and creating a new screen with ToGraphicalUiElement.
