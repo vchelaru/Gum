@@ -19,13 +19,13 @@ Inheritance is useful if your project needs multiple screens or components which
 
 All instances must have a Base Type set. For example, the following instance is of type Container.
 
-<figure><img src="../../../.gitbook/assets/image.png" alt=""><figcaption><p>Instance named ContainerInstance is of type Container</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/29_05 44 38.png" alt=""><figcaption><p>Instance named ContainerInstance is of type Container</p></figcaption></figure>
 
 Base Type is automatically assigned when a new instance is created. For example, the following animation shows a new ColoredRectangle instance created. Note that its Base Type is automatically assigned to ColoredRectangle.
 
 <figure><img src="../../../.gitbook/assets/29_05 46 26.gif" alt=""><figcaption><p>Creating a new ColoredRectangle instance assigns the base type to ColoredRectangle</p></figcaption></figure>
 
-Base Type can be changed after an instance is created. Keep in mind that doing so does not change its name or any other properties, so you may need to manually adust properties when converting between different Base Types. Also, note that default values may change when switching from one Base Type to another.
+Base Type can be changed after an instance is created. Keep in mind that doing so does not change its name or any other properties, so you may need to manually adjust properties when converting between different Base Types. Also, note that default values may change when switching from one Base Type to another.
 
 The following shows a ColoredRectangle changed to a Container. Since Container and ColoredRectangle have different default width and height values, changing the Base Type changes its default size too.
 
