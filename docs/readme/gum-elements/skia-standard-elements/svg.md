@@ -21,3 +21,7 @@ Width and Height values can be set on an Svg file just any other Gum element. Un
 Svgs are still rasterized in Gum, so they display pixels when the view is zoomed in, especially if the Svg has a small Width or Height.
 
 <figure><img src="../../../.gitbook/assets/30_06 15 07.gif" alt=""><figcaption><p>Small Svgs display pixels if zoomed in</p></figcaption></figure>
+
+### Maintain File Aspect Ratio Width and Height
+
+Svgs support the **Maintain File Aspect Ratio Width** and **Maintain File Aspect Ratio Height** units. For more information, see the [Width Units](../general-properties/width-units.md#maintain-file-aspect-ratio-width) and [Height Units](../general-properties/height-units.md#maintain-file-aspect-ratio-height) page.

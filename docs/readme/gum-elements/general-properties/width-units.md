@@ -104,7 +104,13 @@ For more information, see the Sprite [Texture Address](../sprite/texture-address
 
 ### Maintain File Aspect Ratio Width
 
-Sprites can select a **Width Unit** called **Maintain File Aspect Ratio Width**, which sets the width of the Sprite so that its aspect ratio matches its source file multiplied by the Width value. Usually Maintain File Aspect Ratio Width is used with a Width value of 100 so that the Sprite shows is source file at the correct aspect ratio. When this value is used, a Sprite's Height can be changed resulting in its absolute width also changing.
+Sprites can select a **Width Unit** called **Maintain File Aspect Ratio Width**, which sets the width of the Sprite so that its aspect ratio matches its source file multiplied by the Width value. Usually Maintain File Aspect Ratio Width is used with a Width value of 100 so that the Sprite shows is source file at the correct aspect ratio.&#x20;
+
+{% hint style="info" %}
+Svgs also support using Maintain File Aspect Ratio Width. For more information on using Svgs see the [Skia Standard Elements](../skia-standard-elements/) page.
+{% endhint %}
+
+When this value is used, a Sprite's Height can be changed resulting in its absolute width also changing.
 
 <figure><img src="../../../.gitbook/assets/30_07 10 01 (1).gif" alt=""><figcaption><p>Changing the Height when using Maintain File Aspect Ratio Width also adjusts absolute width</p></figcaption></figure>
 

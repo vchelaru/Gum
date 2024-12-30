@@ -155,7 +155,13 @@ This value depends on the Sprite's Texture Height property, so changing Texture 
 
 ### Maintain File Aspect Ratio Height
 
-Sprites can select a **Height Unit** called Maintain File Aspect Ratio Height which sets the height of the sprite so its aspect ratio matches its source file multiplied by the Height value. Usually Maintain File Aspect Ratio Height is used with a Height value of 100 so that the Sprite shows is source file at the correct aspect ratio. When this value is used, a Sprite's Width can be changed resulting in its absolute height also changing.
+Sprites can select a **Height Unit** called Maintain File Aspect Ratio Height which sets the height of the sprite so its aspect ratio matches its source file multiplied by the Height value. Usually Maintain File Aspect Ratio Height is used with a Height value of 100 so that the Sprite shows is source file at the correct aspect ratio.&#x20;
+
+{% hint style="info" %}
+Svgs also support using Maintain File Aspect Ratio Height. For more information on using Svgs see the [Skia Standard Elements](../skia-standard-elements/) page.
+{% endhint %}
+
+When this value is used, a Sprite's Width can be changed resulting in its absolute height also changing.
 
 <figure><img src="../../../.gitbook/assets/30_07 22 27.gif" alt=""><figcaption><p>Changing the Width when using Maintain File Aspect Ratio Height also adjusts absolute height</p></figcaption></figure>
 
