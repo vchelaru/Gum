@@ -8,22 +8,16 @@ using Gum.ToolStates;
 using Gum.DataTypes.Variables;
 using System.IO;
 using ToolsUtilities;
-using Gum.Events;
 using Gum.Wireframe;
 using Gum.DataTypes.Behaviors;
 using Gum.Plugins;
 using System.ComponentModel;
-//using System.Windows.Controls;
-//using System.Windows;
 using Grid = System.Windows.Controls.Grid;
 using Gum.Mvvm;
 using Gum.Plugins.InternalPlugins.TreeView;
 using Gum.Plugins.InternalPlugins.TreeView.ViewModels;
-using RenderingLibrary.Graphics;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolTip;
-using System.Management.Instrumentation;
 using Gum.Logic;
-using Gum.Controls;
+using System.Drawing;
 
 namespace Gum.Managers
 {
@@ -97,6 +91,21 @@ namespace Gum.Managers
         
 
         MultiSelectTreeView ObjectTreeView;
+        private ImageList originalImageList;
+        public ImageList unmodifiableImageList
+        {
+            get
+            {
+                return CloneImageList(originalImageList);
+            }
+            set
+            {
+                if (originalImageList == null)
+                {
+                    originalImageList = value;
+                }
+            }
+        }
 
         TreeNode mScreensTreeNode;
         TreeNode mComponentsTreeNode;
@@ -511,6 +520,7 @@ namespace Gum.Managers
             this.ObjectTreeView.HotTracking = true;
             this.ObjectTreeView.ImageIndex = 0;
             this.ObjectTreeView.ImageList = ElementTreeImages;
+            unmodifiableImageList = ElementTreeImages;
             this.ObjectTreeView.Location = new System.Drawing.Point(0, 0);
             this.ObjectTreeView.MultiSelectBehavior = CommonFormsAndControls.MultiSelectBehavior.CtrlDown;
             this.ObjectTreeView.Name = "ObjectTreeView";
@@ -563,6 +573,77 @@ namespace Gum.Managers
                 //else
                 //    Cursor.Current = MyNoDropCursor;
             };
+        }
+
+        private ImageList CloneImageList(ImageList original)
+        {
+            // Create a new ImageList with matching properties
+            ImageList copy = new ImageList
+            {
+                ImageSize = original.ImageSize,
+                ColorDepth = original.ColorDepth,
+                TransparentColor = original.TransparentColor
+            };
+
+            // Clone each image from the original list
+            for (int i = 0; i < original.Images.Count; i++)
+            {
+                string key = original.Images.Keys[i];
+                copy.Images.Add(key, (Image)original.Images[i].Clone());
+            }
+
+            return copy;
+        }
+
+        public void UpdateTreeviewIconScale(float scale = 1.0f)
+        {
+            int baseImageSize = 16;
+            System.Diagnostics.Debug.WriteLine(ObjectTreeView.Indent);
+
+            // Then we can re-scale the images
+            ObjectTreeView.ImageList = ResizeImageListImages(
+                unmodifiableImageList
+                , new System.Drawing.Size(
+                    (int)(baseImageSize * scale)
+                    , (int)(baseImageSize * scale)));
+        }
+
+        public ImageList ResizeImageListImages(ImageList originalImageList, Size newSize)
+        {
+            ImageList resizedImageList = new ImageList
+            {
+                ImageSize = newSize,
+                ColorDepth = originalImageList.ColorDepth // Preserve original color depth
+            };
+
+            foreach (string key in originalImageList.Images.Keys)
+            {
+                Image originalImage = originalImageList.Images[key];
+                Image resizedImage = ResizeImageWithoutGraphics(originalImage, newSize); // Reuse ResizeImage method
+                resizedImageList.Images.Add(key, resizedImage);
+            }
+
+            return resizedImageList;
+        }
+
+        private Image ResizeImageWithoutGraphics(Image originalImage, Size newSize)
+        {
+            Bitmap resizedImage = new Bitmap(newSize.Width, newSize.Height);
+
+            for (int x = 0; x < newSize.Width; x++)
+            {
+                for (int y = 0; y < newSize.Height; y++)
+                {
+                    // Calculate the position in the original image
+                    int originalX = x * originalImage.Width / newSize.Width;
+                    int originalY = y * originalImage.Height / newSize.Height;
+
+                    // Copy the pixel from the original image
+                    resizedImage.SetPixel(x, y, ((Bitmap)originalImage).GetPixel(originalX, originalY));
+                }
+            }
+
+            return resizedImage;
         }
 
         private void ObjectTreeView_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
@@ -1555,7 +1636,6 @@ namespace Gum.Managers
         {
             ElementTreeViewManager.Self.HandleKeyDown(e);
             DragDropManager.Self.HandleKeyDown(e);
-            HotkeyManager.Self.HandleKeyDownAppWide(e);
         }
 
 
