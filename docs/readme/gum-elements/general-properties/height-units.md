@@ -143,7 +143,7 @@ The following image shows a child ColoredRectangle with a Height of 200 **Percen
 
 ### Percentage of File Height
 
-The [Sprite](../sprite/) type can select a **Height Unit** called **Percentage of File Height**, which sets the height of the Sprite according to the file that it is displaying. This is the default **Height Unit** for Sprites.
+[Sprites](../sprite/) can select a **Height Unit** called **Percentage of File Height**, which sets the height of the Sprite according to the file that it is displaying. This is the default **Height Unit** for Sprites.
 
 The following image shows a child Sprite with 200 **Percentage of Source File** Height, which means it draws two times as tall as its source image:
 
@@ -151,5 +151,14 @@ The following image shows a child Sprite with 200 **Percentage of Source File** 
 
 This value depends on the Sprite's Texture Height property, so changing Texture Height also changes the Sprite's absolute height.
 
-<figure><img src="../../../.gitbook/assets/30_06 39 18.gif" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/30_06 39 18.gif" alt=""><figcaption><p>Changing a Sprite's Texture Height adjusts its absolute height when using Percentage of File Height</p></figcaption></figure>
 
+### Maintain File Aspect Ratio Height
+
+Sprites can select a **Height Unit** called Maintain File Aspect Ratio Height which sets the height of the sprite so its aspect ratio matches its source file multiplied by the Height value. Usually Maintain File Aspect Ratio Height is used with a Height value of 100 so that the Sprite shows is source file at the correct aspect ratio. When this value is used, a Sprite's Width can be changed resulting in its absolute height also changing.
+
+<figure><img src="../../../.gitbook/assets/30_07 22 27.gif" alt=""><figcaption><p>Changing the Width when using Maintain File Aspect Ratio Height also adjusts absolute height</p></figcaption></figure>
+
+When using Maintain File Aspect Ratio Height, the Sprite's absolute height depends on the Sprite's Texture Height property.
+
+<figure><img src="../../../.gitbook/assets/30_07 25 09.gif" alt=""><figcaption><p>Changing either Width or Texture Height affects the Sprite's absolute height</p></figcaption></figure>
