@@ -205,19 +205,40 @@ public class HotkeyManager : Singleton<HotkeyManager>
 
     #region App Wide Keys
 
+
+    public void HandleKeyDownAppWide(System.Windows.Input.KeyEventArgs e)
+    {
+        HandleKeyDownAppWide(ConvertToFormsKeyEventArgs(e));
+    }
+
+    public static System.Windows.Forms.KeyEventArgs ConvertToFormsKeyEventArgs(System.Windows.Input.KeyEventArgs wpfArgs)
+    {
+        System.Windows.Forms.Keys key = (System.Windows.Forms.Keys)System.Windows.Input.KeyInterop.VirtualKeyFromKey(wpfArgs.Key);
+        return new System.Windows.Forms.KeyEventArgs(key);
+    }
+
     public void HandleKeyDownAppWide(KeyEventArgs e)
     {
-        double minValue = 8.25f;
+        // TODO: Move these values somewhere
+        double defaultValue = 8.25f;
+        double minValue = 6f;
         double maxValue = 50f;
+
         MainPanelControl tempMPC = GumCommands.Self.GuiCommands.mainPanelControl;
         if (ZoomCameraIn.IsPressed(e) || ZoomCameraInAlternative.IsPressed(e))
         {
             tempMPC.FontSize = ClampValue(tempMPC.FontSize + 2, minValue, maxValue);
-
+            float scale = (float)(tempMPC.FontSize / defaultValue);
+            System.Diagnostics.Debug.WriteLine(scale);
+            ElementTreeViewManager.Self.UpdateTreeviewIconScale(scale);
+            e.Handled = true;
         }
         else if (ZoomCameraOut.IsPressed(e) || ZoomCameraOutAlternative.IsPressed(e))
         {
-            tempMPC.FontSize = ClampValue(tempMPC.FontSize - 2, minValue, maxValue); ;
+            tempMPC.FontSize = ClampValue(tempMPC.FontSize - 2, minValue, maxValue);
+            float scale = (float)(tempMPC.FontSize / defaultValue);
+            ElementTreeViewManager.Self.UpdateTreeviewIconScale(scale);
+            e.Handled = true;
         }
     }
 
@@ -249,7 +270,7 @@ public class HotkeyManager : Singleton<HotkeyManager>
         }
         TryHandleCtrlF(e);
         HandleGoToDefinition(e);
-
+        HandleKeyDownAppWide(e);
     }
 
     private void TryHandleCtrlF(KeyEventArgs e)
