@@ -28,7 +28,7 @@ namespace Gum.Commands
 
         public MainWindow MainWindow { get; private set; }
 
-        MainPanelControl mainPanelControl;
+        public MainPanelControl mainPanelControl { get; private set; }
 
         #endregion
 

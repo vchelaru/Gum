@@ -1,8 +1,10 @@
-﻿using Gum.DataTypes;
+﻿using Gum.Controls;
+using Gum.DataTypes;
 using Gum.Logic;
 using Gum.Plugins;
 using Gum.ToolStates;
 using Gum.Wireframe;
+using System;
 using System.Windows.Forms;
 
 namespace Gum.Managers;
@@ -200,6 +202,39 @@ public class HotkeyManager : Singleton<HotkeyManager>
     {
         _copyPasteLogic = CopyPasteLogic.Self;
     }
+
+    #region App Wide Keys
+
+    public void HandleKeyDownAppWide(KeyEventArgs e)
+    {
+        double minValue = 8.25f;
+        double maxValue = 50f;
+        MainPanelControl tempMPC = GumCommands.Self.GuiCommands.mainPanelControl;
+        if (ZoomCameraIn.IsPressed(e) || ZoomCameraInAlternative.IsPressed(e))
+        {
+            tempMPC.FontSize = ClampValue(tempMPC.FontSize + 2, minValue, maxValue);
+
+        }
+        else if (ZoomCameraOut.IsPressed(e) || ZoomCameraOutAlternative.IsPressed(e))
+        {
+            tempMPC.FontSize = ClampValue(tempMPC.FontSize - 2, minValue, maxValue); ;
+        }
+    }
+
+    // Naming it ClampValue so it won't collide with Clamp when we go to .NET Core
+    private double ClampValue(double value, double minValue, double maxValue)
+    {
+        if (value < minValue)
+            return minValue;
+
+        if (value > maxValue)
+            return maxValue;
+
+        return value;
+    }
+
+    #endregion
+
 
     #region Element Tree View
 

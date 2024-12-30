@@ -23,6 +23,7 @@ using RenderingLibrary.Graphics;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolTip;
 using System.Management.Instrumentation;
 using Gum.Logic;
+using Gum.Controls;
 
 namespace Gum.Managers
 {
@@ -1554,6 +1555,7 @@ namespace Gum.Managers
         {
             ElementTreeViewManager.Self.HandleKeyDown(e);
             DragDropManager.Self.HandleKeyDown(e);
+            HotkeyManager.Self.HandleKeyDownAppWide(e);
         }
 
 
