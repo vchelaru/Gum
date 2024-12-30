@@ -107,7 +107,7 @@ namespace WpfDataUi.DataTypes
         {
             HideHeader = false;
 
-            FontSize = 12;
+            FontSize = 12; // This seems to modify ALL the fonts
 
             Members = new ObservableCollection<InstanceMember>();
 

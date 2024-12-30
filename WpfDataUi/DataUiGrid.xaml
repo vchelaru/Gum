@@ -42,7 +42,7 @@
                         </ItemsControl.Resources>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <DataUi:SingleDataUiContainer x:Name="Container" FontSize="12" Padding="2,1"/>
+                                <DataUi:SingleDataUiContainer x:Name="Container" Padding="2,1"/>
                                 <DataTemplate.Triggers>
                                     <Trigger Property="ItemsControl.AlternationIndex" Value="0">
                                         <Setter TargetName="Container" Property="Background" Value="{StaticResource LightBg}"/>
