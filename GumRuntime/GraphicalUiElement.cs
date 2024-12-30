@@ -4300,123 +4300,6 @@ namespace Gum.Wireframe
             }
         }
 
-        /// <summary>
-        /// Searches for and returns a GraphicalUiElement in this instance by name. Returns null
-        /// if not found.
-        /// </summary>
-        /// <param name="name">The case-sensitive name to search for.</param>
-        /// <returns>The found GraphicalUiElement, or null if no match is found.</returns>
-        public GraphicalUiElement GetGraphicalUiElementByName(string name)
-        {
-            var containsDots = ToolsUtilities.StringFunctions.ContainsNoAlloc(name, '.');
-            if (containsDots)
-            {
-                // rare, so we can do allocation calls here:
-                var indexOfDot = name.IndexOf('.');
-
-                var prefix = name.Substring(0, indexOfDot);
-
-                GraphicalUiElement container = null;
-                for (int i = mWhatThisContains.Count - 1; i > -1; i--)
-                {
-                    var item = mWhatThisContains[i];
-                    if (item.name == prefix)
-                    {
-                        container = item;
-                        break;
-                    }
-                }
-
-                var suffix = name.Substring(indexOfDot + 1);
-
-                return container?.GetGraphicalUiElementByName(suffix);
-            }
-            else
-            {
-                if (this.Children?.Count > 0 && mWhatThisContains.Count == 0)
-                {
-                    // This is a regular item that hasn't had its mWhatThisContains populated
-                    return this.GetChildByNameRecursively(name) as GraphicalUiElement;
-                }
-                else
-                {
-                    for (int i = mWhatThisContains.Count - 1; i > -1; i--)
-                    {
-                        var item = mWhatThisContains[i];
-                        if (item.name == name)
-                        {
-                            return item;
-                        }
-                    }
-                }
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Performs a recursive search for graphical UI elements, where eacn name in the parameters
-        /// is the name of a GraphicalUiElement one level deeper than the last.
-        /// </summary>
-        /// <param name="names">The names to search for, allowing retrieval multiple levels deep.</param>
-        /// <returns>The found element, or null if no match is found.</returns>
-        public GraphicalUiElement GetGraphicalUiElementByName(params string[] names)
-        {
-            if (names.Length > 0)
-            {
-                var directChild = GetGraphicalUiElementByName(names[0]);
-
-                if (names.Length == 1)
-                {
-                    return directChild;
-                }
-                else
-                {
-                    var subArray = names.Skip(1).ToArray();
-
-                    return directChild?.GetGraphicalUiElementByName(subArray);
-                }
-            }
-            return null;
-        }
-
-        public IPositionedSizedObject GetChildByName(string name)
-        {
-            for(int i = 0; i < Children.Count; i++)
-            {
-                var child = Children[i];
-                if (child.Name == name)
-                {
-                    return child;
-                }
-            }
-            return null;
-        }
-
-        public IRenderableIpso GetChildByNameRecursively(string name)
-        {
-            return GetChildByName(Children, name);
-        }
-
-        private IRenderableIpso GetChildByName(ObservableCollection<IRenderableIpso> children, string name)
-        {
-            foreach (var child in children)
-            {
-                if (child.Name == name)
-                {
-                    return child;
-                }
-
-                var subChild = GetChildByName(child.Children, name);
-                if (subChild != null)
-                {
-                    return subChild;
-                }
-            }
-            return null;
-        }
-
-
         static void SetPropertyThroughReflection(IRenderableIpso mContainedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
         {
             System.Reflection.PropertyInfo propertyInfo = mContainedObjectAsIpso.GetType().GetProperty(propertyName);
@@ -4960,6 +4843,221 @@ namespace Gum.Wireframe
                 y > absoluteY &&
                 x < absoluteX + this.GetAbsoluteWidth() &&
                 y < absoluteY + this.GetAbsoluteHeight();
+        }
+
+
+        public void SuspendLayout(bool recursive = false)
+        {
+            mIsLayoutSuspended = true;
+
+            if (recursive)
+            {
+                if (this.Children?.Count > 0)
+                {
+                    var count = Children.Count;
+                    for (int i = 0; i < count; i++)
+                    {
+                        var asGraphicalUiElement = Children[i] as GraphicalUiElement;
+                        asGraphicalUiElement?.SuspendLayout(true);
+                    }
+                }
+                else
+                {
+                    for (int i = mWhatThisContains.Count - 1; i > -1; i--)
+                    {
+                        mWhatThisContains[i].SuspendLayout(true);
+                    }
+
+                }
+            }
+        }
+
+        public void ResumeLayout(bool recursive = false)
+        {
+            mIsLayoutSuspended = false;
+
+            if (recursive)
+            {
+                if (!IsAllLayoutSuspended)
+                {
+                    ResumeLayoutUpdateIfDirtyRecursive();
+                }
+            }
+            else
+            {
+                if (isFontDirty)
+                {
+                    if (!IsAllLayoutSuspended)
+                    {
+                        this.UpdateToFontValues();
+                        isFontDirty = false;
+                    }
+                }
+                if (currentDirtyState != null)
+                {
+                    UpdateLayout(currentDirtyState.ParentUpdateType,
+                        currentDirtyState.ChildrenUpdateDepth,
+                        currentDirtyState.XOrY);
+                }
+            }
+        }
+
+        private bool ResumeLayoutUpdateIfDirtyRecursive()
+        {
+
+            mIsLayoutSuspended = false;
+            UpdateFontRecursive();
+
+            var didCallUpdateLayout = false;
+
+            if (currentDirtyState != null)
+            {
+                didCallUpdateLayout = true;
+                UpdateLayout(currentDirtyState.ParentUpdateType,
+                    currentDirtyState.ChildrenUpdateDepth,
+                    currentDirtyState.XOrY);
+            }
+
+            if (this.Children?.Count > 0)
+            {
+                var count = Children.Count;
+                for (int i = 0; i < count; i++)
+                {
+                    var asGraphicalUiElement = Children[i] as GraphicalUiElement;
+                    asGraphicalUiElement.ResumeLayoutUpdateIfDirtyRecursive();
+                }
+            }
+            else
+            {
+                int count = mWhatThisContains.Count;
+                for (int i = 0; i < count; i++)
+                {
+                    mWhatThisContains[i].ResumeLayoutUpdateIfDirtyRecursive();
+                }
+            }
+
+            return didCallUpdateLayout;
+        }
+
+        #endregion
+
+        #region Get Child/Element
+
+
+        /// <summary>
+        /// Searches for and returns a GraphicalUiElement in this instance by name. Returns null
+        /// if not found.
+        /// </summary>
+        /// <param name="name">The case-sensitive name to search for.</param>
+        /// <returns>The found GraphicalUiElement, or null if no match is found.</returns>
+        public GraphicalUiElement GetGraphicalUiElementByName(string name)
+        {
+            var containsDots = ToolsUtilities.StringFunctions.ContainsNoAlloc(name, '.');
+            if (containsDots)
+            {
+                // rare, so we can do allocation calls here:
+                var indexOfDot = name.IndexOf('.');
+
+                var prefix = name.Substring(0, indexOfDot);
+
+                GraphicalUiElement container = null;
+                for (int i = mWhatThisContains.Count - 1; i > -1; i--)
+                {
+                    var item = mWhatThisContains[i];
+                    if (item.name == prefix)
+                    {
+                        container = item;
+                        break;
+                    }
+                }
+
+                var suffix = name.Substring(indexOfDot + 1);
+
+                return container?.GetGraphicalUiElementByName(suffix);
+            }
+            else
+            {
+                if (this.Children?.Count > 0 && mWhatThisContains.Count == 0)
+                {
+                    // This is a regular item that hasn't had its mWhatThisContains populated
+                    return this.GetChildByNameRecursively(name) as GraphicalUiElement;
+                }
+                else
+                {
+                    for (int i = mWhatThisContains.Count - 1; i > -1; i--)
+                    {
+                        var item = mWhatThisContains[i];
+                        if (item.name == name)
+                        {
+                            return item;
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Performs a recursive search for graphical UI elements, where eacn name in the parameters
+        /// is the name of a GraphicalUiElement one level deeper than the last.
+        /// </summary>
+        /// <param name="names">The names to search for, allowing retrieval multiple levels deep.</param>
+        /// <returns>The found element, or null if no match is found.</returns>
+        public GraphicalUiElement GetGraphicalUiElementByName(params string[] names)
+        {
+            if (names.Length > 0)
+            {
+                var directChild = GetGraphicalUiElementByName(names[0]);
+
+                if (names.Length == 1)
+                {
+                    return directChild;
+                }
+                else
+                {
+                    var subArray = names.Skip(1).ToArray();
+
+                    return directChild?.GetGraphicalUiElementByName(subArray);
+                }
+            }
+            return null;
+        }
+
+        public IPositionedSizedObject GetChildByName(string name)
+        {
+            for (int i = 0; i < Children.Count; i++)
+            {
+                var child = Children[i];
+                if (child.Name == name)
+                {
+                    return child;
+                }
+            }
+            return null;
+        }
+
+        public IRenderableIpso GetChildByNameRecursively(string name)
+        {
+            return GetChildByName(Children, name);
+        }
+
+        private IRenderableIpso GetChildByName(ObservableCollection<IRenderableIpso> children, string name)
+        {
+            foreach (var child in children)
+            {
+                if (child.Name == name)
+                {
+                    return child;
+                }
+
+                var subChild = GetChildByName(child.Children, name);
+                if (subChild != null)
+                {
+                    return subChild;
+                }
+            }
+            return null;
         }
 
         #endregion
