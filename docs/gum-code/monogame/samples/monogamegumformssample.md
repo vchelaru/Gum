@@ -42,4 +42,4 @@ The ComplexListBoxItemScreen shows how to create a ListBoxItem which is fully cu
 * Each item displays multiple pieces of information with multiple Text instances rather than a single Text instance
 * Each item displays information from a complex view model with multiple properties
 
-<figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>ListBoxItems displaying complex information about weapons</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>ListBoxItems displaying complex information about weapons</p></figcaption></figure>
