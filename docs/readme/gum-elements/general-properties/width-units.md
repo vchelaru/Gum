@@ -90,17 +90,27 @@ The following image shows a child ColoredRectangle with a Width of 200 **Percent
 
 ### Percentage of File Width
 
-The [Sprite](../sprite/) type can select a **With Unit** called **Percentage of File Width**, which sets the width of the Sprite according to the file that it is displaying. This is the default **Width Unit** for Sprites.
+The [Sprite](../sprite/) type can select a **Width Unit** called **Percentage of File Width**, which sets the width of the Sprite according to the file that it is displaying. This is the default **Width Unit** for Sprites.
 
 The following image shows a child Sprite with 200 **Percentage of Source File** Width, which means it draws two times as wide as its source image:
 
 ![Sprite using 200 Percentage of File width](<../../../.gitbook/assets/11_05 58 09.png>)
 
-This value depends on the Sprite's Texture Width property, so changing Texture Width also changes the Sprite's absolute width.
+When using Percentage of Source File Width, the Sprite's absolute width depends on the Sprite's Texture Width property.
 
 <figure><img src="../../../.gitbook/assets/30_06 28 15.gif" alt=""><figcaption><p>Changing a Sprite's Texture Width adjusts its absolute height when using Percentage of File Width</p></figcaption></figure>
 
 For more information, see the Sprite [Texture Address](../sprite/texture-address.md) page.
+
+### Maintain File Aspect Ratio Width
+
+The Sprite type can select a **Height Unit** called **Maintain File Aspect Ratio Width**, which sets the width of the Sprite so that its aspect ratio matches its source file multiplied by the Width value. Usually Maintain File Aspect Ratio Width is used with a Width value of 100 so that the file shows is source file at the correct aspect ratio. When this value is used, a Sprite's Height can be changed resulting in its absolute width also changing.
+
+<figure><img src="../../../.gitbook/assets/30_07 10 01 (1).gif" alt=""><figcaption><p>Changing the Height when using Maintain File Aspect Ratio Width also adjusts width</p></figcaption></figure>
+
+When using Maintain File Aspect Ratio Width, the Sprite's absolute width depends on the Sprite's Texture Width property.
+
+<figure><img src="../../../.gitbook/assets/30_07 14 29.gif" alt=""><figcaption><p>Changing either Height or TextureWidth affects the Sprite's absolute width</p></figcaption></figure>
 
 ### Absolute Multiplied by Font Scale
 
