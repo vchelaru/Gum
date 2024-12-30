@@ -20,3 +20,6 @@ Width an dHeight values can be set on a Lottie file just like normal images. Unl
 
 <figure><img src="../../../.gitbook/assets/30_05 41 15.gif" alt=""><figcaption><p>LottieAnimations can be resized and maintain their crisp visuals</p></figcaption></figure>
 
+LottieAnimations are still rasterized in Gum, so they will display pixels when the view is zoomed in, especially if the LottieAnimation has a small Width or Height.
+
+<figure><img src="../../../.gitbook/assets/30_05 44 20.gif" alt=""><figcaption><p>LottieAnimations are still rasterized so zooming in shows pixels</p></figcaption></figure>
