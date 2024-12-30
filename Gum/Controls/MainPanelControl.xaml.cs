@@ -1,7 +1,7 @@
-﻿using Gum.Plugins;
+﻿using Gum.Managers;
+using Gum.Plugins;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -34,6 +34,12 @@ public partial class MainPanelControl : UserControl
     public MainPanelControl()
     {
         InitializeComponent();
+        this.KeyDown += HandleKeyDown;
+    }
+
+    private void HandleKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        HotkeyManager.Self.HandleKeyDownAppWide(e);
     }
 
     private void CenterBottomTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
