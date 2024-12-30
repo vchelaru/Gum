@@ -63,6 +63,7 @@
     * [Skia Standard Elements](readme/gum-elements/skia-standard-elements/README.md)
       * [General Properties](readme/gum-elements/skia-standard-elements/general-properties/README.md)
         * [Has Dropshadow](readme/gum-elements/skia-standard-elements/general-properties/has-dropshadow.md)
+        * [Is Filled](readme/gum-elements/skia-standard-elements/general-properties/is-filled.md)
         * [Use Gradient](readme/gum-elements/skia-standard-elements/general-properties/use-gradient.md)
       * [Arc](readme/gum-elements/skia-standard-elements/arc/README.md)
         * [Start Angle](readme/gum-elements/skia-standard-elements/arc/start-angle.md)
