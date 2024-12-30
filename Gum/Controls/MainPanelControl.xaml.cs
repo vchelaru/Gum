@@ -34,7 +34,37 @@ public partial class MainPanelControl : UserControl
     public MainPanelControl()
     {
         InitializeComponent();
+
+        OverrideFontSizeProperty();
         this.KeyDown += HandleKeyDown;
+    }
+
+    private void OverrideFontSizeProperty()
+    {
+        const double defaultFontSize = 11;
+
+        FontSizeProperty.OverrideMetadata(
+            typeof(MainPanelControl),
+            new FrameworkPropertyMetadata(
+                defaultFontSize,
+                FrameworkPropertyMetadataOptions.AffectsMeasure
+                | FrameworkPropertyMetadataOptions.AffectsRender
+                | FrameworkPropertyMetadataOptions.Inherits,
+                null,
+                Coerce)
+        );
+
+        static object Coerce(DependencyObject d, object baseValue)
+        {
+            return baseValue is not double size
+                ? baseValue
+                : size switch
+                {
+                    < 8 => 8,
+                    > 24 => 24,
+                    _ => size
+                };
+        }
     }
 
     private void HandleKeyDown(object sender, System.Windows.Input.KeyEventArgs e)

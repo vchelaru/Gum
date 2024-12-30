@@ -535,6 +535,14 @@ namespace Gum.Managers
             this.ObjectTreeView.PreviewKeyDown += this.ObjectTreeView_PreviewKeyDown;
             this.ObjectTreeView.MouseClick += this.ObjectTreeView_MouseClick;
             this.ObjectTreeView.MouseMove += (sender, e) => HandleMouseOver(e.X, e.Y);
+            this.ObjectTreeView.FontChanged += (sender, _) =>
+            {
+                if (sender is MultiSelectTreeView { Font.Size: var fontSize})
+                {
+                    const float defaultFontSize = 8.25f;
+                    UpdateTreeviewIconScale(fontSize/defaultFontSize);
+                }
+            };
             ObjectTreeView.DragDrop += HandleDragDropEvent;
 
             ObjectTreeView.ItemDrag += (sender, e) =>
@@ -595,7 +603,7 @@ namespace Gum.Managers
             return copy;
         }
 
-        public void UpdateTreeviewIconScale(float scale = 1.0f)
+        private void UpdateTreeviewIconScale(float scale = 1.0f)
         {
             int baseImageSize = 16;
             System.Diagnostics.Debug.WriteLine(ObjectTreeView.Indent);
@@ -606,44 +614,44 @@ namespace Gum.Managers
                 , new System.Drawing.Size(
                     (int)(baseImageSize * scale)
                     , (int)(baseImageSize * scale)));
-        }
 
-        public ImageList ResizeImageListImages(ImageList originalImageList, Size newSize)
-        {
-            ImageList resizedImageList = new ImageList
+            ImageList ResizeImageListImages(ImageList originalImageList, Size newSize)
             {
-                ImageSize = newSize,
-                ColorDepth = originalImageList.ColorDepth // Preserve original color depth
-            };
-
-            foreach (string key in originalImageList.Images.Keys)
-            {
-                Image originalImage = originalImageList.Images[key];
-                Image resizedImage = ResizeImageWithoutGraphics(originalImage, newSize); // Reuse ResizeImage method
-                resizedImageList.Images.Add(key, resizedImage);
-            }
-
-            return resizedImageList;
-        }
-
-        private Image ResizeImageWithoutGraphics(Image originalImage, Size newSize)
-        {
-            Bitmap resizedImage = new Bitmap(newSize.Width, newSize.Height);
-
-            for (int x = 0; x < newSize.Width; x++)
-            {
-                for (int y = 0; y < newSize.Height; y++)
+                ImageList resizedImageList = new ImageList
                 {
-                    // Calculate the position in the original image
-                    int originalX = x * originalImage.Width / newSize.Width;
-                    int originalY = y * originalImage.Height / newSize.Height;
+                    ImageSize = newSize,
+                    ColorDepth = originalImageList.ColorDepth // Preserve original color depth
+                };
 
-                    // Copy the pixel from the original image
-                    resizedImage.SetPixel(x, y, ((Bitmap)originalImage).GetPixel(originalX, originalY));
+                foreach (string key in originalImageList.Images.Keys)
+                {
+                    Image originalImage = originalImageList.Images[key];
+                    Image resizedImage = ResizeImageWithoutGraphics(originalImage, newSize); // Reuse ResizeImage method
+                    resizedImageList.Images.Add(key, resizedImage);
                 }
+
+                return resizedImageList;
             }
 
-            return resizedImage;
+            Image ResizeImageWithoutGraphics(Image originalImage, Size newSize)
+            {
+                Bitmap resizedImage = new Bitmap(newSize.Width, newSize.Height);
+
+                for (int x = 0; x < newSize.Width; x++)
+                {
+                    for (int y = 0; y < newSize.Height; y++)
+                    {
+                        // Calculate the position in the original image
+                        int originalX = x * originalImage.Width / newSize.Width;
+                        int originalY = y * originalImage.Height / newSize.Height;
+
+                        // Copy the pixel from the original image
+                        resizedImage.SetPixel(x, y, ((Bitmap)originalImage).GetPixel(originalX, originalY));
+                    }
+                }
+
+                return resizedImage;
+            }
         }
 
         private void ObjectTreeView_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)

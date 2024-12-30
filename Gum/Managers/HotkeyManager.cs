@@ -219,39 +219,21 @@ public class HotkeyManager : Singleton<HotkeyManager>
 
     public void HandleKeyDownAppWide(KeyEventArgs e)
     {
-        // TODO: Move these values somewhere
-        double defaultValue = 8.25f;
-        double minValue = 6f;
-        double maxValue = 50f;
-
-        MainPanelControl tempMPC = GumCommands.Self.GuiCommands.mainPanelControl;
-        if (ZoomCameraIn.IsPressed(e) || ZoomCameraInAlternative.IsPressed(e))
+        ScaleAppFont();
+       
+        void ScaleAppFont()
         {
-            tempMPC.FontSize = ClampValue(tempMPC.FontSize + 2, minValue, maxValue);
-            float scale = (float)(tempMPC.FontSize / defaultValue);
-            System.Diagnostics.Debug.WriteLine(scale);
-            ElementTreeViewManager.Self.UpdateTreeviewIconScale(scale);
-            e.Handled = true;
+            const int strength = 2;
+
+            int? direction = ZoomCameraIn.IsPressed(e) || ZoomCameraInAlternative.IsPressed(e) ? 1 :
+                ZoomCameraOut.IsPressed(e) || ZoomCameraOutAlternative.IsPressed(e) ? -1 : null;
+
+            if (direction is {} dir)
+            {
+                GumCommands.Self.GuiCommands.ShiftAppFontSize(dir * strength);
+                e.Handled = true;
+            }
         }
-        else if (ZoomCameraOut.IsPressed(e) || ZoomCameraOutAlternative.IsPressed(e))
-        {
-            tempMPC.FontSize = ClampValue(tempMPC.FontSize - 2, minValue, maxValue);
-            float scale = (float)(tempMPC.FontSize / defaultValue);
-            ElementTreeViewManager.Self.UpdateTreeviewIconScale(scale);
-            e.Handled = true;
-        }
-    }
-
-    // Naming it ClampValue so it won't collide with Clamp when we go to .NET Core
-    private double ClampValue(double value, double minValue, double maxValue)
-    {
-        if (value < minValue)
-            return minValue;
-
-        if (value > maxValue)
-            return maxValue;
-
-        return value;
     }
 
     #endregion
