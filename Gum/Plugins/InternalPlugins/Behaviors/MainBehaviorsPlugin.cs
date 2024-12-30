@@ -38,7 +38,7 @@ public class MainBehaviorsPlugin : InternalPlugin
 
         control = new BehaviorsControl();
         control.DataContext = viewModel;
-        behaviorsTab = GumCommands.Self.GuiCommands.AddControl(control, "Behaviors");
+        behaviorsTab = this.CreateTab(control, "Behaviors", TabLocation.CenterBottom);
         behaviorsTab.Hide();
 
         stateDataUiGrid = new DataUiGrid();
@@ -195,7 +195,7 @@ public class MainBehaviorsPlugin : InternalPlugin
         {
             viewModel.UpdateTo(asComponent);
 
-            this.behaviorsTab.Show();
+            this.behaviorsTab.Show(focus:false);
         }
         else
         {
