@@ -80,21 +80,27 @@ Setting a Text instance's **Width Units** to **Relative to Children** results in
 
 ![Text with Relative to Children width results in the contents of the Text instance controlling its size](<../../../.gitbook/assets/11_05 52 48.png>)
 
-### Percentage of Other Dimension
+### Percentage of Height
 
-**Percentage of Other Dimension** adjusts the object's effective width so it remains proportional to the Height value multiplied by the Width value (as a percentage). For example, if a Width value of 200 is entered, then the effective width is 200% (2x) of the height.
+**Percentage of Height** adjusts the object's effective width so it remains proportional to the Height value multiplied by the Width value (as a percentage). For example, if a Width value of 200 is entered, then the effective width is 200% (2x) of the height.
 
 The following image shows a child ColoredRectangle with a Width of 200 **Percentage of Other Dimension**. In this image, the **Height** value is 50 units, so the effective width is 100 units:
 
 ![Rectangle displaying a width 200% of its height](<../../../.gitbook/assets/11_05 55 15.png>)
 
-### Percentage of Source File
+### Percentage of File Width
 
-The [Sprite](../sprite/) type has an extra **With Unit** called **Percentage of Source File**, which sets the width of the Sprite according to the file that it is displaying. This is the default **Width Unit** for Sprites.
+The [Sprite](../sprite/) type can select a **With Unit** called **Percentage of File Width**, which sets the width of the Sprite according to the file that it is displaying. This is the default **Width Unit** for Sprites.
 
 The following image shows a child Sprite with 200 **Percentage of Source File** Width, which means it draws two times as wide as its source image:
 
 ![Sprite using 200 Percentage of File width](<../../../.gitbook/assets/11_05 58 09.png>)
+
+This value depends on the Sprite's Texture Width property, so changing Texture Width also changes the Sprite's absolute width.
+
+<figure><img src="../../../.gitbook/assets/30_06 28 15.gif" alt=""><figcaption><p>Changing a Sprite's Texture Width adjusts its absolute height when using Percentage of File Width</p></figcaption></figure>
+
+For more information, see the Sprite [Texture Address](../sprite/texture-address.md) page.
 
 ### Absolute Multiplied by Font Scale
 

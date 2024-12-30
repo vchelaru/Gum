@@ -133,18 +133,23 @@ For example, the following image contains multiple Text instances. Each has a si
 
 <figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Texts with the same height despite having different string</p></figcaption></figure>
 
-### Percentage of Other Dimension
+### Percentage of Width
 
-**Percentage of Other Dimension** adjusts the object's effective height so it remains proportional to the Width value multiplied by the Height value (as a percentage). For example, if a Height value of 200 is entered, then the effective height is 200% (2x) of the width.
+**Percentage of Width** adjusts the object's effective height so it remains proportional to the Width value multiplied by the Height value (as a percentage). For example, if a Height value of 200 is entered, then the effective height is 200% (2x) of the width.
 
 The following image shows a child ColoredRectangle with a Height of 200 **Percentage of Other Dimension**. In this image, the **Width** value is 50 units, so the effective height is 100 units:
 
 <figure><img src="../../../.gitbook/assets/11_06 29 41.png" alt=""><figcaption><p>Rectangle using Percentage of Other Dimension height of 200</p></figcaption></figure>
 
-### Percentage of Source File
+### Percentage of File Height
 
-The [Sprite](../sprite/) type has an extra **Height Unit** called **Percentage of Source File**, which sets the height of the Sprite according to the file that it is displaying. This is the default **Height Unit** for Sprites.
+The [Sprite](../sprite/) type can select a **Height Unit** called **Percentage of File Height**, which sets the height of the Sprite according to the file that it is displaying. This is the default **Height Unit** for Sprites.
 
 The following image shows a child Sprite with 200 **Percentage of Source File** Height, which means it draws two times as tall as its source image:
 
 ![Sprite using Percentage of Source height of 200](<../../../.gitbook/assets/11_06 31 44.png>)
+
+This value depends on the Sprite's Texture Height property, so changing Texture Height also changes the Sprite's absolute height.
+
+<figure><img src="../../../.gitbook/assets/30_06 39 18.gif" alt=""><figcaption></figcaption></figure>
+
