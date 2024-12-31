@@ -103,7 +103,6 @@
   </State>
   <Category>
     <Name>ToggleCategory</Name>
-    <IsSetRecursively>false</IsSetRecursively>
     <State>
       <Name>EnabledOn</Name>
       <Variable>

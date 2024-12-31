@@ -4099,7 +4099,6 @@
   </State>
   <Category>
     <Name>CursorMoveCategory</Name>
-    <IsSetRecursively>false</IsSetRecursively>
     <State>
       <Name>LeftRightMoveSupported</Name>
       <Variable>

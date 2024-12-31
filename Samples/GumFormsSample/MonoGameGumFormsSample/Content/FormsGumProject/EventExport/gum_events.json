@@ -147,6 +147,20 @@
         "ElementType": "Components",
         "EventType": 7,
         "TimestampUtc": "2024-12-31T10:15:14.6167027Z"
+      },
+      {
+        "NewName": "Test",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 0,
+        "TimestampUtc": "2024-12-31T11:02:24.3557939Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "Test",
+        "ElementType": "Components",
+        "EventType": 1,
+        "TimestampUtc": "2024-12-31T12:01:08.1652013Z"
       }
     ]
   }

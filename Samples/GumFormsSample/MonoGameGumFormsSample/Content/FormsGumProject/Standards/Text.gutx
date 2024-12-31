@@ -303,7 +303,6 @@
   </State>
   <Category>
     <Name>ColorCategory</Name>
-    <IsSetRecursively>false</IsSetRecursively>
     <State>
       <Name>Black</Name>
       <Variable>
@@ -592,7 +591,6 @@
   </Category>
   <Category>
     <Name>StyleCategory</Name>
-    <IsSetRecursively>false</IsSetRecursively>
     <State>
       <Name>Tiny</Name>
       <Variable>

@@ -238,7 +238,6 @@
   </State>
   <Category>
     <Name>ScrollBarVisibility</Name>
-    <IsSetRecursively>false</IsSetRecursively>
     <State>
       <Name>NoScrollBar</Name>
       <Variable>

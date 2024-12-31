@@ -313,7 +313,6 @@
   </State>
   <Category>
     <Name>ScrollBarCategory</Name>
-    <IsSetRecursively>false</IsSetRecursively>
   </Category>
   <Instance>
     <Name>UpButtonInstance</Name>

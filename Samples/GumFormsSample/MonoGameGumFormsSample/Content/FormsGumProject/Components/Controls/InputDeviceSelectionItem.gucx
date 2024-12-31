@@ -258,7 +258,6 @@
   </State>
   <Category>
     <Name>JoinedCategory</Name>
-    <IsSetRecursively>false</IsSetRecursively>
     <State>
       <Name>NoInputDevice</Name>
       <Variable>
