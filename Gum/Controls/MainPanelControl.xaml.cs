@@ -125,7 +125,7 @@ public partial class MainPanelControl : UserControl
 
         var tab = new PluginTab()
         {
-            Page = pluginTabItem
+            TabItem = pluginTabItem
         };
 
 
@@ -235,7 +235,7 @@ public partial class MainPanelControl : UserControl
     {
         foreach (var tabControl in AllControls)
         {
-            if (tabControl.Items.Contains(pluginTab.Page))
+            if (tabControl.Items.Contains(pluginTab.TabItem))
             {
                 return true;
             }
@@ -283,7 +283,7 @@ public partial class MainPanelControl : UserControl
         {
             var tabControl = GetTabFromLocation(pluginTab.SuggestedLocation);
 
-            tabControl.Items.Add(pluginTab.Page);
+            tabControl.Items.Add(pluginTab.TabItem);
 
             pluginTab.RaiseTabShown();
         }
@@ -299,9 +299,9 @@ public partial class MainPanelControl : UserControl
         var wasRemoved = false;
         foreach (var tabControl in AllControls)
         {
-            if (tabControl.Items.Contains(pluginTab.Page))
+            if (tabControl.Items.Contains(pluginTab.TabItem))
             {
-                tabControl.Items.Remove(pluginTab.Page);
+                tabControl.Items.Remove(pluginTab.TabItem);
                 wasRemoved = true;
             }
         }

@@ -303,7 +303,7 @@ namespace Gum.Plugins.BaseClasses
 
 
             PluginTab pluginTab = new PluginTab();
-            pluginTab.Page = page;
+            pluginTab.TabItem = page;
             pluginTab.Title = tabName;
 
             pluginTab.SuggestedLocation = defaultLocation;

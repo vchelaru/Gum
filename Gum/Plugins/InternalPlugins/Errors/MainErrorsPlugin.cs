@@ -3,78 +3,102 @@ using System.ComponentModel.Composition;
 using Gum.DataTypes;
 using Gum.ToolStates;
 using System;
+using Gum.Commands;
+using Gum.Plugins.InternalPlugins.Errors.Views;
 
-namespace Gum.Plugins.Errors
+namespace Gum.Plugins.Errors;
+
+[Export(typeof(PluginBase))]
+public class MainErrorsPlugin : InternalPlugin
 {
-    [Export(typeof(PluginBase))]
-    public class MainErrorsPlugin : InternalPlugin
+    #region Fields/Properties
+
+    AllErrorsViewModel viewModel;
+    ErrorChecker errorChecker;
+    ErrorDisplay control;
+    PluginTab tabPage;
+    private ErrorTabHeader _tabPageHeader;
+    private readonly GuiCommands _guiCommands;
+
+    #endregion
+
+    public MainErrorsPlugin()
     {
-        AllErrorsViewModel viewModel;
-        ErrorChecker errorChecker;
-        ErrorDisplay control;
-        PluginTab tabPage;
+        _guiCommands = GumCommands.Self.GuiCommands;
+    }
 
-        public override void StartUp()
+    public override void StartUp()
+    {
+        viewModel = new AllErrorsViewModel();
+
+        errorChecker = new ErrorChecker();
+
+        CreateViews();
+
+        AssignEvents();
+    }
+
+    private void CreateViews()
+    {
+        control = new ErrorDisplay();
+        control.DataContext = viewModel;
+        tabPage = _guiCommands.AddControl(control, "Errors", TabLocation.RightBottom);
+
+        _tabPageHeader = new ErrorTabHeader();
+        tabPage.TabItem.Header = _tabPageHeader;
+    }
+
+    private void AssignEvents()
+    {
+        this.ElementSelected += HandleElementSelected;
+        this.InstanceSelected += HandleInstanceSelected;
+
+        this.InstanceAdd += HandleInstanceAdd;
+        this.InstanceDelete += HandleInstanceDelete;
+        this.VariableSet += HandleVariableSet;
+        this.BehaviorReferencesChanged += HandleBehaviorReferencesChanged;
+    }
+
+    private void HandleInstanceSelected(ElementSave element, InstanceSave instance)
+    {
+        UpdateErrorsForElement(element);
+    }
+
+    private void HandleBehaviorReferencesChanged(ElementSave element)
+    {
+        UpdateErrorsForElement(element);
+    }
+
+    private void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue)
+    {
+        UpdateErrorsForElement(element);
+    }
+
+    private void HandleInstanceDelete(ElementSave element, InstanceSave instance)
+    {
+        UpdateErrorsForElement(element);
+    }
+
+    private void HandleInstanceAdd(ElementSave element, InstanceSave instance)
+    {
+        UpdateErrorsForElement(element);
+    }
+
+    private void HandleElementSelected(ElementSave element)
+    {
+        UpdateErrorsForElement(element);
+    }
+
+    private void UpdateErrorsForElement(ElementSave element)
+    {
+        var errors = errorChecker.GetErrorsFor(element, ProjectState.Self.GumProjectSave);
+
+        viewModel.Errors.Clear();
+        foreach (var item in errors)
         {
-            viewModel = new AllErrorsViewModel();
-
-            errorChecker = new ErrorChecker();
-
-            control = new ErrorDisplay();
-            control.DataContext = viewModel;
-
-            tabPage = GumCommands.Self.GuiCommands.AddControl(control, "Errors", TabLocation.RightBottom);
-
-            this.ElementSelected += HandleElementSelected;
-            this.InstanceSelected += HandleInstanceSelected;
-
-            this.InstanceAdd += HandleInstanceAdd;
-            this.InstanceDelete += HandleInstanceDelete;
-            this.VariableSet += HandleVariableSet;
-            this.BehaviorReferencesChanged += HandleBehaviorReferencesChanged;
+            viewModel.Errors.Add(item);
         }
 
-        private void HandleInstanceSelected(ElementSave element, InstanceSave instance)
-        {
-            UpdateErrorsForElement(element);
-        }
-
-        private void HandleBehaviorReferencesChanged(ElementSave element)
-        {
-            UpdateErrorsForElement(element);
-        }
-
-        private void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue)
-        {
-            UpdateErrorsForElement(element);
-        }
-
-        private void HandleInstanceDelete(ElementSave element, InstanceSave instance)
-        {
-            UpdateErrorsForElement(element);
-        }
-
-        private void HandleInstanceAdd(ElementSave element, InstanceSave instance)
-        {
-            UpdateErrorsForElement(element);
-        }
-
-        private void HandleElementSelected(ElementSave element)
-        {
-            UpdateErrorsForElement(element);
-        }
-
-        private void UpdateErrorsForElement(ElementSave element)
-        {
-            var errors = errorChecker.GetErrorsFor(element, ProjectState.Self.GumProjectSave);
-
-            viewModel.Errors.Clear();
-            foreach (var item in errors)
-            {
-                viewModel.Errors.Add(item);
-            }
-
-            tabPage.Title = $"Errors ({errors.Length})";
-        }
+        _tabPageHeader.SetErrorCount(errors.Length);
     }
 }
