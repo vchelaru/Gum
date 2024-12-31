@@ -18,7 +18,7 @@ namespace WpfDataUi.Controls
     /// </summary>
     public partial class TextBoxDisplay : UserControl, IDataUi, ISetDefaultable
     {
-        #region Fields
+        #region Fields/Properties
 
         TextBoxDisplayLogic mTextBoxLogic;
 
@@ -29,10 +29,6 @@ namespace WpfDataUi.Controls
         public decimal? LabelDragValueRounding { get; set; } = 1;
 
         public bool EnableLabelDragValueChange { get; set; } = true;
-
-        #endregion
-
-        #region Properties
 
         public InstanceMember InstanceMember
         {
@@ -88,6 +84,12 @@ namespace WpfDataUi.Controls
                     }
                 }
             }
+        }
+
+        public string NullCheckboxText
+        {
+            get => (string)NullableCheckBox.Content;
+            set => NullableCheckBox.Content = value;
         }
 
         #endregion
