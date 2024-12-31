@@ -84,6 +84,69 @@
         "ElementType": "Screens",
         "EventType": 7,
         "TimestampUtc": "2024-12-28T17:11:21.6043495Z"
+      },
+      {
+        "NewName": "Controls/MessageBox",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 0,
+        "TimestampUtc": "2024-12-31T10:08:55.9306543Z"
+      },
+      {
+        "NewName": "Controls/MessageBox (Controls/UserControl).LabelInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-31T10:13:24.8450603Z"
+      },
+      {
+        "NewName": "Controls/MessageBox (Controls/UserControl).ButtonStandardInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-31T10:14:01.1755268Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "Controls/MessageBox (Controls/UserControl).Controls/ButtonStandard ButtonStandardInstance in Controls/MessageBox (Controls/UserControl)",
+        "ElementType": "Components",
+        "EventType": 6,
+        "TimestampUtc": "2024-12-31T10:14:05.1343753Z"
+      },
+      {
+        "NewName": "Controls/MessageBox (Controls/UserControl).ContainerInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-31T10:14:10.5972272Z"
+      },
+      {
+        "NewName": "Controls/MessageBox (Controls/UserControl).ButtonConfirmInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-31T10:14:24.0385787Z"
+      },
+      {
+        "NewName": "Controls/MessageBox (Controls/UserControl).ButtonDenyInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2024-12-31T10:14:28.0309982Z"
+      },
+      {
+        "NewName": "Controls/MessageBox (Controls/UserControl).OkButton",
+        "OldName": "Controls/MessageBox (Controls/UserControl).ButtonConfirmInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-31T10:15:09.8333244Z"
+      },
+      {
+        "NewName": "Controls/MessageBox (Controls/UserControl).CancelButton",
+        "OldName": "Controls/MessageBox (Controls/UserControl).ButtonDenyInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2024-12-31T10:15:14.6167027Z"
       }
     ]
   }
