@@ -103,6 +103,11 @@ internal class MainEditorTabPlugin : InternalPlugin
     {
         var state = SelectedState.Self.SelectedStateSave ?? element.DefaultState;
 
+        if(instance != null)
+        {
+            qualifiedName = instance.Name + "." + qualifiedName;
+        }
+
         var value = state.GetValue(qualifiedName);
 
         var areSame = value == null && oldValue == null;
