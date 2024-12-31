@@ -143,8 +143,6 @@ public class SelectedState : ISelectedState
                 GumCommands.Self.GuiCommands.RefreshVariables();
             }
 
-            WireframeObjectManager.Self.RefreshAll(true);
-
             SelectionManager.Self.Refresh();
 
         }
