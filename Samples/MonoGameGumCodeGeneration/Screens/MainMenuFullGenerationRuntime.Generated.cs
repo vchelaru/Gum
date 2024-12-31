@@ -1,4 +1,4 @@
-//Code for MainMenu
+//Code for MainMenuFullGeneration
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Managers;
@@ -11,8 +11,13 @@ using MonoGameGumCodeGeneration.Components;
 using System.Linq;
 namespace MonoGameGumCodeGeneration.Screens
 {
-    public partial class MainMenuRuntime
+    public partial class MainMenuFullGenerationRuntime
     {
+        [System.Runtime.CompilerServices.ModuleInitializer]
+        public static void RegisterRuntimeType()
+        {
+            GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("MainMenuFullGeneration", typeof(MainMenuFullGenerationRuntime));
+        }
         public PopupRuntime PopupInstance { get; protected set; }
         public ComponentWithStatesRuntime ComponentWithStatesInstance { get; protected set; }
         public TextRuntime TextWithLotsOfPropertiesSet { get; protected set; }
@@ -21,7 +26,7 @@ namespace MonoGameGumCodeGeneration.Screens
         public PolygonRuntime PolygonInstance1 { get; protected set; }
         public RectangleRuntime RectangleInstance { get; protected set; }
 
-        public MainMenuRuntime(bool fullInstantiation = true)
+        public MainMenuFullGenerationRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         {
             if(fullInstantiation)
             {
@@ -30,10 +35,7 @@ namespace MonoGameGumCodeGeneration.Screens
 
                 InitializeInstances();
 
-                if(fullInstantiation)
-                {
-                    ApplyDefaultVariables();
-                }
+                ApplyDefaultVariables();
                 AssignParents();
                 CustomInitialize();
             }
@@ -57,13 +59,20 @@ namespace MonoGameGumCodeGeneration.Screens
         }
         protected virtual void AssignParents()
         {
-            this.WhatThisContains.Add(PopupInstance);
-            this.WhatThisContains.Add(ComponentWithStatesInstance);
-            this.WhatThisContains.Add(TextWithLotsOfPropertiesSet);
-            this.WhatThisContains.Add(PolygonInstance);
-            this.WhatThisContains.Add(CircleInstance);
-            this.WhatThisContains.Add(PolygonInstance1);
-            this.WhatThisContains.Add(RectangleInstance);
+            if(this.Children != null) this.Children.Add(PopupInstance);
+            else this.WhatThisContains.Add(PopupInstance);
+            if(this.Children != null) this.Children.Add(ComponentWithStatesInstance);
+            else this.WhatThisContains.Add(ComponentWithStatesInstance);
+            if(this.Children != null) this.Children.Add(TextWithLotsOfPropertiesSet);
+            else this.WhatThisContains.Add(TextWithLotsOfPropertiesSet);
+            if(this.Children != null) this.Children.Add(PolygonInstance);
+            else this.WhatThisContains.Add(PolygonInstance);
+            if(this.Children != null) this.Children.Add(CircleInstance);
+            else this.WhatThisContains.Add(CircleInstance);
+            if(this.Children != null) this.Children.Add(PolygonInstance1);
+            else this.WhatThisContains.Add(PolygonInstance1);
+            if(this.Children != null) this.Children.Add(RectangleInstance);
+            else this.WhatThisContains.Add(RectangleInstance);
         }
         private void ApplyDefaultVariables()
         {
@@ -97,6 +106,14 @@ namespace MonoGameGumCodeGeneration.Screens
 
             this.PolygonInstance.X = 545f;
             this.PolygonInstance.Y = 55f;
+            this.PolygonInstance.SetPoints(new System.Numerics.Vector2[]{
+                new System.Numerics.Vector2(-32f, -32f),
+                new System.Numerics.Vector2(32f, -32f),
+                new System.Numerics.Vector2(108f, 71f),
+                new System.Numerics.Vector2(-88f, 86f),
+                new System.Numerics.Vector2(-83f, 13f),
+                new System.Numerics.Vector2(-32f, -32f),
+            });
 
             this.CircleInstance.Alpha = 255;
             this.CircleInstance.Blue = 255;
@@ -119,6 +136,14 @@ namespace MonoGameGumCodeGeneration.Screens
             this.PolygonInstance1.X = 623f;
             this.PolygonInstance1.XUnits = GeneralUnitType.PixelsFromSmall;
             this.PolygonInstance1.Y = 317f;
+            this.PolygonInstance1.SetPoints(new System.Numerics.Vector2[]{
+                new System.Numerics.Vector2(-32f, -32f),
+                new System.Numerics.Vector2(32f, -32f),
+                new System.Numerics.Vector2(32f, 32f),
+                new System.Numerics.Vector2(1f, 59f),
+                new System.Numerics.Vector2(-32f, 32f),
+                new System.Numerics.Vector2(-32f, -32f),
+            });
 
             this.RectangleInstance.Blue = 219;
             this.RectangleInstance.Green = 168;

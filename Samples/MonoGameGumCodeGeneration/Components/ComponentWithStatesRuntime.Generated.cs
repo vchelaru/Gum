@@ -13,6 +13,11 @@ namespace MonoGameGumCodeGeneration.Components
 {
     public partial class ComponentWithStatesRuntime
     {
+        [System.Runtime.CompilerServices.ModuleInitializer]
+        public static void RegisterRuntimeType()
+        {
+            GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("ComponentWithStates", typeof(ComponentWithStatesRuntime));
+        }
         public enum ColorCategory
         {
             RedState,
@@ -20,37 +25,76 @@ namespace MonoGameGumCodeGeneration.Components
             BlueState,
         }
 
+        ColorCategory mColorCategoryState;
         public ColorCategory ColorCategoryState
         {
+            get => mColorCategoryState;
             set
             {
-                if(Categories.ContainsKey("ColorCategory"))
+                mColorCategoryState = value;
+                var appliedDynamically = false;
+                if(!appliedDynamically)
                 {
-                    var category = Categories["ColorCategory"];
-                    var state = category.States.Find(item => item.Name == value.ToString());
-                    this.ApplyState(state);
-                }
-                else
-                {
-                    var category = ((Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "ColorCategory");
-                    var state = category.States.Find(item => item.Name == value.ToString());
-                    this.ApplyState(state);
+                    switch (value)
+                    {
+                        case ColorCategory.RedState:
+                            this.ColoredRectangleInstance.Blue = 0;
+                            this.ColoredRectangleInstance.Green = 0;
+                            this.ColoredRectangleInstance.Red = 255;
+                            break;
+                        case ColorCategory.GreenState:
+                            this.ColoredRectangleInstance.Blue = 0;
+                            this.ColoredRectangleInstance.Green = 255;
+                            this.ColoredRectangleInstance.Red = 0;
+                            break;
+                        case ColorCategory.BlueState:
+                            this.ColoredRectangleInstance.Blue = 255;
+                            this.ColoredRectangleInstance.Green = 0;
+                            this.ColoredRectangleInstance.Red = 0;
+                            break;
+                    }
                 }
             }
         }
         public ColoredRectangleRuntime ColoredRectangleInstance { get; protected set; }
 
-        public ComponentWithStatesRuntime()
+        public ComponentWithStatesRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         {
+            if(fullInstantiation)
+            {
 
+                 
+
+                InitializeInstances();
+
+                ApplyDefaultVariables();
+                AssignParents();
+                CustomInitialize();
+            }
+        }
+        protected virtual void InitializeInstances()
+        {
+            ColoredRectangleInstance = new ColoredRectangleRuntime();
+            ColoredRectangleInstance.Name = "ColoredRectangleInstance";
+        }
+        protected virtual void AssignParents()
+        {
+            this.Children.Add(ColoredRectangleInstance);
+        }
+        private void ApplyDefaultVariables()
+        {
+            this.ColoredRectangleInstance.Height = 0f;
+            this.ColoredRectangleInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            this.ColoredRectangleInstance.Width = 0f;
+            this.ColoredRectangleInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            this.ColoredRectangleInstance.X = 0f;
+            this.ColoredRectangleInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
+            this.ColoredRectangleInstance.XUnits = GeneralUnitType.PixelsFromMiddle;
+            this.ColoredRectangleInstance.Y = 0f;
+            this.ColoredRectangleInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+            this.ColoredRectangleInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
 
         }
-        public override void AfterFullCreation()
-        {
-            ColoredRectangleInstance = this.GetGraphicalUiElementByName("ColoredRectangleInstance") as ColoredRectangleRuntime;
-            CustomInitialize();
-        }
-        //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
         partial void CustomInitialize();
     }
 }

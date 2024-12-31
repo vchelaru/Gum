@@ -4139,7 +4139,7 @@ namespace Gum.Wireframe
             // instance clips its children.  Therefore, we should make sure that we're
             // only adding direct children and letting instances handle their own children
 
-            if (this.ElementSave != null && this.ElementSave is ScreenSave)
+            if (this.ElementSave is ScreenSave || this.Children == null)
             {
 
                 //Recursively add children to the managers
