@@ -25,6 +25,12 @@ public abstract class StateTreeViewItem : ViewModel
         set => Set(value);
     }
 
+    public bool IsRequiredBySelectedBehavior
+    {
+        get => Get<bool>();
+        set => Set(value);
+    }
+
     public override string ToString() => DataAsObject?.ToString();
 
 
