@@ -77,6 +77,10 @@ var popupComponent = gumProject.Components.First(item => item.Name == "MyPopup")
     .ToGraphicalUiElement(SystemManagers.Default, addToManagers);
 
 popupComponent.Parent = ModalRoot;
+
+// later, the popup can be removed:
+popupComponent.RemoveFromManagers();
+popupComponent.Parent = null;
 ```
 
 If you are going to add a Screen to a ModalRoot, then the Screen must have a renderable contained object so that it can have its Parent assigned. You can do this by creating a Screen runtime which inherits from ContainerBase, or you can optionally add an InvisibleRenderable as shown in the following code:
@@ -90,4 +94,8 @@ var popupScreen = gumProject.Screens.First(item => item.Name == "MyScreen")
 // Give the Screen a ContainedObject so that it can have its parent assigned
 popupScreen.SetContainedObject (new InvisibleRenderable());
 popupScreen.Parent = ModalRoot;
+
+// later, the popup can be removed:
+popupScreen.RemoveFromManagers();
+popupScreen.Parent = null;
 ```
