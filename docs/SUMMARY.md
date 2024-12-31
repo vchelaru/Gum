@@ -141,6 +141,7 @@
     * [IDataUi](gum-code/gum-code-reference/idataui.md)
     * [InstanceMember](gum-code/gum-code-reference/instancemember.md)
     * [InstanceSave](gum-code/gum-code-reference/instancesave.md)
+    * [InteractiveGue](gum-code/gum-code-reference/interactivegue.md)
     * [IPositionedSizedObject](gum-code/gum-code-reference/ipositionedsizedobject.md)
     * [Layer](gum-code/gum-code-reference/layer.md)
     * [Renderer](gum-code/gum-code-reference/renderer/README.md)
