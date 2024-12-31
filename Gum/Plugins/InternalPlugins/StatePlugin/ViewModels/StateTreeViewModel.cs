@@ -85,7 +85,7 @@ public class StateTreeViewModel : ViewModel
 
     #region Refresh
 
-    public void RefreshTo(IStateContainer stateContainer, ISelectedState selectedState)
+    public void RefreshTo(IStateContainer stateContainer, ISelectedState selectedState, ObjectFinder objectFinder)
     {
         if(stateContainer != null)
         {
@@ -95,7 +95,7 @@ public class StateTreeViewModel : ViewModel
             RemoveUnnecessaryNodes(stateContainer);
             AddMissingItems(stateContainer, selectedState);
             FixNodeOrderInCategory(stateContainer);
-            RefreshBackgroundToVariables();
+            RefreshStateVmBackground(selectedState, objectFinder);
 
             ApplyExpanded(expandedNodes);
 
@@ -253,15 +253,28 @@ public class StateTreeViewModel : ViewModel
         }
     }
 
-    internal void RefreshBackgroundToVariables()
+    internal void RefreshStateVmBackground(ISelectedState selectedState, ObjectFinder objectFinder)
     {
-        var instance = GumState.Self.SelectedState.SelectedInstance;
+        var instance = selectedState.SelectedInstance;
+        var behaviorReference = selectedState.SelectedBehaviorReference;
+
+        var behavior = behaviorReference != null ?
+            objectFinder.GetBehavior(behaviorReference) :
+            null;
 
         foreach(var categoryVm in Categories)
         {
+            var matchingBehaviorCategory = behavior?.Categories.FirstOrDefault(item => item.Name == categoryVm.Data.Name);
+            categoryVm.IsRequiredBySelectedBehavior = 
+                matchingBehaviorCategory != null;
+
             foreach (var stateVm in categoryVm.States)
             {
                 var state = stateVm.Data;
+                
+                stateVm.IsRequiredBySelectedBehavior =
+                    matchingBehaviorCategory?.States.Any(item => item.Name == state.Name) == true;
+
                 if (instance != null)
                 {
                     stateVm.IncludesVariablesForSelectedInstance =

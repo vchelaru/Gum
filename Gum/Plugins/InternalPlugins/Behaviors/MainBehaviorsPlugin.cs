@@ -20,7 +20,7 @@ public class MainBehaviorsPlugin : InternalPlugin
 {
     BehaviorsControl control;
     private readonly ISelectedState _selectedState;
-    BehaviorsViewModel viewModel = new BehaviorsViewModel();
+    BehaviorsViewModel viewModel;
     DataUiGrid stateDataUiGrid;
     PluginTab behaviorsTab;
 
@@ -32,7 +32,7 @@ public class MainBehaviorsPlugin : InternalPlugin
     public override void StartUp()
     {
 
-        viewModel = new BehaviorsViewModel();
+        viewModel = new BehaviorsViewModel(_selectedState);
         viewModel.ApplyChangedValues += HandleApplyBehaviorChanges;
 
 
