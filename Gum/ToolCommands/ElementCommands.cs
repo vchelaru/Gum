@@ -367,23 +367,27 @@ namespace Gum.ToolCommands
 
         public void AddBehaviorTo(string behaviorName, ComponentSave componentSave, bool performSave = true)
         {
-            var behaviorReference = new ElementBehaviorReference();
-            behaviorReference.BehaviorName = behaviorName;
-            componentSave.Behaviors.Add(behaviorReference);
-
             var project = ProjectManager.Self.GumProjectSave;
             var behaviorSave = project.Behaviors.FirstOrDefault(item => item.Name == behaviorName);
 
-            GumCommands.Self.ProjectCommands.ElementCommands.AddCategoriesFromBehavior(behaviorSave, componentSave);
-
-            GumCommands.Self.GuiCommands.PrintOutput($"Added behavior {behaviorName} to {componentSave}");
-
-            if (performSave)
+            if(behaviorSave != null)
             {
-                GumCommands.Self.FileCommands.TryAutoSaveElement(componentSave);
+                var behaviorReference = new ElementBehaviorReference();
+                behaviorReference.BehaviorName = behaviorName;
+                componentSave.Behaviors.Add(behaviorReference);
+
+                GumCommands.Self.ProjectCommands.ElementCommands.AddCategoriesFromBehavior(behaviorSave, componentSave);
+
+                PluginManager.Self.BehaviorReferencesChanged(componentSave);
+
+                GumCommands.Self.GuiCommands.PrintOutput($"Added behavior {behaviorName} to {componentSave}");
+
+                if (performSave)
+                {
+                    GumCommands.Self.FileCommands.TryAutoSaveElement(componentSave);
+                }
             }
         }
-
 
         void AddCategoriesFromBehavior(BehaviorSave behaviorSave, ElementSave element)
         {

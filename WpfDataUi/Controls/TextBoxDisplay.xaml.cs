@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Markup;
 using System.Windows.Navigation;
+using System.Xml.Linq;
 using WpfDataUi.DataTypes;
 
 namespace WpfDataUi.Controls
@@ -17,7 +18,7 @@ namespace WpfDataUi.Controls
     /// </summary>
     public partial class TextBoxDisplay : UserControl, IDataUi, ISetDefaultable
     {
-        #region Fields
+        #region Fields/Properties
 
         TextBoxDisplayLogic mTextBoxLogic;
 
@@ -28,10 +29,6 @@ namespace WpfDataUi.Controls
         public decimal? LabelDragValueRounding { get; set; } = 1;
 
         public bool EnableLabelDragValueChange { get; set; } = true;
-
-        #endregion
-
-        #region Properties
 
         public InstanceMember InstanceMember
         {
@@ -89,6 +86,12 @@ namespace WpfDataUi.Controls
             }
         }
 
+        public string NullCheckboxText
+        {
+            get => (string)NullableCheckBox.Content;
+            set => NullableCheckBox.Content = value;
+        }
+
         #endregion
 
         static void LoadViewFromUri(UserControl userControl, string baseUri)
@@ -140,20 +143,19 @@ namespace WpfDataUi.Controls
             {
                 SuppressSettingProperty = true;
 
-                mTextBoxLogic.RefreshDisplay();
+                mTextBoxLogic.RefreshDisplay(out object valueOnInstance);
 
                 this.Label.Text = InstanceMember.DisplayName;
                 this.RefreshContextMenu(TextBox.ContextMenu);
                 this.RefreshContextMenu(StackPanel.ContextMenu);
 
-                HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
-                HintTextBlock.Text = InstanceMember?.DetailText;
+                RefreshHintText();
 
-                RefreshIsEnabled();
+                RefreshIsEnabled(valueOnInstance, forceNullableEnable:false);
 
                 SuppressSettingProperty = false;
 
-                if(mTextBoxLogic.IsNumeric)
+                if (mTextBoxLogic.IsNumeric)
                 {
                     this.Label.Cursor = Cursors.ScrollWE;
                 }
@@ -162,14 +164,52 @@ namespace WpfDataUi.Controls
                     this.Label.Cursor = null;
                 }
 
+                RefreshNullableRelatedUiVisibility(valueOnInstance);
+
             }
+        }
+
+        private void RefreshHintText()
+        {
+            HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
+            HintTextBlock.Text = InstanceMember?.DetailText;
+        }
+
+        private void RefreshNullableRelatedUiVisibility(object valueOnInstance)
+        {
+            bool isNullable = IsDisplayedTypeNullable();
+
+            if (isNullable)
+            {
+                this.NullableCheckBox.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                this.NullableCheckBox.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private bool IsDisplayedTypeNullable()
+        {
+            var type = InstanceMember?.PropertyType;
+
+            var isNullable =
+                Nullable.GetUnderlyingType(type) != null;
+            return isNullable;
         }
 
         public virtual ApplyValueResult TrySetValueOnUi(object valueOnInstance)
         {
+            if(!mTextBoxLogic.IsInApplicationToInstance)
+            {
+                this.NullableCheckBox.IsChecked = valueOnInstance == null;
+                // we could put more things here if needed
+            }
             this.TextBox.Text = mTextBoxLogic.ConvertNumberToString(valueOnInstance);
 
             RefreshPlaceholderText();
+
+            RefreshNullableRelatedUiVisibility(valueOnInstance);
 
             return ApplyValueResult.Success;
         }
@@ -198,7 +238,15 @@ namespace WpfDataUi.Controls
 
         public ApplyValueResult TryGetValueOnUi(out object value)
         {
-            return mTextBoxLogic.TryGetValueOnUi(out value);
+            if(this.NullableCheckBox.Visibility == Visibility.Visible && this.NullableCheckBox.IsChecked == true)
+            {
+                value = null;
+                return ApplyValueResult.Success;
+            }
+            else
+            {
+                return mTextBoxLogic.TryGetValueOnUi(out value);
+            }
         }
 
         private void HandlePropertyChange(object sender, PropertyChangedEventArgs e)
@@ -239,10 +287,12 @@ namespace WpfDataUi.Controls
                 lastApplyValueResult = mTextBoxLogic.TryApplyToInstance();
             }
 
-            RefreshIsEnabled();
+            TryGetValueOnUi(out object valueOnInstance);
+
+            RefreshIsEnabled(valueOnInstance, forceNullableEnable:false);
         }
 
-        private void RefreshIsEnabled()
+        private void RefreshIsEnabled(object valueOnInstance, bool forceNullableEnable)
         {
             if (lastApplyValueResult == ApplyValueResult.NotSupported)
             {
@@ -254,6 +304,11 @@ namespace WpfDataUi.Controls
             }
             else
             {
+                if(IsDisplayedTypeNullable())
+                {
+                    this.TextBox.IsEnabled = forceNullableEnable || valueOnInstance != null;
+                }
+
                 this.IsEnabled = true;
             }
         }
@@ -370,6 +425,25 @@ namespace WpfDataUi.Controls
         public double RoundDouble(double valueToRound, double multipleOf)
         {
             return ((int)(System.Math.Sign(valueToRound) * .5f + valueToRound / multipleOf)) * multipleOf;
+        }
+
+        private void NullableCheckBox_Checked(object sender, RoutedEventArgs e)
+        {
+            HandleNullableCheckBoxCheckChanged();
+        }
+
+        private void NullableCheckBox_Unchecked(object sender, RoutedEventArgs e)
+        {
+            HandleNullableCheckBoxCheckChanged();
+        }
+
+        private void HandleNullableCheckBoxCheckChanged()
+        {
+            lastApplyValueResult = mTextBoxLogic.TryApplyToInstance();
+
+            TryGetValueOnUi(out object newValue);
+
+            RefreshIsEnabled(newValue, forceNullableEnable: NullableCheckBox.IsChecked == false);
         }
     }
 }

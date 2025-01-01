@@ -58,6 +58,11 @@ public class GumService
         return gumProject;
     }
 
+    // In December 31, 2024 we moved to using ModuleInitializer 
+    // More info: https://github.com/vchelaru/Gum/issues/275
+    // Therefore, this is no longer needed. However, old projects
+    // may still use this. Not sure when we can remove this, sometime
+    // in the future....
     private void RegisterRuntimeTypesThroughReflection()
     {
         // Get the currently executing assembly

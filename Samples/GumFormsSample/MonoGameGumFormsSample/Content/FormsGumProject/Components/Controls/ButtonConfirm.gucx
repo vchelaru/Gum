@@ -217,7 +217,6 @@
   </State>
   <Category>
     <Name>ButtonCategory</Name>
-    <IsSetRecursively>false</IsSetRecursively>
     <State>
       <Name>Enabled</Name>
       <Variable>

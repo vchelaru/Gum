@@ -10,6 +10,10 @@ For more information about the NineSlice type, see the [NineSlice page](../../..
 
 The following code can be used to instantiate a NineSliceRuntime which uses a Texture (png file) named Frame.png.
 
+{% hint style="info" %}
+**NOTE:** The Frame.png file must have the `Copy to Output Directory` set to either `Copy always` or `Copy if newer`.  Otherwise you will get an error: System.IO.IOException 'Could not get the stream for the file C:\path\to\file\Frame.png'
+{% endhint %}
+
 ```csharp
 var nineSlice = new NineSliceRuntime();
 nineSlice.SourceFileName = "Frame.png";

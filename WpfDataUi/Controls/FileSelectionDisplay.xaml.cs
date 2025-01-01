@@ -90,7 +90,7 @@ namespace WpfDataUi.Controls
 
             SuppressSettingProperty = true;
 
-            mTextBoxLogic.RefreshDisplay();
+            mTextBoxLogic.RefreshDisplay(out object _);
 
             HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
             HintTextBlock.Text = InstanceMember?.DetailText;

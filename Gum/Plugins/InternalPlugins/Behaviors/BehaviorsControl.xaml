@@ -12,7 +12,7 @@
                 <RowDefinition Height="*"></RowDefinition>
                 <RowDefinition Height="Auto"></RowDefinition>
             </Grid.RowDefinitions>
-            <ListBox ItemsSource="{Binding AddedBehaviors}">
+            <ListBox ItemsSource="{Binding AddedBehaviors}" SelectedItem="{Binding SelectedBehavior}">
             </ListBox>
             <Button Grid.Row="1" Click="HandleEditClick">Edit</Button>
                 

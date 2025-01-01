@@ -152,7 +152,7 @@ namespace WpfDataUi.Controls
 
                 SuppressSettingProperty = true;
 
-                mTextBoxLogic.RefreshDisplay();
+                mTextBoxLogic.RefreshDisplay(out object _);
 
                 this.Label.Text = InstanceMember.DisplayName;
 

@@ -6,8 +6,8 @@ namespace Gum.Plugins
     {
         public string Title
         {
-            get => (string)Page.Header;
-            set => Page.Header = value;
+            get => (string)TabItem.Header;
+            set => TabItem.Header = value;
         }
 
         public TabLocation SuggestedLocation
@@ -15,19 +15,19 @@ namespace Gum.Plugins
             get; set;
         } = TabLocation.RightBottom;
 
-        PluginTabItem page;
-        internal PluginTabItem Page
+        PluginTabItem tabItem;
+        internal PluginTabItem TabItem
         {
-            get => page;
+            get => tabItem;
             set
             {
-                if (page != value)
+                if (tabItem != value)
                 {
-                    page = value;
+                    tabItem = value;
 
-                    if(page != null)
+                    if(tabItem != null)
                     {
-                        page.MiddleMouseClicked += (_, _) => HandleMiddleMouseClicked();
+                        tabItem.MiddleMouseClicked += (_, _) => HandleMiddleMouseClicked();
                     }
 
 
@@ -87,7 +87,7 @@ namespace Gum.Plugins
 
         public void Focus()
         {
-            Page.Focus();
+            TabItem.Focus();
         }
 
         public bool CanClose { get; set; }

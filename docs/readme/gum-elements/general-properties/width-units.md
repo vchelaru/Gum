@@ -38,7 +38,7 @@ Despite the name referring to a "Container", the size is relative to the parent 
 
 Ratio of Container can be used to fill available space or to share available space with other objects using a ratio. It behaves similar to a Height Units of [Ratio of Container](height-units.md#ratio-of-container), but operates horizontally rather than vertically.
 
-<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Blue rectangle using a ratio value of 2, next to siblings each using a ratio value of 1</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Blue rectangle using a ratio value of 2, next to siblings each using a ratio value of 1</p></figcaption></figure>
 
 {% hint style="info" %}
 Despite the name referring to a "Container", the total size available for ratios is relative to the parent regardless of the parent's type. If the instance has no parent, then the size is relative to the canvas.
@@ -80,21 +80,43 @@ Setting a Text instance's **Width Units** to **Relative to Children** results in
 
 ![Text with Relative to Children width results in the contents of the Text instance controlling its size](<../../../.gitbook/assets/11_05 52 48.png>)
 
-### Percentage of Other Dimension
+### Percentage of Height
 
-**Percentage of Other Dimension** adjusts the object's effective width so it remains proportional to the Height value multiplied by the Width value (as a percentage). For example, if a Width value of 200 is entered, then the effective width is 200% (2x) of the height.
+**Percentage of Height** adjusts the object's effective width so it remains proportional to the Height value multiplied by the Width value (as a percentage). For example, if a Width value of 200 is entered, then the effective width is 200% (2x) of the height.
 
 The following image shows a child ColoredRectangle with a Width of 200 **Percentage of Other Dimension**. In this image, the **Height** value is 50 units, so the effective width is 100 units:
 
 ![Rectangle displaying a width 200% of its height](<../../../.gitbook/assets/11_05 55 15.png>)
 
-### Percentage of Source File
+### Percentage of File Width
 
-The [Sprite](../sprite/) type has an extra **With Unit** called **Percentage of Source File**, which sets the width of the Sprite according to the file that it is displaying. This is the default **Width Unit** for Sprites.
+[Sprites](../sprite/) can select a **Width Unit** called **Percentage of File Width**, which sets the width of the Sprite according to the file that it is displaying. This is the default **Width Unit** for Sprites.
 
 The following image shows a child Sprite with 200 **Percentage of Source File** Width, which means it draws two times as wide as its source image:
 
 ![Sprite using 200 Percentage of File width](<../../../.gitbook/assets/11_05 58 09.png>)
+
+When using Percentage of Source File Width, the Sprite's absolute width depends on the Sprite's Texture Width property.
+
+<figure><img src="../../../.gitbook/assets/30_06 28 15.gif" alt=""><figcaption><p>Changing a Sprite's Texture Width adjusts its absolute height when using Percentage of File Width</p></figcaption></figure>
+
+For more information, see the Sprite [Texture Address](../sprite/texture-address.md) page.
+
+### Maintain File Aspect Ratio Width
+
+Sprites can select a **Width Unit** called **Maintain File Aspect Ratio Width**, which sets the width of the Sprite so that its aspect ratio matches its source file multiplied by the Width value. Usually Maintain File Aspect Ratio Width is used with a Width value of 100 so that the Sprite shows is source file at the correct aspect ratio.&#x20;
+
+{% hint style="info" %}
+Svgs also support using Maintain File Aspect Ratio Width. For more information on using Svgs see the [Skia Standard Elements](../skia-standard-elements/) page.
+{% endhint %}
+
+When this value is used, a Sprite's Height can be changed resulting in its absolute width also changing.
+
+<figure><img src="../../../.gitbook/assets/30_07 10 01 (1).gif" alt=""><figcaption><p>Changing the Height when using Maintain File Aspect Ratio Width also adjusts absolute width</p></figcaption></figure>
+
+When using Maintain File Aspect Ratio Width, the Sprite's absolute width depends on the Sprite's Texture Width property.
+
+<figure><img src="../../../.gitbook/assets/30_07 14 29.gif" alt=""><figcaption><p>Changing either Height or Texture Width affects the Sprite's absolute width</p></figcaption></figure>
 
 ### Absolute Multiplied by Font Scale
 
@@ -102,4 +124,4 @@ Absolute Multiplied by Font Scale is a property which multiplies the Font Scale 
 
 At the time of this writing, the Gum tool always uses a Font Scale of 1, so this cannot be previewed in the tool. However, when a Gum project is loaded at runtime, the runtime may apply a Font Scale value such as using the **Text size** from Windows.
 
-<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Width of 100 using Absolute Multiplied by Font Scale results in an absolute width of 100 in the Gum tool</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Width of 100 using Absolute Multiplied by Font Scale results in an absolute width of 100 in the Gum tool</p></figcaption></figure>

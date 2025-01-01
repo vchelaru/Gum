@@ -88,6 +88,17 @@ namespace Gum.Plugins.BaseClasses
         /// [object] - OLD value of the variable.  New value must be obtained through the InstanceSave
         /// </summary>
         public event Action<ElementSave, InstanceSave, string, object> VariableSet;
+
+        /// <summary>
+        /// Event raised after a variable has been set - this can be used to perform action after most 
+        /// plugins have responded to VariableSet, such as refreshing views.
+        /// [ElementSave] - current ElementSave (like the Screen) 
+        /// [InstanceSave] - current InstanceSave (like a sprite in a Screen). This may be null 
+        /// [string] - name of the variable set 
+        /// [object] - OLD value of the variable.  New value must be obtained through the InstanceSave
+        /// </summary>
+        public event Action<ElementSave, InstanceSave, string, object> VariableSetLate;
+
         /// <summary>
         /// Event raised when a new variable is added. At the time of this writing
         /// this will only occur when a new exposed variable is added.
@@ -107,6 +118,10 @@ namespace Gum.Plugins.BaseClasses
         public event Action<TreeNode> StateWindowTreeNodeSelected;
         public event Action<BehaviorSave> BehaviorSelected;
         public event Action<VariableSave> BehaviorVariableSelected;
+
+        public event Action<ElementBehaviorReference, ElementSave> BehaviorReferenceSelected;
+        public event Action<ElementSave> BehaviorReferencesChanged;
+
         public event Action<ElementSave, InstanceSave> InstanceSelected;
 
         /// <summary>
@@ -123,7 +138,6 @@ namespace Gum.Plugins.BaseClasses
         public event Action<ElementSave, InstanceSave, string> InstanceRename;
         public event Action<InstanceSave> InstanceReordered;
 
-        public event Action<ElementSave> BehaviorReferencesChanged;
         public event Action RefreshBehaviorView;
 
         /// <summary>
@@ -292,7 +306,7 @@ namespace Gum.Plugins.BaseClasses
 
 
             PluginTab pluginTab = new PluginTab();
-            pluginTab.Page = page;
+            pluginTab.TabItem = page;
             pluginTab.Title = tabName;
 
             pluginTab.SuggestedLocation = defaultLocation;
@@ -317,16 +331,13 @@ namespace Gum.Plugins.BaseClasses
 
         public void CallProjectLoad(GumProjectSave newlyLoadedProject) =>
             ProjectLoad?.Invoke(newlyLoadedProject);
-
         public void CallProjectSave(GumProjectSave savedProject) =>
             AfterProjectSave?.Invoke(savedProject);
-
         public void CallProjectLocationSet(FilePath filePath) =>
             ProjectLocationSet?.Invoke(filePath);
 
         public void CallGuidesChanged() =>
             GuidesChanged?.Invoke();
-        
 
         public void CallExport(ElementSave elementSave) =>
             Export?.Invoke(elementSave);
@@ -340,30 +351,24 @@ namespace Gum.Plugins.BaseClasses
         
         public void CallElementAdd(ElementSave element) =>
             ElementAdd?.Invoke(element);
-        
         public void CallElementDelete(ElementSave element) =>
             ElementDelete?.Invoke(element);
-        
-
         public void CallElementDuplicate(ElementSave oldElement, ElementSave newElement) =>
             ElementDuplicate?.Invoke(oldElement, newElement);
-
         public void CallElementRename(ElementSave elementSave, string oldName) =>
             ElementRename?.Invoke(elementSave, oldName);
 
         public void CallStateRename(StateSave stateSave, string oldName) => 
             StateRename?.Invoke(stateSave, oldName);
-        
         public void CallStateAdd(StateSave stateSave) => StateAdd?.Invoke(stateSave);
-
         public void CallStateMovedToCategory(StateSave stateSave, StateSaveCategory newCategory, StateSaveCategory oldCategory) =>
             StateMovedToCategory?.Invoke(stateSave, newCategory, oldCategory);
+        public void CallStateDelete(StateSave stateSave) => StateDelete?.Invoke(stateSave);
 
         public void CallRefreshStateTreeView() => RefreshStateTreeView?.Invoke();
 
         public void CallAfterUndo() => AfterUndo?.Invoke();
 
-        public void CallStateDelete(StateSave stateSave) => StateDelete?.Invoke(stateSave);
 
         public void CallReactToStateSaveSelected(StateSave stateSave) => ReactToStateSaveSelected?.Invoke(stateSave);
         public void CallReactToStateSaveCategorySelected(StateSaveCategory category) => ReactToStateSaveCategorySelected?.Invoke(category);
@@ -386,14 +391,12 @@ namespace Gum.Plugins.BaseClasses
         public void CallVariableDelete(ElementSave elementSave, string variableName) =>
             VariableDelete?.Invoke(elementSave, variableName);
 
-        public void CallVariableSet(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue)
-        {
-            if(VariableSet != null)
-            {
-                VariableSet(parentElement, instance, changedMember, oldValue);
-            }
+        public void CallVariableSet(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue) =>
+            VariableSet?.Invoke(parentElement, instance, changedMember, oldValue);
 
-        }
+        public void CallVariableSetLate(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue) =>
+            VariableSetLate?.Invoke(parentElement, instance, changedMember, oldValue);
+
 
         public void CallAddAndRemoveVariablesForType(string type, StateSave standardDefaultStateSave) =>
             AddAndRemoveVariablesForType?.Invoke(type, standardDefaultStateSave);
@@ -413,6 +416,8 @@ namespace Gum.Plugins.BaseClasses
         public void CallInstanceAdd(ElementSave elementSave, InstanceSave instance) => InstanceAdd?.Invoke(elementSave, instance);
 
         public void CallBehaviorReferencesChanged(ElementSave element) => BehaviorReferencesChanged?.Invoke(element);
+
+        public void CallBehaviorReferenceSelected(ElementBehaviorReference behaviorReference, ElementSave element) => BehaviorReferenceSelected?.Invoke(behaviorReference, element);
 
         public void CallRefreshBehaviorUi() => RefreshBehaviorView?.Invoke();
 

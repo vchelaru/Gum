@@ -10,15 +10,15 @@ Normal Blend is the default value. When an instance uses Normal Blend, it _inter
 
 If a Normal Blend Sprite has an Alpha of 255, then the Sprite completely replaces whatever it is drawn on top of.
 
-<figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Normal Blend Sprite with an Alpha of 255</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Normal Blend Sprite with an Alpha of 255</p></figcaption></figure>
 
 If a Sprite has an alpha of 128 (roughly half of 255), then it averages its color with whatever it is drawn on top of.
 
-<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Normal Blend Sprite with an Alpha of 128</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Normal Blend Sprite with an Alpha of 128</p></figcaption></figure>
 
 A Sprite with 25 alpha (roughly 10%) will blend with whatever it is drawn on top of, but its color is given a weight of roughly 10%.
 
-<figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Normal Blend Sprite with an Alpha of 25</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Normal Blend Sprite with an Alpha of 25</p></figcaption></figure>
 
 {% hint style="info" %}
 The examples above use the Alpha value to apply transparency. Note that if the source file (.png) has transparency as part of the file, the same effect applies.

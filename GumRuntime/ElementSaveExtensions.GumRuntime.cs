@@ -115,7 +115,10 @@ namespace GumRuntime
             return toReturn;
         }
 
-        public static void SetStatesAndCategoriesRecursively(this GraphicalUiElement graphicalElement, ElementSave elementSave)
+        [Obsolete("Use AddStatesAndCategoriesRecursivelyToGue since that more clearly indicates what the method is doing")]
+        public static void SetStatesAndCategoriesRecursively(this GraphicalUiElement graphicalElement, ElementSave elementSave) => AddStatesAndCategoriesRecursivelyToGue(graphicalElement, elementSave);
+
+        public static void AddStatesAndCategoriesRecursivelyToGue(this GraphicalUiElement graphicalElement, ElementSave elementSave)
         {
             if (graphicalElement == null)
             {
@@ -126,7 +129,7 @@ namespace GumRuntime
                 var baseElementSave = Gum.Managers.ObjectFinder.Self.GetElementSave(elementSave.BaseType);
                 if (baseElementSave != null)
                 {
-                    graphicalElement.SetStatesAndCategoriesRecursively(baseElementSave);
+                    graphicalElement.AddStatesAndCategoriesRecursivelyToGue(baseElementSave);
                 }
             }
 
@@ -565,7 +568,7 @@ namespace GumRuntime
         public static void SetGraphicalUiElement(this ElementSave elementSave, GraphicalUiElement toReturn, ISystemManagers systemManagers)
         {
             // We need to set categories and states first since those are used below;
-            toReturn.SetStatesAndCategoriesRecursively(elementSave);
+            toReturn.AddStatesAndCategoriesRecursivelyToGue(elementSave);
 
             if (toReturn.RenderableComponent == null)
             {

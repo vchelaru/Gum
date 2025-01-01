@@ -1991,42 +1991,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>string</Type>
-      <Name>TouchScreenRadioButton.Parent</Name>
-      <Value xsi:type="xsd:string">MenuItems</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>RadioButtonCategory</Type>
-      <Name>TouchScreenRadioButton.RadioButtonCategoryState</Name>
-      <Value xsi:type="xsd:string">EnabledOff</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>TouchScreenRadioButton.RadioDisplayText</Name>
-      <Value xsi:type="xsd:string">Touchscreen</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TouchScreenRadioButton.Width</Name>
-      <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>TouchScreenRadioButton.Width Units</Name>
-      <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>TouchScreenRadioButton.Y</Name>
-      <Value xsi:type="xsd:float">4</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>float</Type>
       <Name>ResolutionBox.Height</Name>
       <Value xsi:type="xsd:float">128</Value>
@@ -2556,6 +2520,42 @@
       <Type>string</Type>
       <Name>TitleText2.Text</Name>
       <Value xsi:type="xsd:string">HUD Demo</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>TouchScreenRadioButton.Parent</Name>
+      <Value xsi:type="xsd:string">MenuItems</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>RadioButtonCategory</Type>
+      <Name>TouchScreenRadioButton.RadioButtonCategoryState</Name>
+      <Value xsi:type="xsd:string">EnabledOff</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>TouchScreenRadioButton.RadioDisplayText</Name>
+      <Value xsi:type="xsd:string">Touchscreen</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>TouchScreenRadioButton.Width</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>TouchScreenRadioButton.Width Units</Name>
+      <Value xsi:type="xsd:int">2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>TouchScreenRadioButton.Y</Name>
+      <Value xsi:type="xsd:float">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
