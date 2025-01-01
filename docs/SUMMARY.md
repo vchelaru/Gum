@@ -29,6 +29,7 @@
       * [Clips Children](readme/gum-elements/general-properties/clips-children.md)
       * [Height Units](readme/gum-elements/general-properties/height-units.md)
       * [Locked](readme/gum-elements/general-properties/locked.md)
+      * [Order](readme/gum-elements/general-properties/order.md)
       * [Parent](readme/gum-elements/general-properties/parent.md)
       * [Relative Layout Unit Type](readme/gum-elements/general-properties/relative-layout-unit-type.md)
       * [Rotation](readme/gum-elements/general-properties/rotation.md)
