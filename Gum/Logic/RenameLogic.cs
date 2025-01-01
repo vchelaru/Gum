@@ -12,6 +12,7 @@ using CommonFormsAndControls;
 using Gum.Controls;
 using System.Drawing;
 using System.Windows.Documents.DocumentStructures;
+using ToolsUtilities;
 
 namespace Gum.Logic;
 
@@ -259,8 +260,11 @@ public class RenameLogic
 
     #region Element
 
-    public static void HandleRename(IInstanceContainer instanceContainer, InstanceSave instance, string oldName, NameChangeAction action, bool askAboutRename = true)
+    public static GeneralResponse HandleRename(IInstanceContainer instanceContainer, InstanceSave instance, string oldName, NameChangeAction action, bool askAboutRename = true)
     {
+        GeneralResponse toReturn = new GeneralResponse();
+        toReturn.Succeeded = false;
+
         try
         {
             isRenamingXmlFile = instance == null;
@@ -301,15 +305,18 @@ public class RenameLogic
             {
                 instance.Name = oldName;
             }
+            toReturn.Succeeded = shouldContinue;
         }
         catch (Exception e)
         {
             MessageBox.Show("Error renaming instance container " + instanceContainer.ToString() + "\n\n" + e.ToString());
+            toReturn.Succeeded = false;
         }
         finally
         {
             isRenamingXmlFile = false;
         }
+        return toReturn;
     }
 
     private static void RenameXml(ElementSave elementSave, string oldName)
@@ -533,10 +540,26 @@ public class RenameLogic
 
     private static bool ValidateWithPopup(IInstanceContainer instanceContainer, InstanceSave instance, bool shouldContinue)
     {
+        string whyNot;
         if (instance != null)
         {
-            string whyNot;
             if (NameVerifier.Self.IsInstanceNameValid(instance.Name, instance, instanceContainer, out whyNot) == false)
+            {
+                MessageBox.Show(whyNot);
+                shouldContinue = false;
+            }
+        }
+        else if(instanceContainer is ComponentSave component)
+        {
+            if (NameVerifier.Self.IsComponentNameValid(component.Name, null, component, out whyNot) == false)
+            {
+                MessageBox.Show(whyNot);
+                shouldContinue = false;
+            }
+        }
+        else if (instanceContainer is ScreenSave screen)
+        {
+            if (NameVerifier.Self.IsScreenNameValid(screen.Name, screen, out whyNot) == false)
             {
                 MessageBox.Show(whyNot);
                 shouldContinue = false;

@@ -11,6 +11,7 @@ namespace Gum.Managers
 {
     public class NameVerifier
     {
+        #region Fields/Properties
 
         public static char[] InvalidCharacters =
                 new char[] 
@@ -67,6 +68,9 @@ namespace Gum.Managers
             }
         }
 
+        #endregion
+
+        #region Folder
 
         public bool IsFolderNameValid(string folderName, out string whyNotValid)
         {
@@ -76,6 +80,8 @@ namespace Gum.Managers
             return string.IsNullOrEmpty(whyNotValid);
 
         }
+
+        #endregion
 
         public bool IsScreenNameValid(string screenName, ScreenSave screen, out string whyNotValid)
         {

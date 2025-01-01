@@ -29,7 +29,7 @@ namespace Gum.PropertyGridHelpers
 
 
         // added instance property so we can change values even if a tree view is selected
-        public void PropertyValueChanged(string unqualifiedMemberName, object oldValue, InstanceSave instance, bool refresh = true, bool recordUndo = true,
+        public GeneralResponse PropertyValueChanged(string unqualifiedMemberName, object oldValue, InstanceSave instance, bool refresh = true, bool recordUndo = true,
             bool trySave = true)
         {
             var selectedStateSave = SelectedState.Self.SelectedStateSave;
@@ -67,7 +67,8 @@ namespace Gum.PropertyGridHelpers
                 selectedStateSave = containerElement.DefaultState;
             }
 
-            ReactToPropertyValueChanged(unqualifiedMemberName, oldValue, instanceContainer, instance, selectedStateSave, refresh, recordUndo: recordUndo, trySave: trySave);
+            var response = ReactToPropertyValueChanged(unqualifiedMemberName, oldValue, instanceContainer, instance, selectedStateSave, refresh, recordUndo: recordUndo, trySave: trySave);
+            return response;
         }
 
         /// <summary>
@@ -78,9 +79,10 @@ namespace Gum.PropertyGridHelpers
         /// <param name="parentElement"></param>
         /// <param name="instance"></param>
         /// <param name="refresh"></param>
-        public void ReactToPropertyValueChanged(string unqualifiedMember, object oldValue, IInstanceContainer instanceContainer,
+        public GeneralResponse ReactToPropertyValueChanged(string unqualifiedMember, object oldValue, IInstanceContainer instanceContainer,
             InstanceSave instance, StateSave stateSave, bool refresh, bool recordUndo = true, bool trySave = true)
         {
+            GeneralResponse response = GeneralResponse.SuccessfulResponse;
             ObjectFinder.Self.EnableCache();
             try
             {
@@ -94,7 +96,7 @@ namespace Gum.PropertyGridHelpers
                 // So does that mean that we want to call this code before we update variable references, but
                 // we can still raise the plugin event after? If so, I'm going to move the plugin manager call
                 // out of ReactToChangedMember and call it here.
-                ReactToChangedMember(unqualifiedMember, oldValue, instanceContainer, instance, stateSave);
+                response = ReactToChangedMember(unqualifiedMember, oldValue, instanceContainer, instance, stateSave);
                 var parentElement = instanceContainer as ElementSave;
 
                 bool didSetDeepReference = false;
@@ -161,6 +163,8 @@ namespace Gum.PropertyGridHelpers
             {
                 ObjectFinder.Self.DisableCache();
             }
+
+            return response;
         }
 
         private static bool DoVariableReferenceReactionOnInstanceVariableSet(ElementSave container, InstanceSave instance, StateSave stateSave, string unqualifiedVariableName, object newValue)
@@ -305,9 +309,9 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        private void ReactToChangedMember(string rootVariableName, object oldValue, IInstanceContainer instanceContainer, InstanceSave instance, StateSave stateSave)
+        private GeneralResponse ReactToChangedMember(string rootVariableName, object oldValue, IInstanceContainer instanceContainer, InstanceSave instance, StateSave stateSave)
         {
-            ReactIfChangedMemberIsName(instanceContainer, instance, rootVariableName, oldValue);
+            var response = ReactIfChangedMemberIsName(instanceContainer, instance, rootVariableName, oldValue);
 
             // Handled in a plugin
             //ReactIfChangedMemberIsBaseType(parentElement, changedMember, oldValue);
@@ -343,6 +347,8 @@ namespace Gum.PropertyGridHelpers
                 ReactIfChangedMemberIsVariableReference(parentElement, instance, stateSave, rootVariableName, oldValue);
             }
             ReactIfChangedBaseType(instanceContainer, instance, stateSave, rootVariableName, oldValue);
+
+            return response;
         }
 
         private void ReactIfChangedBaseType(IInstanceContainer instanceContainer, InstanceSave instance, StateSave stateSave, string rootVariableName, object oldValue)
@@ -388,12 +394,16 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        private static void ReactIfChangedMemberIsName(IInstanceContainer instanceContainer, InstanceSave instance, string changedMember, object oldValue)
+        private static GeneralResponse ReactIfChangedMemberIsName(IInstanceContainer instanceContainer, InstanceSave instance, string changedMember, object oldValue)
         {
+            var toReturn = OptionallyAttemptedGeneralResponse.SuccessfulWithoutAttempt;
+
             if (changedMember == "Name")
             {
-                RenameLogic.HandleRename(instanceContainer, instance, (string)oldValue, NameChangeAction.Rename);
+                var innerResponse = RenameLogic.HandleRename(instanceContainer, instance, (string)oldValue, NameChangeAction.Rename);
+                toReturn.SetFrom(innerResponse);
             }
+            return toReturn;
         }
 
         private void ReactIfChangedMemberIsFont(List<ElementWithState> elementStack, InstanceSave instance, string changedMember, object oldValue, object newValue)

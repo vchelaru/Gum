@@ -646,7 +646,12 @@ namespace Gum.PropertyGridHelpers
                     }
                 }
 
-                NotifyVariableLogic(gumElementOrInstanceSaveAsObject, trySave: setPropertyArgs.CommitType == SetPropertyCommitType.Full);
+                var response = NotifyVariableLogic(gumElementOrInstanceSaveAsObject, trySave: setPropertyArgs.CommitType == SetPropertyCommitType.Full);
+
+                if(response.Succeeded == false)
+                {
+                    setPropertyArgs.IsAssignmentCancelled = true;
+                }
             }
             else
             {
@@ -892,8 +897,10 @@ namespace Gum.PropertyGridHelpers
             NotifyVariableLogic(gumElementOrInstanceSaveAsObject, trySave: true);
         }
 
-        public void NotifyVariableLogic(object gumElementOrInstanceSaveAsObject, bool? forceRefresh = null, bool trySave = true)
+        public GeneralResponse NotifyVariableLogic(object gumElementOrInstanceSaveAsObject, bool? forceRefresh = null, bool trySave = true)
         {
+            GeneralResponse response = GeneralResponse.SuccessfulResponse;
+
             string name = RootVariableName;
 
             bool handledByExposedVariable = false;
@@ -929,10 +936,12 @@ namespace Gum.PropertyGridHelpers
 
             if (!handledByExposedVariable)
             {
-                SetVariableLogic.Self.PropertyValueChanged(name, LastOldValue, gumElementOrInstanceSaveAsObject as InstanceSave, refresh: effectiveRefresh,
+                response = SetVariableLogic.Self.PropertyValueChanged(name, LastOldValue, gumElementOrInstanceSaveAsObject as InstanceSave, refresh: effectiveRefresh,
                     recordUndo: effectiveRecordUndo,
                     trySave: trySave);
             }
+
+            return response;
         }
 
         private Type HandleCustomGetType(object instance)

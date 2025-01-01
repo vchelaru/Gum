@@ -34,11 +34,11 @@ namespace Gum.Wireframe
             mContextMenuStrip = contextMenuStrip;
 
             mBringToFront = new ToolStripMenuItem();
-            mBringToFront.Text = "Bring to front";
+            mBringToFront.Text = "Bring to Front";
             mBringToFront.Click += OnBringToFrontClick;
 
             mSendToBack = new ToolStripMenuItem();
-            mSendToBack.Text = "Send to back";
+            mSendToBack.Text = "Send to Back";
             mSendToBack.Click += OnSendToBack;
 
             mMoveForward = new ToolStripMenuItem();

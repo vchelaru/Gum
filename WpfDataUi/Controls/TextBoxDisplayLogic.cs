@@ -101,11 +101,14 @@ namespace WpfDataUi.Controls
 
                 var result = TryApplyToInstance();
 
-                TextAtStartOfEditing = mAssociatedTextBox.Text;
-
                 if (result == ApplyValueResult.Success)
                 {
+                    TextAtStartOfEditing = mAssociatedTextBox.Text;
                     mContainer.Refresh(forceRefreshEvenIfFocused: true);
+                }
+                else
+                {
+                    mAssociatedTextBox.Text = TextAtStartOfEditing;
                 }
 
             }
