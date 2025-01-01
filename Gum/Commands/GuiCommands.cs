@@ -28,7 +28,7 @@ namespace Gum.Commands
 
         public MainWindow MainWindow { get; private set; }
 
-        public MainPanelControl mainPanelControl { get; private set; }
+        MainPanelControl mainPanelControl;
 
         #endregion
 
@@ -67,6 +67,12 @@ namespace Gum.Commands
         public void RefreshVariableValues()
         {
             PropertyGridManager.Self.RefreshVariablesDataGridValues();
+        }
+
+        public void ShiftAppFontSize(int delta)
+        {
+            MainWindow.MainMenuStrip.Font = new System.Drawing.Font(MainWindow.MainMenuStrip.Font.FontFamily, (float)mainPanelControl.FontSize - 2.75f + delta);
+            mainPanelControl.FontSize += delta;
         }
 
         #region Tab Controls
