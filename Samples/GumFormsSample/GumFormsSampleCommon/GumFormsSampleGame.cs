@@ -22,6 +22,11 @@ public class GumFormsSampleGame : Game
     private SpriteBatch _spriteBatch;
 
     List<GraphicalUiElement> Roots = new List<GraphicalUiElement>();
+
+    RenderTarget2D renderTarget;
+
+    float scale = 1f;
+
     public GumFormsSampleGame()
     {
         _graphics = new GraphicsDeviceManager(this);
@@ -29,8 +34,8 @@ public class GumFormsSampleGame : Game
         IsMouseVisible = true;
 
         // This sets the initial size:
-        _graphics.PreferredBackBufferWidth = 1024;
-        _graphics.PreferredBackBufferHeight = 768;
+        _graphics.PreferredBackBufferWidth = (int)(1024*scale);
+        _graphics.PreferredBackBufferHeight = (int)(768 * scale);
 
         _graphics.SupportedOrientations = DisplayOrientation.LandscapeLeft | DisplayOrientation.LandscapeRight;
 #if (ANDROID || iOS)
@@ -41,7 +46,11 @@ public class GumFormsSampleGame : Game
 
     protected override void Initialize()
     {
+        renderTarget = new RenderTarget2D(GraphicsDevice, 1024, 768);
+        _spriteBatch = new SpriteBatch(GraphicsDevice);
+
         var gumProject = GumService.Default.Initialize(_graphics.GraphicsDevice, "FormsGumProject/GumProject.gumx");
+        FormsUtilities.Cursor.TransformMatrix = Matrix.CreateScale(1/scale);
 
         const int screenNumber = 0;
 
@@ -134,9 +143,17 @@ public class GumFormsSampleGame : Game
 
     protected override void Draw(GameTime gameTime)
     {
+        GraphicsDevice.SetRenderTarget(renderTarget);
+
         GraphicsDevice.Clear(Color.CornflowerBlue);
 
         SystemManagers.Default.Draw();
+
+        GraphicsDevice.SetRenderTarget(null);
+
+        _spriteBatch.Begin();
+        _spriteBatch.Draw(renderTarget, new Rectangle(0, 0, (int)(1024*scale), (int)(768*scale)), Color.White);
+        _spriteBatch.End();
 
         base.Draw(gameTime);
     }
