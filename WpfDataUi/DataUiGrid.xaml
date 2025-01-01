@@ -26,7 +26,6 @@
                 <Expander 
                         Header="{Binding Name}" 
                         Visibility="{Binding Visibility}" 
-                        FontSize="{Binding FontSize}"
                         Width="{Binding Width}"
                         BorderThickness="{Binding CategoryBorderThickness}"
                         VerticalAlignment="Stretch"  
