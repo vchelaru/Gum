@@ -18,6 +18,11 @@ internal class MainTreeViewPlugin : InternalPlugin
 {
     public override void StartUp()
     {
+        AssignEvents();
+    }
+
+    private void AssignEvents()
+    {
         this.InstanceSelected += MainTreeViewPlugin_InstanceSelected;
         this.ElementSelected += HandleElementSelected;
         this.BehaviorSelected += HandleBehaviorSelected;

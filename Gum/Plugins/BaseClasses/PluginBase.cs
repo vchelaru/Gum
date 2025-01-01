@@ -98,6 +98,7 @@ namespace Gum.Plugins.BaseClasses
         /// [object] - OLD value of the variable.  New value must be obtained through the InstanceSave
         /// </summary>
         public event Action<ElementSave, InstanceSave, string, object> VariableSetLate;
+        public event Action<IStateContainer, VariableSave> VariableSelected;
 
         /// <summary>
         /// Event raised when a new variable is added. At the time of this writing
@@ -139,6 +140,7 @@ namespace Gum.Plugins.BaseClasses
         public event Action<InstanceSave> InstanceReordered;
 
         public event Action RefreshBehaviorView;
+        public event Action<bool> RefreshVariableView;
 
         /// <summary>
         /// Method which allows a plugin to provide a default StateSave for a given type. This can be used
@@ -397,6 +399,8 @@ namespace Gum.Plugins.BaseClasses
         public void CallVariableSetLate(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue) =>
             VariableSetLate?.Invoke(parentElement, instance, changedMember, oldValue);
 
+        public void CallVariableSelected(IStateContainer container, VariableSave variable) =>
+            VariableSelected?.Invoke(container, variable);
 
         public void CallAddAndRemoveVariablesForType(string type, StateSave standardDefaultStateSave) =>
             AddAndRemoveVariablesForType?.Invoke(type, standardDefaultStateSave);
@@ -420,6 +424,8 @@ namespace Gum.Plugins.BaseClasses
         public void CallBehaviorReferenceSelected(ElementBehaviorReference behaviorReference, ElementSave element) => BehaviorReferenceSelected?.Invoke(behaviorReference, element);
 
         public void CallRefreshBehaviorUi() => RefreshBehaviorView?.Invoke();
+
+        public void CallRefreshVariableView(bool force) => RefreshVariableView?.Invoke(force);
 
         public void CallInstanceDelete(ElementSave elementSave, InstanceSave instance) => InstanceDelete?.Invoke(elementSave, instance);
 

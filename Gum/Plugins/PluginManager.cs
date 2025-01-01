@@ -687,7 +687,8 @@ namespace Gum.Plugins
             CallMethodOnPlugin(plugin => plugin.CallVariableSetLate(parentElement, instance, changedMember, oldValue), "VariableSet (Late)");
         }
 
-
+        internal void VariableSelected(IStateContainer container, VariableSave variable) =>
+            CallMethodOnPlugin(plugin => plugin.CallVariableSelected(container, variable));
 
         internal void VariableRemovedFromCategory(string variableName, StateSaveCategory category) =>
             CallMethodOnPlugin(plugin => plugin.CallVariableRemovedFromCategory(variableName, category));
@@ -768,6 +769,9 @@ namespace Gum.Plugins
 
         internal void RefreshBehaviorView(ElementSave elementSave) =>
             CallMethodOnPlugin(plugin => plugin.CallRefreshBehaviorUi());
+
+        internal void RefreshVariableView(bool force) =>
+            CallMethodOnPlugin(plugin => plugin.CallRefreshVariableView(force));
 
         internal void BehaviorReferencesChanged(ElementSave elementSave) => 
             CallMethodOnPlugin(plugin => plugin.CallBehaviorReferencesChanged(elementSave));

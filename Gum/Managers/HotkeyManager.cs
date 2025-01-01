@@ -3,6 +3,7 @@ using Gum.Logic;
 using Gum.Plugins;
 using Gum.ToolStates;
 using Gum.Wireframe;
+using System;
 using System.Windows.Forms;
 
 namespace Gum.Managers;
@@ -214,7 +215,25 @@ public class HotkeyManager : Singleton<HotkeyManager>
         }
         TryHandleCtrlF(e);
         HandleGoToDefinition(e);
+        HandleRename(e);
+    }
 
+    private void HandleRename(KeyEventArgs e)
+    {
+        if(Rename.IsPressed(e))
+        {
+            if(SelectedState.Self.SelectedInstance != null)
+            {
+
+            }
+            else if(SelectedState.Self.SelectedElement != null && 
+                SelectedState.Self.SelectedElement is not StandardElementSave)
+            {
+                GumCommands.Self.GuiCommands.ShowRenameElementWindow(SelectedState.Self.SelectedElement);
+                e.Handled = true;
+
+            }
+        }
     }
 
     private void TryHandleCtrlF(KeyEventArgs e)

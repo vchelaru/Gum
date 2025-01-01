@@ -625,17 +625,26 @@ public class SelectedState : ISelectedState
 
     public VariableSave SelectedVariableSave
     {
-        set
-        {
-            snapshot.SelectedVariableSave = value;
-        }
         get
         {
             return snapshot.SelectedVariableSave;
         }
 
+        set
+        {
+            HandleVariableSaveSelected(value);
+        }
     }
 
+    private void HandleVariableSaveSelected(VariableSave value)
+    {
+        snapshot.SelectedVariableSave = value;
+
+
+
+        PluginManager.Self.VariableSelected(SelectedStateContainer, value);
+
+    }
 
     public VariableSave SelectedBehaviorVariable
     {
@@ -676,6 +685,8 @@ public class SelectedState : ISelectedState
         if (variable != snapshot.SelectedBehaviorVariable)
         {
             snapshot.SelectedBehaviorVariable = variable;
+
+            // This should go through a plugin, an dshould be on the HandleSelect method
             PropertyGridManager.Self.SelectedBehaviorVariable = variable;
         }
     }
