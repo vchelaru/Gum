@@ -62,7 +62,7 @@ namespace Gum.Wireframe
     {
         static List<Action> nextPushActions = new List<Action>();
         static List<Action> nextClickActions = new List<Action>();
-        internal static double CurrentGameTime { get; set; }
+        public static double CurrentGameTime { get; internal set; }
 
         static IInputReceiver currentInputReceiver;
 
