@@ -271,7 +271,6 @@
   </State>
   <Category>
     <Name>CheckBoxCategory</Name>
-    <IsSetRecursively>false</IsSetRecursively>
     <State>
       <Name>EnabledOn</Name>
       <Variable>

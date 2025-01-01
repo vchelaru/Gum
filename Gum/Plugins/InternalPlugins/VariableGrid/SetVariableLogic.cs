@@ -26,44 +26,7 @@ namespace Gum.PropertyGridHelpers
 
         public bool AttemptToPersistPositionsOnUnitChanges { get; set; } = true;
 
-        static HashSet<string> PropertiesSupportingIncrementalChange = new HashSet<string>
-        {
-            "Animate",
-            "Alpha",
-            "AutoGridHorizontalCells",
-            "AutoGridVerticalCells",
-            "Blue",
-            "CurrentChainName",
-            "Children Layout",
-            "FlipHorizontal",
-            "FontSize",
-            "Green",
-            "Height",
-            "Height Units",
-            "HorizontalAlignment",
-            nameof(GraphicalUiElement.IgnoredByParentSize),
-            "IsBold",
-            "MaxLettersToShow",
-            nameof(Text.MaxNumberOfLines),
-            "Red",
-            "Rotation",
-            "StackSpacing",
-            "Text",
-            "Texture Address",
-            "TextOverflowVerticalMode",
-            "UseCustomFont",
-            "UseFontSmoothing",
-            "VerticalAlignment",
-            "Visible",
-            "Width",
-            "Width Units",
-            "X",
-            "X Origin",
-            "X Units",
-            "Y",
-            "Y Origin",
-            "Y Units",
-        };
+
 
         // added instance property so we can change values even if a tree view is selected
         public void PropertyValueChanged(string unqualifiedMemberName, object oldValue, InstanceSave instance, bool refresh = true, bool recordUndo = true,
@@ -134,10 +97,10 @@ namespace Gum.PropertyGridHelpers
                 ReactToChangedMember(unqualifiedMember, oldValue, instanceContainer, instance, stateSave);
                 var parentElement = instanceContainer as ElementSave;
 
+                bool didSetDeepReference = false;
+
                 if (parentElement != null)
                 {
-
-
                     string qualifiedName = unqualifiedMember;
                     if (instance != null)
                     {
@@ -148,7 +111,7 @@ namespace Gum.PropertyGridHelpers
                     var newValue = stateSave.GetValueRecursive(qualifiedName);
 
                     // this could be a tunneled variable. If so, we may need to propagate the value to other instances one level deeper
-                    var didSetDeepReference = DoVariableReferenceReactionOnInstanceVariableSet(parentElement, instance, stateSave, unqualifiedMember, newValue);
+                    didSetDeepReference = DoVariableReferenceReactionOnInstanceVariableSet(parentElement, instance, stateSave, unqualifiedMember, newValue);
 
                     // now force save it if it's a variable reference:
                     if (unqualifiedMember == "VariableReferences" && trySave)
@@ -170,10 +133,15 @@ namespace Gum.PropertyGridHelpers
 
                     if (refresh)
                     {
-                        RefreshInResponseToVariableChange(unqualifiedMember, oldValue, parentElement, instance, qualifiedName,
-                            // if a deep reference is set, then this is more complicated than a single variable assignment, so we should
-                            // force everything. This makes debugging a little more difficult, but it keeps the wireframe accurate without having to track individual assignments.
-                            forceWireframeRefresh: didSetDeepReference, trySave: trySave);
+                        RefreshInResponseToVariableChange(unqualifiedMember, oldValue, parentElement, instance, qualifiedName);
+
+                        // This used to only check if values have changed. However, this can cause problems
+                        // because an intermediary value may change the value, then it gets a full commit. On
+                        // the full commit it doesn't save, so we need to save if this is true. 
+                        if (trySave)
+                        {
+                            GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+                        }
                     }
                 }
 
@@ -182,6 +150,12 @@ namespace Gum.PropertyGridHelpers
                 // the texture window which depend on the wireframe will have the correct values
                 PluginManager.Self.VariableSet(parentElement, instance, unqualifiedMember, oldValue);
 
+                // The MainEditorTabPlugin handles refreshing in most cases, but if there was a "deep" set due to variable references,
+                // then we forcefully change the values here.
+                if(didSetDeepReference)
+                {
+                    GumCommands.Self.WireframeCommands.Refresh(forceLayout: true);
+                }
             }
             finally
             {
@@ -318,8 +292,8 @@ namespace Gum.PropertyGridHelpers
 
         }
 
-        public void RefreshInResponseToVariableChange(string unqualifiedMember, object oldValue, ElementSave parentElement,
-            InstanceSave instance, string qualifiedName, bool forceWireframeRefresh = false, bool trySave = true)
+        void RefreshInResponseToVariableChange(string unqualifiedMember, object oldValue, ElementSave parentElement,
+            InstanceSave instance, string qualifiedName)
         {
 
             var needsToRefreshEntireElement = ExclusionsPlugin.VariablesRequiringRefresh.Contains(unqualifiedMember);
@@ -328,90 +302,6 @@ namespace Gum.PropertyGridHelpers
             {
                 GumCommands.Self.GuiCommands.RefreshElementTreeView(parentElement);
                 GumCommands.Self.GuiCommands.RefreshVariables(force: true);
-            }
-
-            var state = SelectedState.Self.SelectedStateSave ?? parentElement.DefaultState;
-
-            var value = state.GetValue(qualifiedName);
-
-            var areSame = value == null && oldValue == null;
-            if (!areSame && value != null)
-            {
-                areSame = value.Equals(oldValue);
-            }
-
-            // This used to only check if values have changed. However, this can cause problems
-            // because an intermediary value may change the value, then it gets a full commit. On
-            // the full commit it doesn't save, so we need to save if this is true. 
-            if (trySave)
-            {
-                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-            }
-
-            // If the values are the same they may have been set to be the same by a plugin that
-            // didn't allow the assignment, so don't go through the work of saving and refreshing
-            if (!areSame)
-            {
-
-
-                // Inefficient but let's do this for now - we can make it more efficient later
-                // November 19, 2019
-                // While this is inefficient
-                // at runtime, it is *really*
-                // inefficient for debugging. If
-                // a set value fails, we have to trace
-                // the entire variable assignment and that
-                // can take forever. Therefore, we're going to
-                // migrate towards setting the individual values
-                // here. This can expand over time to just exclude
-                // the RefreshAll call completely....but I don't know
-                // if that will cause problems now, so instead I'm going
-                // to do it one by one:
-                var handledByDirectSet = false;
-                if (forceWireframeRefresh == false &&
-                    PropertiesSupportingIncrementalChange.Contains(unqualifiedMember) &&
-                    // June 19, 2024 - if the value is null (from default assignment), we
-                    // can't set this single value - it requires a recursive variable finder.
-                    // for simplicity (for now?) we will just refresh all:
-                    value != null &&
-
-                    (instance != null || SelectedState.Self.SelectedComponent != null || SelectedState.Self.SelectedStandardElement != null))
-                {
-                    // this assumes that the object having its variable set is the selected instance. If we're setting
-                    // an exposed variable, this is not the case - the object having its variable set is actually the instance.
-                    //GraphicalUiElement gue = WireframeObjectManager.Self.GetSelectedRepresentation();
-                    GraphicalUiElement gue = null;
-                    if (instance != null)
-                    {
-                        gue = WireframeObjectManager.Self.GetRepresentation(instance);
-                    }
-                    else
-                    {
-                        gue = WireframeObjectManager.Self.GetSelectedRepresentation();
-                    }
-
-                    if (gue != null)
-                    {
-                        gue.SetProperty(unqualifiedMember, value);
-
-                        WireframeObjectManager.Self.RootGue?.ApplyVariableReferences(SelectedState.Self.SelectedStateSave);
-                        //gue.ApplyVariableReferences(SelectedState.Self.SelectedStateSave);
-
-                        handledByDirectSet = true;
-                    }
-                    if (unqualifiedMember == "Text" && LocalizationManager.HasDatabase)
-                    {
-                        WireframeObjectManager.Self.ApplyLocalization(gue, value as string);
-                    }
-                }
-
-                if (!handledByDirectSet)
-                {
-                    WireframeObjectManager.Self.RefreshAll(true, forceReloadTextures: false);
-                }
-
-
-                SelectionManager.Self.Refresh();
             }
         }
 

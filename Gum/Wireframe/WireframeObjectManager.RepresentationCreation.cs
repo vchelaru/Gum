@@ -237,7 +237,7 @@ namespace Gum.Wireframe
 
                 if (baseElement != null)
                 {
-                    graphicalElement.SetStatesAndCategoriesRecursively(baseElement);
+                    graphicalElement.AddStatesAndCategoriesRecursivelyToGue(baseElement);
 
                     // for performance reasons, we'll suspend the layout here:
                     graphicalElement.SuspendLayout();

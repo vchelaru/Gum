@@ -20,7 +20,7 @@ public class MainBehaviorsPlugin : InternalPlugin
 {
     BehaviorsControl control;
     private readonly ISelectedState _selectedState;
-    BehaviorsViewModel viewModel = new BehaviorsViewModel();
+    BehaviorsViewModel viewModel;
     DataUiGrid stateDataUiGrid;
     PluginTab behaviorsTab;
 
@@ -32,7 +32,7 @@ public class MainBehaviorsPlugin : InternalPlugin
     public override void StartUp()
     {
 
-        viewModel = new BehaviorsViewModel();
+        viewModel = new BehaviorsViewModel(_selectedState);
         viewModel.ApplyChangedValues += HandleApplyBehaviorChanges;
 
 
@@ -52,7 +52,9 @@ public class MainBehaviorsPlugin : InternalPlugin
         this.BehaviorSelected += HandleBehaviorSelected;
         this.StateWindowTreeNodeSelected += HandleStateSelected;
         this.BehaviorReferencesChanged += HandleBehaviorReferencesChanged;
+
         this.RefreshBehaviorView += HandleRefreshBehaviorView;
+
         this.StateAdd += HandleStateAdd;
         this.StateMovedToCategory += HandleStateMovedToCategory;
     }
@@ -126,52 +128,70 @@ public class MainBehaviorsPlugin : InternalPlugin
 
     }
 
+    bool isApplyingChanges = false;
     private void HandleApplyBehaviorChanges(object sender, EventArgs e)
     {
+
         var component = SelectedState.Self.SelectedComponent;
         if (component == null) return;
 
-        using var undoLock = UndoManager.Self.RequestLock();
+        isApplyingChanges = true;
 
-        var selectedBehaviorNames = viewModel.AllBehaviors
-            .Where(item => item.IsChecked)
-            .Select(item => item.Name)
-            .ToList();
-
-        var addedBehaviors = selectedBehaviorNames
-            .Except(component.Behaviors.Select(item => item.BehaviorName))
-            .ToList();
-
-        var removedBehaviors = component.Behaviors.Select(item => item.BehaviorName)
-            .Except(selectedBehaviorNames)
-            .ToList();
-
-        if (removedBehaviors.Any())
+        try
         {
-            // ask the user what to do
+            using var undoLock = UndoManager.Self.RequestLock();
+
+            var selectedBehaviorNames = viewModel.AllBehaviors
+                .Where(item => item.IsChecked)
+                .Select(item => item.Name)
+                .ToList();
+
+            var addedBehaviors = selectedBehaviorNames
+                .Except(component.Behaviors.Select(item => item.BehaviorName))
+                .ToList();
+
+            var removedBehaviors = component.Behaviors.Select(item => item.BehaviorName)
+                .Except(selectedBehaviorNames)
+                .ToList();
+
+            if (removedBehaviors.Any())
+            {
+                // ask the user what to do
+            }
+
+            if (removedBehaviors.Any() || addedBehaviors.Any())
+            {
+                component.Behaviors.Clear();
+                foreach (var behavior in viewModel.AllBehaviors.Where(item => item.IsChecked))
+                {
+                    GumCommands.Self.ProjectCommands.ElementCommands.AddBehaviorTo(behavior.Name, component, performSave: false);
+                }
+
+                GumCommands.Self.GuiCommands.RefreshStateTreeView();
+                GumCommands.Self.FileCommands.TryAutoSaveElement(component);
+            }
+            viewModel.UpdateTo(component);
+
         }
-
-        component.Behaviors.Clear();
-        foreach (var behavior in viewModel.AllBehaviors.Where(item => item.IsChecked))
+        finally
         {
-            GumCommands.Self.ProjectCommands.ElementCommands.AddBehaviorTo(behavior.Name, component, performSave: false);
-        }
-
-        GumCommands.Self.GuiCommands.RefreshStateTreeView();
-        GumCommands.Self.FileCommands.TryAutoSaveElement(component);
-
-        viewModel.UpdateTo(component);
-
-        if (removedBehaviors.Any() || addedBehaviors.Any())
-        {
-            PluginManager.Self.BehaviorReferencesChanged(component);
+            isApplyingChanges = false;
         }
     }
 
 
     private void HandleBehaviorReferencesChanged(ElementSave element)
     {
+        if (isApplyingChanges)
+        {
+            return;
+        }
         HandleElementSelected(element);
+
+        if(element == _selectedState.SelectedElement)
+        {
+            this.behaviorsTab.Show(focus: true);
+        }
     }
 
     private void HandleElementSelected(ElementSave element)
@@ -195,7 +215,7 @@ public class MainBehaviorsPlugin : InternalPlugin
         {
             viewModel.UpdateTo(asComponent);
 
-            this.behaviorsTab.Show(focus:false);
+            this.behaviorsTab.Show(focus: false);
         }
         else
         {

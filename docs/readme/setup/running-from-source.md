@@ -14,13 +14,7 @@ Gum is an open source project so you can run it from source instead of running t
    1. If you downloaded the .zip file from the GitHub main page, unzip the file
    2. If you downloaded the file through a Git client, be sure to be on the `master` branch
 
-<figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Gum repository in Github Desktop</p></figcaption></figure>
-
-{% hint style="info" %}
-Due to the way GitBook handles image files, some file names are very long. You may need to modify your git config file to allow long file names. More info can be found here:
-
-[https://stackoverflow.com/a/75429694/789380](https://stackoverflow.com/a/75429694/789380)
-{% endhint %}
+<figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Gum repository in Github Desktop</p></figcaption></figure>
 
 ## Running the code
 
@@ -35,4 +29,4 @@ Due to the way GitBook handles image files, some file names are very long. You m
 
 Gum depends on a number of plugins for its functionality. By default if you build the project and run it (such as by pressing F5 in Visual Studio), then plugins are not automatically built. To build plugins, you need to explicitly build all plugin projects. The easiest way to do this is to select the Build -> Rebuild Solution option in Visual Studio.
 
-<figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Build -> Rebuild Solution in Visual Studio</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Build -> Rebuild Solution in Visual Studio</p></figcaption></figure>

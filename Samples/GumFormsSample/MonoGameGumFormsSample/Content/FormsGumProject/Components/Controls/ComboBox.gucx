@@ -330,7 +330,6 @@
   </State>
   <Category>
     <Name>ComboBoxCategory</Name>
-    <IsSetRecursively>false</IsSetRecursively>
     <State>
       <Name>Enabled</Name>
       <Variable>

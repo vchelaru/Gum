@@ -10,7 +10,7 @@ using static MonoGameGumCodeGeneration.Components.ComponentWithStatesRuntime;
 
 namespace MonoGameGumCodeGeneration.Screens
 {
-    partial class MainMenuRuntime : GraphicalUiElement
+    partial class MainMenuFullGenerationRuntime : GraphicalUiElement
     {
         partial void CustomInitialize()
         {

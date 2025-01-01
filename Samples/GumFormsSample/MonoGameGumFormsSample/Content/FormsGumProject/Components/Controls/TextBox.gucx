@@ -451,7 +451,6 @@
   </State>
   <Category>
     <Name>TextBoxCategory</Name>
-    <IsSetRecursively>false</IsSetRecursively>
     <State>
       <Name>Enabled</Name>
       <Variable>
@@ -563,7 +562,6 @@
   </Category>
   <Category>
     <Name>LineModeCategory</Name>
-    <IsSetRecursively>false</IsSetRecursively>
     <State>
       <Name>Single</Name>
     </State>

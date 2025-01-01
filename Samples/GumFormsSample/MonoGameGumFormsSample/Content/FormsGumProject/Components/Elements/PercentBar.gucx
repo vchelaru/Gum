@@ -260,7 +260,6 @@
   </State>
   <Category>
     <Name>BarDecorCategory</Name>
-    <IsSetRecursively>false</IsSetRecursively>
     <State>
       <Name>None</Name>
       <Variable>

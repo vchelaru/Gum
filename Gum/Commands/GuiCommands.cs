@@ -24,7 +24,6 @@ namespace Gum.Commands
     public class GuiCommands
     {
         #region FieldsProperties
-        FlowLayoutPanel mFlowLayoutPanel;
 
         public MainWindow MainWindow { get; private set; }
 
@@ -36,7 +35,6 @@ namespace Gum.Commands
         {
             this.MainWindow = mainWindow;
             this.mainPanelControl = mainPanelControl;
-            mFlowLayoutPanel = mainWindow.ToolbarPanel;
         }
 
         internal void RefreshStateTreeView()
@@ -255,7 +253,7 @@ namespace Gum.Commands
                 height = 64;
             }
 
-            var scaledX = mFlowLayoutPanel.LogicalToDeviceUnits(System.Windows.Forms.Control.MousePosition.X);
+            var scaledX = MainWindow.LogicalToDeviceUnits(System.Windows.Forms.Control.MousePosition.X);
 
             var source = System.Windows.PresentationSource.FromVisual(mainPanelControl);
 

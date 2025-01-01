@@ -36,9 +36,19 @@ namespace Gum.Wireframe
         public bool Handled { get; set; }
     }
 
+    /// <summary>
+    /// Contains information about objects which have been added to or removed from the current selection.
+    /// This is typically used by Gum Forms for elements which support selection such as ListBox.
+    /// </summary>
     public class SelectionChangedEventArgs
     {
+        /// <summary>
+        /// The items which were just removed from selection.
+        /// </summary>
         public IList RemovedItems { get; private set; } = new List<Object>();
+        /// <summary>
+        /// The items which were just added to selection.
+        /// </summary>
         public IList AddedItems { get; private set; } = new List<Object>();
     }
 
@@ -52,9 +62,11 @@ namespace Gum.Wireframe
     {
         static List<Action> nextPushActions = new List<Action>();
         static List<Action> nextClickActions = new List<Action>();
-        public static double CurrentGameTime { get; set; }
+        internal static double CurrentGameTime { get; set; }
 
         static IInputReceiver currentInputReceiver;
+
+        
         public static IInputReceiver CurrentInputReceiver
         {
             get => currentInputReceiver;
@@ -81,11 +93,27 @@ namespace Gum.Wireframe
             }
         }
 
+        /// <summary>
+        /// Whether this instance supports events and whether the Cursor considers this when
+        /// determining what it is over. Typically this is assigned once based 
+        /// on its type, usually when objects are created from a Gum project. Objects which 
+        /// should consume cursor events without raising them should keep this value set to true
+        /// but should set IsEnabled to false.
+        /// </summary>
         public bool HasEvents { get; set; } = true;
         public bool ExposeChildrenEvents { get; set; } = true;
 
+        /// <summary>
+        /// Whether to check each individual child for raising UI events even if the cursor
+        /// is outside of the bounds of this object. Setting this to false can have a slight
+        /// performance cost since each child is checked even if the cursor is not over this.
+        /// </summary>
         public bool RaiseChildrenEventsOutsideOfBounds { get; set; } = false;
         bool isEnabled = true;
+
+        /// <summary>
+        /// Whether this is enabled. If this is false, then this will not raise events.
+        /// </summary>
         public bool IsEnabled
         {
             get => isEnabled;
@@ -99,6 +127,9 @@ namespace Gum.Wireframe
             }
         }
 
+        /// <summary>
+        /// Provides an uncasted reference to the Gum Forms element which uses this as visual element.
+        /// </summary>
         public virtual object FormsControlAsObject { get; set; }
 
         #region Events
@@ -147,6 +178,9 @@ namespace Gum.Wireframe
         /// </summary>
         public event EventHandler Dragging;
 
+        /// <summary>
+        /// Event raised when the Enabled property changed.
+        /// </summary>
         public event EventHandler EnabledChange;
 
         /// <summary>
@@ -364,6 +398,12 @@ namespace Gum.Wireframe
             return handledByThis || handledByChild;
         }
 
+        /// <summary>
+        /// Returns whether the argument cursor is over this instance. If RaiseChildrenEventsOutsideOfBounds is set
+        /// to true, then each of the individual chilren are also checked if the cursor is not inside this object's bounds.
+        /// </summary>
+        /// <param name="cursor">The cursor to check whether it is over this.</param>
+        /// <returns>Whether the cursor is over this.</returns>
         public bool HasCursorOver(ICursor cursor)
         {
             var layer = (this.GetTopParent() as GraphicalUiElement).Layer;
@@ -546,6 +586,13 @@ namespace Gum.Wireframe
             RollOff += (not, used) => LosePush?.Invoke(this, EventArgs.Empty);
         }
 
+        /// <summary>
+        /// Adds an action to be called the next time the Cursor performs a push action 
+        /// (the left button is not down the previous frame but is down this frame). The 
+        /// argument action is invoked one time.
+        /// </summary>
+        /// <param name="action">The action to invoke one time.</param>
+        /// <exception cref="ArgumentNullException">Thrown if the argument action is null.</exception>
         public static void AddNextPushAction(Action action)
         {
 #if DEBUG
@@ -556,6 +603,14 @@ namespace Gum.Wireframe
 #endif
             nextPushActions.Add(action);
         }
+
+        /// <summary>
+        /// Adds an action to be called the next time the Cursor performs a click action
+        /// (the left button was down last frame and is released this frame). The argument
+        /// action is invoked one time.
+        /// </summary>
+        /// <param name="action">The action to invoke one time.</param>
+        /// <exception cref="ArgumentNullException">Thrown if the argument action is null.</exception>
         public static void AddNextClickAction(Action action)
         {
 #if DEBUG
@@ -566,6 +621,7 @@ namespace Gum.Wireframe
 #endif
             nextClickActions.Add(action);
         }
+
         internal static void DoNextClickActions()
         {
 

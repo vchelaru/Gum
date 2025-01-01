@@ -19,6 +19,7 @@ public class StateViewModel : StateTreeViewItem
         set => Set(value);
     }
 
+
     public override object DataAsObject => Data;
     public override string Title => Data?.Name;
 

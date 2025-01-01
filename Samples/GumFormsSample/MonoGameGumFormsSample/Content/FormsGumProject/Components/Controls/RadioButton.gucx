@@ -253,7 +253,6 @@
   </State>
   <Category>
     <Name>RadioButtonCategory</Name>
-    <IsSetRecursively>false</IsSetRecursively>
     <State>
       <Name>EnabledOn</Name>
       <Variable>

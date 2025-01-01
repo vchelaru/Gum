@@ -31,9 +31,9 @@ namespace WpfDataUi.Controls
             {
                 var type = InstanceMember?.PropertyType;
 
-                return 
-                    type == typeof(float) || 
-                    type == typeof(double) || 
+                return
+                    type == typeof(float) ||
+                    type == typeof(double) ||
                     type == typeof(decimal) ||
                     type == typeof(int) ||
                     type == typeof(long) ||
@@ -51,7 +51,7 @@ namespace WpfDataUi.Controls
                     ;
             }
         }
-            
+
 
         #endregion
 
@@ -73,17 +73,17 @@ namespace WpfDataUi.Controls
         {
             bool shouldClamp = MinValue.HasValue || MaxValue.HasValue;
 
-            if(shouldClamp)
+            if (shouldClamp)
             {
                 decimal parsedDecimal;
 
-                if(decimal.TryParse(mAssociatedTextBox.Text, out parsedDecimal))
+                if (decimal.TryParse(mAssociatedTextBox.Text, out parsedDecimal))
                 {
                     if (MinValue.HasValue && parsedDecimal < MinValue)
                     {
                         mAssociatedTextBox.Text = MinValue.ToString();
                     }
-                    if(MaxValue.HasValue && parsedDecimal > MaxValue)
+                    if (MaxValue.HasValue && parsedDecimal > MaxValue)
                     {
                         mAssociatedTextBox.Text = MaxValue.ToString();
                     }
@@ -103,7 +103,7 @@ namespace WpfDataUi.Controls
 
                 TextAtStartOfEditing = mAssociatedTextBox.Text;
 
-                if(result == ApplyValueResult.Success)
+                if (result == ApplyValueResult.Success)
                 {
                     mContainer.Refresh(forceRefreshEvenIfFocused: true);
                 }
@@ -125,41 +125,51 @@ namespace WpfDataUi.Controls
             HasUserChangedAnything = false;
         }
 
+        public bool IsInApplicationToInstance { get; private set; } = false;
         public ApplyValueResult TryApplyToInstance(SetPropertyCommitType commitType = SetPropertyCommitType.Full)
         {
-            object newValue;
-
-            if (HasUserChangedAnything || commitType == SetPropertyCommitType.Full)
+            IsInApplicationToInstance = true;
+            try
             {
-                var result = mContainer.TryGetValueOnUi(out newValue);
 
-                if (result == ApplyValueResult.Success)
+                object newValue;
+
+                if (HasUserChangedAnything || commitType == SetPropertyCommitType.Full)
                 {
-                    if (InstanceMember.BeforeSetByUi != null)
-                    {
-                        InstanceMember.CallBeforeSetByUi(mContainer);
-                    }
+                    var result = mContainer.TryGetValueOnUi(out newValue);
 
-                    // Hold on, the Before set may have actually changed the value, so we should get the value again.
-                    mContainer.TryGetValueOnUi(out newValue);
+                    if (result == ApplyValueResult.Success)
+                    {
+                        if (InstanceMember.BeforeSetByUi != null)
+                        {
+                            InstanceMember.CallBeforeSetByUi(mContainer);
+                        }
 
-                    if(newValue is string)
-                    {
-                        newValue = (newValue as string).Replace("\r", "");
+                        // Hold on, the Before set may have actually changed the value, so we should get the value again.
+                        mContainer.TryGetValueOnUi(out newValue);
+
+                        if (newValue is string)
+                        {
+                            newValue = (newValue as string).Replace("\r", "");
+                        }
+                        // get rid of \r
+                        return mContainer.TrySetValueOnInstance(newValue, commitType);
                     }
-                    // get rid of \r
-                    return mContainer.TrySetValueOnInstance(newValue, commitType);
-                }
-                else
-                {
-                    if(InstanceMember.SetValueError != null)
+                    else
                     {
-                        InstanceMember.SetValueError(mAssociatedTextBox.Text);
+                        if (InstanceMember.SetValueError != null)
+                        {
+                            InstanceMember.SetValueError(mAssociatedTextBox.Text);
+                        }
+                        return result;
                     }
-                    return result;
                 }
+                return ApplyValueResult.Success;
             }
-            return ApplyValueResult.Success;
+            finally
+            {
+                IsInApplicationToInstance = false;
+            }
         }
 
         public string ConvertStringToUsableValue()
@@ -181,14 +191,14 @@ namespace WpfDataUi.Controls
             }
 
             return text;
-            
+
         }
 
         public string ConvertNumberToString(object value, int? numberOfDecimals = null)
         {
             string text = value?.ToString();
 
-            if(value is float)
+            if (value is float)
             {
 
                 // I came to this method through a lot of trial and error.
@@ -210,7 +220,7 @@ namespace WpfDataUi.Controls
                         // truncating decimals:
                         text = (floatValue).ToString("f0");
                     }
-                    else if(numberOfDecimals != null)
+                    else if (numberOfDecimals != null)
                     {
                         text = (floatValue).ToString($"f{numberOfDecimals}");
                     }
@@ -224,7 +234,7 @@ namespace WpfDataUi.Controls
                     text = (floatValue).ToString($"f{numberOfDecimals}");
                 }
             }
-            if(value is double)
+            if (value is double)
             {
                 double doubleValue = (double)value;
                 text = doubleValue.ToString();
@@ -291,36 +301,36 @@ namespace WpfDataUi.Controls
                         // The user may have put in a bad value
                         try
                         {
-                            if(string.IsNullOrEmpty(usableString))
+                            if (string.IsNullOrEmpty(usableString))
                             {
-                                if(InstancePropertyType == typeof(float))
+                                if (InstancePropertyType == typeof(float))
                                 {
                                     value = 0.0f;
                                     result = ApplyValueResult.Success;
                                 }
-                                else if(InstancePropertyType == typeof(int))
+                                else if (InstancePropertyType == typeof(int))
                                 {
                                     value = 0;
                                     result = ApplyValueResult.Success;
                                 }
-                                else if(InstancePropertyType == typeof(double))
+                                else if (InstancePropertyType == typeof(double))
                                 {
                                     value = 0.0;
                                     result = ApplyValueResult.Success;
                                 }
-                                else if(InstancePropertyType == typeof(long))
+                                else if (InstancePropertyType == typeof(long))
                                 {
                                     value = (long)0;
                                     result = ApplyValueResult.Success;
                                 }
-                                else if(InstancePropertyType == typeof(byte))
+                                else if (InstancePropertyType == typeof(byte))
                                 {
                                     value = (byte)0;
                                     result = ApplyValueResult.Success;
                                 }
                             }
 
-                            if(result != ApplyValueResult.Success)
+                            if (result != ApplyValueResult.Success)
                             {
                                 // This used to convert from invariant string, but we want to use commas if the native 
                                 // computer settings use commas
@@ -329,7 +339,7 @@ namespace WpfDataUi.Controls
                                     value = converter.ConvertFromString(usableString);
                                     result = ApplyValueResult.Success;
                                 }
-                                catch(NotSupportedException)
+                                catch (NotSupportedException)
                                 {
                                     // if we got here, then suppress the error if we are already working with a string:
                                     value = usableString;
@@ -341,10 +351,10 @@ namespace WpfDataUi.Controls
                         {
                             result = ApplyValueResult.InvalidSyntax;
                         }
-                        catch(Exception e)
+                        catch (Exception e)
                         {
                             var wasMathOperation = false;
-                            if(e.InnerException is FormatException)
+                            if (e.InnerException is FormatException)
                             {
                                 try
                                 {
@@ -357,7 +367,7 @@ namespace WpfDataUi.Controls
                                     result = ApplyValueResult.InvalidSyntax;
                                 }
                             }
-                            if(wasMathOperation)
+                            if (wasMathOperation)
                             {
                                 result = ApplyValueResult.Success;
                             }
@@ -383,8 +393,8 @@ namespace WpfDataUi.Controls
 
         public static object TryHandleMathOperation(string usableString, Type instancePropertyType)
         {
-            if(instancePropertyType == typeof(float) || 
-                instancePropertyType == typeof(float?) || 
+            if (instancePropertyType == typeof(float) ||
+                instancePropertyType == typeof(float?) ||
                 instancePropertyType == typeof(int?) ||
                 instancePropertyType == typeof(int) ||
                 instancePropertyType == typeof(double) ||
@@ -394,8 +404,8 @@ namespace WpfDataUi.Controls
                 )
             {
                 var result = new DataTable().Compute(usableString, null);
-            
-                if(result is float || result is int || result is decimal || result is double)
+
+                if (result is float || result is int || result is decimal || result is double)
                 {
                     var converter = TypeDescriptor.GetConverter(instancePropertyType);
 
@@ -474,7 +484,7 @@ namespace WpfDataUi.Controls
 
         }
 
-        public void RefreshDisplay()
+        public void RefreshDisplay(out object valueOnInstance)
         {
             if (mContainer.HasEnoughInformationToWork())
             {
@@ -483,7 +493,6 @@ namespace WpfDataUi.Controls
                 InstancePropertyType = type;
             }
 
-            object valueOnInstance;
             bool successfulGet = mContainer.TryGetValueOnInstance(out valueOnInstance);
             if (successfulGet)
             {
@@ -494,7 +503,7 @@ namespace WpfDataUi.Controls
             {
                 mAssociatedTextBox.Background = DefaultValueBackground;
             }
-            else if(InstanceMember.IsIndeterminate)
+            else if (InstanceMember.IsIndeterminate)
             {
                 mAssociatedTextBox.Background = IndeterminateValueBackground;
             }

@@ -56,5 +56,29 @@ public class DemoScreenGumRuntime : BindableGue
         this.GetFrameworkElementByName<RadioButton>("TouchScreenRadioButton").SetBinding(
             nameof(RadioButton.IsChecked),
             nameof(viewModel.IsTouchscreenChecked));
+
+        this.GetFrameworkElementByName<Button>("DetectResolutionsButton").Click += (not, used) =>
+        {
+            ShowPopup();
+        };
+    }
+
+    private void ShowPopup()
+    {
+        var element = ObjectFinder.Self.GetElementSave("Controls/MessageBox");
+        var popupGue = element.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
+        popupGue.Parent = FrameworkElement.ModalRoot;
+
+        popupGue.GetFrameworkElementByName<Button>("OkButton").Click += (not, used) =>
+        {
+            popupGue.RemoveFromManagers();
+            popupGue.Parent = null;
+        };
+
+        popupGue.GetFrameworkElementByName<Button>("CancelButton").Click += (not, used) =>
+        {
+            popupGue.RemoveFromManagers();
+            popupGue.Parent = null;
+        };
     }
 }

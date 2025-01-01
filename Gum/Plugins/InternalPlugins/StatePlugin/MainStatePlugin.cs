@@ -32,6 +32,7 @@ public class MainStatePlugin : InternalPlugin
     private readonly GumCommands _gumCommands;
     private readonly HotkeyManager _hotkeyManager;
     private readonly ISelectedState _selectedState;
+    private readonly ObjectFinder _objectFinder;
 
     #endregion
 
@@ -43,6 +44,7 @@ public class MainStatePlugin : InternalPlugin
         _stateTreeViewRightClickService = new StateTreeViewRightClickService(GumState.Self.SelectedState, _gumCommands);
         _hotkeyManager = HotkeyManager.Self;
         _selectedState = GumState.Self.SelectedState;
+        _objectFinder = ObjectFinder.Self;
     }
 
     public override void StartUp()
@@ -69,6 +71,7 @@ public class MainStatePlugin : InternalPlugin
         this.StateRename += HandleStateRename;
         this.CategoryRename += HandleCategoryRename;
         this.BehaviorSelected += HandleBehaviorSelected;
+        this.BehaviorReferenceSelected += HandleBehaviorReferenceSelected;
         this.InstanceSelected += HandleInstanceSelected;
         this.ElementSelected += HandleElementSelected;
         this.StateMovedToCategory += HandleStateMovedToCategory;
@@ -90,7 +93,7 @@ public class MainStatePlugin : InternalPlugin
     private void HandleStateMovedToCategory(StateSave stateSave, StateSaveCategory newCategory, StateSaveCategory oldCategory)
     {
         _stateTreeViewRightClickService.PopulateMenuStrip();
-        stateTreeViewModel.RefreshTo(GumState.Self.SelectedState.SelectedStateContainer, GumState.Self.SelectedState);
+        stateTreeViewModel.RefreshTo(GumState.Self.SelectedState.SelectedStateContainer, _selectedState, _objectFinder);
     }
 
     private void HandleElementSelected(ElementSave save)
@@ -102,7 +105,7 @@ public class MainStatePlugin : InternalPlugin
 
     private void HandleInstanceSelected(ElementSave save1, InstanceSave save2)
     {
-        RefreshUI(SelectedState.Self.SelectedStateContainer, SelectedState.Self);
+        RefreshUI(SelectedState.Self.SelectedStateContainer);
 
         // A user could directly select an instance in
         // a different container such as going from a component
@@ -114,6 +117,11 @@ public class MainStatePlugin : InternalPlugin
     private void HandleBehaviorSelected(BehaviorSave behavior)
     {
         _stateTreeViewRightClickService.PopulateMenuStrip();
+        HandleRefreshStateTreeView();
+    }
+
+    private void HandleBehaviorReferenceSelected(ElementBehaviorReference reference, ElementSave element)
+    {
         HandleRefreshStateTreeView();
     }
 
@@ -141,7 +149,7 @@ public class MainStatePlugin : InternalPlugin
 
     private void HandleRefreshStateTreeView()
     {
-        RefreshUI(SelectedState.Self.SelectedStateContainer, SelectedState.Self);
+        RefreshUI(SelectedState.Self.SelectedStateContainer);
     }
 
     private void HandleTreeNodeSelected(TreeNode node)
@@ -195,7 +203,7 @@ public class MainStatePlugin : InternalPlugin
     private void HandleVariableSet(ElementSave elementSave, InstanceSave instance, string variableName, object oldValue)
     {
         // Do this to refresh the yellow highlights - We may not need to do more than this:
-        stateTreeViewModel.RefreshTo(elementSave, GumState.Self.SelectedState);
+        stateTreeViewModel.RefreshTo(elementSave, _selectedState, _objectFinder);
     }
     #endregion
 
@@ -208,18 +216,9 @@ public class MainStatePlugin : InternalPlugin
         }
     }
 
-    IStateContainer mLastElementRefreshedTo;
-    void RefreshUI(IStateContainer stateContainer, ISelectedState selectedState)
+    void RefreshUI(IStateContainer stateContainer)
     {
-
-        bool changed = stateContainer != mLastElementRefreshedTo;
-
-        mLastElementRefreshedTo = stateContainer;
-
-        StateSave lastStateSave = SelectedState.Self.SelectedStateSave;
-        InstanceSave instance = SelectedState.Self.SelectedInstance;
-
-        stateTreeViewModel.RefreshTo(stateContainer, selectedState);
+        stateTreeViewModel.RefreshTo(stateContainer, _selectedState, _objectFinder);
     }
 
 }

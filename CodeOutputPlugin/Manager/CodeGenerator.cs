@@ -522,6 +522,7 @@ public class CodeGenerator
         {
             var builder = context.StringBuilder;
 
+            builder.AppendLine(context.Tabs + "[System.Runtime.CompilerServices.ModuleInitializer]");
             builder.AppendLine(context.Tabs + "public static void RegisterRuntimeType()");
             builder.AppendLine(context.Tabs + "{");
             context.TabCount++;
@@ -1820,7 +1821,10 @@ public class CodeGenerator
                 {
                     if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
                     {
-                        context.StringBuilder.AppendLine($"{context.Tabs}this.Children.Add({instance.Name});");
+                        // If it's a screen it may have children, or it may not. We just don't know, so we need to check
+
+                        context.StringBuilder.AppendLine($"{context.Tabs}if(this.Children != null) this.Children.Add({instance.Name});");
+                        context.StringBuilder.AppendLine($"{context.Tabs}else this.WhatThisContains.Add({instance.Name});");
                     }
                     else
                     {

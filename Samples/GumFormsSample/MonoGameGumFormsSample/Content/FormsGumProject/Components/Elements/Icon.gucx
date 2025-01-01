@@ -142,7 +142,6 @@
   </State>
   <Category>
     <Name>IconCategory</Name>
-    <IsSetRecursively>false</IsSetRecursively>
     <State>
       <Name>None</Name>
       <Variable>

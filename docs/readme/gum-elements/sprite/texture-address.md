@@ -2,7 +2,7 @@
 
 ## Introduction
 
-The texture address property controls the texture address behavior of a sprite. Specifically it can control whether texture addresses variables are available, and how texture coordinates and sprite size relate.
+The texture address property controls the texture address behavior of a sprite. Specifically it can control whether texture addresses variables are available, and how texture coordinates and sprite size are related.
 
 ## Entire Texture
 
@@ -16,7 +16,7 @@ When using Entire Texture, individual texture values cannot be set so wrapping i
 
 If the texture address property is set to **Custom** then the top, bottom, left, and right properties can be independently set. This allows a sprite to only render a portion of its source texture.
 
-![Sprite with Texture Address set to EntireImage](<../../../.gitbook/assets/26_19 46 21.png>)
+![Sprite with Texture Address set to Custom](<../../../.gitbook/assets/26_19 46 21.png>)
 
 Typically a Texture Address of Custom is used in combination with a **Width Units** of **Percent of File Width** and and a **Height Units** of **Percent of File Height**. In this case, the size of the sprite depends on the texture coordinates.
 
@@ -28,9 +28,17 @@ If the **Texture Address** property is set to **DimensionsBased** then the textu
 
 <figure><img src="../../../.gitbook/assets/26_19 50 05.gif" alt=""><figcaption><p>Resizing a Sprite with Texture Address set to DimensionsBased</p></figcaption></figure>
 
-When the Texture Address is set to DimensionBased, then the Texture Width and Texture Height values are replaced by Texture Width Scale and Texture Height Scale. In this mode, the Texture Width and Texture Height values are calculated by multiplying the absolute size of the Sprite by its respective scale values.
+When the Texture Address is set to DimensionsBased, then the Texture Width and Texture Height values are replaced by Texture Width Scale and Texture Height Scale. In this mode, the Texture Width and Texture Height values are calculated by multiplying the absolute size of the Sprite by its respective scale values.
 
-When using DimensionBased Texture Address, wrapping is possible. For more information see the [Wrap](texture-address.md#wrap) page.
+When using DimensionsBased Texture Address, wrapping is possible. For more information see the [Wrap](texture-address.md#wrap) page.
+
+#### DimensionsBased Texture Address and Percentage of File Width/Height
+
+If a Sprite uses a **Width Units** of **Percentage of File Width** or a **Height Units** of **Percentage of File Height**, then the Width and Height values represent the size of the sprite relative to the entire source file.&#x20;
+
+For example, if a Sprite is displaying a source PNG file with a width of 130 pixels and its Width is 300, then the absolute width of the Sprite is 390 (130 \* 300%). If Wrap is checked, then this indicates the number of times that the image repeats on the Sprite.
+
+<figure><img src="../../../.gitbook/assets/image (148).png" alt=""><figcaption><p>Sprite displaying a PNG with dimensions 130x180 with a Width of 300 and Height of 200</p></figcaption></figure>
 
 #### Texture Width Scale and Texture Height Scale
 

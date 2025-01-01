@@ -575,7 +575,6 @@
   </State>
   <Category>
     <Name>ListBoxItemCategory</Name>
-    <IsSetRecursively>false</IsSetRecursively>
     <State>
       <Name>Enabled</Name>
       <Variable>

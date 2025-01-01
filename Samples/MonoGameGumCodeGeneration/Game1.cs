@@ -4,6 +4,7 @@ using GumRuntime;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MonoGameGum;
 using MonoGameGumCodeGeneration.Components;
 using MonoGameGumCodeGeneration.Screens;
 using RenderingLibrary;
@@ -25,35 +26,11 @@ namespace MonoGameGumCodeGeneration
 
         protected override void Initialize()
         {
-            SystemManagers.Default = new SystemManagers(); 
-            SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
+            var gumProject = GumService.Default.Initialize(_graphics.GraphicsDevice, "GumProject/GumProject.gumx");
 
-            ElementSaveExtensions.RegisterGueInstantiationType(
-                "Popup",
-                typeof(PopupRuntime)
-            );
-            ElementSaveExtensions.RegisterGueInstantiationType(
-                "ComponentWithStates",
-                typeof(ComponentWithStatesRuntime)
-            );
-
-            ElementSaveExtensions.RegisterGueInstantiationType(
-                "MainMenu",
-                typeof(MainMenuRuntime)
-            );
-
-
-            var gumProject = GumProjectSave.Load("GumProject/GumProject.gumx");
-
-            ObjectFinder.Self.GumProjectSave = gumProject;
-            gumProject.Initialize();
-
-            FileManager.RelativeDirectory = "Content/GumProject/";
-
-            // This assumes that your project has at least 1 screen
-            var screenGue = gumProject.Screens.First().ToGraphicalUiElement(
-                SystemManagers.Default, addToManagers: true);
-
+            var screenGue = new MainMenuFullGenerationRuntime();
+            screenGue.AddToManagers();
+            screenGue.Name = "MainMenu Screen";
 
             base.Initialize();
         }
@@ -61,19 +38,14 @@ namespace MonoGameGumCodeGeneration
 
         protected override void Update(GameTime gameTime)
         {
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
-                Exit();
-            SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
-
+            GumService.Default.Update(this, gameTime);
             base.Update(gameTime);
         }
 
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
-
-            SystemManagers.Default.Draw();
-
+            GumService.Default.Draw();
             base.Draw(gameTime);
         }
     }

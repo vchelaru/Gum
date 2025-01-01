@@ -18,7 +18,21 @@
                 <HierarchicalDataTemplate DataType="{x:Type viewmodels:CategoryViewModel}" ItemsSource="{Binding States}">
                     <StackPanel Orientation="Horizontal" Margin="0,2,0,2">
                         <Image SnapsToDevicePixels="True" Source="/Content/Icons/folder.png" Width="16" Height="16" VerticalAlignment="Center"/>
-                        <TextBlock Margin="4,0,0,0" Text="{Binding Title}" VerticalAlignment="Center"  />
+                        <TextBlock Margin="4,0,0,0" Text="{Binding Title}" VerticalAlignment="Center"  >
+                            <TextBlock.Style>
+
+                                <Style TargetType="{x:Type TextBlock}">
+                                    <Style.Resources>
+                                        <SolidColorBrush x:Key="IncludedInBehaviorBgBrush" Color="Orange" Opacity=".64" />
+                                    </Style.Resources>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsRequiredBySelectedBehavior}" Value="True">
+                                            <Setter Property="Background" Value="{StaticResource IncludedInBehaviorBgBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                     </StackPanel>
                 </HierarchicalDataTemplate>
                 <DataTemplate DataType="{x:Type viewmodels:StateViewModel}">
@@ -27,10 +41,14 @@
                             <Style TargetType="{x:Type TextBlock}">
                                 <Style.Resources>
                                     <SolidColorBrush x:Key="IncludesVariablesBgBrush" Color="Yellow" Opacity=".64" />
+                                    <SolidColorBrush x:Key="IncludedInBehaviorBgBrush" Color="Orange" Opacity=".64" />
                                 </Style.Resources>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding IncludesVariablesForSelectedInstance}" Value="True">
                                         <Setter Property="Background" Value="{StaticResource IncludesVariablesBgBrush}" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsRequiredBySelectedBehavior}" Value="True">
+                                        <Setter Property="Background" Value="{StaticResource IncludedInBehaviorBgBrush}" />
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>

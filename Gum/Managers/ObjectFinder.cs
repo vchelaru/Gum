@@ -850,11 +850,17 @@ namespace Gum.Managers
 
         public BehaviorSave GetBehavior(ElementBehaviorReference behaviorReference)
         {
+            var behaviorName = behaviorReference.BehaviorName;
+            return GetBehavior(behaviorName);
+        }
+
+        public BehaviorSave GetBehavior(string behaviorName)
+        {
             var behaviors = GumProjectSave.Behaviors;
 
-            foreach(var behavior in behaviors)
+            foreach (var behavior in behaviors)
             {
-                if(behavior.Name == behaviorReference.BehaviorName)
+                if (behavior.Name == behaviorName)
                 {
                     return behavior;
                 }

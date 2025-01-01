@@ -48,11 +48,11 @@ Despite the name referring to a "Container", the total size available for ratios
 
 The simplest case is a single child in a container with its Height Units set to **Ratio of Container**.
 
-<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Ratio of Container set to 1</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/BlueRectRatioHeight.png" alt=""><figcaption><p>Ratio of Container set to 1</p></figcaption></figure>
 
 In this case the blue [ColoredRectangle](../coloredrectangle.md) has no siblings (its container has no other children), so it occupies the entire parent height. If a second child is added (by copy/pasting the existing child), then each child is given 1 _ratio_ value, which means each is 1/2 of the size of the entire parent.
 
-<figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Two stacked ColoredRectangles, each with a Height ratio of 1</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Two stacked ColoredRectangles, each with a Height ratio of 1</p></figcaption></figure>
 
 To better visualize the effect of ratio, it's common to set the parent's [Children Layout](../container/children-layout.md) to Top to Bottom Stack, and to give each child a different color as shown in the following image.
 
@@ -131,20 +131,40 @@ The height of a Text instance using Relative to Children depends on the number o
 
 For example, the following image contains multiple Text instances. Each has a single line of text, but the line of text differs in the height of each character. Notice that the texts are all the same height even though the contents of their lines differ.
 
-<figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Texts with the same height despite having different string</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Texts with the same height despite having different string</p></figcaption></figure>
 
-### Percentage of Other Dimension
+### Percentage of Width
 
-**Percentage of Other Dimension** adjusts the object's effective height so it remains proportional to the Width value multiplied by the Height value (as a percentage). For example, if a Height value of 200 is entered, then the effective height is 200% (2x) of the width.
+**Percentage of Width** adjusts the object's effective height so it remains proportional to the Width value multiplied by the Height value (as a percentage). For example, if a Height value of 200 is entered, then the effective height is 200% (2x) of the width.
 
 The following image shows a child ColoredRectangle with a Height of 200 **Percentage of Other Dimension**. In this image, the **Width** value is 50 units, so the effective height is 100 units:
 
 <figure><img src="../../../.gitbook/assets/11_06 29 41.png" alt=""><figcaption><p>Rectangle using Percentage of Other Dimension height of 200</p></figcaption></figure>
 
-### Percentage of Source File
+### Percentage of File Height
 
-The [Sprite](../sprite/) type has an extra **Height Unit** called **Percentage of Source File**, which sets the height of the Sprite according to the file that it is displaying. This is the default **Height Unit** for Sprites.
+[Sprites](../sprite/) can select a **Height Unit** called **Percentage of File Height**, which sets the height of the Sprite according to the file that it is displaying. This is the default **Height Unit** for Sprites.
 
 The following image shows a child Sprite with 200 **Percentage of Source File** Height, which means it draws two times as tall as its source image:
 
 ![Sprite using Percentage of Source height of 200](<../../../.gitbook/assets/11_06 31 44.png>)
+
+This value depends on the Sprite's Texture Height property, so changing Texture Height also changes the Sprite's absolute height.
+
+<figure><img src="../../../.gitbook/assets/30_06 39 18.gif" alt=""><figcaption><p>Changing a Sprite's Texture Height adjusts its absolute height when using Percentage of File Height</p></figcaption></figure>
+
+### Maintain File Aspect Ratio Height
+
+Sprites can select a **Height Unit** called Maintain File Aspect Ratio Height which sets the height of the sprite so its aspect ratio matches its source file multiplied by the Height value. Usually Maintain File Aspect Ratio Height is used with a Height value of 100 so that the Sprite shows is source file at the correct aspect ratio.&#x20;
+
+{% hint style="info" %}
+Svgs also support using Maintain File Aspect Ratio Height. For more information on using Svgs see the [Skia Standard Elements](../skia-standard-elements/) page.
+{% endhint %}
+
+When this value is used, a Sprite's Width can be changed resulting in its absolute height also changing.
+
+<figure><img src="../../../.gitbook/assets/30_07 22 27.gif" alt=""><figcaption><p>Changing the Width when using Maintain File Aspect Ratio Height also adjusts absolute height</p></figcaption></figure>
+
+When using Maintain File Aspect Ratio Height, the Sprite's absolute height depends on the Sprite's Texture Height property.
+
+<figure><img src="../../../.gitbook/assets/30_07 25 09.gif" alt=""><figcaption><p>Changing either Width or Texture Height affects the Sprite's absolute height</p></figcaption></figure>
