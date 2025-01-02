@@ -5,15 +5,11 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:DataUi="clr-namespace:WpfDataUi"
              xmlns:local="clr-namespace:WpfDataUi"
-             xmlns:conv="clr-namespace:WpfDataUi.Converters"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300"
              Padding="0,1,0,0"
              >
 
-    <UserControl.Resources>
-        <conv:AddDoubleConverter x:Key="AddDoubleConverter" />
-    </UserControl.Resources>
     <!--Vic sasks - why is this wrapped in a stack panel? Shouldn't an ItemsControl expand the same as the stack panel? Having it in a stack panel screws with horizontal layouts...-->
     <!--<StackPanel Background="Purple">-->
     <ItemsControl Name="InternalControl" ItemsSource="{Binding Categories}">
