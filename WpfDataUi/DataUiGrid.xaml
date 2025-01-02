@@ -32,10 +32,6 @@
                         Header="{Binding Name}" 
                         Visibility="{Binding Visibility}" 
                         Width="{Binding Width}"
-                        FontSize="{Binding Path=FontSize,
-                         RelativeSource={RelativeSource AncestorType={x:Type UserControl}},
-                         Converter={StaticResource AddDoubleConverter},
-                         ConverterParameter=3.75}"
                         BorderThickness="{Binding CategoryBorderThickness}"
                         VerticalAlignment="Stretch"  
                         IsExpanded="{Binding IsExpanded}" 
