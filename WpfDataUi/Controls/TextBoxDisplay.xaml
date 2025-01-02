@@ -3,8 +3,13 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:conv="clr-namespace:WpfDataUi.Converters"
+             xmlns:parent="clr-namespace:WpfDataUi"
              mc:Ignorable="d"
              d:Width="400">
+    <UserControl.Resources>
+        <conv:AddDoubleConverter x:Key="AddDoubleConverter" />
+    </UserControl.Resources>
     <StackPanel x:Name="StackPanel">
         <StackPanel.ContextMenu>
             <ContextMenu>
@@ -57,7 +62,11 @@
                     VerticalAlignment="Top"
                     MaxWidth="{Binding ActualWidth, ElementName=TopRowGrid}"
                     Margin="0,0,-4,0"
-                    FontSize="10" Text="This is a property description. But what if it is longer?"/>
+                    FontSize="{Binding Path=FontSize,
+                         RelativeSource={RelativeSource AncestorType={x:Type parent:DataUiGrid}},
+                         Converter={StaticResource AddDoubleConverter},
+                         ConverterParameter=-2}"
+                   Text="This is a property description. But what if it is longer?"/>
 
 
     </StackPanel>
