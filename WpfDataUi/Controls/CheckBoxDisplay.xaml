@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:conv="clr-namespace:WpfDataUi.Converters"
-             xmlns:parent="clr-namespace:WpfDataUi"
+             xmlns:local="clr-namespace:WpfDataUi.Controls"
              mc:Ignorable="d" 
              d:DesignWidth="300">
     <UserControl.Resources>
@@ -33,7 +33,7 @@
                     Margin="0,0,-4,0"
                     MaxWidth="{Binding ActualWidth, ElementName=TopRowGrid}"
                     FontSize="{Binding Path=FontSize,
-                        RelativeSource={RelativeSource AncestorType={x:Type parent:DataUiGrid}},
+                        RelativeSource={RelativeSource AncestorType={x:Type local:CheckBoxDisplay}},
                         Converter={StaticResource AddDoubleConverter},
                         ConverterParameter=-2}"
                    >
