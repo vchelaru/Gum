@@ -18,6 +18,7 @@ using Gum.Plugins.InternalPlugins.TreeView;
 using Gum.Plugins.InternalPlugins.TreeView.ViewModels;
 using Gum.Logic;
 using System.Drawing;
+using WpfInput = System.Windows.Input;
 
 namespace Gum.Managers
 {
@@ -123,8 +124,8 @@ namespace Gum.Managers
         /// </summary>
         object mRecordedSelectedObject;
 
-        TextBox searchTextBox;
-        CheckBox deepSearchCheckBox;
+        System.Windows.Controls.TextBox searchTextBox;
+        System.Windows.Controls.CheckBox deepSearchCheckBox;
         #endregion
 
         #region Properties
@@ -453,10 +454,10 @@ namespace Gum.Managers
             var grid = new Grid();
             grid.RowDefinitions.Add(
                 new System.Windows.Controls.RowDefinition() 
-                { Height = new System.Windows.GridLength(22, System.Windows.GridUnitType.Pixel) });
+                { Height = System.Windows.GridLength.Auto });
             grid.RowDefinitions.Add(
                 new System.Windows.Controls.RowDefinition()
-                { Height = new System.Windows.GridLength(22, System.Windows.GridUnitType.Pixel) });
+                    { Height = System.Windows.GridLength.Auto });
             grid.RowDefinitions.Add(
                 new System.Windows.Controls.RowDefinition() 
                 { Height = new System.Windows.GridLength(1, System.Windows.GridUnitType.Star) });
@@ -472,16 +473,12 @@ namespace Gum.Managers
 
 
             var searchBarUi = CreateSearchBoxUi();
-            var searchBarHost = new System.Windows.Forms.Integration.WindowsFormsHost();
-            searchBarHost.Child = searchBarUi;
-            Grid.SetRow(searchBarHost, 0);
-            grid.Children.Add(searchBarHost);
+            Grid.SetRow(searchBarUi, 0);
+            grid.Children.Add(searchBarUi);
 
             var checkBoxUi = CreateSearchCheckBoxUi();
-            var checkBoxHost = new System.Windows.Forms.Integration.WindowsFormsHost();
-            checkBoxHost.Child = checkBoxUi;
-            Grid.SetRow(checkBoxHost, 1);
-            grid.Children.Add(checkBoxHost);
+            Grid.SetRow(checkBoxUi, 1);
+            grid.Children.Add(checkBoxUi);
 
             FlatList = CreateFlatSearchList();
             FlatList.HorizontalAlignment = System.Windows.HorizontalAlignment.Stretch;
@@ -1692,7 +1689,7 @@ namespace Gum.Managers
                         AddToFlatList(screen);
                     }
 
-                    if (deepSearchCheckBox.Checked)
+                    if (deepSearchCheckBox.IsChecked is true)
                     {
                         SearchInstanceVariables(screen, filterTextLower);
                     }
@@ -1712,7 +1709,7 @@ namespace Gum.Managers
                         }
                     }
 
-                    if (deepSearchCheckBox.Checked)
+                    if (deepSearchCheckBox.IsChecked is true)
                     {
                         SearchInstanceVariables(component, filterTextLower);
                     }
@@ -1724,7 +1721,7 @@ namespace Gum.Managers
                         AddToFlatList(standard);
                     }
 
-                    if (deepSearchCheckBox.Checked)
+                    if (deepSearchCheckBox.IsChecked is true)
                     {
                         SearchInstanceVariables(standard, filterTextLower);
                     }
@@ -1806,31 +1803,35 @@ namespace Gum.Managers
             FlatList.FlatList.Items.Add(vm);
         }
 
-        private Control CreateSearchBoxUi()
+        private Grid CreateSearchBoxUi()
         {
-            var panel = new Panel();
-            panel.Dock = DockStyle.Top;
+            var grid = new Grid();
+            grid.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition
+                { Width = new System.Windows.GridLength(1, System.Windows.GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition
+            { Width = System.Windows.GridLength.Auto});
 
-            searchTextBox = new TextBox();
+
+            searchTextBox = new System.Windows.Controls.TextBox();
+            searchTextBox.VerticalAlignment = System.Windows.VerticalAlignment.Center;
             searchTextBox.TextChanged += (not, used) => FilterText = searchTextBox.Text;
             searchTextBox.KeyDown += (sender, args) =>
             {
-                if (args.KeyCode == Keys.Escape)
+                bool isCtrlDown = WpfInput.Keyboard.IsKeyDown(WpfInput.Key.LeftCtrl) || WpfInput.Keyboard.IsKeyDown(WpfInput.Key.RightCtrl);
+
+                if (args.Key == WpfInput.Key.Escape)
                 {
                     searchTextBox.Text = null;
                     args.Handled = true;
-                    args.SuppressKeyPress = true;
                     ObjectTreeView.Focus();
                 }
-                else if (args.KeyCode == Keys.Back
-                 && (args.Modifiers & Keys.Control) == Keys.Control
-                )
+                else if (args.Key == WpfInput.Key.Back
+                 && isCtrlDown)
                 {
                     searchTextBox.Text = null;
                     args.Handled = true;
-                    args.SuppressKeyPress = true;
                 }
-                else if (args.KeyCode == Keys.Down)
+                else if (args.Key == WpfInput.Key.Down)
                 {
                     if(FlatList.FlatList.SelectedIndex < FlatList.FlatList.Items.Count -1)
                     {
@@ -1838,7 +1839,7 @@ namespace Gum.Managers
                     }
                     args.Handled = true;
                 }
-                else if (args.KeyCode == Keys.Up)
+                else if (args.Key == WpfInput.Key.Up)
                 {
                     if (FlatList.FlatList.SelectedIndex > 0)
                     {
@@ -1846,10 +1847,9 @@ namespace Gum.Managers
                     }
                     args.Handled = true;
                 }
-                else if (args.KeyCode == Keys.Enter)
+                else if (args.Key == WpfInput.Key.Enter)
                 {
                     args.Handled = true;
-                    args.SuppressKeyPress = true;
                     ObjectTreeView.Focus();
 
                     var selectedItem = FlatList.FlatList.SelectedItem as SearchItemViewModel;
@@ -1861,37 +1861,32 @@ namespace Gum.Managers
                     }
                 }
             };
-            searchTextBox.Dock = DockStyle.Fill;
-            panel.Controls.Add(searchTextBox);
 
-            var xButton = new Button();
-            xButton.Text = "X";
+            grid.Children.Add(searchTextBox);
+
+            var xButton = new System.Windows.Controls.Button();
+            xButton.Content = "X";
             xButton.Click += (not, used) => searchTextBox.Text = null;
-            xButton.Dock = DockStyle.Right;
+            xButton.VerticalAlignment = System.Windows.VerticalAlignment.Center;
             xButton.Width = 24;
-            panel.Controls.Add(xButton);
-            panel.Height = 20;
+            grid.Children.Add(xButton);
 
-            return panel;
+            Grid.SetColumn(searchTextBox, 0);
+            Grid.SetColumn(xButton, 1);
+
+            return grid;
         }
 
-        private Control CreateSearchCheckBoxUi()
+        private System.Windows.Controls.CheckBox CreateSearchCheckBoxUi()
         {
-            var panel = new Panel();
-
-            deepSearchCheckBox = new CheckBox();
-            deepSearchCheckBox.Checked = false;
-            deepSearchCheckBox.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            deepSearchCheckBox = new System.Windows.Controls.CheckBox();
+            deepSearchCheckBox.IsChecked = false;
+            deepSearchCheckBox.VerticalContentAlignment = System.Windows.VerticalAlignment.Center;
             deepSearchCheckBox.Width = 200;
-            deepSearchCheckBox.Text = "Search variables";
-            deepSearchCheckBox.CheckedChanged += (object sender, EventArgs args) =>
-            {
-                ReactToFilterTextChanged();
-            };
+            deepSearchCheckBox.Content = "Search variables";
+            deepSearchCheckBox.Checked += (_, _) => ReactToFilterTextChanged();
 
-            panel.Controls.Add(deepSearchCheckBox);
-
-            return panel;
+            return deepSearchCheckBox;
         }
 
         private void HandleSelectedSearchNode(SearchItemViewModel vm)
