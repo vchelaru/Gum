@@ -603,7 +603,6 @@ namespace Gum.Managers
         private void UpdateTreeviewIconScale(float scale = 1.0f)
         {
             int baseImageSize = 16;
-            System.Diagnostics.Debug.WriteLine(ObjectTreeView.Indent);
 
             // Then we can re-scale the images
             ObjectTreeView.ImageList = ResizeImageListImages(
