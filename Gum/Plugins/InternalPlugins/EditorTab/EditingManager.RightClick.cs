@@ -124,14 +124,11 @@ namespace Gum.Wireframe
 
             string selectedParent = null;
 
-            if (selectedInstance != null)
+            if (selectedInstance != null && selectedElement != null)
             {
                 selectedParent = GetEffectiveParentNameFor(selectedInstance, selectedElement);
-            }
 
-            if(SelectedState.Self.SelectedElement != null)
-            {
-                foreach (var instance in SelectedState.Self.SelectedElement.Instances)
+                foreach (var instance in selectedElement.Instances)
                 {
                     // Ignore the current instance
                     if (instance != selectedInstance)
@@ -152,6 +149,7 @@ namespace Gum.Wireframe
                     }
                 }
             }
+
         }
 
         private string GetEffectiveParentNameFor(InstanceSave instance, ElementSave owner)

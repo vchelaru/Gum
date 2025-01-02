@@ -101,13 +101,20 @@ internal class MainEditorTabPlugin : InternalPlugin
 
     private void HandleVariableSetLate(ElementSave element, InstanceSave instance, string qualifiedName, object oldValue)
     {
-        var state = SelectedState.Self.SelectedStateSave ?? element.DefaultState;
+        /////////////////////////////Early Out//////////////////////////
+        if(element == null)
+        {
+            // This could be a variable on a behavior or instance in a behavior. If so, we don't show anything in the editor
+            return;
+        }
+        ////////////////////////////End Early Out///////////////////////
 
         if(instance != null)
         {
             qualifiedName = instance.Name + "." + qualifiedName;
         }
 
+        var state = SelectedState.Self.SelectedStateSave ?? element?.DefaultState;
         var value = state.GetValue(qualifiedName);
 
         var areSame = value == null && oldValue == null;
