@@ -113,7 +113,7 @@ internal class MainEditorTabPlugin : InternalPlugin
     {
         // Uncommenting this makes the area for teh combo box properly grow, but it
         // kills the wireframe view. Not sure why....
-        //_wireframeEditControl.Height = _defaultWireframeEditControlHeight * _guiCommands.UiZoomValue;
+        _wireframeEditControl.Height = _defaultWireframeEditControlHeight * _guiCommands.UiZoomValue / 100;
     }
 
     private void HandleVariableSetLate(ElementSave element, InstanceSave instance, string qualifiedName, object oldValue)
