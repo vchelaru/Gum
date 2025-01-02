@@ -211,11 +211,35 @@ public class HotkeyManager : Singleton<HotkeyManager>
         HandleKeyDownAppWide(ConvertToFormsKeyEventArgs(e));
     }
 
-    public static System.Windows.Forms.KeyEventArgs ConvertToFormsKeyEventArgs(System.Windows.Input.KeyEventArgs wpfArgs)
+    private System.Windows.Forms.KeyEventArgs ConvertToFormsKeyEventArgs(System.Windows.Input.KeyEventArgs e)
     {
-        System.Windows.Forms.Keys key = (System.Windows.Forms.Keys)System.Windows.Input.KeyInterop.VirtualKeyFromKey(wpfArgs.Key);
-        return new System.Windows.Forms.KeyEventArgs(key);
+        // Convert WPF Key to WinForms Keys
+        var winFormsKey = (System.Windows.Forms.Keys)System.Windows.Input.KeyInterop.VirtualKeyFromKey(e.Key);
+
+        // Convert WPF modifiers to WinForms modifiers
+        var modifiers = ConvertModifiers(System.Windows.Input.Keyboard.Modifiers);
+
+        // Combine the key and modifiers to form the KeyData
+        var keyData = winFormsKey | modifiers;
+
+        // Return the WinForms KeyEventArgs
+        return new System.Windows.Forms.KeyEventArgs(keyData);
     }
+
+    private System.Windows.Forms.Keys ConvertModifiers(System.Windows.Input.ModifierKeys wpfModifiers)
+    {
+        var winFormsModifiers = System.Windows.Forms.Keys.None;
+
+        if (wpfModifiers.HasFlag(System.Windows.Input.ModifierKeys.Control))
+            winFormsModifiers |= System.Windows.Forms.Keys.Control;
+        if (wpfModifiers.HasFlag(System.Windows.Input.ModifierKeys.Alt))
+            winFormsModifiers |= System.Windows.Forms.Keys.Alt;
+        if (wpfModifiers.HasFlag(System.Windows.Input.ModifierKeys.Shift))
+            winFormsModifiers |= System.Windows.Forms.Keys.Shift;
+
+        return winFormsModifiers;
+    }
+
 
     public void HandleKeyDownAppWide(KeyEventArgs e)
     {
