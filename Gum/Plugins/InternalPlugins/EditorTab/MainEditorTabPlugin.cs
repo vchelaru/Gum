@@ -118,13 +118,20 @@ internal class MainEditorTabPlugin : InternalPlugin
 
     private void HandleVariableSetLate(ElementSave element, InstanceSave instance, string qualifiedName, object oldValue)
     {
-        var state = SelectedState.Self.SelectedStateSave ?? element.DefaultState;
+        /////////////////////////////Early Out//////////////////////////
+        if(element == null)
+        {
+            // This could be a variable on a behavior or instance in a behavior. If so, we don't show anything in the editor
+            return;
+        }
+        ////////////////////////////End Early Out///////////////////////
 
         if(instance != null)
         {
             qualifiedName = instance.Name + "." + qualifiedName;
         }
 
+        var state = SelectedState.Self.SelectedStateSave ?? element?.DefaultState;
         var value = state.GetValue(qualifiedName);
 
         var areSame = value == null && oldValue == null;
@@ -216,6 +223,7 @@ internal class MainEditorTabPlugin : InternalPlugin
     private void HandleInstanceSelected(ElementSave element, InstanceSave instance)
     {
         WireframeObjectManager.Self.RefreshAll(forceLayout: false);
+        EditingManager.Self.RefreshContextMenuStrip();
     }
 
     private void HandleXnaInitialized()
@@ -229,7 +237,9 @@ internal class MainEditorTabPlugin : InternalPlugin
             PluginManager.Self.HandleWireframeResized();
         };
 
-        this._wireframeControl.MouseClick += wireframeControl1_MouseClick;
+        //this._wireframeControl.MouseClick += wireframeControl1_MouseClick;
+        this._wireframeControl.MouseDown += wireframeControl1_MouseDown;
+
 
         this._wireframeControl.DragDrop += DragDropManager.Self.HandleFileDragDrop;
         this._wireframeControl.DragEnter += DragDropManager.Self.HandleFileDragEnter;
@@ -332,7 +342,7 @@ internal class MainEditorTabPlugin : InternalPlugin
         WireframeObjectManager.Self.RefreshAll(forceLayout: true);
     }
 
-    private void wireframeControl1_MouseClick(object sender, MouseEventArgs e)
+    private void wireframeControl1_MouseDown(object sender, MouseEventArgs e)
     {
         if (e.Button == MouseButtons.Right)
         {
