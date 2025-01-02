@@ -74,8 +74,7 @@ namespace WpfDataUi
                 if (AreEqual(dataUi.InstanceMember.Value, valueToSet) == false || commitType == SetPropertyCommitType.Full)
                 {
                     //dataUi.InstanceMember.Value = valueToSet;
-                    dataUi.InstanceMember.SetValue(valueToSet, commitType);
-                    result = ApplyValueResult.Success;
+                    result = dataUi.InstanceMember.SetValue(valueToSet, commitType);
                     dataUi.InstanceMember.CallAfterSetByUi();
                 }
                 else

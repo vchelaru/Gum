@@ -253,6 +253,25 @@ public class HotkeyManager : Singleton<HotkeyManager>
         TryHandleCtrlF(e);
         HandleGoToDefinition(e);
         HandleKeyDownAppWide(e);
+        HandleRename(e);
+    }
+
+    private void HandleRename(KeyEventArgs e)
+    {
+        if(Rename.IsPressed(e))
+        {
+            if(SelectedState.Self.SelectedInstance != null)
+            {
+
+            }
+            else if(SelectedState.Self.SelectedElement != null && 
+                SelectedState.Self.SelectedElement is not StandardElementSave)
+            {
+                GumCommands.Self.GuiCommands.ShowRenameElementWindow(SelectedState.Self.SelectedElement);
+                e.Handled = true;
+
+            }
+        }
     }
 
     private void TryHandleCtrlF(KeyEventArgs e)

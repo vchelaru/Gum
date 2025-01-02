@@ -12,7 +12,6 @@
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
-
     <LangVersion>12.0</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -40,8 +39,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x86</PlatformTarget>
-        <LangVersion>12.0</LangVersion>
-
+    <LangVersion>12.0</LangVersion>
     <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
@@ -50,8 +48,7 @@
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>x86</PlatformTarget>
-        <LangVersion>12.0</LangVersion>
-
+    <LangVersion>12.0</LangVersion>
     <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
   <ItemGroup>
@@ -110,6 +107,10 @@
     <ProjectReference Include="..\RenderingLibrary\RenderingLibrary.csproj">
       <Project>{A86EE399-7C93-42E1-80ED-CA4CBF4CA573}</Project>
       <Name>RenderingLibrary</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj">
+      <Project>{cae35f4b-8a10-4a85-b2fb-7f4a8d7c7138}</Project>
+      <Name>ToolsUtilitiesStandard</Name>
     </ProjectReference>
     <ProjectReference Include="..\XnaAndWinforms\XnaAndWinforms.csproj">
       <Project>{C39A973C-66D6-4A6C-82B5-AE0042F210F8}</Project>

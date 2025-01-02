@@ -94,7 +94,7 @@ The [Wraps Children](wraps-children.md) property controls how stacking behaves b
 
 Children of a container which uses the **TopToBottomStack** or **LeftToWriteStack** will be ordered according to their order in the tree view on the left. By default this is the order in which the children are added to a parent container.
 
-![](../../../.gitbook/assets/GumOrdering1.png)
+<figure><img src="../../../.gitbook/assets/01_05 25 04.png" alt=""><figcaption><p>Item order in the Project tab determines the order of items in a stacked container</p></figcaption></figure>
 
 Children can be reordered using the right-click menu on an instance.
 
@@ -103,6 +103,8 @@ Children can be reordered using the right-click menu on an instance.
 Alternatively, children order can be changed by clicking on the item in the tree view, holding down the ALT key, then pressing the up or down arrows.
 
 <figure><img src="../../../.gitbook/assets/15_08 09 38.gif" alt=""><figcaption><p>Changing order with ALT+Arrow hotkey</p></figcaption></figure>
+
+For more information on ordering, see the [Order](../general-properties/order.md) page.
 
 ### Auto Grid Horizontal and Auto Grid Vertical
 

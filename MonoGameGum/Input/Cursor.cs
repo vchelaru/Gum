@@ -1,4 +1,5 @@
 ﻿using Gum.Wireframe;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Input.Touch;
 using System;
@@ -13,6 +14,8 @@ namespace MonoGameGum.Input
 
     public class Cursor : ICursor
     {
+        public Matrix TransformMatrix { get; set; } = Matrix.Identity;
+
         public InputDevice LastInputDevice
         {
             get;
@@ -233,6 +236,11 @@ namespace MonoGameGum.Input
             LastX = X;
             LastY = Y;
 
+
+
+            int? x = null;
+            int? y = null;
+
             if (System.OperatingSystem.IsAndroid() || System.OperatingSystem.IsIOS())
             {
                 LastInputDevice = InputDevice.TouchScreen;
@@ -240,18 +248,29 @@ namespace MonoGameGum.Input
 
                 if (_touchCollection.Count > 0)
                 {
-                    X = (int)_touchCollection[0].Position.X;
-                    Y = (int)_touchCollection[0].Position.Y;
+                    x = (int)_touchCollection[0].Position.X;
+                    y = (int)_touchCollection[0].Position.Y;
                 }
             }
             else
             {
                 LastInputDevice = InputDevice.Mouse;
                 _mouseState = Microsoft.Xna.Framework.Input.Mouse.GetState();
-                X = _mouseState.X;
-                Y = _mouseState.Y;
+                x = _mouseState.X;
+                y = _mouseState.Y;
             }
 
+            if(x != null)
+            {
+                var vector = new Vector2(x.Value, y.Value);
+                vector = Vector2.Transform(vector, TransformMatrix);
+                X = (int)vector.X;
+                Y = (int)vector.Y;
+            }
+            else
+            {
+                // do nothing
+            }
 
             // We want to keep track of whether
             // the user pushed in the window or not

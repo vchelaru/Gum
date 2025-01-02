@@ -76,7 +76,7 @@ bool addToManagers = false;
 var popupComponent = gumProject.Components.First(item => item.Name == "MyPopup")
     .ToGraphicalUiElement(SystemManagers.Default, addToManagers);
 
-popupComponent.Parent = ModalRoot;
+popupComponent.Parent = FrameworkElement.ModalRoot;
 
 // later, the popup can be removed:
 popupComponent.RemoveFromManagers();
@@ -93,7 +93,7 @@ var popupScreen = gumProject.Screens.First(item => item.Name == "MyScreen")
     .ToGraphicalUiElement(SystemManagers.Default, addToManagers);
 // Give the Screen a ContainedObject so that it can have its parent assigned
 popupScreen.SetContainedObject (new InvisibleRenderable());
-popupScreen.Parent = ModalRoot;
+popupScreen.Parent = FrameworkElement.ModalRoot;
 
 // later, the popup can be removed:
 popupScreen.RemoveFromManagers();

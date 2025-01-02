@@ -51,7 +51,8 @@ public class MainTextureCoordinatePlugin : PluginBase
 
     public override bool ShutDown(PluginShutDownReason shutDownReason)
     {
-        // todo - hide the window
+        this.textureCoordinatePluginTab?.Hide();
+
         return true;
     }
 

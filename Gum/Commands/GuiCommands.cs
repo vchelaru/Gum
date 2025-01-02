@@ -18,6 +18,9 @@ using Gum.Logic;
 using static System.ComponentModel.Design.ObjectSelectorEditor;
 using System.IO;
 using ToolsUtilities;
+using WpfDataUi.DataTypes;
+using Gum.PropertyGridHelpers;
+using System.Xml.Linq;
 
 namespace Gum.Commands
 {
@@ -37,11 +40,6 @@ namespace Gum.Commands
             this.mainPanelControl = mainPanelControl;
         }
 
-        internal void RefreshStateTreeView()
-        {
-            PluginManager.Self.RefreshStateTreeView();
-        }
-
         internal void BroadcastRefreshBehaviorView()
         {
             PluginManager.Self.RefreshBehaviorView(
@@ -54,9 +52,16 @@ namespace Gum.Commands
                 SelectedState.Self.SelectedElement);
         }
 
+        #region Refresh Commands
+
+        internal void RefreshStateTreeView()
+        {
+            PluginManager.Self.RefreshStateTreeView();
+        }
+
         public void RefreshVariables(bool force = false)
         {
-            PropertyGridManager.Self.RefreshUI(force: force);
+            PluginManager.Self.RefreshVariableView(force);
         }
 
         /// <summary>
@@ -72,6 +77,18 @@ namespace Gum.Commands
             MainWindow.MainMenuStrip.Font = new System.Drawing.Font(MainWindow.MainMenuStrip.Font.FontFamily, (float)mainPanelControl.FontSize - 2.75f + delta);
             mainPanelControl.FontSize += delta;
         }
+
+        public void RefreshElementTreeView()
+        {
+            ElementTreeViewManager.Self.RefreshUi();
+        }
+
+        public void RefreshElementTreeView(IInstanceContainer instanceContainer)
+        {
+            ElementTreeViewManager.Self.RefreshUi(instanceContainer);
+        }
+
+        #endregion
 
         #region Tab Controls
 
@@ -113,7 +130,25 @@ namespace Gum.Commands
             return mainPanelControl.IsTabVisible(pluginTab);
         }
 
+
+        public void RemoveControl(System.Windows.Controls.UserControl control)
+        {
+            mainPanelControl.RemoveWpfControl(control);
+        }
+
+        /// <summary>
+        /// Selects the tab which contains the argument control
+        /// </summary>
+        /// <param name="control">The control to show.</param>
+        /// <returns>Whether the control was shown. If the control is not found, false is returned.</returns>
+        public bool ShowTabForControl(System.Windows.Controls.UserControl control)
+        {
+            return mainPanelControl.ShowTabForControl(control);
+        }
+
         #endregion
+
+        #region Move to Cursor
 
         public void PositionWindowByCursor(System.Windows.Window window)
         {
@@ -135,105 +170,11 @@ namespace Gum.Commands
             window.Top = mousePosition.Y - height / 2;
         }
 
-
         public void PositionWindowByCursor(System.Windows.Forms.Form window)
         {
             var mousePosition = GumCommands.Self.GuiCommands.GetMousePosition();
 
             window.Location = new System.Drawing.Point(mousePosition.X - window.Width / 2, mousePosition.Y - window.Height / 2);
-        }
-
-        public void RemoveControl(System.Windows.Controls.UserControl control)
-        {
-            mainPanelControl.RemoveWpfControl(control);
-        }
-
-        /// <summary>
-        /// Selects the tab which contains the argument control
-        /// </summary>
-        /// <param name="control">The control to show.</param>
-        /// <returns>Whether the control was shown. If the control is not found, false is returned.</returns>
-        public bool ShowTabForControl(System.Windows.Controls.UserControl control)
-        {
-            return mainPanelControl.ShowTabForControl(control);
-        }
-
-        public void PrintOutput(string output)
-        {
-            OutputManager.Self.AddOutput(output);
-        }
-
-        public void RefreshElementTreeView()
-        {
-            ElementTreeViewManager.Self.RefreshUi();
-        }
-
-
-
-        public void RefreshElementTreeView(IInstanceContainer instanceContainer)
-        {
-            ElementTreeViewManager.Self.RefreshUi(instanceContainer);
-        }
-
-        #region Show/Hide Methods
-
-        public void ShowMessage(string message)
-        {
-            MessageBox.Show(message);
-        }
-
-        public System.Windows.MessageBoxResult ShowYesNoMessageBox(string message, string caption = "Confirm", Action yesAction = null, Action noAction = null)
-        {
-            caption ??= "Confirm";
-            var result = System.Windows.MessageBoxResult.None;
-
-            result = System.Windows.MessageBox.Show(message, caption, System.Windows.MessageBoxButton.YesNo);
-
-            if (result == System.Windows.MessageBoxResult.Yes)
-            {
-                yesAction?.Invoke();
-            }
-            else if (result == System.Windows.MessageBoxResult.No)
-            {
-                noAction?.Invoke();
-            }
-
-            return result;
-        }
-
-
-        public System.Drawing.Point GetMousePosition()
-        {
-            return MainWindow.MousePosition;
-        }
-
-        public void HideTools()
-        {
-            mainPanelControl.HideTools();
-        }
-
-        public void ShowTools()
-        {
-            mainPanelControl.ShowTools();
-        }
-
-        internal void FocusSearch()
-        {
-            ElementTreeViewManager.Self.FocusSearch();
-        }
-
-        internal void ToggleToolVisibility()
-        {
-            //var areToolsVisible = mMainWindow.LeftAndEverythingContainer.Panel1Collapsed == false;
-
-            //if(areToolsVisible)
-            //{
-            //    HideTools();
-            //}
-            //else
-            //{
-            //    ShowTools();
-            //}
         }
 
         public void MoveToCursor(System.Windows.Window window)
@@ -271,6 +212,78 @@ namespace Gum.Commands
             window.Top = mousePositionY - height / 2;
 
             window.ShiftWindowOntoScreen();
+        }
+        #endregion
+
+        public void PrintOutput(string output)
+        {
+            OutputManager.Self.AddOutput(output);
+        }
+
+        #region Show/Hide Tools
+
+        public System.Drawing.Point GetMousePosition()
+        {
+            return MainWindow.MousePosition;
+        }
+
+        public void HideTools()
+        {
+            mainPanelControl.HideTools();
+        }
+
+        public void ShowTools()
+        {
+            mainPanelControl.ShowTools();
+        }
+
+
+        internal void ToggleToolVisibility()
+        {
+            //var areToolsVisible = mMainWindow.LeftAndEverythingContainer.Panel1Collapsed == false;
+
+            //if(areToolsVisible)
+            //{
+            //    HideTools();
+            //}
+            //else
+            //{
+            //    ShowTools();
+            //}
+        }
+
+
+        #endregion
+
+        internal void FocusSearch()
+        {
+            ElementTreeViewManager.Self.FocusSearch();
+        }
+
+        #region Show General Messages
+
+        public void ShowMessage(string message)
+        {
+            MessageBox.Show(message);
+        }
+
+        public System.Windows.MessageBoxResult ShowYesNoMessageBox(string message, string caption = "Confirm", Action yesAction = null, Action noAction = null)
+        {
+            caption ??= "Confirm";
+            var result = System.Windows.MessageBoxResult.None;
+
+            result = System.Windows.MessageBox.Show(message, caption, System.Windows.MessageBoxButton.YesNo);
+
+            if (result == System.Windows.MessageBoxResult.Yes)
+            {
+                yesAction?.Invoke();
+            }
+            else if (result == System.Windows.MessageBoxResult.No)
+            {
+                noAction?.Invoke();
+            }
+
+            return result;
         }
 
         #endregion
@@ -426,11 +439,6 @@ namespace Gum.Commands
             }
         }
 
-        public void DoOnUiThread(Action action)
-        {
-            mainPanelControl.Dispatcher.Invoke(action);
-        }
-
         public void ShowRenameFolderWindow(TreeNode node)
         {
             var tiw = new TextInputWindow();
@@ -531,5 +539,28 @@ namespace Gum.Commands
             }
         }
 
+        public void ShowRenameElementWindow(ElementSave element)
+        {
+            var oldName = element.Name;
+
+            var window = new CustomizableTextInputWindow();
+            window.Result = oldName;
+            window.Message = "Enter new name:";
+            window.HighlightText();
+            var dialogResult = window.ShowDialog();
+
+            if(dialogResult == true)
+            {
+                element.Name = window.Result;
+                SetVariableLogic.Self.PropertyValueChanged("Name", oldName, null, refresh: true,
+                    recordUndo: true,
+                    trySave: true);
+            }
+        }
+
+        public void DoOnUiThread(Action action)
+        {
+            mainPanelControl.Dispatcher.Invoke(action);
+        }
     }
 }

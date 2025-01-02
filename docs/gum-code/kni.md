@@ -21,14 +21,13 @@ If you would like to create a new Kni project from scratch, you can follow these
 
 1. Go to the Kni Releases
 2.  Download and run the latest KniSdkSetup exe\
-    &#x20;
+
 
     <figure><img src="../.gitbook/assets/KniSetup.png" alt=""><figcaption><p>KniSdkSetup in GitHub</p></figcaption></figure>
 3. After installing the SDK, open Visual Studio
 4. Select the option to create a new project
 5. Search for Kni
-6.  Select one of the project templates, such as **Web browser**\
-
+6.  Select one of the project templates, such as **Web browser**\\
 
     <figure><img src="../.gitbook/assets/KniNewProjectInVs.png" alt=""><figcaption><p>Web browser project in Kni</p></figcaption></figure>
 7. Click Next and proceed through the remainder of the steps to create a project

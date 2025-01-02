@@ -603,16 +603,6 @@ namespace Gum.PropertyGridHelpers
                 {
                     newValue = null;
                 }
-                string variableType = null;
-                var existingVariable = elementSave?.GetVariableFromThisOrBase(Name);
-                if (existingVariable != null)
-                {
-                    variableType = existingVariable.Type;
-                }
-                else
-                {
-                    variableType = elementSave?.GetVariableListFromThisOrBase(Name)?.Type;
-                }
 
 
                 // the stateSave.SetValue method handles Name and Base Type internally just fine,
@@ -632,10 +622,12 @@ namespace Gum.PropertyGridHelpers
                     // If we are creating a new variable, we need to make sure it carries the same exposed
                     // name as the variable in base that defines it. We need to first get that variable...
                     VariableSave variableDefinedInThisOrBase = null;
+                    var existingVariable = elementSave?.GetVariableFromThisOrBase(Name);
                     if (!string.IsNullOrEmpty(existingVariable?.ExposedAsName))
                     {
                         variableDefinedInThisOrBase = GetVariableDefinedInThisOrBase(existingVariable);
                     }
+                    string variableType = existingVariable?.Type ?? elementSave?.GetVariableListFromThisOrBase(Name)?.Type;
                     // ...set variable after getting it from base, or else we'd get the variable we just set...
                     stateSave.SetValue(Name, newValue, instanceSave, variableType);
                     if (!string.IsNullOrEmpty(existingVariable?.ExposedAsName) && variableDefinedInThisOrBase != null)
@@ -646,7 +638,12 @@ namespace Gum.PropertyGridHelpers
                     }
                 }
 
-                NotifyVariableLogic(gumElementOrInstanceSaveAsObject, trySave: setPropertyArgs.CommitType == SetPropertyCommitType.Full);
+                var response = NotifyVariableLogic(gumElementOrInstanceSaveAsObject, trySave: setPropertyArgs.CommitType == SetPropertyCommitType.Full);
+
+                if(response.Succeeded == false)
+                {
+                    setPropertyArgs.IsAssignmentCancelled = true;
+                }
             }
             else
             {
@@ -892,8 +889,10 @@ namespace Gum.PropertyGridHelpers
             NotifyVariableLogic(gumElementOrInstanceSaveAsObject, trySave: true);
         }
 
-        public void NotifyVariableLogic(object gumElementOrInstanceSaveAsObject, bool? forceRefresh = null, bool trySave = true)
+        public GeneralResponse NotifyVariableLogic(object gumElementOrInstanceSaveAsObject, bool? forceRefresh = null, bool trySave = true)
         {
+            GeneralResponse response = GeneralResponse.SuccessfulResponse;
+
             string name = RootVariableName;
 
             bool handledByExposedVariable = false;
@@ -929,10 +928,12 @@ namespace Gum.PropertyGridHelpers
 
             if (!handledByExposedVariable)
             {
-                SetVariableLogic.Self.PropertyValueChanged(name, LastOldValue, gumElementOrInstanceSaveAsObject as InstanceSave, refresh: effectiveRefresh,
+                response = SetVariableLogic.Self.PropertyValueChanged(name, LastOldValue, gumElementOrInstanceSaveAsObject as InstanceSave, refresh: effectiveRefresh,
                     recordUndo: effectiveRecordUndo,
                     trySave: trySave);
             }
+
+            return response;
         }
 
         private Type HandleCustomGetType(object instance)
