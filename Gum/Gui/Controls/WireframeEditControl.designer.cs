@@ -1,4 +1,5 @@
 ﻿using System.Windows.Forms.Integration;
+using System.Windows.Media.Animation;
 
 namespace FlatRedBall.AnimationEditorForms.Controls
 {
@@ -36,20 +37,19 @@ namespace FlatRedBall.AnimationEditorForms.Controls
             // 
             // ComboBox
             // 
-            this.ComboBox.VerticalAlignment = System.Windows.VerticalAlignment.Top;
+            this.ComboBox.VerticalAlignment = System.Windows.VerticalAlignment.Center;
             this.ComboBox.IsEditable = false;
             this.ComboBox.Margin = new System.Windows.Thickness(0, 0, 0, 0);
             this.ComboBox.Name = "ComboBox";
             this.ComboBox.Height = 21;
+            this.ComboBox.VerticalContentAlignment = System.Windows.VerticalAlignment.Center;
             this.ComboBox.TabIndex = 0;
             this.ComboBox.SelectionChanged += this.ComboBox_SelectedIndexChanged;
 
             // Allow us to add the WPF to the FORMS control
             var elementHost = new ElementHost
             {
-                Dock = System.Windows.Forms.DockStyle.Top,
-                Location = new System.Drawing.Point(0, 0),
-                Size = new System.Drawing.Size(215, 21),
+                Dock = System.Windows.Forms.DockStyle.Fill,
                 Child = this.ComboBox
             };
 
