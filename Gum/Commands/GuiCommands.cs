@@ -74,8 +74,10 @@ namespace Gum.Commands
 
         public void ShiftAppFontSize(int delta)
         {
-            MainWindow.MainMenuStrip.Font = new System.Drawing.Font(MainWindow.MainMenuStrip.Font.FontFamily, (float)mainPanelControl.FontSize - 2.75f + delta);
             mainPanelControl.FontSize += delta;
+            MainWindow.MainMenuStrip.Font = new System.Drawing.Font(MainWindow.MainMenuStrip.Font.FontFamily, 
+                (float)mainPanelControl.FontSize * 0.75f);
+            
         }
 
         public void RefreshElementTreeView()
