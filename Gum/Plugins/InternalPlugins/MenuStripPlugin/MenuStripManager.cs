@@ -6,6 +6,8 @@ using Gum.Wireframe;
 using Gum.Undo;
 using Gum.Gui.Forms;
 using System.Diagnostics;
+using ExCSS;
+using Gum.Commands;
 
 namespace Gum.Managers
 {
@@ -13,7 +15,9 @@ namespace Gum.Managers
     {
         #region Fields
 
-        private MenuStrip menuStrip1;
+        private readonly GuiCommands _guiCommands;
+
+        private MenuStrip _menuStrip;
 
         private ToolStripMenuItem fileToolStripMenuItem;
 
@@ -38,6 +42,11 @@ namespace Gum.Managers
 
 
         #endregion
+
+        public MenuStripManager(GuiCommands guiCommands)
+        {
+            _guiCommands = guiCommands;
+        }
 
         public void Initialize()
         {
@@ -308,26 +317,26 @@ namespace Gum.Managers
             this.fileToolStripMenuItem.Text = "File";
 
 
-            this.menuStrip1 = new System.Windows.Forms.MenuStrip();
+            this._menuStrip = new System.Windows.Forms.MenuStrip();
 
             // 
             // menuStrip1
             // 
-            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this._menuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
                 this.fileToolStripMenuItem,
                 this.editToolStripMenuItem,
                 this.viewToolStripMenuItem,
                 this.contentToolStripMenuItem,
                 this.pluginsToolStripMenuItem,
                 this.helpToolStripMenuItem});
-            this.menuStrip1.Location = new System.Drawing.Point(0, 0);
-            this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(1076, 24);
-            this.menuStrip1.TabIndex = 0;
-            this.menuStrip1.Text = "menuStrip1";
+            this._menuStrip.Location = new System.Drawing.Point(0, 0);
+            this._menuStrip.Name = "menuStrip1";
+            this._menuStrip.Size = new System.Drawing.Size(1076, 24);
+            this._menuStrip.TabIndex = 0;
+            this._menuStrip.Text = "menuStrip1";
 
-            mainWindow.Controls.Add(this.menuStrip1);
-            mainWindow.MainMenuStrip = this.menuStrip1;
+            mainWindow.Controls.Add(this._menuStrip);
+            mainWindow.MainMenuStrip = this._menuStrip;
 
 
 
@@ -403,6 +412,16 @@ namespace Gum.Managers
                 GumCommands.Self.Edit.RemoveStateCategory(
                     SelectedState.Self.SelectedStateCategorySave, SelectedState.Self.SelectedStateContainer as IStateCategoryListContainer);
             }
+        }
+
+        const int DefaultFontSize = 11;
+
+        internal void HandleUiZoomValueChanged()
+        {
+            var fontSize = DefaultFontSize * _guiCommands.UiZoomValue / 100.0f;
+
+            _menuStrip.Font = new System.Drawing.Font(_menuStrip.Font.FontFamily,
+                fontSize * 0.75f);
         }
     }
 

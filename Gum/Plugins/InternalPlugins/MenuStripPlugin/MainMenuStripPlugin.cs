@@ -1,4 +1,5 @@
-﻿using Gum.DataTypes;
+﻿using ExCSS;
+using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
@@ -21,7 +22,7 @@ public class MainMenuStripPlugin : InternalPlugin
 
     public static void InitializeMenuStrip()
     {
-        _menuStripManager = new MenuStripManager();
+        _menuStripManager = new MenuStripManager(GumCommands.Self.GuiCommands);
         _menuStripManager.Initialize();
 
     }
@@ -38,6 +39,12 @@ public class MainMenuStripPlugin : InternalPlugin
         this.InstanceSelected += HandleInstanceSelected;
         this.BehaviorVariableSelected += HandleBehaviorVariableSelected;
         this.AfterUndo += HandleAfterUndo;
+        this.UiZoomValueChanged += HandleUiZoomValueChanged;
+    }
+
+    private void HandleUiZoomValueChanged()
+    {
+        _menuStripManager.HandleUiZoomValueChanged();
     }
 
     private void HandleAfterUndo()

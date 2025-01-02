@@ -72,12 +72,26 @@ namespace Gum.Commands
             PropertyGridManager.Self.RefreshVariablesDataGridValues();
         }
 
-        public void ShiftAppFontSize(int delta)
+        const int DefaultFontSize = 11;
+
+        int _uiZoomValue = 100;
+        public int UiZoomValue
         {
-            mainPanelControl.FontSize += delta;
-            MainWindow.MainMenuStrip.Font = new System.Drawing.Font(MainWindow.MainMenuStrip.Font.FontFamily, 
-                (float)mainPanelControl.FontSize * 0.75f);
-            
+            get => _uiZoomValue;
+            set
+            {
+                _uiZoomValue = value;
+                UpdateUiToZoomValue();
+            }
+        }
+
+        private void UpdateUiToZoomValue()
+        {
+            var fontSize = DefaultFontSize * UiZoomValue / 100.0f;
+
+            mainPanelControl.FontSize = fontSize;
+
+            PluginManager.Self.HandleUiZoomValueChanged();
         }
 
         public void RefreshElementTreeView()

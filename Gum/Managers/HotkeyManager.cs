@@ -1,7 +1,9 @@
-﻿using Gum.Controls;
+﻿using Gum.Commands;
+using Gum.Controls;
 using Gum.DataTypes;
 using Gum.Logic;
 using Gum.Plugins;
+using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using System;
@@ -195,12 +197,15 @@ public class HotkeyManager : Singleton<HotkeyManager>
 
     public KeyCombination Rename { get; private set; } = KeyCombination.Pressed(Keys.F2);
 
-    CopyPasteLogic _copyPasteLogic;
+    private readonly CopyPasteLogic _copyPasteLogic;
+    private readonly Commands.GuiCommands _guiCommands;
+
     // If adding any new keys here, modify HotkeyViewModel
 
     public HotkeyManager()
     {
         _copyPasteLogic = CopyPasteLogic.Self;
+        _guiCommands = GumCommands.Self.GuiCommands;
     }
 
     #region App Wide Keys
@@ -251,14 +256,34 @@ public class HotkeyManager : Singleton<HotkeyManager>
        
         void ScaleAppFont()
         {
-            const int strength = 2;
-
             int? direction = ZoomCameraIn.IsPressed(e) || ZoomCameraInAlternative.IsPressed(e) ? 1 :
                 ZoomCameraOut.IsPressed(e) || ZoomCameraOutAlternative.IsPressed(e) ? -1 : null;
 
             if (direction is {} dir)
             {
-                GumCommands.Self.GuiCommands.ShiftAppFontSize(dir * strength);
+                var currentZoom = _guiCommands.UiZoomValue;
+                if (dir > 0)
+                {
+                    if (currentZoom < 100)
+                    {
+                        _guiCommands.UiZoomValue += 10;
+                    }
+                    else
+                    {
+                        _guiCommands.UiZoomValue += 25;
+                    }
+                }
+                else
+                {
+                    if (currentZoom <= 100)
+                    {
+                        _guiCommands.UiZoomValue -= 10;
+                    }
+                    else
+                    {
+                        _guiCommands.UiZoomValue -= 25;
+                    }
+                }
                 e.Handled = true;
             }
         }
