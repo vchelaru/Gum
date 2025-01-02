@@ -75,20 +75,20 @@ namespace Gum.Commands
         const int DefaultFontSize = 11;
 
         int _uiZoomValue = 100;
-        int _minUiZoomValue = 70;
-        int _maxUiZoomValue = 500;
+        const int MinUiZoomValue = 70;
+        const int MaxUiZoomValue = 500;
         public int UiZoomValue
         {
             get => _uiZoomValue;
             set
             {
-                if (value > _maxUiZoomValue)
+                if (value > MaxUiZoomValue)
                 {
-                    _uiZoomValue = _maxUiZoomValue;
+                    _uiZoomValue = MaxUiZoomValue;
                 }
-                else if (value < _minUiZoomValue)
+                else if (value < MinUiZoomValue)
                 {
-                    _uiZoomValue = _minUiZoomValue;
+                    _uiZoomValue = MinUiZoomValue;
                 }
                 else
                 {
