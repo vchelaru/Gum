@@ -1860,6 +1860,8 @@ namespace Gum.Managers
                         searchTextBox.Text = null;
                     }
                 }
+
+                HotkeyManager.Self.HandleKeyDownAppWide(args);
             };
 
             grid.Children.Add(searchTextBox);
@@ -1882,6 +1884,7 @@ namespace Gum.Managers
             deepSearchCheckBox = new System.Windows.Controls.CheckBox();
             deepSearchCheckBox.IsChecked = false;
             deepSearchCheckBox.VerticalContentAlignment = System.Windows.VerticalAlignment.Center;
+            deepSearchCheckBox.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
             deepSearchCheckBox.Width = 200;
             deepSearchCheckBox.Content = "Search variables";
             deepSearchCheckBox.Checked += (_, _) => ReactToFilterTextChanged();
