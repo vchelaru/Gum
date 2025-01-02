@@ -1,4 +1,6 @@
-﻿namespace FlatRedBall.AnimationEditorForms.Controls
+﻿using System.Windows.Forms.Integration;
+
+namespace FlatRedBall.AnimationEditorForms.Controls
 {
     partial class WireframeEditControl
     {
@@ -28,33 +30,42 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.ComboBox = new System.Windows.Forms.ComboBox();
+            this.ComboBox = new System.Windows.Controls.ComboBox();
+
             this.SuspendLayout();
             // 
             // ComboBox
             // 
-            this.ComboBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.ComboBox.FormattingEnabled = true;
-            this.ComboBox.Location = new System.Drawing.Point(0, 0);
+            this.ComboBox.VerticalAlignment = System.Windows.VerticalAlignment.Top;
+            this.ComboBox.IsEditable = false;
+            this.ComboBox.Margin = new System.Windows.Thickness(0, 0, 0, 0);
             this.ComboBox.Name = "ComboBox";
-            this.ComboBox.Size = new System.Drawing.Size(215, 21);
+            this.ComboBox.Height = 21;
             this.ComboBox.TabIndex = 0;
-            this.ComboBox.SelectedIndexChanged += new System.EventHandler(this.ComboBox_SelectedIndexChanged);
+            this.ComboBox.SelectionChanged += this.ComboBox_SelectedIndexChanged;
+
+            // Allow us to add the WPF to the FORMS control
+            var elementHost = new ElementHost
+            {
+                Dock = System.Windows.Forms.DockStyle.Top,
+                Location = new System.Drawing.Point(0, 0),
+                Size = new System.Drawing.Size(215, 21),
+                Child = this.ComboBox
+            };
+
             // 
             // WireframeEditControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.ComboBox);
+            this.Controls.Add(elementHost);
             this.Name = "WireframeEditControl";
             this.Size = new System.Drawing.Size(215, 21);
             this.ResumeLayout(false);
-
         }
 
         #endregion
 
-        private System.Windows.Forms.ComboBox ComboBox;
+        private System.Windows.Controls.ComboBox ComboBox;
     }
 }
