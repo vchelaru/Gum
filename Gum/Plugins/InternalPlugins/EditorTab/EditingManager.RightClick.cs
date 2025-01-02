@@ -86,23 +86,18 @@ namespace Gum.Wireframe
 
         public void OnRightClick()
         {
+            RefreshContextMenuStrip();
+        }
+
+        public void RefreshContextMenuStrip()
+        {
             /////////////Early Out////////////////////
-            if(mContextMenuStrip == null)
+            if (mContextMenuStrip == null)
             {
                 return;
             }
             ///////////End Early Out//////////////////
 
-            // Note:  This
-            // code assumes
-            // that the object
-            // that was right-clicked
-            // on is the selected object.
-            // We can bet this is the case
-            // because selection happens on
-            // a mouse push (even on a right-push).
-            // The click will happen *after* so the object
-            // should already be selected.
             if (SelectedState.Self.SelectedInstance != null)
             {
                 mContextMenuStrip.Items.Add(mBringToFront);
@@ -114,7 +109,10 @@ namespace Gum.Wireframe
                 PopulateMoveInFrontOfMenuItem();
 
             }
-
+            else
+            {
+                mContextMenuStrip.Items.Clear();
+            }
         }
 
         private void PopulateMoveInFrontOfMenuItem()
@@ -131,24 +129,26 @@ namespace Gum.Wireframe
                 selectedParent = GetEffectiveParentNameFor(selectedInstance, selectedElement);
             }
 
-
-            foreach (var instance in SelectedState.Self.SelectedElement.Instances)
+            if(SelectedState.Self.SelectedElement != null)
             {
-                // Ignore the current instance
-                if (instance != selectedInstance)
+                foreach (var instance in SelectedState.Self.SelectedElement.Instances)
                 {
-                    var instanceParent = GetEffectiveParentNameFor(instance, selectedElement);
-                    var hasSameParent = instanceParent == selectedParent;
-
-                    // for move in front of, we only want to allow the selected instance to be moved in front of its siblings.
-                    // This menu item cannot be used to move to a different parent.
-                    if(hasSameParent)
+                    // Ignore the current instance
+                    if (instance != selectedInstance)
                     {
-                        ToolStripMenuItem item = new ToolStripMenuItem(instance.Name);
-                        item.Tag = instance;
-                        mMoveInFrontOf.DropDownItems.Add(item);
+                        var instanceParent = GetEffectiveParentNameFor(instance, selectedElement);
+                        var hasSameParent = instanceParent == selectedParent;
 
-                        item.Click += HandleMoveInFrontOfClick;
+                        // for move in front of, we only want to allow the selected instance to be moved in front of its siblings.
+                        // This menu item cannot be used to move to a different parent.
+                        if(hasSameParent)
+                        {
+                            ToolStripMenuItem item = new ToolStripMenuItem(instance.Name);
+                            item.Tag = instance;
+                            mMoveInFrontOf.DropDownItems.Add(item);
+
+                            item.Click += HandleMoveInFrontOfClick;
+                        }
                     }
                 }
             }

@@ -199,6 +199,7 @@ internal class MainEditorTabPlugin : InternalPlugin
     private void HandleInstanceSelected(ElementSave element, InstanceSave instance)
     {
         WireframeObjectManager.Self.RefreshAll(forceLayout: false);
+        EditingManager.Self.RefreshContextMenuStrip();
     }
 
     private void HandleXnaInitialized()
@@ -212,7 +213,9 @@ internal class MainEditorTabPlugin : InternalPlugin
             PluginManager.Self.HandleWireframeResized();
         };
 
-        this._wireframeControl.MouseClick += wireframeControl1_MouseClick;
+        //this._wireframeControl.MouseClick += wireframeControl1_MouseClick;
+        this._wireframeControl.MouseDown += wireframeControl1_MouseDown;
+
 
         this._wireframeControl.DragDrop += DragDropManager.Self.HandleFileDragDrop;
         this._wireframeControl.DragEnter += DragDropManager.Self.HandleFileDragEnter;
@@ -295,7 +298,7 @@ internal class MainEditorTabPlugin : InternalPlugin
         WireframeObjectManager.Self.RefreshAll(forceLayout: true);
     }
 
-    private void wireframeControl1_MouseClick(object sender, MouseEventArgs e)
+    private void wireframeControl1_MouseDown(object sender, MouseEventArgs e)
     {
         if (e.Button == MouseButtons.Right)
         {
