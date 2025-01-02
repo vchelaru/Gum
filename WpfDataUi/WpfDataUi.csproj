@@ -149,6 +149,7 @@
     <Compile Include="Controls\ToggleButtonOptionDisplay.xaml.cs">
       <DependentUpon>ToggleButtonOptionDisplay.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Converters\AddDoubleConverter.cs" />
     <Compile Include="DataGridAttachedProperties.cs" />
     <Compile Include="DataTypes\IMemberDefinition.cs" />
     <Compile Include="DataTypes\IMemberDefinitionContainer.cs" />

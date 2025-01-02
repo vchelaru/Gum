@@ -9,6 +9,7 @@
              d:DesignHeight="300" d:DesignWidth="300"
              Padding="0,1,0,0"
              >
+
     <!--Vic sasks - why is this wrapped in a stack panel? Shouldn't an ItemsControl expand the same as the stack panel? Having it in a stack panel screws with horizontal layouts...-->
     <!--<StackPanel Background="Purple">-->
     <ItemsControl Name="InternalControl" ItemsSource="{Binding Categories}">
@@ -26,7 +27,6 @@
                 <Expander 
                         Header="{Binding Name}" 
                         Visibility="{Binding Visibility}" 
-                        FontSize="{Binding FontSize}"
                         Width="{Binding Width}"
                         BorderThickness="{Binding CategoryBorderThickness}"
                         VerticalAlignment="Stretch"  
@@ -42,7 +42,7 @@
                         </ItemsControl.Resources>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <DataUi:SingleDataUiContainer x:Name="Container" FontSize="12" Padding="2,1"/>
+                                <DataUi:SingleDataUiContainer x:Name="Container" Padding="2,1"/>
                                 <DataTemplate.Triggers>
                                     <Trigger Property="ItemsControl.AlternationIndex" Value="0">
                                         <Setter TargetName="Container" Property="Background" Value="{StaticResource LightBg}"/>

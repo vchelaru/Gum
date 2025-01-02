@@ -107,8 +107,6 @@ namespace WpfDataUi.DataTypes
         {
             HideHeader = false;
 
-            FontSize = 12;
-
             Members = new ObservableCollection<InstanceMember>();
 
             Members.CollectionChanged += HandleMembersChanged;

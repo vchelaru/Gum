@@ -8,21 +8,17 @@ using Gum.ToolStates;
 using Gum.DataTypes.Variables;
 using System.IO;
 using ToolsUtilities;
-using Gum.Events;
 using Gum.Wireframe;
 using Gum.DataTypes.Behaviors;
 using Gum.Plugins;
 using System.ComponentModel;
-//using System.Windows.Controls;
-//using System.Windows;
 using Grid = System.Windows.Controls.Grid;
 using Gum.Mvvm;
 using Gum.Plugins.InternalPlugins.TreeView;
 using Gum.Plugins.InternalPlugins.TreeView.ViewModels;
-using RenderingLibrary.Graphics;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolTip;
-using System.Management.Instrumentation;
 using Gum.Logic;
+using System.Drawing;
+using WpfInput = System.Windows.Input;
 
 namespace Gum.Managers
 {
@@ -96,6 +92,21 @@ namespace Gum.Managers
         
 
         MultiSelectTreeView ObjectTreeView;
+        private ImageList originalImageList;
+        public ImageList unmodifiableImageList
+        {
+            get
+            {
+                return CloneImageList(originalImageList);
+            }
+            set
+            {
+                if (originalImageList == null)
+                {
+                    originalImageList = value;
+                }
+            }
+        }
 
         TreeNode mScreensTreeNode;
         TreeNode mComponentsTreeNode;
@@ -113,8 +124,8 @@ namespace Gum.Managers
         /// </summary>
         object mRecordedSelectedObject;
 
-        TextBox searchTextBox;
-        CheckBox deepSearchCheckBox;
+        System.Windows.Controls.TextBox searchTextBox;
+        System.Windows.Controls.CheckBox deepSearchCheckBox;
         #endregion
 
         #region Properties
@@ -443,10 +454,10 @@ namespace Gum.Managers
             var grid = new Grid();
             grid.RowDefinitions.Add(
                 new System.Windows.Controls.RowDefinition() 
-                { Height = new System.Windows.GridLength(22, System.Windows.GridUnitType.Pixel) });
+                { Height = System.Windows.GridLength.Auto });
             grid.RowDefinitions.Add(
                 new System.Windows.Controls.RowDefinition()
-                { Height = new System.Windows.GridLength(22, System.Windows.GridUnitType.Pixel) });
+                    { Height = System.Windows.GridLength.Auto });
             grid.RowDefinitions.Add(
                 new System.Windows.Controls.RowDefinition() 
                 { Height = new System.Windows.GridLength(1, System.Windows.GridUnitType.Star) });
@@ -462,16 +473,12 @@ namespace Gum.Managers
 
 
             var searchBarUi = CreateSearchBoxUi();
-            var searchBarHost = new System.Windows.Forms.Integration.WindowsFormsHost();
-            searchBarHost.Child = searchBarUi;
-            Grid.SetRow(searchBarHost, 0);
-            grid.Children.Add(searchBarHost);
+            Grid.SetRow(searchBarUi, 0);
+            grid.Children.Add(searchBarUi);
 
             var checkBoxUi = CreateSearchCheckBoxUi();
-            var checkBoxHost = new System.Windows.Forms.Integration.WindowsFormsHost();
-            checkBoxHost.Child = checkBoxUi;
-            Grid.SetRow(checkBoxHost, 1);
-            grid.Children.Add(checkBoxHost);
+            Grid.SetRow(checkBoxUi, 1);
+            grid.Children.Add(checkBoxUi);
 
             FlatList = CreateFlatSearchList();
             FlatList.HorizontalAlignment = System.Windows.HorizontalAlignment.Stretch;
@@ -510,6 +517,7 @@ namespace Gum.Managers
             this.ObjectTreeView.HotTracking = true;
             this.ObjectTreeView.ImageIndex = 0;
             this.ObjectTreeView.ImageList = ElementTreeImages;
+            unmodifiableImageList = ElementTreeImages;
             this.ObjectTreeView.Location = new System.Drawing.Point(0, 0);
             this.ObjectTreeView.MultiSelectBehavior = CommonFormsAndControls.MultiSelectBehavior.CtrlDown;
             this.ObjectTreeView.Name = "ObjectTreeView";
@@ -524,6 +532,14 @@ namespace Gum.Managers
             this.ObjectTreeView.PreviewKeyDown += this.ObjectTreeView_PreviewKeyDown;
             this.ObjectTreeView.MouseClick += this.ObjectTreeView_MouseClick;
             this.ObjectTreeView.MouseMove += (sender, e) => HandleMouseOver(e.X, e.Y);
+            this.ObjectTreeView.FontChanged += (sender, _) =>
+            {
+                if (sender is MultiSelectTreeView { Font.Size: var fontSize})
+                {
+                    const float defaultFontSize = 8.25f;
+                    UpdateTreeviewIconScale(fontSize/defaultFontSize);
+                }
+            };
             ObjectTreeView.DragDrop += HandleDragDropEvent;
 
             ObjectTreeView.ItemDrag += (sender, e) =>
@@ -562,6 +578,76 @@ namespace Gum.Managers
                 //else
                 //    Cursor.Current = MyNoDropCursor;
             };
+        }
+
+        private ImageList CloneImageList(ImageList original)
+        {
+            // Create a new ImageList with matching properties
+            ImageList copy = new ImageList
+            {
+                ImageSize = original.ImageSize,
+                ColorDepth = original.ColorDepth,
+                TransparentColor = original.TransparentColor
+            };
+
+            // Clone each image from the original list
+            for (int i = 0; i < original.Images.Count; i++)
+            {
+                string key = original.Images.Keys[i];
+                copy.Images.Add(key, (Image)original.Images[i].Clone());
+            }
+
+            return copy;
+        }
+
+        private void UpdateTreeviewIconScale(float scale = 1.0f)
+        {
+            int baseImageSize = 16;
+
+            // Then we can re-scale the images
+            ObjectTreeView.ImageList = ResizeImageListImages(
+                unmodifiableImageList
+                , new System.Drawing.Size(
+                    (int)(baseImageSize * scale)
+                    , (int)(baseImageSize * scale)));
+
+            ImageList ResizeImageListImages(ImageList originalImageList, Size newSize)
+            {
+                ImageList resizedImageList = new ImageList
+                {
+                    ImageSize = newSize,
+                    ColorDepth = originalImageList.ColorDepth // Preserve original color depth
+                };
+
+                foreach (string key in originalImageList.Images.Keys)
+                {
+                    Image originalImage = originalImageList.Images[key];
+                    Image resizedImage = ResizeImageWithoutGraphics(originalImage, newSize); // Reuse ResizeImage method
+                    resizedImageList.Images.Add(key, resizedImage);
+                }
+
+                return resizedImageList;
+            }
+
+            Image ResizeImageWithoutGraphics(Image originalImage, Size newSize)
+            {
+                Bitmap resizedImage = new Bitmap(newSize.Width, newSize.Height);
+
+                for (int x = 0; x < newSize.Width; x++)
+                {
+                    for (int y = 0; y < newSize.Height; y++)
+                    {
+                        // Calculate the position in the original image
+                        int originalX = x * originalImage.Width / newSize.Width;
+                        int originalY = y * originalImage.Height / newSize.Height;
+
+                        // Copy the pixel from the original image
+                        resizedImage.SetPixel(x, y, ((Bitmap)originalImage).GetPixel(originalX, originalY));
+                    }
+                }
+
+                return resizedImage;
+            }
         }
 
         private void ObjectTreeView_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
@@ -1602,7 +1688,7 @@ namespace Gum.Managers
                         AddToFlatList(screen);
                     }
 
-                    if (deepSearchCheckBox.Checked)
+                    if (deepSearchCheckBox.IsChecked is true)
                     {
                         SearchInstanceVariables(screen, filterTextLower);
                     }
@@ -1622,7 +1708,7 @@ namespace Gum.Managers
                         }
                     }
 
-                    if (deepSearchCheckBox.Checked)
+                    if (deepSearchCheckBox.IsChecked is true)
                     {
                         SearchInstanceVariables(component, filterTextLower);
                     }
@@ -1634,7 +1720,7 @@ namespace Gum.Managers
                         AddToFlatList(standard);
                     }
 
-                    if (deepSearchCheckBox.Checked)
+                    if (deepSearchCheckBox.IsChecked is true)
                     {
                         SearchInstanceVariables(standard, filterTextLower);
                     }
@@ -1716,31 +1802,35 @@ namespace Gum.Managers
             FlatList.FlatList.Items.Add(vm);
         }
 
-        private Control CreateSearchBoxUi()
+        private Grid CreateSearchBoxUi()
         {
-            var panel = new Panel();
-            panel.Dock = DockStyle.Top;
+            var grid = new Grid();
+            grid.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition
+                { Width = new System.Windows.GridLength(1, System.Windows.GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition
+            { Width = System.Windows.GridLength.Auto});
 
-            searchTextBox = new TextBox();
+
+            searchTextBox = new System.Windows.Controls.TextBox();
+            searchTextBox.VerticalAlignment = System.Windows.VerticalAlignment.Center;
             searchTextBox.TextChanged += (not, used) => FilterText = searchTextBox.Text;
             searchTextBox.KeyDown += (sender, args) =>
             {
-                if (args.KeyCode == Keys.Escape)
+                bool isCtrlDown = WpfInput.Keyboard.IsKeyDown(WpfInput.Key.LeftCtrl) || WpfInput.Keyboard.IsKeyDown(WpfInput.Key.RightCtrl);
+
+                if (args.Key == WpfInput.Key.Escape)
                 {
                     searchTextBox.Text = null;
                     args.Handled = true;
-                    args.SuppressKeyPress = true;
                     ObjectTreeView.Focus();
                 }
-                else if (args.KeyCode == Keys.Back
-                 && (args.Modifiers & Keys.Control) == Keys.Control
-                )
+                else if (args.Key == WpfInput.Key.Back
+                 && isCtrlDown)
                 {
                     searchTextBox.Text = null;
                     args.Handled = true;
-                    args.SuppressKeyPress = true;
                 }
-                else if (args.KeyCode == Keys.Down)
+                else if (args.Key == WpfInput.Key.Down)
                 {
                     if(FlatList.FlatList.SelectedIndex < FlatList.FlatList.Items.Count -1)
                     {
@@ -1748,7 +1838,7 @@ namespace Gum.Managers
                     }
                     args.Handled = true;
                 }
-                else if (args.KeyCode == Keys.Up)
+                else if (args.Key == WpfInput.Key.Up)
                 {
                     if (FlatList.FlatList.SelectedIndex > 0)
                     {
@@ -1756,10 +1846,9 @@ namespace Gum.Managers
                     }
                     args.Handled = true;
                 }
-                else if (args.KeyCode == Keys.Enter)
+                else if (args.Key == WpfInput.Key.Enter)
                 {
                     args.Handled = true;
-                    args.SuppressKeyPress = true;
                     ObjectTreeView.Focus();
 
                     var selectedItem = FlatList.FlatList.SelectedItem as SearchItemViewModel;
@@ -1770,38 +1859,36 @@ namespace Gum.Managers
                         searchTextBox.Text = null;
                     }
                 }
+
+                HotkeyManager.Self.HandleKeyDownAppWide(args);
             };
-            searchTextBox.Dock = DockStyle.Fill;
-            panel.Controls.Add(searchTextBox);
 
-            var xButton = new Button();
-            xButton.Text = "X";
+            grid.Children.Add(searchTextBox);
+
+            var xButton = new System.Windows.Controls.Button();
+            xButton.Content = "X";
             xButton.Click += (not, used) => searchTextBox.Text = null;
-            xButton.Dock = DockStyle.Right;
+            xButton.VerticalAlignment = System.Windows.VerticalAlignment.Center;
             xButton.Width = 24;
-            panel.Controls.Add(xButton);
-            panel.Height = 20;
+            grid.Children.Add(xButton);
 
-            return panel;
+            Grid.SetColumn(searchTextBox, 0);
+            Grid.SetColumn(xButton, 1);
+
+            return grid;
         }
 
-        private Control CreateSearchCheckBoxUi()
+        private System.Windows.Controls.CheckBox CreateSearchCheckBoxUi()
         {
-            var panel = new Panel();
-
-            deepSearchCheckBox = new CheckBox();
-            deepSearchCheckBox.Checked = false;
-            deepSearchCheckBox.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            deepSearchCheckBox = new System.Windows.Controls.CheckBox();
+            deepSearchCheckBox.IsChecked = false;
+            deepSearchCheckBox.VerticalContentAlignment = System.Windows.VerticalAlignment.Center;
+            deepSearchCheckBox.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
             deepSearchCheckBox.Width = 200;
-            deepSearchCheckBox.Text = "Search variables";
-            deepSearchCheckBox.CheckedChanged += (object sender, EventArgs args) =>
-            {
-                ReactToFilterTextChanged();
-            };
+            deepSearchCheckBox.Content = "Search variables";
+            deepSearchCheckBox.Checked += (_, _) => ReactToFilterTextChanged();
 
-            panel.Controls.Add(deepSearchCheckBox);
-
-            return panel;
+            return deepSearchCheckBox;
         }
 
         private void HandleSelectedSearchNode(SearchItemViewModel vm)

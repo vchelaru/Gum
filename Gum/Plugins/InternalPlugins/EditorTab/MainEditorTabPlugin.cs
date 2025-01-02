@@ -1,4 +1,5 @@
 ﻿using FlatRedBall.AnimationEditorForms.Controls;
+using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
@@ -70,12 +71,20 @@ internal class MainEditorTabPlugin : InternalPlugin
     }
 
     readonly ScrollbarService _scrollbarService;
+    private readonly GuiCommands _guiCommands;
     WireframeControl _wireframeControl;
-    private FlowLayoutPanel _toolbarPanel;
+
+    private FlatRedBall.AnimationEditorForms.Controls.WireframeEditControl _wireframeEditControl;
+    private int _defaultWireframeEditControlHeight;
+
+    Panel gumEditorPanel;
+
+
 
     public MainEditorTabPlugin()
     {
         _scrollbarService = new ScrollbarService();
+        _guiCommands = GumCommands.Self.GuiCommands;
         Self = this;
     }
 
@@ -97,6 +106,14 @@ internal class MainEditorTabPlugin : InternalPlugin
         this.XnaInitialized += HandleXnaInitialized;
         this.WireframeResized += _scrollbarService.HandleWireframeResized;
         this.ElementSelected += _scrollbarService.HandleElementSelected;
+        this.UiZoomValueChanged += HandleUiZoomValueChanged;
+    }
+
+    private void HandleUiZoomValueChanged()
+    {
+        // Uncommenting this makes the area for teh combo box properly grow, but it
+        // kills the wireframe view. Not sure why....
+        _wireframeEditControl.Height = _defaultWireframeEditControlHeight * _guiCommands.UiZoomValue / 100;
     }
 
     private void HandleVariableSetLate(ElementSave element, InstanceSave instance, string qualifiedName, object oldValue)
@@ -261,27 +278,47 @@ internal class MainEditorTabPlugin : InternalPlugin
         UpdateWireframeControlSizes();
     }
 
-    public void HandleWireframeInitialized(WireframeControl wireframeControl1, WireframeEditControl wireframeEditControl, 
-        System.Windows.Forms.Cursor addCursor, System.Windows.Forms.Panel gumEditorPanel, FlowLayoutPanel toolbarPanel)
+    public void HandleWireframeInitialized(
+        System.Windows.Forms.ContextMenuStrip wireframeContextMenuStrip,
+        System.Windows.Forms.Cursor addCursor)
     {
+        gumEditorPanel = new Panel();
+
+        CreateWireframeEditControl(gumEditorPanel);
+
+        CreateWireframeControl(wireframeContextMenuStrip);
+
         GumCommands.Self.GuiCommands.AddControl(gumEditorPanel, "Editor", TabLocation.RightTop);
 
 
-        _wireframeControl = wireframeControl1;
-        _toolbarPanel = toolbarPanel;
-        wireframeControl1.XnaUpdate += () =>
+        _wireframeControl.XnaUpdate += () =>
         {
             Wireframe.WireframeObjectManager.Self.Activity();
             ToolLayerService.Self.Activity();
         };
 
-        _scrollbarService.HandleWireframeInitialized(wireframeControl1, gumEditorPanel);
+        _scrollbarService.HandleWireframeInitialized(_wireframeControl, gumEditorPanel);
 
-        ToolCommands.GuiCommands.Self.Initialize(wireframeControl1);
+        ToolCommands.GuiCommands.Self.Initialize(_wireframeControl);
 
-        Wireframe.WireframeObjectManager.Self.Initialize(wireframeEditControl, wireframeControl1, addCursor);
-        wireframeControl1.Initialize(wireframeEditControl, gumEditorPanel, HotkeyManager.Self);
+        Wireframe.WireframeObjectManager.Self.Initialize(_wireframeEditControl, _wireframeControl, addCursor);
+        _wireframeControl.Initialize(_wireframeEditControl, gumEditorPanel, HotkeyManager.Self);
 
+        EditingManager.Self.Initialize(wireframeContextMenuStrip);
+    }
+
+    private void CreateWireframeControl(System.Windows.Forms.ContextMenuStrip WireframeContextMenuStrip)
+    {
+        this._wireframeControl = new Gum.Wireframe.WireframeControl();
+        this._wireframeControl.AllowDrop = true;
+        this._wireframeControl.Dock = DockStyle.Fill;
+        this._wireframeControl.ContextMenuStrip = WireframeContextMenuStrip;
+        this._wireframeControl.Cursor = System.Windows.Forms.Cursors.Default;
+        this._wireframeControl.DesiredFramesPerSecond = 30F;
+        this._wireframeControl.Name = "wireframeControl1";
+        this._wireframeControl.TabIndex = 0;
+        this._wireframeControl.Text = "wireframeControl1";
+        gumEditorPanel.Controls.Add(this._wireframeControl);
     }
 
     /// <summary>
@@ -311,5 +348,25 @@ internal class MainEditorTabPlugin : InternalPlugin
         {
             EditingManager.Self.OnRightClick();
         }
+    }
+
+
+    private void CreateWireframeEditControl(Panel gumEditorPanel)
+    {
+        _wireframeEditControl = new FlatRedBall.AnimationEditorForms.Controls.WireframeEditControl();
+        gumEditorPanel.Controls.Add(_wireframeEditControl);
+        // 
+        // WireframeEditControl
+        // 
+        //this.WireframeEditControl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+        //| System.Windows.Forms.AnchorStyles.Right)));
+        _wireframeEditControl.Dock = DockStyle.Top;
+        _wireframeEditControl.Location = new System.Drawing.Point(0, 0);
+        _wireframeEditControl.Margin = new System.Windows.Forms.Padding(4);
+        _wireframeEditControl.Name = "WireframeEditControl";
+        _wireframeEditControl.PercentageValue = 100;
+        _wireframeEditControl.TabIndex = 1;
+        _defaultWireframeEditControlHeight = _wireframeEditControl.Height;
+
     }
 }

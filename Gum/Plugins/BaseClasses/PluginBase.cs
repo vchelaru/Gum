@@ -173,6 +173,8 @@ namespace Gum.Plugins.BaseClasses
         // Parameters are: extension, parentElement, instance, changedMember
         public event Func<string, ElementSave, InstanceSave, string, bool> IsExtensionValid;
 
+        public event Action UiZoomValueChanged;
+
         #endregion
 
         public string UniqueId
@@ -473,6 +475,7 @@ namespace Gum.Plugins.BaseClasses
         public bool CallIsExtensionValid(string extension, ElementSave parentElement, InstanceSave instance, string changedMember) =>
             IsExtensionValid?.Invoke(extension, parentElement, instance, changedMember) ?? false;
 
+        public void CallUiZoomValueChanged() => UiZoomValueChanged?.Invoke();
 
         #endregion
     }

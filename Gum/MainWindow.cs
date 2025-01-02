@@ -38,10 +38,6 @@ namespace Gum
         #region Fields/Properties
 
         private System.Windows.Forms.Timer FileWatchTimer;
-        private FlatRedBall.AnimationEditorForms.Controls.WireframeEditControl WireframeEditControl;
-        public System.Windows.Forms.FlowLayoutPanel ToolbarPanel;
-        private Wireframe.WireframeControl wireframeControl1;
-        Panel gumEditorPanel;
 
         MainPanelControl mainPanelControl;
 
@@ -65,11 +61,6 @@ namespace Gum
             this.KeyPreview = true;
             this.KeyDown += HandleKeyDown;
 
-            // Create the wireframe control, but don't add it...
-            CreateWireframeControl();
-
-            CreateWireframeEditControl();
-            //CreateEditorToolbarPanel();
 
             // Initialize before the StateView is created...
             GumCommands.Self.Initialize(this, mainPanelControl);
@@ -109,8 +100,9 @@ namespace Gum
 
             // do this after initializing the plugins. This is separate from where the initialize call is made, but it must
             // happen after plugins are created:
-            MainEditorTabPlugin.Self.HandleWireframeInitialized(wireframeControl1, WireframeEditControl, 
-                addCursor, gumEditorPanel, ToolbarPanel);
+            MainEditorTabPlugin.Self.HandleWireframeInitialized(
+                WireframeContextMenuStrip,
+                addCursor);
 
             StandardElementsManager.Self.Initialize();
             StandardElementsManager.Self.CustomGetDefaultState = 
@@ -121,7 +113,6 @@ namespace Gum
             VariableSaveExtensionMethods.CustomFixEnumerations = VariableSaveExtensionMethodsGumTool.FixEnumerationsWithReflection;
 
 
-            EditingManager.Self.Initialize(this.WireframeContextMenuStrip);
             // ProjectManager.Initialize used to happen here, but I 
             // moved it down to the Load event for MainWindow because
             // ProjectManager.Initialize may load a project, and if it
@@ -153,67 +144,6 @@ namespace Gum
                 args.Handled = true;
                 args.SuppressKeyPress = true;
             }
-        }
-
-        //private void CreateEditorToolbarPanel()
-        //{
-        //    this.ToolbarPanel = new System.Windows.Forms.FlowLayoutPanel();
-        //    gumEditorPanel.Controls.Add(this.ToolbarPanel);
-        //    // 
-        //    // ToolbarPanel
-        //    // 
-        //    //this.ToolbarPanel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-        //    //| System.Windows.Forms.AnchorStyles.Right)));
-        //    this.ToolbarPanel.Dock = DockStyle.Top;
-        //    this.ToolbarPanel.Location = new System.Drawing.Point(0, 22);
-        //    this.ToolbarPanel.Name = "ToolbarPanel";
-        //    this.ToolbarPanel.Size = new System.Drawing.Size(532, 31);
-        //    this.ToolbarPanel.TabIndex = 2;
-        //}
-
-        // todo - a lot of this has moved to MainEditorTabPlugin. Need to finish that migration...
-        private void CreateWireframeControl()
-        {
-            this.wireframeControl1 = new Gum.Wireframe.WireframeControl();
-            // 
-            // wireframeControl1
-            // 
-            this.wireframeControl1.AllowDrop = true;
-            //this.wireframeControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            //| System.Windows.Forms.AnchorStyles.Left)
-            //| System.Windows.Forms.AnchorStyles.Right)));
-            this.wireframeControl1.Dock = DockStyle.Fill;
-            this.wireframeControl1.ContextMenuStrip = this.WireframeContextMenuStrip;
-            this.wireframeControl1.Cursor = System.Windows.Forms.Cursors.Default;
-            this.wireframeControl1.DesiredFramesPerSecond = 30F;
-            this.wireframeControl1.Location = new System.Drawing.Point(0, 52);
-            this.wireframeControl1.Name = "wireframeControl1";
-            this.wireframeControl1.Size = new System.Drawing.Size(532, 452);
-            this.wireframeControl1.TabIndex = 0;
-            this.wireframeControl1.Text = "wireframeControl1";
-
-            gumEditorPanel = new Panel();
-
-
-            //... add it here, so it can be done after scroll bars and other controls
-            gumEditorPanel.Controls.Add(this.wireframeControl1);
-        }
-
-        private void CreateWireframeEditControl()
-        {
-            this.WireframeEditControl = new FlatRedBall.AnimationEditorForms.Controls.WireframeEditControl();
-            gumEditorPanel.Controls.Add(this.WireframeEditControl);
-            // 
-            // WireframeEditControl
-            // 
-            //this.WireframeEditControl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-            //| System.Windows.Forms.AnchorStyles.Right)));
-            this.WireframeEditControl.Dock = DockStyle.Top;
-            this.WireframeEditControl.Location = new System.Drawing.Point(0, 0);
-            this.WireframeEditControl.Margin = new System.Windows.Forms.Padding(4);
-            this.WireframeEditControl.Name = "WireframeEditControl";
-            this.WireframeEditControl.PercentageValue = 100;
-            this.WireframeEditControl.TabIndex = 1;
         }
 
         private void InitializeFileWatchTimer()

@@ -899,6 +899,10 @@ namespace Gum.Plugins
         internal void ReactToFileChanged(FilePath filePath) =>
             CallMethodOnPlugin(plugin => plugin.CallReactToFileChanged(filePath));
 
+        internal void HandleUiZoomValueChanged() =>
+            CallMethodOnPlugin(plugin => plugin.CallUiZoomValueChanged());
+
+
         #endregion
 
         internal bool ShouldExclude(VariableSave defaultVariable, RecursiveVariableFinder rvf)
