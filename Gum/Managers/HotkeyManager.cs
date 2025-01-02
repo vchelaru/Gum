@@ -243,6 +243,10 @@ public class HotkeyManager : Singleton<HotkeyManager>
 
     public void HandleKeyDownAppWide(KeyEventArgs e)
     {
+        // Don't try to process any keys if they've already been handled
+        if (e.Handled)
+            return;
+
         ScaleAppFont();
        
         void ScaleAppFont()
