@@ -40,6 +40,7 @@
 		<Compile Include="..\WpfDataUi\Controls\TextBoxDisplay.xaml.cs" Link="Controls\TextBoxDisplay.xaml.cs" />
 		<Compile Include="..\WpfDataUi\Controls\TextBoxDisplayLogic.cs" Link="Controls\TextBoxDisplayLogic.cs" />
 		<Compile Include="..\WpfDataUi\Controls\ToggleButtonOptionDisplay.xaml.cs" Link="Controls\ToggleButtonOptionDisplay.xaml.cs" />
+		<Compile Include="..\WpfDataUi\Converters\AddDoubleConverter.cs" Link="Converters\AddDoubleConverter.cs" />
 		<Compile Include="..\WpfDataUi\DataGridAttachedProperties.cs" Link="DataGridAttachedProperties.cs" />
 		<Compile Include="..\WpfDataUi\DataTypes\IMemberDefinition.cs" Link="DataTypes\IMemberDefinition.cs" />
 		<Compile Include="..\WpfDataUi\DataTypes\IMemberDefinitionContainer.cs" Link="DataTypes\IMemberDefinitionContainer.cs" />
