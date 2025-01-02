@@ -35,11 +35,10 @@
                 PreviewMouseLeftButtonUp="Slider_MouseLeftButtonUp"
                 Thumb.DragCompleted="Slider_DragCompleted"
                 MinWidth="60" 
-                Height="20" 
                 VerticalAlignment="Center" 
                 ></Slider>
 
-            <TextBox Grid.Column="2" x:Name="TextBox" Margin="3,1,1,1" Height="22"
+            <TextBox Grid.Column="2" x:Name="TextBox" Margin="3,1,1,1"
                      LostFocus="TextBox_LostFocus_1">
                 <TextBox.ContextMenu>
                     <ContextMenu>
@@ -49,8 +48,8 @@
             <Grid Grid.Column="1" Grid.Row="1">
                 <!-- Negative Y margin to make the text show closer to the slider. The overlap looks bad 
             here in the editor, but it's fine in my testing in the actual app.-->
-                <TextBlock x:Name="MinValueText" VerticalAlignment="Top" Margin="0,-8,0,0" IsHitTestVisible="False">0</TextBlock>
-                <TextBlock x:Name="MaxValueText" VerticalAlignment="Top" Margin="0,-8,0,0" IsHitTestVisible="False" HorizontalAlignment="Right">100</TextBlock>
+                <TextBlock x:Name="MinValueText" VerticalAlignment="Top" Margin="0,-4,0,0" IsHitTestVisible="False">0</TextBlock>
+                <TextBlock x:Name="MaxValueText" VerticalAlignment="Top" Margin="0,-4,0,0" IsHitTestVisible="False" HorizontalAlignment="Right">100</TextBlock>
             </Grid>
         </Grid>
 

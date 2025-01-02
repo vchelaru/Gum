@@ -165,7 +165,6 @@ namespace WpfDataUi.Controls
                 Name="ComboBox",
                 VerticalAlignment = VerticalAlignment.Center,
                 VerticalContentAlignment = VerticalAlignment.Center,
-                Height=22,
                 MinWidth = 60
             };
             ComboBox.ContextMenu = new ContextMenu();

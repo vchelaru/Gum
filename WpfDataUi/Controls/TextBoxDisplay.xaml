@@ -41,7 +41,7 @@
                      LostFocus="TextBox_LostFocus_1" 
                      GotFocus="TextBox_GotFocus"
                      VerticalContentAlignment="Center"
-                     MinWidth="60" Height="20" VerticalAlignment="Center">
+                     MinWidth="60" VerticalAlignment="Center">
                 <TextBox.ContextMenu>
                     <ContextMenu>
                     </ContextMenu>
