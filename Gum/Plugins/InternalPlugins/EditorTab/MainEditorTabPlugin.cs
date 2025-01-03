@@ -46,6 +46,7 @@ internal class MainEditorTabPlugin : InternalPlugin
             nameof(Text.MaxNumberOfLines),
             "Red",
             "Rotation",
+            "SourceFile",
             "StackSpacing",
             "Text",
             "Texture Address",
