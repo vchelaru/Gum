@@ -20,4 +20,4 @@ To resolve this ambiguity, the ButtonBehavior's Default Implementation is automa
 
 <figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1).png" alt=""><figcaption><p>ButtonBehavior using ButtonStandard as the Default Implementation</p></figcaption></figure>
 
-For more information about whether you should set the Default Implementation, refere to the documentation for your particular runtime.
+For more information about whether you should set the Default Implementation, refer to the documentation for your particular runtime.
