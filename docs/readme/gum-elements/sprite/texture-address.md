@@ -6,11 +6,9 @@ The texture address property controls the texture address behavior of a sprite. 
 
 ## Entire Texture
 
-If the texture address property is set to **EntireTexture** then the sprite draws its full image. The sprite does not repeat or render only part of the texture.
+If the texture address property is set to **EntireTexture** then the sprite draws its full image. The sprite does not repeat or render only part of the texture.  This renders the entire image.
 
-![Sprite with Texture Address set to EntireTexture](<../../../.gitbook/assets/26_19 44 30.png>)
-
-When using Entire Texture, individual texture values cannot be set so wrapping is not possible.
+![Sprite with Texture Address set to EntireTexture](<../../../.gitbook/assets/gum_texture_address_entire_texture (1).png>)
 
 ## Custom
 
@@ -18,13 +16,13 @@ If the texture address property is set to **Custom** then the top, bottom, left,
 
 ![Sprite with Texture Address set to Custom](<../../../.gitbook/assets/26_19 46 21.png>)
 
-Typically a Texture Address of Custom is used in combination with a **Width Units** of **Percent of File Width** and and a **Height Units** of **Percent of File Height**. In this case, the size of the sprite depends on the texture coordinates.
+Typically a Texture Address of Custom is used in combination with a **Width Units** of **Percent of File Width** and a **Height Units** of **Percent of File Height**. In this case, the size of the sprite depends on the texture coordinates.
 
 When using Custom Texture Address, wrapping is possible. For more information see the [Wrap](texture-address.md#wrap) page.
 
 ## DimensionsBased
 
-If the **Texture Address** property is set to **DimensionsBased** then the texture coordinates adjusts internally according to the width and the height of the Sprite. In other words, making the sprite larger or smaller dies not stretch the image that it is rendering. Instead the image is be clipped, or clamped/wrapped according to the Wrap property.
+If the **Texture Address** property is set to **DimensionsBased** then the texture coordinates adjusts internally according to the width and the height of the Sprite. In other words, making the sprite larger or smaller does not stretch the image that it is rendering. Instead the image is be clipped, or clamped/wrapped according to the Wrap property.
 
 <figure><img src="../../../.gitbook/assets/26_19 50 05.gif" alt=""><figcaption><p>Resizing a Sprite with Texture Address set to DimensionsBased</p></figcaption></figure>
 
