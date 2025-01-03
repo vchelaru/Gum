@@ -18,7 +18,7 @@ The entire texture is split up into 3 sections horizontally and 3 sections verti
 
 ## Custom
 
-The **Custom** value allows specifying a custom set of coordinates for the Nine Slice. **Custom** is most often used to when an image is part of a sprite sheet. The following example uses this image:
+The **Custom** value allows specifying a custom set of coordinates for the Nine Slice. **Custom** is most often used when an image is part of a sprite sheet. The following example uses this image:
 
 <figure><img src="../../../.gitbook/assets/UiTileGrid.png" alt=""><figcaption></figcaption></figure>
 
@@ -33,4 +33,3 @@ The NineSlice uses the following variables:
 These values result in the the following NineSlice:
 
 <figure><img src="../../../.gitbook/assets/NineSliceCustomTexture.png" alt=""><figcaption></figcaption></figure>
-
