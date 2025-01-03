@@ -399,9 +399,12 @@ namespace Gum.ToolCommands
                 if (matchingComponentCategory == null)
                 {
                     //category doesn't exist, so let's add a clone of it:
-                    matchingComponentCategory = new StateSaveCategory();
-                    matchingComponentCategory.Name = behaviorCategory.Name;
-                    element.Categories.Add(matchingComponentCategory);
+
+                    // Use the AddCategory command so that it also gets variables:
+                    //matchingComponentCategory = new StateSaveCategory();
+                    //matchingComponentCategory.Name = behaviorCategory.Name;
+                    //element.Categories.Add(matchingComponentCategory);
+                    matchingComponentCategory = AddCategory(element, behaviorCategory.Name);
                 }
 
                 foreach (var behaviorState in behaviorCategory.States)
