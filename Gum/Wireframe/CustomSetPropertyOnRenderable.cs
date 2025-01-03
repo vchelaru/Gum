@@ -19,6 +19,8 @@ using System.Text;
 using System.Threading.Tasks;
 using ToolsUtilitiesStandard.Helpers;
 using System.Net;
+using System.IO;
+
 
 
 #if GUM
@@ -112,96 +114,7 @@ namespace Gum.Wireframe
             }
             else if (renderableIpso is NineSlice)
             {
-                var nineSlice = renderableIpso as NineSlice;
-
-                if (propertyName == "SourceFile")
-                {
-                    string valueAsString = value as string;
-
-                    if (string.IsNullOrEmpty(valueAsString))
-                    {
-                        nineSlice.SetSingleTexture(null);
-                    }
-                    else
-                    {
-                        if (ToolsUtilities.FileManager.IsRelative(valueAsString))
-                        {
-                            valueAsString = ToolsUtilities.FileManager.RelativeDirectory + valueAsString;
-                            valueAsString = ToolsUtilities.FileManager.RemoveDotDotSlash(valueAsString);
-                        }
-
-                        //check if part of atlas
-                        //Note: assumes that if this filename is in an atlas that all 9 are in an atlas
-                        var atlasedTexture = global::RenderingLibrary.Content.LoaderManager.Self.TryLoadContent<AtlasedTexture>(valueAsString);
-                        if (atlasedTexture != null)
-                        {
-                            nineSlice.LoadAtlasedTexture(valueAsString, atlasedTexture);
-                        }
-                        else
-                        {
-                            if (NineSliceExtensions.GetIfShouldUsePattern(valueAsString))
-                            {
-                                nineSlice.SetTexturesUsingPattern(valueAsString, SystemManagers.Default, false);
-                            }
-                            else
-                            {
-                                var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-
-                                Microsoft.Xna.Framework.Graphics.Texture2D texture =
-                                    Sprite.InvalidTexture;
-
-                                try
-                                {
-                                    texture =
-                                        loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(valueAsString);
-                                }
-                                catch (Exception e)
-                                {
-                                    if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
-                                    {
-                                        string message = $"Error setting SourceFile on NineSlice named {nineSlice.Name}:\n{valueAsString}";
-                                        throw new System.IO.FileNotFoundException(message);
-                                    }
-                                    // do nothing?
-                                }
-                                nineSlice.SetSingleTexture(texture);
-
-                            }
-                        }
-                    }
-                    handled = true;
-                }
-                else if (propertyName == "Blend")
-                {
-                    var valueAsGumBlend = (RenderingLibrary.Blend)value;
-
-                    var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
-
-                    nineSlice.BlendState = valueAsXnaBlend;
-
-                    handled = true;
-                }
-                else if (propertyName == nameof(NineSlice.CustomFrameTextureCoordinateWidth))
-                {
-                    var asFloat = value as float?;
-
-                    nineSlice.CustomFrameTextureCoordinateWidth = asFloat;
-
-                    handled = true;
-                }
-                else if (propertyName == "Color")
-                {
-                    if (value is System.Drawing.Color drawingColor)
-                    {
-                        nineSlice.Color = drawingColor;
-                    }
-                    else if (value is Microsoft.Xna.Framework.Color xnaColor)
-                    {
-                        nineSlice.Color = xnaColor.ToSystemDrawing();
-
-                    }
-                    handled = true;
-                }
+                handled = TrySetPropertyOnNineSlice(renderableIpso, propertyName, value, handled);
             }
 #endif
 
@@ -227,6 +140,102 @@ namespace Gum.Wireframe
                     }
                 }
             }
+        }
+
+        private static bool TrySetPropertyOnNineSlice(IRenderableIpso renderableIpso, string propertyName, object value, bool handled)
+        {
+            var nineSlice = renderableIpso as NineSlice;
+
+            if (propertyName == "SourceFile")
+            {
+                string valueAsString = value as string;
+
+                if (string.IsNullOrEmpty(valueAsString))
+                {
+                    nineSlice.SetSingleTexture(null);
+                }
+                else
+                {
+                    if (ToolsUtilities.FileManager.IsRelative(valueAsString))
+                    {
+                        valueAsString = ToolsUtilities.FileManager.RelativeDirectory + valueAsString;
+                        valueAsString = ToolsUtilities.FileManager.RemoveDotDotSlash(valueAsString);
+                    }
+
+                    //check if part of atlas
+                    //Note: assumes that if this filename is in an atlas that all 9 are in an atlas
+                    var atlasedTexture = global::RenderingLibrary.Content.LoaderManager.Self.TryLoadContent<AtlasedTexture>(valueAsString);
+                    if (atlasedTexture != null)
+                    {
+                        nineSlice.LoadAtlasedTexture(valueAsString, atlasedTexture);
+                    }
+                    else
+                    {
+                        if (NineSliceExtensions.GetIfShouldUsePattern(valueAsString))
+                        {
+                            nineSlice.SetTexturesUsingPattern(valueAsString, SystemManagers.Default, false);
+                        }
+                        else
+                        {
+                            var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+
+                            Microsoft.Xna.Framework.Graphics.Texture2D texture =
+                                Sprite.InvalidTexture;
+
+                            try
+                            {
+                                texture =
+                                    loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(valueAsString);
+                            }
+                            catch (Exception e)
+                            {
+                                if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
+                                {
+                                    string message = $"Error setting SourceFile on NineSlice named {nineSlice.Name}:\n{valueAsString}";
+                                    throw new System.IO.FileNotFoundException(message);
+                                }
+                                // do nothing?
+                            }
+                            nineSlice.SetSingleTexture(texture);
+
+                        }
+                    }
+                }
+                handled = true;
+            }
+            else if (propertyName == "Blend")
+            {
+                var valueAsGumBlend = (RenderingLibrary.Blend)value;
+
+                var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
+
+                nineSlice.BlendState = valueAsXnaBlend;
+
+                handled = true;
+            }
+            else if (propertyName == nameof(NineSlice.CustomFrameTextureCoordinateWidth))
+            {
+                var asFloat = value as float?;
+
+                nineSlice.CustomFrameTextureCoordinateWidth = asFloat;
+
+                handled = true;
+            }
+            else if (propertyName == "Color")
+            {
+                if (value is System.Drawing.Color drawingColor)
+                {
+                    nineSlice.Color = drawingColor;
+                }
+                else if (value is Microsoft.Xna.Framework.Color xnaColor)
+                {
+                    nineSlice.Color = xnaColor.ToSystemDrawing();
+
+                }
+                handled = true;
+            }
+
+            return handled;
         }
 
         private static bool TrySetPropertyOnSprite(IRenderableIpso renderableIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
@@ -1315,7 +1324,7 @@ namespace Gum.Wireframe
                     {
                         sprite.Texture = loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(value);
                     }
-                    catch (Exception ex) when (ex is System.IO.FileNotFoundException || ex is System.IO.DirectoryNotFoundException || ex is WebException)
+                    catch (Exception ex) when (ex is System.IO.FileNotFoundException or System.IO.DirectoryNotFoundException or WebException or IOException)
                     {
                         if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
                         {

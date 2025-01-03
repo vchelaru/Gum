@@ -98,6 +98,7 @@ namespace Gum.Wireframe
 
             gueManager = new GraphicalUiElementManager();
             GraphicalUiElement.AreUpdatesAppliedWhenInvisible= true;
+            GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ConsumeSilently;
 
             ElementSaveExtensions.CustomCreateGraphicalComponentFunc = HandleCreateGraphicalComponent;
         }
@@ -267,44 +268,57 @@ namespace Gum.Wireframe
 
                     GraphicalUiElement.IsAllLayoutSuspended = true;
 
-                    RootGue = elementSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
-                    // Always set default first, then if the selected state is not the default, then apply that after:
-                    RootGue.SetVariablesRecursively(elementSave, elementSave.DefaultState);
-                    var selectedState = GumState.Self.SelectedState.SelectedStateSave;
-                    if(selectedState != null && selectedState != elementSave.DefaultState)
+                    try
                     {
-                        RootGue.ApplyState(selectedState);
+
+                        RootGue = elementSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
+                        // Always set default first, then if the selected state is not the default, then apply that after:
+                        RootGue.SetVariablesRecursively(elementSave, elementSave.DefaultState);
+                        var selectedState = GumState.Self.SelectedState.SelectedStateSave;
+                        if(selectedState != null && selectedState != elementSave.DefaultState)
+                        {
+                            RootGue.ApplyState(selectedState);
+                        }
+
+
+                        AddAllIpsos(RootGue);
+                        HashSet<GraphicalUiElement> hashSet = new HashSet<GraphicalUiElement>();
+                        var tempSorted = AllIpsos.OrderBy(item =>
+                        {
+                            hashSet.Clear();
+                            return GetDepth(item, hashSet);
+                        }).ToArray();
+
+                        AllIpsos.Clear();
+                        AllIpsos.AddRange(tempSorted);
+
+                        UpdateTextOutlines(RootGue);
+
                     }
-
-
-                    AddAllIpsos(RootGue);
-                    HashSet<GraphicalUiElement> hashSet = new HashSet<GraphicalUiElement>();
-                    var tempSorted = AllIpsos.OrderBy(item =>
+                    catch(Exception e)
                     {
-                        hashSet.Clear();
-                        return GetDepth(item, hashSet);
-                    }).ToArray();
-
-                    AllIpsos.Clear();
-                    AllIpsos.AddRange(tempSorted);
-
-                    UpdateTextOutlines(RootGue);
-
+                        RootGue = null;
+                        GumCommands.Self.GuiCommands.PrintOutput(e.ToString());
+                        GumCommands.Self.GuiCommands.ShowMessage($"Error loading {elementSave}. See output window for more details");
+                    }
                     GraphicalUiElement.IsAllLayoutSuspended = false;
 
-                    RootGue.UpdateFontRecursive();
-                    RootGue.UpdateLayout();
-
-                    gueManager.Add(RootGue);
-                    // what about fonts?
-                    // We recreate missing fonts on startup, so do we need to bother here?
-                    // I'm not sure, but if we do we would call:
-                    //FontManager.Self.CreateAllMissingFontFiles(ObjectFinder.Self.GumProjectSave);
-
-
-                    if(LocalizationManager.HasDatabase)
+                    if(RootGue != null)
                     {
-                        ApplyLocalization();
+                        RootGue.UpdateFontRecursive();
+                        RootGue.UpdateLayout();
+
+                        gueManager.Add(RootGue);
+                        // what about fonts?
+                        // We recreate missing fonts on startup, so do we need to bother here?
+                        // I'm not sure, but if we do we would call:
+                        //FontManager.Self.CreateAllMissingFontFiles(ObjectFinder.Self.GumProjectSave);
+
+
+                        if(LocalizationManager.HasDatabase)
+                        {
+                            ApplyLocalization();
+                        }
                     }
                 }
                 ObjectFinder.Self.DisableCache();
