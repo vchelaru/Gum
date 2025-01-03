@@ -520,13 +520,18 @@ public class SelectedState : ISelectedState
 
     private void HandleSelectedStateCategorySave(StateSaveCategory value)
     {
+        var categoryBefore = SelectedStateCategorySave;
+
         if(value != null)
         {
             snapshot.SelectedStateSave = null;
         }
         UpdateToSetSelectedStateSaveCategory(value);
 
-        PluginManager.Self.ReactToStateSaveCategorySelected(value);
+        if (categoryBefore != value)
+        {
+            PluginManager.Self.ReactToStateSaveCategorySelected(value);
+        }
     }
 
     private void UpdateToSetSelectedStateSaveCategory(StateSaveCategory selectedStateSaveCategory)
@@ -551,8 +556,20 @@ public class SelectedState : ISelectedState
 
     public StateSave CustomCurrentStateSave
     {
-        get;
-        set;
+        get => snapshot.CustomCurrentStateSave;
+        set
+        {
+            HandleCustomStateSaveSelected(value);
+
+        }
+    }
+
+    private void HandleCustomStateSaveSelected(StateSave value)
+    {
+        snapshot.CustomCurrentStateSave = value;
+
+        PluginManager.Self.ReactToCustomStateSaveSelected(value);
+
     }
 
     public StateSave SelectedStateSave
@@ -596,17 +613,13 @@ public class SelectedState : ISelectedState
             snapshot.SelectedStateCategorySave = category;
         }
 
-        UpdateToSetSelectedStateSave(stateSave);
-    }
-
-    private void UpdateToSetSelectedStateSave(StateSave selectedStateSave)
-    {
-        var isSame = snapshot.SelectedStateSave == selectedStateSave;
+        var isSame = snapshot.SelectedStateSave == stateSave;
         if (!isSame)
         {
-            TakeSnapshot(selectedStateSave);
-            PluginManager.Self.ReactToStateSaveSelected(selectedStateSave);
+            TakeSnapshot(stateSave);
+            PluginManager.Self.ReactToStateSaveSelected(stateSave);
         }
+
     }
 
     private void TakeSnapshot(StateSave selectedStateSave)

@@ -26,6 +26,7 @@ public class MainVariableGridPlugin : InternalPlugin
         this.TreeNodeSelected += HandleTreeNodeSelected;
         this.ReactToStateSaveSelected += HandleStateSelected;
         this.ReactToStateSaveCategorySelected += MainVariableGridPlugin_ReactToStateSaveCategorySelected;
+        this.ReactToCustomStateSaveSelected += HandleCustomStateSelected;
         this.StateMovedToCategory += HandleStateMovedToCategory;
         this.InstanceSelected += HandleInstanceSelected;
         this.ElementSelected += HandleElementSelected;
@@ -68,6 +69,11 @@ public class MainVariableGridPlugin : InternalPlugin
     private void HandleStateSelected(StateSave save)
     {
         PropertyGridManager.Self.RefreshUI(force: true);
+    }
+
+    private void HandleCustomStateSelected(StateSave save)
+    {
+        PropertyGridManager.Self.RefreshVariablesDataGridValues();
     }
 
     private void HandleTreeNodeSelected(TreeNode node)

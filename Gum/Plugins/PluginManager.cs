@@ -660,6 +660,9 @@ namespace Gum.Plugins
         internal void ReactToStateSaveSelected(StateSave stateSave) =>
             CallMethodOnPlugin((plugin) => plugin.CallReactToStateSaveSelected(stateSave));
 
+        internal void ReactToCustomStateSaveSelected(StateSave stateSave) =>
+            CallMethodOnPlugin((plugin) => plugin.CallReactToCustomStateSaveSelected(stateSave));
+
         internal void RefreshStateTreeView() =>
             CallMethodOnPlugin((plugin) => plugin.CallRefreshStateTreeView());
 

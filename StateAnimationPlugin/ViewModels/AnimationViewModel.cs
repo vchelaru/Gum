@@ -561,7 +561,6 @@ namespace StateAnimationPlugin.ViewModels
 
             Gum.ToolStates.SelectedState.Self.CustomCurrentStateSave = combined;
             Gum.ToolStates.SelectedState.Self.SelectedStateSave = null;
-            GumCommands.Self.GuiCommands.RefreshVariableValues();
         }
 
         private double ProcessRatio(FlatRedBall.Glue.StateInterpolation.InterpolationType interpolationType, FlatRedBall.Glue.StateInterpolation.Easing easing, double linearRatio)

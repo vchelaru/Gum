@@ -89,7 +89,39 @@ namespace WpfDataUi.Controls
 
         public void RefreshButtonFromOptions(Option[] options)
         {
+            var areSame = true;
+
+            if(options.Length != toggleButtons.Count)
+            {
+                areSame = false;
+            }
+
+
+            if (areSame)
+            {
+                // image comparison would be expensive, so let's just do tag
+                for (int i = 0; i < toggleButtons.Count; i++)
+                {
+                    var button = toggleButtons[i];
+                    var option = options[i];
+                    if (button.Tag != option)
+                    {
+                        areSame = false;
+                        break;
+                    }
+                }
+            }
+
+            if (!areSame)
+            {
+                ForceRefreshButtons(options);
+            }
+        }
+
+        private void ForceRefreshButtons(Option[] options)
+        {
             ButtonWrapPanel.Children.Clear();
+            toggleButtons.Clear();
 
             foreach (var option in options)
             {

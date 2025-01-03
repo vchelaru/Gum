@@ -86,7 +86,16 @@ namespace Gum.DataTypes.Variables
 
         public VariableListSave GetVariableListSave(string variableName)
         {
-            return VariableLists.FirstOrDefault(list => list.Name == variableName);
+            var count = VariableLists.Count;
+            for (int i = 0; i < count; i++)
+            {
+                var variableList = VariableLists[i];
+                if (variableList.Name == variableName)
+                {
+                    return variableList;
+                }
+            }
+            return null;
         }
 
         public bool TryGetValue<T>(string variableName, out T result)
