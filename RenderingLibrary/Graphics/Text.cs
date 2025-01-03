@@ -535,20 +535,31 @@ namespace RenderingLibrary.Graphics
 
         public int Red
         {
-            get { return mRed; }
-            set { mRed = value; }
+            get => mRed; 
+            set 
+            { 
+
+                mRed = System.Math.Max(0, System.Math.Min(value, 255)); 
+            }
         }
 
         public int Green
         {
-            get { return mGreen; }
-            set { mGreen = value; }
+            get  => mGreen; 
+        
+            set
+            {
+                mGreen = System.Math.Max(0, System.Math.Min(value, 255));
+            }
         }
 
         public int Blue
         {
-            get { return mBlue; }
-            set { mBlue = value; }
+            get => mBlue;
+            set 
+            { 
+                mBlue = System.Math.Max(0, System.Math.Min(value, 255));
+            }
         }
 
         public float FontScale

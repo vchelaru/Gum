@@ -616,6 +616,10 @@ public class SelectedState : ISelectedState
         var isSame = snapshot.SelectedStateSave == stateSave;
         if (!isSame)
         {
+            if(stateSave != null)
+            {
+                snapshot.CustomCurrentStateSave = null;
+            }
             TakeSnapshot(stateSave);
             PluginManager.Self.ReactToStateSaveSelected(stateSave);
         }
