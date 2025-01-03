@@ -284,9 +284,14 @@ internal class MainEditorTabPlugin : InternalPlugin
     {
         gumEditorPanel = new Panel();
 
-        CreateWireframeEditControl(gumEditorPanel);
-
+        // 2025-01-02 UI Scale update
+        // WireFrameControl needs to be added to the gumEditorPanel first
+        // Otherwise, the combobox will be drawn ontop of the top yellow ruler
         CreateWireframeControl(wireframeContextMenuStrip);
+
+        // The WireframeEditControl (Where the combobox lives) must
+        // be added to the gumEditorPanel 2nd, no idea why
+        CreateWireframeEditControl(gumEditorPanel);
 
         GumCommands.Self.GuiCommands.AddControl(gumEditorPanel, "Editor", TabLocation.RightTop);
 
