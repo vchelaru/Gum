@@ -2,7 +2,7 @@
 
 ### Introduction
 
-Behaviors can define requirements which are resuable across multiple components to standardize instance names and behaviors. If a component uses a behavior, then it is forced to include categories and instances according to the behavior definition.
+Behaviors can define requirements which are reusable across multiple components to standardize instance names and behaviors. If a component uses a behavior, then the behavior is forced to include categories and instances according to the behavior definition.
 
 Behaviors are used to define requirements for components, to simplify the creation of new components, and to reduce the chances of spelling and implementation mistakes.
 
@@ -29,7 +29,7 @@ New behaviors appear in the Project tab.
 
 <figure><img src="../../../.gitbook/assets/image (83).png" alt=""><figcaption><p>ButtonBehavior in the Behaviors folder</p></figcaption></figure>
 
-Once a behavior has been created, it can be given categories, states, and instances. Any component which uses this behavior is required to have the same categories and states.&#x20;
+Once a behavior is created, it can be given categories, states, and instances. Components which use this behavior are required to have matching categories and states.&#x20;
 
 The process of adding and removing states to behaviors is the same as adding and removing states in other elements. For more information, see the [States](../states/) page.
 
@@ -57,15 +57,19 @@ Behaviors can also be added and removed on the component's Behaviors tab:
 4. Check the desired behaviors - a component may use multiple behaviors
 5. Click OK
 
-<figure><img src="../../../.gitbook/assets/28_05 20 28.gif" alt=""><figcaption><p>Button component adding the ButtonBehavior</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/03_04 09 26.gif" alt=""><figcaption><p>Button component adding the ButtonBehavior</p></figcaption></figure>
 
 Notice that once a behavior is added to a component, the component automatically creates the matching categories and states.
+
+If the behavior is selected in the Behaviors tab, the required states and categories are highlighted in the States tab.
+
+<figure><img src="../../../.gitbook/assets/03_04 07 52.png" alt=""><figcaption><p>States and Categories required by the selected behavior are highlighted</p></figcaption></figure>
 
 These categories cannot be removed as long as the component uses the behavior.
 
 ### Category and State Requirements
 
-As mentioned above, if a component uses a behavior, then the component is required to include all of the states and categories defined by the behavior.  If a behavior is added to a component, then all states and categories in the behavior are automatically added to the component. Keep in mind that newly-added states do not automatically assign any values. The behavior only requires that the states exist but it does not decide which variables are assigned by the states. These required states can even be left to their default  so they have no affect on the component.
+As mentioned above, if a component uses a behavior, then the component is required to include all of the states and categories defined by the behavior.  If a behavior is added to a component, then all states and categories in the behavior are automatically added to the component. Keep in mind that newly-added states do not automatically assign any values. The behavior only requires that the states exist but it does not decide which variables are assigned by the states. These required states can even be left to their default so they have no affect on the component.
 
 Required states and categories cannot be removed or renamed. Required states cannot be moved to different categories.
 
