@@ -49,15 +49,16 @@ Now that we have the states defined we can set values for the states. In this ca
 The two states we created above will be used as the keyframes for our animation. The animation will begin in the Hidden state then interpolate to the Shown state. To add this animation:
 
 1. Verify that **TextComponent** or any objects under it are selected
-2. Select **State Animation** ->**View Animations**
-3. Click the **Add Animation** button
-4. Name the animation **Show** and click **OK**
-5. Select the Show animation and click **Add State**
-6. Select the **Hidden** state and click **OK** - this is the first keyframe in our animation
-7. Click **Add State** again
-8. Select **Shown** and click **OK**
+2. Select **View** -> **View Animations**
+3. The **Animations tab** appears in the bottom right
+4. Click the **Add Animation** button
+5. Name the animation **Show** and click **OK**
+6. Select the Show animation and click **Add State**
+7. Select the **Hidden** state and click **OK** - this is the first keyframe in our animation
+8. Click **Add State** again
+9. Select **Shown** and click **OK**
 
-<figure><img src="../../../.gitbook/assets/06_11 41 08.gif" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/animation_tutorial_hide_show.gif" alt=""><figcaption></figcaption></figure>
 
 The animation can now be played or previewed:
 

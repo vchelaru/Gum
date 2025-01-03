@@ -20,11 +20,13 @@ First we'll create a Screen called AnimatedScreen. To do this:
 The animation we will be creating in our Screen will start with all TextComponents being invisible, then each one appearing by playing their Show animation. The animations will be slightly staggered. First we'll add the initial state where all of the TextComponents are invisible. To do this:
 
 1. Verify that the AnimatedScreen is selected
-2. Right-click in the states area and select "Add State"
-3. Name the state "AllInvisible" and click OK
-4. Select one of the TextComponents
-5. Set its State to Hidden
-6. Repeat setting the State to Hidden for the other TextComponents
+2. Right-click in the states area and select "Add Category" name it "ScreenCategory"
+3. Right-click the category and select "Add State"
+4. Name the state "AllInvisible" and click OK
+5. Click to select the "AllInvisible" state.
+6. Select one of the TextComponents
+7. Set its **HideShow** State to **Hidden**
+8. Repeat setting the State to Hidden for the other TextComponents
 
 ![](<../../../.gitbook/assets/MakeAllInvisibleState (1).gif>)
 
@@ -33,12 +35,12 @@ The animation we will be creating in our Screen will start with all TextComponen
 Now we have all of the states and animations that we'll use as keyframes in our animation. To create the animation:
 
 1. Select AnimatedScreen
-2. Select "State Animation" -> "View Animations"
+2. Select "View" -> "View Animations"
 3. Click "Add Animation"
 4. Name the animation "ShowAll"
 5. Select the ShowAll animation
 6. Click "Add State"
-7. Select "AllInvisible" and click OK
+7. Select "ScreenCategory/AllInvisible" and click OK
 
 The animation now sets all TextComponents to their Hidden state initially.
 
@@ -48,11 +50,11 @@ The animation now sets all TextComponents to their Hidden state initially.
 
 Next we'll be adding animations to animate the TextComponent instances to visible. To do this:
 
-1. Bring up the animation window for AnimatedScren if it is not already showing
+1. Bring up the animation window for AnimatedScreen if it is not already showing
 2. Select "ShowAll"
 3. Click "Add Sub-animation"
 4. Select the first TextComponentInstance
-5. Select the Show animation and click OK
+5. Select the **Show** animation and click **OK**
 6. Select the newly-created animation and set its Time to 0.5
 7. Repeat the above steps to add animations for the other two TextComponents, but set their times to 1.0 and 1.5
 
