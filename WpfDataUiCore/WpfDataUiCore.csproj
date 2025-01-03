@@ -9,9 +9,7 @@
 
 	<PropertyGroup>
 		<TargetFramework>net6.0-windows</TargetFramework>
-		<!-- This is set to 7.3 to prevent Gum (which is still .NET Framework 4.7.X) from having compile errors
-			 form new C# syntax. This can get removed in the future if Gum moves to .NET 8+-->
-		<LangVersion>7.3</LangVersion>
+		<LangVersion>12.0</LangVersion>
 		<UseWindowsForms>true</UseWindowsForms>
 		<UseWPF>true</UseWPF>
 	</PropertyGroup>
