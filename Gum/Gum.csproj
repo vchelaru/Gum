@@ -280,10 +280,10 @@
     <Compile Include="Plugins\InternalPlugins\ProjectPropertiesWindowPlugin\ProjectPropertiesControl.xaml.cs">
       <DependentUpon>ProjectPropertiesControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Gui\Controls\WireframeEditControl.cs">
+    <Compile Include="Plugins\InternalPlugins\EditorTab\Views\WireframeEditControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Gui\Controls\WireframeEditControl.designer.cs">
+    <Compile Include="Plugins\InternalPlugins\EditorTab\Views\WireframeEditControl.designer.cs">
       <DependentUpon>WireframeEditControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Gui\Forms\DeleteOptionsWindow.cs">
@@ -446,7 +446,7 @@
     <Compile Include="Wireframe\WireframeObjectManager.cs" />
     <Compile Include="Wireframe\WireframeObjectManager.Guide.cs" />
     <Compile Include="Wireframe\WireframeObjectManager.RepresentationCreation.cs" />
-    <EmbeddedResource Include="Gui\Controls\WireframeEditControl.resx">
+    <EmbeddedResource Include="Plugins\InternalPlugins\EditorTab\Views\WireframeEditControl.resx">
       <DependentUpon>WireframeEditControl.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
