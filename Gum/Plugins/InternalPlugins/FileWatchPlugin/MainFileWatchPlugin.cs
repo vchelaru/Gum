@@ -132,14 +132,21 @@ public class MainFileWatchPlugin : InternalPlugin
 
             const int maxOfFilesToShow = 15;
 
-            var filesToDisplay = fileWatchManager.ChangedFilesWaitingForFlush.Take(maxOfFilesToShow).ToArray();
-
-            string nextFilesInfo = null;
-            foreach(var item in filesToDisplay)
+            try
             {
-                nextFilesInfo += item.FullPath + "\n";
+                var filesToDisplay = fileWatchManager.ChangedFilesWaitingForFlush.Take(maxOfFilesToShow).ToArray();
+
+                string nextFilesInfo = null;
+                foreach(var item in filesToDisplay)
+                {
+                    nextFilesInfo += item.FullPath + "\n";
+                }
+                viewModel.NextFilesToFlush = nextFilesInfo;
             }
-            viewModel.NextFilesToFlush = nextFilesInfo;
+            catch
+            {
+                // This can happen if there's a file that changes right when this happens. no biggie, we'll get it next time....
+            }
         });
     }
 

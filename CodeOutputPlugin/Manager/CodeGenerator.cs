@@ -518,7 +518,8 @@ public class CodeGenerator
 
     static void RegisterRuntimeType(CodeGenerationContext context)
     {
-        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
+        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame && 
+            context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FindByName)
         {
             var builder = context.StringBuilder;
 
