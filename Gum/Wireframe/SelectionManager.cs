@@ -35,6 +35,8 @@ namespace Gum.Wireframe
             return focusedControl;
         }
 
+
+
         #endregion
 
         #region Fields
@@ -83,6 +85,8 @@ namespace Gum.Wireframe
                 return mSelf;
             }
         }
+
+        ISelectedState _selectedState;
 
         public bool IsOverBody
         {
@@ -193,8 +197,9 @@ namespace Gum.Wireframe
 
         #region Methods
 
-        public SelectionManager()
+        SelectionManager()
         {
+            _selectedState = SelectedState.Self;
 
             // We used to have this set to 2, but now that we have dotted lines, I just do a value of 0
             mUiLayer = Renderer.Self.AddLayer();
@@ -228,8 +233,8 @@ namespace Gum.Wireframe
                 // Always check this even if the cursor isn't over the window because other windows (like
                 // the texture coordinate seleciton plugin window) can change the texture coordinates and we
                 // want the highlight to update:
-                //if (Cursor.IsInWindow && SelectedState.Self.SelectedElement != null)
-                if (SelectedState.Self.SelectedElement != null)
+                //if (Cursor.IsInWindow && _selectedState.SelectedElement != null)
+                if (_selectedState.SelectedElement != null)
                 {
                     HighlightActivity(forceNoHighlight);
 
@@ -315,7 +320,7 @@ namespace Gum.Wireframe
                             else
                             {
                                 List<ElementWithState> elementStack = new List<ElementWithState>();
-                                elementStack.Add(new ElementWithState(SelectedState.Self.SelectedElement));
+                                elementStack.Add(new ElementWithState(_selectedState.SelectedElement));
 
                                 representationOver =
                                     GetRepresentationAt(worldXAt, worldYAt, false, elementStack);
@@ -593,6 +598,7 @@ namespace Gum.Wireframe
             return isVisible;
         }
 
+        List<GraphicalUiElement> emptyGraphicalUiElementList = new List<GraphicalUiElement>();
         private void UpdateEditorsToSelection()
         {
             if(SelectedGues.Count == 1 &&
@@ -640,7 +646,14 @@ namespace Gum.Wireframe
 
             if(WireframeEditor != null)
             {
-                WireframeEditor.UpdateToSelection(mSelectedIpsos);
+                if(_selectedState.CustomCurrentStateSave != null)
+                {
+                    WireframeEditor.UpdateToSelection(emptyGraphicalUiElementList);
+                }
+                else
+                {
+                    WireframeEditor.UpdateToSelection(mSelectedIpsos);
+                }
                 WireframeEditor.RestrictToUnitValues = RestrictToUnitValues;
             }
         }
@@ -675,7 +688,7 @@ namespace Gum.Wireframe
                     float y = Cursor.GetWorldY();
 
                     List<ElementWithState> elementStack = new List<ElementWithState>();
-                    elementStack.Add(new ElementWithState(SelectedState.Self.SelectedElement));
+                    elementStack.Add(new ElementWithState(_selectedState.SelectedElement));
 
 
                     IRenderableIpso representation =
@@ -700,7 +713,7 @@ namespace Gum.Wireframe
                         // re-get the representationl
                         if (selectedInstance != null)
                         {
-                            bool isAlreadySelected = SelectedState.Self.SelectedInstances.Contains(selectedInstance);
+                            bool isAlreadySelected = _selectedState.SelectedInstances.Contains(selectedInstance);
 
                             if (isAlreadySelected)
                             {
@@ -714,13 +727,13 @@ namespace Gum.Wireframe
                                 if (selectMultiple)
                                 {
                                     List<InstanceSave> instances = new List<InstanceSave>();
-                                    instances.AddRange(SelectedState.Self.SelectedInstances);
+                                    instances.AddRange(_selectedState.SelectedInstances);
                                     instances.Add(selectedInstance);
-                                    SelectedState.Self.SelectedInstances = instances;
+                                    _selectedState.SelectedInstances = instances;
                                 }
                                 else
                                 {
-                                    SelectedState.Self.SelectedInstance = selectedInstance;
+                                    _selectedState.SelectedInstance = selectedInstance;
                                 }
                                 // See comment above on why we do this
                                 representation = WireframeObjectManager.Self.GetRepresentation(selectedInstance, elementStack);
@@ -728,8 +741,8 @@ namespace Gum.Wireframe
                         }
                         else
                         {
-                            SelectedState.Self.SelectedInstance = null;
-                            SelectedState.Self.SelectedElement = selectedElement;
+                            _selectedState.SelectedInstance = null;
+                            _selectedState.SelectedElement = selectedElement;
 
                             representation = WireframeObjectManager.Self.GetRepresentation(selectedElement);
                         }
@@ -738,15 +751,15 @@ namespace Gum.Wireframe
                     }
                     else
                     {
-                        SelectedState.Self.SelectedInstance = null;
+                        _selectedState.SelectedInstance = null;
                     }
                     
                     if (hasChanged)
                     {
-                        if (SelectedState.Self.SelectedInstances.Count() > 1)
+                        if (_selectedState.SelectedInstances.Count() > 1)
                         {
                             List<GraphicalUiElement> selectedIpsos = new List<GraphicalUiElement>();
-                            foreach (var instance in SelectedState.Self.SelectedInstances)
+                            foreach (var instance in _selectedState.SelectedInstances)
                             {
                                 selectedIpsos.Add(WireframeObjectManager.Self.GetRepresentation(instance, elementStack));
                             }
@@ -808,11 +821,11 @@ namespace Gum.Wireframe
 
             List<GraphicalUiElement> representations = new List<GraphicalUiElement>();
 
-            var elementStack = SelectedState.Self.GetTopLevelElementStack();
-            if (SelectedState.Self.SelectedInstances.Count() != 0)
+            var elementStack = _selectedState.GetTopLevelElementStack();
+            if (_selectedState.SelectedInstances.Count() != 0)
             {
                 
-                foreach (var instance in SelectedState.Self.SelectedInstances)
+                foreach (var instance in _selectedState.SelectedInstances)
                 {
                     GraphicalUiElement toAdd = 
                         WireframeObjectManager.Self.GetRepresentation(instance, elementStack);
@@ -822,10 +835,10 @@ namespace Gum.Wireframe
                     }
                 }
             }
-            else if (SelectedState.Self.SelectedElement != null)
+            else if (_selectedState.SelectedElement != null)
             {
                 GraphicalUiElement toAdd =
-                    WireframeObjectManager.Self.GetRepresentation(SelectedState.Self.SelectedElement);
+                    WireframeObjectManager.Self.GetRepresentation(_selectedState.SelectedElement);
 
                 if (toAdd != null)
                 {

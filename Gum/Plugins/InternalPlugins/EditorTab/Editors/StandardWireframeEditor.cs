@@ -31,8 +31,8 @@ namespace Gum.Wireframe.Editors
             new List<GraphicalUiElement>();
 
         LineCircle rotationHandle;
-        bool rotationHighlighted;
-        bool rotationGrabbed;
+        bool isRotationHighlighted;
+        bool isRotationGrabbed;
 
         DimensionDisplay widthDimensionDisplay;
         DimensionDisplay heightDimensionDisplay;
@@ -55,7 +55,7 @@ namespace Gum.Wireframe.Editors
                 {
                     return true;
                 }
-                else if(rotationHighlighted)
+                else if(isRotationHighlighted)
                 {
                     return true;
                 }
@@ -124,7 +124,7 @@ namespace Gum.Wireframe.Editors
                 {
                     mResizeHandles.SetValuesFrom(selectedObjects);
 
-                    mResizeHandles.UpdateHandleRadius();
+                    mResizeHandles.UpdateHandleSizes();
 
                     UpdateRotationHandlePosition();
                 }
@@ -164,7 +164,7 @@ namespace Gum.Wireframe.Editors
 
         private void RotationHandleGrabbingActivity()
         {
-            if(rotationGrabbed)
+            if(isRotationGrabbed)
             {
                 var gue = selectedObjects.First();
 
@@ -217,13 +217,11 @@ namespace Gum.Wireframe.Editors
             var worldX = cursor.GetWorldX();
             var worldY = cursor.GetWorldY();
 
-            rotationHighlighted = rotationHandle.HasCursorOver(worldX, worldY);
+            isRotationHighlighted = rotationHandle.HasCursorOver(worldX, worldY);
         }
 
         private void UpdateRotationHandlePosition()
         {
-
-
             GraphicalUiElement singleSelectedObject = null;
             if(selectedObjects.Count == 1)
             {
@@ -281,12 +279,12 @@ namespace Gum.Wireframe.Editors
 
             if (cursor.PrimaryDown == false)
             {
-                if(rotationGrabbed)
+                if(isRotationGrabbed)
                 {
                     DoEndOfSettingValuesLogic();
                 }
                 mHasGrabbed = false;
-                rotationGrabbed = false;
+                isRotationGrabbed = false;
             }
 
             if (cursor.PrimaryClick && mHasChangedAnythingSinceLastPush)
@@ -411,7 +409,7 @@ namespace Gum.Wireframe.Editors
 
                 RefreshRotationGrabbed();
 
-                rotationGrabbed = rotationHighlighted;
+                isRotationGrabbed = isRotationHighlighted;
 
                 mHasChangedAnythingSinceLastPush = false;
 
@@ -537,10 +535,13 @@ namespace Gum.Wireframe.Editors
             if(selectedObjects.Count == 0 || selectedObjects.Any(item => item.Tag is ScreenSave))
             {
                 mResizeHandles.Visible = false;
+                rotationHandle.Visible = false;
+
             }
             else
             {
                 mResizeHandles.Visible = true;
+                rotationHandle.Visible = true;
                 mResizeHandles.SetValuesFrom(selectedObjects);
             }
         }
