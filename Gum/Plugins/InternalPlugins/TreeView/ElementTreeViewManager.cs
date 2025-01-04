@@ -1866,10 +1866,9 @@ namespace Gum.Managers
             grid.Children.Add(searchTextBox);
 
             var xButton = new System.Windows.Controls.Button();
-            xButton.Content = "X";
+            xButton.Content = " X "; // Spaces to force some padding automatically based on font size of space
             xButton.Click += (not, used) => searchTextBox.Text = null;
             xButton.VerticalAlignment = System.Windows.VerticalAlignment.Center;
-            xButton.Width = 24;
             grid.Children.Add(xButton);
 
             Grid.SetColumn(searchTextBox, 0);
@@ -1884,7 +1883,6 @@ namespace Gum.Managers
             deepSearchCheckBox.IsChecked = false;
             deepSearchCheckBox.VerticalContentAlignment = System.Windows.VerticalAlignment.Center;
             deepSearchCheckBox.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
-            deepSearchCheckBox.Width = 200;
             deepSearchCheckBox.Content = "Search variables";
             deepSearchCheckBox.Checked += (_, _) => ReactToFilterTextChanged();
 

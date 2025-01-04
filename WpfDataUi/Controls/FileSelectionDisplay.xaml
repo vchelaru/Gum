@@ -38,12 +38,19 @@
                 </TextBox.ContextMenu>
             </TextBox>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Column="1">
-                <Button Width="24"
-                    Click="Button_Click_1" VerticalAlignment="Center"
+                <Button 
+                    Click="Button_Click_1" 
+                    VerticalAlignment="Center"
+                    Height="{Binding ActualHeight, ElementName=TextBox}"
+                    Width="{Binding ActualHeight, ElementName=TextBox}"
+                    MinHeight="24"
+                    MinWidth="24"
                     >...</Button>
                 <Button Grid.Column="2"
-                    Width="24"
-                    Height="20"
+                    Height="{Binding ActualHeight, ElementName=TextBox}"
+                    Width="{Binding ActualHeight, ElementName=TextBox}"
+                    MinHeight="24"
+                    MinWidth="24"
                     Margin="1,0,0,0" Click="ViewInExplorerClicked">
                     <Image Source="/WpfDataUi;component/Content/Icons/OpenFolder.png"></Image>
                 </Button>
