@@ -59,9 +59,9 @@
             </Canvas>
             <Grid Grid.Column="2">
                 <Grid>
-                    <TextBox x:Name="TextBox" MinWidth="50" Height="24" 
+                    <TextBox x:Name="TextBox" MinWidth="30"
                          PreviewKeyDown="TextBox_PreviewKeyDown_1" 
-                         LostFocus="TextBox_LostFocus_1"
+                         LostFocus="TextBox_LostFocus_1" VerticalAlignment="Center"
                          Margin="0,0,13,0"
                          >
                         <TextBox.ContextMenu>
@@ -76,7 +76,7 @@
                                Margin="3,0,16,0" x:Name="PlaceholderText" ></TextBlock>
                     </decorators:NoSizeDecorator>
                 </Grid>
-                <Label Content="&#186;" Height="32" HorizontalAlignment="Right"></Label>
+                <Label Content="&#186;" HorizontalAlignment="Right" VerticalAlignment="Center"></Label>
             </Grid>
         </Grid>
         <TextBlock x:Name="HintTextBlock" 
