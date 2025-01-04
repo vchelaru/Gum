@@ -69,6 +69,8 @@ If you are planning on loading the .gumx project, select the **FindByName** opti
 
 If you would like the entire project generated, select the **FullyInCode** option. This option enables working in Gum to create layouts which will work fully in code without loading a .gumx file. This is especially improtant if you are working on a platform with limited IO access. Generated code can run faster than loading a .gumx file since it does not require file IO, XML parsing, and reflection.
 
+For more details see the [Runtime Generation Details](runtime-generation-details.md) page.
+
 #### Project-wide Using Statements
 
 Add the following using statement at the end of the Project-wide Using Statement box so that references to standard runtime types are found.

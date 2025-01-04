@@ -32,12 +32,10 @@ To add the files to your .csproj:
 
 1. Open your .csproj file in a text editor
 2.  Add a line to copy all files in the Gum project folder including the .gumx file itself. For an example, see the .csproj file for the MonoGameGumFromFile project: [https://github.com/vchelaru/Gum/blob/0e266942560e585359f019ac090a6c1010621c0b/Samples/MonoGameGumFromFile/MonoGameGumFromFile/MonoGameGumFromFile.csproj#L37](https://github.com/vchelaru/Gum/blob/0e266942560e585359f019ac090a6c1010621c0b/Samples/MonoGameGumFromFile/MonoGameGumFromFile/MonoGameGumFromFile.csproj#L37)\
-    Your .csproj may look like this:\
-
+    Your .csproj may look like this:\\
 
     <figure><img src="../../.gitbook/assets/29_12 07 52.png" alt=""><figcaption><p>Copy all files to output</p></figcaption></figure>
-3.  Verify that all gum files (see the extension list above) are marked as Copy if newer in Visual Studio\
-
+3.  Verify that all gum files (see the extension list above) are marked as Copy if newer in Visual Studio\\
 
     <figure><img src="../../.gitbook/assets/CopyIfNewer.png" alt=""><figcaption><p>Gum project set to Copy if newer</p></figcaption></figure>
 
@@ -65,10 +63,6 @@ protected override void Initialize()
     
     base.Initialize();
 }
-
-
-
-
 ```
 
 Note that the ToGraphicalUiElement method has an `addToManage` parameter which determines whether the GraphicalUiElement is added to managers. If a GraphicalUiElement is not added to managers, it will not appear on screen.

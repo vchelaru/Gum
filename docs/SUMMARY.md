@@ -103,6 +103,7 @@
       * [Use Font Smoothing](readme/gum-elements/text/use-font-smoothing.md)
   * [Project Tab](readme/project-tab.md)
   * [Code Tab](readme/code-tab/README.md)
+    * [Runtime Generation Details](readme/code-tab/runtime-generation-details.md)
     * [Generation Scope](readme/code-tab/generation-scope.md)
     * [Inheritance Location](readme/code-tab/inheritance-location.md)
     * [Is CodeGen Plugin Enabled](readme/code-tab/is-codegen-plugin-enabled.md)
