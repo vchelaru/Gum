@@ -60,7 +60,8 @@ using System.Linq;
         /// MyProjectNamespace.Screens.MyBaseGumScreen. For other types
         /// like a PDF renderer, this might just be GraphicalUiElement.
         /// </summary>
-        public string DefaultScreenBase { get; set; } = "Gum.Wireframe.GraphicalUiElement";
+        public string DefaultScreenBase { get; set; } =
+                "Gum.Wireframe.BindableGue";
 
         public OutputLibrary OutputLibrary { get; set; }
 
