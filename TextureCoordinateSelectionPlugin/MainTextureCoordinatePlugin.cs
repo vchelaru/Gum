@@ -67,7 +67,8 @@ public class MainTextureCoordinatePlugin : PluginBase
     private void AssignEvents()
     {
         this.TreeNodeSelected += HandleTreeNodeSelected;
-        this.VariableSet += HandleVariableSet;
+
+        this.VariableSetLate += HandleVariableSet;
         // This is needed for when undos happen
         this.WireframeRefreshed += HandleWireframeRefreshed;
     }
@@ -129,6 +130,7 @@ public class MainTextureCoordinatePlugin : PluginBase
 
         if(shouldRefresh)
         {
+            RefreshControl();
             Logic.ControlLogic.Self.RefreshSelector(Logic.RefreshType.Force);
         }
     }
