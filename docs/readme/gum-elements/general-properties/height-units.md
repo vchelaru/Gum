@@ -20,8 +20,6 @@ The following shows a child ColoredRectangle with -10 **Relative to Container** 
 
 ![Rectangle using a Relative to Container height value of -10](<../../../.gitbook/assets/11_06 18 55.png>)
 
-
-
 {% hint style="info" %}
 Despite the name referring to a "Container", the size is relative to the parent regardless of the parent's type. If the instance has no parent, then the size is relative to the canvas.
 {% endhint %}
@@ -90,25 +88,66 @@ Ratio of Container also respects [Stack Spacing](../container/stack-spacing.md).
 
 ### Relative to Children
 
-The following image shows a child [ColoredRectangle](height-units.md#relativetochildren) with 50 **RelativeToChildren** Height, which means that it is 50 pixels taller than is necessary to contain its children. Since the rectangle has no children, this is the same as having 50 **Absolute** Height:
+The following image shows a child [ColoredRectangle](height-units.md#relativetochildren) with 50 **Relative to Children** Height, which means that it is 50 pixels taller than is necessary to contain its children. Since the rectangle has no children, this is the same as having 50 **Absolute** Height:
 
 ![Rectangle using Relative to Children height of 50, resulting in an absolute height of 50 since it has no children](<../../../.gitbook/assets/13_13 35 18.png>)
 
-**RelativeToChildren** can be used to size an object based on the position and sizes of a container's children. The following image shows a container with 0 **RelativeToChildren** Height, which mans that its height is set just large enough to contain its children. Notice that if the children are moved, the rectangle's height adjusts. Both children are considered so the container adjusts its height according to the bottom-most side of either child:
+**Relative to Children** can be used to size an object based on the position and sizes of a container's children. The following image shows a container with 0 **Relative to Children** Height, which mans that its height is set just large enough to contain its children. Notice that if the children are moved, the rectangle's height adjusts. Both children are considered so the container adjusts its height according to the bottom-most side of either child:
 
-![Moving children can adjust the absolute height of the parent if the parent is using a Height Units of RelativeToChildren](<../../../.gitbook/assets/13_13 37 33.gif>)
+![Moving children can adjust the absolute height of the parent if the parent is using a Height Units of Relative to Children](<../../../.gitbook/assets/13_13 37 33.gif>)
 
-A non-zero **Height** when using **RelativeToChildren** can be used to add additional padding to a parent container. The following shows how changing the height can adjust the absolute height relative to children:
+A non-zero **Height** when using **Relative to Children** can be used to add additional padding to a parent container. The following shows how changing the height can adjust the absolute height relative to children:
 
-![Height is relative to the bottom-most child when using RelativeToChildren](<../../../.gitbook/assets/13_13 39 50.gif>)
+![Height is relative to the bottom-most child when using Relative to Children](<../../../.gitbook/assets/13_13 39 50.gif>)
+
+#### Ignored Height Values
+
+A parent container can ignore its children when it determines its own height when using a Height Units value of **Relative to Children** if any of the following are true:
+
+1. If the child's height depends on its parent's height for its own height. This circular dependency is resolved by the parent ignoring this child.
+2. If the child is explicitly positioned outside of the bounds of the parent
+
+If a child's height depends on the parent (1), then the child is ignored by the parent. Once the parent has determined its own height, then the child is sized according to the parent. This type of circular dependency is quite common when adding background visuals to a container.&#x20;
+
+For example consider a container with two children - BlueRectangle and YellowRectangle - with the following variables:
+
+* BlueRectangle Y = Pixels from Top
+* BlueRectangle Height Units = Absolute
+* YellowRectangle Height Units = Relative to Container
+
+Only YellowRectangle depends on its parent.
+
+Since the blue rectangle's height value does not depend on the parent, the parent can use the blue rectangle's Height when calculating its own height. Since the yellow rectangle depends on the parent, the parent ignores the yellow rectangle. Instead, the yellow rectangle depends on the parent container's height for calculating its own. This in effect creates a situation where BlueRectangle affects the height of both its parent and also its YellowRectangle sibling.
+
+<figure><img src="../../../.gitbook/assets/05_05 54 05.gif" alt=""><figcaption><p>Moving BlueRectangle changes the size of both its parent and also the YellowRectangle</p></figcaption></figure>
+
+A parent does not consider a child if the child is explicitly positioned outside of the parent's bounds. This can happen if the child's Y Units and Y value result in the child being drawn outside of the bounds.
+
+If a child has Y Units of Pixels from Top and its Y value pushes the child out of the top of the screen, then the portion that is outside of the top of the screen is ignored. The BlueRectangle in the following image has an absolute height of 50. Its Y value is -20, so only 30 pixels are used to determine the parent's height.
+
+<figure><img src="../../../.gitbook/assets/image (155).png" alt=""><figcaption><p>Parent height is 30 since the BlueRectangle explicitly has 20 of its height set outside of the parent's bounds</p></figcaption></figure>
+
+Similarly, if a child uses a Y Units of Pixels from Bottom then the parent does not consider the height of any portion which is outside of its bounds. The following animation shows RedRectangle placed outside of the bottom of its bounds with a Y Units of Pixels from Bottom.
+
+<figure><img src="../../../.gitbook/assets/05_06 46 26.gif" alt=""><figcaption><p>Red rectangle not affecting the height of its parent since it is placed outside of the parent's bounds</p></figcaption></figure>
+
+Notice that if RedRectangle is moved so that it is inside the bounds, it can affect the height of the parent. As RedRectangle is moved into the bounds, the parent grows to accommodate the desired RedRectangle Y value.
+
+<figure><img src="../../../.gitbook/assets/05_06 48 12.gif" alt=""><figcaption><p>Moving a child which uses PixelsFromBottom up can make the parent grow to accomoodate the child's Y value</p></figcaption></figure>
+
+A parent ignores its child if the child uses a Y Units of Percentage of Parent Height because this also creates a circular dependency (parent eight depends on child position, child position depends on parent height).
+
+<figure><img src="../../../.gitbook/assets/05_06 52 34.gif" alt=""><figcaption><p>Y Units of Percentage of Parent Height results in the child ignored</p></figcaption></figure>
+
+If a child is a Text instance using a Y Origin of Baseline and a Y Units of Pixels from Bottom, then portions of the text which fall below the baseline are ignored by the parent's height.
+
+<figure><img src="../../../.gitbook/assets/image (156).png" alt=""><figcaption><p>Portions of the text are ignored when calculating heights</p></figcaption></figure>
 
 #### Relative to Children and Auto Grid Vertical
 
 If a parent sets its Height Units to Relative to Children, then it must resize itself to contain its children. Normally, the height of the entire parent is determined by the child which needs the most space vertically. If the parent uses an Auto Grid Vertical layout, then the children control the size of the _cells_ rather than the entire parent. Since all cells must be the same size, the child which needs the most amount of space vertically determines the height of all cells.
 
 For example, the following image shows a four by four grid, each containing one white rectangle. The first rectangle has an absolute width and height of 100, so each cell is sized to be 100x100. Note that the other rectangles are 50x50.
-
-
 
 <figure><img src="../../../.gitbook/assets/11_15 30 38 (1).png" alt=""><figcaption><p>The largest child determines the height of the cell when the parent uses Relative to Children height</p></figcaption></figure>
 
@@ -155,7 +194,7 @@ This value depends on the Sprite's Texture Height property, so changing Texture 
 
 ### Maintain File Aspect Ratio Height
 
-Sprites can select a **Height Unit** called Maintain File Aspect Ratio Height which sets the height of the sprite so its aspect ratio matches its source file multiplied by the Height value. Usually Maintain File Aspect Ratio Height is used with a Height value of 100 so that the Sprite shows is source file at the correct aspect ratio.&#x20;
+Sprites can select a **Height Unit** called Maintain File Aspect Ratio Height which sets the height of the sprite so its aspect ratio matches its source file multiplied by the Height value. Usually Maintain File Aspect Ratio Height is used with a Height value of 100 so that the Sprite shows is source file at the correct aspect ratio.
 
 {% hint style="info" %}
 Svgs also support using Maintain File Aspect Ratio Height. For more information on using Svgs see the [Skia Standard Elements](../skia-standard-elements/) page.

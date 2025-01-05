@@ -10,15 +10,9 @@ The followingshows a child [ColoredRectangle](../coloredrectangle.md) positioned
 
 ## PixelsFromCenterY
 
-The followingshows a child ColoredRectangle positioned 50 **PixelsFromCenterY** relative to its parent:
+The following shows a child ColoredRectangle positioned 50 **PixelsFromCenterY** relative to its parent:
 
 ![](../../../.gitbook/assets/PixelsFromCenterYGum.png)
-
-## PixelsFromCenterYInverted
-
-The followingshows a child ColoredRectangle positioned 50 **PixelsFromCenterYInverted** relative to its parent. Note that coordinates are "inverted", which means that increasing the Y value moves the object up rather than down. This value exists to simplify integration with engines which may use positive Y as up:
-
-![](<../../../.gitbook/assets/PixelsFromCenterYInvertedGum (1).png>)
 
 ## PixelsFromBottom
 
