@@ -28,7 +28,7 @@ The following image shows a child ColoredRectangle positioned 50 **Percentage Pa
 
 ### Pixels From Baseline
 
-Pixels From Baseline positions a child relative to the parent's baseline. If the parent is a Text instance, the baseline is the Y position of the bottom of letters which do not have descenders. For more information on the concept of text baseline, see the baseline Wikipedia page  [https://en.wikipedia.org/wiki/Baseline\_(typography)](https://en.wikipedia.org/wiki/Baseline_\(typography\))
+Pixels From Baseline positions a child relative to the parent's baseline. If the parent is a Text instance and if the parent Text has its Height Units set to Relative to Children, the baseline is the Y position of the bottom of letters which do not have descenders. For more information on the concept of text baseline, see the baseline Wikipedia page  [https://en.wikipedia.org/wiki/Baseline\_(typography)](https://en.wikipedia.org/wiki/Baseline_\(typography\))
 
 The following image shows a child ColoredRectangle positioned 0 pixels relative to a Text instance's baseline. Note that the ColoredRectangle has an Alpha value of 128 so that the descenders from the Text instance are visible.
 
