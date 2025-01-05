@@ -9,3 +9,5 @@ The Is Italic value controls whether the Text instance uses an auto-generated fo
 This value is true by default because it usually produces more visually appealing fonts. If your project is using an intentionally pixelated font then you may want to disable this property to preserve the pixelated aesthetic.
 
 <figure><img src="../../../.gitbook/assets/image (76).png" alt=""><figcaption><p>Title Screen in BattleCrypt Bombers intentionally using a pixelated font for buttons</p></figcaption></figure>
+
+Pixelated fonts are usually designed to be used at a paritcular Font Size. For more information about Font Size mulitples and pixelated fonts, see the [Font Size](font-size.md#font-size-and-pixel-fonts) page.
