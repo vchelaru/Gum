@@ -730,6 +730,14 @@ namespace Gum.Wireframe
                     {
                         throw new ArgumentException("Not a Number (NAN) not allowed");
                     }
+                    if (float.IsPositiveInfinity(value))
+                    {
+                        throw new ArgumentException("Positive Infinity not allowed");
+                    }
+                    if (float.IsNegativeInfinity(value))
+                    {
+                        throw new ArgumentException("Negative Infinity not allowed");
+                    }
 #endif
                     mX = value;
 
@@ -762,6 +770,14 @@ namespace Gum.Wireframe
                     if (float.IsNaN(value))
                     {
                         throw new ArgumentException("Not a Number (NAN) not allowed");
+                    }
+                    if(float.IsPositiveInfinity(value))
+                    {
+                        throw new ArgumentException("Positive Infinity not allowed");
+                    }
+                    if (float.IsNegativeInfinity(value))
+                    {
+                        throw new ArgumentException("Negative Infinity not allowed");
                     }
 #endif
                     mY = value;

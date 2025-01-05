@@ -255,7 +255,7 @@ namespace Gum.Wireframe
                     throw new InvalidOperationException("Cannot be infinite");
                 }
 
-                modificationAmount = AdjustAmountAccordingToUnitType(baseVariableName, modificationAmount, unitsVariableAsObject);
+                modificationAmount = ConvertAmountToPixelAccordingToUnitType(baseVariableName, modificationAmount, unitsVariableAsObject);
 
                 if(float.IsPositiveInfinity(modificationAmount))
                 {
@@ -298,7 +298,7 @@ namespace Gum.Wireframe
             object unitsVariableAsObject;
             GetCurrentValueForVariable(unitsVariableName, null, out unitsNameWithInstance, out unitsVariableAsObject);
 
-            modificationAmount = AdjustAmountAccordingToUnitType(baseVariableName, modificationAmount, unitsVariableAsObject);
+            modificationAmount = ConvertAmountToPixelAccordingToUnitType(baseVariableName, modificationAmount, unitsVariableAsObject);
 
             float newValue = currentValue + modificationAmount;
             SelectedState.Self.SelectedStateSave.SetValue(baseVariableName, newValue, null, "float");
@@ -314,7 +314,7 @@ namespace Gum.Wireframe
             return newValue;
         }
 
-        private static float AdjustAmountAccordingToUnitType(string baseVariableName, float amount, object unitsVariableAsObject)
+        private static float ConvertAmountToPixelAccordingToUnitType(string baseVariableName, float amount, object unitsVariableAsObject)
         {
             GeneralUnitType generalUnitType = UnitConverter.ConvertToGeneralUnit(unitsVariableAsObject);
 
@@ -386,6 +386,16 @@ namespace Gum.Wireframe
                             outY /= ratio;
                         }
                     }
+                }
+
+                // Values can become infinite. For example, if the Units is percent and the parent has a width or height of 0, then the value will be infinite.
+                if(float.IsPositiveInfinity(outX) || float.IsNegativeInfinity(outX))
+                {
+                    outX = 0;
+                }
+                if (float.IsPositiveInfinity(outY) || float.IsNegativeInfinity(outY))
+                {
+                    outY = 0;
                 }
 
                 if (baseVariableName == "X" || baseVariableName == "Width")
