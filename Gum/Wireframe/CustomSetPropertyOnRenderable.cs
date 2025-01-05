@@ -1324,12 +1324,15 @@ namespace Gum.Wireframe
                     {
                         sprite.Texture = loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(value);
                     }
-                    catch (Exception ex) when (ex is System.IO.FileNotFoundException or System.IO.DirectoryNotFoundException or WebException or IOException)
+                    catch (Exception ex) 
+                    // Jan 1, 2025 - we used to only catch certain types of exceptions, but this list keeps growing as there
+                    // are a variety of types of crashes that can occur. NineSlice catches all exceptions, so let's just do that!
+                    //when (ex is System.IO.FileNotFoundException or System.IO.DirectoryNotFoundException or WebException or IOException)
                     {
                         if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
                         {
                             string message = $"Error setting SourceFile on Sprite in {graphicalUiElement.Tag}:\n{value}";
-                            throw new System.IO.FileNotFoundException(message);
+                            throw new System.IO.FileNotFoundException(message, ex);
                         }
                         sprite.Texture = null;
                     }
