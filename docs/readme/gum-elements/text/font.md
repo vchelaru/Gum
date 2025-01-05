@@ -52,3 +52,11 @@ Fonts are generated in response to any of the following properties changing:
 * [Is Italic](is-italic.md)
 * [Is Bold](is-bold.md)
 * [Use Font Smoothing](use-font-smoothing.md)
+
+### Installing Fonts
+
+Windows Machines typicall have dozens of fonts installed automatically. You may be working on a project which needs custom fonts. These fonts can be obtained on many websites including [https://www.dafont.com/](https://www.dafont.com/) and [https://fonts.google.com/](https://fonts.google.com/).&#x20;
+
+Once a font has been installed, you must restart Gum for the font to be available in the Font dropdown.
+
+<figure><img src="../../../.gitbook/assets/image (154).png" alt=""><figcaption><p>Font available in the Font dropdown after being installed</p></figcaption></figure>
