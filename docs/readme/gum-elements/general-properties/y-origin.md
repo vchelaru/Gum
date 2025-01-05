@@ -4,19 +4,19 @@
 
 The **Y Origin** variable controls the point which an object is positioned by. By default the **Y Origin** is **Top**. The **Y Origin** is shown visually as a white "X" in the editor.
 
-## Top
+### Top
 
 The following image shows a [ColoredRectangle](../coloredrectangle.md) with its **Y Origin** set to **Top**:
 
 ![ColoredRectangle with Top Y Origin](<../../../.gitbook/assets/25_19 38 16.png>)
 
-## Center
+### Center
 
 The following image shows a ColoredRectangle with its **Y Origin** set to **Center**:
 
 ![ColoredRectangle with Center Y Origin](<../../../.gitbook/assets/25_19 39 18.png>)
 
-## Bottom
+### Bottom
 
 The following image shows a ColoredRectangle with its **Y Origin** set to **Bottom**:
 
