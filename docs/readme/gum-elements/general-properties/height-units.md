@@ -92,11 +92,11 @@ The following image shows a child [ColoredRectangle](height-units.md#relativetoc
 
 ![Rectangle using Relative to Children height of 50, resulting in an absolute height of 50 since it has no children](<../../../.gitbook/assets/13_13 35 18.png>)
 
-**Relative to Children** can be used to size an object based on the position and sizes of a container's children. The following image shows a container with 0 **Relative to Children** Height, which mans that its height is set just large enough to contain its children. Notice that if the children are moved, the rectangle's height adjusts. Both children are considered so the container adjusts its height according to the bottom-most side of either child:
+**Relative to Children** can be used to size an object based on the position and sizes of a container's children. The following image shows a container with 0 **Relative to Children** Height, which mans that its height is set just large enough to contain its children. Notice that if the children are moved, the parent's height adjusts. Both children are considered so the container adjusts its height according to the bottom-most side of either child:
 
 ![Moving children can adjust the absolute height of the parent if the parent is using a Height Units of Relative to Children](<../../../.gitbook/assets/13_13 37 33.gif>)
 
-A non-zero **Height** when using **Relative to Children** can be used to add additional padding to a parent container. The following shows how changing the height can adjust the absolute height relative to children:
+A non-zero **Height** when using **Relative to Children** can be used to add additional padding to a parent container. The following animation shows how changing the height can adjust the absolute height relative to children:
 
 ![Height is relative to the bottom-most child when using Relative to Children](<../../../.gitbook/assets/13_13 39 50.gif>)
 
@@ -104,10 +104,11 @@ A non-zero **Height** when using **Relative to Children** can be used to add add
 
 A parent container can ignore its children when it determines its own height when using a Height Units value of **Relative to Children** if any of the following are true:
 
-1. If the child's height depends on its parent's height for its own height. This circular dependency is resolved by the parent ignoring this child.
-2. If the child is explicitly positioned outside of the bounds of the parent
+1. The child's height depends on its parent's height. This circular dependency is resolved by the parent ignoring this child.
+2. The child is explicitly positioned outside of parent's bounds
+3. The child's Y Units is Percentage of Parent Height
 
-If a child's height depends on the parent (1), then the child is ignored by the parent. Once the parent has determined its own height, then the child is sized according to the parent. This type of circular dependency is quite common when adding background visuals to a container.&#x20;
+If a child's height depends on the parent (1), then the child is ignored by the parent. Once the parent has determined its own height, then the child is sized according to the parent. This type of circular dependency is common when adding background visuals to a container.&#x20;
 
 For example consider a container with two children - BlueRectangle and YellowRectangle - with the following variables:
 
@@ -117,31 +118,31 @@ For example consider a container with two children - BlueRectangle and YellowRec
 
 Only YellowRectangle depends on its parent.
 
-Since the blue rectangle's height value does not depend on the parent, the parent can use the blue rectangle's Height when calculating its own height. Since the yellow rectangle depends on the parent, the parent ignores the yellow rectangle. Instead, the yellow rectangle depends on the parent container's height for calculating its own. This in effect creates a situation where BlueRectangle affects the height of both its parent and also its YellowRectangle sibling.
+Since BlueRectangle's absolute height value does not depend on the parent, the parent can use BlueRectangle's absolute height when calculating its own absolute height. Since YellowRectangle depends on the parent, the parent ignores the YellowRectangle. Instead, YellowRectangle depends on the parent container's absolute height for calculating its own absolute height. This in effect creates a situation where BlueRectangle affects the height of both its parent and also its YellowRectangle sibling.
 
-<figure><img src="../../../.gitbook/assets/05_05 54 05.gif" alt=""><figcaption><p>Moving BlueRectangle changes the size of both its parent and also the YellowRectangle</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/05_05 54 05.gif" alt=""><figcaption><p>Moving BlueRectangle changes the height of both its parent and also YellowRectangle</p></figcaption></figure>
 
-A parent does not consider a child if the child is explicitly positioned outside of the parent's bounds. This can happen if the child's Y Units and Y value result in the child being drawn outside of the bounds.
+A parent does not consider a child if the child is explicitly positioned outside of the parent's bounds. This can happen if the child's Y Units and Y value result in the child being drawn outside of the parent's bounds.
 
-If a child has Y Units of Pixels from Top and its Y value pushes the child out of the top of the screen, then the portion that is outside of the top of the screen is ignored. The BlueRectangle in the following image has an absolute height of 50. Its Y value is -20, so only 30 pixels are used to determine the parent's height.
+If a child has Y Units of Pixels from Top and its Y value pushes the child out of the top of its parent, then the portion that is outside of the top of the parent is ignored. The BlueRectangle in the following image has an absolute height of 50. Its Y value is -20, so only 30 pixels are used to determine the parent's height.
 
-<figure><img src="../../../.gitbook/assets/image (155).png" alt=""><figcaption><p>Parent height is 30 since the BlueRectangle explicitly has 20 of its height set outside of the parent's bounds</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (155).png" alt=""><figcaption><p>Parent absolute height is 30 since the BlueRectangle explicitly has 20 of its height set outside of the parent's bounds</p></figcaption></figure>
 
 Similarly, if a child uses a Y Units of Pixels from Bottom then the parent does not consider the height of any portion which is outside of its bounds. The following animation shows RedRectangle placed outside of the bottom of its bounds with a Y Units of Pixels from Bottom.
 
-<figure><img src="../../../.gitbook/assets/05_06 46 26.gif" alt=""><figcaption><p>Red rectangle not affecting the height of its parent since it is placed outside of the parent's bounds</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/05_06 46 26.gif" alt=""><figcaption><p>RedRectangle not affecting the absolute height of its parent since it is placed outside of the parent's bounds</p></figcaption></figure>
 
-Notice that if RedRectangle is moved so that it is inside the bounds, it can affect the height of the parent. As RedRectangle is moved into the bounds, the parent grows to accommodate the desired RedRectangle Y value.
+Notice that if RedRectangle is moved so that it is inside the bounds, it can affect the absolute height of the parent. As RedRectangle is moved into the bounds, the parent grows to accommodate the desired RedRectangle Y value.
 
-<figure><img src="../../../.gitbook/assets/05_06 48 12.gif" alt=""><figcaption><p>Moving a child which uses PixelsFromBottom up can make the parent grow to accomoodate the child's Y value</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/05_06 48 12.gif" alt=""><figcaption><p>Moving a child which uses Pixels From Bottom up can make the parent grow to accommodate the child's Y value</p></figcaption></figure>
 
-A parent ignores its child if the child uses a Y Units of Percentage of Parent Height because this also creates a circular dependency (parent eight depends on child position, child position depends on parent height).
+A parent ignores its child if the child uses a Y Units of Percentage of Parent Height because this also creates a circular dependency (parent height depends on child position, child position depends on parent height).
 
 <figure><img src="../../../.gitbook/assets/05_06 52 34.gif" alt=""><figcaption><p>Y Units of Percentage of Parent Height results in the child ignored</p></figcaption></figure>
 
 If a child is a Text instance using a Y Origin of Baseline and a Y Units of Pixels from Bottom, then portions of the text which fall below the baseline are ignored by the parent's height.
 
-<figure><img src="../../../.gitbook/assets/image (156).png" alt=""><figcaption><p>Portions of the text are ignored when calculating heights</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/baselineHeightIgnore.png" alt=""><figcaption><p>Portions of the text are ignored when calculating heights</p></figcaption></figure>
 
 #### Relative to Children and Auto Grid Vertical
 

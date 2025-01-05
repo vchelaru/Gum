@@ -36,6 +36,6 @@ Font Size can be set to any value, but this font only looks good if Font Size is
 
 The rendering artifacts are more obvious when zooming in, as shown in the following image:
 
-<figure><img src="../../../.gitbook/assets/image (153).png" alt=""><figcaption><p>Rendering artifacts on font sizes which are not multiples of the intended font size for Press Start 2P font</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/FontSizeArtifacts.png" alt=""><figcaption><p>Rendering artifacts on font sizes which are not multiples of the intended font size for Press Start 2P font</p></figcaption></figure>
 
 Of course, we could also set the Font Size to 16, but this is unnecessary. Since text instances using pixelated fonts usually have [Use Font Smoothing](use-font-smoothing.md) set to false, then the Text can use its [Font Scale](font-scale.md) to adjust its size.

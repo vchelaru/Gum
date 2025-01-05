@@ -50,17 +50,57 @@ The following image shows a child ColoredRectangle with 50 **Relative to Childre
 
 ![Rectangle with a width of 50 Relative to Children, but since it has no children it is 50 units wide](<../../../.gitbook/assets/11_05 46 44.png>)
 
-**Relative to Children** can be used to size an object based on the position and sizes of a container's children. The following image shows a container with 0 **Relative to Children** Width, which means that its width is set just large enough to contain its children.
+**Relative to Children** can be used to size an object based on the position and sizes of a container's children. The following animation shows a container with 0 **Relative to Children** Width, which means that its width is set just large enough to contain its children. Notice that if the children are moved, the parent's width adjusts. Both children are considered so the container adjusts its width according to the right-most side of either child:
 
-![Rectangle set to 0 width, so its children decide its width](<../../../.gitbook/assets/11_05 48 45.png>)
+<figure><img src="../../../.gitbook/assets/05_07 19 10.gif" alt=""><figcaption><p>Moving children can adjust the absolute width of the parent if the parent is using a Width Units of Relative to Children</p></figcaption></figure>
 
-A non-zero **Width** when using **Relative to Children** can be used to add additional padding to a parent container. The following image shows a container with 20 pixels of padding width:
+A non-zero **Width** when using **Relative to Children** can be used to add additional padding to a parent container. The following animation shows how changing the Width variable can adjust the absolute width relative to children:
 
-![Width can be used to add padding to a container which has width Relative to Children](<../../../.gitbook/assets/11_05 49 45.png>)
+<figure><img src="../../../.gitbook/assets/05_07 21 14.gif" alt=""><figcaption><p>Width is relative to the right-most child when using Relative to Children</p></figcaption></figure>
 
-**Relative to Children** dynamically adjusts to changes in properties on the children. In the following animation the container has a **Children Layout** of **Left to Right Stack**. Adding additional children expands the container automatically:
+**Relative to Children** dynamically adjusts to changes in properties on the children. The following animation shows a container with **Children Layout** of **Left to Right Stack**. Adding additional children expands the container automatically:
 
-![](<../../../.gitbook/assets/LeftToRightStackSizeChildren (1).gif>)
+![Adding children expands the width of the parent if the children are positioned in a horizontal stack.](<../../../.gitbook/assets/LeftToRightStackSizeChildren (1).gif>)
+
+#### Ignored Width Values
+
+A parent container can ignore its children when it determines its absolute width when using a Width Units of Relative to Children if any of the following are true:
+
+1. The child's width depends on its parent's width. This circular dependency is resolved by the parent ignoring this child.
+2. The child is explicitly positioned outside of the parent's bounds
+3. The child's X Units is Percentage of Parent Width
+
+If a child's width depends on the parent (1), then the child is ignored by the parent. Once the parent has determined its own width, then the child is sized according to the parent. This type of circular dependency is common when adding background visuals to a container.
+
+For example consider a container with two children - BlueRectangle and YellowRectangle - with the following variables:
+
+* BlueRectangle X = Pixels from Left
+* BlueRectangle Width Units = Absolute
+* YellowRectangle Width Units = Relative to Container
+
+Only YellowRectangle depends on its parent.
+
+Since BlueRectangle's absolute width value does not depend on the parent, the parent can use BlueRectangle's absolute width when calculating its own absolute width. Since YellowRectangle depends on the parent, the parent ignores the YellowRectangle. Instead, YellowRectangle depends on the parent container's absolute width for calculating its own absolute width. This in effect creates a situation where BlueRectangle affects the width of both its parent and also its YellowRectangle sibling.
+
+<figure><img src="../../../.gitbook/assets/05_07 32 31.gif" alt=""><figcaption><p>Moving BlueRectangle changes the width of both its parent and also YellowRectangle</p></figcaption></figure>
+
+A parent does not consider a child if the child is explicitly positioned outside of the parent's bounds. This can happen if the child's X Units and X values result in the child being drawn outside of the parent's bounds
+
+If a child has X Units of Pixels from Left and its X value pushes the child out of the left of the parent, then the portion that is outside of the left of the parent is ignored. The BlueRectangle in the following image has an absolute width of 50. Its X value is -20, so only 30 pixels are used to determine the parent's absolute height.
+
+<figure><img src="../../../.gitbook/assets/05_07 37 28.png" alt=""><figcaption><p>Parent absolute width is 30 since the BlueRectangle explicitly has 20 of its width set outside of the parent's bounds</p></figcaption></figure>
+
+Similarly, if a child uss an X Units of Pixels from Right then the parent does not consider the width of any portion which is outside of its bounds. The following animation shows RedRectangle placed outside of the right of the container's bounds with a X Units of Pixels from Right.
+
+<figure><img src="../../../.gitbook/assets/05_07 40 25.gif" alt=""><figcaption><p>RedRectangle not affecting the absolute width of its parent since it is placed outside of the parent's bounds</p></figcaption></figure>
+
+Notice that if RedRectangle is moved so that it is inside the bounds, it can affect the absolute width of the parent. As RedRectangle is moved into the bounds, the parent grows to accommodate the desired RedRectangle X value.
+
+<figure><img src="../../../.gitbook/assets/05_07 42 42.gif" alt=""><figcaption><p>Moving a child which uses Pixels from Right can make the parent grow to accommodate the child's X value</p></figcaption></figure>
+
+A parent ignores its child if the child uses an X Units of Percentage of Parent Width because this also creates a circular dependency (parent width depends on child position, child position depends on parent width).
+
+<figure><img src="../../../.gitbook/assets/05_07 45 21.gif" alt=""><figcaption><p>X Units of Percentage of Parent Width result in the child ignored</p></figcaption></figure>
 
 #### Relative to Children and Auto Grid Horizontal
 

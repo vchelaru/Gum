@@ -59,4 +59,4 @@ Windows Machines typicall have dozens of fonts installed automatically. You may 
 
 Once a font has been installed, you must restart Gum for the font to be available in the Font dropdown.
 
-<figure><img src="../../../.gitbook/assets/image (154).png" alt=""><figcaption><p>Font available in the Font dropdown after being installed</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/NewFontDropdown.png" alt=""><figcaption><p>Font available in the Font dropdown after being installed</p></figcaption></figure>
