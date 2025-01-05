@@ -529,8 +529,11 @@ namespace RenderingLibrary.Graphics
 
         public int Alpha
         {
-            get { return mAlpha; }
-            set { mAlpha = value; }
+            get  => mAlpha; 
+            set 
+            { 
+                mAlpha = System.Math.Max(0, System.Math.Min(value, 255));
+            }
         }
 
         public int Red
