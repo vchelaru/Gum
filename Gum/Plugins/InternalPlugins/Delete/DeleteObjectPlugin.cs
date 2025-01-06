@@ -19,6 +19,12 @@ namespace Gum.Gui.Plugins
         private GroupBox deleteGroupBox;
         private RadioButton deleteJustParent;
         private RadioButton deleteAllContainedObjects;
+        private readonly ElementCommands _elementCommands;
+
+        public DeleteObjectPlugin()
+        {
+            _elementCommands = ElementCommands.Self;
+        }
 
         public override void StartUp()
         {
@@ -94,7 +100,7 @@ namespace Gum.Gui.Plugins
 
             if(shouldDetachChildren)
             {
-                ElementCommands.Self.RemoveParentReferencesToInstance(instance, element);
+                _elementCommands.RemoveParentReferencesToInstance(instance, element);
             }
             if(shouldDeleteChildren)
             {
@@ -123,11 +129,11 @@ namespace Gum.Gui.Plugins
             var parentContainer = instance.ParentContainer;
             if(parentContainer.Instances.Contains(instance))
             {
-                ElementCommands.Self.RemoveInstance(instance, parentContainer);
+                _elementCommands.RemoveInstance(instance, parentContainer);
             }
             else
             {
-                ElementCommands.Self.RemoveParentReferencesToInstance(instance, parentContainer);
+                _elementCommands.RemoveParentReferencesToInstance(instance, parentContainer);
             }
         }
 

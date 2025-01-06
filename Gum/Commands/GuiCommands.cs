@@ -22,6 +22,9 @@ using WpfDataUi.DataTypes;
 using Gum.PropertyGridHelpers;
 using System.Xml.Linq;
 using Gum.Plugins.InternalPlugins.VariableGrid.ViewModels;
+using Microsoft.Extensions.Hosting;
+using Gum.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Gum.Commands
 {
@@ -328,8 +331,10 @@ namespace Gum.Commands
                 return;
             }
             //////////////End Early Out/////////////
+            var host = Builder.App;
+            var services = host.Services;
 
-            var vm = new AddVariableViewModel();
+            var vm = services.GetRequiredService<AddVariableViewModel>();
 
             var window = new AddVariableWindow(vm);
 
@@ -337,44 +342,7 @@ namespace Gum.Commands
 
             if (result == true)
             {
-                var type = vm.SelectedItem;
-                var name = vm.EnteredName;
-
-                string whyNotValid;
-                bool isValid = NameVerifier.Self.IsVariableNameValid(
-                    name, out whyNotValid);
-
-                if (!isValid)
-                {
-                    MessageBox.Show(whyNotValid);
-                }
-                else
-                {
-                    var behavior = SelectedState.Self.SelectedBehavior;
-
-                    var newVariable = new VariableSave();
-
-                    newVariable.Name = name;
-                    newVariable.Type = type;
-                    newVariable.Value = vm.DefaultValue;
-
-                    if (behavior != null)
-                    {
-                        behavior.RequiredVariables.Variables.Add(newVariable);
-                        ElementCommands.Self.SortVariables(behavior);
-                        GumCommands.Self.FileCommands.TryAutoSaveBehavior(behavior);
-                    }
-                    else if (SelectedState.Self.SelectedElement != null)
-                    {
-                        var element = SelectedState.Self.SelectedElement;
-                        newVariable.IsCustomVariable = true;
-                        element.DefaultState.Variables.Add(newVariable);
-                        ElementCommands.Self.SortVariables(element);
-                        GumCommands.Self.FileCommands.TryAutoSaveElement(element);
-                    }
-                    GumCommands.Self.GuiCommands.RefreshVariables(force: true);
-
-                }
+                vm.AddVariableToSelectedItem();
             }
         }
 

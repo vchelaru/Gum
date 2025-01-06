@@ -8,7 +8,9 @@ using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.VariableGrid.ViewModels;
 using Gum.Plugins.VariableGrid;
+using Gum.ToolCommands;
 using Gum.ToolStates;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,20 +20,32 @@ using WpfDataUi.DataTypes;
 
 namespace Gum.Services;
 
+#region Interface
 
 internal interface IEditVariableService
 {
     void TryAddEditVariableOptions(InstanceMember instanceMember, VariableSave variableSave, IStateCategoryListContainer stateListCategoryContainer);
 }
-
+#endregion
 
 internal class EditVariableService : IEditVariableService
 {
+    #region Enums
+
     enum EditMode
     {
         None,
         ExposedName,
         FullEdit
+    }
+
+    #endregion
+
+    private readonly ElementCommands _elementCommands;
+
+    public EditVariableService(ElementCommands elementCommands)
+    {
+        _elementCommands = elementCommands;
     }
 
     public void TryAddEditVariableOptions(InstanceMember instanceMember, VariableSave variableSave, IStateCategoryListContainer stateListCategoryContainer)
@@ -60,6 +74,11 @@ internal class EditVariableService : IEditVariableService
         var behaviorSave = stateCategoryListContainer as BehaviorSave;
         // for now only edit variables inside of behaviors:
         if (behaviorSave != null)
+        {
+            return EditMode.FullEdit;
+        }
+
+        if(variableSave.IsCustomVariable)
         {
             return EditMode.FullEdit;
         }
@@ -169,7 +188,11 @@ internal class EditVariableService : IEditVariableService
 
     private void ShowFullEditUi(VariableSave variable, IStateCategoryListContainer container)
     {
-        var vm = new AddVariableViewModel();
+        var host = Builder.App;
+        var services = host.Services;
+
+        var vm = services.GetRequiredService<AddVariableViewModel>();
+
 
         vm.SelectedItem = variable.Type;
         vm.EnteredName = variable.Name;
@@ -215,6 +238,7 @@ internal class EditVariableService : IEditVariableService
                     var element = SelectedState.Self.SelectedElement;
                     if (ApplyEditVariableOnElement(element, oldName, newName, type))
                     {
+                        _elementCommands.SortVariables(element);
                         GumCommands.Self.FileCommands.TryAutoSaveElement(element);
                     }
 

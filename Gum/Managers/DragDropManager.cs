@@ -30,6 +30,7 @@ public class DragDropManager
 
     object mDraggedItem;
     private readonly ISelectedState _selectedState;
+    private readonly ElementCommands _elementCommands;
 
     #endregion
 
@@ -57,6 +58,7 @@ public class DragDropManager
     public DragDropManager()
     {
         _selectedState = SelectedState.Self;
+        _elementCommands = ElementCommands.Self;
     }
 
     internal void HandleDragDropEvent(object sender, DragEventArgs e)
@@ -412,7 +414,7 @@ public class DragDropManager
             // the object we dragged off.  This is so that plugins can properly use the SelectedElement.
             ElementTreeViewManager.Self.Select(behavior);
 
-            newInstance = GumCommands.Self.ProjectCommands.ElementCommands.AddInstance(behavior, name, draggedElement.Name);
+            newInstance = _elementCommands.AddInstance(behavior, name, draggedElement.Name);
             //handled = true;
         }
 
@@ -448,7 +450,7 @@ public class DragDropManager
             // the object we dragged off.  This is so that plugins can properly use the SelectedElement.
             ElementTreeViewManager.Self.Select(target);
 
-            newInstance = GumCommands.Self.ProjectCommands.ElementCommands.AddInstance(target, name, draggedAsElementSave.Name, parentInstance?.Name);
+            newInstance = _elementCommands.AddInstance(target, name, draggedAsElementSave.Name, parentInstance?.Name);
             handled = true;
         }
 
@@ -568,7 +570,7 @@ public class DragDropManager
         using var undoLock = UndoManager.Self.RequestLock();
 
 
-        GumCommands.Self.ProjectCommands.ElementCommands.AddBehaviorTo(behavior, targetComponent);
+        _elementCommands.AddBehaviorTo(behavior, targetComponent);
 
         if(targetComponent == SelectedState.Self.SelectedComponent)
         {
@@ -870,7 +872,7 @@ public class DragDropManager
         nameToAdd = StringFunctions.MakeStringUnique(nameToAdd, existingNames);
 
         InstanceSave instance =
-            ElementCommands.Self.AddInstance(element, nameToAdd);
+            _elementCommands.AddInstance(element, nameToAdd);
         instance.BaseType = "Sprite";
 
         SetInstanceToPosition(worldX, worldY, instance);

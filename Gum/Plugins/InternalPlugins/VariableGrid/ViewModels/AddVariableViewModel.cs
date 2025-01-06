@@ -1,4 +1,8 @@
-﻿using Gum.Mvvm;
+﻿using Gum.DataTypes.Variables;
+using Gum.Managers;
+using Gum.Mvvm;
+using Gum.ToolCommands;
+using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +18,9 @@ public class AddVariableViewModel : ViewModel
         get => Get<string>();
         set => Set(value);
     }
+
+    private readonly Commands.GuiCommands _guiCommands;
+    private readonly ISelectedState _selectedState;
 
     public List<string> AvailableTypes
     {
@@ -47,8 +54,12 @@ public class AddVariableViewModel : ViewModel
         }
     }
 
-    public AddVariableViewModel()
+    public AddVariableViewModel(Commands.GuiCommands guiCommands,
+        ISelectedState selectedState)
     {
+        _guiCommands = guiCommands;
+        _selectedState = selectedState;
+
         AvailableTypes = new List<string>();
         AvailableTypes.Add("float");
         AvailableTypes.Add("int");
@@ -69,5 +80,47 @@ public class AddVariableViewModel : ViewModel
             return GeneralResponse.UnsuccessfulWith("You must enter a name");
         }
         return GeneralResponse.SuccessfulResponse;
+    }
+
+    public void AddVariableToSelectedItem()
+    {
+        var type = SelectedItem;
+        var name = EnteredName;
+
+        string whyNotValid;
+        bool isValid = NameVerifier.Self.IsVariableNameValid(
+            name, out whyNotValid);
+
+        if (!isValid)
+        {
+            _guiCommands.ShowMessage(whyNotValid);
+        }
+        else
+        {
+            var behavior = _selectedState.SelectedBehavior;
+
+            var newVariable = new VariableSave();
+
+            newVariable.Name = name;
+            newVariable.Type = type;
+            newVariable.Value = DefaultValue;
+
+            if (behavior != null)
+            {
+                behavior.RequiredVariables.Variables.Add(newVariable);
+                ElementCommands.Self.SortVariables(behavior);
+                GumCommands.Self.FileCommands.TryAutoSaveBehavior(behavior);
+            }
+            else if (_selectedState.SelectedElement != null)
+            {
+                var element = _selectedState.SelectedElement;
+                newVariable.IsCustomVariable = true;
+                element.DefaultState.Variables.Add(newVariable);
+                ElementCommands.Self.SortVariables(element);
+                GumCommands.Self.FileCommands.TryAutoSaveElement(element);
+            }
+            GumCommands.Self.GuiCommands.RefreshVariables(force: true);
+
+        }
     }
 }

@@ -1,4 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Gum.Plugins.InternalPlugins.VariableGrid.ViewModels;
+using Gum.ToolCommands;
+using Gum.ToolStates;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
@@ -16,8 +19,14 @@ internal class Builder
     {
         var builder = Host.CreateApplicationBuilder();
 
+        builder.Services.AddSingleton(typeof(ElementCommands), ElementCommands.Self);
+        builder.Services.AddSingleton(typeof(ISelectedState), SelectedState.Self);
+        builder.Services.AddSingleton(typeof(Commands.GuiCommands), GumCommands.Self.GuiCommands);
+        builder.Services.AddSingleton<IEditVariableService, EditVariableService>();
         builder.Services.AddSingleton<IEditVariableService, EditVariableService>();
         builder.Services.AddSingleton<IExposeVariableService, ExposeVariableService>();
+
+        builder.Services.AddTransient<AddVariableViewModel>();
 
         App = builder.Build();
     }
