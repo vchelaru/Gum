@@ -70,13 +70,17 @@ Top to Bottom and Left to Right stacks separate their children using the Stack S
 
 ### Stacking and Children Origin
 
-In most cases children which are stacked should use a Left [X Origin](../general-properties/x-origin.md) if the parent uses a **LeftToRightStack** and should use a Top [Y Origin](../general-properties/y-origin.md) if the parent uses a **Top To Bottom Stack**.
+The position of a child in a stack is determined by the size of the previous item in the stack and the origin of the child. In most cases children which are stacked should use a Left [X Origin](../general-properties/x-origin.md) if the parent uses a **Left To Right Stack** and should use a Top [Y Origin](../general-properties/y-origin.md) if the parent uses a **Top To Bottom Stack**.
 
-For example, consider a parent which contains two children - a blue and a red rectangle.
+Consider a container with a blue rectangle which stacks horizontally. The blue occupies some space according to its absolute width. The next instance after the blue rectangle is placed relative to the right-side of the blue rectangle.
+
+<figure><img src="../../../.gitbook/assets/05_19 39 30.png" alt=""><figcaption><p>The next item's position is based on the right-side of the blue rectangle</p></figcaption></figure>
+
+For example, if a red rectangle is added to the container, the stack may create a layout similar to the following image:
 
 ![](<../../../.gitbook/assets/LeftToRightStackLeftOrigin (1).png>)
 
-In the image shown above, the red rectangle is positioned directly to the right of the blue rectangle. Notice that if the red rectangle's [X Origin](../general-properties/x-origin.md) is changed to **Center**, the red rectangle overlaps the blue rectangle.
+Keep in mind that the stack simply states the position of the next item. Each item can freely adjust its **X Origin** (or **Y Origin** in a **Top to Bottom Stack**). If the red rectangle's [X Origin](../general-properties/x-origin.md) is changed to **Center**, the red rectangle overlaps the blue rectangle.
 
 ![](<../../../.gitbook/assets/LeftToRightOverlapping (1).png>)
 
