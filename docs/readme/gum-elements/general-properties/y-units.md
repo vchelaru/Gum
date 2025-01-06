@@ -34,6 +34,14 @@ The following image shows a child ColoredRectangle positioned 0 pixels relative 
 
 <figure><img src="../../../.gitbook/assets/PixelsFromBaseline.png" alt=""><figcaption><p>ColoredRectangle with Y Units of Pixels From Baseline</p></figcaption></figure>
 
+A text instance's baseline is defined by its Font and Font Scale values. The baseline is defined in the .fnt file with the `base` value which indicates the distance from the top of the text instance to the baseline. For example, an Arial font with Font Size 40 has a `base` value of 36 and a lineHeight of 45.&#x20;
+
+<figure><img src="../../../.gitbook/assets/05_20 48 34.png" alt=""><figcaption><p>Arial with Font Size 40 has a base value of 36</p></figcaption></figure>
+
+This means that 36 pixels fall above the baseline, and 9 pixels (45 - 36) below.
+
+<figure><img src="../../../.gitbook/assets/05_20 51 13.png" alt=""><figcaption><p>Base defines the distance from the top of the Text instance to the baseline</p></figcaption></figure>
+
 Note that if the parent is not a Text instance, then the bottom of the parent is used as the baseline. The following image shows a Colored Rectangle using a Y Units of Pixels From Baseline with a Container parent.
 
 <figure><img src="../../../.gitbook/assets/05_09 18 28.png" alt=""><figcaption><p>Pixels from Baseline uses the bottom of the parent if it is not a Text instance</p></figcaption></figure>
