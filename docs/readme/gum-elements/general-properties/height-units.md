@@ -173,6 +173,14 @@ For example, the following image contains multiple Text instances. Each has a si
 
 <figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Texts with the same height despite having different string</p></figcaption></figure>
 
+We can observe the absolute height of a Text instance by mousing over one of the handles for resizing vertically.
+
+<figure><img src="../../../.gitbook/assets/image.png" alt=""><figcaption><p>Text which has an absolute height of 41 pixels</p></figcaption></figure>
+
+In this case, the height is 41 pixels tall. This is based on the lineHeight as defined on the .fnt file. The image above is using an Arial 36 font which has a lineHeight value of 41 pixels.
+
+<figure><img src="../../../.gitbook/assets/image (1).png" alt=""><figcaption><p>Font36Arial has a lineHeight of 41.</p></figcaption></figure>
+
 ### Percentage of Width
 
 **Percentage of Width** adjusts the object's effective height so it remains proportional to the Width value multiplied by the Height value (as a percentage). For example, if a Height value of 200 is entered, then the effective height is 200% (2x) of the width.

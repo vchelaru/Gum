@@ -18,10 +18,10 @@ In this particular case, the hearts can be filled or empty to show the current a
 
 Since this container should only ever contain instances of a Heart component, then the container's Contained Type can be set to Heart.
 
-<figure><img src="../../../.gitbook/assets/image (2).png" alt=""><figcaption><p>HealthContainer instance with its Contained Type set to Heart</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (2) (1).png" alt=""><figcaption><p>HealthContainer instance with its Contained Type set to Heart</p></figcaption></figure>
 
 In this example, FlatRedBall respects the Contained Type variable and generates a generic list.
 
-<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1).png" alt=""><figcaption><p>ContainerRuntime can be generic in FlatRedBall, so it respects the Contained Type variable</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (2).png" alt=""><figcaption><p>ContainerRuntime can be generic in FlatRedBall, so it respects the Contained Type variable</p></figcaption></figure>
 
 As mentioned above, the implementation of this variable depends on the runtime you are using. If you are using a runtime which does not implement this feature and you would like to have it added, please create a GitHub issue or make a request in Discord.
