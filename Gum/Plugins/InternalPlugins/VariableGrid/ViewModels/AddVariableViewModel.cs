@@ -1,8 +1,11 @@
-﻿using Gum.DataTypes.Variables;
+﻿using Gum.Commands;
+using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Mvvm;
 using Gum.ToolCommands;
 using Gum.ToolStates;
+using Gum.Undo;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,6 +24,9 @@ public class AddVariableViewModel : ViewModel
 
     private readonly Commands.GuiCommands _guiCommands;
     private readonly ISelectedState _selectedState;
+    private readonly UndoManager _undoManager;
+    private readonly ElementCommands _elementCommands;
+    private readonly FileCommands _fileCommands;
 
     public List<string> AvailableTypes
     {
@@ -55,10 +61,16 @@ public class AddVariableViewModel : ViewModel
     }
 
     public AddVariableViewModel(Commands.GuiCommands guiCommands,
-        ISelectedState selectedState)
+        ISelectedState selectedState,
+        UndoManager undoManager,
+        ElementCommands elementCommands,
+        FileCommands fileCommands)
     {
         _guiCommands = guiCommands;
         _selectedState = selectedState;
+        _undoManager = undoManager;
+        _elementCommands = elementCommands;
+        _fileCommands = fileCommands;
 
         AvailableTypes = new List<string>();
         AvailableTypes.Add("float");
@@ -105,22 +117,144 @@ public class AddVariableViewModel : ViewModel
             newVariable.Type = type;
             newVariable.Value = DefaultValue;
 
+            using var undoLock = _undoManager.RequestLock();
+
             if (behavior != null)
             {
                 behavior.RequiredVariables.Variables.Add(newVariable);
-                ElementCommands.Self.SortVariables(behavior);
-                GumCommands.Self.FileCommands.TryAutoSaveBehavior(behavior);
+                _elementCommands.SortVariables(behavior);
+                _fileCommands.TryAutoSaveBehavior(behavior);
             }
             else if (_selectedState.SelectedElement != null)
             {
                 var element = _selectedState.SelectedElement;
                 newVariable.IsCustomVariable = true;
                 element.DefaultState.Variables.Add(newVariable);
-                ElementCommands.Self.SortVariables(element);
-                GumCommands.Self.FileCommands.TryAutoSaveElement(element);
+                _elementCommands.SortVariables(element);
+                _fileCommands.TryAutoSaveElement(element);
             }
-            GumCommands.Self.GuiCommands.RefreshVariables(force: true);
+            _guiCommands.RefreshVariables(force: true);
 
         }
     }
+
+    internal void DoEdit(VariableSave variable)
+    {
+        var type = SelectedItem;
+        var newName = EnteredName;
+
+        string whyNotValid;
+        bool isValid = NameVerifier.Self.IsVariableNameValid(
+            newName, out whyNotValid);
+
+        if (!isValid)
+        {
+            _guiCommands.ShowMessage(whyNotValid);
+        }
+        else
+        {
+            var behavior = _selectedState.SelectedBehavior;
+
+            using var undoLock = _undoManager.RequestLock();
+
+            if (behavior != null)
+            {
+                var changedType = variable.Type != type;
+                if (changedType)
+                {
+                    // todo - need to fix this by converting?
+                    variable.Value = null;
+                }
+                variable.Name = newName;
+                variable.Type = type;
+
+                _fileCommands.TryAutoSaveBehavior(behavior);
+            }
+            else if (_selectedState.SelectedElement != null)
+            {
+                var oldName = variable.Name;
+                var element = SelectedState.Self.SelectedElement;
+                if (ApplyEditVariableOnElement(element, oldName, newName, type))
+                {
+                    _elementCommands.SortVariables(element);
+                    _fileCommands.TryAutoSaveElement(element);
+                }
+
+                ApplyChangesToInstances(element, oldName, newName, type);
+
+                var derivedElements = ObjectFinder.Self.GetElementsInheritingFrom(element);
+                foreach (var derived in derivedElements)
+                {
+                    if (ApplyEditVariableOnElement(derived, oldName, newName, type))
+                    {
+                        _fileCommands.TryAutoSaveElement(derived);
+                    }
+
+                    ApplyChangesToInstances(derived, oldName, newName, type);
+                }
+            }
+            _guiCommands.RefreshVariables(force: true);
+        }
+    }
+
+    private void ApplyChangesToInstances(ElementSave element, string oldName, string newName, string type)
+    {
+        var references = ObjectFinder.Self.GetElementReferencesToThis(element)
+            .Where(item => item.ReferenceType == ReferenceType.InstanceOfType)
+            .ToArray();
+
+        ////////////////////////// Early Out ///////////////////////////
+        if (references.Length == 0) return;
+        /////////////////////// End Early Out /////////////////////////
+
+        HashSet<ElementSave> elementsToSave = new HashSet<ElementSave>();
+
+        foreach (var reference in references)
+        {
+            var instance = reference.ReferencingObject as InstanceSave;
+
+            var oldFullName = instance.Name + "." + oldName;
+            var newFullName = instance.Name + "." + newName;
+
+            if (ApplyEditVariableOnElement(reference.OwnerOfReferencingObject, oldFullName, newFullName, type))
+            {
+                elementsToSave.Add(reference.OwnerOfReferencingObject);
+            }
+        }
+
+        foreach (var elementToSave in elementsToSave)
+        {
+            GumCommands.Self.FileCommands.TryAutoSaveElement(elementToSave);
+        }
+    }
+
+    private bool ApplyEditVariableOnElement(ElementSave element, string oldName, string newName, string type)
+    {
+        var changed = false;
+        var allStates = element.AllStates;
+
+        foreach (var state in allStates)
+        {
+            foreach (var variable in state.Variables)
+            {
+                if (variable.Name == oldName)
+                {
+                    variable.Name = newName;
+                    if (variable.Type != type)
+                    {
+                        variable.Type = type;
+                        // todo - convert:
+                        variable.Value = null;
+                    }
+                    changed = true;
+                }
+            }
+        }
+
+
+
+        return changed;
+    }
+
+
 }

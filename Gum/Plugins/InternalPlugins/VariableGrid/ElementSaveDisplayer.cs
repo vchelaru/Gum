@@ -16,6 +16,7 @@ using WpfDataUi.Controls;
 using GumRuntime;
 using Gum.DataTypes.Behaviors;
 using Newtonsoft.Json.Linq;
+using Gum.Undo;
 
 namespace Gum.PropertyGridHelpers
 {
@@ -269,12 +270,12 @@ namespace Gum.PropertyGridHelpers
                     if (instance != null)
                     {
                         srim =
-                        new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, instance.Name + "." + propertyDescriptor.Name, instance, element);
+                        new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, instance.Name + "." + propertyDescriptor.Name, instance, element, UndoManager.Self);
                     }
                     else
                     {
                         srim =
-                            new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, propertyDescriptor.Name, instance, element);
+                            new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, propertyDescriptor.Name, instance, element, UndoManager.Self);
                     }
 
                     // moved to internal
@@ -312,12 +313,12 @@ namespace Gum.PropertyGridHelpers
 
             if (instance != null)
             {
-                srim = new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, instance.Name + "." + propertyDescriptor.Name, instance, element);
+                srim = new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, instance.Name + "." + propertyDescriptor.Name, instance, element, UndoManager.Self);
             }
             else
             {
                 srim =
-                    new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, propertyDescriptor.Name, instance, element);
+                    new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, propertyDescriptor.Name, instance, element, UndoManager.Self);
             }
 
             // moved to internal

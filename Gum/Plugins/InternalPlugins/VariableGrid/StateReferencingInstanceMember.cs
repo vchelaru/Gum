@@ -9,6 +9,7 @@ using Gum.Plugins;
 using Gum.Reflection;
 using Gum.Services;
 using Gum.ToolStates;
+using Gum.Undo;
 using Gum.Wireframe;
 using GumRuntime;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,6 +32,7 @@ namespace Gum.PropertyGridHelpers
 
         ObjectFinder _objectFinder;
         private readonly HotkeyManager _hotkeyManager;
+        private readonly UndoManager _undoManager;
         StateSave mStateSave;
         string mVariableName;
         public InstanceSave InstanceSave { get; private set; }
@@ -232,15 +234,19 @@ namespace Gum.PropertyGridHelpers
 
         #region Methods
 
-        public StateReferencingInstanceMember(InstanceSavePropertyDescriptor ispd, StateSave stateSave,
+        public StateReferencingInstanceMember(InstanceSavePropertyDescriptor ispd, 
+            StateSave stateSave,
             StateSaveCategory stateSaveCategory,
-            string variableName, InstanceSave instanceSave, IStateCategoryListContainer stateListCategoryContainer) :
+            string variableName, InstanceSave instanceSave, 
+            IStateCategoryListContainer stateListCategoryContainer,
+            UndoManager undoManager) :
             base(variableName, stateSave)
         {
             _editVariablesService = Gum.Services.Builder.App.Services.GetRequiredService<IEditVariableService>();
             _exposeVariableService = Gum.Services.Builder.App.Services.GetRequiredService<IExposeVariableService>();
             _objectFinder = ObjectFinder.Self;
             _hotkeyManager = HotkeyManager.Self;
+            _undoManager = undoManager;
 
             StateSaveCategory = stateSaveCategory;
             InstanceSave = instanceSave;
@@ -459,6 +465,7 @@ namespace Gum.PropertyGridHelpers
                 {
                     if (ElementSave?.DefaultState.Variables.Contains(this.VariableSave) == true)
                     {
+                        using var undoLock = _undoManager.RequestLock();
                         ElementSave.DefaultState.Variables.Remove(this.VariableSave);
 
                         GumCommands.Self.FileCommands.TryAutoSaveElement(ElementSave);
