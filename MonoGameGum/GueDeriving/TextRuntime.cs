@@ -159,7 +159,7 @@ namespace MonoGameGum.GueDeriving
                 if (this.WidthUnits == Gum.DataTypes.DimensionUnitType.RelativeToChildren)
                 {
                     // make it have no line wrap width before assignign the text:
-                    ContainedText.Width = 0;
+                    ContainedText.Width = null;
                 }
                 ContainedText.RawText = value;
                 NotifyPropertyChanged();

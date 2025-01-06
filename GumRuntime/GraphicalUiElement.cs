@@ -1599,14 +1599,11 @@ namespace Gum.Wireframe
                     clipsChildrenChild.ClipsChildren = ClipsChildren;
                 }
 
-                if (this.mContainedObjectAsIpso != null)
-                {
-                    widthBeforeLayout = mContainedObjectAsIpso.Width;
-                    heightBeforeLayout = mContainedObjectAsIpso.Height;
+                widthBeforeLayout = mContainedObjectAsIpso.Width;
+                heightBeforeLayout = mContainedObjectAsIpso.Height;
 
-                    xBeforeLayout = mContainedObjectAsIpso.X;
-                    yBeforeLayout = mContainedObjectAsIpso.Y;
-                }
+                xBeforeLayout = mContainedObjectAsIpso.X;
+                yBeforeLayout = mContainedObjectAsIpso.Y;
 
                 // The texture dimensions may need to be set before
                 // updating width if we are using % of texture width/height.
