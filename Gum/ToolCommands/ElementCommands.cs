@@ -236,6 +236,33 @@ namespace Gum.ToolCommands
         }
         #endregion
 
+        #region Variables
+
+        public void SortVariables()
+        {
+            var gumProject = GumState.Self.ProjectState.GumProjectSave;
+
+            foreach (var elementSave in gumProject.AllElements)
+            {
+                SortVariables(elementSave);
+            }
+            foreach (var behavior in gumProject.Behaviors)
+            {
+                SortVariables(behavior);
+            }
+        }
+
+        public void SortVariables(IStateContainer container)
+        {
+            foreach (var stateSave in container.AllStates)
+            {
+                stateSave.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
+            }
+        }
+
+
+        #endregion
+
         #region Category
 
 

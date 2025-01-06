@@ -1,68 +1,63 @@
-﻿using System.Linq;
+﻿using Gum.Plugins.InternalPlugins.VariableGrid.ViewModels;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace Gum.Plugins.VariableGrid
+namespace Gum.Plugins.VariableGrid;
+
+/// <summary>
+/// Interaction logic for AddVariableWindow.xaml
+/// </summary>
+public partial class AddVariableWindow : Window
 {
-    /// <summary>
-    /// Interaction logic for AddVariableWindow.xaml
-    /// </summary>
-    public partial class AddVariableWindow : Window
+    public AddVariableViewModel ViewModel { get; }
+
+    public AddVariableWindow(AddVariableViewModel viewModel)
     {
-        public string SelectedType
+        InitializeComponent();
+
+        this.DataContext = viewModel;
+        this.ViewModel = viewModel;
+
+        this.Loaded += AddVariableWindow_Loaded;
+    }
+
+    private void AddVariableWindow_Loaded(object sender, RoutedEventArgs e)
+    {
+        GumCommands.Self.GuiCommands.MoveToCursor(this);
+
+        this.TextBox.Focus();
+    }
+
+    private void HandleOkClicked(object sender, RoutedEventArgs e)
+    {
+        var response = ViewModel.Validate();
+        if(!response.Succeeded)
         {
-            get
-            {
-                return (ListBox.SelectedItem as ListBoxItem)?.Content as string;
-            }
-            set
-            {
-                var newItem = ListBox.Items.FirstOrDefault(item => item is ListBoxItem && ((ListBoxItem)item).Content as string == value);
-                ListBox.SelectedItem = newItem;
-            }
+            MessageBox.Show(response.Message);
+            return;
+        }
+        else
+        {
+            DialogResult = true;
         }
 
-        public string EnteredName
+    }
+
+    private void HandleCancelClicked(object sender, RoutedEventArgs e)
+    {
+        this.DialogResult = false;
+    }
+
+    private void TextBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if(e.Key == System.Windows.Input.Key.Enter)
         {
-            get => TextBox.Text;
-            set => TextBox.Text = value;
+            HandleOkClicked(null, null);
         }
-
-        public AddVariableWindow()
+        if(e.Key == System.Windows.Input.Key.Escape)
         {
-            InitializeComponent();
-
-            this.Loaded += AddVariableWindow_Loaded;
-
-            ListBox.SelectedIndex = 0;
+            HandleCancelClicked(null, null);
         }
-
-        private void AddVariableWindow_Loaded(object sender, RoutedEventArgs e)
-        {
-            GumCommands.Self.GuiCommands.MoveToCursor(this);
-
-            this.TextBox.Focus();
-        }
-
-        private void HandleOkClicked(object sender, RoutedEventArgs e)
-        {
-            if(this.SelectedType == null)
-            {
-                MessageBox.Show("You must select a type");
-                return;
-            }
-            if(string.IsNullOrEmpty(this.EnteredName))
-            {
-                MessageBox.Show("You must enter a name");
-                return;
-            }
-            this.DialogResult = true;
-        }
-
-        private void HandleCancelClicked(object sender, RoutedEventArgs e)
-        {
-            this.DialogResult = false;
-        }
-
     }
 }

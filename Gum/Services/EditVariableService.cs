@@ -6,6 +6,7 @@ using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Managers;
+using Gum.Plugins.InternalPlugins.VariableGrid.ViewModels;
 using Gum.Plugins.VariableGrid;
 using Gum.ToolStates;
 using System;
@@ -168,21 +169,19 @@ internal class EditVariableService : IEditVariableService
 
     private void ShowFullEditUi(VariableSave variable, IStateCategoryListContainer container)
     {
-        var window = new AddVariableWindow();
+        var vm = new AddVariableViewModel();
 
-        window.SelectedType = variable.Type;
-        window.EnteredName = variable.Name;
+        vm.SelectedItem = variable.Type;
+        vm.EnteredName = variable.Name;
+
+        var window = new AddVariableWindow(vm);
 
         var result = window.ShowDialog();
 
         if (result == true)
         {
-            var type = window.SelectedType;
-            if (type == null)
-            {
-                throw new InvalidOperationException("Type cannot be null");
-            }
-            var newName = window.EnteredName;
+            var type = vm.SelectedItem;
+            var newName = vm.EnteredName;
 
             string whyNotValid;
             bool isValid = NameVerifier.Self.IsVariableNameValid(

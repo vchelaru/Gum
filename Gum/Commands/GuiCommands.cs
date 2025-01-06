@@ -21,6 +21,7 @@ using ToolsUtilities;
 using WpfDataUi.DataTypes;
 using Gum.PropertyGridHelpers;
 using System.Xml.Linq;
+using Gum.Plugins.InternalPlugins.VariableGrid.ViewModels;
 
 namespace Gum.Commands
 {
@@ -328,18 +329,16 @@ namespace Gum.Commands
             }
             //////////////End Early Out/////////////
 
-            var window = new AddVariableWindow();
+            var vm = new AddVariableViewModel();
+
+            var window = new AddVariableWindow(vm);
 
             var result = window.ShowDialog();
 
             if (result == true)
             {
-                var type = window.SelectedType;
-                if (type == null)
-                {
-                    throw new InvalidOperationException("Type cannot be null");
-                }
-                var name = window.EnteredName;
+                var type = vm.SelectedItem;
+                var name = vm.EnteredName;
 
                 string whyNotValid;
                 bool isValid = NameVerifier.Self.IsVariableNameValid(
@@ -357,9 +356,12 @@ namespace Gum.Commands
 
                     newVariable.Name = name;
                     newVariable.Type = type;
+                    newVariable.Value = vm.DefaultValue;
+
                     if (behavior != null)
                     {
                         behavior.RequiredVariables.Variables.Add(newVariable);
+                        ElementCommands.Self.SortVariables(behavior);
                         GumCommands.Self.FileCommands.TryAutoSaveBehavior(behavior);
                     }
                     else if (SelectedState.Self.SelectedElement != null)
@@ -367,6 +369,7 @@ namespace Gum.Commands
                         var element = SelectedState.Self.SelectedElement;
                         newVariable.IsCustomVariable = true;
                         element.DefaultState.Variables.Add(newVariable);
+                        ElementCommands.Self.SortVariables(element);
                         GumCommands.Self.FileCommands.TryAutoSaveElement(element);
                     }
                     GumCommands.Self.GuiCommands.RefreshVariables(force: true);

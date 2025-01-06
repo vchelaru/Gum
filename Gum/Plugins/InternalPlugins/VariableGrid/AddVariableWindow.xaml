@@ -19,16 +19,17 @@
                 <RowDefinition></RowDefinition>
             </Grid.RowDefinitions>
             <Label>Type:</Label>
-            <ListBox Grid.Row="1" x:Name="ListBox">
-                <ListBoxItem>float</ListBoxItem>
-                <ListBoxItem>int</ListBoxItem>
-                <ListBoxItem>string</ListBoxItem>
-                <ListBoxItem>bool</ListBoxItem>
+            <ListBox Grid.Row="1"
+                     ItemsSource="{Binding AvailableTypes}"
+                     SelectedItem="{Binding SelectedItem}">
             </ListBox>
         </Grid>
         <StackPanel Grid.Row="1" Orientation="Vertical" Margin="0,5,0,0">
             <Label Margin="0,0,0, -3">Name:</Label>
-            <TextBox x:Name="TextBox" HorizontalAlignment="Stretch"></TextBox>
+            <TextBox x:Name="TextBox"  
+                     Text="{Binding EnteredName, UpdateSourceTrigger=PropertyChanged}" 
+                     KeyDown="TextBox_KeyDown" 
+                     HorizontalAlignment="Stretch"/>
         </StackPanel>
         <Grid HorizontalAlignment="Right" Grid.Row="2" Margin="0,5,0,0">
             <Grid.ColumnDefinitions>

@@ -18,6 +18,7 @@ using System.Linq;
 using System.Reflection;
 using System.ComponentModel;
 using System.Management.Instrumentation;
+using Gum.ToolCommands;
 
 namespace Gum
 {
@@ -612,7 +613,7 @@ namespace Gum
                 {
                     PluginManager.Self.BeforeProjectSave(GumProjectSave);
 
-                    SortVariables();
+                    ElementCommands.Self.SortVariables();
 
                     bool saveContainedElements = isNewProject || forceSaveContainedElements;
 
@@ -687,37 +688,6 @@ namespace Gum
             }
         }
 
-        private void SortVariables()
-        {
-            foreach (var elementSave in GumProjectSave.Screens)
-            {
-                foreach (var stateSave in elementSave.AllStates)
-                {
-                    stateSave.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
-                }
-            }
-            foreach (var elementSave in GumProjectSave.Components)
-            {
-                foreach (var stateSave in elementSave.AllStates)
-                {
-                    stateSave.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
-                }
-            }
-            foreach (var elementSave in GumProjectSave.StandardElements)
-            {
-                foreach (var stateSave in elementSave.AllStates)
-                {
-                    stateSave.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
-                }
-            }
-            foreach (var behavior in GumProjectSave.Behaviors)
-            {
-                foreach (var stateSave in behavior.AllStates)
-                {
-                    stateSave.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
-                }
-            }
-        }
 
         private static string TryGetFileNameFromException(UnauthorizedAccessException exception)
         {
