@@ -43,6 +43,10 @@ The example above copies the entirety of the content folder to the output folder
 
 [https://learn.microsoft.com/en-us/visualstudio/msbuild/how-to-select-the-files-to-build?view=vs-2022#specify-inputs-with-wildcards](https://learn.microsoft.com/en-us/visualstudio/msbuild/how-to-select-the-files-to-build?view=vs-2022#specify-inputs-with-wildcards)
 
+{% hint style="info" %}
+If you are using the Contentless project ([https://github.com/Ellpeck/Contentless](https://github.com/Ellpeck/Contentless)) , you need to explicitly exclude Gum and all of its files by adding and modifying `Content/Contentless.json` .&#x20;
+{% endhint %}
+
 ### Loading a Gum Project
 
 To load a Gum Project:
