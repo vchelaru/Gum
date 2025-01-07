@@ -90,7 +90,7 @@ internal class ExposeVariableService : IExposeVariableService
             if (result == DialogResult.OK)
             {
                 string whyNot;
-                if (!NameVerifier.Self.IsExposedVariableNameValid(tiw.Result, SelectedState.Self.SelectedElement, out whyNot))
+                if (!NameVerifier.Self.IsVariableNameValid(tiw.Result, SelectedState.Self.SelectedElement, variableSave, out whyNot))
                 {
                     MessageBox.Show(whyNot);
                 }

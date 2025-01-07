@@ -1,4 +1,5 @@
 ﻿using Gum.Commands;
+using Gum.Managers;
 using Gum.Plugins.InternalPlugins.VariableGrid.ViewModels;
 using Gum.ToolCommands;
 using Gum.ToolStates;
@@ -26,9 +27,11 @@ internal class Builder
         builder.Services.AddSingleton(typeof(Commands.GuiCommands), GumCommands.Self.GuiCommands);
         builder.Services.AddSingleton(typeof(UndoManager), UndoManager.Self);
         builder.Services.AddSingleton(typeof(FileCommands), GumCommands.Self.FileCommands);
+        builder.Services.AddSingleton(typeof(NameVerifier), NameVerifier.Self);
         builder.Services.AddSingleton<IEditVariableService, EditVariableService>();
         builder.Services.AddSingleton<IEditVariableService, EditVariableService>();
         builder.Services.AddSingleton<IExposeVariableService, ExposeVariableService>();
+
 
         builder.Services.AddTransient<AddVariableViewModel>();
 

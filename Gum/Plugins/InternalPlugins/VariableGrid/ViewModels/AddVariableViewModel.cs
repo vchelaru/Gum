@@ -16,6 +16,8 @@ using ToolsUtilities;
 namespace Gum.Plugins.InternalPlugins.VariableGrid.ViewModels;
 public class AddVariableViewModel : ViewModel
 {
+    #region Fields/Properties
+
     public string EnteredName
     {
         get => Get<string>();
@@ -27,6 +29,7 @@ public class AddVariableViewModel : ViewModel
     private readonly UndoManager _undoManager;
     private readonly ElementCommands _elementCommands;
     private readonly FileCommands _fileCommands;
+    private readonly NameVerifier _nameVerifier;
 
     public List<string> AvailableTypes
     {
@@ -60,17 +63,24 @@ public class AddVariableViewModel : ViewModel
         }
     }
 
+    public ElementSave Element { get; set; }
+    public VariableSave Variable { get; set; }
+
+    #endregion
+
     public AddVariableViewModel(Commands.GuiCommands guiCommands,
         ISelectedState selectedState,
         UndoManager undoManager,
         ElementCommands elementCommands,
-        FileCommands fileCommands)
+        FileCommands fileCommands,
+        NameVerifier nameVerifier)
     {
         _guiCommands = guiCommands;
         _selectedState = selectedState;
         _undoManager = undoManager;
         _elementCommands = elementCommands;
         _fileCommands = fileCommands;
+        _nameVerifier = nameVerifier;
 
         AvailableTypes = new List<string>();
         AvailableTypes.Add("float");
@@ -91,6 +101,12 @@ public class AddVariableViewModel : ViewModel
         {
             return GeneralResponse.UnsuccessfulWith("You must enter a name");
         }
+
+        if(!_nameVerifier.IsVariableNameValid(EnteredName, Element, Variable, out string whyNotValid))
+        {
+            return GeneralResponse.UnsuccessfulWith(whyNotValid);
+        }
+
         return GeneralResponse.SuccessfulResponse;
     }
 
@@ -101,7 +117,7 @@ public class AddVariableViewModel : ViewModel
 
         string whyNotValid;
         bool isValid = NameVerifier.Self.IsVariableNameValid(
-            name, out whyNotValid);
+            name, Element, Variable, out whyNotValid);
 
         if (!isValid)
         {
@@ -145,7 +161,7 @@ public class AddVariableViewModel : ViewModel
 
         string whyNotValid;
         bool isValid = NameVerifier.Self.IsVariableNameValid(
-            newName, out whyNotValid);
+            newName, Element, Variable, out whyNotValid);
 
         if (!isValid)
         {

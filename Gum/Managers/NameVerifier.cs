@@ -159,27 +159,27 @@ namespace Gum.Managers
             return string.IsNullOrEmpty(whyNotValid);
         }
 
-        public bool IsExposedVariableNameValid(string variableName, ElementSave elementSave, out string whyNotValid)
+        public bool IsVariableNameValid(string variableName, ElementSave elementSave, VariableSave variableSave, out string whyNotValid)
         {
             whyNotValid = null;
 
             IsNameValidCommon(variableName, out whyNotValid);
 
-            if (string.IsNullOrEmpty(whyNotValid))
+            if (string.IsNullOrEmpty(whyNotValid) && elementSave != null)
             {
-                IsNameAlreadyUsed(variableName, null, elementSave, out whyNotValid);
+                IsNameAlreadyUsed(variableName, variableSave, elementSave, out whyNotValid);
             }
 
             if (string.IsNullOrEmpty(whyNotValid))
             {
-                var existingVariable = elementSave.GetVariableFromThisOrBase(variableName);
+                var existingVariable = elementSave?.GetVariableFromThisOrBase(variableName);
 
                 // there's a variable but we shouldn't consider it
                 // unless it's "Active" - inactive variables may be
                 // leftovers from a type change
 
 
-                if(existingVariable != null)
+                if(existingVariable != null && elementSave != null)
                 {
                     var isActive = VariableSaveLogic.GetIfVariableIsActive(existingVariable,
                         elementSave, null);
@@ -207,13 +207,6 @@ namespace Gum.Managers
                 // need to check for duplicate names eventually
             }
             return string.IsNullOrEmpty(whyNotValid);
-        }
-
-        public bool IsVariableNameValid(string name, out string whyNotValid)
-        {
-            IsNameValidCommon(name, out whyNotValid);
-            return string.IsNullOrEmpty(whyNotValid);
-
         }
 
         private void IsNameValidCommon(string name, out string whyNotValid)

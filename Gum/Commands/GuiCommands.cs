@@ -335,6 +335,8 @@ namespace Gum.Commands
             var services = host.Services;
 
             var vm = services.GetRequiredService<AddVariableViewModel>();
+            vm.Element = SelectedState.Self.SelectedElement;
+            vm.Variable = null;
 
             var window = new AddVariableWindow(vm);
 

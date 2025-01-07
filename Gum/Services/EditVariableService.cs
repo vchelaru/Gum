@@ -192,7 +192,8 @@ internal class EditVariableService : IEditVariableService
         var services = host.Services;
 
         var vm = services.GetRequiredService<AddVariableViewModel>();
-
+        vm.Variable = variable;
+        vm.Element = container as ElementSave;
 
         vm.SelectedItem = variable.Type;
         vm.EnteredName = variable.Name;
