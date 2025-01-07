@@ -116,6 +116,8 @@
     * [AddMenuItem](readme/plugins/pluginbase.addmenuitem.md)
     * [Export](readme/plugins/pluginbase.export.md)
     * [Setting Up Post Build Events](readme/plugins/setting-up-post-build-events.md)
+  * [Variables](readme/variables/README.md)
+    * [Add Variable](readme/variables/add-variable.md)
 * [Gum Code](gum-code/README.md)
   * [Gum Code Reference](gum-code/gum-code-reference/README.md)
     * [Camera](gum-code/gum-code-reference/camera.md)

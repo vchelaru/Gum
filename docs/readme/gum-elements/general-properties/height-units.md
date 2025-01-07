@@ -175,11 +175,11 @@ For example, the following image contains multiple Text instances. Each has a si
 
 We can observe the absolute height of a Text instance by mousing over one of the handles for resizing vertically.
 
-<figure><img src="../../../.gitbook/assets/image.png" alt=""><figcaption><p>Text which has an absolute height of 41 pixels</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/TextHeight.png" alt=""><figcaption><p>Text which has an absolute height of 41 pixels</p></figcaption></figure>
 
 In this case, the height is 41 pixels tall. This is based on the lineHeight as defined on the .fnt file. The image above is using an Arial 36 font which has a lineHeight value of 41 pixels.
 
-<figure><img src="../../../.gitbook/assets/image (1).png" alt=""><figcaption><p>Font36Arial has a lineHeight of 41.</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/FntImage.png" alt=""><figcaption><p>Font36Arial has a lineHeight of 41.</p></figcaption></figure>
 
 ### Percentage of Width
 
