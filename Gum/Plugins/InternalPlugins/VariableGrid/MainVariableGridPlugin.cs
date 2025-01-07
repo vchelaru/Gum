@@ -33,6 +33,14 @@ public class MainVariableGridPlugin : InternalPlugin
         this.BehaviorSelected += HandleBehaviorSelected;
         this.VariableSelected += HandleVariableSelected;
         this.RefreshVariableView += HandleRefreshVariableView;
+        this.AfterUndo += HandleAfterUndo;
+    }
+
+    private void HandleAfterUndo()
+    {
+        // An undo can result in variables added or removed, so let's
+        // do a full refresh
+        PropertyGridManager.Self.RefreshUI(force: true);
     }
 
     private void HandleVariableSelected(IStateContainer container, VariableSave save)

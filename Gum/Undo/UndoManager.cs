@@ -447,15 +447,13 @@ public class UndoManager
         Plugins.PluginManager.Self.AfterUndo();
 
         GumCommands.Self.GuiCommands.RefreshElementTreeView(toApplyTo);
-        UpdateToSelectedStateSave();
 
-        // The instances may have changed.  We will want 
-        // to refresh the wireframe since the IPSOs in the 
-        // wireframe have tags.
-        if (shouldRefreshWireframe)
-        {
-            WireframeObjectManager.Self.RefreshAll(true);
-        }
+        // reset everything. This is slow, but is easy
+        WireframeObjectManager.Self.RefreshAll(true);
+
+        SelectionManager.Self.Refresh();
+
+
         if (shouldRefreshStateTreeView)
         {
             GumCommands.Self.GuiCommands.RefreshStateTreeView();
@@ -482,16 +480,6 @@ public class UndoManager
 
         // Don't do this anymore due to filtering through search
         //ElementTreeViewManager.Self.VerifyComponentsAreInTreeView(ProjectManager.Self.GumProjectSave);
-    }
-
-    private void UpdateToSelectedStateSave()
-    {
-        // reset everything. This is slow, but is easy
-        WireframeObjectManager.Self.RefreshAll(true);
-
-        SelectionManager.Self.Refresh();
-
-        GumCommands.Self.GuiCommands.RefreshVariables();
     }
 
     public void PerformRedo()

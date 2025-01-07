@@ -198,7 +198,7 @@ internal class EditVariableService : IEditVariableService
         vm.EnteredName = variable.Name;
 
         var window = new AddVariableWindow(vm);
-
+        window.Title = "Edit Variable";
         var result = window.ShowDialog();
 
         if (result == true)
