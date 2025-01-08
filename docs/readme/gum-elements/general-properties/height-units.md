@@ -96,11 +96,16 @@ A non-zero `Height` when using `Relative to Children` can be used to add additio
 
 A parent container can ignore its children when it determines its own height when using a `Height Units` of `Relative to Children` if any of the following are true:
 
-1. The child's height depends on its parent's height. This circular dependency is resolved by the parent ignoring this child.
-2. The child is explicitly positioned outside of parent's bounds
-3. The child's `Y Units` is `Percentage of Parent Height`
+1. The child's `Ignored By Parent Size` is true.
+2. The child's height depends on its parent's height. This circular dependency is resolved by the parent ignoring this child.
+3. The child is explicitly positioned outside of parent's bounds
+4. The child's `Y Units` is `Percentage of Parent Height`
 
-#### Child Depends on Parent Height (1)
+#### Child's Ignored By Parent Size is True (1)
+
+If a child has its `Ignored By Parent Size` set to true, then the parent ignores this child when calculating its own size. For more information, see the [Ignored By Parent Size](ignored-by-parent-size.md) page.
+
+#### Child Depends on Parent Height (2)
 
 If a child's height depends on the parent, then the child is ignored by the parent. Once the parent has determined its own height, then the child is sized according to the parent. This type of circular dependency is common when adding background visuals to a container.&#x20;
 
@@ -116,7 +121,7 @@ Since BlueRectangle's absolute height value does not depend on the parent, the p
 
 <figure><img src="../../../.gitbook/assets/05_05 54 05.gif" alt=""><figcaption><p>Moving BlueRectangle changes the height of both its parent and also YellowRectangle</p></figcaption></figure>
 
-#### Child Explicitly Positioned Outside of Parent's Bounds (2)
+#### Child Explicitly Positioned Outside of Parent's Bounds (3)
 
 A parent does not consider a child if the child is explicitly positioned outside of the parent's bounds. This can happen if the child's `Y Units` and `Y` values result in the child being drawn outside of the parent's bounds.
 
@@ -136,7 +141,7 @@ If a child is a Text instance using a `Y Origin` of `Baseline` and a `Y Units` o
 
 <figure><img src="../../../.gitbook/assets/baselineHeightIgnore.png" alt=""><figcaption><p>Portions of the text are ignored when calculating heights</p></figcaption></figure>
 
-#### Child Y Units is Percentage of Parent Height (3)
+#### Child Y Units is Percentage of Parent Height (4)
 
 A parent ignores its child if the child uses a `Y Units` of `Percentage of Parent Height` because this also creates a circular dependency (parent height depends on child position, child position depends on parent height).
 

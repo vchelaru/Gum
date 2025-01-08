@@ -28,6 +28,7 @@
       * [Base Type (Inheritance)](readme/gum-elements/general-properties/base-type-inheritance.md)
       * [Clips Children](readme/gum-elements/general-properties/clips-children.md)
       * [Height Units](readme/gum-elements/general-properties/height-units.md)
+      * [Ignored By Parent Size](readme/gum-elements/general-properties/ignored-by-parent-size.md)
       * [Locked](readme/gum-elements/general-properties/locked.md)
       * [Order](readme/gum-elements/general-properties/order.md)
       * [Parent](readme/gum-elements/general-properties/parent.md)
