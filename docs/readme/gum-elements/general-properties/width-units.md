@@ -68,7 +68,9 @@ A parent container can ignore its children when it determines its absolute width
 2. The child is explicitly positioned outside of the parent's bounds
 3. The child's X Units is Percentage of Parent Width
 
-If a child's width depends on the parent (1), then the child is ignored by the parent. Once the parent has determined its own width, then the child is sized according to the parent. This type of circular dependency is common when adding background visuals to a container.
+Child Width Depends on its Parnet's Width (1)
+
+If a child's width depends on the parent, then the child is ignored by the parent. Once the parent has determined its own width, then the child is sized according to the parent. This type of circular dependency is common when adding background visuals to a container.
 
 For example consider a container with two children - BlueRectangle and YellowRectangle - with the following variables:
 
@@ -82,19 +84,23 @@ Since BlueRectangle's absolute width value does not depend on the parent, the pa
 
 <figure><img src="../../../.gitbook/assets/05_07 32 31.gif" alt=""><figcaption><p>Moving BlueRectangle changes the width of both its parent and also YellowRectangle</p></figcaption></figure>
 
+#### Child is Explicitly Positioned Outside of Parnent's Bounds (2)
+
 A parent does not consider a child if the child is explicitly positioned outside of the parent's bounds. This can happen if the child's X Units and X values result in the child being drawn outside of the parent's bounds
 
 If a child has X Units of Pixels from Left and its X value pushes the child out of the left of the parent, then the portion that is outside of the left of the parent is ignored. The BlueRectangle in the following image has an absolute width of 50. Its X value is -20, so only 30 pixels are used to determine the parent's absolute height.
 
 <figure><img src="../../../.gitbook/assets/05_07 37 28.png" alt=""><figcaption><p>Parent absolute width is 30 since the BlueRectangle explicitly has 20 of its width set outside of the parent's bounds</p></figcaption></figure>
 
-Similarly, if a child uss an X Units of Pixels from Right then the parent does not consider the width of any portion which is outside of its bounds. The following animation shows RedRectangle placed outside of the right of the container's bounds with a X Units of Pixels from Right.
+Similarly, if a child uses an X Units of Pixels from Right then the parent does not consider the width of any portion which is outside of its bounds. The following animation shows RedRectangle placed outside of the right of the container's bounds with a X Units of Pixels from Right.
 
 <figure><img src="../../../.gitbook/assets/05_07 40 25.gif" alt=""><figcaption><p>RedRectangle not affecting the absolute width of its parent since it is placed outside of the parent's bounds</p></figcaption></figure>
 
 Notice that if RedRectangle is moved so that it is inside the bounds, it can affect the absolute width of the parent. As RedRectangle is moved into the bounds, the parent grows to accommodate the desired RedRectangle X value.
 
 <figure><img src="../../../.gitbook/assets/05_07 42 42.gif" alt=""><figcaption><p>Moving a child which uses Pixels from Right can make the parent grow to accommodate the child's X value</p></figcaption></figure>
+
+#### Child's X Units is Percentage of Parent Width (3)
 
 A parent ignores its child if the child uses an X Units of Percentage of Parent Width because this also creates a circular dependency (parent width depends on child position, child position depends on parent width).
 

@@ -24,19 +24,19 @@ The following shows how to use the ChildrenLayout property to change the default
 
 Regular layout positions each child independent of every other child. The position of one child does not affect the position other children. This is the default layout for containers.
 
-<figure><img src="../../../.gitbook/assets/image (4) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Two ColoredRectangles using regular layout</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/08_06 25 43.png" alt=""><figcaption><p>Two ColoredRectangles using Regular layout</p></figcaption></figure>
 
 ### Top to Bottom Stack
 
 Top to Bottom Stack results in each child being positioned after its previous sibling vertically. This can be used to create horizontal stacks.
 
-<figure><img src="../../../.gitbook/assets/image (12) (1).png" alt=""><figcaption><p>Text Instances in a top to bottom stack</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/08_06 28 12.png" alt=""><figcaption><p>Text Instances in a top to bottom stack</p></figcaption></figure>
 
 ### Left to Right Stack
 
 Left to Right Stack results in each child being positioned after its previous sibling horizontally. This can be used to create vertical stacks.
 
-<figure><img src="../../../.gitbook/assets/HeartsRow.png" alt=""><figcaption><p>Sprites in a left to right stack</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/08_06 31 34.png" alt=""><figcaption><p>Sprites in a Left to Right Stack</p></figcaption></figure>
 
 ### Stacking and X/Y Values
 
@@ -113,6 +113,8 @@ For more information on ordering, see the [Order](../general-properties/order.md
 ### Auto Grid Horizontal and Auto Grid Vertical
 
 Auto Grid Horizontal and Auto Grid Vertical layouts result in each child of the container being placed in its own cell. All position and size values are relative to the entire cell, so children can expand to fill their cell or be positioned according to any side or corner.
+
+<figure><img src="../../../.gitbook/assets/08_06 36 05.png" alt=""><figcaption><p>Blue ColoredRectangles in a Container using Children Layout of Auto Grid Horizontal </p></figcaption></figure>
 
 The following shows a container with an Auto Grid Horizontal and Vertical Cells of 2, resulting in a 2x2 grid. As children are added to the container through copy/paste, each child is placed in its own cell.
 

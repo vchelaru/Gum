@@ -100,7 +100,9 @@ A parent container can ignore its children when it determines its own height whe
 2. The child is explicitly positioned outside of parent's bounds
 3. The child's `Y Units` is `Percentage of Parent Height`
 
-If a child's height depends on the parent (1), then the child is ignored by the parent. Once the parent has determined its own height, then the child is sized according to the parent. This type of circular dependency is common when adding background visuals to a container.&#x20;
+#### Child Depends on Parent Height (1)
+
+If a child's height depends on the parent, then the child is ignored by the parent. Once the parent has determined its own height, then the child is sized according to the parent. This type of circular dependency is common when adding background visuals to a container.&#x20;
 
 For example consider a container with two children - BlueRectangle and YellowRectangle - with the following variables:
 
@@ -113,6 +115,8 @@ Only YellowRectangle depends on its parent.
 Since BlueRectangle's absolute height value does not depend on the parent, the parent can use BlueRectangle's absolute height when calculating its own absolute height. Since YellowRectangle depends on the parent, the parent ignores the YellowRectangle. Instead, YellowRectangle depends on the parent container's absolute height for calculating its own absolute height. This in effect creates a situation where BlueRectangle affects the height of both its parent and also its YellowRectangle sibling.
 
 <figure><img src="../../../.gitbook/assets/05_05 54 05.gif" alt=""><figcaption><p>Moving BlueRectangle changes the height of both its parent and also YellowRectangle</p></figcaption></figure>
+
+#### Child Explicitly Positioned Outside of Parent's Bounds (2)
 
 A parent does not consider a child if the child is explicitly positioned outside of the parent's bounds. This can happen if the child's `Y Units` and `Y` values result in the child being drawn outside of the parent's bounds.
 
@@ -128,13 +132,15 @@ Notice that if RedRectangle is moved so that it is inside the bounds, it can aff
 
 <figure><img src="../../../.gitbook/assets/05_06 48 12.gif" alt=""><figcaption><p>Moving a child which uses <code>Pixels From Bottom</code> upward can make the parent grow to accommodate the child's <code>Y</code> value</p></figcaption></figure>
 
-A parent ignores its child if the child uses a `Y Units` of `Percentage of Parent Height` because this also creates a circular dependency (parent height depends on child position, child position depends on parent height).
-
-<figure><img src="../../../.gitbook/assets/05_06 52 34.gif" alt=""><figcaption><p><code>Y Units</code> of <code>Percentage of Parent Height</code> results in the child ignored</p></figcaption></figure>
-
 If a child is a Text instance using a `Y Origin` of `Baseline` and a `Y Units` of `Pixels from Bottom`, then portions of the text which fall below the baseline are ignored by the parent's height.
 
 <figure><img src="../../../.gitbook/assets/baselineHeightIgnore.png" alt=""><figcaption><p>Portions of the text are ignored when calculating heights</p></figcaption></figure>
+
+#### Child Y Units is Percentage of Parent Height (3)
+
+A parent ignores its child if the child uses a `Y Units` of `Percentage of Parent Height` because this also creates a circular dependency (parent height depends on child position, child position depends on parent height).
+
+<figure><img src="../../../.gitbook/assets/05_06 52 34.gif" alt=""><figcaption><p><code>Y Units</code> of <code>Percentage of Parent Height</code> results in the child ignored</p></figcaption></figure>
 
 #### Relative to Children and Auto Grid Vertical
 
@@ -185,7 +191,7 @@ The following image shows a child ColoredRectangle with a `Height` of 200 `Perce
 
 [Sprites](../sprite/) can select a `Height Units` called `Percentage of File Height`, which sets the height of the Sprite according to the file that it is displaying. This is the default `Height Units` for Sprites.
 
-The following image shows a child Sprite with 200 `Percentage of Source File`` ``Height`, which means it draws two times as tall as its source image:
+The following image shows a child Sprite with 200 `Percentage of Source File Height`, which means it draws two times as tall as its source image:
 
 ![Sprite using Percentage of File Height of 200](<../../../.gitbook/assets/11_06 31 44.png>)
 
