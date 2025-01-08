@@ -8,7 +8,9 @@ using Gum.RenderingLibrary;
 using Vector2 = System.Numerics.Vector2;
 using Matrix = System.Numerics.Matrix4x4;
 using System.Linq;
+#if GUM
 using WpfDataUi.Controls;
+#endif
 
 namespace Gum.Managers
 {
@@ -578,10 +580,12 @@ namespace Gum.Managers
                     Value = 255,
                     Name = "Alpha",
                     Category = "Rendering",
-                    PreferredDisplayer = typeof(SliderDisplay)
                 };
+#if GUM
+                alphaValue.PreferredDisplayer = typeof(SliderDisplay);
                 alphaValue.PropertiesToSetOnDisplayer["MinValue"] = 0.0;
                 alphaValue.PropertiesToSetOnDisplayer["MaxValue"] = 255.0;
+#endif
                 stateSave.Variables.Add(alphaValue);
             }
             var redValue = new VariableSave
@@ -591,10 +595,7 @@ namespace Gum.Managers
                 Value = 255,
                 Name = "Red",
                 Category = "Rendering",
-                PreferredDisplayer = typeof(SliderDisplay)
             };
-            redValue.PropertiesToSetOnDisplayer["MinValue"] = 0.0;
-            redValue.PropertiesToSetOnDisplayer["MaxValue"] = 255.0;
             stateSave.Variables.Add(redValue);
 
             var greenValue = new VariableSave
@@ -604,10 +605,7 @@ namespace Gum.Managers
                 Value = 255,
                 Name = "Green",
                 Category = "Rendering",
-                PreferredDisplayer = typeof(SliderDisplay)
             };
-            greenValue.PropertiesToSetOnDisplayer["MinValue"] = 0.0;
-            greenValue.PropertiesToSetOnDisplayer["MaxValue"] = 255.0;
             stateSave.Variables.Add(greenValue);
 
             var blueValue = new VariableSave
@@ -617,11 +615,20 @@ namespace Gum.Managers
                 Value = 255,
                 Name = "Blue",
                 Category = "Rendering",
-                PreferredDisplayer = typeof(SliderDisplay)
             };
+            stateSave.Variables.Add(blueValue);
+
+#if GUM
+            redValue.PropertiesToSetOnDisplayer["MinValue"] = 0.0;
+            redValue.PropertiesToSetOnDisplayer["MaxValue"] = 255.0;
+            greenValue.PropertiesToSetOnDisplayer["MinValue"] = 0.0;
+            greenValue.PropertiesToSetOnDisplayer["MaxValue"] = 255.0;
             blueValue.PropertiesToSetOnDisplayer["MinValue"] = 0.0;
             blueValue.PropertiesToSetOnDisplayer["MaxValue"] = 255.0;
-            stateSave.Variables.Add(blueValue);
+            redValue.PreferredDisplayer = typeof(SliderDisplay);
+            blueValue.PreferredDisplayer = typeof(SliderDisplay);
+            greenValue.PreferredDisplayer = typeof(SliderDisplay);
+#endif
         }
 
         public static void AddDimensionsVariables(StateSave stateSave, float defaultWidth, float defaultHeight, DimensionVariableAction dimensionVariableAction)
