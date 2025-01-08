@@ -125,7 +125,9 @@ The largest child determines the cell size for all other children. Therefore, if
 
 #### Relative to Children and Text
 
-Setting a Text instance's **Width Units** to **Relative to Children** results in the Text object adjusting according to its text contents. For example, setting the **Width Units** to **Relative to Children** and setting the **Width** to 0 results in the Text object automatically adjusting its actual width according to the text it contains.
+Setting a Text instance's **Width Units** to **Relative to Children** results in the Text object adjusting according to its text contents. In other words if a Text's Width Units is set to Relative To Children, then the words in the Text do not wrap.
+
+For example, setting the **Width Units** to **Relative to Children** and setting the **Width** to 0 results in the Text object automatically adjusting its actual width according to the text it contains.
 
 ![Text with Relative to Children width results in the contents of the Text instance controlling its size](<../../../.gitbook/assets/11_05 52 48.png>)
 
