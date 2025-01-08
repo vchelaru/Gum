@@ -10,39 +10,37 @@ The following shows a child [ColoredRectangle](../coloredrectangle.md) with 50 *
 
 ![Rectangle with an absolute width of 50](<../../../.gitbook/assets/11_05 35 01.png>)
 
-### Relative to Container
+### Relative to Parent
 
-The following image shows a child ColoredRectangle with -10 **RelativeToContainer** Width, so it sizes itself 10 pixels less wide than its parent.
+The following image shows a child ColoredRectangle with -10 **Relative to Parent** Width, so it sizes itself 10 pixels less wide than its parent.
 
-![Rectangle using a Relative to Container width value of -10](<../../../.gitbook/assets/11_05 36 16.png>)
+![Rectangle using a Relative to Parent width value of -10](<../../../.gitbook/assets/11_05 36 16.png>)
 
-{% hint style="info" %}
-Despite the name referring to a "Container", the size is relative to the parent regardless of the parent's type. If the instance has no parent, then the size is relative to the canvas.
-{% endhint %}
+If an instance does not have a parent, then it uses the canvas size.
 
-<figure><img src="../../../.gitbook/assets/image (70).png" alt=""><figcaption><p>Rectangle using 0 relative to container with no direct parent</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (70).png" alt=""><figcaption><p>Rectangle using 0 Relative to Parent with no direct parent</p></figcaption></figure>
 
-### Percentage of Container
 
-The following shows a child ColoredRectangle with 100 **Percentage of Container** Width, which means it has 100% of the width of its parent. Note that 100 **Percentage** is the same as 0 **Relative to Container**:
-
-![Rectangle using 100% of its container](<../../../.gitbook/assets/02_10 09 01.png>)
 
 {% hint style="info" %}
-Despite the name referring to a "Container", the size is relative to the parent regardless of the parent's type. If the instance has no parent, then the size is relative to the canvas.
+All relationships between parent and children depend only on the direct parent or child. Grandchildren and grandparents are not considered when performing calculations. For more information, see the [Parent](parent.md#children-outside-of-parent-bounds) page.
 {% endhint %}
+
+### Percentage of Parent
+
+The following shows a child ColoredRectangle with 100 **Percentage of Parent** Width, which means it has 100% of the width of its parent. Note that 100 **Percentage** is the same as 0 **Relative to Parent**:
+
+![Rectangle using 100% of its parent](<../../../.gitbook/assets/02_10 09 01.png>)
+
+If an object does not have a parent, then the width of the canvas is used.
 
 <figure><img src="../../../.gitbook/assets/image (69).png" alt=""><figcaption><p>Rectangle using 100% of the screen when it has no direct parent</p></figcaption></figure>
 
-### Ratio of Container
+### Ratio of Parent
 
-Ratio of Container can be used to fill available space or to share available space with other objects using a ratio. It behaves similar to a Height Units of [Ratio of Container](height-units.md#ratio-of-container), but operates horizontally rather than vertically.
+Ratio of Parent can be used to fill available space or to share available space with other objects using a ratio. It behaves similar to a Height Units of [Ratio of Parent](height-units.md#ratio-of-parent), but operates horizontally rather than vertically.
 
 <figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Blue rectangle using a ratio value of 2, next to siblings each using a ratio value of 1</p></figcaption></figure>
-
-{% hint style="info" %}
-Despite the name referring to a "Container", the total size available for ratios is relative to the parent regardless of the parent's type. If the instance has no parent, then the size is relative to the canvas.
-{% endhint %}
 
 ### Relative to Children
 
@@ -50,7 +48,7 @@ The following image shows a child ColoredRectangle with 50 **Relative to Childre
 
 ![Rectangle with a width of 50 Relative to Children, but since it has no children it is 50 units wide](<../../../.gitbook/assets/11_05 46 44.png>)
 
-**Relative to Children** can be used to size an object based on the position and sizes of a container's children. The following animation shows a container with 0 **Relative to Children** Width, which means that its width is set just large enough to contain its children. Notice that if the children are moved, the parent's width adjusts. Both children are considered so the container adjusts its width according to the right-most side of either child:
+**Relative to Children** can be used to size an object based on the position and sizes of a parent's children. The following animation shows a container with 0 **Relative to Children** Width, which means that its width is set just large enough to contain its children. Notice that if the children are moved, the parent's width adjusts. Both children are considered so the container adjusts its width according to the right-most side of either child:
 
 <figure><img src="../../../.gitbook/assets/05_07 19 10.gif" alt=""><figcaption><p>Moving children can adjust the absolute width of the parent if the parent is using a Width Units of Relative to Children</p></figcaption></figure>
 
@@ -76,7 +74,7 @@ For example consider a container with two children - BlueRectangle and YellowRec
 
 * BlueRectangle X = Pixels from Left
 * BlueRectangle Width Units = Absolute
-* YellowRectangle Width Units = Relative to Container
+* YellowRectangle Width Units = Relative to Parent
 
 Only YellowRectangle depends on its parent.
 

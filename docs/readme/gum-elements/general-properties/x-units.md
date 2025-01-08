@@ -2,26 +2,26 @@
 
 The **X Units** variable controls how a unit is horizontally positioned relative to its parent. By default an object is positioned relative to the left of its parent, where each unit represents 1 pixel.
 
-## PixelsFromLeft
+## Pixels From Left
 
-The following shows a child [ColoredRectangle](../coloredrectangle.md) positioned 50 **PixelsFromLeft** relative to its parent:
+The following shows a child [ColoredRectangle](../coloredrectangle.md) positioned 50 **Pixels From Left** relative to its parent:
 
-![](<../../../.gitbook/assets/PixelsFromLeftGum (1).png>)
+![](<../../../.gitbook/assets/07_07 36 27.png>)
 
-## PixelsFromCenterX
+## Pixels From Center
 
-The following shows a child ColoredRectangle positioned 50 **PixelsFromCenterX** relative to its parent:
+The following shows a child ColoredRectangle positioned 50 **Pixels From Center** relative to its parent:
 
-![](<../../../.gitbook/assets/PixelsFromCenterXGum (1).png>)
+![](<../../../.gitbook/assets/07_07 37 01.png>)
 
-## PixelsFromRight
+## Pixels From Right
 
-The following shows a child ColoredRectangle positioned 50 **PixelsFromRight** relative to its Parent:
+The following shows a child ColoredRectangle positioned 50 **Pixels From Right** relative to its Parent:
 
-![](<../../../.gitbook/assets/PixelsFromRightGum (1).png>)
+![](<../../../.gitbook/assets/07_07 37 35.png>)
 
-## PercentageWidth
+## Percentage Parent Width
 
-The following shows a child ColoredRectangle positioned 50 **PercentageWidth** relative to its Parent. In other words, it will be positioned halfway between the left and right edges of the Parent:
+The following shows a child ColoredRectangle positioned 50 **Percentage Parent Width** relative to its Parent. In other words, it will be positioned halfway between the left and right edges of the Parent:
 
-![](../../../.gitbook/assets/PercentageWidthGum.png)
+![](<../../../.gitbook/assets/07_07 38 12.png>)
