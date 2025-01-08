@@ -282,15 +282,6 @@ namespace Gum.Wireframe
 
 
                         AddAllIpsos(RootGue);
-                        HashSet<GraphicalUiElement> hashSet = new HashSet<GraphicalUiElement>();
-                        var tempSorted = AllIpsos.OrderBy(item =>
-                        {
-                            hashSet.Clear();
-                            return GetDepth(item, hashSet);
-                        }).ToArray();
-
-                        AllIpsos.Clear();
-                        AllIpsos.AddRange(tempSorted);
 
                         UpdateTextOutlines(RootGue);
 
@@ -352,13 +343,45 @@ namespace Gum.Wireframe
             }
         }
 
-        private void AddAllIpsos(GraphicalUiElement rootGue)
+        private void AddAllIpsos(GraphicalUiElement gue)
         {
-            AllIpsos.Add(rootGue);
-            foreach(var item in rootGue.ContainedElements)
+            AllIpsos.Add(gue);
+
+            var containedElements = gue.ContainedElements.ToHashSet();
+
+            if (gue.Children != null)
             {
-                AllIpsos.Add(item);
+                AddChildrenRecursively(gue, containedElements);
             }
+            else
+            {
+                foreach (var item in gue.ContainedElements)
+                {
+                    if (item.Parent == null)
+                    {
+                        AllIpsos.Add(item);
+                        AddChildrenRecursively(item, containedElements);
+                    }
+                }
+
+            }
+        }
+
+        private void AddChildrenRecursively(GraphicalUiElement gue, HashSet<GraphicalUiElement> containedElements)
+        {
+            foreach(var childAsRenderable in gue.Children)
+            {
+                if(childAsRenderable is GraphicalUiElement child && containedElements.Contains(childAsRenderable))
+                {
+                    AllIpsos.Add(child);
+                    AddChildrenRecursively(child, containedElements);
+                }
+            }
+            //AllIpsos.Add(rootGue);
+            //foreach(var item in rootGue.ContainedElements)
+            //{
+            //    AllIpsos.Add(item);
+            //}
         }
 
         public void ApplyLocalization()
