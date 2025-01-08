@@ -193,7 +193,7 @@ namespace WpfDataUi.Controls
         {
             var type = InstanceMember?.PropertyType;
 
-            var isNullable =
+            var isNullable = type != null &&
                 Nullable.GetUnderlyingType(type) != null;
             return isNullable;
         }
