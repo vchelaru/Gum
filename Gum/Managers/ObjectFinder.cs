@@ -1090,6 +1090,12 @@ namespace Gum.Managers
             }
         }
 
+        /// <summary>
+        /// Returns the root variable (defined on the standard element usually) for the argument instance.
+        /// </summary>
+        /// <param name="name">Fully qualified variable name</param>
+        /// <param name="element">The element containing the variable</param>
+        /// <returns>The root variable if found</returns>
         public VariableSave GetRootVariable(string name, ElementSave element)
         {
             var exposedVariable = element.DefaultState.Variables.FirstOrDefault(item => item.ExposedAsName == name);

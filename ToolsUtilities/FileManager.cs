@@ -395,6 +395,11 @@ namespace ToolsUtilities
             }
             else
             {
+                if (IsUrl(fileName))
+                {
+                    relative = false;
+                }
+                else
                 if (fileName.StartsWith(ExeLocation))
                 {
                     relative = false;
@@ -475,6 +480,12 @@ namespace ToolsUtilities
 
         public static string MakeRelative(string pathToMakeRelative, string pathToMakeRelativeTo, bool preserveCase)
         {
+            // If it's a URL we can't make it relative
+            if(IsUrl(pathToMakeRelative))
+            {
+                return pathToMakeRelative;
+            }
+
             if (string.IsNullOrEmpty(pathToMakeRelative) == false)
             {
                 pathToMakeRelative = FileManager.Standardize(pathToMakeRelative, preserveCase);

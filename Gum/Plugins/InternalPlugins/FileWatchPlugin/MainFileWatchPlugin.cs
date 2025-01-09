@@ -1,6 +1,8 @@
 ﻿using Gum.DataTypes;
 using Gum.Logic.FileWatch;
+using Gum.Managers;
 using Gum.Plugins.BaseClasses;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.ComponentModel.Composition;
 using System.Linq;
@@ -52,6 +54,29 @@ public class MainFileWatchPlugin : InternalPlugin
     {
         this.ProjectLoad += HandleProjectLoad;
         this.ProjectLocationSet += HandleProjectLocationSet;
+        this.VariableSet += HandleVariableSet;
+    }
+
+    private void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue)
+    {
+        if(element== null) 
+        {
+            return;
+        }
+
+        var fullVariableName = variableName;
+        if(instance != null)
+        {
+            fullVariableName = instance.Name + "." + variableName;
+        }
+
+        var rootVarible = ObjectFinder.Self.GetRootVariable(fullVariableName, element);
+
+        if(rootVarible?.IsFile == true)
+        {
+            // need to update the file paths
+            FileWatchLogic.Self.RefreshRootDirectory();
+        }
     }
 
     private void HandleProjectLocationSet(FilePath path)

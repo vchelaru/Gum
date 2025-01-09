@@ -232,7 +232,6 @@ namespace Gum.PropertyGridHelpers
 
         public event Action<string> SetToDefault;
 
-        #region Methods
 
         public StateReferencingInstanceMember(InstanceSavePropertyDescriptor ispd, 
             StateSave stateSave,
@@ -599,7 +598,7 @@ namespace Gum.PropertyGridHelpers
             object newValue = setPropertyArgs.Value;
             if (mPropertyDescriptor != null)
             {
-                AssignLastOldValue(setPropertyArgs);
+                StoreLastOldValue(setPropertyArgs);
                 // <None> is a reserved 
                 // value for when we want
                 // to allow the user to reset
@@ -658,7 +657,7 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        private void AssignLastOldValue(SetPropertyArgs setPropertyArgs)
+        private void StoreLastOldValue(SetPropertyArgs setPropertyArgs)
         {
             object oldValue = base.Value;
 
@@ -988,6 +987,7 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
+        // Vic asks - why does this exist? Why aren't we using ObjectFinder?
         public VariableSave GetRootVariableSave()
         {
             VariableSave variableSave = null;
@@ -1044,6 +1044,5 @@ namespace Gum.PropertyGridHelpers
         }
 #endif
 
-        #endregion
     }
 }

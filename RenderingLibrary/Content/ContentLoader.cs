@@ -87,20 +87,10 @@ namespace RenderingLibrary.Content
 
         private Texture2D LoadTexture2D(string fileName, SystemManagers managers)
         {
-            const bool preserveCase = true;
-
-            string fileNameStandardized = FileManager.Standardize(fileName, preserveCase, false);
-
-            if (FileManager.IsRelative(fileNameStandardized) && FileManager.IsUrl(fileName) == false)
-            {
-                fileNameStandardized = FileManager.RelativeDirectory + fileNameStandardized;
-
-                fileNameStandardized = FileManager.RemoveDotDotSlash(fileNameStandardized);
-            }
-
+            string fileNameStandardized = StandardizeCaseSensitive(fileName);
 
             Texture2D toReturn = null;
-            
+
             if (LoaderManager.Self.CacheTextures)
             {
                 var cached = LoaderManager.Self.GetDisposable(fileNameStandardized) as Texture2D;
@@ -124,6 +114,22 @@ namespace RenderingLibrary.Content
             }
             return toReturn;
 
+        }
+
+        public static string StandardizeCaseSensitive(string fileName)
+        {
+            const bool preserveCase = true;
+
+            string fileNameStandardized = FileManager.Standardize(fileName, preserveCase, false);
+
+            if (FileManager.IsRelative(fileNameStandardized) && FileManager.IsUrl(fileName) == false)
+            {
+                fileNameStandardized = FileManager.RelativeDirectory + fileNameStandardized;
+
+                fileNameStandardized = FileManager.RemoveDotDotSlash(fileNameStandardized);
+            }
+
+            return fileNameStandardized;
         }
 
         private Texture2D LoadTextureFromUrl(string fileName, SystemManagers managers)
