@@ -3,6 +3,7 @@
 * [Gum Tool](README.md)
   * [Setup](readme/setup/README.md)
     * [Running from Source](readme/setup/running-from-source.md)
+  * [Showcase](readme/showcase.md)
   * [Tutorials and Examples](readme/tutorials-and-examples/README.md)
     * [Intro Tutorials](readme/tutorials-and-examples/intro-tutorials/README.md)
       * [1 - The Basics](readme/tutorials-and-examples/intro-tutorials/basics.md)

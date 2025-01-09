@@ -32,6 +32,10 @@ Gum objects can be created and modified in code. Create fully-featured UI by sub
 
 <figure><img src=".gitbook/assets/image (30).png" alt=""><figcaption><p>Working with Gum in Code</p></figcaption></figure>
 
+### Time-Tested and Reliable
+
+Gum has been used in commercial projects of all sizes - check them out in our [Showcase](readme/showcase.md) page.
+
 ### Need Help?
 
 Gum is actively maintained and provides lots of ways to get answers:
