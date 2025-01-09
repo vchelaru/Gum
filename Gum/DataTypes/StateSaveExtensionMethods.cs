@@ -552,7 +552,10 @@ namespace Gum.DataTypes.Variables
                     string directoryToMakeRelativeTo = FileManager.GetDirectory(ObjectFinder.Self.GumProjectSave.FullFileName);
 
                     const bool preserveCase = true;
-                    value = FileManager.MakeRelative((string)value, directoryToMakeRelativeTo, preserveCase);
+                    if(!FileManager.IsUrl(asString))
+                    {
+                        value = FileManager.MakeRelative(asString, directoryToMakeRelativeTo, preserveCase);
+                    }
 
                     // re-assign the value using the relative name now
                     var assignedVariable = stateSave.AssignVariableSave(variableName, value, instanceSave, variableType);
