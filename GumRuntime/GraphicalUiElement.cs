@@ -1905,7 +1905,10 @@ namespace Gum.Wireframe
                 {
                     if (Parent is GraphicalUiElement gue && gue.RenderableComponent is IText text)
                     {
-                        value = parentHeight - text.DescenderHeight;
+                        // January 9, 2025 - breaking layout logic to address this:
+                        // https://github.com/vchelaru/Gum/issues/473
+                        //value = parentHeight - text.DescenderHeight;
+                        value = text.WrappedTextHeight - text.DescenderHeight;
                     }
                     else
                     {
