@@ -32,6 +32,38 @@ Gum objects can be created and modified in code. Create fully-featured UI by sub
 
 <figure><img src=".gitbook/assets/image (30).png" alt=""><figcaption><p>Working with Gum in Code</p></figcaption></figure>
 
+### Time-Tested and Reliable
+
+Gum has been used in commercial projects of all sizes.
+
+<div align="left"><figure><img src=".gitbook/assets/GumDeadvivors.png" alt=""><figcaption><p>Deadvivors</p></figcaption></figure></div>
+
+<figure><img src=".gitbook/assets/GumDeadvivors2 (1).png" alt=""><figcaption><p>Deadvivors</p></figcaption></figure>
+
+<figure><img src=".gitbook/assets/09_05 59 24.png" alt=""><figcaption><p>Cranky Chibi Cthulhu</p></figcaption></figure>
+
+<figure><img src=".gitbook/assets/09_06 00 05.jpg" alt=""><figcaption><p>Cranky Chibi Cthulhu</p></figcaption></figure>
+
+<figure><img src=".gitbook/assets/Legends1.jpg" alt=""><figcaption><p>Champions of Anteria</p></figcaption></figure>
+
+<figure><img src=".gitbook/assets/Legends2.jpg" alt=""><figcaption><p>Champions of Anteria</p></figcaption></figure>
+
+<figure><img src=".gitbook/assets/Blitz1 (1).png" alt=""><figcaption><p>Tetris Blitz</p></figcaption></figure>
+
+<figure><img src=".gitbook/assets/Blitz2.png" alt=""><figcaption><p>Tetris Blitz</p></figcaption></figure>
+
+<figure><img src=".gitbook/assets/WH5.png" alt=""><figcaption><p>War Haven</p></figcaption></figure>
+
+<figure><img src=".gitbook/assets/WH2.png" alt=""><figcaption><p>War Haven</p></figcaption></figure>
+
+<figure><img src=".gitbook/assets/09_05 45 50.png" alt=""><figcaption><p>BattleCrypt Bombers</p></figcaption></figure>
+
+<figure><img src=".gitbook/assets/09_05 46 14.png" alt=""><figcaption><p>BattleCrypt Bombers</p></figcaption></figure>
+
+<figure><img src=".gitbook/assets/09_05 48 04.png" alt=""><figcaption><p>Teotihuacan</p></figcaption></figure>
+
+<figure><img src=".gitbook/assets/09_05 49 15.png" alt=""><figcaption><p>Ship Skwabble</p></figcaption></figure>
+
 ### Need Help?
 
 Gum is actively maintained and provides lots of ways to get answers:
