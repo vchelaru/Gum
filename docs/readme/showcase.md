@@ -22,6 +22,8 @@
 
 <figure><img src="../.gitbook/assets/OldApp1.jpeg" alt=""><figcaption><p>Tula Mobile App</p></figcaption></figure>
 
+<figure><img src="../.gitbook/assets/screenshot26.png" alt=""><figcaption><p>Catnip Coast</p></figcaption></figure>
+
 <figure><img src="../.gitbook/assets/WH5.png" alt=""><figcaption><p>War Haven</p></figcaption></figure>
 
 <figure><img src="../.gitbook/assets/WH2.png" alt=""><figcaption><p>War Haven</p></figcaption></figure>
