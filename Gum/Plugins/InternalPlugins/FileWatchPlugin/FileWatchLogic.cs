@@ -19,17 +19,25 @@ namespace Gum.Logic.FileWatch
 
         public void HandleProjectLoaded()
         {
-            // When we do this, we're going to clear out the ignored files
+            // On a project load we always clear ignored files, but if the project
+            // is null then we also clear ignored files - see RefreshRootDirectory()
             fileWatchManager.ClearIgnoredFiles();
 
-            var directories = GetFileWatchRootDirectories();
+            RefreshRootDirectory();
+        }
 
-            if(ProjectManager.Self.GumProjectSave?.FullFileName != null)
+        public void RefreshRootDirectory()
+        {
+
+            if (ProjectManager.Self.GumProjectSave?.FullFileName != null)
             {
+                var directories = GetFileWatchRootDirectories();
                 fileWatchManager.EnableWithDirectories(directories);
             }
             else
             {
+
+                fileWatchManager.ClearIgnoredFiles();
                 fileWatchManager.Disable();
             }
         }

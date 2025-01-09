@@ -191,6 +191,28 @@ internal class MainEditorTabPlugin : InternalPlugin
 
                 if (gue != null)
                 {
+                    VariableSave variable = null;
+                    if(element != null)
+                    {
+                        variable = ObjectFinder.Self.GetRootVariable(qualifiedName, element);
+                    }
+
+                    if(variable?.IsFile == true && value is string asString)
+                    {
+                        try
+                        {
+                            var standardized =  ToolsUtilities.FileManager.Standardize(asString, preserveCase:true, makeAbsolute:true);
+                            standardized = ToolsUtilities.FileManager.RemoveDotDotSlash(standardized);
+                            // invalidate files...
+                            var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+                            loaderManager.Dispose(standardized);
+                        }
+                        catch
+                        {
+                            // this could be an invalid file name, so tolerate crashes
+                        }
+                    }
+
                     gue.SetProperty(unqualifiedMember, value);
 
                     WireframeObjectManager.Self.RootGue?.ApplyVariableReferences(SelectedState.Self.SelectedStateSave);

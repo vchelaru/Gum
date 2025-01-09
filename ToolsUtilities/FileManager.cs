@@ -395,6 +395,11 @@ namespace ToolsUtilities
             }
             else
             {
+                if (IsUrl(fileName))
+                {
+                    relative = false;
+                }
+                else
                 if (fileName.StartsWith(ExeLocation))
                 {
                     relative = false;
