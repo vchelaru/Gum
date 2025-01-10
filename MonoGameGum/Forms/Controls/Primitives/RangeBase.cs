@@ -15,6 +15,9 @@ public abstract class RangeBase : FrameworkElement
 {
     #region Fields/Properties
 
+    static TimeSpan InitialRepeatRate = TimeSpan.FromSeconds(.33);
+    static TimeSpan SubsequentRepeatRate = TimeSpan.FromSeconds(.12);
+
     protected Button thumb;
 
     // version 1 of this would use the thumb's parent. But this is problematic if the thumb
@@ -37,7 +40,7 @@ public abstract class RangeBase : FrameworkElement
     /// <summary>
     /// The amount of to change Value when the user presses the up or down buttons on a scrollbar.
     /// Also currently the amount of distance to move per mouse wheel tick - note that this may change
-    /// in future versions of FlatRedBall.Forms.
+    /// in future versions of Forms.
     /// </summary>
     public double SmallChange { get; set; }
 
@@ -74,6 +77,10 @@ public abstract class RangeBase : FrameworkElement
     }
 
     double value;
+    private double TrackPushedTime;
+    private float TrackPushedSignRelativeToThumb;
+    private double LastRepeatRate;
+
     public double Value
     {
         get => value;
@@ -164,6 +171,8 @@ public abstract class RangeBase : FrameworkElement
             throw new Exception(message);
         }
 #endif
+        // assign explicit track before adding events
+        AssignExplicitTrack();
 
         if (thumbVisual.FormsControlAsObject == null)
         {
@@ -175,11 +184,16 @@ public abstract class RangeBase : FrameworkElement
         }
         thumb.Push += HandleThumbPush;
 #if FRB
-        thumb.Visual.DragOver += _=>HandleThumbRollOver(this, EventArgs.Empty);
-        Visual.RollOver += _=>HandleTrackRollOver(this, EventArgs.Empty);
+        thumb.Visual.DragOver += HandleThumbRollOverFrb;
+        Visual.RollOver += HandleThisRollOverFrb;
+        Track.Push += HandleTrackPushFrb;
+        Track.RollOver += HandleTrackHoverFrb;
+
 #else
         thumb.Visual.Dragging += HandleThumbRollOver;
-        Visual.RollOver += HandleTrackRollOver;
+        Visual.RollOver += HandleThisRollOver;
+        Track.Push += HandleTrackPush;
+        Track.HoverOver += HandleTrackHover;
 #endif
 
         // The attachments may not yet be set up, so set the explicitTrack's RaiseChildrenEventsOutsideOfBounds
@@ -189,6 +203,15 @@ public abstract class RangeBase : FrameworkElement
         //    thumbParent.RaiseChildrenEventsOutsideOfBounds = true;
         //}
 
+        Minimum = 0;
+        Maximum = 100;
+        SmallChange = 10;
+        Value = 0;
+
+    }
+
+    private void AssignExplicitTrack()
+    {
 #if FRB
         explicitTrack = this.Visual.GetGraphicalUiElementByName("TrackInstance");
         if (explicitTrack != null)
@@ -215,13 +238,17 @@ public abstract class RangeBase : FrameworkElement
             trackAsInteractive.RaiseChildrenEventsOutsideOfBounds = true;
         }
 #endif
-
-        Minimum = 0;
-        Maximum = 100;
-        SmallChange = 10;
-        Value = 0;
-
     }
+
+#if FRB
+    // these wrappers exist at class level rather than lambdas so they can be unsubscribed
+    void HandleThumbRollOverFrb(IWindow _) => HandleThumbRollOver(this, EventArgs.Empty);
+    void HandleThisRollOverFrb(IWindow _) => HandleThisRollOver(this, EventArgs.Empty);
+    void HandleTrackPushFrb(IWindow _) => HandleTrackPush(this, EventArgs.Empty);
+    void HandleTrackHoverFrb(IWindow _) => HandleTrackHover(this, EventArgs.Empty);
+
+#endif
+
 
     protected override void ReactToVisualRemoved()
     {
@@ -229,15 +256,91 @@ public abstract class RangeBase : FrameworkElement
 
         thumb.Push -= HandleThumbPush;
 #if FRB
-        thumb.Visual.DragOver -= _=> HandleThumbRollOver(this, EventArgs.Empty);
-        Visual.RollOver -= _=>HandleTrackRollOver(this, EventArgs.Empty);
+        thumb.Visual.DragOver -= HandleThumbRollOverFrb;
+        Visual.RollOver -= HandleThisRollOverFrb;
+        Track.Push -= HandleTrackPushFrb;
+        Track.RollOver -= HandleTrackHoverFrb;
+
 #else
         thumb.Visual.Dragging -= HandleThumbRollOver;
-        Visual.RollOver -= HandleTrackRollOver;
+        Visual.RollOver -= HandleThisRollOver;
+        Track.Push -= HandleTrackPush;
+        Track.HoverOver -= HandleTrackHover;
 #endif
     }
 
     #endregion
+
+    #region Track Events
+
+    private void HandleTrackPush(object? sender, EventArgs e)
+    {
+        TrackPushedTime = MainCursor.LastPrimaryPushTime;
+
+        TrackPushedSignRelativeToThumb = GetCurrentSignRelativeToThumb();
+
+    }
+
+    private void HandleTrackHover(object? sender, EventArgs e)
+    {
+        var cursor = MainCursor;
+        if (cursor.WindowPushed == Track && cursor.WindowOver != thumb.Visual)
+        {
+            // Should we be respecting MoveToPoint?
+
+            var shouldRepeat = InteractiveGue.CurrentGameTime - TrackPushedTime > InitialRepeatRate.TotalSeconds &&
+                InteractiveGue.CurrentGameTime - LastRepeatRate > SubsequentRepeatRate.TotalSeconds;
+
+            if (shouldRepeat)
+            {
+                ApplyTrackDownRepeatRate();
+                // act as if the thumb was pushed:
+                LastRepeatRate = InteractiveGue.CurrentGameTime;
+            }
+        }
+    }
+
+    private void ApplyTrackDownRepeatRate()
+    {
+        var valueBefore = Value;
+        double newValue;
+        int currentSignRelativeToThumb = GetCurrentSignRelativeToThumb();
+
+        // This prevents the Thumb from hopping back and forth around the cursor's position
+        if(currentSignRelativeToThumb == TrackPushedSignRelativeToThumb)
+        {
+            if (currentSignRelativeToThumb == -1)
+            {
+                newValue = Value - LargeChange;
+                ApplyValueConsideringSnapping(newValue);
+            }
+            else if (currentSignRelativeToThumb == 1)
+            {
+                newValue = Value + LargeChange;
+
+                ApplyValueConsideringSnapping(newValue);
+            }
+        }
+
+        if (valueBefore != Value)
+        {
+            RaiseValueChangedByUi();
+        }
+    }
+
+    private int GetCurrentSignRelativeToThumb()
+    {
+        var cursorX = MainCursor.XRespectingGumZoomAndBounds();
+
+        var currentSignRelativeToThumb = cursorX < thumb.AbsoluteLeft
+            ? -1
+            : cursorX > thumb.AbsoluteLeft + thumb.ActualWidth ? 1 : 0;
+        return currentSignRelativeToThumb;
+    }
+
+    #endregion
+
+    #region Thumb Events
 
     protected abstract void HandleThumbPush(object sender, EventArgs e);
 
@@ -251,14 +354,22 @@ public abstract class RangeBase : FrameworkElement
         }
     }
 
-    private void HandleTrackRollOver(object sender, EventArgs args)
+    #endregion
+
+    private void HandleThisRollOver(object sender, EventArgs args)
     {
         var cursor = MainCursor;
-
         if (cursor.WindowPushed == thumb.Visual)
         {
             UpdateThumbPositionToCursorDrag(cursor);
         }
+    }
+
+
+    protected virtual double ApplyValueConsideringSnapping(double newValue)
+    {
+        Value = newValue;
+        return newValue;
     }
 
     protected virtual void OnMaximumChanged(double oldMaximum, double newMaximum)

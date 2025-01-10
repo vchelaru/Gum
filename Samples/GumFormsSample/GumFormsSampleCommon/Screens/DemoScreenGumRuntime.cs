@@ -2,6 +2,7 @@
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
+using MonoGameGum;
 using MonoGameGum.Forms;
 using MonoGameGum.Forms.Controls;
 using MonoGameGum.Forms.DefaultFromFileVisuals;
@@ -57,7 +58,18 @@ public class DemoScreenGumRuntime : BindableGue
             nameof(RadioButton.IsChecked),
             nameof(viewModel.IsTouchscreenChecked));
 
-        this.GetFrameworkElementByName<Button>("DetectResolutionsButton").Click += (not, used) =>
+        var detectResolutionButton = this.GetFrameworkElementByName<Button>("DetectResolutionsButton");
+
+        detectResolutionButton.Visual.RollOver += (_, _) =>
+        System.Diagnostics.Debug.WriteLine("Roll Over");
+        detectResolutionButton.Visual.Dragging += (_, _) =>
+        System.Diagnostics.Debug.WriteLine("Drag Over");
+
+        var musicSlider = this.GetFrameworkElementByName<Slider>("MusicSlider");
+        musicSlider.LargeChange = 10;
+
+
+        detectResolutionButton.Click += (not, used) =>
         {
             ShowPopup();
         };

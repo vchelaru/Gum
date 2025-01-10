@@ -21,8 +21,17 @@ public class Slider : RangeBase, IInputReceiver
 {
     #region Fields/Properties
 
+
+    /// <summary>
+    /// The frequency to snap the Slider value when IsSnapToTickEnabled is true. If IsSnapToTickEnabled
+    /// is false, then this value is ignored.
+    /// </summary>
     public double TicksFrequency { get; set; } = 1;
 
+    /// <summary>
+    /// Controls whether the TickFrequency is applied when the slider is moved throuh the UI. If false, then any
+    /// value between Minimum and Maximum is possible. If true, then values snap to the TickFrequency.
+    /// </summary>
     public bool IsSnapToTickEnabled { get; set; } = false;
 
     public bool IsMoveToPointEnabled { get; set; }
@@ -78,6 +87,7 @@ public class Slider : RangeBase, IInputReceiver
         base.ReactToVisualChanged();
 
         Track.Push += HandleTrackPush;
+
 
 #if FRB
         base.thumb.Visual.RemovedAsPushedWindow += _ => HandleRemovedAsPushedWindow(this, EventArgs.Empty);
@@ -161,7 +171,7 @@ public class Slider : RangeBase, IInputReceiver
 
             var value = Minimum + (Maximum - Minimum) * ratio;
 
-            ApplyValueConsideringSnapToTicks(value);
+            ApplyValueConsideringSnapping(value);
         }
         else
         {
@@ -171,13 +181,13 @@ public class Slider : RangeBase, IInputReceiver
             if (gumX < thumb.AbsoluteLeft)
             {
                 newValue = Value - LargeChange;
-                ApplyValueConsideringSnapToTicks(newValue);
+                ApplyValueConsideringSnapping(newValue);
             }
             else if (gumX > thumb.AbsoluteLeft + thumb.ActualWidth)
             {
                 newValue = Value + LargeChange;
 
-                ApplyValueConsideringSnapToTicks(newValue);
+                ApplyValueConsideringSnapping(newValue);
             }
         }
 
@@ -209,7 +219,7 @@ public class Slider : RangeBase, IInputReceiver
 
     #endregion
 
-    private double ApplyValueConsideringSnapToTicks(double newValue)
+    private double ApplyValueConsideringSnapping(double newValue)
     {
         var originalValue = newValue;
 
@@ -326,7 +336,7 @@ public class Slider : RangeBase, IInputReceiver
 
             var valueToSet = Minimum + (Maximum - Minimum) * ratio;
 
-            ApplyValueConsideringSnapToTicks(valueToSet);
+            ApplyValueConsideringSnapping(valueToSet);
         }
         else
         {

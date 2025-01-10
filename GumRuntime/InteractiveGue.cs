@@ -168,9 +168,14 @@ namespace Gum.Wireframe
         /// </summary>
         public event EventHandler RollOff;
         /// <summary>
-        /// Event raised every frame the cursor is over this object.
+        /// Event raised every frame the cursor is over this object and the Cursor has changed position.
         /// </summary>
         public event EventHandler RollOver;
+
+        /// <summary>
+        /// Event raised every frame the cursor is over this object whether the Cursor has changed positions or not.
+        /// </summary>
+        public event EventHandler HoverOver;
 
         /// <summary>
         /// Event raised when the cursor pushes on an object and moves. This is similar to RollOver, but is raised even
@@ -227,15 +232,14 @@ namespace Gum.Wireframe
             RemovedAsPushed?.Invoke(this, EventArgs.Empty);
         }
 
-        public void TryCallRollOn()
-        {
+        public void TryCallRollOn() =>
             RollOn?.Invoke(this, EventArgs.Empty);
-        }
 
-        public void TryCallRollOver()
-        {
+        public void TryCallRollOver() =>
             RollOver?.Invoke(this, EventArgs.Empty);
-        }
+
+        public void TryCallHoverOver() =>
+            HoverOver?.Invoke(this, EventArgs.Empty);
 
         #endregion
 
@@ -788,6 +792,7 @@ namespace Gum.Wireframe
                     windowOverAsInteractive.TryCallRollOn();
                 }
 
+                windowOverAsInteractive.TryCallHoverOver();
                 if (cursor.XChange != 0 || cursor.YChange != 0)
                 {
                     windowOverAsInteractive.TryCallRollOver();
