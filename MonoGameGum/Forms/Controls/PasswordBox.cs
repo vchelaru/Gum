@@ -132,7 +132,7 @@ public class PasswordBox : TextBoxBase
     private void CallMethodsInResponseToPasswordChanged()
     {
         TruncateTextToMaxLength();
-        UpdateCaretPositionToCaretIndex();
+        UpdateCaretPositionFromCaretIndex();
         OffsetTextToKeepCaretInView();
         UpdateDisplayedCharacters();
         UpdatePlaceholderVisibility();

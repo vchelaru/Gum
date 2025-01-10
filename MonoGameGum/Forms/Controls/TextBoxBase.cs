@@ -16,6 +16,7 @@ using MonoGameGum.Input;
 namespace MonoGameGum.Forms.Controls;
 #endif
 
+#region TextCompositionEventArgs Class
 public class TextCompositionEventArgs : RoutedEventArgs
 {
     /// <summary>
@@ -24,6 +25,7 @@ public class TextCompositionEventArgs : RoutedEventArgs
     public string Text { get; }
     public TextCompositionEventArgs(string text) { Text = text; }
 }
+#endregion
 
 public abstract class TextBoxBase : FrameworkElement, IInputReceiver
 {
@@ -72,7 +74,7 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
         set
         {
             caretIndex = value;
-            UpdateCaretPositionToCaretIndex();
+            UpdateCaretPositionFromCaretIndex();
             OffsetTextToKeepCaretInView();
         }
     }
@@ -640,7 +642,7 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
             if (oldIndex != caretIndex)
             {
                 UpdateToCaretChanged(oldIndex, caretIndex, isShiftDown);
-                UpdateCaretPositionToCaretIndex();
+                UpdateCaretPositionFromCaretIndex();
                 OffsetTextToKeepCaretInView();
             }
 
@@ -930,7 +932,7 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
         lineNumber = System.Math.Min(lineNumber, coreTextObject.WrappedText.Count - 1);
     }
 
-    protected void UpdateCaretPositionToCaretIndex()
+    protected void UpdateCaretPositionFromCaretIndex()
     {
         if (TextWrapping == TextWrapping.NoWrap)
         {
@@ -991,6 +993,12 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
     private void UpdateToIsFocused()
     {
         UpdateCaretVisibility();
+
+        if(caretComponent.Visible)
+        {
+            UpdateCaretPositionFromCaretIndex();
+        }
+
         UpdateState();
 
         if (isFocused)

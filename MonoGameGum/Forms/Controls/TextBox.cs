@@ -135,7 +135,7 @@ public class TextBox : TextBoxBase
 
             if (!wasHandledByEvent)
             {
-                UpdateCaretPositionToCaretIndex();
+                UpdateCaretPositionFromCaretIndex();
                 OffsetTextToKeepCaretInView();
             }
         }
@@ -225,7 +225,7 @@ public class TextBox : TextBoxBase
             }
 
             TruncateTextToMaxLength();
-            UpdateCaretPositionToCaretIndex();
+            UpdateCaretPositionFromCaretIndex();
             OffsetTextToKeepCaretInView();
         }
     }
