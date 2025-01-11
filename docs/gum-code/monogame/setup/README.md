@@ -2,12 +2,12 @@
 
 This page assumes you have an existing MonoGame project. This can be an empty project or an existing game.
 
-At the time of this writing Gum + MonoGame has been tested on a variety of platforms including DesktopGL, DirectX, and mobile. It has also been used with Nez and Kni. If your particular platform is not supported please contact us on Discord and we will do our best to add support.
+MonoGame Gum works on a variety of platforms including DesktopGL, DirectX, and mobile. It's fully functional with all flavors of XNA-like libraries including MonoGame, Kni (including on web), and FNA. It can be used alongside other libraries such as MonoGameExtended and Nez. If your particular platform is not supported please contact us on Discord and we will do our best to add support.
 
 ### Adding Gum NuGet Packages
 
 1. Open your MonoGame project in your preferred IDE.
-2.  Add the `Gum.MonoGame` NuGet package\
+2. Add the `Gum.MonoGame` NuGet package\
 
 
     <figure><img src="../../../.gitbook/assets/NugetMonoGameGumSetup1.png" alt=""><figcaption><p>Add Gum.MonoGame NuGet Package to your project</p></figcaption></figure>
@@ -39,7 +39,7 @@ protected override void Draw(GameTime gameTime)
 
 ### Testing Gum
 
-To test that you have successfully added Gum to the project, modify your Initialize method:
+To test that you have successfully added Gum to the project, modify your Initialize method to add a rectangle:
 
 ```csharp
 protected override void Initialize()
