@@ -5,11 +5,13 @@ using RenderingLibrary;
 using Microsoft.Xna.Framework.Input;
 using RenderingLibrary.Math;
 
+
 #if FRB
 using FlatRedBall.Gui;
 using FlatRedBall.Input;
 using FlatRedBall.Forms.Controls.Primitives;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
+using static FlatRedBall.Input.Xbox360GamePad;
 using Buttons = FlatRedBall.Input.Xbox360GamePad.Button;
 namespace FlatRedBall.Forms.Controls;
 #else

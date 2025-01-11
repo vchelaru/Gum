@@ -209,6 +209,7 @@ namespace Gum.Wireframe
         /// </summary>
         public event EventHandler RemovedAsPushed;
 
+        public void CallClick() => Click?.Invoke(this, EventArgs.Empty);
 
         // RollOff is determined outside of the individual InteractiveGue so we need to have this callable externally..
         public void TryCallRollOff()

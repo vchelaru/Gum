@@ -10,6 +10,7 @@ using FlatRedBall.Forms.Input;
 using FlatRedBall.Gui;
 using FlatRedBall.Input;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
+using Buttons = FlatRedBall.Input.Xbox360GamePad.Button;
 namespace FlatRedBall.Forms.Controls;
 #else
 using MonoGameGum.Input;
@@ -208,9 +209,7 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
 
     #region Events
 
-#if FRB
-    public event Action<Xbox360GamePad.Button> ControllerButtonPushed;
-#endif
+    public event Action<Buttons> ControllerButtonPushed;
     public event Action<object, TextCompositionEventArgs> PreviewTextInput;
 
     protected TextCompositionEventArgs RaisePreviewTextInput(string newText)
@@ -769,8 +768,7 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
 
     public void OnFocusUpdate()
     {
-#if FRB
-        var gamepads = GuiManager.GamePadsForUiControl;
+        var gamepads = FrameworkElement.GamePadsForUiControl;
 
         for (int i = 0; i < gamepads.Count; i++)
         {
@@ -778,15 +776,16 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
 
             HandleGamepadNavigation(gamepad);
 
-            if (gamepad.ButtonPushed(FlatRedBall.Input.Xbox360GamePad.Button.A))
+            if (gamepad.ButtonPushed(Buttons.A))
             {
                 this.Visual.CallClick();
 
-                ControllerButtonPushed?.Invoke(Xbox360GamePad.Button.A);
+                ControllerButtonPushed?.Invoke(Buttons.A);
             }
 
         }
 
+#if FRB
         var genericGamepads = GuiManager.GenericGamePadsForUiControl;
         for (int i = 0; i < genericGamepads.Count; i++)
         {

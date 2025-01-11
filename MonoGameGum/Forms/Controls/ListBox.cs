@@ -11,13 +11,17 @@ using Gum.DataTypes;
 using RenderingLibrary.Graphics;
 
 
+
 #if FRB
 using FlatRedBall.Input;
 using FlatRedBall.Math.Geometry;
 using FlatRedBall.Gui;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
+using Buttons = FlatRedBall.Input.Xbox360GamePad.Button;
+using static FlatRedBall.Input.Xbox360GamePad;
 namespace FlatRedBall.Forms.Controls;
 #else
+using MonoGameGum.Input;
 namespace MonoGameGum.Forms.Controls;
 #endif
 
@@ -264,9 +268,7 @@ public class ListBox : ItemsControl, IInputReceiver
     /// Until July 2024 this was only firing at the top level. July 2024 version also raises
     /// this event when a button is pushed on an item.
     /// </remarks>
-#if FRB
-    public event Action<Xbox360GamePad.Button> ControllerButtonPushed;
-#endif
+    public event Action<Buttons> ControllerButtonPushed;
     public event Action<int> GenericGamepadButtonPushed;
 
     #endregion
@@ -667,8 +669,7 @@ public class ListBox : ItemsControl, IInputReceiver
 
     private void DoListItemFocusUpdate()
     {
-#if FRB
-        var xboxGamepads = GuiManager.GamePadsForUiControl;
+        var xboxGamepads = FrameworkElement.GamePadsForUiControl;
 
 
         for (int i = 0; i < xboxGamepads.Count; i++)
@@ -677,37 +678,37 @@ public class ListBox : ItemsControl, IInputReceiver
 
             RepositionDirections? direction = null;
 
-            if (gamepad.ButtonRepeatRate(FlatRedBall.Input.Xbox360GamePad.Button.DPadDown) ||
-                gamepad.LeftStick.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Down))
+            if (gamepad.ButtonRepeatRate(Buttons.DPadDown) ||
+                gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Down))
             {
                 direction = RepositionDirections.Down;
             }
             
-            if (gamepad.ButtonRepeatRate(FlatRedBall.Input.Xbox360GamePad.Button.DPadRight) ||
-                gamepad.LeftStick.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Right))
+            if (gamepad.ButtonRepeatRate(Buttons.DPadRight) ||
+                gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Right))
             {
                 direction = RepositionDirections.Right;
             }
 
-            if (gamepad.ButtonRepeatRate(FlatRedBall.Input.Xbox360GamePad.Button.DPadUp) ||
-                gamepad.LeftStick.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Up))
+            if (gamepad.ButtonRepeatRate(Buttons.DPadUp) ||
+                gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Up))
             {
                 direction = RepositionDirections.Up;
             }
 
-            if (gamepad.ButtonRepeatRate(FlatRedBall.Input.Xbox360GamePad.Button.DPadLeft) ||
-                gamepad.LeftStick.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Left))
+            if (gamepad.ButtonRepeatRate(Buttons.DPadLeft) ||
+                gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Left))
             {
                 direction = RepositionDirections.Left;
             }
 
 
-            var pressedButton = (LoseListItemFocusOnPrimaryInput && gamepad.ButtonPushed(FlatRedBall.Input.Xbox360GamePad.Button.A)) ||
-                gamepad.ButtonPushed(FlatRedBall.Input.Xbox360GamePad.Button.B);
+            var pressedButton = (LoseListItemFocusOnPrimaryInput && gamepad.ButtonPushed(Buttons.A)) ||
+                gamepad.ButtonPushed(Buttons.B);
 
             DoListItemFocusUpdate(direction, pressedButton);
 
-            void RaiseIfPushedAndEnabled(FlatRedBall.Input.Xbox360GamePad.Button button)
+            void RaiseIfPushedAndEnabled(Buttons button)
             {
                 if (IsEnabled && gamepad.ButtonPushed(button))
                 {
@@ -715,18 +716,21 @@ public class ListBox : ItemsControl, IInputReceiver
                 }
             }
 
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.A);
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.B);
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.X);
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.Y);
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.Start);
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.Back);
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.DPadLeft);
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.DPadRight);
+            RaiseIfPushedAndEnabled(Buttons.A);
+            RaiseIfPushedAndEnabled(Buttons.B);
+            RaiseIfPushedAndEnabled(Buttons.X);
+            RaiseIfPushedAndEnabled(Buttons.Y);
+            RaiseIfPushedAndEnabled(Buttons.Start);
+            RaiseIfPushedAndEnabled(Buttons.Back);
+            RaiseIfPushedAndEnabled(Buttons.DPadLeft);
+            RaiseIfPushedAndEnabled(Buttons.DPadRight);
 
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.LeftStickAsDPadLeft);
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.LeftStickAsDPadRight);
+#if FRB
+            RaiseIfPushedAndEnabled(Buttons.LeftStickAsDPadLeft);
+            RaiseIfPushedAndEnabled(Buttons.LeftStickAsDPadRight);
+#endif
         }
+#if FRB
 
         var genericGamePads = GuiManager.GenericGamePadsForUiControl;
 
@@ -923,8 +927,7 @@ public class ListBox : ItemsControl, IInputReceiver
 
     private void DoTopLevelFocusUpdate()
     {
-#if FRB
-        var gamepads = GuiManager.GamePadsForUiControl;
+        var gamepads = FrameworkElement.GamePadsForUiControl;
 
         for (int i = 0; i < gamepads.Count; i++)
         {
@@ -932,12 +935,12 @@ public class ListBox : ItemsControl, IInputReceiver
 
             HandleGamepadNavigation(gamepad);
 
-            if (gamepad.ButtonPushed(FlatRedBall.Input.Xbox360GamePad.Button.A))
+            if (gamepad.ButtonPushed(Buttons.A))
             {
                 DoListItemsHaveFocus = true;
             }
 
-            void RaiseIfPushedAndEnabled(FlatRedBall.Input.Xbox360GamePad.Button button)
+            void RaiseIfPushedAndEnabled(Buttons button)
             {
                 if (IsEnabled && gamepad.ButtonPushed(button))
                 {
@@ -945,17 +948,20 @@ public class ListBox : ItemsControl, IInputReceiver
                 }
             }
 
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.B);
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.X);
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.Y);
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.Start);
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.Back);
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.DPadLeft);
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.DPadRight);
+            RaiseIfPushedAndEnabled(Buttons.B);
+            RaiseIfPushedAndEnabled(Buttons.X);
+            RaiseIfPushedAndEnabled(Buttons.Y);
+            RaiseIfPushedAndEnabled(Buttons.Start);
+            RaiseIfPushedAndEnabled(Buttons.Back);
+            RaiseIfPushedAndEnabled(Buttons.DPadLeft);
+            RaiseIfPushedAndEnabled(Buttons.DPadRight);
 
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.LeftStickAsDPadLeft);
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.LeftStickAsDPadRight);
+#if FRB
+            RaiseIfPushedAndEnabled(Buttons.LeftStickAsDPadLeft);
+            RaiseIfPushedAndEnabled(Buttons.LeftStickAsDPadRight);
+#endif
         }
+#if FRB
 
         var genericGamepads = GuiManager.GenericGamePadsForUiControl;
 
@@ -1021,5 +1027,5 @@ public class ListBox : ItemsControl, IInputReceiver
     }
 
 
-    #endregion
+#endregion
 }
