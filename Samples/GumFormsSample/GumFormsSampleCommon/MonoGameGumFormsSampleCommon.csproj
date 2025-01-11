@@ -24,7 +24,7 @@
     <Compile Include="Screens\ComplexListBoxItemScreen.cs" />
     <Compile Include="Screens\FormsCustomizationScreen.cs" />
     <Compile Include="Screens\FrameworkElementExampleScreen.cs" />
-    <Compile Include="FullyCustomizedButton.cs" />
+    <Compile Include="CustomRuntimes\FullyCustomizedButton.cs" />
     <Compile Include="GumFormsSampleGame.cs" />
     <Compile Include="Screens\DemoScreenGumRuntime.cs" />
     <Compile Include="ViewModels\DemoScreenViewModel.cs" />
