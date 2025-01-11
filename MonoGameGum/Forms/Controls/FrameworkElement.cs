@@ -1,6 +1,7 @@
 ﻿using Gum.Wireframe;
 using Microsoft.Xna.Framework.Input;
-using MonoGameGum.Input;
+
+
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
@@ -12,7 +13,18 @@ using System.Text;
 using System.Threading.Tasks;
 using ToolsUtilities;
 
+#if FRB
+using FlatRedBall.Forms.GumExtensions;
+using FlatRedBall.Forms.Input;
+using FlatRedBall.Gui;
+using FlatRedBall.Input;
+using FlatRedBall.Instructions;
+using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
+namespace FlatRedBall.Forms.Controls;
+#else
+using MonoGameGum.Input;
 namespace MonoGameGum.Forms.Controls;
+#endif
 
 #region Enums
 
@@ -30,10 +42,12 @@ public enum TabbingFocusBehavior
 }
 #endregion
 
+#if !FRB
 public class KeyEventArgs : EventArgs
 {
     public Microsoft.Xna.Framework.Input.Keys Key { get; set; }
 }
+#endif
 
 public delegate void KeyEventHandler(object sender, KeyEventArgs e);
 
@@ -42,11 +56,11 @@ public class FrameworkElement
 #if FRB
         public static Cursor MainCursor => GuiManager.Cursor;
 
-        public List<Xbox360GamePad> GamePadsForUiControl => GuiManager.GamePadsForUiControl;
+        public static List<Xbox360GamePad> GamePadsForUiControl => GuiManager.GamePadsForUiControl;
 #else
     public static ICursor MainCursor { get; set; }
 
-    public List<Input.GamePad> GamePadsForUiControl { get; private set; } = new List<Input.GamePad>();
+    public static List<Input.GamePad> GamePadsForUiControl { get; private set; } = new List<Input.GamePad>();
 
 #endif
 
@@ -63,6 +77,10 @@ public class FrameworkElement
 
     protected bool isFocused;
     protected double timeFocused;
+    /// <summary>
+    /// Whether this element has input focus. If true, the element shows its focused
+    /// state and receives input from keyboards and gamepads.
+    /// </summary>
     public virtual bool IsFocused
     {
         get { return isFocused; }
@@ -72,37 +90,37 @@ public class FrameworkElement
             {
                 isFocused = value && IsEnabled;
 
-            //    if (isFocused && this is IInputReceiver inputReceiver)
-            //    {
-            //        FlatRedBall.Input.InputManager.InputReceiver = inputReceiver;
-            //    }
+                if (isFocused && this is IInputReceiver inputReceiver)
+                {
+                    InteractiveGue.CurrentInputReceiver = inputReceiver;
+                }
 
                 UpdateState();
 
-                //    PushValueToViewModel();
+                PushValueToViewModel();
 
                 if (isFocused)
                 {
-                    //timeFocused = TimeManager.CurrentTime;
+                    timeFocused = InteractiveGue.CurrentGameTime;
                     GotFocus?.Invoke(this, null);
                 }
                 else
                 {
                     LostFocus?.Invoke(this, null);
 
-                    //if (this is IInputReceiver inputReceiver2 && InputManager.InputReceiver == inputReceiver2)
-                    //{
-                    //    InputManager.InputReceiver = null;
-                    //}
+                    if (this is IInputReceiver inputReceiver2 && InteractiveGue.CurrentInputReceiver == inputReceiver2)
+                    {
+                        InteractiveGue.CurrentInputReceiver = null;
+                    }
                 }
             }
             // this resolves possible stale states:
             else
             {
-                //if (isFocused && this is IInputReceiver inputReceiver)
-                //{
-                //    FlatRedBall.Input.InputManager.InputReceiver = inputReceiver;
-                //}
+                if (isFocused && this is IInputReceiver inputReceiver)
+                {
+                    InteractiveGue.CurrentInputReceiver = inputReceiver;
+                }
             }
 
         }
@@ -889,14 +907,9 @@ public class FrameworkElement
             else
             {
                 var childAtI = children[newIndex] as InteractiveGue;
-                var elementAtI = childAtI.FormsControlAsObject as FrameworkElement;
+                var elementAtI = childAtI?.FormsControlAsObject as FrameworkElement;
 
-                // assume this for now, need to pull this from FRB
-                bool isInputReceiver =
-                    //elementAtI is IInputReceiver
-                    true;
-
-                if (isInputReceiver && elementAtI.IsVisible &&
+                if (elementAtI is IInputReceiver && elementAtI.IsVisible == true &&
                     elementAtI.IsEnabled && elementAtI.GamepadTabbingFocusBehavior == TabbingFocusBehavior.FocusableIfInputReceiver)
                 {
                     elementAtI.IsFocused = true;
@@ -908,7 +921,7 @@ public class FrameworkElement
                 }
                 else
                 {
-                    if (childAtI.Visible && childAtI.IsEnabled && (elementAtI == null || elementAtI.IsEnabled))
+                    if (childAtI?.Visible == true && childAtI.IsEnabled && (elementAtI == null || elementAtI.IsEnabled))
                     {
 
                         // let this try to handle it:

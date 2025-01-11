@@ -10,6 +10,7 @@ using FlatRedBall.Gui;
 using FlatRedBall.Input;
 using FlatRedBall.Forms.Controls.Primitives;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
+using Buttons = FlatRedBall.Input.Xbox360GamePad.Button;
 namespace FlatRedBall.Forms.Controls;
 #else
 using MonoGameGum.Input;
@@ -52,9 +53,8 @@ public class Slider : RangeBase, IInputReceiver
 
     public event Action<IInputReceiver> FocusUpdate;
 
-#if FRB
-    public event Action<Xbox360GamePad.Button> ControllerButtonPushed;
-#endif
+    public event Action<Buttons> ControllerButtonPushed;
+
     public event Action<int> GenericGamepadButtonPushed;
 
     #endregion
@@ -354,8 +354,7 @@ public class Slider : RangeBase, IInputReceiver
 
     public void OnFocusUpdate()
     {
-#if FRB
-        var gamepads = GuiManager.GamePadsForUiControl;
+        var gamepads = FrameworkElement.GamePadsForUiControl;
 
         for (int i = 0; i < gamepads.Count; i++)
         {
@@ -364,19 +363,19 @@ public class Slider : RangeBase, IInputReceiver
             HandleGamepadNavigation(gamepad);
 
 
-            if (gamepad.ButtonRepeatRate(FlatRedBall.Input.Xbox360GamePad.Button.DPadLeft) ||
-                gamepad.LeftStick.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Left))
+            if (gamepad.ButtonRepeatRate(Buttons.DPadLeft) ||
+                gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Left))
             {
                 this.Value -= this.SmallChange;
             }
-            else if (gamepad.ButtonRepeatRate(FlatRedBall.Input.Xbox360GamePad.Button.DPadRight) ||
-                gamepad.LeftStick.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Right))
+            else if (gamepad.ButtonRepeatRate(Buttons.DPadRight) ||
+                gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Right))
             {
                 this.Value += this.SmallChange;
             }
 
 
-            void RaiseIfPushedAndEnabled(FlatRedBall.Input.Xbox360GamePad.Button button)
+            void RaiseIfPushedAndEnabled(Buttons button)
             {
                 if (IsEnabled && gamepad.ButtonPushed(button))
                 {
@@ -384,13 +383,14 @@ public class Slider : RangeBase, IInputReceiver
                 }
             }
 
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.B);
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.X);
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.Y);
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.Start);
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.Back);
+            RaiseIfPushedAndEnabled(Buttons.B);
+            RaiseIfPushedAndEnabled(Buttons.X);
+            RaiseIfPushedAndEnabled(Buttons.Y);
+            RaiseIfPushedAndEnabled(Buttons.Start);
+            RaiseIfPushedAndEnabled(Buttons.Back);
         }
 
+#if FRB
         var genericGamepads = GuiManager.GenericGamePadsForUiControl;
         for (int i = 0; i < genericGamepads.Count; i++)
         {

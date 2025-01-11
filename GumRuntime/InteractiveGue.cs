@@ -672,6 +672,12 @@ namespace Gum.Wireframe
         /// </summary>
         void OnLoseFocus();
 
+        /// <summary>
+        /// Called every frame if this has focus. Allows general every-frame updates such as
+        /// handling gamepad input.
+        /// </summary>
+        void OnFocusUpdate();
+
         void DoKeyboardAction(IInputReceiverKeyboard keyboard);
     }
 
@@ -847,6 +853,7 @@ namespace Gum.Wireframe
             if(InteractiveGue.CurrentInputReceiver != null)
             {
                 InteractiveGue.CurrentInputReceiver.DoKeyboardAction(keyboard);
+                InteractiveGue.CurrentInputReceiver.OnFocusUpdate();
             }
         }
     }

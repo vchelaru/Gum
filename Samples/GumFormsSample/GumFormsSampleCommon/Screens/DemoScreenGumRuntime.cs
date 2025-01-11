@@ -60,11 +60,6 @@ public class DemoScreenGumRuntime : BindableGue
 
         var detectResolutionButton = this.GetFrameworkElementByName<Button>("DetectResolutionsButton");
 
-        detectResolutionButton.Visual.RollOver += (_, _) =>
-        System.Diagnostics.Debug.WriteLine("Roll Over");
-        detectResolutionButton.Visual.Dragging += (_, _) =>
-        System.Diagnostics.Debug.WriteLine("Drag Over");
-
         var musicSlider = this.GetFrameworkElementByName<Slider>("MusicSlider");
         musicSlider.LargeChange = 10;
 
@@ -73,6 +68,16 @@ public class DemoScreenGumRuntime : BindableGue
         {
             ShowPopup();
         };
+
+
+        var gamepad = FormsUtilities.Gamepads[0];
+        //if(gamepad.IsConnected)
+        {
+            FrameworkElement.GamePadsForUiControl.Add(gamepad);
+            detectResolutionButton.IsFocused = true;
+        }
+
+
     }
 
     private void ShowPopup()

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace MonoGameGum.Input;
 
+#region DPadDirection Enum
 public enum DPadDirection
 {
     Up,
@@ -15,12 +16,23 @@ public enum DPadDirection
     Left,
     Right
 }
+#endregion
 
 public class GamePad
 {
+    #region Fields/Properties
 
-    GamePadState mGamePadState;
-    GamePadState mLastGamePadState;
+    GamePadState mGamePadState = new GamePadState();
+    GamePadState mLastGamePadState = new GamePadState();
+
+    public bool IsConnected => mGamePadState.IsConnected;
+    public bool WasDisconnectedThisFrame
+    {
+        get
+        {
+            return mLastGamePadState.IsConnected && !mGamePadState.IsConnected;
+        }
+    }
 
     AnalogStick mLeftStick;
     AnalogStick mRightStick;
@@ -54,6 +66,17 @@ public class GamePad
     /// The right trigger values as reported directly by the gamepad, not flipped for Gamecube
     /// </summary>
     AnalogButton mRightTrigger;
+
+    #endregion
+
+    public GamePad()
+    {
+        mLeftStick = new AnalogStick();
+        mRightStick = new AnalogStick();
+
+        mLeftTrigger = new AnalogButton();
+        mRightTrigger = new AnalogButton();
+    }
 
     public bool ButtonDown(Buttons button)
     {
@@ -394,6 +417,56 @@ public class GamePad
 
         return false;
 
+    }
+
+    internal void Activity(GamePadState gamepadState, double time)
+    {
+        mLastGamePadState = mGamePadState;
+        mGamePadState = gamepadState;
+
+        if (IsConnected || WasDisconnectedThisFrame)
+        {
+            UpdateAnalogStickAndTriggerValues(time);
+            UpdateLastButtonPushedValues();
+        }
+
+    }
+
+    private void UpdateAnalogStickAndTriggerValues(double time)
+    {
+        var leftStick = mGamePadState.ThumbSticks.Left;
+        var rightStick = mGamePadState.ThumbSticks.Right;
+
+        mLeftStick.Update(leftStick, time);
+        mRightStick.Update(rightStick, time);
+
+        //if (AreShoulderAndTriggersFlipped)
+        //{
+        //    mFlippedLeftTrigger.Update((int)mGamePadState.Buttons.LeftShoulder);
+        //    mFlippedRightTrigger.Update((int)mGamePadState.Buttons.RightShoulder);
+
+        //}
+
+        // Even if using Gamecube, record these values as they are used above in button maps
+        mLeftTrigger.Update(mGamePadState.Triggers.Left, time);
+        mRightTrigger.Update(mGamePadState.Triggers.Right, time);
+
+        
+    }
+
+    private void UpdateLastButtonPushedValues()
+    {
+        // Set the last pushed and clear the ignored input
+
+        //for (int i = 0; i < NumberOfButtons; i++)
+        //{
+        //    mButtonsIgnoredForThisFrame[i] = false;
+
+        //    if (ButtonPushed((Button)i))
+        //    {
+        //        mLastButtonPush[i] = TimeManager.CurrentTime;
+        //    }
+        //}
     }
 
 }
