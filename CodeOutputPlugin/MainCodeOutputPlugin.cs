@@ -282,7 +282,7 @@ namespace CodeOutputPlugin
                             string code = CodeGenerator.GetCodeForInstance(instance, selectedElement, codeOutputProjectSettings );
                             viewModel.Code = code;
                         }
-                        else if(selectedElement != null)
+                        else if(selectedElement != null && selectedElement is not StandardElementSave)
                         {
 
                             string gumCode = CodeGenerator.GetGeneratedCodeForElement(selectedElement, settings, codeOutputProjectSettings);
@@ -401,9 +401,9 @@ namespace CodeOutputPlugin
 
         private void GenerateCodeForElement(bool showPopups, ElementSave element)
         {
-            var settings = control.CodeOutputElementSettings;
-            if (element != null)
+            if (element != null && element is not StandardElementSave)
             {
+                var settings = control.CodeOutputElementSettings;
                 _codeGenerationService.GenerateCodeForElement(element, settings, codeOutputProjectSettings, showPopups);
             }
         }
