@@ -2,16 +2,43 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace MonoGameGum.Input;
+
+public enum DeadzoneType
+{
+    Radial = 0,
+    //BoundingBox = 1, // Not currently supported
+    Cross
+}
+
+public enum DeadzoneInterpolationType
+{
+    /// <summary>
+    /// No interpolation is performed. Values less than the deadzone are set to 0.
+    /// </summary>
+    Instant,
+    /// <summary>
+    /// Linear interpolation is performed for values greater than the deadzone. 
+    /// </summary>
+    Linear,
+    /// <summary>
+    /// Quadratic (in) interpolation is performed for values greater than the deadzone. This increases
+    /// accuracy at lower values (values closer to the deadzone) so that small movements are easier to perform.
+    /// </summary>
+    Quadratic
+}
+
 
 public class AnalogStick
 {
     // The curren time, as of the last time Update was called
     double currentTime;
 
+    Vector2 mRawPosition;
     Vector2 mPosition;
 
     double mTimeAfterPush = DefaultTimeAfterPush;
@@ -118,6 +145,20 @@ public class AnalogStick
                 //break;
         }
     }
+    public float Deadzone { get; set; } = .1f;
+    public DeadzoneType DeadzoneType { get; set; } = DeadzoneType.Radial;// matches the behavior prior to May 22, 2022 when this property was introduced
+
+
+    /// <summary>
+    /// Whether Position values should be limited so that Position.Length is less than or equal to 1.
+    /// This is recommended for top-down games.
+    /// </summary>
+    public bool IsMaxPositionNormalized { get; set; } = false;
+
+    /// <summary>
+    /// The type of interpolation to perform up to the max value when outside of the deadzone value.
+    /// </summary>
+    public DeadzoneInterpolationType DeadzoneInterpolation { get; set; }
 
 
     /// <summary>
@@ -163,6 +204,186 @@ public class AnalogStick
         }
 
         return false;
+    }
+
+    public void Update(Vector2 newPosition, double time)
+    {
+        currentTime = time;
+        mRawPosition = newPosition;
+        if (Deadzone > 0)
+        {
+            switch (DeadzoneType)
+            {
+                case DeadzoneType.Radial:
+                    newPosition = GetRadialDeadzoneValue(newPosition);
+                    break;
+                case DeadzoneType.Cross:
+                    newPosition = GetCrossDeadzoneValue(newPosition);
+                    break;
+            }
+
+        }
+
+        if (IsMaxPositionNormalized && newPosition.LengthSquared() > 1)
+        {
+            newPosition.Normalize();
+        }
+
+        mLastDPadDown[(int)DPadDirection.Up] = AsDPadDown(DPadDirection.Up);
+        mLastDPadDown[(int)DPadDirection.Down] = AsDPadDown(DPadDirection.Down);
+        mLastDPadDown[(int)DPadDirection.Left] = AsDPadDown(DPadDirection.Left);
+        mLastDPadDown[(int)DPadDirection.Right] = AsDPadDown(DPadDirection.Right);
+
+        //mVelocity = Vector2.Multiply((newPosition - mPosition), 1 / TimeManager.SecondDifference);
+        mPosition = newPosition;
+
+        UpdateAccordingToPosition();
+
+        for (int i = 0; i < 4; i++)
+        {
+            if (AsDPadPushed((DPadDirection)i))
+            {
+                mLastDPadPush[i] = currentTime;
+            }
+        }
+
+        // todo...
+        //leftAsButton.Update(-System.Math.Min(0, mPosition.X));
+        //rightAsButton.Update(System.Math.Max(0, mPosition.X));
+
+        //downAsButton.Update(-System.Math.Min(0, mPosition.Y));
+        //upAsButton.Update(System.Math.Max(0, mPosition.Y));
+    }
+
+    private void UpdateAccordingToPosition()
+    {
+        // Atan2 of (0,0) returns 0
+        //mAngle = System.Math.Atan2(mPosition.Y, mPosition.X);
+        //mAngle = MathFunctions.RegulateAngle(mAngle);
+        //mMagnitude = System.Math.Min(1, mPosition.Length());
+    }
+
+    Vector2 GetRadialDeadzoneValue(Vector2 originalValue)
+    {
+        var deadzoneSquared = Deadzone * Deadzone;
+
+        var originalValueLengthSquared =
+            (originalValue.X * originalValue.X) +
+            (originalValue.Y * originalValue.Y);
+
+        if (originalValueLengthSquared < deadzoneSquared)
+        {
+            return Vector2.Zero;
+        }
+        else
+        {
+            switch (DeadzoneInterpolation)
+            {
+                case DeadzoneInterpolationType.Instant:
+                    return originalValue;
+                case DeadzoneInterpolationType.Linear:
+                    {
+                        var range = (1 - Deadzone);
+                        var distanceBeyondDeadzone = originalValue.Length() - Deadzone;
+                        return NormalizedOrRight(originalValue) * (distanceBeyondDeadzone / range);
+                    }
+                case DeadzoneInterpolationType.Quadratic:
+                    {
+                        var range = (1 - Deadzone);
+                        var distanceBeyondDeadzone = originalValue.Length() - Deadzone;
+                        var ratio = (distanceBeyondDeadzone / range);
+
+                        var modifiedRatio = EaseIn(ratio, 0, 1, 1);
+                        return NormalizedOrRight(originalValue) * modifiedRatio;
+                    }
+
+            }
+            return originalValue;
+        }
+    }
+
+
+    static Vector2 NormalizedOrRight(Vector2 vector)
+    {
+        if (vector.X != 0 || vector.Y != 0)
+        {
+            vector.Normalize();
+            return vector;
+        }
+        else
+        {
+            return new Vector2(1, 0);
+        }
+    }
+
+    static float EaseIn(float timeElapsed, float startingValue, float amountToAdd, float durationInSeconds)
+    {
+        return amountToAdd * (timeElapsed /= durationInSeconds) * timeElapsed + startingValue;
+    }
+
+    Vector2 GetCrossDeadzoneValue(Vector2 originalValue)
+    {
+        if (originalValue.X < Deadzone && originalValue.X > -Deadzone)
+        {
+            originalValue.X = 0;
+        }
+        else
+        {
+            switch (DeadzoneInterpolation)
+            {
+                case DeadzoneInterpolationType.Instant:
+                    // return originalValue;
+                    // do nothing
+                    break;
+                case DeadzoneInterpolationType.Linear:
+                    {
+                        var range = (1 - Deadzone);
+                        var distanceBeyondDeadzone = System.Math.Abs(originalValue.X) - Deadzone;
+                        originalValue.X = System.Math.Sign(originalValue.X) * (float)(distanceBeyondDeadzone / range);
+                        break;
+                    }
+                case DeadzoneInterpolationType.Quadratic:
+                    {
+                        var range = (1 - Deadzone);
+                        var distanceBeyondDeadzone = System.Math.Abs(originalValue.X) - Deadzone;
+                        var ratio = distanceBeyondDeadzone / range;
+                        var modifiedRatio = EaseIn(ratio, 0, 1, 1);
+                        originalValue.X = System.Math.Sign(originalValue.X) * (float)modifiedRatio;
+                        break;
+                    }
+            }
+        }
+
+
+        if (originalValue.Y < Deadzone && originalValue.Y > -Deadzone)
+        {
+            originalValue.Y = 0;
+        }
+        else
+        {
+            switch (DeadzoneInterpolation)
+            {
+                case DeadzoneInterpolationType.Instant:
+                    break;
+                case DeadzoneInterpolationType.Linear:
+                    {
+                        var range = (1 - Deadzone);
+                        var distanceBeyondDeadzone = System.Math.Abs(originalValue.Y) - Deadzone;
+                        originalValue.Y = System.Math.Sign(originalValue.Y) * (float)(distanceBeyondDeadzone / range);
+                        break;
+                    }
+                case DeadzoneInterpolationType.Quadratic:
+                    {
+                        var range = 1 - Deadzone;
+                        var distanceBeyondDeadzone = System.Math.Abs(originalValue.Y) - Deadzone;
+                        var ratio = distanceBeyondDeadzone / range;
+                        var modifiedRatio = EaseIn(ratio, 0, 1, 1);
+                        originalValue.Y = System.Math.Sign(originalValue.Y) * (float)modifiedRatio;
+                        break;
+                    }
+            }
+        }
+        return originalValue;
     }
 
 }

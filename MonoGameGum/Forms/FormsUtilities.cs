@@ -27,6 +27,8 @@ namespace MonoGameGum.Forms
 
         public static Keyboard Keyboard => keyboard;
 
+        public static GamePad[] Gamepads { get; private set; } = new GamePad[4];
+
         /// <summary>
         /// Initializes defaults to enable FlatRedBall Forms. This method should be called before using Forms.
         /// </summary>
@@ -50,7 +52,13 @@ namespace MonoGameGum.Forms
             FrameworkElement.DefaultFormsComponents[typeof(Slider)] = typeof(DefaultSliderRuntime);
 
             cursor = new Cursor();
+
             keyboard = new MonoGameGum.Input.Keyboard();
+
+            for(int i = 0; i < Gamepads.Length; i++)
+            {
+                Gamepads[i] = new GamePad();
+            }
 
             FrameworkElement.MainCursor = cursor;
 
@@ -108,6 +116,7 @@ namespace MonoGameGum.Forms
 
             cursor.Activity(gameTime.TotalGameTime.TotalSeconds);
             keyboard.Activity(gameTime.TotalGameTime.TotalSeconds);
+            UpdateGamepads(gameTime.TotalGameTime.TotalSeconds);
             innerList.Clear();
 
             if (FrameworkElement.ModalRoot.Children.Count > 0)
@@ -184,6 +193,15 @@ namespace MonoGameGum.Forms
 
             //FrameworkElement.Root.DoUiActivityRecursively(cursor, keyboard, gameTime.TotalGameTime.TotalSeconds);
               GueInteractiveExtensionMethods.DoUiActivityRecursively(innerList, cursor, keyboard, gameTime.TotalGameTime.TotalSeconds);
+        }
+
+        private static void UpdateGamepads(double time)
+        {
+            for (int i = 0; i < Gamepads.Length; i++)
+            {
+                var gamepadState = Microsoft.Xna.Framework.Input.GamePad.GetState((int)i);
+                Gamepads[i].Activity(gamepadState, time);
+            }
         }
 
         static void SetDimensionsToCanvas(InteractiveGue container)

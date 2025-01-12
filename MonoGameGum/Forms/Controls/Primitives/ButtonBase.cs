@@ -139,6 +139,9 @@ public class ButtonBase : FrameworkElement, IInputReceiver
     public void OnFocusUpdate()
     {
         var gamepads = GamePadsForUiControl;
+
+
+
         for (int i = 0; i < gamepads.Count; i++)
         {
             var gamepad = gamepads[i];
@@ -155,6 +158,10 @@ public class ButtonBase : FrameworkElement, IInputReceiver
                 this.HandleClick(this, EventArgs.Empty);
 
                 ControllerButtonPushed?.Invoke(GamepadButton.A);
+            }
+            else if(gamepad.ButtonReleased(GamepadButton.A))
+            {
+                UpdateState();
             }
 
             void RaiseIfPushedAndEnabled(GamepadButton button)

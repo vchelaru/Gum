@@ -209,6 +209,7 @@ namespace Gum.Wireframe
         /// </summary>
         public event EventHandler RemovedAsPushed;
 
+        public void CallClick() => Click?.Invoke(this, EventArgs.Empty);
 
         // RollOff is determined outside of the individual InteractiveGue so we need to have this callable externally..
         public void TryCallRollOff()
@@ -672,6 +673,12 @@ namespace Gum.Wireframe
         /// </summary>
         void OnLoseFocus();
 
+        /// <summary>
+        /// Called every frame if this has focus. Allows general every-frame updates such as
+        /// handling gamepad input.
+        /// </summary>
+        void OnFocusUpdate();
+
         void DoKeyboardAction(IInputReceiverKeyboard keyboard);
     }
 
@@ -847,6 +854,7 @@ namespace Gum.Wireframe
             if(InteractiveGue.CurrentInputReceiver != null)
             {
                 InteractiveGue.CurrentInputReceiver.DoKeyboardAction(keyboard);
+                InteractiveGue.CurrentInputReceiver.OnFocusUpdate();
             }
         }
     }

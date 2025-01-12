@@ -1,6 +1,7 @@
 ﻿using Gum.Wireframe;
 using Microsoft.Xna.Framework.Input;
-using MonoGameGum.Input;
+
+
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
@@ -11,8 +12,21 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using ToolsUtilities;
+using System.Threading;
 
+
+#if FRB
+using FlatRedBall.Forms.GumExtensions;
+using FlatRedBall.Forms.Input;
+using FlatRedBall.Gui;
+using FlatRedBall.Input;
+using FlatRedBall.Instructions;
+using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
+namespace FlatRedBall.Forms.Controls;
+#else
+using MonoGameGum.Input;
 namespace MonoGameGum.Forms.Controls;
+#endif
 
 #region Enums
 
@@ -22,7 +36,6 @@ public enum TabDirection
     Down
 }
 
-
 public enum TabbingFocusBehavior
 {
     FocusableIfInputReceiver,
@@ -30,10 +43,12 @@ public enum TabbingFocusBehavior
 }
 #endregion
 
+#if !FRB
 public class KeyEventArgs : EventArgs
 {
     public Microsoft.Xna.Framework.Input.Keys Key { get; set; }
 }
+#endif
 
 public delegate void KeyEventHandler(object sender, KeyEventArgs e);
 
@@ -42,13 +57,15 @@ public class FrameworkElement
 #if FRB
         public static Cursor MainCursor => GuiManager.Cursor;
 
-        public List<Xbox360GamePad> GamePadsForUiControl => GuiManager.GamePadsForUiControl;
+        public static List<Xbox360GamePad> GamePadsForUiControl => GuiManager.GamePadsForUiControl;
 #else
     public static ICursor MainCursor { get; set; }
 
-    public List<Input.GamePad> GamePadsForUiControl { get; private set; } = new List<Input.GamePad>();
+    public static List<Input.GamePad> GamePadsForUiControl { get; private set; } = new List<Input.GamePad>();
 
 #endif
+
+#if !FRB
 
     /// <summary>
     /// Container used to hold popups such as the ListBox which appears when clicking on a combo box.
@@ -61,8 +78,14 @@ public class FrameworkElement
     /// </summary>
     public static InteractiveGue ModalRoot { get; set; }
 
+#endif
+
     protected bool isFocused;
     protected double timeFocused;
+    /// <summary>
+    /// Whether this element has input focus. If true, the element shows its focused
+    /// state and receives input from keyboards and gamepads.
+    /// </summary>
     public virtual bool IsFocused
     {
         get { return isFocused; }
@@ -72,37 +95,37 @@ public class FrameworkElement
             {
                 isFocused = value && IsEnabled;
 
-            //    if (isFocused && this is IInputReceiver inputReceiver)
-            //    {
-            //        FlatRedBall.Input.InputManager.InputReceiver = inputReceiver;
-            //    }
+                if (isFocused && this is IInputReceiver inputReceiver)
+                {
+                    InteractiveGue.CurrentInputReceiver = inputReceiver;
+                }
 
                 UpdateState();
 
-                //    PushValueToViewModel();
+                PushValueToViewModel();
 
                 if (isFocused)
                 {
-                    //timeFocused = TimeManager.CurrentTime;
+                    timeFocused = InteractiveGue.CurrentGameTime;
                     GotFocus?.Invoke(this, null);
                 }
                 else
                 {
                     LostFocus?.Invoke(this, null);
 
-                    //if (this is IInputReceiver inputReceiver2 && InputManager.InputReceiver == inputReceiver2)
-                    //{
-                    //    InputManager.InputReceiver = null;
-                    //}
+                    if (this is IInputReceiver inputReceiver2 && InteractiveGue.CurrentInputReceiver == inputReceiver2)
+                    {
+                        InteractiveGue.CurrentInputReceiver = null;
+                    }
                 }
             }
             // this resolves possible stale states:
             else
             {
-                //if (isFocused && this is IInputReceiver inputReceiver)
-                //{
-                //    FlatRedBall.Input.InputManager.InputReceiver = inputReceiver;
-                //}
+                if (isFocused && this is IInputReceiver inputReceiver)
+                {
+                    InteractiveGue.CurrentInputReceiver = inputReceiver;
+                }
             }
 
         }
@@ -178,6 +201,23 @@ public class FrameworkElement
             Visual.Width = value;
         }
     }
+
+
+#if FRB
+    /// <summary>
+    /// The X position of the left side of the element in pixels.
+    /// </summary>
+    [Obsolete("Use AbsoluteLeft")]
+    public float ActualX => Visual.GetLeft();
+
+    /// <summary>
+    /// The Y position of the top of the element in pixels (positive Y is down).
+    /// </summary>
+    [Obsolete("Use AbsoluteTop")]
+    public float ActualY => Visual.GetTop();
+
+#endif
+
     public float X
     {
         get { return Visual.X; }
@@ -331,7 +371,7 @@ public class FrameworkElement
             // whether to create a forms object. Yes, this is less convenient for the user who is manually
             // creating runtimes, but it's worth it for the standard behavior of the user creating instances
             // of Gum objects, and to be able to create Forms objects in Gum tool
-            System.Reflection.ConstructorInfo? boolBoolConstructor = gumType.GetConstructor(new[] { typeof(bool), typeof(bool) });
+            var boolBoolConstructor = gumType.GetConstructor(new[] { typeof(bool), typeof(bool) });
             if(boolBoolConstructor != null)
             {
                 return boolBoolConstructor.Invoke(new object[] { true, false }) as InteractiveGue;
@@ -346,11 +386,8 @@ public class FrameworkElement
         }
         else
         {
-#if UWP
-            var baseType = type.GetTypeInfo().BaseType;
-#else
             var baseType = type.BaseType;
-#endif
+
             if (baseType == typeof(object) || baseType == typeof(FrameworkElement))
             {
                 var message =
@@ -423,12 +460,14 @@ public class FrameworkElement
 
     public void Close()
     {
-        //if (!FlatRedBallServices.IsThreadPrimary())
-        //{
+#if FRB
+        if (!FlatRedBallServices.IsThreadPrimary())
+        {
 
-        //    InstructionManager.AddSafe(CloseInternal);
-        //}
-        //else
+            InstructionManager.AddSafe(CloseInternal);
+        }
+        else
+#endif
         {
             CloseInternal();
         }
@@ -436,24 +475,24 @@ public class FrameworkElement
 
     private void CloseInternal()
     {
-        //var inputReceiver = InputManager.InputReceiver;
-        //if (inputReceiver != null)
-        //{
-        //    if (inputReceiver is GraphicalUiElement gue)
-        //    {
-        //        if (gue.IsInParentChain(this.Visual))
-        //        {
-        //            InputManager.InputReceiver = null;
-        //        }
-        //    }
-        //    else if (inputReceiver is FrameworkElement frameworkElement)
-        //    {
-        //        if (frameworkElement.Visual?.IsInParentChain(this.Visual) == true)
-        //        {
-        //            InputManager.InputReceiver = null;
-        //        }
-        //    }
-        //}
+        var inputReceiver = InteractiveGue.CurrentInputReceiver;
+        if (inputReceiver != null)
+        {
+            if (inputReceiver is InteractiveGue gue)
+            {
+                if (gue.IsInParentChain(this.Visual))
+                {
+                    InteractiveGue.CurrentInputReceiver = null;
+                }
+            }
+            else if (inputReceiver is FrameworkElement frameworkElement)
+            {
+                if (frameworkElement.Visual?.IsInParentChain(this.Visual) == true)
+                {
+                    InteractiveGue.CurrentInputReceiver = null;
+                }
+            }
+        }
         Visual.RemoveFromManagers();
     }
 
@@ -473,15 +512,19 @@ public class FrameworkElement
             throw new InvalidOperationException("Visual must be set before calling Show");
         }
 #endif
-        //if (!FlatRedBallServices.IsThreadPrimary())
-        //{
-        //    InstructionManager.AddSafe(() =>
-        //    {
-        //        Visual.AddToManagers(RenderingLibrary.SystemManagers.Default, gumLayer);
-        //    });
 
-        //}
-        //else
+
+#if FRB
+        if (!FlatRedBallServices.IsThreadPrimary())
+        {
+            InstructionManager.AddSafe(() =>
+            {
+                Visual.AddToManagers(RenderingLibrary.SystemManagers.Default, gumLayer);
+            });
+
+        }
+        else
+#endif
         {
             Visual.AddToManagers(RenderingLibrary.SystemManagers.Default, layer);
         }
@@ -542,9 +585,6 @@ public class FrameworkElement
         var cameraBottom = Renderer.Self.Camera.ClientHeight / Renderer.Self.Camera.Zoom;
         //var cameraLeft = 0;
         var cameraRight = Renderer.Self.Camera.ClientWidth / Renderer.Self.Camera.Zoom;
-
-        //var amountXToShift = 0;
-        //var amountYToShift = 0;
 
         var thisBottom = this.Visual.AbsoluteY + this.Visual.GetAbsoluteHeight();
         if (thisBottom > cameraBottom)
@@ -744,46 +784,46 @@ public class FrameworkElement
         }
     }
 
+#if FRB
+    protected void HandleGamepadNavigation(Xbox360GamePad gamepad)
+    {
+        if (gamepad.ButtonRepeatRate(FlatRedBall.Input.Xbox360GamePad.Button.DPadDown) ||
+            (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.ButtonRepeatRate(FlatRedBall.Input.Xbox360GamePad.Button.DPadRight)) ||
+            gamepad.LeftStick.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Down) ||
+            (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.LeftStick.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Right)))
+        {
+            this.HandleTab(TabDirection.Down, this);
+        }
+        else if (gamepad.ButtonRepeatRate(FlatRedBall.Input.Xbox360GamePad.Button.DPadUp) ||
+            (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.ButtonRepeatRate(FlatRedBall.Input.Xbox360GamePad.Button.DPadLeft)) ||
+            gamepad.LeftStick.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Up) ||
+            (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.LeftStick.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Left)))
+        {
+            this.HandleTab(TabDirection.Up, this);
+        }
+    }
+    protected void HandleGamepadNavigation(GenericGamePad gamepad)
+    {
+        AnalogStick leftStick = gamepad.AnalogSticks.Length > 0
+            ? gamepad.AnalogSticks[0]
+            : null;
 
-    //protected void HandleGamepadNavigation(Xbox360GamePad gamepad)
-    //{
-    //    if (gamepad.ButtonRepeatRate(FlatRedBall.Input.Xbox360GamePad.Button.DPadDown) ||
-    //        (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.ButtonRepeatRate(FlatRedBall.Input.Xbox360GamePad.Button.DPadRight)) ||
-    //        gamepad.LeftStick.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Down) ||
-    //        (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.LeftStick.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Right)))
-    //    {
-    //        this.HandleTab(TabDirection.Down, this);
-    //    }
-    //    else if (gamepad.ButtonRepeatRate(FlatRedBall.Input.Xbox360GamePad.Button.DPadUp) ||
-    //        (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.ButtonRepeatRate(FlatRedBall.Input.Xbox360GamePad.Button.DPadLeft)) ||
-    //        gamepad.LeftStick.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Up) ||
-    //        (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.LeftStick.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Left)))
-    //    {
-    //        this.HandleTab(TabDirection.Up, this);
-    //    }
-    //}
-
-    //protected void HandleGamepadNavigation(GenericGamePad gamepad)
-    //{
-    //    AnalogStick leftStick = gamepad.AnalogSticks.Length > 0
-    //        ? gamepad.AnalogSticks[0]
-    //        : null;
-
-    //    if (gamepad.DPadRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Down) ||
-    //        (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.DPadRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Right)) ||
-    //        leftStick?.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Down) == true ||
-    //        (IsUsingLeftAndRightGamepadDirectionsForNavigation && leftStick?.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Right) == true))
-    //    {
-    //        this.HandleTab(TabDirection.Down, this);
-    //    }
-    //    else if (gamepad.DPadRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Up) ||
-    //        (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.DPadRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Left)) ||
-    //        leftStick?.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Up) == true ||
-    //        (IsUsingLeftAndRightGamepadDirectionsForNavigation && leftStick?.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Left) == true))
-    //    {
-    //        this.HandleTab(TabDirection.Up, this);
-    //    }
-    //}
+        if (gamepad.DPadRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Down) ||
+            (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.DPadRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Right)) ||
+            leftStick?.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Down) == true ||
+            (IsUsingLeftAndRightGamepadDirectionsForNavigation && leftStick?.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Right) == true))
+        {
+            this.HandleTab(TabDirection.Down, this);
+        }
+        else if (gamepad.DPadRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Up) ||
+            (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.DPadRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Left)) ||
+            leftStick?.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Up) == true ||
+            (IsUsingLeftAndRightGamepadDirectionsForNavigation && leftStick?.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Left) == true))
+        {
+            this.HandleTab(TabDirection.Up, this);
+        }
+    }
+#endif
 
     public void HandleTab(TabDirection tabDirection = TabDirection.Down, FrameworkElement requestingElement = null)
     {
@@ -854,7 +894,7 @@ public class FrameworkElement
             {
                 for (int i = 0; i < children.Count; i++)
                 {
-                    var childElement = children[i] as GraphicalUiElement;
+                    var childElement = children[i];
 
                     if (childElement == requestingVisual)
                     {
@@ -889,15 +929,12 @@ public class FrameworkElement
             else
             {
                 var childAtI = children[newIndex] as InteractiveGue;
-                var elementAtI = childAtI.FormsControlAsObject as FrameworkElement;
+                var elementAtI = childAtI?.FormsControlAsObject as FrameworkElement;
 
-                // assume this for now, need to pull this from FRB
-                bool isInputReceiver =
-                    //elementAtI is IInputReceiver
-                    true;
-
-                if (isInputReceiver && elementAtI.IsVisible &&
-                    elementAtI.IsEnabled && elementAtI.GamepadTabbingFocusBehavior == TabbingFocusBehavior.FocusableIfInputReceiver)
+                if (elementAtI is IInputReceiver && elementAtI.IsVisible == true &&
+                    elementAtI.IsEnabled &&
+                    elementAtI.Visual.HasEvents &&
+                    elementAtI.GamepadTabbingFocusBehavior == TabbingFocusBehavior.FocusableIfInputReceiver)
                 {
                     elementAtI.IsFocused = true;
 
@@ -908,7 +945,8 @@ public class FrameworkElement
                 }
                 else
                 {
-                    if (childAtI.Visible && childAtI.IsEnabled && (elementAtI == null || elementAtI.IsEnabled))
+                    if (childAtI?.Visible == true && childAtI.IsEnabled && (elementAtI == null || elementAtI.IsEnabled))
+
                     {
 
                         // let this try to handle it:
@@ -1004,6 +1042,12 @@ public class FrameworkElement
 
         var primaryDown = cursor.PrimaryDown;
 
+        bool pushedByGamepads = false;
+        for(int i = 0; i < GamePadsForUiControl.Count; i++)
+        {
+            pushedByGamepads = pushedByGamepads || (GamePadsForUiControl[i].ButtonDown(Buttons.A));
+        }
+
         var isTouchScreen = false;
 
 
@@ -1021,6 +1065,10 @@ public class FrameworkElement
         else if (IsFocused)
         {
             if (cursor.WindowPushed == visual && primaryDown)
+            {
+                return PushedState;
+            }
+            else if(pushedByGamepads)
             {
                 return PushedState;
             }

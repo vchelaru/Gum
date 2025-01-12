@@ -9,10 +9,13 @@ using Microsoft.Xna.Framework.Input;
 using RenderingLibrary;
 
 
+
 #if FRB
+using static FlatRedBall.Input.Xbox360GamePad;
 using FlatRedBall.Gui;
 using FlatRedBall.Input;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
+using Buttons = FlatRedBall.Input.Xbox360GamePad.Button;
 namespace FlatRedBall.Forms.Controls;
 #else
 using MonoGameGum.Input;
@@ -162,9 +165,7 @@ public class ComboBox : FrameworkElement, IInputReceiver
 
     public event Action<object, SelectionChangedEventArgs> SelectionChanged;
     public event Action<IInputReceiver> FocusUpdate;
-#if FRB
-    public event Action<Xbox360GamePad.Button> ControllerButtonPushed;
-#endif
+    public event Action<Buttons> ControllerButtonPushed;
     public event Action<int> GenericGamepadButtonPushed;
 
     #endregion
@@ -447,23 +448,23 @@ public class ComboBox : FrameworkElement, IInputReceiver
 
     private void DoOpenDropDownFocusUpdate()
     {
-#if FRB
-        var xboxGamepads = GuiManager.GamePadsForUiControl;
+        var xboxGamepads = FrameworkElement.GamePadsForUiControl;
 
         for (int i = 0; i < xboxGamepads.Count; i++)
         {
             var gamepad = xboxGamepads[i];
 
-            var movedDown = gamepad.ButtonRepeatRate(FlatRedBall.Input.Xbox360GamePad.Button.DPadDown) ||
-                gamepad.LeftStick.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Down);
+            var movedDown = gamepad.ButtonRepeatRate(Buttons.DPadDown) ||
+                gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Down);
 
-            var movedUp = gamepad.ButtonRepeatRate(FlatRedBall.Input.Xbox360GamePad.Button.DPadUp) ||
-                     gamepad.LeftStick.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Up);
+            var movedUp = gamepad.ButtonRepeatRate(Buttons.DPadUp) ||
+                     gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Up);
 
-            var pressedButton = gamepad.ButtonPushed(FlatRedBall.Input.Xbox360GamePad.Button.A) ||
-                gamepad.ButtonPushed(FlatRedBall.Input.Xbox360GamePad.Button.B);
+            var pressedButton = gamepad.ButtonPushed(Buttons.A) ||
+                gamepad.ButtonPushed(Buttons.B);
             DoDropDownOpenFocusUpdate(movedDown, movedUp, pressedButton);
         }
+#if FRB
 
         var genericGamepads = GuiManager.GenericGamePadsForUiControl;
         for(int i = 0; i < genericGamepads.Count; i++)
@@ -527,8 +528,7 @@ public class ComboBox : FrameworkElement, IInputReceiver
 
     private void DoClosedDropDownFocusUpdate()
     {
-#if FRB
-        var gamepads = GuiManager.GamePadsForUiControl;
+        var gamepads = FrameworkElement.GamePadsForUiControl;
 
         for (int i = 0; i < gamepads.Count; i++)
         {
@@ -536,7 +536,7 @@ public class ComboBox : FrameworkElement, IInputReceiver
 
             HandleGamepadNavigation(gamepad);
 
-            if (gamepad.ButtonPushed(FlatRedBall.Input.Xbox360GamePad.Button.A))
+            if (gamepad.ButtonPushed(Buttons.A))
             {
                 IsDropDownOpen = IsDropDownOpen = true;
 
@@ -546,7 +546,7 @@ public class ComboBox : FrameworkElement, IInputReceiver
                 }
             }
 
-            void RaiseIfPushedAndEnabled(FlatRedBall.Input.Xbox360GamePad.Button button)
+            void RaiseIfPushedAndEnabled(Buttons button)
             {
                 if (IsEnabled && gamepad.ButtonPushed(button))
                 {
@@ -554,12 +554,13 @@ public class ComboBox : FrameworkElement, IInputReceiver
                 }
             }
 
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.B);
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.X);
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.Y);
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.Start);
-            RaiseIfPushedAndEnabled(Xbox360GamePad.Button.Back);
+            RaiseIfPushedAndEnabled(Buttons.B);
+            RaiseIfPushedAndEnabled(Buttons.X);
+            RaiseIfPushedAndEnabled(Buttons.Y);
+            RaiseIfPushedAndEnabled(Buttons.Start);
+            RaiseIfPushedAndEnabled(Buttons.Back);
         }
+#if FRB
 
         var genericGamepads = GuiManager.GenericGamePadsForUiControl;
         for(int i = 0; i < genericGamepads.Count; i++)

@@ -13,6 +13,10 @@ public class AnalogButton
 
     float mLastPosition = 0;
 
+    bool lastIsDownDown = false;
+
+
+    double mLastButtonPush;
 
 
     /// <summary>
@@ -26,6 +30,45 @@ public class AnalogButton
     internal float LastPosition
     {
         get { return mLastPosition; }
+    }
+
+    public bool IsDown
+    {
+        get
+        {
+            if (lastIsDownDown)
+            {
+                return mPosition > AnalogStick.DPadOffValue;
+            }
+            else
+            {
+                return mPosition > AnalogStick.DPadOnValue;
+            }
+
+        }
+    }
+
+    public bool WasJustPressed => !lastIsDownDown && IsDown;
+
+    public bool WasJustReleased => lastIsDownDown && !IsDown;
+
+
+
+    public void Update(float newPosition, double time)
+    {
+        mLastPosition = mPosition;
+        lastIsDownDown = IsDown;
+
+        //if (TimeManager.SecondDifference != 0)
+        //{
+        //    mVelocity = (newPosition - mPosition) / TimeManager.SecondDifference;
+        //}
+        mPosition = newPosition;
+
+        if (IsDown && !lastIsDownDown)
+        {
+            mLastButtonPush = time;
+        }
     }
 
 }
