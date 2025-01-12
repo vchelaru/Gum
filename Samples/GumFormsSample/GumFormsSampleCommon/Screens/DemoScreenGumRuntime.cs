@@ -19,6 +19,9 @@ namespace GumFormsSample.Screens;
 
 public class DemoScreenGumRuntime : BindableGue
 {
+
+    Button detectResolutionButton;
+
     [ModuleInitializer]
     public static void RegisterRuntimeType()
     {
@@ -58,7 +61,7 @@ public class DemoScreenGumRuntime : BindableGue
             nameof(RadioButton.IsChecked),
             nameof(viewModel.IsTouchscreenChecked));
 
-        var detectResolutionButton = this.GetFrameworkElementByName<Button>("DetectResolutionsButton");
+        detectResolutionButton = this.GetFrameworkElementByName<Button>("DetectResolutionsButton");
 
         var musicSlider = this.GetFrameworkElementByName<Slider>("MusicSlider");
         musicSlider.LargeChange = 10;
@@ -86,15 +89,19 @@ public class DemoScreenGumRuntime : BindableGue
         var popupGue = element.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
         popupGue.Parent = FrameworkElement.ModalRoot;
 
-        popupGue.GetFrameworkElementByName<Button>("OkButton").Click += (not, used) =>
+        var okButton = popupGue.GetFrameworkElementByName<Button>("OkButton");
+        okButton.IsFocused = true;
+        okButton.Click += (not, used) =>
         {
             popupGue.RemoveFromManagers();
+            detectResolutionButton.IsFocused = true;
             popupGue.Parent = null;
         };
 
         popupGue.GetFrameworkElementByName<Button>("CancelButton").Click += (not, used) =>
         {
             popupGue.RemoveFromManagers();
+            detectResolutionButton.IsFocused = true;
             popupGue.Parent = null;
         };
     }

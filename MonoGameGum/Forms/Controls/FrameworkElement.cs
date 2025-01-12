@@ -1042,6 +1042,12 @@ public class FrameworkElement
 
         var primaryDown = cursor.PrimaryDown;
 
+        bool pushedByGamepads = false;
+        for(int i = 0; i < GamePadsForUiControl.Count; i++)
+        {
+            pushedByGamepads = pushedByGamepads || (GamePadsForUiControl[i].ButtonDown(Buttons.A));
+        }
+
         var isTouchScreen = false;
 
 
@@ -1059,6 +1065,10 @@ public class FrameworkElement
         else if (IsFocused)
         {
             if (cursor.WindowPushed == visual && primaryDown)
+            {
+                return PushedState;
+            }
+            else if(pushedByGamepads)
             {
                 return PushedState;
             }
