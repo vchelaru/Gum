@@ -55,10 +55,13 @@ namespace MonoGameGum.Forms
 
             keyboard = new MonoGameGum.Input.Keyboard();
 
-            for(int i = 0; i < Gamepads.Length; i++)
+            for (int i = 0; i < Gamepads.Length; i++)
             {
                 Gamepads[i] = new GamePad();
             }
+
+            // Do an initial update to update connectivity
+            UpdateGamepads(0);
 
             FrameworkElement.MainCursor = cursor;
 
