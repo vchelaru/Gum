@@ -33,7 +33,7 @@ Sprite element is selected in the image above. Notice that since a **SourceFile*
 Plugins can add additional standard elements. The list above is the default list of standard elements before plugins have made any changes.
 {% endhint %}
 
-## Components
+### Components
 
 Components are objects which can contain standard elements and instances of other components. Components can be very simple, such as a Label, or very complex, such as an options menu with dozens of _instances_. Items added to components or screens are called _instances_.
 
@@ -45,7 +45,7 @@ Screens are objects which can contain standard elements and instances of other c
 
 Components and screens are similar - both can contain instances of standard elements, and both can contain other components. The only difference between screens and components is that screens cannot contain other screens.
 
-You can think of screens like a screen in a video game. Examples include a main menu, credits screen, options screen, and level selection screen. You can think of components as elements which are composed of multiple standard elements. Examples include a Button component which is made up of a Sprite instance and a Text instance, or a Logo component which may be made up of multiple Sprites and Text objects.
+For example you can think of screens in a video game which might include a main menu, credits screen, options screen, and level selection screen. You can think of components as elements which are composed of multiple standard elements. Examples include a Button component which is made up of a Sprite instance and a Text instance, or a Logo component which may be made up of multiple Sprites and Text objects.
 
 ## Creating a Screen
 
@@ -55,7 +55,7 @@ To create a screen:
 
     <figure><img src="../../../.gitbook/assets/image (9) (2).png" alt=""><figcaption><p>Right-click, Add Screen option</p></figcaption></figure>
 2. Enter the name of the new screen - such as **MainMenu**
-3.  The newly-created screen is created and selected
+3.  Click OK. The newly-created screen is created and selected
 
     <figure><img src="../../../.gitbook/assets/image (3) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>The MainMenu screen in Gum</p></figcaption></figure>
 
@@ -75,7 +75,7 @@ Alternatively, you can also drag+drop a standard element into a screen in the tr
 <figure><img src="../../../.gitbook/assets/13_09 17 10.gif" alt=""><figcaption><p>Adding a Text instance to the MainMenu screen in the Project tab</p></figcaption></figure>
 
 {% hint style="info" %}
-If an element is dropped in the Editor window, it appears at the location where it has been droped - setting its X and Y values. If an element is dropped in the Project tab, then it preserves its default X and Y values.
+If an element is dropped in the Editor window, it appears at the location where it has been dropped - setting its X and Y values. If an element is dropped in the Project tab, then it preserves its default X and Y values.
 {% endhint %}
 
 ## Editing in the preview window
