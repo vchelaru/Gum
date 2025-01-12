@@ -597,6 +597,30 @@ public class ListBox : ItemsControl, IInputReceiver
 
         var mainRoot = listBoxParent.ElementGueContainingThis ?? listBoxParent;
 
+        if(mainRoot.Children == null)
+        {
+            // The main root is a screen which would not have layers
+            // therefore we have to get the parent that still has children:
+            var parentWithChildren = listBoxParent as IRenderableIpso;
+            while (parentWithChildren != null)
+            {
+                var potentialParent = parentWithChildren.Parent;
+                if(potentialParent?.Children != null)
+                {
+                    // continue okay
+                    parentWithChildren = potentialParent.Parent;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            if(parentWithChildren != null)
+            {
+                mainRoot = parentWithChildren as InteractiveGue;
+            }
+        }
+
         // do a search in the layers to see where this is held - expensive but we can at least look in non-main layers
         foreach (var layer in managers.Renderer.Layers)
         {
