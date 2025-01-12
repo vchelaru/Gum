@@ -2779,16 +2779,6 @@
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>
-    <Name>ShowDialogButton</Name>
-    <BaseType>Controls/ButtonStandard</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>ShowToastButton</Name>
-    <BaseType>Controls/ButtonStandard</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
     <Name>ContainerInstance3</Name>
     <BaseType>Container</BaseType>
     <DefinedByBase>false</DefinedByBase>
@@ -2914,12 +2904,12 @@
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>
-    <Name>ButtonConfirmInstance1</Name>
+    <Name>ButtonWithNoEvents</Name>
     <BaseType>Controls/ButtonConfirm</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>
-    <Name>ButtonWithNoEvents</Name>
+    <Name>ButtonConfirmInstance1</Name>
     <BaseType>Controls/ButtonConfirm</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
@@ -3004,6 +2994,11 @@
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>
+    <Name>ShowToastButton</Name>
+    <BaseType>Controls/ButtonStandard</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
     <Name>TabMenuBackground</Name>
     <BaseType>NineSlice</BaseType>
     <DefinedByBase>false</DefinedByBase>
@@ -3011,6 +3006,21 @@
   <Instance>
     <Name>TabMarginContainer</Name>
     <BaseType>Container</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>Tab1</Name>
+    <BaseType>Controls/ButtonTab</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>Tab2</Name>
+    <BaseType>Controls/ButtonTab</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>Tab3</Name>
+    <BaseType>Controls/ButtonTab</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>
@@ -3054,18 +3064,8 @@
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>
-    <Name>Tab3</Name>
-    <BaseType>Controls/ButtonTab</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Tab2</Name>
-    <BaseType>Controls/ButtonTab</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>Tab1</Name>
-    <BaseType>Controls/ButtonTab</BaseType>
+    <Name>ShowDialogButton</Name>
+    <BaseType>Controls/ButtonStandard</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>
