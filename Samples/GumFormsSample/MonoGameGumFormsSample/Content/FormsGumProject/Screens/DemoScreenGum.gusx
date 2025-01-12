@@ -2879,13 +2879,13 @@
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>
-    <Name>ButtonConfirmInstance</Name>
-    <BaseType>Controls/ButtonConfirm</BaseType>
+    <Name>ButtonDenyInstance</Name>
+    <BaseType>Controls/ButtonDeny</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>
-    <Name>ButtonDenyInstance</Name>
-    <BaseType>Controls/ButtonDeny</BaseType>
+    <Name>ButtonConfirmInstance</Name>
+    <BaseType>Controls/ButtonConfirm</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>

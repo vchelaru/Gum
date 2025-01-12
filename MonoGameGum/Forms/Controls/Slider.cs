@@ -448,8 +448,6 @@ public class Slider : RangeBase, IInputReceiver
 #if !FRB
     public void DoKeyboardAction(IInputReceiverKeyboard keyboard)
     {
-        OnFocusUpdate();
-
         ReceiveInput();
 
         var shift = keyboard.IsShiftDown;

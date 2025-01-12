@@ -821,8 +821,6 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
     public void DoKeyboardAction(IInputReceiverKeyboard keyboard)
     {
 #if !FRB
-        OnFocusUpdate();
-
         ReceiveInput();
 
         var shift = keyboard.IsShiftDown;

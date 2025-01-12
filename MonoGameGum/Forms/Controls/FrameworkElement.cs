@@ -906,8 +906,8 @@ public class FrameworkElement
             }
             else
             {
-                var childAtI = children[newIndex] as GraphicalUiElement;
-                var elementAtI = (childAtI as FrameworkElement).FormsControlAsObject as FrameworkElement;
+                var childAtI = children[newIndex] as InteractiveGue;
+                var elementAtI = childAtI?.FormsControlAsObject as FrameworkElement;
 
                 if (elementAtI is IInputReceiver && elementAtI.IsVisible == true &&
                     elementAtI.IsEnabled && elementAtI.GamepadTabbingFocusBehavior == TabbingFocusBehavior.FocusableIfInputReceiver)
@@ -921,9 +921,8 @@ public class FrameworkElement
                 }
                 else
                 {
-                    var childAsInteractiveGue = childAtI as InteractiveGue;
+                    if (childAtI?.Visible == true && childAtI.IsEnabled && (elementAtI == null || elementAtI.IsEnabled))
 
-                    if (childAtI?.Visible == true && (childAsInteractiveGue == null || childAsInteractiveGue.IsEnabled) && (elementAtI == null || elementAtI.IsEnabled))
                     {
 
                         // let this try to handle it:
