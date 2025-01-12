@@ -371,11 +371,18 @@ namespace Gum.Wireframe
         {
             foreach(var childAsRenderable in gue.Children)
             {
-                if(childAsRenderable is GraphicalUiElement child && containedElements.Contains(childAsRenderable))
+                if(childAsRenderable is GraphicalUiElement child )
                 {
-                    AllIpsos.Add(child);
+                    if(containedElements.Contains(childAsRenderable))
+                    {
+                        AllIpsos.Add(child);
+                    }
+                    // don't put this in the if containedElements.Contains 
+                    // check because we can have children which are attached
+                    // to an item inside of component instnace using parent dot operator
                     AddChildrenRecursively(child, containedElements);
                 }
+
             }
             //AllIpsos.Add(rootGue);
             //foreach(var item in rootGue.ContainedElements)
