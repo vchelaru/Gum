@@ -421,13 +421,14 @@ public class GamePad
 
     internal void Activity(GamePadState gamepadState, double time)
     {
+        currentTime = time;
         mLastGamePadState = mGamePadState;
         mGamePadState = gamepadState;
 
         if (IsConnected || WasDisconnectedThisFrame)
         {
             UpdateAnalogStickAndTriggerValues(time);
-            UpdateLastButtonPushedValues();
+            UpdateLastButtonPushedValues(time);
         }
 
     }
@@ -454,19 +455,19 @@ public class GamePad
         
     }
 
-    private void UpdateLastButtonPushedValues()
+    private void UpdateLastButtonPushedValues(double currentTime)
     {
         // Set the last pushed and clear the ignored input
 
-        //for (int i = 0; i < NumberOfButtons; i++)
-        //{
-        //    mButtonsIgnoredForThisFrame[i] = false;
+        for (int i = 0; i < mLastButtonPush.Length; i++)
+        {
+            //mButtonsIgnoredForThisFrame[i] = false;
 
-        //    if (ButtonPushed((Button)i))
-        //    {
-        //        mLastButtonPush[i] = TimeManager.CurrentTime;
-        //    }
-        //}
+            if (ButtonPushed((Buttons)i))
+            {
+                mLastButtonPush[i] = currentTime;
+            }
+        }
     }
 
 }
