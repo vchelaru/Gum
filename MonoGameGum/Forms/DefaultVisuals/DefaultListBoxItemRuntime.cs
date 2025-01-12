@@ -62,6 +62,10 @@ public class DefaultListBoxItemRuntime : InteractiveGue
             FocusedIndicator.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
             FocusedIndicator.YUnits = GeneralUnitType.PixelsFromMiddle;
             FocusedIndicator.Color = new Microsoft.Xna.Framework.Color(205, 142, 44);
+            FocusedIndicator.Width = 0;
+            FocusedIndicator.Height = 0;
+            FocusedIndicator.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
             this.Children.Add(FocusedIndicator);
 
             var listBoxItemCategory = new Gum.DataTypes.Variables.StateSaveCategory();
