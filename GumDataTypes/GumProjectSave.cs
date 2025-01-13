@@ -303,7 +303,7 @@ namespace Gum.DataTypes
 
             if (FileManager.IsRelative(fileName))
             {
-                fileName = FileManager.MakeAbsolute(fileName);
+                fileName = FileManager.RemoveDotDotSlash(FileManager.MakeAbsolute(fileName));
             }
 
 
