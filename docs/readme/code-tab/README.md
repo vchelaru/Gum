@@ -1,6 +1,6 @@
 # Code Tab
 
-### Introduction
+## Introduction
 
 The Code tab provides generated code for your current Gum objects.
 
@@ -14,7 +14,7 @@ This tab provides the following functionality:
 
 If you are working with Gum in a C# environment then the Code tab can help you write Gum code.
 
-### Enabling CodeGen Preview
+## Enabling CodeGen Preview
 
 To enable code generation:
 
@@ -28,7 +28,7 @@ To enable code generation:
 The generation of code may make selection slightly slower, especially when viewing complex screens or components. If you are experiencing performance problems, you may consider unchecking the **Show CodeGen Preview** checkbox when performing editing.
 {% endhint %}
 
-### Previewing Instances
+## Previewing Instances
 
 If you have a single instance selected, the preview window displays the code for creating the instance and assigning its variables. This is especially useful if you are unsure how to reproduce a particular layout in code. For example, the following image shows the generated code for a Text named TextInstance.
 
@@ -36,7 +36,7 @@ If you have a single instance selected, the preview window displays the code for
 
 The generated code shows all of the assignments necessary to reproduce the current instance's layout. Keep in mind that only explicitly-set variables are displayed. Any default (green background) variables are not assigned in generated code.
 
-### Previewing Entire Screens and Components
+## Previewing Entire Screens and Components
 
 If a Screen or Component is selected, then an entire class for the component is displayed in the preview window. This generated code includes:
 
@@ -47,7 +47,7 @@ If a Screen or Component is selected, then an entire class for the component is 
 * A property for each instance in the Screen or Component
 * Initialization of all variables including variables on the instances
 
-### Automatic Saving of Generated Code
+## Automatic Saving of Generated Code
 
 The Code tab supports the automatic copying of files to disk. By using this feature, C# projects can automatically stay in sync with Gum projects, eliminating the need to write custom Runtime objects.
 
@@ -59,19 +59,19 @@ To set up automatic code generation, first enable the code generation plugin as 
 
 Next, modify the values in the Project-Wide Code Generation section and the Element Code Generation section as discussed in the following sections:
 
-#### Output Library
+### Output Library
 
 Select the desired Output Library, such as **MonoGame**.
 
-#### Object Instantiation Type
+### Object Instantiation Type
 
 If you are planning on loading the .gumx project, select the **FindByName** option.
 
-If you would like the entire project generated, select the **FullyInCode** option. This option enables working in Gum to create layouts which will work fully in code without loading a .gumx file. This is especially improtant if you are working on a platform with limited IO access. Generated code can run faster than loading a .gumx file since it does not require file IO, XML parsing, and reflection.
+If you would like the entire project generated, select the **FullyInCode** option. This option enables working in Gum to create layouts which will work fully in code without loading a .gumx file. This is especially important if you are working on a platform with limited IO access. Generated code can run faster than loading a .gumx file since it does not require file IO, XML parsing, and reflection.
 
 For more details see the [Runtime Generation Details](runtime-generation-details.md) page.
 
-#### Project-wide Using Statements
+### Project-wide Using Statements
 
 Add the following using statement at the end of the Project-wide Using Statement box so that references to standard runtime types are found.
 
@@ -85,19 +85,21 @@ If you plan on creating Screens, you should also add using statements for your c
 using {YourProjectNamespace}.Components;
 ```
 
-#### Code Project Root
+### Code Project Root
 
-Enter the location of the folder containing the .csproj file in the Code Project Root text box. If an absolute path is entered, it will be saved to a relative path so that generation works for all users working on a project regardless of where a project is cloned even though it appears absolute in Gum. For example: `C:\Users\Owner\Documents\GitHub\Gum\Samples\MonoGameGumCodeGeneration\`
+Enter the location of the folder containing the .csproj file in the Code Project Root text box. If an absolute path is entered, it is saved to a relative path so that generation works for all users working on a project regardless of where a project is cloned even though it appears absolute in Gum. For example: `C:\Users\Owner\Documents\GitHub\Gum\Samples\MonoGameGumCodeGeneration\`
 
-#### Root Namespace
+Since the path is saved as relative to your .gumx location, this path will break if you move your Gum project to a new location. Be sure to update this if you are moving your .gumx.
+
+### Root Namespace
 
 Enter the project's Root Namespace, such as `MyGame`.
 
-#### Default Screen Base
+### Default Screen Base
 
 Enter the type that you would like all Screen runtimes to inherit from. If you're not sure what to enter, then use `GraphicalUiElement`. If your game uses a custom class that you have written for all Screens, then use the name of that class. You can switch to custom classes later as your project grows.
 
-#### Generation Behavior
+### Generation Behavior
 
 Select NeverGenerate for components which should not generate to disk
 
