@@ -13,7 +13,7 @@ Gum projects can be loaded in a game project. Gum projects are made up of multip
 You are not required to use the Gum tool or .gumx projects - you are free to do everything in code if you prefer. Of course using the Gum tool can make it much easier to iterate quickly and experiment so its use is recommended.
 {% endhint %}
 
-### Creating a Gum Project
+## Creating a Gum Project
 
 Before creating a Gum project, it is recommended that you already have a functional MonoGame. It's best to put your Gum project in a subfolder of the game's Content folder so that it stays organized from the rest of your content files. Remember, Gum creates lots files.
 
@@ -27,12 +27,12 @@ To create a Gum project:
 2. Select File->New Project
 3. Navigate to the Content's subfolder (such as GumProject/) to select a location for the project
 
-### Adding the Gum Project Files to Your .csproj
+## Adding the Gum Project Files to Your .csproj
 
 To add the files to your .csproj:
 
 1. Open your .csproj file in a text editor
-2. Add a line to copy all files in the Gum project folder including the .gumx file itself. For an example, see the .csproj file for the MonoGameGumFromFile project: [https://github.com/vchelaru/Gum/blob/0e266942560e585359f019ac090a6c1010621c0b/Samples/MonoGameGumFromFile/MonoGameGumFromFile/MonoGameGumFromFile.csproj#L37](https://github.com/vchelaru/Gum/blob/0e266942560e585359f019ac090a6c1010621c0b/Samples/MonoGameGumFromFile/MonoGameGumFromFile/MonoGameGumFromFile.csproj#L37)\
+2.  Add a line to copy all files in the Gum project folder including the .gumx file itself. For an example, see the .csproj file for the MonoGameGumFromFile project: [https://github.com/vchelaru/Gum/blob/0e266942560e585359f019ac090a6c1010621c0b/Samples/MonoGameGumFromFile/MonoGameGumFromFile/MonoGameGumFromFile.csproj#L37](https://github.com/vchelaru/Gum/blob/0e266942560e585359f019ac090a6c1010621c0b/Samples/MonoGameGumFromFile/MonoGameGumFromFile/MonoGameGumFromFile.csproj#L37)\
     Your .csproj may look like this:\\
 
     <figure><img src="../../.gitbook/assets/WildcardInCsproj.png" alt=""><figcaption><p>Example of wildcard pattern in .csproj</p></figcaption></figure>
@@ -45,10 +45,10 @@ For more information about wildcard support in .csproj files, see this page on h
 [https://learn.microsoft.com/en-us/visualstudio/msbuild/how-to-select-the-files-to-build?view=vs-2022#specify-inputs-with-wildcards](https://learn.microsoft.com/en-us/visualstudio/msbuild/how-to-select-the-files-to-build?view=vs-2022#specify-inputs-with-wildcards)
 
 {% hint style="info" %}
-If you are using the Contentless project ([https://github.com/Ellpeck/Contentless](https://github.com/Ellpeck/Contentless)) , you need to explicitly exclude Gum and all of its files by adding and modifying `Content/Contentless.json` .&#x20;
+If you are using the Contentless project ([https://github.com/Ellpeck/Contentless](https://github.com/Ellpeck/Contentless)) , you need to explicitly exclude Gum and all of its files by adding and modifying `Content/Contentless.json` .
 {% endhint %}
 
-### Loading a Gum Project
+## Loading a Gum Project
 
 To load a Gum Project:
 
@@ -70,9 +70,20 @@ protected override void Initialize()
 }
 ```
 
-Note that the `ToGraphicalUiElement` method has an `addToManagers` parameter which determines whether the GraphicalUiElement is added to managers. If a GraphicalUiElement is not added to managers, it does not appear on screen.
+The code above loads the Gum project using the file path `"GumProject/GumProject.gumx"`. By default this path is relative to your game's Content folder. If your Gum project is not part of the Content folder you can still load it by using the "../" prefix to step out of the Content folder. For example, the following code would load a Gum project located at `<exe location>/GumProject/GumProject.gumx`:
 
-Alternatively, the AddToManagers method can be explicitly called as shown in the following code:
+```csharp
+MonoGameGum.GumService.Default.Initialize(
+    this.GraphicsDevice, "../GumProject/GumProject.gumx");
+```
+
+## ToGraphicalUiElement
+
+Once a Gum project is loaded, all of its screens and components can be accessed through the object returned from the Initialize method. The code above stores the project in a variable called `gumProject`. Any screen or component can be converted to a GraphicalUiElement, which is the visual object that displays in game.
+
+The code in the previous section creates a `GraphicalUiElement` from the first screen in the project. Note that the `ToGraphicalUiElement` method has an `addToManagers` parameter which determines whether the GraphicalUiElement is added to managers. If a `GraphicalUiElement` is not added to managers, it does not appear on screen.
+
+Alternatively, the `AddToManagers` method can be explicitly called as shown in the following code:
 
 ```csharp
 var gumScreen = gumProject.Screens.First().ToGraphicalUiElement(
@@ -149,7 +160,7 @@ public class Game1 : Game
 }
 ```
 
-### Troubleshooting Gum Project Loading
+## Troubleshooting Gum Project Loading
 
 If your Gum project load results in an exception, you can inspect the exception message for information about the failure. The most common type of failure is a missing file reference.
 
