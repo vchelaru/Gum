@@ -1,133 +1,63 @@
 {
   "UserEvents": {
-    "vchel": [],
-    "Owner": [
+    "vchel": [
       {
-        "NewName": null,
-        "OldName": "DemoScreenGum.Controls/ButtonConfirm ButtonConfirmInstance1 in DemoScreenGum",
-        "ElementType": "Screens",
-        "EventType": 6,
-        "TimestampUtc": "2024-11-17T19:55:55.9799865Z"
+        "NewName": "WithInner",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 0,
+        "TimestampUtc": "2025-01-12T21:31:55.5861723Z"
+      },
+      {
+        "NewName": "WithInner (Container).ContainerInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2025-01-12T21:31:59.124949Z"
       },
       {
         "NewName": null,
-        "OldName": "DemoScreenGum.Container DemoTabbedMenu in DemoScreenGum",
-        "ElementType": "Screens",
-        "EventType": 6,
-        "TimestampUtc": "2024-11-17T19:56:19.0266253Z"
+        "OldName": "WithInner",
+        "ElementType": "Components",
+        "EventType": 1,
+        "TimestampUtc": "2025-01-12T21:32:41.1154826Z"
       },
       {
-        "NewName": null,
-        "OldName": "DemoScreenGum.Controls/ButtonStandardIcon AudioSettingsButton in DemoScreenGum",
+        "NewName": "TestScreen",
+        "OldName": null,
         "ElementType": "Screens",
-        "EventType": 6,
-        "TimestampUtc": "2024-11-17T19:56:19.1236263Z"
+        "EventType": 0,
+        "TimestampUtc": "2025-01-12T21:33:53.6164352Z"
       },
       {
-        "NewName": null,
-        "OldName": "DemoScreenGum.Controls/ButtonStandardIcon CreditsButton in DemoScreenGum",
-        "ElementType": "Screens",
-        "EventType": 6,
-        "TimestampUtc": "2024-11-17T19:56:19.1246422Z"
+        "NewName": "Comp1",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 0,
+        "TimestampUtc": "2025-01-12T21:34:02.2759438Z"
       },
       {
-        "NewName": null,
-        "OldName": "DemoScreenGum.Controls/ButtonStandardIcon ExitButton in DemoScreenGum",
-        "ElementType": "Screens",
-        "EventType": 6,
-        "TimestampUtc": "2024-11-17T19:56:19.1305431Z"
+        "NewName": "Comp1 (Container).ContainerInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2025-01-12T21:34:08.2008977Z"
       },
       {
-        "NewName": null,
-        "OldName": "DemoScreenGum.Controls/ButtonStandardIcon PlayButton in DemoScreenGum",
-        "ElementType": "Screens",
-        "EventType": 6,
-        "TimestampUtc": "2024-11-17T19:56:19.1356477Z"
-      },
-      {
-        "NewName": null,
-        "OldName": "DemoScreenGum.Controls/ButtonStandardIcon VideoSettingsButton in DemoScreenGum",
-        "ElementType": "Screens",
-        "EventType": 6,
-        "TimestampUtc": "2024-11-17T19:56:19.1405935Z"
-      },
-      {
-        "NewName": null,
-        "OldName": "DemoScreenGum.Container ListContainer in DemoScreenGum",
-        "ElementType": "Screens",
-        "EventType": 6,
-        "TimestampUtc": "2024-11-17T19:56:19.1465408Z"
-      },
-      {
-        "NewName": null,
-        "OldName": "DemoScreenGum.Controls/ButtonTab Tab1 in DemoScreenGum",
-        "ElementType": "Screens",
-        "EventType": 6,
-        "TimestampUtc": "2024-11-17T19:56:19.1515914Z"
-      },
-      {
-        "NewName": null,
-        "OldName": "DemoScreenGum.Controls/ButtonTab Tab2 in DemoScreenGum",
-        "ElementType": "Screens",
-        "EventType": 6,
-        "TimestampUtc": "2024-11-17T19:56:19.1556624Z"
-      },
-      {
-        "NewName": null,
-        "OldName": "DemoScreenGum.Controls/ButtonTab Tab3 in DemoScreenGum",
-        "ElementType": "Screens",
-        "EventType": 6,
-        "TimestampUtc": "2024-11-17T19:56:19.1606689Z"
-      },
-      {
-        "NewName": null,
-        "OldName": "DemoScreenGum.Elements/DividerHorizontal TabHeaderDivider in DemoScreenGum",
-        "ElementType": "Screens",
-        "EventType": 6,
-        "TimestampUtc": "2024-11-17T19:56:19.1657894Z"
-      },
-      {
-        "NewName": null,
-        "OldName": "DemoScreenGum.Controls/ButtonClose TabMenuClose in DemoScreenGum",
-        "ElementType": "Screens",
-        "EventType": 6,
-        "TimestampUtc": "2024-11-17T19:56:19.1708382Z"
-      },
-      {
-        "NewName": null,
-        "OldName": "DemoScreenGum.Container TabMarginContainer in DemoScreenGum",
-        "ElementType": "Screens",
-        "EventType": 6,
-        "TimestampUtc": "2024-11-17T19:56:19.1758107Z"
-      },
-      {
-        "NewName": null,
-        "OldName": "DemoScreenGum.NineSlice TabMenuBackground in DemoScreenGum",
-        "ElementType": "Screens",
-        "EventType": 6,
-        "TimestampUtc": "2024-11-17T19:56:19.1809046Z"
-      },
-      {
-        "NewName": "DemoScreenGum.TextBoxInstance2",
+        "NewName": "TestScreen.Comp1Instance",
         "OldName": null,
         "ElementType": "Screens",
         "EventType": 5,
-        "TimestampUtc": "2024-11-17T19:57:10.0074935Z"
+        "TimestampUtc": "2025-01-12T21:34:24.7256743Z"
       },
       {
-        "NewName": "DemoScreenGum.MultiLineTextBox",
-        "OldName": "DemoScreenGum.TextBoxInstance2",
+        "NewName": "TestScreen.ColoredRectangleInstance",
+        "OldName": null,
         "ElementType": "Screens",
-        "EventType": 7,
-        "TimestampUtc": "2024-11-17T19:59:13.8272853Z"
-      },
-      {
-        "NewName": "Controls/ScrollBar (Container).TrackInstance",
-        "OldName": "Controls/ScrollBar (Container).ThumbContainer",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2024-11-17T22:42:47.9505938Z"
+        "EventType": 5,
+        "TimestampUtc": "2025-01-12T21:34:35.3114504Z"
       }
-    ]
+    ],
+    "Owner": []
   }
 }

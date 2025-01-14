@@ -179,6 +179,19 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>bool</Type>
+      <Name>IsOverrideInCodeGen</Name>
+      <Value xsi:type="xsd:boolean">false</Value>
+      <Category>Xamarin Forms</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>bool</Type>
+      <Name>IsXamarinFormsControl</Name>
+      <Category>Xamarin Forms</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>ColorCategory</Type>
       <Name>Line.ColorCategoryState</Name>
       <Value xsi:type="xsd:string">Gray</Value>
@@ -277,6 +290,7 @@
     <Variable>
       <Type>State</Type>
       <Name>State</Name>
+      <Category>States and Visibility</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>

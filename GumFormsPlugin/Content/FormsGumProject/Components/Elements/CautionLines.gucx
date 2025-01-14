@@ -17,6 +17,19 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>bool</Type>
+      <Name>IsOverrideInCodeGen</Name>
+      <Value xsi:type="xsd:boolean">false</Value>
+      <Category>Xamarin Forms</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>bool</Type>
+      <Name>IsXamarinFormsControl</Name>
+      <Category>Xamarin Forms</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>int</Type>
       <Name>LinesSprite.Alpha</Name>
       <ExposedAsName>LineAlpha</ExposedAsName>
@@ -86,6 +99,7 @@
     <Variable>
       <Type>State</Type>
       <Name>State</Name>
+      <Category>States and Visibility</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>

@@ -904,6 +904,19 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>bool</Type>
+      <Name>IsOverrideInCodeGen</Name>
+      <Value xsi:type="xsd:boolean">false</Value>
+      <Category>Xamarin Forms</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>bool</Type>
+      <Name>IsXamarinFormsControl</Name>
+      <Category>Xamarin Forms</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>string</Type>
       <Name>LabelInstance.LabelText</Name>
       <Value xsi:type="xsd:string">New Profile Name</Value>
@@ -1153,6 +1166,48 @@
       <Type>DimensionUnitType</Type>
       <Name>MenuTitle2.Width Units</Name>
       <Value xsi:type="xsd:int">2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>MultiLineTextBox.Height</Name>
+      <Value xsi:type="xsd:float">174</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>LineModeCategory</Type>
+      <Name>MultiLineTextBox.LineModeCategoryState</Name>
+      <Value xsi:type="xsd:string">Multi</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>MultiLineTextBox.Parent</Name>
+      <Value xsi:type="xsd:string">MarginContainer</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>MultiLineTextBox.PlaceholderText</Name>
+      <Value xsi:type="xsd:string">Multi-line text box</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>MultiLineTextBox.Width</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>MultiLineTextBox.Width Units</Name>
+      <Value xsi:type="xsd:int">2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>MultiLineTextBox.Y</Name>
+      <Value xsi:type="xsd:float">7</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -1702,48 +1757,6 @@
     <Variable>
       <Type>float</Type>
       <Name>TextBoxInstance1.Y</Name>
-      <Value xsi:type="xsd:float">7</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>MultiLineTextBox.Height</Name>
-      <Value xsi:type="xsd:float">174</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>LineModeCategory</Type>
-      <Name>MultiLineTextBox.LineModeCategoryState</Name>
-      <Value xsi:type="xsd:string">Multi</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>MultiLineTextBox.Parent</Name>
-      <Value xsi:type="xsd:string">MarginContainer</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>MultiLineTextBox.PlaceholderText</Name>
-      <Value xsi:type="xsd:string">Multi-line text box</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>MultiLineTextBox.Width</Name>
-      <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>MultiLineTextBox.Width Units</Name>
-      <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>MultiLineTextBox.Y</Name>
       <Value xsi:type="xsd:float">7</Value>
       <SetsValue>true</SetsValue>
     </Variable>

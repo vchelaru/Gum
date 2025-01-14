@@ -1,0 +1,14 @@
+{
+  "CommonUsingStatements": "using Gum.Converters;\r\nusing Gum.DataTypes;\r\nusing Gum.Managers;\r\nusing Gum.Wireframe;\r\n\r\nusing RenderingLibrary.Graphics;\r\n\r\nusing System.Linq;\r\n",
+  "CodeProjectRoot": null,
+  "RootNamespace": null,
+  "IsCodeGenPluginEnabled": false,
+  "IsShowCodegenPreviewChecked": false,
+  "InheritanceLocation": 1,
+  "ObjectInstantiationType": 0,
+  "DefaultScreenBase": "Gum.Wireframe.BindableGue",
+  "OutputLibrary": 0,
+  "AdjustPixelValuesForDensity": false,
+  "BaseTypesNotCodeGenerated": null,
+  "GenerateGumDataTypes": false
+}

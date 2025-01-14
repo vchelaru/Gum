@@ -1116,6 +1116,9 @@ namespace Gum.Wireframe
         /// </summary>
         public float AbsoluteTop => this.GetAbsoluteY();
 
+        public float AbsoluteRight => AbsoluteLeft + this.GetAbsoluteWidth();
+        public float AbsoluteBottom => AbsoluteTop + this.GetAbsoluteHeight();
+
         public IVisible ExplicitIVisibleParent
         {
             get;

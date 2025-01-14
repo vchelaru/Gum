@@ -195,8 +195,22 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>bool</Type>
+      <Name>IsOverrideInCodeGen</Name>
+      <Value xsi:type="xsd:boolean">false</Value>
+      <Category>Xamarin Forms</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>bool</Type>
+      <Name>IsXamarinFormsControl</Name>
+      <Category>Xamarin Forms</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>State</Type>
       <Name>State</Name>
+      <Category>States and Visibility</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -214,7 +228,6 @@
   </State>
   <Category>
     <Name>ButtonCategory</Name>
-    <IsSetRecursively>false</IsSetRecursively>
     <State>
       <Name>Enabled</Name>
       <Variable>

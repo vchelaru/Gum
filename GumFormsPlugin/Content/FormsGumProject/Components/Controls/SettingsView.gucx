@@ -41,6 +41,19 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>bool</Type>
+      <Name>IsOverrideInCodeGen</Name>
+      <Value xsi:type="xsd:boolean">false</Value>
+      <Category>Xamarin Forms</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>bool</Type>
+      <Name>IsXamarinFormsControl</Name>
+      <Category>Xamarin Forms</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>float</Type>
       <Name>MusicSliderInstance.Width</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -115,6 +128,7 @@
     <Variable>
       <Type>State</Type>
       <Name>State</Name>
+      <Category>States and Visibility</Category>
       <SetsValue>true</SetsValue>
     </Variable>
   </State>

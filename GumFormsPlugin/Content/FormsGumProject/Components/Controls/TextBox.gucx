@@ -197,6 +197,19 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>bool</Type>
+      <Name>IsOverrideInCodeGen</Name>
+      <Value xsi:type="xsd:boolean">false</Value>
+      <Category>Xamarin Forms</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>bool</Type>
+      <Name>IsXamarinFormsControl</Name>
+      <Category>Xamarin Forms</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>LineModeCategory</Type>
       <Name>LineModeCategoryState</Name>
       <SetsValue>false</SetsValue>
@@ -324,6 +337,7 @@
     <Variable>
       <Type>State</Type>
       <Name>State</Name>
+      <Category>States and Visibility</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -437,7 +451,6 @@
   </State>
   <Category>
     <Name>TextBoxCategory</Name>
-    <IsSetRecursively>false</IsSetRecursively>
     <State>
       <Name>Enabled</Name>
       <Variable>
@@ -549,9 +562,14 @@
   </Category>
   <Category>
     <Name>LineModeCategory</Name>
-    <IsSetRecursively>false</IsSetRecursively>
     <State>
       <Name>Single</Name>
+      <Variable>
+        <Type>VerticalAlignment</Type>
+        <Name>PlaceholderTextInstance.VerticalAlignment</Name>
+        <Value xsi:type="xsd:int">1</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
       <Variable>
         <Type>float</Type>
         <Name>SelectionInstance.Height</Name>
@@ -565,6 +583,12 @@
         <SetsValue>true</SetsValue>
       </Variable>
       <Variable>
+        <Type>VerticalAlignment</Type>
+        <Name>TextInstance.VerticalAlignment</Name>
+        <Value xsi:type="xsd:int">1</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
         <Type>float</Type>
         <Name>TextInstance.Width</Name>
         <Value xsi:type="xsd:float">0</Value>
@@ -574,18 +598,6 @@
         <Type>DimensionUnitType</Type>
         <Name>TextInstance.Width Units</Name>
         <Value xsi:type="xsd:int">4</Value>
-        <SetsValue>true</SetsValue>
-      </Variable>
-      <Variable>
-        <Type>VerticalAlignment</Type>
-        <Name>PlaceholderTextInstance.VerticalAlignment</Name>
-        <Value xsi:type="xsd:int">1</Value>
-        <SetsValue>true</SetsValue>
-      </Variable>
-      <Variable>
-        <Type>VerticalAlignment</Type>
-        <Name>TextInstance.VerticalAlignment</Name>
-        <Value xsi:type="xsd:int">1</Value>
         <SetsValue>true</SetsValue>
       </Variable>
     </State>

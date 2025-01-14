@@ -123,8 +123,16 @@
     </Variable>
     <Variable>
       <Type>bool</Type>
+      <Name>IsOverrideInCodeGen</Name>
+      <Value xsi:type="xsd:boolean">false</Value>
+      <Category>Xamarin Forms</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>bool</Type>
       <Name>IsXamarinFormsControl</Name>
       <Value xsi:type="xsd:boolean">false</Value>
+      <Category>Xamarin Forms</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -171,6 +179,7 @@
       <Type>State</Type>
       <Name>State</Name>
       <Value xsi:type="xsd:string">Default</Value>
+      <Category>States and Visibility</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -224,6 +233,7 @@
       <Type>bool</Type>
       <Name>Visible</Name>
       <Value xsi:type="xsd:boolean">true</Value>
+      <Category>States and Visibility</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -293,7 +303,6 @@
   </State>
   <Category>
     <Name>ColorCategory</Name>
-    <IsSetRecursively>false</IsSetRecursively>
     <State>
       <Name>Black</Name>
       <Variable>
@@ -582,7 +591,6 @@
   </Category>
   <Category>
     <Name>StyleCategory</Name>
-    <IsSetRecursively>false</IsSetRecursively>
     <State>
       <Name>Tiny</Name>
       <Variable>
