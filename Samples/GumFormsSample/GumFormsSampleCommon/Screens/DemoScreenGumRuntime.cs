@@ -61,6 +61,18 @@ public class DemoScreenGumRuntime : BindableGue
             nameof(RadioButton.IsChecked),
             nameof(viewModel.IsTouchscreenChecked));
 
+        var menu = this.GetFrameworkElementByName<Menu>("MenuInstance");
+        var fileMenuItem = new MenuItem();
+        fileMenuItem.Header = "File";
+        fileMenuItem.Items.Add("New");
+        fileMenuItem.Items.Add("Save");
+        fileMenuItem.Items.Add("Exit");
+        menu.Items.Add(fileMenuItem);
+
+
+        menu.Items.Add("Edit");
+        menu.Items.Add("Help");
+
         detectResolutionButton = this.GetFrameworkElementByName<Button>("DetectResolutionsButton");
 
         var musicSlider = this.GetFrameworkElementByName<Slider>("MusicSlider");

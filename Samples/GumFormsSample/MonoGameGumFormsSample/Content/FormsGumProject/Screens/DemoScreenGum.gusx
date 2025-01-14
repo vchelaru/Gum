@@ -750,7 +750,7 @@
     <Variable>
       <Type>float</Type>
       <Name>DemoDialog.Y</Name>
-      <Value xsi:type="xsd:float">13</Value>
+      <Value xsi:type="xsd:float">43</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -810,7 +810,7 @@
     <Variable>
       <Type>float</Type>
       <Name>DemoHud.Y</Name>
-      <Value xsi:type="xsd:float">239</Value>
+      <Value xsi:type="xsd:float">249</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -852,7 +852,7 @@
     <Variable>
       <Type>float</Type>
       <Name>DemoSettingsMenu.Y</Name>
-      <Value xsi:type="xsd:float">12</Value>
+      <Value xsi:type="xsd:float">42</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -876,7 +876,7 @@
     <Variable>
       <Type>float</Type>
       <Name>DemoTabbedMenu.Y</Name>
-      <Value xsi:type="xsd:float">452</Value>
+      <Value xsi:type="xsd:float">462</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -948,7 +948,7 @@
     <Variable>
       <Type>float</Type>
       <Name>DialogBoxInstance.Y</Name>
-      <Value xsi:type="xsd:float">264</Value>
+      <Value xsi:type="xsd:float">278</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -1655,6 +1655,12 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>float</Type>
+      <Name>MenuInstance.Height</Name>
+      <Value xsi:type="xsd:float">32</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>ChildrenLayout</Type>
       <Name>MenuItems.Children Layout</Name>
       <Value xsi:type="xsd:int">1</Value>
@@ -2148,7 +2154,7 @@
     <Variable>
       <Type>float</Type>
       <Name>ShowDialogButton.Y</Name>
-      <Value xsi:type="xsd:float">236</Value>
+      <Value xsi:type="xsd:float">250</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -2201,7 +2207,7 @@
     <Variable>
       <Type>float</Type>
       <Name>ShowToastButton.Y</Name>
-      <Value xsi:type="xsd:float">16</Value>
+      <Value xsi:type="xsd:float">44</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -2663,7 +2669,7 @@
     <Variable>
       <Type>float</Type>
       <Name>TreeViewInstance.Y</Name>
-      <Value xsi:type="xsd:float">50</Value>
+      <Value xsi:type="xsd:float">78</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -2703,6 +2709,11 @@
       <SetsValue>true</SetsValue>
     </Variable>
   </State>
+  <Instance>
+    <Name>MenuInstance</Name>
+    <BaseType>Controls/Menu</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
   <Instance>
     <Name>DemoSettingsMenu</Name>
     <BaseType>Container</BaseType>

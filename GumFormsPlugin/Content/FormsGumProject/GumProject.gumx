@@ -122,6 +122,16 @@
     <LinkType>ReferenceOriginal</LinkType>
   </ComponentReference>
   <ComponentReference>
+    <Name>Controls/Menu</Name>
+    <ElementType>Component</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </ComponentReference>
+  <ComponentReference>
+    <Name>Controls/MenuItem</Name>
+    <ElementType>Component</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </ComponentReference>
+  <ComponentReference>
     <Name>Controls/PasswordBox</Name>
     <ElementType>Component</ElementType>
     <LinkType>ReferenceOriginal</LinkType>
@@ -302,6 +312,12 @@
   </BehaviorReference>
   <BehaviorReference>
     <Name>ListBoxItemBehavior</Name>
+  </BehaviorReference>
+  <BehaviorReference>
+    <Name>MenuBehavior</Name>
+  </BehaviorReference>
+  <BehaviorReference>
+    <Name>MenuItemBehavior</Name>
   </BehaviorReference>
   <BehaviorReference>
     <Name>OnScreenKeyboardBehavior</Name>

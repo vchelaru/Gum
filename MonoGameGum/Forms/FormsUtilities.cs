@@ -227,7 +227,16 @@ namespace MonoGameGum.Forms
                     "ObjectFinder.Self.GumProjectSave before making this call");
             }
 #endif
-
+            // Some thoughts about this method:
+            // 1. We can probably be more efficient 
+            //    here by doing a single loop for categories
+            //    and behaviors rather than calling Any multiple
+            //    times.
+            // 2. I believe Gum Forms was written before behaviors
+            //    were used. Therefore a lot here use categories instead
+            //    of behaviors. New items (like Menu) are using behaviors
+            //    and old controls should proably be migrated over if we have
+            //    any conflicts.
             foreach (var component in ObjectFinder.Self.GumProjectSave.Components)
             {
                 if (component.Categories.Any(item => item.Name == "ButtonCategory"))
@@ -253,6 +262,22 @@ namespace MonoGameGum.Forms
                     ElementSaveExtensions.RegisterGueInstantiationType(
                         component.Name,
                         typeof(DefaultFromFileListBoxRuntime));
+                }
+                else if(component.Behaviors.Any(item => item.BehaviorName == "MenuBehavior"))
+                {
+                    ElementSaveExtensions.RegisterGueInstantiationType(
+                        component.Name,
+                        typeof(DefaultFromFileMenuRuntime));
+                }
+                else if (component.Behaviors.Any(item => item.BehaviorName == "MenuItemBehavior"))
+                {
+                    ElementSaveExtensions.RegisterGueInstantiationType(
+                        component.Name,
+                        typeof(DefaultFromFileMenuItemRuntime));
+
+                    // cannot do this until we can instantiate from-file elements without accessing the element
+                    //FrameworkElement.DefaultFormsComponents[typeof(MenuItem)] = typeof(DefaultFromFileMenuItemRuntime);
+
                 }
                 else if (component.Categories.Any(item => item.Name == "PasswordBoxCategory"))
                 {
