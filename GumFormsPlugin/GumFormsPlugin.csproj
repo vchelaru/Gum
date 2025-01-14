@@ -61,9 +61,12 @@
 		<EmbeddedResource Remove="Content\FormsGumProject\EventExport\**" />
 		<EmbeddedResource Remove="Content\FormsGumProject\FontCache\**" />
 		<EmbeddedResource Remove="Content\FormsGumProject\Libraries\**" />
+		<EmbeddedResource Remove="Content\FormsGumProject\Standards\StandardGraphics\**" />
 		<None Remove="Content\FormsGumProject\EventExport\**" />
 		<None Remove="Content\FormsGumProject\FontCache\**" />
 		<None Remove="Content\FormsGumProject\Libraries\**" />
+		<None Remove="Content\FormsGumProject\Standards\StandardGraphics\**" />
+		<Page Remove="Content\FormsGumProject\Standards\StandardGraphics\**" />
 	</ItemGroup>
 	<ItemGroup>
 	  <EmbeddedResource Remove="Content\FormsGumProject\ProjectCodeSettings.codsj" />

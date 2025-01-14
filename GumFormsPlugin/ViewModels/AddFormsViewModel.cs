@@ -126,7 +126,7 @@ public class AddFormsViewModel : ViewModel
         var shouldSave = false;
         if (nonStandardWhichBlockCopying.Count > 0)
         {
-            var message = "Cannot create Gum project because the following file(s) would get overwritten:"
+            var message = "Cannot add Forms controls because the following file(s) would get overwritten:"
                 + "\n\n" + string.Join("\n", nonStandardFiles);
             GumCommands.Self.GuiCommands.ShowMessage(message);
         }
