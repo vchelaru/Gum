@@ -30,7 +30,7 @@
 
 <figure><img src="../.gitbook/assets/09_05 45 50.png" alt=""><figcaption><p>BattleCrypt Bombers</p></figcaption></figure>
 
-<figure><img src="../.gitbook/assets/image.png" alt=""><figcaption><p>BattleCrypt Bombers</p></figcaption></figure>
+<figure><img src="../.gitbook/assets/image (1).png" alt=""><figcaption><p>BattleCrypt Bombers</p></figcaption></figure>
 
 <figure><img src="../.gitbook/assets/09_05 48 04.png" alt=""><figcaption><p>Teotihuacan</p></figcaption></figure>
 
