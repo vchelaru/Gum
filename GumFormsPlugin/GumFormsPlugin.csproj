@@ -27,6 +27,8 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<None Remove="Content\FormsGumProject\GumProject.gumx" />
+		<None Remove="Content\FormsGumProject\ProjectCodeSettings.codsj" />
+		<None Remove="Content\FormsGumProject\Screens\DemoScreenGumAnimations.ganx" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -62,6 +64,10 @@
 		<None Remove="Content\FormsGumProject\EventExport\**" />
 		<None Remove="Content\FormsGumProject\FontCache\**" />
 		<None Remove="Content\FormsGumProject\Libraries\**" />
+	</ItemGroup>
+	<ItemGroup>
+	  <EmbeddedResource Remove="Content\FormsGumProject\ProjectCodeSettings.codsj" />
+	  <EmbeddedResource Remove="Content\FormsGumProject\Screens\DemoScreenGumAnimations.ganx" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\CodeOutputPlugin\CodeOutputPlugin.csproj" />
