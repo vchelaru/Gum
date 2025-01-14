@@ -334,7 +334,11 @@ public class ControlLogic : Singleton<ControlLogic>
 
             RefreshSelector(RefreshType.Force);
 
-            GumCommands.Self.GuiCommands.RefreshVariableValues();
+            // We should refresh the entire grid because we could be
+            // changing this from Entire Texture to Custom, resulting in
+            // new variables being shown
+            //GumCommands.Self.GuiCommands.RefreshVariableValues();
+            GumCommands.Self.GuiCommands.RefreshVariables();
 
         }
 
