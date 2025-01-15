@@ -2,11 +2,11 @@
 
 ### Introduction
 
-The Base Type variable can be used to specify both inheritance but also the type of an instance.
+The `Base Type` variable can be used to specify both inheritance but also the type of an instance.
 
-Base Type on an instance indicates its type. This is usually automatically set when an instance is first created - usually by drag+dropping a component or standard element onto its target component or screen.
+`Base Type` on an instance indicates its type. This is usually automatically set when an instance is first created - usually by drag+dropping a component or standard element onto its target component or screen.
 
-Gum Screens and Components support changing Base Type to specify inheritance. By setting a base type, a screen or component automatically inherits the following from the base type:
+Gum Screens and Components support changing `Base Type` to specify inheritance. By setting a base type, a screen or component automatically inherits the following from the base type:
 
 * Variable values
 * Exposed variables
