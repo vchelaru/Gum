@@ -126,7 +126,7 @@ namespace Gum.Wireframe.Editors
                         suffix = " File Aspect Ratio";
                         break;
                     case DataTypes.DimensionUnitType.Percentage:
-                        suffix = "% Container";
+                        suffix = "% Parent";
                         break;
                     case DataTypes.DimensionUnitType.PercentageOfOtherDimension:
                         suffix = "% Height";
@@ -135,13 +135,13 @@ namespace Gum.Wireframe.Editors
                         suffix = "% File";
                         break;
                     case DataTypes.DimensionUnitType.Ratio:
-                        suffix = " Ratio Container";
+                        suffix = " Ratio of Parent";
                         break;
                     case DataTypes.DimensionUnitType.RelativeToChildren:
                         suffix = " Relative to Children";
                         break;
                     case DataTypes.DimensionUnitType.RelativeToContainer:
-                        suffix = " Relative to Container";
+                        suffix = " Relative to Parent";
                         break;
                 }
 
@@ -187,7 +187,7 @@ namespace Gum.Wireframe.Editors
                         suffix = " File Aspect Ratio";
                         break;
                     case DataTypes.DimensionUnitType.Percentage:
-                        suffix = "% Container";
+                        suffix = "% Parent";
                         break;
                     case DataTypes.DimensionUnitType.PercentageOfOtherDimension:
                         suffix = "% Width";
@@ -196,13 +196,13 @@ namespace Gum.Wireframe.Editors
                         suffix = "% File";
                         break;
                     case DataTypes.DimensionUnitType.Ratio:
-                        suffix = " Ratio Container";
+                        suffix = " Ratio of Parent";
                         break;
                     case DataTypes.DimensionUnitType.RelativeToChildren:
                         suffix = " Relative to Children";
                         break;
                     case DataTypes.DimensionUnitType.RelativeToContainer:
-                        suffix = " Relative to Container";
+                        suffix = " Relative to Parent";
                         break;
                 }
 
