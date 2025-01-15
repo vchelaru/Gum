@@ -8,7 +8,7 @@ Components can contain instances of other components and of standard objects. Ex
 * Buttons
 * Popup Menus
 
-Components can also be simple (such as a button) or more complex UI elements such as a full Options screen with dozens of instances.
+Components can also be simple such as a button or more complex UI elements such as a full Options screen with dozens of instances.
 
 ## Simple Button Example - Creating the Entity
 
@@ -50,7 +50,7 @@ To do this:
 
 <figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1) (1).png" alt=""><figcaption><p>Fill Dock expands the ColoredRectangleInstance to occupy its full parent</p></figcaption></figure>
 
-Alternatively you can adjust the individual values:
+Alternatively you can adjust the individual values. Keep in mind that using the Alignment tab is the fastest way to get your instances setup. The next section shows all of the changes that the Alignment tab performs for you:
 
 1. Select the ColoredRectangleInstance
 2. Change `Height Units` to `Relative To Parent`
@@ -61,8 +61,6 @@ Alternatively you can adjust the individual values:
 Now the ColoredRectangleInstance automatically matches the Button's actual with and height:
 
 ![ColoredRectangleInstance fills its parent by matching its width and height](../../../.gitbook/assets/Gum_rL5aAQWKVB.png)
-
-## Positioning the Text
 
 Next we'll position the TextInstance. We'll want to adjust the Text so that it is always centered, and line-wraps with the size of the button.&#x20;
 
@@ -124,7 +122,7 @@ Now that we have a component created, we can add instances of this component the
 1. Create a new Screen. I'll call mine MainMenu
 2. Drag+drop the Button component into the Screen
 
-You can now resize and position the Button instance. You can also add multiple buttons and adjust the individually.
+We can now resize and position the Button instance. We can reuse our Button component to create multiple instances. Each instance can be adjusted by changing its `X`, `Y`, `Width`, and `Height` values.
 
 ![Multiple Button instances in MainMenu](../../../.gitbook/assets/Gum_mQ20VxDf31.png)
 
