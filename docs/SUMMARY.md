@@ -142,6 +142,7 @@
       * [GetAbsoluteWidth](gum-code/gum-code-reference/graphicaluielement/getabsolutewidth.md)
       * [GetChildByNameRecursively](gum-code/gum-code-reference/graphicaluielement/getchildbynamerecursively.md)
       * [RemoveFromManagers](gum-code/gum-code-reference/graphicaluielement/removefrommanagers.md)
+      * [UpdateLayout](gum-code/gum-code-reference/graphicaluielement/updatelayout.md)
     * [GumProjectSave](gum-code/gum-code-reference/gumprojectsave.md)
     * [IDataUi](gum-code/gum-code-reference/idataui.md)
     * [InstanceMember](gum-code/gum-code-reference/instancemember.md)

@@ -2,11 +2,11 @@
 
 ### Introduction
 
-Parenting allows UI elements to be positioned and sized according to other UI elements. Parenting hierarchies can go many levels deep and the parent/child relationship can be visualized by the white line connecting the parent to the child when the child is selected.
+The Parent variable allows UI elements to be positioned and sized according to other UI elements. Parenting hierarchies can go many levels deep and the parent/child relationship can be visualized by the white line connecting the parent to the child when the child is selected.
 
 ### Parents and Units
 
-Parents control control the position of their children. Parents can also control the size of their objects depending on the child's Width Units and Height Units.
+Parents control control the position of their children. Parents can also control the size of their objects depending on the child's `Width Units` and `Height Units`.
 
 For example, if a parent is moved, its children move along with it. For more information on positioning children, see the [X Units](x-units.md) and [Y Units](y-units.md) pages.
 
@@ -18,13 +18,13 @@ Children can also be sized according to their parents. For more information on s
 
 ### Children Outside of Parent Bounds
 
-Children can be placed outside of their parents bounds. In the simplest case, a child can be dragged outside of its parents' bounds in the editor.
+Children can be placed outside of their parent's bounds. In the simplest case, a child can be dragged outside of its parent's bounds in the editor.
 
 <figure><img src="../../../.gitbook/assets/07_06 48 01.gif" alt=""><figcaption><p>Children can be placed outside of their parents' bounds</p></figcaption></figure>
 
-Children outside of their parents' bounds still follow all of the same rules for sizing and positioning, but there are some important things to keep in mind.
+Children outside of their parent's bounds still follow all of the same rules for sizing and positioning, but there are some important things to keep in mind.
 
-If a child is placed outside of its parents' bounds, then the parent's absolute width and height do not adjust. Any unit value that depends on children or parents only considers the **immediate child or parent** and does not look at sizes beyond the immediate relationship.
+Children placed outside of a parent do not affect the parent's effective width or height. Any unit value that depends on children or parents only considers the **immediate child or parent** and does not look at sizes beyond the immediate relationship.
 
 For example if a parent is 100 width, and its child is given an X of 200, the parent's width is still 100 (assuming the parent does not size itself according to its children). This is important when other children are sized or positioned according to the parent's width.
 
@@ -47,19 +47,19 @@ To change the parent/child relationship in the tree view:
 1. Select a child
 2. Drag+drop the child onto the desired parent
 
-<figure><img src="../../../.gitbook/assets/11_20 21 41.gif" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/11_20 21 41.gif" alt=""><figcaption><p>Drag+drop a child onto the desired parent</p></figcaption></figure>
 
 The child can be detached from its parent by drag+dropping it onto the Component.
 
-<figure><img src="../../../.gitbook/assets/11_20 22 36.gif" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/11_20 22 36.gif" alt=""><figcaption><p>Drag+drop a child onto its root component or screen to detach it from its current parent</p></figcaption></figure>
 
-Drag+dropping onto a parent may set the Parent property to an instance inside of the parent's Component type sets its Default Child Container value. For more information see the [Default Child Container](../component/default-child-container.md) page.
+Drag+dropping onto a parent may set the `Parent` property to an instance inside of the parent's Component type sets its Default Child Container value. For more information see the [Default Child Container](../component/default-child-container.md) page.
 
 ### Example - Using the Dropdown
 
-To set a parent/child relationship:
+To set Parent by name:
 
-1. Select the child
-2. Change the Parent property to the desired parent:
+1. Select the desired child
+2. Change the `Parent` property to the desired parent:
 
-<figure><img src="../../../.gitbook/assets/11_20 20 04.gif" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/11_20 20 04.gif" alt=""><figcaption><p>Change Parent using the dropdown</p></figcaption></figure>
