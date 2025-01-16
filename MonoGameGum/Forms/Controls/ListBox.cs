@@ -597,7 +597,7 @@ public class ListBox : ItemsControl, IInputReceiver
 
         var mainRoot = listBoxParent.ElementGueContainingThis ?? listBoxParent;
 
-        if(mainRoot.Children == null)
+        //if(mainRoot.Children == null)
         {
             // The main root is a screen which would not have layers
             // therefore we have to get the parent that still has children:
