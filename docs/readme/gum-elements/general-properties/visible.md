@@ -2,16 +2,27 @@
 
 ## Introduction
 
-The Visible property controls whether an object and its children appear.
+The `Visible` variable controls whether an object and its children appear.
 
 ## Example
 
-Toggling the Visible property changes whether an object is drawn.
+Setting Visible to false hides the selected instance.
 
-![](<../../../.gitbook/assets/VisibleExample (1).gif>)
+![Visible property controls whether an instance is hidden or shown](<../../../.gitbook/assets/16_19 40 08.gif>)
 
 ## Parent/Child Visibility
 
-Toggling the visibility of a parent will make all children invisible, even if a child's Visible property is true.
+Setting a parent's `Visible` variable to false also hides all children. Note that this does not explicitly set the Visible property to false for all children, but a child's effective visibility depends on its parent.
 
-![](../../../.gitbook/assets/VisibleChildParent.gif)
+![A parent's Visible value controls whether children are visible](<../../../.gitbook/assets/16_19 45 06.gif>)
+
+## Visibility and Stacking
+
+If an instance is part of a parent which stacks its children (has a `Children Layout` of `Left to Right Stack` or `Top to Bottom Stack`), then it will no longer be considered when stacking siblings if it is invisible. In other words, making an item invisible removes it from the stack.
+
+<figure><img src="../../../.gitbook/assets/16_19 48 47.gif" alt=""><figcaption><p>Invisible siblings are not considered in stacking</p></figcaption></figure>
+
+If the stack contains children which use a `Width Units` of `Ratio`, then hiding any of the siblings results in the children with ratio width adjusting to occupy the extra space.
+
+<figure><img src="../../../.gitbook/assets/16_19 52 56.gif" alt=""><figcaption><p>Invisible siblings are not considered when calculating used space for <code>Width Units</code> of <code>Ratio</code>.</p></figcaption></figure>
+
