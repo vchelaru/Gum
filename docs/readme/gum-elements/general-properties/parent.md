@@ -2,7 +2,7 @@
 
 ### Introduction
 
-The Parent variable allows UI elements to be positioned and sized according to other UI elements. Parenting hierarchies can go many levels deep and the parent/child relationship can be visualized by the white line connecting the parent to the child when the child is selected.
+The `Parent` variable allows UI elements to be positioned and sized according to other UI elements. Parenting hierarchies can go many levels deep and the parent/child relationship can be visualized by the white line connecting the parent to the child when the child is selected.
 
 ### Parents and Units
 
@@ -26,7 +26,7 @@ Children outside of their parent's bounds still follow all of the same rules for
 
 Children placed outside of a parent do not affect the parent's effective width or height. Any unit value that depends on children or parents only considers the **immediate child or parent** and does not look at sizes beyond the immediate relationship.
 
-For example if a parent is 100 width, and its child is given an X of 200, the parent's width is still 100 (assuming the parent does not size itself according to its children). This is important when other children are sized or positioned according to the parent's width.
+For example if a parent has 100 effective width, and its child is given an `X` of 200, the parent's effective width remains 100 (assuming the parent does not size itself according to its children). This is important when other children are sized or positioned according to the parent's width.
 
 The following animation shows three instances:
 
@@ -42,14 +42,14 @@ Children outside of bounds may not respond to click events unless the parent is 
 
 ### Example - Drag+Drop in the Tree View
 
-To change the parent/child relationship in the tree view:
+To change `Parent` in the **Project** tab:
 
 1. Select a child
 2. Drag+drop the child onto the desired parent
 
 <figure><img src="../../../.gitbook/assets/11_20 21 41.gif" alt=""><figcaption><p>Drag+drop a child onto the desired parent</p></figcaption></figure>
 
-The child can be detached from its parent by drag+dropping it onto the Component.
+The child can be detached from its `Parent` by drag+dropping it onto the Component.
 
 <figure><img src="../../../.gitbook/assets/11_20 22 36.gif" alt=""><figcaption><p>Drag+drop a child onto its root component or screen to detach it from its current parent</p></figcaption></figure>
 
