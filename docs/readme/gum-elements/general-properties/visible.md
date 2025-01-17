@@ -26,3 +26,12 @@ If the stack contains children which use a `Width Units` of `Ratio`, then hiding
 
 <figure><img src="../../../.gitbook/assets/16_19 52 56.gif" alt=""><figcaption><p>Invisible siblings are not considered when calculating used space for <code>Width Units</code> of <code>Ratio</code>.</p></figcaption></figure>
 
+## Selecting Invisible Objects
+
+An invisible object can be selected by clicking on it in the Project tab or in the Editor tab.
+
+<figure><img src="../../../.gitbook/assets/16_20 04 41.gif" alt=""><figcaption><p>Invisible objects can be selected</p></figcaption></figure>
+
+Visible items are given preferential selection even if they are ordered behind invisible items.
+
+<figure><img src="../../../.gitbook/assets/16_20 05 57.gif" alt=""><figcaption><p>The visible ColoredRectangle is selected before the invisible container</p></figcaption></figure>
