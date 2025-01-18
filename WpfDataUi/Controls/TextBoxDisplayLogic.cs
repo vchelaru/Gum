@@ -502,6 +502,11 @@ namespace WpfDataUi.Controls
                 mContainer.TrySetValueOnUi(valueOnInstance);
             }
 
+            RefreshBackgroundColor();
+        }
+
+        public void RefreshBackgroundColor()
+        {
             if (InstanceMember.IsDefault)
             {
                 mAssociatedTextBox.Background = DefaultValueBackground;

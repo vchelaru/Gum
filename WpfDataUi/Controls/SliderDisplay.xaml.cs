@@ -326,7 +326,6 @@ namespace WpfDataUi.Controls
                 //lastSliderTime = DateTime.Now;
                 // display the value, but don't push it until the drag is complete:
                 ApplySliderValueToTextBox();
-
             }
         }
 
@@ -375,6 +374,8 @@ namespace WpfDataUi.Controls
         private void Slider_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
         {
             HandleValueChanged();
+
+            mTextBoxLogic.RefreshBackgroundColor();
         }
 
         private void RefreshMinAndMaxValues()
