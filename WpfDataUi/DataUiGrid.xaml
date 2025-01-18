@@ -37,7 +37,7 @@
                               >
                     <ItemsControl x:Name="ItemsControlInstance" ItemsSource="{Binding Members}" Focusable="False" AlternationCount="2">
                         <ItemsControl.Resources>
-                            <SolidColorBrush x:Key="LightBg" Color="White" Opacity="0.1"/>
+                            <SolidColorBrush x:Key="LightBg" Color="Black" Opacity="0.1"/>
                             <SolidColorBrush x:Key="DarkBg" Color="Black" Opacity="0.05"/>
                         </ItemsControl.Resources>
                         <ItemsControl.ItemTemplate>

@@ -146,21 +146,6 @@ namespace WpfDataUi.DataTypes
             MemberValueChangedByUi?.Invoke(instanceMember);
         }
 
-        public void SetAlternatingColors(Brush evenBrush, Brush oddBrush)
-        {
-            for (int i = 0; i < this.Members.Count; i++)
-            {
-                if (i % 2 == 0)
-                {
-                    Members[i].BackgroundColor = evenBrush;
-                }
-                else
-                {
-                    Members[i].BackgroundColor = oddBrush;
-                }
-
-            }
-        }
 
         public override string ToString()
         {
