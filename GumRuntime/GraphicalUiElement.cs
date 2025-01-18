@@ -67,7 +67,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         None = 0,
         IfParentStacks = 1,
         IfParentWidthHeightDependOnChildren = 2,
-        All = 4
+        IfParentIsAutoGrid = 4,
+        All = 8
 
     }
 
@@ -258,7 +259,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                         if (this.WidthUnits == DimensionUnitType.Ratio || this.HeightUnits == DimensionUnitType.Ratio)
                         {
                             // If this is a width or height ratio and we're made visible, then the parent needs to update if it stacks:
-                            this.UpdateLayout(ParentUpdateType.IfParentStacks,
+                            this.UpdateLayout(ParentUpdateType.IfParentStacks | ParentUpdateType.IfParentIsAutoGrid,
                                 // If something is made visible, that shouldn't update the children, right?
                                 //int.MaxValue/2, 
                                 0,
@@ -271,17 +272,17 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 if (!didUpdate)
                 {
                     // This will make this dirty:
-                    this.UpdateLayout(ParentUpdateType.IfParentStacks | ParentUpdateType.IfParentWidthHeightDependOnChildren,
+                    this.UpdateLayout(ParentUpdateType.IfParentStacks | ParentUpdateType.IfParentWidthHeightDependOnChildren | ParentUpdateType.IfParentIsAutoGrid,
                         // If something is made visible, that shouldn't update the children, right?
                         //int.MaxValue/2, 
                         0,
                         null);
                 }
 
-                if (!absoluteVisible && GetIfParentStacks())
+                if (!absoluteVisible && (GetIfParentStacks() || GetIfParentIsAutoGrid()))
                 {
                     // This updates the parent right away:
-                    (Parent as GraphicalUiElement)?.UpdateLayout(ParentUpdateType.IfParentStacks, int.MaxValue / 2, null);
+                    (Parent as GraphicalUiElement)?.UpdateLayout(ParentUpdateType.IfParentStacks | ParentUpdateType.IfParentIsAutoGrid, int.MaxValue / 2, null);
 
                 }
             }
@@ -1483,6 +1484,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         var updateParent =
             (parentUpdateType & ParentUpdateType.All) == ParentUpdateType.All ||
             (parentUpdateType & ParentUpdateType.IfParentStacks) == ParentUpdateType.IfParentStacks && GetIfParentStacks() ||
+            (parentUpdateType & ParentUpdateType.IfParentIsAutoGrid) == ParentUpdateType.IfParentIsAutoGrid && GetIfParentIsAutoGrid() ||
             (parentUpdateType & ParentUpdateType.IfParentWidthHeightDependOnChildren) == ParentUpdateType.IfParentWidthHeightDependOnChildren && (Parent as GraphicalUiElement)?.GetIfDimensionsDependOnChildren() == true;
 
         #region Early Out - Suspended
@@ -1857,7 +1859,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     #endregion
 
     private void AdjustParentOriginOffsetsByUnits(float parentWidth, float parentHeight, bool isParentFlippedHorizontally,
-ref float unitOffsetX, ref float unitOffsetY, ref bool wasHandledX, ref bool wasHandledY)
+        ref float unitOffsetX, ref float unitOffsetY, ref bool wasHandledX, ref bool wasHandledY)
     {
 
         var shouldAdd = Parent is GraphicalUiElement parentGue &&
@@ -3444,7 +3446,7 @@ ref float unitOffsetX, ref float unitOffsetY, ref bool wasHandledX, ref bool was
         }
         else if (GetIfParentIsAutoGrid())
         {
-            var indexInSiblingList = this.GetIndexInSiblings();
+            var indexInSiblingList = this.GetIndexInVisibleSiblings();
             int xIndex, yIndex;
             float cellWidth, cellHeight;
             GetCellDimensions(indexInSiblingList, out xIndex, out yIndex, out cellWidth, out cellHeight);
@@ -3479,7 +3481,7 @@ ref float unitOffsetX, ref float unitOffsetY, ref bool wasHandledX, ref bool was
         cellHeight = parentHeight / yRows;
     }
 
-    private int GetIndexInSiblings()
+    private int GetIndexInVisibleSiblings()
     {
         System.Collections.IList siblings = null;
 
