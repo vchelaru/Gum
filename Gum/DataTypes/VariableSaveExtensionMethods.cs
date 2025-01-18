@@ -329,6 +329,7 @@ namespace Gum.DataTypes
                             toReturn = true;
                             break;
                         case "GradientType":
+                        case "RenderingLibrary.Graphics.GradientType":
                             variableSave.Value = (global::RenderingLibrary.Graphics.GradientType)valueAsInt;
                             toReturn = true;
                             break;
