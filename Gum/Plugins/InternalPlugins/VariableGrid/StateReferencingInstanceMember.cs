@@ -38,7 +38,7 @@ namespace Gum.PropertyGridHelpers
         public InstanceSave InstanceSave { get; private set; }
         public ElementSave ElementSave { get; private set; }
 
-        public object LastOldValue { get; private set; }
+        public object LastOldFullCommitValue { get; private set; }
 
         InstanceSavePropertyDescriptor mPropertyDescriptor;
 
@@ -644,7 +644,7 @@ namespace Gum.PropertyGridHelpers
                     }
                 }
 
-                var response = NotifyVariableLogic(gumElementOrInstanceSaveAsObject, trySave: setPropertyArgs.CommitType == SetPropertyCommitType.Full);
+                var response = NotifyVariableLogic(gumElementOrInstanceSaveAsObject, setPropertyArgs.CommitType, trySave: setPropertyArgs.CommitType == SetPropertyCommitType.Full);
 
                 if(response.Succeeded == false)
                 {
@@ -663,7 +663,7 @@ namespace Gum.PropertyGridHelpers
 
             if (setPropertyArgs.CommitType == SetPropertyCommitType.Full)
             {
-                LastOldValue = oldValue;
+                LastOldFullCommitValue = oldValue;
 
                 // if the value changes was a list, we want to store off a copy of it or else the modified 
                 // list will simply add to the existing list and later checks for equality will always return true:
@@ -675,7 +675,7 @@ namespace Gum.PropertyGridHelpers
                     {
                         newList.Add(item);
                     }
-                    LastOldValue = newList;
+                    LastOldFullCommitValue = newList;
                 }
             }
         }
@@ -770,7 +770,7 @@ namespace Gum.PropertyGridHelpers
             StateSave state = SelectedState.Self.SelectedStateSave;
             VariableSave variable = state.GetVariableSave(variableName);
             var oldValue = variable?.Value;
-            LastOldValue = oldValue;
+            LastOldFullCommitValue = oldValue;
 
             if (shouldReset)
             {
@@ -892,10 +892,10 @@ namespace Gum.PropertyGridHelpers
             }
 
             var gumElementOrInstanceSaveAsObject = this.Instance;
-            NotifyVariableLogic(gumElementOrInstanceSaveAsObject, trySave: true);
+            NotifyVariableLogic(gumElementOrInstanceSaveAsObject, SetPropertyCommitType.Full, trySave: true);
         }
 
-        public GeneralResponse NotifyVariableLogic(object gumElementOrInstanceSaveAsObject, bool? forceRefresh = null, bool trySave = true)
+        public GeneralResponse NotifyVariableLogic(object gumElementOrInstanceSaveAsObject, SetPropertyCommitType commitType, bool trySave = true)
         {
             GeneralResponse response = GeneralResponse.SuccessfulResponse;
 
@@ -903,7 +903,7 @@ namespace Gum.PropertyGridHelpers
 
             bool handledByExposedVariable = false;
 
-            bool effectiveRefresh = forceRefresh ?? IsCallingRefresh;
+            bool effectiveRefresh = commitType == SetPropertyCommitType.Full || IsCallingRefresh;
 
             bool effectiveRecordUndo = IsCallingRefresh && trySave;
 
@@ -926,7 +926,7 @@ namespace Gum.PropertyGridHelpers
                     {
                         handledByExposedVariable = true;
 
-                        SetVariableLogic.Self.ReactToPropertyValueChanged(variable.GetRootName(), LastOldValue, elementSave, instanceInElement, this.StateSave, refresh: effectiveRefresh, recordUndo: effectiveRecordUndo);
+                        SetVariableLogic.Self.ReactToPropertyValueChanged(variable.GetRootName(), LastOldFullCommitValue, elementSave, instanceInElement, this.StateSave, refresh: effectiveRefresh, recordUndo: effectiveRecordUndo);
                     }
 
                 }
@@ -934,7 +934,7 @@ namespace Gum.PropertyGridHelpers
 
             if (!handledByExposedVariable)
             {
-                response = SetVariableLogic.Self.PropertyValueChanged(name, LastOldValue, gumElementOrInstanceSaveAsObject as InstanceSave, refresh: effectiveRefresh,
+                response = SetVariableLogic.Self.PropertyValueChanged(name, LastOldFullCommitValue, gumElementOrInstanceSaveAsObject as InstanceSave, refresh: effectiveRefresh,
                     recordUndo: effectiveRecordUndo,
                     trySave: trySave);
             }

@@ -151,30 +151,34 @@ internal class MainEditorTabPlugin : InternalPlugin
             areSame = value.Equals(oldValue);
         }
 
-        // If the values are the same they may have been set to be the same by a plugin that
-        // didn't allow the assignment, so don't go through the work of saving and refreshing
-        if (!areSame)
+        var unqualifiedMember = qualifiedName;
+        if(qualifiedName.Contains("."))
         {
-            var unqualifiedMember = qualifiedName;
-            if(qualifiedName.Contains("."))
-            {
-                unqualifiedMember = qualifiedName.Substring(qualifiedName.LastIndexOf('.') + 1);
-            }
+            unqualifiedMember = qualifiedName.Substring(qualifiedName.LastIndexOf('.') + 1);
+        }
 
-            // Inefficient but let's do this for now - we can make it more efficient later
-            // November 19, 2019
-            // While this is inefficient
-            // at runtime, it is *really*
-            // inefficient for debugging. If
-            // a set value fails, we have to trace
-            // the entire variable assignment and that
-            // can take forever. Therefore, we're going to
-            // migrate towards setting the individual values
-            // here. This can expand over time to just exclude
-            // the RefreshAll call completely....but I don't know
-            // if that will cause problems now, so instead I'm going
-            // to do it one by one:
-            var handledByDirectSet = false;
+        // Inefficient but let's do this for now - we can make it more efficient later
+        // November 19, 2019
+        // While this is inefficient
+        // at runtime, it is *really*
+        // inefficient for debugging. If
+        // a set value fails, we have to trace
+        // the entire variable assignment and that
+        // can take forever. Therefore, we're going to
+        // migrate towards setting the individual values
+        // here. This can expand over time to just exclude
+        // the RefreshAll call completely....but I don't know
+        // if that will cause problems now, so instead I'm going
+        // to do it one by one:
+        var handledByDirectSet = false;
+
+        var supportsIncrementalChange = PropertiesSupportingIncrementalChange.Contains(unqualifiedMember);
+
+        // If the values are the same they may have been set to be the same by a plugin that
+        // didn't allow the assignment, so don't go through the work of saving and refreshing.
+        // Update January 19, 2025 - actually for incrmeental changes just use it, it will be fast
+        if (!areSame || supportsIncrementalChange)
+        {
 
             // if a deep reference is set, then this is more complicated than a single variable assignment, so we should
             // force everything. This makes debugging a little more difficult, but it keeps the wireframe accurate without having to track individual assignments.

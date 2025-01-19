@@ -350,7 +350,7 @@ namespace Gum.Managers
                                     {
                                         if(item is StateReferencingInstanceMember srim)
                                         {
-                                            srim.NotifyVariableLogic((object)srim.InstanceSave ?? srim.ElementSave, forceRefresh:args.CommitType == SetPropertyCommitType.Full);
+                                            srim.NotifyVariableLogic((object)srim.InstanceSave ?? srim.ElementSave, args.CommitType);
 
                                         }
                                         //RefreshInResponseToVariableChange()

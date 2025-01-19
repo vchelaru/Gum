@@ -469,5 +469,19 @@ namespace WpfDataUi.Controls
                 ReactToAngleSetThroughProperty(SetPropertyCommitType.Full);
             }
         }
+
+        private void Ellipse_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            System.Windows.Input.Mouse.Capture(EllipseInstance);
+
+        }
+
+        private void Ellipse_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            System.Windows.Input.Mouse.Capture(null);
+
+            ReactToAngleSetThroughProperty(SetPropertyCommitType.Full);
+
+        }
     }
 }

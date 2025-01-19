@@ -28,8 +28,13 @@
             </Grid.RowDefinitions>
 
             <Label x:Name="Label" Grid.Column="0" VerticalAlignment="Center">TitleText</Label>
-            <Canvas Grid.Column="1" Width="40" Height="40" Margin="6">
-                <Ellipse Grid.Column="0" Width="40" Height="40" Stroke="Gray" MouseMove="Ellipse_MouseMove_1" MouseLeftButtonDown="Ellipse_MouseLeftButtonDown_1">
+            <Canvas Grid.Column="1" Width="40" Height="40" Margin="6" x:Name="CanvasInstance">
+                <Ellipse Grid.Column="0" Width="40" Height="40" Stroke="Gray" 
+                         x:Name="EllipseInstance"
+                         MouseDown="Ellipse_MouseDown"
+                         MouseMove="Ellipse_MouseMove_1" 
+                         MouseUp="Ellipse_MouseUp"
+                         MouseLeftButtonDown="Ellipse_MouseLeftButtonDown_1">
                     <Ellipse.Fill>
                         <LinearGradientBrush StartPoint=".5,0" EndPoint=".5,1">
                             <GradientStop Color="White" Offset="0.0" />
