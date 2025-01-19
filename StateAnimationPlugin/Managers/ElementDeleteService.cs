@@ -23,44 +23,52 @@ internal class ElementDeleteService
         deleteAnimationFileCheckbox.Width = 220;
     }
 
-    internal void HandleDeleteOptionsWindowShow(DeleteOptionsWindow deleteWindow, object objectToDelete)
+    internal void HandleDeleteOptionsWindowShow(DeleteOptionsWindow deleteWindow, Array objectsToDelete)
     {
-        if (objectToDelete is ComponentSave or ScreenSave)
+        bool hasAlreadyAddedDeleteAnimationFileCheckBox = false;
+
+        foreach(var objectToDelete in objectsToDelete)
         {
-            FilePath? animationFile = _animationFilePathService.GetAbsoluteAnimationFileNameFor(objectToDelete as ElementSave);
-            deleteAnimationFileCheckbox.IsChecked = false;
-            if (animationFile?.Exists() == true)
+            if (objectToDelete is ComponentSave or ScreenSave)
             {
-                deleteAnimationFileCheckbox.IsChecked = true;
-                deleteWindow.MainStackPanel.Children.Add(deleteAnimationFileCheckbox);
-                deleteAnimationFileCheckbox.Content = "Delete Animation file (.ganx)";
+                FilePath? animationFile = _animationFilePathService.GetAbsoluteAnimationFileNameFor(objectToDelete as ElementSave);
+                deleteAnimationFileCheckbox.IsChecked = false;
+                if (hasAlreadyAddedDeleteAnimationFileCheckBox == false && (animationFile?.Exists() == true ))
+                {
+                    deleteAnimationFileCheckbox.IsChecked = true;
+                    deleteWindow.MainStackPanel.Children.Add(deleteAnimationFileCheckbox);
+                    deleteAnimationFileCheckbox.Content = "Delete Animation file (.ganx)";
+                    hasAlreadyAddedDeleteAnimationFileCheckBox = true;
+                }
             }
         }
     }
 
-    internal void HandleConfirmDelete(DeleteOptionsWindow deleteOptionsWindow, object deletedObject)
+    internal void HandleConfirmDelete(DeleteOptionsWindow deleteOptionsWindow, Array deletedObjects)
     {
-
-        if (deleteAnimationFileCheckbox.IsChecked == true && deletedObject is ElementSave deletedElement)
+        foreach(var deletedObject in deletedObjects)
         {
-            var fileName = _animationFilePathService.GetAbsoluteAnimationFileNameFor(deletedElement);
-
-            if (fileName?.Exists() == true)
+            if (deleteAnimationFileCheckbox.IsChecked == true && deletedObject is ElementSave deletedElement)
             {
-                try
+                var fileName = _animationFilePathService.GetAbsoluteAnimationFileNameFor(deletedElement);
+
+                if (fileName?.Exists() == true)
                 {
-                    System.IO.File.Delete(fileName.FullPath);
-                }
-                catch
-                {
-                    System.Windows.Forms.MessageBox.Show("Could not delete the file\n" + fileName);
+                    try
+                    {
+                        System.IO.File.Delete(fileName.FullPath);
+                    }
+                    catch
+                    {
+                        System.Windows.Forms.MessageBox.Show("Could not delete the file\n" + fileName);
+                    }
                 }
             }
-        }
 
-        if(deleteOptionsWindow.MainStackPanel.Children.Contains(deleteAnimationFileCheckbox))
-        {
-            deleteOptionsWindow.MainStackPanel.Children.Remove(deleteAnimationFileCheckbox);
+            if(deleteOptionsWindow.MainStackPanel.Children.Contains(deleteAnimationFileCheckbox))
+            {
+                deleteOptionsWindow.MainStackPanel.Children.Remove(deleteAnimationFileCheckbox);
+            }
         }
     }
 

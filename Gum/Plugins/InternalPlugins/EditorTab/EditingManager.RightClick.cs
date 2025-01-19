@@ -188,33 +188,10 @@ namespace Gum.Wireframe
 
         public void RemoveSelectedElement()
         {
-            RemoveElement(SelectedState.Self.SelectedElement);
-
+            ProjectCommands.Self.RemoveElement(SelectedState.Self.SelectedElement);
             SelectedState.Self.SelectedElement = null;
         }
 
-        private void RemoveElement(ElementSave elementToRemove)
-        {
-            ScreenSave asScreenSave = elementToRemove as ScreenSave;
-            ComponentSave asComponentSave = elementToRemove as ComponentSave;
-
-            if (asScreenSave != null)
-            {
-                ProjectCommands.Self.RemoveScreen(asScreenSave);
-            }
-            else if (asComponentSave != null)
-            {
-                ProjectCommands.Self.RemoveComponent(asComponentSave);
-            }
-
-            GumCommands.Self.GuiCommands.RefreshElementTreeView();
-            GumCommands.Self.GuiCommands.RefreshStateTreeView();
-            
-            GumCommands.Self.GuiCommands.RefreshVariables();
-            Wireframe.WireframeObjectManager.Self.RefreshAll(true);
-
-            GumCommands.Self.FileCommands.TryAutoSaveProject();
-        }
 
 
         public void RemoveSelectedBehavior()

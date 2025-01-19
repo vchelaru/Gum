@@ -9,6 +9,8 @@ using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
@@ -17,6 +19,16 @@ namespace Gum.Managers
 {
     public class DeleteLogic : Singleton<DeleteLogic>
     {
+        private readonly ProjectCommands _projectCommands;
+        private readonly ISelectedState _selectedState;
+
+        public DeleteLogic()
+        {
+            _projectCommands = ProjectCommands.Self;
+            _selectedState = SelectedState.Self;
+        }
+
+
         public void HandleDeleteCommand()
         {
             var handled = SelectionManager.Self.TryHandleDelete();
@@ -31,23 +43,23 @@ namespace Gum.Managers
         {
             using (var undoLock = UndoManager.Self.RequestLock())
             {
-                object objectDeleted = null;
+                Array objectsDeleted = null;
                 DeleteOptionsWindow optionsWindow = null;
 
-                var selectedElement = SelectedState.Self.SelectedElement;
-                var selectedInstance = SelectedState.Self.SelectedInstance;
-                var selectedBehavior = SelectedState.Self.SelectedBehavior;
+                var selectedElements = _selectedState.SelectedElements;
+                var selectedInstance = _selectedState.SelectedInstance;
+                var selectedBehavior = _selectedState.SelectedBehavior;
 
-                var selectedStateContainer = (IStateContainer)selectedElement ?? selectedBehavior;
+                var selectedStateContainer = (IStateContainer)selectedElements.FirstOrDefault() ?? selectedBehavior;
 
-                if (SelectedState.Self.SelectedInstances.Count() > 1)
+                if (_selectedState.SelectedInstances.Count() > 1)
                 {
                     AskToDeleteInstances(SelectedState.Self.SelectedInstances);
                 }
                 else if (selectedInstance != null)
                 {
-                    objectDeleted = selectedInstance;
-                    //AskToDeleteInstance(SelectedState.Self.SelectedInstance);
+                    var array = new InstanceSave[] { selectedInstance };
+                    objectsDeleted = array;
 
                     if (selectedInstance.DefinedByBase)
                     {
@@ -57,7 +69,7 @@ namespace Gum.Managers
                     {
                         //DialogResult result =
                         //    MessageBox.Show("Are you sure you'd like to delete " + instance.Name + "?", "Delete instance?", MessageBoxButtons.YesNo);
-                        var result = ShowDeleteDialog(selectedInstance, out optionsWindow);
+                        var result = ShowDeleteDialog(array, out optionsWindow);
 
 
                         if (result == true)
@@ -71,6 +83,7 @@ namespace Gum.Managers
                             // will be handled in a plugin
                             //Gum.ToolCommands.ElementCommands.Self.RemoveInstance(instance, selectedElement);
                             var instanceName = selectedInstance.Name;
+                            var selectedElement = selectedElements.First();
                             if(selectedElement != null)
                             {
                                 selectedElement.Instances.Remove(selectedInstance);
@@ -95,7 +108,7 @@ namespace Gum.Managers
 
                             PluginManager.Self.InstanceDelete(selectedElement, selectedInstance);
 
-                            var deletedSelection = SelectedState.Self.SelectedInstance == selectedInstance;
+                            var deletedSelection = _selectedState.SelectedInstance == selectedInstance;
 
                             RefreshAndSaveAfterInstanceRemoval(selectedElement, selectedBehavior);
 
@@ -104,56 +117,39 @@ namespace Gum.Managers
                                 var index = siblings.IndexOf(selectedInstance);
                                 if (index + 1 < siblings.Count)
                                 {
-                                    SelectedState.Self.SelectedInstance = siblings[index + 1];
+                                    _selectedState.SelectedInstance = siblings[index + 1];
                                 }
                                 else if (index > 0)
                                 {
-                                    SelectedState.Self.SelectedInstance = siblings[index - 1];
+                                    _selectedState.SelectedInstance = siblings[index - 1];
                                 }
                                 else
                                 {
                                     // no siblings so select the container or null if none exists:
-                                    SelectedState.Self.SelectedInstance = parentInstance;
+                                    _selectedState.SelectedInstance = parentInstance;
                                 }
                             }
                         }
                     }
                 }
-                else if (SelectedState.Self.SelectedComponent != null)
+                else if (_selectedState.SelectedElements.Count() > 0)
                 {
-                    var result = ShowDeleteDialog(SelectedState.Self.SelectedComponent, out optionsWindow);
+                    var array = _selectedState.SelectedElements.ToArray();
+                    var result = ShowDeleteDialog(array, out optionsWindow);
 
                     if (result == true)
                     {
-                        objectDeleted = SelectedState.Self.SelectedComponent;
-                        // We need to remove the reference
-                        EditingManager.Self.RemoveSelectedElement();
-                    }
-                }
-                else if (SelectedState.Self.SelectedScreen != null)
-                {
-                    var result = ShowDeleteDialog(SelectedState.Self.SelectedScreen, out optionsWindow);
+                        objectsDeleted = array;
 
-                    if (result == true)
-                    {
-                        objectDeleted = SelectedState.Self.SelectedScreen;
-                        // We need to remove the reference
-                        EditingManager.Self.RemoveSelectedElement();
-                    }
-                }
-                else if (SelectedState.Self.SelectedBehavior != null)
-                {
-                    var result = ShowDeleteDialog(SelectedState.Self.SelectedBehavior, out optionsWindow);
-
-                    if (result == true)
-                    {
-                        objectDeleted = SelectedState.Self.SelectedBehavior;
-                        // We need to remove the reference
-                        EditingManager.Self.RemoveSelectedBehavior();
+                        foreach(var item in array)
+                        {
+                            _projectCommands.RemoveElement(item);
+                        }
+                        _selectedState.SelectedElement = null;
                     }
                 }
 
-                var shouldDelete = objectDeleted != null;
+                var shouldDelete = objectsDeleted?.Length > 0;
 
                 if (shouldDelete && selectedInstance != null)
                 {
@@ -162,43 +158,59 @@ namespace Gum.Managers
 
                 if (shouldDelete)
                 {
-                    PluginManager.Self.DeleteConfirm(optionsWindow, objectDeleted);
+                    PluginManager.Self.DeleteConfirm(optionsWindow, objectsDeleted);
                 }
             }
         }
 
-        bool? ShowDeleteDialog(object objectToDelete, out DeleteOptionsWindow optionsWindow)
+        //bool? ShowDeleteMultiple(Array array)
+        //{
+        //    if(array.Length == 1)
+        //    {
+        //        ShowDeleteDialog(array[0]);
+        //    }
+        //}
+        bool? ShowDeleteDialog(Array objectsToDelete, out DeleteOptionsWindow optionsWindow)
         {
+
             string titleText;
-            if (objectToDelete is ComponentSave)
+
+            titleText = "Delete?";
+            if(objectsToDelete.Length == 1)
             {
-                titleText = "Delete Component?";
-            }
-            else if (objectToDelete is ScreenSave)
-            {
-                titleText = "Delete Screen?";
-            }
-            else if (objectToDelete is InstanceSave)
-            {
-                titleText = "Delete Instance?";
-            }
-            else if (objectToDelete is BehaviorSave)
-            {
-                titleText = "Delete Behavior?";
-            }
-            else
-            {
-                titleText = "Delete?";
+                var objectToDelete = objectsToDelete.GetValue(0);
+                if (objectToDelete is ComponentSave)
+                {
+                    titleText = "Delete Component?";
+                }
+                else if (objectToDelete is ScreenSave)
+                {
+                    titleText = "Delete Screen?";
+                }
+                else if (objectToDelete is InstanceSave)
+                {
+                    titleText = "Delete Instance?";
+                }
+                else if (objectToDelete is BehaviorSave)
+                {
+                    titleText = "Delete Behavior?";
+                }
             }
 
             optionsWindow = new DeleteOptionsWindow();
             optionsWindow.Title = titleText;
-            optionsWindow.Message = "Are you sure you want to delete:\n" + objectToDelete.ToString();
-            optionsWindow.ObjectToDelete = objectToDelete;
+            optionsWindow.Message = "Are you sure you want to delete:\n";
+            foreach(var item in objectsToDelete)
+            {
+                optionsWindow.Message += item.ToString() + "\n";
+
+            }
+                
+            optionsWindow.ObjectsToDelete = objectsToDelete;
 
             GumCommands.Self.GuiCommands.PositionWindowByCursor(optionsWindow);
 
-            PluginManager.Self.ShowDeleteDialog(optionsWindow, objectToDelete);
+            PluginManager.Self.ShowDeleteDialog(optionsWindow, objectsToDelete);
 
             var result = optionsWindow.ShowDialog();
 

@@ -212,7 +212,7 @@ namespace Gum.Wireframe
             ElementSave elementSave = null;
 
             // If mulitple elements are selected then we can't show them all, so act as if nothing is selected.
-            if(SelectedState.Self.SelectedElements.Count == 1)
+            if(SelectedState.Self.SelectedElements.Count() == 1)
             {
                 elementSave = SelectedState.Self.SelectedElement;
             }

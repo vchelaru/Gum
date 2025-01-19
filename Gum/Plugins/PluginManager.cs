@@ -626,12 +626,12 @@ namespace Gum.Plugins
         /// elements, instances, and behaviors.
         /// </summary>
         /// <param name="window">The window to modify.</param>
-        /// <param name="objectToDelete">The object that may be deleted, which could be any Gum type.</param>
-        internal void ShowDeleteDialog(DeleteOptionsWindow window, object objectToDelete) =>
-            CallMethodOnPlugin(plugin => plugin.CallDeleteOptionsWindowShow(window, objectToDelete));
+        /// <param name="objectsToDelete">An array of objects that may be deleted, which could be any Gum type.</param>
+        internal void ShowDeleteDialog(DeleteOptionsWindow window, Array objectsToDelete) =>
+            CallMethodOnPlugin(plugin => plugin.CallDeleteOptionsWindowShow(window, objectsToDelete));
 
-        internal void DeleteConfirm(DeleteOptionsWindow window, object objectToDelete) => 
-            CallMethodOnPlugin(plugin => plugin.CallDeleteConfirm(window, objectToDelete));
+        internal void DeleteConfirm(DeleteOptionsWindow window, Array objectsToDelete) => 
+            CallMethodOnPlugin(plugin => plugin.CallDeleteConfirm(window, objectsToDelete));
 
         internal void ElementRename(ElementSave elementSave, string oldName) =>
             CallMethodOnPlugin(plugin => plugin.CallElementRename(elementSave, oldName));

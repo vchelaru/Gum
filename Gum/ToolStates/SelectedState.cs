@@ -81,11 +81,18 @@ public class SelectedState : ISelectedState
         }
         set
         {
-            HandleElementSelected(value);
+            if (value == null)
+            {
+                SelectedElements = new List<ElementSave>();
+            }
+            else
+            {
+                SelectedElements = new List<ElementSave> { value };
+            }
         }
     }
 
-    public List<ElementSave> SelectedElements
+    public IEnumerable<ElementSave> SelectedElements
     {
         get
         {
@@ -93,76 +100,78 @@ public class SelectedState : ISelectedState
         }
         set
         {
-            UpdateToSelectedElements(value);
+
+            HandleElementsSelected(value.ToList());
         }
     }
 
-    private void HandleElementSelected(ElementSave value)
+    private void HandleElementsSelected(List<ElementSave> value)
     {
-        var elementBefore = SelectedElement;
+        var elementsBefore = SelectedElements.ToList();
         var instancesBefore = SelectedInstances.ToList();
 
-        if (value != null)
+        if (value?.Count > 0)
         {
             snapshot.SelectedInstance = null;
             snapshot.SelectedBehavior = null;
         }
-        UpdateToSelectedElement(value);
 
-        if(value != elementBefore)
+
+
+        var differ = elementsBefore.Count != value.Count;
+
+        if (!differ)
         {
-            snapshot.SelectedBehaviorReference = null;
+            for (int i = 0; i < elementsBefore.Count; i++)
+            {
+                if (elementsBefore[i] != value[i])
+                {
+                    differ = true;
+                    break;
+                }
+            }
         }
 
-        if (value != elementBefore || (instancesBefore.Count > 0 && SelectedElement?.Instances.Count == 0))
+        if(differ)
+        {
+            snapshot.SelectedBehaviorReference = null;
+            UpdateToSelectedElements(value);
+        }
+
+        if (differ || (instancesBefore.Count > 0 && SelectedElement?.Instances.Count == 0))
         {
             PluginManager.Self.ElementSelected(SelectedElement);
         }
     }
 
-    private void UpdateToSelectedElement(ElementSave element)
-    {
-        if (snapshot.SelectedElement != element)
-        {
-            snapshot.SelectedElement = element;
-
-            var stateBefore = SelectedStateSave;
-
-            if (SelectedElement != null &&
-                (SelectedStateSave == null || SelectedElement.AllStates.Contains(SelectedStateSave) == false) &&
-                SelectedElement.States.Count > 0
-                )
-            {
-
-                SelectedStateSave = SelectedElement.States[0];
-            }
-            else if (SelectedElement == null)
-            {
-                SelectedStateSave = null;
-            }
-
-            if (stateBefore == SelectedStateSave)
-            {
-                // If the state changed (element changed) then no need to force the UI again
-                GumCommands.Self.GuiCommands.RefreshVariables();
-            }
-
-            SelectionManager.Self.Refresh();
-
-        }
-    }
 
     private void UpdateToSelectedElements(List<ElementSave> elements)
     {
         snapshot.SelectedElements = elements;
-        if (elements?.Count > 0)
+
+        var stateBefore = SelectedStateSave;
+
+        if (SelectedElement != null &&
+            (SelectedStateSave == null || SelectedElement.AllStates.Contains(SelectedStateSave) == false) &&
+            SelectedElement.States.Count > 0
+            )
         {
-            UpdateToSelectedElement(elements[0]);
+
+            SelectedStateSave = SelectedElement.States[0];
         }
-        else
+        else if (SelectedElement == null)
         {
-            UpdateToSelectedElement(null);
+            SelectedStateSave = null;
         }
+
+        if (stateBefore == SelectedStateSave)
+        {
+            // If the state changed (element changed) then no need to force the UI again
+            GumCommands.Self.GuiCommands.RefreshVariables();
+        }
+
+        SelectionManager.Self.Refresh();
+
     }
 
     #endregion

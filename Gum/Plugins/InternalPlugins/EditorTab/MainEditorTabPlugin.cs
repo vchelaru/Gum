@@ -25,6 +25,10 @@ namespace Gum.Plugins.InternalPlugins.EditorTab;
 [Export(typeof(PluginBase))]
 internal class MainEditorTabPlugin : InternalPlugin
 {
+    #region Fields/Properties
+
+    #region PropertiesSupportingIncrementalChange
+
     static HashSet<string> PropertiesSupportingIncrementalChange = new HashSet<string>
         {
             "Animate",
@@ -64,7 +68,7 @@ internal class MainEditorTabPlugin : InternalPlugin
             "Y Origin",
             "Y Units",
         };
-
+    #endregion
     public static MainEditorTabPlugin Self
     {
         get;
@@ -80,7 +84,7 @@ internal class MainEditorTabPlugin : InternalPlugin
 
     Panel gumEditorPanel;
 
-
+    #endregion
 
     public MainEditorTabPlugin()
     {
@@ -101,6 +105,7 @@ internal class MainEditorTabPlugin : InternalPlugin
         this.ReactToStateSaveSelected += HandleStateSelected;
         this.InstanceSelected += HandleInstanceSelected;
         this.ElementSelected += HandleElementSelected;
+        this.ElementDelete += HandleElementDeleted;
         this.VariableSetLate += HandleVariableSetLate;
 
         this.CameraChanged += _scrollbarService.HandleCameraChanged;
@@ -108,6 +113,11 @@ internal class MainEditorTabPlugin : InternalPlugin
         this.WireframeResized += _scrollbarService.HandleWireframeResized;
         this.ElementSelected += _scrollbarService.HandleElementSelected;
         this.UiZoomValueChanged += HandleUiZoomValueChanged;
+    }
+
+    private void HandleElementDeleted(ElementSave save)
+    {
+        Wireframe.WireframeObjectManager.Self.RefreshAll(true);
     }
 
     private void HandleUiZoomValueChanged()

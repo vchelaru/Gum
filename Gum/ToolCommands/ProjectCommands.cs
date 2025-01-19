@@ -70,33 +70,33 @@ namespace Gum.ToolCommands
             Plugins.PluginManager.Self.ElementAdd(screenSave);
         }
 
-        internal void RemoveScreen(ScreenSave asScreenSave)
-        {
-            GumProjectSave gps = ProjectManager.Self.GumProjectSave;
-
-            string name = asScreenSave.Name;
-            List<ElementReference> references = gps.ScreenReferences;
-
-            RemoveElementReferencesFromList(name, references);
-
-            gps.Screens.Remove(asScreenSave);
-
-            Plugins.PluginManager.Self.ElementDelete(asScreenSave);
-        }
-
         #endregion
 
         #region Element (Screen/Component/Standard)
 
         internal void RemoveElement(ElementSave element)
         {
-            if (element is ScreenSave)
+            GumProjectSave gps = ProjectManager.Self.GumProjectSave;
+            string name = element.Name;
+            var removed = false;
+            if (element is ScreenSave asScreenSave)
             {
-                RemoveScreen(element as ScreenSave);
+                RemoveElementReferencesFromList(name, gps.ScreenReferences);
+                gps.Screens.Remove(asScreenSave);
+                removed = true;
             }
-            else if (element is ComponentSave)
+            else if (element is ComponentSave asComponentSave)
             {
-                RemoveComponent(element as ComponentSave);
+                RemoveElementReferencesFromList(name, gps.ComponentReferences);
+                gps.Components.Remove(asComponentSave);
+                removed = true;
+
+            }
+
+            if(removed)
+            {
+                Plugins.PluginManager.Self.ElementDelete(element);
+                GumCommands.Self.FileCommands.TryAutoSaveProject();
             }
         }
 
@@ -227,19 +227,7 @@ namespace Gum.ToolCommands
             }
         }
 
-        internal void RemoveComponent(ComponentSave asComponentSave)
-        {
-            GumProjectSave gps = ProjectManager.Self.GumProjectSave;
 
-            string name = asComponentSave.Name;
-            List<ElementReference> references = gps.ComponentReferences;
-
-            RemoveElementReferencesFromList(name, references);
-
-            gps.Components.Remove(asComponentSave);
-
-            Plugins.PluginManager.Self.ElementDelete(asComponentSave);
-        }
         #endregion
     }
 }

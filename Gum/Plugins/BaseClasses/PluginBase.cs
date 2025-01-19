@@ -27,8 +27,8 @@ namespace Gum.Plugins.BaseClasses
         public event Action<ElementSave> AfterElementSave;
         public event Action GuidesChanged;
         public event Action<ElementSave> Export;
-        public event Action<DeleteOptionsWindow, object> DeleteOptionsWindowShow;
-        public event Action<DeleteOptionsWindow, object> DeleteConfirm;
+        public event Action<DeleteOptionsWindow, Array> DeleteOptionsWindowShow;
+        public event Action<DeleteOptionsWindow, Array> DeleteConfirm;
 
         public event Action<ElementSave> ElementAdd;
         public event Action<ElementSave> ElementDelete;
@@ -348,11 +348,11 @@ namespace Gum.Plugins.BaseClasses
             Export?.Invoke(elementSave);
 
 
-        public void CallDeleteOptionsWindowShow(DeleteOptionsWindow optionsWindow, object objectToDelete) =>
-                DeleteOptionsWindowShow?.Invoke(optionsWindow, objectToDelete);
+        public void CallDeleteOptionsWindowShow(DeleteOptionsWindow optionsWindow, Array objectsToDelete) =>
+                DeleteOptionsWindowShow?.Invoke(optionsWindow, objectsToDelete);
 
-        public void CallDeleteConfirm(DeleteOptionsWindow optionsWindow, object deletedObject) =>
-            DeleteConfirm?.Invoke(optionsWindow, deletedObject);
+        public void CallDeleteConfirm(DeleteOptionsWindow optionsWindow, Array deletedObjects) =>
+            DeleteConfirm?.Invoke(optionsWindow, deletedObjects);
         
         public void CallElementAdd(ElementSave element) =>
             ElementAdd?.Invoke(element);

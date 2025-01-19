@@ -74,8 +74,14 @@ public class MainStatePlugin : InternalPlugin
         this.BehaviorReferenceSelected += HandleBehaviorReferenceSelected;
         this.InstanceSelected += HandleInstanceSelected;
         this.ElementSelected += HandleElementSelected;
+        this.ElementDelete += HandleElementDeleted;
         this.StateMovedToCategory += HandleStateMovedToCategory;
         this.VariableSet += HandleVariableSet;
+    }
+
+    private void HandleElementDeleted(ElementSave save)
+    {
+        RefreshUI(SelectedState.Self.SelectedStateContainer);
     }
 
     private void CreateNewStateTab()

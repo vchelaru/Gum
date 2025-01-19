@@ -5,6 +5,7 @@ using Gum.Managers;
 using Gum.Mvvm;
 using Gum.Plugins.BaseClasses;
 using Gum.ToolStates;
+using HarfBuzzSharp;
 using System;
 using System.ComponentModel.Composition;
 using System.Windows.Forms;
@@ -30,10 +31,16 @@ public class MainVariableGridPlugin : InternalPlugin
         this.StateMovedToCategory += HandleStateMovedToCategory;
         this.InstanceSelected += HandleInstanceSelected;
         this.ElementSelected += HandleElementSelected;
+        this.ElementDelete += HandleElementDeleted;
         this.BehaviorSelected += HandleBehaviorSelected;
         this.VariableSelected += HandleVariableSelected;
         this.RefreshVariableView += HandleRefreshVariableView;
         this.AfterUndo += HandleAfterUndo;
+    }
+
+    private void HandleElementDeleted(ElementSave save)
+    {
+        PropertyGridManager.Self.RefreshUI(force:false);
     }
 
     private void HandleAfterUndo()

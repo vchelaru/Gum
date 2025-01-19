@@ -1568,7 +1568,11 @@ namespace Gum.Managers
                 else if(selectedObject is ElementSave elementSave)
                 {
                     SelectedState.Self.SelectedInstance = null;
-                    SelectedState.Self.SelectedElement = elementSave;
+                    var elements = this.SelectedNodes
+                        .Where(item => item.Tag is ElementSave)
+                        .Select(item => item.Tag as ElementSave);
+
+                    SelectedState.Self.SelectedElements = elements;
                 }
                 else if (selectedObject is InstanceSave selectedInstance)
                 {
