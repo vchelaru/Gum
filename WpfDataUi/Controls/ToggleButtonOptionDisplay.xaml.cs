@@ -186,6 +186,10 @@ namespace WpfDataUi.Controls
             this.RefreshContextMenu(ButtonWrapPanel.ContextMenu);
             this.RefreshContextMenu(Grid.ContextMenu);
 
+
+            HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
+            HintTextBlock.Text = InstanceMember?.DetailText;
+
             RefreshButtonAppearance();
 
             RefreshIsEnabled();
