@@ -160,10 +160,8 @@ namespace WpfDataUi.Controls
                     }
                     else
                     {
-                        if (InstanceMember.SetValueError != null)
-                        {
-                            InstanceMember.SetValueError(mAssociatedTextBox.Text);
-                        }
+                        InstanceMember.SetValueError?.Invoke(mAssociatedTextBox.Text);
+
                         return result;
                     }
                 }

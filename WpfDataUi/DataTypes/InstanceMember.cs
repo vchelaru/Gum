@@ -9,6 +9,7 @@ using WpfDataUi.EventArguments;
 
 namespace WpfDataUi.DataTypes
 {
+    #region SetPropertyArgs
     public enum SetPropertyCommitType
     {
         // A value is being set, but the user is continually editing the value, like sliding a slider
@@ -23,6 +24,8 @@ namespace WpfDataUi.DataTypes
         public object Value { get; set; }
         public bool IsAssignmentCancelled { get; set; }
     }
+
+    #endregion
 
     public class InstanceMember : DependencyObject
     {
@@ -321,11 +324,6 @@ namespace WpfDataUi.DataTypes
             }
         }
 
-        public Brush BackgroundColor
-        {
-            get;
-            set;
-        }
 
         string detailText;
         public string DetailText 
