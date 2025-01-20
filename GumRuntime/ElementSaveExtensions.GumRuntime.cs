@@ -360,6 +360,7 @@ namespace GumRuntime
             }
         }
 
+#if GUM
         private static object ApplyVariablesUsingInterpreter(string[] split, string left, InstanceSave instanceLeft, object value)
         {
             var currentScreenOrComponent = ObjectFinder.Self.GetElementContainerOf(instanceLeft);
@@ -399,6 +400,7 @@ namespace GumRuntime
 
             return value;
         }
+#endif
 
 #if GUM
         private static void AddAllVariablesToInterpreter(ElementSave currentScreenOrComponent, Interpreter interpreter)
