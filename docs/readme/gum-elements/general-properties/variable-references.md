@@ -1,12 +1,32 @@
 # Variable References
 
-### Introduction
+## Introduction
 
-**Variable References** allows any variable on an instance to reference a variable on another instance. The most common use of **Variable References** is to create a centralized style component which can be referenced throughout a Gum project.
+`Variable References` allows any variable on an instance or component to reference other variables. These other variables can be on the same instance or component, a different instance, or even variables from a different component.
 
-Variables which are assigned through **Variable References** cannot be directly set on the instance - the value obtained through the reference overwrites any custom value.
+<figure><img src="../../../.gitbook/assets/image (158).png" alt=""><figcaption><p>Component setting its Height relative to its Width</p></figcaption></figure>
 
-### Example - Creating Color Styles
+One common use of `Variable References` is to create a centralized style component which can be referenced throughout a Gum project.
+
+Variables which are assigned through `Variable References` cannot be directly set on the instance - the value obtained through the reference overwrites any custom value. For example, the reference `Height = Width` results in Height being read-only and depending on Width.
+
+<figure><img src="../../../.gitbook/assets/image (159).png" alt=""><figcaption><p>Height is assigned to Width, so it is readonly</p></figcaption></figure>
+
+## Variable Reference Syntax
+
+`Variable References` can contain multiple lines. Each line is a separate variable reference. Each variable reference uses the following syntax:
+
+`{VariableName} = {Components or Screens}/{ComponentOrScreenName}.{InstanceName}.{VariableName}`
+
+The variable being assigned is also called the _left side_ and the variable on the right side of the equals is also called the _right side._ The right side only needs to include the component name if the right side comes from a different component. If the variable being assigned is from the current component, then no instance name is needed, only the variable name.
+
+The following examples show how variables can be assigned:
+
+
+
+<table><thead><tr><th width="148">Selected Item</th><th width="185">Variable Reference</th><th>Details</th></tr></thead><tbody><tr><td>Component</td><td>X = Y</td><td>The selected component's X variable references its Y variable</td></tr><tr><td>Component</td><td>Width = ContainerInstance.Width</td><td>The selected component's Width variable references the Width variable on an instance named ContainerInstance</td></tr><tr><td>Component</td><td>Width = Components/OtherComponent.Rectangle.Width</td><td>The selected component's Width variable references the Width variable on an instance named Rectangle inside a different component named OtherComponent</td></tr><tr><td>ContainerInstance (instance)</td><td>X = Y</td><td>The selected instance's X variable references the X variable of the element that it is a part of. Note that Y means the Y of the containing element.</td></tr><tr><td>ContainerInstance</td><td>Width = ContainerInstance.Height</td><td>The selected instance's Width variable references its own Height variable.</td></tr><tr><td>ContainerInstance</td><td>Width = Components/OtherComponent.Rectangle.Width</td><td>The selected instance's Width variable references the Width variable on an instance named Rectangle inside a different component named OtherComponent</td></tr></tbody></table>
+
+## Example - Creating Color Styles
 
 The following example creates a Styles component which contains a color value which is referenced by objects in a MainMenu Screen.
 
@@ -49,13 +69,13 @@ Once Variable References are set, the referenced instances (instances in Styles)
 
 <figure><img src="../../../.gitbook/assets/StyleUpdate.gif" alt=""><figcaption></figcaption></figure>
 
-### Variable References in the Property Grid
+## Variable References in the Property Grid
 
 As shown above, Variable References can be used to assign one variable to another. If a variable is referenced, then the variable cannot be manually assigned. The Variable Reference takes priority. For example, if an object references the Red, Green, and Blue variables, then those values cannot be manually set on the object. The values appear disabled and text indicates why they are read-only.
 
 <figure><img src="../../../.gitbook/assets/image (20).png" alt=""><figcaption></figcaption></figure>
 
-### Implied Variable References
+## Implied Variable References
 
 When entering a variable reference, Gum understands implied variable references by filling in the left-side of the equals sign to match the variable name on the right-side. For example, the following can be entered in the Variable References text box:
 
@@ -83,7 +103,7 @@ Blue = Components/Styles.PrimaryColor.Blue
 
 <figure><img src="../../../.gitbook/assets/07_08 19 47.gif" alt=""><figcaption></figcaption></figure>
 
-### Same-Screen/Component References
+## Same-Screen/Component References
 
 The examples given above are useful for a centralized styling scenario. Variable references do not require referencing variables from other Screens or Components. If a reference is between two instances in the same Screen or Component, then the variable reference does not need to include the name of the component.&#x20;
 
@@ -101,13 +121,13 @@ Changing the BlueRectangle's X value automatically updates the RedRectangle's X,
 
 <figure><img src="../../../.gitbook/assets/07_08 29 59.gif" alt=""><figcaption></figcaption></figure>
 
-### Obtaining a Qualified Variable Name
+## Obtaining a Qualified Variable Name
 
 Typing a variable name can be tedious, especially when referencing a variable in a different Screen or Component. Qualified variable names can be obtained by right-clicking on the variable name in Gum and selecting the **Copy Qualified Variable Name** option. This can then be pasted in the Variable References box of any other object.
 
 <figure><img src="../../../.gitbook/assets/07_08 35 17 (1).gif" alt=""><figcaption></figcaption></figure>
 
-### Referencing Different Variables
+## Referencing Different Variables
 
 Usually a variable references the same-named variable from the source, such as Red being assigned to Red. This is not a requirement, and variables can reference other variable values. For example, the Green value could reference the Red value on a source.
 
