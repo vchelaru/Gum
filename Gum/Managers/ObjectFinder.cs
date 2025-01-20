@@ -1117,15 +1117,25 @@ namespace Gum.Managers
             }
             else
             {
-                var baseElement = GetElementSave(element.BaseType);
+                // Is this a custom variable?
+                var customVariable = element.DefaultState.Variables.FirstOrDefault(item => item.Name == name && item.IsCustomVariable);
 
-                if(baseElement != null)
+                if(customVariable != null)
                 {
-                    toReturn = GetRootVariable(effectiveName, baseElement);
+                    toReturn = customVariable;
                 }
                 else
                 {
-                    toReturn = element.DefaultState.Variables.FirstOrDefault(item => item.Name == effectiveName);
+                    var baseElement = GetElementSave(element.BaseType);
+
+                    if(baseElement != null)
+                    {
+                        toReturn = GetRootVariable(effectiveName, baseElement);
+                    }
+                    else
+                    {
+                        toReturn = element.DefaultState.Variables.FirstOrDefault(item => item.Name == effectiveName);
+                    }
                 }
             }
 
