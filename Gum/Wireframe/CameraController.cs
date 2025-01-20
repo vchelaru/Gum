@@ -82,7 +82,7 @@ namespace Gum.Wireframe
                 Renderer.Self.Camera.Position.X -= xChange / Renderer.Self.Camera.Zoom;
                 Renderer.Self.Camera.Position.Y -= yChange / Renderer.Self.Camera.Zoom;
 
-                Gum.ToolCommands.GuiCommands.Self.RefreshWireframe();
+                Gum.ToolCommands.GuiCommands_Old.Self.RefreshWireframe();
 
                 if(xChange != 0 || yChange != 0)
                 {

@@ -18,6 +18,8 @@ using RenderingLibrary.Graphics;
 using Gum.Logic;
 using GumRuntime;
 using Gum.Plugins.InternalPlugins.VariableGrid;
+using Gum.Services;
+using Gum.Commands;
 
 namespace Gum.PropertyGridHelpers
 {
@@ -27,7 +29,9 @@ namespace Gum.PropertyGridHelpers
 
         static SetVariableLogic()
         {
-            _variableReferenceLogic = new VariableReferenceLogic();
+
+            _variableReferenceLogic = new VariableReferenceLogic(
+                Builder.Get<GuiCommands>());
         }
 
         public bool AttemptToPersistPositionsOnUnitChanges { get; set; } = true;

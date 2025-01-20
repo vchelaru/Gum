@@ -341,7 +341,7 @@ internal class MainEditorTabPlugin : InternalPlugin
 
         _scrollbarService.HandleWireframeInitialized(_wireframeControl, gumEditorPanel);
 
-        ToolCommands.GuiCommands.Self.Initialize(_wireframeControl);
+        ToolCommands.GuiCommands_Old.Self.Initialize(_wireframeControl);
 
         Wireframe.WireframeObjectManager.Self.Initialize(_wireframeEditControl, _wireframeControl, addCursor);
         _wireframeControl.Initialize(_wireframeEditControl, gumEditorPanel, HotkeyManager.Self);

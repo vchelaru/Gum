@@ -18,6 +18,8 @@ internal class Builder
 {
     public static IHost App { get; private set; }
 
+    public static T Get<T>() => App.Services.GetRequiredService<T>();
+
     public void Build()
     {
         var builder = Host.CreateApplicationBuilder();
@@ -27,6 +29,7 @@ internal class Builder
         builder.Services.AddSingleton(typeof(Commands.GuiCommands), GumCommands.Self.GuiCommands);
         builder.Services.AddSingleton(typeof(UndoManager), UndoManager.Self);
         builder.Services.AddSingleton(typeof(FileCommands), GumCommands.Self.FileCommands);
+        builder.Services.AddSingleton(typeof(GuiCommands), GumCommands.Self.GuiCommands);
         builder.Services.AddSingleton(typeof(NameVerifier), NameVerifier.Self);
         builder.Services.AddSingleton<IEditVariableService, EditVariableService>();
         builder.Services.AddSingleton<IEditVariableService, EditVariableService>();

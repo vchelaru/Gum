@@ -1,13 +1,13 @@
 ﻿namespace Gum.ToolCommands
 {
-    public class GuiCommands
+    public class GuiCommands_Old
     {
         Wireframe.WireframeControl mWireframeControl;
 
-        static GuiCommands mSelf = new GuiCommands();
+        static GuiCommands_Old mSelf = new GuiCommands_Old();
 
 
-        public static GuiCommands Self
+        public static GuiCommands_Old Self
         {
             get { return mSelf; }
             set { mSelf = value; }

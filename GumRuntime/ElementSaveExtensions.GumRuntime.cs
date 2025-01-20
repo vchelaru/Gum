@@ -100,7 +100,7 @@ namespace GumRuntime
         public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave, ISystemManagers systemManagers,
             bool addToManagers, string genericType = null)
         {
-            GraphicalUiElement toReturn = CreateGueForElement(elementSave, genericType:genericType);
+            GraphicalUiElement toReturn = CreateGueForElement(elementSave, genericType: genericType);
 
             toReturn.Name = elementSave.Name;
 
@@ -231,55 +231,36 @@ namespace GumRuntime
             {
                 if (variableList.GetRootName() == "VariableReferences" && variableList.ValueAsIList.Count > 0)
                 {
-                    if (variableList.SourceObject == null)
+                    InstanceSave instance = null;
+                    if (!string.IsNullOrEmpty(variableList.SourceObject))
                     {
-                        foreach (string referenceString in variableList.ValueAsIList)
-                        {
-                            var result = ApplyVariableReferencesOnSpecificOwner((InstanceSave)null, referenceString, stateSave);
-#if GUM
-                            if (!string.IsNullOrEmpty(result.VariableName))
-                            {
-                                var unqualified = result.VariableName;
-                                if (unqualified?.Contains(".") == true)
-                                {
-                                    unqualified = unqualified.Substring(unqualified.IndexOf(".") + 1);
-                                }
-                                //SetVariableLogic.Self.ReactToChangedMember(unqualified, result.valueBefore, element, null, stateSave, 
-                                //    refresh: false, recordUndo: false, trySave: true);
-
-                                if (!ValueEquality(result.OldValue, result.NewValue))
-                                {
-                                    Gum.Plugins.PluginManager.Self.VariableSet(element, null, unqualified, result.OldValue);
-                                }
-
-                            }
-#endif
-                        }
+                        instance = element.GetInstance(variableList.SourceObject);
                     }
-                    else
+
+
+                    foreach (string referenceString in variableList.ValueAsIList)
                     {
-                        InstanceSave instance = element.GetInstance(variableList.SourceObject);
-                        if (instance != null)
-                        {
-                            foreach (string referenceString in variableList.ValueAsIList)
-                            {
-                                var result = ApplyVariableReferencesOnSpecificOwner(instance, referenceString, stateSave);
+                        // this applies the variable and returns info about the application:
+                        var result = ApplyVariableReferencesOnSpecificOwner(instance, referenceString, stateSave);
 #if GUM
-                                if (!string.IsNullOrEmpty(result.VariableName))
-                                {
-                                    var unqualified = result.VariableName;
-                                    if (unqualified?.Contains(".") == true)
-                                    {
-                                        unqualified = unqualified.Substring(unqualified.IndexOf(".") + 1);
-                                    }
-                                    if (!ValueEquality(result.OldValue, result.NewValue))
-                                    {
-                                        Gum.Plugins.PluginManager.Self.VariableSet(element, null, unqualified, result.OldValue);
-                                    }
-                                }
-#endif
+                        // In the gum tool, we need to check if the applicatoin actually changed the value
+                        // If so, we notify plugins that the variable was changed in case any additional changes
+                        // need to happen
+                        if (!string.IsNullOrEmpty(result.VariableName))
+                        {
+                            var unqualified = result.VariableName;
+                            if (unqualified?.Contains(".") == true)
+                            {
+                                unqualified = unqualified.Substring(unqualified.IndexOf(".") + 1);
                             }
+
+                            if (!ValueEquality(result.OldValue, result.NewValue))
+                            {
+                                Gum.Plugins.PluginManager.Self.VariableSet(element, null, unqualified, result.OldValue);
+                            }
+
                         }
+#endif
                     }
                 }
             }
@@ -341,40 +322,56 @@ namespace GumRuntime
         /// <param name="stateSave">The state save which owns the variable reference.</param>
         public static void ApplyVariableReferencesOnSpecificOwner(GraphicalUiElement referenceOwner, string referenceString, StateSave stateSave)
         {
+            //////////////////////////////Early Out/////////////////////////////////
+            if(referenceString?.StartsWith("//") == true)
+            {
+                return;
+            }
+            ////////////////////////////End Early Out///////////////////////////////
+            
             // splits the left and right side, so that we get two items. the first is the left side like "X" and the second is the right side like "SomeItem.X"
             var split = referenceString
                 .Split(equalsArray, 2, StringSplitOptions.RemoveEmptyEntries)
                 .Select(item => item.Trim()).ToArray();
 
-            if (split.Length <= 1)
+            if (split.Length != 2)
             {
                 return;
             }
 
-            object value = null;
-            string left = "";
-
-            left = split[0];
+            var left = split[0];
+            var right = split[1];
 
             var instanceLeft = referenceOwner.Tag as InstanceSave;
-            var currentScreenOrComponent = ObjectFinder.Self.GetContainerOf(instanceLeft);
 
-            var currentScreen = currentScreenOrComponent as ScreenSave;
-            var currentComponent = currentScreenOrComponent as ComponentSave;
+            // assume the owner of the right-side is the StateSave that was passed in...
+            var ownerOfRightSideVariable = stateSave;
+            // ...but call this to change that in case the right-side is a variable belonging to some other component
+            GetRightSideAndState(instanceLeft, ref right, ref ownerOfRightSideVariable);
 
-#if GUM
-            // the Interpreter is loaded up with all available variables in the current project.
-            // This is potentially inefficient, and maybe could be cached, but that's an optimization
-            // for another day.
+            var recursiveVariableFinder = new RecursiveVariableFinder(ownerOfRightSideVariable);
+            var value = recursiveVariableFinder.GetValue(right);
+
+            //value = ApplyVariablesUsingInterpreter(split, left, instanceLeft, value);
+
+            if (value != null)
+            {
+                referenceOwner.SetProperty(left, value);
+            }
+        }
+
+        private static object ApplyVariablesUsingInterpreter(string[] split, string left, InstanceSave instanceLeft, object value)
+        {
+            var currentScreenOrComponent = ObjectFinder.Self.GetElementContainerOf(instanceLeft);
+            // We used to use an interpreter. The problem with the interpreter is it doesn't
+            // understand the recursive variable finder, so it only applies explicitly set variales
             var interpreter = new Interpreter(InterpreterOptions.PrimitiveTypes | InterpreterOptions.SystemKeywords);
-
             AddAllVariablesToInterpreter(currentScreenOrComponent, interpreter);
 
 
-            // FIXME: Add all variables of current instance to interpreter as well, so "X" is also valid (instead of "FullInstanceName.X")
-
             // The interpreter has to treat each fully qualified variable as a separate value
-            // The variable "MyObject.X" cannot be seen as a variable, it has to be a standard C#
+            // The variable "MyObject.X" cannot be seen as a qualifying object with its variable.
+            // Instead it has to be a standard C#
             // variable. Therefore, we replace all periods and slashes with \u1234.
             // Why \u1234? Not sure, need to ask arcnor, but I suspect it's a variable
             // that is valid for variables, but will not be used by users when writing scripts.
@@ -398,15 +395,9 @@ namespace GumRuntime
             catch (Exception ex)
             {
                 // TODO: Show error
-                return;
             }
-#endif
 
-
-            if (value != null)
-            {
-                referenceOwner.SetProperty(left, value);
-            }
+            return value;
         }
 
 #if GUM
@@ -453,8 +444,16 @@ namespace GumRuntime
             public object NewValue;
         }
 
-        private static VariableReferenceAssignmentResult ApplyVariableReferencesOnSpecificOwner(InstanceSave instance, string referenceString, StateSave stateSave)
+        private static VariableReferenceAssignmentResult ApplyVariableReferencesOnSpecificOwner(InstanceSave instanceLeft, string referenceString, StateSave stateSave)
         {
+
+            //////////////////////////////Early Out/////////////////////////////////
+            if (referenceString?.StartsWith("//") == true)
+            {
+                return new VariableReferenceAssignmentResult { NewValue = null, OldValue = null, VariableName = null };
+            }
+            ////////////////////////////End Early Out///////////////////////////////
+
             var split = referenceString
                 .Split(equalsArray, StringSplitOptions.RemoveEmptyEntries)
                 .Select(item => item.Trim()).ToArray();
@@ -467,9 +466,10 @@ namespace GumRuntime
             var left = split[0];
             var right = split[1];
 
+            // assume the owner of the right-side is the StateSave that was passed in...
             var ownerOfRightSideVariable = stateSave;
-
-            GetRightSideAndState(instance, ref right, ref ownerOfRightSideVariable);
+            // ...but call this to change that in case the right-side is a variable belonging to some other component
+            GetRightSideAndState(instanceLeft, ref right, ref ownerOfRightSideVariable);
 
             var recursiveVariableFinder = new RecursiveVariableFinder(ownerOfRightSideVariable);
 
@@ -479,20 +479,16 @@ namespace GumRuntime
             string effectiveLeft = null;
             if (value != null)
             {
-                if (instance == null)
+                if (instanceLeft == null)
                 {
                     effectiveLeft = left;
-                    valueBefore = stateSave.GetValue(left);
-                    stateSave.SetValue(left, value, instance);
                 }
                 else
                 {
-                    var nameToSet = $"{instance.Name}.{left}";
-                    effectiveLeft = nameToSet;
-                    valueBefore = stateSave.GetValue(nameToSet);
-
-                    stateSave.SetValue(nameToSet, value, instance);
+                    effectiveLeft = $"{instanceLeft.Name}.{left}";
                 }
+                valueBefore = stateSave.GetValue(effectiveLeft);
+                stateSave.SetValue(effectiveLeft, value, instanceLeft);
             }
 
             return new VariableReferenceAssignmentResult
@@ -501,10 +497,9 @@ namespace GumRuntime
                 OldValue = valueBefore,
                 VariableName = effectiveLeft
             };
-            //(effectiveLeft, valueBefore);
         }
 
-        private static void GetRightSideAndState(InstanceSave instanceSave, ref string right, ref StateSave stateSave)
+        public static void GetRightSideAndState(InstanceSave instanceSave, ref string right, ref StateSave stateSave)
         {
             var isExternalElement = right.Contains("/");
 

@@ -36,7 +36,7 @@ namespace Gum.Wireframe
 
         void OnProjectLoad(GumProjectSave obj)
         {
-            GuiCommands.Self.UpdateWireframeToProject();
+            GuiCommands_Old.Self.UpdateWireframeToProject();
         }
     }
 
