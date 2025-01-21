@@ -21,7 +21,7 @@ this.Root.Children.Add(customizedButton.Visual);
 
 Notice that this button has subtle color changes when the cursor hovers over or pushes on it.
 
-<figure><img src="../../../.gitbook/assets/26_07 28 29.gif" alt=""><figcaption><p>Button responding to hover and push events</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/26_07 28 29.gif" alt=""><figcaption><p>Button responding to hover and push events</p></figcaption></figure>
 
 These cursor actions result in different states being applied to the button. These states are initialized by default when calling the following code:
 
@@ -53,7 +53,7 @@ customizedButton.UpdateState();
 
 Now the button highlights yellow instead of a lighter blue.
 
-<figure><img src="../../../.gitbook/assets/26_07 35 48.gif" alt=""><figcaption><p>Button highlighting yellow on hover</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/26_07 35 48.gif" alt=""><figcaption><p>Button highlighting yellow on hover</p></figcaption></figure>
 
 {% hint style="info" %}
 Each Forms instance creates its own Categories dictionary, so modifying the Categories on one instance does not affect the Categories on another instance.
@@ -86,7 +86,7 @@ customizedButton.UpdateState();
 
 The button text now becomes black and is twice as big when highlighted but notice that the text changes are not undone when the cursor moves off of the button (when the Highlighted state is unset).
 
-<figure><img src="../../../.gitbook/assets/26_07 46 55.gif" alt=""><figcaption><p>Hover state is applied, but not undone</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/26_07 46 55.gif" alt=""><figcaption><p>Hover state is applied, but not undone</p></figcaption></figure>
 
 The reason that the hover state is not unset is because all variables which are set through states persist until they are undone. Typically if you create states in the Gum tool, the Gum tool forces any state which is set in a category to also be propagated through all other states in the same category. However, when we're setting states in code, we must make sure to apply any states that we care to all other categories.
 
@@ -117,7 +117,7 @@ enabledState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
 customizedButton.UpdateState();
 ```
 
-<figure><img src="../../../.gitbook/assets/26_07 50 10.gif" alt=""><figcaption><p>Enabled state resetting text color and size</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/26_07 50 10.gif" alt=""><figcaption><p>Enabled state resetting text color and size</p></figcaption></figure>
 
 ### Available Instances
 
@@ -231,7 +231,7 @@ var customizedButton = new Button();
 this.Root.Children.Add(customizedButton.Visual);
 ```
 
-<figure><img src="../../../.gitbook/assets/27_06 45 57.gif" alt=""><figcaption><p>Pink button using styling defined in StyledButtonRuntime</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/27_06 45 57.gif" alt=""><figcaption><p>Pink button using styling defined in StyledButtonRuntime</p></figcaption></figure>
 
 ### Defining a ButtonRuntime Without Inheritance
 
@@ -239,11 +239,11 @@ The section above shows how to customize a button using inheritance. This approa
 
 For example, we can create a NineSlice that uses the following image:
 
-<figure><img src="../../../.gitbook/assets/button_square_gradient.png" alt=""><figcaption><p>Blue NineSlice image</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/button_square_gradient.png" alt=""><figcaption><p>Blue NineSlice image</p></figcaption></figure>
 
-Download this file to your game's Content folder, and mark the file as Copy if Newer. Make sure it appears in Visual Studio. For more information on file loading, see the [File Loading](../file-loading.md) tutorial.
+Download this file to your game's Content folder, and mark the file as Copy if Newer. Make sure it appears in Visual Studio. For more information on file loading, see the [File Loading](../../file-loading.md) tutorial.
 
-<figure><img src="../../../.gitbook/assets/27_06 58 31.png" alt=""><figcaption><p>button_square_gradient.png in Visual Studio marked as Copy if newer</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/27_06 58 31.png" alt=""><figcaption><p>button_square_gradient.png in Visual Studio marked as Copy if newer</p></figcaption></figure>
 
 Now we can create a new Button which inherits from InteractiveGue rather than DefaultButtonRuntime to fully customize the appearance of our button. Note that the only requirement that Buttons have is that they contain a Text object named TextIntance, so we should copy this instance from the DefaultButtonRutime code into our own. Our new Button also has a NineSlice which references the button\_square\_gradient.png from above, and states for Enabled and Pressed.
 
@@ -362,7 +362,7 @@ FrameworkElement.DefaultFormsComponents[typeof(Button)] =
 
 Now we can run our game and see the button in action:
 
-<figure><img src="../../../.gitbook/assets/27_07 13 21.gif" alt=""><figcaption><p>Button using a NineSlice</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/27_07 13 21.gif" alt=""><figcaption><p>Button using a NineSlice</p></figcaption></figure>
 
 As mentioned above, you are free to add any controls to your custom button including icons, additional Text instances, and additional Sprites for other effects. You can customize your Forms objects to look however you want.
 
@@ -409,15 +409,15 @@ Components defined in Gum can contain almost anything you want; however, Buttons
 
 The following image shows the a component named StandardButton which contains a ColoredRectangle, a Rectangle, and a Text instance. For other controls, see the DefaultVisuals page linked above.
 
-<figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Example Button in Gum</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Example Button in Gum</p></figcaption></figure>
 
 #### Adding Button States to the Component
 
 All Gum Forms components react to various properties by assigning states. For a full list of states needed, see the DefaultVisuals page linked above.
 
-For Buttons, we can add a ButtonCategory state. You are free to implement as many or as few states as you want. For the full list of states see above in the [Available States](control-customization.md#available-states) section.
+For Buttons, we can add a ButtonCategory state. You are free to implement as many or as few states as you want. For the full list of states see above in the [Available States](./#available-states) section.
 
-<figure><img src="../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Example of a ButtonStateCategory implementing only Normal, Highlighted, and Pushed</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Example of a ButtonStateCategory implementing only Normal, Highlighted, and Pushed</p></figcaption></figure>
 
 #### Defining a Custom Runtime for the Forms Control
 
@@ -468,7 +468,7 @@ ElementSaveExtensions.RegisterGueInstantiationType(
     typeof(StandardButtonRuntime));
 ```
 
-For more information on using a custom runtime defined in your Gum project, see the [Custom Runtimes](../custom-runtimes.md) tutorial.
+For more information on using a custom runtime defined in your Gum project, see the [Custom Runtimes](../../custom-runtimes.md) tutorial.
 
 #### Associate the Custom Runtime to the Forms Type
 
@@ -486,9 +486,9 @@ Of course, you are not required to create buttons this way - you can also create
 
 ListBoxItems are typically created automatically when items are added to a ListBox instance. We can modify ListBoxItems by creating a runtime object for our ListBoxItem then assigning the ListBox's VisualTemplate.
 
-The easiest way to create a runtime object for ListBoxItem is to copy the existing DefaultListBoxItemRuntime class which can be found here: [https://github.com/vchelaru/Gum/blob/master/MonoGameGum/Forms/DefaultVisuals/DefaultListBoxItemRuntime.cs](../../../../MonoGameGum/Forms/DefaultVisuals/DefaultListBoxItemRuntime.cs)
+The easiest way to create a runtime object for ListBoxItem is to copy the existing DefaultListBoxItemRuntime class which can be found here: [https://github.com/vchelaru/Gum/blob/master/MonoGameGum/Forms/DefaultVisuals/DefaultListBoxItemRuntime.cs](../../../../../MonoGameGum/Forms/DefaultVisuals/DefaultListBoxItemRuntime.cs)
 
-For an example of a fully customized ListBoxItem, see this example: [https://github.com/vchelaru/Gum/blob/master/Samples/GumFormsSample/GumFormsSampleCommon/CustomRuntimes/CustomListBoxItemRuntime.cs](../../../../Samples/GumFormsSample/GumFormsSampleCommon/CustomRuntimes/CustomListBoxItemRuntime.cs)
+For an example of a fully customized ListBoxItem, see this example: [https://github.com/vchelaru/Gum/blob/master/Samples/GumFormsSample/GumFormsSampleCommon/CustomRuntimes/CustomListBoxItemRuntime.cs](../../../../../Samples/GumFormsSample/GumFormsSampleCommon/CustomRuntimes/CustomListBoxItemRuntime.cs)
 
 You may want to rename the class when creating your own version. For example, you may want to name yours `CustomListBoxItemRuntime`.
 
@@ -522,4 +522,4 @@ for (int i = 0; i < 20; i++)
 Notice that the code above passes a false value to the `tryCreateFormsObject` parameter. This prevents the CustomListBoxItemRuntime from creating its own Forms object that would override the default styling.
 {% endhint %}
 
-<figure><img src="../../../.gitbook/assets/27_06 00 06.gif" alt="" width="164"><figcaption><p>Custom ListBoxItem in a ListBox</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/27_06 00 06.gif" alt="" width="164"><figcaption><p>Custom ListBoxItem in a ListBox</p></figcaption></figure>
