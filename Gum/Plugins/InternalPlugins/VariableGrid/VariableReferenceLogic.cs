@@ -74,9 +74,13 @@ public class VariableReferenceLogic
                 elementsToSave.Add(reference.OwnerOfReferencingObject);
             }
         }
-        foreach (var elementToSave in elementsToSave)
+
+        if(trySave)
         {
-            GumCommands.Self.FileCommands.TryAutoSaveElement(elementToSave);
+            foreach (var elementToSave in elementsToSave)
+            {
+                GumCommands.Self.FileCommands.TryAutoSaveElement(elementToSave);
+            }
         }
 
         var newValue = stateSave.GetValueRecursive(qualifiedName);
