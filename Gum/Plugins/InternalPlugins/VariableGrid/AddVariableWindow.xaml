@@ -6,30 +6,33 @@
              xmlns:local="clr-namespace:Gum.Plugins.VariableGrid"
              mc:Ignorable="d"
              Title="Add Variable"
-             Width="300" Height="260">
+             SizeToContent="Height"
+             Width="450" Height="Auto">
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition></RowDefinition>
             <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition Height="Auto"></RowDefinition>
         </Grid.RowDefinitions>
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"></RowDefinition>
-                <RowDefinition></RowDefinition>
-            </Grid.RowDefinitions>
+        <StackPanel>
             <Label>Type:</Label>
-            <ListBox Grid.Row="1"
+            <ListBox 
+                     MinHeight="150"
                      ItemsSource="{Binding AvailableTypes}"
-                     SelectedItem="{Binding SelectedItem}">
+                     SelectedItem="{Binding SelectedItem}"
+                     IsEnabled="{Binding IsTypeChangeUiEnabled}"
+                >
             </ListBox>
-        </Grid>
+            <TextBlock TextWrapping="Wrap" Text="{Binding TypeChangeMessage}"/>
+        </StackPanel>
         <StackPanel Grid.Row="1" Orientation="Vertical" Margin="0,5,0,0">
             <Label Margin="0,0,0, -3">Name:</Label>
             <TextBox x:Name="TextBox"  
                      Text="{Binding EnteredName, UpdateSourceTrigger=PropertyChanged}" 
                      KeyDown="TextBox_KeyDown" 
                      HorizontalAlignment="Stretch"/>
+            <TextBlock TextWrapping="Wrap" x:Name="DetailLabel" Text="{Binding DetailText}"/>
+
         </StackPanel>
         <Grid HorizontalAlignment="Right" Grid.Row="2" Margin="0,5,0,0">
             <Grid.ColumnDefinitions>

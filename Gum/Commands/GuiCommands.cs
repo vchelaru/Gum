@@ -335,6 +335,7 @@ namespace Gum.Commands
             var services = host.Services;
 
             var vm = services.GetRequiredService<AddVariableViewModel>();
+            vm.RenameType = RenameType.NormalName;
             vm.Element = SelectedState.Self.SelectedElement;
             vm.Variable = null;
 

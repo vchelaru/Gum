@@ -26,6 +26,8 @@ public enum NameChangeAction
 
 #endregion
 
+#region VariableChange Class
+
 public class VariableChange
 {
     public IStateCategoryListContainer Container;
@@ -33,7 +35,30 @@ public class VariableChange
     public StateSave State;
     public VariableSave Variable;
     public object NewValue;
+
 }
+
+public enum SideOfEquals
+{
+    Left,
+    Right,
+    Both
+}
+public class VariableReferenceChange
+{
+    public ElementSave Container;
+    public VariableListSave VariableReferenceList;
+    public int LineIndex;
+    public SideOfEquals ChangedSide;
+}
+
+public class VariableChangeResponse
+{
+    public List<VariableChange> VariableChanges = new List<VariableChange>();
+    public List<VariableReferenceChange> VariableReferenceChanges = new List<VariableReferenceChange>();
+}
+
+#endregion
 
 public class RenameLogic
 {
@@ -600,9 +625,10 @@ public class RenameLogic
 
     #region Variable
 
-    public static List<VariableChange> GetVariableChangesForRenamedVariable(IStateCategoryListContainer owner, VariableSave variableSave, string oldName)
+    public static VariableChangeResponse GetVariableChangesForRenamedVariable(IStateCategoryListContainer owner, VariableSave variableSave, string oldName)
     {
-        List<VariableChange> toReturn = new List<VariableChange>();
+        List<VariableChange> variableChanges = new List<VariableChange>();
+        List<VariableReferenceChange> variableReferenceChanges = new List<VariableReferenceChange>();
 
         var project = GumState.Self.ProjectState.GumProjectSave;
 
@@ -626,7 +652,7 @@ public class RenameLogic
                 {
                     if (variable.ExposedAsName == oldName)
                     {
-                        toReturn.Add(new VariableChange
+                        variableChanges.Add(new VariableChange
                         {
                             Container = item,
                             Category = item.Categories.FirstOrDefault(item => item.States.Contains(state)),
@@ -653,7 +679,7 @@ public class RenameLogic
                             var instanceElement = ObjectFinder.Self.GetElementSave(instance);
                             if (inheritingElements.Contains(instanceElement) || instanceElement == ownerAsElement)
                             {
-                                toReturn.Add(new VariableChange
+                                variableChanges.Add(new VariableChange
                                 {
                                     Container = element,
                                     Category = element.Categories.FirstOrDefault(item => item.States.Contains(state)),
@@ -664,10 +690,78 @@ public class RenameLogic
                         }
                     }
                 }
+                foreach(var variableList in state.VariableLists)
+                {
+                    if(variableList.GetRootName() == "VariableReferences")
+                    {
+                        // loop through the items and see if any are using this:
+                        for(int i = 0; i < variableList.ValueAsIList.Count; i++)
+                        {
+                            var line = variableList.ValueAsIList[i];
+
+                            if(line is not string asString || asString.StartsWith("//") || asString.Contains("=") == false || asString.Contains(oldName) == false)
+                            {
+                                continue;
+                            }
+
+                            var right = asString.Substring(asString.IndexOf("=") + 1).Trim();
+                            var leftSide = asString.Substring(asString.IndexOf("=")).Trim();
+
+                            ElementSave leftSideElement = null;
+                            if (string.IsNullOrEmpty(variableList.SourceObject))
+                            {
+                                leftSideElement = element;
+                            }
+                            else
+                            {
+                                var instance = element.GetInstance(variableList.SourceObject);
+                                if (instance != null)
+                                {
+                                    leftSideElement = ObjectFinder.Self.GetElementSave(instance);
+                                }
+                            }
+
+                            var matchesLeft = leftSide == oldName && (ownerAsElement == leftSideElement || inheritingElements.Contains(leftSideElement));
+
+
+
+                            InstanceSave instanceLeft = element.GetInstance(variableList.SourceObject);
+                            var stateContainingRightSideVariable = state;
+                            GumRuntime.ElementSaveExtensions.GetRightSideAndState(ref right, ref stateContainingRightSideVariable);
+                            var matchesRight = false;
+                            if(right == oldName || right.EndsWith("." + oldName))
+                            {
+                                // see if the owner of the right side is this element or an inheriting element:
+                                // finish here....
+                                var rightSideOwner = stateContainingRightSideVariable.ParentContainer;
+
+                                matchesRight = ownerAsElement == rightSideOwner || inheritingElements.Contains(rightSideOwner);
+                            }
+
+
+                            if((matchesLeft || matchesRight) && ownerAsElement.AllStates.Contains(stateContainingRightSideVariable))
+                            {
+                                // we have a match!!
+                                var referenceChange = new VariableReferenceChange();
+                                referenceChange.Container = element;
+                                referenceChange.VariableReferenceList = variableList;
+                                referenceChange.LineIndex = i;
+                                referenceChange.ChangedSide = (matchesLeft && matchesRight) ? SideOfEquals.Both
+                                    : matchesLeft ? SideOfEquals.Left
+                                    : SideOfEquals.Right;
+                                variableReferenceChanges.Add(referenceChange);
+                            }
+                        }
+                    }
+                }
             }
         }
 
-        return toReturn;
+        return new VariableChangeResponse
+        {
+            VariableChanges = variableChanges,
+            VariableReferenceChanges = variableReferenceChanges
+        };
     }
 
 

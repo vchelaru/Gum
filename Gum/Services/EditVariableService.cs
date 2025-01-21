@@ -118,21 +118,16 @@ internal class EditVariableService : IEditVariableService
         tiw.Width = 600;
         tiw.Title = "New exposed variable";
 
-        var changes = RenameLogic.GetVariableChangesForRenamedVariable(container, variable, variable.ExposedAsName);
-        if (changes.Count > 0)
-        {
-            tiw.Message += "\n\nThis will also rename the following variables:";
-            foreach (var change in changes)
-            {
-                var containerName = change.Container.ToString();
-                if (change.Container is ElementSave elementSave)
-                {
-                    containerName = elementSave.Name;
-                }
-                tiw.Message += $"\n{change.Variable.Name} in {containerName}";
-            }
 
+
+        var changes = RenameLogic.GetVariableChangesForRenamedVariable(container, variable, variable.ExposedAsName);
+        string changesDetails = GetChangesDetails(changes);
+
+        if(!string.IsNullOrEmpty(changesDetails))
+        {
+            tiw.Message += "\n\n" + changesDetails;
         }
+
         tiw.Result = variable.ExposedAsName;
 
         if (tiw.ShowDialog() == true)
@@ -141,8 +136,57 @@ internal class EditVariableService : IEditVariableService
         }
     }
 
-    private void RenameExposedVariable(VariableSave variable, string newName, IStateCategoryListContainer container, List<VariableChange> changes)
+    private static string GetChangesDetails(VariableChangeResponse changes)
     {
+        var variableChanges = changes.VariableChanges;
+
+        var changesDetails = string.Empty;
+
+        if (variableChanges.Count > 0)
+        {
+            if (!string.IsNullOrEmpty(changesDetails))
+            {
+                changesDetails += "\n\n";
+            }
+            changesDetails += "This will also rename the following variables:";
+            foreach (var change in variableChanges)
+            {
+                var containerName = change.Container.ToString();
+                if (change.Container is ElementSave elementSave)
+                {
+                    containerName = elementSave.Name;
+                }
+                changesDetails += $"\n{change.Variable.Name} in {containerName}";
+            }
+        }
+        var variableReferenceChanges = changes.VariableReferenceChanges;
+        if (variableReferenceChanges.Count > 0)
+        {
+            if(!string.IsNullOrEmpty(changesDetails))
+            {
+                changesDetails += "\n\n";
+            }
+            changesDetails += "This will also modify the following variable references:";
+            foreach (var change in variableReferenceChanges)
+            {
+                // just in case something changes this on a separate thread, let's be safe:
+                try
+                {
+                    var line = change.VariableReferenceList.ValueAsIList[change.LineIndex];
+                    changesDetails += $"\n{line} in {change.Container.Name}";
+
+                }
+                catch { }
+            }
+        }
+
+        return changesDetails;
+    }
+
+    private void RenameExposedVariable(VariableSave variable, string newName, IStateCategoryListContainer container, VariableChangeResponse changeResponse)
+    {
+        var variableChanges = changeResponse.VariableChanges;
+
         var oldName = variable.ExposedAsName;
 
         variable.ExposedAsName = newName;
@@ -154,7 +198,7 @@ internal class EditVariableService : IEditVariableService
             changedElements.Add(containerElement);
         }
 
-        foreach (var change in changes)
+        foreach (var change in variableChanges)
         {
             var element = change.Container as ElementSave;
             if (element != null)
@@ -178,6 +222,11 @@ internal class EditVariableService : IEditVariableService
             }
         }
 
+        // We can re-use the logic in the AddVariableViewModel:
+        var vm = Builder.Get<AddVariableViewModel>();
+        vm.RenameType = RenameType.ExposedName;
+        vm.ApplyVariableReferenceChanges(changeResponse, newName, oldName, changedElements);
+
         GumCommands.Self.GuiCommands.RefreshVariables(force:true);
         foreach(var element in changedElements)
         {
@@ -188,10 +237,9 @@ internal class EditVariableService : IEditVariableService
 
     private void ShowFullEditUi(VariableSave variable, IStateCategoryListContainer container)
     {
-        var host = Builder.App;
-        var services = host.Services;
+        var vm = Builder.Get<AddVariableViewModel>();
+        vm.RenameType = RenameType.NormalName;
 
-        var vm = services.GetRequiredService<AddVariableViewModel>();
         vm.Variable = variable;
         vm.Element = container as ElementSave;
 
@@ -200,11 +248,28 @@ internal class EditVariableService : IEditVariableService
 
         var window = new AddVariableWindow(vm);
         window.Title = "Edit Variable";
+
+        var changes = RenameLogic.GetVariableChangesForRenamedVariable(container, variable, variable.Name);
+
+        var isReferencedInVariableReference = changes.VariableReferenceChanges.Count > 0;
+        vm.VariableChangeResponse = changes;
+
+        string changesDetails = GetChangesDetails(changes);
+        vm.DetailText = changesDetails;
+
         var result = window.ShowDialog();
 
         if (result == true)
         {
-            vm.DoEdit(variable);
+            var validityResponse = vm.Validate();
+            if(validityResponse.Succeeded == false)
+            {
+                GumCommands.Self.GuiCommands.ShowMessage(validityResponse.Message);
+            }
+            else
+            {
+                vm.DoEdit(variable, changes);
+            }
         }
     }
 }

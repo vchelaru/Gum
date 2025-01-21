@@ -26,7 +26,7 @@ public class VariableReferenceLogic
         _guiCommands = guiCommands;
     }
 
-    public void DoVariableReferenceReaction(ElementSave parentElement, InstanceSave instance, string unqualifiedMember,
+    public void DoVariableReferenceReaction(ElementSave parentElement, InstanceSave leftSideInstance, string unqualifiedMember,
         StateSave stateSave, string qualifiedName, bool trySave)
     {
         if(unqualifiedMember == "VariableReferences")
@@ -35,7 +35,7 @@ public class VariableReferenceLogic
 
             if(newDirectValue != null)
             {
-                var failures = GetIndividualFailures(parentElement, instance, newDirectValue);
+                var failures = GetIndividualFailures(parentElement, leftSideInstance, newDirectValue);
 
                 if(failures.Count > 0)
                 {
@@ -82,7 +82,7 @@ public class VariableReferenceLogic
         var newValue = stateSave.GetValueRecursive(qualifiedName);
 
         // this could be a tunneled variable. If so, we may need to propagate the value to other instances one level deeper
-        var didSetDeepReference = DoVariableReferenceReactionOnInstanceVariableSet(parentElement, instance, stateSave, unqualifiedMember, newValue);
+        var didSetDeepReference = DoVariableReferenceReactionOnInstanceVariableSet(parentElement, leftSideInstance, stateSave, unqualifiedMember, newValue);
 
         // now force save it if it's a variable reference:
         if (unqualifiedMember == "VariableReferences" && trySave)
@@ -141,7 +141,7 @@ public class VariableReferenceLogic
         }
     }
 
-    private List<(string, GeneralResponse)> GetIndividualFailures(ElementSave parentElement, InstanceSave instance, VariableListSave newDirectValue)
+    private List<(string, GeneralResponse)> GetIndividualFailures(ElementSave parentElement, InstanceSave leftSideInstance, VariableListSave newDirectValue)
     {
         var values = newDirectValue.ValueAsIList;
 
@@ -154,14 +154,14 @@ public class VariableReferenceLogic
                 continue;
             }
 
-            var response = CheckSyntaxOfLine(parentElement, instance, line);
+            var response = CheckSyntaxOfLine(parentElement, leftSideInstance, line);
 
             VariableSave leftSideVariable = null;
 
             if (response.Succeeded)
             {
                 var leftSideResponse =
-                    CheckLeftSideVariableExistence(parentElement, instance, line);
+                    CheckLeftSideVariableExistence(parentElement, leftSideInstance, line);
 
                 if (leftSideResponse.Succeeded == false)
                 {
@@ -175,7 +175,7 @@ public class VariableReferenceLogic
 
             if(response.Succeeded)
             {
-                var typeMatchResponse = CheckIfVariableTypesMatch(leftSideVariable, parentElement, instance, line);
+                var typeMatchResponse = CheckIfVariableTypesMatch(leftSideVariable, parentElement, leftSideInstance, line);
 
                 if (typeMatchResponse.Succeeded == false)
                 {
@@ -192,7 +192,7 @@ public class VariableReferenceLogic
         return failures;
     }
 
-    private GeneralResponse CheckIfVariableTypesMatch(VariableSave leftSideVariable, ElementSave parentElement, InstanceSave instance, string line)
+    private GeneralResponse CheckIfVariableTypesMatch(VariableSave leftSideVariable, ElementSave parentElement, InstanceSave leftSideInstance, string line)
     {
         var leftSideType = leftSideVariable.Type;
         string rightSideType = null;
@@ -203,7 +203,7 @@ public class VariableReferenceLogic
         var right = split[1].Trim();
 
         // ...but call this to change that in case the right-side is a variable belonging to some other component
-        GumRuntime.ElementSaveExtensions.GetRightSideAndState(instance, ref right, ref ownerOfRightSideVariable);
+        GumRuntime.ElementSaveExtensions.GetRightSideAndState(ref right, ref ownerOfRightSideVariable);
 
         if(ownerOfRightSideVariable  == null)
         {

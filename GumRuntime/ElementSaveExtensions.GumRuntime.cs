@@ -347,12 +347,10 @@ namespace GumRuntime
             // assume the owner of the right-side is the StateSave that was passed in...
             var ownerOfRightSideVariable = stateSave;
             // ...but call this to change that in case the right-side is a variable belonging to some other component
-            GetRightSideAndState(instanceLeft, ref right, ref ownerOfRightSideVariable);
+            GetRightSideAndState(ref right, ref ownerOfRightSideVariable);
 
             var recursiveVariableFinder = new RecursiveVariableFinder(ownerOfRightSideVariable);
             var value = recursiveVariableFinder.GetValue(right);
-
-            //value = ApplyVariablesUsingInterpreter(split, left, instanceLeft, value);
 
             if (value != null)
             {
@@ -471,7 +469,7 @@ namespace GumRuntime
             // assume the owner of the right-side is the StateSave that was passed in...
             var ownerOfRightSideVariable = stateSave;
             // ...but call this to change that in case the right-side is a variable belonging to some other component
-            GetRightSideAndState(instanceLeft, ref right, ref ownerOfRightSideVariable);
+            GetRightSideAndState(ref right, ref ownerOfRightSideVariable);
 
             var recursiveVariableFinder = new RecursiveVariableFinder(ownerOfRightSideVariable);
 
@@ -501,7 +499,7 @@ namespace GumRuntime
             };
         }
 
-        public static void GetRightSideAndState(InstanceSave instanceSave, ref string right, ref StateSave stateSave)
+        public static void GetRightSideAndState(ref string right, ref StateSave stateSave)
         {
             var isExternalElement = right.Contains("/");
 
@@ -537,11 +535,7 @@ namespace GumRuntime
             }
             else
             {
-                var isQualified = right.Contains('.');
-                if (!isQualified && instanceSave != null)
-                {
-                    right = instanceSave.Name + "." + right;
-                }
+                
             }
 
         }
@@ -556,7 +550,16 @@ namespace GumRuntime
                 var dotAfterInstance = right.IndexOf(".");
                 var instanceName = right.Substring(0, dotAfterInstance);
                 var instance = element.GetInstance(instanceName);
-                GetRightSideAndState(instance, ref right, ref stateSave);
+
+                if(instance != null)
+                {
+                    // we found the variable on the instance
+                    // do nothing to right, it's got what we need there already
+                }
+                else
+                {
+                    GetRightSideAndState(ref right, ref stateSave);
+                }
             }
 
             return stateSave;
