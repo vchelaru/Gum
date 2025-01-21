@@ -36,6 +36,16 @@ public class MainVariableGridPlugin : InternalPlugin
         this.VariableSelected += HandleVariableSelected;
         this.RefreshVariableView += HandleRefreshVariableView;
         this.AfterUndo += HandleAfterUndo;
+        this.VariableSet += HandleVariableSet;
+    }
+
+    private void HandleVariableSet(ElementSave element, InstanceSave instance, string strippedName, object oldValue)
+    {
+        if(strippedName == "VariableReferences")
+        {
+            // force refresh:
+            PropertyGridManager.Self.RefreshUI(force: true);
+        }
     }
 
     private void HandleElementDeleted(ElementSave save)
