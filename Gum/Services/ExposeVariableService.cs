@@ -172,7 +172,7 @@ internal class ExposeVariableService : IExposeVariableService
 
     private GeneralResponse GetIfCanUnexposeVariable(VariableSave variableSave, ElementSave elementSave)
     {
-        var renames = _renameLogic.GetVariableChangesForRenamedVariable(elementSave, variableSave, variableSave.GetRootName());
+        var renames = _renameLogic.GetVariableChangesForRenamedVariable(elementSave, variableSave, variableSave.ExposedAsName);
 
         if (renames.VariableReferenceChanges.Count > 0)
         {
