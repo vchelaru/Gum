@@ -27,6 +27,12 @@ namespace Gum.Wireframe
 
         protected float aspectRatioOnGrab;
 
+        public bool IsXMovementEnabled { get; set; } = true;
+        public bool IsYMovementEnabled { get; set; } = true;
+        public bool IsWidthChangeEnabled { get; set; } = true;
+        public bool IsHeightChangeEnabled { get; set; } = true;
+
+
         public bool RestrictToUnitValues { get; set; }
 
         public WireframeEditor(global::Gum.Managers.HotkeyManager hotkeyManager)
@@ -70,8 +76,12 @@ namespace Gum.Wireframe
 
         protected void ApplyCursorMovement(InputLibrary.Cursor cursor)
         {
-            float xToMoveBy = cursor.XChange / Renderer.Self.Camera.Zoom;
-            float yToMoveBy = cursor.YChange / Renderer.Self.Camera.Zoom;
+            float xToMoveBy = IsXMovementEnabled 
+                ? cursor.XChange / Renderer.Self.Camera.Zoom
+                : 0;
+            float yToMoveBy = IsYMovementEnabled
+                ? cursor.YChange / Renderer.Self.Camera.Zoom
+                : 0;
 
             var vector2 = new Vector2(xToMoveBy, yToMoveBy);
             var selectedObject = WireframeObjectManager.Self.GetSelectedRepresentation();

@@ -16,9 +16,13 @@ using Vector2 = System.Numerics.Vector2;
 using Color = System.Drawing.Color;
 using Matrix = System.Numerics.Matrix4x4;
 using System.Windows.Input;
+using System;
 
 namespace Gum.Wireframe.Editors
 {
+    /// <summary>
+    /// Editor which includes ability to move, resize, and rotate an object.
+    /// </summary>
     public class StandardWireframeEditor : WireframeEditor
     {
         #region Fields/Properties
@@ -122,11 +126,74 @@ namespace Gum.Wireframe.Editors
 
                 if (!shouldSkip)
                 {
+                    UpdateLockedVariables(selectedObjects);
+
                     mResizeHandles.SetValuesFrom(selectedObjects);
 
                     mResizeHandles.UpdateHandleSizes();
 
                     UpdateRotationHandlePosition();
+                }
+            }
+        }
+
+        private void UpdateLockedVariables(ICollection<GraphicalUiElement> selectedObjects)
+        {
+            var item = selectedObjects.FirstOrDefault();
+
+            IsXMovementEnabled = true;
+            IsYMovementEnabled = true;
+            IsWidthChangeEnabled = true;
+            IsHeightChangeEnabled = true;
+
+
+            if (item == null) return;
+
+            var tag = item.Tag;
+
+            RecursiveVariableFinder? rfv = null;
+
+            if (tag is InstanceSave instance)
+            {
+                rfv = new RecursiveVariableFinder(instance, instance.ParentContainer);
+            }
+            if(tag is ElementSave element)
+            {
+                rfv = new RecursiveVariableFinder(SelectedState.Self.SelectedStateSave);
+            }
+                
+            var variableReferences = rfv?.GetVariableList("VariableReferences");
+
+            if(variableReferences != null)
+            {
+                var list = variableReferences.ValueAsIList;
+
+                foreach (string variableReference in list)
+                {
+                    var split = variableReference.Split('=');
+
+                    if(split.Length == 2)
+                    {
+                        var variable = split[0].Trim();
+
+                        if(variable == "X")
+                        {
+                            IsXMovementEnabled = false;
+                        }
+                        if(variable == "Y")
+                        {
+                            IsYMovementEnabled = false;
+
+                        }
+                        if (variable == "Width")
+                        {
+
+                        }
+                        if (variable == "Height")
+                        {
+
+                        }
+                    }
                 }
             }
         }
@@ -424,17 +491,6 @@ namespace Gum.Wireframe.Editors
             }
         }
 
-        private void BodyGrabbingActivity()
-        {
-            var cursor = InputLibrary.Cursor.Self;
-            if (SelectionManager.Self.IsOverBody && cursor.PrimaryDown && mHasGrabbed &&
-                grabbedState.HasMovedEnough)
-            {
-                ApplyCursorMovement(cursor);
-            }
-
-        }
-
         private bool SideGrabbingActivityForInstanceSave(float cursorXChange, float cursorYChange, InstanceSave instanceSave, List<ElementWithState> elementStack)
         {
             float changeXMultiplier;
@@ -442,6 +498,22 @@ namespace Gum.Wireframe.Editors
             float widthMultiplier;
             float heightMultiplier;
             CalculateMultipliers(instanceSave, elementStack, out changeXMultiplier, out changeYMultiplier, out widthMultiplier, out heightMultiplier);
+
+            var shouldDisableX = (IsXMovementEnabled == false && changeXMultiplier != 0) ||
+                (IsWidthChangeEnabled == false && widthMultiplier != 0);
+            var shouldDisableY = (IsYMovementEnabled == false && changeYMultiplier != 0) ||
+                (IsHeightChangeEnabled == false && heightMultiplier != 0);
+
+            if(shouldDisableX)
+            {
+                changeXMultiplier = 0;
+                widthMultiplier = 0;
+            }
+            if(shouldDisableY)
+            {
+                changeYMultiplier = 0;
+                heightMultiplier = 0;
+            }
 
             AdjustCursorChangeValuesForAxisLockedDrag(ref cursorXChange, ref cursorYChange, instanceSave, elementStack);
 
@@ -522,6 +594,22 @@ namespace Gum.Wireframe.Editors
             }
             return hasChangeOccurred;
         }
+
+        #endregion
+
+        #region Moving (Changing X and Y)
+
+        private void BodyGrabbingActivity()
+        {
+            var cursor = InputLibrary.Cursor.Self;
+            if (SelectionManager.Self.IsOverBody && cursor.PrimaryDown && mHasGrabbed &&
+                grabbedState.HasMovedEnough)
+            {
+                ApplyCursorMovement(cursor);
+            }
+
+        }
+
 
         #endregion
 
