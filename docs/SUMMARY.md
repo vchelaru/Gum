@@ -190,6 +190,7 @@
         * [TextBox](gum-code/monogame/gum-forms/controls/textbox.md)
       * [Control Customization](gum-code/monogame/gum-forms/control-customization/README.md)
         * [MenuItem](gum-code/monogame/gum-forms/control-customization/menuitem.md)
+      * [Gamepad Support](gum-code/monogame/gum-forms/gamepad-support.md)
       * [Troubleshooting](gum-code/monogame/gum-forms/troubleshooting.md)
     * [File Loading](gum-code/monogame/file-loading.md)
     * [Resizing the Game Window](gum-code/monogame/resizing-the-game-window.md)
