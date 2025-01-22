@@ -545,7 +545,7 @@ namespace StateAnimationPlugin
             return response;
         }
 
-        private DeleteResponse HandleGetDeleteStateCategoryResponse(StateSaveCategory category, IStateCategoryListContainer container)
+        private DeleteResponse HandleGetDeleteStateCategoryResponse(StateSaveCategory category, IStateContainer container)
         {
             var response = new DeleteResponse();
             response.ShouldDelete = true;

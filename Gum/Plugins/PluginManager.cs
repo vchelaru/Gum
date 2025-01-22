@@ -845,7 +845,7 @@ namespace Gum.Plugins
             return response;
         }
 
-        internal DeleteResponse GetDeleteStateCategoryResponse(StateSaveCategory stateSaveCategory, IStateCategoryListContainer element)
+        internal DeleteResponse GetDeleteStateCategoryResponse(StateSaveCategory stateSaveCategory, IStateContainer element)
         {
             DeleteResponse response = new DeleteResponse();
             response.ShouldDelete = true;

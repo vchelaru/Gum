@@ -410,7 +410,7 @@ namespace Gum.Managers
             else if (SelectedState.Self.SelectedStateCategorySave != null)
             {
                 GumCommands.Self.Edit.RemoveStateCategory(
-                    SelectedState.Self.SelectedStateCategorySave, SelectedState.Self.SelectedStateContainer as IStateCategoryListContainer);
+                    SelectedState.Self.SelectedStateCategorySave, SelectedState.Self.SelectedStateContainer);
             }
         }
 

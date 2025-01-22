@@ -192,7 +192,7 @@ namespace Gum.Commands
 
         #region Category
 
-        public void RemoveStateCategory(StateSaveCategory category, IStateCategoryListContainer stateCategoryListContainer)
+        public void RemoveStateCategory(StateSaveCategory category, IStateContainer stateCategoryListContainer)
         {
             DeleteLogic.Self.RemoveStateCategory(category, stateCategoryListContainer);
         }

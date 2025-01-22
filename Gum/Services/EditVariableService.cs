@@ -24,7 +24,7 @@ namespace Gum.Services;
 
 internal interface IEditVariableService
 {
-    void TryAddEditVariableOptions(InstanceMember instanceMember, VariableSave variableSave, IStateCategoryListContainer stateListCategoryContainer);
+    void TryAddEditVariableOptions(InstanceMember instanceMember, VariableSave variableSave, IStateContainer stateListCategoryContainer);
 }
 #endregion
 
@@ -42,13 +42,15 @@ internal class EditVariableService : IEditVariableService
     #endregion
 
     private readonly ElementCommands _elementCommands;
+    private readonly RenameLogic _renameLogic;
 
-    public EditVariableService(ElementCommands elementCommands)
+    public EditVariableService(ElementCommands elementCommands, RenameLogic renameLogic)
     {
         _elementCommands = elementCommands;
+        _renameLogic = renameLogic;
     }
 
-    public void TryAddEditVariableOptions(InstanceMember instanceMember, VariableSave variableSave, IStateCategoryListContainer stateListCategoryContainer)
+    public void TryAddEditVariableOptions(InstanceMember instanceMember, VariableSave variableSave, IStateContainer stateListCategoryContainer)
     {
         if (ShouldAddEditVariableOptions(variableSave, stateListCategoryContainer))
         {
@@ -59,12 +61,12 @@ internal class EditVariableService : IEditVariableService
         }
     }
 
-    bool ShouldAddEditVariableOptions(VariableSave variableSave, IStateCategoryListContainer stateListCategoryContainer)
+    bool ShouldAddEditVariableOptions(VariableSave variableSave, IStateContainer stateListCategoryContainer)
     {
         return GetAvailableEditModeFor(variableSave, stateListCategoryContainer) != EditMode.None;
     }
 
-    EditMode GetAvailableEditModeFor(VariableSave variableSave, IStateCategoryListContainer stateCategoryListContainer)
+    EditMode GetAvailableEditModeFor(VariableSave variableSave, IStateContainer stateCategoryListContainer)
     {
         if (variableSave == null)
         {
@@ -96,7 +98,7 @@ internal class EditVariableService : IEditVariableService
     }
 
 
-    private void ShowEditVariableWindow(VariableSave variable, IStateCategoryListContainer container)
+    private void ShowEditVariableWindow(VariableSave variable, IStateContainer container)
     {
         var editmode = GetAvailableEditModeFor(variable, container);
 
@@ -111,7 +113,7 @@ internal class EditVariableService : IEditVariableService
 
     }
 
-    private void ShowEditExposedUi(VariableSave variable, IStateCategoryListContainer container)
+    private void ShowEditExposedUi(VariableSave variable, IStateContainer container)
     {
         var tiw = new CustomizableTextInputWindow();
         tiw.Message = "Enter new exposed variable name.";
@@ -120,7 +122,7 @@ internal class EditVariableService : IEditVariableService
 
 
 
-        var changes = RenameLogic.GetVariableChangesForRenamedVariable(container, variable, variable.ExposedAsName);
+        var changes = _renameLogic.GetVariableChangesForRenamedVariable(container, variable, variable.ExposedAsName);
         string changesDetails = GetChangesDetails(changes);
 
         if(!string.IsNullOrEmpty(changesDetails))
@@ -183,7 +185,7 @@ internal class EditVariableService : IEditVariableService
         return changesDetails;
     }
 
-    private void RenameExposedVariable(VariableSave variable, string newName, IStateCategoryListContainer container, VariableChangeResponse changeResponse)
+    private void RenameExposedVariable(VariableSave variable, string newName, IStateContainer container, VariableChangeResponse changeResponse)
     {
         var variableChanges = changeResponse.VariableChanges;
 
@@ -235,7 +237,7 @@ internal class EditVariableService : IEditVariableService
 
     }
 
-    private void ShowFullEditUi(VariableSave variable, IStateCategoryListContainer container)
+    private void ShowFullEditUi(VariableSave variable, IStateContainer container)
     {
         var vm = Builder.Get<AddVariableViewModel>();
         vm.RenameType = RenameType.NormalName;
@@ -249,7 +251,7 @@ internal class EditVariableService : IEditVariableService
         var window = new AddVariableWindow(vm);
         window.Title = "Edit Variable";
 
-        var changes = RenameLogic.GetVariableChangesForRenamedVariable(container, variable, variable.Name);
+        var changes = _renameLogic.GetVariableChangesForRenamedVariable(container, variable, variable.Name);
 
         var isReferencedInVariableReference = changes.VariableReferenceChanges.Count > 0;
         vm.VariableChangeResponse = changes;

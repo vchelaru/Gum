@@ -266,7 +266,7 @@ namespace Gum.ToolCommands
         #region Category
 
 
-        public StateSaveCategory AddCategory(IStateCategoryListContainer objectToAddTo, string name)
+        public StateSaveCategory AddCategory(IStateContainer objectToAddTo, string name)
         {
             if (objectToAddTo == null)
             {

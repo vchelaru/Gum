@@ -7,7 +7,7 @@ using Gum.DataTypes.Behaviors;
 namespace Gum.DataTypes
 {
 
-    public abstract class ElementSave : IStateContainer, IStateCategoryListContainer, IInstanceContainer
+    public abstract class ElementSave : IStateContainer, IInstanceContainer
     {
 
         #region Properties
@@ -50,7 +50,7 @@ namespace Gum.DataTypes
             set;
         }
 
-        IEnumerable<StateSaveCategory> IStateContainer.Categories => Categories;
+        IList<StateSaveCategory> IStateContainer.Categories => Categories;
         [XmlElement("Category")]
         public List<StateSaveCategory> Categories
         {

@@ -6,7 +6,7 @@ using ToolsUtilities;
 
 namespace Gum.DataTypes.Behaviors
 {
-    public class BehaviorSave : IStateContainer, IStateCategoryListContainer, IInstanceContainer
+    public class BehaviorSave : IStateContainer, IInstanceContainer
     {
         public string Name { get; set; }
 
@@ -22,7 +22,7 @@ namespace Gum.DataTypes.Behaviors
 
         public StateSave RequiredVariables { get; set; } = new StateSave();
 
-        IEnumerable<StateSaveCategory> IStateContainer.Categories => Categories;
+        IList<StateSaveCategory> IStateContainer.Categories => Categories;
         [XmlElement("Category")]
         public List<StateSaveCategory> Categories { get; set; } = new List<StateSaveCategory>();
 

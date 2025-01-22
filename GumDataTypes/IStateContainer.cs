@@ -15,15 +15,7 @@ namespace Gum.DataTypes
             get;
         }
 
-        IEnumerable<StateSaveCategory> Categories
-        {
-            get;
-        }
-    }
-
-    public interface IStateCategoryListContainer
-    {
-        List<StateSaveCategory> Categories
+        IList<StateSaveCategory> Categories
         {
             get;
         }

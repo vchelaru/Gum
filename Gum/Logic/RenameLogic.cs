@@ -30,7 +30,7 @@ public enum NameChangeAction
 
 public class VariableChange
 {
-    public IStateCategoryListContainer Container;
+    public IStateContainer Container;
     public StateSaveCategory Category;
     public StateSave State;
     public VariableSave Variable;
@@ -148,7 +148,7 @@ public class RenameLogic
         }
     }
 
-    public static void RenameCategory(IStateCategoryListContainer owner, StateSaveCategory category, string oldName, string newName, List<VariableChange> variableChanges)
+    public static void RenameCategory(IStateContainer owner, StateSaveCategory category, string oldName, string newName, List<VariableChange> variableChanges)
     {
         using (UndoManager.Self.RequestLock())
         {
@@ -200,7 +200,7 @@ public class RenameLogic
         }
     }
 
-    private static List<VariableChange> GetVariableChangesForCategoryRename(IStateCategoryListContainer owner, StateSaveCategory category, string oldName)
+    private static List<VariableChange> GetVariableChangesForCategoryRename(IStateContainer owner, StateSaveCategory category, string oldName)
     {
         List<VariableChange> toReturn = new List<VariableChange>();
 
@@ -625,7 +625,7 @@ public class RenameLogic
 
     #region Variable
 
-    public static VariableChangeResponse GetVariableChangesForRenamedVariable(IStateCategoryListContainer owner, VariableSave variableSave, string oldName)
+    public VariableChangeResponse GetVariableChangesForRenamedVariable(IStateContainer owner, VariableSave variableSave, string oldStrippedName)
     {
         List<VariableChange> variableChanges = new List<VariableChange>();
         List<VariableReferenceChange> variableReferenceChanges = new List<VariableReferenceChange>();
@@ -650,7 +650,7 @@ public class RenameLogic
             {
                 foreach (var variable in state.Variables)
                 {
-                    if (variable.ExposedAsName == oldName)
+                    if (variable.ExposedAsName == oldStrippedName)
                     {
                         variableChanges.Add(new VariableChange
                         {
@@ -671,7 +671,7 @@ public class RenameLogic
             {
                 foreach (var variable in state.Variables)
                 {
-                    if (variable.GetRootName() == oldName && !string.IsNullOrEmpty(variable.SourceObject))
+                    if (variable.GetRootName() == oldStrippedName && !string.IsNullOrEmpty(variable.SourceObject))
                     {
                         var instance = element.GetInstance(variable.SourceObject);
                         if (instance != null)
@@ -699,7 +699,7 @@ public class RenameLogic
                         {
                             var line = variableList.ValueAsIList[i];
 
-                            if(line is not string asString || asString.StartsWith("//") || asString.Contains("=") == false || asString.Contains(oldName) == false)
+                            if(line is not string asString || asString.StartsWith("//") || asString.Contains("=") == false || asString.Contains(oldStrippedName) == false)
                             {
                                 continue;
                             }
@@ -721,7 +721,7 @@ public class RenameLogic
                                 }
                             }
 
-                            var matchesLeft = leftSide == oldName && (ownerAsElement == leftSideElement || inheritingElements.Contains(leftSideElement));
+                            var matchesLeft = leftSide == oldStrippedName && (ownerAsElement == leftSideElement || inheritingElements.Contains(leftSideElement));
 
 
 
@@ -729,7 +729,7 @@ public class RenameLogic
                             var stateContainingRightSideVariable = state;
                             GumRuntime.ElementSaveExtensions.GetRightSideAndState(ref right, ref stateContainingRightSideVariable);
                             var matchesRight = false;
-                            if(right == oldName || right.EndsWith("." + oldName))
+                            if(right == oldStrippedName || right.EndsWith("." + oldStrippedName))
                             {
                                 // see if the owner of the right side is this element or an inheriting element:
                                 // finish here....

@@ -352,7 +352,7 @@ namespace Gum.Commands
         public void ShowAddCategoryWindow()
         {
 
-            var target = SelectedState.Self.SelectedStateContainer as IStateCategoryListContainer;
+            var target = SelectedState.Self.SelectedStateContainer;
             if (target == null)
             {
                 MessageBox.Show("You must first select an element or behavior to add a state category");

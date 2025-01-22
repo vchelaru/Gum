@@ -220,7 +220,7 @@ public class StateTreeViewRightClickService
     {
         _gumCommands.Edit.RemoveStateCategory(
             _selectedState.SelectedStateCategorySave,
-            _selectedState.SelectedStateContainer as IStateCategoryListContainer);
+            _selectedState.SelectedStateContainer);
     }
 
     public void DeleteStateClick()

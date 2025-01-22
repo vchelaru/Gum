@@ -6,6 +6,7 @@ using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Reflection;
 using Gum.Services;
 using Gum.ToolStates;
@@ -33,6 +34,7 @@ namespace Gum.PropertyGridHelpers
         ObjectFinder _objectFinder;
         private readonly HotkeyManager _hotkeyManager;
         private readonly UndoManager _undoManager;
+        private readonly IDeleteVariableLogic _deleteVariableLogic;
         StateSave mStateSave;
         string mVariableName;
         public InstanceSave InstanceSave { get; private set; }
@@ -237,14 +239,15 @@ namespace Gum.PropertyGridHelpers
             StateSave stateSave,
             StateSaveCategory stateSaveCategory,
             string variableName, InstanceSave instanceSave, 
-            IStateCategoryListContainer stateListCategoryContainer,
+            IStateContainer stateListCategoryContainer,
             UndoManager undoManager) :
             base(variableName, stateSave)
         {
-            _editVariablesService = Gum.Services.Builder.App.Services.GetRequiredService<IEditVariableService>();
-            _exposeVariableService = Gum.Services.Builder.App.Services.GetRequiredService<IExposeVariableService>();
+            _editVariablesService = Gum.Services.Builder.Get<IEditVariableService>();
+            _exposeVariableService = Gum.Services.Builder.Get<IExposeVariableService>();
             _objectFinder = ObjectFinder.Self;
             _hotkeyManager = HotkeyManager.Self;
+            _deleteVariableLogic = Gum.Services.Builder.App.Services.GetRequiredService<IDeleteVariableLogic>();
             _undoManager = undoManager;
 
             StateSaveCategory = stateSaveCategory;
@@ -458,18 +461,12 @@ namespace Gum.PropertyGridHelpers
                 });
             }
 
-            if (this.VariableSave?.IsCustomVariable == true)
+            
+            if (VariableSave != null && _deleteVariableLogic.CanDeleteVariable(this.VariableSave))
             {
                 ContextMenuEvents.Add("Delete Variable", (sender, e) =>
                 {
-                    if (ElementSave?.DefaultState.Variables.Contains(this.VariableSave) == true)
-                    {
-                        using var undoLock = _undoManager.RequestLock();
-                        ElementSave.DefaultState.Variables.Remove(this.VariableSave);
-
-                        GumCommands.Self.FileCommands.TryAutoSaveElement(ElementSave);
-                        GumCommands.Self.GuiCommands.RefreshVariables(force: true);
-                    }
+                    _deleteVariableLogic.DeleteVariable(this.VariableSave, this.ElementSave);
                 });
             }
         }

@@ -160,7 +160,7 @@ namespace Gum.Plugins.BaseClasses
         // Which is better? I don't know yet, so I'm going to keep Gum using the event approach and Glue using the non-event
         // approach to see if a preference emerges.
         public Func<StateSave, IStateContainer, DeleteResponse> GetDeleteStateResponse;
-        public Func<StateSaveCategory, IStateCategoryListContainer, DeleteResponse> GetDeleteStateCategoryResponse;
+        public Func<StateSaveCategory, IStateContainer, DeleteResponse> GetDeleteStateCategoryResponse;
 
         public event Action CameraChanged;
         public event Action XnaInitialized;

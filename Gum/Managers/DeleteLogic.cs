@@ -322,7 +322,7 @@ namespace Gum.Managers
             SelectionManager.Self.Refresh();
         }
 
-        public void RemoveStateCategory(StateSaveCategory category, IStateCategoryListContainer stateCategoryListContainer)
+        public void RemoveStateCategory(StateSaveCategory category, IStateContainer stateCategoryListContainer)
         {
             var deleteResponse = new DeleteResponse();
             deleteResponse.ShouldDelete = true;
@@ -378,7 +378,7 @@ namespace Gum.Managers
             {
 
                 var stateCategoryListContainer =
-                    SelectedState.Self.SelectedStateContainer as IStateCategoryListContainer;
+                    SelectedState.Self.SelectedStateContainer;
 
                 var isRemovingSelectedCategory = SelectedState.Self.SelectedStateCategorySave == category;
 
