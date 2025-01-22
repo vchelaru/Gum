@@ -524,12 +524,7 @@ namespace Gum.PropertyGridHelpers
 
             if (variableSave != null)
             {
-                var oldExposedName = variableSave.ExposedAsName;
-                variableSave.ExposedAsName = null;
-
-                PluginManager.Self.VariableDelete(ElementSave, oldExposedName);
-                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-                GumCommands.Self.GuiCommands.RefreshVariables(force: true);
+                _exposeVariableService.HandleUnexposeVariableClick(VariableSave, ElementSave);
             }
         }
 

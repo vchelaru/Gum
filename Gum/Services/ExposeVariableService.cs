@@ -11,17 +11,34 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Gum.Commands;
+using Gum.Undo;
+using ToolsUtilities;
 
 namespace Gum.Services;
 
 internal interface IExposeVariableService
 {
     void HandleExposeVariableClick(InstanceSave instanceSave, VariableSave variableSave, string rootVariableName);
-
+    void HandleUnexposeVariableClick(VariableSave variableSave, ElementSave elementSave);
 }
 
 internal class ExposeVariableService : IExposeVariableService
 {
+    private readonly UndoManager _undoManager;
+    private readonly GuiCommands _guiCommands;
+    private readonly FileCommands _fileCommands;
+    private readonly RenameLogic _renameLogic;
+
+    public ExposeVariableService(UndoManager undoManager, GuiCommands guiCommands, FileCommands fileCommands,
+        RenameLogic renameLogic)
+    {
+        _undoManager = undoManager;
+        _guiCommands = guiCommands;
+        _fileCommands = fileCommands;
+        _renameLogic = renameLogic;
+    }
+
     public void HandleExposeVariableClick(InstanceSave instanceSave, VariableSave variableSave, string rootVariableName)
     {
         if (instanceSave == null)
@@ -130,5 +147,43 @@ internal class ExposeVariableService : IExposeVariableService
                 }
             }
         }
+    }
+
+    public void HandleUnexposeVariableClick(VariableSave variableSave, ElementSave elementSave)
+    {
+        // do we want to support undos? I think so....?
+
+
+        var response = GetIfCanUnexposeVariable(variableSave, elementSave);
+        if (response.Succeeded == false)
+        {
+            _guiCommands.ShowMessage(response.Message);
+        }
+        else
+        {
+            var oldExposedName = variableSave.ExposedAsName;
+            variableSave.ExposedAsName = null;
+
+            PluginManager.Self.VariableDelete(elementSave, oldExposedName);
+            _fileCommands.TryAutoSaveCurrentElement();
+            _guiCommands.RefreshVariables(force: true);
+        }
+    }
+
+    private GeneralResponse GetIfCanUnexposeVariable(VariableSave variableSave, ElementSave elementSave)
+    {
+        var renames = _renameLogic.GetVariableChangesForRenamedVariable(elementSave, variableSave, variableSave.GetRootName());
+
+        if (renames.VariableReferenceChanges.Count > 0)
+        {
+            string message = $"Cannot unexpose variable {variableSave.ExposedAsName} because it is referenced by:\n\n";
+            foreach (var item in renames.VariableReferenceChanges)
+            {
+                message += $"{item.VariableReferenceList.ValueAsIList[item.LineIndex]} in {item.VariableReferenceList.Name} ({item.Container})\n";
+            }
+            return GeneralResponse.UnsuccessfulWith(message);
+        }
+
+        return GeneralResponse.SuccessfulResponse;
     }
 }
