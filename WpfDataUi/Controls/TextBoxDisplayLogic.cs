@@ -355,26 +355,36 @@ namespace WpfDataUi.Controls
                         catch (Exception e)
                         {
                             var wasMathOperation = false;
-                            if (e.InnerException is FormatException)
+
+                            var succeeded = TryConvertingToIntThroughDouble(ref value, ref result, usableString);
+
+                            if(!succeeded)
                             {
-                                try
+                                if (e.InnerException is FormatException)
                                 {
-                                    var computedValue = TryHandleMathOperation(usableString, InstancePropertyType);
-                                    wasMathOperation = computedValue != null;
-                                    value = computedValue;
+                                    try
+                                    {
+                                        var computedValue = TryHandleMathOperation(usableString, InstancePropertyType);
+                                        wasMathOperation = computedValue != null;
+                                        value = computedValue;
+                                    }
+                                    catch
+                                    {
+                                        result = ApplyValueResult.InvalidSyntax;
+
+                                        // It's possible this is an integer value that is either too long, or that has a decimal point. Try that:
+                                        TryConvertingToIntThroughDouble(ref value, ref result, usableString);
+
+                                    }
                                 }
-                                catch
+                                if (wasMathOperation)
+                                {
+                                    result = ApplyValueResult.Success;
+                                }
+                                else
                                 {
                                     result = ApplyValueResult.InvalidSyntax;
                                 }
-                            }
-                            if (wasMathOperation)
-                            {
-                                result = ApplyValueResult.Success;
-                            }
-                            else
-                            {
-                                result = ApplyValueResult.InvalidSyntax;
                             }
                         }
                     }
@@ -390,6 +400,44 @@ namespace WpfDataUi.Controls
             }
 
             return result;
+        }
+
+        private bool TryConvertingToIntThroughDouble(ref object value, ref ApplyValueResult result, string usableString)
+        {
+            bool succeeded = false;
+            if (InstancePropertyType == typeof(int))
+            {
+                // see if a double can handle this:
+                var doubleConverter = TypeDescriptor.GetConverter(typeof(double));
+
+                try
+                {
+                    var doubleValue = (double)doubleConverter.ConvertFromString(usableString);
+
+                    if (doubleValue > int.MaxValue)
+                    {
+                        value = int.MaxValue;
+                        result = ApplyValueResult.Success;
+                    }
+                    else if (doubleValue < int.MinValue)
+                    {
+                        value = int.MinValue;
+                        result = ApplyValueResult.Success;
+                    }
+                    else
+                    {
+                        value = (int)doubleValue;
+                        result = ApplyValueResult.Success;
+                    }
+                    succeeded = true;
+                }
+                catch
+                {
+                    // oh well we tried
+                }
+            }
+
+            return succeeded;
         }
 
         public static object TryHandleMathOperation(string usableString, Type instancePropertyType)
