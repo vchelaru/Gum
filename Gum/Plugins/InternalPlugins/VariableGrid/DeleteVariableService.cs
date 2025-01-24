@@ -54,7 +54,8 @@ public class DeleteVariableService : IDeleteVariableService
         {
 
             using var undoLock = _undoManager.RequestLock();
-            if(stateContainer is ElementSave elementSave)
+            var elementSave = stateContainer as ElementSave;
+            if(elementSave != null)
             {
                 elementSave.DefaultState.Variables.Remove(variable);
                 _fileCommands.TryAutoSaveElement(elementSave);
@@ -66,6 +67,8 @@ public class DeleteVariableService : IDeleteVariableService
             }
 
             _guiCommands.RefreshVariables(force: true);
+
+            PluginManager.Self.VariableDelete(elementSave, variable.Name);
         }
     }
 

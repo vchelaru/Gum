@@ -59,7 +59,7 @@ public class EditVariableService : IEditVariableService
     {
         if (CanEditVariable(variableSave, stateListCategoryContainer))
         {
-            instanceMember.ContextMenuEvents.Add("Edit Variable", (sender, e) =>
+            instanceMember.ContextMenuEvents.Add($"Edit Variable [{variableSave.Name}]", (sender, e) =>
             {
                 ShowEditVariableWindow(variableSave, stateListCategoryContainer);
             });

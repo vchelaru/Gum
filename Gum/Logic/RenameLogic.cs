@@ -632,16 +632,16 @@ public class RenameLogic
 
         var project = GumState.Self.ProjectState.GumProjectSave;
 
-        var ownerAsElement = owner as ElementSave;
+        var changedVariableOwnerElement = owner as ElementSave;
 
         // consider:
         // Inheritance
         // Instances using this
 
         List<ElementSave>? inheritingElements = new List<ElementSave>();
-        if (ownerAsElement != null)
+        if (changedVariableOwnerElement != null)
         {
-            inheritingElements.AddRange(ObjectFinder.Self.GetElementsInheritingFrom(ownerAsElement));
+            inheritingElements.AddRange(ObjectFinder.Self.GetElementsInheritingFrom(changedVariableOwnerElement));
         }
 
         foreach (var item in inheritingElements)
@@ -677,7 +677,7 @@ public class RenameLogic
                         if (instance != null)
                         {
                             var instanceElement = ObjectFinder.Self.GetElementSave(instance);
-                            if (inheritingElements.Contains(instanceElement) || instanceElement == ownerAsElement)
+                            if (inheritingElements.Contains(instanceElement) || instanceElement == changedVariableOwnerElement)
                             {
                                 variableChanges.Add(new VariableChange
                                 {
@@ -694,8 +694,25 @@ public class RenameLogic
                 {
                     if(variableList.GetRootName() == "VariableReferences")
                     {
+                        ElementSave rootLeftSideElement = null;
+                        InstanceSave leftSideInstance = null;
+                        if (string.IsNullOrEmpty(variableList.SourceObject))
+                        {
+                            rootLeftSideElement = element;
+                        }
+                        else
+                        {
+                            leftSideInstance = element.GetInstance(variableList.SourceObject);
+                            if (leftSideInstance != null)
+                            {
+                                rootLeftSideElement = ObjectFinder.Self.GetElementSave(leftSideInstance);
+                            }
+                        }
+                        InstanceSave instanceLeft = element.GetInstance(variableList.SourceObject);
+
+
                         // loop through the items and see if any are using this:
-                        for(int i = 0; i < variableList.ValueAsIList.Count; i++)
+                        for (int i = 0; i < variableList.ValueAsIList.Count; i++)
                         {
                             var line = variableList.ValueAsIList[i];
 
@@ -705,27 +722,18 @@ public class RenameLogic
                             }
 
                             var right = asString.Substring(asString.IndexOf("=") + 1).Trim();
-                            var leftSide = asString.Substring(asString.IndexOf("=")).Trim();
+                            var leftSide = asString.Substring(0,asString.IndexOf("=")).Trim();
 
-                            ElementSave leftSideElement = null;
-                            if (string.IsNullOrEmpty(variableList.SourceObject))
+
+                            var matchesLeft = false;
+                            if(leftSide == oldStrippedName)
                             {
-                                leftSideElement = element;
-                            }
-                            else
-                            {
-                                var instance = element.GetInstance(variableList.SourceObject);
-                                if (instance != null)
-                                {
-                                    leftSideElement = ObjectFinder.Self.GetElementSave(instance);
-                                }
+                                // See if the element that contains the left side variable is a match...
+                                matchesLeft = changedVariableOwnerElement == rootLeftSideElement || inheritingElements.Contains(rootLeftSideElement) ||
+                                    // or if we are in the same instance as the one that owns the variable reference...
+                                    (element == changedVariableOwnerElement && variableList.SourceObject == variableSave.SourceObject);
                             }
 
-                            var matchesLeft = leftSide == oldStrippedName && (ownerAsElement == leftSideElement || inheritingElements.Contains(leftSideElement));
-
-
-
-                            InstanceSave instanceLeft = element.GetInstance(variableList.SourceObject);
                             var stateContainingRightSideVariable = state;
                             GumRuntime.ElementSaveExtensions.GetRightSideAndState(ref right, ref stateContainingRightSideVariable);
                             var matchesRight = false;
@@ -735,11 +743,11 @@ public class RenameLogic
                                 // finish here....
                                 var rightSideOwner = stateContainingRightSideVariable.ParentContainer;
 
-                                matchesRight = ownerAsElement == rightSideOwner || inheritingElements.Contains(rightSideOwner);
+                                matchesRight = changedVariableOwnerElement == rightSideOwner || inheritingElements.Contains(rightSideOwner);
                             }
 
 
-                            if((matchesLeft || matchesRight) && ownerAsElement.AllStates.Contains(stateContainingRightSideVariable))
+                            if((matchesLeft || matchesRight) && changedVariableOwnerElement.AllStates.Contains(stateContainingRightSideVariable))
                             {
                                 // we have a match!!
                                 var referenceChange = new VariableReferenceChange();

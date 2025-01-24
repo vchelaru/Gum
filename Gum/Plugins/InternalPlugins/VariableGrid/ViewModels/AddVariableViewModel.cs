@@ -175,15 +175,15 @@ public class AddVariableViewModel : ViewModel
 
             using var undoLock = _undoManager.RequestLock();
 
+            var element = _selectedState.SelectedElement;
             if (behavior != null)
             {
                 behavior.RequiredVariables.Variables.Add(newVariable);
                 _elementCommands.SortVariables(behavior);
                 _fileCommands.TryAutoSaveBehavior(behavior);
             }
-            else if (_selectedState.SelectedElement != null)
+            else if (element != null)
             {
-                var element = _selectedState.SelectedElement;
                 newVariable.IsCustomVariable = true;
                 element.DefaultState.Variables.Add(newVariable);
                 _elementCommands.SortVariables(element);
@@ -191,6 +191,7 @@ public class AddVariableViewModel : ViewModel
             }
             _guiCommands.RefreshVariables(force: true);
 
+            PluginManager.Self.VariableAdd(element, name);
         }
     }
 

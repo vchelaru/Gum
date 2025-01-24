@@ -41,10 +41,74 @@ internal class ExposeVariableService : IExposeVariableService
 
     public void HandleExposeVariableClick(InstanceSave instanceSave, VariableSave variableSave, string rootVariableName)
     {
+        var canExpose = GetIfCanExpose(instanceSave, variableSave, rootVariableName);
+
+        if(canExpose.Succeeded == false)
+        {
+            // show message
+            _guiCommands.ShowMessage(canExpose.Message);
+            return;
+        }
+
+        var tiw = new TextInputWindow();
+        tiw.Message = "Enter variable name:";
+        tiw.Title = "Expose variable";
+        // We want to use the name without the dots.
+        // So something like TextInstance.Text would be
+        // TextInstanceText
+        tiw.Result = variableSave.Name.Replace(".", "");
+
+        DialogResult result = tiw.ShowDialog();
+
+        if (result == DialogResult.OK)
+        {
+            string whyNot;
+            if (!NameVerifier.Self.IsVariableNameValid(tiw.Result, SelectedState.Self.SelectedElement, variableSave, out whyNot))
+            {
+                MessageBox.Show(whyNot);
+            }
+            else
+            {
+                var elementSave = SelectedState.Self.SelectedElement;
+                // if there is an inactive variable,
+                // we should get rid of it:
+                var existingVariable = SelectedState.Self.SelectedElement.GetVariableFromThisOrBase(tiw.Result);
+
+                // there's a variable but we shouldn't consider it
+                // unless it's "Active" - inactive variables may be
+                // leftovers from a type change
+
+
+                if (existingVariable != null)
+                {
+                    var isActive = VariableSaveLogic.GetIfVariableIsActive(existingVariable, elementSave, null);
+                    if (isActive == false)
+                    {
+                        // gotta remove the variable:
+                        if (elementSave.DefaultState.Variables.Contains(existingVariable))
+                        {
+                            // We may need to worry about inheritance...eventually
+                            elementSave.DefaultState.Variables.Remove(existingVariable);
+                        }
+                    }
+
+                }
+
+                variableSave.ExposedAsName = tiw.Result;
+
+                PluginManager.Self.VariableAdd(elementSave, tiw.Result);
+
+                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+                GumCommands.Self.GuiCommands.RefreshVariables(force: true);
+            }
+        }
+    }
+
+    private GeneralResponse GetIfCanExpose(InstanceSave instanceSave, VariableSave variableSave, string rootVariableName)
+    {
         if (instanceSave == null)
         {
-            MessageBox.Show("Cannot expose variables on components or screens, only on instances");
-            return;
+            return GeneralResponse.UnsuccessfulWith("Cannot expose variables on components or screens, only on instances");
         }
 
         // Update June 1, 2017
@@ -90,63 +154,27 @@ internal class ExposeVariableService : IExposeVariableService
 
         if (variableSave == null)
         {
-            MessageBox.Show("This variable cannot be exposed.");
+            return GeneralResponse.UnsuccessfulWith("This variable cannot be exposed.");
         }
-        else
+
+        // if the variable is used on a left-side, it should not be exposable:
+        var selectedElement = SelectedState.Self.SelectedElement;
+        var renames = _renameLogic.GetVariableChangesForRenamedVariable(selectedElement, variableSave, variableSave.GetRootName());
+
+        var renamesOnThis = renames.VariableReferenceChanges
+            .Where(item => item.Container == selectedElement && item.ChangedSide == SideOfEquals.Left)
+            .ToArray();
+
+        if (renamesOnThis.Length > 0)
         {
-            TextInputWindow tiw = new TextInputWindow();
-            tiw.Message = "Enter variable name:";
-            tiw.Title = "Expose variable";
-            // We want to use the name without the dots.
-            // So something like TextInstance.Text would be
-            // TextInstanceText
-            tiw.Result = variableSave.Name.Replace(".", "");
+            var firstRename = renamesOnThis[0];
+            string message = $"Cannot expose variable {variableSave} because it is assigned in a variable reference:\n\n" +
+                $"{firstRename.VariableReferenceList.ValueAsIList[firstRename.LineIndex]}";
 
-            DialogResult result = tiw.ShowDialog();
-
-            if (result == DialogResult.OK)
-            {
-                string whyNot;
-                if (!NameVerifier.Self.IsVariableNameValid(tiw.Result, SelectedState.Self.SelectedElement, variableSave, out whyNot))
-                {
-                    MessageBox.Show(whyNot);
-                }
-                else
-                {
-                    var elementSave = SelectedState.Self.SelectedElement;
-                    // if there is an inactive variable,
-                    // we should get rid of it:
-                    var existingVariable = SelectedState.Self.SelectedElement.GetVariableFromThisOrBase(tiw.Result);
-
-                    // there's a variable but we shouldn't consider it
-                    // unless it's "Active" - inactive variables may be
-                    // leftovers from a type change
-
-
-                    if (existingVariable != null)
-                    {
-                        var isActive = VariableSaveLogic.GetIfVariableIsActive(existingVariable, elementSave, null);
-                        if (isActive == false)
-                        {
-                            // gotta remove the variable:
-                            if (elementSave.DefaultState.Variables.Contains(existingVariable))
-                            {
-                                // We may need to worry about inheritance...eventually
-                                elementSave.DefaultState.Variables.Remove(existingVariable);
-                            }
-                        }
-
-                    }
-
-                    variableSave.ExposedAsName = tiw.Result;
-
-                    PluginManager.Self.VariableAdd(elementSave, tiw.Result);
-
-                    GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-                    GumCommands.Self.GuiCommands.RefreshVariables(force: true);
-                }
-            }
+            return GeneralResponse.UnsuccessfulWith(message);
         }
+
+        return GeneralResponse.SuccessfulResponse;
     }
 
     public void HandleUnexposeVariableClick(VariableSave variableSave, ElementSave elementSave)
@@ -158,16 +186,15 @@ internal class ExposeVariableService : IExposeVariableService
         if (response.Succeeded == false)
         {
             _guiCommands.ShowMessage(response.Message);
+            return;
         }
-        else
-        {
-            var oldExposedName = variableSave.ExposedAsName;
-            variableSave.ExposedAsName = null;
 
-            PluginManager.Self.VariableDelete(elementSave, oldExposedName);
-            _fileCommands.TryAutoSaveCurrentElement();
-            _guiCommands.RefreshVariables(force: true);
-        }
+        var oldExposedName = variableSave.ExposedAsName;
+        variableSave.ExposedAsName = null;
+
+        PluginManager.Self.VariableDelete(elementSave, oldExposedName);
+        _fileCommands.TryAutoSaveCurrentElement();
+        _guiCommands.RefreshVariables(force: true);
     }
 
     private GeneralResponse GetIfCanUnexposeVariable(VariableSave variableSave, ElementSave elementSave)

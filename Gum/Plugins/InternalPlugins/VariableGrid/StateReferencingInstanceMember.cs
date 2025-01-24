@@ -464,7 +464,7 @@ namespace Gum.PropertyGridHelpers
             
             if (VariableSave != null && _deleteVariableLogic.CanDeleteVariable(this.VariableSave))
             {
-                ContextMenuEvents.Add("Delete Variable", (sender, e) =>
+                ContextMenuEvents.Add($"Delete Variable [{VariableSave.Name}]", (sender, e) =>
                 {
                     _deleteVariableLogic.DeleteVariable(this.VariableSave, this.ElementSave);
                 });
