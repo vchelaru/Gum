@@ -57,6 +57,8 @@ namespace Gum.Commands
             }
         }
 
+        // object could be an IStateContainer or IInstanceContainer,
+        // and if we have 2 functions, one for each, this causes ambiguous references
         public void TryAutoSaveObject(object objectToSave)
         {
             if(objectToSave is ElementSave elementSave)

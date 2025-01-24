@@ -1,5 +1,7 @@
-﻿using Gum.DataTypes.Variables;
+﻿using Gum.DataTypes.Behaviors;
+using Gum.DataTypes.Variables;
 using Gum.Mvvm;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -46,11 +48,11 @@ namespace Gum.Plugins.VariableGrid
 
         public Visibility ShowBehaviorUi
         {
-            get { return Get<Visibility>(); }
-            set { Set(value); }
+            get => Get<Visibility>(); 
+            set => Set(value); 
         }
 
-
+        public BehaviorSave BehaviorSave { get; set; }
 
         public ObservableCollection<VariableSave> BehaviorVariables
         {
@@ -64,6 +66,7 @@ namespace Gum.Plugins.VariableGrid
             set => Set(value); 
         }
 
+        [DependsOn(nameof(SelectedBehaviorVariable))]
         public List<MenuItem> BehaviorVariablesContextMenuItems
         {
             get
@@ -85,6 +88,7 @@ namespace Gum.Plugins.VariableGrid
 
         MenuItem EditVariableMenuItem;
         MenuItem DeleteVariableMenuItem;
+        private readonly IDeleteVariableService _deleteVariableService;
 
         #endregion
 
@@ -115,7 +119,7 @@ namespace Gum.Plugins.VariableGrid
             }
         }
 
-        public MainControlViewModel()
+        public MainControlViewModel(IDeleteVariableService deleteVariableService)
         {
             EditVariableMenuItem = new MenuItem();
             EditVariableMenuItem.Header = "Edit Variable";
@@ -123,12 +127,17 @@ namespace Gum.Plugins.VariableGrid
 
             DeleteVariableMenuItem = new MenuItem();
             DeleteVariableMenuItem.Header = "Delete Variable";
-            DeleteVariableMenuItem.Click += handleDeleteVariableClicked;
+            DeleteVariableMenuItem.Click += HandleDeleteVariableClicked;
+
+            _deleteVariableService = deleteVariableService;
         }
 
-        private void handleDeleteVariableClicked(object sender, RoutedEventArgs e)
+        private void HandleDeleteVariableClicked(object sender, RoutedEventArgs e)
         {
-
+            if(BehaviorSave != null)
+            {
+                _deleteVariableService.DeleteVariable(SelectedBehaviorVariable, BehaviorSave);
+            }
         }
 
         private void HandleEditVariableClicked(object sender, RoutedEventArgs e)

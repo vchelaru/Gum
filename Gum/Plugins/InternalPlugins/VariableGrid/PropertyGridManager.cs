@@ -13,6 +13,7 @@ using Gum.Controls;
 using System.Windows.Media;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using RenderingLibrary.Graphics;
+using Gum.Services;
 
 namespace Gum.Managers
 {
@@ -91,7 +92,10 @@ namespace Gum.Managers
             GumCommands.Self.GuiCommands.AddControl(mainControl, "Variables", TabLocation.CenterBottom);
 
             mVariablesDataGrid = mainControl.DataGrid;
-            VariableViewModel = new Plugins.VariableGrid.MainControlViewModel();
+
+            var deleteVariableLogic = Builder.Get<IDeleteVariableService>();
+
+            VariableViewModel = new Plugins.VariableGrid.MainControlViewModel(deleteVariableLogic);
             VariableViewModel.AddVariableButtonVisibility = System.Windows.Visibility.Collapsed;
             mainControl.DataContext = VariableViewModel;
             mainControl.SelectedBehaviorVariableChanged += HandleBehaviorVariableSelected;
@@ -99,8 +103,6 @@ namespace Gum.Managers
 
             InitializeRightClickMenu();
         }
-
-
 
         private void HandleBehaviorVariableSelected(object sender, EventArgs e)
         {
@@ -447,7 +449,7 @@ namespace Gum.Managers
                 this.VariableViewModel.BehaviorVariables.AddRange(behaviorSave.RequiredVariables.Variables);
             }
 
-
+            this.VariableViewModel.BehaviorSave = behaviorSave;
             this.VariableViewModel.ShowBehaviorUi = isShown ?
                 System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
 

@@ -37,7 +37,7 @@ internal class Builder
         builder.Services.AddSingleton<IEditVariableService, EditVariableService>();
         builder.Services.AddSingleton<IEditVariableService, EditVariableService>();
         builder.Services.AddSingleton<IExposeVariableService, ExposeVariableService>();
-        builder.Services.AddSingleton<IDeleteVariableLogic, DeleteVariableLogic>();
+        builder.Services.AddSingleton<IDeleteVariableService, DeleteVariableService>();
 
 
         builder.Services.AddTransient<AddVariableViewModel>();

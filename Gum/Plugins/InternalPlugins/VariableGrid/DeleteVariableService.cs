@@ -1,5 +1,6 @@
 ﻿using Gum.Commands;
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Undo;
@@ -12,19 +13,19 @@ using ToolsUtilities;
 
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
 
-public interface IDeleteVariableLogic
+public interface IDeleteVariableService
 {
     bool CanDeleteVariable(VariableSave variable);
     void DeleteVariable(VariableSave variable, IStateContainer stateContainer);
 }
-public class DeleteVariableLogic : IDeleteVariableLogic
+public class DeleteVariableService : IDeleteVariableService
 {
     private readonly UndoManager _undoManager;
     private readonly FileCommands _fileCommands;
     private readonly GuiCommands _guiCommands;
     private readonly RenameLogic _renameLogic;
 
-    public DeleteVariableLogic(UndoManager undoManager, FileCommands fileCommands, GuiCommands guiCommands, 
+    public DeleteVariableService(UndoManager undoManager, FileCommands fileCommands, GuiCommands guiCommands, 
         RenameLogic renameLogic)
     {
         _undoManager = undoManager;
@@ -40,30 +41,53 @@ public class DeleteVariableLogic : IDeleteVariableLogic
 
     public void DeleteVariable(VariableSave variable, IStateContainer stateContainer)
     {
-        if(stateContainer is ElementSave elementSave && 
-            elementSave.DefaultState.Variables.Contains(variable))
+
+
+
+        var response = GetIfCanDeleteVariable(variable, stateContainer);
+
+        if(response.Succeeded == false)
         {
-            var response = GetIfCanDeleteVariable(variable, stateContainer);
+            _guiCommands.ShowMessage(response.Message);
+        }
+        else
+        {
 
-            if(response.Succeeded == false)
+            using var undoLock = _undoManager.RequestLock();
+            if(stateContainer is ElementSave elementSave)
             {
-                _guiCommands.ShowMessage(response.Message);
-            }
-            else
-            {
-
-                using var undoLock = _undoManager.RequestLock();
                 elementSave.DefaultState.Variables.Remove(variable);
-
                 _fileCommands.TryAutoSaveElement(elementSave);
-                _guiCommands.RefreshVariables(force: true);
+            }
+            else if(stateContainer is BehaviorSave behavior)
+            {
+                behavior.RequiredVariables.Variables.Remove(variable);
+                _fileCommands.TryAutoSaveObject(behavior);
             }
 
+            _guiCommands.RefreshVariables(force: true);
         }
     }
 
     private GeneralResponse GetIfCanDeleteVariable(VariableSave variable, IStateContainer stateContainer)
     {
+        var isVariableContained = false;
+
+        if (stateContainer is ElementSave elementSave)
+        {
+            isVariableContained =
+                elementSave.DefaultState.Variables.Contains(variable);
+        }
+        else if (stateContainer is BehaviorSave behaviorSave)
+        {
+            isVariableContained = behaviorSave.RequiredVariables.Variables.Contains(variable);
+        }
+
+        if(!isVariableContained)
+        {
+            return GeneralResponse.UnsuccessfulWith($"The variable {variable} is not contained in {stateContainer}");
+        }
+
         var renames = _renameLogic.GetVariableChangesForRenamedVariable(stateContainer, variable, variable.GetRootName());
 
         if (renames.VariableReferenceChanges.Count > 0)
