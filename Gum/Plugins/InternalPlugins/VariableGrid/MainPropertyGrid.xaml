@@ -32,7 +32,11 @@
                 </Grid.RowDefinitions>
                 <WpfDataUi:DataUiGrid Grid.Row="0" Name="BehaviorDataGrid"/>
                 <ListBox Grid.Row="1" ItemsSource="{Binding BehaviorVariables}" SelectionChanged="ListBox_SelectionChanged" 
-                         SelectedItem="{Binding SelectedBehaviorVariable}"></ListBox>
+                         SelectedItem="{Binding SelectedBehaviorVariable}">
+                    <ListBox.ContextMenu>
+                        <ContextMenu x:Name="ListBoxContextMenu" ItemsSource="{Binding BehaviorVariablesContextMenuItems}"/>
+                    </ListBox.ContextMenu>
+                </ListBox>
             </Grid>
             <Button Grid.Row="1" Click="HandleAddVariableClicked" Visibility="{Binding AddVariableButtonVisibility}">Add Variable</Button>
         </Grid>
