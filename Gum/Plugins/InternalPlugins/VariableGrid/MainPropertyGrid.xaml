@@ -4,8 +4,12 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:WpfDataUi="clr-namespace:WpfDataUi;assembly=WpfDataUi"
+             xmlns:Converters="clr-namespace:Gum.Plugins.InternalPlugins.VariableGrid.Converters"
              mc:Ignorable="d" 
              d:DesignHeight="200" d:DesignWidth="300">
+    <UserControl.Resources>
+        <Converters:BehaviorVariableToStringConverter x:Key="BehaviorVariableToStringConverter"/>
+    </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" MaxHeight="200"></RowDefinition>
@@ -31,11 +35,18 @@
                     <RowDefinition Height="Auto"></RowDefinition>
                 </Grid.RowDefinitions>
                 <WpfDataUi:DataUiGrid Grid.Row="0" Name="BehaviorDataGrid"/>
-                <ListBox Grid.Row="1" ItemsSource="{Binding BehaviorVariables}" SelectionChanged="ListBox_SelectionChanged" 
+                <ListBox Grid.Row="1" 
+                         ItemsSource="{Binding BehaviorVariables}" 
+                         SelectionChanged="ListBox_SelectionChanged" 
                          SelectedItem="{Binding SelectedBehaviorVariable}">
                     <ListBox.ContextMenu>
                         <ContextMenu x:Name="ListBoxContextMenu" ItemsSource="{Binding BehaviorVariablesContextMenuItems}"/>
                     </ListBox.ContextMenu>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Label Content="{Binding Converter={StaticResource BehaviorVariableToStringConverter}}"/>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
                 </ListBox>
             </Grid>
             <Button Grid.Row="1" Click="HandleAddVariableClicked" Visibility="{Binding AddVariableButtonVisibility}">Add Variable</Button>
