@@ -41,6 +41,11 @@ internal class ExposeVariableService : IExposeVariableService
 
     public void HandleExposeVariableClick(InstanceSave instanceSave, VariableSave variableSave, string rootVariableName)
     {
+        // This variable may not exist yet if it hasn't been assigned.
+        //if (variableSave == null)
+        //{
+        //    throw new ArgumentNullException(nameof(variableSave));
+        //}
         var canExpose = GetIfCanExpose(instanceSave, variableSave, rootVariableName);
 
         if(canExpose.Succeeded == false)
@@ -56,7 +61,8 @@ internal class ExposeVariableService : IExposeVariableService
         // We want to use the name without the dots.
         // So something like TextInstance.Text would be
         // TextInstanceText
-        tiw.Result = variableSave.Name.Replace(".", "");
+        var fullVariableName = instanceSave.Name + "." + rootVariableName;
+        tiw.Result = fullVariableName.Replace(".", "").Replace(" ", "");
 
         DialogResult result = tiw.ShowDialog();
 
@@ -94,6 +100,21 @@ internal class ExposeVariableService : IExposeVariableService
 
                 }
 
+                if(variableSave == null)
+                {
+                    StateSave stateToExposeOn = SelectedState.Self.SelectedElement.DefaultState;
+
+                    var variableInDefault = ObjectFinder.Self.GetRootVariable(fullVariableName, instanceSave.ParentContainer);
+                    string variableType = variableInDefault.Type;
+                    stateToExposeOn.SetValue(fullVariableName, null, instanceSave, variableType);
+
+                    variableSave = stateToExposeOn.GetVariableSave(fullVariableName);
+
+                    // Not sure if we need this, but setting SetsValue to false matches the old behavior when
+                    // this code used to be part of validation
+                    variableSave.SetsValue = false;
+                }
+
                 variableSave.ExposedAsName = tiw.Result;
 
                 PluginManager.Self.VariableAdd(elementSave, tiw.Result);
@@ -129,37 +150,25 @@ internal class ExposeVariableService : IExposeVariableService
 
             ElementSave elementForInstance = ObjectFinder.Self.GetElementSave(instanceSave.BaseType);
             var variableInDefault = elementForInstance.DefaultState.GetVariableSave(rawVariableName);
-            while (variableInDefault == null && !string.IsNullOrEmpty(elementForInstance.BaseType))
+
+            if(variableInDefault == null)
             {
-                elementForInstance = ObjectFinder.Self.GetElementSave(elementForInstance.BaseType);
-                if (elementForInstance?.DefaultState == null)
-                {
-                    break;
-                }
-                variableInDefault = elementForInstance.DefaultState.GetVariableSave(rawVariableName);
+                variableInDefault = ObjectFinder.Self.GetRootVariable(variableName, instanceSave.ParentContainer);
             }
 
-            if (variableInDefault != null)
+            if (variableInDefault == null)
             {
-                string variableType = variableInDefault.Type;
-
-                stateToExposeOn.SetValue(variableName, null, instanceSave, variableType);
-
-                // Now the variable should be created so we can access it
-                variableSave = stateToExposeOn.GetVariableSave(variableName);
-                // Since it's newly-created, there is no value being set:
-                variableSave.SetsValue = false;
+                return GeneralResponse.UnsuccessfulWith("This variable cannot be exposed.");
             }
         }
 
-        if (variableSave == null)
-        {
-            return GeneralResponse.UnsuccessfulWith("This variable cannot be exposed.");
-        }
 
         // if the variable is used on a left-side, it should not be exposable:
         var selectedElement = SelectedState.Self.SelectedElement;
-        var renames = _renameLogic.GetVariableChangesForRenamedVariable(selectedElement, variableSave, variableSave.GetRootName());
+
+        var fullVariableName = instanceSave.Name + "." + rootVariableName;
+
+        var renames = _renameLogic.GetVariableChangesForRenamedVariable(selectedElement, fullVariableName, rootVariableName);
 
         var renamesOnThis = renames.VariableReferenceChanges
             .Where(item => item.Container == selectedElement && item.ChangedSide == SideOfEquals.Left)
@@ -168,7 +177,7 @@ internal class ExposeVariableService : IExposeVariableService
         if (renamesOnThis.Length > 0)
         {
             var firstRename = renamesOnThis[0];
-            string message = $"Cannot expose variable {variableSave} because it is assigned in a variable reference:\n\n" +
+            string message = $"Cannot expose variable {fullVariableName} because it is assigned in a variable reference:\n\n" +
                 $"{firstRename.VariableReferenceList.ValueAsIList[firstRename.LineIndex]}";
 
             return GeneralResponse.UnsuccessfulWith(message);
@@ -199,7 +208,7 @@ internal class ExposeVariableService : IExposeVariableService
 
     private GeneralResponse GetIfCanUnexposeVariable(VariableSave variableSave, ElementSave elementSave)
     {
-        var renames = _renameLogic.GetVariableChangesForRenamedVariable(elementSave, variableSave, variableSave.ExposedAsName);
+        var renames = _renameLogic.GetVariableChangesForRenamedVariable(elementSave, variableSave.Name, variableSave.ExposedAsName);
 
         if (renames.VariableReferenceChanges.Count > 0)
         {

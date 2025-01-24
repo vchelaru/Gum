@@ -625,7 +625,7 @@ public class RenameLogic
 
     #region Variable
 
-    public VariableChangeResponse GetVariableChangesForRenamedVariable(IStateContainer owner, VariableSave variableSave, string oldStrippedName)
+    public VariableChangeResponse GetVariableChangesForRenamedVariable(IStateContainer owner, string oldFullName, string oldStrippedOrExposedName)
     {
         List<VariableChange> variableChanges = new List<VariableChange>();
         List<VariableReferenceChange> variableReferenceChanges = new List<VariableReferenceChange>();
@@ -650,7 +650,7 @@ public class RenameLogic
             {
                 foreach (var variable in state.Variables)
                 {
-                    if (variable.ExposedAsName == oldStrippedName)
+                    if (variable.ExposedAsName == oldStrippedOrExposedName)
                     {
                         variableChanges.Add(new VariableChange
                         {
@@ -671,7 +671,7 @@ public class RenameLogic
             {
                 foreach (var variable in state.Variables)
                 {
-                    if (variable.GetRootName() == oldStrippedName && !string.IsNullOrEmpty(variable.SourceObject))
+                    if (variable.GetRootName() == oldStrippedOrExposedName && !string.IsNullOrEmpty(variable.SourceObject))
                     {
                         var instance = element.GetInstance(variable.SourceObject);
                         if (instance != null)
@@ -716,7 +716,7 @@ public class RenameLogic
                         {
                             var line = variableList.ValueAsIList[i];
 
-                            if(line is not string asString || asString.StartsWith("//") || asString.Contains("=") == false || asString.Contains(oldStrippedName) == false)
+                            if(line is not string asString || asString.StartsWith("//") || asString.Contains("=") == false || asString.Contains(oldStrippedOrExposedName) == false)
                             {
                                 continue;
                             }
@@ -726,18 +726,23 @@ public class RenameLogic
 
 
                             var matchesLeft = false;
-                            if(leftSide == oldStrippedName)
+                            if(leftSide == oldStrippedOrExposedName)
                             {
+                                string oldSourceObject = null;
+                                if(oldFullName.Contains("."))
+                                {
+                                    oldSourceObject = oldFullName.Substring(0, oldFullName.IndexOf("."));
+                                }
                                 // See if the element that contains the left side variable is a match...
                                 matchesLeft = changedVariableOwnerElement == rootLeftSideElement || inheritingElements.Contains(rootLeftSideElement) ||
                                     // or if we are in the same instance as the one that owns the variable reference...
-                                    (element == changedVariableOwnerElement && variableList.SourceObject == variableSave.SourceObject);
+                                    (element == changedVariableOwnerElement && variableList.SourceObject == oldSourceObject);
                             }
 
                             var stateContainingRightSideVariable = state;
                             GumRuntime.ElementSaveExtensions.GetRightSideAndState(ref right, ref stateContainingRightSideVariable);
                             var matchesRight = false;
-                            if(right == oldStrippedName || right.EndsWith("." + oldStrippedName))
+                            if(right == oldStrippedOrExposedName || right.EndsWith("." + oldStrippedOrExposedName))
                             {
                                 // see if the owner of the right side is this element or an inheriting element:
                                 // finish here....

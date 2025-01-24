@@ -127,7 +127,7 @@ public class EditVariableService : IEditVariableService
 
 
 
-        var changes = _renameLogic.GetVariableChangesForRenamedVariable(container, variable, variable.ExposedAsName);
+        var changes = _renameLogic.GetVariableChangesForRenamedVariable(container, variable.Name, variable.ExposedAsName);
         string changesDetails = GetChangesDetails(changes);
 
         if(!string.IsNullOrEmpty(changesDetails))
@@ -256,7 +256,7 @@ public class EditVariableService : IEditVariableService
         var window = new AddVariableWindow(vm);
         window.Title = "Edit Variable";
 
-        var changes = _renameLogic.GetVariableChangesForRenamedVariable(container, variable, variable.Name);
+        var changes = _renameLogic.GetVariableChangesForRenamedVariable(container, variable.Name, variable.Name);
 
         var isReferencedInVariableReference = changes.VariableReferenceChanges.Count > 0;
         vm.VariableChangeResponse = changes;
