@@ -2,6 +2,7 @@
 using Gum.DataTypes.Variables;
 using Gum.Mvvm;
 using Gum.Plugins.InternalPlugins.VariableGrid;
+using Gum.Services;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -89,6 +90,7 @@ namespace Gum.Plugins.VariableGrid
         MenuItem EditVariableMenuItem;
         MenuItem DeleteVariableMenuItem;
         private readonly IDeleteVariableService _deleteVariableService;
+        private IEditVariableService _editVariableService;
 
         #endregion
 
@@ -119,7 +121,7 @@ namespace Gum.Plugins.VariableGrid
             }
         }
 
-        public MainControlViewModel(IDeleteVariableService deleteVariableService)
+        public MainControlViewModel(IDeleteVariableService deleteVariableService, IEditVariableService editVariableService)
         {
             EditVariableMenuItem = new MenuItem();
             EditVariableMenuItem.Header = "Edit Variable";
@@ -130,6 +132,7 @@ namespace Gum.Plugins.VariableGrid
             DeleteVariableMenuItem.Click += HandleDeleteVariableClicked;
 
             _deleteVariableService = deleteVariableService;
+            _editVariableService = editVariableService;
         }
 
         private void HandleDeleteVariableClicked(object sender, RoutedEventArgs e)
@@ -142,7 +145,13 @@ namespace Gum.Plugins.VariableGrid
 
         private void HandleEditVariableClicked(object sender, RoutedEventArgs e)
         {
+            var editModes = 
+                _editVariableService.GetAvailableEditModeFor(SelectedBehaviorVariable, BehaviorSave);
 
+            if(editModes != VariableEditMode.None)
+            {
+                _editVariableService.ShowEditVariableWindow(SelectedBehaviorVariable, BehaviorSave);
+            }
         }
     }
 }

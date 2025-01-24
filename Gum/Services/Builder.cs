@@ -35,7 +35,6 @@ internal class Builder
         builder.Services.AddSingleton(typeof(NameVerifier), NameVerifier.Self);
         builder.Services.AddSingleton(typeof(RenameLogic));
         builder.Services.AddSingleton<IEditVariableService, EditVariableService>();
-        builder.Services.AddSingleton<IEditVariableService, EditVariableService>();
         builder.Services.AddSingleton<IExposeVariableService, ExposeVariableService>();
         builder.Services.AddSingleton<IDeleteVariableService, DeleteVariableService>();
 

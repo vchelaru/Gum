@@ -22,24 +22,29 @@ namespace Gum.Services;
 
 #region Interface
 
-internal interface IEditVariableService
+public interface IEditVariableService
 {
+    VariableEditMode GetAvailableEditModeFor(VariableSave variableSave, IStateContainer stateCategoryListContainer);
+
+    void ShowEditVariableWindow(VariableSave variable, IStateContainer container);
+
     void TryAddEditVariableOptions(InstanceMember instanceMember, VariableSave variableSave, IStateContainer stateListCategoryContainer);
 }
 #endregion
 
-internal class EditVariableService : IEditVariableService
+#region Enums
+
+public enum VariableEditMode
 {
-    #region Enums
+    None,
+    ExposedName,
+    FullEdit
+}
 
-    enum EditMode
-    {
-        None,
-        ExposedName,
-        FullEdit
-    }
+#endregion
 
-    #endregion
+public class EditVariableService : IEditVariableService
+{
 
     private readonly ElementCommands _elementCommands;
     private readonly RenameLogic _renameLogic;
@@ -52,7 +57,7 @@ internal class EditVariableService : IEditVariableService
 
     public void TryAddEditVariableOptions(InstanceMember instanceMember, VariableSave variableSave, IStateContainer stateListCategoryContainer)
     {
-        if (ShouldAddEditVariableOptions(variableSave, stateListCategoryContainer))
+        if (CanEditVariable(variableSave, stateListCategoryContainer))
         {
             instanceMember.ContextMenuEvents.Add("Edit Variable", (sender, e) =>
             {
@@ -61,28 +66,28 @@ internal class EditVariableService : IEditVariableService
         }
     }
 
-    bool ShouldAddEditVariableOptions(VariableSave variableSave, IStateContainer stateListCategoryContainer)
+    bool CanEditVariable(VariableSave variableSave, IStateContainer stateListCategoryContainer)
     {
-        return GetAvailableEditModeFor(variableSave, stateListCategoryContainer) != EditMode.None;
+        return GetAvailableEditModeFor(variableSave, stateListCategoryContainer) != VariableEditMode.None;
     }
 
-    EditMode GetAvailableEditModeFor(VariableSave variableSave, IStateContainer stateCategoryListContainer)
+    public VariableEditMode GetAvailableEditModeFor(VariableSave variableSave, IStateContainer stateCategoryListContainer)
     {
         if (variableSave == null)
         {
-            return EditMode.None;
+            return VariableEditMode.None;
         }
 
         var behaviorSave = stateCategoryListContainer as BehaviorSave;
         // for now only edit variables inside of behaviors:
         if (behaviorSave != null)
         {
-            return EditMode.FullEdit;
+            return VariableEditMode.FullEdit;
         }
 
         if(variableSave.IsCustomVariable)
         {
-            return EditMode.FullEdit;
+            return VariableEditMode.FullEdit;
         }
 
         if (stateCategoryListContainer is ElementSave elementSave)
@@ -91,22 +96,22 @@ internal class EditVariableService : IEditVariableService
 
             var isExposed = !string.IsNullOrEmpty(variableSave.ExposedAsName);
 
-            return isExposed ? EditMode.ExposedName : EditMode.None;
+            return isExposed ? VariableEditMode.ExposedName : VariableEditMode.None;
         }
 
-        return EditMode.None;
+        return VariableEditMode.None;
     }
 
 
-    private void ShowEditVariableWindow(VariableSave variable, IStateContainer container)
+    public void ShowEditVariableWindow(VariableSave variable, IStateContainer container)
     {
         var editmode = GetAvailableEditModeFor(variable, container);
 
-        if (editmode == EditMode.ExposedName)
+        if (editmode == VariableEditMode.ExposedName)
         {
             ShowEditExposedUi(variable, container);
         }
-        else if (editmode == EditMode.FullEdit)
+        else if (editmode == VariableEditMode.FullEdit)
         {
             ShowFullEditUi(variable, container);
         }

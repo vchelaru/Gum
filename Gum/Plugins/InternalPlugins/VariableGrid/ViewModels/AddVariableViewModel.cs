@@ -140,7 +140,7 @@ public class AddVariableViewModel : ViewModel
         if(Variable != null)
         {
             // it must either be exposed or a custom variable to be renamed:
-            if(Variable.IsCustomVariable == false && string.IsNullOrEmpty(Variable.ExposedAsName) && Element == null)
+            if(Variable.IsCustomVariable == false && string.IsNullOrEmpty(Variable.ExposedAsName) && Element != null)
             {
                 return GeneralResponse.UnsuccessfulWith(
                     $"The variable {Variable} cannot be changed because it is not an exposed or custom variable");

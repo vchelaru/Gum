@@ -94,8 +94,9 @@ namespace Gum.Managers
             mVariablesDataGrid = mainControl.DataGrid;
 
             var deleteVariableLogic = Builder.Get<IDeleteVariableService>();
+            var editVariableService = Builder.Get<IEditVariableService>();
 
-            VariableViewModel = new Plugins.VariableGrid.MainControlViewModel(deleteVariableLogic);
+            VariableViewModel = new Plugins.VariableGrid.MainControlViewModel(deleteVariableLogic, editVariableService);
             VariableViewModel.AddVariableButtonVisibility = System.Windows.Visibility.Collapsed;
             mainControl.DataContext = VariableViewModel;
             mainControl.SelectedBehaviorVariableChanged += HandleBehaviorVariableSelected;
