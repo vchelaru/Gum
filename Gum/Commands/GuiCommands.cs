@@ -394,13 +394,11 @@ namespace Gum.Commands
 
                 if (canAdd)
                 {
-                    using (UndoManager.Self.RequestLock())
-                    {
-                        StateSaveCategory category = ElementCommands.Self.AddCategory(
-                            target, name);
+                    using var undoLock = UndoManager.Self.RequestLock();
+                    StateSaveCategory category = ElementCommands.Self.AddCategory(
+                        target, name);
 
-                        SelectedState.Self.SelectedStateCategorySave = category;
-                    }
+                    SelectedState.Self.SelectedStateCategorySave = category;
                 }
             }
 

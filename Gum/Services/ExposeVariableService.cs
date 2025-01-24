@@ -84,7 +84,7 @@ internal class ExposeVariableService : IExposeVariableService
                 // unless it's "Active" - inactive variables may be
                 // leftovers from a type change
 
-
+                using var undoLocl = _undoManager.RequestLock();
                 if (existingVariable != null)
                 {
                     var isActive = VariableSaveLogic.GetIfVariableIsActive(existingVariable, elementSave, null);
@@ -197,6 +197,8 @@ internal class ExposeVariableService : IExposeVariableService
             _guiCommands.ShowMessage(response.Message);
             return;
         }
+
+        using var undoLock = _undoManager.RequestLock();
 
         var oldExposedName = variableSave.ExposedAsName;
         variableSave.ExposedAsName = null;
