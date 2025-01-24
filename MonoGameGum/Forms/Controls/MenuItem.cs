@@ -99,6 +99,8 @@ public class MenuItem : ItemsControl
         get;set;
     }
 
+    public VisualTemplate? ScrollViewerVisualTemplate { get; set; } = null;
+
     #endregion
 
     #region Events
@@ -243,8 +245,17 @@ public class MenuItem : ItemsControl
         if (this.Items?.Count > 0 && itemsPopup == null)
         {
             timeOpened = MainCursor.LastPrimaryPushTime;
-            itemsPopup = new ScrollViewer();
 
+            var visualTemplateVisual = ScrollViewerVisualTemplate?.CreateContent(null) as InteractiveGue;
+
+            if(visualTemplateVisual == null)
+            {
+                itemsPopup = new ScrollViewer();
+            }
+            else
+            {
+                itemsPopup = new ScrollViewer(visualTemplateVisual);
+            }
             //itemsPopup.InnerPanel.Height = 0;
             //itemsPopup.InnerPanel.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
             //itemsPopup.InnerPanel.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;

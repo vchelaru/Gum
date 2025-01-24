@@ -1,5 +1,6 @@
 ﻿using Gum.Wireframe;
 using Microsoft.Xna.Framework;
+using MonoGameGum.Forms;
 using MonoGameGum.Forms.Controls;
 using MonoGameGum.Forms.DefaultVisuals;
 using MonoGameGum.GueDeriving;
@@ -30,11 +31,11 @@ namespace GumFormsSample.Screens
 
             CreateMenu(root);
 
-            //CreateColumn1Ui(root);
+            CreateColumn1Ui(root);
 
-            //CreateColumn2Ui(root);
+            CreateColumn2Ui(root);
 
-            //CreateLayeredUi(roots);
+            CreateLayeredUi(roots);
 
         }
 
@@ -74,6 +75,33 @@ namespace GumFormsSample.Screens
                 editItem.Items.Add($"Edit Item {i}");
             }
             menu.Items.Add(editItem);
+
+
+
+            var customMenuItem = new MenuItem();
+
+
+            customMenuItem.Header = "Custom Dropdown";
+            var customScrollViewerVisualTemplate = new VisualTemplate(() =>
+            {
+                var toReturn = new DefaultScrollViewerRuntime();
+                var background = toReturn.GetGraphicalUiElementByName("Background")
+                    as ColoredRectangleRuntime;
+
+                background.Color = Color.Orange;
+
+                return toReturn;
+            });
+            customMenuItem.ScrollViewerVisualTemplate = customScrollViewerVisualTemplate;
+
+
+            for (int i = 0; i < 10; i++)
+            {
+                customMenuItem.Items.Add($"Custom dropdown item {i}");
+            }
+            menu.Items.Add(customMenuItem);
+
+
             menu.Items.Add("Help");
 
             root.Children.Add(menu.Visual);
@@ -159,6 +187,7 @@ namespace GumFormsSample.Screens
             listBox.Y = currentY;
             listBox.Width = 200;
             listBox.Height = 200;
+
             for (int i = 0; i < 20; i++)
             {
                 listBox.Items.Add($"Item {i}");
