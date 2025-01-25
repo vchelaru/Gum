@@ -7,8 +7,7 @@ MonoGame Gum works on a variety of platforms including DesktopGL, DirectX, and m
 ### Adding Gum NuGet Packages
 
 1. Open your MonoGame project in your preferred IDE.
-2. Add the `Gum.MonoGame` NuGet package\
-
+2.  Add the `Gum.MonoGame` NuGet package\\
 
     <figure><img src="../../../.gitbook/assets/NugetMonoGameGumSetup1.png" alt=""><figcaption><p>Add Gum.MonoGame NuGet Package to your project</p></figcaption></figure>
 
@@ -66,5 +65,4 @@ This page shows the minimum code needed to get Gum up and running in your projec
 
 ### Downloading the Gum Tool
 
-The Gum tool can be used to create Gum projects which can be loaded into your MonoGame project. To download and run the Gum tool, see the [Setup page](../../../readme/setup/).
-
+The Gum tool can be used to create Gum projects which can be loaded into your MonoGame project. To download and run the Gum tool, see the [Setup page](../../../gum-tool/setup/).

@@ -46,7 +46,7 @@ The Gum Layout Engine is the core technology behind the Gum UI Tool and the Gum 
 
 Projects which perform their layouts purely in code can still take advantage of the Gum UI Tool to preview their layouts and to learn about the capiblities of the GraphicalUiElement (the C# object type providing access to all Gum properties).
 
-A full list of Gum properties can be found in the [Gum Element General Properties](../../readme/gum-elements/general-properties/) page, but we will cover a few concepts here to give you an idea of how Gum works.
+A full list of Gum properties can be found in the [Gum Element General Properties](../../gum-tool/gum-elements/general-properties/) page, but we will cover a few concepts here to give you an idea of how Gum works.
 
 By default, Gum elements are positioned relative to the top-left of their parent. Similarly, the origin of a Gum element is also its own top-left corner. Therefore, a rectangle that has an X of 100 and a Y of 50 appears as shown in the following image:
 

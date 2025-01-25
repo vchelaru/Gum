@@ -23,7 +23,7 @@ Once you are finished, your game project should reference the `Gum.MonoGam` proj
 
 ### Creating a new Gum Project
 
-Next we'll create a project in the Gum UI tool. If you have not yet run the Gum tool, you can get setup instructions in the Gum [Setup page](../../../../readme/setup/).
+Next we'll create a project in the Gum UI tool. If you have not yet run the Gum tool, you can get setup instructions in the Gum [Setup page](../../../../gum-tool/setup/).
 
 Once you have the tool downloaded, run it. You should have an empty project.
 

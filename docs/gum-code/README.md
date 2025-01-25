@@ -1,2 +1,0 @@
-# Gum Code
-

@@ -18,4 +18,4 @@ For information on running from source, see [Running from Source](./#running-fro
 
 ## Writing Plugins
 
-For information on how to write Gum plugins, visit this page: [Plugins](../../readme/plugins/)
+For information on how to write Gum plugins, visit this page: [Plugins](../../gum-tool/plugins/)

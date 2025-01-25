@@ -38,7 +38,7 @@ Notice that when the parent resizes the blue rectangle is also resized, but when
 
 <figure><img src="../../../.gitbook/assets/07_06 55 18.gif" alt=""><figcaption><p>Children can exist outside of the parent bounds without resizing the parent</p></figcaption></figure>
 
-Children outside of bounds may not respond to click events unless the parent is explicitly checking for click events outside of its bounds. This is a property which is set at runtime. For more information see the [RaiseChildrenEventsOutsideOfBounds](../../../gum-code/gum-code-reference/interactivegue/raisechildreneventsoutsideofbounds.md) page.
+Children outside of bounds may not respond to click events unless the parent is explicitly checking for click events outside of its bounds. This is a property which is set at runtime. For more information see the [RaiseChildrenEventsOutsideOfBounds](../../../code/gum-code-reference/interactivegue/raisechildreneventsoutsideofbounds.md) page.
 
 ### Example - Drag+Drop in the Tree View
 
