@@ -124,7 +124,7 @@ public class VariableReferenceLogic
     {
         if (failures.Count > 0)
         {
-            var message = "Invalid veriable reference(s):\n";
+            var message = "Invalid variable reference(s):\n";
 
             foreach (var failure in failures)
             {
