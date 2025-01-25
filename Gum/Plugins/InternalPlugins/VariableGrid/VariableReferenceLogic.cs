@@ -124,24 +124,24 @@ public class VariableReferenceLogic
     {
         if (failures.Count > 0)
         {
-            var message = "Invalid veriable reference(s):\n";
+            string message = "";
 
             foreach (var failure in failures)
             {
                 var generalResponseMessage = failure.Item2.Message;
                 if (string.IsNullOrEmpty(generalResponseMessage))
                 {
-                    message += failure.Item1 + "\n";
+                    message += $"[{failure.Item1}]\n";
                 }
                 else
                 {
-                    message += $"{failure.Item1} {failure.Item2.Message} \n";
+                    message += $"[{failure.Item1}] {failure.Item2.Message} \n";
                 }
             }
 
             message += "\n\nInvalid lines will be commented out";
 
-            GumCommands.Self.GuiCommands.ShowMessage(message);
+            GumCommands.Self.GuiCommands.ShowMessage(message, "Invalid Variable Reference");
         }
     }
 
@@ -226,14 +226,14 @@ public class VariableReferenceLogic
 
         if (rootVariable == null)
         {
-            return GeneralResponse.UnsuccessfulWith($"Could not find variable {right} in {ownerElement}");
+            return GeneralResponse.UnsuccessfulWith($"Could not find variable [{right}] in [{ownerElement}]");
         }
 
         rightSideType = rootVariable.Type;
 
         if(rightSideType != leftSideType)
         {
-            return GeneralResponse.UnsuccessfulWith($"Left side is of type {leftSideType} but right side is of type {rightSideType}");
+            return GeneralResponse.UnsuccessfulWith($"Left side is of type [{leftSideType}] but right side is of type [{rightSideType}]");
         }
         return GeneralResponse.SuccessfulResponse;
     }
@@ -248,7 +248,7 @@ public class VariableReferenceLogic
 
         if(rootVar == null)
         {
-            return GeneralResponse<VariableSave>.UnsuccessfulWith($"Could not find variable {leftSide}");
+            return GeneralResponse<VariableSave>.UnsuccessfulWith($"Could not find variable [{leftSide}]");
         }
 
         var toReturn = GeneralResponse<VariableSave>.SuccessfulResponse;
@@ -279,7 +279,7 @@ public class VariableReferenceLogic
 
         if (string.IsNullOrEmpty(split[1]))
         {
-            return GeneralResponse.UnsuccessfulWith("Right side cannot be emmpty");
+            return GeneralResponse.UnsuccessfulWith("Right side cannot be empty");
         }
 
         return GeneralResponse.SuccessfulResponse;
