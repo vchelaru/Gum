@@ -161,7 +161,7 @@ namespace Gum.ToolCommands
 
             folder = folder?.Replace('\\', '/');
 
-            if (!NameVerifier.Self.IsComponentNameValid(componentName, folder, null, out whyNotValid))
+            if (!NameVerifier.Self.IsElementNameValid(componentName, folder, null, out whyNotValid))
             {
                 MessageBox.Show(whyNotValid);
                 return null;

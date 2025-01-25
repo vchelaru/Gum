@@ -34,6 +34,7 @@ namespace CodeOutputPlugin
         private readonly CodeGenerationFileLocationsService _codeGenerationFileLocationsService;
         private readonly CodeGenerationService _codeGenerationService;
         private readonly ISelectedState _selectedState;
+        private readonly RenameService _renameService;
         PluginTab pluginTab;
 
         #endregion
@@ -47,6 +48,8 @@ namespace CodeOutputPlugin
             _codeGenerationService = new CodeGenerationService();
 
             _selectedState = SelectedState.Self;
+
+            _renameService = new RenameService();
         }
 
         public override void StartUp()
@@ -64,7 +67,7 @@ namespace CodeOutputPlugin
             this.InstanceReordered += HandleInstanceReordered;
 
             this.ElementSelected += HandleElementSelected;
-            this.ElementRename += (element, oldName) => RenameManager.HandleRename(element, oldName, codeOutputProjectSettings);
+            this.ElementRename += (element, oldName) => _renameService.HandleRename(element, oldName, codeOutputProjectSettings);
             this.ElementAdd += HandleElementAdd;
             this.ElementDelete += HandleElementDeleted;
 
@@ -185,7 +188,7 @@ namespace CodeOutputPlugin
         {
             ParentSetLogic.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
 
-            RenameManager.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
+            _renameService.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
 
             HandleRefreshAndExport();
         }

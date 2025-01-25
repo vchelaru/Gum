@@ -540,7 +540,7 @@ public partial class ElementTreeViewManager
 
                 string whyNotValid;
 
-                if (!NameVerifier.Self.IsScreenNameValid(name, null, out whyNotValid))
+                if (!NameVerifier.Self.IsElementNameValid(name, null, null, out whyNotValid))
                 {
                     MessageBox.Show(whyNotValid);
                 }

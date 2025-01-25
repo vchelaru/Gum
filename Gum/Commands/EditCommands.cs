@@ -345,7 +345,7 @@ namespace Gum.Commands
                         prefix = tiw.Result.Substring(0, indexOfSlash + 1);
                     }
 
-                    NameVerifier.Self.IsScreenNameValid(strippedName, null, out whyNotValid);
+                    NameVerifier.Self.IsElementNameValid(strippedName, null, null, out whyNotValid);
 
                     if (string.IsNullOrEmpty(whyNotValid))
                     {
@@ -386,7 +386,7 @@ namespace Gum.Commands
                     string name = tiw.Result;
 
                     string whyNotValid;
-                    NameVerifier.Self.IsComponentNameValid(tiw.Result, folder, null, out whyNotValid);
+                    NameVerifier.Self.IsElementNameValid(tiw.Result, folder, null, out whyNotValid);
 
                     if (string.IsNullOrEmpty(whyNotValid))
                     {
@@ -438,7 +438,7 @@ namespace Gum.Commands
                     //bool replace = tiwcw.Checked
 
                     string whyNotValid;
-                    NameVerifier.Self.IsComponentNameValid(createComponentWindow.Result, "", null, out whyNotValid);
+                    NameVerifier.Self.IsElementNameValid(createComponentWindow.Result, "", null, out whyNotValid);
 
                     if (string.IsNullOrEmpty(whyNotValid))
                     {

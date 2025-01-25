@@ -85,7 +85,7 @@
     <Compile Include="Manager\CustomCodeGenerator.cs" />
     <Compile Include="Manager\CustomVariableManager.cs" />
     <Compile Include="Manager\ParentSetLogic.cs" />
-    <Compile Include="Manager\RenameManager.cs" />
+    <Compile Include="Manager\RenameService.cs" />
     <Compile Include="Manager\VariableExclusionLogic.cs" />
     <Compile Include="Models\CodeOutputElementSettings.cs" />
     <Compile Include="Models\CodeOutputProjectSettings.cs" />

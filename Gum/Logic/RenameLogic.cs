@@ -574,17 +574,19 @@ public class RenameLogic
                 shouldContinue = false;
             }
         }
-        else if(instanceContainer is ComponentSave component)
+        else if(instanceContainer is ElementSave elementSave and not StandardElementSave)
         {
-            if (NameVerifier.Self.IsComponentNameValid(component.Name, null, component, out whyNot) == false)
+            var nameWithoutFolder = elementSave.Name;
+            string? folder = null;
+
+            if(elementSave.Name.Contains('/'))
             {
-                MessageBox.Show(whyNot);
-                shouldContinue = false;
+                var lastIndexOfSlash = elementSave.Name.LastIndexOf('/');
+                folder = elementSave.Name.Substring(0, lastIndexOfSlash);
+                nameWithoutFolder = elementSave.Name.Substring(lastIndexOfSlash + 1);
             }
-        }
-        else if (instanceContainer is ScreenSave screen)
-        {
-            if (NameVerifier.Self.IsScreenNameValid(screen.Name, screen, out whyNot) == false)
+
+            if (NameVerifier.Self.IsElementNameValid(nameWithoutFolder, folder, elementSave, out whyNot) == false)
             {
                 MessageBox.Show(whyNot);
                 shouldContinue = false;

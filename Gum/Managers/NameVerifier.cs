@@ -83,35 +83,13 @@ namespace Gum.Managers
 
         #endregion
 
-        public bool IsScreenNameValid(string screenName, ScreenSave screen, out string whyNotValid)
+        public bool IsElementNameValid(string componentNameWithoutFolder, string folderName, ElementSave elementSave, out string whyNotValid)
         {
-            IsNameValidCommon(screenName, out whyNotValid);
-
-            if(string.IsNullOrEmpty(whyNotValid))
-            {
-                IsFileNameWindowsReserved(screenName, out whyNotValid);
-            }
-
-            //if (string.IsNullOrEmpty(whyNotValid))
-            //{
-            //    IsNameValidVariable(screenName, out whyNotValid);
-            //}
+            IsNameValidCommon(componentNameWithoutFolder, out whyNotValid);
 
             if (string.IsNullOrEmpty(whyNotValid))
             {
-                IsNameAnExistingElement(screenName, null, screen, out whyNotValid);
-            }
-
-            return string.IsNullOrEmpty(whyNotValid);
-        }
-
-        public bool IsComponentNameValid(string componentName, string folderName, ComponentSave component, out string whyNotValid)
-        {
-            IsNameValidCommon(componentName, out whyNotValid);
-
-            if (string.IsNullOrEmpty(whyNotValid))
-            {
-                IsFileNameWindowsReserved(componentName, out whyNotValid);
+                IsFileNameWindowsReserved(componentNameWithoutFolder, out whyNotValid);
             }
             //if (string.IsNullOrEmpty(whyNotValid))
             //{
@@ -120,7 +98,7 @@ namespace Gum.Managers
 
             if (string.IsNullOrEmpty(whyNotValid))
             {
-                IsNameAnExistingElement(componentName, folderName, component, out whyNotValid);
+                IsNameAnExistingElement(componentNameWithoutFolder, folderName, elementSave, out whyNotValid);
             }
 
             return string.IsNullOrEmpty(whyNotValid);
