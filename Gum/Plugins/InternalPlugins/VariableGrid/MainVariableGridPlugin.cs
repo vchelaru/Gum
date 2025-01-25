@@ -15,7 +15,12 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid;
 [Export(typeof(PluginBase))]
 public class MainVariableGridPlugin : InternalPlugin
 {
+    PropertyGridManager _propertyGridManager;
 
+    public MainVariableGridPlugin()
+    {
+        _propertyGridManager = PropertyGridManager.Self;
+    }
 
     public override void StartUp()
     {
@@ -32,6 +37,7 @@ public class MainVariableGridPlugin : InternalPlugin
         this.InstanceSelected += HandleInstanceSelected;
         this.ElementSelected += HandleElementSelected;
         this.ElementDelete += HandleElementDeleted;
+        this.ElementRename += HandleElementRenamed;
         this.BehaviorSelected += HandleBehaviorSelected;
         this.VariableSelected += HandleVariableSelected;
         this.RefreshVariableView += HandleRefreshVariableView;
@@ -39,25 +45,30 @@ public class MainVariableGridPlugin : InternalPlugin
         this.VariableSet += HandleVariableSet;
     }
 
+    private void HandleElementRenamed(ElementSave save, string arg2)
+    {
+        PropertyGridManager.Self.RefreshVariablesDataGridValues();
+    }
+
     private void HandleVariableSet(ElementSave element, InstanceSave instance, string strippedName, object oldValue)
     {
         if(strippedName == "VariableReferences")
         {
             // force refresh:
-            PropertyGridManager.Self.RefreshUI(force: true);
+            _propertyGridManager.RefreshEntireGrid(force: true);
         }
     }
 
     private void HandleElementDeleted(ElementSave save)
     {
-        PropertyGridManager.Self.RefreshUI(force:false);
+        _propertyGridManager.RefreshEntireGrid(force:false);
     }
 
     private void HandleAfterUndo()
     {
         // An undo can result in variables added or removed, so let's
         // do a full refresh
-        PropertyGridManager.Self.RefreshUI(force: true);
+        _propertyGridManager.RefreshEntireGrid(force: true);
     }
 
     private void HandleVariableSelected(IStateContainer container, VariableSave save)
@@ -67,33 +78,33 @@ public class MainVariableGridPlugin : InternalPlugin
 
     private void HandleElementSelected(ElementSave save)
     {
-        PropertyGridManager.Self.RefreshUI(force: true);
+        _propertyGridManager.RefreshEntireGrid(force: true);
     }
 
     private void HandleBehaviorSelected(BehaviorSave save)
     {
-        PropertyGridManager.Self.RefreshUI(force: true);
+        _propertyGridManager.RefreshEntireGrid(force: true);
     }
 
     private void HandleInstanceSelected(ElementSave save1, InstanceSave save2)
     {
-        PropertyGridManager.Self.RefreshUI(force: true);
+        _propertyGridManager.RefreshEntireGrid(force: true);
     }
 
     private void MainVariableGridPlugin_ReactToStateSaveCategorySelected(StateSaveCategory obj)
     {
-        PropertyGridManager.Self.RefreshUI(force: true);
+        _propertyGridManager.RefreshEntireGrid(force: true);
 
     }
 
     private void HandleStateMovedToCategory(StateSave save, StateSaveCategory category1, StateSaveCategory category2)
     {
-        PropertyGridManager.Self.RefreshUI(force: true);
+        _propertyGridManager.RefreshEntireGrid(force: true);
     }
 
     private void HandleStateSelected(StateSave save)
     {
-        PropertyGridManager.Self.RefreshUI(force: true);
+        _propertyGridManager.RefreshEntireGrid(force: true);
     }
 
     private void HandleCustomStateSelected(StateSave save)
@@ -116,12 +127,12 @@ public class MainVariableGridPlugin : InternalPlugin
 
         if(selectedState.SelectedBehavior == null && selectedState.SelectedInstance == null && selectedState.SelectedElement == null)
         {
-            PropertyGridManager.Self.RefreshUI(force: true);
+            _propertyGridManager.RefreshEntireGrid(force: true);
         }
     }
 
     private void HandleRefreshVariableView(bool force)
     {
-        PropertyGridManager.Self.RefreshUI(force);
+        _propertyGridManager.RefreshEntireGrid(force);
     }
 }

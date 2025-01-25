@@ -118,8 +118,7 @@ namespace Gum.Managers
         bool isInRefresh = false;
 
 
-        [Obsolete("Use GuiCommands.RefreshVariables")]
-        public void RefreshUI(bool force = false)
+        public void RefreshEntireGrid(bool force = false)
         {
             if (isInRefresh || ObjectsSuppressingRefresh.Count > 0)
                 return;

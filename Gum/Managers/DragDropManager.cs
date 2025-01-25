@@ -61,36 +61,6 @@ public class DragDropManager
         _elementCommands = ElementCommands.Self;
     }
 
-    internal void HandleDragDropEvent(object sender, DragEventArgs e)
-    {
-        List<TreeNode> treeNodesToDrop = GetTreeNodesToDrop();
-        mDraggedItem = null;
-        TreeNode targetTreeNode = ElementTreeViewManager.Self.GetTreeNodeOver();
-        foreach(var draggedTreeNode in treeNodesToDrop )
-        {
-            object draggedObject = draggedTreeNode.Tag;
-
-            if (targetTreeNode != draggedTreeNode)
-            {
-                HandleDroppedItemOnTreeView(draggedObject, targetTreeNode);
-            }
-        }
-
-        string[] files = (string[])e.Data?.GetData(DataFormats.FileDrop);
-
-        if(files != null)
-        {
-            var isTargetRootScreenTreeNode = targetTreeNode == ElementTreeViewManager.Self.RootScreensTreeNode;
-            foreach(FilePath file in files)
-            {
-                if(file.Extension == GumProjectSave.ScreenExtension && isTargetRootScreenTreeNode)
-                {
-                    ImportLogic.ImportScreen(file);
-                }
-            }
-        }
-    }
-
     #region Drag+drop File (from windows explorer)
 
     internal void HandleFileDragDrop(object sender, DragEventArgs e)
@@ -145,6 +115,31 @@ public class DragDropManager
         }
         if (shouldUpdate)
             SaveAndRefresh();
+    }
+
+    private void AddNewInstanceForDrop(string fileName, float worldX, float worldY)
+    {
+        string nameToAdd = FileManager.RemovePath(FileManager.RemoveExtension(fileName));
+
+        var element = SelectedState.Self.SelectedElement;
+
+        IEnumerable<string> existingNames = element.Instances.Select(i => i.Name);
+        nameToAdd = StringFunctions.MakeStringUnique(nameToAdd, existingNames);
+
+        InstanceSave instance =
+            _elementCommands.AddInstance(element, nameToAdd);
+        instance.BaseType = "Sprite";
+
+        SetInstanceToPosition(worldX, worldY, instance);
+
+        var variableName = instance.Name + ".SourceFile";
+
+        var oldValue = SelectedState.Self.SelectedStateSave.GetValueOrDefault<string>(variableName);
+
+        SelectedState.Self.SelectedStateSave.SetValue(variableName, fileName, instance);
+
+        SetVariableLogic.Self.ReactToPropertyValueChanged("SourceFile", oldValue, element, instance, SelectedState.Self.SelectedStateSave, refresh: false);
+
     }
 
     private void TryHandleFileDropOnInstance(float worldX, float worldY, string[] files, ref bool handled, ref bool shouldUpdate)
@@ -694,6 +689,36 @@ public class DragDropManager
 
     #region General Functions
 
+    internal void HandleDragDropEvent(object sender, DragEventArgs e)
+    {
+        List<TreeNode> treeNodesToDrop = GetTreeNodesToDrop();
+        mDraggedItem = null;
+        TreeNode targetTreeNode = ElementTreeViewManager.Self.GetTreeNodeOver();
+        foreach(var draggedTreeNode in treeNodesToDrop )
+        {
+            object draggedObject = draggedTreeNode.Tag;
+
+            if (targetTreeNode != draggedTreeNode)
+            {
+                HandleDroppedItemOnTreeView(draggedObject, targetTreeNode);
+            }
+        }
+
+        string[] files = (string[])e.Data?.GetData(DataFormats.FileDrop);
+
+        if(files != null)
+        {
+            var isTargetRootScreenTreeNode = targetTreeNode == ElementTreeViewManager.Self.RootScreensTreeNode;
+            foreach(FilePath file in files)
+            {
+                if(file.Extension == GumProjectSave.ScreenExtension && isTargetRootScreenTreeNode)
+                {
+                    ImportLogic.ImportScreen(file);
+                }
+            }
+        }
+    }
+
     public void OnItemDrag(object item)
     {
         mDraggedItem = item;
@@ -859,34 +884,6 @@ public class DragDropManager
         }
     }
 
-    #endregion
-
-
-    private void AddNewInstanceForDrop(string fileName, float worldX, float worldY)
-    {
-        string nameToAdd = FileManager.RemovePath(FileManager.RemoveExtension(fileName));
-
-        var element = SelectedState.Self.SelectedElement;
-
-        IEnumerable<string> existingNames = element.Instances.Select(i => i.Name);
-        nameToAdd = StringFunctions.MakeStringUnique(nameToAdd, existingNames);
-
-        InstanceSave instance =
-            _elementCommands.AddInstance(element, nameToAdd);
-        instance.BaseType = "Sprite";
-
-        SetInstanceToPosition(worldX, worldY, instance);
-
-        var variableName = instance.Name + ".SourceFile";
-
-        var oldValue = SelectedState.Self.SelectedStateSave.GetValueOrDefault<string>(variableName);
-
-        SelectedState.Self.SelectedStateSave.SetValue(variableName, fileName, instance);
-
-        SetVariableLogic.Self.ReactToPropertyValueChanged("SourceFile", oldValue, element, instance, SelectedState.Self.SelectedStateSave, refresh:false);
-
-    }
-
     private void SetInstanceToPosition(float worldX, float worldY, InstanceSave instance)
     {
         var component = SelectedState.Self.SelectedComponent;
@@ -932,4 +929,8 @@ public class DragDropManager
         SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".X", xToSet);
         SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".Y", yToSet);
     }
+
+    #endregion
+
+
 }
