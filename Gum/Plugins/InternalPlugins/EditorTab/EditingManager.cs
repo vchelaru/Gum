@@ -233,7 +233,7 @@ namespace Gum.Wireframe
 
             bool shouldContinue = true;
 
-            if(SelectedState.Self.CustomCurrentStateSave != null && currentValueAsObject == null)
+            if(SelectedState.Self.CustomCurrentStateSave != null || currentValueAsObject == null)
             {
                 // This is okay, we will do nothing here:
                 shouldContinue = false;

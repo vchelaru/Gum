@@ -64,7 +64,7 @@ namespace Gum.DataTypes.Variables
                 if (elementContainingState != null && stateSave != elementContainingState.DefaultState)
                 {
                     // try to get it from the stateSave recursively since it's not set directly on the state...
-                    if (foundVariable != null && foundVariable.SetsValue)
+                    if (foundVariable != null && foundVariable.SetsValue && foundVariable.Value != null)
                     {
                         // Why do we early out here?
                         //return foundVariable.Value;
