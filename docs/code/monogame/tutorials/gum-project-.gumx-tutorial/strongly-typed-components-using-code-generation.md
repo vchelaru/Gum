@@ -29,7 +29,7 @@ For this tutorial we'll create a component which can be used to display score. T
 
 <figure><img src="../../../../.gitbook/assets/image (107).png" alt=""><figcaption><p>Score component in Gum</p></figcaption></figure>
 
-The exact layout of your component does not need to match the layout displayed in the image above. If you are new to Gum and would like to learn more about creating components, see the [Components tutorial](../../../../readme/tutorials-and-examples/intro-tutorials/components.md).
+The exact layout of your component does not need to match the layout displayed in the image above. If you are new to Gum and would like to learn more about creating components, see the [Components tutorial](../../../../gum-tool/tutorials-and-examples/intro-tutorials/components.md).
 
 The NineSlice in the image above may look different than your default NineSlice. You can modify its appearance by changing its texture coordinates:
 
@@ -41,7 +41,7 @@ The NineSlice in the image above may look different than your default NineSlice.
 
 <figure><img src="../../../../.gitbook/assets/09_05 00 58.gif" alt=""><figcaption><p>Dragging the Texture Coordinates rectangle</p></figcaption></figure>
 
-For more information on working with texture coordinates, see the NineSlice [Texture Left](../../../../readme/gum-elements/nineslice/texture-left.md) and [Texture Top](../../../../readme/gum-elements/nineslice/texture-top.md) pages.
+For more information on working with texture coordinates, see the NineSlice [Texture Left](../../../../gum-tool/gum-elements/nineslice/texture-left.md) and [Texture Top](../../../../gum-tool/gum-elements/nineslice/texture-top.md) pages.
 
 ### Interacting with Custom Components in code
 

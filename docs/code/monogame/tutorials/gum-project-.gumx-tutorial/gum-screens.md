@@ -40,7 +40,7 @@ Add a ButtonStandard instance by dropping Components/Controls/ButtonStandard ont
 
 Be sure to select the TitleScreen first, then drag+drop. If you click the component instead, then it will be selected, so you must re-select the TitleScreen.
 
-The Gum tool includes lots of functionality for creating and customizing UI. For a more complete tutorial covering the Gum tool, see the [Gum Tool Intro Tutorials](../../../../readme/tutorials-and-examples/intro-tutorials/). Feel free to spend some time creating your TitleScreen.
+The Gum tool includes lots of functionality for creating and customizing UI. For a more complete tutorial covering the Gum tool, see the [Gum Tool Intro Tutorials](../../../../gum-tool/tutorials-and-examples/intro-tutorials/). Feel free to spend some time creating your TitleScreen.
 
 ### Showing a Gum Screen in Your Game
 

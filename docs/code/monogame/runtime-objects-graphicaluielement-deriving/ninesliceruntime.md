@@ -4,7 +4,7 @@
 
 The NineSliceRuntime object is used to draw a visual object which references a Texture2D, but which does not stretch the corner pieces of a texture, and which only stretches the edges between the corners along their axis. In other words, the NineSlice (sometimes also referred to as a sprite frame) is used to draw frames in UI which can stretch without introducing visual artifacts.
 
-For more information about the NineSlice type, see the [NineSlice page](../../../readme/gum-elements/nineslice/).
+For more information about the NineSlice type, see the [NineSlice page](../../../gum-tool/gum-elements/nineslice/).
 
 ### Code Example
 

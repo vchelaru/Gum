@@ -18,4 +18,4 @@ This tutorial assumes a basic understanding of the Gum tool. Specifically it ass
 2. Create Screens and Entities
 3. Work with the Variables tab
 
-If you are brand new to Gum, we recommend learning about how to work with the Gum tool by reading the Gum tool [Intro Tutorials](../../../../readme/tutorials-and-examples/intro-tutorials/).&#x20;
+If you are brand new to Gum, we recommend learning about how to work with the Gum tool by reading the Gum tool [Intro Tutorials](../../../../gum-tool/tutorials-and-examples/intro-tutorials/).&#x20;

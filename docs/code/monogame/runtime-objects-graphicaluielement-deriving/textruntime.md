@@ -30,7 +30,7 @@ By default all TextRuntime instances use an Arial 18 pt font. This can be change
 Fonts on TextRuntime objects can be modified in one of the following ways:
 
 1. By setting the `UseCustomFont` property to `true`, then changing the `CustomFontFile` property to a desired .fnt file.
-2. By directly assigning the `BitmapFont` property on the TextRuntime object, bypassing all other properties.&#x20;
+2. By directly assigning the `BitmapFont` property on the TextRuntime object, bypassing all other properties.
 3. By setting `UseCustomFont` property to `false`, then changing the individual Font values. This approach requires following a specific .fnt naming convention.
 
 For most projects, the first approach is recommended since it doesn't require specific naming conventions. The second approach also works well if you are directly loading the BitmapFont object yourself. The third approach is convenient if your project is using the Gum tool, and if the Gum tool has already generated fonts for the specific combinations of values you are assigning.
@@ -47,7 +47,7 @@ customText.Text = "Hello, I am using a custom font";
 customText.AddToManagers(SystemManagers.Default, null);
 ```
 
-For information on creating your own .fnt file with Bitmap Font Generator, see the [Use Custom Font](../../../readme/gum-elements/text/use-custom-font.md) page.
+For information on creating your own .fnt file with Bitmap Font Generator, see the [Use Custom Font](../../../gum-tool/gum-elements/text/use-custom-font.md) page.
 
 This code assumes a font file named WhitePeaberryOutline.fnt is located in the `Content/WhitePeaberryOutline` folder. By default all Gum content loading is performed relative to the Content folder; however, if UseCustomFont is set to false, then all font loading is performed from the FontCache folder. See the [Font Component Values](textruntime.md#font-component-values) section for more information on loading from the FontCache folder. See the [File Loading](../file-loading.md) page for more information about loading files in general.
 
@@ -123,10 +123,10 @@ Note that this method does not take into consideration the content folder.
 To create a .fnt file, you have a few options:
 
 1. Open Gum, create a temporary Text instance with the desired properties, then look at the font cache folder
-2. Use Angelcode Bitmap Font Generator. For more information see the [Use Custom Font page](../../../readme/gum-elements/text/use-custom-font.md).
+2. Use Angelcode Bitmap Font Generator. For more information see the [Use Custom Font page](../../../gum-tool/gum-elements/text/use-custom-font.md).
 3. Manually create a .fnt file in a text editor and a corresponding .png. This option requires understanding how the .fnt file format is structured. The best way to learn this is to open an existing font file.
 
-Using Gum to create the font cache is fairly simple, but you must know which fonts you intend to use ahead of time. A font is created automatically by the Gum tool whenever a Text property is changed.&#x20;
+Using Gum to create the font cache is fairly simple, but you must know which fonts you intend to use ahead of time. A font is created automatically by the Gum tool whenever a Text property is changed.
 
 To view the existing font cache, you can click the View Font Cache menu item in Gum.
 
@@ -138,11 +138,11 @@ As you make changes to the Text object, new files are created and added to the f
 
 ### Missing Font Exceptions
 
-By default TextRuntime instances do not throw exceptions for missing font files even if GraphicalUiElement.ThrowExceptionsForMissingFiles is set to  CustomSetPropertyOnRenderable.ThrowExceptionsForMissingFiles. The reason for this is because a TextRuntime's font is decided by a combination multiple properties.
+By default TextRuntime instances do not throw exceptions for missing font files even if GraphicalUiElement.ThrowExceptionsForMissingFiles is set to CustomSetPropertyOnRenderable.ThrowExceptionsForMissingFiles. The reason for this is because a TextRuntime's font is decided by a combination multiple properties.
 
 If UseCustomFont is set to false, then the font is determined by the combination of font values (as discussed above). If useCustomFont is set to true, then the font is determined by the CustomFontFile (also as discussed above).
 
-Ultimately the variables which are used for fonts can be assigned in any order, and can be assigned from multiple spots (such as direct assignments, states, or creation from Gum projects).&#x20;
+Ultimately the variables which are used for fonts can be assigned in any order, and can be assigned from multiple spots (such as direct assignments, states, or creation from Gum projects).
 
 In other words, the TextRuntime doesn't know when variable assignment is finished. We can address this in a few different ways.
 

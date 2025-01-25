@@ -28,7 +28,7 @@ Instance properties exist regardless of which Object Instantiation Type is used,
 
 <figure><img src="../../.gitbook/assets/StandardRuntimeInstances.png" alt=""><figcaption><p>MyComponent generates a runtime with properties matching the names of its contained instances</p></figcaption></figure>
 
-The types of these properties match their types in Gum. Instances of standard elements are generated using their corresponding runtime types. For example, a Text instance generates a property of type TextRuntime. For more information about standard element runtime types, see the [Runtime Objects](../../gum-code/monogame/runtime-objects-graphicaluielement-deriving/) section.
+The types of these properties match their types in Gum. Instances of standard elements are generated using their corresponding runtime types. For example, a Text instance generates a property of type TextRuntime. For more information about standard element runtime types, see the [Runtime Objects](../../code/monogame/runtime-objects-graphicaluielement-deriving/) section.
 
 Instances of components are generated using their corresponding runtime types as well. For example, instances of a component named Button are generated with the type ButtonRuntime.
 
