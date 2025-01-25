@@ -21,6 +21,13 @@ public enum AboveOrBelow
     Below
 }
 
+public enum ControlLocation
+{
+    Above,
+    Below,
+    LeftOfTextBox
+}
+
 /// <summary>
 /// Interaction logic for CustomizableTextInputWindow.xaml
 /// </summary>
@@ -64,15 +71,19 @@ public partial class CustomizableTextInputWindow : Window
         TextBox.SelectAll();
     }
 
-    public void AddControl(Control control, AboveOrBelow aboveOrBelow = AboveOrBelow.Below)
+    public void AddControl(Control control, ControlLocation controlLocation = ControlLocation.Below)
     {
-        if (aboveOrBelow == AboveOrBelow.Above)
+        if (controlLocation == ControlLocation.Above)
         {
             AboveTextBoxStackPanel.Children.Add(control);
         }
-        else if (aboveOrBelow == AboveOrBelow.Below)
+        else if (controlLocation == ControlLocation.Below)
         {
             BelowTextBoxStackPanel.Children.Add(control);
+        }
+        else if(controlLocation == ControlLocation.LeftOfTextBox)
+        {
+            LeftOfTextBoxStackPanel.Children.Add(control);
         }
     }
 

@@ -545,14 +545,32 @@ namespace Gum.Commands
             var oldName = element.Name;
 
             var window = new CustomizableTextInputWindow();
-            window.Result = oldName;
-            window.Message = "Enter new name:";
+            window.Title = "Enter new name:";
+            window.Message = string.Empty;
             window.HighlightText();
+
+            string folder = "";
+            string rootElementName = element.Name;
+            if(element.Name.Contains("/"))
+            {
+                folder = Path.GetDirectoryName(element.Name).Replace("\\", "/") + "/";
+                rootElementName = Path.GetFileName(element.Name);
+            }
+
+            window.Result = rootElementName;
+            if(!string.IsNullOrEmpty(folder))
+            {
+                var label = new System.Windows.Controls.Label();
+                label.Content = folder;
+                window.AddControl(label, ControlLocation.LeftOfTextBox);
+            }
+
+
             var dialogResult = window.ShowDialog();
 
             if(dialogResult == true)
             {
-                element.Name = window.Result;
+                element.Name = folder + window.Result;
                 SetVariableLogic.Self.PropertyValueChanged("Name", oldName, null, refresh: true,
                     recordUndo: true,
                     trySave: true);

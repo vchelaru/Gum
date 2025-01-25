@@ -16,7 +16,14 @@
         <StackPanel x:Name="AboveTextBoxStackPanel"></StackPanel>
         <StackPanel Grid.Row="1" x:Name="TextBoxStackPanel">
             <TextBlock x:Name="Label" TextWrapping="Wrap" Text="Label" Margin="0,0,0,5" />
-            <TextBox x:Name="TextBox" KeyDown="TextBox_KeyDown" TextChanged="TextBox_TextChanged" ></TextBox>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" x:Name="LeftOfTextBoxStackPanel"/>
+                <TextBox Grid.Column="1" x:Name="TextBox" KeyDown="TextBox_KeyDown" TextChanged="TextBox_TextChanged" ></TextBox>
+            </Grid>
             <TextBlock x:Name="ValidationLabel" Foreground="Red" FontSize="10" Margin="3,0,0,0" TextWrapping="Wrap" Text="Validation text" />
         </StackPanel>
         <StackPanel x:Name="BelowTextBoxStackPanel"
