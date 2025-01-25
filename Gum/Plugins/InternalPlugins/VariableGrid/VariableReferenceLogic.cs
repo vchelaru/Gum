@@ -226,14 +226,14 @@ public class VariableReferenceLogic
 
         if (rootVariable == null)
         {
-            return GeneralResponse.UnsuccessfulWith($"Could not find variable {right} in {ownerElement}");
+            return GeneralResponse.UnsuccessfulWith($"Could not find variable [{right}] in [{ownerElement}]");
         }
 
         rightSideType = rootVariable.Type;
 
         if(rightSideType != leftSideType)
         {
-            return GeneralResponse.UnsuccessfulWith($"Left side is of type {leftSideType} but right side is of type {rightSideType}");
+            return GeneralResponse.UnsuccessfulWith($"Left side is of type [{leftSideType}] but right side is of type [{rightSideType}]");
         }
         return GeneralResponse.SuccessfulResponse;
     }
@@ -248,7 +248,7 @@ public class VariableReferenceLogic
 
         if(rootVar == null)
         {
-            return GeneralResponse<VariableSave>.UnsuccessfulWith($"Could not find variable {leftSide}");
+            return GeneralResponse<VariableSave>.UnsuccessfulWith($"Could not find variable [{leftSide}]");
         }
 
         var toReturn = GeneralResponse<VariableSave>.SuccessfulResponse;
