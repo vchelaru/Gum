@@ -124,7 +124,7 @@ public class VariableReferenceLogic
     {
         if (failures.Count > 0)
         {
-            var message = "Invalid veriable reference(s):\n";
+            string message = "";
 
             foreach (var failure in failures)
             {
@@ -141,7 +141,7 @@ public class VariableReferenceLogic
 
             message += "\n\nInvalid lines will be commented out";
 
-            GumCommands.Self.GuiCommands.ShowMessage(message);
+            GumCommands.Self.GuiCommands.ShowMessage(message, "Invalid Variable Reference");
         }
     }
 

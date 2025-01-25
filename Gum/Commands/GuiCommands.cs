@@ -295,9 +295,9 @@ namespace Gum.Commands
 
         #region Show General Messages
 
-        public void ShowMessage(string message)
+        public void ShowMessage(string message, string caption = "")
         {
-            MessageBox.Show(message);
+            MessageBox.Show(message, caption);
         }
 
         public System.Windows.MessageBoxResult ShowYesNoMessageBox(string message, string caption = "Confirm", Action yesAction = null, Action noAction = null)
