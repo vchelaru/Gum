@@ -572,6 +572,11 @@ public class ListBox : ItemsControl, IInputReceiver
         base.UpdateVerticalScrollBarValues();
     }
 
+    /// <summary>
+    /// Shows the argument popup using the argument listBoxParent to determine its destination layer.
+    /// </summary>
+    /// <param name="popup">The popup to show, for example a dropdown from a ComboBox or MenuItem</param>
+    /// <param name="listBoxParent">The parent visual, which would be something like the ComboBox.Visual</param>
     public static void ShowPopupListBox(ScrollViewer popup, GraphicalUiElement listBoxParent)
     {
         popup.IsVisible = true;
@@ -586,53 +591,10 @@ public class ListBox : ItemsControl, IInputReceiver
         popup.Visual.WidthUnits = DimensionUnitType.Absolute;
         popup.Visual.HeightUnits = DimensionUnitType.Absolute;
 
-
-
         // let's just make sure it's removed
         popup.Visual.RemoveFromManagers();
 
-        var managers = listBoxParent.Managers ?? SystemManagers.Default;
-
-        var layerToAddListBoxTo = managers.Renderer.MainLayer;
-
-        var mainRoot = listBoxParent.ElementGueContainingThis ?? listBoxParent;
-
-        if(mainRoot.Children == null)
-        {
-            // The main root is a screen which would not have layers
-            // therefore we have to get the parent that still has children:
-            var parentWithChildren = listBoxParent as IRenderableIpso;
-            while (parentWithChildren != null)
-            {
-                var potentialParent = parentWithChildren.Parent;
-                if(potentialParent?.Children != null)
-                {
-                    // continue okay
-                    parentWithChildren = potentialParent.Parent;
-                }
-                else
-                {
-                    break;
-                }
-            }
-            if(parentWithChildren != null)
-            {
-                mainRoot = parentWithChildren as InteractiveGue;
-            }
-        }
-
-        // do a search in the layers to see where this is held - expensive but we can at least look in non-main layers
-        foreach (var layer in managers.Renderer.Layers)
-        {
-            if (layer != managers.Renderer.MainLayer)
-            {
-                if (layer.Renderables.Contains(mainRoot) || layer.Renderables.Contains(mainRoot?.RenderableComponent as IRenderableIpso))
-                {
-                    layerToAddListBoxTo = layer;
-                    break;
-                }
-            }
-        }
+        var layerToAddListBoxTo = GetLayerToAddTo(listBoxParent);
 
 #if FRB
         popup.Visual.AddToManagers(listBoxParent.EffectiveManagers,
@@ -673,6 +635,37 @@ public class ListBox : ItemsControl, IInputReceiver
 #endif
 
 
+    }
+
+    private static Layer GetLayerToAddTo(GraphicalUiElement listBoxParent)
+    {
+        var managers = listBoxParent.Managers ?? SystemManagers.Default;
+
+        var layerToAddListBoxTo = managers.Renderer.MainLayer;
+
+        var mainRoot = listBoxParent.ElementGueContainingThis ?? listBoxParent;
+
+        // We need to loop up the parents to see if there is a layer that contains this:
+        var parent = listBoxParent;
+        while(parent != null)
+        {
+            foreach (var layer in managers.Renderer.Layers)
+            {
+                if (layer != layerToAddListBoxTo)
+                {
+                    if (layer.Renderables.Contains(parent) || layer.Renderables.Contains(parent.RenderableComponent as IRenderableIpso))
+                    {
+                        layerToAddListBoxTo = layer;
+                        break;
+                    }
+                }
+            }
+
+            parent = parent.Parent as GraphicalUiElement;
+        }
+
+
+        return layerToAddListBoxTo;
     }
 
     #region IInputReceiver Methods
