@@ -131,11 +131,11 @@ public class VariableReferenceLogic
                 var generalResponseMessage = failure.Item2.Message;
                 if (string.IsNullOrEmpty(generalResponseMessage))
                 {
-                    message += failure.Item1 + "\n";
+                    message += $"[{failure.Item1}]\n";
                 }
                 else
                 {
-                    message += $"{failure.Item1} {failure.Item2.Message} \n";
+                    message += $"[{failure.Item1}] {failure.Item2.Message} \n";
                 }
             }
 
@@ -279,7 +279,7 @@ public class VariableReferenceLogic
 
         if (string.IsNullOrEmpty(split[1]))
         {
-            return GeneralResponse.UnsuccessfulWith("Right side cannot be emmpty");
+            return GeneralResponse.UnsuccessfulWith("Right side cannot be empty");
         }
 
         return GeneralResponse.SuccessfulResponse;
