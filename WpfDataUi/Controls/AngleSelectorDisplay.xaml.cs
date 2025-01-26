@@ -277,6 +277,9 @@ namespace WpfDataUi.Controls
 
             RefreshIsEnabled();
 
+            mTextBoxLogic.RefreshBackgroundColor();
+
+
             SuppressSettingProperty = false;
         }
 
