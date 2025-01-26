@@ -413,7 +413,7 @@ public class RenameLogic
 
                 }
 
-                foreach (var variable in screen.DefaultState.Variables.Where(item => item.GetRootName() == "Contained Type"))
+                foreach (var variable in screen.DefaultState.Variables.Where(item => item.GetRootName() == "ContainedType"))
                 {
                     if (variable.Value as string == oldName)
                     {
@@ -445,7 +445,7 @@ public class RenameLogic
                     }
                 }
 
-                foreach (var variable in component.DefaultState.Variables.Where(item => item.GetRootName() == "Contained Type"))
+                foreach (var variable in component.DefaultState.Variables.Where(item => item.GetRootName() == "ContainedType"))
                 {
                     if (variable.Value as string == oldName)
                     {

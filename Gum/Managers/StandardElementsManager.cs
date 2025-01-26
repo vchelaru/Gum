@@ -260,7 +260,7 @@ namespace Gum.Managers
                     Category = "Children",
                     Type = "string",
                     Value = null,
-                    Name = "Contained Type"
+                    Name = "ContainedType"
                 });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "ChildrenLayout", Value = ChildrenLayout.Regular, Name = "ChildrenLayout" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "float", Value = 0.0f, Name = "StackSpacing" });

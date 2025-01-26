@@ -2920,7 +2920,7 @@ public class CodeGenerator
                     var rootName = item.GetRootName();
 
                     // these are excluded from codegen for now:
-                    if (rootName == "Contained Type")
+                    if (rootName == "ContainedType")
                     {
                         shouldInclude = false;
                     }

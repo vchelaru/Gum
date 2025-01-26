@@ -33,7 +33,7 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>Contained Type</Name>
+      <Name>ContainedType</Name>
       <Category>Children</Category>
       <SetsValue>true</SetsValue>
     </Variable>

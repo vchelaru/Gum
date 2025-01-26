@@ -900,7 +900,7 @@ namespace Gum.Managers
                     }
                 }
 
-                foreach (var variable in screen.DefaultState.Variables.Where(item => item.GetRootName() == "Contained Type"))
+                foreach (var variable in screen.DefaultState.Variables.Where(item => item.GetRootName() == "ContainedType" || item.GetRootName() == "Contained Type"))
                 {
                     if (variable.Value as string == elementName)
                     {
@@ -932,7 +932,7 @@ namespace Gum.Managers
                     }
                 }
 
-                foreach (var variable in component.DefaultState.Variables.Where(item => item.GetRootName() == "Contained Type"))
+                foreach (var variable in component.DefaultState.Variables.Where(item => item.GetRootName() == "ContainedType" || item.GetRootName() == "Contained Type"))
                 {
                     if (variable.Value as string == elementName)
                     {

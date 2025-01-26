@@ -36,7 +36,7 @@ namespace Gum.Plugins.ParentPlugin
 
             if (newParent != null)
             {
-                var typeRestriction = currentState.GetValueOrDefault<string>($"{newParent.Name}.Contained Type");
+                var typeRestriction = currentState.GetValueOrDefault<string>($"{newParent.Name}.ContainedType");
 
                 if (!string.IsNullOrEmpty(typeRestriction))
                 {
