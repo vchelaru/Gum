@@ -158,6 +158,8 @@ namespace WpfDataUi.Controls
 
                 RefreshMinMaxAndTickDisplay();
 
+                RefreshIsEnabled();
+
                 SuppressSettingProperty = false;
 
                 HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
@@ -166,6 +168,18 @@ namespace WpfDataUi.Controls
                 this.RefreshContextMenu(TextBox.ContextMenu);
                 this.RefreshContextMenu(Slider.ContextMenu);
                 this.RefreshContextMenu(Label.ContextMenu);
+            }
+        }
+
+        private void RefreshIsEnabled()
+        {
+            if (InstanceMember?.IsReadOnly == true)
+            {
+                IsEnabled = false;
+            }
+            else
+            {
+                IsEnabled = true;
             }
         }
 

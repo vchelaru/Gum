@@ -179,8 +179,6 @@ namespace WpfDataUi.Controls
         #endregion
 
 
-        #region Methods
-
         private void UpdateUiToAngle()
         {
             TextBox.Text = mAngle?.ToString();
@@ -196,19 +194,6 @@ namespace WpfDataUi.Controls
             }
         }
 
-
-
-        private void TextBox_PreviewKeyDown_1(object sender, KeyEventArgs e)
-        {
-            if (e.Key == Key.Enter)
-            {
-                // don't handle it, let the text box display logic handle it too:
-                //e.Handled = true;
-                ApplyTextBoxText();
-                //mTextAtStartOfEditing = TextBox.Text;
-
-            }
-        }
 
         private void ApplyTextBoxText()
         {
@@ -239,12 +224,6 @@ namespace WpfDataUi.Controls
             mTextBoxLogic.TryApplyToInstance();
         }
 
-        private void TextBox_LostFocus_1(object sender, RoutedEventArgs e)
-        {
-            ApplyTextBoxText();
-        }
-        #endregion
-
 
         void NotifyPropertyChange(string propertyName)
         {
@@ -252,11 +231,6 @@ namespace WpfDataUi.Controls
             {
                 PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
             }
-        }
-
-        private void Grid_DragOver_1(object sender, DragEventArgs e)
-        {
-            Ellipse_MouseMove_1(null, null);
         }
 
         public void Refresh(bool forceRefreshEvenIfFocused = false)
@@ -301,7 +275,21 @@ namespace WpfDataUi.Controls
                 TextBox.Background = TextBoxDisplayLogic.CustomValueBackground;
             }
 
+            RefreshIsEnabled();
+
             SuppressSettingProperty = false;
+        }
+
+        private void RefreshIsEnabled()
+        {
+            if (InstanceMember?.IsReadOnly == true)
+            {
+                IsEnabled = false;
+            }
+            else
+            {
+                IsEnabled = true;
+            }
         }
 
         public ApplyValueResult TryGetValueOnUi(out object result)
@@ -406,6 +394,34 @@ namespace WpfDataUi.Controls
             }
         }
 
+        public static decimal RoundDecimal(decimal valueToRound, decimal multipleOf)
+        {
+            return ((int)(System.Math.Sign(valueToRound) * .5m + valueToRound / multipleOf)) * multipleOf;
+        }
+
+        #region Event Handlers
+        private void TextBox_PreviewKeyDown_1(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                // don't handle it, let the text box display logic handle it too:
+                //e.Handled = true;
+                ApplyTextBoxText();
+                //mTextAtStartOfEditing = TextBox.Text;
+
+            }
+        }
+
+        private void TextBox_LostFocus_1(object sender, RoutedEventArgs e)
+        {
+            ApplyTextBoxText();
+        }
+
+        private void Grid_DragOver_1(object sender, DragEventArgs e)
+        {
+            Ellipse_MouseMove_1(null, null);
+        }
+
         private void Ellipse_MouseMove_1(object sender, MouseEventArgs e)
         {
             if (Mouse.LeftButton == MouseButtonState.Pressed)
@@ -452,10 +468,6 @@ namespace WpfDataUi.Controls
             }
         }
 
-        public static decimal RoundDecimal(decimal valueToRound, decimal multipleOf)
-        {
-            return ((int)(System.Math.Sign(valueToRound) * .5m + valueToRound / multipleOf)) * multipleOf;
-        }
         private void Ellipse_MouseLeftButtonDown_1(object sender, MouseButtonEventArgs e)
         {
             Ellipse_MouseMove_1(null, null);
@@ -483,5 +495,7 @@ namespace WpfDataUi.Controls
             ReactToAngleSetThroughProperty(SetPropertyCommitType.Full);
 
         }
+        #endregion
+
     }
 }
