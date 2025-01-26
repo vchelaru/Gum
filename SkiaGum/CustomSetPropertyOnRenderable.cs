@@ -94,7 +94,7 @@ namespace SkiaGum
                 }
                 handled = true;
             }
-            else if (propertyName == "Font Scale")
+            else if (propertyName == "Font Scale" || propertyName == "FontScale")
             {
                 text.FontScale = (float)value;
                 // we want to update if the text's size is based on its "children" (the letters it contains)

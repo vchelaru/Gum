@@ -204,6 +204,10 @@ namespace Gum
                 {
                     wasModified = true;
                 }
+                if (RemoveSpacesInVariables(mGumProjectSave))
+                {
+                    wasModified = true;
+                }
                 if (RemoveDuplicateVariables(mGumProjectSave))
                 {
                     wasModified = true;
@@ -286,7 +290,52 @@ namespace Gum
             }
         }
 
-        private bool FixRecursiveAssignments(GumProjectSave mGumProjectSave)
+        private bool RemoveSpacesInVariables(GumProjectSave gumProjectSave)
+        {
+            bool didChange = false;
+            foreach(var element in gumProjectSave.AllElements)
+            {
+                foreach(var state in element.AllStates)
+                {
+                    foreach(var variable in state.Variables)
+                    {
+                        Replace(variable, "Base Type");
+                        Replace(variable, "Children Layout");
+                        Replace(variable, "Clips Children");
+                        Replace(variable, "Contained Type");
+                        Replace(variable, "Font Scale");
+                        Replace(variable, "Height Units");
+                        Replace(variable, "Texture Address");
+                        Replace(variable, "Texture Height");
+                        Replace(variable, "Texture Height Scale");
+                        Replace(variable, "Texture Left");
+                        Replace(variable, "Texture Top");
+                        Replace(variable, "Texture Width");
+                        Replace(variable, "Texture Width Scale");
+                        Replace(variable, "Width Units");
+                        Replace(variable, "Wraps Children");
+                        Replace(variable, "X Origin");
+                        Replace(variable, "X Units");
+                        Replace(variable, "Y Origin");
+                        Replace(variable, "Y Units");
+
+                        void Replace(VariableSave variableSave, string oldName)
+                        {
+                            if(variable.Name.EndsWith(oldName))
+                            {
+                                var newName = variable.Name.Substring(0, variable.Name.Length - oldName.Length) + 
+                                    oldName.Replace(" ", "");
+                                variable.Name = newName;
+                                didChange = true;
+                            }
+                        }
+                    }
+                }
+            }
+            return didChange;
+        }
+
+        private bool FixRecursiveAssignments(GumProjectSave gumProjectSave)
         {
             var toReturn = false;
             // Instances can't be of type screen, so don't check this (unless someone messes with the XML but that's on them)
@@ -297,7 +346,7 @@ namespace Gum
             //        toReturn = true;
             //    }
             //}
-            foreach (var component in mGumProjectSave.Components)
+            foreach (var component in gumProjectSave.Components)
             {
                 if (FixRecursiveAssignments(component))
                 {
