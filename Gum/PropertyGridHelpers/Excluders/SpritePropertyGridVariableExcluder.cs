@@ -41,24 +41,24 @@ namespace Gum.PropertyGridHelpers.Excluders
 
             }
 
-            if (rootName == "Texture Top" || rootName == "Texture Left")
+            if (rootName == "TextureTop" || rootName == "TextureLeft")
             {
-                var addressMode = rvf.GetValue<TextureAddress>($"{prefix}Texture Address");
+                var addressMode = rvf.GetValue<TextureAddress>($"{prefix}TextureAddress");
 
                 shouldExclude = addressMode == TextureAddress.EntireTexture;
             }
 
-            if (rootName == "Texture Width" || rootName == "Texture Height")
+            if (rootName == "TextureWidth" || rootName == "TextureHeight")
             {
-                var addressMode = rvf.GetValue<TextureAddress>($"{prefix}Texture Address");
+                var addressMode = rvf.GetValue<TextureAddress>($"{prefix}TextureAddress");
 
                 shouldExclude = addressMode == TextureAddress.EntireTexture ||
                     addressMode == TextureAddress.DimensionsBased;
             }
 
-            if (rootName == "Texture Width Scale" || rootName == "Texture Height Scale")
+            if (rootName == "TextureWidthScale" || rootName == "TextureHeightScale")
             {
-                var addressMode = rvf.GetValue<TextureAddress>($"{prefix}Texture Address");
+                var addressMode = rvf.GetValue<TextureAddress>($"{prefix}TextureAddress");
 
                 shouldExclude = addressMode == TextureAddress.EntireTexture ||
                     addressMode == TextureAddress.Custom;

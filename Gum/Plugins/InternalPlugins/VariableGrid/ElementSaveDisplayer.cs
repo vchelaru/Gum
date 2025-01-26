@@ -543,7 +543,7 @@ namespace Gum.PropertyGridHelpers
                 }
                 var fakeBaseTypeVariable = new VariableSave
                 {
-                    Name = "Base Type",
+                    Name = "BaseType",
                 };
 
                 isExcluded = PluginManager.Self.ShouldExclude(
@@ -555,7 +555,7 @@ namespace Gum.PropertyGridHelpers
             {
                 // We may want to support Screens inheriting from other Screens in the future, but for now we won't allow it
                 var baseTypeProperty = mHelper.AddProperty(pdc,
-                    "Base Type", typeof(string), baseTypeConverter);
+                    "BaseType", typeof(string), baseTypeConverter);
 
                 baseTypeProperty.IsReadOnly = isReadOnly;
             }

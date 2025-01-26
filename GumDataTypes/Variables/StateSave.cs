@@ -141,7 +141,7 @@ namespace Gum.DataTypes.Variables
             {
                 return ParentContainer.Name;
             }
-            else if (variableName == "Base Type" && ParentContainer != null)
+            else if ((variableName == "BaseType" || variableName == "Base Type") && ParentContainer != null)
             {
                 if (string.IsNullOrEmpty(ParentContainer.BaseType))
                 {
@@ -182,7 +182,7 @@ namespace Gum.DataTypes.Variables
                     {
                         return instanceSave.Name;
                     }
-                    else if (variableName.EndsWith(".Base Type"))
+                    else if (variableName.EndsWith(".Base Type") || variableName.EndsWith(".BaseType"))
                     {
                         return instanceSave.BaseType;
                     }

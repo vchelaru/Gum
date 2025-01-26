@@ -27,7 +27,7 @@ namespace Gum.Controls
 
             if (state != null)
             {
-                var variable = state.Variables.FirstOrDefault(item => item.Name == "Y Origin");
+                var variable = state.Variables.FirstOrDefault(item => item.Name == "YOrigin");
 
                 if(variable != null)
                 {

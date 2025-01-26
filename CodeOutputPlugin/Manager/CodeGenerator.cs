@@ -642,25 +642,25 @@ public class CodeGenerator
         var width = variableFinder.GetValue<float>(variablePrefix + "Width");
         var height = variableFinder.GetValue<float>(variablePrefix + "Height");
 
-        var xUnits = variableFinder.GetValue<PositionUnitType>(variablePrefix + "X Units");
-        var yUnits = variableFinder.GetValue<PositionUnitType>(variablePrefix + "Y Units");
-        var widthUnits = variableFinder.GetValue<DimensionUnitType>(variablePrefix + "Width Units");
-        var heightUnits = variableFinder.GetValue<DimensionUnitType>(variablePrefix + "Height Units");
+        var xUnits = variableFinder.GetValue<PositionUnitType>(variablePrefix + "XUnits");
+        var yUnits = variableFinder.GetValue<PositionUnitType>(variablePrefix + "YUnits");
+        var widthUnits = variableFinder.GetValue<DimensionUnitType>(variablePrefix + "WidthUnits");
+        var heightUnits = variableFinder.GetValue<DimensionUnitType>(variablePrefix + "HeightUnits");
 
-        var xOrigin = variableFinder.GetValue<HorizontalAlignment>(variablePrefix + "X Origin");
-        var yOrigin = variableFinder.GetValue<VerticalAlignment>(variablePrefix + "Y Origin");
+        var xOrigin = variableFinder.GetValue<HorizontalAlignment>(variablePrefix + "XOrigin");
+        var yOrigin = variableFinder.GetValue<VerticalAlignment>(variablePrefix + "YOrigin");
 
         variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "X");
         variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Y");
         variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Width");
         variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Height");
-        variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "X Units");
-        variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Y Units");
-        variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Width Units");
-        variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Height Units");
+        variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "XUnits");
+        variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "YUnits");
+        variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "WidthUnits");
+        variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "HeightUnits");
 
-        variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "X Origin");
-        variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Y Origin");
+        variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "XOrigin");
+        variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "YOrigin");
 
         #endregion
 
@@ -1034,25 +1034,25 @@ public class CodeGenerator
         var height = variableFinder.GetValue<float>(variablePrefix + "Height");
         var originalHeight = height;
 
-        var xUnits = variableFinder.GetValue<PositionUnitType>(variablePrefix + "X Units");
-        var yUnits = variableFinder.GetValue<PositionUnitType>(variablePrefix + "Y Units");
-        var widthUnits = variableFinder.GetValue<DimensionUnitType>(variablePrefix + "Width Units");
-        var heightUnits = variableFinder.GetValue<DimensionUnitType>(variablePrefix + "Height Units");
+        var xUnits = variableFinder.GetValue<PositionUnitType>(variablePrefix + "XUnits");
+        var yUnits = variableFinder.GetValue<PositionUnitType>(variablePrefix + "YUnits");
+        var widthUnits = variableFinder.GetValue<DimensionUnitType>(variablePrefix + "WidthUnits");
+        var heightUnits = variableFinder.GetValue<DimensionUnitType>(variablePrefix + "HeightUnits");
 
-        var xOrigin = variableFinder.GetValue<HorizontalAlignment>(variablePrefix + "X Origin");
-        var yOrigin = variableFinder.GetValue<VerticalAlignment>(variablePrefix + "Y Origin");
+        var xOrigin = variableFinder.GetValue<HorizontalAlignment>(variablePrefix + "XOrigin");
+        var yOrigin = variableFinder.GetValue<VerticalAlignment>(variablePrefix + "YOrigin");
 
         variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "X");
         variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Y");
         variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Width");
         variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Height");
-        variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "X Units");
-        variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Y Units");
-        variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Width Units");
-        variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Height Units");
+        variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "XUnits");
+        variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "YUnits");
+        variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "WidthUnits");
+        variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "HeightUnits");
 
-        variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "X Origin");
-        variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "Y Origin");
+        variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "XOrigin");
+        variablesToConsider.RemoveAll(item => item.Name == variablePrefix + "YOrigin");
         #endregion
 
         var codePrefix = context.CodePrefix;
@@ -1069,7 +1069,7 @@ public class CodeGenerator
         float topPadding = 0;
         float bottomPadding = 0;
 
-        #region Apply Width Units
+        #region Apply WidthUnits
 
         if (widthUnits == DimensionUnitType.Percentage)
         {
@@ -1105,7 +1105,7 @@ public class CodeGenerator
 
         #endregion
 
-        #region Apply Height Units
+        #region Apply HeightUnits
 
         if (heightUnits == DimensionUnitType.Percentage)
         {
@@ -1667,10 +1667,10 @@ public class CodeGenerator
         var x = variableFinder.GetValue<float>(prefix + "X");
         var width = variableFinder.GetValue<float>(prefix + "Width");
 
-        var xUnits = variableFinder.GetValue<PositionUnitType>(prefix + "X Units");
-        var widthUnits = variableFinder.GetValue<DimensionUnitType>(prefix + "Width Units");
+        var xUnits = variableFinder.GetValue<PositionUnitType>(prefix + "XUnits");
+        var widthUnits = variableFinder.GetValue<DimensionUnitType>(prefix + "WidthUnits");
 
-        var xOrigin = variableFinder.GetValue<HorizontalAlignment>(prefix + "X Origin");
+        var xOrigin = variableFinder.GetValue<HorizontalAlignment>(prefix + "XOrigin");
 
         var parentName = variableFinder.GetValue<string>(prefix + "Parent");
 
@@ -1710,10 +1710,10 @@ public class CodeGenerator
         var y = variableFinder.GetValue<float>(prefix + "Y");
         var height = variableFinder.GetValue<float>(prefix + "Height");
 
-        var yUnits = variableFinder.GetValue<PositionUnitType>(prefix + "Y Units");
-        var heightUnits = variableFinder.GetValue<DimensionUnitType>(prefix + "Height Units");
+        var yUnits = variableFinder.GetValue<PositionUnitType>(prefix + "YUnits");
+        var heightUnits = variableFinder.GetValue<DimensionUnitType>(prefix + "HeightUnits");
 
-        var yOrigin = variableFinder.GetValue<HorizontalAlignment>(prefix + "Y Origin");
+        var yOrigin = variableFinder.GetValue<HorizontalAlignment>(prefix + "YOrigin");
 
         var parentName = variableFinder.GetValue<string>(prefix + "Parent");
 
@@ -2225,8 +2225,8 @@ public class CodeGenerator
                 var variableFinder = new RecursiveVariableFinder(instance, element);
 
                 // See if its width or height units depend on children:
-                var heightUnits = variableFinder.GetValue<DimensionUnitType>("Height Units");
-                var widthUnits = variableFinder.GetValue<DimensionUnitType>("Width Units");
+                var heightUnits = variableFinder.GetValue<DimensionUnitType>("HeightUnits");
+                var widthUnits = variableFinder.GetValue<DimensionUnitType>("WidthUnits");
 
                 if (heightUnits == DimensionUnitType.RelativeToChildren || widthUnits == DimensionUnitType.RelativeToChildren)
                 {
@@ -3278,7 +3278,7 @@ public class CodeGenerator
         #region Handle all variables that have no direct translation in Xamarin forms
 
         if (
-            rootVariableName == "Clips Children" ||
+            rootVariableName == "ClipsChildren" ||
             rootVariableName == "ExposeChildrenEvents" ||
             rootVariableName == "FlipHorizontal" ||
             rootVariableName == "HasEvents" ||
@@ -3286,10 +3286,8 @@ public class CodeGenerator
             rootVariableName == "IsXamarinFormsControl" ||
             rootVariableName == "IsOverrideInCodeGen" ||
             rootVariableName == "Name" ||
-            rootVariableName == "Wraps Children" ||
-            rootVariableName == "X Origin" ||
+            rootVariableName == "WrapsChildren" ||
             rootVariableName == "XOrigin" ||
-            rootVariableName == "Y Origin" ||
             rootVariableName == "YOrigin"
             )
         {
@@ -3406,9 +3404,9 @@ public class CodeGenerator
 
         #endregion
 
-        #region Children Layout
+        #region ChildrenLayout
 
-        else if (rootVariableName == "Children Layout" && variable.Value is ChildrenLayout valueAsChildrenLayout)
+        else if (rootVariableName == "ChildrenLayout" && variable.Value is ChildrenLayout valueAsChildrenLayout)
         {
             var isInstanceStackLayout = instance != null && IsOfXamarinFormsType(instance, "StackLayout");
 
@@ -3699,12 +3697,12 @@ public class CodeGenerator
                 item.Name == prefix + "Width" ||
                 item.Name == prefix + "Height" ||
 
-                item.Name == prefix + "X Units" ||
-                item.Name == prefix + "Y Units" ||
-                item.Name == prefix + "Width Units" ||
-                item.Name == prefix + "Height Units" ||
-                item.Name == prefix + "X Origin" ||
-                item.Name == prefix + "Y Origin"
+                item.Name == prefix + "XUnits" ||
+                item.Name == prefix + "YUnits" ||
+                item.Name == prefix + "WidthUnits" ||
+                item.Name == prefix + "HeightUnits" ||
+                item.Name == prefix + "XOrigin" ||
+                item.Name == prefix + "YOrigin"
 
                 );
     }

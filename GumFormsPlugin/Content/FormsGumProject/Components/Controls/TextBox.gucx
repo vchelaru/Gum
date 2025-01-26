@@ -30,7 +30,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>CaretInstance.Height Units</Name>
+      <Name>CaretInstance.HeightUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -55,31 +55,31 @@
     </Variable>
     <Variable>
       <Type>TextureAddress</Type>
-      <Name>CaretInstance.Texture Address</Name>
+      <Name>CaretInstance.TextureAddress</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>CaretInstance.Texture Height</Name>
+      <Name>CaretInstance.TextureHeight</Name>
       <Value xsi:type="xsd:int">24</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>CaretInstance.Texture Left</Name>
+      <Name>CaretInstance.TextureLeft</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>CaretInstance.Texture Top</Name>
+      <Name>CaretInstance.TextureTop</Name>
       <Value xsi:type="xsd:int">48</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>CaretInstance.Texture Width</Name>
+      <Name>CaretInstance.TextureWidth</Name>
       <Value xsi:type="xsd:int">24</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -91,7 +91,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>CaretInstance.Width Units</Name>
+      <Name>CaretInstance.WidthUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -103,13 +103,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>CaretInstance.X Origin</Name>
+      <Name>CaretInstance.XOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>CaretInstance.X Units</Name>
+      <Name>CaretInstance.XUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -121,19 +121,19 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>CaretInstance.Y Origin</Name>
+      <Name>CaretInstance.YOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>CaretInstance.Y Units</Name>
+      <Name>CaretInstance.YUnits</Name>
       <Value xsi:type="xsd:int">7</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>bool</Type>
-      <Name>Clips Children</Name>
+      <Name>ClipsChildren</Name>
       <Value xsi:type="xsd:boolean">true</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -151,7 +151,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>FocusedIndicator.Height Units</Name>
+      <Name>FocusedIndicator.HeightUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -180,13 +180,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>FocusedIndicator.Y Origin</Name>
+      <Name>FocusedIndicator.YOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>FocusedIndicator.Y Units</Name>
+      <Name>FocusedIndicator.YUnits</Name>
       <Value xsi:type="xsd:int">5</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -233,7 +233,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>PlaceholderTextInstance.Height Units</Name>
+      <Name>PlaceholderTextInstance.HeightUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -258,31 +258,31 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>PlaceholderTextInstance.Width Units</Name>
+      <Name>PlaceholderTextInstance.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>PlaceholderTextInstance.X Origin</Name>
+      <Name>PlaceholderTextInstance.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>PlaceholderTextInstance.X Units</Name>
+      <Name>PlaceholderTextInstance.XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>PlaceholderTextInstance.Y Origin</Name>
+      <Name>PlaceholderTextInstance.YOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>PlaceholderTextInstance.Y Units</Name>
+      <Name>PlaceholderTextInstance.YUnits</Name>
       <Value xsi:type="xsd:int">7</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -306,7 +306,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>SelectionInstance.Width Units</Name>
+      <Name>SelectionInstance.WidthUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -318,13 +318,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>SelectionInstance.X Origin</Name>
+      <Name>SelectionInstance.XOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>SelectionInstance.X Units</Name>
+      <Name>SelectionInstance.XUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -359,7 +359,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>TextInstance.Height Units</Name>
+      <Name>TextInstance.HeightUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -395,7 +395,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>TextInstance.Width Units</Name>
+      <Name>TextInstance.WidthUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -407,13 +407,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>TextInstance.X Origin</Name>
+      <Name>TextInstance.XOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>TextInstance.X Units</Name>
+      <Name>TextInstance.XUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -425,13 +425,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>TextInstance.Y Origin</Name>
+      <Name>TextInstance.YOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>TextInstance.Y Units</Name>
+      <Name>TextInstance.YUnits</Name>
       <Value xsi:type="xsd:int">7</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -578,7 +578,7 @@
       </Variable>
       <Variable>
         <Type>Gum.DataTypes.DimensionUnitType</Type>
-        <Name>SelectionInstance.Height Units</Name>
+        <Name>SelectionInstance.HeightUnits</Name>
         <Value xsi:type="xsd:int">2</Value>
         <SetsValue>true</SetsValue>
       </Variable>
@@ -596,7 +596,7 @@
       </Variable>
       <Variable>
         <Type>DimensionUnitType</Type>
-        <Name>TextInstance.Width Units</Name>
+        <Name>TextInstance.WidthUnits</Name>
         <Value xsi:type="xsd:int">4</Value>
         <SetsValue>true</SetsValue>
       </Variable>
@@ -617,7 +617,7 @@
       </Variable>
       <Variable>
         <Type>DimensionUnitType</Type>
-        <Name>SelectionInstance.Height Units</Name>
+        <Name>SelectionInstance.HeightUnits</Name>
         <Value xsi:type="xsd:int">0</Value>
         <Category>Dimensions</Category>
         <SetsValue>true</SetsValue>
@@ -636,7 +636,7 @@
       </Variable>
       <Variable>
         <Type>DimensionUnitType</Type>
-        <Name>TextInstance.Width Units</Name>
+        <Name>TextInstance.WidthUnits</Name>
         <Value xsi:type="xsd:int">2</Value>
         <SetsValue>true</SetsValue>
       </Variable>

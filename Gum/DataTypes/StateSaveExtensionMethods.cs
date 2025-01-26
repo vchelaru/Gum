@@ -612,7 +612,7 @@ namespace Gum.DataTypes.Variables
                 stateSave.ParentContainer.Name = value as string;
                 isReservedName = true;
             }
-            else if (variableName == "Base Type")
+            else if (variableName == "BaseType")
             {
                 stateSave.ParentContainer.BaseType = value?.ToString();
                 isReservedName = true; // don't do anything
@@ -630,7 +630,7 @@ namespace Gum.DataTypes.Variables
                     instanceSave.Name = (string)value;
                     isReservedName = true;
                 }
-                else if (variableName.EndsWith(".Base Type"))
+                else if (variableName.EndsWith(".BaseType"))
                 {
                     instanceSave.BaseType = value.ToString();
                     isReservedName = true;

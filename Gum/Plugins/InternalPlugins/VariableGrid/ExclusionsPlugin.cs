@@ -27,8 +27,8 @@ public class ExclusionsPlugin : InternalPlugin
         "Parent",
         "Name",
         "UseCustomFont",
-        "Texture Address",
-        "Base Type",
+        "TextureAddress",
+        "BaseType",
         "TextOverflowVerticalMode",
 
     };
@@ -49,7 +49,7 @@ public class ExclusionsPlugin : InternalPlugin
 
     private void HandleVariableSet(ElementSave save1, InstanceSave save2, string variableName, object oldValue)
     {
-        if(variableName == "Children Layout")
+        if(variableName == "ChildrenLayout")
         {
             // Changing children layout can result in different values being shown in the property grid
             GumCommands.Self.GuiCommands.RefreshVariables(force:true);
@@ -63,10 +63,10 @@ public class ExclusionsPlugin : InternalPlugin
             case "AutoGridHorizontalCells":
             case "AutoGridVerticalCells":
                 return GetIfAutoGridIsExcluded(finder);
-            case "Base Type":
+            case "BaseType":
                 return GetIfBaseTypeIsExcluded(finder);
             case "StackSpacing":
-            case "Wraps Children":
+            case "WrapsChildren":
                 return GetIfSpacingAndWrapsChildrenIsExcluded(finder);
             case "TextOverflowHorizontalMode":
                 return GetIfOverflowHorizontalModeExcluded(finder);
@@ -110,7 +110,7 @@ public class ExclusionsPlugin : InternalPlugin
 
     private bool GetIfWrapIsExcluded(RecursiveVariableFinder finder)
     {
-        var textureAddress = finder.GetVariable("Texture Address")?.Value;
+        var textureAddress = finder.GetVariable("TextureAddress")?.Value;
 
         if(textureAddress is TextureAddress.EntireTexture)
         {
@@ -121,7 +121,7 @@ public class ExclusionsPlugin : InternalPlugin
 
     private static bool GetIfSpacingAndWrapsChildrenIsExcluded(RecursiveVariableFinder finder)
     {
-        var childrenLayoutVariable = finder.GetVariable("Children Layout");
+        var childrenLayoutVariable = finder.GetVariable("ChildrenLayout");
         var isStack = false;
         if (childrenLayoutVariable?.Value is ChildrenLayout childrenLayout)
         {
@@ -132,7 +132,7 @@ public class ExclusionsPlugin : InternalPlugin
 
     private static bool GetIfAutoGridIsExcluded(RecursiveVariableFinder finder)
     {
-        var childrenLayoutVariable = finder.GetVariable("Children Layout");
+        var childrenLayoutVariable = finder.GetVariable("ChildrenLayout");
 
         var isAuto = false;
         if (childrenLayoutVariable?.Value is ChildrenLayout childrenLayout)

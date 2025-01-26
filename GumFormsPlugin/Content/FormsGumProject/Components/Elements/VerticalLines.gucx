@@ -6,7 +6,7 @@
     <Name>Default</Name>
     <Variable>
       <Type>bool</Type>
-      <Name>Clips Children</Name>
+      <Name>ClipsChildren</Name>
       <Value xsi:type="xsd:boolean">true</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -50,49 +50,49 @@
     </Variable>
     <Variable>
       <Type>TextureAddress</Type>
-      <Name>LinesSprite.Texture Address</Name>
+      <Name>LinesSprite.TextureAddress</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>LinesSprite.Texture Height</Name>
+      <Name>LinesSprite.TextureHeight</Name>
       <Value xsi:type="xsd:int">32</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>LinesSprite.Texture Left</Name>
+      <Name>LinesSprite.TextureLeft</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>LinesSprite.Texture Top</Name>
+      <Name>LinesSprite.TextureTop</Name>
       <Value xsi:type="xsd:int">960</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>LinesSprite.Texture Width</Name>
+      <Name>LinesSprite.TextureWidth</Name>
       <Value xsi:type="xsd:int">1024</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>LinesSprite.X Origin</Name>
+      <Name>LinesSprite.XOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>LinesSprite.Y Origin</Name>
+      <Name>LinesSprite.YOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>LinesSprite.Y Units</Name>
+      <Name>LinesSprite.YUnits</Name>
       <Value xsi:type="xsd:int">7</Value>
       <SetsValue>true</SetsValue>
     </Variable>
