@@ -916,12 +916,12 @@ public class DragDropManager
 
 
 
-        var instanceXUnits = (PositionUnitType)SelectedState.Self.SelectedStateSave.GetValueRecursive($"{instance.Name}.X Units");
+        var instanceXUnits = (PositionUnitType)SelectedState.Self.SelectedStateSave.GetValueRecursive($"{instance.Name}.XUnits");
         var asGeneralXUnitType = UnitConverter.ConvertToGeneralUnit(instanceXUnits);
         xToSet = UnitConverter.Self.ConvertXPosition(differenceX, GeneralUnitType.PixelsFromSmall, asGeneralXUnitType, containerWidth);
 
         var differenceY = worldY - containerTop;
-        var instanceYUnits = (PositionUnitType)SelectedState.Self.SelectedStateSave.GetValueRecursive($"{instance.Name}.Y Units");
+        var instanceYUnits = (PositionUnitType)SelectedState.Self.SelectedStateSave.GetValueRecursive($"{instance.Name}.YUnits");
         var asGeneralYUnitType = UnitConverter.ConvertToGeneralUnit(instanceYUnits);
         yToSet = UnitConverter.Self.ConvertYPosition(differenceY, GeneralUnitType.PixelsFromSmall, asGeneralYUnitType, containerHeight);
 

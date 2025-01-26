@@ -3963,33 +3963,33 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         this.Width = rvf.GetValue<float>("Width");
         this.Height = rvf.GetValue<float>("Height");
 
-        this.HeightUnits = rvf.GetValue<DimensionUnitType>("Height Units");
-        this.WidthUnits = rvf.GetValue<DimensionUnitType>("Width Units");
+        this.HeightUnits = rvf.GetValue<DimensionUnitType>("HeightUnits");
+        this.WidthUnits = rvf.GetValue<DimensionUnitType>("WidthUnits");
 
-        this.XOrigin = rvf.GetValue<HorizontalAlignment>("X Origin");
-        this.YOrigin = rvf.GetValue<VerticalAlignment>("Y Origin");
+        this.XOrigin = rvf.GetValue<HorizontalAlignment>("XOrigin");
+        this.YOrigin = rvf.GetValue<VerticalAlignment>("YOrigin");
 
         this.X = rvf.GetValue<float>("X");
         this.Y = rvf.GetValue<float>("Y");
 
-        this.XUnits = UnitConverter.ConvertToGeneralUnit(rvf.GetValue<PositionUnitType>("X Units"));
-        this.YUnits = UnitConverter.ConvertToGeneralUnit(rvf.GetValue<PositionUnitType>("Y Units"));
+        this.XUnits = UnitConverter.ConvertToGeneralUnit(rvf.GetValue<PositionUnitType>("XUnits"));
+        this.YUnits = UnitConverter.ConvertToGeneralUnit(rvf.GetValue<PositionUnitType>("YUnits"));
 
-        this.TextureWidth = rvf.GetValue<int>("Texture Width");
-        this.TextureHeight = rvf.GetValue<int>("Texture Height");
-        this.TextureLeft = rvf.GetValue<int>("Texture Left");
-        this.TextureTop = rvf.GetValue<int>("Texture Top");
+        this.TextureWidth = rvf.GetValue<int>("TextureWidth");
+        this.TextureHeight = rvf.GetValue<int>("TextureHeight");
+        this.TextureLeft = rvf.GetValue<int>("TextureLeft");
+        this.TextureTop = rvf.GetValue<int>("TextureTop");
 
-        this.TextureWidthScale = rvf.GetValue<float>("Texture Width Scale");
-        this.TextureHeightScale = rvf.GetValue<float>("Texture Height Scale");
+        this.TextureWidthScale = rvf.GetValue<float>("TextureWidthScale");
+        this.TextureHeightScale = rvf.GetValue<float>("TextureHeightScale");
 
         this.Wrap = rvf.GetValue<bool>("Wrap");
 
-        this.TextureAddress = rvf.GetValue<TextureAddress>("Texture Address");
+        this.TextureAddress = rvf.GetValue<TextureAddress>("TextureAddress");
 
-        this.ChildrenLayout = rvf.GetValue<ChildrenLayout>("Children Layout");
-        this.WrapsChildren = rvf.GetValue<bool>("Wraps Children");
-        this.ClipsChildren = rvf.GetValue<bool>("Clips Children");
+        this.ChildrenLayout = rvf.GetValue<ChildrenLayout>("ChildrenLayout");
+        this.WrapsChildren = rvf.GetValue<bool>("WrapsChildren");
+        this.ClipsChildren = rvf.GetValue<bool>("ClipsChildren");
 
         if (this.ElementSave != null)
         {

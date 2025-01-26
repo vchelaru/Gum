@@ -573,7 +573,7 @@ namespace RenderingLibrary.Graphics
                 #if DEBUG
                 if (float.IsNaN(value) || float.IsInfinity(value))
                 {
-                    throw new ArgumentException($"Invalid value: {value}. Font scale cannot be NaN.");
+                    throw new ArgumentException($"Invalid value: {value}. FontScale cannot be NaN.");
                 }
                 #endif
                 

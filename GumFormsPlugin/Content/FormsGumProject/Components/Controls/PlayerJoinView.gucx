@@ -12,7 +12,7 @@
     </Variable>
     <Variable>
       <Type>ChildrenLayout</Type>
-      <Name>InnerPanelInstance.Children Layout</Name>
+      <Name>InnerPanelInstance.ChildrenLayout</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -24,7 +24,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>InnerPanelInstance.Height Units</Name>
+      <Name>InnerPanelInstance.HeightUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -42,7 +42,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>InnerPanelInstance.Width Units</Name>
+      <Name>InnerPanelInstance.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -54,13 +54,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>InnerPanelInstance.X Origin</Name>
+      <Name>InnerPanelInstance.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>InnerPanelInstance.X Units</Name>
+      <Name>InnerPanelInstance.XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -72,13 +72,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>InnerPanelInstance.Y Origin</Name>
+      <Name>InnerPanelInstance.YOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>InnerPanelInstance.Y Units</Name>
+      <Name>InnerPanelInstance.YUnits</Name>
       <Value xsi:type="xsd:int">7</Value>
       <SetsValue>true</SetsValue>
     </Variable>

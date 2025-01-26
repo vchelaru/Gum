@@ -501,7 +501,7 @@ namespace Gum.PropertyGridHelpers
                     isVariableList = rootVariableList != null;
                 }
 
-                canExpose = !isVariableList && rootName != "Name" && rootName != "Base Type"
+                canExpose = !isVariableList && rootName != "Name" && rootName != "BaseType"
                     && instance != null;
 
             }
@@ -542,7 +542,7 @@ namespace Gum.PropertyGridHelpers
             {
                 return asInstanceSave.Name;
             }
-            else if (RootVariableName == "Base Type" && instance is InstanceSave asInstanceForBehavior)
+            else if (RootVariableName == "BaseType" && instance is InstanceSave asInstanceForBehavior)
             {
                 return asInstanceForBehavior.BaseType;
             }
@@ -612,7 +612,7 @@ namespace Gum.PropertyGridHelpers
                 {
                     instanceSave.Name = (string)newValue;
                 }
-                else if (instanceSave != null && RootVariableName == "Base Type")
+                else if (instanceSave != null && RootVariableName == "BaseType")
                 {
                     instanceSave.BaseType = newValue.ToString();
                 }

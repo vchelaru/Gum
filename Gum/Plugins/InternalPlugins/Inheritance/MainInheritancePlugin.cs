@@ -86,7 +86,7 @@ namespace Gum.Plugins.Inheritance
             string variableName, object oldValue)
         {
 
-            if (variableName == "Base Type" && container != null)
+            if (variableName == "BaseType" && container != null)
             {
                 if(instance != null)
                 {

@@ -103,7 +103,7 @@ internal class RenameService
     internal void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue, CodeOutputProjectSettings codeOutputProjectSettings)
     {
         /////////////////////////Early Out////////////////////
-        if(variableName != "Base Type" || instance != null || !codeOutputProjectSettings.IsCodeGenPluginEnabled)
+        if(variableName != "BaseType" || instance != null || !codeOutputProjectSettings.IsCodeGenPluginEnabled)
         {
             return;
         }

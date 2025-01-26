@@ -31,7 +31,7 @@ namespace Gum.Controls
 
             if (state != null)
             {
-                var variable = state.Variables.FirstOrDefault(item => item.Name == "Width Units");
+                var variable = state.Variables.FirstOrDefault(item => item.Name == "WidthUnits");
 
                 if (variable?.ExcludedValuesForEnum?.Any() == true)
                 {

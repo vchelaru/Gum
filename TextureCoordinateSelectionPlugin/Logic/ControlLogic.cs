@@ -323,11 +323,11 @@ public class ControlLogic : Singleton<ControlLogic>
             graphicalUiElement.TextureWidth = width;
             graphicalUiElement.TextureHeight = height;
 
-            state.SetValue($"{instancePrefix}Texture Left", left, "int");
-            state.SetValue($"{instancePrefix}Texture Top", top, "int");
-            state.SetValue($"{instancePrefix}Texture Width", width, "int");
-            state.SetValue($"{instancePrefix}Texture Height", height, "int");
-            state.SetValue($"{instancePrefix}Texture Address",
+            state.SetValue($"{instancePrefix}TextureLeft", left, "int");
+            state.SetValue($"{instancePrefix}TextureTop", top, "int");
+            state.SetValue($"{instancePrefix}TextureWidth", width, "int");
+            state.SetValue($"{instancePrefix}TextureHeight", height, "int");
+            state.SetValue($"{instancePrefix}TextureAddress",
                 Gum.Managers.TextureAddress.Custom, nameof(TextureAddress));
 
             RefreshOutline(control, ref textureOutlineRectangle);
@@ -358,10 +358,10 @@ public class ControlLogic : Singleton<ControlLogic>
             instancePrefix += ".";
         }
 
-        oldTextureLeftValue = state.GetValue($"{instancePrefix}Texture Left");
-        oldTextureTopValue = state.GetValue($"{instancePrefix}Texture Top");
-        oldTextureWidthValue = state.GetValue($"{instancePrefix}Texture Width");
-        oldTextureHeightValue = state.GetValue($"{instancePrefix}Texture Height");
+        oldTextureLeftValue = state.GetValue($"{instancePrefix}TextureLeft");
+        oldTextureTopValue = state.GetValue($"{instancePrefix}TextureTop");
+        oldTextureWidthValue = state.GetValue($"{instancePrefix}TextureWidth");
+        oldTextureHeightValue = state.GetValue($"{instancePrefix}TextureHeight");
     }
 
     private void HandleRegionChanged(object sender, EventArgs e)
@@ -390,10 +390,10 @@ public class ControlLogic : Singleton<ControlLogic>
 
 
 
-            state.SetValue($"{instancePrefix}Texture Left", graphicalUiElement.TextureLeft, "int");
-            state.SetValue($"{instancePrefix}Texture Top", graphicalUiElement.TextureTop, "int");
-            state.SetValue($"{instancePrefix}Texture Width", graphicalUiElement.TextureWidth, "int");
-            state.SetValue($"{instancePrefix}Texture Height", graphicalUiElement.TextureHeight, "int");
+            state.SetValue($"{instancePrefix}TextureLeft", graphicalUiElement.TextureLeft, "int");
+            state.SetValue($"{instancePrefix}TextureTop", graphicalUiElement.TextureTop, "int");
+            state.SetValue($"{instancePrefix}TextureWidth", graphicalUiElement.TextureWidth, "int");
+            state.SetValue($"{instancePrefix}TextureHeight", graphicalUiElement.TextureHeight, "int");
 
 
             GumCommands.Self.GuiCommands.RefreshVariableValues();
@@ -411,13 +411,13 @@ public class ControlLogic : Singleton<ControlLogic>
         shouldRefreshAccordingToVariableSets = false;
         {
             // This could be really heavy if we notify everyone of the changes. We should only do it when the editing stops...
-            SetVariableLogic.Self.ReactToPropertyValueChanged("Texture Left", oldTextureLeftValue,
+            SetVariableLogic.Self.ReactToPropertyValueChanged("TextureLeft", oldTextureLeftValue,
                 element, instance, state, refresh: false);
-            SetVariableLogic.Self.ReactToPropertyValueChanged("Texture Top", oldTextureTopValue,
+            SetVariableLogic.Self.ReactToPropertyValueChanged("TextureTop", oldTextureTopValue,
                 element, instance, state, refresh: false);
-            SetVariableLogic.Self.ReactToPropertyValueChanged("Texture Width", oldTextureWidthValue,
+            SetVariableLogic.Self.ReactToPropertyValueChanged("TextureWidth", oldTextureWidthValue,
                 element, instance, state, refresh: false);
-            SetVariableLogic.Self.ReactToPropertyValueChanged("Texture Height", oldTextureHeightValue,
+            SetVariableLogic.Self.ReactToPropertyValueChanged("TextureHeight", oldTextureHeightValue,
                 element, instance, state, refresh: false);
         }
         shouldRefreshAccordingToVariableSets = true;
@@ -495,7 +495,7 @@ public class ControlLogic : Singleton<ControlLogic>
                 instancePrefix += ".";
             }
 
-            var textureAddress = rfv.GetValue<Gum.Managers.TextureAddress>($"{instancePrefix}Texture Address");
+            var textureAddress = rfv.GetValue<Gum.Managers.TextureAddress>($"{instancePrefix}TextureAddress");
             if (textureAddress == Gum.Managers.TextureAddress.Custom)
             {
                 shouldClearOut = false;
@@ -504,11 +504,11 @@ public class ControlLogic : Singleton<ControlLogic>
                 var selector = control.RectangleSelector;
 
 
-                selector.Left = rfv.GetValue<int>($"{instancePrefix}Texture Left");
-                selector.Width = rfv.GetValue<int>($"{instancePrefix}Texture Width");
+                selector.Left = rfv.GetValue<int>($"{instancePrefix}TextureLeft");
+                selector.Width = rfv.GetValue<int>($"{instancePrefix}TextureWidth");
 
-                selector.Top = rfv.GetValue<int>($"{instancePrefix}Texture Top");
-                selector.Height = rfv.GetValue<int>($"{instancePrefix}Texture Height");
+                selector.Top = rfv.GetValue<int>($"{instancePrefix}TextureTop");
+                selector.Height = rfv.GetValue<int>($"{instancePrefix}TextureHeight");
 
                 selector.Visible = true;
                 selector.ShowHandles = true;
@@ -526,11 +526,11 @@ public class ControlLogic : Singleton<ControlLogic>
                 control.DesiredSelectorCount = 1;
                 var selector = control.RectangleSelector;
 
-                selector.Left = rfv.GetValue<int>($"{instancePrefix}Texture Left");
-                selector.Top = rfv.GetValue<int>($"{instancePrefix}Texture Top");
+                selector.Left = rfv.GetValue<int>($"{instancePrefix}TextureLeft");
+                selector.Top = rfv.GetValue<int>($"{instancePrefix}TextureTop");
 
-                var widthScale = rfv.GetValue<float>($"{instancePrefix}Texture Width Scale");
-                var heightScale = rfv.GetValue<float>($"{instancePrefix}Texture Height Scale");
+                var widthScale = rfv.GetValue<float>($"{instancePrefix}TextureWidthScale");
+                var heightScale = rfv.GetValue<float>($"{instancePrefix}TextureHeightScale");
 
                 var absoluteWidth = graphicalUiElement.GetAbsoluteWidth();
                 var absoluteHeight = graphicalUiElement.GetAbsoluteHeight();

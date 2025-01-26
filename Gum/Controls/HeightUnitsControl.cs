@@ -30,7 +30,7 @@ namespace Gum.Controls
 
             if (state != null)
             {
-                var variable = state.Variables.FirstOrDefault(item => item.Name == "Height Units");
+                var variable = state.Variables.FirstOrDefault(item => item.Name == "HeightUnits");
 
                 if (variable?.ExcludedValuesForEnum?.Any() == true)
                 {

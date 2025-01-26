@@ -19,7 +19,7 @@ namespace Gum.Managers
         {
             var defaultStates =
                 StandardElementsManager.Self.DefaultStates;
-            defaultStates["Container"].Variables.First(item => item.Name == "Contained Type").CustomTypeConverter =
+            defaultStates["Container"].Variables.First(item => item.Name == "ContainedType").CustomTypeConverter =
                 new AvailableContainedTypeConverter();
 
             defaultStates["Component"].Variables

@@ -27,7 +27,8 @@ namespace GumRuntime
 
                 if(instanceElement.Name == "Container" && instanceElement is StandardElementSave)
                 {
-                    genericType = instanceSave.ParentContainer.DefaultState.GetValueOrDefault<string>(instanceSave.Name + "." + "Contained Type");
+                    genericType = instanceSave.ParentContainer.DefaultState.GetValueOrDefault<string>(instanceSave.Name + "." + "ContainedType") ??
+                        instanceSave.ParentContainer.DefaultState.GetValueOrDefault<string>(instanceSave.Name + "." + "Contained Type");
                 }
 
                 toReturn = ElementSaveExtensions.ToGraphicalUiElement(instanceElement, systemManagers, 

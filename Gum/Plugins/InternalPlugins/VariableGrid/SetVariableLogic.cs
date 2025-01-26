@@ -219,7 +219,7 @@ namespace Gum.PropertyGridHelpers
         private void ReactIfChangedBaseType(IInstanceContainer instanceContainer, InstanceSave instance, StateSave stateSave, string rootVariableName, object oldValue)
         {
 
-            if (rootVariableName == "Base Type")
+            if (rootVariableName == "BaseType")
             {
                 VariableSave variable = SelectedState.Self.SelectedVariableSave;
 
@@ -350,7 +350,7 @@ namespace Gum.PropertyGridHelpers
             float valueToSet = 0;
 
             var wereUnitValuesChanged =
-                changedMember == "X Units" || changedMember == "Y Units" || changedMember == "Width Units" || changedMember == "Height Units";
+                changedMember == "XUnits" || changedMember == "YUnits" || changedMember == "WidthUnits" || changedMember == "HeightUnits";
 
             var shouldAttemptValueChange = wereUnitValuesChanged && ProjectManager.Self.GumProjectSave?.ConvertVariablesOnUnitTypeChange == true;
 
@@ -396,24 +396,24 @@ namespace Gum.PropertyGridHelpers
 
 
                     XOrY xOrY = XOrY.X;
-                    if (changedMember == "X Units")
+                    if (changedMember == "XUnits")
                     {
                         variableToSet = "X";
                         xOrY = XOrY.X;
                     }
-                    else if (changedMember == "Y Units")
+                    else if (changedMember == "YUnits")
                     {
                         variableToSet = "Y";
                         xOrY = XOrY.Y;
                     }
-                    else if (changedMember == "Width Units")
+                    else if (changedMember == "WidthUnits")
                     {
                         variableToSet = "Width";
                         isWidthOrHeight = true;
                         xOrY = XOrY.X;
 
                     }
-                    else if (changedMember == "Height Units")
+                    else if (changedMember == "HeightUnits")
                     {
                         variableToSet = "Height";
                         isWidthOrHeight = true;
@@ -549,7 +549,7 @@ namespace Gum.PropertyGridHelpers
 
                     if (!cancel && filePath.Extension == "achx")
                     {
-                        stateSave.SetValue($"{instancePrefix}Texture Address", Gum.Managers.TextureAddress.Custom);
+                        stateSave.SetValue($"{instancePrefix}TextureAddress", Gum.Managers.TextureAddress.Custom);
                         GumCommands.Self.GuiCommands.RefreshVariables(force: true);
                     }
                 }
@@ -900,7 +900,7 @@ namespace Gum.PropertyGridHelpers
 
         private void ReactIfChangedMemberIsTextureAddress(ElementSave parentElement, string changedMember, object oldValue)
         {
-            if (changedMember == "Texture Address")
+            if (changedMember == "TextureAddress")
             {
                 RecursiveVariableFinder rvf;
 
@@ -914,7 +914,7 @@ namespace Gum.PropertyGridHelpers
                     rvf = new RecursiveVariableFinder(parentElement.DefaultState);
                 }
 
-                var textureAddress = rvf.GetValue<TextureAddress>("Texture Address");
+                var textureAddress = rvf.GetValue<TextureAddress>("TextureAddress");
 
                 if (textureAddress == TextureAddress.Custom)
                 {
@@ -944,10 +944,10 @@ namespace Gum.PropertyGridHelpers
 
                                 if (texture != null && instance != null)
                                 {
-                                    parentElement.DefaultState.SetValue(instance.Name + ".Texture Top", 0);
-                                    parentElement.DefaultState.SetValue(instance.Name + ".Texture Left", 0);
-                                    parentElement.DefaultState.SetValue(instance.Name + ".Texture Width", texture.Width);
-                                    parentElement.DefaultState.SetValue(instance.Name + ".Texture Height", texture.Height);
+                                    parentElement.DefaultState.SetValue(instance.Name + ".TextureTop", 0);
+                                    parentElement.DefaultState.SetValue(instance.Name + ".TextureLeft", 0);
+                                    parentElement.DefaultState.SetValue(instance.Name + ".TextureWidth", texture.Width);
+                                    parentElement.DefaultState.SetValue(instance.Name + ".TextureHeight", texture.Height);
                                 }
                             }
                         }

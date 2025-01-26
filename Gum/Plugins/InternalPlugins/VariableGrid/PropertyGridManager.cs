@@ -660,37 +660,37 @@ namespace Gum.Managers
                         member.PreferredDisplayer = typeof(TextVerticalAlignmentControl);
                     }
                     else if (propertyType == typeof(PositionUnitType) &&
-                        member.Name == "X Units" || member.Name.EndsWith(".X Units"))
+                        member.Name == "XUnits" || member.Name.EndsWith(".XUnits"))
                     {
                         member.PreferredDisplayer = typeof(XUnitsControl);
                     }
                     else if (propertyType == typeof(PositionUnitType) &&
-                        member.Name == "Y Units" || member.Name.EndsWith(".Y Units"))
+                        member.Name == "YUnits" || member.Name.EndsWith(".YUnits"))
                     {
                         member.PreferredDisplayer = typeof(YUnitsControl);
                     }
                     else if (propertyType == typeof(global::RenderingLibrary.Graphics.HorizontalAlignment) &&
-                        member.Name == "X Origin" || member.Name.EndsWith(".X Origin"))
+                        member.Name == "XOrigin" || member.Name.EndsWith(".XOrigin"))
                     {
                         member.PreferredDisplayer = typeof(XOriginControl);
                     }
                     else if (propertyType == typeof(global::RenderingLibrary.Graphics.VerticalAlignment) &&
-                        member.Name == "Y Origin" || member.Name.EndsWith(".Y Origin"))
+                        member.Name == "YOrigin" || member.Name.EndsWith(".YOrigin"))
                     {
                         member.PreferredDisplayer = typeof(YOriginControl);
                     }
                     else if (propertyType == typeof(DimensionUnitType) &&
-                        member.Name == "Width Units" || member.Name.EndsWith(".Width Units"))
+                        member.Name == "WidthUnits" || member.Name.EndsWith(".WidthUnits"))
                     {
                         member.PreferredDisplayer = typeof(WidthUnitsControl);
                     }
                     else if (propertyType == typeof(DimensionUnitType) &&
-                        member.Name == "Height Units" || member.Name.EndsWith(".Height Units"))
+                        member.Name == "HeightUnits" || member.Name.EndsWith(".HeightUnits"))
                     {
                         member.PreferredDisplayer = typeof(HeightUnitsControl);
                     }
                     else if (propertyType == typeof(ChildrenLayout) &&
-                        member.Name == "Children Layout" || member.Name.EndsWith(".Children Layout"))
+                        member.Name == "ChildrenLayout" || member.Name.EndsWith(".ChildrenLayout"))
                     {
                         member.PreferredDisplayer = typeof(ChildrenLayoutControl);
                     }

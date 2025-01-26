@@ -22,14 +22,14 @@ namespace Gum.Wireframe
         public string[] PositionAndSizeVariables = new string[]{
             "Width",
             "Height",
-            "Width Units",
-            "Height Units",
-            "X Origin",
-            "Y Origin",
+            "WidthUnits",
+            "HeightUnits",
+            "XOrigin",
+            "YOrigin",
             "X",
             "Y",
-            "X Units",
-            "Y Units",
+            "XUnits",
+            "YUnits",
             "Guide",
             "Parent"
         

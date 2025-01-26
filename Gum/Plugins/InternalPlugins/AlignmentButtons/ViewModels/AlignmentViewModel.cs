@@ -188,7 +188,7 @@ namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels
                 SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Top, PositionUnitType.PixelsFromTop, DockMargin);
 
                 SetAndCallReact("Width", -DockMargin * 2, "float");
-                SetAndCallReact("Width Units", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
+                SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
 
 
                 RefreshAndSave();
@@ -205,7 +205,7 @@ namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels
                 SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
 
                 SetAndCallReact("Height", -DockMargin * 2, "float");
-                SetAndCallReact("Height Units", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
+                SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
 
                 RefreshAndSave();
             }
@@ -222,10 +222,10 @@ namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels
                 SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
 
                 SetAndCallReact("Width", -DockMargin * 2, "float");
-                SetAndCallReact("Width Units", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
+                SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
 
                 SetAndCallReact("Height", -DockMargin * 2, "float");
-                SetAndCallReact("Height Units", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
+                SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
 
                 RefreshAndSave();
             }
@@ -242,7 +242,7 @@ namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels
                 SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
 
                 SetAndCallReact("Height", -DockMargin * 2, "float");
-                SetAndCallReact("Height Units", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
+                SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
 
                 RefreshAndSave();
             }
@@ -258,7 +258,7 @@ namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels
                 SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Bottom, PositionUnitType.PixelsFromBottom, -DockMargin);
 
                 SetAndCallReact("Width", -DockMargin * 2, "float");
-                SetAndCallReact("Width Units", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
+                SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
 
                 RefreshAndSave();
             }
@@ -274,7 +274,7 @@ namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels
                 SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
 
                 SetAndCallReact("Height", -DockMargin * 2, "float");
-                SetAndCallReact("Height Units", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
+                SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
 
                 RefreshAndSave();
             }
@@ -290,7 +290,7 @@ namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels
                 SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
 
                 SetAndCallReact("Width", -DockMargin * 2, "float");
-                SetAndCallReact("Width Units", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
+                SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
 
                 RefreshAndSave();
             }

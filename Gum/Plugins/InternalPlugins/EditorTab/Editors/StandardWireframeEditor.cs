@@ -915,7 +915,7 @@ namespace Gum.Wireframe.Editors
 
         private float GetXMultiplierForLeft(InstanceSave instanceSave, IPositionedSizedObject ipso)
         {
-            object xOriginAsObject = EditingManager.GetCurrentValueForVariable("X Origin", instanceSave);
+            object xOriginAsObject = EditingManager.GetCurrentValueForVariable("XOrigin", instanceSave);
             bool shouldContiue = xOriginAsObject != null;
             if (shouldContiue)
             {
@@ -936,7 +936,7 @@ namespace Gum.Wireframe.Editors
 
         private float GetYMultiplierForTop(InstanceSave instanceSave, GraphicalUiElement gue)
         {
-            object yOriginAsObject = EditingManager.GetCurrentValueForVariable("Y Origin", instanceSave);
+            object yOriginAsObject = EditingManager.GetCurrentValueForVariable("YOrigin", instanceSave);
             bool shouldContiue = yOriginAsObject != null;
             if (shouldContiue)
             {
@@ -957,7 +957,7 @@ namespace Gum.Wireframe.Editors
 
         private float GetYMultiplierForBottom(InstanceSave instanceSave, GraphicalUiElement ipso)
         {
-            object yOriginAsObject = EditingManager.GetCurrentValueForVariable("Y Origin", instanceSave);
+            object yOriginAsObject = EditingManager.GetCurrentValueForVariable("YOrigin", instanceSave);
             bool shouldContiue = yOriginAsObject != null;
             if (shouldContiue)
             {
@@ -977,7 +977,7 @@ namespace Gum.Wireframe.Editors
 
         private float GetXMultiplierForRight(InstanceSave instanceSave, IPositionedSizedObject ipso)
         {
-            object xOriginAsObject = EditingManager.GetCurrentValueForVariable("X Origin", instanceSave);
+            object xOriginAsObject = EditingManager.GetCurrentValueForVariable("XOrigin", instanceSave);
 
             bool shouldContiue = xOriginAsObject != null;
 

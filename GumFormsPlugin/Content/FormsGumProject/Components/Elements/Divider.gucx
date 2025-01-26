@@ -18,7 +18,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>AccentLeft.Height Units</Name>
+      <Name>AccentLeft.HeightUnits</Name>
       <Value xsi:type="xsd:int">3</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -31,31 +31,31 @@
     </Variable>
     <Variable>
       <Type>TextureAddress</Type>
-      <Name>AccentLeft.Texture Address</Name>
+      <Name>AccentLeft.TextureAddress</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>AccentLeft.Texture Height</Name>
+      <Name>AccentLeft.TextureHeight</Name>
       <Value xsi:type="xsd:int">3</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>AccentLeft.Texture Left</Name>
+      <Name>AccentLeft.TextureLeft</Name>
       <Value xsi:type="xsd:int">281</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>AccentLeft.Texture Top</Name>
+      <Name>AccentLeft.TextureTop</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>AccentLeft.Texture Width</Name>
+      <Name>AccentLeft.TextureWidth</Name>
       <Value xsi:type="xsd:int">3</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -79,7 +79,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>AccentRight.Height Units</Name>
+      <Name>AccentRight.HeightUnits</Name>
       <Value xsi:type="xsd:int">3</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -92,31 +92,31 @@
     </Variable>
     <Variable>
       <Type>TextureAddress</Type>
-      <Name>AccentRight.Texture Address</Name>
+      <Name>AccentRight.TextureAddress</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>AccentRight.Texture Height</Name>
+      <Name>AccentRight.TextureHeight</Name>
       <Value xsi:type="xsd:int">3</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>AccentRight.Texture Left</Name>
+      <Name>AccentRight.TextureLeft</Name>
       <Value xsi:type="xsd:int">281</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>AccentRight.Texture Top</Name>
+      <Name>AccentRight.TextureTop</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>AccentRight.Texture Width</Name>
+      <Name>AccentRight.TextureWidth</Name>
       <Value xsi:type="xsd:int">3</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -128,13 +128,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>AccentRight.X Origin</Name>
+      <Name>AccentRight.XOrigin</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>AccentRight.X Units</Name>
+      <Name>AccentRight.XUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -146,7 +146,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>Height Units</Name>
+      <Name>HeightUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -164,7 +164,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>Line.Height Units</Name>
+      <Name>Line.HeightUnits</Name>
       <Value xsi:type="xsd:int">3</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -177,31 +177,31 @@
     </Variable>
     <Variable>
       <Type>TextureAddress</Type>
-      <Name>Line.Texture Address</Name>
+      <Name>Line.TextureAddress</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>Line.Texture Height</Name>
+      <Name>Line.TextureHeight</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>Line.Texture Left</Name>
+      <Name>Line.TextureLeft</Name>
       <Value xsi:type="xsd:int">281</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>Line.Texture Top</Name>
+      <Name>Line.TextureTop</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>Line.Texture Width</Name>
+      <Name>Line.TextureWidth</Name>
       <Value xsi:type="xsd:int">3</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -213,31 +213,31 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>Line.Width Units</Name>
+      <Name>Line.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>Line.X Origin</Name>
+      <Name>Line.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>Line.X Units</Name>
+      <Name>Line.XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>Line.Y Origin</Name>
+      <Name>Line.YOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>Line.Y Units</Name>
+      <Name>Line.YUnits</Name>
       <Value xsi:type="xsd:int">7</Value>
       <SetsValue>true</SetsValue>
     </Variable>
