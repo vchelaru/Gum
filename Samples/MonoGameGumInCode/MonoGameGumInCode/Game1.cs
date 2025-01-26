@@ -3,6 +3,7 @@ using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MonoGameGum;
 using MonoGameGum.GueDeriving;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
@@ -19,14 +20,15 @@ namespace MonoGameGumInCode
         public Game1()
         {
             _graphics = new GraphicsDeviceManager(this);
+            _graphics.PreferredBackBufferWidth = 1024;
+            _graphics.PreferredBackBufferHeight = 768;
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
         }
 
         protected override void Initialize()
         {
-            SystemManagers.Default = new SystemManagers();
-            SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
+            GumService.Default.Initialize(_graphics.GraphicsDevice);
 
             // adjust this to zoom in or out
             //SystemManagers.Default.Renderer.Camera.Zoom = 3;
@@ -125,40 +127,40 @@ namespace MonoGameGumInCode
             container.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
             container.Width = 0;
             container.Height = 0;
-            //container.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+            container.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
             container.AddToManagers();
 
-            //AddText(container, "This is a colored rectangle:");
+            AddText(container, "This is a colored rectangle:");
 
-            //var coloredRectangleInstance = new ColoredRectangleRuntime();
-            //coloredRectangleInstance.X = 10;
-            //coloredRectangleInstance.Y = 10;
-            //coloredRectangleInstance.Width = 120;
-            //coloredRectangleInstance.Height = 24;
-            //coloredRectangleInstance.Color = Color.White;
-            //container.Children.Add(coloredRectangleInstance);
+            var coloredRectangleInstance = new ColoredRectangleRuntime();
+            coloredRectangleInstance.X = 10;
+            coloredRectangleInstance.Y = 10;
+            coloredRectangleInstance.Width = 120;
+            coloredRectangleInstance.Height = 24;
+            coloredRectangleInstance.Color = Color.White;
+            container.Children.Add(coloredRectangleInstance);
 
-            //AddText(container, "This is a (line) rectangle:");
+            AddText(container, "This is a (line) rectangle:");
 
-            //var lineRectangle = new RectangleRuntime();
-            //lineRectangle.X = 10;
-            //lineRectangle.Y = 10;
-            //lineRectangle.Width = 120;
-            //lineRectangle.Height = 24;
-            //lineRectangle.LineWidth = 5;
-            //lineRectangle.Color = Color.Purple;
-            //container.Children.Add(lineRectangle);
+            var lineRectangle = new RectangleRuntime();
+            lineRectangle.X = 10;
+            lineRectangle.Y = 10;
+            lineRectangle.Width = 120;
+            lineRectangle.Height = 24;
+            lineRectangle.LineWidth = 5;
+            lineRectangle.Color = Color.Purple;
+            container.Children.Add(lineRectangle);
 
 
-            //AddText(container, "This is a sprite:");
+            AddText(container, "This is a sprite:");
 
-            //var sprite = new SpriteRuntime();
-            //sprite.X = 10;
-            //sprite.Y = 10;
-            //sprite.SourceFileName = "BearTexture.png";
-            //container.Children.Add(sprite);
+            var sprite = new SpriteRuntime();
+            sprite.X = 10;
+            sprite.Y = 10;
+            sprite.SourceFileName = "BearTexture.png";
+            container.Children.Add(sprite);
 
-            //AddText(container, "This is a NineSlice:");
+            AddText(container, "This is a NineSlice:");
 
             var nineSlice = new NineSliceRuntime();
             nineSlice.X = 10;
@@ -168,33 +170,63 @@ namespace MonoGameGumInCode
             nineSlice.Height = 48;
             container.Children.Add(nineSlice);
 
-            //var customText = new TextRuntime();
-            //customText.Width = 300;
-            //customText.UseCustomFont = true;
-            //customText.CustomFontFile = "WhitePeaberryOutline/WhitePeaberryOutline.fnt";
-            //customText.Text = "Hello, I am using a custom font.\nPretty cool huh?";
-            //container.Children.Add(customText);
+            var customText = new TextRuntime();
+            customText.Width = 300;
+            customText.UseCustomFont = true;
+            customText.CustomFontFile = "WhitePeaberryOutline/WhitePeaberryOutline.fnt";
+            customText.Text = "Hello, I am using a custom font.\nPretty cool huh?";
+            container.Children.Add(customText);
 
-            //AddText(container, "This is a polygon:");
-            //var polygon = new PolygonRuntime();
-            //polygon.Name = "PolygonRuntime";
-            //polygon.X = 10;
-            //polygon.Y = 10;
-            //polygon.Color = Color.Red;
+            var layoutCountBefore = GraphicalUiElement.UpdateLayoutCallCount;
 
-            //// width/heights are used for layout
-            //polygon.Width = 30;
-            //polygon.Height = 30;
-            //polygon.IsDotted = true;
-            //polygon.SetPoints(new System.Numerics.Vector2[]
-            //{
-            //    new System.Numerics.Vector2(30, 0),
-            //    new System.Numerics.Vector2(0, 30),
-            //    new System.Numerics.Vector2(30, 30),
-            //    new System.Numerics.Vector2(60, 0),
-            //    new System.Numerics.Vector2(30, 0),
-            //});
-            //container.Children.Add(polygon);
+            AddText(container, "Stacking/wrapping container:");
+
+            var stackingContainer = new ContainerRuntime();
+
+            GraphicalUiElement.IsAllLayoutSuspended = true;
+            stackingContainer.Width = 200;
+            stackingContainer.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+            stackingContainer.StackSpacing = 3;
+            stackingContainer.WrapsChildren = true;
+            stackingContainer.Y = 10;
+            stackingContainer.Height = 10;
+            stackingContainer.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+
+            for (int i = 0; i < 70; i++)
+            {
+                var rectangle = new ColoredRectangleRuntime();
+                stackingContainer.Children.Add(rectangle);
+                rectangle.Width = 7;
+                rectangle.Height = 7;
+            }
+
+            container.Children.Add(stackingContainer);
+            GraphicalUiElement.IsAllLayoutSuspended = false;
+            container.UpdateLayout();
+            var layoutCountAfter = GraphicalUiElement.UpdateLayoutCallCount;
+            System.Diagnostics.Debug.WriteLine($"Number of layout calls: {layoutCountAfter - layoutCountBefore}");
+
+            AddText(container, "This is a polygon:");
+            var polygon = new PolygonRuntime();
+            polygon.Name = "PolygonRuntime";
+            polygon.X = 10;
+            polygon.Y = 10;
+            polygon.Color = Color.Red;
+
+            // width/heights are used for layout
+            polygon.IsDotted = true;
+            polygon.SetPoints(new System.Numerics.Vector2[]
+            {
+                new System.Numerics.Vector2(30, 0),
+                new System.Numerics.Vector2(0, 30),
+                new System.Numerics.Vector2(30, 30),
+                new System.Numerics.Vector2(60, 0),
+                new System.Numerics.Vector2(30, 0),
+            });
+            polygon.Width = 30;
+            polygon.Height = 8;
+            container.Children.Add(polygon);
+
 
         }
 
@@ -229,7 +261,7 @@ namespace MonoGameGumInCode
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
+            GumService.Default.Update(this, gameTime);
 
             bool moveCameraWithMouse = false;
             if(moveCameraWithMouse)
@@ -253,7 +285,7 @@ namespace MonoGameGumInCode
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            SystemManagers.Default.Draw();
+            GumService.Default.Draw();
 
 
             base.Draw(gameTime);
