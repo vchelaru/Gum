@@ -675,7 +675,8 @@ namespace Gum.Wireframe.Editors
             }
             else if (SelectedState.Self.SelectedInstances.Count() != 0)
             {
-                foreach (var gue in SelectionManager.Self.SelectedGues)
+                var gues = SelectionManager.Self.SelectedGues.ToArray();
+                foreach (var gue in gues)
                 {
                     var instanceSave = gue.Tag as InstanceSave;
 
