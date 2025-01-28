@@ -49,9 +49,14 @@ public class ItemsControl : ScrollViewer
         {
             if (items != value)
             {
+                var wasSuppressed = GraphicalUiElement.IsAllLayoutSuspended;
+                    GraphicalUiElement.IsAllLayoutSuspended = true;
+
                 if (items != null)
                 {
                     ClearVisualsInternal();
+                    HandleCollectionChanged(this,                     
+                        new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
                 }
 
                 if (items is INotifyCollectionChanged notifyCollectionChanged)
@@ -71,6 +76,12 @@ public class ItemsControl : ScrollViewer
                         items, startingIndex: 0);
                     HandleCollectionChanged(this, args);
                 }
+
+                    GraphicalUiElement.IsAllLayoutSuspended = wasSuppressed;
+                    if (!wasSuppressed)
+                    {
+                        Visual.ResumeLayout(recursive: true);
+                    }
             }
         }
     }
@@ -171,6 +182,14 @@ public class ItemsControl : ScrollViewer
             case NotifyCollectionChangedAction.Add:
                 {
                     int index = e.NewStartingIndex;
+
+                    var shouldSuppressLayout = e.NewItems.Count > 0 && InnerPanel != null;
+                    var wasSuppressed = GraphicalUiElement.IsAllLayoutSuspended;
+                    if(shouldSuppressLayout)
+                    {
+                        GraphicalUiElement.IsAllLayoutSuspended = true;
+                    }
+
                     foreach (var item in e.NewItems)
                     {
                         var newItem = item as FrameworkElement ?? CreateNewItemFrameworkElement(item);
@@ -185,6 +204,14 @@ public class ItemsControl : ScrollViewer
                         HandleCollectionNewItemCreated(newItem, index);
 
                         index++;
+                    }
+                    if(shouldSuppressLayout)
+                    {
+                        GraphicalUiElement.IsAllLayoutSuspended = wasSuppressed;
+                        if (!wasSuppressed)
+                        {
+                            InnerPanel.ResumeLayout(recursive:true);
+                        }
                     }
                 }
 

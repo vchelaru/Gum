@@ -915,15 +915,27 @@ namespace Gum.Wireframe
 
         public static void UpdateToFontValues(IText text, GraphicalUiElement graphicalUiElement)
         {
-            if (graphicalUiElement.IsLayoutSuspended || GraphicalUiElement.IsAllLayoutSuspended)
-            {
-                graphicalUiElement.IsFontDirty = true;
-            }
+            // January 28, 2025
+            // If we early-out here,
+            // then the bitmap values
+            // never get assigned. This
+            // means that eventually when
+            // layout is resumed, bitmap values
+            // will get assigned. However, assigning
+            // bitmap values on a Text that has has Width
+            // or Height Units of Relative to Children, the
+            // parent then updates its parents layout. This causes
+            // tons of layout calls when resuming layout on a list box.
+            // Instead, we should assign fonts and mark font as dirty, then
+            // on resume only the parent layout needs to happen.
+            //if (graphicalUiElement.IsLayoutSuspended || GraphicalUiElement.IsAllLayoutSuspended)
+            //{
+            //    graphicalUiElement.IsFontDirty = true;
+            //}
             // todo: This could make things faster, but it will require
             // extra calls in generated code, or an "UpdateAll" method
             //if (!mIsLayoutSuspended && !IsAllLayoutSuspended)
-            else
-            {
+
                 BitmapFont font = null;
 
                 var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
@@ -1039,7 +1051,6 @@ namespace Gum.Wireframe
                         graphicalUiElement.UpdateLayout();
                     }
                 }
-            }
         }
 
 #endregion

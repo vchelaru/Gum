@@ -1,7 +1,9 @@
+
+![gum-logo-normal-512](https://github.com/user-attachments/assets/90d1625b-1d9a-4fca-b9a7-f0fb42badcbb)
+
 [![Join the chat](https://img.shields.io/discord/586997072373481494)](https://discord.gg/tG5RBgw)
 [![Twitter](https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Ftwitter.com%2FFlatRedBall)](https://twitter.com/FlatRedBall)
-
-# Introduction 
+![Activity](https://img.shields.io/github/last-commit/vchelaru/Gum/master)
 
 Gum is a general purpose UI layout tool built on object-oriented principles. 
 

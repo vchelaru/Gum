@@ -44,6 +44,7 @@ public enum MissingFileBehavior
 /// </summary>
 public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyPropertyChanged
 {
+
     #region Enums/Internal Classes
 
     enum ChildType
@@ -1482,10 +1483,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     public void UpdateLayout(ParentUpdateType parentUpdateType, int childrenUpdateDepth, XOrY? xOrY = null)
     {
         var updateParent =
-            (parentUpdateType & ParentUpdateType.All) == ParentUpdateType.All ||
-            (parentUpdateType & ParentUpdateType.IfParentStacks) == ParentUpdateType.IfParentStacks && GetIfParentStacks() ||
-            (parentUpdateType & ParentUpdateType.IfParentIsAutoGrid) == ParentUpdateType.IfParentIsAutoGrid && GetIfParentIsAutoGrid() ||
-            (parentUpdateType & ParentUpdateType.IfParentWidthHeightDependOnChildren) == ParentUpdateType.IfParentWidthHeightDependOnChildren && (Parent as GraphicalUiElement)?.GetIfDimensionsDependOnChildren() == true;
+            ((parentUpdateType & ParentUpdateType.All) == ParentUpdateType.All) ||
+            ((parentUpdateType & ParentUpdateType.IfParentStacks) == ParentUpdateType.IfParentStacks && GetIfParentStacks()) ||
+            ((parentUpdateType & ParentUpdateType.IfParentIsAutoGrid) == ParentUpdateType.IfParentIsAutoGrid && GetIfParentIsAutoGrid()) ||
+            ((parentUpdateType & ParentUpdateType.IfParentWidthHeightDependOnChildren) == ParentUpdateType.IfParentWidthHeightDependOnChildren && (Parent as GraphicalUiElement)?.GetIfDimensionsDependOnChildren() == true);
 
         #region Early Out - Suspended
 
@@ -4903,6 +4904,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         {
             if (!IsAllLayoutSuspended)
             {
+
                 ResumeLayoutUpdateIfDirtyRecursive();
             }
         }
