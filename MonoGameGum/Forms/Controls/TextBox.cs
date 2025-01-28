@@ -214,19 +214,24 @@ public class TextBox : TextBoxBase
 
         if (!string.IsNullOrEmpty(whatToPaste))
         {
-            if (selectionLength != 0)
-            {
-                DeleteSelection();
-            }
-            foreach (var character in whatToPaste)
-            {
-                this.Text = this.Text.Insert(caretIndex, "" + character);
-                caretIndex++;
-            }
+            var args = RaisePreviewTextInput(whatToPaste);
 
-            TruncateTextToMaxLength();
-            UpdateCaretPositionFromCaretIndex();
-            OffsetTextToKeepCaretInView();
+            if(args.Handled == false)
+            {
+                if (selectionLength != 0)
+                {
+                    DeleteSelection();
+                }
+                foreach (var character in whatToPaste)
+                {
+                    this.Text = this.Text.Insert(caretIndex, "" + character);
+                    caretIndex++;
+                }
+
+                TruncateTextToMaxLength();
+                UpdateCaretPositionFromCaretIndex();
+                OffsetTextToKeepCaretInView();
+            }
         }
     }
 
