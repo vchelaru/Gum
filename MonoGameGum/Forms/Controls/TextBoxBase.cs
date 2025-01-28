@@ -536,17 +536,17 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
                         int? letterToMoveToFromCtrl = null;
                         if (isCtrlDown)
                         {
+                            // Both WPF (and visual Studio) Move to the beginning of the
+                            // current word. Discord works differently but we're going to 
+                            // match WPF behavior. For example:
+                            // 12 34
+                            // If the cursor is at 4, pressing left moves the cursor
+                            // before the 3 but after the space.
                             letterToMoveToFromCtrl = GetCtrlBeforeTarget(caretIndex - 1);
                             if (letterToMoveToFromCtrl != null)
                             {
 
-                                // match Visual Studio behavior, and go after the last space
-                                if (letterToMoveToFromCtrl != caretIndex - 1)
-                                {
-                                    // we found a space, now select one to the right...
-                                    letterToMoveToFromCtrl++;
-                                }
-                                else
+                                if (letterToMoveToFromCtrl == caretIndex - 1)
                                 {
                                     letterToMoveToFromCtrl = null;
                                 }
@@ -633,6 +633,13 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
                     if (isCtrlDown)
                     {
                         HandlePaste();
+                    }
+                    break;
+                case Keys.A:
+
+                    if(isCtrlDown)
+                    {
+                        SelectAll();
                     }
                     break;
             }
