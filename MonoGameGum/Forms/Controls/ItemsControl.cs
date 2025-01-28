@@ -121,7 +121,6 @@ public class ItemsControl : ScrollViewer
 
     #region Events
 
-    [Obsolete("Use ItemPushed since ItemClicked actually responds to pushes")]
     public event EventHandler ItemClicked;
     public event EventHandler ItemPushed;
 
@@ -274,7 +273,6 @@ public class ItemsControl : ScrollViewer
     }
 
 
-    [Obsolete("Use OnItemPushed")]
     protected void OnItemClicked(object sender, EventArgs args)
     {
         ItemClicked?.Invoke(sender, args);
