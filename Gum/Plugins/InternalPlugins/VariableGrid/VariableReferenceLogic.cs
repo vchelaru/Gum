@@ -107,6 +107,8 @@ public class VariableReferenceLogic
 
     public AssignmentExpressionSyntax GetAssignmentSyntax(string item)
     {
+        item = EvaluatedSyntax.ConvertToCSharpSyntax(item);
+
         var sourceNode = CSharpSyntaxTree.ParseText(item).GetCompilationUnitRoot();
 
         var assignment = GetAssignmentRoot(sourceNode);

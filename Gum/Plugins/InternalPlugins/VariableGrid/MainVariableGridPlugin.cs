@@ -59,6 +59,8 @@ public class MainVariableGridPlugin : InternalPlugin
     {
         //    var syntax =_variableReferenceLogic.GetAssignmentSyntax(expression);
 
+        expression = EvaluatedSyntax.ConvertToCSharpSyntax(expression);
+
         var syntax = CSharpSyntaxTree.ParseText(expression).GetCompilationUnitRoot();
 
         if(syntax != null)

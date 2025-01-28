@@ -1,5 +1,6 @@
 ﻿using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Managers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
@@ -71,11 +72,49 @@ internal class EvaluatedSyntax
             // we just need to evaluate the right-side
             var rightSideToEvaluate = memberAccess.ToString();
 
-            var rfv = new RecursiveVariableFinder(stateForUnqualifiedRightSide);
 
-            var value = rfv.GetValue(rightSideToEvaluate);
+            RecursiveVariableFinder rfv = null;
 
-            return FromSyntaxAndValue(syntaxNode, value);
+            var stateForRfv = stateForUnqualifiedRightSide;
+
+            if(rightSideToEvaluate.StartsWith("global::"))
+            {
+                if(rightSideToEvaluate.StartsWith("global::Components."))
+                {
+                    var componentName = rightSideToEvaluate.Substring("globl::Components.".Length+1);
+                    var nextDot = componentName.IndexOf('.');
+                    componentName = componentName.Substring(0, nextDot);
+                    var component = ObjectFinder.Self.GetComponent(componentName);
+                    stateForRfv = component?.DefaultState;
+                    // add 2 for the dot and then moving after the dot
+                    rightSideToEvaluate = rightSideToEvaluate.Substring(("globl::Components." + componentName).Length + 2);
+                }
+                else if (rightSideToEvaluate.StartsWith("globl::Screens."))
+                {
+                    var screenName = rightSideToEvaluate.Substring("globl::Screens.".Length);
+                    var nextDot = screenName.IndexOf('.');
+                    screenName = screenName.Substring(0, nextDot);
+                    var component = ObjectFinder.Self.GetScreen(screenName);
+                    stateForRfv = component?.DefaultState;
+                    // add 2 for the dot and then moving after the dot
+                    rightSideToEvaluate = rightSideToEvaluate.Substring(("globl::Screens." + screenName).Length + 2);
+
+                }
+
+            }
+
+            if(stateForRfv == null)
+            {
+                return null;
+            }
+            else
+            {
+                rfv = new RecursiveVariableFinder(stateForRfv);
+
+                var value = rfv.GetValue(rightSideToEvaluate);
+
+                return FromSyntaxAndValue(syntaxNode, value);
+            }
 
         }
         else if(syntaxNode is LiteralExpressionSyntax literalExpression)
@@ -215,14 +254,34 @@ internal class EvaluatedSyntax
     }
 
 
+    public static string ConvertToCSharpSyntax(string lineOfText)
+    {
+        if (lineOfText.Contains("Components/"))
+        {
+            lineOfText = lineOfText.Replace("Components/", "global::Components.");
+        }
+        if (lineOfText.Contains("Screens/"))
+        {
+            lineOfText = lineOfText.Replace("Screens/", "global::Screens.");
+        }
+
+        return lineOfText;
+    }
 
 
+    public static string ConvertToVariableReferenceSyntax(string lineOfText)
+    {
+        if (lineOfText.Contains("global::Components."))
+        {
+            lineOfText = lineOfText.Replace("global::Components.", "Components/");
+        }
+        if (lineOfText.Contains("global::Screens."))
+        {
+            lineOfText = lineOfText.Replace("global::Screens.", "Screens/");
+        }
 
-
-
-
-
-
+        return lineOfText;
+    }
 
 
 
