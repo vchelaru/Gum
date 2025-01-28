@@ -240,7 +240,7 @@ public class ComboBox : FrameworkElement, IInputReceiver
             Visual.RaiseChildrenEventsOutsideOfBounds = true;
         }
         listBox.SelectionChanged += HandleSelectionChanged;
-        listBox.ItemClicked += HandleListBoxItemClicked;
+        listBox.ItemPushed += HandleListBoxItemPushed;
 
         listBox.IsVisible = false;
         Text = null;
@@ -411,7 +411,7 @@ public class ComboBox : FrameworkElement, IInputReceiver
 
     }
 
-    private void HandleListBoxItemClicked(object sender, EventArgs args)
+    private void HandleListBoxItemPushed(object sender, EventArgs args)
     {
         HideListBox();
     }

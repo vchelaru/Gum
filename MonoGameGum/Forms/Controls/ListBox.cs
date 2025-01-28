@@ -311,7 +311,7 @@ public class ListBox : ItemsControl, IInputReceiver
         // let's hope the item doesn't already have this event - if the user recycles them that could be a problem...
         item.Selected += HandleItemSelected;
         item.GotFocus += HandleItemFocused;
-        item.Clicked += HandleListBoxItemClicked;
+        item.Clicked += HandleListBoxItemPushed;
 
         return item;
     }
@@ -396,9 +396,10 @@ public class ListBox : ItemsControl, IInputReceiver
         OnItemFocused(sender, EventArgs.Empty);
     }
 
-    private void HandleListBoxItemClicked(object sender, EventArgs e)
+    private void HandleListBoxItemPushed(object sender, EventArgs e)
     {
         OnItemClicked(sender, EventArgs.Empty);
+        OnItemPushed(sender, EventArgs.Empty);
     }
 
     #endregion

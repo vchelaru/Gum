@@ -56,7 +56,9 @@ public class ListBoxItem : FrameworkElement
     #region Events
 
     public event EventHandler Selected;
+    [Obsolete("This is incorrectly named. Instead, use Pushed")]
     public event EventHandler Clicked;
+    public event EventHandler Pushed;
 
     #endregion
 
@@ -146,6 +148,7 @@ public class ListBoxItem : FrameworkElement
             IsSelected = true;
 
             Clicked?.Invoke(this, null);
+            Pushed?.Invoke(this, null);
         }
     }
 
@@ -157,6 +160,7 @@ public class ListBoxItem : FrameworkElement
             IsSelected = true;
 
             Clicked?.Invoke(this, null);
+            Pushed?.Invoke(this, null);
         }
     }
 
