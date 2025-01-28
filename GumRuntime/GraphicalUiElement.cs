@@ -44,6 +44,32 @@ public enum MissingFileBehavior
 /// </summary>
 public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyPropertyChanged
 {
+
+    // for debug only
+    public GraphicalUiElement GetFirstDirty()
+    {
+        if(this.currentDirtyState != null)
+        {
+            return this;
+        }
+
+        if(this.Children != null)
+        {
+            foreach(var child in Children)
+            {
+                if(child is GraphicalUiElement childGue)
+                {
+                    var fromChild =  childGue.GetFirstDirty();
+                    if(fromChild != null)
+                    {
+                        return fromChild;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     #region Enums/Internal Classes
 
     enum ChildType
@@ -1482,10 +1508,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     public void UpdateLayout(ParentUpdateType parentUpdateType, int childrenUpdateDepth, XOrY? xOrY = null)
     {
         var updateParent =
-            (parentUpdateType & ParentUpdateType.All) == ParentUpdateType.All ||
-            (parentUpdateType & ParentUpdateType.IfParentStacks) == ParentUpdateType.IfParentStacks && GetIfParentStacks() ||
-            (parentUpdateType & ParentUpdateType.IfParentIsAutoGrid) == ParentUpdateType.IfParentIsAutoGrid && GetIfParentIsAutoGrid() ||
-            (parentUpdateType & ParentUpdateType.IfParentWidthHeightDependOnChildren) == ParentUpdateType.IfParentWidthHeightDependOnChildren && (Parent as GraphicalUiElement)?.GetIfDimensionsDependOnChildren() == true;
+            ((parentUpdateType & ParentUpdateType.All) == ParentUpdateType.All) ||
+            ((parentUpdateType & ParentUpdateType.IfParentStacks) == ParentUpdateType.IfParentStacks && GetIfParentStacks()) ||
+            ((parentUpdateType & ParentUpdateType.IfParentIsAutoGrid) == ParentUpdateType.IfParentIsAutoGrid && GetIfParentIsAutoGrid()) ||
+            ((parentUpdateType & ParentUpdateType.IfParentWidthHeightDependOnChildren) == ParentUpdateType.IfParentWidthHeightDependOnChildren && (Parent as GraphicalUiElement)?.GetIfDimensionsDependOnChildren() == true);
 
         #region Early Out - Suspended
 
@@ -4903,7 +4929,21 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         {
             if (!IsAllLayoutSuspended)
             {
+                // This loops through all items, updating their fonts.
+                // If there are multiple items that have fonts which are
+                // sized based on their fonts, such as children text in a 
+                // stack layout, then this call ulimately makes the parent
+                // call UpdateLayout over and over for each item. therefore,
+                // we are going to internally suppress layouts, then do a single
+                // layout call:
+                var wasGloballySuspended = GraphicalUiElement.IsAllLayoutSuspended;
+                GraphicalUiElement.IsAllLayoutSuspended = true;
                 ResumeLayoutUpdateIfDirtyRecursive();
+                if(!wasGloballySuspended)
+                {
+                    GraphicalUiElement.IsAllLayoutSuspended = false;
+                    UpdateLayout();
+                }
             }
         }
         else

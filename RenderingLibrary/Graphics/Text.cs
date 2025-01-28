@@ -512,12 +512,15 @@ namespace RenderingLibrary.Graphics
             }
             set
             {
-                mBitmapFont = value;
+                if(mBitmapFont != value)
+                {
+                    mBitmapFont = value;
 
-                UpdateWrappedText();
-                UpdatePreRenderDimensions();
+                    UpdateWrappedText();
+                    UpdatePreRenderDimensions();
 
-                mNeedsBitmapFontRefresh = true;
+                    mNeedsBitmapFontRefresh = true;
+                }
                 //UpdateTextureToRender();
             }
         }
