@@ -56,7 +56,7 @@ textBox.SelectionStart = 0;
 textBox.SelectionLength = textBox.Text?.Length ?? 0; // in case text is null
 ```
 
-Selection can also be performed by the user. Double-clicking the text box selects all text.
+Selection can also be performed by the user. Double-clicking the text box selects all text. Also, pressing CTRL+A selects all text.
 
 <figure><img src="../../../../.gitbook/assets/16_11 18 38.gif" alt=""><figcaption><p>Double-click selects all text</p></figcaption></figure>
 
