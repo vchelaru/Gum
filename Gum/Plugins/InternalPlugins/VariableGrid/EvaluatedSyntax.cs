@@ -139,6 +139,10 @@ internal class EvaluatedSyntax
         {
             return dynamicValue1 / dynamicValue2;
         }
+        else
+        {
+            System.Diagnostics.Debugger.Break();
+        }
 
         return null;
     }
