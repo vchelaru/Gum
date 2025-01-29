@@ -4,6 +4,9 @@ using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using GumRuntime;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Drawing.Drawing2D;
@@ -102,6 +105,40 @@ public class VariableReferenceLogic
         }
     }
 
+    public AssignmentExpressionSyntax GetAssignmentSyntax(string item)
+    {
+        item = EvaluatedSyntax.ConvertToCSharpSyntax(item);
+
+        var sourceNode = CSharpSyntaxTree.ParseText(item).GetCompilationUnitRoot();
+
+        var assignment = GetAssignmentRoot(sourceNode);
+        return assignment;
+    }
+
+    private static AssignmentExpressionSyntax GetAssignmentRoot(SyntaxNode sourceNode)
+    {
+
+        if(sourceNode is AssignmentExpressionSyntax assignment)
+        {
+            return assignment;
+        }
+        else
+        {
+            var children = sourceNode.ChildNodes();
+
+            foreach(var child in children)
+            {
+                var asAssignment = GetAssignmentRoot(child);
+                if(asAssignment != null)
+                {
+                    return asAssignment;
+                }
+            }
+        }
+        return null;
+
+    }
+
     private static void CommentFailures(VariableListSave newDirectValue, List<(string, GeneralResponse)> failures)
     {
         foreach (var failure in failures)
@@ -158,14 +195,21 @@ public class VariableReferenceLogic
                 continue;
             }
 
-            var response = CheckSyntaxOfLine(parentElement, leftSideInstance, line);
+            var assignmentSyntax = GetAssignmentSyntax(line);
+
+            GeneralResponse response = GeneralResponse.SuccessfulResponse;
+
+            if(assignmentSyntax == null)
+            {
+                response = GeneralResponse.UnsuccessfulWith("Could not parse line. This should be an assignment such as X=Y");
+            }
 
             VariableSave leftSideVariable = null;
 
             if (response.Succeeded)
             {
                 var leftSideResponse =
-                    CheckLeftSideVariableExistence(parentElement, leftSideInstance, line);
+                    CheckLeftSideVariableExistence(parentElement, leftSideInstance, assignmentSyntax);
 
                 if (leftSideResponse.Succeeded == false)
                 {
@@ -177,9 +221,21 @@ public class VariableReferenceLogic
                 }
             }
 
-            if(response.Succeeded)
+            EvaluatedSyntax evaulatedSyntax = null;
+
+            if (response.Succeeded)
             {
-                var typeMatchResponse = CheckIfVariableTypesMatch(leftSideVariable, parentElement, leftSideInstance, line);
+                evaulatedSyntax = EvaluatedSyntax.FromSyntaxNode(assignmentSyntax.Right, parentElement.DefaultState);
+
+                if (evaulatedSyntax == null)
+                {
+                    response = GeneralResponse.UnsuccessfulWith($"Could not evaluate right-side expression {assignmentSyntax}");
+                }
+            }
+
+            if(response.Succeeded)
+            { 
+                var typeMatchResponse = CheckIfVariableTypesMatch(leftSideVariable, parentElement, leftSideInstance, evaulatedSyntax);
 
                 if (typeMatchResponse.Succeeded == false)
                 {
@@ -196,40 +252,14 @@ public class VariableReferenceLogic
         return failures;
     }
 
-    private GeneralResponse CheckIfVariableTypesMatch(VariableSave leftSideVariable, ElementSave parentElement, InstanceSave leftSideInstance, string line)
+    private GeneralResponse CheckIfVariableTypesMatch(VariableSave leftSideVariable, ElementSave parentElement, InstanceSave leftSideInstance, EvaluatedSyntax assignment)
     {
         var leftSideType = leftSideVariable.Type;
         string rightSideType = null;
         // get the right side type to compare:
         var ownerOfRightSideVariable = parentElement.DefaultState;
 
-        var split = line.Split('=');
-        var right = split[1].Trim();
-
-        // ...but call this to change that in case the right-side is a variable belonging to some other component
-        GumRuntime.ElementSaveExtensions.GetRightSideAndState(ref right, ref ownerOfRightSideVariable);
-
-        if(ownerOfRightSideVariable  == null)
-        {
-            return GeneralResponse.UnsuccessfulWith("Could not find element owning right-side variable");
-        }
-
-        var ownerElement = ownerOfRightSideVariable.ParentContainer;
-
-        if (ownerElement == null)
-        {
-            return GeneralResponse.UnsuccessfulWith("Could not find element owning right-side variable");
-        }
-
-
-        var rootVariable = ObjectFinder.Self.GetRootVariable(right, ownerElement);
-
-        if (rootVariable == null)
-        {
-            return GeneralResponse.UnsuccessfulWith($"Could not find variable [{right}] in [{ownerElement}]");
-        }
-
-        rightSideType = rootVariable.Type;
+        rightSideType = assignment.EvaluatedType;
 
         if(rightSideType != leftSideType)
         {
@@ -238,11 +268,11 @@ public class VariableReferenceLogic
         return GeneralResponse.SuccessfulResponse;
     }
 
-    private GeneralResponse<VariableSave> CheckLeftSideVariableExistence(ElementSave parentElement, InstanceSave instance, string line)
+    private GeneralResponse<VariableSave> CheckLeftSideVariableExistence(ElementSave parentElement, InstanceSave instance, AssignmentExpressionSyntax syntax)
     {
         var element = instance != null ? ObjectFinder.Self.GetElementSave(instance) : parentElement;
 
-        var leftSide = line.Split('=')[0].Trim();
+        var leftSide = syntax.Left.ToString();
 
         var rootVar = ObjectFinder.Self.GetRootVariable(leftSide, element);
 
@@ -257,34 +287,7 @@ public class VariableReferenceLogic
     }
 
     static char[] equalsArray = new char[] { '=' };
-    public GeneralResponse CheckSyntaxOfLine(ElementSave parentElement, InstanceSave instance, string line)
-    {
-        if(line.Contains("=") == false)
-        {
-            return GeneralResponse.UnsuccessfulWith("Line must have an assigment using equals (=)");
-        }
-        var split = line
-            .Split(equalsArray, 2, StringSplitOptions.RemoveEmptyEntries)
-            .Select(item => item.Trim()).ToArray();
-
-        if(split.Length != 2)
-        {
-            return GeneralResponse.UnsuccessfulWith("Only one equal allowed in a line of text");
-        }
-
-        if (string.IsNullOrEmpty(split[0]))
-        {
-            return GeneralResponse.UnsuccessfulWith("Left side must be assigned, empty values are not allowed");
-        }
-
-        if (string.IsNullOrEmpty(split[1]))
-        {
-            return GeneralResponse.UnsuccessfulWith("Right side cannot be empty");
-        }
-
-        return GeneralResponse.SuccessfulResponse;
-    }
-
+    
     private static bool DoVariableReferenceReactionOnInstanceVariableSet(ElementSave container, InstanceSave instance, StateSave stateSave, string unqualifiedVariableName, object newValue)
     {
         var didAssignDeepReference = false;

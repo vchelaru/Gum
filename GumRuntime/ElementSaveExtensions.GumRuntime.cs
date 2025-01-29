@@ -15,6 +15,7 @@ using Xceed.Wpf.Toolkit.PropertyGrid.Converters;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using System.ComponentModel;
+using System.Text;
 
 namespace GumRuntime
 {
@@ -23,6 +24,8 @@ namespace GumRuntime
         static Dictionary<string, Type> mElementToGueTypes = new Dictionary<string, Type>();
         static Dictionary<string, Func<GraphicalUiElement>> mElementToGueTypeFuncs = new Dictionary<string, Func<GraphicalUiElement>>();
         static Func<GraphicalUiElement> TemplateFunc;
+
+        public static Func<StateSave, string, object> CustomEvaluateExpression;
 
         public static void RegisterGueInstantiationType(string elementName, Type gueInheritingType)
         {
@@ -340,17 +343,10 @@ namespace GumRuntime
             }
 
             var left = split[0];
+
             var right = split[1];
+            var value = GetRightSideValue(stateSave, right);
 
-            var instanceLeft = referenceOwner.Tag as InstanceSave;
-
-            // assume the owner of the right-side is the StateSave that was passed in...
-            var ownerOfRightSideVariable = stateSave;
-            // ...but call this to change that in case the right-side is a variable belonging to some other component
-            GetRightSideAndState(ref right, ref ownerOfRightSideVariable);
-
-            var recursiveVariableFinder = new RecursiveVariableFinder(ownerOfRightSideVariable);
-            var value = recursiveVariableFinder.GetValue(right);
 
             if (value != null)
             {
@@ -465,15 +461,7 @@ namespace GumRuntime
 
             var left = split[0];
             var right = split[1];
-
-            // assume the owner of the right-side is the StateSave that was passed in...
-            var ownerOfRightSideVariable = stateSave;
-            // ...but call this to change that in case the right-side is a variable belonging to some other component
-            GetRightSideAndState(ref right, ref ownerOfRightSideVariable);
-
-            var recursiveVariableFinder = new RecursiveVariableFinder(ownerOfRightSideVariable);
-
-            var value = recursiveVariableFinder.GetValue(right);
+            object value = GetRightSideValue(stateSave, right);
 
             object valueBefore = null;
             string effectiveLeft = null;
@@ -497,6 +485,27 @@ namespace GumRuntime
                 OldValue = valueBefore,
                 VariableName = effectiveLeft
             };
+        }
+
+        private static object GetRightSideValue(StateSave stateSave, string right)
+        {
+            if(CustomEvaluateExpression != null)
+            {
+                return CustomEvaluateExpression(stateSave, right);
+            }
+            else
+            {
+                // fallback (temporarily?)
+                // assume the owner of the right-side is the StateSave that was passed in...
+                var ownerOfRightSideVariable = stateSave;
+                // ...but call this to change that in case the right-side is a variable belonging to some other component
+                GetRightSideAndState(ref right, ref ownerOfRightSideVariable);
+
+                var recursiveVariableFinder = new RecursiveVariableFinder(ownerOfRightSideVariable);
+
+                var value = recursiveVariableFinder.GetValue(right);
+                return value;
+            }
         }
 
         public static void GetRightSideAndState(ref string right, ref StateSave stateSave)

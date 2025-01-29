@@ -1,5 +1,7 @@
 ﻿using Gum.Wireframe;
 using System;
+using System.Reflection;
+
 
 #if FRB
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
