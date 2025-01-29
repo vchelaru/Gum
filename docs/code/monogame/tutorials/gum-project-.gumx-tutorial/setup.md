@@ -76,7 +76,7 @@ First, we'll set up our project so all Gum files are copied when the project is 
 
 
     <figure><img src="../../../../.gitbook/assets/image (11).png" alt=""><figcaption><p>Properties right click option</p></figcaption></figure>
-3.  Set the file to Copy if Newer
+3.  Set the file to Copy if Newer. If using Android, see instructions below.
 
     <figure><img src="../../../../.gitbook/assets/image (12).png" alt=""><figcaption><p>Mark the Gum file as Copy if newer</p></figcaption></figure>
 4.  Double click your game's csproj file to open it in the text editor and find the entry for the file that you marked as Copy if newer.\
@@ -97,6 +97,20 @@ At the time of this writing, Gum does not use the MonoGame Content Builder to bu
 
 Future versions may be expanded to support using either the .XNB file format or _raw_ PNGs.
 {% endhint %}
+
+#### Android
+
+If you are using Android, then your files must be marked as Android Assets rather than copied files.
+
+The steps to do this are:
+
+1. Open your project file
+2. Find the entry for the Gum project if you followed the previous section which copies file using wildcard
+3. Change it to an Android Asset. For example your code might look like this:
+
+```xml
+<AndroidAsset Include="Content\GumProject\**\*.*" />
+```
 
 ### Loading the Gum Project
 
