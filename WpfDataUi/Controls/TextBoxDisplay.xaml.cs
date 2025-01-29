@@ -26,6 +26,8 @@ namespace WpfDataUi.Controls
 
         ApplyValueResult? lastApplyValueResult = null;
 
+        bool IsInSet = false;
+
         public decimal? LabelDragValueRounding { get; set; } = 1;
 
         public bool EnableLabelDragValueChange { get; set; } = true;
@@ -138,6 +140,8 @@ namespace WpfDataUi.Controls
             // If we're default, then go ahead and change the value
             bool canRefresh =
                 this.TextBox.IsFocused == false || forceRefreshEvenIfFocused || mTextBoxLogic.InstanceMember.IsDefault;
+
+            canRefresh = canRefresh && !IsInSet;
 
             if (canRefresh)
             {
@@ -304,7 +308,7 @@ namespace WpfDataUi.Controls
             }
             else
             {
-                if(IsDisplayedTypeNullable())
+                if (IsDisplayedTypeNullable())
                 {
                     this.TextBox.IsEnabled = forceNullableEnable || valueOnInstance != null;
                 }
@@ -434,16 +438,30 @@ namespace WpfDataUi.Controls
 
         private void NullableCheckBox_Unchecked(object sender, RoutedEventArgs e)
         {
+            var propertyType = this.GetPropertyType();
+
+            if (propertyType.IsValueType && Nullable.GetUnderlyingType(propertyType) != null)
+            {
+                // For nullable value types
+                var underlyingType = Nullable.GetUnderlyingType(propertyType);
+                var value = Activator.CreateInstance(underlyingType);
+                TrySetValueOnUi(value);
+            }
+
             HandleNullableCheckBoxCheckChanged();
         }
 
         private void HandleNullableCheckBoxCheckChanged()
         {
+            IsInSet = true;
+
             lastApplyValueResult = mTextBoxLogic.TryApplyToInstance();
 
             TryGetValueOnUi(out object newValue);
 
             RefreshIsEnabled(newValue, forceNullableEnable: NullableCheckBox.IsChecked == false);
+
+            IsInSet = false;
         }
     }
 }
