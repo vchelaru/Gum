@@ -79,28 +79,32 @@ internal class EvaluatedSyntax
 
             if(rightSideToEvaluate.StartsWith("global::"))
             {
-                if(rightSideToEvaluate.StartsWith("global::Components."))
+                string elementType = null;
+                if (rightSideToEvaluate.StartsWith("global::Components."))
                 {
-                    var componentName = rightSideToEvaluate.Substring("globl::Components.".Length+1);
-                    var nextDot = componentName.IndexOf('.');
-                    componentName = componentName.Substring(0, nextDot);
-                    var component = ObjectFinder.Self.GetComponent(componentName);
-                    stateForRfv = component?.DefaultState;
-                    // add 2 for the dot and then moving after the dot
-                    rightSideToEvaluate = rightSideToEvaluate.Substring(("globl::Components." + componentName).Length + 2);
+                    elementType = "Components";
                 }
-                else if (rightSideToEvaluate.StartsWith("globl::Screens."))
+                else if (rightSideToEvaluate.StartsWith("global::Screens."))
                 {
-                    var screenName = rightSideToEvaluate.Substring("globl::Screens.".Length);
-                    var nextDot = screenName.IndexOf('.');
-                    screenName = screenName.Substring(0, nextDot);
-                    var component = ObjectFinder.Self.GetScreen(screenName);
-                    stateForRfv = component?.DefaultState;
-                    // add 2 for the dot and then moving after the dot
-                    rightSideToEvaluate = rightSideToEvaluate.Substring(("globl::Screens." + screenName).Length + 2);
-
+                    elementType = "Screens";
                 }
-
+                else if(rightSideToEvaluate.StartsWith("global::Standards."))
+                {
+                    elementType = "Standards";
+                }
+                if (elementType != null)
+                {
+                    var elementName = rightSideToEvaluate.Substring($"global::{elementType}.".Length);
+                    var nextDot = elementName.IndexOf('.');
+                    if(nextDot != -1)
+                    {
+                        elementName = elementName.Substring(0, nextDot);
+                        elementName.Replace('\u1234', '/');
+                        var element = ObjectFinder.Self.GetElementSave(elementName);
+                        stateForRfv = element?.DefaultState;
+                        rightSideToEvaluate = rightSideToEvaluate.Substring(($"global::{elementType}." + elementName).Length + 1);
+                    }
+                }
             }
 
             if(stateForRfv == null)
@@ -160,6 +164,8 @@ internal class EvaluatedSyntax
 
     private static object Combine(EvaluatedSyntax leftEvaluated, EvaluatedSyntax rightEvaluated, SyntaxToken operatorToken)
     {
+        if (leftEvaluated?.Value == null || rightEvaluated?.Value == null) return null;
+
         dynamic dynamicValue1, dynamicValue2;
         GetDynamicValues(leftEvaluated.Value, rightEvaluated.Value, out dynamicValue1, out dynamicValue2);
         if(operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.PlusToken))
@@ -187,14 +193,6 @@ internal class EvaluatedSyntax
     }
 
 
-
-    static object AddNumbers(object obj1, object obj2)
-    {
-        // Get the types of the objects
-        dynamic dynamicValue1, dynamicValue2;
-        GetDynamicValues(obj1, obj2, out dynamicValue1, out dynamicValue2);
-        return dynamicValue1 + dynamicValue2;
-    }
 
     private static void GetDynamicValues(object obj1, object obj2, out dynamic dynamicValue1, out dynamic dynamicValue2)
     {
@@ -264,21 +262,16 @@ internal class EvaluatedSyntax
         {
             lineOfText = lineOfText.Replace("Screens/", "global::Screens.");
         }
-
-        return lineOfText;
-    }
-
-
-    public static string ConvertToVariableReferenceSyntax(string lineOfText)
-    {
-        if (lineOfText.Contains("global::Components."))
+        if (lineOfText.Contains("Standards/"))
         {
-            lineOfText = lineOfText.Replace("global::Components.", "Components/");
+            lineOfText = lineOfText.Replace("Standards/", "global::Standards.");
         }
-        if (lineOfText.Contains("global::Screens."))
-        {
-            lineOfText = lineOfText.Replace("global::Screens.", "Screens/");
-        }
+
+        // any additional slashes are part of the name, so we want to replace those with something
+        // that still evaluates to a variable in C#, but which can be differentiated from a period, or
+        // anything else the user might type
+        lineOfText = lineOfText.Replace('/', '\u1234');
+
 
         return lineOfText;
     }
