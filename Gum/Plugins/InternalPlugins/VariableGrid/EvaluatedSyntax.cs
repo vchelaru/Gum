@@ -99,7 +99,7 @@ internal class EvaluatedSyntax
                     if(nextDot != -1)
                     {
                         elementName = elementName.Substring(0, nextDot);
-                        elementName.Replace('\u1234', '/');
+                        elementName = elementName.Replace('\u1234', '/');
                         var element = ObjectFinder.Self.GetElementSave(elementName);
                         stateForRfv = element?.DefaultState;
                         rightSideToEvaluate = rightSideToEvaluate.Substring(($"global::{elementType}." + elementName).Length + 1);
