@@ -94,9 +94,9 @@ namespace Gum.PropertyGridHelpers
             {
                 variableListName = instanceSave.Name + "." + variableListName;
             }
-            var variableReference = recursiveVariableFinder.GetVariableList(variableListName);
             Dictionary<string, string> variablesSetThroughReference = new Dictionary<string, string>();
 
+            var variableReference = recursiveVariableFinder.GetVariableList(variableListName);
             if(variableReference?.ValueAsIList != null)
             {
                 foreach(var item in variableReference.ValueAsIList)
@@ -107,6 +107,39 @@ namespace Gum.PropertyGridHelpers
                         var indexOfEquals = assignment.IndexOf("=");
                         var variableName = assignment.Substring(0, indexOfEquals).Trim();
                         var rightSideEquals = assignment.Substring(indexOfEquals + 1).Trim();
+                        variablesSetThroughReference[variableName] = rightSideEquals;
+                    }
+                }
+            }
+
+            HashSet<InstanceSave> instancesWithExposedVariables = new HashSet<InstanceSave>();
+            foreach(var variable in elementSave.DefaultState.Variables)
+            {
+                if(!string.IsNullOrEmpty(variable.SourceObject) && !string.IsNullOrEmpty(variable.ExposedAsName))
+                {
+                    var instance = elementSave.GetInstance(variable.SourceObject);
+                    if(instance != null)
+                    {
+                        instancesWithExposedVariables.Add(instance);
+                    }
+                }
+            }
+
+            foreach(var instanceWithExposedVariables in instancesWithExposedVariables)
+            {
+                var instanceVariableListName = "VariableReferences";
+
+                var instanceRfv = new RecursiveVariableFinder(instanceWithExposedVariables, elementSave);
+
+                var variable = instanceRfv.GetVariableList(instanceVariableListName);
+
+                if(variable?.ValueAsIList != null)
+                {
+                    foreach(string item in variable.ValueAsIList)
+                    {
+                        var indexOfEquals = item.IndexOf("=");
+                        var variableName = instanceWithExposedVariables.Name + "." + item.Substring(0, indexOfEquals).Trim();
+                        var rightSideEquals = item.Substring(indexOfEquals + 1).Trim();
                         variablesSetThroughReference[variableName] = rightSideEquals;
                     }
                 }
