@@ -159,6 +159,27 @@ namespace Gum.PropertyGridHelpers
 
             #region Loop through all variables
 
+            Dictionary<string, string> exposedVariables = new Dictionary<string, string>();
+            if(instanceSave != null)
+            {
+                var instanceOwner = instanceSave.ParentContainer;
+                if(instanceOwner != null)
+                {
+                    foreach(var variable in instanceOwner.DefaultState.Variables)
+                    {
+                        if(!string.IsNullOrEmpty(variable.ExposedAsName) && variable.SourceObject == instanceSave.Name)
+                        {
+                            var rootVariable = ObjectFinder.Self.GetRootVariable(variable.Name, elementSave);
+
+                            if(rootVariable != null)
+                            {
+                                exposedVariables.Add(rootVariable.Name, variable.ExposedAsName);
+                            }
+                        }
+                    }
+                }
+            }
+
             // We want to use the default state to get all possible
             // variables because the default state will always set all
             // variables.  We then look at the current state to get the
@@ -173,7 +194,20 @@ namespace Gum.PropertyGridHelpers
                 if (variablesSetThroughReference.ContainsKey(variableName))
                 {
                     isReadonly = true;
-                    subtext = variablesSetThroughReference[variableName];
+                    subtext += "=" + variablesSetThroughReference[variableName];
+                }
+
+                if(instanceSave != null)
+                {
+
+                    if(exposedVariables.ContainsKey(defaultVariable.Name))
+                    {
+                        if(!string.IsNullOrEmpty(subtext))
+                        {
+                            subtext += "\n";
+                        }
+                        subtext += "Exposed as " + exposedVariables[defaultVariable.Name];
+                    }
                 }
                 TryAddPropertyToList(pdc, elementSave, instanceSave, amountToDisplay, defaultVariable, isReadonly, subtext);
             }

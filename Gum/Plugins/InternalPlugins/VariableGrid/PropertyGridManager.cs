@@ -555,7 +555,7 @@ namespace Gum.Managers
             }
             mLastCategory = null;
 
-            GetMemberCategoriesForBehaviorInstance(behavior, instance, categories);
+            mPropertyGridDisplayer.GetCategories(behavior, instance, categories);
 
             return categories;
         }
@@ -584,13 +584,6 @@ namespace Gum.Managers
             }
             return categories;
 
-        }
-
-        private void GetMemberCategoriesForBehaviorInstance(BehaviorSave behavior, InstanceSave instance, List<MemberCategory> categories)
-        {
-            categories.Clear();
-
-            mPropertyGridDisplayer.GetCategories(behavior, instance, categories);
         }
 
         private void GetMemberCategoriesForState(ElementSave element, InstanceSave instance, List<MemberCategory> categories, StateSave stateSave, StateSaveCategory stateSaveCategory)
