@@ -262,7 +262,7 @@ public class VariableReferenceLogic
         rightSideType = assignment.EvaluatedType;
         if (rightSideType == null)
         {
-            return GeneralResponse.UnsuccessfulWith($"Right side of equation is empty!");
+            return GeneralResponse.UnsuccessfulWith("Right side of equation is empty!");
         }
 
         var areEqual = rightSideType == leftSideType;
