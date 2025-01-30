@@ -55,7 +55,7 @@ public class MainVariableGridPlugin : InternalPlugin
     }
 
 
-    private object EvaluateExpression(StateSave stateSave, string expression)
+    private object EvaluateExpression(StateSave stateSave, string expression, string desiredType)
     {
         //    var syntax =_variableReferenceLogic.GetAssignmentSyntax(expression);
 
@@ -66,7 +66,11 @@ public class MainVariableGridPlugin : InternalPlugin
         if(syntax != null)
         {
             var evaluatedSyntax = EvaluatedSyntax.FromSyntaxNode(syntax, stateSave);
-            return evaluatedSyntax?.Value;
+
+            if(evaluatedSyntax.CastTo(desiredType))
+            {
+                return evaluatedSyntax?.Value;
+            }
         }
         return null;
     }

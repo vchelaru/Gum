@@ -15,14 +15,18 @@ using System.Windows.Media;
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
 internal class EvaluatedSyntax
 {
+    #region Fields/Properties
+
     public string EvaluatedType { get; set; }
     public SyntaxNode SyntaxNode { get; set; }
 
     public object Value { get; set; }
 
+    #endregion
+
     public override string ToString()
     {
-        if(SyntaxNode == null)
+        if (SyntaxNode == null)
         {
             return "<no syntax>";
         }
@@ -32,6 +36,8 @@ internal class EvaluatedSyntax
         }
     }
 
+    #region Parse
+
     public static EvaluatedSyntax FromSyntaxNode(SyntaxNode syntaxNode, StateSave stateForUnqualifiedRightSide)
     {
         return Evaluate(syntaxNode, stateForUnqualifiedRightSide);
@@ -39,7 +45,7 @@ internal class EvaluatedSyntax
 
     private static EvaluatedSyntax Evaluate(SyntaxNode syntaxNode, StateSave stateForUnqualifiedRightSide)
     {
-        if(syntaxNode is BinaryExpressionSyntax binaryExpressionSytax)
+        if (syntaxNode is BinaryExpressionSyntax binaryExpressionSytax)
         {
             var leftSyntax = binaryExpressionSytax.Left;
             var rightSyntax = binaryExpressionSytax.Right;
@@ -51,7 +57,7 @@ internal class EvaluatedSyntax
 
             return FromSyntaxAndValue(syntaxNode, value);
         }
-        else if(syntaxNode is ParenthesizedExpressionSyntax parenthesizedExpressionSyntax)
+        else if (syntaxNode is ParenthesizedExpressionSyntax parenthesizedExpressionSyntax)
         {
             var childNodes = parenthesizedExpressionSyntax.ChildNodes();
 
@@ -67,7 +73,7 @@ internal class EvaluatedSyntax
             }
 
         }
-        else if(syntaxNode is IdentifierNameSyntax identifierNameSyntax)
+        else if (syntaxNode is IdentifierNameSyntax identifierNameSyntax)
         {
             var rfv = new RecursiveVariableFinder(stateForUnqualifiedRightSide);
 
@@ -85,7 +91,7 @@ internal class EvaluatedSyntax
 
             var stateForRfv = stateForUnqualifiedRightSide;
 
-            if(rightSideToEvaluate.StartsWith("global::"))
+            if (rightSideToEvaluate.StartsWith("global::"))
             {
                 string elementType = null;
                 if (rightSideToEvaluate.StartsWith("global::Components."))
@@ -96,7 +102,7 @@ internal class EvaluatedSyntax
                 {
                     elementType = "Screens";
                 }
-                else if(rightSideToEvaluate.StartsWith("global::Standards."))
+                else if (rightSideToEvaluate.StartsWith("global::Standards."))
                 {
                     elementType = "Standards";
                 }
@@ -104,7 +110,7 @@ internal class EvaluatedSyntax
                 {
                     var elementName = rightSideToEvaluate.Substring($"global::{elementType}.".Length);
                     var nextDot = elementName.IndexOf('.');
-                    if(nextDot != -1)
+                    if (nextDot != -1)
                     {
                         elementName = elementName.Substring(0, nextDot);
                         elementName = elementName.Replace('\u1234', '/');
@@ -115,7 +121,7 @@ internal class EvaluatedSyntax
                 }
             }
 
-            if(stateForRfv == null)
+            if (stateForRfv == null)
             {
                 return null;
             }
@@ -129,13 +135,13 @@ internal class EvaluatedSyntax
             }
 
         }
-        else if(syntaxNode is LiteralExpressionSyntax literalExpression)
+        else if (syntaxNode is LiteralExpressionSyntax literalExpression)
         {
             var value = literalExpression.Token.Value;
 
             return FromSyntaxAndValue(syntaxNode, value);
         }
-        else if(syntaxNode is GlobalStatementSyntax globalStatementSyntax)
+        else if (syntaxNode is GlobalStatementSyntax globalStatementSyntax)
         {
             var statement = globalStatementSyntax.Statement;
 
@@ -152,16 +158,16 @@ internal class EvaluatedSyntax
                 }
             }
         }
-        else if(syntaxNode is CompilationUnitSyntax compilationUnitSyntax)
+        else if (syntaxNode is CompilationUnitSyntax compilationUnitSyntax)
         {
             var childNodes = compilationUnitSyntax.ChildNodes();
 
             if (childNodes.Count() == 0) return null;
 
-            foreach(var item in childNodes)
+            foreach (var item in childNodes)
             {
                 var evaluatedSyntax = Evaluate(item, stateForUnqualifiedRightSide);
-                if(evaluatedSyntax != null)
+                if (evaluatedSyntax != null)
                 {
                     return evaluatedSyntax;
                 }
@@ -176,19 +182,19 @@ internal class EvaluatedSyntax
 
         dynamic dynamicValue1, dynamicValue2;
         GetDynamicValues(leftEvaluated.Value, rightEvaluated.Value, out dynamicValue1, out dynamicValue2);
-        if(operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.PlusToken))
+        if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.PlusToken))
         {
             return dynamicValue1 + dynamicValue2;
         }
-        else if(operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.MinusToken))
+        else if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.MinusToken))
         {
             return dynamicValue1 - dynamicValue2;
         }
-        else if(operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.AsteriskToken))
+        else if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.AsteriskToken))
         {
             return dynamicValue1 * dynamicValue2;
         }
-        else if(operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.SlashToken))
+        else if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.SlashToken))
         {
             return dynamicValue1 / dynamicValue2;
         }
@@ -199,8 +205,6 @@ internal class EvaluatedSyntax
 
         return null;
     }
-
-
 
     private static void GetDynamicValues(object obj1, object obj2, out dynamic dynamicValue1, out dynamic dynamicValue2)
     {
@@ -218,6 +222,25 @@ internal class EvaluatedSyntax
         dynamicValue1 = value1;
         dynamicValue2 = value2;
     }
+    private static EvaluatedSyntax FromSyntaxAndValue(SyntaxNode syntaxNode, object value)
+    {
+        var toReturn = new EvaluatedSyntax();
+        toReturn.SyntaxNode = syntaxNode;
+        toReturn.Value = value;
+
+        toReturn.EvaluatedType = value is float ? "float"
+            : value is string ? "string"
+            : value is bool ? "bool"
+            : value is int ? "int"
+            : value is decimal ? "decimal"
+            : value is long ? "long"
+            : value?.GetType().ToString();
+        return toReturn;
+    }
+
+    #endregion
+
+    #region Convert
 
     static Type GetNumericType(object obj)
     {
@@ -284,22 +307,60 @@ internal class EvaluatedSyntax
         return lineOfText;
     }
 
+    #endregion
 
-
-
-    private static EvaluatedSyntax FromSyntaxAndValue(SyntaxNode syntaxNode, object value)
+    public bool CastTo(string desiredType)
     {
-        var toReturn = new EvaluatedSyntax();
-        toReturn.SyntaxNode = syntaxNode;
-        toReturn.Value = value;
+        if(desiredType == this.EvaluatedType)
+        {
+            return true;
+        }
+        switch (desiredType)
+        {
+            case "int":
+                if (this.EvaluatedType == "float")
+                {
+                    this.Value = (int)(float)this.Value;
+                    this.EvaluatedType = desiredType;
+                    return true;
+                }
+                else if(this.EvaluatedType == "double")
+                {
+                    this.Value = (int)(double)this.Value;
+                    this.EvaluatedType = desiredType;
+                    return true;
+                }
+                break;
+            case "float":
+                if(this.EvaluatedType == "int")
+                {
+                    this.Value = (float)(int)this.Value;
+                    this.EvaluatedType = desiredType;
+                    return true;
+                }
+                if (this.EvaluatedType == "double")
+                {
+                    this.Value = (float)(double)this.Value;
+                    this.EvaluatedType = desiredType;
+                    return true;
+                }
+                break;
+            case "double":
+                if (this.EvaluatedType == "int")
+                {
+                    this.Value = (double)(int)this.Value;
+                    this.EvaluatedType = desiredType;
+                    return true;
+                }
+                if (this.EvaluatedType == "float")
+                {
+                    this.Value = (double)(float)this.Value;
+                    this.EvaluatedType = desiredType;
+                    return true;
+                }
+                break;
+        }
 
-        toReturn.EvaluatedType = value is float ? "float"
-            : value is string ? "string"
-            : value is bool ? "bool"
-            : value is int ? "int"
-            : value is decimal ? "decimal"
-            : value is long ? "long"
-            : value?.GetType().ToString();
-        return toReturn;
+        return false;
     }
 }

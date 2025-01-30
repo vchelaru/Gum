@@ -221,21 +221,27 @@ public class VariableReferenceLogic
                 }
             }
 
-            EvaluatedSyntax evaulatedSyntax = null;
+            EvaluatedSyntax evaluatedSyntax = null;
 
             if (response.Succeeded)
             {
-                evaulatedSyntax = EvaluatedSyntax.FromSyntaxNode(assignmentSyntax.Right, parentElement.DefaultState);
+                evaluatedSyntax = EvaluatedSyntax.FromSyntaxNode(assignmentSyntax.Right, parentElement.DefaultState);
 
-                if (evaulatedSyntax == null)
+                if (evaluatedSyntax == null)
                 {
                     response = GeneralResponse.UnsuccessfulWith($"Could not evaluate right-side expression {assignmentSyntax}");
                 }
             }
 
+            if(response.Succeeded && !evaluatedSyntax.CastTo(leftSideVariable.Type))
+            {
+                response = GeneralResponse.UnsuccessfulWith(
+                    $"Could not cast {evaluatedSyntax.EvaluatedType} to {leftSideVariable.Type}");
+            }
+
             if(response.Succeeded)
-            { 
-                var typeMatchResponse = CheckIfVariableTypesMatch(leftSideVariable, parentElement, leftSideInstance, evaulatedSyntax);
+            {
+                var typeMatchResponse = CheckIfVariableTypesMatch(leftSideVariable, parentElement, leftSideInstance, evaluatedSyntax);
 
                 if (typeMatchResponse.Succeeded == false)
                 {

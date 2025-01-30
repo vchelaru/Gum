@@ -25,7 +25,7 @@ namespace GumRuntime
         static Dictionary<string, Func<GraphicalUiElement>> mElementToGueTypeFuncs = new Dictionary<string, Func<GraphicalUiElement>>();
         static Func<GraphicalUiElement> TemplateFunc;
 
-        public static Func<StateSave, string, object> CustomEvaluateExpression;
+        public static Func<StateSave, string, string, object> CustomEvaluateExpression;
 
         public static void RegisterGueInstantiationType(string elementName, Type gueInheritingType)
         {
@@ -344,8 +344,24 @@ namespace GumRuntime
 
             var left = split[0];
 
+            var instanceLeft = referenceOwner.Tag as InstanceSave;
+
+            var leftVariableName = instanceLeft == null
+                ? left
+                : instanceLeft + "." + left;
+
+            string leftSideType = null;
+            var variableOnState = stateSave.Variables.FirstOrDefault(item => item.Name == leftVariableName);
+            leftSideType = variableOnState?.Type;
+            if (leftSideType == null)
+            {
+                var elementOwningInstance = instanceLeft?.ParentContainer ?? stateSave.ParentContainer;
+                leftSideType = ObjectFinder.Self.GetRootVariable(leftVariableName, elementOwningInstance)?.Type;
+            }
+
+
             var right = split[1];
-            var value = GetRightSideValue(stateSave, right);
+            var value = GetRightSideValue(stateSave, right, leftSideType);
 
 
             if (value != null)
@@ -460,8 +476,22 @@ namespace GumRuntime
             }
 
             var left = split[0];
+
+            var leftVariableName = instanceLeft == null
+                ? left
+                : instanceLeft + "." + left;
+
+            string leftSideType = null;
+            var variableOnState = stateSave.Variables.FirstOrDefault(item =>  item.Name == leftVariableName);
+            leftSideType = variableOnState?.Type;
+            if(leftSideType == null)
+            {
+                var elementOwningInstance = instanceLeft?.ParentContainer ?? stateSave.ParentContainer;
+                leftSideType = ObjectFinder.Self.GetRootVariable(leftVariableName, elementOwningInstance)?.Type;
+            }
+
             var right = split[1];
-            object value = GetRightSideValue(stateSave, right);
+            object value = GetRightSideValue(stateSave, right, leftSideType);
 
             object valueBefore = null;
             string effectiveLeft = null;
@@ -487,11 +517,11 @@ namespace GumRuntime
             };
         }
 
-        private static object GetRightSideValue(StateSave stateSave, string right)
+        private static object GetRightSideValue(StateSave stateSave, string right, string leftSideType)
         {
             if(CustomEvaluateExpression != null)
             {
-                return CustomEvaluateExpression(stateSave, right);
+                return CustomEvaluateExpression(stateSave, right, leftSideType);
             }
             else
             {
