@@ -422,7 +422,7 @@ public class VariableReferenceLogic
 
         ///////////////////End Early Out/////////////////////////////////////
 
-        bool didChange = ModifyLines(oldValue, newValueAsList);
+        bool didChange = ModifyLines(oldValue, newValueAsList, instance);
 
 
         if (didChange)
@@ -434,7 +434,7 @@ public class VariableReferenceLogic
     #region Line Assignment Expansion / Modifications
 
 
-    bool ModifyLines(object oldValue, List<string> newValueAsList)
+    bool ModifyLines(object oldValue, List<string> newValueAsList, InstanceSave selectedInstance)
     {
         var oldValueAsList = oldValue as List<string>;
 
@@ -457,6 +457,12 @@ public class VariableReferenceLogic
                 if (split.Length == 1)
                 {
                     split = AddImpliedLeftSide(newValueAsList, i, split);
+                }
+
+                if(split.Length > 1 && selectedInstance != null && split[1]?.Contains('.') != true)
+                {
+                    split[1] = selectedInstance.Name + "." + split[1];
+                    newValueAsList[i] = split[0] + "=" + split[1];
                 }
 
                 if(split.Length > 1)
