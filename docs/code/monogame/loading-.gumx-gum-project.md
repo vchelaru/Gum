@@ -33,7 +33,7 @@ To add the files to your .csproj:
 
 1. Open your .csproj file in a text editor
 2.  Add a line to copy all files in the Gum project folder including the .gumx file itself. For an example, see the .csproj file for the MonoGameGumFromFile project: [https://github.com/vchelaru/Gum/blob/0e266942560e585359f019ac090a6c1010621c0b/Samples/MonoGameGumFromFile/MonoGameGumFromFile/MonoGameGumFromFile.csproj#L37](https://github.com/vchelaru/Gum/blob/0e266942560e585359f019ac090a6c1010621c0b/Samples/MonoGameGumFromFile/MonoGameGumFromFile/MonoGameGumFromFile.csproj#L37)\
-    Your .csproj may look like this:\\
+    Your .csproj may look like this:
 
     <figure><img src="../../.gitbook/assets/WildcardInCsproj.png" alt=""><figcaption><p>Example of wildcard pattern in .csproj</p></figcaption></figure>
 3.  Verify that all gum files (see the extension list above) are marked as Copy if newer in Visual Studio\\
@@ -47,6 +47,20 @@ For more information about wildcard support in .csproj files, see this page on h
 {% hint style="info" %}
 If you are using the Contentless project ([https://github.com/Ellpeck/Contentless](https://github.com/Ellpeck/Contentless)) , you need to explicitly exclude Gum and all of its files by adding and modifying `Content/Contentless.json` .
 {% endhint %}
+
+#### Android
+
+If you are using Android, then your files must be marked as Android Assets rather than copied files.
+
+The steps to do this are:
+
+1. Open your project file
+2. Find the entry for the Gum project if you followed the previous section which copies file using wildcard
+3. Change it to an Android Asset. For example your code might look like this:
+
+```xml
+<AndroidAsset Include="Content\GumProject\**\*.*" />
+```
 
 ## Loading a Gum Project
 
