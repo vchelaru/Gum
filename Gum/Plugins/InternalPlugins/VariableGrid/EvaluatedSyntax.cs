@@ -227,20 +227,28 @@ internal class EvaluatedSyntax
         var toReturn = new EvaluatedSyntax();
         toReturn.SyntaxNode = syntaxNode;
         toReturn.Value = value;
+        string type = GetSimpleTypeNameForValue(value);
 
-        toReturn.EvaluatedType = value is float ? "float"
-            : value is string ? "string"
-            : value is bool ? "bool"
-            : value is int ? "int"
-            : value is decimal ? "decimal"
-            : value is long ? "long"
-            : value?.GetType().ToString();
+        toReturn.EvaluatedType = type;
+
         return toReturn;
     }
+
 
     #endregion
 
     #region Convert
+    private static string GetSimpleTypeNameForValue(object value)
+    {
+        return value is float ? "float"
+            : value is string ? "string"
+            : value is bool ? "bool"
+            : value is int ? "int"
+            : value is decimal ? "decimal"
+            : value is double ? "double"
+            : value is long ? "long"
+            : value?.GetType().ToString();
+    }
 
     static Type GetNumericType(object obj)
     {

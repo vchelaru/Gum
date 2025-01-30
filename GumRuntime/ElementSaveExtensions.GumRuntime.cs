@@ -348,7 +348,7 @@ namespace GumRuntime
 
             var leftVariableName = instanceLeft == null
                 ? left
-                : instanceLeft + "." + left;
+                : instanceLeft.Name + "." + left;
 
             string leftSideType = null;
             var variableOnState = stateSave.Variables.FirstOrDefault(item => item.Name == leftVariableName);
@@ -479,7 +479,7 @@ namespace GumRuntime
 
             var leftVariableName = instanceLeft == null
                 ? left
-                : instanceLeft + "." + left;
+                : instanceLeft.Name + "." + left;
 
             string leftSideType = null;
             var variableOnState = stateSave.Variables.FirstOrDefault(item =>  item.Name == leftVariableName);
