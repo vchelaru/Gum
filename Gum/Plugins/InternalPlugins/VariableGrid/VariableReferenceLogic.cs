@@ -233,6 +233,12 @@ public class VariableReferenceLogic
                 }
             }
 
+            if(response.Succeeded && evaluatedSyntax.EvaluatedType == null)
+            {
+                response = GeneralResponse.UnsuccessfulWith(
+                    $"The right side {assignmentSyntax.Right.ToString()} cannot be evaluated, are you referencing a variable that doesn't exist?");
+            }
+
             if(response.Succeeded && !evaluatedSyntax.CastTo(leftSideVariable.Type))
             {
                 response = GeneralResponse.UnsuccessfulWith(
@@ -269,7 +275,7 @@ public class VariableReferenceLogic
 
         var areEqual = rightSideType == leftSideType;
 
-        if(!areEqual && rightSideType.Contains("."))
+        if(!areEqual && rightSideType?.Contains(".") == true)
         {
             // right side is qualified. let's compare unqualified
             var afterLastDot = rightSideType.Substring(rightSideType.LastIndexOf(".") + 1);
