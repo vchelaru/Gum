@@ -81,7 +81,7 @@ namespace Gum.PropertyGridHelpers
                 mHelper.AddProperty(pdc, "Locked", typeof(bool)).IsReadOnly = !isDefault;
             }
 
-            if(elementSave is ComponentSave && instanceSave == null)
+            if (elementSave is ComponentSave && instanceSave == null)
             {
                 var defaultChildContainerProperty = mHelper.AddProperty(pdc, nameof(ComponentSave.DefaultChildContainer), typeof(string));
                 defaultChildContainerProperty.IsReadOnly = !isDefault;
@@ -94,56 +94,8 @@ namespace Gum.PropertyGridHelpers
             {
                 variableListName = instanceSave.Name + "." + variableListName;
             }
-            Dictionary<string, string> variablesSetThroughReference = new Dictionary<string, string>();
 
-            var variableReference = recursiveVariableFinder.GetVariableList(variableListName);
-            if(variableReference?.ValueAsIList != null)
-            {
-                foreach(var item in variableReference.ValueAsIList)
-                {
-                    var assignment = item as string;
-                    if(assignment?.Contains("=") == true)
-                    {
-                        var indexOfEquals = assignment.IndexOf("=");
-                        var variableName = assignment.Substring(0, indexOfEquals).Trim();
-                        var rightSideEquals = assignment.Substring(indexOfEquals + 1).Trim();
-                        variablesSetThroughReference[variableName] = rightSideEquals;
-                    }
-                }
-            }
-
-            HashSet<InstanceSave> instancesWithExposedVariables = new HashSet<InstanceSave>();
-            foreach(var variable in elementSave.DefaultState.Variables)
-            {
-                if(!string.IsNullOrEmpty(variable.SourceObject) && !string.IsNullOrEmpty(variable.ExposedAsName))
-                {
-                    var instance = elementSave.GetInstance(variable.SourceObject);
-                    if(instance != null)
-                    {
-                        instancesWithExposedVariables.Add(instance);
-                    }
-                }
-            }
-
-            foreach(var instanceWithExposedVariables in instancesWithExposedVariables)
-            {
-                var instanceVariableListName = "VariableReferences";
-
-                var instanceRfv = new RecursiveVariableFinder(instanceWithExposedVariables, elementSave);
-
-                var variable = instanceRfv.GetVariableList(instanceVariableListName);
-
-                if(variable?.ValueAsIList != null)
-                {
-                    foreach(string item in variable.ValueAsIList)
-                    {
-                        var indexOfEquals = item.IndexOf("=");
-                        var variableName = instanceWithExposedVariables.Name + "." + item.Substring(0, indexOfEquals).Trim();
-                        var rightSideEquals = item.Substring(indexOfEquals + 1).Trim();
-                        variablesSetThroughReference[variableName] = rightSideEquals;
-                    }
-                }
-            }
+            Dictionary<string, string> variablesSetThroughReference = GetVariablesSetThroughReferences(elementSave, recursiveVariableFinder, variableListName);
 
 
             // if component
@@ -159,7 +111,7 @@ namespace Gum.PropertyGridHelpers
                         string variableName = item.Name;
                         var isReadonly = false;
                         string subtext = null;
-                        if(variablesSetThroughReference.ContainsKey(variableName))
+                        if (variablesSetThroughReference.ContainsKey(variableName))
                         {
                             isReadonly = true;
                             subtext = variablesSetThroughReference[variableName];
@@ -171,9 +123,12 @@ namespace Gum.PropertyGridHelpers
             // else if screen
             else if (instanceSave == null && elementSave as ScreenSave != null)
             {
-                var screenDefaultState = StandardElementsManager.Self.GetDefaultStateFor("Screen");
-                foreach (var item in screenDefaultState.Variables)
+                var defaultElementState = StandardElementsManager.Self.GetDefaultStateFor("Screen");
+                var variables = defaultElementState.Variables;
+
+                foreach (var item in variables)
                 {
+                    // Shouldn't we check state?
                     string variableName = item.Name;
                     var isReadonly = false;
                     string subtext = null;
@@ -193,18 +148,18 @@ namespace Gum.PropertyGridHelpers
             #region Loop through all variables
 
             Dictionary<string, string> exposedVariables = new Dictionary<string, string>();
-            if(instanceSave != null)
+            if (instanceSave != null)
             {
                 var instanceOwner = instanceSave.ParentContainer;
-                if(instanceOwner != null)
+                if (instanceOwner != null)
                 {
-                    foreach(var variable in instanceOwner.DefaultState.Variables)
+                    foreach (var variable in instanceOwner.DefaultState.Variables)
                     {
-                        if(!string.IsNullOrEmpty(variable.ExposedAsName) && variable.SourceObject == instanceSave.Name)
+                        if (!string.IsNullOrEmpty(variable.ExposedAsName) && variable.SourceObject == instanceSave.Name)
                         {
                             var rootVariable = ObjectFinder.Self.GetRootVariable(variable.Name, instanceOwner);
 
-                            if(rootVariable != null)
+                            if (rootVariable != null)
                             {
                                 exposedVariables.Add(rootVariable.Name, variable.ExposedAsName);
                             }
@@ -230,12 +185,12 @@ namespace Gum.PropertyGridHelpers
                     subtext += "=" + variablesSetThroughReference[variableName];
                 }
 
-                if(instanceSave != null)
+                if (instanceSave != null)
                 {
 
-                    if(exposedVariables.ContainsKey(defaultVariable.Name))
+                    if (exposedVariables.ContainsKey(defaultVariable.Name))
                     {
-                        if(!string.IsNullOrEmpty(subtext))
+                        if (!string.IsNullOrEmpty(subtext))
                         {
                             subtext += "\n";
                         }
@@ -246,6 +201,62 @@ namespace Gum.PropertyGridHelpers
             }
 
             #endregion
+        }
+
+        private static Dictionary<string, string> GetVariablesSetThroughReferences(ElementSave elementSave, RecursiveVariableFinder recursiveVariableFinder, string variableListName)
+        {
+            Dictionary<string, string> variablesSetThroughReference = new Dictionary<string, string>();
+
+            var variableReference = recursiveVariableFinder.GetVariableList(variableListName);
+            if (variableReference?.ValueAsIList != null)
+            {
+                foreach (var item in variableReference.ValueAsIList)
+                {
+                    var assignment = item as string;
+                    if (assignment?.Contains("=") == true)
+                    {
+                        var indexOfEquals = assignment.IndexOf("=");
+                        var variableName = assignment.Substring(0, indexOfEquals).Trim();
+                        var rightSideEquals = assignment.Substring(indexOfEquals + 1).Trim();
+                        variablesSetThroughReference[variableName] = rightSideEquals;
+                    }
+                }
+            }
+
+            HashSet<InstanceSave> instancesWithExposedVariables = new HashSet<InstanceSave>();
+            foreach (var variable in elementSave.DefaultState.Variables)
+            {
+                if (!string.IsNullOrEmpty(variable.SourceObject) && !string.IsNullOrEmpty(variable.ExposedAsName))
+                {
+                    var instance = elementSave.GetInstance(variable.SourceObject);
+                    if (instance != null)
+                    {
+                        instancesWithExposedVariables.Add(instance);
+                    }
+                }
+            }
+
+            foreach (var instanceWithExposedVariables in instancesWithExposedVariables)
+            {
+                var instanceVariableListName = "VariableReferences";
+
+                var instanceRfv = new RecursiveVariableFinder(instanceWithExposedVariables, elementSave);
+
+                var variable = instanceRfv.GetVariableList(instanceVariableListName);
+
+                if (variable?.ValueAsIList != null)
+                {
+                    foreach (string item in variable.ValueAsIList)
+                    {
+                        var indexOfEquals = item.IndexOf("=");
+                        var variableName = instanceWithExposedVariables.Name + "." + item.Substring(0, indexOfEquals).Trim();
+                        var rightSideEquals = item.Substring(indexOfEquals + 1).Trim();
+                        variablesSetThroughReference[variableName] = rightSideEquals;
+                    }
+                }
+            }
+
+            return variablesSetThroughReference;
         }
 
         public void GetCategories(BehaviorSave behavior, InstanceSave instance, List<MemberCategory> categories)
@@ -518,7 +529,12 @@ namespace Gum.PropertyGridHelpers
 
             if (shouldInclude)
             {
-                TypeConverter typeConverter = defaultVariable.GetTypeConverter(elementSave);
+                TypeConverter typeConverter = null;
+                
+                if(typeConverter == null)
+                {
+                    typeConverter = defaultVariable.GetTypeConverter(elementSave);
+                }
 
                 Attribute[] customAttributes = GetAttributesForVariable(defaultVariable);
 

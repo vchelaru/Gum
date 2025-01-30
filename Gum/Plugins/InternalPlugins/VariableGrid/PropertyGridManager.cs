@@ -642,50 +642,111 @@ namespace Gum.Managers
                 foreach (var member in category.Members)
                 {
                     var propertyType = member.PropertyType;
-                    if (propertyType == typeof(global::RenderingLibrary.Graphics.HorizontalAlignment) &&
-                        member.Name == "HorizontalAlignment" || member.Name.EndsWith(".HorizontalAlignment"))
+
+                    if(propertyType == typeof(global::RenderingLibrary.Graphics.HorizontalAlignment))
                     {
-                        member.PreferredDisplayer = typeof(TextHorizontalAlignmentControl);
+
+                        if (member.Name == "HorizontalAlignment" || member.Name.EndsWith(".HorizontalAlignment"))
+                        {
+                            member.PreferredDisplayer = typeof(TextHorizontalAlignmentControl);
+                        }
+                        else if (member.Name == "XOrigin" || member.Name.EndsWith(".XOrigin"))
+                        {
+                            member.PreferredDisplayer = typeof(XOriginControl);
+                        }
+                        else
+                        {
+                            string rootName = GetRootName(member);
+                            if (rootName == "HorizontalAlignment")
+                            {
+                                member.PreferredDisplayer = typeof(TextHorizontalAlignmentControl);
+                            }
+                            else if (rootName == "XOrigin")
+                            {
+                                member.PreferredDisplayer = typeof(XOriginControl);
+                            }
+                        }
                     }
-                    else if (propertyType == typeof(global::RenderingLibrary.Graphics.VerticalAlignment) &&
-                        member.Name == "VerticalAlignment" || member.Name.EndsWith(".VerticalAlignment"))
+                    else if(propertyType == typeof(global::RenderingLibrary.Graphics.VerticalAlignment))
                     {
-                        member.PreferredDisplayer = typeof(TextVerticalAlignmentControl);
+
+                        if (member.Name == "VerticalAlignment" || member.Name.EndsWith(".VerticalAlignment"))
+                        {
+                            member.PreferredDisplayer = typeof(TextVerticalAlignmentControl);
+                        }
+                        else if (member.Name == "YOrigin" || member.Name.EndsWith(".YOrigin"))
+                        {
+                            member.PreferredDisplayer = typeof(YOriginControl);
+                        }
+                        else
+                        {
+                            string rootName = GetRootName(member);
+                            if (rootName == "VerticalAlignment")
+                            {
+                                member.PreferredDisplayer = typeof(TextVerticalAlignmentControl);
+                            }
+                            else if (rootName == "YOrigin")
+                            {
+                                member.PreferredDisplayer = typeof(YOriginControl);
+                            }
+                        }
                     }
-                    else if (propertyType == typeof(PositionUnitType) &&
-                        member.Name == "XUnits" || member.Name.EndsWith(".XUnits"))
+                    else if(propertyType == typeof(PositionUnitType))
                     {
-                        member.PreferredDisplayer = typeof(XUnitsControl);
+
+                        if (member.Name == "XUnits" || member.Name.EndsWith(".XUnits"))
+                        {
+                            member.PreferredDisplayer = typeof(XUnitsControl);
+                        }
+                        else if (member.Name == "YUnits" || member.Name.EndsWith(".YUnits"))
+                        {
+                            member.PreferredDisplayer = typeof(YUnitsControl);
+                        }
+                        else
+                        {
+                            string rootName = GetRootName(member);
+
+                            if (rootName == "XUnits")
+                            {
+                                member.PreferredDisplayer = typeof(XUnitsControl);
+                            }
+                            else if (rootName == "YUnits")
+                            {
+                                member.PreferredDisplayer = typeof(YUnitsControl);
+                            }
+                        }
                     }
-                    else if (propertyType == typeof(PositionUnitType) &&
-                        member.Name == "YUnits" || member.Name.EndsWith(".YUnits"))
+                    else if(propertyType == typeof(DimensionUnitType))
                     {
-                        member.PreferredDisplayer = typeof(YUnitsControl);
+                        if (member.Name == "WidthUnits" || member.Name.EndsWith(".WidthUnits"))
+                        {
+                            member.PreferredDisplayer = typeof(WidthUnitsControl);
+                        }
+                        else if (member.Name == "HeightUnits" || member.Name.EndsWith(".HeightUnits"))
+                        {
+                            member.PreferredDisplayer = typeof(HeightUnitsControl);
+                        }
+                        else
+                        {
+                            string rootName = GetRootName(member);
+                            if (rootName == "WidthUnits")
+                            {
+                                member.PreferredDisplayer = typeof(WidthUnitsControl);
+                            }
+                            else if (rootName == "HeightUnits")
+                            {
+                                member.PreferredDisplayer = typeof(HeightUnitsControl);
+                            }
+                        }
+
                     }
-                    else if (propertyType == typeof(global::RenderingLibrary.Graphics.HorizontalAlignment) &&
-                        member.Name == "XOrigin" || member.Name.EndsWith(".XOrigin"))
+                    else if (propertyType == typeof(ChildrenLayout))
                     {
-                        member.PreferredDisplayer = typeof(XOriginControl);
-                    }
-                    else if (propertyType == typeof(global::RenderingLibrary.Graphics.VerticalAlignment) &&
-                        member.Name == "YOrigin" || member.Name.EndsWith(".YOrigin"))
-                    {
-                        member.PreferredDisplayer = typeof(YOriginControl);
-                    }
-                    else if (propertyType == typeof(DimensionUnitType) &&
-                        member.Name == "WidthUnits" || member.Name.EndsWith(".WidthUnits"))
-                    {
-                        member.PreferredDisplayer = typeof(WidthUnitsControl);
-                    }
-                    else if (propertyType == typeof(DimensionUnitType) &&
-                        member.Name == "HeightUnits" || member.Name.EndsWith(".HeightUnits"))
-                    {
-                        member.PreferredDisplayer = typeof(HeightUnitsControl);
-                    }
-                    else if (propertyType == typeof(ChildrenLayout) &&
-                        member.Name == "ChildrenLayout" || member.Name.EndsWith(".ChildrenLayout"))
-                    {
-                        member.PreferredDisplayer = typeof(ChildrenLayoutControl);
+                        //if(member.Name == "ChildrenLayout" || member.Name.EndsWith(".ChildrenLayout"))
+                        //{
+                            member.PreferredDisplayer = typeof(ChildrenLayoutControl);
+                        //}
+
                     }
                     else if(propertyType == typeof(TextOverflowHorizontalMode))
                     {
@@ -701,6 +762,17 @@ namespace Gum.Managers
                     }
 
                 }
+            }
+
+            static string GetRootName(InstanceMember member)
+            {
+                var srim = member as StateReferencingInstanceMember;
+
+                var element = srim.ElementSave;
+                var variable = srim.Name;
+
+                var rootName = ObjectFinder.Self.GetRootVariable(variable, element)?.Name;
+                return rootName;
             }
         }
 
