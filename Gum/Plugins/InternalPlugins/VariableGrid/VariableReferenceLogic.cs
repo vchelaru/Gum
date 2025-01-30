@@ -260,6 +260,10 @@ public class VariableReferenceLogic
         var ownerOfRightSideVariable = parentElement.DefaultState;
 
         rightSideType = assignment.EvaluatedType;
+        if (rightSideType == null)
+        {
+            return GeneralResponse.UnsuccessfulWith($"Right side of equation is empty!");
+        }
 
         var areEqual = rightSideType == leftSideType;
 
