@@ -169,7 +169,7 @@ namespace Gum.PropertyGridHelpers
                     {
                         if(!string.IsNullOrEmpty(variable.ExposedAsName) && variable.SourceObject == instanceSave.Name)
                         {
-                            var rootVariable = ObjectFinder.Self.GetRootVariable(variable.Name, elementSave);
+                            var rootVariable = ObjectFinder.Self.GetRootVariable(variable.Name, instanceOwner);
 
                             if(rootVariable != null)
                             {
