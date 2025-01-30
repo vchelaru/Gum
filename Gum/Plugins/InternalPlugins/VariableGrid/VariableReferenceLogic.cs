@@ -465,7 +465,7 @@ public class VariableReferenceLogic
                     if(leftSide.Contains("."))
                     {
                         var lastDot = leftSide.LastIndexOf('.');
-                        var unqualifiedLeft = leftSide.Substring(0, lastDot + 1);
+                        var unqualifiedLeft = leftSide.Substring(lastDot + 1);
                         newValueAsList[i] = unqualifiedLeft + "=" + split[1];
                         split[0] = unqualifiedLeft;
                     }
