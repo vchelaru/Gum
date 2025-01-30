@@ -7,6 +7,7 @@ using GumRuntime;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Drawing.Drawing2D;
@@ -15,7 +16,6 @@ using System.Management.Instrumentation;
 using System.Security.AccessControl;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Windows.Media.Media3D;
 using ToolsUtilities;
 
@@ -291,6 +291,47 @@ public class VariableReferenceLogic
         {
             return GeneralResponse.UnsuccessfulWith($"Left side is of type [{leftSideType}] but right side is of type [{rightSideType}]");
         }
+
+        // special case, some variable types like XUnits vs YUnits use the same 
+        // type even though they shouldn't be mixed, so we need to compare the root
+        // variable:
+        var shouldTryMatchingRoots = leftSideType is
+            nameof(HorizontalAlignment) or
+            nameof(VerticalAlignment) or
+            nameof(PositionUnitType) or
+            nameof(DimensionUnitType);
+
+        if(shouldTryMatchingRoots)
+        {
+            var leftSideQualified = leftSideInstance == null
+                ? leftSideVariable.Name
+                : leftSideInstance.Name + "." + leftSideVariable.Name;
+
+            var leftSideRoot = ObjectFinder.Self.GetRootVariable(leftSideQualified, parentElement);
+            VariableSave rightSideRoot = null;
+            var rightSide = assignment.SyntaxNode.ToString();
+
+            if(rightSide?.Contains("global::") == true)
+            {
+                EvaluatedSyntax.ConvertGlobalToElementNameWithSlashes(rightSide, out string elementName, out _);
+                rightSide = elementName;
+            }
+
+            if(rightSide.Contains("global::") == false)
+            {
+                var unevaluated = 
+                // it's a variable in this element
+                rightSideRoot = ObjectFinder.Self.GetRootVariable(rightSide, parentElement);
+            }
+            // see if this is a simple type:
+
+            if(leftSideRoot != null && rightSideRoot != null && leftSideRoot.Name != rightSideRoot.Name)
+            {
+                // we found both, they don't match, don't allow it:
+                return GeneralResponse.UnsuccessfulWith($"Left side is [{leftSideRoot.Name}] but right side is [{rightSideRoot.Name}]");
+            }
+        }
+
         return GeneralResponse.SuccessfulResponse;
     }
 

@@ -93,31 +93,14 @@ internal class EvaluatedSyntax
 
             if (rightSideToEvaluate.StartsWith("global::"))
             {
-                string elementType = null;
-                if (rightSideToEvaluate.StartsWith("global::Components."))
+                string elementName, elementType;
+                ConvertGlobalToElementNameWithSlashes(rightSideToEvaluate, out elementName, out elementType);
+
+                if (elementName != null)
                 {
-                    elementType = "Components";
-                }
-                else if (rightSideToEvaluate.StartsWith("global::Screens."))
-                {
-                    elementType = "Screens";
-                }
-                else if (rightSideToEvaluate.StartsWith("global::Standards."))
-                {
-                    elementType = "Standards";
-                }
-                if (elementType != null)
-                {
-                    var elementName = rightSideToEvaluate.Substring($"global::{elementType}.".Length);
-                    var nextDot = elementName.IndexOf('.');
-                    if (nextDot != -1)
-                    {
-                        elementName = elementName.Substring(0, nextDot);
-                        elementName = elementName.Replace('\u1234', '/');
-                        var element = ObjectFinder.Self.GetElementSave(elementName);
-                        stateForRfv = element?.DefaultState;
-                        rightSideToEvaluate = rightSideToEvaluate.Substring(($"global::{elementType}." + elementName).Length + 1);
-                    }
+                    var element = ObjectFinder.Self.GetElementSave(elementName);
+                    stateForRfv = element?.DefaultState;
+                    rightSideToEvaluate = rightSideToEvaluate.Substring(($"global::{elementType}." + elementName).Length + 1);
                 }
             }
 
@@ -314,6 +297,35 @@ internal class EvaluatedSyntax
 
         return lineOfText;
     }
+
+    public static void ConvertGlobalToElementNameWithSlashes(string rightSideToEvaluate, out string elementName, out string elementType)
+    {
+        elementName = null;
+        elementType = null;
+        if (rightSideToEvaluate.StartsWith("global::Components."))
+        {
+            elementType = "Components";
+        }
+        else if (rightSideToEvaluate.StartsWith("global::Screens."))
+        {
+            elementType = "Screens";
+        }
+        else if (rightSideToEvaluate.StartsWith("global::Standards."))
+        {
+            elementType = "Standards";
+        }
+        if (elementType != null)
+        {
+            elementName = rightSideToEvaluate.Substring($"global::{elementType}.".Length);
+            var nextDot = elementName.IndexOf('.');
+            if (nextDot != -1)
+            {
+                elementName = elementName.Substring(0, nextDot);
+                elementName = elementName.Replace('\u1234', '/');
+            }
+        }
+    }
+
 
     #endregion
 
