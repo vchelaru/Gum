@@ -313,11 +313,18 @@ public class VariableReferenceLogic
 
             if(rightSide?.Contains("global::") == true)
             {
-                EvaluatedSyntax.ConvertGlobalToElementNameWithSlashes(rightSide, out string elementName, out _);
-                rightSide = elementName;
+                EvaluatedSyntax.ConvertGlobalToElementNameWithSlashes(rightSide, out string elementName, out string elementType);
+
+                var element = ObjectFinder.Self.GetElementSave(elementName);
+                if(element != null)
+                {
+                    rightSide =  rightSide.Substring(($"global::{elementType}." + elementName).Length + 1);
+
+                    rightSideRoot = ObjectFinder.Self.GetRootVariable(rightSide, element);
+                }
             }
 
-            if(rightSide.Contains("global::") == false)
+            else 
             {
                 var unevaluated = 
                 // it's a variable in this element
