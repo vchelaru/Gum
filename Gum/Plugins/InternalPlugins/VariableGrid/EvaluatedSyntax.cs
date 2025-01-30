@@ -296,6 +296,9 @@ internal class EvaluatedSyntax
         toReturn.EvaluatedType = value is float ? "float"
             : value is string ? "string"
             : value is bool ? "bool"
+            : value is int ? "int"
+            : value is decimal ? "decimal"
+            : value is long ? "long"
             : value?.GetType().ToString();
         return toReturn;
     }
