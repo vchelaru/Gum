@@ -206,11 +206,11 @@ namespace WpfDataUi.Controls
             //else 
             if (InstanceMember?.IsReadOnly == true)
             {
-                this.IsEnabled = false;
+                ButtonWrapPanel.IsEnabled = false;
             }
             else
             {
-                this.IsEnabled = true;
+                ButtonWrapPanel.IsEnabled = true;
             }
         }
 
