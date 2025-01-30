@@ -323,6 +323,16 @@ internal class EvaluatedSyntax
         {
             return true;
         }
+
+        if(this.EvaluatedType?.Contains(".") == true &&
+            this.EvaluatedType.EndsWith("." + desiredType))
+        {
+            // Assume this is qualified and we want
+            // to un-qualify it.
+            this.EvaluatedType = desiredType;
+            return true;
+        }
+
         switch (desiredType)
         {
             case "int":

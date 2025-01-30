@@ -248,10 +248,26 @@ namespace Gum.PropertyGridHelpers
                 {
                     foreach (string item in variable.ValueAsIList)
                     {
+                        if(item?.StartsWith("//") == true)
+                        {
+                            continue;
+                        }
                         var indexOfEquals = item.IndexOf("=");
-                        var variableName = instanceWithExposedVariables.Name + "." + item.Substring(0, indexOfEquals).Trim();
-                        var rightSideEquals = item.Substring(indexOfEquals + 1).Trim();
-                        variablesSetThroughReference[variableName] = rightSideEquals;
+
+                        if(indexOfEquals == -1)
+                        {
+                            continue;
+                        }
+
+                        try
+                        {
+                            var variableName = instanceWithExposedVariables.Name + "." + item.Substring(0, indexOfEquals).Trim();
+                            var rightSideEquals = item.Substring(indexOfEquals + 1).Trim();
+                            variablesSetThroughReference[variableName] = rightSideEquals;
+                        }
+                        // swallow this exception, anything could be typed in this text box, and we don't
+                        // want to crash here because of it.
+                        catch { }
                     }
                 }
             }

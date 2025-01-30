@@ -22,7 +22,11 @@ using ToolsUtilities;
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
 public class VariableReferenceLogic
 {
+    #region Fields/Properties
+
     private readonly GuiCommands _guiCommands;
+
+    #endregion
 
     public VariableReferenceLogic(GuiCommands guiCommands)
     {
@@ -402,4 +406,152 @@ public class VariableReferenceLogic
         return didAssignDeepReference;
     }
 
+
+    public void ReactIfChangedMemberIsVariableReference(ElementSave parentElement, InstanceSave instance, StateSave stateSave, string changedMember, object oldValue)
+    {
+        ///////////////////// Early Out/////////////////////////////////////
+        if (changedMember != "VariableReferences") return;
+
+        var changedMemberWithPrefix = changedMember;
+        if (instance != null)
+        {
+            changedMemberWithPrefix = instance.Name + "." + changedMember;
+        }
+
+        var newValueAsList = stateSave.GetVariableListSave(changedMemberWithPrefix)?.ValueAsIList as List<string>;
+
+        ///////////////////End Early Out/////////////////////////////////////
+
+        bool didChange = ModifyLines(oldValue, newValueAsList);
+
+
+        if (didChange)
+        {
+            GumCommands.Self.GuiCommands.RefreshVariables(force: true);
+        }
+    }
+
+    #region Line Assignment Expansion / Modifications
+
+
+    bool ModifyLines(object oldValue, List<string> newValueAsList)
+    {
+        var oldValueAsList = oldValue as List<string>;
+
+
+        if (newValueAsList != null)
+        {
+            for (int i = newValueAsList.Count - 1; i >= 0; i--)
+            {
+                var item = newValueAsList[i];
+
+                var split = item
+                    .Split(equalsArray, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(stringItem => stringItem.Trim()).ToArray();
+
+                if (split.Length == 0)
+                {
+                    continue;
+                }
+
+                if (split.Length == 1)
+                {
+                    split = AddImpliedLeftSide(newValueAsList, i, split);
+                }
+
+                if(split.Length > 1)
+                {
+                    var leftSide = split[0];
+                    if(leftSide.Contains("."))
+                    {
+                        var lastDot = leftSide.LastIndexOf('.');
+                        var unqualifiedLeft = leftSide.Substring(0, lastDot + 1);
+                        newValueAsList[i] = unqualifiedLeft + "=" + split[1];
+                        split[0] = unqualifiedLeft;
+                    }
+                }
+
+                if (split.Length == 2)
+                {
+                    var leftSide = split[0];
+                    var rightSide = split[1];
+                    if (leftSide == "Color" && rightSide.EndsWith(".Color"))
+                    {
+                        ExpandColorToRedGreenBlue(newValueAsList, i, rightSide);
+                    }
+                }
+            }
+        }
+
+        var didChange = false;
+        if (oldValueAsList == null && newValueAsList == null)
+        {
+            didChange = false;
+        }
+        else if (oldValueAsList == null && newValueAsList != null)
+        {
+            didChange = true;
+        }
+        else if (oldValueAsList != null && newValueAsList == null)
+        {
+            didChange = true;
+        }
+        else if (oldValueAsList.Count != newValueAsList.Count)
+        {
+            didChange = true;
+        }
+        else
+        {
+            // not null, same items, so let's loop
+            for (int i = 0; i < oldValueAsList.Count; i++)
+            {
+                if (oldValueAsList[i] != newValueAsList[i])
+                {
+                    didChange = true;
+                    break;
+                }
+            }
+        }
+
+        return didChange;
+    }
+
+
+    private static void ExpandColorToRedGreenBlue(List<string> asList, int i, string rightSide)
+    {
+        // does this thing have a color value?
+        // let's assume "no" for now, eventually may need to fix this up....
+        var withoutVariable = rightSide.Substring(0, rightSide.Length - ".Color".Length);
+
+        asList.RemoveAt(i);
+
+        asList.Add($"Red = {withoutVariable}.Red");
+        asList.Add($"Green = {withoutVariable}.Green");
+        asList.Add($"Blue = {withoutVariable}.Blue");
+    }
+
+    private static string[] AddImpliedLeftSide(List<string> asList, int i, string[] split)
+    {
+        // need to prepend the equality here
+
+        var rightSide = split[0]; // there is no left side, just right side
+        var afterDot = rightSide.Substring(rightSide.LastIndexOf('.') + 1);
+
+        if (rightSide.Contains("."))
+        {
+            // TODO: This is unused?
+            var withoutVariable = rightSide.Substring(0, rightSide.LastIndexOf('.'));
+
+            asList[i] = $"{afterDot} = {rightSide}";
+
+            split = asList[i]
+                .Split(equalsArray, StringSplitOptions.RemoveEmptyEntries)
+                .Select(stringItem => stringItem.Trim()).ToArray();
+
+        }
+        return split;
+    }
+
+
+    #endregion
 }
