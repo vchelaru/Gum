@@ -17,11 +17,15 @@ using ToolsUtilities;
 
 namespace Gum.Services;
 
+#region IExposeVariableService Interface
+
 internal interface IExposeVariableService
 {
     void HandleExposeVariableClick(InstanceSave instanceSave, VariableSave variableSave, string rootVariableName);
     void HandleUnexposeVariableClick(VariableSave variableSave, ElementSave elementSave);
 }
+
+#endregion
 
 internal class ExposeVariableService : IExposeVariableService
 {
@@ -164,24 +168,28 @@ internal class ExposeVariableService : IExposeVariableService
 
 
         // if the variable is used on a left-side, it should not be exposable:
-        var selectedElement = SelectedState.Self.SelectedElement;
+        // Update Jan 29, 2025
+        // Actually yes, expose it
+        // but make it read-only.
+        // https://github.com/vchelaru/Gum/issues/521
+        //var selectedElement = SelectedState.Self.SelectedElement;
 
-        var fullVariableName = instanceSave.Name + "." + rootVariableName;
+        //var fullVariableName = instanceSave.Name + "." + rootVariableName;
 
-        var renames = _renameLogic.GetVariableChangesForRenamedVariable(selectedElement, fullVariableName, rootVariableName);
+        //var renames = _renameLogic.GetVariableChangesForRenamedVariable(selectedElement, fullVariableName, rootVariableName);
 
-        var renamesOnThis = renames.VariableReferenceChanges
-            .Where(item => item.Container == selectedElement && item.ChangedSide == SideOfEquals.Left)
-            .ToArray();
+        //var variableReferences = renames.VariableReferenceChanges
+        //    .Where(item => item.Container == selectedElement && item.ChangedSide == SideOfEquals.Left)
+        //    .ToArray();
 
-        if (renamesOnThis.Length > 0)
-        {
-            var firstRename = renamesOnThis[0];
-            string message = $"Cannot expose variable {fullVariableName} because it is assigned in a variable reference:\n\n" +
-                $"{firstRename.VariableReferenceList.ValueAsIList[firstRename.LineIndex]}";
+        //if (variableReferences.Length > 0)
+        //{
+        //    var firstRename = variableReferences[0];
+        //    string message = $"Cannot expose variable {fullVariableName} because it is assigned in a variable reference:\n\n" +
+        //        $"{firstRename.VariableReferenceList.ValueAsIList[firstRename.LineIndex]}";
 
-            return GeneralResponse.UnsuccessfulWith(message);
-        }
+        //    return GeneralResponse.UnsuccessfulWith(message);
+        //}
 
         return GeneralResponse.SuccessfulResponse;
     }

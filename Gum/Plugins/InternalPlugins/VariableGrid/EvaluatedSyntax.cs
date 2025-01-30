@@ -67,7 +67,15 @@ internal class EvaluatedSyntax
             }
 
         }
-        if (syntaxNode is MemberAccessExpressionSyntax memberAccess)
+        else if(syntaxNode is IdentifierNameSyntax identifierNameSyntax)
+        {
+            var rfv = new RecursiveVariableFinder(stateForUnqualifiedRightSide);
+
+            var value = rfv.GetValue(identifierNameSyntax.ToString());
+
+            return FromSyntaxAndValue(syntaxNode, value);
+        }
+        else if (syntaxNode is MemberAccessExpressionSyntax memberAccess)
         {
             // we just need to evaluate the right-side
             var rightSideToEvaluate = memberAccess.ToString();

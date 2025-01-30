@@ -261,7 +261,17 @@ public class VariableReferenceLogic
 
         rightSideType = assignment.EvaluatedType;
 
-        if(rightSideType != leftSideType)
+        var areEqual = rightSideType == leftSideType;
+
+        if(!areEqual && rightSideType.Contains("."))
+        {
+            // right side is qualified. let's compare unqualified
+            var afterLastDot = rightSideType.Substring(rightSideType.LastIndexOf(".") + 1);
+
+            areEqual = afterLastDot == leftSideType;
+        }
+
+        if (!areEqual)
         {
             return GeneralResponse.UnsuccessfulWith($"Left side is of type [{leftSideType}] but right side is of type [{rightSideType}]");
         }
