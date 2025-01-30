@@ -293,11 +293,7 @@ namespace Gum.PropertyGridHelpers
                 DisplayName = RootVariableName;
             }
 
-            TryAddExposeVariableMenuOptions(instanceSave);
-
-            TryAddCopyVariableReferenceMenuOptions();
-
-            _editVariablesService.TryAddEditVariableOptions(this, VariableSave, stateListCategoryContainer);
+            ModifyContextMenu(instanceSave, stateListCategoryContainer);
 
             // This could be slow since we have to check it for every variable in an object.
             // Maybe we'll want to pass this in to the function?
@@ -358,7 +354,16 @@ namespace Gum.PropertyGridHelpers
 
         }
 
+        private void ModifyContextMenu(InstanceSave instanceSave, IStateContainer stateListCategoryContainer)
+        {
+            SupportsMakeDefault = this.mVariableName != "Name";
 
+            TryAddExposeVariableMenuOptions(instanceSave);
+
+            TryAddCopyVariableReferenceMenuOptions();
+
+            _editVariablesService.TryAddEditVariableOptions(this, VariableSave, stateListCategoryContainer);
+        }
 
         private void HandleUiCreated(System.Windows.Controls.UserControl obj)
         {
@@ -429,7 +434,7 @@ namespace Gum.PropertyGridHelpers
 
         private void TryAddCopyVariableReferenceMenuOptions()
         {
-            if (this.mVariableName != null)
+            if (this.mVariableName != null && mVariableName != "Name" && mVariableName != "BaseType")
             {
                 ContextMenuEvents.Add("Copy Qualified Variable Name", (sender, e) =>
                 {

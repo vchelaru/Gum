@@ -183,6 +183,8 @@ namespace WpfDataUi.DataTypes
             }
         }
 
+        public bool SupportsMakeDefault { get; set; } = true;
+
         public bool IsWriteOnly 
         {
             get

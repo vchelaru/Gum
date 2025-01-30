@@ -284,18 +284,24 @@ public static class IDataUiExtensionMethods
 
         if(!areSame)
         {
-            ForceRefresh(dataUi, contextMenu);
+            ForceRefreshContextMenu(dataUi, contextMenu);
         }
     }
 
-    private static void ForceRefresh(IDataUi dataUi, ContextMenu contextMenu)
+    public static void ForceRefreshContextMenu(this IDataUi dataUi, ContextMenu contextMenu)
     {
         contextMenu?.Items.Clear();
 
-        var makeDefault = new MenuItemExposedClick();
-        makeDefault.Header = "Make Default";
-        makeDefault.SetMakeDefaultClick(dataUi);
-        contextMenu.Items.Add(makeDefault);
+        var shouldAddMakeDefault = dataUi.InstanceMember == null ||
+            dataUi.InstanceMember.SupportsMakeDefault;
+
+        if(shouldAddMakeDefault)
+        {
+            var makeDefault = new MenuItemExposedClick();
+            makeDefault.Header = "Make Default";
+            makeDefault.SetMakeDefaultClick(dataUi);
+            contextMenu.Items.Add(makeDefault);
+        }
 
         if (dataUi.InstanceMember != null)
         {

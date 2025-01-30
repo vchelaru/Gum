@@ -1289,6 +1289,11 @@ namespace Gum.Managers
 
         private void RefreshElementTreeNode(TreeNode node, ElementSave elementSave)
         {
+            // This could be because of a corruption:
+            if (string.IsNullOrEmpty(elementSave.Name))
+            {
+                throw new ArgumentException("ElementSave cannot have a null name");
+            }
             List<InstanceSave> expandedInstances = new List<InstanceSave>();
             List<InstanceSave> allInstances = elementSave.Instances;
 

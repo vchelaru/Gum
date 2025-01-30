@@ -51,7 +51,10 @@ namespace WpfDataUi.Controls
                     mInstanceMember.PropertyChanged += HandlePropertyChange;
                 }
 
-
+                if(instanceMemberChanged)
+                {
+                    this.RefreshAllContextMenus(force:true);
+                }
                 //if (mInstanceMember != null)
                 //{
                 //    mInstanceMember.DebugInformation = "TextBoxDisplay " + mInstanceMember.Name;
@@ -128,9 +131,22 @@ namespace WpfDataUi.Controls
             LoadViewFromUri(this, xamlLocation);
             mTextBoxLogic = new TextBoxDisplayLogic(this, TextBox);
 
-            this.RefreshContextMenu(TextBox.ContextMenu);
-            this.RefreshContextMenu(StackPanel.ContextMenu);
+            this.RefreshAllContextMenus();
             this.ContextMenu = TextBox.ContextMenu;
+        }
+
+        private void RefreshAllContextMenus(bool force=false)
+        {
+            if(force)
+            {
+                this.ForceRefreshContextMenu(TextBox.ContextMenu);
+                this.ForceRefreshContextMenu(StackPanel.ContextMenu);
+            }
+            else
+            {
+                this.RefreshContextMenu(TextBox.ContextMenu);
+                this.RefreshContextMenu(StackPanel.ContextMenu);
+            }
         }
 
         public void Refresh(bool forceRefreshEvenIfFocused = false)
@@ -150,8 +166,7 @@ namespace WpfDataUi.Controls
                 mTextBoxLogic.RefreshDisplay(out object valueOnInstance);
 
                 this.Label.Text = InstanceMember.DisplayName;
-                this.RefreshContextMenu(TextBox.ContextMenu);
-                this.RefreshContextMenu(StackPanel.ContextMenu);
+                this.RefreshAllContextMenus();
 
                 RefreshHintText();
 

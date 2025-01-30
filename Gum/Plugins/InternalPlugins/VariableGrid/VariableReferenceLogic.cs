@@ -33,82 +33,6 @@ public class VariableReferenceLogic
         _guiCommands = guiCommands;
     }
 
-    public void DoVariableReferenceReaction(ElementSave parentElement, InstanceSave leftSideInstance, string unqualifiedMember,
-        StateSave stateSave, string qualifiedName, bool trySave)
-    {
-        if(unqualifiedMember == "VariableReferences")
-        {
-            var newDirectValue = stateSave.GetVariableListSave(qualifiedName);
-
-            if(newDirectValue != null)
-            {
-                var failures = GetIndividualFailures(parentElement, leftSideInstance, newDirectValue);
-
-                if(failures.Count > 0)
-                {
-                    ShowFailureMessage(failures);
-
-                    CommentFailures(newDirectValue, failures);
-                }
-            }
-        }
-
-        // apply references on this element first, then apply the values to the other references:
-        ElementSaveExtensions.ApplyVariableReferences(parentElement, stateSave);
-
-        if (unqualifiedMember == "VariableReferences")
-        {
-            _guiCommands.RefreshVariableValues();
-        }
-
-        // Oct 13, 2022
-        // This should set 
-        // values on all contained objects for this particular state
-        // Maybe this could be slow? not sure, but this covers all cases so if
-        // there are performance issues, will investigate later.
-        var references = ObjectFinder.Self.GetElementReferencesToThis(parentElement);
-        var filteredReferences = references
-            .Where(item => item.ReferenceType == ReferenceType.VariableReference);
-
-        HashSet<StateSave> statesAlreadyApplied = new HashSet<StateSave>();
-        HashSet<ElementSave> elementsToSave = new HashSet<ElementSave>();
-        foreach (var reference in filteredReferences)
-        {
-            if (statesAlreadyApplied.Contains(reference.StateSave) == false)
-            {
-                ElementSaveExtensions.ApplyVariableReferences(reference.OwnerOfReferencingObject, reference.StateSave);
-                statesAlreadyApplied.Add(reference.StateSave);
-                elementsToSave.Add(reference.OwnerOfReferencingObject);
-            }
-        }
-
-        if(trySave)
-        {
-            foreach (var elementToSave in elementsToSave)
-            {
-                GumCommands.Self.FileCommands.TryAutoSaveElement(elementToSave);
-            }
-        }
-
-        var newValue = stateSave.GetValueRecursive(qualifiedName);
-
-        // this could be a tunneled variable. If so, we may need to propagate the value to other instances one level deeper
-        var didSetDeepReference = DoVariableReferenceReactionOnInstanceVariableSet(parentElement, leftSideInstance, stateSave, unqualifiedMember, newValue);
-
-        // now force save it if it's a variable reference:
-        if (unqualifiedMember == "VariableReferences" && trySave)
-        {
-            GumCommands.Self.FileCommands.TryAutoSaveElement(parentElement);
-        }
-
-        // The MainEditorTabPlugin handles refreshing in most cases, but if there was a "deep" set due to variable references,
-        // then we forcefully change the values here.
-        if (didSetDeepReference)
-        {
-            GumCommands.Self.WireframeCommands.Refresh(forceLayout: true);
-        }
-    }
-
     public AssignmentExpressionSyntax GetAssignmentSyntax(string item)
     {
         item = EvaluatedSyntax.ConvertToCSharpSyntax(item);
@@ -141,6 +65,105 @@ public class VariableReferenceLogic
         }
         return null;
 
+    }
+
+    #region Validation (failures)
+
+    private List<(string, GeneralResponse)> GetIndividualFailures(ElementSave parentElement, InstanceSave leftSideInstance, VariableListSave newDirectValue)
+    {
+        var values = newDirectValue.ValueAsIList;
+
+        var failures = new List<(string, GeneralResponse)>();
+
+        foreach (string line in values)
+        {
+            AddFailureForLine(parentElement, leftSideInstance, failures, line);
+        }
+
+        return failures;
+    }
+
+    private void AddFailureForLine(ElementSave parentElement, InstanceSave leftSideInstance, List<(string, GeneralResponse)> failures, string line)
+    {
+        if (line.StartsWith("//") || string.IsNullOrEmpty(line))
+        {
+            return;
+        }
+
+        var assignmentSyntax = GetAssignmentSyntax(line);
+
+        GeneralResponse response = GeneralResponse.SuccessfulResponse;
+
+        if (assignmentSyntax == null)
+        {
+            response = GeneralResponse.UnsuccessfulWith("Could not parse line. This should be an assignment such as X=Y");
+        }
+
+        VariableSave leftSideVariable = null;
+
+        if(response.Succeeded)
+        {
+            var leftSide = assignmentSyntax.Left?.ToString();
+
+            if(leftSide == "Name")
+            {
+                response = GeneralResponse.UnsuccessfulWith("Name cannot be assigned in variable references");
+            }
+        }
+
+        if (response.Succeeded)
+        {
+            var leftSideResponse =
+                CheckLeftSideVariableExistence(parentElement, leftSideInstance, assignmentSyntax);
+
+            if (leftSideResponse.Succeeded == false)
+            {
+                response = leftSideResponse;
+            }
+            else
+            {
+                leftSideVariable = leftSideResponse.Data;
+            }
+        }
+
+        EvaluatedSyntax evaluatedSyntax = null;
+
+        if (response.Succeeded)
+        {
+            evaluatedSyntax = EvaluatedSyntax.FromSyntaxNode(assignmentSyntax.Right, parentElement.DefaultState);
+
+            if (evaluatedSyntax == null)
+            {
+                response = GeneralResponse.UnsuccessfulWith($"Could not evaluate right-side expression {assignmentSyntax}");
+            }
+        }
+
+        if (response.Succeeded && evaluatedSyntax.EvaluatedType == null)
+        {
+            response = GeneralResponse.UnsuccessfulWith(
+                $"The right side {assignmentSyntax.Right.ToString()} cannot be evaluated, are you referencing a variable that doesn't exist?");
+        }
+
+        if (response.Succeeded && !evaluatedSyntax.CastTo(leftSideVariable.Type))
+        {
+            response = GeneralResponse.UnsuccessfulWith(
+                $"Could not cast {evaluatedSyntax.EvaluatedType} to {leftSideVariable.Type}");
+        }
+
+        if (response.Succeeded)
+        {
+            var typeMatchResponse = CheckIfVariableTypesMatch(leftSideVariable, parentElement, leftSideInstance, evaluatedSyntax);
+
+            if (typeMatchResponse.Succeeded == false)
+            {
+                response = typeMatchResponse;
+            }
+        }
+
+        if (response.Succeeded == false)
+        {
+            failures.Add((line, response));
+        }
     }
 
     private static void CommentFailures(VariableListSave newDirectValue, List<(string, GeneralResponse)> failures)
@@ -184,88 +207,6 @@ public class VariableReferenceLogic
 
             GumCommands.Self.GuiCommands.ShowMessage(message, "Invalid Variable Reference");
         }
-    }
-
-    private List<(string, GeneralResponse)> GetIndividualFailures(ElementSave parentElement, InstanceSave leftSideInstance, VariableListSave newDirectValue)
-    {
-        var values = newDirectValue.ValueAsIList;
-
-        var failures = new List<(string, GeneralResponse)>();
-
-        foreach (string line in values)
-        {
-            if (line.StartsWith("//") || string.IsNullOrEmpty(line))
-            {
-                continue;
-            }
-
-            var assignmentSyntax = GetAssignmentSyntax(line);
-
-            GeneralResponse response = GeneralResponse.SuccessfulResponse;
-
-            if(assignmentSyntax == null)
-            {
-                response = GeneralResponse.UnsuccessfulWith("Could not parse line. This should be an assignment such as X=Y");
-            }
-
-            VariableSave leftSideVariable = null;
-
-            if (response.Succeeded)
-            {
-                var leftSideResponse =
-                    CheckLeftSideVariableExistence(parentElement, leftSideInstance, assignmentSyntax);
-
-                if (leftSideResponse.Succeeded == false)
-                {
-                    response = leftSideResponse;
-                }
-                else
-                {
-                    leftSideVariable = leftSideResponse.Data;
-                }
-            }
-
-            EvaluatedSyntax evaluatedSyntax = null;
-
-            if (response.Succeeded)
-            {
-                evaluatedSyntax = EvaluatedSyntax.FromSyntaxNode(assignmentSyntax.Right, parentElement.DefaultState);
-
-                if (evaluatedSyntax == null)
-                {
-                    response = GeneralResponse.UnsuccessfulWith($"Could not evaluate right-side expression {assignmentSyntax}");
-                }
-            }
-
-            if(response.Succeeded && evaluatedSyntax.EvaluatedType == null)
-            {
-                response = GeneralResponse.UnsuccessfulWith(
-                    $"The right side {assignmentSyntax.Right.ToString()} cannot be evaluated, are you referencing a variable that doesn't exist?");
-            }
-
-            if(response.Succeeded && !evaluatedSyntax.CastTo(leftSideVariable.Type))
-            {
-                response = GeneralResponse.UnsuccessfulWith(
-                    $"Could not cast {evaluatedSyntax.EvaluatedType} to {leftSideVariable.Type}");
-            }
-
-            if(response.Succeeded)
-            {
-                var typeMatchResponse = CheckIfVariableTypesMatch(leftSideVariable, parentElement, leftSideInstance, evaluatedSyntax);
-
-                if (typeMatchResponse.Succeeded == false)
-                {
-                    response = typeMatchResponse;
-                }
-            }
-
-            if (response.Succeeded == false)
-            {
-                failures.Add((line, response));
-            }
-        }
-
-        return failures;
     }
 
     private GeneralResponse CheckIfVariableTypesMatch(VariableSave leftSideVariable, ElementSave parentElement, InstanceSave leftSideInstance, EvaluatedSyntax assignment)
@@ -360,8 +301,87 @@ public class VariableReferenceLogic
         return toReturn;
     }
 
-    static char[] equalsArray = new char[] { '=' };
-    
+    #endregion
+
+    #region Assignment Reactions
+
+
+    public void DoVariableReferenceReaction(ElementSave parentElement, InstanceSave leftSideInstance, string unqualifiedMember,
+        StateSave stateSave, string qualifiedName, bool trySave)
+    {
+        if (unqualifiedMember == "VariableReferences")
+        {
+            var newDirectValue = stateSave.GetVariableListSave(qualifiedName);
+
+            if (newDirectValue != null)
+            {
+                var failures = GetIndividualFailures(parentElement, leftSideInstance, newDirectValue);
+
+                if (failures.Count > 0)
+                {
+                    ShowFailureMessage(failures);
+
+                    CommentFailures(newDirectValue, failures);
+                }
+            }
+        }
+
+        // apply references on this element first, then apply the values to the other references:
+        ElementSaveExtensions.ApplyVariableReferences(parentElement, stateSave);
+
+        if (unqualifiedMember == "VariableReferences")
+        {
+            _guiCommands.RefreshVariableValues();
+        }
+
+        // Oct 13, 2022
+        // This should set 
+        // values on all contained objects for this particular state
+        // Maybe this could be slow? not sure, but this covers all cases so if
+        // there are performance issues, will investigate later.
+        var references = ObjectFinder.Self.GetElementReferencesToThis(parentElement);
+        var filteredReferences = references
+            .Where(item => item.ReferenceType == ReferenceType.VariableReference);
+
+        HashSet<StateSave> statesAlreadyApplied = new HashSet<StateSave>();
+        HashSet<ElementSave> elementsToSave = new HashSet<ElementSave>();
+        foreach (var reference in filteredReferences)
+        {
+            if (statesAlreadyApplied.Contains(reference.StateSave) == false)
+            {
+                ElementSaveExtensions.ApplyVariableReferences(reference.OwnerOfReferencingObject, reference.StateSave);
+                statesAlreadyApplied.Add(reference.StateSave);
+                elementsToSave.Add(reference.OwnerOfReferencingObject);
+            }
+        }
+
+        if (trySave)
+        {
+            foreach (var elementToSave in elementsToSave)
+            {
+                GumCommands.Self.FileCommands.TryAutoSaveElement(elementToSave);
+            }
+        }
+
+        var newValue = stateSave.GetValueRecursive(qualifiedName);
+
+        // this could be a tunneled variable. If so, we may need to propagate the value to other instances one level deeper
+        var didSetDeepReference = DoVariableReferenceReactionOnInstanceVariableSet(parentElement, leftSideInstance, stateSave, unqualifiedMember, newValue);
+
+        // now force save it if it's a variable reference:
+        if (unqualifiedMember == "VariableReferences" && trySave)
+        {
+            GumCommands.Self.FileCommands.TryAutoSaveElement(parentElement);
+        }
+
+        // The MainEditorTabPlugin handles refreshing in most cases, but if there was a "deep" set due to variable references,
+        // then we forcefully change the values here.
+        if (didSetDeepReference)
+        {
+            GumCommands.Self.WireframeCommands.Refresh(forceLayout: true);
+        }
+    }
+
     private static bool DoVariableReferenceReactionOnInstanceVariableSet(ElementSave container, InstanceSave instance, StateSave stateSave, string unqualifiedVariableName, object newValue)
     {
         var didAssignDeepReference = false;
@@ -479,9 +499,11 @@ public class VariableReferenceLogic
         }
     }
 
+    #endregion
+
     #region Line Assignment Expansion / Modifications
 
-
+    static char[] equalsArray = new char[] { '=' };
     bool ModifyLines(object oldValue, List<string> newValueAsList, InstanceSave selectedInstance)
     {
         var oldValueAsList = oldValue as List<string>;

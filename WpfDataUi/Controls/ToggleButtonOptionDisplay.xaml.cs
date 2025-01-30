@@ -46,8 +46,14 @@ namespace WpfDataUi.Controls
             }
             set
             {
+                var didChange = mInstanceMember != value;
                 mInstanceMember = value;
                 Refresh();
+                if(didChange)
+                {
+                    RefreshAllContextMenus(true);
+                }
+
             }
         }
 
@@ -174,18 +180,16 @@ namespace WpfDataUi.Controls
         {
             SuppressSettingProperty = true;
 
-            string propertyName =  InstanceMember?.DisplayName;
-            
-            if(propertyName != null)
+            string propertyName = InstanceMember?.DisplayName;
+
+            if (propertyName != null)
             {
                 propertyName = InsertSpacesInCamelCaseString(propertyName);
             }
             Label.Text = propertyName;
             TrySetValueOnUi(InstanceMember.Value);
 
-            this.RefreshContextMenu(ButtonWrapPanel.ContextMenu);
-            this.RefreshContextMenu(Grid.ContextMenu);
-
+            RefreshAllContextMenus();
 
             HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
             HintTextBlock.Text = InstanceMember?.DetailText;
@@ -195,6 +199,21 @@ namespace WpfDataUi.Controls
             RefreshIsEnabled();
 
             SuppressSettingProperty = false;
+        }
+
+        private void RefreshAllContextMenus(bool force=false)
+        {
+            if(force)
+            {
+                this.ForceRefreshContextMenu(ButtonWrapPanel.ContextMenu);
+                this.ForceRefreshContextMenu(Grid.ContextMenu);
+
+            }
+            else
+            {
+                this.RefreshContextMenu(ButtonWrapPanel.ContextMenu);
+                this.RefreshContextMenu(Grid.ContextMenu);
+            }
         }
 
         private void RefreshIsEnabled()
