@@ -148,6 +148,18 @@ namespace Gum.Managers
                         _selectedState.SelectedElement = null;
                     }
                 }
+                else if (selectedBehavior != null)
+                {
+                    var array = new[] { selectedBehavior };
+                    var result = ShowDeleteDialog(array, out optionsWindow);
+
+                    if (result == true)
+                    {
+                        objectsDeleted = array;
+                        // We need to remove the reference
+                        EditingManager.Self.RemoveSelectedBehavior();
+                    }
+                }
 
                 var shouldDelete = objectsDeleted?.Length > 0;
 
