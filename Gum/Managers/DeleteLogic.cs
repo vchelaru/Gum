@@ -83,7 +83,7 @@ namespace Gum.Managers
                             // will be handled in a plugin
                             //Gum.ToolCommands.ElementCommands.Self.RemoveInstance(instance, selectedElement);
                             var instanceName = selectedInstance.Name;
-                            var selectedElement = selectedElements.First();
+                            var selectedElement = selectedElements.FirstOrDefault();
                             if(selectedElement != null)
                             {
                                 selectedElement.Instances.Remove(selectedInstance);
