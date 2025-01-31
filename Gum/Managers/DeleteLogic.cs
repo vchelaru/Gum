@@ -84,12 +84,12 @@ namespace Gum.Managers
                             //Gum.ToolCommands.ElementCommands.Self.RemoveInstance(instance, selectedElement);
                             var instanceName = selectedInstance.Name;
                             var selectedElement = selectedElements.FirstOrDefault();
-                            if(selectedElement != null)
+                            if (selectedElement != null)
                             {
                                 selectedElement.Instances.Remove(selectedInstance);
                                 selectedElement.Events.RemoveAll(item => item.GetSourceObject() == instanceName);
                             }
-                            else if(selectedBehavior != null)
+                            else if (selectedBehavior != null)
                             {
                                 selectedBehavior.RequiredInstances.Remove(selectedInstance as BehaviorInstanceSave);
                             }
@@ -134,18 +134,24 @@ namespace Gum.Managers
                 }
                 else if (_selectedState.SelectedElements.Count() > 0)
                 {
-                    var array = _selectedState.SelectedElements.ToArray();
-                    var result = ShowDeleteDialog(array, out optionsWindow);
+                    var array = _selectedState.SelectedElements
+                        .Where(item => item is not StandardElementSave).ToArray();
 
-                    if (result == true)
+                    if (array.Length > 0)
                     {
-                        objectsDeleted = array;
 
-                        foreach(var item in array)
+                        var result = ShowDeleteDialog(array, out optionsWindow);
+
+                        if (result == true)
                         {
-                            _projectCommands.RemoveElement(item);
+                            objectsDeleted = array;
+
+                            foreach(var item in array)
+                            {
+                                _projectCommands.RemoveElement(item);
+                            }
+                            _selectedState.SelectedElement = null;
                         }
-                        _selectedState.SelectedElement = null;
                     }
                 }
                 else if (selectedBehavior != null)
