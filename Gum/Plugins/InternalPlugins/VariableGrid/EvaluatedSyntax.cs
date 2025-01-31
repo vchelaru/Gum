@@ -410,6 +410,10 @@ internal class EvaluatedSyntax
                     return true;
                 }
                 break;
+            case "string":
+                this.Value = this.Value?.ToString();
+                this.EvaluatedType = desiredType;
+                return true;
         }
 
         return false;
