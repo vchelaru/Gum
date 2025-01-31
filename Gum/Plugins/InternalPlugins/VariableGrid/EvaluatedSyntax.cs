@@ -3,6 +3,7 @@ using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CSharp.RuntimeBinder;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -165,25 +166,33 @@ internal class EvaluatedSyntax
 
         dynamic dynamicValue1, dynamicValue2;
         GetDynamicValues(leftEvaluated.Value, rightEvaluated.Value, out dynamicValue1, out dynamicValue2);
-        if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.PlusToken))
+
+        try
         {
-            return dynamicValue1 + dynamicValue2;
+            if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.PlusToken))
+            {
+                return dynamicValue1 + dynamicValue2;
+            }
+            else if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.MinusToken))
+            {
+                return dynamicValue1 - dynamicValue2;
+            }
+            else if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.AsteriskToken))
+            {
+                return dynamicValue1 * dynamicValue2;
+            }
+            else if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.SlashToken))
+            {
+                return dynamicValue1 / dynamicValue2;
+            }
+            else
+            {
+                System.Diagnostics.Debugger.Break();
+            }
         }
-        else if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.MinusToken))
+        catch(RuntimeBinderException)
         {
-            return dynamicValue1 - dynamicValue2;
-        }
-        else if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.AsteriskToken))
-        {
-            return dynamicValue1 * dynamicValue2;
-        }
-        else if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.SlashToken))
-        {
-            return dynamicValue1 / dynamicValue2;
-        }
-        else
-        {
-            System.Diagnostics.Debugger.Break();
+            // This can happen if someone does something like tries to subtract strings ("A" - "B")
         }
 
         return null;
