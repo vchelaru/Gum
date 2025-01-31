@@ -191,8 +191,14 @@ internal class EvaluatedSyntax
 
     private static void GetDynamicValues(object obj1, object obj2, out dynamic dynamicValue1, out dynamic dynamicValue2)
     {
-        var type1 = GetNumericType(obj1);
-        var type2 = GetNumericType(obj2);
+        dynamicValue1 = null;
+        dynamicValue2 = null;
+
+        if(!TryGetNumericType(obj1, out Type type1) || !TryGetNumericType(obj2, out Type type2))
+        {
+            return;
+        }
+        
 
         // Find the larger (wider) type to ensure proper addition
         var targetType = GetWiderNumericType(type1, type2);
@@ -233,17 +239,22 @@ internal class EvaluatedSyntax
             : value?.GetType().ToString();
     }
 
-    static Type GetNumericType(object obj)
+    static bool TryGetNumericType(object obj, out Type type)
     {
         if (obj == null)
             throw new ArgumentNullException(nameof(obj));
 
-        var type = obj.GetType();
+        type = obj.GetType();
 
         if (!IsNumericType(type))
-            throw new ArgumentException($"Object of type {type} is not a numeric type.");
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
 
-        return type;
     }
 
     static bool IsNumericType(Type type)

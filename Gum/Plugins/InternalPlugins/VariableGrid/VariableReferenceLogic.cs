@@ -141,7 +141,7 @@ public class VariableReferenceLogic
         if (response.Succeeded && evaluatedSyntax.EvaluatedType == null)
         {
             response = GeneralResponse.UnsuccessfulWith(
-                $"The right side cannot be evaluated, are you referencing a variable that doesn't exist?");
+                $"The right side cannot be evaluated, are you referencing a variable that doesn't exist or mixing variable types?");
         }
 
         if (response.Succeeded && !evaluatedSyntax.CastTo(leftSideVariable.Type))
