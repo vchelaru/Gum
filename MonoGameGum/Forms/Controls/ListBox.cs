@@ -287,6 +287,13 @@ public class ListBox : ItemsControl, IInputReceiver
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
+
+        if(InnerPanel == null)
+        {
+            string message = "The ListBox is being created with a Visual that does not have an InnerPanel " +
+                "with name InnerPanelInstance. This is a requirement ";
+            throw new InvalidOperationException(message);
+        }
     }
 
     #endregion
@@ -416,9 +423,10 @@ public class ListBox : ItemsControl, IInputReceiver
 
     #region Collection Changed
 
-    protected override void HandleCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+    protected override void HandleItemsCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
     {
-        base.HandleCollectionChanged(sender, e);
+        // todo - can this logic get moved to the individual methods below? I think it should...
+        base.HandleItemsCollectionChanged(sender, e);
 
         if (e.Action == NotifyCollectionChangedAction.Remove &&
             (e.OldStartingIndex == selectedIndex ||
@@ -434,21 +442,21 @@ public class ListBox : ItemsControl, IInputReceiver
             SelectedIndex = -1;
             PushValueToViewModel(nameof(SelectedObject));
         }
-        else if(e.Action == NotifyCollectionChangedAction.Move)
+    }
+
+    protected override void HandleCollectionItemMoved(int oldIndex, int newIndex)
+    {
+        var itemToMove = ListBoxItemsInternal[oldIndex];
+
+        ListBoxItemsInternal.RemoveAt(oldIndex);
+        ListBoxItemsInternal.Insert(newIndex, itemToMove);
+        if (SelectedIndex == oldIndex)
         {
-
-            var itemToMove = ListBoxItemsInternal[e.OldStartingIndex];
-
-            ListBoxItemsInternal.RemoveAt(e.OldStartingIndex);
-            ListBoxItemsInternal.Insert(e.NewStartingIndex, itemToMove);
-            if(SelectedIndex == e.OldStartingIndex)
-            {
-                SelectedIndex = e.NewStartingIndex;
-            }
-            else if(SelectedIndex == e.NewStartingIndex)
-            {
-                SelectedIndex = e.OldStartingIndex;
-            }
+            SelectedIndex = newIndex;
+        }
+        else if (SelectedIndex == newIndex)
+        {
+            SelectedIndex = oldIndex;
         }
     }
 

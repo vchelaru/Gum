@@ -55,18 +55,18 @@ public class ItemsControl : ScrollViewer
                 if (items != null)
                 {
                     ClearVisualsInternal();
-                    HandleCollectionChanged(this,                     
+                    HandleItemsCollectionChanged(this,                     
                         new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
                 }
 
                 if (items is INotifyCollectionChanged notifyCollectionChanged)
                 {
-                    notifyCollectionChanged.CollectionChanged -= HandleCollectionChanged;
+                    notifyCollectionChanged.CollectionChanged -= HandleItemsCollectionChanged;
                 }
                 items = value;
                 if (items is INotifyCollectionChanged newNotifyCollectionChanged)
                 {
-                    newNotifyCollectionChanged.CollectionChanged += HandleCollectionChanged;
+                    newNotifyCollectionChanged.CollectionChanged += HandleItemsCollectionChanged;
                 }
 
                 if (items?.Count > 0)
@@ -74,7 +74,7 @@ public class ItemsControl : ScrollViewer
                     // refresh!
                     var args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add,
                         items, startingIndex: 0);
-                    HandleCollectionChanged(this, args);
+                    HandleItemsCollectionChanged(this, args);
                 }
 
                     GraphicalUiElement.IsAllLayoutSuspended = wasSuppressed;
@@ -108,7 +108,7 @@ public class ItemsControl : ScrollViewer
                     {
                         // refresh!
                         var args = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, items, startingIndex: 0);
-                        HandleCollectionChanged(this, args);
+                        HandleItemsCollectionChanged(this, args);
                     }
                 }
             }
@@ -144,7 +144,6 @@ public class ItemsControl : ScrollViewer
         return label;
     }
 
-
     protected virtual InteractiveGue CreateNewVisual(object vm)
     {
         if (VisualTemplate != null)
@@ -174,9 +173,87 @@ public class ItemsControl : ScrollViewer
         }
     }
 
+    protected override void ReactToVisualChanged()
+    {
+        base.ReactToVisualChanged();
+
+        if(InnerPanel != null)
+        {
+            InnerPanel.Children.CollectionChanged += HandleInnerPanelCollectionChanged;
+        }
+    }
+
+    
+    /// <inheritdoc/>
+    protected override void ReactToVisualRemoved()
+    {
+        base.ReactToVisualRemoved();
+
+        if(InnerPanel != null)
+        {
+            InnerPanel.Children.CollectionChanged -= HandleInnerPanelCollectionChanged;
+        }
+    }
+
+    private void HandleInnerPanelCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+    {
+        switch(e.Action)
+        {
+            case NotifyCollectionChangedAction.Add:
+                {
+
+                    int absoluteIndex = e.NewStartingIndex;
+                    foreach(var item in e.NewItems)
+                    {
+                        var asGue = item as InteractiveGue;
+
+                        var newFrameworkItem = asGue?.FormsControlAsObject as FrameworkElement;
+
+                        if(newFrameworkItem != null)
+                        {
+                            HandleCollectionNewItemCreated(newFrameworkItem, absoluteIndex);
+                        }
+                        absoluteIndex++;
+                    }
+                }
+                break;
+            case NotifyCollectionChangedAction.Move:
+                // todo - we need to raise an event here when items get moved
+                // https://github.com/vchelaru/Gum/issues/557
+                break;
+            case NotifyCollectionChangedAction.Remove:
+                {
+                    int absoluteIndex = e.OldStartingIndex;
+
+                    foreach(var item in e.OldItems)
+                    {
+                        var asGue = item as InteractiveGue;
+                        var newFrameworkItem = asGue?.FormsControlAsObject as FrameworkElement;
+                        if (newFrameworkItem != null)
+                        {
+                            HandleCollectionItemRemoved(absoluteIndex);
+                        }
+
+                        absoluteIndex++;
+                    }
+                }
+                break;
+            case NotifyCollectionChangedAction.Replace:
+                var index = e.NewStartingIndex;
+
+                //var listItem = InnerPanel.Children[index];
+                HandleCollectionReplace(index);
+                break;
+            case NotifyCollectionChangedAction.Reset:
+                HandleCollectionReset();
+
+                break;
+        }
+    }
+
     #region Event Handler methods
 
-    protected virtual void HandleCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+    protected virtual void HandleItemsCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
     {
         switch (e.Action)
         {
@@ -202,7 +279,8 @@ public class ItemsControl : ScrollViewer
 
 
                         newItem.Visual.Parent = InnerPanel;
-                        HandleCollectionNewItemCreated(newItem, index);
+                        // handled by the panel being updated:
+                        //HandleCollectionNewItemCreated(newItem, index);
 
                         index++;
                     }
@@ -231,6 +309,8 @@ public class ItemsControl : ScrollViewer
                     }
                 }
 
+                HandleCollectionItemMoved(e.OldStartingIndex, e.NewStartingIndex);
+
                 break;
             case NotifyCollectionChangedAction.Remove:
                 {
@@ -242,21 +322,20 @@ public class ItemsControl : ScrollViewer
                         listItem.Parent = null;
                     }
 
-                    HandleCollectionItemRemoved(index);
+                    //HandleCollectionItemRemoved(index);
                 }
                 break;
             case NotifyCollectionChangedAction.Replace:
                 {
-                    var index = e.NewStartingIndex;
+                    //var index = e.NewStartingIndex;
 
                     //var listItem = InnerPanel.Children[index];
-                    HandleCollectionReplace(index);
+                    //HandleCollectionReplace(index);
                     
                 }
                 break;
             case NotifyCollectionChangedAction.Reset:
                 ClearVisualsInternal();
-                HandleCollectionReset();
                 break;
         }
 
@@ -267,11 +346,14 @@ public class ItemsControl : ScrollViewer
     protected virtual void HandleCollectionItemRemoved(int indexToRemoveFrom) { }
     protected virtual void HandleCollectionReset() { }
     protected virtual void HandleCollectionReplace(int index) { }
+    protected virtual void HandleCollectionItemMoved(int oldIndex, int newIndex) { }
 
     private void ClearVisualsInternal()
     {
         if(InnerPanel != null)
         {
+            InnerPanel.Children.Clear();
+
             for (int i = InnerPanel.Children.Count - 1; i > -1; i--)
             {
                 InnerPanel.Children[i].Parent = null;
