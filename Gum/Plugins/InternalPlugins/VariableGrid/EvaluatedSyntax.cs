@@ -194,22 +194,33 @@ internal class EvaluatedSyntax
         dynamicValue1 = null;
         dynamicValue2 = null;
 
-        if(!TryGetNumericType(obj1, out Type type1) || !TryGetNumericType(obj2, out Type type2))
+        var isFirstNumeric = TryGetNumericType(obj1, out Type type1);
+        var isSecondNumeric = TryGetNumericType(obj2, out Type type2);
+
+        if(isFirstNumeric && isSecondNumeric)
         {
-            return;
+            // Find the larger (wider) type to ensure proper addition
+            var targetType = GetWiderNumericType(type1, type2);
+
+            // Convert both numbers to the wider type
+            var value1 = Convert.ChangeType(obj1, targetType);
+            var value2 = Convert.ChangeType(obj2, targetType);
+
+            // Perform the addition
+            dynamicValue1 = value1;
+            dynamicValue2 = value2;
         }
-        
+        else
+        {
+            var isFirstNumericOrString = isFirstNumeric || obj1 is string;
+            var isSecondNumericOrString = isSecondNumeric || obj2 is string;
 
-        // Find the larger (wider) type to ensure proper addition
-        var targetType = GetWiderNumericType(type1, type2);
-
-        // Convert both numbers to the wider type
-        var value1 = Convert.ChangeType(obj1, targetType);
-        var value2 = Convert.ChangeType(obj2, targetType);
-
-        // Perform the addition
-        dynamicValue1 = value1;
-        dynamicValue2 = value2;
+            if(isFirstNumericOrString && isSecondNumericOrString)
+            {
+                dynamicValue1 = obj1;
+                dynamicValue2 = obj2;
+            }
+        }
     }
     private static EvaluatedSyntax FromSyntaxAndValue(SyntaxNode syntaxNode, object value)
     {
