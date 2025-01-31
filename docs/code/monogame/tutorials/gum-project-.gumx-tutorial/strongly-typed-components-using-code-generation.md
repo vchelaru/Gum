@@ -213,7 +213,7 @@ Notice that initially Gum may be generating additonal statements which are not n
 
 ### Screen Runtimes
 
-We can also create runtimes for screens. Once properties have been set up, adding additional runtimes is much easier. In fact, clicking Generate Code button the produces generated code for the screen.
+We can also create runtimes for screens. Once properties have been set up, adding additional runtimes is much easier. Just click the Generate Code button!
 
 <figure><img src="../../../../.gitbook/assets/image (116).png" alt=""><figcaption><p>Generate code button creates runtime classes for the selected Screen</p></figcaption></figure>
 
