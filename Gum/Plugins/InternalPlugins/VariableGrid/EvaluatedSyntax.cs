@@ -3,6 +3,7 @@ using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CSharp.RuntimeBinder;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -165,25 +166,33 @@ internal class EvaluatedSyntax
 
         dynamic dynamicValue1, dynamicValue2;
         GetDynamicValues(leftEvaluated.Value, rightEvaluated.Value, out dynamicValue1, out dynamicValue2);
-        if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.PlusToken))
+
+        try
         {
-            return dynamicValue1 + dynamicValue2;
+            if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.PlusToken))
+            {
+                return dynamicValue1 + dynamicValue2;
+            }
+            else if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.MinusToken))
+            {
+                return dynamicValue1 - dynamicValue2;
+            }
+            else if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.AsteriskToken))
+            {
+                return dynamicValue1 * dynamicValue2;
+            }
+            else if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.SlashToken))
+            {
+                return dynamicValue1 / dynamicValue2;
+            }
+            else
+            {
+                System.Diagnostics.Debugger.Break();
+            }
         }
-        else if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.MinusToken))
+        catch(RuntimeBinderException)
         {
-            return dynamicValue1 - dynamicValue2;
-        }
-        else if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.AsteriskToken))
-        {
-            return dynamicValue1 * dynamicValue2;
-        }
-        else if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.SlashToken))
-        {
-            return dynamicValue1 / dynamicValue2;
-        }
-        else
-        {
-            System.Diagnostics.Debugger.Break();
+            // This can happen if someone does something like tries to subtract strings ("A" - "B")
         }
 
         return null;
@@ -191,19 +200,36 @@ internal class EvaluatedSyntax
 
     private static void GetDynamicValues(object obj1, object obj2, out dynamic dynamicValue1, out dynamic dynamicValue2)
     {
-        var type1 = GetNumericType(obj1);
-        var type2 = GetNumericType(obj2);
+        dynamicValue1 = null;
+        dynamicValue2 = null;
 
-        // Find the larger (wider) type to ensure proper addition
-        var targetType = GetWiderNumericType(type1, type2);
+        var isFirstNumeric = TryGetNumericType(obj1, out Type type1);
+        var isSecondNumeric = TryGetNumericType(obj2, out Type type2);
 
-        // Convert both numbers to the wider type
-        var value1 = Convert.ChangeType(obj1, targetType);
-        var value2 = Convert.ChangeType(obj2, targetType);
+        if(isFirstNumeric && isSecondNumeric)
+        {
+            // Find the larger (wider) type to ensure proper addition
+            var targetType = GetWiderNumericType(type1, type2);
 
-        // Perform the addition
-        dynamicValue1 = value1;
-        dynamicValue2 = value2;
+            // Convert both numbers to the wider type
+            var value1 = Convert.ChangeType(obj1, targetType);
+            var value2 = Convert.ChangeType(obj2, targetType);
+
+            // Perform the addition
+            dynamicValue1 = value1;
+            dynamicValue2 = value2;
+        }
+        else
+        {
+            var isFirstNumericOrString = isFirstNumeric || obj1 is string;
+            var isSecondNumericOrString = isSecondNumeric || obj2 is string;
+
+            if(isFirstNumericOrString && isSecondNumericOrString)
+            {
+                dynamicValue1 = obj1;
+                dynamicValue2 = obj2;
+            }
+        }
     }
     private static EvaluatedSyntax FromSyntaxAndValue(SyntaxNode syntaxNode, object value)
     {
@@ -233,17 +259,22 @@ internal class EvaluatedSyntax
             : value?.GetType().ToString();
     }
 
-    static Type GetNumericType(object obj)
+    static bool TryGetNumericType(object obj, out Type type)
     {
         if (obj == null)
             throw new ArgumentNullException(nameof(obj));
 
-        var type = obj.GetType();
+        type = obj.GetType();
 
         if (!IsNumericType(type))
-            throw new ArgumentException($"Object of type {type} is not a numeric type.");
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
 
-        return type;
     }
 
     static bool IsNumericType(Type type)
@@ -399,6 +430,10 @@ internal class EvaluatedSyntax
                     return true;
                 }
                 break;
+            case "string":
+                this.Value = this.Value?.ToString();
+                this.EvaluatedType = desiredType;
+                return true;
         }
 
         return false;
