@@ -25,6 +25,7 @@ using MonoGameGum.Input;
 namespace MonoGameGum.Forms.Controls;
 #endif
 
+#region ScrollIntoViewStyle Enums
 public enum ScrollIntoViewStyle
 {
     /// <summary>
@@ -39,7 +40,7 @@ public enum ScrollIntoViewStyle
     Center,
     Bottom
 }
-
+#endregion
 
 #if !FRB
 
@@ -283,6 +284,11 @@ public class ListBox : ItemsControl, IInputReceiver
     {
     }
 
+    protected override void ReactToVisualChanged()
+    {
+        base.ReactToVisualChanged();
+    }
+
     #endregion
 
     #region Item Creation
@@ -454,9 +460,9 @@ public class ListBox : ItemsControl, IInputReceiver
         }
     }
 
-    protected override void HandleCollectionItemRemoved(int inexToRemoveFrom)
+    protected override void HandleCollectionItemRemoved(int indexToRemoveFrom)
     {
-        ListBoxItemsInternal.RemoveAt(inexToRemoveFrom);
+        ListBoxItemsInternal.RemoveAt(indexToRemoveFrom);
     }
 
     protected override void HandleCollectionReset()
@@ -483,6 +489,8 @@ public class ListBox : ItemsControl, IInputReceiver
             }
         }
     }
+
+    #region Scroll Item into view
 
     /// <summary>
     /// Scrolls the list view so that the argument item is in view. The amount of scrolling depends on the scrollIntoViewStyle argument.
@@ -548,6 +556,8 @@ public class ListBox : ItemsControl, IInputReceiver
             }
         }
     }
+
+    #endregion
 
     public override void UpdateState()
     {

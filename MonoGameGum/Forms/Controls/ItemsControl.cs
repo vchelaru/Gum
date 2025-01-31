@@ -201,7 +201,7 @@ public class ItemsControl : ScrollViewer
                         }
 
 
-                        newItem.Visual.Parent = base.InnerPanel;
+                        newItem.Visual.Parent = InnerPanel;
                         HandleCollectionNewItemCreated(newItem, index);
 
                         index++;
@@ -211,7 +211,7 @@ public class ItemsControl : ScrollViewer
                         GraphicalUiElement.IsAllLayoutSuspended = wasSuppressed;
                         if (!wasSuppressed)
                         {
-                            InnerPanel.ResumeLayout(recursive:true);
+                            InnerPanel?.ResumeLayout(recursive:true);
                         }
                     }
                 }
@@ -223,9 +223,12 @@ public class ItemsControl : ScrollViewer
 
                 object? itemToMove = default;
                 // need to move the item to the new index:
-                if(oldIndex < InnerPanel.Children.Count)
+                if(InnerPanel != null)
                 {
-                    InnerPanel.Children.Move(oldIndex, newIndex);
+                    if(oldIndex < InnerPanel.Children.Count)
+                    {
+                        InnerPanel.Children.Move(oldIndex, newIndex);
+                    }
                 }
 
                 break;
@@ -245,7 +248,8 @@ public class ItemsControl : ScrollViewer
             case NotifyCollectionChangedAction.Replace:
                 {
                     var index = e.NewStartingIndex;
-                    var listItem = InnerPanel.Children[index];
+
+                    //var listItem = InnerPanel.Children[index];
                     HandleCollectionReplace(index);
                     
                 }
@@ -260,15 +264,18 @@ public class ItemsControl : ScrollViewer
     }
 
     protected virtual void HandleCollectionNewItemCreated(FrameworkElement newItem, int newItemIndex) { }
-    protected virtual void HandleCollectionItemRemoved(int inexToRemoveFrom) { }
+    protected virtual void HandleCollectionItemRemoved(int indexToRemoveFrom) { }
     protected virtual void HandleCollectionReset() { }
     protected virtual void HandleCollectionReplace(int index) { }
 
     private void ClearVisualsInternal()
     {
-        for (int i = InnerPanel.Children.Count - 1; i > -1; i--)
+        if(InnerPanel != null)
         {
-            InnerPanel.Children[i].Parent = null;
+            for (int i = InnerPanel.Children.Count - 1; i > -1; i--)
+            {
+                InnerPanel.Children[i].Parent = null;
+            }
         }
     }
 
