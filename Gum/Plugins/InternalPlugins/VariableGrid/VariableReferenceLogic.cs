@@ -105,9 +105,9 @@ public class VariableReferenceLogic
         {
             var leftSide = assignmentSyntax.Left?.ToString();
 
-            if(leftSide == "Name")
+            if(leftSide is "Name" or "BaseType" or "DefaultChildContainer")
             {
-                response = GeneralResponse.UnsuccessfulWith("Name cannot be assigned in variable references");
+                response = GeneralResponse.UnsuccessfulWith($"{leftSide} cannot be assigned in variable references");
             }
         }
 
@@ -141,7 +141,7 @@ public class VariableReferenceLogic
         if (response.Succeeded && evaluatedSyntax.EvaluatedType == null)
         {
             response = GeneralResponse.UnsuccessfulWith(
-                $"The right side {assignmentSyntax.Right.ToString()} cannot be evaluated, are you referencing a variable that doesn't exist?");
+                $"The right side cannot be evaluated, are you referencing a variable that doesn't exist?");
         }
 
         if (response.Succeeded && !evaluatedSyntax.CastTo(leftSideVariable.Type))
@@ -529,13 +529,13 @@ public class VariableReferenceLogic
                     split = AddImpliedLeftSide(newValueAsList, i, split);
                 }
 
-                if(split.Length > 1 && selectedInstance != null && split[1]?.Contains('.') != true)
+                if(split.Length > 1 && selectedInstance != null )
                 {
-                    split[1] = selectedInstance.Name + "." + split[1];
-                    newValueAsList[i] = split[0] + "=" + split[1];
+                    // need to loop through each item and adjust its text...
+                    QualifyInstanceVariables(newValueAsList, selectedInstance, i, split);
                 }
 
-                if(split.Length > 1)
+                if (split.Length > 1)
                 {
                     var leftSide = split[0];
                     if(leftSide.Contains("."))
@@ -592,6 +592,40 @@ public class VariableReferenceLogic
         return didChange;
     }
 
+    private static void QualifyInstanceVariables(List<string> newValueAsList, InstanceSave selectedInstance, int i, string[] split)
+    {
+        var asCSharp = EvaluatedSyntax.ConvertToCSharpSyntax(split[1]);
+
+        var syntax = CSharpSyntaxTree.ParseText(asCSharp).GetCompilationUnitRoot();
+
+        var itemsToReplace = syntax.DescendantNodes()
+            .Where(item => item is IdentifierNameSyntax && 
+                item.Parent is not MemberAccessExpressionSyntax
+                    and not AliasQualifiedNameSyntax);
+
+        var newTree = syntax.ReplaceNodes(
+            itemsToReplace,
+            (node, potentialExistingReplacement) =>
+            {
+                var toReturn =
+                    SyntaxFactory.IdentifierName($"{selectedInstance.Name}.{node.ToString()}");
+
+
+
+                return toReturn;
+            });
+
+        var newCSharp = newTree.ToString();
+
+        split[1] = EvaluatedSyntax.ConvertToSlashSyntax(newCSharp);
+        newValueAsList[i] = split[0] + "=" + split[1];
+
+
+        //syntax.ReplaceNodes(
+
+        //split[1] = selectedInstance.Name + "." + split[1];
+        //newValueAsList[i] = split[0] + "=" + split[1];
+    }
 
     private static void ExpandColorToRedGreenBlue(List<string> asList, int i, string rightSide)
     {

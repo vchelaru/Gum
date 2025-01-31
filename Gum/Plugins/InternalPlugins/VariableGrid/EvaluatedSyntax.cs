@@ -75,7 +75,7 @@ internal class EvaluatedSyntax
         }
         else if (syntaxNode is IdentifierNameSyntax identifierNameSyntax)
         {
-            var rfv = new RecursiveVariableFinder(stateForUnqualifiedRightSide);
+                            var rfv = new RecursiveVariableFinder(stateForUnqualifiedRightSide);
 
             var value = rfv.GetValue(identifierNameSyntax.ToString());
 
@@ -296,6 +296,16 @@ internal class EvaluatedSyntax
 
 
         return lineOfText;
+    }
+
+    public static string ConvertToSlashSyntax(string cSharp)
+    {
+        var convertedText = cSharp.Replace('\u1234', '/')
+            .Replace("global::Components.", "Components/")
+            .Replace("global::Screens.", "Screens/")
+            .Replace("global::Standards.", "Standards/");
+
+        return convertedText;
     }
 
     public static void ConvertGlobalToElementNameWithSlashes(string rightSideToEvaluate, out string elementName, out string elementType)

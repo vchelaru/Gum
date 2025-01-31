@@ -67,7 +67,7 @@ public class MainVariableGridPlugin : InternalPlugin
         {
             var evaluatedSyntax = EvaluatedSyntax.FromSyntaxNode(syntax, stateSave);
 
-            if(evaluatedSyntax.CastTo(desiredType))
+            if(evaluatedSyntax?.CastTo(desiredType) == true)
             {
                 return evaluatedSyntax?.Value;
             }
