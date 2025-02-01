@@ -44,19 +44,19 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>Bar.Width Units</Name>
+      <Name>Bar.WidthUnits</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>Bar.X Origin</Name>
+      <Name>Bar.XOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>Bar.X Units</Name>
+      <Name>Bar.XUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -74,7 +74,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>BarContainer.Height Units</Name>
+      <Name>BarContainer.HeightUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -92,31 +92,31 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>BarContainer.Width Units</Name>
+      <Name>BarContainer.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>BarContainer.X Origin</Name>
+      <Name>BarContainer.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>BarContainer.X Units</Name>
+      <Name>BarContainer.XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>BarContainer.Y Origin</Name>
+      <Name>BarContainer.YOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>BarContainer.Y Units</Name>
+      <Name>BarContainer.YUnits</Name>
       <Value xsi:type="xsd:int">7</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -138,7 +138,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>CautionLinesInstance.Height Units</Name>
+      <Name>CautionLinesInstance.HeightUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -174,7 +174,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>CautionLinesInstance.Width Units</Name>
+      <Name>CautionLinesInstance.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -211,7 +211,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>VerticalLinesInstance.Height Units</Name>
+      <Name>VerticalLinesInstance.HeightUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -247,7 +247,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>VerticalLinesInstance.Width Units</Name>
+      <Name>VerticalLinesInstance.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>

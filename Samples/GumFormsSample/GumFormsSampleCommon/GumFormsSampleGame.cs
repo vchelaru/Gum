@@ -52,7 +52,7 @@ public class GumFormsSampleGame : Game
         var gumProject = GumService.Default.Initialize(_graphics.GraphicsDevice, "FormsGumProject/GumProject.gumx");
         FormsUtilities.Cursor.TransformMatrix = Matrix.CreateScale(1/scale);
 
-        const int screenNumber = 1;
+        const int screenNumber = 0;
 
         switch (screenNumber)
         {

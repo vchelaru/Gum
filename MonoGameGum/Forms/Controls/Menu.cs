@@ -5,6 +5,8 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Collections.ObjectModel;
+
 
 #if FRB
 using FlatRedBall.Input;
@@ -20,7 +22,22 @@ namespace MonoGameGum.Forms.Controls;
 public class Menu : ItemsControl
 {
     public const string MenuCategoryState = "MenuCategoryState";
+
     protected List<MenuItem> MenuItemsInternal = new List<MenuItem>();
+
+    ReadOnlyCollection<MenuItem> menuItemsReadOnly;
+
+    public ReadOnlyCollection<MenuItem> MenuItems
+    {
+        get
+        {
+            if (menuItemsReadOnly == null)
+            {
+                menuItemsReadOnly = new ReadOnlyCollection<MenuItem>(MenuItemsInternal);
+            }
+            return menuItemsReadOnly;
+        }
+    }
 
     public Menu() : base()
     {
@@ -58,12 +75,14 @@ public class Menu : ItemsControl
         //base.UpdateVerticalScrollBarValues();
     }
 
+    #region Item Creation
+
     protected override FrameworkElement CreateNewItemFrameworkElement(object o)
     {
         MenuItem menuItem;
         if(o is MenuItem)
         {
-            menuItem = o as MenuItem;
+            menuItem = (MenuItem)o;
         }
         else
         {
@@ -95,6 +114,8 @@ public class Menu : ItemsControl
 
         InteractiveGue.AddNextPushAction(HandleNextPush);
     }
+
+    #endregion
 
     private void HandleNextPush()
     {
@@ -153,11 +174,15 @@ public class Menu : ItemsControl
         }
     }
 
+    #region Collection Changed
+
     protected override void HandleCollectionNewItemCreated(FrameworkElement newItem, int newItemIndex)
     {
         if (newItem is MenuItem menuItem)
         {
             MenuItemsInternal.Insert(newItemIndex, menuItem);
+
+            // todo - look at AssignListBoxEvents to see how this could be improved so events don't get added 2x
             menuItem.Selected += HandleItemSelected;
         }
     }
@@ -187,6 +212,7 @@ public class Menu : ItemsControl
     //    }
     //}
 
+
     protected override void HandleCollectionItemRemoved(int inexToRemoveFrom)
     {
         MenuItemsInternal.RemoveAt(inexToRemoveFrom);
@@ -201,5 +227,7 @@ public class Menu : ItemsControl
     {
         MenuItemsInternal[index].UpdateToObject(Items[index]);
     }
+
+    #endregion
 
 }

@@ -29,7 +29,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>AudioSettingsButton.Width Units</Name>
+      <Name>AudioSettingsButton.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -71,7 +71,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>Background1.Height Units</Name>
+      <Name>Background1.HeightUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -95,7 +95,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>Background1.Width Units</Name>
+      <Name>Background1.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -107,13 +107,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>Background1.X Origin</Name>
+      <Name>Background1.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>Background1.X Units</Name>
+      <Name>Background1.XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -125,13 +125,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>Background1.Y Origin</Name>
+      <Name>Background1.YOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>Background1.Y Units</Name>
+      <Name>Background1.YUnits</Name>
       <Value xsi:type="xsd:int">7</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -167,13 +167,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>BindingButton.X Origin</Name>
+      <Name>BindingButton.XOrigin</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>BindingButton.X Units</Name>
+      <Name>BindingButton.XUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -185,13 +185,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>BindingButton.Y Origin</Name>
+      <Name>BindingButton.YOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>BindingButton.Y Units</Name>
+      <Name>BindingButton.YUnits</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -233,13 +233,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>ButtonCloseInstance.X Origin</Name>
+      <Name>ButtonCloseInstance.XOrigin</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>ButtonCloseInstance.X Units</Name>
+      <Name>ButtonCloseInstance.XUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -251,13 +251,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>ButtonCloseInstance1.X Origin</Name>
+      <Name>ButtonCloseInstance1.XOrigin</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>ButtonCloseInstance1.X Units</Name>
+      <Name>ButtonCloseInstance1.XUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -269,13 +269,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>ButtonCloseInstance2.X Origin</Name>
+      <Name>ButtonCloseInstance2.XOrigin</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>ButtonCloseInstance2.X Units</Name>
+      <Name>ButtonCloseInstance2.XUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -287,13 +287,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>ButtonConfirmInstance.X Origin</Name>
+      <Name>ButtonConfirmInstance.XOrigin</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>ButtonConfirmInstance.X Units</Name>
+      <Name>ButtonConfirmInstance.XUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -311,13 +311,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>ButtonConfirmInstance1.X Origin</Name>
+      <Name>ButtonConfirmInstance1.XOrigin</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>ButtonConfirmInstance1.X Units</Name>
+      <Name>ButtonConfirmInstance1.XUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -329,13 +329,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>ButtonConfirmInstance1.Y Origin</Name>
+      <Name>ButtonConfirmInstance1.YOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>ButtonConfirmInstance1.Y Units</Name>
+      <Name>ButtonConfirmInstance1.YUnits</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -359,7 +359,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>ButtonContainer.Width Units</Name>
+      <Name>ButtonContainer.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -401,13 +401,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>ButtonWithNoEvents.X Origin</Name>
+      <Name>ButtonWithNoEvents.XOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>ButtonWithNoEvents.X Units</Name>
+      <Name>ButtonWithNoEvents.XUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -419,13 +419,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>ButtonWithNoEvents.Y Origin</Name>
+      <Name>ButtonWithNoEvents.YOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>ButtonWithNoEvents.Y Units</Name>
+      <Name>ButtonWithNoEvents.YUnits</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -443,13 +443,13 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>ComboBoxInstance.Width Units</Name>
+      <Name>ComboBoxInstance.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>ChildrenLayout</Type>
-      <Name>ContainerInstance.Children Layout</Name>
+      <Name>ContainerInstance.ChildrenLayout</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -461,7 +461,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>ContainerInstance.Height Units</Name>
+      <Name>ContainerInstance.HeightUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -479,7 +479,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>ContainerInstance.Width Units</Name>
+      <Name>ContainerInstance.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -491,13 +491,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>ContainerInstance.X Origin</Name>
+      <Name>ContainerInstance.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>ContainerInstance.X Units</Name>
+      <Name>ContainerInstance.XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -509,13 +509,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>ContainerInstance.Y Origin</Name>
+      <Name>ContainerInstance.YOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>ContainerInstance.Y Units</Name>
+      <Name>ContainerInstance.YUnits</Name>
       <Value xsi:type="xsd:int">7</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -539,7 +539,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>ContainerInstance1.Width Units</Name>
+      <Name>ContainerInstance1.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -551,13 +551,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>ContainerInstance1.X Origin</Name>
+      <Name>ContainerInstance1.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>ContainerInstance1.X Units</Name>
+      <Name>ContainerInstance1.XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -569,7 +569,7 @@
     </Variable>
     <Variable>
       <Type>ChildrenLayout</Type>
-      <Name>ContainerInstance2.Children Layout</Name>
+      <Name>ContainerInstance2.ChildrenLayout</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -581,7 +581,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>ContainerInstance2.Height Units</Name>
+      <Name>ContainerInstance2.HeightUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -599,7 +599,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>ContainerInstance2.Width Units</Name>
+      <Name>ContainerInstance2.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -611,13 +611,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>ContainerInstance2.X Origin</Name>
+      <Name>ContainerInstance2.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>ContainerInstance2.X Units</Name>
+      <Name>ContainerInstance2.XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -635,7 +635,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>ContainerInstance3.Height Units</Name>
+      <Name>ContainerInstance3.HeightUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -653,7 +653,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>ContainerInstance3.Width Units</Name>
+      <Name>ContainerInstance3.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -665,13 +665,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>ContainerInstance3.X Origin</Name>
+      <Name>ContainerInstance3.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>ContainerInstance3.X Units</Name>
+      <Name>ContainerInstance3.XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -719,7 +719,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>CreditsButton.Width Units</Name>
+      <Name>CreditsButton.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -767,7 +767,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>DemoHud.Height Units</Name>
+      <Name>DemoHud.HeightUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -785,7 +785,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>DemoHud.Width Units</Name>
+      <Name>DemoHud.WidthUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -797,13 +797,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>DemoHud.X Origin</Name>
+      <Name>DemoHud.XOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>DemoHud.X Units</Name>
+      <Name>DemoHud.XUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -815,13 +815,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>DemoHud.Y Origin</Name>
+      <Name>DemoHud.YOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>DemoHud.Y Units</Name>
+      <Name>DemoHud.YUnits</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -833,7 +833,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>DemoSettingsMenu.Height Units</Name>
+      <Name>DemoSettingsMenu.HeightUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -911,13 +911,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>DetectResolutionsButton.X Origin</Name>
+      <Name>DetectResolutionsButton.XOrigin</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>DetectResolutionsButton.X Units</Name>
+      <Name>DetectResolutionsButton.XUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -929,13 +929,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>DetectResolutionsButton.Y Origin</Name>
+      <Name>DetectResolutionsButton.YOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>DetectResolutionsButton.Y Units</Name>
+      <Name>DetectResolutionsButton.YUnits</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -983,31 +983,31 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>DividerInstance.Width Units</Name>
+      <Name>DividerInstance.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>DividerInstance.X Origin</Name>
+      <Name>DividerInstance.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>DividerInstance.X Units</Name>
+      <Name>DividerInstance.XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>DividerInstance.Y Origin</Name>
+      <Name>DividerInstance.YOrigin</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>DividerInstance.Y Units</Name>
+      <Name>DividerInstance.YUnits</Name>
       <Value xsi:type="xsd:int">5</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1025,7 +1025,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>DividerInstance1.Width Units</Name>
+      <Name>DividerInstance1.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1049,7 +1049,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>DividerInstance2.Width Units</Name>
+      <Name>DividerInstance2.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1073,7 +1073,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>DividerInstance3.Width Units</Name>
+      <Name>DividerInstance3.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1097,31 +1097,31 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>DividerInstance4.Width Units</Name>
+      <Name>DividerInstance4.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>DividerInstance4.X Origin</Name>
+      <Name>DividerInstance4.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>DividerInstance4.X Units</Name>
+      <Name>DividerInstance4.XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>DividerInstance4.Y Origin</Name>
+      <Name>DividerInstance4.YOrigin</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>DividerInstance4.Y Units</Name>
+      <Name>DividerInstance4.YUnits</Name>
       <Value xsi:type="xsd:int">5</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1139,31 +1139,31 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>DividerInstance5.Width Units</Name>
+      <Name>DividerInstance5.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>DividerInstance5.X Origin</Name>
+      <Name>DividerInstance5.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>DividerInstance5.X Units</Name>
+      <Name>DividerInstance5.XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>DividerInstance5.Y Origin</Name>
+      <Name>DividerInstance5.YOrigin</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>DividerInstance5.Y Units</Name>
+      <Name>DividerInstance5.YUnits</Name>
       <Value xsi:type="xsd:int">5</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1193,7 +1193,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>ExitButton.Width Units</Name>
+      <Name>ExitButton.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1223,13 +1223,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>FullScreenCheckbox.X Origin</Name>
+      <Name>FullScreenCheckbox.XOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>FullScreenCheckbox.X Units</Name>
+      <Name>FullScreenCheckbox.XUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1241,13 +1241,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>FullScreenCheckbox.Y Origin</Name>
+      <Name>FullScreenCheckbox.YOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>FullScreenCheckbox.Y Units</Name>
+      <Name>FullScreenCheckbox.YUnits</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1277,7 +1277,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>GamepadRadioButton.Width Units</Name>
+      <Name>GamepadRadioButton.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1325,7 +1325,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>HitpointsBar1.Width Units</Name>
+      <Name>HitpointsBar1.WidthUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1379,7 +1379,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>HitpointsBar2.Width Units</Name>
+      <Name>HitpointsBar2.WidthUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1433,7 +1433,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>HitpointsBar3.Width Units</Name>
+      <Name>HitpointsBar3.WidthUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1488,7 +1488,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>KeyboardRadioButton.Width Units</Name>
+      <Name>KeyboardRadioButton.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1512,7 +1512,7 @@
     </Variable>
     <Variable>
       <Type>ChildrenLayout</Type>
-      <Name>ListContainer.Children Layout</Name>
+      <Name>ListContainer.ChildrenLayout</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1524,7 +1524,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>ListContainer.Height Units</Name>
+      <Name>ListContainer.HeightUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1542,7 +1542,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>ListContainer.Width Units</Name>
+      <Name>ListContainer.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1554,13 +1554,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>ListContainer.X Origin</Name>
+      <Name>ListContainer.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>ListContainer.X Units</Name>
+      <Name>ListContainer.XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1572,19 +1572,19 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>ListContainer.Y Origin</Name>
+      <Name>ListContainer.YOrigin</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>ListContainer.Y Units</Name>
+      <Name>ListContainer.YUnits</Name>
       <Value xsi:type="xsd:int">5</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>ChildrenLayout</Type>
-      <Name>MarginContainer.Children Layout</Name>
+      <Name>MarginContainer.ChildrenLayout</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1596,7 +1596,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>MarginContainer.Height Units</Name>
+      <Name>MarginContainer.HeightUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1614,7 +1614,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>MarginContainer.Width Units</Name>
+      <Name>MarginContainer.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1626,13 +1626,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>MarginContainer.X Origin</Name>
+      <Name>MarginContainer.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>MarginContainer.X Units</Name>
+      <Name>MarginContainer.XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1644,13 +1644,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>MarginContainer.Y Origin</Name>
+      <Name>MarginContainer.YOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>MarginContainer.Y Units</Name>
+      <Name>MarginContainer.YUnits</Name>
       <Value xsi:type="xsd:int">7</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1661,8 +1661,200 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>string</Type>
+      <Name>MenuItemInstance.Header</Name>
+      <Value xsi:type="xsd:string">File</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>MenuItemInstance.Parent</Name>
+      <Value xsi:type="xsd:string">MenuInstance.InnerPanelInstance</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>MenuItemInstance.X</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HorizontalAlignment</Type>
+      <Name>MenuItemInstance.XOrigin</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>PositionUnitType</Type>
+      <Name>MenuItemInstance.XUnits</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>MenuItemInstance.Y</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>VerticalAlignment</Type>
+      <Name>MenuItemInstance.YOrigin</Name>
+      <Value xsi:type="xsd:int">1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>PositionUnitType</Type>
+      <Name>MenuItemInstance.YUnits</Name>
+      <Value xsi:type="xsd:int">7</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>MenuItemInstance1.Header</Name>
+      <Value xsi:type="xsd:string">Edit</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>MenuItemInstance1.Parent</Name>
+      <Value xsi:type="xsd:string">MenuInstance.InnerPanelInstance</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>MenuItemInstance1.X</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HorizontalAlignment</Type>
+      <Name>MenuItemInstance1.XOrigin</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>PositionUnitType</Type>
+      <Name>MenuItemInstance1.XUnits</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>MenuItemInstance1.Y</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>VerticalAlignment</Type>
+      <Name>MenuItemInstance1.YOrigin</Name>
+      <Value xsi:type="xsd:int">1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>PositionUnitType</Type>
+      <Name>MenuItemInstance1.YUnits</Name>
+      <Value xsi:type="xsd:int">7</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>MenuItemInstance2.Header</Name>
+      <Value xsi:type="xsd:string">View</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>MenuItemInstance2.Parent</Name>
+      <Value xsi:type="xsd:string">MenuInstance.InnerPanelInstance</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>MenuItemInstance2.X</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HorizontalAlignment</Type>
+      <Name>MenuItemInstance2.XOrigin</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>PositionUnitType</Type>
+      <Name>MenuItemInstance2.XUnits</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>MenuItemInstance2.Y</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>VerticalAlignment</Type>
+      <Name>MenuItemInstance2.YOrigin</Name>
+      <Value xsi:type="xsd:int">1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>PositionUnitType</Type>
+      <Name>MenuItemInstance2.YUnits</Name>
+      <Value xsi:type="xsd:int">7</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>MenuItemInstance3.Header</Name>
+      <Value xsi:type="xsd:string">Help</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>MenuItemInstance3.Parent</Name>
+      <Value xsi:type="xsd:string">MenuInstance.InnerPanelInstance</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>MenuItemInstance3.X</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HorizontalAlignment</Type>
+      <Name>MenuItemInstance3.XOrigin</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>PositionUnitType</Type>
+      <Name>MenuItemInstance3.XUnits</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>MenuItemInstance3.Y</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>VerticalAlignment</Type>
+      <Name>MenuItemInstance3.YOrigin</Name>
+      <Value xsi:type="xsd:int">1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>PositionUnitType</Type>
+      <Name>MenuItemInstance3.YUnits</Name>
+      <Value xsi:type="xsd:int">7</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>ChildrenLayout</Type>
-      <Name>MenuItems.Children Layout</Name>
+      <Name>MenuItems.ChildrenLayout</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1674,7 +1866,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>MenuItems.Height Units</Name>
+      <Name>MenuItems.HeightUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1692,7 +1884,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>MenuItems.Width Units</Name>
+      <Name>MenuItems.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1704,13 +1896,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>MenuItems.X Origin</Name>
+      <Name>MenuItems.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>MenuItems.X Units</Name>
+      <Name>MenuItems.XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1722,13 +1914,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>MenuItems.Y Origin</Name>
+      <Name>MenuItems.YOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>MenuItems.Y Units</Name>
+      <Name>MenuItems.YUnits</Name>
       <Value xsi:type="xsd:int">7</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1740,7 +1932,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>MenuTitle.Height Units</Name>
+      <Name>MenuTitle.HeightUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1758,7 +1950,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>MenuTitle.Width Units</Name>
+      <Name>MenuTitle.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1770,7 +1962,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>MenuTitle1.Height Units</Name>
+      <Name>MenuTitle1.HeightUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1788,7 +1980,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>MenuTitle1.Width Units</Name>
+      <Name>MenuTitle1.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1800,7 +1992,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>MenuTitle2.Height Units</Name>
+      <Name>MenuTitle2.HeightUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1818,7 +2010,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>MenuTitle2.Width Units</Name>
+      <Name>MenuTitle2.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1854,7 +2046,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>MusicSlider.Width Units</Name>
+      <Name>MusicSlider.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1872,7 +2064,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>PercentBarInstance.Width Units</Name>
+      <Name>PercentBarInstance.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1908,7 +2100,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>PercentBarInstance1.Width Units</Name>
+      <Name>PercentBarInstance1.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1944,7 +2136,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>PercentBarInstance2.Width Units</Name>
+      <Name>PercentBarInstance2.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1974,7 +2166,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>PercentBarInstance3.Width Units</Name>
+      <Name>PercentBarInstance3.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -2010,7 +2202,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>PercentBarInstance4.Width Units</Name>
+      <Name>PercentBarInstance4.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -2040,7 +2232,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>PercentBarInstance5.Width Units</Name>
+      <Name>PercentBarInstance5.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -2076,7 +2268,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>PlayButton.Width Units</Name>
+      <Name>PlayButton.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -2100,7 +2292,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>ResolutionBox.Width Units</Name>
+      <Name>ResolutionBox.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -2141,13 +2333,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>ShowDialogButton.X Origin</Name>
+      <Name>ShowDialogButton.XOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>ShowDialogButton.X Units</Name>
+      <Name>ShowDialogButton.XUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -2159,13 +2351,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>ShowDialogButton.Y Origin</Name>
+      <Name>ShowDialogButton.YOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>ShowDialogButton.Y Units</Name>
+      <Name>ShowDialogButton.YUnits</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -2194,13 +2386,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>ShowToastButton.X Origin</Name>
+      <Name>ShowToastButton.XOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>ShowToastButton.X Units</Name>
+      <Name>ShowToastButton.XUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -2212,13 +2404,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>ShowToastButton.Y Origin</Name>
+      <Name>ShowToastButton.YOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>ShowToastButton.Y Units</Name>
+      <Name>ShowToastButton.YUnits</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -2248,7 +2440,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>SoundSlider.Width Units</Name>
+      <Name>SoundSlider.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -2272,13 +2464,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>Tab1.X Origin</Name>
+      <Name>Tab1.XOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>Tab1.X Units</Name>
+      <Name>Tab1.XUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -2308,13 +2500,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>Tab2.X Origin</Name>
+      <Name>Tab2.XOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>Tab2.X Units</Name>
+      <Name>Tab2.XUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -2344,13 +2536,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>Tab3.X Origin</Name>
+      <Name>Tab3.XOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>Tab3.X Units</Name>
+      <Name>Tab3.XUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -2374,7 +2566,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>TabHeaderDivider.Width Units</Name>
+      <Name>TabHeaderDivider.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -2398,7 +2590,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>TabMarginContainer.Height Units</Name>
+      <Name>TabMarginContainer.HeightUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -2416,7 +2608,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>TabMarginContainer.Width Units</Name>
+      <Name>TabMarginContainer.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -2428,13 +2620,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>TabMarginContainer.X Origin</Name>
+      <Name>TabMarginContainer.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>TabMarginContainer.X Units</Name>
+      <Name>TabMarginContainer.XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -2446,13 +2638,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>TabMarginContainer.Y Origin</Name>
+      <Name>TabMarginContainer.YOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>TabMarginContainer.Y Units</Name>
+      <Name>TabMarginContainer.YUnits</Name>
       <Value xsi:type="xsd:int">7</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -2482,13 +2674,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>TabMenuClose.X Origin</Name>
+      <Name>TabMenuClose.XOrigin</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>TabMenuClose.X Units</Name>
+      <Name>TabMenuClose.XUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -2506,7 +2698,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>TextBoxInstance.Width Units</Name>
+      <Name>TextBoxInstance.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -2524,7 +2716,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>TextBoxInstance1.Width Units</Name>
+      <Name>TextBoxInstance1.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -2638,7 +2830,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>TouchScreenRadioButton.Width Units</Name>
+      <Name>TouchScreenRadioButton.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -2698,7 +2890,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>VideoSettingsButton.Width Units</Name>
+      <Name>VideoSettingsButton.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -3097,6 +3289,26 @@
   <Instance>
     <Name>ContainerInstance2</Name>
     <BaseType>Container</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>MenuItemInstance</Name>
+    <BaseType>Controls/MenuItem</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>MenuItemInstance1</Name>
+    <BaseType>Controls/MenuItem</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>MenuItemInstance2</Name>
+    <BaseType>Controls/MenuItem</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>MenuItemInstance3</Name>
+    <BaseType>Controls/MenuItem</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Behaviors />

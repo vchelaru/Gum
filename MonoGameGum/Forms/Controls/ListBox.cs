@@ -44,6 +44,8 @@ public enum ScrollIntoViewStyle
 
 #if !FRB
 
+#region RepositionDirections Enum
+
 public enum RepositionDirections
 {
     None = 0,
@@ -53,6 +55,8 @@ public enum RepositionDirections
     Right = 8,
     All = 15,
 }
+
+#endregion
 
 #endif
 
@@ -330,20 +334,15 @@ public class ListBox : ItemsControl, IInputReceiver
         if (o is ListBoxItem)
         {
             // the user provided a list box item, so just use that directly instead of creating a new one
-            item = o as ListBoxItem;
+            item = (ListBoxItem)o;
         }
         else
         {
             var visual = CreateNewVisual(o);
-
             item = CreateNewListBoxItem(visual);
-
             item.UpdateToObject(o);
-
             item.BindingContext = o;
-
         }
-
 
         return item;
     }

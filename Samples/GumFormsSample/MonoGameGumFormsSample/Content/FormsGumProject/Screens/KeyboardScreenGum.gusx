@@ -24,7 +24,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>KeyboardInstance.Height Units</Name>
+      <Name>KeyboardInstance.HeightUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -36,7 +36,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>KeyboardInstance.Width Units</Name>
+      <Name>KeyboardInstance.WidthUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -48,13 +48,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>KeyboardInstance.X Origin</Name>
+      <Name>KeyboardInstance.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>KeyboardInstance.X Units</Name>
+      <Name>KeyboardInstance.XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -66,13 +66,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>KeyboardInstance.Y Origin</Name>
+      <Name>KeyboardInstance.YOrigin</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>KeyboardInstance.Y Units</Name>
+      <Name>KeyboardInstance.YUnits</Name>
       <Value xsi:type="xsd:int">5</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -90,13 +90,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>TextBoxInstance.X Origin</Name>
+      <Name>TextBoxInstance.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>TextBoxInstance.X Units</Name>
+      <Name>TextBoxInstance.XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -108,13 +108,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>TextBoxInstance.Y Origin</Name>
+      <Name>TextBoxInstance.YOrigin</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>TextBoxInstance.Y Units</Name>
+      <Name>TextBoxInstance.YUnits</Name>
       <Value xsi:type="xsd:int">5</Value>
       <SetsValue>true</SetsValue>
     </Variable>

@@ -61,17 +61,7 @@ public class DemoScreenGumRuntime : BindableGue
             nameof(RadioButton.IsChecked),
             nameof(viewModel.IsTouchscreenChecked));
 
-        var menu = this.GetFrameworkElementByName<Menu>("MenuInstance");
-        var fileMenuItem = new MenuItem();
-        fileMenuItem.Header = "File";
-        fileMenuItem.Items.Add("New");
-        fileMenuItem.Items.Add("Save");
-        fileMenuItem.Items.Add("Exit");
-        menu.Items.Add(fileMenuItem);
-
-
-        menu.Items.Add("Edit");
-        menu.Items.Add("Help");
+        InitializeMenuItem();
 
         detectResolutionButton = this.GetFrameworkElementByName<Button>("DetectResolutionsButton");
 
@@ -91,6 +81,35 @@ public class DemoScreenGumRuntime : BindableGue
             FrameworkElement.GamePadsForUiControl.Add(gamepad);
             detectResolutionButton.IsFocused = true;
         }
+
+
+    }
+
+    private void InitializeMenuItem()
+    {
+        var menu = this.GetFrameworkElementByName<Menu>("MenuInstance");
+
+        var fileMenuItem = menu.MenuItems.FirstOrDefault(item => item.Header == "File");
+
+        //var fileMenuItem = new MenuItem();
+        //fileMenuItem.Header = "File";
+        //menu.Items.Add(fileMenuItem);
+
+        //var menuItem = new MenuItem
+
+        var menuItemElement = ObjectFinder.Self.GetElementSave("Controls/MenuItem");
+        var newMenuItem = new MenuItem((InteractiveGue)menuItemElement.ToGraphicalUiElement(this.EffectiveManagers, addToManagers:false));
+        newMenuItem.Header = "New";
+        fileMenuItem.Items.Add(newMenuItem);
+
+        var saveMenuItem = new MenuItem((InteractiveGue)menuItemElement.ToGraphicalUiElement(this.EffectiveManagers, addToManagers: false));
+        saveMenuItem.Header = "Save";
+        fileMenuItem.Items.Add(saveMenuItem);
+
+
+        var exitMenuItem = new MenuItem((InteractiveGue)menuItemElement.ToGraphicalUiElement(this.EffectiveManagers, addToManagers: false));
+        exitMenuItem.Header = "Exit";
+        fileMenuItem.Items.Add(exitMenuItem);
 
 
     }
