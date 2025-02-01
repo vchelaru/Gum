@@ -479,8 +479,10 @@ namespace Gum.PropertyGridHelpers
             StateSave defaultState;
             GetDefaultState(instanceSave, out elementSave, out defaultState);
 
-            FillPropertyList(pdc, elementSave, instanceSave, defaultState, AmountToDisplay.ElementAndExposedOnly);
-
+            if(elementSave != null)
+            {
+                FillPropertyList(pdc, elementSave, instanceSave, defaultState, AmountToDisplay.ElementAndExposedOnly);
+            }
         }
 
         private static void GetDefaultState(InstanceSave instanceSave, out ElementSave elementSave, out StateSave defaultState)
