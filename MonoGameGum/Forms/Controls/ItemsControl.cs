@@ -42,6 +42,25 @@ public class ItemsControl : ScrollViewer
     }
 
     IList items;
+    /// <summary>
+    /// The items contained by this ItemsControl. This can contain regular
+    /// data such as strings, instances of ViewModels, or FrameworkElement instances
+    /// such as ListBoxItem instances.
+    /// 
+    /// Typically the Items is assigned or bound to an ObservableCollection. In this case
+    /// the ItemsControl automatically creates FrameworkElements (such as ListBoxItem instances)
+    /// in response to items being added or removed from the Items list.
+    /// </summary>
+    /// <remarks>
+    /// The Items list is not guaranteed to reflect the items contained in the ItemsControl
+    /// if Visual elements have been added directly to the InnerPanel. This can happen if the
+    /// Visual's InnerPanel's Children are directly added to, or if an instance of an ItemsControl,
+    /// such as a ListBox, is loaded from the Gum tool pre-filled with ListBoxItems. 
+    /// 
+    /// If items are not added directly to the InnerPanel, then the Items list and the internal InnerPanel
+    /// Children will remain in sync since the ItemsControl automatically creates FrameworkElement instances
+    /// in response to the Items.
+    /// </remarks>
     public IList Items
     {
         get => items;

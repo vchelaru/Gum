@@ -98,6 +98,19 @@ public class ListBoxItem : FrameworkElement
 
     #region Event Handlers
 
+    bool hasHadListBoxEventsAssigned = false;
+    internal void AssignListBoxEvents(EventHandler handleItemSelected, EventHandler handleItemFocused, EventHandler handleListBoxItemPushed, EventHandler handleListBoxItemClicked)
+    {
+        if(!hasHadListBoxEventsAssigned)
+        {
+            Selected += handleItemSelected;
+            GotFocus += handleItemFocused;
+            Pushed += handleListBoxItemPushed;
+            Clicked += handleListBoxItemClicked;
+            hasHadListBoxEventsAssigned = true;
+        }
+    }
+
     private void HandleRollOn(object sender, EventArgs args)
     {
         var cursor = MainCursor;

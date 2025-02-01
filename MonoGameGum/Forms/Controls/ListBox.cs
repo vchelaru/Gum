@@ -145,14 +145,21 @@ public class ListBox : ItemsControl, IInputReceiver
     {
         get
         {
-            if (selectedIndex > -1 && selectedIndex < Items.Count)
+            if (selectedIndex > -1)
             {
-                return Items[selectedIndex];
+                if(Items.Count == 0 && SelectedIndex < ListBoxItems.Count)
+                {
+                    // This could be a ListBox with only 
+                    // backing visuals and not Items
+                    return ListBoxItems[selectedIndex];
+                }
+                else if(selectedIndex < Items.Count)
+                {
+                    return Items[selectedIndex];
+                }
             }
-            else
-            {
-                return null;
-            }
+
+            return null;
         }
         set
         {
@@ -294,6 +301,22 @@ public class ListBox : ItemsControl, IInputReceiver
                 "with name InnerPanelInstance. This is a requirement ";
             throw new InvalidOperationException(message);
         }
+
+        if (InnerPanel.Children.Count > 0 && this.Items?.Count > 0 == false)
+        {
+            foreach(var item in InnerPanel.Children)
+            {
+                if(item is InteractiveGue interactiveGue && interactiveGue.FormsControlAsObject is ListBoxItem listBoxItem)
+                {
+                    this.Items.Add(item as ListBoxItem);
+                    if(this.Items is not INotifyCollectionChanged )
+                    {
+                        ListBoxItemsInternal.Add(listBoxItem);
+                        listBoxItem.AssignListBoxEvents(HandleItemSelected, HandleItemFocused, HandleListBoxItemPushed, HandleListBoxItemClicked);
+                    }
+                }
+            }
+        }
     }
 
     #endregion
@@ -320,12 +343,7 @@ public class ListBox : ItemsControl, IInputReceiver
             item.BindingContext = o;
 
         }
-        // If the iuser added a ListBoxItem as a parameter,
-        // let's hope the item doesn't already have this event - if the user recycles them that could be a problem...
-        item.Selected += HandleItemSelected;
-        item.GotFocus += HandleItemFocused;
-        item.Pushed += HandleListBoxItemPushed;
-        item.Clicked += HandleListBoxItemClicked;
+
 
         return item;
     }
@@ -385,19 +403,27 @@ public class ListBox : ItemsControl, IInputReceiver
 
         for (int i = 0; i < ListBoxItemsInternal.Count; i++)
         {
-            var listBoxItem = ListBoxItemsInternal[i];
-            if (listBoxItem != sender && listBoxItem.IsSelected)
+            var listBoxItemAtI = ListBoxItemsInternal[i];
+            if (listBoxItemAtI != sender && listBoxItemAtI.IsSelected)
             {
-                var deselectedItem = listBoxItem.BindingContext ?? listBoxItem;
+                var deselectedItem = listBoxItemAtI.BindingContext ?? listBoxItemAtI;
                 args.RemovedItems.Add(deselectedItem);
-                listBoxItem.IsSelected = false;
+                listBoxItemAtI.IsSelected = false;
             }
         }
 
-        selectedIndex = ListBoxItemsInternal.IndexOf(sender as ListBoxItem);
-        if (selectedIndex > -1)
+        var listBoxItem = sender as ListBoxItem;
+        selectedIndex = ListBoxItemsInternal.IndexOf(listBoxItem);
+
+        // Items.Count could be smaller than ListBoxItemsInternal if the ListBoxItems
+        // were added directl on the visual
+        if (selectedIndex > -1 && selectedIndex < Items.Count)
         {
             args.AddedItems.Add(Items[selectedIndex]);
+        }
+        else if(listBoxItem != null)
+        {
+            args.AddedItems.Add(listBoxItem);
         }
 
         SelectionChanged?.Invoke(this, args);
@@ -465,8 +491,11 @@ public class ListBox : ItemsControl, IInputReceiver
         if (newItem is ListBoxItem listBoxItem)
         {
             ListBoxItemsInternal.Insert(newItemIndex, listBoxItem);
+            listBoxItem.AssignListBoxEvents(HandleItemSelected, HandleItemFocused, HandleListBoxItemPushed, HandleListBoxItemClicked);
         }
     }
+
+
 
     protected override void HandleCollectionItemRemoved(int indexToRemoveFrom)
     {
