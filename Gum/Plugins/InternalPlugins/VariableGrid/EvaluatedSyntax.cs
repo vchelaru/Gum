@@ -74,7 +74,7 @@ internal class EvaluatedSyntax
             }
 
         }
-        else if (syntaxNode is IdentifierNameSyntax or CompilationUnitSyntax)
+        else if (syntaxNode is IdentifierNameSyntax or VariableDeclarationSyntax)
         {
             var rfv = new RecursiveVariableFinder(stateForUnqualifiedRightSide);
 
@@ -146,7 +146,7 @@ internal class EvaluatedSyntax
         {
             var childNodes = compilationUnitSyntax.ChildNodes();
 
-            if (childNodes.Count() == 0) return null;
+            if (childNodes?.Count() > 0 != true) return null;
 
             foreach (var item in childNodes)
             {
