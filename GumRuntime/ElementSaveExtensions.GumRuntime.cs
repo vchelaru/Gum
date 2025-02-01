@@ -351,8 +351,8 @@ namespace GumRuntime
                 : instanceLeft.Name + "." + left;
 
             string leftSideType = null;
-            var variableOnState = stateSave.Variables.FirstOrDefault(item => item.Name == leftVariableName);
-            leftSideType = variableOnState?.Type;
+            var leftVariableOnState = stateSave.Variables.FirstOrDefault(item => item.Name == leftVariableName);
+            leftSideType = leftVariableOnState?.Type;
             if (leftSideType == null)
             {
                 var elementOwningInstance = instanceLeft?.ParentContainer ?? stateSave.ParentContainer;

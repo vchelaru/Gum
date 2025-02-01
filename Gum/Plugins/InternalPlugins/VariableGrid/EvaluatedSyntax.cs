@@ -74,11 +74,11 @@ internal class EvaluatedSyntax
             }
 
         }
-        else if (syntaxNode is IdentifierNameSyntax identifierNameSyntax)
+        else if (syntaxNode is IdentifierNameSyntax or CompilationUnitSyntax)
         {
-                            var rfv = new RecursiveVariableFinder(stateForUnqualifiedRightSide);
+            var rfv = new RecursiveVariableFinder(stateForUnqualifiedRightSide);
 
-            var value = rfv.GetValue(identifierNameSyntax.ToString());
+            var value = rfv.GetValue(syntaxNode.ToString());
 
             return FromSyntaxAndValue(syntaxNode, value);
         }

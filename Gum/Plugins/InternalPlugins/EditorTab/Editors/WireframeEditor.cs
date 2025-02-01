@@ -14,6 +14,8 @@ using Matrix = System.Numerics.Matrix4x4;
 using Gum.Managers;
 using System.Collections;
 using System;
+using Gum.PropertyGridHelpers;
+using System.Security.Policy;
 
 namespace Gum.Wireframe
 {
@@ -264,7 +266,7 @@ namespace Gum.Wireframe
 
             GumCommands.Self.FileCommands.TryAutoSaveElement(selectedElement);
 
-            UndoManager.Self.RecordUndo();
+            using var undoLock = UndoManager.Self.RequestLock();
 
             GumCommands.Self.GuiCommands.RefreshVariableValues();
 
@@ -277,7 +279,15 @@ namespace Gum.Wireframe
                 if (DoValuesDiffer(stateSave, possiblyChangedVariable.Name, oldValue))
                 {
                     var instance = element.GetInstance(possiblyChangedVariable.SourceObject);
-                    PluginManager.Self.VariableSet(element, instance, possiblyChangedVariable.GetRootName(), oldValue);
+
+                    // should this be:
+                    SetVariableLogic.Self.PropertyValueChanged(possiblyChangedVariable.GetRootName(), oldValue, 
+                       instance, 
+                       refresh: true,
+                       recordUndo: false,
+                       trySave: false);
+                    // instead of this?
+                    //PluginManager.Self.VariableSet(element, instance, possiblyChangedVariable.GetRootName(), oldValue);
                 }
             }
 
