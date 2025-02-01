@@ -71,7 +71,7 @@ public partial class CustomizableTextInputWindow : Window
         TextBox.SelectAll();
     }
 
-    public void AddControl(Control control, ControlLocation controlLocation = ControlLocation.Below)
+    public void AddControl(FrameworkElement control, ControlLocation controlLocation = ControlLocation.Below)
     {
         if (controlLocation == ControlLocation.Above)
         {
@@ -124,12 +124,12 @@ public partial class CustomizableTextInputWindow : Window
                 e.Handled = true;
                 break;
             default:
-                TextEntered?.Invoke(this, null);
                 break;
         }
     }
 
     private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
     {
+                TextEntered?.Invoke(this, null);
     }
 }

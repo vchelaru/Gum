@@ -12,6 +12,7 @@ using ToolsUtilities;
 using Gum.Logic;
 using Gum.DataTypes.Behaviors;
 using Gum.PropertyGridHelpers;
+using Gum.Controls;
 
 namespace Gum.Managers;
 
@@ -138,39 +139,7 @@ public partial class ElementTreeViewManager
 
     void AddFolderClick(object sender, EventArgs e)
     {
-        TextInputWindow tiw = new TextInputWindow();
-        tiw.Message = "Enter new folder name:";
-        tiw.Title = "Add folder";
-
-        DialogResult result = tiw.ShowDialog();
-
-        if (result == DialogResult.OK)
-        {
-            string folderName = tiw.Result;
-
-            string whyNotValid;
-
-            if (!NameVerifier.Self.IsFolderNameValid(folderName, out whyNotValid))
-            {
-                MessageBox.Show(whyNotValid);
-            }
-            else
-            {
-                TreeNode parentTreeNode = SelectedNode;
-
-                string folder = parentTreeNode.GetFullFilePath() + folderName + "\\";
-
-                // If the path is relative
-                // that means that the root
-                // hasn't been set yet.
-                if (!FileManager.IsRelative(folder))
-                {
-                    System.IO.Directory.CreateDirectory(folder);
-                }
-
-                GumCommands.Self.GuiCommands.RefreshElementTreeView();
-            }
-        }
+        GumCommands.Self.GuiCommands.ShowAddFolderWindow(SelectedNode);
     }
 
 

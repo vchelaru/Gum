@@ -25,6 +25,7 @@ using Gum.Plugins.InternalPlugins.VariableGrid.ViewModels;
 using Microsoft.Extensions.Hosting;
 using Gum.Services;
 using Microsoft.Extensions.DependencyInjection;
+using System.Windows.Media;
 
 namespace Gum.Commands
 {
@@ -436,6 +437,69 @@ namespace Gum.Commands
 
                         }
                     }
+                }
+            }
+        }
+
+        public void ShowAddFolderWindow(TreeNode node)
+        {
+            var tiw = new CustomizableTextInputWindow();
+            tiw.Message = "Enter new folder name:";
+            tiw.Title = "Add folder";
+
+            var errorLabel = new System.Windows.Controls.TextBlock();
+            errorLabel.TextWrapping = System.Windows.TextWrapping.Wrap;
+            tiw.AddControl(errorLabel);
+
+            tiw.TextEntered += (_,_) =>
+            {
+                var text = tiw.Result;
+
+                string whyNotValid;
+                if(!NameVerifier.Self.IsFolderNameValid(text, out whyNotValid))
+                {
+                    errorLabel.Foreground = System.Windows.Media.Brushes.Red;
+                    errorLabel.Text = whyNotValid;
+                }
+                else if(text?.Contains(' ') == true)
+                {
+                    errorLabel.Foreground = System.Windows.Media.Brushes.Orange;
+                    errorLabel.Text = "Folders with spaces are not recommended since they can break variable references";
+                }
+                else
+                {
+                    errorLabel.Text = "";
+                }
+
+            };
+
+            var dialogResult = tiw.ShowDialog();
+
+            if (dialogResult == true)
+            {
+                string folderName = tiw.Result;
+
+                string whyNotValid;
+
+                if (!NameVerifier.Self.IsFolderNameValid(folderName, out whyNotValid))
+                {
+                    MessageBox.Show(whyNotValid);
+                }
+                else
+                {
+                    TreeNode parentTreeNode = node;
+
+                    string folder = parentTreeNode.GetFullFilePath() + folderName + "\\";
+
+                    // If the path is relative
+                    // that means that the root
+                    // hasn't been set yet.
+                    if (!FileManager.IsRelative(folder))
+                    {
+                        System.IO.Directory.CreateDirectory(folder);
+                    }
+
+                    GumCommands.Self.GuiCommands.RefreshElementTreeView();
                 }
             }
         }
