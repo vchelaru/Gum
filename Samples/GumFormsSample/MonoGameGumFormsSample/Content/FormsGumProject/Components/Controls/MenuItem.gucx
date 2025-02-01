@@ -18,7 +18,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>Background.Height Units</Name>
+      <Name>Background.HeightUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -35,7 +35,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>Background.Width Units</Name>
+      <Name>Background.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -47,13 +47,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>Background.X Origin</Name>
+      <Name>Background.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>Background.X Units</Name>
+      <Name>Background.XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -65,13 +65,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>Background.Y Origin</Name>
+      <Name>Background.YOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>Background.Y Units</Name>
+      <Name>Background.YUnits</Name>
       <Value xsi:type="xsd:int">7</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -83,7 +83,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>Height Units</Name>
+      <Name>HeightUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -126,7 +126,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>TextInstance.Height Units</Name>
+      <Name>TextInstance.HeightUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -151,6 +151,7 @@
       <Type>string</Type>
       <Name>TextInstance.Text</Name>
       <Value xsi:type="xsd:string">Menu Item</Value>
+      <ExposedAsName>Header</ExposedAsName>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -167,7 +168,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>TextInstance.Width Units</Name>
+      <Name>TextInstance.WidthUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -179,25 +180,25 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>TextInstance.X Origin</Name>
+      <Name>TextInstance.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>TextInstance.X Units</Name>
+      <Name>TextInstance.XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>TextInstance.Y Origin</Name>
+      <Name>TextInstance.YOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>TextInstance.Y Units</Name>
+      <Name>TextInstance.YUnits</Name>
       <Value xsi:type="xsd:int">7</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -209,7 +210,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>Width Units</Name>
+      <Name>WidthUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -221,13 +222,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>X Origin</Name>
+      <Name>XOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>X Units</Name>
+      <Name>XUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -239,13 +240,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>Y Origin</Name>
+      <Name>YOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>Y Units</Name>
+      <Name>YUnits</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>

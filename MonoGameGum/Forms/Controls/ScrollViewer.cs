@@ -157,6 +157,7 @@ public class ScrollViewer : FrameworkElement
         base.ReactToVisualChanged();
     }
 
+    /// <inheritdoc/>
     protected override void ReactToVisualRemoved()
     {
         if (Visual != null)

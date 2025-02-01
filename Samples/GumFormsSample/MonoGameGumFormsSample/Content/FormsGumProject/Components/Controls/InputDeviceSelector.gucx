@@ -23,7 +23,7 @@
     </Variable>
     <Variable>
       <Type>ChildrenLayout</Type>
-      <Name>ContainerInstance1.Children Layout</Name>
+      <Name>ContainerInstance1.ChildrenLayout</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -41,7 +41,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>ContainerInstance1.Width Units</Name>
+      <Name>ContainerInstance1.WidthUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -53,13 +53,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>ContainerInstance1.X Origin</Name>
+      <Name>ContainerInstance1.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>ContainerInstance1.X Units</Name>
+      <Name>ContainerInstance1.XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -71,19 +71,19 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>ContainerInstance1.Y Origin</Name>
+      <Name>ContainerInstance1.YOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>ContainerInstance1.Y Units</Name>
+      <Name>ContainerInstance1.YUnits</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>ChildrenLayout</Type>
-      <Name>ContainerInstance2.Children Layout</Name>
+      <Name>ContainerInstance2.ChildrenLayout</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -101,7 +101,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>ContainerInstance2.Width Units</Name>
+      <Name>ContainerInstance2.WidthUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -113,13 +113,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>ContainerInstance2.X Origin</Name>
+      <Name>ContainerInstance2.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>ContainerInstance2.X Units</Name>
+      <Name>ContainerInstance2.XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -131,13 +131,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>ContainerInstance2.Y Origin</Name>
+      <Name>ContainerInstance2.YOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>ContainerInstance2.Y Units</Name>
+      <Name>ContainerInstance2.YUnits</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -149,13 +149,13 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>Height Units</Name>
+      <Name>HeightUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>ChildrenLayout</Type>
-      <Name>InputDeviceContainerInstance.Children Layout</Name>
+      <Name>InputDeviceContainerInstance.ChildrenLayout</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -167,7 +167,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>InputDeviceContainerInstance.Height Units</Name>
+      <Name>InputDeviceContainerInstance.HeightUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -185,7 +185,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>InputDeviceContainerInstance.Width Units</Name>
+      <Name>InputDeviceContainerInstance.WidthUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -197,13 +197,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>InputDeviceContainerInstance.X Origin</Name>
+      <Name>InputDeviceContainerInstance.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>InputDeviceContainerInstance.X Units</Name>
+      <Name>InputDeviceContainerInstance.XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -215,13 +215,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>InputDeviceContainerInstance.Y Origin</Name>
+      <Name>InputDeviceContainerInstance.YOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>InputDeviceContainerInstance.Y Units</Name>
+      <Name>InputDeviceContainerInstance.YUnits</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -313,13 +313,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>TextInstance.X Origin</Name>
+      <Name>TextInstance.XOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>TextInstance.X Units</Name>
+      <Name>TextInstance.XUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -331,13 +331,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>TextInstance.Y Origin</Name>
+      <Name>TextInstance.YOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>TextInstance.Y Units</Name>
+      <Name>TextInstance.YUnits</Name>
       <Value xsi:type="xsd:int">7</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -385,13 +385,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>TextInstance1.X Origin</Name>
+      <Name>TextInstance1.XOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>TextInstance1.X Units</Name>
+      <Name>TextInstance1.XUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -403,13 +403,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>TextInstance1.Y Origin</Name>
+      <Name>TextInstance1.YOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>TextInstance1.Y Units</Name>
+      <Name>TextInstance1.YUnits</Name>
       <Value xsi:type="xsd:int">7</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -421,7 +421,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>Width Units</Name>
+      <Name>WidthUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -433,13 +433,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>X Origin</Name>
+      <Name>XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>X Units</Name>
+      <Name>XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -451,13 +451,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>Y Origin</Name>
+      <Name>YOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>Y Units</Name>
+      <Name>YUnits</Name>
       <Value xsi:type="xsd:int">7</Value>
       <SetsValue>true</SetsValue>
     </Variable>

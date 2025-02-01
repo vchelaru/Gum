@@ -20,6 +20,9 @@ using MonoGameGum.Forms.Controls.Primitives;
 namespace MonoGameGum.Forms.Controls;
 #endif
 
+/// <summary>
+/// A control enabling changing a value between the specified Minimum and Maximum
+/// </summary>
 public class Slider : RangeBase, IInputReceiver
 {
     #region Fields/Properties
@@ -99,6 +102,7 @@ public class Slider : RangeBase, IInputReceiver
         UpdateState();
     }
 
+    /// <inheritdoc/>
     protected override void ReactToVisualRemoved()
     {
         base.ReactToVisualRemoved();

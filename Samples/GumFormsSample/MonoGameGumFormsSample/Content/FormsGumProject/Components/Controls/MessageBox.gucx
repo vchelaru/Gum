@@ -26,27 +26,27 @@
     </Variable>
     <Variable>
       <Type>ChildrenLayout</Type>
-      <Name>Children Layout</Name>
+      <Name>ChildrenLayout</Name>
       <Value xsi:type="xsd:int">0</Value>
       <Category>Children</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>bool</Type>
-      <Name>Clips Children</Name>
+      <Name>ClipsChildren</Name>
       <Value xsi:type="xsd:boolean">false</Value>
       <Category>Children</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>Contained Type</Name>
+      <Name>ContainedType</Name>
       <Category>Children</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>ChildrenLayout</Type>
-      <Name>ContainerInstance.Children Layout</Name>
+      <Name>ContainerInstance.ChildrenLayout</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -70,7 +70,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>ContainerInstance.Width Units</Name>
+      <Name>ContainerInstance.WidthUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -82,13 +82,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>ContainerInstance.X Origin</Name>
+      <Name>ContainerInstance.XOrigin</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>ContainerInstance.X Units</Name>
+      <Name>ContainerInstance.XUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -100,13 +100,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>ContainerInstance.Y Origin</Name>
+      <Name>ContainerInstance.YOrigin</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>ContainerInstance.Y Units</Name>
+      <Name>ContainerInstance.YUnits</Name>
       <Value xsi:type="xsd:int">5</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -140,7 +140,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>Height Units</Name>
+      <Name>HeightUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <Category>Dimensions</Category>
       <SetsValue>true</SetsValue>
@@ -185,7 +185,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>LabelInstance.Width Units</Name>
+      <Name>LabelInstance.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -197,13 +197,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>LabelInstance.X Origin</Name>
+      <Name>LabelInstance.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>LabelInstance.X Units</Name>
+      <Name>LabelInstance.XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -215,13 +215,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>LabelInstance.Y Origin</Name>
+      <Name>LabelInstance.YOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>LabelInstance.Y Units</Name>
+      <Name>LabelInstance.YUnits</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -274,14 +274,14 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>Width Units</Name>
+      <Name>WidthUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <Category>Dimensions</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>bool</Type>
-      <Name>Wraps Children</Name>
+      <Name>WrapsChildren</Name>
       <Value xsi:type="xsd:boolean">false</Value>
       <Category>Children</Category>
       <SetsValue>true</SetsValue>
@@ -295,14 +295,14 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>X Origin</Name>
+      <Name>XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <Category>Position</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>X Units</Name>
+      <Name>XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <Category>Position</Category>
       <SetsValue>true</SetsValue>
@@ -316,14 +316,14 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>Y Origin</Name>
+      <Name>YOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <Category>Position</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>Y Units</Name>
+      <Name>YUnits</Name>
       <Value xsi:type="xsd:int">7</Value>
       <Category>Position</Category>
       <SetsValue>true</SetsValue>

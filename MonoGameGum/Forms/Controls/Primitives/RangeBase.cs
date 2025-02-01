@@ -249,7 +249,7 @@ public abstract class RangeBase : FrameworkElement
 
 #endif
 
-
+    /// <inheritdoc/>
     protected override void ReactToVisualRemoved()
     {
         base.ReactToVisualRemoved();

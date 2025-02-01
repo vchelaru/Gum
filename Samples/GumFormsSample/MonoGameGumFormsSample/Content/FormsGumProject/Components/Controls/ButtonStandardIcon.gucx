@@ -18,7 +18,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>Background.Height Units</Name>
+      <Name>Background.HeightUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -41,7 +41,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>Background.Width Units</Name>
+      <Name>Background.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -53,13 +53,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>Background.X Origin</Name>
+      <Name>Background.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>Background.X Units</Name>
+      <Name>Background.XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -71,13 +71,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>Background.Y Origin</Name>
+      <Name>Background.YOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>Background.Y Units</Name>
+      <Name>Background.YUnits</Name>
       <Value xsi:type="xsd:int">7</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -106,7 +106,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>FocusedIndicator.Height Units</Name>
+      <Name>FocusedIndicator.HeightUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -135,13 +135,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>FocusedIndicator.Y Origin</Name>
+      <Name>FocusedIndicator.YOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>FocusedIndicator.Y Units</Name>
+      <Name>FocusedIndicator.YUnits</Name>
       <Value xsi:type="xsd:int">5</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -195,7 +195,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>TextInstance.Height Units</Name>
+      <Name>TextInstance.HeightUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -242,7 +242,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>TextInstance.Width Units</Name>
+      <Name>TextInstance.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>

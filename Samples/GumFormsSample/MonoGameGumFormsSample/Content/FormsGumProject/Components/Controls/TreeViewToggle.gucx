@@ -12,7 +12,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>Height Units</Name>
+      <Name>HeightUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -24,7 +24,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>IconInstance.Height Units</Name>
+      <Name>IconInstance.HeightUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -48,7 +48,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>IconInstance.Width Units</Name>
+      <Name>IconInstance.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -96,7 +96,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>Width Units</Name>
+      <Name>WidthUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -120,13 +120,13 @@
       </Variable>
       <Variable>
         <Type>RenderingLibrary.Graphics.HorizontalAlignment</Type>
-        <Name>IconInstance.X Origin</Name>
+        <Name>IconInstance.XOrigin</Name>
         <Value xsi:type="xsd:int">0</Value>
         <SetsValue>true</SetsValue>
       </Variable>
       <Variable>
         <Type>RenderingLibrary.Graphics.VerticalAlignment</Type>
-        <Name>IconInstance.Y Origin</Name>
+        <Name>IconInstance.YOrigin</Name>
         <Value xsi:type="xsd:int">2</Value>
         <SetsValue>true</SetsValue>
       </Variable>
@@ -155,14 +155,14 @@
       </Variable>
       <Variable>
         <Type>HorizontalAlignment</Type>
-        <Name>IconInstance.X Origin</Name>
+        <Name>IconInstance.XOrigin</Name>
         <Value xsi:type="xsd:int">0</Value>
         <Category>Position</Category>
         <SetsValue>true</SetsValue>
       </Variable>
       <Variable>
         <Type>VerticalAlignment</Type>
-        <Name>IconInstance.Y Origin</Name>
+        <Name>IconInstance.YOrigin</Name>
         <Value xsi:type="xsd:int">0</Value>
         <Category>Position</Category>
         <SetsValue>true</SetsValue>
@@ -191,14 +191,14 @@
       </Variable>
       <Variable>
         <Type>HorizontalAlignment</Type>
-        <Name>IconInstance.X Origin</Name>
+        <Name>IconInstance.XOrigin</Name>
         <Value xsi:type="xsd:int">0</Value>
         <Category>Position</Category>
         <SetsValue>true</SetsValue>
       </Variable>
       <Variable>
         <Type>VerticalAlignment</Type>
-        <Name>IconInstance.Y Origin</Name>
+        <Name>IconInstance.YOrigin</Name>
         <Value xsi:type="xsd:int">2</Value>
         <Category>Position</Category>
         <SetsValue>true</SetsValue>
@@ -228,14 +228,14 @@
       </Variable>
       <Variable>
         <Type>HorizontalAlignment</Type>
-        <Name>IconInstance.X Origin</Name>
+        <Name>IconInstance.XOrigin</Name>
         <Value xsi:type="xsd:int">0</Value>
         <Category>Position</Category>
         <SetsValue>true</SetsValue>
       </Variable>
       <Variable>
         <Type>VerticalAlignment</Type>
-        <Name>IconInstance.Y Origin</Name>
+        <Name>IconInstance.YOrigin</Name>
         <Value xsi:type="xsd:int">0</Value>
         <Category>Position</Category>
         <SetsValue>true</SetsValue>
@@ -265,14 +265,14 @@
       </Variable>
       <Variable>
         <Type>HorizontalAlignment</Type>
-        <Name>IconInstance.X Origin</Name>
+        <Name>IconInstance.XOrigin</Name>
         <Value xsi:type="xsd:int">0</Value>
         <Category>Position</Category>
         <SetsValue>true</SetsValue>
       </Variable>
       <Variable>
         <Type>VerticalAlignment</Type>
-        <Name>IconInstance.Y Origin</Name>
+        <Name>IconInstance.YOrigin</Name>
         <Value xsi:type="xsd:int">2</Value>
         <Category>Position</Category>
         <SetsValue>true</SetsValue>
@@ -302,14 +302,14 @@
       </Variable>
       <Variable>
         <Type>HorizontalAlignment</Type>
-        <Name>IconInstance.X Origin</Name>
+        <Name>IconInstance.XOrigin</Name>
         <Value xsi:type="xsd:int">0</Value>
         <Category>Position</Category>
         <SetsValue>true</SetsValue>
       </Variable>
       <Variable>
         <Type>VerticalAlignment</Type>
-        <Name>IconInstance.Y Origin</Name>
+        <Name>IconInstance.YOrigin</Name>
         <Value xsi:type="xsd:int">0</Value>
         <Category>Position</Category>
         <SetsValue>true</SetsValue>
@@ -339,14 +339,14 @@
       </Variable>
       <Variable>
         <Type>HorizontalAlignment</Type>
-        <Name>IconInstance.X Origin</Name>
+        <Name>IconInstance.XOrigin</Name>
         <Value xsi:type="xsd:int">0</Value>
         <Category>Position</Category>
         <SetsValue>true</SetsValue>
       </Variable>
       <Variable>
         <Type>VerticalAlignment</Type>
-        <Name>IconInstance.Y Origin</Name>
+        <Name>IconInstance.YOrigin</Name>
         <Value xsi:type="xsd:int">2</Value>
         <Category>Position</Category>
         <SetsValue>true</SetsValue>
@@ -376,14 +376,14 @@
       </Variable>
       <Variable>
         <Type>HorizontalAlignment</Type>
-        <Name>IconInstance.X Origin</Name>
+        <Name>IconInstance.XOrigin</Name>
         <Value xsi:type="xsd:int">0</Value>
         <Category>Position</Category>
         <SetsValue>true</SetsValue>
       </Variable>
       <Variable>
         <Type>VerticalAlignment</Type>
-        <Name>IconInstance.Y Origin</Name>
+        <Name>IconInstance.YOrigin</Name>
         <Value xsi:type="xsd:int">0</Value>
         <Category>Position</Category>
         <SetsValue>true</SetsValue>

@@ -46,7 +46,8 @@ namespace Gum.Debug
         {
             if (!ObjectFinder.Self.GumProjectSave.Screens.Contains(screenSave))
             {
-                throw new Exception("Could not find Screen " + screenSave + " in the project");
+                var screenName = screenSave == null ? "<null screen>" : screenSave.ToString();
+                throw new Exception($"Could not find Screen {screenName} in the project {ObjectFinder.Self.GumProjectSave.FullFileName}");
             }
         }
 

@@ -18,7 +18,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>FocusedIndicator.Height Units</Name>
+      <Name>FocusedIndicator.HeightUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -47,13 +47,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>FocusedIndicator.Y Origin</Name>
+      <Name>FocusedIndicator.YOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>FocusedIndicator.Y Units</Name>
+      <Name>FocusedIndicator.YUnits</Name>
       <Value xsi:type="xsd:int">5</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -90,7 +90,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>NineSliceInstance.Height Units</Name>
+      <Name>NineSliceInstance.HeightUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -161,25 +161,25 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>ThumbInstance.X Origin</Name>
+      <Name>ThumbInstance.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>ThumbInstance.X Units</Name>
+      <Name>ThumbInstance.XUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>ThumbInstance.Y Origin</Name>
+      <Name>ThumbInstance.YOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>ThumbInstance.Y Units</Name>
+      <Name>ThumbInstance.YUnits</Name>
       <Value xsi:type="xsd:int">7</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -191,7 +191,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>TrackInstance.Height Units</Name>
+      <Name>TrackInstance.HeightUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -203,31 +203,31 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>TrackInstance.Width Units</Name>
+      <Name>TrackInstance.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>TrackInstance.X Origin</Name>
+      <Name>TrackInstance.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>TrackInstance.X Units</Name>
+      <Name>TrackInstance.XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>TrackInstance.Y Origin</Name>
+      <Name>TrackInstance.YOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>TrackInstance.Y Units</Name>
+      <Name>TrackInstance.YUnits</Name>
       <Value xsi:type="xsd:int">7</Value>
       <SetsValue>true</SetsValue>
     </Variable>

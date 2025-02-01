@@ -18,7 +18,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>Background.Height Units</Name>
+      <Name>Background.HeightUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -36,7 +36,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>Background.Width Units</Name>
+      <Name>Background.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -48,13 +48,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>Background.X Origin</Name>
+      <Name>Background.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>Background.X Units</Name>
+      <Name>Background.XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -66,13 +66,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>Background.Y Origin</Name>
+      <Name>Background.YOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>Background.Y Units</Name>
+      <Name>Background.YUnits</Name>
       <Value xsi:type="xsd:int">7</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -96,7 +96,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>DamageTextInstance.Height Units</Name>
+      <Name>DamageTextInstance.HeightUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -132,7 +132,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>DamageTextInstance.Width Units</Name>
+      <Name>DamageTextInstance.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -144,13 +144,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>DamageTextInstance.X Origin</Name>
+      <Name>DamageTextInstance.XOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>DamageTextInstance.X Units</Name>
+      <Name>DamageTextInstance.XUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -162,13 +162,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>DamageTextInstance.Y Origin</Name>
+      <Name>DamageTextInstance.YOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>DamageTextInstance.Y Units</Name>
+      <Name>DamageTextInstance.YUnits</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -192,7 +192,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>DurabilityTextInstance.Height Units</Name>
+      <Name>DurabilityTextInstance.HeightUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -233,7 +233,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>DurabilityTextInstance.Width Units</Name>
+      <Name>DurabilityTextInstance.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -245,13 +245,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>DurabilityTextInstance.X Origin</Name>
+      <Name>DurabilityTextInstance.XOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>DurabilityTextInstance.X Units</Name>
+      <Name>DurabilityTextInstance.XUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -263,13 +263,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>DurabilityTextInstance.Y Origin</Name>
+      <Name>DurabilityTextInstance.YOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>DurabilityTextInstance.Y Units</Name>
+      <Name>DurabilityTextInstance.YUnits</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -287,7 +287,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>FocusedIndicator.Height Units</Name>
+      <Name>FocusedIndicator.HeightUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -316,13 +316,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>FocusedIndicator.Y Origin</Name>
+      <Name>FocusedIndicator.YOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>FocusedIndicator.Y Units</Name>
+      <Name>FocusedIndicator.YUnits</Name>
       <Value xsi:type="xsd:int">5</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -334,7 +334,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>Height Units</Name>
+      <Name>HeightUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -371,7 +371,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>LevelTextInstance.Height Units</Name>
+      <Name>LevelTextInstance.HeightUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -412,7 +412,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>LevelTextInstance.Width Units</Name>
+      <Name>LevelTextInstance.WidthUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -424,13 +424,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>LevelTextInstance.X Origin</Name>
+      <Name>LevelTextInstance.XOrigin</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>LevelTextInstance.X Units</Name>
+      <Name>LevelTextInstance.XUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -442,13 +442,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>LevelTextInstance.Y Origin</Name>
+      <Name>LevelTextInstance.YOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>LevelTextInstance.Y Units</Name>
+      <Name>LevelTextInstance.YUnits</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -477,7 +477,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>NameTextInstance.Height Units</Name>
+      <Name>NameTextInstance.HeightUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -514,7 +514,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>NameTextInstance.Width Units</Name>
+      <Name>NameTextInstance.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -526,13 +526,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>NameTextInstance.X Origin</Name>
+      <Name>NameTextInstance.XOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>NameTextInstance.X Units</Name>
+      <Name>NameTextInstance.XUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -544,13 +544,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>NameTextInstance.Y Origin</Name>
+      <Name>NameTextInstance.YOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>NameTextInstance.Y Units</Name>
+      <Name>NameTextInstance.YUnits</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -568,7 +568,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>Width Units</Name>
+      <Name>WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>

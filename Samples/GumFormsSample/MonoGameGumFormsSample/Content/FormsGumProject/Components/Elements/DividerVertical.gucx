@@ -18,7 +18,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>AccentRight.Height Units</Name>
+      <Name>AccentRight.HeightUnits</Name>
       <Value xsi:type="xsd:int">3</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -36,31 +36,31 @@
     </Variable>
     <Variable>
       <Type>TextureAddress</Type>
-      <Name>AccentRight.Texture Address</Name>
+      <Name>AccentRight.TextureAddress</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>AccentRight.Texture Height</Name>
+      <Name>AccentRight.TextureHeight</Name>
       <Value xsi:type="xsd:int">3</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>AccentRight.Texture Left</Name>
+      <Name>AccentRight.TextureLeft</Name>
       <Value xsi:type="xsd:int">281</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>AccentRight.Texture Top</Name>
+      <Name>AccentRight.TextureTop</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>AccentRight.Texture Width</Name>
+      <Name>AccentRight.TextureWidth</Name>
       <Value xsi:type="xsd:int">3</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -72,25 +72,25 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>AccentRight.X Origin</Name>
+      <Name>AccentRight.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>AccentRight.X Units</Name>
+      <Name>AccentRight.XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>AccentRight.Y Origin</Name>
+      <Name>AccentRight.YOrigin</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>AccentRight.Y Units</Name>
+      <Name>AccentRight.YUnits</Name>
       <Value xsi:type="xsd:int">5</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -108,7 +108,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>AccentTop.Height Units</Name>
+      <Name>AccentTop.HeightUnits</Name>
       <Value xsi:type="xsd:int">3</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -126,31 +126,31 @@
     </Variable>
     <Variable>
       <Type>TextureAddress</Type>
-      <Name>AccentTop.Texture Address</Name>
+      <Name>AccentTop.TextureAddress</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>AccentTop.Texture Height</Name>
+      <Name>AccentTop.TextureHeight</Name>
       <Value xsi:type="xsd:int">3</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>AccentTop.Texture Left</Name>
+      <Name>AccentTop.TextureLeft</Name>
       <Value xsi:type="xsd:int">281</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>AccentTop.Texture Top</Name>
+      <Name>AccentTop.TextureTop</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>AccentTop.Texture Width</Name>
+      <Name>AccentTop.TextureWidth</Name>
       <Value xsi:type="xsd:int">3</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -162,13 +162,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>AccentTop.X Origin</Name>
+      <Name>AccentTop.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>AccentTop.X Units</Name>
+      <Name>AccentTop.XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -205,7 +205,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>Line.Height Units</Name>
+      <Name>Line.HeightUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -223,31 +223,31 @@
     </Variable>
     <Variable>
       <Type>TextureAddress</Type>
-      <Name>Line.Texture Address</Name>
+      <Name>Line.TextureAddress</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>Line.Texture Height</Name>
+      <Name>Line.TextureHeight</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>Line.Texture Left</Name>
+      <Name>Line.TextureLeft</Name>
       <Value xsi:type="xsd:int">281</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>Line.Texture Top</Name>
+      <Name>Line.TextureTop</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>Line.Texture Width</Name>
+      <Name>Line.TextureWidth</Name>
       <Value xsi:type="xsd:int">3</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -259,31 +259,31 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>Line.Width Units</Name>
+      <Name>Line.WidthUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>Line.X Origin</Name>
+      <Name>Line.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>Line.X Units</Name>
+      <Name>Line.XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>Line.Y Origin</Name>
+      <Name>Line.YOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>Line.Y Units</Name>
+      <Name>Line.YUnits</Name>
       <Value xsi:type="xsd:int">7</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -301,7 +301,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>Width Units</Name>
+      <Name>WidthUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
