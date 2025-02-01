@@ -293,7 +293,7 @@ namespace Gum.PropertyGridHelpers
                 DisplayName = RootVariableName;
             }
 
-            ModifyContextMenu(instanceSave, stateListCategoryContainer);
+            ModifyContextMenu(instanceSave, stateListCategoryContainer, ispd);
 
             // This could be slow since we have to check it for every variable in an object.
             // Maybe we'll want to pass this in to the function?
@@ -354,9 +354,9 @@ namespace Gum.PropertyGridHelpers
 
         }
 
-        private void ModifyContextMenu(InstanceSave instanceSave, IStateContainer stateListCategoryContainer)
+        private void ModifyContextMenu(InstanceSave instanceSave, IStateContainer stateListCategoryContainer, InstanceSavePropertyDescriptor ispd)
         {
-            SupportsMakeDefault = this.mVariableName != "Name";
+            SupportsMakeDefault = this.mVariableName != "Name" && !ispd.IsAssignedByReference;
 
             TryAddExposeVariableMenuOptions(instanceSave);
 

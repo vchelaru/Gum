@@ -70,6 +70,8 @@ namespace Gum.DataTypes.ComponentModel
             set;
         }
 
+        public bool IsAssignedByReference { get; set; }
+
         public string Category { get; set; } = "";
 
         public Type PropertyType

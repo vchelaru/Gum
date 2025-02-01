@@ -17,6 +17,7 @@ using GumRuntime;
 using Gum.DataTypes.Behaviors;
 using Newtonsoft.Json.Linq;
 using Gum.Undo;
+using System.Security.Principal;
 
 namespace Gum.PropertyGridHelpers
 {
@@ -111,12 +112,19 @@ namespace Gum.PropertyGridHelpers
                         string variableName = item.Name;
                         var isReadonly = false;
                         string subtext = null;
+                        var isSetByReference = variablesSetThroughReference.ContainsKey(variableName);
                         if (variablesSetThroughReference.ContainsKey(variableName))
                         {
                             isReadonly = true;
                             subtext = variablesSetThroughReference[variableName];
                         }
-                        TryAddPropertyToList(pdc, elementSave, instanceSave, amountToDisplay, item, isReadonly, subtext);
+                        var property = GetPropertyDescriptor(elementSave, instanceSave, amountToDisplay, item, isReadonly, subtext, pdc);
+
+                        if(property != null)
+                        {
+                            property.IsAssignedByReference = isSetByReference;
+                            pdc.Add(property);
+                        }
                     }
                 }
             }
@@ -132,12 +140,19 @@ namespace Gum.PropertyGridHelpers
                     string variableName = item.Name;
                     var isReadonly = false;
                     string subtext = null;
-                    if (variablesSetThroughReference.ContainsKey(variableName))
+                    var isSetByReference = variablesSetThroughReference.ContainsKey(variableName);
+                    if (isSetByReference)
                     {
                         isReadonly = true;
                         subtext = variablesSetThroughReference[variableName];
                     }
-                    TryAddPropertyToList(pdc, elementSave, instanceSave, amountToDisplay, item, isReadonly, subtext);
+                    var property = GetPropertyDescriptor(elementSave, instanceSave, amountToDisplay, item, isReadonly, subtext, pdc);
+
+                    if (property != null)
+                    {
+                        property.IsAssignedByReference = isSetByReference;
+                        pdc.Add(property);
+                    }
                 }
             }
 
@@ -179,7 +194,8 @@ namespace Gum.PropertyGridHelpers
                 string variableName = defaultVariable.Name;
                 var isReadonly = false;
                 string subtext = null;
-                if (variablesSetThroughReference.ContainsKey(variableName))
+                var isSetByReference = variablesSetThroughReference.ContainsKey(variableName);
+                if (isSetByReference)
                 {
                     isReadonly = true;
                     subtext += "=" + variablesSetThroughReference[variableName];
@@ -197,7 +213,12 @@ namespace Gum.PropertyGridHelpers
                         subtext += "Exposed as " + exposedVariables[defaultVariable.Name];
                     }
                 }
-                TryAddPropertyToList(pdc, elementSave, instanceSave, amountToDisplay, defaultVariable, isReadonly, subtext);
+                var property = GetPropertyDescriptor(elementSave, instanceSave, amountToDisplay, defaultVariable, isReadonly, subtext, pdc);
+                if(property != null)
+                {
+                    property.IsAssignedByReference = isSetByReference;
+                    pdc.Add(property);
+                }
             }
 
             #endregion
@@ -516,8 +537,8 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        private static void TryAddPropertyToList(List<InstanceSavePropertyDescriptor> pdc, ElementSave elementSave, InstanceSave instanceSave, 
-            AmountToDisplay amountToDisplay, VariableSave defaultVariable, bool forceReadOnly, string subtext)
+        private static InstanceSavePropertyDescriptor GetPropertyDescriptor(ElementSave elementSave, InstanceSave instanceSave, 
+            AmountToDisplay amountToDisplay, VariableSave defaultVariable, bool forceReadOnly, string subtext, List<InstanceSavePropertyDescriptor> existingItems)
         {
             ElementSave container = elementSave;
             if (instanceSave != null)
@@ -535,7 +556,7 @@ namespace Gum.PropertyGridHelpers
                 amountToDisplay == AmountToDisplay.AllVariables || 
                 !string.IsNullOrEmpty(defaultVariable.ExposedAsName));
 
-            shouldInclude &= pdc.Any(item => item.Name == defaultVariable.Name) == false;
+            shouldInclude &= existingItems.Any(item => item.Name == defaultVariable.Name) == false;
 
             var isState = defaultVariable.IsState(elementSave, out ElementSave categoryContainer, out StateSaveCategory categorySave);
 
@@ -609,8 +630,9 @@ namespace Gum.PropertyGridHelpers
                 {
                     property.Subtext += "\n" + defaultVariable.DetailText;
                 }
-                pdc.Add(property);
+                return property;
             }
+            return null;
         }
 
         private static void AddNameAndBaseTypeProperties(List<InstanceSavePropertyDescriptor> pdc, ElementSave elementSave, InstanceSave instance, bool isReadOnly)
