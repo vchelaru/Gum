@@ -20,8 +20,16 @@
                     HorizontalAlignment="Right"
                     VerticalAlignment="Bottom"
                     Grid.Row="2">
-            <Button Width="70" Click="YesButtonClick">Yes</Button>
-            <Button Width="70" Click="NoButtonClick">No</Button>
+            <Button Width="70" Click="YesButtonClick">
+                <TextBlock>
+                    <Underline>Y</Underline>es
+                </TextBlock>
+            </Button>
+            <Button Width="70" Click="NoButtonClick">
+                <TextBlock>
+                    <Underline>N</Underline>o
+                </TextBlock>                
+            </Button>
         </StackPanel>
     </Grid>
 </Window>

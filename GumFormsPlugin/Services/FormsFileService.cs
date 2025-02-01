@@ -10,7 +10,7 @@ namespace GumFormsPlugin.Services;
 public class FormsFileService
 {
     // for now, we make this false, we can add screens later:
-    bool saveScreens = false;
+    //bool saveScreens = false;
 
     public Dictionary<string, FilePath> GetSourceDestinations(bool isIncludeDemoScreenGum)
     {

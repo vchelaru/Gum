@@ -291,12 +291,6 @@
     <Compile Include="Plugins\InternalPlugins\EditorTab\Views\WireframeEditControl.designer.cs">
       <DependentUpon>WireframeEditControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="Gui\Forms\DeleteOptionsWindow.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Gui\Forms\DeleteOptionsWindow.Designer.cs">
-      <DependentUpon>DeleteOptionsWindow.cs</DependentUpon>
-    </Compile>
     <Compile Include="Gui\Forms\PluginsWindow.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -454,9 +448,6 @@
     <EmbeddedResource Include="Plugins\InternalPlugins\EditorTab\Views\WireframeEditControl.resx">
       <DependentUpon>WireframeEditControl.cs</DependentUpon>
       <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Gui\Forms\DeleteOptionsWindow.resx">
-      <DependentUpon>DeleteOptionsWindow.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Gui\Forms\PluginsWindow.resx">
       <DependentUpon>PluginsWindow.cs</DependentUpon>

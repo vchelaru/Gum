@@ -403,7 +403,7 @@ namespace GumRuntime
 
                 value = Convert.ChangeType(value, variableLeftType);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // TODO: Show error
             }

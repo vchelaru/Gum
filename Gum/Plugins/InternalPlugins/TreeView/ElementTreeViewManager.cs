@@ -1615,7 +1615,16 @@ namespace Gum.Managers
 
         internal void HandleKeyDown(KeyEventArgs e)
         {
+            var didTreeViewHaveFocus = ObjectTreeView.ContainsFocus;
             HotkeyManager.Self.HandleKeyDownElementTreeView(e);
+
+            if (didTreeViewHaveFocus)
+            {
+                // On a delete, the popup appears, which steals focus from the treeview.
+                // If we had focus before, let's get it now.
+                ObjectTreeView.Focus();
+            }
+
         }
 
         private void ObjectTreeView_AfterSelect_1(object sender, TreeViewEventArgs e)

@@ -31,7 +31,7 @@ internal class ElementDeleteService
         {
             if (objectToDelete is ComponentSave or ScreenSave)
             {
-                FilePath? animationFile = _animationFilePathService.GetAbsoluteAnimationFileNameFor(objectToDelete as ElementSave);
+                var animationFile = _animationFilePathService.GetAbsoluteAnimationFileNameFor(objectToDelete as ElementSave);
                 deleteAnimationFileCheckbox.IsChecked = false;
                 if (hasAlreadyAddedDeleteAnimationFileCheckBox == false && (animationFile?.Exists() == true ))
                 {
