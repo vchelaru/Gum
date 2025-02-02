@@ -161,12 +161,18 @@ namespace MonoGameGum.GueDeriving
                     // make it have no line wrap width before assignign the text:
                     ContainedText.Width = null;
                 }
-                ContainedText.RawText = value;
+
+                // Use SetProperty so it goes through the BBCode-checking methods
+                //ContainedText.RawText = value;
+                this.SetProperty("Text", value);
+
                 NotifyPropertyChanged();
                 var shouldUpdate = widthBefore != ContainedText.WrappedTextWidth || heightBefore != ContainedText.WrappedTextHeight;
                 if (shouldUpdate)
                 {
-                    UpdateLayout(Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentWidthHeightDependOnChildren | Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentStacks, int.MaxValue / 2);
+                    UpdateLayout(
+                        Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentWidthHeightDependOnChildren | 
+                        Gum.Wireframe.GraphicalUiElement.ParentUpdateType.IfParentStacks, int.MaxValue / 2);
                 }
             }
         }
