@@ -6,6 +6,7 @@ using Vector2 = System.Numerics.Vector2;
 using Color = System.Drawing.Color;
 using Matrix = System.Numerics.Matrix4x4;
 using Gum.Managers;
+using Gum.Commands;
 
 namespace Gum.Wireframe.Editors
 {
@@ -35,11 +36,14 @@ namespace Gum.Wireframe.Editors
 
         ToolFontService _toolFontService;
 
+        private readonly GuiCommands _guiCommands;
+
         #endregion
 
         public DimensionDisplay()
         {
             _toolFontService = ToolFontService.Self;
+            _guiCommands = GumCommands.Self.GuiCommands;
         }
 
         public void AddToManagers(SystemManagers systemManagers)
@@ -106,9 +110,20 @@ namespace Gum.Wireframe.Editors
 
             var topLeft = new Vector2(left, top);
 
-            float fromBodyOffset = 26 / Zoom;
-            float endCapLength = 12 / Zoom;
-            dimensionDisplayText.FontScale = 1/Zoom;
+            // Adjust the Font size based on the UI's scale.  Instead of the Editors zoom level.
+            // This should have ZERO affect for anyone not using UI level zoom
+            float scaleFactor = _guiCommands.UiZoomValue / 100;
+            float decreasedScaleFactor = scaleFactor * 0.75f;
+            float finalizedScaleFactor = decreasedScaleFactor < 1 ? 1 : decreasedScaleFactor;
+
+            // The dividing by zoom makes sure when we zoom the editor, it retains the same size for text 
+            // even though the editor objects are changing in size.
+            float adjustedScaleFactorWithEditorZoom = finalizedScaleFactor / Zoom; 
+
+            // Apply zoom factors combined to the offsets and font scale
+            float fromBodyOffset = 26  * adjustedScaleFactorWithEditorZoom;
+            float endCapLength = 12 * adjustedScaleFactorWithEditorZoom;
+            dimensionDisplayText.FontScale = adjustedScaleFactorWithEditorZoom;
 
             var rotationMatrix = asIpso.GetAbsoluteRotationMatrix();
             var rotatedLeftDirection = new Vector2(rotationMatrix.Left().X, rotationMatrix.Left().Y);
