@@ -421,54 +421,13 @@ For Buttons, we can add a ButtonCategory state. You are free to implement as man
 
 #### Defining a Custom Runtime for the Forms Control
 
-Once you have created a Component in your project, you need to create a custom runtime class. This custom runtime class associates the Component in your .gumx file to a strongly-typed class. This runtime type also enables the creation of Forms controls by instantiating the runtime object, including when an element from the Gum project is converted to a GraphicalUiElement.
-
-The runtime class does not need much code since most of the work is done in the Gum project. The following shows an example custom runtime for the StandardButton component:
-
-<pre class="language-csharp"><code class="lang-csharp">internal class StandardButtonRuntime : InteractiveGue
-{
-    public StandardButtonRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base() 
-    {
-        if(fullInstantiation)
-        {
-            // no need to do anything here, we are fully instantiated by the Gum object
-        }
-
-        // Warning - the StandardButtonRuntime children have not yet been
-        // populated from Gum. Therefore, we shouldn't create the children
-        // here, even if tryCreateFormsObject is set to true.
-        // See AfterFullCreation below
-
-    }
-
-    // The Forms objects should only be created after the 
-    // children have been assigned. We can override the AfterFullCreation
-<strong>    // method to handle creating the Forms object after the children have 
-</strong>    // been created.
-    public override void AfterFullCreation()
-    {
-        base.AfterFullCreation();
-
-        if (FormsControl == null)
-        {
-            FormsControlAsObject = new Button(this);
-        }
-    }
-
-    public Button FormsControl => FormsControlAsObject as Button;
-}
-
-</code></pre>
-
-This runtime can be associated with the StandardButton component in Gum using the following code in your Game class:
+Once you have created a Component in your project, you need to tell your game to use this for Buttons. To do this, add the following code in your Game class:
 
 ```csharp
 ElementSaveExtensions.RegisterGueInstantiationType(
     "Buttons/StandardButton", 
-    typeof(StandardButtonRuntime));
+    typeof(MonoGameGum.Forms.DefaultFromFileVisuals.DefaultFromFileButtonRuntime));
 ```
-
-For more information on using a custom runtime defined in your Gum project, see the [Custom Runtimes](../../custom-runtimes.md) tutorial.
 
 #### Associate the Custom Runtime to the Forms Type
 
