@@ -124,9 +124,18 @@ namespace Gum.DataTypes
                 //elementSave.States[0] = replacement;
                 StateSave stateForNewType = defaultState.Clone();
 
+                var elementDefaultState = elementSave.DefaultState;
                 foreach (VariableSave variableSave in stateForNewType.Variables)
                 {
-                    VariableSave existingVariable = elementSave.DefaultState.GetVariableSave(variableSave.Name);
+                    VariableSave existingVariable = elementDefaultState.GetVariableSave(variableSave.Name);
+
+                    if(existingVariable == null)
+                    {
+                        // todo - for now we're going to check for variables that may match if we remove their spaces.
+                        // Eventually this can go away. 
+                        // Added February 2, 2025. Not sure when to remove this, in a few years?
+                        existingVariable = elementDefaultState.Variables.FirstOrDefault(item => item.Name.Replace(" ", "") == variableSave.Name);
+                    }
 
                     if (existingVariable == null)
                     {
