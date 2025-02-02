@@ -901,16 +901,25 @@ namespace Gum.Managers
 
             #region Update the nodes
 
-            System.Collections.IList list = mScreensTreeNode.Nodes;
-            for (int i = 0; i < list.Count; i++)
+            // February 2, 2025
+            // Not sure why exactly
+            // but if we foreach here,
+            // it can result in the enumerator
+            // returning a null instance. This is
+            // fixed by moving to a for-loop.
+            var screenList = mScreensTreeNode.Nodes;
+            for (int i = 0; i < screenList.Count; i++)
             {
-                object treeNode = list[i];
+                object treeNode = screenList[i];
                 RefreshUi(treeNode as TreeNode);
             }
 
-            foreach (TreeNode treeNode in mComponentsTreeNode.Nodes)
+            // see above on why we use a for instead foreach
+            var componentList = mComponentsTreeNode.Nodes;
+            for (int i = 0; i < componentList.Count; i++)
             {
-                RefreshUi(treeNode);
+                object treeNode = componentList[i];
+                RefreshUi(treeNode as TreeNode);
             }
 
             foreach (TreeNode treeNode in mStandardElementsTreeNode.Nodes)
