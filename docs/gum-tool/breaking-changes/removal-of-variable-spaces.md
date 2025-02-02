@@ -44,7 +44,7 @@ Projects which have been created prior to this change will likely have variables
 
 The runtime objects (GraphicalUiElement) have been written to accept variables with and without spaces. Therefore, even if your game updates to a new version of the Gum libraries but you haven't yet converted variables to spaces, the game should still work the same as before.
 
-The check for variables with spaces may be done in the future, but if so it is unlikely to happen for many years. The GraphicalUiElement object has been checking for variables with and without spaces for many years as well, so if you open an old project in Gum and convert the variables to no longer have spaces, old games will be able to load these newly-upgraded files without any problems.
+The check for variables with spaces may be removed in the future, but if so it is unlikely to happen for many years. The GraphicalUiElement object has been checking for variables with and without spaces for many years as well, so if you open an old project in Gum and convert the variables to no longer have spaces, old games will be able to load these newly-upgraded files without any problems.
 
 ## Testing
 

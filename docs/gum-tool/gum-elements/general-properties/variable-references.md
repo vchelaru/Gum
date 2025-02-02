@@ -35,14 +35,14 @@ X = Components/OtherComponent.X
 X references the X value in OtherComponent. Note that X could be the X value on any component or any instance inside of a component:
 
 ```
-X = Component/OtherComponent.X
+X = Components/OtherComponent.X
 ```
 
 Spaces are optional around the equals sign, but spaces are not allowed in variable names. The following lines are okay:
 
 ```csharp
-Y=Component/OtherComponent.Y
-Width = Component/OtherComponent.Width
+Y=Components/OtherComponent.Y
+Width = Components/OtherComponent.Width
 ```
 
 However, the following is not allowed:
