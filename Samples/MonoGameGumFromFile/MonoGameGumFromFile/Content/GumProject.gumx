@@ -3,8 +3,8 @@
   <CustomProperties />
   <FontRanges>32-126,160-255</FontRanges>
   <Version>1</Version>
-  <DefaultCanvasWidth>800</DefaultCanvasWidth>
-  <DefaultCanvasHeight>600</DefaultCanvasHeight>
+  <DefaultCanvasWidth>1024</DefaultCanvasWidth>
+  <DefaultCanvasHeight>768</DefaultCanvasHeight>
   <ShowOutlines>true</ShowOutlines>
   <ShowCanvasOutline>true</ShowCanvasOutline>
   <ShowRuler>true</ShowRuler>

@@ -11,6 +11,16 @@
     <AndroidAsset Include="Content\**\*.*" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\MonoGameGumFromFile\Components\ComponentWithExposedVariableRuntime.cs" Link="Components\ComponentWithExposedVariableRuntime.cs" />
+    <Compile Include="..\MonoGameGumFromFile\Components\ComponentWithExposedVariableRuntime.Generated.cs" Link="Components\ComponentWithExposedVariableRuntime.Generated.cs" />
+    <Compile Include="..\MonoGameGumFromFile\Managers\SingleThreadSynchronizationContext.cs" Link="Managers\SingleThreadSynchronizationContext.cs" />
+    <Compile Include="..\MonoGameGumFromFile\Screens\MvvmScreenRuntime.cs" Link="Screens\MvvmScreenRuntime.cs" />
+    <Compile Include="..\MonoGameGumFromFile\Screens\MvvmScreenRuntime.Generated.cs" Link="Screens\MvvmScreenRuntime.Generated.cs" />
+    <Compile Include="..\MonoGameGumFromFile\Screens\StartScreenRuntime.cs" Link="Screens\StartScreenRuntime.cs" />
+    <Compile Include="..\MonoGameGumFromFile\Screens\StartScreenRuntime.Generated.cs" Link="Screens\StartScreenRuntime.Generated.cs" />
+    <Compile Include="..\MonoGameGumFromFile\ViewModels\MvvmScreenViewModel.cs" Link="ViewModels\MvvmScreenViewModel.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.1.303" />
     <PackageReference Include="MonoGame.Framework.Android" Version="3.8.1.303" />
   </ItemGroup>
@@ -21,8 +31,12 @@
 		<ProjectReference Include="..\..\..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
 	</ItemGroup>
   <ItemGroup>
-
-	</ItemGroup>
+    <Folder Include="Managers\" />
+    <Folder Include="Components\" />
+    <Folder Include="ViewModels\" />
+    <Folder Include="Screens\" />
+    <Folder Include="ScreenRuntimes\" />
+  </ItemGroup>
   <Target Name="RestoreDotnetTools" BeforeTargets="Restore">
     <Message Text="Restoring dotnet tools" Importance="High" />
     <Exec Command="dotnet tool restore" />

@@ -7,10 +7,13 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGameGum;
+using MonoGameGum.Forms;
 using MonoGameGum.GueDeriving;
 using MonoGameGum.Input;
 using MonoGameGum.Renderables;
 using MonoGameGumFromFile.ComponentRuntimes;
+using MonoGameGumFromFile.Managers;
+using MonoGameGumFromFile.Screens;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
@@ -19,7 +22,7 @@ using System.Linq;
 using System.Threading;
 using ToolsUtilities;
 
-namespace MonoGameGumFromFileAndroid
+namespace MonoGameGumFromFile
 {
     public class Game1 : Game
     {
@@ -30,10 +33,9 @@ namespace MonoGameGumFromFileAndroid
 
         ScreenSave currentGumScreenSave;
 
-        GraphicalUiElement currentScreenGue;
+        GraphicalUiElement Root;
 
-        Cursor cursor;
-        MonoGameGum.Input.Keyboard gumKeyboard;
+        SingleThreadSynchronizationContext synchronizationContext;
 
         #endregion
 
@@ -58,7 +60,7 @@ namespace MonoGameGumFromFileAndroid
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            GumService.Default.Draw();
+            SystemManagers.Default.Draw();
 
             base.Draw(gameTime);
         }
@@ -68,24 +70,60 @@ namespace MonoGameGumFromFileAndroid
 
         protected override void Initialize()
         {
+            synchronizationContext = new SingleThreadSynchronizationContext();
             GumService.Default.Initialize(_graphics.GraphicsDevice, "GumProject.gumx");
 
-            //SetSinglePixelTexture();
+
+            // This allows you to resize:
+            Window.AllowUserResizing = true;
+            // This event is raised whenever a resize occurs, allowing
+            // us to perform custom logic on a resize
+            Window.ClientSizeChanged += HandleClientSizeChanged;
+
+            // store off the original height so we can use it for zooming
+            originalHeight = _graphics.GraphicsDevice.Viewport.Height;
+
+            // This example includes code that assocaites a particular screen with a
+            // runtime class
+            ElementSaveExtensions.RegisterGueInstantiation("StartScreen",
+                () => new StartScreenRuntime());
+
 
             InitializeRuntimeMapping();
 
             ShowScreen("StartScreen");
-            InitializeStartScreen();
-            cursor = new Cursor();
-            gumKeyboard = new MonoGameGum.Input.Keyboard();
 
             base.Initialize();
+        }
+
+        bool performZoom = true;
+        int originalHeight;
+
+        private void HandleClientSizeChanged(object sender, EventArgs e)
+        {
+            float zoom = 1;
+            if (performZoom)
+            {
+                zoom = _graphics.GraphicsDevice.Viewport.Height / (float)originalHeight;
+            }
+            SystemManagers.Default.Renderer.Camera.Zoom = zoom;
+
+
+            GraphicalUiElement.CanvasWidth = _graphics.GraphicsDevice.Viewport.Width / zoom;
+            GraphicalUiElement.CanvasHeight = _graphics.GraphicsDevice.Viewport.Height / zoom;
+
+            // Grab the rootmost object and tell it to resize:
+            Root.UpdateLayout();
+
+            // If you are using Gum Forms, you should also notify GumForms:
+            //MonoGameGum.Forms.Controls.FrameworkElement.Root.UpdateLayout();
+
         }
 
         private void InitializeRuntimeMapping()
         {
             ElementSaveExtensions.RegisterGueInstantiationType(
-                "Buttons/StandardButton", 
+                "Buttons/StandardButton",
                 typeof(ClickableButton));
 
         }
@@ -123,17 +161,14 @@ namespace MonoGameGumFromFileAndroid
 
             if (state.IsKeyDown(Keys.D1))
             {
-                if(ShowScreen("StartScreen"))
-                {
-                    InitializeStartScreen();
-                }
+                ShowScreen("StartScreen");
             }
             else if (state.IsKeyDown(Keys.D2))
             {
                 var justShowed = ShowScreen("StateScreen");
                 if (justShowed)
                 {
-                    var setMeInCode = currentScreenGue.GetGraphicalUiElementByName("SetMeInCode");
+                    var setMeInCode = Root.GetGraphicalUiElementByName("SetMeInCode");
 
                     // States can be found in the Gum element's Categories and applied:
                     var stateToSet = setMeInCode.ElementSave.Categories
@@ -187,20 +222,41 @@ namespace MonoGameGumFromFileAndroid
             }
             else if (state.IsKeyDown(Keys.D7))
             {
-                if(ShowScreen("OffsetLayerScreen"))
+                if (ShowScreen("OffsetLayerScreen"))
                 {
                     InitializeOffsetLayerScreen();
                 }
             }
-            else if(state.IsKeyDown(Keys.D8))
+            else if (state.IsKeyDown(Keys.D8))
             {
-                if(!GetIfIsAlreadyShown("InteractiveGueScreen"))
+                if (!GetIfIsAlreadyShown("InteractiveGueScreen"))
                 {
                     //ElementSaveExtensions.RegisterDefaultInstantiationType(() => new InteractiveGue());
                     ShowScreen("InteractiveGueScreen");
                     //InitializeInteractiveGueScreen();
                 }
+            }
+            else if (state.IsKeyDown(Keys.D9))
+            {
+                ShowScreen("ResizeScreen");
+            }
+            else if (state.IsKeyDown(Keys.D0))
+            {
+                ShowScreen("MvvmScreen");
+            }
+            else if (state.IsKeyDown(Keys.Escape))
+            {
+                RemoveScreenAndLayers();
+            }
+        }
 
+        private void RemoveScreenAndLayers()
+        {
+            Root?.RemoveFromManagers();
+            var layers = SystemManagers.Default.Renderer.Layers;
+            while (layers.Count > 1)
+            {
+                SystemManagers.Default.Renderer.RemoveLayer(SystemManagers.Default.Renderer.Layers.LastOrDefault());
             }
         }
 
@@ -209,15 +265,9 @@ namespace MonoGameGumFromFileAndroid
 
         }
 
-        private void InitializeStartScreen()
-        {
-            var exposedVariableInstance = currentScreenGue.GetGraphicalUiElementByName("ComponentWithExposedVariableInstance");
-            exposedVariableInstance.SetProperty("Text", "I'm set in code");
-        }
-
         private void InitializeZoomScreen()
         {
-            var layered = currentScreenGue.GetGraphicalUiElementByName("Layered");
+            var layered = Root.GetGraphicalUiElementByName("Layered");
             var layer = SystemManagers.Default.Renderer.AddLayer();
             layer.Name = "Zoomed-in Layer";
             layered.MoveToLayer(layer);
@@ -235,10 +285,10 @@ namespace MonoGameGumFromFileAndroid
             layer.Name = "Offset Layer";
             layer.LayerCameraSettings = new LayerCameraSettings()
             {
-                IsInScreenSpace= true
+                IsInScreenSpace = true
             };
 
-            var layeredText = currentScreenGue.GetGraphicalUiElementByName("LayeredText");
+            var layeredText = Root.GetGraphicalUiElementByName("LayeredText");
             layeredText.MoveToLayer(layer);
         }
 
@@ -246,11 +296,7 @@ namespace MonoGameGumFromFileAndroid
         {
             var newScreenElement = ObjectFinder.Self.GumProjectSave.Screens.FirstOrDefault(item => item.Name == screenName);
 
-            var isAlreadyShown = false;
-            if (currentScreenGue != null)
-            {
-                isAlreadyShown = currentScreenGue.Tag == newScreenElement;
-            }
+            var isAlreadyShown = Root?.Tag == newScreenElement && Root?.EffectiveManagers != null;
 
             return isAlreadyShown;
         }
@@ -263,14 +309,14 @@ namespace MonoGameGumFromFileAndroid
                 var newScreenElement = ObjectFinder.Self.GumProjectSave.Screens.FirstOrDefault(item => item.Name == screenName);
                 FileManager.RelativeDirectory = "Content" + Path.DirectorySeparatorChar;
                 currentGumScreenSave = newScreenElement;
-                currentScreenGue?.RemoveFromManagers();
+                Root?.RemoveFromManagers();
                 var layers = SystemManagers.Default.Renderer.Layers;
-                while(layers.Count > 1)
+                while (layers.Count > 1)
                 {
                     SystemManagers.Default.Renderer.RemoveLayer(SystemManagers.Default.Renderer.Layers.LastOrDefault());
                 }
 
-                currentScreenGue = currentGumScreenSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
+                Root = currentGumScreenSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
             }
             return !isAlreadyShown;
         }
@@ -280,17 +326,22 @@ namespace MonoGameGumFromFileAndroid
         MouseState lastMouseState;
         protected override void Update(GameTime gameTime)
         {
-            GumService.Default.Update(this, gameTime, currentScreenGue);
+            GumService.Default.Update(this, gameTime, Root);
+
+            Root.AnimateSelf(gameTime.ElapsedGameTime.TotalSeconds);
+
+
+            synchronizationContext.Update();
 
             DoSwapScreenLogic();
 
             var mouseState = Mouse.GetState();
 
-            if(currentGumScreenSave?.Name == "StartScreen")
+            if (currentGumScreenSave?.Name == "StartScreen")
             {
                 DoStartScreenLogic();
             }
-            else if(currentGumScreenSave?.Name == "InteractiveGueScreen")
+            else if (currentGumScreenSave?.Name == "InteractiveGueScreen")
             {
                 DoInteractiveGueScreenLogic(gameTime.TotalGameTime.TotalSeconds);
             }
@@ -299,12 +350,16 @@ namespace MonoGameGumFromFileAndroid
             {
                 DoZoomScreenLogic(mouseState);
             }
-            else if(currentGumScreenSave?.Name == "OffsetLayerScreen")
+            else if (currentGumScreenSave?.Name == "OffsetLayerScreen")
             {
                 DoOffsetLayerScreenLogic(mouseState);
             }
+            else if (Root is MvvmScreenRuntime asMvvmScreen)
+            {
+                asMvvmScreen.CustomActivity();
+            }
 
-            if(mouseState.LeftButton == ButtonState.Pressed && lastMouseState.LeftButton == ButtonState.Released)
+            if (mouseState.LeftButton == ButtonState.Pressed && lastMouseState.LeftButton == ButtonState.Released)
             {
                 // user just pushed on something so handle a push:
                 HandleMousePush(mouseState);
@@ -320,7 +375,7 @@ namespace MonoGameGumFromFileAndroid
         int clickCount = 0;
         private void DoInteractiveGueScreenLogic(double currentGameTimeInSeconds)
         {
-            currentScreenGue.DoUiActivityRecursively(cursor, gumKeyboard, currentGameTimeInSeconds);
+            Root.DoUiActivityRecursively(FormsUtilities.Cursor, FormsUtilities.Keyboard, currentGameTimeInSeconds);
         }
 
         private void DoOffsetLayerScreenLogic(MouseState mouseState)
@@ -337,34 +392,34 @@ namespace MonoGameGumFromFileAndroid
             var camera = SystemManagers.Default.Renderer.Camera;
 
             var needsRefresh = false;
-            if(mouseState.LeftButton == ButtonState.Pressed)
+            if (mouseState.LeftButton == ButtonState.Pressed)
             {
                 camera.Zoom *= 1.01f;
                 needsRefresh = true;
             }
-            else if(mouseState.RightButton == ButtonState.Pressed)
+            else if (mouseState.RightButton == ButtonState.Pressed)
             {
                 camera.Zoom *= .99f;
                 needsRefresh = true;
             }
 
-            if(needsRefresh)
+            if (needsRefresh)
             {
                 GraphicalUiElement.CanvasWidth = 800 / camera.Zoom;
                 GraphicalUiElement.CanvasHeight = 600 / camera.Zoom;
 
                 // need to update the layout in response to the canvas size changing:
-                currentScreenGue?.UpdateLayout();
+                Root?.UpdateLayout();
             }
         }
 
         private void HandleMousePush(MouseState mouseState)
         {
-            var itemOver = GetItemOver(mouseState.X, mouseState.Y, currentScreenGue);
+            var itemOver = GetItemOver(mouseState.X, mouseState.Y, Root);
 
-            if(itemOver?.Tag is InstanceSave instanceSave && instanceSave.Name == "ToggleFontSizes")
+            if (itemOver?.Tag is InstanceSave instanceSave && instanceSave.Name == "ToggleFontSizes")
             {
-                if(itemOver.FontSize == 16)
+                if (itemOver.FontSize == 16)
                 {
                     itemOver.FontSize = 32;
                 }
@@ -377,27 +432,27 @@ namespace MonoGameGumFromFileAndroid
 
         private GraphicalUiElement GetItemOver(int x, int y, GraphicalUiElement graphicalUiElement)
         {
-            if(graphicalUiElement.Children == null)
+            if (graphicalUiElement.Children == null)
             {
                 // this is a top level screen
-                foreach(var child in graphicalUiElement.ContainedElements)
+                foreach (var child in graphicalUiElement.ContainedElements)
                 {
-                    var isOver = 
+                    var isOver =
                         x >= child.GetAbsoluteLeft() &&
                         x < child.GetAbsoluteRight() &&
                         y >= child.GetAbsoluteTop() &&
                         y < child.GetAbsoluteBottom();
-                    if(isOver)
+                    if (isOver)
                     {
                         return child;
                     }
                     else
                     {
                         var foundItem = GetItemOver(x, y, child);
-                        if(foundItem != null)
+                        if (foundItem != null)
                         {
                             return foundItem;
-                        }    
+                        }
                     }
                 }
             }

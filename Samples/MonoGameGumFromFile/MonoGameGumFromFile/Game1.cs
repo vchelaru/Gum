@@ -13,7 +13,6 @@ using MonoGameGum.Input;
 using MonoGameGum.Renderables;
 using MonoGameGumFromFile.ComponentRuntimes;
 using MonoGameGumFromFile.Managers;
-using MonoGameGumFromFile.ScreenRuntimes;
 using MonoGameGumFromFile.Screens;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
@@ -48,8 +47,8 @@ namespace MonoGameGumFromFile
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
 
-            _graphics.PreferredBackBufferWidth = 800;
-            _graphics.PreferredBackBufferHeight = 600;
+            _graphics.PreferredBackBufferWidth = 1024;
+            _graphics.PreferredBackBufferHeight = 768;
         }
 
         protected override void LoadContent()

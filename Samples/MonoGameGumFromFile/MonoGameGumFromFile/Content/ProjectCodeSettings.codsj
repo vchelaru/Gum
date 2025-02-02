@@ -1,5 +1,5 @@
 {
-  "CommonUsingStatements": "using Gum.Converters;\nusing Gum.DataTypes;\nusing Gum.Managers;\nusing Gum.Wireframe;\n\nusing RenderingLibrary.Graphics;\n\nusing MonoGameGum.GueDeriving;\n",
+  "CommonUsingStatements": "using Gum.Converters;\nusing Gum.DataTypes;\nusing Gum.Managers;\nusing Gum.Wireframe;\n\nusing RenderingLibrary.Graphics;\n\nusing MonoGameGum.GueDeriving;\nusing MonoGameGumFromFile.Components;",
   "CodeProjectRoot": "..\\",
   "RootNamespace": "MonoGameGumFromFile",
   "IsCodeGenPluginEnabled": true,

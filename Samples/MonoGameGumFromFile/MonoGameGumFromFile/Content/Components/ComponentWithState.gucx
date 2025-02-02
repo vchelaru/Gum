@@ -30,7 +30,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>LeftSideRectangle.Height Units</Name>
+      <Name>LeftSideRectangle.HeightUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -42,13 +42,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>LeftSideRectangle.X Origin</Name>
+      <Name>LeftSideRectangle.XOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>LeftSideRectangle.X Units</Name>
+      <Name>LeftSideRectangle.XUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -60,13 +60,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>LeftSideRectangle.Y Origin</Name>
+      <Name>LeftSideRectangle.YOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>LeftSideRectangle.Y Units</Name>
+      <Name>LeftSideRectangle.YUnits</Name>
       <Value xsi:type="xsd:int">7</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -83,7 +83,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>RightSideRectangle.Height Units</Name>
+      <Name>RightSideRectangle.HeightUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -95,13 +95,13 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>RightSideRectangle.X Origin</Name>
+      <Name>RightSideRectangle.XOrigin</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>RightSideRectangle.X Units</Name>
+      <Name>RightSideRectangle.XUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -113,13 +113,13 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>RightSideRectangle.Y Origin</Name>
+      <Name>RightSideRectangle.YOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>RightSideRectangle.Y Units</Name>
+      <Name>RightSideRectangle.YUnits</Name>
       <Value xsi:type="xsd:int">7</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -133,7 +133,6 @@
   </State>
   <Category>
     <Name>LeftSideCategory</Name>
-    <IsSetRecursively>false</IsSetRecursively>
     <State>
       <Name>Red</Name>
       <Variable>
@@ -182,7 +181,6 @@
   </Category>
   <Category>
     <Name>RightSideCategory</Name>
-    <IsSetRecursively>false</IsSetRecursively>
     <State>
       <Name>Yellow</Name>
       <Variable>
