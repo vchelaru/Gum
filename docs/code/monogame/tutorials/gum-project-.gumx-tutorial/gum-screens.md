@@ -54,8 +54,8 @@ To show the screen in game, modify the Initialize method as shown in the followi
         "GumProject/GumProject.gumx");
 
 // Start of new code
-    // the Screens list contains all screens. Find the screen you want
-    var screen = gumProject.Screens.Find(item => item.Name == "TitleScreen");
+<strong>    // the Screens list contains all screens. Find the screen you want
+</strong>    var screen = gumProject.Screens.Find(item => item.Name == "TitleScreen");
     // Calling GraphicalUiElement creates the visuals for the screen
 <strong>    screen.ToGraphicalUiElement(
 </strong><strong>        RenderingLibrary.SystemManagers.Default, addToManagers: true);
