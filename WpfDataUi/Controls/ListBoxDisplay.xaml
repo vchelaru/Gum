@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:WpfDataUi.Controls"
              mc:Ignorable="d" 
-             MinHeight="80" MaxHeight="120"
+             MinHeight="80" MaxHeight="260"
              d:DesignWidth="200">
     <Grid>
         <Grid.RowDefinitions>
@@ -28,7 +28,12 @@
             </ListBox>
             <Grid Grid.Row="1">
                 <StackPanel x:Name="NotEditingEntryStackPanel" HorizontalAlignment="Stretch" Orientation="Horizontal">
-                    <Button Height="24" Width="24" Click="AddButtonClicked">+</Button>
+                    <Button 
+                        Height="{Binding ActualHeight, ElementName=Label}"
+                        Width="{Binding ActualHeight, ElementName=Label}"
+                        MinHeight="24"
+                        MinWidth="24"
+                        Click="AddButtonClicked">+</Button>
                 </StackPanel>
             </Grid>
             <Grid Grid.Row="1" x:Name="NewEntryGrid" Visibility="Collapsed">
