@@ -8,10 +8,10 @@
              d:DesignHeight="300" d:DesignWidth="300">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="20"></ColumnDefinition>
+            <ColumnDefinition Width="{Binding ActualHeight, ElementName=TextBlockInstance}"></ColumnDefinition>
             <ColumnDefinition></ColumnDefinition>
         </Grid.ColumnDefinitions>
-        
+
         <Button x:Name="ButtonInstance" Click="ButtonInstance_Click">X</Button>
         <TextBlock Grid.Column="1" VerticalAlignment="Center" Margin="4,0,0,0" Name="TextBlockInstance">Member Name</TextBlock>
     </Grid>
