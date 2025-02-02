@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using RenderingLibrary.Graphics;
+using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Drawing.Drawing2D;
@@ -515,9 +516,24 @@ public class VariableReferenceLogic
             {
                 var item = newValueAsList[i];
 
-                var split = item
-                    .Split(equalsArray, StringSplitOptions.RemoveEmptyEntries)
-                    .Select(stringItem => stringItem.Trim()).ToArray();
+                var syntax = CSharpSyntaxTree.ParseText(item).GetCompilationUnitRoot();
+                var assignment = syntax.DescendantNodes().FirstOrDefault(item => item is AssignmentExpressionSyntax) as AssignmentExpressionSyntax;
+
+
+                string[] split = new string[0];
+                if(assignment == null)
+                {
+                    // fall back?
+                    split = 
+                }
+                else
+                {
+                    split = new string[]
+                    {
+                        assignment.Left.ToString(),
+                        assignment.Right.ToString()
+                    };
+                }
 
                 if (split.Length == 0)
                 {
