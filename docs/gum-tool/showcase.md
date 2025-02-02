@@ -10,6 +10,10 @@
 
 <figure><img src="../.gitbook/assets/09_06 00 05.jpg" alt=""><figcaption><p>Cranky Chibi Cthulhu</p></figcaption></figure>
 
+<figure><img src="../.gitbook/assets/TerraScriber3.avif" alt=""><figcaption><p>TerraScriber</p></figcaption></figure>
+
+<figure><img src="../.gitbook/assets/TerraScriber4.avif" alt=""><figcaption><p>TerraScriber</p></figcaption></figure>
+
 <figure><img src="../.gitbook/assets/Legends1.jpg" alt=""><figcaption><p>Champions of Anteria</p></figcaption></figure>
 
 <figure><img src="../.gitbook/assets/Legends2.jpg" alt=""><figcaption><p>Champions of Anteria</p></figcaption></figure>
