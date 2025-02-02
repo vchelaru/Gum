@@ -14,7 +14,8 @@ namespace MonoGameGumFromFile.Screens
         partial void CustomInitialize()
         {
             var exposedVariableInstance = GetGraphicalUiElementByName("ComponentWithExposedVariableInstance");
-            exposedVariableInstance.SetProperty("Text", "I'm set in code");
+            exposedVariableInstance.SetProperty("Text", 
+                "I'm set in code. I even [IsBold=true]support BBCode[/IsBold] for [Color=Pink]inline[/Color] styling.");
         }
     }
 }
