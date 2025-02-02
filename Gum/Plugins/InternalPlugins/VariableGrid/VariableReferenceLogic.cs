@@ -523,8 +523,7 @@ public class VariableReferenceLogic
                 string[] split = new string[0];
                 if(assignment == null)
                 {
-                    // fall back?
-                    split = 
+                    split = new string[] { item?.Trim() };
                 }
                 else
                 {
