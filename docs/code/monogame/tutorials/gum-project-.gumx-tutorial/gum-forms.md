@@ -18,7 +18,7 @@ Gum Forms provides a collection of standardized, fully functional UI elements. M
 We can use all of the types above by adding instances of components which map to these controls.
 
 {% hint style="info" %}
-This tutorial does not require any any of the instances from the previous tutorial. It assumes that you still have a Gum project and that you have set up your Game class to include the necessary Initialize, Draw, and Update calls.
+This tutorial does not require any of the instances from the previous tutorial. It assumes that you still have a Gum project and that you have set up your Game class to include the necessary Initialize, Draw, and Update calls.
 
 If you would like a simpler starting point, feel free to delete all content in your TitleScreen in Gum, and feel free to delete all code aside from the bare minimum for your project.
 

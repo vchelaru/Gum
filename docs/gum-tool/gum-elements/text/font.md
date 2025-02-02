@@ -55,7 +55,7 @@ Fonts are generated in response to any of the following properties changing:
 
 ### Installing Fonts
 
-Windows Machines typicall have dozens of fonts installed automatically. You may be working on a project which needs custom fonts. These fonts can be obtained on many websites including [https://www.dafont.com/](https://www.dafont.com/) and [https://fonts.google.com/](https://fonts.google.com/).&#x20;
+Windows Machines typically have dozens of fonts installed automatically. You may be working on a project which needs custom fonts. These fonts can be obtained on many websites including [https://www.dafont.com/](https://www.dafont.com/) and [https://fonts.google.com/](https://fonts.google.com/).&#x20;
 
 Once a font has been installed, you must restart Gum for the font to be available in the Font dropdown.
 

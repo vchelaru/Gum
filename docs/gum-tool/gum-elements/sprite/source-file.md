@@ -22,7 +22,7 @@ All files are added as paths relative to the .gumx project.
 
 <figure><img src="../../../.gitbook/assets/image (94).png" alt=""><figcaption><p>Sprite referencing UISpriteSheet.png located in the same folder as the .gumx file</p></figcaption></figure>
 
-If a file is referenced outside of the .gumx folder, then Gum asks if you would like to copy the file or reference it outside of the current directory. Usually files should be copied to the project folder to keep the entire Gum proejct portable.
+If a file is referenced outside of the .gumx folder, then Gum asks if you would like to copy the file or reference it outside of the current directory. Usually files should be copied to the project folder to keep the entire Gum project portable.
 
 <figure><img src="../../../.gitbook/assets/image (95).png" alt=""><figcaption><p>Gum asking whether a file should be copied or referenced in its current location.</p></figcaption></figure>
 
