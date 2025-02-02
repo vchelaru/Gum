@@ -17,12 +17,12 @@
         <Label x:Name="Label" MinWidth="100">Property Label:</Label>
 
         <!--If this isn't avaiable, try "unblocking" your dlls: https://wpftoolkit.codeplex.com/discussions/572836-->
-        <colorpicker:PortableColorPicker Grid.Column="1" Height="12"
+        <colorpicker:PortableColorPicker Grid.Column="1" MinHeight="12" Margin="0,5,0,5"
                           Name="ColorPicker"
                           MouseUp="ColorPicker_MouseUp"
                                          PreviewMouseUp="ColorPicker_PreviewMouseUp"
                           ColorChanged="HandleColorChange" 
-                          VerticalAlignment="Center">
+                          VerticalAlignment="Stretch">
             
         </colorpicker:PortableColorPicker>
     </Grid>
