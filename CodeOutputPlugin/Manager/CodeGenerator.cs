@@ -2432,6 +2432,8 @@ public class CodeGenerator
 
     #endregion
 
+    #region States
+
     public static string GetCodeForState(ElementSave container, StateSave stateSave, CodeOutputProjectSettings codeOutputProjectSettings)
     {
         var stringBuilder = new StringBuilder();
@@ -2455,8 +2457,6 @@ public class CodeGenerator
             .ToArray();
         return variablesToConsider;
     }
-
-    #region States
 
     private static void FillWithStateEnums(CodeGenerationContext context)
     {
@@ -3114,7 +3114,7 @@ public class CodeGenerator
             }
             else
             {
-                return "\"" + asString.Replace("\n", "\\n") + "\"";
+                return $"@\"{asString}\"";
             }
         }
         else if (value is bool)
