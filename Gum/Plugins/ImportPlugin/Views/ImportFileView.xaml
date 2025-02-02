@@ -14,20 +14,29 @@
             <RowDefinition Height="Auto"></RowDefinition>
         </Grid.RowDefinitions>
 
-        <TextBox 
-                 x:Name="SearchTextBox"
-                 Margin="5" 
-                 KeyDown="TextBox_KeyDown"
-                 PreviewKeyDown="TextBox_PreviewKeyDown"
-                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"></TextBox>
+        <Grid Grid.Row="0" Margin="5,0,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Text="Filter:" Margin="0,0,5,0" VerticalAlignment="Center"/>
+            <TextBox 
+                x:Name="SearchTextBox"
+                Grid.Column="1"
+                Margin="5" 
+                KeyDown="TextBox_KeyDown"
+                PreviewKeyDown="TextBox_PreviewKeyDown"
+                Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"></TextBox>
+        </Grid>
         <ListBox x:Name="ListBoxInstance"
-                 Grid.Row="1" Margin="5,0,5,5" 
-                 ItemsSource="{Binding FilteredFileList}"
-                 SelectedItem="{Binding SelectedListBoxItem}"
-                 SelectionChanged="ListBoxInstance_SelectionChanged"
-                 ></ListBox>
+                Grid.Row="1" Margin="5,0,5,5" 
+                ItemsSource="{Binding FilteredFileList}"
+                SelectedItem="{Binding SelectedListBoxItem}"
+                SelectionChanged="ListBoxInstance_SelectionChanged"
+                ></ListBox>
         <TextBlock FontSize="10" Margin="5,0,5,5" TextWrapping="Wrap" Grid.Row="2">
-            The list above shows all files in the project folder. <LineBreak></LineBreak>
+            The list above shows all files in the project folder not yet imported. <LineBreak></LineBreak>
             To add files from outside of the project folder, click the Browse button. Files from outside of the content folder will be copied to the content folder.</TextBlock>
         <Grid Grid.Row="3" Margin="5,0,15,5">
             <Grid.ColumnDefinitions>
