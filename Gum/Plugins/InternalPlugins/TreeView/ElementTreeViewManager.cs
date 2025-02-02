@@ -1757,28 +1757,6 @@ namespace Gum.Managers
                     FlatList.FlatList.SelectedIndex = 0;
                 }
             }
-
-            //do this after refreshing the UI or else the tree nodes won't expand
-            //if (string.IsNullOrEmpty(filterText))
-            //{
-            //    List<TreeNode> nodesToKeepExpanded = new List<TreeNode>();
-
-            //    var node = SelectedNode;
-
-            //    while (node != null)
-            //    {
-            //        nodesToKeepExpanded.Add(node);
-            //        node = node.Parent;
-            //    }
-
-            //    if (expandedStateBeforeFilter != null)
-            //    {
-            //        expandedStateBeforeFilter.Apply();
-            //        expandedStateBeforeFilter = null;
-            //    }
-
-            //    SelectedNode?.EnsureVisible();
-            //}
         }
 
         private void SearchInstanceVariables(ElementSave element, string filterTextLower )
