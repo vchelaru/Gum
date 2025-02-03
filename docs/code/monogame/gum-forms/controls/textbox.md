@@ -2,7 +2,7 @@
 
 The TextBox control allows users to enter a string. It supports highlighting, copy/paste, selection with mouse and keyboard, and CTRL key for performing operations on entire words.
 
-### Code Example: Creating a TextBox
+## Code Example: Creating a TextBox
 
 The following code creates a TextBox.
 
@@ -26,7 +26,7 @@ textBox2.Placeholder = "Placeholder Text...";
 
 <figure><img src="../../../../.gitbook/assets/24_07 22 19.gif" alt=""><figcaption><p>Interacting with TextBoxes</p></figcaption></figure>
 
-### Selection
+## Selection
 
 Selection can be performed programmatically or by the user using the cursor.
 
@@ -42,7 +42,7 @@ if(textBox.SelectionLength > 0)
 }
 ```
 
-The `SelectionStart` and `SelectionLength` proerties can be modified to change the visual selection. For example, the following selects the first 5 letters:
+The `SelectionStart` and `SelectionLength` properties can be modified to change the visual selection. For example, the following selects the first 5 letters:
 
 ```csharp
 textBox.SelectionStart = 0;
@@ -68,13 +68,13 @@ Holding down the shift key and pressing the arrow keys adjusts the selection.
 
 <figure><img src="../../../../.gitbook/assets/16_11 22 37.gif" alt=""><figcaption><p>Arrow keys + shift to select</p></figcaption></figure>
 
-### TextWrapping
+## TextWrapping
 
-The TextWrapping property can be used to set whether the TextBox wraps text. By default this value is set to `TextWrapping.NoWrap` which means the text does not wrap, but instead extends horizontally.
+The `TextWrapping` property can be used to set whether the TextBox wraps text. By default this value is set to `TextWrapping.NoWrap` which means the text does not wrap, but instead extends horizontally.
 
 <figure><img src="../../../../.gitbook/assets/16_11 32 07.gif" alt=""><figcaption><p>TextWrapping.NoWrap causes text to scroll</p></figcaption></figure>
 
-If TextWrapping is set to \`TextWrapping.Wrap, then text wraps to multiple lines. Note that usually this is combined with a taller text box so that multiple lines display properly.
+If `TextWrapping` is set to \`TextWrapping.Wrap, then text wraps to multiple lines. Note that usually this is combined with a taller text box so that multiple lines display properly.
 
 ```csharp
 wrappedTextBox.TextWrapping = TextWrapping.Wrap;
@@ -83,3 +83,16 @@ wrappedTextBox.Height = 140;
 ```
 
 <figure><img src="../../../../.gitbook/assets/16_11 39 19.gif" alt=""><figcaption><p>TextWrapping.Wrap causes text to wrap</p></figcaption></figure>
+
+## Extended Character Sets and Keyboards
+
+The TextBox supports entering characters respecting the current keyboard language settings. This includes typing characters with accents, pasting text, and entering alt codes ([https://www.alt-codes.net/](https://www.alt-codes.net/) ).
+
+<figure><img src="../../../../.gitbook/assets/image (167).png" alt=""><figcaption><p>TextBox displaying the é character</p></figcaption></figure>
+
+Characters must be available in the current font to support being written in TextBoxes. If you would like to support more characters, you can explicitly create a font (.fnt) including the desired characters, or change the default character set in Gum.
+
+For more information on creating fonts, see the [Font](../../../../gum-tool/gum-elements/text/font.md) and [Use Custom Font](../../../../gum-tool/gum-elements/text/use-custom-font.md) pages. For more information on specifying the default character set in Gum, see the [Project Property Font Ranges](../../../../gum-tool/menu/project-properties.md#font-ranges) page.
+
+
+
