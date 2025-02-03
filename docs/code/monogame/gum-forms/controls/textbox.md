@@ -26,6 +26,21 @@ textBox2.Placeholder = "Placeholder Text...";
 
 <figure><img src="../../../../.gitbook/assets/24_07 22 19.gif" alt=""><figcaption><p>Interacting with TextBoxes</p></figcaption></figure>
 
+## Typing
+
+TextBox supports reading characters from the keyboard. It supports:
+
+* Regular character typing
+* Backspace
+* Delete
+* Enter (if multi-line)
+* Keyboard repeat rate
+* CTRL X, C, and V for cut, copy, and paste
+
+The TextBox respects the OS-level repat rate. For example, the following animation shows the TextBox responding to the Windows Key repeat rate.
+
+<figure><img src="../../../../.gitbook/assets/03_08 07 14.gif" alt=""><figcaption><p>Key repeat rate adjusted in Windows</p></figcaption></figure>
+
 ## Selection
 
 Selection can be performed programmatically or by the user using the cursor.
