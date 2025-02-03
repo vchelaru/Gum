@@ -1,6 +1,6 @@
 # Setup
 
-### Introduction
+## Introduction
 
 This tutorial walks you through creating a brand new Gum project and adding it to an existing MonoGame project. The MonoGame project can be empty or it can be an existing game - the steps are the same either way.
 
@@ -13,7 +13,7 @@ This tutorial covers:
 
 This tutorial presents the minimum amount of code necessary to work with Gum. You may need to adapt the code to fit in your game project.
 
-### Adding Gum NuGet Packages
+## Adding Gum NuGet Packages
 
 Before writing any code, we must add the Gum nuget package. Add the `Gum.MonoGame` package to your game. For more information see the [Setup page](../../setup/).
 
@@ -21,7 +21,7 @@ Once you are finished, your game project should reference the `Gum.MonoGam` proj
 
 <figure><img src="../../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Gum.MonoGame NuGet package</p></figcaption></figure>
 
-### Creating a new Gum Project
+## Creating a new Gum Project
 
 Next we'll create a project in the Gum UI tool. If you have not yet run the Gum tool, you can get setup instructions in the Gum [Setup page](../../../../gum-tool/setup/).
 
@@ -65,7 +65,7 @@ Your project now includes Forms components.
 
 <figure><img src="../../../../.gitbook/assets/image (8) (1).png" alt=""><figcaption><p>Forms Components in Gum</p></figcaption></figure>
 
-### Modifying the Game .csproj
+## Modifying the Game .csproj
 
 Now that we have our Gum project created, we can load it in our game.
 
@@ -98,7 +98,7 @@ At the time of this writing, Gum does not use the MonoGame Content Builder to bu
 Future versions may be expanded to support using either the .XNB file format or _raw_ PNGs.
 {% endhint %}
 
-#### Android
+### Android
 
 If you are using Android, then your files must be marked as Android Assets rather than copied files.
 
@@ -112,7 +112,7 @@ The steps to do this are:
 <AndroidAsset Include="Content\GumProject\**\*.*" />
 ```
 
-### Loading the Gum Project
+## Loading the Gum Project
 
 Now that we have a Gum project added to the .csproj, we can load the Gum project. We need to add code to Initialize, Update, and Draw. A simplified Game class with these calls would look like the following code:
 
@@ -175,7 +175,7 @@ MonoGameGum.GumService.Default.Update(this, gameTime);
 MonoGameGum.GumService.Default.Draw();
 ```
 
-### Conclusion
+## Conclusion
 
 If you've followed along, your project is now a fully-functional Gum project. We haven't added any screens to the Gum project yet, so if you run the game you'll still see a blank (cornflower blue) screen.
 

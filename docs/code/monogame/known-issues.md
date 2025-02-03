@@ -6,5 +6,4 @@ Gum projects can be loaded and used in MonoGame projects with most features avai
 
 * Gum Animations
 * Variable References - note that variable references propagate variable assignments, so you can use variable references in your project, but they will not update in real-time in your game
-* BBCode
 * Skia
