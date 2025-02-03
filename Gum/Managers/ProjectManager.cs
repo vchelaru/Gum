@@ -119,8 +119,6 @@ namespace Gum
             ObjectFinder.Self.GumProjectSave = mGumProjectSave;
 
             StandardElementsManager.Self.PopulateProjectWithDefaultStandards(mGumProjectSave);
-            // Now that a new project is created, refresh the UI!
-            GumCommands.Self.GuiCommands.RefreshElementTreeView();
 
             PluginManager.Self.ProjectLoad(mGumProjectSave);
         }
@@ -252,9 +250,6 @@ namespace Gum
             SelectedState.Self.SelectedBehavior = null;
             SelectedState.Self.SelectedStateCategorySave = null;
             SelectedState.Self.SelectedStateSave = null;
-
-            // Now that a new project is loaded, refresh the UI!
-            GumCommands.Self.GuiCommands.RefreshElementTreeView();
 
 
             if (mGumProjectSave != null)

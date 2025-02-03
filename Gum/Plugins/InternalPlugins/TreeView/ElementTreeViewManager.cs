@@ -694,7 +694,10 @@ namespace Gum.Managers
             }
             else
             {
+                RootScreensTreeNode.Nodes.Clear();
                 RootComponentsTreeNode.Nodes.Clear();
+                // maybe we support behavior folders in the future? If so:
+                RootBehaviorsTreeNode.Nodes.Clear();
             }
         }
 

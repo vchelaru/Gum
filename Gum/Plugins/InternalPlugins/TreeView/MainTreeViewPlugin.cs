@@ -26,7 +26,28 @@ internal class MainTreeViewPlugin : InternalPlugin
         this.InstanceSelected += MainTreeViewPlugin_InstanceSelected;
         this.ElementSelected += HandleElementSelected;
         this.BehaviorSelected += HandleBehaviorSelected;
+
         this.ElementDelete += HandleElementDeleted;
+        this.ElementAdd += HandleElementAdd;
+
+        this.BehaviorCreated += HandleBehaviorCreated;
+
+        this.ProjectLoad += HandleProjectLoad;
+    }
+
+    private void HandleProjectLoad(GumProjectSave save)
+    {
+        ElementTreeViewManager.Self.RefreshUi();
+    }
+
+    private void HandleElementAdd(ElementSave save)
+    {
+        ElementTreeViewManager.Self.RefreshUi();
+    }
+
+    private void HandleBehaviorCreated(BehaviorSave save)
+    {
+        ElementTreeViewManager.Self.RefreshUi();
     }
 
     private void HandleElementDeleted(ElementSave save)

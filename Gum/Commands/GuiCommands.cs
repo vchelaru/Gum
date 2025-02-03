@@ -112,6 +112,9 @@ namespace Gum.Commands
             PluginManager.Self.HandleUiZoomValueChanged();
         }
 
+
+        [Obsolete("This should not be explicitly called. Rather, the plugin " +
+            "should respond to load events ")]
         public void RefreshElementTreeView()
         {
             ElementTreeViewManager.Self.RefreshUi();

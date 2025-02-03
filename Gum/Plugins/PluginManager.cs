@@ -730,6 +730,9 @@ namespace Gum.Plugins
 
         internal void BehaviorVariableSelected(VariableSave variable) =>
             CallMethodOnPlugin(plugin => plugin.CallBehaviorVariableSelected(variable));
+        internal void BehaviorCreated(BehaviorSave behavior) =>
+            CallMethodOnPlugin(plugin => plugin.CallBehaviorCreated(behavior));
+
 
         internal void InstanceSelected(ElementSave elementSave, InstanceSave instance) =>
             CallMethodOnPlugin(plugin => plugin.CallInstanceSelected(elementSave, instance));

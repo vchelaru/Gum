@@ -294,8 +294,8 @@ namespace Gum.Commands
                     ProjectManager.Self.GumProjectSave.Behaviors.Add(behavior);
                     ProjectManager.Self.GumProjectSave.Behaviors.Sort((first, second) => first.Name.CompareTo(second.Name));
 
+                    PluginManager.Self.BehaviorCreated(behavior);
 
-                    GumCommands.Self.GuiCommands.RefreshElementTreeView();
                     SelectedState.Self.SelectedBehavior = behavior;
 
                     GumCommands.Self.FileCommands.TryAutoSaveProject();

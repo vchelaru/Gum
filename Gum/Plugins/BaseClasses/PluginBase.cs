@@ -119,6 +119,7 @@ namespace Gum.Plugins.BaseClasses
         public event Action<TreeNode> TreeNodeSelected;
         public event Action<TreeNode> StateWindowTreeNodeSelected;
         public event Action<BehaviorSave> BehaviorSelected;
+        public event Action<BehaviorSave> BehaviorCreated;
         public event Action<VariableSave> BehaviorVariableSelected;
 
         public event Action<ElementBehaviorReference, ElementSave> BehaviorReferenceSelected;
@@ -417,6 +418,7 @@ namespace Gum.Plugins.BaseClasses
 
         public void CallBehaviorSelected(BehaviorSave behavior) => BehaviorSelected?.Invoke(behavior);
 
+        public void CallBehaviorCreated(BehaviorSave behavior) => BehaviorCreated?.Invoke(behavior);
         public void CallBehaviorVariableSelected(VariableSave behaviorVariable) => BehaviorVariableSelected?.Invoke(behaviorVariable);
 
         public void CallInstanceSelected(ElementSave elementSave, InstanceSave instance) => InstanceSelected?.Invoke(elementSave, instance);

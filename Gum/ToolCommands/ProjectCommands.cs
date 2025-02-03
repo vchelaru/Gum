@@ -184,14 +184,12 @@ namespace Gum.ToolCommands
             gumProject.Components.Add(componentSave);
             gumProject.Components.Sort((first, second) => first.Name.CompareTo(second.Name));
 
-            GumCommands.Self.GuiCommands.RefreshElementTreeView();
-
-            SelectedState.Self.SelectedComponent = componentSave;
 
             GumCommands.Self.FileCommands.TryAutoSaveProject();
             GumCommands.Self.FileCommands.TryAutoSaveElement(componentSave);
-
             Plugins.PluginManager.Self.ElementAdd(componentSave);
+
+            SelectedState.Self.SelectedComponent = componentSave;
         }
 
         private void PrepareNewComponentSave(ComponentSave componentSave, string componentName)
