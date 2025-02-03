@@ -42,7 +42,7 @@ The following shows a simple Game1.cs file which renders Gum Text:
 
     protected override void Initialize()
     {
-        MonoGameGum.GumService.Default.Initialize(this.GraphicsDevice);
+        MonoGameGum.GumService.Default.Initialize(this);
         
         gumBatch = new GumBatch();
         font = new RenderingLibrary.Graphics.BitmapFont(

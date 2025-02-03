@@ -28,7 +28,7 @@ namespace MonoGameGumInCode
 
         protected override void Initialize()
         {
-            GumService.Default.Initialize(_graphics.GraphicsDevice);
+            GumService.Default.Initialize(this);
 
             // adjust this to zoom in or out
             //SystemManagers.Default.Renderer.Camera.Zoom = 3;

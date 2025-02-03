@@ -73,7 +73,7 @@ To load a Gum Project:
 protected override void Initialize()
 {
     var gumProject = MonoGameGum.GumService.Default.Initialize(
-        this.GraphicsDevice, 
+        this, 
         "GumProject/GumProject.gumx");
 
     // This assumes that your project has at least 1 screen
@@ -88,7 +88,7 @@ The code above loads the Gum project using the file path `"GumProject/GumProject
 
 ```csharp
 MonoGameGum.GumService.Default.Initialize(
-    this.GraphicsDevice, "../GumProject/GumProject.gumx");
+    this, "../GumProject/GumProject.gumx");
 ```
 
 ## ToGraphicalUiElement
@@ -151,7 +151,7 @@ public class Game1 : Game
     protected override void Initialize()
     {
         var gumProject = MonoGameGum.GumService.Default.Initialize(
-            this.GraphicsDevice, "GumProject/GumProject.gumx");
+            this, "GumProject/GumProject.gumx");
         // This assumes that your project has at least 1 screen
         Root = gumProject.Screens.First().ToGraphicalUiElement(
             SystemManagers.Default, addToManagers: true);

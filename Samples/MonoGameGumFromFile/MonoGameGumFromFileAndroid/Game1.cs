@@ -71,7 +71,7 @@ namespace MonoGameGumFromFile
         protected override void Initialize()
         {
             synchronizationContext = new SingleThreadSynchronizationContext();
-            GumService.Default.Initialize(_graphics.GraphicsDevice, "GumProject.gumx");
+            GumService.Default.Initialize(this, "GumProject.gumx");
 
 
             // This allows you to resize:

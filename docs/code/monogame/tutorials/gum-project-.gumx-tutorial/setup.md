@@ -130,7 +130,7 @@ public class Game1 : Game
     protected override void Initialize()
     {
         var gumProject = MonoGameGum.GumService.Default.Initialize(
-            this.GraphicsDevice,
+            this,
             // This is relative to Content:
             "GumProject/GumProject.gumx");
 
@@ -158,7 +158,7 @@ The code above has the following three calls on GumService:
 
 ```csharp
         var gumProject = MonoGameGum.GumService.Default.Initialize(
-            this.GraphicsDevice,
+            this,
             // This is relative to Content:
             "GumProject/GumProject.gumx");
 ```

@@ -18,7 +18,7 @@ To initialize Gum, modify your Game project (such as Game1.cs) so that it includ
 ```csharp
 protected override void Initialize()
 {
-    MonoGameGum.GumService.Default.Initialize(this.GraphicsDevice);
+    MonoGameGum.GumService.Default.Initialize(this);
     base.Initialize();
 }
 
@@ -43,7 +43,7 @@ To test that you have successfully added Gum to the project, modify your Initial
 ```csharp
 protected override void Initialize()
 {
-    MonoGameGum.GumService.Default.Initialize(this.GraphicsDevice);
+    MonoGameGum.GumService.Default.Initialize(this);
 
     var rectangle = new ColoredRectangleRuntime();
     rectangle.Width = 100;

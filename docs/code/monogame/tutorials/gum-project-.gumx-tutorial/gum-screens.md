@@ -49,7 +49,7 @@ To show the screen in game, modify the Initialize method as shown in the followi
 <pre class="language-csharp" data-line-numbers><code class="lang-csharp">protected override void Initialize()
 {
     var gumProject = MonoGameGum.GumService.Default.Initialize(
-        this.GraphicsDevice,
+        this,
         // This is relative to Content:
         "GumProject/GumProject.gumx");
 
@@ -108,7 +108,7 @@ public class Game1 : Game
     protected override void Initialize()
     {
         var gumProject = MonoGameGum.GumService.Default.Initialize(
-            this.GraphicsDevice,
+            this,
             // This is relative to Content:
             "GumProject/GumProject.gumx");      
             
@@ -154,7 +154,7 @@ We can modify the displayed string by getting an instance of the Text and modify
 protected override void Initialize()
 {
     var gumProject = MonoGameGum.GumService.Default.Initialize(
-        this.GraphicsDevice,
+        this,
         // This is relative to Content:
         "GumProject/GumProject.gumx");      
         
@@ -183,7 +183,7 @@ We can also interact with Forms objects in code. The base type for all Forms obj
 protected override void Initialize()
 {
     var gumProject = MonoGameGum.GumService.Default.Initialize(
-        this.GraphicsDevice,
+        this,
         // This is relative to Content:
         "GumProject/GumProject.gumx");      
         

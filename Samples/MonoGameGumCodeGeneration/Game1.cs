@@ -26,7 +26,7 @@ namespace MonoGameGumCodeGeneration
 
         protected override void Initialize()
         {
-            var gumProject = GumService.Default.Initialize(_graphics.GraphicsDevice, "GumProject/GumProject.gumx");
+            var gumProject = GumService.Default.Initialize(this, "GumProject/GumProject.gumx");
 
             var screenGue = new MainMenuFullGenerationRuntime();
             screenGue.AddToManagers();

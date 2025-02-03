@@ -55,7 +55,7 @@ public class WebGlTest1Game : Game
 
     protected override void Initialize()
     {
-        MonoGameGum.GumService.Default.Initialize(this.GraphicsDevice);
+        MonoGameGum.GumService.Default.Initialize(this);
 
         var rectangle = new ColoredRectangleRuntime();
         rectangle.Width = 100;
