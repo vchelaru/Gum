@@ -1,6 +1,6 @@
 # Gum Forms
 
-### Introduction
+## Introduction
 
 Gum Forms provides a collection of standardized, fully functional UI elements. MonoGame Gum includes the following types:
 
@@ -42,7 +42,9 @@ public class Game1 : Game
             this.GraphicsDevice,
             // This is relative to Content:
             "GumProject/GumProject.gumx");
-
+            
+        var screen = gumProject.Screens.Find(item => item.Name == "TitleScreen");
+        
         Root = screen.ToGraphicalUiElement(
             RenderingLibrary.SystemManagers.Default, addToManagers: true);
 
@@ -68,7 +70,7 @@ public class Game1 : Game
 
 
 
-### Adding Forms Instances to a Screen
+## Adding Forms Instances to a Screen
 
 The previous tutorial showed how to add a Button instance to our screen. We can add other functional controls by drag+dropping instances into the TitleScreen. This tutorial shows how to interact with a ListBox, so you should drag+drop a ListBox instance into your screen. You can also add additional instances of other types if you would like to see them in action, such as CheckBox, ComboBox, Slider, and TextBox.
 
@@ -78,7 +80,7 @@ Our forms controls already have some functionality even before we write any code
 
 <figure><img src="../../../../.gitbook/assets/24_12 03 46.gif" alt=""><figcaption><p>Forms controls with built-in functionality</p></figcaption></figure>
 
-### Interacting with Forms Instances
+## Interacting with Forms Instances
 
 We can interact with any of the Forms instances by using `GetFrameworkElementByName`. For example, to interact with the ListBox that we added in the previous section, add the following code to your Initialize method to add items to the ListBox:
 
@@ -119,9 +121,9 @@ For example, each of these components has a state category named ButtonCategory.
 
 <figure><img src="../../../../.gitbook/assets/image (106).png" alt=""><figcaption><p>ButtonClose with a ButtonCategory state category</p></figcaption></figure>
 
-Although we won't cover the details in this tutorial, you can customize the existing components or create new components which will map to the Forms types so long as they have the appropriate category.
+Although we won't cover the details in this tutorial, you can customize the existing components or create new components which will map to the Forms types so long as they have the appropriate category. See the next tutorial for details about Forms control customization.
 
-### Additional Documentation
+## Additional Documentation
 
 Forms component instances can be added and modified just like any other instance, but at runtime these types provide common properties and methods. To learn more about working with Forms in code, see the [Forms documentation](../../gum-forms/controls/).
 
@@ -129,7 +131,7 @@ Forms component instances can be added and modified just like any other instance
 The Forms types and properties are based on the WPF syntax. Developers familiar with WPF may find that many of the same members exist in Gum Forms. However, keep in mind that Gum Forms are still using Gum for the layout engine, so any properties related to position or size follow the Gum rules rather than WPF rules.
 {% endhint %}
 
-### Conclusion
+## Conclusion
 
 This tutorial showed how to create Forms instances in a screen, interact with them in code, and how to work with the different forms types.
 

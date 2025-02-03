@@ -1,10 +1,10 @@
 # Gum Screens
 
-### Introduction
+## Introduction
 
 Gum screens are _top level_ items which can contain instances of Gum objects. We'll be creating our first Gum screen in this tutorial. We'll also load this screen in code and work with gum objects.
 
-### Creating a Screen in the Gum Tool
+## Creating a Screen in the Gum Tool
 
 To add a new Screen:
 
@@ -24,7 +24,7 @@ The newly created TitleScreen is now in the Screens folder.
 
 <figure><img src="../../../../.gitbook/assets/image (101).png" alt=""><figcaption><p>TitleScreen in Gum</p></figcaption></figure>
 
-### Adding Instances
+## Adding Instances
 
 We can add instances to Gum Screen by drag+dropping the files onto the Game screen.&#x20;
 
@@ -42,7 +42,7 @@ Be sure to select the TitleScreen first, then drag+drop. If you click the compon
 
 The Gum tool includes lots of functionality for creating and customizing UI. For a more complete tutorial covering the Gum tool, see the [Gum Tool Intro Tutorials](../../../../gum-tool/tutorials-and-examples/intro-tutorials/). Feel free to spend some time creating your TitleScreen.
 
-### Showing a Gum Screen in Your Game
+## Showing a Gum Screen in Your Game
 
 To show the screen in game, modify the Initialize method as shown in the following snippet:
 
@@ -83,7 +83,7 @@ The ToGraphicalUiElement method is responsible for converting the Gum screen int
 The `addToManagers` parameter results in the screen being added to the Gum rendering system. By passing `true` for this parameter, the Screen shows up automatically when Draw is called. Remember, Draw was added in the previous tutorial.
 {% endhint %}
 
-### Keeping a Screen Reference (Root)
+## Keeping a Screen Reference (Root)
 
 Games usually need to interact with Gum screens in code. By convention the Screen is stored in a variable named `Root`. We can modify the Game project by:
 
@@ -144,7 +144,7 @@ More complicated games may have multiple roots, such as situations where UI may 
 This tutorial uses Game1 as the container for all Gum members and logic. You may want to move this code into other classes to fit the rest of your game's code structure.
 {% endhint %}
 
-### Accessing Instances in Code
+## Accessing Instances in Code
 
 Now that we have our screen stored in the Root object, we can access objects.
 
@@ -209,6 +209,6 @@ protected override void Initialize()
 
 Notice that the code above uses the GetFrameworkElementByName. This code returns an instance of a FrameworkElement (Forms instance). As we'll cover in the next tutorial, only some Components can be used as Forms instances.
 
-### Conclusion
+## Conclusion
 
 This tutorial showed how to load a Gum screen in code and how to interact with objects. The next tutorial discusses Forms controls and explains the difference between GraphicalUielements and Forms controls.
