@@ -15,8 +15,7 @@
 		<Platforms>AnyCPU</Platforms>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>FlatRedBall.GumDataTypes</PackageId>
-		<Version>2025.2.2.3</Version>
-
+		<Version>2025.2.3.1</Version>
 
 
 
