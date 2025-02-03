@@ -52,13 +52,18 @@ This effect is easy to notice when dragging an object inside a stack, as shown i
 
 ### Stacking and Units
 
-If instances are stacked in a container, the stacking controls the instance values based on the direction of the stack. Containers with a **Top to Bottom Stack** control the Y value of their children. Similarly, Containers with a **Left to Right Stack** control the X value of their children. The position value which is not controlled by the stack can be changed freely without any impact on the stacking.
+If instances are stacked in a container, the stacking controls the instance values based on the direction of the stack.&#x20;
+
+* **Top to Bottom Stack** containers control the Y value of their children.&#x20;
+* **Left to Right Stack** containers control the X value of their children.&#x20;
+
+The position value which is not controlled by the stack can be changed freely without any impact on the stacking.
 
 For example, if a container stacks its children using a **Top to Bottom Stack**, the children in the stack are free to change their X values. The following animation shows how children can be left, center, or right anchored (which changes their **X Units** and **X Origin**) without affecting the other children in the stack.
 
 <figure><img src="../../../.gitbook/assets/01_10 09 47.gif" alt=""><figcaption><p>Changing horizontal layout values does not affect siblings in a Top to Bottom Stack</p></figcaption></figure>
 
-An object will stack only if its position unit values are top or left for vertical or horizontal stacks. For example, if a child is part of a Top to Bottom Stack, it will only stack if its Y Units is set to Pixels from Top. Otherwise it ignores its parents stacking behavior.
+An object stacks only if its position unit values are top or left for vertical or horizontal stacks. For example, if a child is part of a Top to Bottom Stack, it will only stack if its Y Units is set to Pixels from Top. Otherwise it ignores its parents stacking behavior.
 
 <figure><img src="../../../.gitbook/assets/04_19 41 43.gif" alt=""><figcaption><p>Top to Bottom Stack is only respected if the child has its Y Units set to Pixels from Top</p></figcaption></figure>
 
@@ -76,17 +81,17 @@ Consider a container with a blue rectangle which stacks horizontally. The blue o
 
 <figure><img src="../../../.gitbook/assets/05_19 39 30.png" alt=""><figcaption><p>The next item's position is based on the right-side of the blue rectangle</p></figcaption></figure>
 
-For example, if a red rectangle is added to the container, the stack may create a layout similar to the following image:
+For example, if a red rectangle (partially transparent to make it easier to see when overlapping) is added to the container, the stack may create a layout similar to the following image:
 
-![](<../../../.gitbook/assets/LeftToRightStackLeftOrigin (1).png>)
+![Red rectangle is positioned relative to the right-side of the blue rectangle.](<../../../.gitbook/assets/03_05 28 05.png>)
 
 Keep in mind that the stack simply states the position of the next item. Each item can freely adjust its **X Origin** (or **Y Origin** in a **Top to Bottom Stack**). If the red rectangle's [X Origin](../general-properties/x-origin.md) is changed to **Center**, the red rectangle overlaps the blue rectangle.
 
-![](<../../../.gitbook/assets/LeftToRightOverlapping (1).png>)
+![Stack determines a child's position, the child can change its origin](<../../../.gitbook/assets/03_05 29 08.png>)
 
-If the red rectangle's [X Origin](../general-properties/x-origin.md) is changed to **Right**, then its right side will align with the right side of the blue rectangle, resulting in the red overlapping the blue completely. In this case the stacking is essentially cancelled out by the [X Origin](../general-properties/x-origin.md).
+If the red rectangle's [X Origin](../general-properties/x-origin.md) is changed to **Right**, then its right side aligns with the right side of the blue rectangle, resulting in the red overlapping the blue completely. In this case the red rectangle's stacking is essentially cancelled out by the [X Origin](../general-properties/x-origin.md).
 
-![](../../../.gitbook/assets/LeftToRightCompleteOverlap.png)
+![Red rectangle overlapping blue rectangle](<../../../.gitbook/assets/03_05 30 44.png>)
 
 This overlapping may not be desirable, so keep this in mind when changing a stacked child's origin.
 
