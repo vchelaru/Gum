@@ -118,7 +118,7 @@ namespace MonoGameGum.Forms
             }
 
             cursor.Activity(gameTime.TotalGameTime.TotalSeconds);
-            keyboard.Activity(gameTime.TotalGameTime.TotalSeconds);
+            keyboard.Activity(gameTime.TotalGameTime.TotalSeconds, game);
             UpdateGamepads(gameTime.TotalGameTime.TotalSeconds);
             innerList.Clear();
 

@@ -30,6 +30,12 @@ public class GumService
         }
     }
 
+    public GumProjectSave? Initialize(Game game, string? gumProjectFile = null)
+    {
+        return Initialize(game.GraphicsDevice, gumProjectFile);
+    }
+
+    [Obsolete("Initialize passing Game as the first parameter rather than GraphicsDevice. This method will be removed in future versions of Gum")]
     public GumProjectSave? Initialize(GraphicsDevice graphicsDevice, string? gumProjectFile = null)
     {
         RegisterRuntimeTypesThroughReflection();

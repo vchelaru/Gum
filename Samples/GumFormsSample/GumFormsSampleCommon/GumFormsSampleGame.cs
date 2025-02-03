@@ -49,7 +49,7 @@ public class GumFormsSampleGame : Game
         renderTarget = new RenderTarget2D(GraphicsDevice, 1024, 768);
         _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-        var gumProject = GumService.Default.Initialize(_graphics.GraphicsDevice, "FormsGumProject/GumProject.gumx");
+        var gumProject = GumService.Default.Initialize(this, "FormsGumProject/GumProject.gumx");
         FormsUtilities.Cursor.TransformMatrix = Matrix.CreateScale(1/scale);
 
         const int screenNumber = 1;
