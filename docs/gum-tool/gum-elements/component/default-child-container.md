@@ -1,8 +1,8 @@
 # Default Child Container
 
-Default Child Container specifies which instance should contain children which are added to instances of the current component.
+Default Child Container specifies the default parent for children of the selected component.
 
-By default this value is blank, which means that children will treat the entire component as their parent. If this value is set, children which are dropped on instances of this component type will use the instance as their parent.
+By default this value is blank, which means that newly added children treat the entire component as their parent. If this value is set, children which are dropped on instances of this component type use the instance as their parent.
 
 Default Child Container is typically set on containers which are designed to hold children, but which have margins or decoration around the dedicated container instance. Examples include list boxes, tree views, and frames.
 

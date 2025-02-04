@@ -15,7 +15,7 @@ You are not required to use the Gum tool or .gumx projects - you are free to do 
 
 ## Creating a Gum Project
 
-Before creating a Gum project, it is recommended that you already have a functional MonoGame. It's best to put your Gum project in a subfolder of the game's Content folder so that it stays organized from the rest of your content files. Remember, Gum creates lots files.
+Before creating a Gum project, it is recommended that you already have a functional MonoGame. It's best to put your Gum project in a subfolder of the game's Content folder so that it stays organized from the rest of your content files. Remember, Gum creates lots of files.
 
 <figure><img src="../../.gitbook/assets/ContentFolderInGame.png" alt=""><figcaption><p>GumProject folder in the game's Content folder</p></figcaption></figure>
 
