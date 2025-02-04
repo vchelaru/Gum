@@ -239,71 +239,81 @@ namespace MonoGameGum.Forms
             //    any conflicts.
             foreach (var component in ObjectFinder.Self.GumProjectSave.Components)
             {
-                if (component.Categories.Any(item => item.Name == "ButtonCategory"))
+                var categoryNames = component.Categories.Select(item => item.Name).ToList();
+
+                if (categoryNames.Contains("ButtonCategory"))
                 {
                     ElementSaveExtensions.RegisterGueInstantiationType(
                         component.Name,
                         typeof(DefaultFromFileButtonRuntime));
                 }
-                else if (component.Categories.Any(item => item.Name == "CheckBoxCategory"))
+                else if (categoryNames.Contains("CheckBoxCategory"))
                 {
                     ElementSaveExtensions.RegisterGueInstantiationType(
                         component.Name,
                         typeof(DefaultFromFileCheckBoxRuntime));
                 }
-                else if (component.Categories.Any(item => item.Name == "ComboBoxCategory"))
+                else if (categoryNames.Contains("ComboBoxCategory"))
                 {
                     ElementSaveExtensions.RegisterGueInstantiationType(
                         component.Name,
                         typeof(DefaultFromFileComboBoxRuntime));
                 }
-                else if (component.Categories.Any(item => item.Name == "ListBoxCategory"))
+                else if(categoryNames.Contains("LabelCategory"))
+                {
+                    ElementSaveExtensions.RegisterGueInstantiationType(
+                        component.Name,
+                        typeof(DefaultFromFileLabelRuntime));
+                }
+                else if (categoryNames.Contains("ListBoxCategory"))
                 {
                     ElementSaveExtensions.RegisterGueInstantiationType(
                         component.Name,
                         typeof(DefaultFromFileListBoxRuntime));
                 }
-                else if(component.Behaviors.Any(item => item.BehaviorName == "MenuBehavior"))
+                else if (categoryNames.Contains("ListBoxItemCategory"))
+                {
+                    ElementSaveExtensions.RegisterGueInstantiationType(
+                        component.Name,
+                        typeof(DefaultFromFileListBoxItemRuntime));
+                }
+                else if(categoryNames.Contains("MenuBehavior"))
                 {
                     ElementSaveExtensions.RegisterGueInstantiationType(
                         component.Name,
                         typeof(DefaultFromFileMenuRuntime));
                 }
-                else if (component.Behaviors.Any(item => item.BehaviorName == "MenuItemBehavior"))
+                else if (categoryNames.Contains("MenuItemBehavior"))
                 {
                     ElementSaveExtensions.RegisterGueInstantiationType(
                         component.Name,
                         typeof(DefaultFromFileMenuItemRuntime));
-
-                    // cannot do this until we can instantiate from-file elements without accessing the element
-                    //FrameworkElement.DefaultFormsComponents[typeof(MenuItem)] = typeof(DefaultFromFileMenuItemRuntime);
-
                 }
-                else if (component.Categories.Any(item => item.Name == "PasswordBoxCategory"))
+                else if (categoryNames.Contains("PasswordBoxCategory"))
                 {
                     ElementSaveExtensions.RegisterGueInstantiationType(
                         component.Name,
                         typeof(DefaultFromFilePasswordBoxRuntime));
                 }
-                else if (component.Categories.Any(item => item.Name == "RadioButtonCategory"))
+                else if (categoryNames.Contains("RadioButtonCategory"))
                 {
                     ElementSaveExtensions.RegisterGueInstantiationType(
                         component.Name,
                         typeof(DefaultFromFileRadioButtonRuntime));
                 }
-                else if (component.Categories.Any(item => item.Name == "ScrollBarCategory"))
+                else if (categoryNames.Contains("ScrollBarCategory"))
                 {
                     ElementSaveExtensions.RegisterGueInstantiationType(
                         component.Name,
                         typeof(DefaultFromFileScrollBarRuntime));
                 }
-                else if (component.Categories.Any(item => item.Name == "SliderCategory"))
+                else if (categoryNames.Contains("SliderCategory"))
                 {
                     ElementSaveExtensions.RegisterGueInstantiationType(
                         component.Name,
                         typeof(DefaultFromFileSliderRuntime));
                 }
-                else if (component.Categories.Any(item => item.Name == "TextBoxCategory"))
+                else if (categoryNames.Contains("TextBoxCategory"))
                 {
                     ElementSaveExtensions.RegisterGueInstantiationType(
                         component.Name,
