@@ -35,7 +35,8 @@ public class GumService
         return Initialize(game.GraphicsDevice, gumProjectFile);
     }
 
-    [Obsolete("Initialize passing Game as the first parameter rather than GraphicsDevice. This method will be removed in future versions of Gum")]
+    [Obsolete("Initialize passing Game as the first parameter rather than GraphicsDevice. Using this method does not support non-(EN-US) keyboard layouts, and " +
+        "does not support ALT+numeric key codes for accents in TextBoxes. This method will be removed in future versions of Gum")]
     public GumProjectSave? Initialize(GraphicsDevice graphicsDevice, string? gumProjectFile = null)
     {
         RegisterRuntimeTypesThroughReflection();
