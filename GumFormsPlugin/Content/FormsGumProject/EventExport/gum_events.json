@@ -1,63 +1,6 @@
 {
   "UserEvents": {
-    "vchel": [
-      {
-        "NewName": "WithInner",
-        "OldName": null,
-        "ElementType": "Components",
-        "EventType": 0,
-        "TimestampUtc": "2025-01-12T21:31:55.5861723Z"
-      },
-      {
-        "NewName": "WithInner (Container).ContainerInstance",
-        "OldName": null,
-        "ElementType": "Components",
-        "EventType": 5,
-        "TimestampUtc": "2025-01-12T21:31:59.124949Z"
-      },
-      {
-        "NewName": null,
-        "OldName": "WithInner",
-        "ElementType": "Components",
-        "EventType": 1,
-        "TimestampUtc": "2025-01-12T21:32:41.1154826Z"
-      },
-      {
-        "NewName": "TestScreen",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 0,
-        "TimestampUtc": "2025-01-12T21:33:53.6164352Z"
-      },
-      {
-        "NewName": "Comp1",
-        "OldName": null,
-        "ElementType": "Components",
-        "EventType": 0,
-        "TimestampUtc": "2025-01-12T21:34:02.2759438Z"
-      },
-      {
-        "NewName": "Comp1 (Container).ContainerInstance",
-        "OldName": null,
-        "ElementType": "Components",
-        "EventType": 5,
-        "TimestampUtc": "2025-01-12T21:34:08.2008977Z"
-      },
-      {
-        "NewName": "TestScreen.Comp1Instance",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2025-01-12T21:34:24.7256743Z"
-      },
-      {
-        "NewName": "TestScreen.ColoredRectangleInstance",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2025-01-12T21:34:35.3114504Z"
-      }
-    ],
+    "vchel": [],
     "Owner": []
   }
 }

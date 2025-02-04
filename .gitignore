@@ -13,3 +13,4 @@ Samples/MonoGameGumImmediateMode/MonoGameGumImmediateMode/.config/*
 [Bb]in/
 [Oo]bj/
 Samples/GumFormsSample/MonoGameGumFormsSample/Content/FormsGumProject/EventExport/gum_events.json
+Samples/GameUiSamples/Content/GumProject/EventExport/gum_events.json
