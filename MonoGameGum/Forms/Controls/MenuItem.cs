@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Diagnostics.SymbolStore;
 using System.Linq;
 using System.Text;
@@ -101,6 +102,8 @@ public class MenuItem : ItemsControl
 
     public VisualTemplate? ScrollViewerVisualTemplate { get; set; } = null;
 
+    InteractiveGue lastVisual;
+
     #endregion
 
     #region Events
@@ -121,6 +124,11 @@ public class MenuItem : ItemsControl
 
     protected override void ReactToVisualChanged()
     {
+        if(lastVisual != null && lastVisual != Visual)
+        {
+            lastVisual.Children.CollectionChanged -= HandleVisualChildrenChanged;
+        }
+
 #if FRB
         Visual.Push += _=> this.HandlePush(this, EventArgs.Empty);
         Visual.Click += _ => this.HandleClick(this, EventArgs.Empty);
@@ -138,6 +146,10 @@ public class MenuItem : ItemsControl
         text = Visual.GetGraphicalUiElementByName("TextInstance");
         coreText = text?.RenderableComponent as RenderingLibrary.Graphics.Text;
 
+        Visual.Children.CollectionChanged += HandleVisualChildrenChanged;
+
+        lastVisual = Visual;
+
         // Just in case it needs to set the state to "enabled"
         UpdateState();
 
@@ -145,8 +157,38 @@ public class MenuItem : ItemsControl
         base.ReactToVisualChanged();
     }
 
+    private void HandleVisualChildrenChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        // February 5, 2025
+        // I wanted to make this
+        // work the same as the ListBox,
+        // but children added to ListBox are
+        // kept on the list. Here, the MenuItem 
+        // doesn't actually have a proper list of 
+        // children to add to. For it to do so, we would
+        // need to have a ListBox just like ComboBox has, and
+        // then we could add to it. For now, users must add through
+        // code.
+        //if(e.Action == NotifyCollectionChangedAction.Add)
+        //{
+        //    var newItems = e.NewItems;
+
+        //    foreach(var item in newItems)
+        //    {
+                
+        //        if(item is InteractiveGue interactiveGue &&
+        //            interactiveGue.FormsControlAsObject is MenuItem menuItem)
+        //        {
+        //            Visual.Children.Remove(interactiveGue);
+        //            this.Items.Add(menuItem);
+        //        }
+        //    }
+        //}
+    }
+
     #endregion
 
+    #region Event Handlers
     private void HandleRollOn(object sender, EventArgs args)
     {
         var cursor = MainCursor;
@@ -198,6 +240,10 @@ public class MenuItem : ItemsControl
             
         }
     }
+
+    #endregion
+
+
 
     internal void SetSelectOnHighlightRecursively(bool value)
     {
