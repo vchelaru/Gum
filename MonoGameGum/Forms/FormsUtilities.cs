@@ -245,79 +245,79 @@ namespace MonoGameGum.Forms
                 {
                     ElementSaveExtensions.RegisterGueInstantiationType(
                         component.Name,
-                        typeof(DefaultFromFileButtonRuntime));
+                        typeof(DefaultFromFileButtonRuntime), overwriteIfAlreadyExists:false);
                 }
                 else if (categoryNames.Contains("CheckBoxCategory"))
                 {
                     ElementSaveExtensions.RegisterGueInstantiationType(
                         component.Name,
-                        typeof(DefaultFromFileCheckBoxRuntime));
+                        typeof(DefaultFromFileCheckBoxRuntime), overwriteIfAlreadyExists: false);
                 }
                 else if (categoryNames.Contains("ComboBoxCategory"))
                 {
                     ElementSaveExtensions.RegisterGueInstantiationType(
                         component.Name,
-                        typeof(DefaultFromFileComboBoxRuntime));
+                        typeof(DefaultFromFileComboBoxRuntime), overwriteIfAlreadyExists: false);
                 }
                 else if(categoryNames.Contains("LabelCategory"))
                 {
                     ElementSaveExtensions.RegisterGueInstantiationType(
                         component.Name,
-                        typeof(DefaultFromFileLabelRuntime));
+                        typeof(DefaultFromFileLabelRuntime), overwriteIfAlreadyExists: false);
                 }
                 else if (categoryNames.Contains("ListBoxCategory"))
                 {
                     ElementSaveExtensions.RegisterGueInstantiationType(
                         component.Name,
-                        typeof(DefaultFromFileListBoxRuntime));
+                        typeof(DefaultFromFileListBoxRuntime), overwriteIfAlreadyExists: false);
                 }
                 else if (categoryNames.Contains("ListBoxItemCategory"))
                 {
                     ElementSaveExtensions.RegisterGueInstantiationType(
                         component.Name,
-                        typeof(DefaultFromFileListBoxItemRuntime));
+                        typeof(DefaultFromFileListBoxItemRuntime), overwriteIfAlreadyExists: false);
                 }
                 else if(categoryNames.Contains("MenuBehavior"))
                 {
                     ElementSaveExtensions.RegisterGueInstantiationType(
                         component.Name,
-                        typeof(DefaultFromFileMenuRuntime));
+                        typeof(DefaultFromFileMenuRuntime), overwriteIfAlreadyExists: false);
                 }
                 else if (categoryNames.Contains("MenuItemBehavior"))
                 {
                     ElementSaveExtensions.RegisterGueInstantiationType(
                         component.Name,
-                        typeof(DefaultFromFileMenuItemRuntime));
+                        typeof(DefaultFromFileMenuItemRuntime), overwriteIfAlreadyExists: false);
                 }
                 else if (categoryNames.Contains("PasswordBoxCategory"))
                 {
                     ElementSaveExtensions.RegisterGueInstantiationType(
                         component.Name,
-                        typeof(DefaultFromFilePasswordBoxRuntime));
+                        typeof(DefaultFromFilePasswordBoxRuntime), overwriteIfAlreadyExists: false);
                 }
                 else if (categoryNames.Contains("RadioButtonCategory"))
                 {
                     ElementSaveExtensions.RegisterGueInstantiationType(
                         component.Name,
-                        typeof(DefaultFromFileRadioButtonRuntime));
+                        typeof(DefaultFromFileRadioButtonRuntime), overwriteIfAlreadyExists: false);
                 }
                 else if (categoryNames.Contains("ScrollBarCategory"))
                 {
                     ElementSaveExtensions.RegisterGueInstantiationType(
                         component.Name,
-                        typeof(DefaultFromFileScrollBarRuntime));
+                        typeof(DefaultFromFileScrollBarRuntime), overwriteIfAlreadyExists: false);
                 }
                 else if (categoryNames.Contains("SliderCategory"))
                 {
                     ElementSaveExtensions.RegisterGueInstantiationType(
                         component.Name,
-                        typeof(DefaultFromFileSliderRuntime));
+                        typeof(DefaultFromFileSliderRuntime), overwriteIfAlreadyExists: false);
                 }
                 else if (categoryNames.Contains("TextBoxCategory"))
                 {
                     ElementSaveExtensions.RegisterGueInstantiationType(
                         component.Name,
-                        typeof(DefaultFromFileTextBoxRuntime));
+                        typeof(DefaultFromFileTextBoxRuntime), overwriteIfAlreadyExists: false);
                 }
             }
         }

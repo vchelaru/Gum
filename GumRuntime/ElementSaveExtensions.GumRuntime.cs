@@ -27,9 +27,19 @@ namespace GumRuntime
 
         public static Func<StateSave, string, string, object> CustomEvaluateExpression;
 
-        public static void RegisterGueInstantiationType(string elementName, Type gueInheritingType)
+        public static void RegisterGueInstantiationType(string elementName, Type gueInheritingType, bool overwriteIfAlreadyExists = true)
         {
-            mElementToGueTypes[elementName] = gueInheritingType;
+            if(overwriteIfAlreadyExists)
+            {
+                mElementToGueTypes[elementName] = gueInheritingType;
+            }
+            else
+            {
+                if(mElementToGueTypes.ContainsKey(elementName) == false && mElementToGueTypeFuncs.ContainsKey(elementName) == false)
+                {
+                    mElementToGueTypes[elementName] = gueInheritingType;
+                }
+            }
         }
 
         public static void RegisterGueInstantiation<T>(string elementName, Func<T> templateFunc) where T : GraphicalUiElement

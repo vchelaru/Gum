@@ -77,7 +77,11 @@ namespace CodeOutputPlugin.Manager
             var visualApi = CodeGenerator.GetVisualApiForElement(element);
             string inheritance = CodeGenerator.GetInheritance(element, projectSettings);
 
-            var classHeader = $"partial class {CodeGenerator.GetClassNameForType(element.Name, visualApi)} : {inheritance}";
+            var context = new CodeGenerationContext();
+            context.Element = element;
+            context.CodeOutputProjectSettings = projectSettings;
+
+            var classHeader = $"partial class {CodeGenerator.GetClassNameForType(element.Name, visualApi, context)} : {inheritance}";
             return classHeader;
         }
 

@@ -2,10 +2,12 @@
 using Gum;
 using Gum.Converters;
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.ToolStates;
 using GumDataTypes.Variables;
+using GumRuntime;
 using Newtonsoft.Json.Linq;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math;
@@ -15,6 +17,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Net.Mime;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.Remoting.Contexts;
 using System.Security.Principal;
@@ -130,7 +133,21 @@ public struct CodeGenerationContext
 
 public class CodeGenerator
 {
+    #region CodeGenerator Fields/Properties
+
+    public static int CanvasWidth { get; set; } = 480;
+    public static int CanvasHeight { get; set; } = 854;
+
+    /// <summary>
+    /// if true, then pixel sizes are maintained regardless of pixel density. This allows layouts to maintain pixel-perfect.
+    /// Update: This is now set to false because .... well, it makes it hard to create flexible layouts. It's best to set a resolution of 
+    /// 320 wide and let density scale things up
+    /// </summary>
+    static bool AdjustPixelValuesForDensity { get; set; } = false;
+
     static CodeGenerationFileLocationsService _codeGenerationFileLocationsService;
+
+    #endregion
     // All the methods here need to not be static, then we can get rid of this and make it a proper constructor with DI
     static CodeGenerator()
     {
@@ -176,19 +193,6 @@ public class CodeGenerator
 
     #endregion
 
-    #region Fields/Properties
-
-    public static int CanvasWidth { get; set; } = 480;
-    public static int CanvasHeight { get; set; } = 854;
-
-    /// <summary>
-    /// if true, then pixel sizes are maintained regardless of pixel density. This allows layouts to maintain pixel-perfect.
-    /// Update: This is now set to false because .... well, it makes it hard to create flexible layouts. It's best to set a resolution of 
-    /// 320 wide and let density scale things up
-    /// </summary>
-    static bool AdjustPixelValuesForDensity { get; set; } = false;
-
-    #endregion
 
     #region Generated Variables Properties (Exposed and "new")
 
@@ -254,13 +258,13 @@ public class CodeGenerator
 
             string stateContainerType;
             VisualApi visualApi = GetVisualApiForElement(stateContainer);
-            stateContainerType = GetClassNameForType(stateContainer.Name, visualApi);
+            stateContainerType = GetClassNameForType(stateContainer.Name, visualApi, context);
             type = $"{stateContainerType}.{category.Name}";
         }
 
         if (bindingBehavior == BindingBehavior.BindablePropertyWithBoundInstance)
         {
-            var containerClassName = GetClassNameForType(container.Name, VisualApi.XamarinForms);
+            var containerClassName = GetClassNameForType(container.Name, VisualApi.XamarinForms, context);
             stringBuilder.AppendLine($"{ToTabs(tabCount)}public static readonly BindableProperty {exposedVariable.ExposedAsName}Property = " +
                 $"BindableProperty.Create(nameof({exposedVariable.ExposedAsName}),typeof({type}),typeof({containerClassName}), defaultBindingMode: BindingMode.TwoWay);");
 
@@ -276,8 +280,8 @@ public class CodeGenerator
         {
             var rcv = new RecursiveVariableFinder(container.DefaultState);
             var defaultValue = rcv.GetValue(exposedVariable.Name);
-            var defaultValueAsString = VariableValueToGumCodeValue(exposedVariable, container, forcedValue: defaultValue);
-            var containerClassName = GetClassNameForType(container.Name, VisualApi.XamarinForms);
+            var defaultValueAsString = VariableValueToGumCodeValue(exposedVariable, context, forcedValue: defaultValue);
+            var containerClassName = GetClassNameForType(container.Name, VisualApi.XamarinForms, context);
 
             string defaultAssignmentWithComma = null;
 
@@ -369,6 +373,40 @@ public class CodeGenerator
 
     #endregion
 
+    #region Instance Properties (like ColoredRectangleInstance or ButtonInstance)
+
+    private static void FillWithInstanceDeclaration(CodeGenerationContext context)
+    {
+        VisualApi visualApi = VisualApi.Gum;
+
+        var defaultState = context.Element.DefaultState;
+        var isXamForms = defaultState.GetValueRecursive($"{context.Instance.Name}.IsXamarinFormsControl") as bool?;
+        if (isXamForms == true)
+        {
+            visualApi = VisualApi.XamarinForms;
+        }
+
+
+        string className = GetClassNameForType(context.Instance.BaseType, visualApi, context);
+
+        bool isPublic = true;
+        string accessString = isPublic ? "public " : "";
+
+        var isOverride = (defaultState.GetValueRecursive($"{context.Instance.Name}.IsOverrideInCodeGen") as bool?) ?? false;
+        if (isOverride)
+        {
+            accessString += "override ";
+        }
+
+        
+        // If this is private, it cannot override anything. Therefore, we'll mark the setter as protected:
+        //stringBuilder.AppendLine($"{tabs}{accessString}{className} {instance.Name} {{ get; private set; }}");
+        context.StringBuilder.AppendLine($"{context.Tabs}{accessString}{className} {context.Instance.Name} {{ get; protected set; }}");
+    }
+
+
+    #endregion
+
     #region Initialize
 
     static bool DoesElementInheritFromCodeGeneratedElement(ElementSave element, CodeOutputProjectSettings projectSettings)
@@ -430,6 +468,23 @@ public class CodeGenerator
             }
         }
 
+
+        if(!isFullyInstantiatingInCode)
+        {
+            var gumFormsType = GetGumFormsType(context.Element);
+            if( gumFormsType != null )
+            {
+                context.StringBuilder.AppendLine($"{context.Tabs}if (FormsControl == null)");
+                context.StringBuilder.AppendLine($"{context.Tabs}{{");
+                {
+                    context.TabCount++;
+                    context.StringBuilder.AppendLine($"{context.Tabs}FormsControlAsObject = new {gumFormsType}(this);");
+                    context.TabCount--;
+                }
+                context.StringBuilder.AppendLine($"{context.Tabs}}}");
+            }
+        }
+
         foreach (var instance in context.Element.Instances)
         {
             if (!instance.DefinedByBase)
@@ -460,7 +515,8 @@ public class CodeGenerator
     private static void AddFindByNameAssignment(CodeGenerationContext context)
     {
         context.StringBuilder.AppendLine(
-            $"{context.Tabs}{context.Instance.Name} = this.GetGraphicalUiElementByName(\"{context.Instance.Name}\") as {GetClassNameForType(context.Instance.BaseType, context.VisualApi)};");
+            $"{context.Tabs}{context.Instance.Name} = this.GetGraphicalUiElementByName(\"{context.Instance.Name}\") as " +
+            $"{GetClassNameForType(context.Instance.BaseType, context.VisualApi, context)};");
     }
 
     private static void FillWithInstanceInstantiation(CodeGenerationContext context)
@@ -477,7 +533,7 @@ public class CodeGenerator
 
         var tabs = context.Tabs;
 
-        context.StringBuilder.AppendLine($"{tabs}{instance.Name} = new {GetClassNameForType(instance.BaseType, visualApi)}();");
+        context.StringBuilder.AppendLine($"{tabs}{instance.Name} = new {GetClassNameForType(instance.BaseType, visualApi, context)}();");
 
         var shouldSetBinding =
             visualApi == VisualApi.XamarinForms && context.Element.DefaultState.Variables.Any(item => !string.IsNullOrEmpty(item.ExposedAsName) && item.SourceObject == instance.Name);
@@ -528,14 +584,71 @@ public class CodeGenerator
             builder.AppendLine(context.Tabs + "{");
             context.TabCount++;
 
-            var className = CodeGenerator.GetClassNameForType(context.Element.Name, context.VisualApi);
+            var className = CodeGenerator.GetClassNameForType(context.Element.Name, context.VisualApi, context);
 
             builder.AppendLine(context.Tabs + $"GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType(\"{context.Element.Name}\", typeof({className}));");
 
+            //var formsType = GetGumFormsType(context.Element);
+
+            //if(formsType != null)
+            //{
+            //    var text = $"global:: GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType(@\"{context.Element.Name}\", typeof({className}));
+            //}
 
             context.TabCount--;
             builder.AppendLine(context.Tabs + "}");
+
+
         }
+    }
+
+    #endregion
+
+    #region Gum Forms (MonoGame)
+
+    private static string? GetGumFormsType(ElementSave element)
+    {
+        var behaviors = element.Behaviors;
+
+        foreach(var behavior in behaviors)
+        {
+            if(BehaviorGumFormsTypes.ContainsKey(behavior.BehaviorName))
+            {
+                return BehaviorGumFormsTypes[behavior.BehaviorName];
+            }
+        }
+        return null;
+    }
+
+    static Dictionary<string, string> BehaviorGumFormsTypes = new Dictionary<string, string>()
+    {
+        { "ButtonBehavior", "MonoGameGum.Forms.Controls.Button" },
+        { "CheckBoxBehavior", "MonoGameGum.Forms.Controls.CheckBox" },
+        { "ComboBoxBehavior", "MonoGameGum.Forms.Controls.ComboBox" },
+        { "LabelBehavior", "MonoGameGum.Forms.Controls.Label" },
+        { "ListBoxBehavior", "MonoGameGum.Forms.Controls.ListBox" },
+        { "ListBoxItemBehavior", "MonoGameGum.Forms.Controls.ListBoxItem" },
+        { "MenuBehavior", "MonoGameGum.Forms.Controls.Menu" },
+        { "MenuItemBehavior", "MonoGameGum.Forms.Controls.MenuItem" },
+        { "PasswordBoxBehavior", "MonoGameGum.Forms.Controls.PasswordBox" },
+        { "RadioButtonBehavior", "MonoGameGum.Forms.Controls.RadioButton" },
+        { "ScrollBarBehavior", "MonoGameGum.Forms.Controls.ScrollBar" },
+        { "ScrollViewerBehavior", "MonoGameGum.Forms.Controls.ScrollViewer" },
+        { "SliderBehavior", "MonoGameGum.Forms.Controls.Slider" },
+        { "TextBoxBehavior", "MonoGameGum.Forms.Controls.TextBox" },
+    };
+
+    static void AddGumFormsMembers(CodeGenerationContext context)
+    {
+        if (context.CodeOutputProjectSettings.OutputLibrary != OutputLibrary.MonoGame) return;
+
+        var gumFormsType = GetGumFormsType(context.Element);
+
+        if (gumFormsType == null) return;
+
+        var stringBuilder = context.StringBuilder;
+
+        stringBuilder.AppendLine($"{context.Tabs}public {gumFormsType} FormsControl => FormsControlAsObject as {gumFormsType};");
     }
 
     #endregion
@@ -1945,7 +2058,7 @@ public class CodeGenerator
         const string access = "public";
 
         var header =
-            $"{access} partial class {GetClassNameForType(context.Element.Name, context.VisualApi)}";
+            $"{access} partial class {GetClassNameForType(context.Element.Name, context.VisualApi, context)}";
 
         if (context.CodeOutputProjectSettings.InheritanceLocation == InheritanceLocation.InGeneratedCode)
         {
@@ -1956,7 +2069,7 @@ public class CodeGenerator
         context.StringBuilder.AppendLine(context.Tabs + header);
     }
 
-    public static string GetClassNameForType(string gumType, VisualApi visualApi)
+    public static string GetClassNameForType(string gumType, VisualApi visualApi, CodeGenerationContext context)
     {
         string className = null;
         var specialHandledCase = false;
@@ -1969,6 +2082,25 @@ public class CodeGenerator
                     className = "Label";
                     specialHandledCase = true;
                     break;
+            }
+        }
+
+        if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
+        {
+            // see if it's a forms object:
+            var component = ObjectFinder.Self.GetComponent(gumType);
+
+            if(component != null)
+            {
+                var behaviors = component.Behaviors;
+
+                var formsBehavior = behaviors.FirstOrDefault(item => IsGumFormsBehavior(item));
+
+                if(formsBehavior != null)
+                {
+                    className = formsBehavior.BehaviorName;
+                    specialHandledCase = true;
+                }
             }
         }
 
@@ -1992,6 +2124,12 @@ public class CodeGenerator
         return className;
     }
 
+    private static bool IsGumFormsBehavior(ElementBehaviorReference item)
+    {
+        var behaviorName = item.BehaviorName;
+
+        return false;
+    }
 
     public static string GetInheritance(ElementSave element, CodeOutputProjectSettings projectSettings)
     {
@@ -2050,7 +2188,7 @@ public class CodeGenerator
         var stringBuilder = context.StringBuilder;
         var projectSettings = context.CodeOutputProjectSettings;
 
-        var elementName = GetClassNameForType(element.Name, visualApi);
+        var elementName = GetClassNameForType(element.Name, visualApi, context);
 
         if (visualApi == VisualApi.Gum)
         {
@@ -2314,6 +2452,8 @@ public class CodeGenerator
 
         #endregion
 
+        AddGumFormsMembers(context);
+
         #region States
 
         FillWithStateEnums(context);
@@ -2325,7 +2465,8 @@ public class CodeGenerator
 
         foreach (var instance in element.Instances.Where(item => item.DefinedByBase == false))
         {
-            FillWithInstanceDeclaration(instance, element, stringBuilder, context.TabCount);
+            context.Instance = instance;
+            FillWithInstanceDeclaration(context);
         }
 
         AddAbsoluteLayoutIfNecessary(element, context.TabCount, stringBuilder, projectSettings);
@@ -2483,7 +2624,7 @@ public class CodeGenerator
     private static void FillWithStateProperties(CodeGenerationContext context)
     {
         var isXamarinForms = GetVisualApiForElement(context.Element) == VisualApi.XamarinForms;
-        var containerClassName = GetClassNameForType(context.Element.Name, GetVisualApiForElement(context.Element));
+        var containerClassName = GetClassNameForType(context.Element.Name, GetVisualApiForElement(context.Element), context);
 
 
         foreach (var category in context.Element.Categories)
@@ -2845,13 +2986,13 @@ public class CodeGenerator
     {
         var stringBuilder = new StringBuilder();
 
-        FillWithInstanceDeclaration(instance, element, stringBuilder);
-
         var context = new CodeGenerationContext();
+        context.Instance = instance;
         context.Element = element;
         context.CodeOutputProjectSettings = codeOutputProjectSettings;
-        context.Instance = instance;
         context.StringBuilder = stringBuilder;
+
+        FillWithInstanceDeclaration(context);
 
         FillWithInstanceInstantiation(context);
 
@@ -2997,7 +3138,7 @@ public class CodeGenerator
 
 
 
-                return $"{context.CodePrefixNoTabs}.{variableName} = {VariableValueToGumCodeValue(variable, container)};";
+                return $"{context.CodePrefixNoTabs}.{variableName} = {VariableValueToGumCodeValue(variable, context)};";
             }
 
         }
@@ -3066,25 +3207,25 @@ public class CodeGenerator
         }
     }
 
-    private static string VariableValueToGumCodeValue(VariableSave variable, ElementSave container, object forcedValue = null)
+    private static string VariableValueToGumCodeValue(VariableSave variable, CodeGenerationContext context, object forcedValue = null)
     {
         var value = forcedValue ?? variable.Value;
         var rootName = variable.GetRootName();
-        var isState = variable.IsState(container, out ElementSave categoryContainer, out StateSaveCategory category);
+        var isState = variable.IsState(context.Element, out ElementSave categoryContainer, out StateSaveCategory category);
 
-        return VariableValueToGumCode(value, rootName, isState, categoryContainer, category);
+        return VariableValueToGumCode(value, rootName, isState, categoryContainer, category, context.CodeOutputProjectSettings);
     }
 
-    private static string VariableValueToGumCodeValue(VariableListSave variable, ElementSave container, object forcedValue = null)
+    private static string VariableValueToGumCodeValue(VariableListSave variable, ElementSave container, CodeOutputProjectSettings codeOutputProjectSettings, object forcedValue = null)
     {
         var value = forcedValue ?? variable.ValueAsIList;
         var rootName = variable.GetRootName();
         var isState = false;
 
-        return VariableValueToGumCode(value, rootName, isState, null, null);
+        return VariableValueToGumCode(value, rootName, isState, null, null, codeOutputProjectSettings);
     }
 
-    private static string VariableValueToGumCode(object value, string rootName, bool isState, ElementSave categoryContainer, StateSaveCategory category)
+    private static string VariableValueToGumCode(object value, string rootName, bool isState, ElementSave categoryContainer, StateSaveCategory category, CodeOutputProjectSettings settings)
     {
         if (value is float asFloat)
         {
@@ -3103,7 +3244,10 @@ public class CodeGenerator
                     string containerClassName = "VariableState";
                     if (categoryContainer != null)
                     {
-                        containerClassName = GetClassNameForType(categoryContainer.Name, VisualApi.Gum);
+                        var context = new CodeGenerationContext();
+                        context.CodeOutputProjectSettings = settings;
+
+                        containerClassName = GetClassNameForType(categoryContainer.Name, VisualApi.Gum, context);
                     }
                     return $"{containerClassName}.{category.Name}.{asString}";
                 }
@@ -3198,7 +3342,7 @@ public class CodeGenerator
             }
             else if (isState)
             {
-                var containerClassName = GetClassNameForType(categoryContainer.Name, VisualApi.XamarinForms);
+                var containerClassName = GetClassNameForType(categoryContainer.Name, VisualApi.XamarinForms, context);
                 if (category == null)
                 {
                     return $"{containerClassName}.VariableState.{value}";
@@ -3568,7 +3712,7 @@ public class CodeGenerator
             if (variable.IsCustomVariable)
             {
                 // assign it:
-                context.StringBuilder.AppendLine($"{context.CodePrefix}.{variable.Name} = {VariableValueToGumCodeValue(variable, context.Element)};");
+                context.StringBuilder.AppendLine($"{context.CodePrefix}.{variable.Name} = {VariableValueToGumCodeValue(variable, context)};");
 
             }
         }
@@ -3707,34 +3851,6 @@ public class CodeGenerator
                 );
     }
 
-    private static void FillWithInstanceDeclaration(InstanceSave instance, ElementSave container, StringBuilder stringBuilder, int tabCount = 0)
-    {
-        VisualApi visualApi = VisualApi.Gum;
-
-        var defaultState = container.DefaultState;
-        var isXamForms = defaultState.GetValueRecursive($"{instance.Name}.IsXamarinFormsControl") as bool?;
-        if (isXamForms == true)
-        {
-            visualApi = VisualApi.XamarinForms;
-        }
-
-        var tabs = new String(' ', 4 * tabCount);
-
-        string className = GetClassNameForType(instance.BaseType, visualApi);
-
-        bool isPublic = true;
-        string accessString = isPublic ? "public " : "";
-
-        var isOverride = (defaultState.GetValueRecursive($"{instance.Name}.IsOverrideInCodeGen") as bool?) ?? false;
-        if (isOverride)
-        {
-            accessString += "override ";
-        }
-
-        // If this is private, it cannot override anything. Therefore, we'll mark the setter as protected:
-        //stringBuilder.AppendLine($"{tabs}{accessString}{className} {instance.Name} {{ get; private set; }}");
-        stringBuilder.AppendLine($"{tabs}{accessString}{className} {instance.Name} {{ get; protected set; }}");
-    }
 
     private static string GetSuffixCodeLine(InstanceSave instance, VariableSave variable, VisualApi visualApi)
     {
@@ -4003,6 +4119,11 @@ public class CodeGenerator
 
     private static void FillWithVariableBinding(ElementSave element, StringBuilder stringBuilder, int tabCount)
     {
+        var context = new CodeGenerationContext();
+        context.Element = element;
+        context.StringBuilder = stringBuilder;
+        context.TabCount = tabCount;
+
         var boundVariables = new List<VariableSave>();
 
         foreach (var variable in element.DefaultState.Variables)
@@ -4016,7 +4137,7 @@ public class CodeGenerator
                 if (isXamForms)
                 {
                     var instance = element.GetInstance(instanceName);
-                    var instanceType = GetClassNameForType(instance.BaseType, VisualApi.XamarinForms);
+                    var instanceType = GetClassNameForType(instance.BaseType, VisualApi.XamarinForms, context);
                     stringBuilder.AppendLine(ToTabs(tabCount) + $"{instanceName}.SetBinding({instanceType}.{variable.GetRootName()}Property, nameof({variable.ExposedAsName}));");
                 }
             }

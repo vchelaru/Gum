@@ -26,7 +26,11 @@ internal class CodeGenerationFileLocationsService
                 : selectedElement is ComponentSave ? "Components"
                 : "Standards";
             var splitName = (prefix + "/" + elementName).Split('/');
-            var nameWithNamespaceArray = splitName.Take(splitName.Length - 1).Append(CodeGenerator.GetClassNameForType(elementName, effectiveVisualApi));
+
+            var context = new CodeGenerationContext();
+            context.CodeOutputProjectSettings = codeOutputProjectSettings;
+
+            var nameWithNamespaceArray = splitName.Take(splitName.Length - 1).Append(CodeGenerator.GetClassNameForType(elementName, effectiveVisualApi, context));
 
             var folder = codeOutputProjectSettings.CodeProjectRoot;
             if (FileManager.IsRelative(folder))
