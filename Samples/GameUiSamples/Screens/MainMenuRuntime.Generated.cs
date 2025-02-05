@@ -4,6 +4,8 @@ using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Wireframe;
 
+using GameUiSamples.Components;
+
 using RenderingLibrary.Graphics;
 
 using System.Linq;
@@ -20,6 +22,7 @@ namespace GameUiSamples.Screens
         }
         public ListBoxRuntime ListBoxInstance { get; protected set; }
         public ButtonConfirmRuntime ButtonConfirmInstance { get; protected set; }
+        public ListBoxItemRuntime GameTitleScreenItem { get; protected set; }
 
         public MainMenuRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         {
@@ -30,6 +33,7 @@ namespace GameUiSamples.Screens
         {
             ListBoxInstance = this.GetGraphicalUiElementByName("ListBoxInstance") as ListBoxRuntime;
             ButtonConfirmInstance = this.GetGraphicalUiElementByName("ButtonConfirmInstance") as ButtonConfirmRuntime;
+            GameTitleScreenItem = this.GetGraphicalUiElementByName("GameTitleScreenItem") as ListBoxItemRuntime;
             CustomInitialize();
         }
         //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

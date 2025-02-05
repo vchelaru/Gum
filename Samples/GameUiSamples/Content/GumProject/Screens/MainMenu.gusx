@@ -36,7 +36,7 @@
     <Variable>
       <Type>float</Type>
       <Name>ButtonConfirmInstance.Y</Name>
-      <Value xsi:type="xsd:float">421</Value>
+      <Value xsi:type="xsd:float">324</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -52,9 +52,21 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>string</Type>
+      <Name>GameTitleScreenItem.ListItemDisplayText</Name>
+      <Value xsi:type="xsd:string">Game Title Screen</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>GameTitleScreenItem.Parent</Name>
+      <Value xsi:type="xsd:string">ListBoxInstance.InnerPanelInstance</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>float</Type>
       <Name>ListBoxInstance.Height</Name>
-      <Value xsi:type="xsd:float">377</Value>
+      <Value xsi:type="xsd:float">264</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -66,7 +78,7 @@
     <Variable>
       <Type>float</Type>
       <Name>ListBoxInstance.Width</Name>
-      <Value xsi:type="xsd:float">-64</Value>
+      <Value xsi:type="xsd:float">-800</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -120,6 +132,11 @@
   <Instance>
     <Name>ButtonConfirmInstance</Name>
     <BaseType>Controls/ButtonConfirm</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>GameTitleScreenItem</Name>
+    <BaseType>Controls/ListBoxItem</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Behaviors />

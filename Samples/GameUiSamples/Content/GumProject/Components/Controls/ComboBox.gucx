@@ -82,6 +82,12 @@
       <SetsValue>false</SetsValue>
     </Variable>
     <Variable>
+      <Type>string</Type>
+      <Name>DefaultChildContainer</Name>
+      <Value xsi:type="xsd:string">ListBoxInstance</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>ColorCategory</Type>
       <Name>FocusedIndicator.ColorCategoryState</Name>
       <Value xsi:type="xsd:string">Warning</Value>

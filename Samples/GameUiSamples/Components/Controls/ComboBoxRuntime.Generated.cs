@@ -1,10 +1,8 @@
-//Code for Controls/ButtonConfirm (Container)
+//Code for Controls/ComboBox (Container)
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Wireframe;
-
-using GameUiSamples.Components;
 
 using RenderingLibrary.Graphics;
 
@@ -13,15 +11,14 @@ using System.Linq;
 using MonoGameGum.GueDeriving;
 namespace GameUiSamples.Components
 {
-    public partial class ButtonConfirmRuntime:ContainerRuntime
+    public partial class ComboBoxRuntime:ContainerRuntime
     {
         [System.Runtime.CompilerServices.ModuleInitializer]
         public static void RegisterRuntimeType()
         {
-            GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ButtonConfirm", typeof(ButtonConfirmRuntime));
+            GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ComboBox", typeof(ComboBoxRuntime));
         }
-        public MonoGameGum.Forms.Controls.Button FormsControl => FormsControlAsObject as MonoGameGum.Forms.Controls.Button;
-        public enum ButtonCategory
+        public enum ComboBoxCategory
         {
             Enabled,
             Disabled,
@@ -32,19 +29,19 @@ namespace GameUiSamples.Components
             DisabledFocused,
         }
 
-        public ButtonCategory ButtonCategoryState
+        public ComboBoxCategory ComboBoxCategoryState
         {
             set
             {
-                if(Categories.ContainsKey("ButtonCategory"))
+                if(Categories.ContainsKey("ComboBoxCategory"))
                 {
-                    var category = Categories["ButtonCategory"];
+                    var category = Categories["ComboBoxCategory"];
                     var state = category.States.Find(item => item.Name == value.ToString());
                     this.ApplyState(state);
                 }
                 else
                 {
-                    var category = ((Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "ButtonCategory");
+                    var category = ((Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "ComboBoxCategory");
                     var state = category.States.Find(item => item.Name == value.ToString());
                     this.ApplyState(state);
                 }
@@ -52,27 +49,21 @@ namespace GameUiSamples.Components
         }
         public NineSliceRuntime Background { get; protected set; }
         public TextRuntime TextInstance { get; protected set; }
+        public ListBoxRuntime ListBoxInstance { get; protected set; }
+        public IconRuntime IconInstance { get; protected set; }
         public NineSliceRuntime FocusedIndicator { get; protected set; }
 
-        public string ButtonDisplayText
-        {
-            get => TextInstance.Text;
-            set => TextInstance.Text = value;
-        }
-
-        public ButtonConfirmRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
+        public ComboBoxRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         {
 
 
         }
         public override void AfterFullCreation()
         {
-            if (FormsControl == null)
-            {
-                FormsControlAsObject = new MonoGameGum.Forms.Controls.Button(this);
-            }
             Background = this.GetGraphicalUiElementByName("Background") as NineSliceRuntime;
             TextInstance = this.GetGraphicalUiElementByName("TextInstance") as TextRuntime;
+            ListBoxInstance = this.GetGraphicalUiElementByName("ListBoxInstance") as ListBoxRuntime;
+            IconInstance = this.GetGraphicalUiElementByName("IconInstance") as IconRuntime;
             FocusedIndicator = this.GetGraphicalUiElementByName("FocusedIndicator") as NineSliceRuntime;
             CustomInitialize();
         }

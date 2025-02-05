@@ -1,6 +1,9 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Gum.Wireframe;
+using GumRuntime;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using RenderingLibrary;
 
 namespace GameUiSamples;
 
@@ -9,18 +12,24 @@ public class Game1 : Game
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
 
+    GraphicalUiElement Root;
+
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
-        _graphics.PreferredBackBufferWidth = 1365;
+        _graphics.PreferredBackBufferWidth = 1366;
         _graphics.PreferredBackBufferHeight = 768;
         IsMouseVisible = true;
     }
 
     protected override void Initialize()
     {
-        MonoGameGum.GumService.Default.Initialize(this, "GumProject/GameUiSamplesgumProject.gumx");
+        var gumProject = MonoGameGum.GumService.Default.Initialize(this, "GumProject/GameUiSamplesgumProject.gumx");
+
+        Root = gumProject.Screens
+            .Find(item => item.Name == "MainMenu")
+            .ToGraphicalUiElement(SystemManagers.Default, addToManagers:true);
 
         base.Initialize();
     }
@@ -34,7 +43,7 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
-        MonoGameGum.GumService.Default.Update(this, gameTime);
+        MonoGameGum.GumService.Default.Update(this, gameTime, Root);
 
         base.Update(gameTime);
     }

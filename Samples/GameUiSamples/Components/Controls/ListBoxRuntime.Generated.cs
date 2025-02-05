@@ -4,6 +4,8 @@ using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Wireframe;
 
+using GameUiSamples.Components;
+
 using RenderingLibrary.Graphics;
 
 using System.Linq;
@@ -18,6 +20,7 @@ namespace GameUiSamples.Components
         {
             GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ListBox", typeof(ListBoxRuntime));
         }
+        public MonoGameGum.Forms.Controls.ListBox FormsControl => FormsControlAsObject as MonoGameGum.Forms.Controls.ListBox;
         public enum ListBoxCategory
         {
             Enabled,
@@ -57,6 +60,10 @@ namespace GameUiSamples.Components
         }
         public override void AfterFullCreation()
         {
+            if (FormsControl == null)
+            {
+                FormsControlAsObject = new MonoGameGum.Forms.Controls.ListBox(this);
+            }
             Background = this.GetGraphicalUiElementByName("Background") as NineSliceRuntime;
             VerticalScrollBarInstance = this.GetGraphicalUiElementByName("VerticalScrollBarInstance") as ScrollBarRuntime;
             ClipContainerInstance = this.GetGraphicalUiElementByName("ClipContainerInstance") as ContainerRuntime;

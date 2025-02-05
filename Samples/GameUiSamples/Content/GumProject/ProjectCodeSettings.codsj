@@ -1,5 +1,5 @@
 {
-  "CommonUsingStatements": "using Gum.Converters;\r\nusing Gum.DataTypes;\r\nusing Gum.Managers;\r\nusing Gum.Wireframe;\r\n\r\nusing RenderingLibrary.Graphics;\r\n\r\nusing System.Linq;\r\n\nusing MonoGameGum.GueDeriving;",
+  "CommonUsingStatements": "using Gum.Converters;\nusing Gum.DataTypes;\nusing Gum.Managers;\nusing Gum.Wireframe;\n\nusing GameUiSamples.Components;\n\nusing RenderingLibrary.Graphics;\n\nusing System.Linq;\n\nusing MonoGameGum.GueDeriving;",
   "CodeProjectRoot": "..\\..\\",
   "RootNamespace": "GameUiSamples",
   "IsCodeGenPluginEnabled": true,
