@@ -240,7 +240,7 @@ namespace MonoGameGum.Forms
             foreach (var component in ObjectFinder.Self.GumProjectSave.Components)
             {
                 var categoryNames = component.Categories.Select(item => item.Name).ToList();
-
+                var behaviorNames = component.Behaviors.Select(item => item.BehaviorName).ToList();
                 if (categoryNames.Contains("ButtonCategory"))
                 {
                     ElementSaveExtensions.RegisterGueInstantiationType(
@@ -277,13 +277,13 @@ namespace MonoGameGum.Forms
                         component.Name,
                         typeof(DefaultFromFileListBoxItemRuntime), overwriteIfAlreadyExists: false);
                 }
-                else if(categoryNames.Contains("MenuBehavior"))
+                else if(behaviorNames.Contains("MenuBehavior"))
                 {
                     ElementSaveExtensions.RegisterGueInstantiationType(
                         component.Name,
                         typeof(DefaultFromFileMenuRuntime), overwriteIfAlreadyExists: false);
                 }
-                else if (categoryNames.Contains("MenuItemBehavior"))
+                else if (behaviorNames.Contains("MenuItemBehavior"))
                 {
                     ElementSaveExtensions.RegisterGueInstantiationType(
                         component.Name,
