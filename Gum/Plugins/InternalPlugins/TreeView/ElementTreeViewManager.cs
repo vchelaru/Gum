@@ -1758,7 +1758,9 @@ namespace Gum.Managers
 
                 foreach(var behavior in project.Behaviors)
                 {
-                    if(behavior.Name.ToLower().Contains(filterTextLower))
+                    // Feb 5, 2025 - at some point a behavior with an empty name
+                    // snuck into a FRB project. We shouldn't crash here because of it...
+                    if(behavior.Name?.ToLower().Contains(filterTextLower) == true)
                     {
                         AddToFlatList(behavior);
                     }
