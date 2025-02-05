@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using ToolsUtilities;
 
 namespace EventOutputPlugin.Managers
@@ -56,16 +58,34 @@ namespace EventOutputPlugin.Managers
         }
 
 
+        static string GenerateConsistentHash(string input)
+        {
+            // Handle null inputs
+            if (string.IsNullOrEmpty(input))
+                return "";
+
+            // Create SHA256 hash object
+            using var sha256 = SHA256.Create();
+
+            // Convert string to bytes using UTF8 encoding
+            byte[] inputBytes = Encoding.UTF8.GetBytes(input);
+
+            // Compute hash
+            byte[] hashBytes = sha256.ComputeHash(inputBytes);
+
+            // Convert to lowercase hexadecimal string
+            return BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
+        }
 
         public static void ExportEvent(string newName, string oldName, GumEventTypes eventType, string elementType)
         {
             if(!string.IsNullOrWhiteSpace(EventExportDirectory))
             {
                 var exportedEvent = new ExportedEvent();
-                var username = Environment.UserName;
+                var username = GenerateConsistentHash(Environment.UserName);
 
                 exportedEvent.NewName = newName;
-                exportedEvent.OldName = oldName;
+                exportedEvent.OldName = oldName; 
                 exportedEvent.ElementType = elementType;
                 exportedEvent.EventType = eventType;
                 exportedEvent.TimestampUtc = DateTime.UtcNow;

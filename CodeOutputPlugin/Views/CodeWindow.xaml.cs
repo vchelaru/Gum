@@ -184,7 +184,13 @@ namespace CodeOutputPlugin.Views
 
                     if(!string.IsNullOrWhiteSpace(valueToSet) && FileManager.IsRelative(valueToSet) == false)
                     {
-                        valueToSet = FileManager.MakeRelative(valueToSet, GumState.Self.ProjectState.ProjectDirectory, preserveCase:true);
+                        var projectDirectory = GumState.Self.ProjectState.ProjectDirectory;
+                        valueToSet = FileManager.MakeRelative(valueToSet, projectDirectory, preserveCase:true);
+
+                        if(string.IsNullOrEmpty(valueToSet))
+                        {
+                            valueToSet = "./";
+                        }
                     }
                     CodeOutputProjectSettings.CodeProjectRoot = valueToSet;
 
@@ -194,17 +200,22 @@ namespace CodeOutputPlugin.Views
 
             member.CustomGetEvent += (owner) =>
             {
-                if(string.IsNullOrEmpty(CodeOutputProjectSettings?.CodeProjectRoot))
+                var projectRoot = CodeOutputProjectSettings?.CodeProjectRoot;
+                if (string.IsNullOrEmpty(projectRoot))
                 {
                     return String.Empty;
                 }
-                else if (CodeOutputProjectSettings?.CodeProjectRoot != null && FileManager.IsRelative(CodeOutputProjectSettings?.CodeProjectRoot))
+                else if(projectRoot == "./")
                 {
-                    return FileManager.RemoveDotDotSlash( GumState.Self.ProjectState.ProjectDirectory + CodeOutputProjectSettings?.CodeProjectRoot);
+                    return GumState.Self.ProjectState.ProjectDirectory;
+                }
+                else if (projectRoot != null && FileManager.IsRelative(projectRoot))
+                {
+                    return FileManager.RemoveDotDotSlash( GumState.Self.ProjectState.ProjectDirectory + projectRoot);
                 }
                 else
                 {
-                    return CodeOutputProjectSettings?.CodeProjectRoot;
+                    return projectRoot;
                 }
             };
             member.CustomGetTypeEvent += (owner) => typeof(string);
