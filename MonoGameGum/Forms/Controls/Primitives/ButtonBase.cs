@@ -251,7 +251,17 @@ public class ButtonBase : FrameworkElement, IInputReceiver
 #if !FRB
     public void DoKeyboardAction(IInputReceiverKeyboard keyboard)
     {
-
+        var asKeyboard = keyboard as MonoGameGum.Input.Keyboard;
+        if(asKeyboard != null)
+        {
+            foreach(var key in asKeyboard.KeysTyped)
+            {
+                HandleKeyDown(key, 
+                    keyboard.IsShiftDown,
+                    keyboard.IsAltDown,
+                    keyboard.IsCtrlDown);
+            }
+        }
     }
 #endif
 
@@ -261,11 +271,9 @@ public class ButtonBase : FrameworkElement, IInputReceiver
 
     public void HandleKeyDown(Keys key, bool isShiftDown, bool isAltDown, bool isCtrlDown)
     {
-#if FRB
-        var args = new Input.KeyEventArgs();
+        var args = new KeyEventArgs();
         args.Key = key;
         base.RaiseKeyDown(args);
-#endif
     }
 
     public void HandleCharEntered(char character)

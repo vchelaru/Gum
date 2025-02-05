@@ -28,6 +28,7 @@ using System.Collections;
 using System.Reflection.Emit;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.Versioning;
 
 namespace Gum.Wireframe
 {
@@ -738,7 +739,8 @@ namespace Gum.Wireframe
         bool IsCtrlDown { get; }
         bool IsAltDown { get; }
 
-        //IReadOnlyCollection<T> KeysTyped { get; }
+        // FRB has this, but we don't have access to XNA-likes here, so we can't include it
+        //IReadOnlyCollection<Microsoft.Xna.Framework.Input.Keys> KeysTyped { get; }
 
         string GetStringTyped();
     }
@@ -853,8 +855,10 @@ namespace Gum.Wireframe
 
             if(InteractiveGue.CurrentInputReceiver != null)
             {
-                InteractiveGue.CurrentInputReceiver.DoKeyboardAction(keyboard);
-                InteractiveGue.CurrentInputReceiver.OnFocusUpdate();
+                var receiver = InteractiveGue.CurrentInputReceiver;
+
+                receiver.DoKeyboardAction(keyboard);
+                receiver.OnFocusUpdate();
             }
         }
     }

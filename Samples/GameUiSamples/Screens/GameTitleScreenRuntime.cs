@@ -25,50 +25,27 @@ partial class GameTitleScreenRuntime : Gum.Wireframe.BindableGue, IUpdateScreen
     {
         Player1Button.FormsControl.IsFocused = true;
 
-        Player1Button.FormsControl.Click += HandleButtonClicked;
-        Player2Button.FormsControl.Click += HandleButtonClicked;
-        OptionsButton.FormsControl.Click += HandleButtonClicked;
-        ExitButton.FormsControl.Click += HandleButtonClicked;
+        // Note that some setup is being performed
+        // in TitleScreenButtonRuntime.CustomInitialize.
+        // See that file for code that affects the behavior
+        // of TitleScreenButtons.
 
+        ExitButton.FormsControl.Click += HandleExitClicked;
 
 
         FrameworkElement.GamePadsForUiControl.Clear();
         FrameworkElement.GamePadsForUiControl.AddRange(FormsUtilities.Gamepads);
     }
 
-    private void HandleButtonClicked(object sender, EventArgs e)
+    private void HandleExitClicked(object sender, EventArgs e)
     {
-        (sender as Button).IsFocused = true;
-
-        if(sender == ExitButton.FormsControl)
-        {
-            Game1.Root.RemoveFromManagers();
-            Game1.Root = ObjectFinder.Self.GetScreen("MainMenu")
-                .ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
-        }
+        Game1.Root.RemoveFromManagers();
+        Game1.Root = ObjectFinder.Self.GetScreen("MainMenu")
+            .ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
     }
-
-    FrameworkElement FocusedElement =>
-        (InteractiveGue.CurrentInputReceiver as FrameworkElement);
 
     public void Update()
     {
-        var keyboard = FormsUtilities.Keyboard;
-
-        var currentItem = InteractiveGue.CurrentInputReceiver;
-
-        if(keyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Up))
-        {
-            FocusedElement?.HandleTab(TabDirection.Up);
-        }
-        else if(keyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Down))
-        {
-            FocusedElement?.HandleTab(TabDirection.Down);
-        }
-        else if(keyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Enter))
-        {
-            (FocusedElement as Button)?.PerformClick();
-        }
 
     }
 }
