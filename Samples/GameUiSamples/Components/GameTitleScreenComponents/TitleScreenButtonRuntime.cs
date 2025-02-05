@@ -21,6 +21,10 @@ namespace GameUiSamples.Components
             FormsControl.Click += (_, _) => FormsControl.IsFocused = true;
 
             FormsControl.KeyDown += HandleKeyDown;
+
+            // We could update which gamepad button is considered a "click":
+            // For example to set it to B instead of A:
+            //FormsControl.ClickGamepadButton = Microsoft.Xna.Framework.Input.Buttons.B;
         }
 
         private void HandleKeyDown(object sender, KeyEventArgs e)
