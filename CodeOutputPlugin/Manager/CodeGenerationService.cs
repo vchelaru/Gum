@@ -27,14 +27,25 @@ internal class CodeGenerationService
         var generatedFileName = _codeGenerationFileLocationsService.GetGeneratedFileName(selectedElement, elementSettings, codeOutputProjectSettings);
 
         ////////////////////////////////////////Early Out/////////////////////////////
+        string errorMessage = string.Empty;
         if (generatedFileName == null)
         {
-            if (showPopups)
+            errorMessage = "Generated file name must be set first";
+        }
+        if(string.IsNullOrEmpty(codeOutputProjectSettings.CodeProjectRoot))
+        {
+            errorMessage = "You must first specify a Code Project Root before generating code";
+        }
+
+        if(errorMessage != string.Empty)
+        {
+            if(showPopups)
             {
-                GumCommands.Self.GuiCommands.ShowMessage("Generated file name must be set first");
+                GumCommands.Self.GuiCommands.ShowMessage(errorMessage);
             }
             return;
         }
+
         //////////////////////////////////////End Early Out//////////////////////////
 
         // We used to use the view model code, but the viewmodel may have
@@ -55,7 +66,8 @@ internal class CodeGenerationService
                     else
                     {
                         var settings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(item);
-                        return _codeGenerationFileLocationsService.GetGeneratedFileName(item, settings, codeOutputProjectSettings).Exists() == false;
+                        var generatedFileName = _codeGenerationFileLocationsService.GetGeneratedFileName(item, settings, codeOutputProjectSettings);
+                        return generatedFileName.Exists() == false;
                     }
                 })
                 .ToList();
