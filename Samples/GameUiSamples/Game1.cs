@@ -1,4 +1,5 @@
-﻿using Gum.Wireframe;
+﻿using GameUiSamples.Screens;
+using Gum.Wireframe;
 using GumRuntime;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -12,7 +13,7 @@ public class Game1 : Game
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
 
-    GraphicalUiElement Root;
+    public static GraphicalUiElement Root;
 
     public Game1()
     {
@@ -44,6 +45,8 @@ public class Game1 : Game
     protected override void Update(GameTime gameTime)
     {
         MonoGameGum.GumService.Default.Update(this, gameTime, Root);
+
+        (Root as IUpdateScreen)?.Update();
 
         base.Update(gameTime);
     }

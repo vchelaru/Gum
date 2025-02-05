@@ -10,6 +10,9 @@ using System.Linq;
 using MonoGameGum.GueDeriving;
 using MonoGameGum.Forms.Controls;
 using System;
+using System.ComponentModel.Design.Serialization;
+using GumRuntime;
+using RenderingLibrary;
 namespace GameUiSamples.Screens;
 
 partial class MainMenuRuntime : Gum.Wireframe.BindableGue
@@ -18,7 +21,7 @@ partial class MainMenuRuntime : Gum.Wireframe.BindableGue
     partial void CustomInitialize()
     {
         listBox = (ListBox)ListBoxInstance.FormsControlAsObject;
-        //listBox.SelectedIndex = 0;
+        listBox.SelectedIndex = 0;
 
         var button = (Button)ButtonConfirmInstance.FormsControlAsObject;
         button.Click += GoToSelectedScreen;
@@ -33,7 +36,9 @@ partial class MainMenuRuntime : Gum.Wireframe.BindableGue
 
             if(item == GameTitleScreenItem.FormsControlAsObject)
             {
-                // go to screen
+                Game1.Root.RemoveFromManagers();
+                Game1.Root = ObjectFinder.Self.GetScreen("GameTitleScreen")
+                    .ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
             }
         }
     }
