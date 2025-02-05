@@ -136,6 +136,8 @@ public class ButtonBase : FrameworkElement, IInputReceiver
 
     #region IInputReceiver Methods
 
+    public GamepadButton ClickGamepadButton { get; set; } = GamepadButton.A;
+
     public void OnFocusUpdate()
     {
         var gamepads = GamePadsForUiControl;
@@ -148,7 +150,7 @@ public class ButtonBase : FrameworkElement, IInputReceiver
 
             HandleGamepadNavigation(gamepad);
 
-            if (gamepad.ButtonPushed(GamepadButton.A) &&
+            if (gamepad.ButtonPushed(ClickGamepadButton) &&
                 // A button may be focused, then through the action of clicking the button
                 // (like buying items) it may lose its enabled state,but
                 // remain focused as to not focus a new item.
@@ -156,10 +158,8 @@ public class ButtonBase : FrameworkElement, IInputReceiver
             {
                 //this.HandlePush(null);
                 this.HandleClick(this, EventArgs.Empty);
-
-                ControllerButtonPushed?.Invoke(GamepadButton.A);
             }
-            else if(gamepad.ButtonReleased(GamepadButton.A))
+            else if(gamepad.ButtonReleased(ClickGamepadButton))
             {
                 UpdateState();
             }
@@ -172,6 +172,7 @@ public class ButtonBase : FrameworkElement, IInputReceiver
                 }
             }
 
+            RaiseIfPushedAndEnabled(GamepadButton.A);
             RaiseIfPushedAndEnabled(GamepadButton.B);
             RaiseIfPushedAndEnabled(GamepadButton.X);
             RaiseIfPushedAndEnabled(GamepadButton.Y);
@@ -188,11 +189,6 @@ public class ButtonBase : FrameworkElement, IInputReceiver
             if (IsEnabled && gamepad.LeftStick.AsDPadPushed(DPadDirection.Right))
             {
                 ControllerButtonPushed?.Invoke(GamepadButton.DPadRight);
-            }
-
-
-            if (gamepad.ButtonReleased(GamepadButton.A))
-            {
             }
         }
 
