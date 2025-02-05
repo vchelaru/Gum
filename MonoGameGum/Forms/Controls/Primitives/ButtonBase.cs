@@ -4,7 +4,9 @@ using System;
 using System.Collections.Generic;
 
 
+
 #if FRB
+using FlatRedBall.Forms.Input;
 using FlatRedBall.Gui;
 using FlatRedBall.Input;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
