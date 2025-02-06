@@ -436,6 +436,7 @@ namespace RenderingLibrary.Graphics
             spriteRenderer.EndSpriteBatch();
         }
 
+        Dictionary<IRenderableIpso, RenderTarget2D> RenderTargets = new Dictionary<IRenderableIpso, RenderTarget2D>();
 
         private void PreRender(IList<IRenderableIpso> renderables)
         {
@@ -452,6 +453,7 @@ namespace RenderingLibrary.Graphics
                 var renderable = renderables[i];
                 if(renderable.Visible)
                 {
+
                     renderable.PreRender();
 
                     // Some Gum objects, like GraphicalUiElements, may not have children if the object hasn't
@@ -460,7 +462,94 @@ namespace RenderingLibrary.Graphics
                     {
                         PreRender(renderable.Children);
                     }
+                    if(renderable.IsRenderTarget)
+                    {
+                        RenderToRenderTarget(renderable, SystemManagers.Default);
+                    }
                 }
+            }
+        }
+
+        GumBatch gumBatch;
+
+        private void RenderToRenderTarget(IRenderableIpso renderable, SystemManagers systemManagers)
+        {
+            var width = renderable.Width;
+            var height = renderable.Height;
+
+            if(RenderTargets.ContainsKey(renderable))
+            {
+                var existingRenderTarget = RenderTargets[renderable];
+                if (existingRenderTarget.Width != width || existingRenderTarget.Height != height)
+                {
+                    existingRenderTarget.Dispose();
+                    RenderTargets.Remove(renderable);
+                }
+            }
+
+
+            if(RenderTargets.ContainsKey(renderable) == false)
+            {
+                //var width = GraphicsDevice.Viewport.Width;
+                //var height = GraphicsDevice.Viewport.Height;
+                RenderTargets[renderable] = new RenderTarget2D(GraphicsDevice, (int)width, (int)height);
+
+            }
+
+            Texture oldRenderTarget = null;
+            if (GraphicsDevice.RenderTargetCount > 0)
+            {
+                oldRenderTarget = GraphicsDevice.GetRenderTargets()[0].RenderTarget;
+            }
+
+            var renderTarget = RenderTargets[renderable];
+
+
+
+            GraphicsDevice.SetRenderTarget(renderTarget);
+
+            var oldCameraWidth = Camera.ClientWidth;
+            var oldCameraHeight = Camera.ClientHeight;
+            var oldCameraX = Camera.X;
+            var oldCameraY = Camera.Y;
+
+
+
+            GraphicsDevice.Clear(Microsoft.Xna.Framework.Color.Transparent);
+
+            Camera.ClientWidth = (int)renderable.Width;
+            Camera.ClientHeight = (int)renderable.Height;
+            Camera.X = (int)renderable.GetAbsoluteLeft();
+            Camera.Y = (int)renderable.GetAbsoluteTop();
+
+
+            gumBatch = gumBatch ?? new GumBatch();
+
+
+            // todo  - rotations don't currently work:
+            //var rotationRadians = MathHelper.ToRadians(renderable.Rotation);
+            //var matrix = Matrix.CreateRotationZ(rotationRadians);
+            //gumBatch.Begin(matrix);
+            gumBatch.Begin();
+
+            //gumBatch.Draw(renderable);
+            //systemManagers.Renderer.Draw(renderable);
+            Draw(systemManagers, _layers[0], renderable, forceRenderHierarchy:true);
+
+
+            gumBatch.End();
+
+            GraphicsDevice.SetRenderTarget(oldRenderTarget as RenderTarget2D);
+
+            Camera.ClientWidth = oldCameraWidth;
+            Camera.ClientHeight = oldCameraHeight;
+            Camera.X = oldCameraX;
+            Camera.Y = oldCameraY;
+
+            if(!System.IO.File.Exists("Output.png"))
+            {
+                using var stream = System.IO.File.OpenWrite("Output.png");
+                renderTarget.SaveAsPng(stream, renderTarget.Width, renderTarget.Height);
             }
         }
 
@@ -475,7 +564,7 @@ namespace RenderingLibrary.Graphics
         }
 
 
-        private void Draw(SystemManagers managers, Layer layer, IRenderableIpso renderable)
+        private void Draw(SystemManagers managers, Layer layer, IRenderableIpso renderable, bool forceRenderHierarchy = false)
         {
             if (renderable.Visible)
             {
@@ -483,12 +572,28 @@ namespace RenderingLibrary.Graphics
                 AdjustRenderStates(mRenderStateVariables, layer, renderable);
                 bool didClipChange = oldClip != mRenderStateVariables.ClipRectangle;
 
-                renderable.Render(managers);
-
-
-                if (RenderUsingHierarchy)
+                if (renderable.IsRenderTarget && !forceRenderHierarchy)
                 {
-                    Render(renderable.Children, managers, layer);
+                    var renderableAlpha = 255;
+                    if(renderable is InvisibleRenderable invisibleRenderable)
+                    {
+                        renderableAlpha = (int)invisibleRenderable.Alpha;
+                    }
+                    var color = System.Drawing.Color.FromArgb(
+                        renderableAlpha, Color.White
+                        );
+
+                    Sprite.Render(managers, spriteRenderer, renderable, RenderTargets[renderable], color);                  
+                }
+                else
+                {
+                    renderable.Render(managers);
+
+
+                    if (RenderUsingHierarchy)
+                    {
+                        Render(renderable.Children, managers, layer);
+                    }
                 }
 
                 if (didClipChange)

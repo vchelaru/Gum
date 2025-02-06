@@ -143,6 +143,9 @@ namespace RenderingLibrary.Math.Geometry
             set => mLinePrimitive.LinePixelWidth = value;
         }
 
+        bool IRenderableIpso.IsRenderTarget => false;
+
+
         #endregion
 
         #region Constructor

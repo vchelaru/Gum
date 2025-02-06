@@ -10,6 +10,8 @@ namespace RenderingLibrary.Graphics
 {
     public interface IRenderableIpso : IRenderable, IPositionedSizedObject, IVisible
     {
+        bool IsRenderTarget { get; }
+
         bool ClipsChildren { get;  }
         IRenderableIpso Parent { get; set; }
         ObservableCollection<IRenderableIpso> Children { get; }

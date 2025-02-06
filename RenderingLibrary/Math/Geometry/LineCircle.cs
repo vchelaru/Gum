@@ -113,6 +113,7 @@ namespace RenderingLibrary.Math.Geometry
             }
         }
 
+        bool IRenderableIpso.IsRenderTarget => false;
 
         bool IRenderableIpso.ClipsChildren
         {

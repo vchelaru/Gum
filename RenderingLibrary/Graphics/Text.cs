@@ -650,6 +650,7 @@ namespace RenderingLibrary.Graphics
 
         public float LineHeightMultiplier { get; set; } = 1;
 
+        bool IRenderableIpso.IsRenderTarget => false;
 
         #endregion
 
@@ -680,7 +681,7 @@ namespace RenderingLibrary.Graphics
 
             mRawText = text;
             mNeedsBitmapFontRefresh = true;
-            mBounds = new LinePrimitive(this.Renderer.SinglePixelTexture);
+            mBounds = new LinePrimitive(managers.Renderer.SinglePixelTexture);
             mBounds.Color = Color.LightGreen;
 
             mBounds.Add(0, 0);

@@ -119,6 +119,8 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        public int StackCount => mStateStack.Count;
+
         #endregion
 
         public SpriteBatchStack(GraphicsDevice graphicsDevice)
@@ -221,7 +223,9 @@ namespace RenderingLibrary.Graphics
         {
             AdjustCurrentParametersDrawCall(texture2D, null, objectRequestingChange);
 
-            SpriteBatch.Draw(texture2D, destinationRectangle.ToXNA(), sourceRectangle.ToXNA(), color.ToXNA());
+            var xnaColor = color.ToXNA();
+
+            SpriteBatch.Draw(texture2D, destinationRectangle.ToXNA(), sourceRectangle.ToXNA(), xnaColor);
         }
 
         internal void Draw(Texture2D texture2D, Rectangle destinationRectangle, Rectangle? sourceRectangle, Color color, float rotationInRadians, Vector2 origin, SpriteEffects effects, int layerDepth, object objectRequestingChange)

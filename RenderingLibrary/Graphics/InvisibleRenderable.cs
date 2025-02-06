@@ -7,6 +7,7 @@ namespace RenderingLibrary.Graphics
 {
     public class InvisibleRenderable : IVisible, IRenderableIpso, ISetClipsChildren
     {
+        public bool IsRenderTarget { get; set; }
         public bool AbsoluteVisible
         {
             get
@@ -87,10 +88,13 @@ namespace RenderingLibrary.Graphics
 
         public bool FlipHorizontal { get; set; }
 
+        public float Alpha { get; set; } = 255;
+
         IVisible IVisible.Parent { get { return Parent as IVisible; } }
 
         public void PreRender()
         {
+
         }
 
         public void Render(ISystemManagers managers)
