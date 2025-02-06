@@ -36,6 +36,8 @@ namespace SkiaGum.Renderables
         public bool ClearCanvasOnRender { get; set; } = true;
 #endif
 
+        bool IRenderableIpso.IsRenderTarget => false;
+
         protected Microsoft.Xna.Framework.Vector2 Position;
 
         IRenderableIpso mParent;

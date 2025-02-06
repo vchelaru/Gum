@@ -9,6 +9,7 @@ using Rectangle = System.Drawing.Rectangle;
 using Gum;
 using System.Reflection.Emit;
 using Microsoft.Xna.Framework;
+using System.Linq;
 
 namespace RenderingLibrary.Graphics
 {
@@ -497,10 +498,12 @@ namespace RenderingLibrary.Graphics
             }
 
             Texture oldRenderTarget = null;
-            if (GraphicsDevice.RenderTargetCount > 0)
-            {
-                oldRenderTarget = GraphicsDevice.GetRenderTargets()[0].RenderTarget;
-            }
+
+            // RenderTargetCount isn't supported in raw XNA or KNI
+            //if (GraphicsDevice.RenderTargetCount > 0)
+            //{
+                oldRenderTarget = GraphicsDevice.GetRenderTargets().FirstOrDefault().RenderTarget;
+            //}
 
             var renderTarget = RenderTargets[renderable];
 

@@ -1,4 +1,5 @@
-﻿using RenderingLibrary;
+﻿using Gum.RenderingLibrary;
+using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
@@ -54,7 +55,8 @@ namespace MonoGameGum.GueDeriving
             }
             set
             {
-                BlendState = ContainedSprite.BlendState.ToXNA();
+                BlendState = value.ToBlendState().ToXNA();
+
                 // NotifyPropertyChanged handled by BlendState:
             }
         }

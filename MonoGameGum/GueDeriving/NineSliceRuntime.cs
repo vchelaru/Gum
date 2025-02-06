@@ -1,4 +1,5 @@
-﻿using Gum.Wireframe;
+﻿using Gum.RenderingLibrary;
+using Gum.Wireframe;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
@@ -56,7 +57,8 @@ namespace MonoGameGum.GueDeriving
             }
             set
             {
-                BlendState = ContainedNineSlice.BlendState.ToXNA();
+                BlendState = value.ToBlendState().ToXNA();
+
                 // NotifyPropertyChanged handled by BlendState:
             }
         }

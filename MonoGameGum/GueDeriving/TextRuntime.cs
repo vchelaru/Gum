@@ -25,6 +25,7 @@ namespace MonoGameGum.GueDeriving
             }
         }
 
+        // Shouldn't this be an XNA blend state?
         public Gum.BlendState BlendState
         {
             get => ContainedText.BlendState;
