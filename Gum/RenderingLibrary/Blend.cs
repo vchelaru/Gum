@@ -6,6 +6,8 @@ namespace Gum.RenderingLibrary
     {
         Normal,
         Additive,
-        Replace
+        Replace,
+        SubtractAlpha,
+        ReplaceAlpha
     }
 }

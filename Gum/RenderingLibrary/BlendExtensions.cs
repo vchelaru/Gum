@@ -23,6 +23,10 @@ namespace Gum.RenderingLibrary
                     return BlendState.Additive;
                 case Blend.Replace:
                     return BlendState.Opaque;
+                case Blend.SubtractAlpha:
+                    return BlendState.SubtractAlpha;
+                case Blend.ReplaceAlpha:
+                    return BlendState.ReplaceAlpha;
             }
             return BlendState.NonPremultiplied;
         }
@@ -43,6 +47,14 @@ namespace Gum.RenderingLibrary
             else if (blendState == BlendState.Opaque)
             {
                 return Blend.Replace;
+            }
+            else if (blendState == BlendState.SubtractAlpha)
+            {
+                return Blend.SubtractAlpha;
+            }
+            else if(blendState == BlendState.ReplaceAlpha)
+            {
+                return Blend.ReplaceAlpha;
             }
             else
             {

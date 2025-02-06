@@ -101,6 +101,9 @@ namespace Gum
 
         public static readonly BlendState NonPremultipliedAddAlpha;
 
+        public static readonly BlendState SubtractAlpha;
+        public static readonly BlendState ReplaceAlpha;
+
         static BlendState()
         {
             Additive = new BlendState("BlendState.Additive", Blend.SourceAlpha, Blend.One);
@@ -108,11 +111,72 @@ namespace Gum
             NonPremultiplied = new BlendState("BlendState.NonPremultiplied", Blend.SourceAlpha, Blend.InverseSourceAlpha);
             Opaque = new BlendState("BlendState.Opaque", Blend.One, Blend.Zero);
 
+
+            {
+
+                // Vic 2/6/2025, pulled from 12/19/2020
+                // This took me a while to figure out, so I'll document what I learned.
+                // For alpha, the operation is:
+                // ResultAlpha = (SourceAlpha * Blend.AlphaSourceBlend) {BlendFunc} (DestinationAlpha * Blend.AlphaDestblend)
+                // where:
+                // ResultAlpha is the resulting pixel alpha after the operation occurs
+                // SourceAlpha is the alpha of the pixel on the sprite (or current item) that is being drawn
+                // DestinationAlpha is the alpha of the pixel on the surface before the pixel is drawn, which is the result alpha from a previous operation
+                // In this case we want to subtract the sprite being drawn.
+                // To subtract the sprite that is being drawn, which is the SourceSprite, we need to do a ReverseSubtract
+                // so that the Source is being subtracted.
+                // We want to use Blend.One on both so that the values being used are the pixel values on source and dest.
+                // Keep in mind that since we're making a texture, we need this texture to be premultiplied, so we
+                // need to multiply the destination color by the inverse source alpha, so that if alpha is 0, we preserve the color, otherwise we
+                // darken it to premult
+                SubtractAlpha = new BlendState();
+                SubtractAlpha.ColorSourceBlend = Blend.Zero;
+                SubtractAlpha.ColorBlendFunction = BlendFunction.Add;
+                SubtractAlpha.ColorDestinationBlend = Blend.InverseSourceAlpha;
+
+                SubtractAlpha.AlphaSourceBlend = Blend.One;
+                SubtractAlpha.AlphaBlendFunction = BlendFunction.ReverseSubtract;
+                SubtractAlpha.AlphaDestinationBlend = Blend.One;
+
+                // 2/6/2025
+                // I don't yet
+                // understand why
+                // these properties
+                // are needed, but if
+                // I don't assign them,
+                // the blend doesn't work
+                // correctly.
+                SubtractAlpha.BlendFactor = Color.White;
+                SubtractAlpha.ColorWriteChannels = ColorWriteChannels.All;
+                SubtractAlpha.ColorWriteChannels1 = ColorWriteChannels.All;
+                SubtractAlpha.ColorWriteChannels2 = ColorWriteChannels.All;
+                SubtractAlpha.ColorWriteChannels3 = ColorWriteChannels.All;
+            }
+
+
+            ReplaceAlpha = new BlendState();
+            ReplaceAlpha.ColorSourceBlend = Blend.Zero;
+            ReplaceAlpha.ColorBlendFunction = BlendFunction.Add;
+            ReplaceAlpha.ColorDestinationBlend = Blend.One;
+
+            ReplaceAlpha.AlphaSourceBlend = Blend.One;
+            ReplaceAlpha.AlphaBlendFunction = BlendFunction.Add;
+            ReplaceAlpha.AlphaDestinationBlend = Blend.Zero;
+
+            ReplaceAlpha.BlendFactor = Color.White;
+            ReplaceAlpha.ColorWriteChannels = ColorWriteChannels.All;
+            ReplaceAlpha.ColorWriteChannels1 = ColorWriteChannels.All;
+            ReplaceAlpha.ColorWriteChannels2 = ColorWriteChannels.All;
+            ReplaceAlpha.ColorWriteChannels3 = ColorWriteChannels.All;
+
+
+
+
             NonPremultipliedAddAlpha = new BlendState();
 
-            NonPremultipliedAddAlpha.ColorSourceBlend = BlendState.NonPremultiplied.ColorSourceBlend;
-            NonPremultipliedAddAlpha.ColorDestinationBlend = BlendState.NonPremultiplied.ColorDestinationBlend;
-            NonPremultipliedAddAlpha.ColorBlendFunction = BlendState.NonPremultiplied.ColorBlendFunction;
+            NonPremultipliedAddAlpha.ColorSourceBlend = Blend.One;
+            NonPremultipliedAddAlpha.ColorDestinationBlend = Blend.Zero;
+            NonPremultipliedAddAlpha.ColorBlendFunction = BlendFunction.Add;
 
             NonPremultipliedAddAlpha.AlphaSourceBlend = Blend.SourceAlpha;
             NonPremultipliedAddAlpha.AlphaDestinationBlend = Blend.DestinationAlpha;

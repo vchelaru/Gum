@@ -49,7 +49,7 @@ namespace RenderingLibrary.Graphics
         GraphicsDevice mGraphicsDevice;
 
         static Renderer mSelf;
-
+        private RenderTargetService renderTargetService;
         Camera mCamera;
 
         Texture2D mSinglePixelTexture;
@@ -242,6 +242,7 @@ namespace RenderingLibrary.Graphics
 
         public void Initialize(GraphicsDevice graphicsDevice, SystemManagers managers)
         {
+            renderTargetService = new RenderTargetService();
             mCamera = new RenderingLibrary.Camera();
 
             if (graphicsDevice != null)
@@ -364,6 +365,8 @@ namespace RenderingLibrary.Graphics
                     mCamera.ClientHeight = GraphicsDevice.Viewport.Height;
                 }
 
+                renderTargetService.ClearUnusedRenderTargetsLastFrame();
+
 
                 mRenderStateVariables.BlendState = Renderer.NormalBlendState;
                 mRenderStateVariables.Wrap = false;
@@ -437,7 +440,6 @@ namespace RenderingLibrary.Graphics
             spriteRenderer.EndSpriteBatch();
         }
 
-        Dictionary<IRenderableIpso, RenderTarget2D> RenderTargets = new Dictionary<IRenderableIpso, RenderTarget2D>();
 
         private void PreRender(IList<IRenderableIpso> renderables)
         {
@@ -475,27 +477,7 @@ namespace RenderingLibrary.Graphics
 
         private void RenderToRenderTarget(IRenderableIpso renderable, SystemManagers systemManagers)
         {
-            var width = renderable.Width;
-            var height = renderable.Height;
 
-            if(RenderTargets.ContainsKey(renderable))
-            {
-                var existingRenderTarget = RenderTargets[renderable];
-                if (existingRenderTarget.Width != width || existingRenderTarget.Height != height)
-                {
-                    existingRenderTarget.Dispose();
-                    RenderTargets.Remove(renderable);
-                }
-            }
-
-
-            if(RenderTargets.ContainsKey(renderable) == false)
-            {
-                //var width = GraphicsDevice.Viewport.Width;
-                //var height = GraphicsDevice.Viewport.Height;
-                RenderTargets[renderable] = new RenderTarget2D(GraphicsDevice, (int)width, (int)height);
-
-            }
 
             Texture oldRenderTarget = null;
 
@@ -505,9 +487,7 @@ namespace RenderingLibrary.Graphics
                 oldRenderTarget = GraphicsDevice.GetRenderTargets().FirstOrDefault().RenderTarget;
             //}
 
-            var renderTarget = RenderTargets[renderable];
-
-
+            var renderTarget = renderTargetService.GetRenderTargetFor(GraphicsDevice, renderable);
 
             GraphicsDevice.SetRenderTarget(renderTarget);
 
@@ -580,13 +560,16 @@ namespace RenderingLibrary.Graphics
                     var renderableAlpha = 255;
                     if(renderable is InvisibleRenderable invisibleRenderable)
                     {
-                        renderableAlpha = (int)invisibleRenderable.Alpha;
+                        renderableAlpha = System.Math.Min(255, (int)invisibleRenderable.Alpha);
+                        renderableAlpha = System.Math.Max(0, renderableAlpha);
                     }
                     var color = System.Drawing.Color.FromArgb(
                         renderableAlpha, Color.White
                         );
 
-                    Sprite.Render(managers, spriteRenderer, renderable, RenderTargets[renderable], color);                  
+                    var renderTarget = renderTargetService.GetRenderTargetFor(GraphicsDevice, renderable);
+
+                    Sprite.Render(managers, spriteRenderer, renderable, renderTarget, color);                  
                 }
                 else
                 {
@@ -786,6 +769,68 @@ namespace RenderingLibrary.Graphics
 
     }
 
+    #region RenderTargetService
+
+    class RenderTargetService
+    {
+        HashSet<IRenderableIpso> itemsUsingRenderTargetsThisFrame = new HashSet<IRenderableIpso>();
+        Dictionary<IRenderableIpso, RenderTarget2D> RenderTargets = new Dictionary<IRenderableIpso, RenderTarget2D>();
+        List<IRenderableIpso> keysToRemove = new List<IRenderableIpso>();
+
+        public void ClearUnusedRenderTargetsLastFrame()
+        {
+            keysToRemove.Clear();
+
+            foreach (var item in RenderTargets)
+            {
+                if(itemsUsingRenderTargetsThisFrame.Contains(item.Key) == false)
+                {
+                    keysToRemove.Add(item.Key);
+                }
+            }
+
+            foreach(var item in keysToRemove)
+            {
+                RenderTargets[item].Dispose();
+                RenderTargets.Remove(item);
+            }
+        }
+
+        public RenderTarget2D GetRenderTargetFor(GraphicsDevice graphicsDevice, IRenderableIpso renderable)
+        {
+            itemsUsingRenderTargetsThisFrame.Add(renderable);
+
+            var width = renderable.Width;
+            var height = renderable.Height;
+
+            if (RenderTargets.ContainsKey(renderable))
+            {
+                var existingRenderTarget = RenderTargets[renderable];
+                if (existingRenderTarget.Width != width || existingRenderTarget.Height != height)
+                {
+                    existingRenderTarget.Dispose();
+                    RenderTargets.Remove(renderable);
+                }
+            }
+
+
+            if (RenderTargets.ContainsKey(renderable) == false)
+            {
+                //var width = GraphicsDevice.Viewport.Width;
+                //var height = GraphicsDevice.Viewport.Height;
+                RenderTargets[renderable] = new RenderTarget2D(graphicsDevice, (int)width, (int)height);
+
+            }
+            var renderTarget = RenderTargets[renderable];
+
+            return renderTarget;
+        }
+    }
+
+    #endregion
+
+    #region GumBatch
+
     public class GumBatch
     {
         enum GumBatchState
@@ -857,6 +902,8 @@ namespace RenderingLibrary.Graphics
 
 
     }
+
+    #endregion
 
     #region Custom effect support
 
