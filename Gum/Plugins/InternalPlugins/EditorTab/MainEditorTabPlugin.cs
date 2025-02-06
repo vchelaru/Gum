@@ -46,6 +46,7 @@ internal class MainEditorTabPlugin : InternalPlugin
             "HorizontalAlignment",
             nameof(GraphicalUiElement.IgnoredByParentSize),
             "IsBold",
+            "IsRenderTarget",
             "MaxLettersToShow",
             nameof(Text.MaxNumberOfLines),
             "Red",

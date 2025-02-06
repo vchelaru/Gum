@@ -502,8 +502,16 @@ namespace RenderingLibrary.Graphics
 
             Camera.ClientWidth = (int)renderable.Width;
             Camera.ClientHeight = (int)renderable.Height;
-            Camera.X = (int)renderable.GetAbsoluteLeft();
-            Camera.Y = (int)renderable.GetAbsoluteTop();
+            if(Camera.CameraCenterOnScreen == CameraCenterOnScreen.TopLeft)
+            {
+                Camera.X = (int)renderable.GetAbsoluteLeft();
+                Camera.Y = (int)renderable.GetAbsoluteTop();
+            }
+            else
+            {
+                Camera.X = (int)(renderable.GetAbsoluteLeft() + renderable.Width/2f);
+                Camera.Y = (int)(renderable.GetAbsoluteTop() + renderable.Height/2f);
+            }
 
 
             gumBatch = gumBatch ?? new GumBatch();

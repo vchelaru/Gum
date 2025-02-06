@@ -269,6 +269,11 @@ namespace Gum.Managers
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "int", Value = 4, Name = "AutoGridHorizontalCells" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "int", Value = 4, Name = "AutoGridVerticalCells" });
 
+                VariableSave alphaValue = CreateAlphaVariable();
+                stateSave.Variables.Add(alphaValue);
+
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "IsRenderTarget", Category = "Rendering" });
+
 
                 AddClipsChildren(stateSave);
 
@@ -573,19 +578,7 @@ namespace Gum.Managers
         {
             if (includeAlpha)
             {
-                var alphaValue = new VariableSave
-                {
-                    SetsValue = true,
-                    Type = "int",
-                    Value = 255,
-                    Name = "Alpha",
-                    Category = "Rendering",
-                };
-#if GUM
-                alphaValue.PreferredDisplayer = typeof(SliderDisplay);
-                alphaValue.PropertiesToSetOnDisplayer["MinValue"] = 0.0;
-                alphaValue.PropertiesToSetOnDisplayer["MaxValue"] = 255.0;
-#endif
+                VariableSave alphaValue = CreateAlphaVariable(); 
                 stateSave.Variables.Add(alphaValue);
             }
             var redValue = new VariableSave
@@ -629,6 +622,24 @@ namespace Gum.Managers
             blueValue.PreferredDisplayer = typeof(SliderDisplay);
             greenValue.PreferredDisplayer = typeof(SliderDisplay);
 #endif
+        }
+
+        private static VariableSave CreateAlphaVariable()
+        {
+            var alphaValue = new VariableSave
+            {
+                SetsValue = true,
+                Type = "int",
+                Value = 255,
+                Name = "Alpha",
+                Category = "Rendering",
+            };
+#if GUM
+            alphaValue.PreferredDisplayer = typeof(SliderDisplay);
+            alphaValue.PropertiesToSetOnDisplayer["MinValue"] = 0.0;
+            alphaValue.PropertiesToSetOnDisplayer["MaxValue"] = 255.0;
+#endif
+            return alphaValue;
         }
 
         public static void AddDimensionsVariables(StateSave stateSave, float defaultWidth, float defaultHeight, DimensionVariableAction dimensionVariableAction)

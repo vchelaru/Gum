@@ -174,9 +174,9 @@ namespace Gum
 
             NonPremultipliedAddAlpha = new BlendState();
 
-            NonPremultipliedAddAlpha.ColorSourceBlend = Blend.One;
-            NonPremultipliedAddAlpha.ColorDestinationBlend = Blend.Zero;
-            NonPremultipliedAddAlpha.ColorBlendFunction = BlendFunction.Add;
+            NonPremultipliedAddAlpha.ColorSourceBlend = BlendState.NonPremultiplied.ColorSourceBlend;
+            NonPremultipliedAddAlpha.ColorDestinationBlend = BlendState.NonPremultiplied.ColorDestinationBlend;
+            NonPremultipliedAddAlpha.ColorBlendFunction = BlendState.NonPremultiplied.ColorBlendFunction;
 
             NonPremultipliedAddAlpha.AlphaSourceBlend = Blend.SourceAlpha;
             NonPremultipliedAddAlpha.AlphaDestinationBlend = Blend.DestinationAlpha;

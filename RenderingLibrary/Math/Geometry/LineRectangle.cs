@@ -192,7 +192,13 @@ namespace RenderingLibrary.Math.Geometry
             set { mLinePrimitive.LinePixelWidth = value; }
         }
 
-        bool IRenderableIpso.IsRenderTarget => false;
+        public bool IsRenderTarget
+        {
+            get;
+            // Originally this didn't have a set, but we are using line rectangles for
+            // containers in Gum, so adding it here too
+            set;
+        }
 
 
         #endregion

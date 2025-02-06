@@ -116,6 +116,10 @@ namespace Gum.Wireframe
             {
                 handled = TrySetPropertyOnNineSlice(renderableIpso, propertyName, value, handled);
             }
+            else if (renderableIpso is InvisibleRenderable)
+            {
+                handled = TrySetPropertyOnInvisbileRenderable(renderableIpso, propertyName, value, handled);
+            }
 #endif
 
             // If special case didn't work, let's try reflection
@@ -140,6 +144,24 @@ namespace Gum.Wireframe
                     }
                 }
             }
+        }
+
+        private static bool TrySetPropertyOnInvisbileRenderable(IRenderableIpso renderableIpso, string propertyName, object value, bool handled)
+        {
+            bool didSet = false;
+            switch (propertyName)
+            {
+                case "IsRenderTarget":
+                    (renderableIpso as InvisibleRenderable).IsRenderTarget = value as bool? ?? false;
+                    didSet = true;
+                    break;
+                case "Alpha":
+                    (renderableIpso as InvisibleRenderable).Alpha = value as float? ?? 256;
+                    didSet = true;
+                    break;
+            }
+
+            return didSet;
         }
 
         private static bool TrySetPropertyOnNineSlice(IRenderableIpso renderableIpso, string propertyName, object value, bool handled)
@@ -243,7 +265,7 @@ namespace Gum.Wireframe
             bool handled = false;
             var sprite = renderableIpso as Sprite;
 
-            if (propertyName ==  "SourceFile")
+            if (propertyName == "SourceFile")
             {
                 var asString = value as String;
                 handled = AssignSourceFileOnSprite(sprite, graphicalUiElement, asString);
@@ -544,10 +566,10 @@ namespace Gum.Wireframe
         public static HashSet<string> Tags { get; private set; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
             "alpha",
-            "red", 
-            "blue", 
-            "green", 
-            "color", 
+            "red",
+            "blue",
+            "green",
+            "color",
             "font",
             "fontsize",
             "outlinethickness",
@@ -556,7 +578,7 @@ namespace Gum.Wireframe
             "usefontsmoothing",
             "fontscale",
             "lineheightmultiplier"
-        
+
         };
 
         static Stack<int> fontSizeStack = new Stack<int>();
@@ -573,13 +595,13 @@ namespace Gum.Wireframe
         {
             // Text can be rendered on multiple lines. This can happen due to explicit newline characters, or by automatic line wrapping.
             // When line indexes are counted, newlines are not included. Therefore, we need to remove newlines here so that indexes match up.
-            var bbCodeNoNewlines = 
-                // update November 18, 2024
-                // We now do include newline
-                // characters becuase those can
-                // be explicitly added for textboxes
-                // with multiple lines:
-                //bbcode?.Replace("\n", "");
+            var bbCodeNoNewlines =
+            // update November 18, 2024
+            // We now do include newline
+            // characters becuase those can
+            // be explicitly added for textboxes
+            // with multiple lines:
+            //bbcode?.Replace("\n", "");
             bbcode;
 
             var resultsNoNewlines = BbCodeParser.Parse(bbCodeNoNewlines, Tags);
@@ -589,10 +611,10 @@ namespace Gum.Wireframe
             asText.RawText = strippedText;
 
             fontNameStack.Clear();
-            if(graphicalUiElement.UseCustomFont)
+            if (graphicalUiElement.UseCustomFont)
             {
                 var customFont = graphicalUiElement.CustomFontFile;
-                if(customFont?.EndsWith(".fnt") == true)
+                if (customFont?.EndsWith(".fnt") == true)
                 {
                     customFont = customFont.Substring(0, customFont.Length - ".fnt".Length);
                 }
@@ -657,7 +679,7 @@ namespace Gum.Wireframe
                         break;
                     case "FontScale":
                         {
-                            if(float.TryParse( item.Open.Argument, out float parsed))
+                            if (float.TryParse(item.Open.Argument, out float parsed))
                             {
                                 castedValue = parsed;
                                 shouldApply = true;
@@ -703,7 +725,7 @@ namespace Gum.Wireframe
                 {
                     case "Font":
                         {
-                            if(hasArg)
+                            if (hasArg)
                             {
                                 // tolerate ".fnt" suffix
                                 var argument = tag.Argument;
@@ -779,7 +801,7 @@ namespace Gum.Wireframe
                         break;
                     case "UseCustomFont":
                         {
-                            if(bool.TryParse(tag.Argument, out bool parsedValue))
+                            if (bool.TryParse(tag.Argument, out bool parsedValue))
                             {
                                 useCustomFontStack.Push(parsedValue);
                                 castedValue = GetAndCreateFontIfNecessary();
@@ -817,7 +839,7 @@ namespace Gum.Wireframe
             }
 
             // close off the last one:
-            if(lastFontInlineVariable != null)
+            if (lastFontInlineVariable != null)
             {
                 lastFontInlineVariable.CharacterCount = asText.RawText.Length - lastFontInlineVariable.StartIndex;
             }
@@ -835,7 +857,7 @@ namespace Gum.Wireframe
                     // this could be a custom font, so let's see if it exists:
 
                     string fileName = String.Empty;
-                    if(ToolsUtilities.FileManager.FileExists(fontFileName))
+                    if (ToolsUtilities.FileManager.FileExists(fontFileName))
                     {
                         fileName = fontFileName;
                     }
@@ -871,7 +893,7 @@ namespace Gum.Wireframe
                     }
 #endif
 
-                    if(ToolsUtilities.FileManager.FileExists(fileName))
+                    if (ToolsUtilities.FileManager.FileExists(fileName))
                     {
                         font = new BitmapFont(fileName, (SystemManagers)null);
                     }
@@ -889,7 +911,7 @@ namespace Gum.Wireframe
             string GetFontFileName()
             {
                 string fontFileNameName;
-                if(useCustomFontStack.Peek())
+                if (useCustomFontStack.Peek())
                 {
                     fontFileNameName = fontNameStack.Peek() + ".fnt";
                 }
@@ -936,19 +958,19 @@ namespace Gum.Wireframe
             // extra calls in generated code, or an "UpdateAll" method
             //if (!mIsLayoutSuspended && !IsAllLayoutSuspended)
 
-                BitmapFont font = null;
+            BitmapFont font = null;
 
-                var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-                var contentLoader = loaderManager.ContentLoader;
+            var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+            var contentLoader = loaderManager.ContentLoader;
 
-                if (graphicalUiElement.UseCustomFont)
+            if (graphicalUiElement.UseCustomFont)
+            {
+
+                if (!string.IsNullOrEmpty(graphicalUiElement.CustomFontFile))
                 {
-
-                    if (!string.IsNullOrEmpty(graphicalUiElement.CustomFontFile))
+                    font = loaderManager.GetDisposable(graphicalUiElement.CustomFontFile) as BitmapFont;
+                    if (font == null)
                     {
-                        font = loaderManager.GetDisposable(graphicalUiElement.CustomFontFile) as BitmapFont;
-                        if (font == null)
-                        {
 #if KNI
                             try
                             {
@@ -961,99 +983,99 @@ namespace Gum.Wireframe
                                 // font doesn't exist, carry on...
                             }
 #else
-                            // so normally we would just let the content loader check if the file exists but since we're not going to
-                            // use the content loader for BitmapFont, we're going to protect this with a file.exists.
-                            if (ToolsUtilities.FileManager.FileExists(graphicalUiElement.CustomFontFile))
-                            {
-                                font = new BitmapFont(graphicalUiElement.CustomFontFile, SystemManagers.Default);
-                                loaderManager.AddDisposable(graphicalUiElement.CustomFontFile, font);
-                            }
-#endif
-                        }
-                        else if(font.Textures.Any(item => item?.IsDisposed == true))
+                        // so normally we would just let the content loader check if the file exists but since we're not going to
+                        // use the content loader for BitmapFont, we're going to protect this with a file.exists.
+                        if (ToolsUtilities.FileManager.FileExists(graphicalUiElement.CustomFontFile))
                         {
-                            // The BitmapFont is cached by Gum, but the underlying Texture2D might be managed by something else (like FRB).
-                            // This means that the Texture can be disposed without the BitmapFont being disposed. If this is the case we should
-                            // ask the underlying system for a new .png, but we can keep the same BitmapFont since that should stay the same and
-                            // .fnt parsing can be the slow part for large fonts.
-                            font.ReAssignTextures();
+                            font = new BitmapFont(graphicalUiElement.CustomFontFile, SystemManagers.Default);
+                            loaderManager.AddDisposable(graphicalUiElement.CustomFontFile, font);
                         }
+#endif
+                    }
+                    else if (font.Textures.Any(item => item?.IsDisposed == true))
+                    {
+                        // The BitmapFont is cached by Gum, but the underlying Texture2D might be managed by something else (like FRB).
+                        // This means that the Texture can be disposed without the BitmapFont being disposed. If this is the case we should
+                        // ask the underlying system for a new .png, but we can keep the same BitmapFont since that should stay the same and
+                        // .fnt parsing can be the slow part for large fonts.
+                        font.ReAssignTextures();
+                    }
+                }
+
+
+            }
+            else
+            {
+                if (graphicalUiElement.FontSize > 0 && !string.IsNullOrEmpty(graphicalUiElement.Font))
+                {
+
+                    string fontName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
+                        graphicalUiElement.FontSize,
+                        graphicalUiElement.Font,
+                        graphicalUiElement.OutlineThickness,
+                        graphicalUiElement.UseFontSmoothing,
+                        graphicalUiElement.IsItalic,
+                        graphicalUiElement.IsBold);
+
+                    string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, preserveCase: true, makeAbsolute: true);
+
+                    font = loaderManager.GetDisposable(fullFileName) as BitmapFont;
+                    if (font == null || font.Texture?.IsDisposed == true)
+                    {
+#if KNI
+                            try
+                            {
+                                // this could be running in browser where we don't have File.Exists, so JUST DO IT
+                                font = new BitmapFont(fullFileName, SystemManagers.Default);
+
+                                loaderManager.AddDisposable(fullFileName, font);
+                            }
+                            catch
+                            {
+                                // font doesn't exist, carry on...
+                            }
+#else
+                        // so normally we would just let the content loader check if the file exists but since we're not going to
+                        // use the content loader for BitmapFont, we're going to protect this with a file.exists.
+                        if (ToolsUtilities.FileManager.FileExists(fullFileName))
+                        {
+                            font = new BitmapFont(fullFileName, SystemManagers.Default);
+
+
+                            loaderManager.AddDisposable(fullFileName, font);
+                        }
+#endif
                     }
 
-
-                }
-                else
-                {
-                    if (graphicalUiElement.FontSize > 0 && !string.IsNullOrEmpty(graphicalUiElement.Font))
-                    {
-
-                        string fontName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
-                            graphicalUiElement.FontSize,
-                            graphicalUiElement.Font,
-                            graphicalUiElement.OutlineThickness,
-                            graphicalUiElement.UseFontSmoothing,
-                            graphicalUiElement.IsItalic,
-                            graphicalUiElement.IsBold);
-
-                        string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, preserveCase:true, makeAbsolute:true);
-
-                        font = loaderManager.GetDisposable(fullFileName) as BitmapFont;
-                        if (font == null || font.Texture?.IsDisposed == true)
-                        {
-#if KNI
-                            try
-                            {
-                                // this could be running in browser where we don't have File.Exists, so JUST DO IT
-                                font = new BitmapFont(fullFileName, SystemManagers.Default);
-
-                                loaderManager.AddDisposable(fullFileName, font);
-                            }
-                            catch
-                            {
-                                // font doesn't exist, carry on...
-                            }
-#else
-                            // so normally we would just let the content loader check if the file exists but since we're not going to
-                            // use the content loader for BitmapFont, we're going to protect this with a file.exists.
-                            if (ToolsUtilities.FileManager.FileExists(fullFileName))
-                            {
-                                font = new BitmapFont(fullFileName, SystemManagers.Default);
-
-
-                                loaderManager.AddDisposable(fullFileName, font);
-                            }
-#endif
-                        }
-
-                        // FRB may dispose fonts, so let's check:
+                    // FRB may dispose fonts, so let's check:
 
 #if DEBUG
-                        if (font?.Textures.Any(item => item?.IsDisposed == true) == true)
-                        {
-                            throw new InvalidOperationException("The returned font has a disposed texture");
-                        }
-#endif
-                    }
-                }
-
-                var fontToSet = font ?? Text.DefaultBitmapFont;
-
-                var asRenderableText = (Text)text;
-                if(asRenderableText.BitmapFont != fontToSet)
-                {
-                    asRenderableText.BitmapFont = fontToSet;
-
-                    // we want to update if the text's size is based on its "children" (the letters it contains)
-                    if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren ||
-                        // If height is relative to children, it could be in a stack
-                        graphicalUiElement.HeightUnits == DimensionUnitType.RelativeToChildren)
+                    if (font?.Textures.Any(item => item?.IsDisposed == true) == true)
                     {
-                        graphicalUiElement.UpdateLayout();
+                        throw new InvalidOperationException("The returned font has a disposed texture");
                     }
+#endif
                 }
+            }
+
+            var fontToSet = font ?? Text.DefaultBitmapFont;
+
+            var asRenderableText = (Text)text;
+            if (asRenderableText.BitmapFont != fontToSet)
+            {
+                asRenderableText.BitmapFont = fontToSet;
+
+                // we want to update if the text's size is based on its "children" (the letters it contains)
+                if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren ||
+                    // If height is relative to children, it could be in a stack
+                    graphicalUiElement.HeightUnits == DimensionUnitType.RelativeToChildren)
+                {
+                    graphicalUiElement.UpdateLayout();
+                }
+            }
         }
 
-#endregion
+        #endregion
 
         private static bool TrySetPropertyOnLineRectangle(IRenderableIpso mContainedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
         {
@@ -1110,6 +1132,11 @@ namespace Gum.Wireframe
             {
                 var valueAsColor = (Color)value;
                 ((LineRectangle)mContainedObjectAsIpso).Color = valueAsColor;
+                handled = true;
+            }
+            else if(propertyName == "IsRenderTarget")
+            {
+                ((LineRectangle)mContainedObjectAsIpso).IsRenderTarget = value as bool? ?? false;
                 handled = true;
             }
 
@@ -1335,7 +1362,7 @@ namespace Gum.Wireframe
                     {
                         sprite.Texture = loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(value);
                     }
-                    catch (Exception ex) 
+                    catch (Exception ex)
                     // Jan 1, 2025 - we used to only catch certain types of exceptions, but this list keeps growing as there
                     // are a variety of types of crashes that can occur. NineSlice catches all exceptions, so let's just do that!
                     //when (ex is System.IO.FileNotFoundException or System.IO.DirectoryNotFoundException or WebException or IOException)
@@ -1499,12 +1526,12 @@ namespace Gum.Wireframe
                 else
                 {
                     // we have a valid font file, so let's make sure the BitmapFont matches the expected font
-                    if(graphicalUiElement.UseCustomFont)
+                    if (graphicalUiElement.UseCustomFont)
                     {
                         var expectedFont = graphicalUiElement.CustomFontFile?.Replace("\\", "/");
                         var currentFont = asText.BitmapFont.FontFile?.Replace("\\", "/");
 
-                        if(!expectedFont.Equals(currentFont, StringComparison.InvariantCultureIgnoreCase))
+                        if (!expectedFont.Equals(currentFont, StringComparison.InvariantCultureIgnoreCase))
                         {
                             throw new System.IO.FileNotFoundException($"Expected:{expectedFont} but currently using:{currentFont}");
                         }
