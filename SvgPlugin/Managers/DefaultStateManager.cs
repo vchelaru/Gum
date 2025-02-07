@@ -129,6 +129,8 @@ namespace SkiaPlugin.Managers
 
                 AddStrokeAndFilledVariables(filledCircleState);
 
+                AddBlendVariable(filledCircleState);
+
                 filledCircleState.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation", SetsValue = true });
 
                 AddVariableReferenceList(filledCircleState);
@@ -298,6 +300,13 @@ namespace SkiaPlugin.Managers
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "IsFilled", Category = "Stroke and Fill" });
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 2.0f, Name = "StrokeWidth", Category = "Stroke and Fill" });
 
+        }
+
+        private static void AddBlendVariable(StateSave stateSave)
+        {
+            var blendariable = new VariableSave { SetsValue = true, Type = "Blend", Value = Gum.RenderingLibrary.Blend.Normal, Name = "Blend", Category = "Rendering" };
+
+            stateSave.Variables.Add(blendariable);
         }
 
         #endregion

@@ -227,7 +227,7 @@ namespace Gum.Managers
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "Wrap", Category = "Source" });
 
                 AddColorVariables(stateSave);
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "Blend", Value = Gum.RenderingLibrary.Blend.Normal, Name = "Blend", Category = "Rendering" });
+                stateSave.Variables.Add(CreateBlendVariable());
 
                 AddEventVariables(stateSave);
 
@@ -269,10 +269,14 @@ namespace Gum.Managers
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "int", Value = 4, Name = "AutoGridHorizontalCells" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "int", Value = 4, Name = "AutoGridVerticalCells" });
 
-                VariableSave alphaValue = CreateAlphaVariable();
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "IsRenderTarget", Category = "Rendering" });
+
+                var alphaValue = CreateAlphaVariable();
                 stateSave.Variables.Add(alphaValue);
 
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "IsRenderTarget", Category = "Rendering" });
+
+                var blendVariable = CreateBlendVariable();
+                stateSave.Variables.Add(blendVariable);
 
 
                 AddClipsChildren(stateSave);
@@ -312,7 +316,7 @@ namespace Gum.Managers
 
                 AddColorVariables(stateSave, true);
 
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "Blend", Value = Gum.RenderingLibrary.Blend.Normal, Name = "Blend", Category = "Rendering" });
+                stateSave.Variables.Add(CreateBlendVariable());
 
                 AddEventVariables(stateSave);
 
@@ -439,7 +443,7 @@ namespace Gum.Managers
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
 
                 AddColorVariables(stateSave);
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "Blend", Value = Gum.RenderingLibrary.Blend.Normal, Name = "Blend", Category = "Rendering" });
+                stateSave.Variables.Add(CreateBlendVariable());
 
                 var ninesliceTextureAddressVariable =
                     new VariableSave { SetsValue = true, Type = "TextureAddress", Value = Gum.Managers.TextureAddress.EntireTexture, Name = "TextureAddress", Category = "Source" };
@@ -512,6 +516,11 @@ namespace Gum.Managers
             //        variable.SetsValue = true;
             //    }
             //}
+        }
+
+        private VariableSave CreateBlendVariable()
+        {
+            return new VariableSave { SetsValue = true, Type = "Blend", Value = Gum.RenderingLibrary.Blend.Normal, Name = "Blend", Category = "Rendering" };
         }
 
         public static void AddClipsChildren(StateSave stateSave)
