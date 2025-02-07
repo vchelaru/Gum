@@ -5,6 +5,13 @@
     <Name>Default</Name>
     <Variable>
       <Type>int</Type>
+      <Name>Alpha</Name>
+      <Value xsi:type="xsd:int">255</Value>
+      <Category>Rendering</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>int</Type>
       <Name>AutoGridHorizontalCells</Name>
       <Value xsi:type="xsd:int">4</Value>
       <Category>Children</Category>
@@ -15,6 +22,13 @@
       <Name>AutoGridVerticalCells</Name>
       <Value xsi:type="xsd:int">4</Value>
       <Category>Children</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>Blend</Type>
+      <Name>Blend</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <Category>Rendering</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -90,6 +104,13 @@
       <Name>IsOverrideInCodeGen</Name>
       <Value xsi:type="xsd:boolean">false</Value>
       <Category>Xamarin Forms</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>bool</Type>
+      <Name>IsRenderTarget</Name>
+      <Value xsi:type="xsd:boolean">false</Value>
+      <Category>Rendering</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
