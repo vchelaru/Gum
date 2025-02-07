@@ -18,6 +18,7 @@ namespace SkiaGum.Renderables
             set;
         }
 
+        public bool IsRenderTarget => false;
 
         ObservableCollection<IRenderableIpso> mChildren;
         public ObservableCollection<IRenderableIpso> Children

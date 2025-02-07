@@ -25,6 +25,8 @@ namespace SkiaGum.Renderables
             }
         }
 
+        public bool IsRenderTarget => false;
+
         public BlendState BlendState => BlendState.AlphaBlend;
 
         ObservableCollection<IRenderableIpso> children = new ObservableCollection<IRenderableIpso>();
