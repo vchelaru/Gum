@@ -200,6 +200,9 @@ namespace RenderingLibrary.Math.Geometry
             set;
         }
 
+        public float Alpha => Color.A;
+
+
 
         #endregion
 
