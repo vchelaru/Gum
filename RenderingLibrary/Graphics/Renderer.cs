@@ -515,7 +515,9 @@ namespace RenderingLibrary.Graphics
                 // if I don't add 1 to the
                 // camera position, then everything
                 // is rendered offset by 1 pixel in the 
-                // Gum tool.
+                // Gum tool. Need to test this in DeskopGL
+                // projects, and possibly apply Camera.PixelPerfectOffsetX
+                // and Camera.PixelPerfectOffsetY
                 Camera.X = (int)(renderable.GetAbsoluteLeft() + renderable.Width/2f) + 1f;
                 Camera.Y = (int)(renderable.GetAbsoluteTop() + renderable.Height/2f) + 1f;
             }
