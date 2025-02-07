@@ -20,9 +20,9 @@ namespace GameUiSamples.Components
         {
             GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("HollowKnightComponents/ManaOrb", typeof(ManaOrbRuntime));
         }
-        public SpriteRuntime SpriteInstance { get; protected set; }
-        public ContainerRuntime ContainerInstance { get; protected set; }
-        public SpriteRuntime SpriteInstance2 { get; protected set; }
+        public SpriteRuntime OrbBackground { get; protected set; }
+        public ContainerRuntime RenderTargetContainer { get; protected set; }
+        public SpriteRuntime WaveTop { get; protected set; }
         public SpriteRuntime WaveMaskSprite { get; protected set; }
         public ColoredRectangleRuntime ColoredRectangleInstance { get; protected set; }
 
@@ -33,9 +33,9 @@ namespace GameUiSamples.Components
         }
         public override void AfterFullCreation()
         {
-            SpriteInstance = this.GetGraphicalUiElementByName("SpriteInstance") as SpriteRuntime;
-            ContainerInstance = this.GetGraphicalUiElementByName("ContainerInstance") as ContainerRuntime;
-            SpriteInstance2 = this.GetGraphicalUiElementByName("SpriteInstance2") as SpriteRuntime;
+            OrbBackground = this.GetGraphicalUiElementByName("OrbBackground") as SpriteRuntime;
+            RenderTargetContainer = this.GetGraphicalUiElementByName("RenderTargetContainer") as ContainerRuntime;
+            WaveTop = this.GetGraphicalUiElementByName("WaveTop") as SpriteRuntime;
             WaveMaskSprite = this.GetGraphicalUiElementByName("WaveMaskSprite") as SpriteRuntime;
             ColoredRectangleInstance = this.GetGraphicalUiElementByName("ColoredRectangleInstance") as ColoredRectangleRuntime;
             CustomInitialize();
