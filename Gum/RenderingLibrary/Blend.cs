@@ -8,6 +8,7 @@ namespace Gum.RenderingLibrary
         Additive,
         Replace,
         SubtractAlpha,
-        ReplaceAlpha
+        ReplaceAlpha,
+        MinAlpha
     }
 }

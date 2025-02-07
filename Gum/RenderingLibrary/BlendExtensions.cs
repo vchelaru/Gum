@@ -27,6 +27,8 @@ namespace Gum.RenderingLibrary
                     return BlendState.SubtractAlpha;
                 case Blend.ReplaceAlpha:
                     return BlendState.ReplaceAlpha;
+                case Blend.MinAlpha:
+                    return BlendState.MinAlpha;
             }
             return BlendState.NonPremultiplied;
         }
@@ -55,6 +57,10 @@ namespace Gum.RenderingLibrary
             else if(blendState == BlendState.ReplaceAlpha)
             {
                 return Blend.ReplaceAlpha;
+            }
+            else if(blendState == BlendState.MinAlpha)
+            {
+                return Blend.MinAlpha;
             }
             else
             {
