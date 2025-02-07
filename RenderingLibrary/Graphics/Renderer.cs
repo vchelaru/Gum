@@ -510,8 +510,14 @@ namespace RenderingLibrary.Graphics
             }
             else
             {
-                Camera.X = (int)(renderable.GetAbsoluteLeft() + renderable.Width/2f);
-                Camera.Y = (int)(renderable.GetAbsoluteTop() + renderable.Height/2f);
+                // February 7, 2025
+                // I'm not sure why, but
+                // if I don't add 1 to the
+                // camera position, then everything
+                // is rendered offset by 1 pixel in the 
+                // Gum tool.
+                Camera.X = (int)(renderable.GetAbsoluteLeft() + renderable.Width/2f) + 1f;
+                Camera.Y = (int)(renderable.GetAbsoluteTop() + renderable.Height/2f) + 1f;
             }
 
 
