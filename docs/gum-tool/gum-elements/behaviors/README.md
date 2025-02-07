@@ -2,7 +2,9 @@
 
 ### Introduction
 
-Behaviors can define requirements which are reusable across multiple components to standardize instance names and behaviors. If a component uses a behavior, then the behavior is forced to include categories and instances according to the behavior definition.
+Behaviors can define requirements which are reusable across multiple components to standardize instance names and behaviors. If a component uses a behavior, then the component is forced to include categories and instances according to the behavior definition.
+
+The most common usage of behaviors is the automatic creation and inclusion of _Gum Forms_ behaviors.
 
 Behaviors are used to define requirements for components, to simplify the creation of new components, and to reduce the chances of spelling and implementation mistakes.
 
