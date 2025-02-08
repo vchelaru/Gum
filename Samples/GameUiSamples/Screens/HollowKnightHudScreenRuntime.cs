@@ -13,6 +13,8 @@ using MonoGameGum.GueDeriving;
 using Microsoft.Xna.Framework;
 using System;
 using MonoGameGum.Forms;
+using GumRuntime;
+using RenderingLibrary;
 namespace GameUiSamples.Screens;
 
 partial class HollowKnightHudScreenRuntime : Gum.Wireframe.BindableGue, IUpdateScreen
@@ -32,14 +34,22 @@ partial class HollowKnightHudScreenRuntime : Gum.Wireframe.BindableGue, IUpdateS
 
     partial void CustomInitialize()
     {
-        this.AddManaButton.Click += (_, _) => ManaOrbInstance.PercentFull += 10; 
-        this.SubtractManaButton.Click += (_, _) => ManaOrbInstance.PercentFull -= 10; 
+        this.AddManaButton.FormsControl.Click += (_, _) => ManaOrbInstance.PercentFull += 10; 
+        this.SubtractManaButton.FormsControl.Click += (_, _) => ManaOrbInstance.PercentFull -= 10; 
 
-        this.RefillHealthButton.Click += (_, _) =>  CurrentHealth = 6; 
-        this.TakeDamageButton.Click += (_, _) => CurrentHealth--; 
+        this.RefillHealthButton.FormsControl.Click += (_, _) =>  CurrentHealth = 6; 
+        this.TakeDamageButton.FormsControl.Click += (_, _) => CurrentHealth--; 
 
-        this.AddMoneyButton.Click += (_, _) => 
+        this.AddMoneyButton.FormsControl.Click += (_, _) => 
             CurrencyInstance.AddMoney(100);
+
+        this.ExitButton.FormsControl.Click += (_, _) =>
+        {
+            Game1.Root.RemoveFromManagers();
+            Game1.Root = ObjectFinder.Self.GetScreen("MainMenu")
+                .ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
+        };
+            
 
         CurrentHealth = MaxHealth;
     }

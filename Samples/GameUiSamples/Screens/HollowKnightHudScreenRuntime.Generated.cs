@@ -37,6 +37,7 @@ namespace GameUiSamples.Screens
         public ButtonStandardRuntime TakeDamageButton { get; protected set; }
         public ButtonStandardRuntime RefillHealthButton { get; protected set; }
         public ButtonStandardRuntime AddMoneyButton { get; protected set; }
+        public ButtonStandardRuntime ExitButton { get; protected set; }
 
         public HollowKnightHudScreenRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         {
@@ -62,6 +63,7 @@ namespace GameUiSamples.Screens
             TakeDamageButton = this.GetGraphicalUiElementByName("TakeDamageButton") as ButtonStandardRuntime;
             RefillHealthButton = this.GetGraphicalUiElementByName("RefillHealthButton") as ButtonStandardRuntime;
             AddMoneyButton = this.GetGraphicalUiElementByName("AddMoneyButton") as ButtonStandardRuntime;
+            ExitButton = this.GetGraphicalUiElementByName("ExitButton") as ButtonStandardRuntime;
             CustomInitialize();
         }
         //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

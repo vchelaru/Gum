@@ -30,7 +30,7 @@ namespace GameUiSamples.Components
         public ItemSlotRuntime ItemSlotInstance7 { get; protected set; }
         public ItemSlotRuntime ItemSlotInstance8 { get; protected set; }
         public ItemSlotRuntime ItemSlotInstance9 { get; protected set; }
-        public ContainerRuntime ContainerInstance { get; protected set; }
+        public ContainerRuntime ItemSlotContainer { get; protected set; }
 
         public HotbarRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         {
@@ -49,7 +49,7 @@ namespace GameUiSamples.Components
             ItemSlotInstance7 = this.GetGraphicalUiElementByName("ItemSlotInstance7") as ItemSlotRuntime;
             ItemSlotInstance8 = this.GetGraphicalUiElementByName("ItemSlotInstance8") as ItemSlotRuntime;
             ItemSlotInstance9 = this.GetGraphicalUiElementByName("ItemSlotInstance9") as ItemSlotRuntime;
-            ContainerInstance = this.GetGraphicalUiElementByName("ContainerInstance") as ContainerRuntime;
+            ItemSlotContainer = this.GetGraphicalUiElementByName("ItemSlotContainer") as ContainerRuntime;
             CustomInitialize();
         }
         //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

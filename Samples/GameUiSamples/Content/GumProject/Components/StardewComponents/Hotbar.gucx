@@ -6,67 +6,67 @@
     <Name>Default</Name>
     <Variable>
       <Type>ChildrenLayout</Type>
-      <Name>ContainerInstance.ChildrenLayout</Name>
+      <Name>ItemSlotContainer.ChildrenLayout</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>float</Type>
-      <Name>ContainerInstance.Height</Name>
+      <Name>ItemSlotContainer.Height</Name>
       <Value xsi:type="xsd:float">-4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>ContainerInstance.HeightUnits</Name>
+      <Name>ItemSlotContainer.HeightUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>float</Type>
-      <Name>ContainerInstance.Width</Name>
+      <Name>ItemSlotContainer.Width</Name>
       <Value xsi:type="xsd:float">-4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>ContainerInstance.WidthUnits</Name>
+      <Name>ItemSlotContainer.WidthUnits</Name>
       <Value xsi:type="xsd:int">2</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>float</Type>
-      <Name>ContainerInstance.X</Name>
+      <Name>ItemSlotContainer.X</Name>
       <Value xsi:type="xsd:float">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>ContainerInstance.XOrigin</Name>
+      <Name>ItemSlotContainer.XOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>ContainerInstance.XUnits</Name>
+      <Name>ItemSlotContainer.XUnits</Name>
       <Value xsi:type="xsd:int">6</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>float</Type>
-      <Name>ContainerInstance.Y</Name>
+      <Name>ItemSlotContainer.Y</Name>
       <Value xsi:type="xsd:float">0</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>ContainerInstance.YOrigin</Name>
+      <Name>ItemSlotContainer.YOrigin</Name>
       <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>ContainerInstance.YUnits</Name>
+      <Name>ItemSlotContainer.YUnits</Name>
       <Value xsi:type="xsd:int">7</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -98,7 +98,7 @@
     <Variable>
       <Type>string</Type>
       <Name>ItemSlotInstance1.Parent</Name>
-      <Value xsi:type="xsd:string">ContainerInstance</Value>
+      <Value xsi:type="xsd:string">ItemSlotContainer</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -110,7 +110,7 @@
     <Variable>
       <Type>string</Type>
       <Name>ItemSlotInstance2.Parent</Name>
-      <Value xsi:type="xsd:string">ContainerInstance</Value>
+      <Value xsi:type="xsd:string">ItemSlotContainer</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -122,7 +122,7 @@
     <Variable>
       <Type>string</Type>
       <Name>ItemSlotInstance3.Parent</Name>
-      <Value xsi:type="xsd:string">ContainerInstance</Value>
+      <Value xsi:type="xsd:string">ItemSlotContainer</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -140,7 +140,7 @@
     <Variable>
       <Type>string</Type>
       <Name>ItemSlotInstance4.Parent</Name>
-      <Value xsi:type="xsd:string">ContainerInstance</Value>
+      <Value xsi:type="xsd:string">ItemSlotContainer</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -152,7 +152,7 @@
     <Variable>
       <Type>string</Type>
       <Name>ItemSlotInstance5.Parent</Name>
-      <Value xsi:type="xsd:string">ContainerInstance</Value>
+      <Value xsi:type="xsd:string">ItemSlotContainer</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -164,7 +164,7 @@
     <Variable>
       <Type>string</Type>
       <Name>ItemSlotInstance6.Parent</Name>
-      <Value xsi:type="xsd:string">ContainerInstance</Value>
+      <Value xsi:type="xsd:string">ItemSlotContainer</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -176,7 +176,7 @@
     <Variable>
       <Type>string</Type>
       <Name>ItemSlotInstance7.Parent</Name>
-      <Value xsi:type="xsd:string">ContainerInstance</Value>
+      <Value xsi:type="xsd:string">ItemSlotContainer</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -188,7 +188,7 @@
     <Variable>
       <Type>string</Type>
       <Name>ItemSlotInstance8.Parent</Name>
-      <Value xsi:type="xsd:string">ContainerInstance</Value>
+      <Value xsi:type="xsd:string">ItemSlotContainer</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -200,7 +200,7 @@
     <Variable>
       <Type>string</Type>
       <Name>ItemSlotInstance9.Parent</Name>
-      <Value xsi:type="xsd:string">ContainerInstance</Value>
+      <Value xsi:type="xsd:string">ItemSlotContainer</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -310,7 +310,7 @@
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>
-    <Name>ContainerInstance</Name>
+    <Name>ItemSlotContainer</Name>
     <BaseType>Container</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
