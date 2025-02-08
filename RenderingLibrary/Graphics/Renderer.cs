@@ -487,15 +487,15 @@ namespace RenderingLibrary.Graphics
             //{
                 oldRenderTarget = GraphicsDevice.GetRenderTargets().FirstOrDefault().RenderTarget;
             //}
-
-            var renderTarget = renderTargetService.GetRenderTargetFor(GraphicsDevice, renderable, Camera);
-
-            GraphicsDevice.SetRenderTarget(renderTarget);
-
             var oldCameraWidth = Camera.ClientWidth;
             var oldCameraHeight = Camera.ClientHeight;
             var oldCameraX = Camera.X;
             var oldCameraY = Camera.Y;
+            var oldViewport = GraphicsDevice.Viewport;
+
+            var renderTarget = renderTargetService.GetRenderTargetFor(GraphicsDevice, renderable, Camera);
+
+            GraphicsDevice.SetRenderTarget(renderTarget);
 
 
 
@@ -545,6 +545,7 @@ namespace RenderingLibrary.Graphics
             Camera.ClientHeight = oldCameraHeight;
             Camera.X = oldCameraX;
             Camera.Y = oldCameraY;
+            GraphicsDevice.Viewport = oldViewport;
 
             if(!System.IO.File.Exists("Output.png"))
             {
