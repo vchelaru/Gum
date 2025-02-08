@@ -818,6 +818,8 @@ namespace RenderingLibrary.Graphics
                 RenderTargets[item].Dispose();
                 RenderTargets.Remove(item);
             }
+
+            itemsUsingRenderTargetsThisFrame.Clear();
         }
 
         public RenderTarget2D GetRenderTargetFor(GraphicsDevice graphicsDevice, IRenderableIpso renderable, Camera camera)
