@@ -14,6 +14,7 @@ using RenderingLibrary;
 using Microsoft.Xna.Framework;
 using MonoGameGum.Forms;
 using Microsoft.Xna.Framework.Input;
+using System;
 namespace GameUiSamples.Screens
 {
     partial class StardewHotbarScreenRuntime : Gum.Wireframe.BindableGue, IUpdateScreen
@@ -32,7 +33,7 @@ namespace GameUiSamples.Screens
         public void Update(GameTime gameTime)
         {
             var keyboard = FormsUtilities.Keyboard;
-            int indexToSelect = -1;
+            int? indexToSelect = null;
             if (keyboard.KeyPushed(Keys.D1)) indexToSelect = 0;
             if (keyboard.KeyPushed(Keys.D2)) indexToSelect = 1;
             if (keyboard.KeyPushed(Keys.D3)) indexToSelect = 2;
@@ -45,10 +46,12 @@ namespace GameUiSamples.Screens
 
             if(indexToSelect != null)
             {
-                SelectIndex(indexToSelect.Va
-                    );
+                SelectIndex(indexToSelect.Value);
             }
         }
-        
+
+        private void SelectIndex(int value)
+        {
+        }
     }
 }
