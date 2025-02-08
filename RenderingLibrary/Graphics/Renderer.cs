@@ -488,7 +488,7 @@ namespace RenderingLibrary.Graphics
                 oldRenderTarget = GraphicsDevice.GetRenderTargets().FirstOrDefault().RenderTarget;
             //}
 
-            var renderTarget = renderTargetService.GetRenderTargetFor(GraphicsDevice, renderable);
+            var renderTarget = renderTargetService.GetRenderTargetFor(GraphicsDevice, renderable, Camera);
 
             GraphicsDevice.SetRenderTarget(renderTarget);
 
@@ -501,8 +501,8 @@ namespace RenderingLibrary.Graphics
 
             GraphicsDevice.Clear(Microsoft.Xna.Framework.Color.Transparent);
 
-            Camera.ClientWidth = (int)renderable.Width;
-            Camera.ClientHeight = (int)renderable.Height;
+            Camera.ClientWidth = (int)renderTarget.Width;
+            Camera.ClientHeight = (int)renderTarget.Height;
             if(Camera.CameraCenterOnScreen == CameraCenterOnScreen.TopLeft)
             {
                 Camera.X = (int)renderable.GetAbsoluteLeft();
@@ -591,7 +591,7 @@ namespace RenderingLibrary.Graphics
                         renderableAlpha, Color.White
                         );
 
-                    var renderTarget = renderTargetService.GetRenderTargetFor(GraphicsDevice, renderable);
+                    var renderTarget = renderTargetService.GetRenderTargetFor(GraphicsDevice, renderable, Camera);
 
                     Sprite.Render(managers, spriteRenderer, renderable, renderTarget, color);                  
                 }
@@ -820,12 +820,13 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        public RenderTarget2D GetRenderTargetFor(GraphicsDevice graphicsDevice, IRenderableIpso renderable)
+        public RenderTarget2D GetRenderTargetFor(GraphicsDevice graphicsDevice, IRenderableIpso renderable, Camera camera)
         {
             itemsUsingRenderTargetsThisFrame.Add(renderable);
 
-            var width = renderable.Width;
-            var height = renderable.Height;
+            var width = (int)(renderable.Width * camera.Zoom);
+            var height = (int)(renderable.Height * camera.Zoom);
+
 
             if (RenderTargets.ContainsKey(renderable))
             {

@@ -10,6 +10,24 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>float</Type>
+      <Name>ColoredRectangleInstance.X</Name>
+      <Value xsi:type="xsd:float">17</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ColoredRectangleInstance.Y</Name>
+      <Value xsi:type="xsd:float">17</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>ContainerInstance.Height</Name>
+      <Value xsi:type="xsd:float">168</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>bool</Type>
       <Name>ContainerInstance.IsRenderTarget</Name>
       <Value xsi:type="xsd:boolean">true</Value>
@@ -17,14 +35,20 @@
     </Variable>
     <Variable>
       <Type>float</Type>
+      <Name>ContainerInstance.Width</Name>
+      <Value xsi:type="xsd:float">204</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
       <Name>ContainerInstance.X</Name>
-      <Value xsi:type="xsd:float">0</Value>
+      <Value xsi:type="xsd:float">259</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>float</Type>
       <Name>ContainerInstance.Y</Name>
-      <Value xsi:type="xsd:float">0</Value>
+      <Value xsi:type="xsd:float">203</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
