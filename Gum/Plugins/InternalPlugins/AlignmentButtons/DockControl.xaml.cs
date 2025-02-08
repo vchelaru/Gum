@@ -25,6 +25,11 @@ namespace Gum.Plugins.AlignmentButtons
             ViewModel.DockTopButton_Click();
         }
 
+        private void SizeToChildren_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            ViewModel.SizeToChildren_Click();
+        }
+
         private void LeftButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             ViewModel.DockLeftButton_Click();
