@@ -518,8 +518,8 @@ namespace RenderingLibrary.Graphics
                 // Gum tool. Need to test this in DeskopGL
                 // projects, and possibly apply Camera.PixelPerfectOffsetX
                 // and Camera.PixelPerfectOffsetY
-                Camera.X = (int)(renderable.GetAbsoluteLeft() + renderable.Width/2f) + 1f;
-                Camera.Y = (int)(renderable.GetAbsoluteTop() + renderable.Height/2f) + 1f;
+                Camera.X = (int)(renderable.GetAbsoluteLeft() + renderable.Width/2f) + 1/Camera.Zoom;
+                Camera.Y = (int)(renderable.GetAbsoluteTop() + renderable.Height/2f) + 1/Camera.Zoom;
             }
 
 
