@@ -83,6 +83,11 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>FullEmptyCategory</Type>
+      <Name>FullEmptyCategoryState</Name>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>float</Type>
       <Name>Height</Name>
       <Value xsi:type="xsd:float">100</Value>
@@ -318,13 +323,13 @@
     <Variable>
       <Type>float</Type>
       <Name>WaveTop.X</Name>
-      <Value xsi:type="xsd:float">-264</Value>
+      <Value xsi:type="xsd:float">-163</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>float</Type>
       <Name>WaveTop.Y</Name>
-      <Value xsi:type="xsd:float">40</Value>
+      <Value xsi:type="xsd:float">-23</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -355,6 +360,27 @@
       <Value />
     </VariableList>
   </State>
+  <Category>
+    <Name>FullEmptyCategory</Name>
+    <State>
+      <Name>Full</Name>
+      <Variable>
+        <Type>float</Type>
+        <Name>WaveTop.Y</Name>
+        <Value xsi:type="xsd:float">-23</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+    </State>
+    <State>
+      <Name>Empty</Name>
+      <Variable>
+        <Type>float</Type>
+        <Name>WaveTop.Y</Name>
+        <Value xsi:type="xsd:float">83</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+    </State>
+  </Category>
   <Instance>
     <Name>OrbBackground</Name>
     <BaseType>Sprite</BaseType>

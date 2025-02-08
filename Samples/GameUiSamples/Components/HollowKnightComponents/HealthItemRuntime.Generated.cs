@@ -20,6 +20,30 @@ namespace GameUiSamples.Components
         {
             GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("HollowKnightComponents/HealthItem", typeof(HealthItemRuntime));
         }
+        public enum FullEmptyCategory
+        {
+            Full,
+            Empty,
+        }
+
+        public FullEmptyCategory FullEmptyCategoryState
+        {
+            set
+            {
+                if(Categories.ContainsKey("FullEmptyCategory"))
+                {
+                    var category = Categories["FullEmptyCategory"];
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.ApplyState(state);
+                }
+                else
+                {
+                    var category = ((Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "FullEmptyCategory");
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.ApplyState(state);
+                }
+            }
+        }
         public SpriteRuntime SpriteInstance { get; protected set; }
 
         public HealthItemRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)

@@ -21,8 +21,8 @@ namespace GameUiSamples.Components
             GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("HollowKnightComponents/Currency", typeof(CurrencyRuntime));
         }
         public SpriteRuntime SpriteInstance { get; protected set; }
-        public TextRuntime TextInstance { get; protected set; }
-        public TextRuntime TextInstance1 { get; protected set; }
+        public TextRuntime TotalMoneyTextInstance { get; protected set; }
+        public TextRuntime ToAddTextInstance { get; protected set; }
 
         public CurrencyRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         {
@@ -32,8 +32,8 @@ namespace GameUiSamples.Components
         public override void AfterFullCreation()
         {
             SpriteInstance = this.GetGraphicalUiElementByName("SpriteInstance") as SpriteRuntime;
-            TextInstance = this.GetGraphicalUiElementByName("TextInstance") as TextRuntime;
-            TextInstance1 = this.GetGraphicalUiElementByName("TextInstance1") as TextRuntime;
+            TotalMoneyTextInstance = this.GetGraphicalUiElementByName("TotalMoneyTextInstance") as TextRuntime;
+            ToAddTextInstance = this.GetGraphicalUiElementByName("ToAddTextInstance") as TextRuntime;
             CustomInitialize();
         }
         //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

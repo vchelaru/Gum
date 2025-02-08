@@ -20,6 +20,30 @@ namespace GameUiSamples.Components
         {
             GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("HollowKnightComponents/ManaOrb", typeof(ManaOrbRuntime));
         }
+        public enum FullEmptyCategory
+        {
+            Full,
+            Empty,
+        }
+
+        public FullEmptyCategory FullEmptyCategoryState
+        {
+            set
+            {
+                if(Categories.ContainsKey("FullEmptyCategory"))
+                {
+                    var category = Categories["FullEmptyCategory"];
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.ApplyState(state);
+                }
+                else
+                {
+                    var category = ((Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "FullEmptyCategory");
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.ApplyState(state);
+                }
+            }
+        }
         public SpriteRuntime OrbBackground { get; protected set; }
         public ContainerRuntime RenderTargetContainer { get; protected set; }
         public SpriteRuntime WaveTop { get; protected set; }

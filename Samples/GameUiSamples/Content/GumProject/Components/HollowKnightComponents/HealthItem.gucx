@@ -5,6 +5,11 @@
   <State>
     <Name>Default</Name>
     <Variable>
+      <Type>FullEmptyCategory</Type>
+      <Name>FullEmptyCategoryState</Name>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>float</Type>
       <Name>Height</Name>
       <Value xsi:type="xsd:float">0</Value>
@@ -63,6 +68,36 @@
       <Value />
     </VariableList>
   </State>
+  <Category>
+    <Name>FullEmptyCategory</Name>
+    <State>
+      <Name>Full</Name>
+      <Variable>
+        <IsFile>true</IsFile>
+        <Type>string</Type>
+        <Name>SpriteInstance.SourceFile</Name>
+        <Value xsi:type="xsd:string">Components\HollowKnightComponents\FilledHealth.png</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+    </State>
+    <State>
+      <Name>Empty</Name>
+      <Variable>
+        <IsFile>true</IsFile>
+        <Type>string</Type>
+        <Name>SpriteInstance.SourceFile</Name>
+        <Value xsi:type="xsd:string">Components\HollowKnightComponents\EmptyHealth.png</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>SpriteInstance.AnimationFrames</Name>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value />
+      </VariableList>
+    </State>
+  </Category>
   <Instance>
     <Name>SpriteInstance</Name>
     <BaseType>Sprite</BaseType>

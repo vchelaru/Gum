@@ -30,6 +30,8 @@ public class GumService
         }
     }
 
+    public GameTime GameTime { get; private set; }
+
     public GumProjectSave? Initialize(Game game, string? gumProjectFile = null)
     {
         return Initialize(game.GraphicsDevice, gumProjectFile);
@@ -94,18 +96,21 @@ public class GumService
 
     public void Update(Game game, GameTime gameTime)
     {
+        GameTime = gameTime;
         FormsUtilities.Update(game, gameTime, (GraphicalUiElement)null);
         SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
     }
 
     public void Update(Game game, GameTime gameTime, GraphicalUiElement root)
     {
+        GameTime = gameTime;
         FormsUtilities.Update(game, gameTime, root);
         SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
     }
 
     public void Update(Game game, GameTime gameTime, IEnumerable<GraphicalUiElement> roots)
     {
+        GameTime = gameTime;
         FormsUtilities.Update(game, gameTime, roots);
         SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
     }

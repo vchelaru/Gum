@@ -16,6 +16,7 @@ using MonoGameGum.Forms.Controls;
 using System;
 using GumRuntime;
 using RenderingLibrary;
+using Microsoft.Xna.Framework;
 namespace GameUiSamples.Screens;
 
 partial class GameTitleScreenRuntime : Gum.Wireframe.BindableGue, IUpdateScreen
@@ -44,7 +45,7 @@ partial class GameTitleScreenRuntime : Gum.Wireframe.BindableGue, IUpdateScreen
             .ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
     }
 
-    public void Update()
+    public void Update(GameTime gameTime)
     {
 
     }

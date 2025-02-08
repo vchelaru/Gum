@@ -51,9 +51,10 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
+
         MonoGameGum.GumService.Default.Update(this, gameTime, Root);
 
-        (Root as IUpdateScreen)?.Update();
+        (Root as IUpdateScreen)?.Update(gameTime);
 
         base.Update(gameTime);
     }

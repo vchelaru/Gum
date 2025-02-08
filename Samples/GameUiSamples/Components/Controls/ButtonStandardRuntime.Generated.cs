@@ -4,6 +4,8 @@ using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Wireframe;
 
+using GameUiSamples.Components;
+
 using RenderingLibrary.Graphics;
 
 using System.Linq;
@@ -18,6 +20,7 @@ namespace GameUiSamples.Components
         {
             GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ButtonStandard", typeof(ButtonStandardRuntime));
         }
+        public MonoGameGum.Forms.Controls.Button FormsControl => FormsControlAsObject as MonoGameGum.Forms.Controls.Button;
         public enum ButtonCategory
         {
             Enabled,
@@ -64,6 +67,10 @@ namespace GameUiSamples.Components
         }
         public override void AfterFullCreation()
         {
+            if (FormsControl == null)
+            {
+                FormsControlAsObject = new MonoGameGum.Forms.Controls.Button(this);
+            }
             Background = this.GetGraphicalUiElementByName("Background") as NineSliceRuntime;
             TextInstance = this.GetGraphicalUiElementByName("TextInstance") as TextRuntime;
             FocusedIndicator = this.GetGraphicalUiElementByName("FocusedIndicator") as NineSliceRuntime;
