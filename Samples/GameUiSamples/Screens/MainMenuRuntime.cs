@@ -42,6 +42,10 @@ partial class MainMenuRuntime : Gum.Wireframe.BindableGue
             {
                 GoToScreen("HollowKnightHudScreen");
             }
+            else if(item == HotbarStardew.FormsControlAsObject)
+            {
+                GoToScreen("StardewHotbarScreen");
+            }
         }
     }
 

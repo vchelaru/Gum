@@ -27,6 +27,12 @@
                         Dock Top
                     </Button.ToolTip>
                 </Button>
+                <Button x:Name="SizeToChildrenButton" Click="SizeToChildren_Click" Grid.Row="0" Grid.Column="2" Margin="3">
+                    <Image Source="/Gum;component/Content/Icons/Sizing/SizeToChildren.png" Height="32" Width="32"/>
+                    <Button.ToolTip>
+                        Size to Children
+                    </Button.ToolTip>
+                </Button>
                 <Button x:Name="LeftButton" Click="LeftButton_Click" Grid.Row="1" Grid.Column="0" Margin="3">
                     <Image Source="/Gum;component/Content/Icons/Sizing/LeftSide.png" Height="32" Width="32"/>
                     <Button.ToolTip>

@@ -195,6 +195,20 @@ namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels
             }
         }
 
+        public void SizeToChildren_Click()
+        {
+            using (UndoManager.Self.RequestLock())
+            {
+                var state = SelectedState.Self.SelectedStateSave;
+
+                SetAndCallReact("Width", DockMargin * 2, "float");
+                SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToChildren, typeof(DimensionUnitType).Name);
+
+                SetAndCallReact("Height", DockMargin * 2, "float");
+                SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToChildren, typeof(DimensionUnitType).Name);
+            }
+        }
+
         public void DockLeftButton_Click()
         {
             using (UndoManager.Self.RequestLock())
