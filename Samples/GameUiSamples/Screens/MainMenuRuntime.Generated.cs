@@ -23,6 +23,7 @@ namespace GameUiSamples.Screens
         public ListBoxRuntime ListBoxInstance { get; protected set; }
         public ButtonConfirmRuntime ButtonConfirmInstance { get; protected set; }
         public ListBoxItemRuntime GameTitleScreenItem { get; protected set; }
+        public ListBoxItemRuntime GameHudHollowKnight { get; protected set; }
 
         public MainMenuRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         {
@@ -34,6 +35,7 @@ namespace GameUiSamples.Screens
             ListBoxInstance = this.GetGraphicalUiElementByName("ListBoxInstance") as ListBoxRuntime;
             ButtonConfirmInstance = this.GetGraphicalUiElementByName("ButtonConfirmInstance") as ButtonConfirmRuntime;
             GameTitleScreenItem = this.GetGraphicalUiElementByName("GameTitleScreenItem") as ListBoxItemRuntime;
+            GameHudHollowKnight = this.GetGraphicalUiElementByName("GameHudHollowKnight") as ListBoxItemRuntime;
             CustomInitialize();
         }
         //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
