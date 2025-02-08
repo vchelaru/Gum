@@ -718,6 +718,9 @@
     <None Include="Content\Icons\TextOverflow\TruncateLine.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Resource Include="Content\Icons\Sizing\SizeToChildren.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
     <Content Include="Content\Icons\Units\PixelsFromBaseline.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

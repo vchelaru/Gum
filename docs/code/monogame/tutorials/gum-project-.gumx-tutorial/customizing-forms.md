@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Gum Forms provide standardized functinality but can be fully customized. Forms controls place very few restrictions on their apperance and behavior. Even though a typical Button has a Text and NineSlice, it could be made of anything (really).
+Gum Forms controls provide standardized functionality which can be fully customized. Forms controls place very few restrictions on their appearance and behavior. Even though a typical Button has a Text and NineSlice, it could be made of anything (really).
 
 This tutorial shows how to customize Forms controls
 

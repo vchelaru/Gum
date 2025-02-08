@@ -99,7 +99,17 @@ namespace RenderingLibrary.Graphics
                 }
             }
 
-            var depthStencilState = DepthStencilState.DepthRead;
+            // February 8, 2025
+            // Gum used to DepthRead
+            // on draw, causing Gum to 
+            // not render if the depth buffer
+            // wasn't cleared. This is probably
+            // not what the user wants in most cases,
+            // but if they do we should enable this as
+            // a setting on Renderer. For now, switching
+            // it.
+            //var depthStencilState = DepthStencilState.DepthRead;
+            var depthStencilState = DepthStencilState.None;
 
             int width = camera.ClientWidth;
             int height = camera.ClientHeight;
