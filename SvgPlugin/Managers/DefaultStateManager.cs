@@ -50,6 +50,8 @@ namespace SkiaPlugin.Managers
 
                 svgState.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true });
 
+                AddBlendVariable(svgState);
+
                 svgState.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation", SetsValue = true });
 
                 AddVariableReferenceList(svgState);
@@ -101,6 +103,9 @@ namespace SkiaPlugin.Managers
 
                 lottieAnimationState.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true });
 
+                AddBlendVariable(lottieAnimationState);
+
+
                 AddVariableReferenceList(lottieAnimationState);
 
             }
@@ -128,6 +133,8 @@ namespace SkiaPlugin.Managers
 
 
                 AddStrokeAndFilledVariables(filledCircleState);
+
+                AddBlendVariable(filledCircleState);
 
                 filledCircleState.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation", SetsValue = true });
 
@@ -162,6 +169,9 @@ namespace SkiaPlugin.Managers
                 AddDropshadowVariables(roundedRectangleState);
 
                 AddStrokeAndFilledVariables(roundedRectangleState);
+
+                AddBlendVariable(roundedRectangleState);
+
 
                 AddVariableReferenceList(roundedRectangleState);
 
@@ -200,6 +210,9 @@ namespace SkiaPlugin.Managers
                 StandardElementsManager.AddDimensionsVariables(arcState, 64, 64,
                     StandardElementsManager.DimensionVariableAction.ExcludeFileOptions);
                 StandardElementsManager.AddColorVariables(arcState);
+
+                AddBlendVariable(arcState);
+
 
                 AddGradientVariables(arcState);
                 AddVariableReferenceList(arcState);
@@ -298,6 +311,13 @@ namespace SkiaPlugin.Managers
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "IsFilled", Category = "Stroke and Fill" });
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 2.0f, Name = "StrokeWidth", Category = "Stroke and Fill" });
 
+        }
+
+        private static void AddBlendVariable(StateSave stateSave)
+        {
+            var blendariable = new VariableSave { SetsValue = true, Type = "Blend", Value = Gum.RenderingLibrary.Blend.Normal, Name = "Blend", Category = "Rendering" };
+
+            stateSave.Variables.Add(blendariable);
         }
 
         #endregion

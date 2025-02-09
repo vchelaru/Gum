@@ -18,6 +18,8 @@ namespace SkiaGum
 
         public static decimal ScreenDensity = 1;
 
+        public bool IsRenderTarget => false;
+
         float? mWidth = 200;
 
         //public SKTypeface Font { get; set; }

@@ -53,6 +53,18 @@
     </Variable>
     <Variable>
       <Type>string</Type>
+      <Name>GameHudHollowKnight.ListItemDisplayText</Name>
+      <Value xsi:type="xsd:string">Hud (Hollow Knight)</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>GameHudHollowKnight.Parent</Name>
+      <Value xsi:type="xsd:string">ListBoxInstance.InnerPanelInstance</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
       <Name>GameTitleScreenItem.ListItemDisplayText</Name>
       <Value xsi:type="xsd:string">Game Title Screen</Value>
       <SetsValue>true</SetsValue>
@@ -61,6 +73,31 @@
       <Type>string</Type>
       <Name>GameTitleScreenItem.Parent</Name>
       <Value xsi:type="xsd:string">ListBoxInstance.InnerPanelInstance</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HotbarStardew.ListItemDisplayText</Name>
+      <Value xsi:type="xsd:string">Hotbar (Stardew Valley)</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>HotbarStardew.Parent</Name>
+      <Value xsi:type="xsd:string">ListBoxInstance.InnerPanelInstance</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>bool</Type>
+      <Name>IsOverrideInCodeGen</Name>
+      <Value xsi:type="xsd:boolean">false</Value>
+      <Category>Xamarin Forms</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>bool</Type>
+      <Name>IsXamarinFormsControl</Name>
+      <Category>Xamarin Forms</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -136,6 +173,16 @@
   </Instance>
   <Instance>
     <Name>GameTitleScreenItem</Name>
+    <BaseType>Controls/ListBoxItem</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>GameHudHollowKnight</Name>
+    <BaseType>Controls/ListBoxItem</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>HotbarStardew</Name>
     <BaseType>Controls/ListBoxItem</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>

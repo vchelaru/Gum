@@ -166,6 +166,7 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        bool IRenderableIpso.IsRenderTarget => false;
 
         #endregion
 

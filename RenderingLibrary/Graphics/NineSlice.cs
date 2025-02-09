@@ -14,6 +14,7 @@ using Rectangle = System.Drawing.Rectangle;
 using Color = System.Drawing.Color;
 using Matrix = System.Numerics.Matrix4x4;
 using Gum;
+using System.Runtime.CompilerServices;
 
 namespace RenderingLibrary.Graphics
 {
@@ -74,6 +75,7 @@ namespace RenderingLibrary.Graphics
 
         #region Properties
 
+        bool IRenderableIpso.IsRenderTarget => false;
         ColorOperation IRenderableIpso.ColorOperation => ColorOperation.Modulate;
 
         public int Alpha

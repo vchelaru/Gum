@@ -11,6 +11,18 @@ namespace MonoGameGum.GueDeriving
 {
     public class ContainerRuntime : InteractiveGue
     {
+        public float Alpha
+        {
+            get => (RenderableComponent as InvisibleRenderable)?.Alpha ?? 255;
+            set
+            {
+                if (RenderableComponent is InvisibleRenderable invisibleRenderable)
+                {
+                    invisibleRenderable.Alpha = value;
+                }
+            }
+        }
+
         public ContainerRuntime(bool fullInstantiation = true)
         {
             if (fullInstantiation)
@@ -21,6 +33,8 @@ namespace MonoGameGum.GueDeriving
                 Visible = true;
             }
         }
+
+
 
         public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
         

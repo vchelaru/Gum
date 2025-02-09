@@ -483,6 +483,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     #endregion
 
+    public bool IsRenderTarget => mContainedObjectAsIpso?.IsRenderTarget == true;
+
     public GeneralUnitType XUnits
     {
         get => mXUnits;
@@ -1294,8 +1296,14 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// </summary>
     public bool ClipsChildren
     {
-        get;
-        set;
+        get => mContainedObjectAsIpso?.ClipsChildren == true;
+        set
+        {
+            if (mContainedObjectAsIpso is ISetClipsChildren clipsChildrenChild)
+            {
+                clipsChildrenChild.ClipsChildren = value;
+            }
+        }
     }
 
 

@@ -250,6 +250,9 @@ namespace SkiaGum.Renderables
 
         }
 
+        public bool IsRenderTarget => false;
+
+
         public void PreRender() {}
 
         public void Render(ISystemManagers managers)

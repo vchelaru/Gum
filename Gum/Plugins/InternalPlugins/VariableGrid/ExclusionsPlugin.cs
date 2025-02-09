@@ -29,6 +29,7 @@ public class ExclusionsPlugin : InternalPlugin
         "UseCustomFont",
         "TextureAddress",
         "BaseType",
+        "IsRenderTarget",
         "TextOverflowVerticalMode",
 
     };
@@ -60,6 +61,10 @@ public class ExclusionsPlugin : InternalPlugin
     {
         switch(variable.Name)
         {
+            case "Alpha":
+                return GetIfAlphaIsExcluded(finder);
+            case "Blend":
+                return GetIfBlendIsExcluded(finder);
             case "AutoGridHorizontalCells":
             case "AutoGridVerticalCells":
                 return GetIfAutoGridIsExcluded(finder);
@@ -73,8 +78,54 @@ public class ExclusionsPlugin : InternalPlugin
             case "Wrap":
                 return GetIfWrapIsExcluded(finder);
 
+
         }
 
+        return false;
+    }
+
+
+    bool IsSelectionContainer
+    {
+        get
+        {
+            ElementSave element = _selectedState.SelectedElement;
+
+            if (element != null && _selectedState.SelectedInstance != null)
+            {
+                element = ObjectFinder.Self.GetElementSave(_selectedState.SelectedInstance);
+            }
+
+            ElementSave baseElement = null;
+
+            if (element != null)
+            {
+                baseElement = ObjectFinder.Self.GetRootStandardElementSave(element);
+            }
+
+            var isContainer =
+                baseElement?.Name == "Container";
+            return isContainer;
+        }
+    }
+
+    private bool GetIfBlendIsExcluded(RecursiveVariableFinder finder)
+    {
+        if (IsSelectionContainer)
+        {
+            return finder.GetValue("IsRenderTarget") as bool? == false;
+        }
+        return false;
+    }
+
+
+    private bool GetIfAlphaIsExcluded(RecursiveVariableFinder finder)
+    {
+
+        if (IsSelectionContainer)
+        {
+            return finder.GetValue("IsRenderTarget") as bool? == false;
+        }
         return false;
     }
 

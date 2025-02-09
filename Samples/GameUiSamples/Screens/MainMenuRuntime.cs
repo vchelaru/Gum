@@ -30,16 +30,29 @@ partial class MainMenuRuntime : Gum.Wireframe.BindableGue
 
     private void GoToSelectedScreen(object sender, EventArgs e)
     {
-        if(listBox.SelectedIndex != -1)
+        if (listBox.SelectedIndex != -1)
         {
             var item = listBox.ListBoxItems[listBox.SelectedIndex];
 
-            if(item == GameTitleScreenItem.FormsControlAsObject)
+            if (item == GameTitleScreenItem.FormsControlAsObject)
             {
-                Game1.Root.RemoveFromManagers();
-                Game1.Root = ObjectFinder.Self.GetScreen("GameTitleScreen")
-                    .ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
+                GoToScreen("GameTitleScreen");
+            }
+            else if (item == GameHudHollowKnight.FormsControlAsObject)
+            {
+                GoToScreen("HollowKnightHudScreen");
+            }
+            else if(item == HotbarStardew.FormsControlAsObject)
+            {
+                GoToScreen("StardewHotbarScreen");
             }
         }
+    }
+
+    private void GoToScreen(string screenName)
+    {
+        Game1.Root.RemoveFromManagers();
+        Game1.Root = ObjectFinder.Self.GetScreen(screenName)
+            .ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
     }
 }

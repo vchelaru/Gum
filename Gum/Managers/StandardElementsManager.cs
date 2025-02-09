@@ -227,7 +227,7 @@ namespace Gum.Managers
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "Wrap", Category = "Source" });
 
                 AddColorVariables(stateSave);
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "Blend", Value = Gum.RenderingLibrary.Blend.Normal, Name = "Blend", Category = "Rendering" });
+                stateSave.Variables.Add(CreateBlendVariable());
 
                 AddEventVariables(stateSave);
 
@@ -269,6 +269,15 @@ namespace Gum.Managers
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "int", Value = 4, Name = "AutoGridHorizontalCells" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "int", Value = 4, Name = "AutoGridVerticalCells" });
 
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "IsRenderTarget", Category = "Rendering" });
+
+                var alphaValue = CreateAlphaVariable();
+                stateSave.Variables.Add(alphaValue);
+
+
+                var blendVariable = CreateBlendVariable();
+                stateSave.Variables.Add(blendVariable);
+
 
                 AddClipsChildren(stateSave);
 
@@ -307,7 +316,7 @@ namespace Gum.Managers
 
                 AddColorVariables(stateSave, true);
 
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "Blend", Value = Gum.RenderingLibrary.Blend.Normal, Name = "Blend", Category = "Rendering" });
+                stateSave.Variables.Add(CreateBlendVariable());
 
                 AddEventVariables(stateSave);
 
@@ -434,7 +443,7 @@ namespace Gum.Managers
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
 
                 AddColorVariables(stateSave);
-                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "Blend", Value = Gum.RenderingLibrary.Blend.Normal, Name = "Blend", Category = "Rendering" });
+                stateSave.Variables.Add(CreateBlendVariable());
 
                 var ninesliceTextureAddressVariable =
                     new VariableSave { SetsValue = true, Type = "TextureAddress", Value = Gum.Managers.TextureAddress.EntireTexture, Name = "TextureAddress", Category = "Source" };
@@ -509,6 +518,11 @@ namespace Gum.Managers
             //}
         }
 
+        private VariableSave CreateBlendVariable()
+        {
+            return new VariableSave { SetsValue = true, Type = "Blend", Value = Gum.RenderingLibrary.Blend.Normal, Name = "Blend", Category = "Rendering" };
+        }
+
         public static void AddClipsChildren(StateSave stateSave)
         {
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Category = "Children", Type = "bool", Value = false, Name = "ClipsChildren" });
@@ -573,19 +587,7 @@ namespace Gum.Managers
         {
             if (includeAlpha)
             {
-                var alphaValue = new VariableSave
-                {
-                    SetsValue = true,
-                    Type = "int",
-                    Value = 255,
-                    Name = "Alpha",
-                    Category = "Rendering",
-                };
-#if GUM
-                alphaValue.PreferredDisplayer = typeof(SliderDisplay);
-                alphaValue.PropertiesToSetOnDisplayer["MinValue"] = 0.0;
-                alphaValue.PropertiesToSetOnDisplayer["MaxValue"] = 255.0;
-#endif
+                VariableSave alphaValue = CreateAlphaVariable(); 
                 stateSave.Variables.Add(alphaValue);
             }
             var redValue = new VariableSave
@@ -629,6 +631,24 @@ namespace Gum.Managers
             blueValue.PreferredDisplayer = typeof(SliderDisplay);
             greenValue.PreferredDisplayer = typeof(SliderDisplay);
 #endif
+        }
+
+        private static VariableSave CreateAlphaVariable()
+        {
+            var alphaValue = new VariableSave
+            {
+                SetsValue = true,
+                Type = "int",
+                Value = 255,
+                Name = "Alpha",
+                Category = "Rendering",
+            };
+#if GUM
+            alphaValue.PreferredDisplayer = typeof(SliderDisplay);
+            alphaValue.PropertiesToSetOnDisplayer["MinValue"] = 0.0;
+            alphaValue.PropertiesToSetOnDisplayer["MaxValue"] = 255.0;
+#endif
+            return alphaValue;
         }
 
         public static void AddDimensionsVariables(StateSave stateSave, float defaultWidth, float defaultHeight, DimensionVariableAction dimensionVariableAction)

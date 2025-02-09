@@ -23,6 +23,9 @@ namespace SkiaGum
         Vector2 Position;
         IRenderableIpso mParent;
 
+        public bool IsRenderTarget => false;
+
+
         public SKSvg Texture
         {
             get; set;

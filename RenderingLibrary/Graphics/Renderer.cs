@@ -9,6 +9,8 @@ using Rectangle = System.Drawing.Rectangle;
 using Gum;
 using System.Reflection.Emit;
 using Microsoft.Xna.Framework;
+using System.Linq;
+using RenderingLibrary.Math.Geometry;
 
 namespace RenderingLibrary.Graphics
 {
@@ -48,7 +50,7 @@ namespace RenderingLibrary.Graphics
         GraphicsDevice mGraphicsDevice;
 
         static Renderer mSelf;
-
+        private RenderTargetService renderTargetService;
         Camera mCamera;
 
         Texture2D mSinglePixelTexture;
@@ -241,6 +243,7 @@ namespace RenderingLibrary.Graphics
 
         public void Initialize(GraphicsDevice graphicsDevice, SystemManagers managers)
         {
+            renderTargetService = new RenderTargetService();
             mCamera = new RenderingLibrary.Camera();
 
             if (graphicsDevice != null)
@@ -363,6 +366,8 @@ namespace RenderingLibrary.Graphics
                     mCamera.ClientHeight = GraphicsDevice.Viewport.Height;
                 }
 
+                renderTargetService.ClearUnusedRenderTargetsLastFrame();
+
 
                 mRenderStateVariables.BlendState = Renderer.NormalBlendState;
                 mRenderStateVariables.Wrap = false;
@@ -452,6 +457,7 @@ namespace RenderingLibrary.Graphics
                 var renderable = renderables[i];
                 if(renderable.Visible)
                 {
+
                     renderable.PreRender();
 
                     // Some Gum objects, like GraphicalUiElements, may not have children if the object hasn't
@@ -460,7 +466,91 @@ namespace RenderingLibrary.Graphics
                     {
                         PreRender(renderable.Children);
                     }
+                    if(renderable.IsRenderTarget)
+                    {
+                        RenderToRenderTarget(renderable, SystemManagers.Default);
+                    }
                 }
+            }
+        }
+
+        GumBatch gumBatch;
+
+        private void RenderToRenderTarget(IRenderableIpso renderable, SystemManagers systemManagers)
+        {
+
+
+            Texture oldRenderTarget = null;
+
+            // RenderTargetCount isn't supported in raw XNA or KNI
+            //if (GraphicsDevice.RenderTargetCount > 0)
+            //{
+                oldRenderTarget = GraphicsDevice.GetRenderTargets().FirstOrDefault().RenderTarget;
+            //}
+            var oldCameraWidth = Camera.ClientWidth;
+            var oldCameraHeight = Camera.ClientHeight;
+            var oldCameraX = Camera.X;
+            var oldCameraY = Camera.Y;
+            var oldViewport = GraphicsDevice.Viewport;
+
+            var renderTarget = renderTargetService.GetRenderTargetFor(GraphicsDevice, renderable, Camera);
+
+            GraphicsDevice.SetRenderTarget(renderTarget);
+
+
+
+            GraphicsDevice.Clear(Microsoft.Xna.Framework.Color.Transparent);
+
+            Camera.ClientWidth = (int)renderTarget.Width;
+            Camera.ClientHeight = (int)renderTarget.Height;
+            if(Camera.CameraCenterOnScreen == CameraCenterOnScreen.TopLeft)
+            {
+                Camera.X = (int)renderable.GetAbsoluteLeft();
+                Camera.Y = (int)renderable.GetAbsoluteTop();
+            }
+            else
+            {
+                // February 7, 2025
+                // I'm not sure why, but
+                // if I don't add 1 to the
+                // camera position, then everything
+                // is rendered offset by 1 pixel in the 
+                // Gum tool. Need to test this in DeskopGL
+                // projects, and possibly apply Camera.PixelPerfectOffsetX
+                // and Camera.PixelPerfectOffsetY
+                Camera.X = (int)(renderable.GetAbsoluteLeft() + renderable.Width/2f) + 1/Camera.Zoom;
+                Camera.Y = (int)(renderable.GetAbsoluteTop() + renderable.Height/2f) + 1/Camera.Zoom;
+            }
+
+
+            gumBatch = gumBatch ?? new GumBatch();
+
+
+            // todo  - rotations don't currently work:
+            //var rotationRadians = MathHelper.ToRadians(renderable.Rotation);
+            //var matrix = Matrix.CreateRotationZ(rotationRadians);
+            //gumBatch.Begin(matrix);
+            gumBatch.Begin();
+
+            //gumBatch.Draw(renderable);
+            //systemManagers.Renderer.Draw(renderable);
+            Draw(systemManagers, _layers[0], renderable, forceRenderHierarchy:true);
+
+
+            gumBatch.End();
+
+            GraphicsDevice.SetRenderTarget(oldRenderTarget as RenderTarget2D);
+
+            Camera.ClientWidth = oldCameraWidth;
+            Camera.ClientHeight = oldCameraHeight;
+            Camera.X = oldCameraX;
+            Camera.Y = oldCameraY;
+            GraphicsDevice.Viewport = oldViewport;
+
+            if(!System.IO.File.Exists("Output.png"))
+            {
+                using var stream = System.IO.File.OpenWrite("Output.png");
+                renderTarget.SaveAsPng(stream, renderTarget.Width, renderTarget.Height);
             }
         }
 
@@ -475,7 +565,7 @@ namespace RenderingLibrary.Graphics
         }
 
 
-        private void Draw(SystemManagers managers, Layer layer, IRenderableIpso renderable)
+        private void Draw(SystemManagers managers, Layer layer, IRenderableIpso renderable, bool forceRenderHierarchy = false)
         {
             if (renderable.Visible)
             {
@@ -483,12 +573,38 @@ namespace RenderingLibrary.Graphics
                 AdjustRenderStates(mRenderStateVariables, layer, renderable);
                 bool didClipChange = oldClip != mRenderStateVariables.ClipRectangle;
 
-                renderable.Render(managers);
-
-
-                if (RenderUsingHierarchy)
+                if (renderable.IsRenderTarget && !forceRenderHierarchy)
                 {
-                    Render(renderable.Children, managers, layer);
+                    var renderableAlpha = 255;
+
+                    // I suppose we could have a single interface?
+                    if(renderable is InvisibleRenderable invisibleRenderable)
+                    {
+                        renderableAlpha = System.Math.Min(255, (int)invisibleRenderable.Alpha);
+                        renderableAlpha = System.Math.Max(0, renderableAlpha);
+                    }
+                    else if(renderable is LineRectangle lineRectangle)
+                    {
+                        renderableAlpha = System.Math.Min(255, (int)lineRectangle.Alpha);
+                        renderableAlpha = System.Math.Max(0, renderableAlpha);
+                    }
+                    var color = System.Drawing.Color.FromArgb(
+                        renderableAlpha, Color.White
+                        );
+
+                    var renderTarget = renderTargetService.GetRenderTargetFor(GraphicsDevice, renderable, Camera);
+
+                    Sprite.Render(managers, spriteRenderer, renderable, renderTarget, color);                  
+                }
+                else
+                {
+                    renderable.Render(managers);
+
+
+                    if (RenderUsingHierarchy)
+                    {
+                        Render(renderable.Children, managers, layer);
+                    }
                 }
 
                 if (didClipChange)
@@ -678,6 +794,71 @@ namespace RenderingLibrary.Graphics
 
     }
 
+    #region RenderTargetService
+
+    class RenderTargetService
+    {
+        HashSet<IRenderableIpso> itemsUsingRenderTargetsThisFrame = new HashSet<IRenderableIpso>();
+        Dictionary<IRenderableIpso, RenderTarget2D> RenderTargets = new Dictionary<IRenderableIpso, RenderTarget2D>();
+        List<IRenderableIpso> keysToRemove = new List<IRenderableIpso>();
+
+        public void ClearUnusedRenderTargetsLastFrame()
+        {
+            keysToRemove.Clear();
+
+            foreach (var item in RenderTargets)
+            {
+                if(itemsUsingRenderTargetsThisFrame.Contains(item.Key) == false)
+                {
+                    keysToRemove.Add(item.Key);
+                }
+            }
+
+            foreach(var item in keysToRemove)
+            {
+                RenderTargets[item].Dispose();
+                RenderTargets.Remove(item);
+            }
+
+            itemsUsingRenderTargetsThisFrame.Clear();
+        }
+
+        public RenderTarget2D GetRenderTargetFor(GraphicsDevice graphicsDevice, IRenderableIpso renderable, Camera camera)
+        {
+            itemsUsingRenderTargetsThisFrame.Add(renderable);
+
+            var width = (int)(renderable.Width * camera.Zoom);
+            var height = (int)(renderable.Height * camera.Zoom);
+
+
+            if (RenderTargets.ContainsKey(renderable))
+            {
+                var existingRenderTarget = RenderTargets[renderable];
+                if (existingRenderTarget.Width != width || existingRenderTarget.Height != height)
+                {
+                    existingRenderTarget.Dispose();
+                    RenderTargets.Remove(renderable);
+                }
+            }
+
+
+            if (RenderTargets.ContainsKey(renderable) == false)
+            {
+                //var width = GraphicsDevice.Viewport.Width;
+                //var height = GraphicsDevice.Viewport.Height;
+                RenderTargets[renderable] = new RenderTarget2D(graphicsDevice, (int)width, (int)height);
+
+            }
+            var renderTarget = RenderTargets[renderable];
+
+            return renderTarget;
+        }
+    }
+
+    #endregion
+
+    #region GumBatch
+
     public class GumBatch
     {
         enum GumBatchState
@@ -749,6 +930,8 @@ namespace RenderingLibrary.Graphics
 
 
     }
+
+    #endregion
 
     #region Custom effect support
 

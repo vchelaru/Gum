@@ -14,6 +14,7 @@ using Point = System.Drawing.Point;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
 using Matrix = System.Numerics.Matrix4x4;
+using Gum.RenderingLibrary;
 
 #if FAST_GL_SKIA_RENDERING
 using SkiaMonoGameRendering;
@@ -35,6 +36,8 @@ namespace SkiaGum.Renderables
 
         public bool ClearCanvasOnRender { get; set; } = true;
 #endif
+
+        bool IRenderableIpso.IsRenderTarget => false;
 
         protected Microsoft.Xna.Framework.Vector2 Position;
 
@@ -69,6 +72,12 @@ namespace SkiaGum.Renderables
         {
             get;
             set;
+        }
+
+        public Gum.RenderingLibrary.Blend Blend
+        {
+            get => BlendState.ToBlend();
+            set => BlendState = value.ToBlendState();
         }
 
         public bool ClipsChildren => false;

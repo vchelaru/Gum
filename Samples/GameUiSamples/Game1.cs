@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using RenderingLibrary;
+using System;
 
 namespace GameUiSamples;
 
@@ -18,10 +19,16 @@ public class Game1 : Game
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
+        _graphics.PreparingDeviceSettings += HandlePrepareDeviceSettings;
         Content.RootDirectory = "Content";
         _graphics.PreferredBackBufferWidth = 1366;
         _graphics.PreferredBackBufferHeight = 768;
         IsMouseVisible = true;
+    }
+
+    private void HandlePrepareDeviceSettings(object sender, PreparingDeviceSettingsEventArgs e)
+    {
+        e.GraphicsDeviceInformation.PresentationParameters.RenderTargetUsage = RenderTargetUsage.PreserveContents;
     }
 
     protected override void Initialize()
@@ -44,9 +51,10 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
+
         MonoGameGum.GumService.Default.Update(this, gameTime, Root);
 
-        (Root as IUpdateScreen)?.Update();
+        (Root as IUpdateScreen)?.Update(gameTime);
 
         base.Update(gameTime);
     }

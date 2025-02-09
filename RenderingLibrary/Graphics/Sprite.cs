@@ -221,6 +221,8 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+        bool IRenderableIpso.IsRenderTarget => false;
+
         public Texture2D Texture
         {
             get { return mTexture; }

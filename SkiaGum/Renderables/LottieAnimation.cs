@@ -17,6 +17,8 @@ namespace SkiaGum.Renderables
             get; set;
         }
 
+        public bool IsRenderTarget => false;
+
         public object Tag { get; set; }
 
 
