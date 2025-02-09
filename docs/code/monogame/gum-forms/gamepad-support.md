@@ -49,3 +49,27 @@ TopButton.FormsControl.ControllerButtonPushed += (button) =>
 ```
 
 <figure><img src="../../../.gitbook/assets/09_10 01 14.gif" alt=""><figcaption><p>Buttons can respond to any gamepad button push</p></figcaption></figure>
+
+If additional flexibility is needed, gamepad events can be polled in an Update method.
+
+```csharp
+var gamepads = FrameworkElement.GamePadsForUiControl;
+for (int i = 0; i < gamepads.Count; i++)
+{
+    var gamepad = gamepads[i];
+
+    if(gamepad.ButtonPushed(Microsoft.Xna.Framework.Input.Buttons.A))
+    {
+        var focusedElement = InteractiveGue.CurrentInputReceiver;
+
+        if(focusedElement != null)
+        {
+            TextInstance.Text =
+                $"Gamepad {i} pressed A on {focusedElement} of type " +
+                $"{focusedElement?.GetType()}";
+        }
+    }
+}
+```
+
+<figure><img src="../../../.gitbook/assets/09_10 56 13.png" alt=""><figcaption></figcaption></figure>
