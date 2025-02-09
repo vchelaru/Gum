@@ -133,7 +133,7 @@ namespace Gum
                 SubtractAlpha = new BlendState();
                 SubtractAlpha.ColorSourceBlend = Blend.Zero;
                 SubtractAlpha.ColorBlendFunction = BlendFunction.Add;
-                SubtractAlpha.ColorDestinationBlend = Blend.InverseSourceAlpha;
+                SubtractAlpha.ColorDestinationBlend = Blend.One;
 
                 SubtractAlpha.AlphaSourceBlend = Blend.One;
                 SubtractAlpha.AlphaBlendFunction = BlendFunction.ReverseSubtract;

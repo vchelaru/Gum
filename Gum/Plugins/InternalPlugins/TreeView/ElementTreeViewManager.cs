@@ -951,13 +951,22 @@ namespace Gum.Managers
 
             #region Re-select whatever was selected before
 
-            if (selectedInstance != null)
+            try
             {
-                SelectedState.Self.SelectedInstance = selectedInstance;
+                if (selectedInstance != null)
+                {
+                    SelectedState.Self.SelectedInstance = selectedInstance;
+                }
+                if(selectedBehavior != null)
+                {
+                    SelectedState.Self.SelectedBehavior = selectedBehavior;
+                }
             }
-            if(selectedBehavior != null)
+            catch
             {
-                SelectedState.Self.SelectedBehavior = selectedBehavior;
+                // This exception can happen if a user has an item selected, then loads a new 
+                // project. In that case the previous selection will no longer be valid, so this
+                // fails. That's okay.
             }
             #endregion
         }

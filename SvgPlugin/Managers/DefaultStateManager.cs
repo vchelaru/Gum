@@ -50,6 +50,8 @@ namespace SkiaPlugin.Managers
 
                 svgState.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true });
 
+                AddBlendVariable(svgState);
+
                 svgState.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation", SetsValue = true });
 
                 AddVariableReferenceList(svgState);
@@ -100,6 +102,9 @@ namespace SkiaPlugin.Managers
                 //StandardElementsManager.AddColorVariables(lottieAnimationState);
 
                 lottieAnimationState.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true });
+
+                AddBlendVariable(lottieAnimationState);
+
 
                 AddVariableReferenceList(lottieAnimationState);
 
@@ -165,6 +170,9 @@ namespace SkiaPlugin.Managers
 
                 AddStrokeAndFilledVariables(roundedRectangleState);
 
+                AddBlendVariable(roundedRectangleState);
+
+
                 AddVariableReferenceList(roundedRectangleState);
 
                 StandardElementsManager.AddClipsChildren(roundedRectangleState);
@@ -202,6 +210,9 @@ namespace SkiaPlugin.Managers
                 StandardElementsManager.AddDimensionsVariables(arcState, 64, 64,
                     StandardElementsManager.DimensionVariableAction.ExcludeFileOptions);
                 StandardElementsManager.AddColorVariables(arcState);
+
+                AddBlendVariable(arcState);
+
 
                 AddGradientVariables(arcState);
                 AddVariableReferenceList(arcState);
