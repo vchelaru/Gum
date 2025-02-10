@@ -28,6 +28,7 @@
     * [Health Bar](gum-tool/tutorials-and-examples/examples/health-bar.md)
 * [Gum Elements](gum-tool/gum-elements/README.md)
   * [General Properties](gum-tool/gum-elements/general-properties/README.md)
+    * [Alpha](gum-tool/gum-elements/general-properties/alpha.md)
     * [Base Type (Inheritance)](gum-tool/gum-elements/general-properties/base-type-inheritance.md)
     * [Blend](gum-tool/gum-elements/general-properties/blend.md)
     * [Clips Children](gum-tool/gum-elements/general-properties/clips-children.md)
