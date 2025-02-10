@@ -32,9 +32,17 @@ using System.Runtime.Versioning;
 
 namespace Gum.Wireframe
 {
-    public class RoutedEventArgs
+    public class RoutedEventArgs : EventArgs
     {
         public bool Handled { get; set; }
+    }
+
+    public class InputEventArgs : RoutedEventArgs
+    {
+        /// <summary>
+        /// The input device which was responsible for this event, such as the Gamepad.
+        /// </summary>
+        public object? InputDevice { get; set; }
     }
 
     /// <summary>
@@ -361,7 +369,10 @@ namespace Gum.Wireframe
                                 {
                                     if (asInteractive.Click != null)
                                     {
-                                        asInteractive.Click(asInteractive, EventArgs.Empty);
+                                        // Should InputDevice be the cursor? Or the underlying hardware?
+                                        // I don't know if we have access to the underlying hardware here...
+                                        var args = new InputEventArgs() { InputDevice = cursor };
+                                        asInteractive.Click(asInteractive, args);
                                     }
                                     //if (cursor.PrimaryClickNoSlide && ClickNoSlide != null)
                                     //{

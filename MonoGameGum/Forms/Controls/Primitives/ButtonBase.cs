@@ -99,7 +99,9 @@ public class ButtonBase : FrameworkElement, IInputReceiver
 
         OnClick();
 
-        Click?.Invoke(this, null);
+        var innerArgs = args as InputEventArgs ?? new InputEventArgs();
+
+        Click?.Invoke(this, args);
 #if FRB
         MouseButtonPushed?.Invoke(FlatRedBall.Input.Mouse.MouseButtons.LeftButton);
 #endif
@@ -131,8 +133,11 @@ public class ButtonBase : FrameworkElement, IInputReceiver
 
     protected virtual void OnClick() { }
 
-    public void PerformClick()
+    public void PerformClick(object? inputDevice = null)
     {
+        var args = inputDevice != null 
+            ? new InputEventArgs() { InputDevice = inputDevice } 
+            : EventArgs.Empty;
         HandleClick(this, EventArgs.Empty);
     }
 
@@ -159,7 +164,7 @@ public class ButtonBase : FrameworkElement, IInputReceiver
                 IsEnabled)
             {
                 //this.HandlePush(null);
-                this.HandleClick(this, EventArgs.Empty);
+                this.HandleClick(this, new InputEventArgs() { InputDevice = gamepad });
             }
             else if(gamepad.ButtonReleased(ClickGamepadButton))
             {

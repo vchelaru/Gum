@@ -96,6 +96,7 @@
 
 	<ItemGroup>
 		<Folder Include="Animation\Content\" />
+		<Folder Include="Forms\Input\" />
 		<Folder Include="Renderables\Fonts\" />
 		<Folder Include="Utilities\" />
 		<Folder Include="RenderingLibrary\" />
