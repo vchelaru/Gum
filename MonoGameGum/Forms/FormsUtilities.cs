@@ -205,6 +205,16 @@ public class FormsUtilities
             var gamepadState = Microsoft.Xna.Framework.Input.GamePad.GetState((int)i);
             Gamepads[i].Activity(gamepadState, time);
         }
+
+#if DEBUG
+        var hashSet = FrameworkElement.GamePadsForUiControl.ToHashSet();
+
+        if (hashSet.Count != FrameworkElement.GamePadsForUiControl.Count)
+        {
+            throw new InvalidOperationException("The same gamepad has been added to FrameworkElement.GamePadsForUiControl multiple times. " +
+                "This should not be done");
+        }
+#endif
     }
 
     static void SetDimensionsToCanvas(InteractiveGue container)
