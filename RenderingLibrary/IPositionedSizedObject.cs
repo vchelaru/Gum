@@ -3,6 +3,7 @@ using RenderingLibrary.Graphics;
 using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
 using Vector2 = System.Numerics.Vector2;
 using Matrix = System.Numerics.Matrix4x4;
+using System;
 
 namespace RenderingLibrary
 {
@@ -206,7 +207,10 @@ namespace RenderingLibrary
 
         //}
 
+        [Obsolete("Use X or Y since this method is a little ambiguous when working with GraphicalUiElements")]
         public static Vector2 GetPosition(this IPositionedSizedObject ipso) => new Vector2(ipso.X, ipso.Y);
+
+        [Obsolete("Use X or Y since this method is a little ambiguous when working with GraphicalUiElements")]
         public static void SetPosition(this IPositionedSizedObject ipso, Vector2 newPosition)
         {
             ipso.X = newPosition.X;

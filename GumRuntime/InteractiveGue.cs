@@ -657,6 +657,15 @@ namespace Gum.Wireframe
             }
         }
 
+        public override void RemoveFromManagers()
+        {
+            base.RemoveFromManagers();
+
+            if(InteractiveGue.CurrentInputReceiver == this.FormsControlAsObject || InteractiveGue.CurrentInputReceiver == this)
+            {
+                InteractiveGue.CurrentInputReceiver = null;
+            }
+        }
     }
 
     public interface IInputReceiver
