@@ -6,8 +6,7 @@
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.KNI</PackageId>
-		<Version>2025.2.7.1</Version>
-
+		<Version>2025.2.10.1</Version>
 
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 
