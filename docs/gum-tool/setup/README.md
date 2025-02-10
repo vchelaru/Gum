@@ -1,6 +1,9 @@
 # Setup
 
-Gum Application (binaries): [files.flatredball.com/content/Tools/Gum/Gum.zip](https://files.flatredball.com/content/Tools/Gum/Gum.zip)
+Gum Application (binaries):
+
+* Latest release direct link: [files.flatredball.com/content/Tools/Gum/Gum.zip](https://files.flatredball.com/content/Tools/Gum/Gum.zip)
+* Release history (including older releases): [https://github.com/vchelaru/Gum/releases](https://github.com/vchelaru/Gum/releases)
 
 Gum Source Code: [https://www.github.com/vchelaru/Gum](https://www.github.com/vchelaru/Gum)
 
