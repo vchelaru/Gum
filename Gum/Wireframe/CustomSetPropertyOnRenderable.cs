@@ -156,7 +156,14 @@ namespace Gum.Wireframe
                     didSet = true;
                     break;
                 case "Alpha":
-                    (renderableIpso as InvisibleRenderable).Alpha = value as float? ?? 256;
+                    if(value is int asInt)
+                    {
+                        (renderableIpso as InvisibleRenderable).Alpha = asInt;
+                    }
+                    else
+                    {
+                        (renderableIpso as InvisibleRenderable).Alpha = value as float? ?? 255;
+                    }
                     didSet = true;
                     break;
             }
