@@ -13,7 +13,16 @@ internal class FrbScreenViewModel : ViewModel
     public BigInteger CurrentBalls
     {
         get => Get<BigInteger>();
-        set => Set(value);
+        set
+        {
+            if (Set(value))
+            {
+                foreach(var item in BuildingViewModels)
+                {
+                    item.CurrentBalls = value;
+                }
+            }
+        }
     }
 
     decimal CurrentBallsDecimal;
@@ -87,6 +96,16 @@ public class BuildingViewModel : ViewModel
     [DependsOn(nameof(Count))]    
     public string CountDisplay => "x" + Count.ToString();
 
+    public BigInteger CurrentBalls
+    {
+        get => Get<BigInteger>(); 
+        set => Set(value);
+    }
+
+    [DependsOn(nameof(CurrentBalls))]
+    [DependsOn(nameof(NextCost))]
+    public bool HasEnoughToBuy => CurrentBalls >= NextCost;
+
     private BigInteger GetCostFor(BuildingDef building)
     {
         var multiplier =
@@ -105,6 +124,8 @@ public class BuildingViewModel : ViewModel
 
         }
     }
+
+
 
     public decimal Earnings => Count * BackingData.EarningsPerSecond;
 }

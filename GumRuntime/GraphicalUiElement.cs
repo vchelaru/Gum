@@ -69,7 +69,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         IfParentStacks = 1,
         IfParentWidthHeightDependOnChildren = 2,
         IfParentIsAutoGrid = 4,
-        All = 8
+        IfParentHasRatioSizedChildren = 8,
+        All = 16
 
     }
 
@@ -260,7 +261,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                         if (this.WidthUnits == DimensionUnitType.Ratio || this.HeightUnits == DimensionUnitType.Ratio)
                         {
                             // If this is a width or height ratio and we're made visible, then the parent needs to update if it stacks:
-                            this.UpdateLayout(ParentUpdateType.IfParentStacks | ParentUpdateType.IfParentIsAutoGrid,
+                            this.UpdateLayout(ParentUpdateType.IfParentStacks | ParentUpdateType.IfParentIsAutoGrid |
+
+                                // if there are ratio sized children, then flipping visibility on this can update the widths of the ratio'ed children
+                                ParentUpdateType.IfParentHasRatioSizedChildren,
                                 // If something is made visible, that shouldn't update the children, right?
                                 //int.MaxValue/2, 
                                 0,
@@ -273,7 +277,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 if (!didUpdate)
                 {
                     // This will make this dirty:
-                    this.UpdateLayout(ParentUpdateType.IfParentStacks | ParentUpdateType.IfParentWidthHeightDependOnChildren | ParentUpdateType.IfParentIsAutoGrid,
+                    this.UpdateLayout(ParentUpdateType.IfParentStacks | ParentUpdateType.IfParentWidthHeightDependOnChildren | ParentUpdateType.IfParentIsAutoGrid |
+                        ParentUpdateType.IfParentHasRatioSizedChildren,
                         // If something is made visible, that shouldn't update the children, right?
                         //int.MaxValue/2, 
                         0,
@@ -1494,13 +1499,24 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     }
 
     HashSet<IRenderableIpso> fullyUpdatedChildren = new HashSet<IRenderableIpso>();
+
+    /// <summary>
+    /// Performs an update to this, and optionally to its parent and children depending on the parameters.
+    /// </summary>
+    /// <param name="parentUpdateType">A filter determining whether whether to update the parent. If All is passed, then
+    /// the parent will always update. If other properties are passed, then the update happens only if the parent matches
+    /// the update type. For example if ParentUpdateType.IfParentStacks is passed, then an update happens if the parent stacks its children.</param>
+    /// <param name="childrenUpdateDepth"></param>
+    /// <param name="xOrY"></param>
     public void UpdateLayout(ParentUpdateType parentUpdateType, int childrenUpdateDepth, XOrY? xOrY = null)
     {
         var updateParent =
             ((parentUpdateType & ParentUpdateType.All) == ParentUpdateType.All) ||
             ((parentUpdateType & ParentUpdateType.IfParentStacks) == ParentUpdateType.IfParentStacks && GetIfParentStacks()) ||
             ((parentUpdateType & ParentUpdateType.IfParentIsAutoGrid) == ParentUpdateType.IfParentIsAutoGrid && GetIfParentIsAutoGrid()) ||
-            ((parentUpdateType & ParentUpdateType.IfParentWidthHeightDependOnChildren) == ParentUpdateType.IfParentWidthHeightDependOnChildren && (Parent as GraphicalUiElement)?.GetIfDimensionsDependOnChildren() == true);
+            ((parentUpdateType & ParentUpdateType.IfParentWidthHeightDependOnChildren) == ParentUpdateType.IfParentWidthHeightDependOnChildren && (Parent as GraphicalUiElement)?.GetIfDimensionsDependOnChildren() == true) ||
+            ((parentUpdateType & ParentUpdateType.IfParentHasRatioSizedChildren) == ParentUpdateType.IfParentHasRatioSizedChildren && GetIfParentHasRatioChildren())
+            ;
 
         #region Early Out - Suspended
 
@@ -3539,6 +3555,34 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             this.EffectiveParentGue.ChildrenLayout == ChildrenLayout.AutoGridVertical);
     }
 
+    private bool GetIfParentHasRatioChildren()
+    {
+        var effectiveParentGue = this.EffectiveParentGue;
+
+        if(effectiveParentGue?.Children != null)
+        {
+            // do we care about situations with no parent?
+            foreach(var child in effectiveParentGue.Children)
+            {
+                if(child is GraphicalUiElement childGue && (childGue.WidthUnits == DimensionUnitType.Ratio || childGue.HeightUnits == DimensionUnitType.Ratio))
+                {
+                    return true;
+                }
+            }
+        }
+        else if(effectiveParentGue != null)
+        {
+            foreach (var child in effectiveParentGue.ContainedElements)
+            {
+                if (child is GraphicalUiElement childGue && child.Parent == null && (childGue.WidthUnits == DimensionUnitType.Ratio || childGue.HeightUnits == DimensionUnitType.Ratio))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 
     private static float GetDimensionFromEdges(float smallEdge, float bigEdge, GeneralUnitType units)
     {

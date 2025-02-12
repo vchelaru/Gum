@@ -26,6 +26,11 @@ public class DefaultLabelRuntime : InteractiveGue
             var TextInstance = new TextRuntime();
             TextInstance.Name = "TextInstance";
             TextInstance.Text = "Label";
+            TextInstance.Width = 0;
+            TextInstance.Height = 0;
+            TextInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+            TextInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+
             this.Children.Add(TextInstance);
         }
         if (tryCreateFormsObject)

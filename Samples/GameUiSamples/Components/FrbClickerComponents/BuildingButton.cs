@@ -60,6 +60,8 @@ internal class BuildingButton : InteractiveGue
             this.Children.Add(CostTextRuntime);
             CostTextRuntime.YOrigin = VerticalAlignment.Bottom;
             CostTextRuntime.YUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
+            CostTextRuntime.Height = 0;
+            CostTextRuntime.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
 
             AmountTextRuntime = new TextRuntime();
             this.Children.Add(AmountTextRuntime);

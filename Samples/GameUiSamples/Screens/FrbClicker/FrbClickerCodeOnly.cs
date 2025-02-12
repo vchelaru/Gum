@@ -1,6 +1,7 @@
 ﻿using GameUiSamples.Components.FrbClickerComponents;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
+using MonoGameGum.Forms;
 using MonoGameGum.Forms.Controls;
 using RenderingLibrary.Graphics;
 using System;
@@ -13,6 +14,9 @@ namespace GameUiSamples.Screens.FrbClicker;
 public class FrbClickerCodeOnly : BindableGue, IUpdateScreen
 {
     FrbScreenViewModel ViewModel => (FrbScreenViewModel)BindingContext;
+    Button ManualClickButton;
+    ToolTip toolTip = new ToolTip();
+
     public FrbClickerCodeOnly() : base(new InvisibleRenderable())
     {
         this.Width = 0;
@@ -24,6 +28,9 @@ public class FrbClickerCodeOnly : BindableGue, IUpdateScreen
         CreateLeftColumn();
 
         CreateRightColumn();
+
+        toolTip = new ToolTip();
+        FrameworkElement.PopupRoot.Children.Add(toolTip);
     }
 
     private void CreateLeftColumn()
@@ -40,16 +47,24 @@ public class FrbClickerCodeOnly : BindableGue, IUpdateScreen
 
         var label = new Label();
         label.SetBinding(nameof(Label.Text), nameof(ViewModel.CurrentBallsDisplay));
+        label.Visual.XOrigin = HorizontalAlignment.Center;
+        label.Visual.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+
         leftPanel.AddChild(label);
 
         var perSecondLabel = new Label();
         perSecondLabel.SetBinding(nameof(Label.Text), nameof(ViewModel.EarningsPerSecondDisplay));
+        perSecondLabel.Visual.XOrigin = HorizontalAlignment.Center;
+        perSecondLabel.Visual.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+
         leftPanel.AddChild(perSecondLabel);
 
-        var button = new Button();
-        leftPanel.AddChild(button);
-        button.Text = "Render Ball";
-        button.Click += (_, _) => ViewModel.DoManualClick();
+        ManualClickButton = new Button();
+        leftPanel.AddChild(ManualClickButton);
+        ManualClickButton.Text = "Render Ball";
+        ManualClickButton.Visual.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+        ManualClickButton.Visual.XOrigin = HorizontalAlignment.Center;
+        ManualClickButton.Click += (_, _) => ViewModel.DoManualClick();
 
     }
 
@@ -57,24 +72,32 @@ public class FrbClickerCodeOnly : BindableGue, IUpdateScreen
     {
         var scrollViewer = new ScrollViewer();
         this.Children.Add(scrollViewer.Visual);
+
         scrollViewer.Visual.Width = 33;
         scrollViewer.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.Percentage;
         scrollViewer.Visual.Height = 0;
         scrollViewer.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+        scrollViewer.X = 0;
         scrollViewer.Visual.XOrigin = HorizontalAlignment.Right;
         scrollViewer.Visual.XUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
+        scrollViewer.InnerPanel.StackSpacing = 5;
 
-        foreach(var item in ViewModel.BuildingViewModels)
+        foreach (var item in ViewModel.BuildingViewModels)
         {
             AddBuildingButton(item);
         }
+
 
         void AddBuildingButton(BuildingViewModel buildingVm)
         {
             var buildingButton = new BuildingButton();
             buildingButton.BuildingName = buildingVm.BackingData.Name;
-            buildingButton.SetBinding(nameof(buildingButton.Cost), nameof(buildingVm.NextCost));
-            buildingButton.SetBinding(nameof(buildingButton.Amount), nameof(buildingVm.CountDisplay));
+            buildingButton.SetBinding(
+                nameof(buildingButton.Cost), nameof(buildingVm.NextCost));
+            buildingButton.SetBinding(
+                nameof(buildingButton.Amount), nameof(buildingVm.CountDisplay));
+            buildingButton.SetBinding(
+                nameof(buildingButton.IsEnabled), nameof(buildingVm.HasEnoughToBuy));
 
             buildingButton.BindingContext = buildingVm;
             buildingButton.Click += (_, _) => ViewModel.TryBuy(buildingVm.BackingData);
@@ -90,6 +113,45 @@ public class FrbClickerCodeOnly : BindableGue, IUpdateScreen
     public void Update(GameTime gameTime)
     {
         ViewModel.Update(gameTime);
+
+        UpdateToolTip();
     }
 
+    private void UpdateToolTip()
+    {
+        var cursor = FormsUtilities.Cursor;
+        var windowOver = cursor.WindowOver;
+
+        if(FormsUtilities.Keyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Up))
+        {
+            int m = 3;
+        }
+
+        if(windowOver == ManualClickButton.Visual)
+        {
+            toolTip.Visible = true;
+            toolTip.Text = "Click to render a red ball manually";
+        }
+        else if(windowOver != null && 
+            windowOver is BuildingButton buildingButtonOver)
+        {
+            toolTip.Visible = true;
+            toolTip.Text = (buildingButtonOver.BindingContext as BuildingViewModel).BackingData.Description;
+        }
+        else
+        {
+            toolTip.Visible = false;
+        }
+
+        if(toolTip.Visible)
+        {
+            toolTip.X = cursor.X;
+            toolTip.Y = cursor.Y + 16;
+
+            if(toolTip.AbsoluteRight > GraphicalUiElement.CanvasWidth)
+            {
+                toolTip.X = GraphicalUiElement.CanvasWidth - toolTip.GetAbsoluteWidth();
+            }
+        }
+    }
 }

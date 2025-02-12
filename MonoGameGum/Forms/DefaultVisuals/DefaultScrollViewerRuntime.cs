@@ -9,25 +9,27 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MonoGameGum.Forms.DefaultVisuals
-{
-    public class DefaultScrollViewerRuntime : InteractiveGue
-    {
-        public DefaultScrollViewerRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
-        {
-            if (fullInstantiation)
-            {
-                var background = new ColoredRectangleRuntime();
-                background.Name = "Background";
+namespace MonoGameGum.Forms.DefaultVisuals;
 
-                var InnerPanel = new ContainerRuntime();
-                InnerPanel.Name = "InnerPanelInstance";
-                var ClipContainer = new ContainerRuntime();
-                ClipContainer.Name = "ClipContainerInstance";
-                var VerticalScrollBarInstance = new DefaultScrollBarRuntime();
-                VerticalScrollBarInstance.Name = "VerticalScrollBarInstance";
-                //var HorizontalScrollBarInstance = new DefaultScrollBarRuntime();
-                //HorizontalScrollBarInstance.Name = "HorizontalScrollBarInstance";
+public class DefaultScrollViewerRuntime : InteractiveGue
+{
+    public DefaultScrollViewerRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
+    {
+        if (fullInstantiation)
+        {
+            var background = new ColoredRectangleRuntime();
+            background.Name = "Background";
+
+            var InnerPanel = new ContainerRuntime();
+            InnerPanel.Name = "InnerPanelInstance";
+            var ClipContainer = new ContainerRuntime();
+            ClipContainer.Name = "ClipContainerInstance";
+            var VerticalScrollBarInstance = new DefaultScrollBarRuntime();
+            VerticalScrollBarInstance.Name = "VerticalScrollBarInstance";
+            //var HorizontalScrollBarInstance = new DefaultScrollBarRuntime();
+            //HorizontalScrollBarInstance.Name = "HorizontalScrollBarInstance";
+
+            {
 
                 background.Height = 0f;
                 background.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
@@ -42,48 +44,70 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 background.Color = new Microsoft.Xna.Framework.Color(32, 32, 32, 255);
                 this.Children.Add(background);
 
-                VerticalScrollBarInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Right;
-                VerticalScrollBarInstance.XUnits = GeneralUnitType.PixelsFromLarge;
-                VerticalScrollBarInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-                VerticalScrollBarInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
-                //VerticalScrollBarInstance.Width = 24;
-                VerticalScrollBarInstance.Height = 0;
-                VerticalScrollBarInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-                this.Children.Add(VerticalScrollBarInstance);
 
+                var scrollAndClipContainer = new ContainerRuntime();
+                scrollAndClipContainer.Width = 0;
+                scrollAndClipContainer.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                scrollAndClipContainer.Height = 0;
+                scrollAndClipContainer.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                this.Children.Add(scrollAndClipContainer);
 
-                ClipContainer.ClipsChildren = true;
-                ClipContainer.Height = -4f;
-                ClipContainer.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-                ClipContainer.Width = -27f;
-                ClipContainer.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-                ClipContainer.X = 2f;
-                ClipContainer.Y = 2f;
-                ClipContainer.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
-                ClipContainer.YUnits = GeneralUnitType.PixelsFromSmall;
-                this.Children.Add(ClipContainer);
+                {
+                    VerticalScrollBarInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Right;
+                    VerticalScrollBarInstance.XUnits = GeneralUnitType.PixelsFromLarge;
+                    VerticalScrollBarInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+                    VerticalScrollBarInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
+                    //VerticalScrollBarInstance.Width = 24;
+                    VerticalScrollBarInstance.Height = 0;
+                    VerticalScrollBarInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                    scrollAndClipContainer.Children.Add(VerticalScrollBarInstance);
 
+                    // clip container container uses a ratio to fill available space,
+                    // and the clip container is inside of that and adds its own margins
+                    var clipContainerContainer = new ContainerRuntime();
+                    clipContainerContainer.Height = 0f;
+                    clipContainerContainer.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                    clipContainerContainer.Width = 1;
+                    clipContainerContainer.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Ratio;
+                    scrollAndClipContainer.Children.Add(clipContainerContainer);
 
-                InnerPanel.Height = 0f;
-                InnerPanel.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-                InnerPanel.Width = 0f;
-                InnerPanel.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-                InnerPanel.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
-                ClipContainer.Children.Add(InnerPanel);
+                    {
+                        ClipContainer.ClipsChildren = true;
+                        ClipContainer.Height = -4f;
+                        ClipContainer.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                        ClipContainer.Width = -4;
+                        ClipContainer.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                        ClipContainer.X = 2f;
+                        ClipContainer.Y = 2f;
+                        ClipContainer.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
+                        ClipContainer.YUnits = GeneralUnitType.PixelsFromSmall;
+                        clipContainerContainer.Children.Add(ClipContainer);
 
+                        {
 
+                            InnerPanel.Height = 0f;
+                            InnerPanel.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+                            InnerPanel.Width = 0f;
+                            InnerPanel.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                            InnerPanel.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+                            ClipContainer.Children.Add(InnerPanel);
+                        }
+                    }
+                }
             }
 
-            if (tryCreateFormsObject)
-            {
-                this.FormsControlAsObject = new ScrollViewer(this);
-            }
-            //HorizontalScrollBarInstance.Height = 0f;
-            //HorizontalScrollBarInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Relative
+
+
+
         }
 
-        public ScrollViewer FormsControl => this.FormsControlAsObject as ScrollViewer;
+        if (tryCreateFormsObject)
+        {
+            this.FormsControlAsObject = new ScrollViewer(this);
+        }
+        //HorizontalScrollBarInstance.Height = 0f;
+        //HorizontalScrollBarInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Relative
     }
 
-
+    public ScrollViewer FormsControl => this.FormsControlAsObject as ScrollViewer;
 }

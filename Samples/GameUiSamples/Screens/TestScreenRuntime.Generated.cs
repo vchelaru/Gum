@@ -28,6 +28,9 @@ namespace GameUiSamples.Screens
         public ColoredRectangleRuntime ColoredRectangleInstance3 { get; protected set; }
         public ColoredRectangleRuntime ColoredRectangleInstance2 { get; protected set; }
         public ColoredRectangleRuntime ColoredRectangleInstance4 { get; protected set; }
+        public ContainerRuntime ContainerInstance3 { get; protected set; }
+        public ColoredRectangleRuntime ColoredRectangleInstance5 { get; protected set; }
+        public ColoredRectangleRuntime RightSide { get; protected set; }
 
         public TestScreenRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         {
@@ -44,6 +47,9 @@ namespace GameUiSamples.Screens
             ColoredRectangleInstance3 = this.GetGraphicalUiElementByName("ColoredRectangleInstance3") as ColoredRectangleRuntime;
             ColoredRectangleInstance2 = this.GetGraphicalUiElementByName("ColoredRectangleInstance2") as ColoredRectangleRuntime;
             ColoredRectangleInstance4 = this.GetGraphicalUiElementByName("ColoredRectangleInstance4") as ColoredRectangleRuntime;
+            ContainerInstance3 = this.GetGraphicalUiElementByName("ContainerInstance3") as ContainerRuntime;
+            ColoredRectangleInstance5 = this.GetGraphicalUiElementByName("ColoredRectangleInstance5") as ColoredRectangleRuntime;
+            RightSide = this.GetGraphicalUiElementByName("RightSide") as ColoredRectangleRuntime;
             CustomInitialize();
         }
         //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
