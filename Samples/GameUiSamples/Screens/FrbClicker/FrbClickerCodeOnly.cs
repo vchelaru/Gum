@@ -32,7 +32,8 @@ public class FrbClickerCodeOnly : BindableGue, IUpdateScreen
         CreateLeftColumn();
 
         CreateCenterColumn();
-        ViewModel.CurrentBalls = 30000000;
+        // uncomment to cheat:
+        //ViewModel.CurrentBalls = 30000000;
         CreateRightColumn();
 
         toolTip = new ToolTip();
