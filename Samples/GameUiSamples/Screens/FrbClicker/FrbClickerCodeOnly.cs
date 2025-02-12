@@ -136,7 +136,16 @@ public class FrbClickerCodeOnly : BindableGue, IUpdateScreen
             windowOver is BuildingButton buildingButtonOver)
         {
             toolTip.Visible = true;
-            toolTip.Text = (buildingButtonOver.BindingContext as BuildingViewModel).BackingData.Description;
+            var vm = (buildingButtonOver.BindingContext as BuildingViewModel);
+            var showTooltip = vm.HasEnoughToBuy || vm.Count > 0;
+            if (showTooltip)
+            {
+                toolTip.Text = vm.BackingData.Description;
+            }
+            else
+            {
+                toolTip.Text = "????";
+            }
         }
         else
         {
