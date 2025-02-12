@@ -29,7 +29,7 @@
     <ProjectReference Include="..\..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Content\GumProject\" />
+    <Folder Include="Content\GumProject\Components\FrbClickerComponents\" />
     <Folder Include="DefsData\" />
 	  <None Update="Content\**\*.*">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

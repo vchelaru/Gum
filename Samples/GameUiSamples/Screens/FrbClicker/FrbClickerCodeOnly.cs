@@ -16,6 +16,7 @@ public class FrbClickerCodeOnly : BindableGue, IUpdateScreen
     FrbScreenViewModel ViewModel => (FrbScreenViewModel)BindingContext;
     Button ManualClickButton;
     ToolTip toolTip = new ToolTip();
+    BallButtonRuntime BallButton;
 
     public FrbClickerCodeOnly() : base(new InvisibleRenderable())
     {
@@ -56,15 +57,12 @@ public class FrbClickerCodeOnly : BindableGue, IUpdateScreen
         perSecondLabel.SetBinding(nameof(Label.Text), nameof(ViewModel.EarningsPerSecondDisplay));
         perSecondLabel.Visual.XOrigin = HorizontalAlignment.Center;
         perSecondLabel.Visual.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-
         leftPanel.AddChild(perSecondLabel);
 
-        ManualClickButton = new Button();
-        leftPanel.AddChild(ManualClickButton);
-        ManualClickButton.Text = "Render Ball";
-        ManualClickButton.Visual.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-        ManualClickButton.Visual.XOrigin = HorizontalAlignment.Center;
-        ManualClickButton.Click += (_, _) => ViewModel.DoManualClick();
+        BallButton = new BallButtonRuntime();
+        leftPanel.AddChild(BallButton.FormsControl);
+        BallButton.FormsControl.Click += (_, _) => ViewModel.DoManualClick();
+
 
     }
 
@@ -90,7 +88,7 @@ public class FrbClickerCodeOnly : BindableGue, IUpdateScreen
 
         void AddBuildingButton(BuildingViewModel buildingVm)
         {
-            var buildingButton = new BuildingButton();
+            var buildingButton = new BuildingButtonRuntime();
             buildingButton.BuildingName = buildingVm.BackingData.Name;
             buildingButton.SetBinding(
                 nameof(buildingButton.Cost), nameof(buildingVm.NextCost));
@@ -127,13 +125,13 @@ public class FrbClickerCodeOnly : BindableGue, IUpdateScreen
             int m = 3;
         }
 
-        if(windowOver == ManualClickButton.Visual)
+        if(windowOver == BallButton)
         {
             toolTip.Visible = true;
             toolTip.Text = "Click to render a red ball manually";
         }
         else if(windowOver != null && 
-            windowOver is BuildingButton buildingButtonOver)
+            windowOver is BuildingButtonRuntime buildingButtonOver)
         {
             toolTip.Visible = true;
             var vm = (buildingButtonOver.BindingContext as BuildingViewModel);

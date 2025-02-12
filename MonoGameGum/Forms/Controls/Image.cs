@@ -14,6 +14,14 @@ namespace MonoGameGum.Forms.Controls;
 
 public class Image : FrameworkElement
 {
+    public string Source
+    {
+        set
+        {
+            Visual.SetProperty("SourceFile", value);
+        }
+    }
+
     public Image() :
         base(new Gum.Wireframe.InteractiveGue(new Sprite(texture:null)))
     {
@@ -24,4 +32,5 @@ public class Image : FrameworkElement
 
         IsVisible = true;
     }
+
 }

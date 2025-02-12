@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using Color = Microsoft.Xna.Framework.Color;
 
 namespace GameUiSamples.Components.FrbClickerComponents;
-internal class BuildingButton : InteractiveGue
+internal class BuildingButtonRuntime : InteractiveGue
 {
     public string BuildingName
     {
@@ -35,7 +35,7 @@ internal class BuildingButton : InteractiveGue
     TextRuntime CostTextRuntime;
     TextRuntime AmountTextRuntime;
 
-    public BuildingButton(bool fullInstantiation = true, bool tryCreateFormsObject = true) : 
+    public BuildingButtonRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : 
         base(new InvisibleRenderable())
     {
         if(fullInstantiation)
