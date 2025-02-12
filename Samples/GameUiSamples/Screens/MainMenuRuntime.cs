@@ -13,6 +13,7 @@ using System;
 using System.ComponentModel.Design.Serialization;
 using GumRuntime;
 using RenderingLibrary;
+using GameUiSamples.Screens.FrbClicker;
 namespace GameUiSamples.Screens;
 
 partial class MainMenuRuntime : Gum.Wireframe.BindableGue
@@ -45,6 +46,13 @@ partial class MainMenuRuntime : Gum.Wireframe.BindableGue
             else if(item == HotbarStardew.FormsControlAsObject)
             {
                 GoToScreen("StardewHotbarScreen");
+            }
+            else if(item == FrbClicker.FormsControlAsObject)
+            {
+                Game1.Root.RemoveFromManagers();
+                var screen = new FrbClickerCodeOnly();
+                screen.AddToManagers();
+                Game1.Root = screen;
             }
         }
     }

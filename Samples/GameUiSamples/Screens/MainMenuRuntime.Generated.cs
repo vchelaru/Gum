@@ -25,6 +25,7 @@ namespace GameUiSamples.Screens
         public ListBoxItemRuntime GameTitleScreenItem { get; protected set; }
         public ListBoxItemRuntime GameHudHollowKnight { get; protected set; }
         public ListBoxItemRuntime HotbarStardew { get; protected set; }
+        public ListBoxItemRuntime FrbClicker { get; protected set; }
 
         public MainMenuRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         {
@@ -38,6 +39,7 @@ namespace GameUiSamples.Screens
             GameTitleScreenItem = this.GetGraphicalUiElementByName("GameTitleScreenItem") as ListBoxItemRuntime;
             GameHudHollowKnight = this.GetGraphicalUiElementByName("GameHudHollowKnight") as ListBoxItemRuntime;
             HotbarStardew = this.GetGraphicalUiElementByName("HotbarStardew") as ListBoxItemRuntime;
+            FrbClicker = this.GetGraphicalUiElementByName("FrbClicker") as ListBoxItemRuntime;
             CustomInitialize();
         }
         //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

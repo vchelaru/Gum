@@ -53,6 +53,18 @@
     </Variable>
     <Variable>
       <Type>string</Type>
+      <Name>FrbClicker.ListItemDisplayText</Name>
+      <Value xsi:type="xsd:string">Incremental Game (Cookie Clicker, Code Only)</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>FrbClicker.Parent</Name>
+      <Value xsi:type="xsd:string">ListBoxInstance.InnerPanelInstance</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
       <Name>GameHudHollowKnight.ListItemDisplayText</Name>
       <Value xsi:type="xsd:string">Hud (Hollow Knight)</Value>
       <SetsValue>true</SetsValue>
@@ -183,6 +195,11 @@
   </Instance>
   <Instance>
     <Name>HotbarStardew</Name>
+    <BaseType>Controls/ListBoxItem</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>FrbClicker</Name>
     <BaseType>Controls/ListBoxItem</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>

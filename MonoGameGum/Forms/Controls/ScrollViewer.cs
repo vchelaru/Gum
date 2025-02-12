@@ -190,6 +190,18 @@ public class ScrollViewer : FrameworkElement
 
     #endregion
 
+    public override void AddChild(FrameworkElement child)
+    {
+        if (InnerPanel != null)
+        {
+            this.InnerPanel.Children.Add(child.Visual);
+        }
+        else
+        {
+            base.AddChild(child);
+        }
+    }
+
     #region Scroll Methods
 
     private void HandleMouseWheelScroll(object sender, RoutedEventArgs args)

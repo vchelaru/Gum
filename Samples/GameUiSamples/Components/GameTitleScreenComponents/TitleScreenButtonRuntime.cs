@@ -12,6 +12,7 @@ using System.Linq;
 using MonoGameGum.GueDeriving;
 using MonoGameGum.Forms.Controls;
 using System;
+using MonoGameGum.Forms;
 namespace GameUiSamples.Components
 {
     partial class TitleScreenButtonRuntime : ContainerRuntime
@@ -38,7 +39,7 @@ namespace GameUiSamples.Components
                     FormsControl.HandleTab(TabDirection.Down);
                     break;
                 case Microsoft.Xna.Framework.Input.Keys.Enter:
-                    FormsControl.PerformClick();
+                    FormsControl.PerformClick(FormsUtilities.Keyboard);
                     break;
             }
         }

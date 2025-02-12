@@ -434,7 +434,7 @@ public class FrameworkElement
         }
     }
 
-    public void AddChild(FrameworkElement child)
+    public virtual void AddChild(FrameworkElement child)
     {
         if (child.Visual == null)
         {
