@@ -6,6 +6,7 @@ using MonoGameGum.Forms.Controls;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,20 +19,49 @@ public class FrbClickerCodeOnly : BindableGue, IUpdateScreen
     ToolTip toolTip = new ToolTip();
     BallButtonRuntime BallButton;
 
+    List<StackPanel> imagePanels = new List<StackPanel>();
+
     public FrbClickerCodeOnly() : base(new InvisibleRenderable())
     {
         this.Width = 0;
         this.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
         this.Height = 0;
         this.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-        this.BindingContext = new FrbScreenViewModel();
+        CreateViewModel();
 
         CreateLeftColumn();
 
+        CreateCenterColumn();
+        ViewModel.CurrentBalls = 30000000;
         CreateRightColumn();
 
         toolTip = new ToolTip();
         FrameworkElement.PopupRoot.Children.Add(toolTip);
+    }
+
+    private void CreateViewModel()
+    {
+        var vm = new FrbScreenViewModel();
+        vm.BuildingPropertyChanged += HandleBuildingPropertyChanged;
+        this.BindingContext = vm;
+    }
+
+    private void HandleBuildingPropertyChanged(object sender, PropertyChangedEventArgs args)
+    {
+        if (args.PropertyName == nameof(BuildingViewModel.Count))
+        {
+            var senderAsVm = sender as BuildingViewModel;
+
+            var matchingPanel = imagePanels.First(item => item.BindingContext == sender);
+
+            while(matchingPanel.Visual.Children.Count < senderAsVm.Count)
+            {
+                var image = new Image();
+                var relativeFile = senderAsVm.BackingData.Icon;
+                image.Source = $"Components/FrbClickerComponents/{relativeFile}";
+                matchingPanel.AddChild(image);
+            }
+        }
     }
 
     private void CreateLeftColumn()
@@ -64,6 +94,33 @@ public class FrbClickerCodeOnly : BindableGue, IUpdateScreen
         BallButton.FormsControl.Click += (_, _) => ViewModel.DoManualClick();
 
 
+    }
+
+    private void CreateCenterColumn()
+    {
+        var centerPanel = new ScrollViewer();
+        centerPanel.Visual.X = 34;
+        centerPanel.Visual.XUnits = Gum.Converters.GeneralUnitType.Percentage;
+        centerPanel.Visual.Width = 32;
+        centerPanel.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.Percentage;
+        centerPanel.Visual.Y = 4;
+        centerPanel.Visual.Height = -8;
+        centerPanel.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+        this.Children.Add(centerPanel.Visual);
+
+        foreach(var item in ViewModel.BuildingViewModels)
+        {
+            var panel = new StackPanel();
+            centerPanel.AddChild(panel);
+            panel.Orientation = Orientation.Horizontal;
+            panel.Visual.WrapsChildren = true;
+            panel.Visual.Width = 0;
+            panel.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            panel.Visual.Height = 0;
+            panel.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+            panel.BindingContext = item;
+            imagePanels.Add(panel);
+        }
     }
 
     private void CreateRightColumn()

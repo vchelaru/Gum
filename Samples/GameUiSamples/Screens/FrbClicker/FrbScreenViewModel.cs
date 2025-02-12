@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -39,14 +40,22 @@ internal class FrbScreenViewModel : ViewModel
     public string EarningsPerSecondDisplay =>
         (EarningsPerSecond).ToString() + " FRBs per second";
 
+    public event PropertyChangedEventHandler BuildingPropertyChanged;
+
     public FrbScreenViewModel()
     {
         foreach(var item in BuildingDefs.AllBuildings)
         {
             var innerVm = new BuildingViewModel();
             innerVm.BackingData = item;
+            innerVm.PropertyChanged += HandleInnerPropertyChanged;
             BuildingViewModels.Add(innerVm);
         }
+    }
+
+    private void HandleInnerPropertyChanged(object sender, PropertyChangedEventArgs e)
+    {
+        BuildingPropertyChanged?.Invoke(sender, e);
     }
 
     public void DoManualClick()
@@ -83,6 +92,7 @@ internal class FrbScreenViewModel : ViewModel
 
 }
 
+#region BuildingViewModel
 
 public class BuildingViewModel : ViewModel
 {
@@ -129,3 +139,5 @@ public class BuildingViewModel : ViewModel
 
     public decimal Earnings => Count * BackingData.EarningsPerSecond;
 }
+
+#endregion
