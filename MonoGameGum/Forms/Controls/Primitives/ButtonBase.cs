@@ -138,7 +138,7 @@ public class ButtonBase : FrameworkElement, IInputReceiver
         var args = inputDevice != null 
             ? new InputEventArgs() { InputDevice = inputDevice } 
             : EventArgs.Empty;
-        HandleClick(this, EventArgs.Empty);
+        HandleClick(this, args);
     }
 
     #region IInputReceiver Methods
