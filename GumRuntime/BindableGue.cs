@@ -62,10 +62,29 @@ public class BindableGue : GraphicalUiElement
 
     public BindableGue()
     {
+        InitializeBindableGue();
     }
 
     public BindableGue(IRenderable renderable) : base(renderable)
     {
+        InitializeBindableGue();
+    }
+
+    private void InitializeBindableGue()
+    {
+        this.ParentChanged += HandleParentChanged;
+    }
+
+    private void HandleParentChanged(object sender, EventArgs e)
+    {
+        var parent = this.EffectiveParentGue as BindableGue;
+
+        var newInherited = parent?.BindingContext;
+
+        if (mBindingContext == null && mInheritedBindingContext != newInherited)
+        {
+            InheritedBindingContext = newInherited;
+        }
     }
 
     public override void RemoveFromManagers()

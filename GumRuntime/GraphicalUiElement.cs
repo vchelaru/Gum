@@ -1377,7 +1377,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 this.Parent = whatContainsThis;
             }
         }
+
+        // This is a bit of a hack to support GraphicalUiElement.IWindow.
+        // This isn't needed in MonoGame:
+        OnConstructor();
     }
+
+    partial void OnConstructor();
 
     public void SetContainedObject(IRenderable containedObject)
     {
