@@ -22,6 +22,7 @@ using FlatRedBall.Gui;
 using FlatRedBall.Input;
 using FlatRedBall.Instructions;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
+using Buttons = FlatRedBall.Input.Xbox360GamePad.Button;
 namespace FlatRedBall.Forms.Controls;
 #else
 using MonoGameGum.Input;
@@ -58,10 +59,12 @@ public delegate void KeyEventHandler(object sender, KeyEventArgs e);
 
 public class FrameworkElement
 {
-#if FRB
-        public static Cursor MainCursor => GuiManager.Cursor;
+    #region Fields/Properties
 
-        public static List<Xbox360GamePad> GamePadsForUiControl => GuiManager.GamePadsForUiControl;
+#if FRB
+    public static Cursor MainCursor => GuiManager.Cursor;
+
+    public static List<Xbox360GamePad> GamePadsForUiControl => GuiManager.GamePadsForUiControl;
 #else
     public static ICursor MainCursor { get; set; }
 
@@ -150,7 +153,6 @@ public class FrameworkElement
         }
     }
 
-
     /// <summary>
     /// The height in pixels. This is a calculated value considering HeightUnits and Height.
     /// </summary>
@@ -206,7 +208,6 @@ public class FrameworkElement
         }
     }
 
-
 #if FRB
     /// <summary>
     /// The X position of the left side of the element in pixels.
@@ -219,7 +220,6 @@ public class FrameworkElement
     /// </summary>
     [Obsolete("Use AbsoluteTop")]
     public float ActualY => Visual.GetTop();
-
 #endif
 
     public float X
@@ -369,7 +369,6 @@ public class FrameworkElement
         if (DefaultFormsComponents.ContainsKey(type))
         {
             var gumType = DefaultFormsComponents[type];
-
             // The bool/bool constructor is required to match the FlatRedBall.Forms functionality
             // of being able to be Gum-first or forms-first. The 2nd bool in particular tells the runtime
             // whether to create a forms object. Yes, this is less convenient for the user who is manually
@@ -386,12 +385,10 @@ public class FrameworkElement
                     " the second argument controls whether the object should internally create a Forms instance.");
             }
 
-
         }
         else
         {
             var baseType = type.BaseType;
-
             if (baseType == typeof(object) || baseType == typeof(FrameworkElement))
             {
                 var message =
@@ -409,6 +406,7 @@ public class FrameworkElement
 
     public TabbingFocusBehavior GamepadTabbingFocusBehavior { get; set; } = TabbingFocusBehavior.FocusableIfInputReceiver;
 
+    #endregion
 
     #region Events
 
@@ -419,6 +417,7 @@ public class FrameworkElement
 
     #endregion
 
+    #region Constructor
 
     public FrameworkElement()
     {
@@ -433,6 +432,8 @@ public class FrameworkElement
             this.Visual = visual;
         }
     }
+
+    #endregion
 
     public virtual void AddChild(FrameworkElement child)
     {
@@ -517,8 +518,20 @@ public class FrameworkElement
         }
 #endif
 
-
 #if FRB
+        Layer gumLayer = null;
+        if(layer != null)
+        {
+            gumLayer = Gum.GumIdb.Self.GumLayersOnFrbLayer(layer).FirstOrDefault();
+
+#if DEBUG
+            if(gumLayer == null)
+            {
+                throw new InvalidOperationException("Could not find a Gum layer on this FRB layer");
+            }
+#endif
+        }
+
         if (!FlatRedBallServices.IsThreadPrimary())
         {
             InstructionManager.AddSafe(() =>
@@ -534,36 +547,38 @@ public class FrameworkElement
         }
     }
 
+#if FRB
     /// <summary>
     /// Displays this visual element (calls Show), and returns a task which completes once
     /// the dialog is removed.
     /// </summary>
-    /// <param name="layer">The Layer to be used to display the element.</param>
+    /// <param name="frbLayer">The FlatRedBall Layer to be used to display the element.</param>
     /// <returns>A task which will complete once this element is removed from managers.</returns>
-    //        public async Task<bool?> ShowDialog(Layer layer = null)
-    //        {
-    //#if DEBUG
-    //            if (Visual == null)
-    //            {
-    //                throw new InvalidOperationException("Visual must be set before calling Show");
-    //            }
-    //#endif
-    //            var semaphoreSlim = new SemaphoreSlim(1);
+    public async Task<bool?> ShowDialog(FlatRedBall.Graphics.Layer frbLayer = null)
+    {
+#if DEBUG
+        if (Visual == null)
+        {
+            throw new InvalidOperationException("Visual must be set before calling Show");
+        }
+#endif
+        var semaphoreSlim = new SemaphoreSlim(1);
 
-    //            void HandleRemovedFromManagers(object sender, EventArgs args) => semaphoreSlim.Release();
-    //            Visual.RemovedFromGuiManager += HandleRemovedFromManagers;
+        void HandleRemovedFromManagers(object sender, EventArgs args) => semaphoreSlim.Release();
+        Visual.RemovedFromGuiManager += HandleRemovedFromManagers;
 
-    //            semaphoreSlim.Wait();
-    //            Show(layer);
-    //            await semaphoreSlim.WaitAsync();
+        semaphoreSlim.Wait();
+        Show(frbLayer);
+        await semaphoreSlim.WaitAsync();
 
-    //            Visual.RemovedFromGuiManager -= HandleRemovedFromManagers;
-    //            // for now, return null, todo add dialog results
+        Visual.RemovedFromGuiManager -= HandleRemovedFromManagers;
+        // for now, return null, todo add dialog results
 
-    //            semaphoreSlim.Dispose();
+        semaphoreSlim.Dispose();
 
-    //            return null;
-    //        }
+        return null;
+    }
+#endif
 
     /// <summary>
     /// Every-frame logic. This will automatically be called if this element is added to the FrameworkElementManager
@@ -603,6 +618,10 @@ public class FrameworkElement
 
     }
 
+    /// <summary>
+    /// Method raised when the current visual is changed or set to null. If the visual
+    /// is being replaced, this is called before the new visual is assigned.
+    /// </summary>
     protected virtual void ReactToVisualRemoved()
     {
 
@@ -663,8 +682,6 @@ public class FrameworkElement
 
         }
     }
-
-
 
     void HandleEnabledChanged(object sender, EventArgs args)
     {
@@ -731,7 +748,6 @@ public class FrameworkElement
         return updated;
     }
 
-
     protected void PushValueToViewModel([CallerMemberName] string uiPropertyName = null)
     {
         var kvp = vmPropsToUiProps.FirstOrDefault(item => item.Value == uiPropertyName);
@@ -789,23 +805,6 @@ public class FrameworkElement
     }
 
 #if FRB
-    protected void HandleGamepadNavigation(Xbox360GamePad gamepad)
-    {
-        if (gamepad.ButtonRepeatRate(FlatRedBall.Input.Xbox360GamePad.Button.DPadDown) ||
-            (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.ButtonRepeatRate(FlatRedBall.Input.Xbox360GamePad.Button.DPadRight)) ||
-            gamepad.LeftStick.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Down) ||
-            (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.LeftStick.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Right)))
-        {
-            this.HandleTab(TabDirection.Down, this);
-        }
-        else if (gamepad.ButtonRepeatRate(FlatRedBall.Input.Xbox360GamePad.Button.DPadUp) ||
-            (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.ButtonRepeatRate(FlatRedBall.Input.Xbox360GamePad.Button.DPadLeft)) ||
-            gamepad.LeftStick.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Up) ||
-            (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.LeftStick.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Left)))
-        {
-            this.HandleTab(TabDirection.Up, this);
-        }
-    }
     protected void HandleGamepadNavigation(GenericGamePad gamepad)
     {
         AnalogStick leftStick = gamepad.AnalogSticks.Length > 0
@@ -823,6 +822,23 @@ public class FrameworkElement
             (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.DPadRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Left)) ||
             leftStick?.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Up) == true ||
             (IsUsingLeftAndRightGamepadDirectionsForNavigation && leftStick?.AsDPadPushedRepeatRate(FlatRedBall.Input.Xbox360GamePad.DPadDirection.Left) == true))
+        {
+            this.HandleTab(TabDirection.Up, this);
+        }
+    }
+    protected void HandleInputDeviceNavigation(IInputDevice inputDevice)
+    {
+        var wasUpPressed = inputDevice.DefaultUpPressable.WasJustPressedOrRepeated ||
+            (IsUsingLeftAndRightGamepadDirectionsForNavigation && inputDevice.DefaultLeftPressable.WasJustPressedOrRepeated);
+
+        var wasDownPressed = inputDevice.DefaultDownPressable.WasJustPressedOrRepeated ||
+            (IsUsingLeftAndRightGamepadDirectionsForNavigation && inputDevice.DefaultRightPressable.WasJustPressedOrRepeated);
+
+        if (wasDownPressed)
+        {
+            this.HandleTab(TabDirection.Down, this);
+        }
+        else if (wasUpPressed)
         {
             this.HandleTab(TabDirection.Up, this);
         }
@@ -854,7 +870,6 @@ public class FrameworkElement
 
         HandleTab(tabDirection, requestingElement.Visual, parentGue, shouldAskParent: true);
     }
-
 
     public static bool HandleTab(TabDirection tabDirection, InteractiveGue requestingVisual,
         InteractiveGue parentVisual, bool shouldAskParent)
@@ -889,8 +904,6 @@ public class FrameworkElement
         {
             int index = 0;
 
-            bool forceSelect = false;
-
             if (tabDirection == TabDirection.Down)
             {
                 index = 0;
@@ -900,17 +913,12 @@ public class FrameworkElement
                 index = children.Count - 1;
             }
 
-            if (!forceSelect)
+            for (int i = 0; i < children.Count; i++)
             {
-                for (int i = 0; i < children.Count; i++)
+                if (children[i] == requestingVisual)
                 {
-                    var childElement = children[i];
-
-                    if (childElement == requestingVisual)
-                    {
-                        index = i;
-                        break;
-                    }
+                    index = i;
+                    break;
                 }
             }
 
@@ -956,9 +964,7 @@ public class FrameworkElement
                 else
                 {
                     if (childAtI?.Visible == true && childAtI.IsEnabled && (elementAtI == null || elementAtI.IsEnabled))
-
                     {
-
                         // let this try to handle it:
                         didChildHandle = HandleTab(tabDirection, null, childAtI, shouldAskParent: false);
 
@@ -994,10 +1000,12 @@ public class FrameworkElement
                 bool didFocusNewItem = false;
                 if (shouldAskParent)
                 {
+#if FRB
                     // if this is a dominant window, don't allow tabbing out
-                    //var isDominant = GuiManager.DominantWindows.Contains(parentVisual);
+                    var isDominant = GuiManager.DominantWindows.Contains(parentVisual);
 
-                    //if (!isDominant)
+                    if(!isDominant)
+#endif
                     {
                         if (parentVisual?.Parent != null)
                         {
@@ -1058,14 +1066,13 @@ public class FrameworkElement
             pushedByGamepads = pushedByGamepads || (GamePadsForUiControl[i].ButtonDown(Buttons.A));
         }
 
-        var isTouchScreen = false;
-
+        var isTouchScreen = cursor.LastInputDevice == InputDevice.TouchScreen;
 
         if (IsEnabled == false)
         {
             if (isFocused)
             {
-                return DisabledFocusedState;
+                return DisabledFocusedState;    
             }
             else
             {
@@ -1139,5 +1146,8 @@ public class FrameworkElement
         }
     }
 
-
+    public override string ToString()
+    {
+        return $"{this.Visual?.Name} ({this.GetType().Name})";
+    }
 }
