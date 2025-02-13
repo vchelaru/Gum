@@ -94,12 +94,11 @@ public class GumService
         }
     }
 
-    public void Update(Game game, GameTime gameTime)
-    {
-        GameTime = gameTime;
-        FormsUtilities.Update(game, gameTime, (GraphicalUiElement)null);
-        SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
-    }
+    public void Update(Game game, GameTime gameTime) =>
+        Update(game, gameTime, (GraphicalUiElement)null);
+
+    public void Update(Game game, GameTime gameTime, Forms.Controls.FrameworkElement root) =>
+        Update(game, gameTime, root.Visual);
 
     public void Update(Game game, GameTime gameTime, GraphicalUiElement root)
     {
