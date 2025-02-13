@@ -449,7 +449,11 @@ public class FrameworkElement
         child.Visual.Parent = this.Visual;
     }
 
+#if FRB
     protected bool GetIfIsOnThisOrChildVisual(Cursor cursor)
+#else
+    protected bool GetIfIsOnThisOrChildVisual(ICursor cursor)
+#endif
     {
         var isOnThisOrChild =
             cursor.WindowOver == this.Visual ||
