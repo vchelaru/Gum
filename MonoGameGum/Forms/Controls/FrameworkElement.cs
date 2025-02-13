@@ -437,6 +437,8 @@ public class FrameworkElement
 
     #endregion
 
+    #region Hide/Show/Add/Remove 
+
     public virtual void AddChild(FrameworkElement child)
     {
         if (child.Visual == null)
@@ -451,23 +453,6 @@ public class FrameworkElement
         child.Visual.Parent = this.Visual;
     }
 
-#if FRB
-    protected bool GetIfIsOnThisOrChildVisual(Cursor cursor)
-#else
-    protected bool GetIfIsOnThisOrChildVisual(ICursor cursor)
-#endif
-    {
-        var isOnThisOrChild =
-            cursor.WindowOver == this.Visual ||
-            (cursor.WindowOver != null && cursor.WindowOver.IsInParentChain(this.Visual));
-
-        return isOnThisOrChild;
-    }
-
-    /// <summary>
-    /// Calls the loaded event. This should not be called in custom code, but instead is called by Gum
-    /// </summary>
-    public virtual void CallLoaded() => Loaded?.Invoke(this, null);
 
     public void Close()
     {
@@ -483,6 +468,7 @@ public class FrameworkElement
             CloseInternal();
         }
     }
+
 
     private void CloseInternal()
     {
@@ -595,6 +581,35 @@ public class FrameworkElement
     }
 #endif
 
+    #endregion
+
+    #region Cursor Hit Detection
+
+#if FRB
+    protected bool GetIfIsOnThisOrChildVisual(Cursor cursor)
+#else
+    protected bool GetIfIsOnThisOrChildVisual(ICursor cursor)
+#endif
+    {
+        var isOnThisOrChild =
+            cursor.WindowOver == this.Visual ||
+            (cursor.WindowOver != null && cursor.WindowOver.IsInParentChain(this.Visual));
+
+        return isOnThisOrChild;
+    }
+
+    #endregion
+
+    /// <summary>
+    /// Calls the loaded event. This should not be called in custom code, but instead is called by Gum
+    /// </summary>
+    public virtual void CallLoaded() => Loaded?.Invoke(this, null);
+
+    protected void RaiseKeyDown(KeyEventArgs e)
+    {
+        KeyDown?.Invoke(this, e);
+    }
+
     /// <summary>
     /// Every-frame logic. This will automatically be called if this element is added to the FrameworkElementManager
     /// </summary>
@@ -642,6 +657,8 @@ public class FrameworkElement
 
     }
 
+    #region Binding/ViewModel
+
     private void HandleViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
     {
         var vmPropertyName = e.PropertyName;
@@ -681,6 +698,7 @@ public class FrameworkElement
         }
     }
 
+
     protected virtual void HandleVisualBindingContextChanged(object sender, BindingContextChangedEventArgs args)
     {
         if (args.OldBindingContext is INotifyPropertyChanged oldAsPropertyChanged)
@@ -698,17 +716,6 @@ public class FrameworkElement
         }
     }
 
-#if FRB
-    void HandleEnabledChanged(IWindow window)
-#else
-    void HandleEnabledChanged(object sender, EventArgs args)
-#endif
-    {
-        if (Visual != null)
-        {
-            this.IsEnabled = Visual.IsEnabled;
-        }
-    }
 
     private void UpdateAllUiPropertiesToVm()
     {
@@ -800,6 +807,10 @@ public class FrameworkElement
         }
     }
 
+    #endregion
+
+    #region Tabbing
+
     /// <summary>
     /// Whether to use left and right directions as navigation. If false, left and right directions are ignored for navigation.
     /// </summary>
@@ -874,7 +885,7 @@ public class FrameworkElement
     /// <param name="tabDirection">The direction to tab</param>
     /// <param name="requestingElement">The element which is requesting the tab. This can be a parent of the current element. If null is passed, then this element is 
     /// treated as the origin of the tab action.</param>
-    public void HandleTab(TabDirection tabDirection = TabDirection.Down, FrameworkElement requestingElement = null)
+    public void HandleTab(TabDirection tabDirection = TabDirection.Down, FrameworkElement requestingElement = null, bool loop = false)
     {
         if (requestingElement == null)
         {
@@ -891,11 +902,22 @@ public class FrameworkElement
 
         var parentGue = requestingElement.Visual.Parent as InteractiveGue;
 
-        HandleTab(tabDirection, requestingElement.Visual, parentGue, shouldAskParent: true);
+        HandleTab(tabDirection, requestingElement.Visual, parentGue, shouldAskParent: true, loop:loop);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="tabDirection"></param>
+    /// <param name="requestingVisual">The current element that is either focused, or that has been tested for focus and failed. If this is null
+    /// then the first or last (depending on direction) element is selected.</param>
+    /// <param name="parentVisual"></param>
+    /// <param name="shouldAskParent"></param>
+    /// <param name="loop"></param>
+    /// <returns></returns>
+    // This should stay public so that it can be called with a null requestingVisual to select the first child.
     public static bool HandleTab(TabDirection tabDirection, InteractiveGue requestingVisual,
-        InteractiveGue parentVisual, bool shouldAskParent)
+        InteractiveGue parentVisual, bool shouldAskParent, bool loop)
     {
         void UnFocusRequestingVisual()
         {
@@ -905,14 +927,14 @@ public class FrameworkElement
             }
         }
 
-        IList<GraphicalUiElement> children = parentVisual?.Children.Cast<GraphicalUiElement>().ToList();
-        if (children == null && requestingVisual != null)
+        IList<GraphicalUiElement> requestingVisualSiblings = parentVisual?.Children.Cast<GraphicalUiElement>().ToList();
+        if (requestingVisualSiblings == null && requestingVisual != null)
         {
-            children = requestingVisual.ElementGueContainingThis?.ContainedElements.Where(item => item.Parent == null).ToList();
+            requestingVisualSiblings = requestingVisual.ElementGueContainingThis?.ContainedElements.Where(item => item.Parent == null).ToList();
         }
 
         //// early out/////////////
-        if (children == null)
+        if (requestingVisualSiblings == null)
         {
             return false;
         }
@@ -921,7 +943,7 @@ public class FrameworkElement
 
         if (requestingVisual == null)
         {
-            newIndex = tabDirection == TabDirection.Down ? 0 : children.Count - 1;
+            newIndex = tabDirection == TabDirection.Down ? 0 : requestingVisualSiblings.Count - 1;
         }
         else
         {
@@ -933,12 +955,12 @@ public class FrameworkElement
             }
             else
             {
-                index = children.Count - 1;
+                index = requestingVisualSiblings.Count - 1;
             }
 
-            for (int i = 0; i < children.Count; i++)
+            for (int i = 0; i < requestingVisualSiblings.Count; i++)
             {
-                if (children[i] == requestingVisual)
+                if (requestingVisualSiblings[i] == requestingVisual)
                 {
                     index = i;
                     break;
@@ -961,7 +983,7 @@ public class FrameworkElement
         var didReachEndOfChildren = false;
         while (true)
         {
-            if ((newIndex >= children.Count && tabDirection == TabDirection.Down) ||
+            if ((newIndex >= requestingVisualSiblings.Count && tabDirection == TabDirection.Down) ||
                 (newIndex < 0 && tabDirection == TabDirection.Up))
             {
                 didReachEndOfChildren = true;
@@ -969,13 +991,10 @@ public class FrameworkElement
             }
             else
             {
-                var childAtI = children[newIndex] as InteractiveGue;
+                var childAtI = requestingVisualSiblings[newIndex] as InteractiveGue;
                 var elementAtI = childAtI?.FormsControlAsObject as FrameworkElement;
 
-                if (elementAtI is IInputReceiver && elementAtI.IsVisible == true &&
-                    elementAtI.IsEnabled &&
-                    elementAtI.Visual.HasEvents &&
-                    elementAtI.GamepadTabbingFocusBehavior == TabbingFocusBehavior.FocusableIfInputReceiver)
+                if (CanElementBeFocused(elementAtI))
                 {
                     elementAtI.IsFocused = true;
 
@@ -989,7 +1008,7 @@ public class FrameworkElement
                     if (childAtI?.Visible == true && childAtI.IsEnabled && (elementAtI == null || elementAtI.IsEnabled))
                     {
                         // let this try to handle it:
-                        didChildHandle = HandleTab(tabDirection, null, childAtI, shouldAskParent: false);
+                        didChildHandle = HandleTab(tabDirection, null, childAtI, shouldAskParent: false, loop:loop);
 
                         if (didChildHandle)
                         {
@@ -1032,11 +1051,16 @@ public class FrameworkElement
                     {
                         if (parentVisual?.Parent != null)
                         {
-                            didFocusNewItem = HandleTab(tabDirection, parentVisual, parentVisual.Parent as InteractiveGue, shouldAskParent: true);
+                            didFocusNewItem = HandleTab(tabDirection, parentVisual, parentVisual.Parent as InteractiveGue, shouldAskParent: true, loop:loop);
                         }
                         else
                         {
-                            didFocusNewItem = HandleTab(tabDirection, parentVisual, null, shouldAskParent: true);
+                            didFocusNewItem = HandleTab(tabDirection, parentVisual, null, shouldAskParent: true, loop: loop);
+
+                            if(didFocusNewItem == false && didReachEndOfChildren && loop)
+                            {
+                                didFocusNewItem = HandleTab(tabDirection, null, requestingVisual, shouldAskParent: true, loop: false);
+                            }
                         }
                     }
                 }
@@ -1050,16 +1074,25 @@ public class FrameworkElement
         return didChildHandle;
     }
 
+    static bool CanElementBeFocused(FrameworkElement element)
+    {
+        return element is IInputReceiver &&
+                    element.IsVisible == true &&
+                    element.IsEnabled &&
+                    element.Visual.HasEvents &&
+                    element.GamepadTabbingFocusBehavior == TabbingFocusBehavior.FocusableIfInputReceiver;
+    }
+
+    #endregion
+
+    #region Updating State (visual appearance)
+
     /// <summary>
     /// Gets the state according to the element's current properties (such as whether it is enabled) and applies it
     /// to refresh the Visual's appearance.
     /// </summary>
     public virtual void UpdateState() { }
 
-    protected void RaiseKeyDown(KeyEventArgs e)
-    {
-        KeyDown?.Invoke(this, e);
-    }
 
     public const string DisabledState = "Disabled";
     public const string DisabledFocusedState = "DisabledFocused";
@@ -1168,6 +1201,21 @@ public class FrameworkElement
             return baseState + "Indeterminate";
         }
     }
+
+
+#if FRB
+    void HandleEnabledChanged(IWindow window)
+#else
+    void HandleEnabledChanged(object sender, EventArgs args)
+#endif
+    {
+        if (Visual != null)
+        {
+            this.IsEnabled = Visual.IsEnabled;
+        }
+    }
+
+    #endregion
 
     public override string ToString()
     {

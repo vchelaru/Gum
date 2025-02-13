@@ -33,10 +33,10 @@ namespace GameUiSamples.Components
             switch(e.Key)
             {
                 case Microsoft.Xna.Framework.Input.Keys.Up:
-                    FormsControl.HandleTab(TabDirection.Up);
+                    FormsControl.HandleTab(TabDirection.Up, loop:true);
                     break;
                 case Microsoft.Xna.Framework.Input.Keys.Down:
-                    FormsControl.HandleTab(TabDirection.Down);
+                    FormsControl.HandleTab(TabDirection.Down, loop:true);
                     break;
                 case Microsoft.Xna.Framework.Input.Keys.Enter:
                     FormsControl.PerformClick(FormsUtilities.Keyboard);
