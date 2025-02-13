@@ -16,6 +16,7 @@ using System.Threading;
 
 
 #if FRB
+using static FlatRedBall.Input.Xbox360GamePad;
 using FlatRedBall.Forms.GumExtensions;
 using FlatRedBall.Forms.Input;
 using FlatRedBall.Gui;
@@ -804,7 +805,11 @@ public class FrameworkElement
     /// </summary>
     public bool IsUsingLeftAndRightGamepadDirectionsForNavigation { get; set; } = true;
 
+#if FRB
+    protected void HandleGamepadNavigation(Xbox360GamePad gamepad)
+#else
     protected void HandleGamepadNavigation(Input.GamePad gamepad)
+#endif
     {
         if (gamepad.ButtonRepeatRate(Buttons.DPadDown) ||
             (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.ButtonRepeatRate(Buttons.DPadRight)) ||
