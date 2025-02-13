@@ -509,7 +509,11 @@ public class FrameworkElement
     /// to a Gum screen in Gum will automatically be displayed when the Screen is created, and calling
     /// this will result in the object being added twice.</remarks>
     /// <param name="layer">The layer to add this to, can be null to add it directly to managers</param>
+#if FRB
+    public void Show(FlatRedBall.Graphics.Layer layer = null)
+#else
     public void Show(Layer layer = null)
+#endif
     {
 #if DEBUG
         if (Visual == null)
@@ -543,7 +547,12 @@ public class FrameworkElement
         else
 #endif
         {
-            Visual.AddToManagers(RenderingLibrary.SystemManagers.Default, layer);
+            Visual.AddToManagers(RenderingLibrary.SystemManagers.Default,
+#if FRB
+                gumLayer);
+#else
+                layer);
+#endif
         }
     }
 
