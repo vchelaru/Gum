@@ -22,6 +22,7 @@ using FlatRedBall.Gui;
 using FlatRedBall.Input;
 using FlatRedBall.Instructions;
 using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
+using BindableGue = global::Gum.Wireframe.GraphicalUiElement;
 using Buttons = FlatRedBall.Input.Xbox360GamePad.Button;
 namespace FlatRedBall.Forms.Controls;
 #else
