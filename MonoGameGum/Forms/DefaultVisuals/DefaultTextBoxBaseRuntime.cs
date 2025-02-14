@@ -20,6 +20,8 @@ namespace MonoGameGum.Forms.DefaultVisuals
         {
             if (fullInstantiation)
             {
+                this.Width = 100;
+                this.Height = 24;
                 this.ClipsChildren = true;
 
                 var Background = new ColoredRectangleRuntime();
