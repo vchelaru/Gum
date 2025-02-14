@@ -1,0 +1,102 @@
+# Forms Controls
+
+## Introduction
+
+Forms controls are a collection of classes which provide common UI behavior. You will probably be familiar with many controls. The most common controls include:
+
+* Button&#x20;
+* CheckBox
+* ComboBox
+* Image
+* Label
+* ListBox
+* RadioButton
+* ScrollViewer
+* Slider
+* TextBox
+
+All controls are in the `MonoGameGum.Forms.Controls` namespace.
+
+## Common Control Properties
+
+All controls share a few common properties and characteristics. If you are familiar with these concepts then the following list may quickly get you familiar with forms controls. If the following list doesn't make sense don't worry, we'll cover each topic in this and following tutorials.
+
+* All can controls can be added to a StackPanel. Technically, any control can be added to any other control, but for this tutorial we'll keep things simple by adding only to a StackPanel.
+* All controls have a Visual property which can be used to position, size, and perform advance layout behavior. This Visual property is ultimately a GraphicalUiElement which provides access to all Gum layout properties.
+* All controls can receive input from the mouse (usually through the Gum Cursor object). Most controls can also receive focus and input from gamepads.
+* All controls support binding by assigning their BindingContext property. Children controls inherit BindingContext from their parents if the BindingContext is not explicitly assigned.
+
+For the rest of this tutorial we'll add a few of the most common controls to our project and show how to work with them. Note that for this tutorial I've removed the Button control from the previous tutorial.
+
+## Code Organization
+
+For the sake of brevity, we will add all of our controls to the Root object, and all code will be added to the game's Initialize method after the Root has been created. Of course a full game may require more advanced organization but we'll keep everything in the Game Initialize for simplicity.
+
+## Label
+
+Labels are text objects which can display a string. Labels do not have any direct interaction such as responding to clicks. The following code adds a label to the project:
+
+```csharp
+var label = new Label();
+Root.AddChild(label);
+label.Text = $"I was created at {System.DateTime.Now}";
+```
+
+<figure><img src="../../../../.gitbook/assets/13_08 21 48.png" alt=""><figcaption><p>Label displaying when it was created</p></figcaption></figure>
+
+The rest of this tutorial assumes that the Label is not removed. It is used to show when events have occurred.
+
+## Button
+
+Button controls are usually added when a user needs to perform a command. Buttons can be clicked with the mouse and gamepad, and their click event can be manually invoked for custom support such as pressing Enter on the keyboard.
+
+The following code creates two buttons. One is disabled so it does not respond to click events:
+
+```csharp
+var button = new Button();
+Root.AddChild(button);
+button.Text = "Click Me";
+button.Click += (_, _) => 
+    label.Text = $"Button clicked @ {System.DateTime.Now}";
+
+var disabledButton = new Button();
+Root.AddChild(disabledButton);
+disabledButton.Text = "Disabled Button";
+disabledButton.IsEnabled = false;
+disabledButton.Click += (_, _) =>
+    label.Text = "This never happens";
+```
+
+<figure><img src="../../../../.gitbook/assets/13_08 38 27.gif" alt=""><figcaption><p>Buttons only respond to Click if IsEnabled is set to true (default)</p></figcaption></figure>
+
+{% hint style="info" %}
+Notice that the Label and two Buttons are stacked top-to-bottom. This is the default behavior layout behavior of StackPanels.
+
+As mentioned earlier, layout-related properties can be accessed through a control's Visual property.
+
+These tutorials focus on the Forms controls themselves but for more information you can look at the different properties available in the [General Properties](../../../../gum-tool/gum-elements/general-properties/) pages.
+{% endhint %}
+
+## CheckBox
+
+CheckBox controls allow the user to toggle a bool value by clicking on it. Just like Button, the CheckBoxes support clicking with mouse and gamepad and changing the IsChecked property in code.
+
+The following code creates two CheckBoxes:
+
+```csharp
+var checkBox = new CheckBox();
+Root.AddChild(checkBox);
+checkBox.Text = "Click Me";
+checkBox.Checked += (_, _) => label.Text = "CheckBox checked";
+checkBox.Unchecked += (_, _) => label.Text = "CheckBox unchecked";
+```
+
+<figure><img src="../../../../.gitbook/assets/13_08 46 53.gif" alt=""><figcaption><p>checkBox responds to clicks</p></figcaption></figure>
+
+## TextBox
+
+TextBox controls allow the user to see and edit string values. TextBoxes support typing with the keyboard, copy/paste, selection, and multiple lines of text.
+
+TextBoxes are automatically focused when clicked, but IsFocused can be explicitly set to give focus.
+
+UNDER CONSTRUCTION.....

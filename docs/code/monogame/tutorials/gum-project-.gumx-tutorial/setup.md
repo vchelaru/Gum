@@ -17,7 +17,7 @@ This tutorial presents the minimum amount of code necessary to work with Gum. Yo
 
 Before writing any code, we must add the Gum nuget package. Add the `Gum.MonoGame` package to your game. For more information see the [Setup page](../../setup/).
 
-Once you are finished, your game project should reference the `Gum.MonoGam` project.
+Once you are finished, your game project should reference the `Gum.MonoGame` project.
 
 <figure><img src="../../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Gum.MonoGame NuGet package</p></figcaption></figure>
 
@@ -72,19 +72,16 @@ Now that we have our Gum project created, we can load it in our game.
 First, we'll set up our project so all Gum files are copied when the project is built. To do this:
 
 1. Right-click on any Gum file in your project, such as GumProject.gumx
-2.  Select the Properties item\
-
+2.  Select the Properties item\\
 
     <figure><img src="../../../../.gitbook/assets/image (11).png" alt=""><figcaption><p>Properties right click option</p></figcaption></figure>
 3.  Set the file to Copy if Newer. If using Android, see instructions below.
 
     <figure><img src="../../../../.gitbook/assets/image (12).png" alt=""><figcaption><p>Mark the Gum file as Copy if newer</p></figcaption></figure>
-4.  Double click your game's csproj file to open it in the text editor and find the entry for the file that you marked as Copy if newer.\
-
+4.  Double click your game's csproj file to open it in the text editor and find the entry for the file that you marked as Copy if newer.\\
 
     <figure><img src="../../../../.gitbook/assets/image (13).png" alt=""><figcaption><p>Entry for GumProject.gumx in the csproj file.</p></figcaption></figure>
-5.  Modify the code to use a wildcard for all files in the Gum project. In other words, change `Content\GumProject\GumProject.gumx` to `Content\GumProject\**\*.*`\
-
+5.  Modify the code to use a wildcard for all files in the Gum project. In other words, change `Content\GumProject\GumProject.gumx` to `Content\GumProject\**\*.*`\\
 
     <figure><img src="../../../../.gitbook/assets/image (14).png" alt=""><figcaption><p>Wildcard entry for all files in the GumProject folder</p></figcaption></figure>
 
