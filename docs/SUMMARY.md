@@ -113,6 +113,7 @@
   * [Inheritance Location](gum-tool/code-tab/inheritance-location.md)
   * [Is CodeGen Plugin Enabled](gum-tool/code-tab/is-codegen-plugin-enabled.md)
   * [Show CodeGen Preview](gum-tool/code-tab/show-codegen-preview.md)
+* [Localization](gum-tool/localization.md)
 * [Menu](gum-tool/menu/README.md)
   * [Content](gum-tool/menu/content.md)
   * [Project Properties](gum-tool/menu/project-properties.md)
