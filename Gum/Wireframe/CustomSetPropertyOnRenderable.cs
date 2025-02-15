@@ -20,1537 +20,1545 @@ using System.Threading.Tasks;
 using ToolsUtilitiesStandard.Helpers;
 using System.Net;
 using System.IO;
+using MonoGameGum.Localization;
 
 
 
 #if GUM
 using Gum.ToolStates;
 #endif
-namespace Gum.Wireframe
+namespace Gum.Wireframe;
+
+public class CustomSetPropertyOnRenderable
 {
-    public class CustomSetPropertyOnRenderable
+    public static ILocalizationService LocalizationService { get; set; }
+    public static void SetPropertyOnRenderable(IRenderableIpso renderableIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
-        public static void SetPropertyOnRenderable(IRenderableIpso renderableIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+        bool handled = false;
+
+        // First try special-casing.  
+
+        if (renderableIpso is Text)
         {
-            bool handled = false;
-
-            // First try special-casing.  
-
-            if (renderableIpso is Text)
-            {
-                handled = TrySetPropertyOnText(renderableIpso, graphicalUiElement, propertyName, value);
-            }
+            handled = TrySetPropertyOnText(renderableIpso, graphicalUiElement, propertyName, value);
+        }
 #if MONOGAME || KNI || XNA4 || FNA
-            else if (renderableIpso is LineCircle)
-            {
-                handled = TrySetPropertyOnLineCircle(renderableIpso, graphicalUiElement, propertyName, value);
-            }
-            else if (renderableIpso is LineRectangle)
-            {
-                handled = TrySetPropertyOnLineRectangle(renderableIpso, graphicalUiElement, propertyName, value);
-            }
-            else if (renderableIpso is LinePolygon)
-            {
-                handled = TrySetPropertyOnLinePolygon(renderableIpso, propertyName, value);
-            }
-            else if (renderableIpso is SolidRectangle)
-            {
-                var solidRect = renderableIpso as SolidRectangle;
-
-                if (propertyName == "Blend")
-                {
-                    var valueAsGumBlend = (RenderingLibrary.Blend)value;
-
-                    var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
-
-                    solidRect.BlendState = valueAsXnaBlend;
-
-                    handled = true;
-                }
-                else if (propertyName == "Alpha")
-                {
-                    int valueAsInt = (int)value;
-                    solidRect.Alpha = valueAsInt;
-                    handled = true;
-                }
-                else if (propertyName == "Red")
-                {
-                    int valueAsInt = (int)value;
-                    solidRect.Red = valueAsInt;
-                    handled = true;
-                }
-                else if (propertyName == "Green")
-                {
-                    int valueAsInt = (int)value;
-                    solidRect.Green = valueAsInt;
-                    handled = true;
-                }
-                else if (propertyName == "Blue")
-                {
-                    int valueAsInt = (int)value;
-                    solidRect.Blue = valueAsInt;
-                    handled = true;
-                }
-                else if (propertyName == "Color")
-                {
-                    //var valueAsColor = (Color)value;
-                    if (value is System.Drawing.Color drawingColor)
-                    {
-                        solidRect.Color = drawingColor;
-                    }
-                    else if (value is Microsoft.Xna.Framework.Color xnaColor)
-                    {
-                        solidRect.Color = xnaColor.ToSystemDrawing();
-
-                    }
-
-                    handled = true;
-                }
-
-            }
-            else if (renderableIpso is Sprite)
-            {
-                handled = TrySetPropertyOnSprite(renderableIpso, graphicalUiElement, propertyName, value);
-            }
-            else if (renderableIpso is NineSlice)
-            {
-                handled = TrySetPropertyOnNineSlice(renderableIpso, propertyName, value, handled);
-            }
-            else if (renderableIpso is InvisibleRenderable)
-            {
-                handled = TrySetPropertyOnInvisbileRenderable(renderableIpso, propertyName, value, handled);
-            }
-#endif
-
-            // If special case didn't work, let's try reflection
-            if (!handled)
-            {
-                if (propertyName == "Parent")
-                {
-                    // do something
-                }
-                else
-                {
-                    System.Reflection.PropertyInfo propertyInfo = renderableIpso.GetType().GetProperty(propertyName);
-
-                    if (propertyInfo != null && propertyInfo.CanWrite)
-                    {
-
-                        if (value.GetType() != propertyInfo.PropertyType)
-                        {
-                            value = System.Convert.ChangeType(value, propertyInfo.PropertyType);
-                        }
-                        propertyInfo.SetValue(renderableIpso, value, null);
-                    }
-                }
-            }
-        }
-
-        private static bool TrySetPropertyOnInvisbileRenderable(IRenderableIpso renderableIpso, string propertyName, object value, bool handled)
+        else if (renderableIpso is LineCircle)
         {
-            bool didSet = false;
-            switch (propertyName)
-            {
-                case "IsRenderTarget":
-                    (renderableIpso as InvisibleRenderable).IsRenderTarget = value as bool? ?? false;
-                    didSet = true;
-                    break;
-                case "Alpha":
-                    if(value is int asInt)
-                    {
-                        (renderableIpso as InvisibleRenderable).Alpha = asInt;
-                    }
-                    else
-                    {
-                        (renderableIpso as InvisibleRenderable).Alpha = value as float? ?? 255;
-                    }
-                    didSet = true;
-                    break;
-            }
-
-            return didSet;
+            handled = TrySetPropertyOnLineCircle(renderableIpso, graphicalUiElement, propertyName, value);
         }
-
-        private static bool TrySetPropertyOnNineSlice(IRenderableIpso renderableIpso, string propertyName, object value, bool handled)
+        else if (renderableIpso is LineRectangle)
         {
-            var nineSlice = renderableIpso as NineSlice;
+            handled = TrySetPropertyOnLineRectangle(renderableIpso, graphicalUiElement, propertyName, value);
+        }
+        else if (renderableIpso is LinePolygon)
+        {
+            handled = TrySetPropertyOnLinePolygon(renderableIpso, propertyName, value);
+        }
+        else if (renderableIpso is SolidRectangle)
+        {
+            var solidRect = renderableIpso as SolidRectangle;
 
-            if (propertyName == "SourceFile")
-            {
-                string valueAsString = value as string;
-
-                if (string.IsNullOrEmpty(valueAsString))
-                {
-                    nineSlice.SetSingleTexture(null);
-                }
-                else
-                {
-                    if (ToolsUtilities.FileManager.IsRelative(valueAsString))
-                    {
-                        valueAsString = ToolsUtilities.FileManager.RelativeDirectory + valueAsString;
-                        valueAsString = ToolsUtilities.FileManager.RemoveDotDotSlash(valueAsString);
-                    }
-
-                    //check if part of atlas
-                    //Note: assumes that if this filename is in an atlas that all 9 are in an atlas
-                    var atlasedTexture = global::RenderingLibrary.Content.LoaderManager.Self.TryLoadContent<AtlasedTexture>(valueAsString);
-                    if (atlasedTexture != null)
-                    {
-                        nineSlice.LoadAtlasedTexture(valueAsString, atlasedTexture);
-                    }
-                    else
-                    {
-                        if (NineSliceExtensions.GetIfShouldUsePattern(valueAsString))
-                        {
-                            nineSlice.SetTexturesUsingPattern(valueAsString, SystemManagers.Default, false);
-                        }
-                        else
-                        {
-                            var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-
-                            Microsoft.Xna.Framework.Graphics.Texture2D texture =
-                                Sprite.InvalidTexture;
-
-                            try
-                            {
-                                texture =
-                                    loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(valueAsString);
-                            }
-                            catch (Exception e)
-                            {
-                                if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
-                                {
-                                    string message = $"Error setting SourceFile on NineSlice named {nineSlice.Name}:\n{valueAsString}";
-                                    throw new System.IO.FileNotFoundException(message);
-                                }
-                                // do nothing?
-                            }
-                            nineSlice.SetSingleTexture(texture);
-
-                        }
-                    }
-                }
-                handled = true;
-            }
-            else if (propertyName == "Blend")
+            if (propertyName == "Blend")
             {
                 var valueAsGumBlend = (RenderingLibrary.Blend)value;
 
                 var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
 
-                nineSlice.BlendState = valueAsXnaBlend;
+                solidRect.BlendState = valueAsXnaBlend;
 
                 handled = true;
-            }
-            else if (propertyName == nameof(NineSlice.CustomFrameTextureCoordinateWidth))
-            {
-                var asFloat = value as float?;
-
-                nineSlice.CustomFrameTextureCoordinateWidth = asFloat;
-
-                handled = true;
-            }
-            else if (propertyName == "Color")
-            {
-                if (value is System.Drawing.Color drawingColor)
-                {
-                    nineSlice.Color = drawingColor;
-                }
-                else if (value is Microsoft.Xna.Framework.Color xnaColor)
-                {
-                    nineSlice.Color = xnaColor.ToSystemDrawing();
-
-                }
-                handled = true;
-            }
-
-            return handled;
-        }
-
-        private static bool TrySetPropertyOnSprite(IRenderableIpso renderableIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
-        {
-            bool handled = false;
-            var sprite = renderableIpso as Sprite;
-
-            if (propertyName == "SourceFile")
-            {
-                var asString = value as String;
-                handled = AssignSourceFileOnSprite(sprite, graphicalUiElement, asString);
-
-            }
-            else if (propertyName == nameof(Sprite.Alpha))
-            {
-                int valueAsInt = (int)value;
-                sprite.Alpha = valueAsInt;
-                handled = true;
-            }
-            else if (propertyName == nameof(Sprite.Red))
-            {
-                int valueAsInt = (int)value;
-                sprite.Red = valueAsInt;
-                handled = true;
-            }
-            else if (propertyName == nameof(Sprite.Green))
-            {
-                int valueAsInt = (int)value;
-                sprite.Green = valueAsInt;
-                handled = true;
-            }
-            else if (propertyName == nameof(Sprite.Blue))
-            {
-                int valueAsInt = (int)value;
-                sprite.Blue = valueAsInt;
-                handled = true;
-            }
-            else if (propertyName == nameof(Sprite.Color))
-            {
-                if (value is System.Drawing.Color drawingColor)
-                {
-                    sprite.Color = drawingColor;
-                }
-                else if (value is Microsoft.Xna.Framework.Color xnaColor)
-                {
-                    sprite.Color = xnaColor.ToSystemDrawing();
-
-                }
-                handled = true;
-            }
-
-            else if (propertyName == "Blend")
-            {
-                var valueAsGumBlend = (RenderingLibrary.Blend)value;
-
-                var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
-
-                sprite.BlendState = valueAsXnaBlend;
-
-                handled = true;
-            }
-            else if (propertyName == nameof(Sprite.Animate))
-            {
-                sprite.Animate = (bool)value;
-                handled = true;
-            }
-            else if (propertyName == nameof(Sprite.CurrentChainName))
-            {
-                sprite.CurrentChainName = (string)value;
-                graphicalUiElement.UpdateTextureValuesFrom(sprite);
-                graphicalUiElement.UpdateLayout();
-                handled = true;
-            }
-            if (!handled)
-            {
-                int m = 3;
-            }
-
-            return handled;
-        }
-
-        #region Text
-
-        public static bool TrySetPropertyOnText(IRenderableIpso mContainedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
-        {
-            bool handled = false;
-
-            void ReactToFontValueChange()
-            {
-                UpdateToFontValues(mContainedObjectAsIpso as IText, graphicalUiElement);
-
-                handled = true;
-            }
-
-            if (propertyName == "Text")
-            {
-                var asText = ((Text)mContainedObjectAsIpso);
-                if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren ||
-                    // If height is relative to children, it could be in a stack
-                    graphicalUiElement.HeightUnits == DimensionUnitType.RelativeToChildren)
-                {
-                    // make it have no line wrap width before assignign the text:
-                    asText.Width = null;
-                }
-
-                var valueAsString = value as string;
-
-
-                asText.InlineVariables.Clear();
-                if (valueAsString?.Contains("[") == true)
-                {
-                    asText.StoredMarkupText = valueAsString;
-                    SetBbCodeText(asText, graphicalUiElement, asText.StoredMarkupText);
-                }
-                else
-                {
-                    asText.StoredMarkupText = null;
-                    asText.RawText = valueAsString;
-                }
-                // we want to update if the text's size is based on its "children" (the letters it contains)
-                if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren ||
-                    // If height is relative to children, it could be in a stack
-                    graphicalUiElement.HeightUnits == DimensionUnitType.RelativeToChildren)
-                {
-                    graphicalUiElement.UpdateLayout();
-                }
-                handled = true;
-            }
-            else if (propertyName == "Font Scale" || propertyName == "FontScale")
-            {
-                ((Text)mContainedObjectAsIpso).FontScale = (float)value;
-                // we want to update if the text's size is based on its "children" (the letters it contains)
-                if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren ||
-                    // If height is relative to children, it could be in a stack
-                    graphicalUiElement.HeightUnits == DimensionUnitType.RelativeToChildren)
-                {
-                    graphicalUiElement.UpdateLayout();
-                }
-                handled = true;
-
-            }
-            else if (propertyName == "Font")
-            {
-                graphicalUiElement.Font = value as string;
-
-                ReactToFontValueChange();
-            }
-#if MONOGAME || KNI || XNA4 || FNA
-            else if (propertyName == nameof(graphicalUiElement.UseCustomFont))
-            {
-                graphicalUiElement.UseCustomFont = (bool)value;
-                var asText = ((Text)mContainedObjectAsIpso);
-
-                if (!string.IsNullOrEmpty(asText.StoredMarkupText))
-                {
-                    SetBbCodeText(asText, graphicalUiElement, asText.StoredMarkupText);
-                }
-                ReactToFontValueChange();
-            }
-
-            else if (propertyName == nameof(graphicalUiElement.CustomFontFile))
-            {
-                graphicalUiElement.CustomFontFile = (string)value;
-                ReactToFontValueChange();
-
-            }
-#if USE_GUMCOMMON
-            else if(propertyName == nameof(MonoGameGum.GueDeriving.TextRuntime.BitmapFont) && graphicalUiElement is MonoGameGum.GueDeriving.TextRuntime textRuntime)
-            {
-                textRuntime.BitmapFont = (BitmapFont)value;
-                handled = true;
-            }
-#endif
-#endif
-            else if (propertyName == nameof(graphicalUiElement.FontSize))
-            {
-                graphicalUiElement.FontSize = (int)value;
-                ReactToFontValueChange();
-            }
-            else if (propertyName == nameof(graphicalUiElement.OutlineThickness))
-            {
-                graphicalUiElement.OutlineThickness = (int)value;
-                ReactToFontValueChange();
-            }
-            else if (propertyName == nameof(graphicalUiElement.IsItalic))
-            {
-                graphicalUiElement.IsItalic = (bool)value;
-                ReactToFontValueChange();
-            }
-            else if (propertyName == nameof(graphicalUiElement.IsBold))
-            {
-                graphicalUiElement.IsBold = (bool)value;
-                ReactToFontValueChange();
-            }
-            else if (propertyName == "LineHeightMultiplier")
-            {
-                var asText = ((Text)mContainedObjectAsIpso);
-                asText.LineHeightMultiplier = (float)value;
-            }
-            else if (propertyName == nameof(graphicalUiElement.UseFontSmoothing))
-            {
-                graphicalUiElement.UseFontSmoothing = (bool)value;
-                ReactToFontValueChange();
-            }
-            else if (propertyName == nameof(Blend))
-            {
-#if MONOGAME || KNI || XNA4 || FNA
-                var valueAsGumBlend = (RenderingLibrary.Blend)value;
-
-                var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
-
-                var text = mContainedObjectAsIpso as Text;
-                text.BlendState = valueAsXnaBlend;
-                handled = true;
-#endif
             }
             else if (propertyName == "Alpha")
             {
-#if MONOGAME || KNI || XNA4 || FNA
                 int valueAsInt = (int)value;
-                ((Text)mContainedObjectAsIpso).Alpha = valueAsInt;
+                solidRect.Alpha = valueAsInt;
                 handled = true;
-#endif
             }
             else if (propertyName == "Red")
             {
                 int valueAsInt = (int)value;
-                ((Text)mContainedObjectAsIpso).Red = valueAsInt;
+                solidRect.Red = valueAsInt;
                 handled = true;
             }
             else if (propertyName == "Green")
             {
                 int valueAsInt = (int)value;
-                ((Text)mContainedObjectAsIpso).Green = valueAsInt;
+                solidRect.Green = valueAsInt;
                 handled = true;
             }
             else if (propertyName == "Blue")
             {
                 int valueAsInt = (int)value;
-                ((Text)mContainedObjectAsIpso).Blue = valueAsInt;
+                solidRect.Blue = valueAsInt;
                 handled = true;
             }
             else if (propertyName == "Color")
             {
-#if MONOGAME || KNI || XNA4 || FNA
                 //var valueAsColor = (Color)value;
-                //((Text)mContainedObjectAsIpso).Color = valueAsColor;
-                //handled = true;
                 if (value is System.Drawing.Color drawingColor)
                 {
-                    ((Text)mContainedObjectAsIpso).Color = drawingColor;
-                    handled = true;
+                    solidRect.Color = drawingColor;
                 }
                 else if (value is Microsoft.Xna.Framework.Color xnaColor)
                 {
-                    ((Text)mContainedObjectAsIpso).Color = xnaColor.ToSystemDrawing();
-                    handled = true;
+                    solidRect.Color = xnaColor.ToSystemDrawing();
+
                 }
+
+                handled = true;
+            }
+
+        }
+        else if (renderableIpso is Sprite)
+        {
+            handled = TrySetPropertyOnSprite(renderableIpso, graphicalUiElement, propertyName, value);
+        }
+        else if (renderableIpso is NineSlice)
+        {
+            handled = TrySetPropertyOnNineSlice(renderableIpso, propertyName, value, handled);
+        }
+        else if (renderableIpso is InvisibleRenderable)
+        {
+            handled = TrySetPropertyOnInvisbileRenderable(renderableIpso, propertyName, value, handled);
+        }
 #endif
-            }
 
-            else if (propertyName == "HorizontalAlignment")
+        // If special case didn't work, let's try reflection
+        if (!handled)
+        {
+            if (propertyName == "Parent")
             {
-                ((Text)mContainedObjectAsIpso).HorizontalAlignment = (HorizontalAlignment)value;
-                handled = true;
+                // do something
             }
-            else if (propertyName == "VerticalAlignment")
+            else
             {
-                ((Text)mContainedObjectAsIpso).VerticalAlignment = (VerticalAlignment)value;
-                handled = true;
-            }
-            else if (propertyName == "MaxLettersToShow")
-            {
-#if MONOGAME || KNI || XNA4 || FNA
-                ((Text)mContainedObjectAsIpso).MaxLettersToShow = (int?)value;
-                handled = true;
-#endif
-            }
+                System.Reflection.PropertyInfo propertyInfo = renderableIpso.GetType().GetProperty(propertyName);
 
-            else if (propertyName == nameof(TextOverflowHorizontalMode))
-            {
-                var textOverflowMode = (TextOverflowHorizontalMode)value;
-
-                if (textOverflowMode == TextOverflowHorizontalMode.EllipsisLetter)
+                if (propertyInfo != null && propertyInfo.CanWrite)
                 {
-                    ((Text)mContainedObjectAsIpso).IsTruncatingWithEllipsisOnLastLine = true;
+
+                    if (value.GetType() != propertyInfo.PropertyType)
+                    {
+                        value = System.Convert.ChangeType(value, propertyInfo.PropertyType);
+                    }
+                    propertyInfo.SetValue(renderableIpso, value, null);
+                }
+            }
+        }
+    }
+
+    private static bool TrySetPropertyOnInvisbileRenderable(IRenderableIpso renderableIpso, string propertyName, object value, bool handled)
+    {
+        bool didSet = false;
+        switch (propertyName)
+        {
+            case "IsRenderTarget":
+                (renderableIpso as InvisibleRenderable).IsRenderTarget = value as bool? ?? false;
+                didSet = true;
+                break;
+            case "Alpha":
+                if(value is int asInt)
+                {
+                    (renderableIpso as InvisibleRenderable).Alpha = asInt;
                 }
                 else
                 {
-                    ((Text)mContainedObjectAsIpso).IsTruncatingWithEllipsisOnLastLine = false;
+                    (renderableIpso as InvisibleRenderable).Alpha = value as float? ?? 255;
                 }
-            }
-            else if (propertyName == nameof(TextOverflowVerticalMode))
-            {
-                graphicalUiElement.TextOverflowVerticalMode = (TextOverflowVerticalMode)value;
-                graphicalUiElement.RefreshTextOverflowVerticalMode();
-
-            }
-
-            return handled;
+                didSet = true;
+                break;
         }
 
-        // For some reason this crashes on web when uploading to itch:
-        //public static HashSet<string> Tags { get; private set; } = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase)
-        // OrdinalIgnoreCase works fine:
-        public static HashSet<string> Tags { get; private set; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        return didSet;
+    }
+
+    private static bool TrySetPropertyOnNineSlice(IRenderableIpso renderableIpso, string propertyName, object value, bool handled)
+    {
+        var nineSlice = renderableIpso as NineSlice;
+
+        if (propertyName == "SourceFile")
         {
-            "alpha",
-            "red",
-            "blue",
-            "green",
-            "color",
-            "font",
-            "fontsize",
-            "outlinethickness",
-            "isitalic",
-            "isbold",
-            "usefontsmoothing",
-            "fontscale",
-            "lineheightmultiplier"
+            string valueAsString = value as string;
 
-        };
-
-        static Stack<int> fontSizeStack = new Stack<int>();
-        static Stack<string> fontNameStack = new Stack<string>();
-        static Stack<int> outlineThicknessStack = new Stack<int>();
-        static Stack<bool> useFontSmoothingStack = new Stack<bool>();
-        static Stack<bool> isItalicStack = new Stack<bool>();
-        static Stack<bool> isBoldStack = new Stack<bool>();
-        static Stack<bool> useCustomFontStack = new Stack<bool>();
-
-        static List<TagInfo> allTags = new List<TagInfo>();
-
-        private static void SetBbCodeText(global::RenderingLibrary.Graphics.Text asText, GraphicalUiElement graphicalUiElement, string bbcode)
-        {
-            // Text can be rendered on multiple lines. This can happen due to explicit newline characters, or by automatic line wrapping.
-            // When line indexes are counted, newlines are not included. Therefore, we need to remove newlines here so that indexes match up.
-            var bbCodeNoNewlines =
-            // update November 18, 2024
-            // We now do include newline
-            // characters becuase those can
-            // be explicitly added for textboxes
-            // with multiple lines:
-            //bbcode?.Replace("\n", "");
-            bbcode;
-
-            var resultsNoNewlines = BbCodeParser.Parse(bbCodeNoNewlines, Tags);
-            var resultsWithNewlines = BbCodeParser.Parse(bbcode, Tags);
-
-            var strippedText = BbCodeParser.RemoveTags(bbcode, resultsWithNewlines);
-            asText.RawText = strippedText;
-
-            fontNameStack.Clear();
-            if (graphicalUiElement.UseCustomFont)
+            if (string.IsNullOrEmpty(valueAsString))
             {
-                var customFont = graphicalUiElement.CustomFontFile;
-                if (customFont?.EndsWith(".fnt") == true)
-                {
-                    customFont = customFont.Substring(0, customFont.Length - ".fnt".Length);
-                }
-                fontNameStack.Push(customFont);
+                nineSlice.SetSingleTexture(null);
             }
             else
             {
-                fontNameStack.Push(graphicalUiElement.Font);
-            }
-
-            fontSizeStack.Clear();
-            fontSizeStack.Push(graphicalUiElement.FontSize);
-
-            outlineThicknessStack.Clear();
-            outlineThicknessStack.Push(graphicalUiElement.OutlineThickness);
-
-            useFontSmoothingStack.Clear();
-            useFontSmoothingStack.Push(graphicalUiElement.UseFontSmoothing);
-
-            isItalicStack.Clear();
-            isItalicStack.Push(graphicalUiElement.IsItalic);
-
-            isBoldStack.Clear();
-            isBoldStack.Push(graphicalUiElement.IsBold);
-
-            useCustomFontStack.Clear();
-            useCustomFontStack.Push(graphicalUiElement.UseCustomFont);
-
-            var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-            var contentLoader = loaderManager.ContentLoader;
-
-            foreach (var item in resultsNoNewlines)
-            {
-                object castedValue = item.Open.Argument;
-                var shouldApply = false;
-                switch (item.Name)
+                if (ToolsUtilities.FileManager.IsRelative(valueAsString))
                 {
-                    case "Red":
-                    case "Green":
-                    case "Blue":
-                        castedValue = byte.Parse(item.Open.Argument);
-                        shouldApply = true;
-                        break;
-                    case "Color":
-                        {
-                            int result;
-
-                            if (item.Open.Argument?.StartsWith("0x") == true && int.TryParse(item.Open.Argument.Substring(2),
-                                                                                NumberStyles.AllowHexSpecifier,
-                                                                                null,
-                                                                                out result))
-                            {
-                                castedValue = result;
-                                castedValue = System.Drawing.Color.FromArgb(result);
-                            }
-                            else
-                            {
-                                castedValue = System.Drawing.Color.FromName(item.Open.Argument);
-                            }
-                            shouldApply = true;
-                        }
-                        break;
-                    case "FontScale":
-                        {
-                            if (float.TryParse(item.Open.Argument, out float parsed))
-                            {
-                                castedValue = parsed;
-                                shouldApply = true;
-                            }
-                        }
-                        break;
-
-                        // Don't do anything like IsBold or IsItalic here - these are handled in ApplyFontVariables
+                    valueAsString = ToolsUtilities.FileManager.RelativeDirectory + valueAsString;
+                    valueAsString = ToolsUtilities.FileManager.RemoveDotDotSlash(valueAsString);
                 }
 
-                if (shouldApply)
-                {
-                    var inlineVariable = new InlineVariable
-                    {
-                        CharacterCount = item.Close.StartStrippedIndex - item.Open.StartStrippedIndex,
-                        StartIndex = item.Open.StartStrippedIndex,
-                        VariableName = item.Name,
-                        Value = castedValue
-                    };
-
-                    asText.InlineVariables.Add(inlineVariable);
-                }
-            }
-
-            ApplyFontVariables(asText, resultsNoNewlines);
-        }
-
-        private static void ApplyFontVariables(Text asText, List<FoundTag> results)
-        {
-            allTags.Clear();
-            allTags.AddRange(results.Select(item => item.Open));
-            allTags.AddRange(results.Select(item => item.Close));
-            allTags.Sort((a, b) => a.StartIndex - b.StartIndex);
-
-            InlineVariable lastFontInlineVariable = null;
-            foreach (var tag in allTags)
-            {
-
-                BitmapFont castedValue = null;
-                string convertedName = "BitmapFont";
-                var hasArg = !string.IsNullOrEmpty(tag.Argument);
-                switch (tag.Name)
-                {
-                    case "Font":
-                        {
-                            if (hasArg)
-                            {
-                                // tolerate ".fnt" suffix
-                                var argument = tag.Argument;
-                                if (argument?.EndsWith(".fnt") == true)
-                                {
-                                    argument = argument.Substring(0, argument.Length - ".fnt".Length);
-                                }
-                                fontNameStack.Push(argument);
-                                castedValue = GetAndCreateFontIfNecessary();
-                            }
-                            else
-                            {
-                                fontNameStack.Pop();
-                                castedValue = GetAndCreateFontIfNecessary();
-                            }
-                        }
-                        break;
-                    case "FontSize":
-                        {
-                            if (int.TryParse(tag.Argument, out int parsedValue))
-                            {
-                                fontSizeStack.Push(parsedValue);
-                                castedValue = GetAndCreateFontIfNecessary();
-                            }
-                            else
-                            {
-                                fontSizeStack.Pop();
-                                castedValue = GetAndCreateFontIfNecessary();
-                            }
-                        }
-                        break;
-                    case "OutlineThickness":
-                        {
-                            if (int.TryParse(tag.Argument, out int parsedValue))
-                            {
-                                outlineThicknessStack.Push(parsedValue);
-                                castedValue = GetAndCreateFontIfNecessary();
-                            }
-                            else
-                            {
-                                outlineThicknessStack.Pop();
-                                castedValue = GetAndCreateFontIfNecessary();
-                            }
-                        }
-                        break;
-                    case "IsItalic":
-                        {
-                            if (bool.TryParse(tag.Argument, out bool parsedValue))
-                            {
-                                isItalicStack.Push(parsedValue);
-                                castedValue = GetAndCreateFontIfNecessary();
-                            }
-                            else
-                            {
-                                isItalicStack.Pop();
-                                castedValue = GetAndCreateFontIfNecessary();
-                            }
-                        }
-                        break;
-                    case "IsBold":
-                        {
-                            if (bool.TryParse(tag.Argument, out bool parsedValue))
-                            {
-                                isBoldStack.Push(parsedValue);
-                                castedValue = GetAndCreateFontIfNecessary();
-                            }
-                            else
-                            {
-                                isBoldStack.Pop();
-                                castedValue = GetAndCreateFontIfNecessary();
-                            }
-                        }
-                        break;
-                    case "UseCustomFont":
-                        {
-                            if (bool.TryParse(tag.Argument, out bool parsedValue))
-                            {
-                                useCustomFontStack.Push(parsedValue);
-                                castedValue = GetAndCreateFontIfNecessary();
-                            }
-                            else
-                            {
-                                useCustomFontStack.Pop();
-                                castedValue = GetAndCreateFontIfNecessary();
-                            }
-                        }
-                        break;
-
-                }
-
-                if (castedValue != null)
-                {
-                    if (lastFontInlineVariable != null)
-                    {
-                        lastFontInlineVariable.CharacterCount = tag.StartStrippedIndex - lastFontInlineVariable.StartIndex;
-                    }
-
-                    var inlineVariable = new InlineVariable
-                    {
-                        // assigned above:
-                        //CharacterCount = tag.Close.StartStrippedIndex - tag.Open.StartStrippedIndex,
-                        StartIndex = tag.StartStrippedIndex,
-                        VariableName = convertedName,
-                        Value = castedValue
-                    };
-
-                    asText.InlineVariables.Add(inlineVariable);
-
-                    lastFontInlineVariable = inlineVariable;
-                }
-            }
-
-            // close off the last one:
-            if (lastFontInlineVariable != null)
-            {
-                lastFontInlineVariable.CharacterCount = asText.RawText.Length - lastFontInlineVariable.StartIndex;
-            }
-
-
-            BitmapFont GetAndCreateFontIfNecessary()
-            {
-                var fontFileName = GetFontFileName();
-
-                var font = global::RenderingLibrary.Content.LoaderManager.Self.GetDisposable(fontFileName) as BitmapFont;
-
-                // no cache, does it need to be created?
-                if (font == null)
-                {
-                    // this could be a custom font, so let's see if it exists:
-
-                    string fileName = String.Empty;
-                    if (ToolsUtilities.FileManager.FileExists(fontFileName))
-                    {
-                        fileName = fontFileName;
-                    }
-                    else
-                    {
-#if GUM
-                        fileName = Managers.FontManager.Self.AbsoluteFontCacheFolder +
-                            ToolsUtilities.FileManager.RemovePath(fontFileName);
-#endif
-                    }
-
-#if GUM
-
-                    if (!ToolsUtilities.FileManager.FileExists(fileName))
-                    {
-                        // user could have typed anything in there, so who knows if this will succeed. Therefore, try/catch:
-                        try
-                        {
-                            BmfcSave.CreateBitmapFontFilesIfNecessary(
-                                fontSizeStack.Peek(),
-                                fontNameStack.Peek(),
-                                outlineThicknessStack.Peek(),
-                                useFontSmoothingStack.Peek(),
-                                isItalicStack.Peek(),
-                                isBoldStack.Peek(),
-                                GumState.Self.ProjectState.GumProjectSave?.FontRanges
-                                );
-                        }
-                        catch
-                        {
-                            // do nothing?
-                        }
-                    }
-#endif
-
-                    if (ToolsUtilities.FileManager.FileExists(fileName))
-                    {
-                        font = new BitmapFont(fileName, (SystemManagers)null);
-                    }
-                    else
-                    {
-                        // This can happen when closing tags are encountered at the end of a font. If no font exists, we can just go to the default
-                        font = Text.DefaultBitmapFont;
-                    }
-                    global::RenderingLibrary.Content.LoaderManager.Self.AddDisposable(fontFileName, font);
-                }
-
-                return font;
-            }
-
-            string GetFontFileName()
-            {
-                string fontFileNameName;
-                if (useCustomFontStack.Peek())
-                {
-                    fontFileNameName = fontNameStack.Peek() + ".fnt";
-                }
-                else
-                {
-                    fontFileNameName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
-                        fontSizeStack.Peek(),
-                        fontNameStack.Peek(),
-                        outlineThicknessStack.Peek(),
-                        useFontSmoothingStack.Peek(),
-                        isItalicStack.Peek(),
-                        isBoldStack.Peek());
-
-                }
-
-                var fullFileName = ToolsUtilities.FileManager.RemoveDotDotSlash(ToolsUtilities.FileManager.Standardize(fontFileNameName, false, true));
-#if ANDROID || IOS
-                fullFileName = fullFileName.ToLowerInvariant();
-#endif
-                return fullFileName;
-            }
-        }
-
-        public static void UpdateToFontValues(IText text, GraphicalUiElement graphicalUiElement)
-        {
-            // January 28, 2025
-            // If we early-out here,
-            // then the bitmap values
-            // never get assigned. This
-            // means that eventually when
-            // layout is resumed, bitmap values
-            // will get assigned. However, assigning
-            // bitmap values on a Text that has has Width
-            // or Height Units of Relative to Children, the
-            // parent then updates its parents layout. This causes
-            // tons of layout calls when resuming layout on a list box.
-            // Instead, we should assign fonts and mark font as dirty, then
-            // on resume only the parent layout needs to happen.
-            //if (graphicalUiElement.IsLayoutSuspended || GraphicalUiElement.IsAllLayoutSuspended)
-            //{
-            //    graphicalUiElement.IsFontDirty = true;
-            //}
-            // todo: This could make things faster, but it will require
-            // extra calls in generated code, or an "UpdateAll" method
-            //if (!mIsLayoutSuspended && !IsAllLayoutSuspended)
-
-            BitmapFont font = null;
-
-            var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-            var contentLoader = loaderManager.ContentLoader;
-
-            if (graphicalUiElement.UseCustomFont)
-            {
-
-                if (!string.IsNullOrEmpty(graphicalUiElement.CustomFontFile))
-                {
-                    font = loaderManager.GetDisposable(graphicalUiElement.CustomFontFile) as BitmapFont;
-                    if (font == null)
-                    {
-#if KNI
-                            try
-                            {
-                                // this could be running in browser where we don't have File.Exists, so JUST DO IT
-                                font = new BitmapFont(graphicalUiElement.CustomFontFile, SystemManagers.Default);
-                                loaderManager.AddDisposable(graphicalUiElement.CustomFontFile, font);
-                            }
-                            catch
-                            {
-                                // font doesn't exist, carry on...
-                            }
-#else
-                        // so normally we would just let the content loader check if the file exists but since we're not going to
-                        // use the content loader for BitmapFont, we're going to protect this with a file.exists.
-                        if (ToolsUtilities.FileManager.FileExists(graphicalUiElement.CustomFontFile))
-                        {
-                            font = new BitmapFont(graphicalUiElement.CustomFontFile, SystemManagers.Default);
-                            loaderManager.AddDisposable(graphicalUiElement.CustomFontFile, font);
-                        }
-#endif
-                    }
-                    else if (font.Textures.Any(item => item?.IsDisposed == true))
-                    {
-                        // The BitmapFont is cached by Gum, but the underlying Texture2D might be managed by something else (like FRB).
-                        // This means that the Texture can be disposed without the BitmapFont being disposed. If this is the case we should
-                        // ask the underlying system for a new .png, but we can keep the same BitmapFont since that should stay the same and
-                        // .fnt parsing can be the slow part for large fonts.
-                        font.ReAssignTextures();
-                    }
-                }
-
-
-            }
-            else
-            {
-                if (graphicalUiElement.FontSize > 0 && !string.IsNullOrEmpty(graphicalUiElement.Font))
-                {
-
-                    string fontName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
-                        graphicalUiElement.FontSize,
-                        graphicalUiElement.Font,
-                        graphicalUiElement.OutlineThickness,
-                        graphicalUiElement.UseFontSmoothing,
-                        graphicalUiElement.IsItalic,
-                        graphicalUiElement.IsBold);
-
-                    string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, preserveCase: true, makeAbsolute: true);
-
-                    font = loaderManager.GetDisposable(fullFileName) as BitmapFont;
-                    if (font == null || font.Texture?.IsDisposed == true)
-                    {
-#if KNI
-                            try
-                            {
-                                // this could be running in browser where we don't have File.Exists, so JUST DO IT
-                                font = new BitmapFont(fullFileName, SystemManagers.Default);
-
-                                loaderManager.AddDisposable(fullFileName, font);
-                            }
-                            catch
-                            {
-                                // font doesn't exist, carry on...
-                            }
-#else
-                        // so normally we would just let the content loader check if the file exists but since we're not going to
-                        // use the content loader for BitmapFont, we're going to protect this with a file.exists.
-                        if (ToolsUtilities.FileManager.FileExists(fullFileName))
-                        {
-                            font = new BitmapFont(fullFileName, SystemManagers.Default);
-
-
-                            loaderManager.AddDisposable(fullFileName, font);
-                        }
-#endif
-                    }
-
-                    // FRB may dispose fonts, so let's check:
-
-#if DEBUG
-                    if (font?.Textures.Any(item => item?.IsDisposed == true) == true)
-                    {
-                        throw new InvalidOperationException("The returned font has a disposed texture");
-                    }
-#endif
-                }
-            }
-
-            var fontToSet = font ?? Text.DefaultBitmapFont;
-
-            var asRenderableText = (Text)text;
-            if (asRenderableText.BitmapFont != fontToSet)
-            {
-                asRenderableText.BitmapFont = fontToSet;
-
-                // we want to update if the text's size is based on its "children" (the letters it contains)
-                if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren ||
-                    // If height is relative to children, it could be in a stack
-                    graphicalUiElement.HeightUnits == DimensionUnitType.RelativeToChildren)
-                {
-                    graphicalUiElement.UpdateLayout();
-                }
-            }
-        }
-
-        #endregion
-
-        private static bool TrySetPropertyOnLineRectangle(IRenderableIpso mContainedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
-        {
-            bool handled = false;
-
-            if (propertyName == "Alpha")
-            {
-                int valueAsInt = (int)value;
-
-                var color =
-                    ((LineRectangle)mContainedObjectAsIpso).Color;
-                color = color.WithAlpha((byte)valueAsInt);
-
-                ((LineRectangle)mContainedObjectAsIpso).Color = color;
-                handled = true;
-            }
-
-            else if (propertyName == "Red")
-            {
-                int valueAsInt = (int)value;
-
-                var color =
-                    ((LineRectangle)mContainedObjectAsIpso).Color;
-                color = color.WithRed((byte)valueAsInt);
-
-                ((LineRectangle)mContainedObjectAsIpso).Color = color;
-                handled = true;
-            }
-
-            else if (propertyName == "Green")
-            {
-                int valueAsInt = (int)value;
-
-                var color =
-                    ((LineRectangle)mContainedObjectAsIpso).Color;
-                color = color.WithGreen((byte)valueAsInt);
-
-                ((LineRectangle)mContainedObjectAsIpso).Color = color;
-                handled = true;
-            }
-
-            else if (propertyName == "Blue")
-            {
-                int valueAsInt = (int)value;
-
-                var color =
-                    ((LineRectangle)mContainedObjectAsIpso).Color;
-                color = color.WithBlue((byte)valueAsInt);
-
-                ((LineRectangle)mContainedObjectAsIpso).Color = color;
-                handled = true;
-            }
-            else if (propertyName == "Color")
-            {
-                var valueAsColor = (Color)value;
-                ((LineRectangle)mContainedObjectAsIpso).Color = valueAsColor;
-                handled = true;
-            }
-            else if(propertyName == "IsRenderTarget")
-            {
-                ((LineRectangle)mContainedObjectAsIpso).IsRenderTarget = value as bool? ?? false;
-                handled = true;
-            }
-
-            return handled;
-        }
-
-        private static bool TrySetPropertyOnLineCircle(IRenderableIpso mContainedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
-        {
-            bool handled = false;
-
-            if (propertyName == "Alpha")
-            {
-                int valueAsInt = (int)value;
-
-                var color =
-                    ((LineCircle)mContainedObjectAsIpso).Color;
-                color = color.WithAlpha((byte)valueAsInt);
-
-                ((LineCircle)mContainedObjectAsIpso).Color = color;
-                handled = true;
-            }
-
-            else if (propertyName == "Red")
-            {
-                int valueAsInt = (int)value;
-
-                var color =
-                    ((LineCircle)mContainedObjectAsIpso).Color;
-                color = color.WithRed((byte)valueAsInt);
-
-                ((LineCircle)mContainedObjectAsIpso).Color = color;
-                handled = true;
-            }
-
-            else if (propertyName == "Green")
-            {
-                int valueAsInt = (int)value;
-
-                var color =
-                    ((LineCircle)mContainedObjectAsIpso).Color;
-                color = color.WithGreen((byte)valueAsInt);
-
-                ((LineCircle)mContainedObjectAsIpso).Color = color;
-                handled = true;
-            }
-
-            else if (propertyName == "Blue")
-            {
-                int valueAsInt = (int)value;
-
-                var color =
-                    ((LineCircle)mContainedObjectAsIpso).Color;
-                color = color.WithBlue((byte)valueAsInt);
-
-                ((LineCircle)mContainedObjectAsIpso).Color = color;
-                handled = true;
-            }
-
-            else if (propertyName == "Color")
-            {
-                var valueAsColor = (Color)value;
-                ((LineCircle)mContainedObjectAsIpso).Color = valueAsColor;
-                handled = true;
-            }
-
-            else if (propertyName == "Radius")
-            {
-                var valueAsFloat = (float)value;
-                ((LineCircle)mContainedObjectAsIpso).Width = 2 * valueAsFloat;
-                ((LineCircle)mContainedObjectAsIpso).Height = 2 * valueAsFloat;
-                ((LineCircle)mContainedObjectAsIpso).Radius = valueAsFloat;
-                graphicalUiElement.Width = 2 * valueAsFloat;
-                graphicalUiElement.Height = 2 * valueAsFloat;
-            }
-
-            return handled;
-        }
-
-        private static bool TrySetPropertyOnLinePolygon(IRenderableIpso mContainedObjectAsIpso, string propertyName, object value)
-        {
-            bool handled = false;
-
-
-            if (propertyName == "Alpha")
-            {
-                int valueAsInt = (int)value;
-
-                var color =
-                    ((LinePolygon)mContainedObjectAsIpso).Color;
-                color = color.WithAlpha((byte)valueAsInt);
-
-                ((LinePolygon)mContainedObjectAsIpso).Color = color;
-                handled = true;
-            }
-
-            else if (propertyName == "Red")
-            {
-                int valueAsInt = (int)value;
-
-                var color =
-                    ((LinePolygon)mContainedObjectAsIpso).Color;
-                color = color.WithRed((byte)valueAsInt);
-
-                ((LinePolygon)mContainedObjectAsIpso).Color = color;
-                handled = true;
-            }
-
-            else if (propertyName == "Green")
-            {
-                int valueAsInt = (int)value;
-
-                var color =
-                    ((LinePolygon)mContainedObjectAsIpso).Color;
-                color = color.WithGreen((byte)valueAsInt);
-
-                ((LinePolygon)mContainedObjectAsIpso).Color = color;
-                handled = true;
-            }
-
-            else if (propertyName == "Blue")
-            {
-                int valueAsInt = (int)value;
-
-                var color =
-                    ((LinePolygon)mContainedObjectAsIpso).Color;
-                color = color.WithBlue((byte)valueAsInt);
-
-                ((LinePolygon)mContainedObjectAsIpso).Color = color;
-                handled = true;
-            }
-
-            else if (propertyName == "Color")
-            {
-                var valueAsColor = (Color)value;
-                ((LinePolygon)mContainedObjectAsIpso).Color = valueAsColor;
-                handled = true;
-            }
-
-
-            else if (propertyName == "Points")
-            {
-                var points = (List<Vector2>)value;
-
-                ((LinePolygon)mContainedObjectAsIpso).SetPoints(points);
-                handled = true;
-            }
-
-            return handled;
-        }
-
-        public static bool AssignSourceFileOnSprite(Sprite sprite, GraphicalUiElement graphicalUiElement, string value)
-        {
-            bool handled;
-
-            var loaderManager =
-                global::RenderingLibrary.Content.LoaderManager.Self;
-
-            if (string.IsNullOrEmpty(value))
-            {
-                sprite.Texture = null;
-
-                graphicalUiElement.UpdateLayout();
-            }
-            else if (value.EndsWith(".achx"))
-            {
-                if (ToolsUtilities.FileManager.IsRelative(value))
-                {
-                    value = ToolsUtilities.FileManager.RelativeDirectory + value;
-
-                    value = ToolsUtilities.FileManager.RemoveDotDotSlash(value);
-                }
-
-
-
-                AnimationChainList animationChainList = null;
-
-                if (loaderManager.CacheTextures)
-                {
-                    animationChainList = loaderManager.GetDisposable(value) as AnimationChainList;
-                }
-
-                if (animationChainList == null)
-                {
-                    var animationChainListSave = AnimationChainListSave.FromFile(value);
-                    animationChainList = animationChainListSave.ToAnimationChainList(null);
-                    if (loaderManager.CacheTextures)
-                    {
-                        loaderManager.AddDisposable(value, animationChainList);
-                    }
-                }
-
-                sprite.AnimationChains = animationChainList;
-
-                sprite.RefreshCurrentChainToDesiredName();
-
-                sprite.UpdateToCurrentAnimationFrame();
-
-                graphicalUiElement.UpdateTextureValuesFrom(sprite);
-                handled = true;
-            }
-            else
-            {
-                if (ToolsUtilities.FileManager.IsRelative(value) && ToolsUtilities.FileManager.IsUrl(value) == false)
-                {
-                    value = ToolsUtilities.FileManager.RelativeDirectory + value;
-
-                    value = ToolsUtilities.FileManager.RemoveDotDotSlash(value);
-                }
-
-                // see if an atlas exists:
-                var atlasedTexture = loaderManager.TryLoadContent<AtlasedTexture>(value);
-
+                //check if part of atlas
+                //Note: assumes that if this filename is in an atlas that all 9 are in an atlas
+                var atlasedTexture = global::RenderingLibrary.Content.LoaderManager.Self.TryLoadContent<AtlasedTexture>(valueAsString);
                 if (atlasedTexture != null)
                 {
-                    graphicalUiElement.UpdateLayout();
+                    nineSlice.LoadAtlasedTexture(valueAsString, atlasedTexture);
                 }
                 else
                 {
-                    // We used to check if the file exists. But internally something may
-                    // alias a file. Ultimately the content loader should make that decision,
-                    // not the GUE
-                    try
+                    if (NineSliceExtensions.GetIfShouldUsePattern(valueAsString))
                     {
-                        sprite.Texture = loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(value);
+                        nineSlice.SetTexturesUsingPattern(valueAsString, SystemManagers.Default, false);
                     }
-                    catch (Exception ex)
-                    // Jan 1, 2025 - we used to only catch certain types of exceptions, but this list keeps growing as there
-                    // are a variety of types of crashes that can occur. NineSlice catches all exceptions, so let's just do that!
-                    //when (ex is System.IO.FileNotFoundException or System.IO.DirectoryNotFoundException or WebException or IOException)
+                    else
                     {
-                        if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
+                        var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+
+                        Microsoft.Xna.Framework.Graphics.Texture2D texture =
+                            Sprite.InvalidTexture;
+
+                        try
                         {
-                            string message = $"Error setting SourceFile on Sprite in {graphicalUiElement.Tag}:\n{value}";
-                            throw new System.IO.FileNotFoundException(message, ex);
+                            texture =
+                                loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(valueAsString);
                         }
-                        sprite.Texture = null;
+                        catch (Exception e)
+                        {
+                            if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
+                            {
+                                string message = $"Error setting SourceFile on NineSlice named {nineSlice.Name}:\n{valueAsString}";
+                                throw new System.IO.FileNotFoundException(message);
+                            }
+                            // do nothing?
+                        }
+                        nineSlice.SetSingleTexture(texture);
+
                     }
-                    graphicalUiElement.UpdateLayout();
                 }
             }
             handled = true;
-            return handled;
+        }
+        else if (propertyName == "Blend")
+        {
+            var valueAsGumBlend = (RenderingLibrary.Blend)value;
+
+            var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
+
+            nineSlice.BlendState = valueAsXnaBlend;
+
+            handled = true;
+        }
+        else if (propertyName == nameof(NineSlice.CustomFrameTextureCoordinateWidth))
+        {
+            var asFloat = value as float?;
+
+            nineSlice.CustomFrameTextureCoordinateWidth = asFloat;
+
+            handled = true;
+        }
+        else if (propertyName == "Color")
+        {
+            if (value is System.Drawing.Color drawingColor)
+            {
+                nineSlice.Color = drawingColor;
+            }
+            else if (value is Microsoft.Xna.Framework.Color xnaColor)
+            {
+                nineSlice.Color = xnaColor.ToSystemDrawing();
+
+            }
+            handled = true;
         }
 
-        public static void AddRenderableToManagers(IRenderableIpso renderable, ISystemManagers iSystemManagers, Layer layer)
-        {
-            var managers = iSystemManagers as SystemManagers;
+        return handled;
+    }
 
-            if (renderable is Sprite)
+    private static bool TrySetPropertyOnSprite(IRenderableIpso renderableIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+    {
+        bool handled = false;
+        var sprite = renderableIpso as Sprite;
+
+        if (propertyName == "SourceFile")
+        {
+            var asString = value as String;
+            handled = AssignSourceFileOnSprite(sprite, graphicalUiElement, asString);
+
+        }
+        else if (propertyName == nameof(Sprite.Alpha))
+        {
+            int valueAsInt = (int)value;
+            sprite.Alpha = valueAsInt;
+            handled = true;
+        }
+        else if (propertyName == nameof(Sprite.Red))
+        {
+            int valueAsInt = (int)value;
+            sprite.Red = valueAsInt;
+            handled = true;
+        }
+        else if (propertyName == nameof(Sprite.Green))
+        {
+            int valueAsInt = (int)value;
+            sprite.Green = valueAsInt;
+            handled = true;
+        }
+        else if (propertyName == nameof(Sprite.Blue))
+        {
+            int valueAsInt = (int)value;
+            sprite.Blue = valueAsInt;
+            handled = true;
+        }
+        else if (propertyName == nameof(Sprite.Color))
+        {
+            if (value is System.Drawing.Color drawingColor)
             {
-                managers.SpriteManager.Add(renderable as Sprite, layer);
+                sprite.Color = drawingColor;
             }
-            else if (renderable is NineSlice)
+            else if (value is Microsoft.Xna.Framework.Color xnaColor)
             {
-                managers.SpriteManager.Add(renderable as NineSlice, layer);
+                sprite.Color = xnaColor.ToSystemDrawing();
+
             }
-            else if (renderable is LineRectangle)
+            handled = true;
+        }
+
+        else if (propertyName == "Blend")
+        {
+            var valueAsGumBlend = (RenderingLibrary.Blend)value;
+
+            var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
+
+            sprite.BlendState = valueAsXnaBlend;
+
+            handled = true;
+        }
+        else if (propertyName == nameof(Sprite.Animate))
+        {
+            sprite.Animate = (bool)value;
+            handled = true;
+        }
+        else if (propertyName == nameof(Sprite.CurrentChainName))
+        {
+            sprite.CurrentChainName = (string)value;
+            graphicalUiElement.UpdateTextureValuesFrom(sprite);
+            graphicalUiElement.UpdateLayout();
+            handled = true;
+        }
+        if (!handled)
+        {
+            int m = 3;
+        }
+
+        return handled;
+    }
+
+    #region Text
+
+    public static bool TrySetPropertyOnText(IRenderableIpso mContainedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+    {
+        bool handled = false;
+
+        void ReactToFontValueChange()
+        {
+            UpdateToFontValues(mContainedObjectAsIpso as IText, graphicalUiElement);
+
+            handled = true;
+        }
+
+        if (propertyName == "Text")
+        {
+            var asText = ((Text)mContainedObjectAsIpso);
+            if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren ||
+                // If height is relative to children, it could be in a stack
+                graphicalUiElement.HeightUnits == DimensionUnitType.RelativeToChildren)
             {
-                managers.ShapeManager.Add(renderable as LineRectangle, layer);
+                // make it have no line wrap width before assignign the text:
+                asText.Width = null;
             }
-            else if (renderable is SolidRectangle)
+
+            var valueAsString = value as string;
+
+
+            asText.InlineVariables.Clear();
+            if (valueAsString?.Contains("[") == true)
             {
-                managers.ShapeManager.Add(renderable as SolidRectangle, layer);
-            }
-            else if (renderable is Text)
-            {
-                managers.TextManager.Add(renderable as Text, layer);
-            }
-            else if (renderable is LineCircle)
-            {
-                managers.ShapeManager.Add(renderable as LineCircle, layer);
-            }
-            else if (renderable is LinePolygon)
-            {
-                managers.ShapeManager.Add(renderable as LinePolygon, layer);
-            }
-            else if (renderable is InvisibleRenderable)
-            {
-                managers.SpriteManager.Add(renderable as InvisibleRenderable, layer);
+
+                // todo - eventually support localization here:
+                asText.StoredMarkupText = valueAsString;
+                SetBbCodeText(asText, graphicalUiElement, asText.StoredMarkupText);
             }
             else
             {
-                if (layer == null)
+                asText.StoredMarkupText = null;
+                var rawText = valueAsString;
+                if(LocalizationService != null)
                 {
-                    managers.Renderer.Layers[0].Add(renderable);
+                    rawText = LocalizationService.Translate(rawText);
                 }
-                else
-                {
-                    layer.Add(renderable);
-                }
+                asText.RawText = rawText;
             }
+            // we want to update if the text's size is based on its "children" (the letters it contains)
+            if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren ||
+                // If height is relative to children, it could be in a stack
+                graphicalUiElement.HeightUnits == DimensionUnitType.RelativeToChildren)
+            {
+                graphicalUiElement.UpdateLayout();
+            }
+            handled = true;
+        }
+        else if (propertyName == "Font Scale" || propertyName == "FontScale")
+        {
+            ((Text)mContainedObjectAsIpso).FontScale = (float)value;
+            // we want to update if the text's size is based on its "children" (the letters it contains)
+            if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren ||
+                // If height is relative to children, it could be in a stack
+                graphicalUiElement.HeightUnits == DimensionUnitType.RelativeToChildren)
+            {
+                graphicalUiElement.UpdateLayout();
+            }
+            handled = true;
+
+        }
+        else if (propertyName == "Font")
+        {
+            graphicalUiElement.Font = value as string;
+
+            ReactToFontValueChange();
+        }
+#if MONOGAME || KNI || XNA4 || FNA
+        else if (propertyName == nameof(graphicalUiElement.UseCustomFont))
+        {
+            graphicalUiElement.UseCustomFont = (bool)value;
+            var asText = ((Text)mContainedObjectAsIpso);
+
+            if (!string.IsNullOrEmpty(asText.StoredMarkupText))
+            {
+                SetBbCodeText(asText, graphicalUiElement, asText.StoredMarkupText);
+            }
+            ReactToFontValueChange();
         }
 
-        public static void RemoveRenderableFromManagers(IRenderableIpso renderable, ISystemManagers iSystemManagers)
+        else if (propertyName == nameof(graphicalUiElement.CustomFontFile))
         {
-            var managers = iSystemManagers as SystemManagers;
+            graphicalUiElement.CustomFontFile = (string)value;
+            ReactToFontValueChange();
 
-            if (renderable is Sprite)
-            {
-                managers.SpriteManager.Remove(renderable as Sprite);
-            }
-            else if (renderable is NineSlice)
-            {
-                managers.SpriteManager.Remove(renderable as NineSlice);
-            }
-            else if (renderable is global::RenderingLibrary.Math.Geometry.LineRectangle)
-            {
-                managers.ShapeManager.Remove(renderable as global::RenderingLibrary.Math.Geometry.LineRectangle);
-            }
-            else if (renderable is global::RenderingLibrary.Math.Geometry.LinePolygon)
-            {
-                managers.ShapeManager.Remove(renderable as global::RenderingLibrary.Math.Geometry.LinePolygon);
-            }
-            else if (renderable is global::RenderingLibrary.Graphics.SolidRectangle)
-            {
-                managers.ShapeManager.Remove(renderable as global::RenderingLibrary.Graphics.SolidRectangle);
-            }
-            else if (renderable is Text)
-            {
-                managers.TextManager.Remove(renderable as Text);
-            }
-            else if (renderable is LineCircle)
-            {
-                managers.ShapeManager.Remove(renderable as LineCircle);
-            }
-            else if (renderable is InvisibleRenderable)
-            {
-                managers.SpriteManager.Remove(renderable as InvisibleRenderable);
-            }
-            else if (renderable != null)
-            {
-                // This could be a custom visual object, so don't do anything:
-                //throw new NotImplementedException();
-                managers.Renderer.RemoveRenderable(renderable);
-            }
-            if (renderable is IManagedObject asManagedObject)
-            {
-                asManagedObject.RemoveFromManagers();
-            }
         }
-
-        public static void ThrowExceptionsForMissingFiles(GraphicalUiElement graphicalUiElement)
+#if USE_GUMCOMMON
+        else if(propertyName == nameof(MonoGameGum.GueDeriving.TextRuntime.BitmapFont) && graphicalUiElement is MonoGameGum.GueDeriving.TextRuntime textRuntime)
         {
-#if MONOGAME || KNI
-            // We can't throw exceptions when assigning values on fonts because the font values get set one-by-one
-            // and the end result of all values determines which file to load. For example, an object may set the following
-            // variables one-by-one:
-            // * FontSize
-            // * Font
-            // * OutlineThickness
-            // Let's say the Font gets set to Arial. The FontSize may not have been set yet, so whatever value happens
-            // to be there will be used to load the font (like 12). But the user may not have Arial12 in their project,
-            // and if we threw an exception on-the-spot, the user would see a message about missing Arial12, even though
-            // the project doesn't actually use Arial12.
-            // We need to wait until the graphical UI element is fully created before we try to throw an exception, so
-            // that's what we're going to do here:
-            if (graphicalUiElement != null && graphicalUiElement.RenderableComponent is Text)
+            textRuntime.BitmapFont = (BitmapFont)value;
+            handled = true;
+        }
+#endif
+#endif
+        else if (propertyName == nameof(graphicalUiElement.FontSize))
+        {
+            graphicalUiElement.FontSize = (int)value;
+            ReactToFontValueChange();
+        }
+        else if (propertyName == nameof(graphicalUiElement.OutlineThickness))
+        {
+            graphicalUiElement.OutlineThickness = (int)value;
+            ReactToFontValueChange();
+        }
+        else if (propertyName == nameof(graphicalUiElement.IsItalic))
+        {
+            graphicalUiElement.IsItalic = (bool)value;
+            ReactToFontValueChange();
+        }
+        else if (propertyName == nameof(graphicalUiElement.IsBold))
+        {
+            graphicalUiElement.IsBold = (bool)value;
+            ReactToFontValueChange();
+        }
+        else if (propertyName == "LineHeightMultiplier")
+        {
+            var asText = ((Text)mContainedObjectAsIpso);
+            asText.LineHeightMultiplier = (float)value;
+        }
+        else if (propertyName == nameof(graphicalUiElement.UseFontSmoothing))
+        {
+            graphicalUiElement.UseFontSmoothing = (bool)value;
+            ReactToFontValueChange();
+        }
+        else if (propertyName == nameof(Blend))
+        {
+#if MONOGAME || KNI || XNA4 || FNA
+            var valueAsGumBlend = (RenderingLibrary.Blend)value;
+
+            var valueAsXnaBlend = valueAsGumBlend.ToBlendState();
+
+            var text = mContainedObjectAsIpso as Text;
+            text.BlendState = valueAsXnaBlend;
+            handled = true;
+#endif
+        }
+        else if (propertyName == "Alpha")
+        {
+#if MONOGAME || KNI || XNA4 || FNA
+            int valueAsInt = (int)value;
+            ((Text)mContainedObjectAsIpso).Alpha = valueAsInt;
+            handled = true;
+#endif
+        }
+        else if (propertyName == "Red")
+        {
+            int valueAsInt = (int)value;
+            ((Text)mContainedObjectAsIpso).Red = valueAsInt;
+            handled = true;
+        }
+        else if (propertyName == "Green")
+        {
+            int valueAsInt = (int)value;
+            ((Text)mContainedObjectAsIpso).Green = valueAsInt;
+            handled = true;
+        }
+        else if (propertyName == "Blue")
+        {
+            int valueAsInt = (int)value;
+            ((Text)mContainedObjectAsIpso).Blue = valueAsInt;
+            handled = true;
+        }
+        else if (propertyName == "Color")
+        {
+#if MONOGAME || KNI || XNA4 || FNA
+            //var valueAsColor = (Color)value;
+            //((Text)mContainedObjectAsIpso).Color = valueAsColor;
+            //handled = true;
+            if (value is System.Drawing.Color drawingColor)
             {
-                // check it
-                var asText = graphicalUiElement.RenderableComponent as Text;
-                if (asText.BitmapFont == null)
-                {
-                    if (graphicalUiElement.UseCustomFont)
-                    {
-                        var fontName = ToolsUtilities.FileManager.Standardize(graphicalUiElement.CustomFontFile, preserveCase: true, makeAbsolute: true);
-
-                        throw new System.IO.FileNotFoundException($"Missing:{fontName}");
-                    }
-                    else
-                    {
-                        if (graphicalUiElement.FontSize > 0 && !string.IsNullOrEmpty(graphicalUiElement.Font))
-                        {
-                            string fontName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
-                                graphicalUiElement.FontSize,
-                                graphicalUiElement.Font,
-                                graphicalUiElement.OutlineThickness,
-                                graphicalUiElement.UseFontSmoothing,
-                                graphicalUiElement.IsItalic,
-                                graphicalUiElement.IsBold);
-
-                            var standardized = ToolsUtilities.FileManager.Standardize(fontName, preserveCase: true, makeAbsolute: true);
-
-                            throw new System.IO.FileNotFoundException($"Missing:{standardized}");
-                        }
-                    }
-                }
-                else
-                {
-                    // we have a valid font file, so let's make sure the BitmapFont matches the expected font
-                    if (graphicalUiElement.UseCustomFont)
-                    {
-                        var expectedFont = graphicalUiElement.CustomFontFile?.Replace("\\", "/");
-                        var currentFont = asText.BitmapFont.FontFile?.Replace("\\", "/");
-
-                        if (!expectedFont.Equals(currentFont, StringComparison.InvariantCultureIgnoreCase))
-                        {
-                            throw new System.IO.FileNotFoundException($"Expected:{expectedFont} but currently using:{currentFont}");
-                        }
-                    }
-                }
+                ((Text)mContainedObjectAsIpso).Color = drawingColor;
+                handled = true;
+            }
+            else if (value is Microsoft.Xna.Framework.Color xnaColor)
+            {
+                ((Text)mContainedObjectAsIpso).Color = xnaColor.ToSystemDrawing();
+                handled = true;
             }
 #endif
+        }
 
-            foreach (var element in graphicalUiElement.ContainedElements)
+        else if (propertyName == "HorizontalAlignment")
+        {
+            ((Text)mContainedObjectAsIpso).HorizontalAlignment = (HorizontalAlignment)value;
+            handled = true;
+        }
+        else if (propertyName == "VerticalAlignment")
+        {
+            ((Text)mContainedObjectAsIpso).VerticalAlignment = (VerticalAlignment)value;
+            handled = true;
+        }
+        else if (propertyName == "MaxLettersToShow")
+        {
+#if MONOGAME || KNI || XNA4 || FNA
+            ((Text)mContainedObjectAsIpso).MaxLettersToShow = (int?)value;
+            handled = true;
+#endif
+        }
+
+        else if (propertyName == nameof(TextOverflowHorizontalMode))
+        {
+            var textOverflowMode = (TextOverflowHorizontalMode)value;
+
+            if (textOverflowMode == TextOverflowHorizontalMode.EllipsisLetter)
             {
-                ThrowExceptionsForMissingFiles(element);
+                ((Text)mContainedObjectAsIpso).IsTruncatingWithEllipsisOnLastLine = true;
             }
+            else
+            {
+                ((Text)mContainedObjectAsIpso).IsTruncatingWithEllipsisOnLastLine = false;
+            }
+        }
+        else if (propertyName == nameof(TextOverflowVerticalMode))
+        {
+            graphicalUiElement.TextOverflowVerticalMode = (TextOverflowVerticalMode)value;
+            graphicalUiElement.RefreshTextOverflowVerticalMode();
+
+        }
+
+        return handled;
+    }
+
+    // For some reason this crashes on web when uploading to itch:
+    //public static HashSet<string> Tags { get; private set; } = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase)
+    // OrdinalIgnoreCase works fine:
+    public static HashSet<string> Tags { get; private set; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "alpha",
+        "red",
+        "blue",
+        "green",
+        "color",
+        "font",
+        "fontsize",
+        "outlinethickness",
+        "isitalic",
+        "isbold",
+        "usefontsmoothing",
+        "fontscale",
+        "lineheightmultiplier"
+
+    };
+
+    static Stack<int> fontSizeStack = new Stack<int>();
+    static Stack<string> fontNameStack = new Stack<string>();
+    static Stack<int> outlineThicknessStack = new Stack<int>();
+    static Stack<bool> useFontSmoothingStack = new Stack<bool>();
+    static Stack<bool> isItalicStack = new Stack<bool>();
+    static Stack<bool> isBoldStack = new Stack<bool>();
+    static Stack<bool> useCustomFontStack = new Stack<bool>();
+
+    static List<TagInfo> allTags = new List<TagInfo>();
+
+    private static void SetBbCodeText(global::RenderingLibrary.Graphics.Text asText, GraphicalUiElement graphicalUiElement, string bbcode)
+    {
+        // Text can be rendered on multiple lines. This can happen due to explicit newline characters, or by automatic line wrapping.
+        // When line indexes are counted, newlines are not included. Therefore, we need to remove newlines here so that indexes match up.
+        var bbCodeNoNewlines =
+        // update November 18, 2024
+        // We now do include newline
+        // characters becuase those can
+        // be explicitly added for textboxes
+        // with multiple lines:
+        //bbcode?.Replace("\n", "");
+        bbcode;
+
+        var resultsNoNewlines = BbCodeParser.Parse(bbCodeNoNewlines, Tags);
+        var resultsWithNewlines = BbCodeParser.Parse(bbcode, Tags);
+
+        var strippedText = BbCodeParser.RemoveTags(bbcode, resultsWithNewlines);
+        asText.RawText = strippedText;
+
+        fontNameStack.Clear();
+        if (graphicalUiElement.UseCustomFont)
+        {
+            var customFont = graphicalUiElement.CustomFontFile;
+            if (customFont?.EndsWith(".fnt") == true)
+            {
+                customFont = customFont.Substring(0, customFont.Length - ".fnt".Length);
+            }
+            fontNameStack.Push(customFont);
+        }
+        else
+        {
+            fontNameStack.Push(graphicalUiElement.Font);
+        }
+
+        fontSizeStack.Clear();
+        fontSizeStack.Push(graphicalUiElement.FontSize);
+
+        outlineThicknessStack.Clear();
+        outlineThicknessStack.Push(graphicalUiElement.OutlineThickness);
+
+        useFontSmoothingStack.Clear();
+        useFontSmoothingStack.Push(graphicalUiElement.UseFontSmoothing);
+
+        isItalicStack.Clear();
+        isItalicStack.Push(graphicalUiElement.IsItalic);
+
+        isBoldStack.Clear();
+        isBoldStack.Push(graphicalUiElement.IsBold);
+
+        useCustomFontStack.Clear();
+        useCustomFontStack.Push(graphicalUiElement.UseCustomFont);
+
+        var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+        var contentLoader = loaderManager.ContentLoader;
+
+        foreach (var item in resultsNoNewlines)
+        {
+            object castedValue = item.Open.Argument;
+            var shouldApply = false;
+            switch (item.Name)
+            {
+                case "Red":
+                case "Green":
+                case "Blue":
+                    castedValue = byte.Parse(item.Open.Argument);
+                    shouldApply = true;
+                    break;
+                case "Color":
+                    {
+                        int result;
+
+                        if (item.Open.Argument?.StartsWith("0x") == true && int.TryParse(item.Open.Argument.Substring(2),
+                                                                            NumberStyles.AllowHexSpecifier,
+                                                                            null,
+                                                                            out result))
+                        {
+                            castedValue = result;
+                            castedValue = System.Drawing.Color.FromArgb(result);
+                        }
+                        else
+                        {
+                            castedValue = System.Drawing.Color.FromName(item.Open.Argument);
+                        }
+                        shouldApply = true;
+                    }
+                    break;
+                case "FontScale":
+                    {
+                        if (float.TryParse(item.Open.Argument, out float parsed))
+                        {
+                            castedValue = parsed;
+                            shouldApply = true;
+                        }
+                    }
+                    break;
+
+                    // Don't do anything like IsBold or IsItalic here - these are handled in ApplyFontVariables
+            }
+
+            if (shouldApply)
+            {
+                var inlineVariable = new InlineVariable
+                {
+                    CharacterCount = item.Close.StartStrippedIndex - item.Open.StartStrippedIndex,
+                    StartIndex = item.Open.StartStrippedIndex,
+                    VariableName = item.Name,
+                    Value = castedValue
+                };
+
+                asText.InlineVariables.Add(inlineVariable);
+            }
+        }
+
+        ApplyFontVariables(asText, resultsNoNewlines);
+    }
+
+    private static void ApplyFontVariables(Text asText, List<FoundTag> results)
+    {
+        allTags.Clear();
+        allTags.AddRange(results.Select(item => item.Open));
+        allTags.AddRange(results.Select(item => item.Close));
+        allTags.Sort((a, b) => a.StartIndex - b.StartIndex);
+
+        InlineVariable lastFontInlineVariable = null;
+        foreach (var tag in allTags)
+        {
+
+            BitmapFont castedValue = null;
+            string convertedName = "BitmapFont";
+            var hasArg = !string.IsNullOrEmpty(tag.Argument);
+            switch (tag.Name)
+            {
+                case "Font":
+                    {
+                        if (hasArg)
+                        {
+                            // tolerate ".fnt" suffix
+                            var argument = tag.Argument;
+                            if (argument?.EndsWith(".fnt") == true)
+                            {
+                                argument = argument.Substring(0, argument.Length - ".fnt".Length);
+                            }
+                            fontNameStack.Push(argument);
+                            castedValue = GetAndCreateFontIfNecessary();
+                        }
+                        else
+                        {
+                            fontNameStack.Pop();
+                            castedValue = GetAndCreateFontIfNecessary();
+                        }
+                    }
+                    break;
+                case "FontSize":
+                    {
+                        if (int.TryParse(tag.Argument, out int parsedValue))
+                        {
+                            fontSizeStack.Push(parsedValue);
+                            castedValue = GetAndCreateFontIfNecessary();
+                        }
+                        else
+                        {
+                            fontSizeStack.Pop();
+                            castedValue = GetAndCreateFontIfNecessary();
+                        }
+                    }
+                    break;
+                case "OutlineThickness":
+                    {
+                        if (int.TryParse(tag.Argument, out int parsedValue))
+                        {
+                            outlineThicknessStack.Push(parsedValue);
+                            castedValue = GetAndCreateFontIfNecessary();
+                        }
+                        else
+                        {
+                            outlineThicknessStack.Pop();
+                            castedValue = GetAndCreateFontIfNecessary();
+                        }
+                    }
+                    break;
+                case "IsItalic":
+                    {
+                        if (bool.TryParse(tag.Argument, out bool parsedValue))
+                        {
+                            isItalicStack.Push(parsedValue);
+                            castedValue = GetAndCreateFontIfNecessary();
+                        }
+                        else
+                        {
+                            isItalicStack.Pop();
+                            castedValue = GetAndCreateFontIfNecessary();
+                        }
+                    }
+                    break;
+                case "IsBold":
+                    {
+                        if (bool.TryParse(tag.Argument, out bool parsedValue))
+                        {
+                            isBoldStack.Push(parsedValue);
+                            castedValue = GetAndCreateFontIfNecessary();
+                        }
+                        else
+                        {
+                            isBoldStack.Pop();
+                            castedValue = GetAndCreateFontIfNecessary();
+                        }
+                    }
+                    break;
+                case "UseCustomFont":
+                    {
+                        if (bool.TryParse(tag.Argument, out bool parsedValue))
+                        {
+                            useCustomFontStack.Push(parsedValue);
+                            castedValue = GetAndCreateFontIfNecessary();
+                        }
+                        else
+                        {
+                            useCustomFontStack.Pop();
+                            castedValue = GetAndCreateFontIfNecessary();
+                        }
+                    }
+                    break;
+
+            }
+
+            if (castedValue != null)
+            {
+                if (lastFontInlineVariable != null)
+                {
+                    lastFontInlineVariable.CharacterCount = tag.StartStrippedIndex - lastFontInlineVariable.StartIndex;
+                }
+
+                var inlineVariable = new InlineVariable
+                {
+                    // assigned above:
+                    //CharacterCount = tag.Close.StartStrippedIndex - tag.Open.StartStrippedIndex,
+                    StartIndex = tag.StartStrippedIndex,
+                    VariableName = convertedName,
+                    Value = castedValue
+                };
+
+                asText.InlineVariables.Add(inlineVariable);
+
+                lastFontInlineVariable = inlineVariable;
+            }
+        }
+
+        // close off the last one:
+        if (lastFontInlineVariable != null)
+        {
+            lastFontInlineVariable.CharacterCount = asText.RawText.Length - lastFontInlineVariable.StartIndex;
+        }
+
+
+        BitmapFont GetAndCreateFontIfNecessary()
+        {
+            var fontFileName = GetFontFileName();
+
+            var font = global::RenderingLibrary.Content.LoaderManager.Self.GetDisposable(fontFileName) as BitmapFont;
+
+            // no cache, does it need to be created?
+            if (font == null)
+            {
+                // this could be a custom font, so let's see if it exists:
+
+                string fileName = String.Empty;
+                if (ToolsUtilities.FileManager.FileExists(fontFileName))
+                {
+                    fileName = fontFileName;
+                }
+                else
+                {
+#if GUM
+                    fileName = Managers.FontManager.Self.AbsoluteFontCacheFolder +
+                        ToolsUtilities.FileManager.RemovePath(fontFileName);
+#endif
+                }
+
+#if GUM
+
+                if (!ToolsUtilities.FileManager.FileExists(fileName))
+                {
+                    // user could have typed anything in there, so who knows if this will succeed. Therefore, try/catch:
+                    try
+                    {
+                        BmfcSave.CreateBitmapFontFilesIfNecessary(
+                            fontSizeStack.Peek(),
+                            fontNameStack.Peek(),
+                            outlineThicknessStack.Peek(),
+                            useFontSmoothingStack.Peek(),
+                            isItalicStack.Peek(),
+                            isBoldStack.Peek(),
+                            GumState.Self.ProjectState.GumProjectSave?.FontRanges
+                            );
+                    }
+                    catch
+                    {
+                        // do nothing?
+                    }
+                }
+#endif
+
+                if (ToolsUtilities.FileManager.FileExists(fileName))
+                {
+                    font = new BitmapFont(fileName, (SystemManagers)null);
+                }
+                else
+                {
+                    // This can happen when closing tags are encountered at the end of a font. If no font exists, we can just go to the default
+                    font = Text.DefaultBitmapFont;
+                }
+                global::RenderingLibrary.Content.LoaderManager.Self.AddDisposable(fontFileName, font);
+            }
+
+            return font;
+        }
+
+        string GetFontFileName()
+        {
+            string fontFileNameName;
+            if (useCustomFontStack.Peek())
+            {
+                fontFileNameName = fontNameStack.Peek() + ".fnt";
+            }
+            else
+            {
+                fontFileNameName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
+                    fontSizeStack.Peek(),
+                    fontNameStack.Peek(),
+                    outlineThicknessStack.Peek(),
+                    useFontSmoothingStack.Peek(),
+                    isItalicStack.Peek(),
+                    isBoldStack.Peek());
+
+            }
+
+            var fullFileName = ToolsUtilities.FileManager.RemoveDotDotSlash(ToolsUtilities.FileManager.Standardize(fontFileNameName, false, true));
+#if ANDROID || IOS
+            fullFileName = fullFileName.ToLowerInvariant();
+#endif
+            return fullFileName;
+        }
+    }
+
+    public static void UpdateToFontValues(IText text, GraphicalUiElement graphicalUiElement)
+    {
+        // January 28, 2025
+        // If we early-out here,
+        // then the bitmap values
+        // never get assigned. This
+        // means that eventually when
+        // layout is resumed, bitmap values
+        // will get assigned. However, assigning
+        // bitmap values on a Text that has has Width
+        // or Height Units of Relative to Children, the
+        // parent then updates its parents layout. This causes
+        // tons of layout calls when resuming layout on a list box.
+        // Instead, we should assign fonts and mark font as dirty, then
+        // on resume only the parent layout needs to happen.
+        //if (graphicalUiElement.IsLayoutSuspended || GraphicalUiElement.IsAllLayoutSuspended)
+        //{
+        //    graphicalUiElement.IsFontDirty = true;
+        //}
+        // todo: This could make things faster, but it will require
+        // extra calls in generated code, or an "UpdateAll" method
+        //if (!mIsLayoutSuspended && !IsAllLayoutSuspended)
+
+        BitmapFont font = null;
+
+        var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+        var contentLoader = loaderManager.ContentLoader;
+
+        if (graphicalUiElement.UseCustomFont)
+        {
+
+            if (!string.IsNullOrEmpty(graphicalUiElement.CustomFontFile))
+            {
+                font = loaderManager.GetDisposable(graphicalUiElement.CustomFontFile) as BitmapFont;
+                if (font == null)
+                {
+#if KNI
+                        try
+                        {
+                            // this could be running in browser where we don't have File.Exists, so JUST DO IT
+                            font = new BitmapFont(graphicalUiElement.CustomFontFile, SystemManagers.Default);
+                            loaderManager.AddDisposable(graphicalUiElement.CustomFontFile, font);
+                        }
+                        catch
+                        {
+                            // font doesn't exist, carry on...
+                        }
+#else
+                    // so normally we would just let the content loader check if the file exists but since we're not going to
+                    // use the content loader for BitmapFont, we're going to protect this with a file.exists.
+                    if (ToolsUtilities.FileManager.FileExists(graphicalUiElement.CustomFontFile))
+                    {
+                        font = new BitmapFont(graphicalUiElement.CustomFontFile, SystemManagers.Default);
+                        loaderManager.AddDisposable(graphicalUiElement.CustomFontFile, font);
+                    }
+#endif
+                }
+                else if (font.Textures.Any(item => item?.IsDisposed == true))
+                {
+                    // The BitmapFont is cached by Gum, but the underlying Texture2D might be managed by something else (like FRB).
+                    // This means that the Texture can be disposed without the BitmapFont being disposed. If this is the case we should
+                    // ask the underlying system for a new .png, but we can keep the same BitmapFont since that should stay the same and
+                    // .fnt parsing can be the slow part for large fonts.
+                    font.ReAssignTextures();
+                }
+            }
+
+
+        }
+        else
+        {
+            if (graphicalUiElement.FontSize > 0 && !string.IsNullOrEmpty(graphicalUiElement.Font))
+            {
+
+                string fontName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
+                    graphicalUiElement.FontSize,
+                    graphicalUiElement.Font,
+                    graphicalUiElement.OutlineThickness,
+                    graphicalUiElement.UseFontSmoothing,
+                    graphicalUiElement.IsItalic,
+                    graphicalUiElement.IsBold);
+
+                string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, preserveCase: true, makeAbsolute: true);
+
+                font = loaderManager.GetDisposable(fullFileName) as BitmapFont;
+                if (font == null || font.Texture?.IsDisposed == true)
+                {
+#if KNI
+                        try
+                        {
+                            // this could be running in browser where we don't have File.Exists, so JUST DO IT
+                            font = new BitmapFont(fullFileName, SystemManagers.Default);
+
+                            loaderManager.AddDisposable(fullFileName, font);
+                        }
+                        catch
+                        {
+                            // font doesn't exist, carry on...
+                        }
+#else
+                    // so normally we would just let the content loader check if the file exists but since we're not going to
+                    // use the content loader for BitmapFont, we're going to protect this with a file.exists.
+                    if (ToolsUtilities.FileManager.FileExists(fullFileName))
+                    {
+                        font = new BitmapFont(fullFileName, SystemManagers.Default);
+
+
+                        loaderManager.AddDisposable(fullFileName, font);
+                    }
+#endif
+                }
+
+                // FRB may dispose fonts, so let's check:
+
+#if DEBUG
+                if (font?.Textures.Any(item => item?.IsDisposed == true) == true)
+                {
+                    throw new InvalidOperationException("The returned font has a disposed texture");
+                }
+#endif
+            }
+        }
+
+        var fontToSet = font ?? Text.DefaultBitmapFont;
+
+        var asRenderableText = (Text)text;
+        if (asRenderableText.BitmapFont != fontToSet)
+        {
+            asRenderableText.BitmapFont = fontToSet;
+
+            // we want to update if the text's size is based on its "children" (the letters it contains)
+            if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren ||
+                // If height is relative to children, it could be in a stack
+                graphicalUiElement.HeightUnits == DimensionUnitType.RelativeToChildren)
+            {
+                graphicalUiElement.UpdateLayout();
+            }
+        }
+    }
+
+    #endregion
+
+    private static bool TrySetPropertyOnLineRectangle(IRenderableIpso mContainedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+    {
+        bool handled = false;
+
+        if (propertyName == "Alpha")
+        {
+            int valueAsInt = (int)value;
+
+            var color =
+                ((LineRectangle)mContainedObjectAsIpso).Color;
+            color = color.WithAlpha((byte)valueAsInt);
+
+            ((LineRectangle)mContainedObjectAsIpso).Color = color;
+            handled = true;
+        }
+
+        else if (propertyName == "Red")
+        {
+            int valueAsInt = (int)value;
+
+            var color =
+                ((LineRectangle)mContainedObjectAsIpso).Color;
+            color = color.WithRed((byte)valueAsInt);
+
+            ((LineRectangle)mContainedObjectAsIpso).Color = color;
+            handled = true;
+        }
+
+        else if (propertyName == "Green")
+        {
+            int valueAsInt = (int)value;
+
+            var color =
+                ((LineRectangle)mContainedObjectAsIpso).Color;
+            color = color.WithGreen((byte)valueAsInt);
+
+            ((LineRectangle)mContainedObjectAsIpso).Color = color;
+            handled = true;
+        }
+
+        else if (propertyName == "Blue")
+        {
+            int valueAsInt = (int)value;
+
+            var color =
+                ((LineRectangle)mContainedObjectAsIpso).Color;
+            color = color.WithBlue((byte)valueAsInt);
+
+            ((LineRectangle)mContainedObjectAsIpso).Color = color;
+            handled = true;
+        }
+        else if (propertyName == "Color")
+        {
+            var valueAsColor = (Color)value;
+            ((LineRectangle)mContainedObjectAsIpso).Color = valueAsColor;
+            handled = true;
+        }
+        else if(propertyName == "IsRenderTarget")
+        {
+            ((LineRectangle)mContainedObjectAsIpso).IsRenderTarget = value as bool? ?? false;
+            handled = true;
+        }
+
+        return handled;
+    }
+
+    private static bool TrySetPropertyOnLineCircle(IRenderableIpso mContainedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+    {
+        bool handled = false;
+
+        if (propertyName == "Alpha")
+        {
+            int valueAsInt = (int)value;
+
+            var color =
+                ((LineCircle)mContainedObjectAsIpso).Color;
+            color = color.WithAlpha((byte)valueAsInt);
+
+            ((LineCircle)mContainedObjectAsIpso).Color = color;
+            handled = true;
+        }
+
+        else if (propertyName == "Red")
+        {
+            int valueAsInt = (int)value;
+
+            var color =
+                ((LineCircle)mContainedObjectAsIpso).Color;
+            color = color.WithRed((byte)valueAsInt);
+
+            ((LineCircle)mContainedObjectAsIpso).Color = color;
+            handled = true;
+        }
+
+        else if (propertyName == "Green")
+        {
+            int valueAsInt = (int)value;
+
+            var color =
+                ((LineCircle)mContainedObjectAsIpso).Color;
+            color = color.WithGreen((byte)valueAsInt);
+
+            ((LineCircle)mContainedObjectAsIpso).Color = color;
+            handled = true;
+        }
+
+        else if (propertyName == "Blue")
+        {
+            int valueAsInt = (int)value;
+
+            var color =
+                ((LineCircle)mContainedObjectAsIpso).Color;
+            color = color.WithBlue((byte)valueAsInt);
+
+            ((LineCircle)mContainedObjectAsIpso).Color = color;
+            handled = true;
+        }
+
+        else if (propertyName == "Color")
+        {
+            var valueAsColor = (Color)value;
+            ((LineCircle)mContainedObjectAsIpso).Color = valueAsColor;
+            handled = true;
+        }
+
+        else if (propertyName == "Radius")
+        {
+            var valueAsFloat = (float)value;
+            ((LineCircle)mContainedObjectAsIpso).Width = 2 * valueAsFloat;
+            ((LineCircle)mContainedObjectAsIpso).Height = 2 * valueAsFloat;
+            ((LineCircle)mContainedObjectAsIpso).Radius = valueAsFloat;
+            graphicalUiElement.Width = 2 * valueAsFloat;
+            graphicalUiElement.Height = 2 * valueAsFloat;
+        }
+
+        return handled;
+    }
+
+    private static bool TrySetPropertyOnLinePolygon(IRenderableIpso mContainedObjectAsIpso, string propertyName, object value)
+    {
+        bool handled = false;
+
+
+        if (propertyName == "Alpha")
+        {
+            int valueAsInt = (int)value;
+
+            var color =
+                ((LinePolygon)mContainedObjectAsIpso).Color;
+            color = color.WithAlpha((byte)valueAsInt);
+
+            ((LinePolygon)mContainedObjectAsIpso).Color = color;
+            handled = true;
+        }
+
+        else if (propertyName == "Red")
+        {
+            int valueAsInt = (int)value;
+
+            var color =
+                ((LinePolygon)mContainedObjectAsIpso).Color;
+            color = color.WithRed((byte)valueAsInt);
+
+            ((LinePolygon)mContainedObjectAsIpso).Color = color;
+            handled = true;
+        }
+
+        else if (propertyName == "Green")
+        {
+            int valueAsInt = (int)value;
+
+            var color =
+                ((LinePolygon)mContainedObjectAsIpso).Color;
+            color = color.WithGreen((byte)valueAsInt);
+
+            ((LinePolygon)mContainedObjectAsIpso).Color = color;
+            handled = true;
+        }
+
+        else if (propertyName == "Blue")
+        {
+            int valueAsInt = (int)value;
+
+            var color =
+                ((LinePolygon)mContainedObjectAsIpso).Color;
+            color = color.WithBlue((byte)valueAsInt);
+
+            ((LinePolygon)mContainedObjectAsIpso).Color = color;
+            handled = true;
+        }
+
+        else if (propertyName == "Color")
+        {
+            var valueAsColor = (Color)value;
+            ((LinePolygon)mContainedObjectAsIpso).Color = valueAsColor;
+            handled = true;
+        }
+
+
+        else if (propertyName == "Points")
+        {
+            var points = (List<Vector2>)value;
+
+            ((LinePolygon)mContainedObjectAsIpso).SetPoints(points);
+            handled = true;
+        }
+
+        return handled;
+    }
+
+    public static bool AssignSourceFileOnSprite(Sprite sprite, GraphicalUiElement graphicalUiElement, string value)
+    {
+        bool handled;
+
+        var loaderManager =
+            global::RenderingLibrary.Content.LoaderManager.Self;
+
+        if (string.IsNullOrEmpty(value))
+        {
+            sprite.Texture = null;
+
+            graphicalUiElement.UpdateLayout();
+        }
+        else if (value.EndsWith(".achx"))
+        {
+            if (ToolsUtilities.FileManager.IsRelative(value))
+            {
+                value = ToolsUtilities.FileManager.RelativeDirectory + value;
+
+                value = ToolsUtilities.FileManager.RemoveDotDotSlash(value);
+            }
+
+
+
+            AnimationChainList animationChainList = null;
+
+            if (loaderManager.CacheTextures)
+            {
+                animationChainList = loaderManager.GetDisposable(value) as AnimationChainList;
+            }
+
+            if (animationChainList == null)
+            {
+                var animationChainListSave = AnimationChainListSave.FromFile(value);
+                animationChainList = animationChainListSave.ToAnimationChainList(null);
+                if (loaderManager.CacheTextures)
+                {
+                    loaderManager.AddDisposable(value, animationChainList);
+                }
+            }
+
+            sprite.AnimationChains = animationChainList;
+
+            sprite.RefreshCurrentChainToDesiredName();
+
+            sprite.UpdateToCurrentAnimationFrame();
+
+            graphicalUiElement.UpdateTextureValuesFrom(sprite);
+            handled = true;
+        }
+        else
+        {
+            if (ToolsUtilities.FileManager.IsRelative(value) && ToolsUtilities.FileManager.IsUrl(value) == false)
+            {
+                value = ToolsUtilities.FileManager.RelativeDirectory + value;
+
+                value = ToolsUtilities.FileManager.RemoveDotDotSlash(value);
+            }
+
+            // see if an atlas exists:
+            var atlasedTexture = loaderManager.TryLoadContent<AtlasedTexture>(value);
+
+            if (atlasedTexture != null)
+            {
+                graphicalUiElement.UpdateLayout();
+            }
+            else
+            {
+                // We used to check if the file exists. But internally something may
+                // alias a file. Ultimately the content loader should make that decision,
+                // not the GUE
+                try
+                {
+                    sprite.Texture = loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(value);
+                }
+                catch (Exception ex)
+                // Jan 1, 2025 - we used to only catch certain types of exceptions, but this list keeps growing as there
+                // are a variety of types of crashes that can occur. NineSlice catches all exceptions, so let's just do that!
+                //when (ex is System.IO.FileNotFoundException or System.IO.DirectoryNotFoundException or WebException or IOException)
+                {
+                    if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
+                    {
+                        string message = $"Error setting SourceFile on Sprite in {graphicalUiElement.Tag}:\n{value}";
+                        throw new System.IO.FileNotFoundException(message, ex);
+                    }
+                    sprite.Texture = null;
+                }
+                graphicalUiElement.UpdateLayout();
+            }
+        }
+        handled = true;
+        return handled;
+    }
+
+    public static void AddRenderableToManagers(IRenderableIpso renderable, ISystemManagers iSystemManagers, Layer layer)
+    {
+        var managers = iSystemManagers as SystemManagers;
+
+        if (renderable is Sprite)
+        {
+            managers.SpriteManager.Add(renderable as Sprite, layer);
+        }
+        else if (renderable is NineSlice)
+        {
+            managers.SpriteManager.Add(renderable as NineSlice, layer);
+        }
+        else if (renderable is LineRectangle)
+        {
+            managers.ShapeManager.Add(renderable as LineRectangle, layer);
+        }
+        else if (renderable is SolidRectangle)
+        {
+            managers.ShapeManager.Add(renderable as SolidRectangle, layer);
+        }
+        else if (renderable is Text)
+        {
+            managers.TextManager.Add(renderable as Text, layer);
+        }
+        else if (renderable is LineCircle)
+        {
+            managers.ShapeManager.Add(renderable as LineCircle, layer);
+        }
+        else if (renderable is LinePolygon)
+        {
+            managers.ShapeManager.Add(renderable as LinePolygon, layer);
+        }
+        else if (renderable is InvisibleRenderable)
+        {
+            managers.SpriteManager.Add(renderable as InvisibleRenderable, layer);
+        }
+        else
+        {
+            if (layer == null)
+            {
+                managers.Renderer.Layers[0].Add(renderable);
+            }
+            else
+            {
+                layer.Add(renderable);
+            }
+        }
+    }
+
+    public static void RemoveRenderableFromManagers(IRenderableIpso renderable, ISystemManagers iSystemManagers)
+    {
+        var managers = iSystemManagers as SystemManagers;
+
+        if (renderable is Sprite)
+        {
+            managers.SpriteManager.Remove(renderable as Sprite);
+        }
+        else if (renderable is NineSlice)
+        {
+            managers.SpriteManager.Remove(renderable as NineSlice);
+        }
+        else if (renderable is global::RenderingLibrary.Math.Geometry.LineRectangle)
+        {
+            managers.ShapeManager.Remove(renderable as global::RenderingLibrary.Math.Geometry.LineRectangle);
+        }
+        else if (renderable is global::RenderingLibrary.Math.Geometry.LinePolygon)
+        {
+            managers.ShapeManager.Remove(renderable as global::RenderingLibrary.Math.Geometry.LinePolygon);
+        }
+        else if (renderable is global::RenderingLibrary.Graphics.SolidRectangle)
+        {
+            managers.ShapeManager.Remove(renderable as global::RenderingLibrary.Graphics.SolidRectangle);
+        }
+        else if (renderable is Text)
+        {
+            managers.TextManager.Remove(renderable as Text);
+        }
+        else if (renderable is LineCircle)
+        {
+            managers.ShapeManager.Remove(renderable as LineCircle);
+        }
+        else if (renderable is InvisibleRenderable)
+        {
+            managers.SpriteManager.Remove(renderable as InvisibleRenderable);
+        }
+        else if (renderable != null)
+        {
+            // This could be a custom visual object, so don't do anything:
+            //throw new NotImplementedException();
+            managers.Renderer.RemoveRenderable(renderable);
+        }
+        if (renderable is IManagedObject asManagedObject)
+        {
+            asManagedObject.RemoveFromManagers();
+        }
+    }
+
+    public static void ThrowExceptionsForMissingFiles(GraphicalUiElement graphicalUiElement)
+    {
+#if MONOGAME || KNI
+        // We can't throw exceptions when assigning values on fonts because the font values get set one-by-one
+        // and the end result of all values determines which file to load. For example, an object may set the following
+        // variables one-by-one:
+        // * FontSize
+        // * Font
+        // * OutlineThickness
+        // Let's say the Font gets set to Arial. The FontSize may not have been set yet, so whatever value happens
+        // to be there will be used to load the font (like 12). But the user may not have Arial12 in their project,
+        // and if we threw an exception on-the-spot, the user would see a message about missing Arial12, even though
+        // the project doesn't actually use Arial12.
+        // We need to wait until the graphical UI element is fully created before we try to throw an exception, so
+        // that's what we're going to do here:
+        if (graphicalUiElement != null && graphicalUiElement.RenderableComponent is Text)
+        {
+            // check it
+            var asText = graphicalUiElement.RenderableComponent as Text;
+            if (asText.BitmapFont == null)
+            {
+                if (graphicalUiElement.UseCustomFont)
+                {
+                    var fontName = ToolsUtilities.FileManager.Standardize(graphicalUiElement.CustomFontFile, preserveCase: true, makeAbsolute: true);
+
+                    throw new System.IO.FileNotFoundException($"Missing:{fontName}");
+                }
+                else
+                {
+                    if (graphicalUiElement.FontSize > 0 && !string.IsNullOrEmpty(graphicalUiElement.Font))
+                    {
+                        string fontName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
+                            graphicalUiElement.FontSize,
+                            graphicalUiElement.Font,
+                            graphicalUiElement.OutlineThickness,
+                            graphicalUiElement.UseFontSmoothing,
+                            graphicalUiElement.IsItalic,
+                            graphicalUiElement.IsBold);
+
+                        var standardized = ToolsUtilities.FileManager.Standardize(fontName, preserveCase: true, makeAbsolute: true);
+
+                        throw new System.IO.FileNotFoundException($"Missing:{standardized}");
+                    }
+                }
+            }
+            else
+            {
+                // we have a valid font file, so let's make sure the BitmapFont matches the expected font
+                if (graphicalUiElement.UseCustomFont)
+                {
+                    var expectedFont = graphicalUiElement.CustomFontFile?.Replace("\\", "/");
+                    var currentFont = asText.BitmapFont.FontFile?.Replace("\\", "/");
+
+                    if (!expectedFont.Equals(currentFont, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        throw new System.IO.FileNotFoundException($"Expected:{expectedFont} but currently using:{currentFont}");
+                    }
+                }
+            }
+        }
+#endif
+
+        foreach (var element in graphicalUiElement.ContainedElements)
+        {
+            ThrowExceptionsForMissingFiles(element);
         }
     }
 }

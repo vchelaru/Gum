@@ -5,6 +5,7 @@ using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using Gum.Plugins.ScrollBarPlugin;
+using Gum.Services;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using GumRuntime;
@@ -78,6 +79,7 @@ internal class MainEditorTabPlugin : InternalPlugin
 
     readonly ScrollbarService _scrollbarService;
     private readonly GuiCommands _guiCommands;
+    private readonly LocalizationManager _localizationManager;
     WireframeControl _wireframeControl;
 
     private FlatRedBall.AnimationEditorForms.Controls.WireframeEditControl _wireframeEditControl;
@@ -90,7 +92,8 @@ internal class MainEditorTabPlugin : InternalPlugin
     public MainEditorTabPlugin()
     {
         _scrollbarService = new ScrollbarService();
-        _guiCommands = GumCommands.Self.GuiCommands;
+        _guiCommands = Builder.Get<GuiCommands>();
+        _localizationManager = Builder.Get<LocalizationManager>();
         Self = this;
     }
 
@@ -235,7 +238,7 @@ internal class MainEditorTabPlugin : InternalPlugin
 
                     handledByDirectSet = true;
                 }
-                if (unqualifiedMember == "Text" && LocalizationManager.HasDatabase)
+                if (unqualifiedMember == "Text" && _localizationManager.HasDatabase)
                 {
                     WireframeObjectManager.Self.ApplyLocalization(gue, value as string);
                 }
@@ -344,7 +347,9 @@ internal class MainEditorTabPlugin : InternalPlugin
 
         ToolCommands.GuiCommands_Old.Self.Initialize(_wireframeControl);
 
-        Wireframe.WireframeObjectManager.Self.Initialize(_wireframeEditControl, _wireframeControl, addCursor);
+        var localizationManager = Builder.Get<LocalizationManager>();
+
+        Wireframe.WireframeObjectManager.Self.Initialize(_wireframeEditControl, _wireframeControl, addCursor, localizationManager);
         _wireframeControl.Initialize(_wireframeEditControl, gumEditorPanel, HotkeyManager.Self);
 
         EditingManager.Self.Initialize(wireframeContextMenuStrip);

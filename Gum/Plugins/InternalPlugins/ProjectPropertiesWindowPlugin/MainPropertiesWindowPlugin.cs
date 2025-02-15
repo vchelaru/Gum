@@ -28,7 +28,12 @@ namespace Gum.Plugins.PropertiesWindowPlugin
         ProjectPropertiesControl control;
 
         ProjectPropertiesViewModel viewModel;
-
+        [Import("LocalizationManager")]
+        public LocalizationManager LocalizationManager
+        {
+            get;
+            set;
+        }
         #endregion
 
         public override void StartUp()

@@ -138,6 +138,8 @@ public class CodeGenerator
     public static int CanvasWidth { get; set; } = 480;
     public static int CanvasHeight { get; set; } = 854;
 
+    public static LocalizationManager LocalizationManager { get; set; }
+
     /// <summary>
     /// if true, then pixel sizes are maintained regardless of pixel density. This allows layouts to maintain pixel-perfect.
     /// Update: This is now set to false because .... well, it makes it hard to create flexible layouts. It's best to set a resolution of 
@@ -3600,7 +3602,7 @@ public class CodeGenerator
 
         #endregion
 
-        else if (GetIsShouldBeLocalized(variable, context.Element.DefaultState))
+        else if (GetIsShouldBeLocalized(variable, context.Element.DefaultState, LocalizationManager))
         {
             string assignment = GetLocalizedLine(instance, variable, context);
 
@@ -3931,7 +3933,7 @@ public class CodeGenerator
 
 
         }
-        else if (GetIsShouldBeLocalized(variable, context.Element.DefaultState))
+        else if (GetIsShouldBeLocalized(variable, context.Element.DefaultState, LocalizationManager))
         {
             string assignment = GetLocalizedLine(instance, variable, context);
 
@@ -4020,9 +4022,9 @@ public class CodeGenerator
         return assignment;
     }
 
-    private static bool GetIsShouldBeLocalized(VariableSave variable, StateSave defaultState)
+    private static bool GetIsShouldBeLocalized(VariableSave variable, StateSave defaultState, LocalizationManager localizationManager)
     {
-        var toReturn = LocalizationManager.HasDatabase &&
+        var toReturn = localizationManager.HasDatabase &&
             // This could be exposed of exposed, so the name wouldn't be "Text"
             //variable.GetRootName() == "Text" && 
             variable.Value is string valueAsString &&
@@ -4075,7 +4077,7 @@ public class CodeGenerator
                 context.Instance = instance;
                 if (instance != null)
                 {
-                    if (GetIsShouldBeLocalized(variable, context.Element.DefaultState))
+                    if (GetIsShouldBeLocalized(variable, context.Element.DefaultState, LocalizationManager))
                     {
                         string assignment = GetLocalizedLine(instance, variable, context);
                         stringBuilder.AppendLine(ToTabs(tabCount) + assignment);

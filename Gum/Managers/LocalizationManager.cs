@@ -6,46 +6,45 @@ using ToolsUtilities;
 
 namespace Gum.Managers
 {
-    public static class LocalizationManager
+    public class LocalizationManager
     {
-
-        public static ReadOnlyCollection<string> Languages
+        public ReadOnlyCollection<string> Languages
         {
             get;
             set;
         }
 
-        static Dictionary<string, string[]> mStringDatabase = new Dictionary<string, string[]>();
+        Dictionary<string, string[]> mStringDatabase = new Dictionary<string, string[]>();
 
-        static string[] emptyStringArray = new string[0];
-        public static IEnumerable<string> Keys => mStringDatabase?.Keys.ToArray() ?? emptyStringArray;
+        string[] emptyStringArray = new string[0];
+        public IEnumerable<string> Keys => mStringDatabase?.Keys.ToArray() ?? emptyStringArray;
 
-        public static bool HasDatabase
+        public bool HasDatabase
         {
             
             get;
             private set;
         }
 
-        public static int CurrentLanguage
+        public int CurrentLanguage
         {
             get;
             set;
         }
 
-        static LocalizationManager()
+        public LocalizationManager()
         {
             Languages = new ReadOnlyCollection<string>(new List<string>());
         }
 
-        public static void Clear()
+        public void Clear()
         {
             Languages = new ReadOnlyCollection<string>(new List<string>());
             mStringDatabase = new Dictionary<string, string[]>();
             HasDatabase = false;
         }
 
-        public static void AddDatabase(string fileName, char delimiter)
+        public void AddDatabase(string fileName, char delimiter)
         {
 
             RuntimeCsvRepresentation rcr;
@@ -75,19 +74,19 @@ namespace Gum.Managers
             AddDatabase(entryDictionary, headerList);
         }
 
-        public static void AddDatabase(Dictionary<string, string[]> entryDictionary, List<string> headerList)
+        public void AddDatabase(Dictionary<string, string[]> entryDictionary, List<string> headerList)
         {
             Languages = new ReadOnlyCollection<string>(headerList);
             mStringDatabase = entryDictionary;
             HasDatabase = true;
         }
 
-        public static string Translate(string stringID)
+        public string Translate(string stringID)
         {
             return TranslateForLanguage(stringID, CurrentLanguage);
         }
 
-        public static string TranslateForLanguage(string stringID, int language)
+        public string TranslateForLanguage(string stringID, int language)
         {
 
             if (stringID == null)
@@ -108,7 +107,7 @@ namespace Gum.Managers
             }
         }
 
-        private static bool ShouldExcludeFromTranslation(string stringID)
+        private bool ShouldExcludeFromTranslation(string stringID)
         {
             if (string.IsNullOrEmpty(stringID))
             {
@@ -135,7 +134,7 @@ namespace Gum.Managers
             return false;
         }
 
-        private static bool IsTime(string stringID)
+        private bool IsTime(string stringID)
         {
             for (int i = 0; i < stringID.Length; i++)
             {
@@ -148,7 +147,7 @@ namespace Gum.Managers
             return true;
         }
 
-        private static bool IsPercentage(string stringID)
+        private bool IsPercentage(string stringID)
         {
             return stringID.CountOf('%') == 1 && stringID.Length > 1 && stringID.EndsWith("%") && StringFunctions.IsNumber(stringID.Substring(0, stringID.Length - 1));
 

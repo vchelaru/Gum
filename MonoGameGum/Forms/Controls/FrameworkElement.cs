@@ -885,6 +885,7 @@ public class FrameworkElement
     /// <param name="tabDirection">The direction to tab</param>
     /// <param name="requestingElement">The element which is requesting the tab. This can be a parent of the current element. If null is passed, then this element is 
     /// treated as the origin of the tab action.</param>
+    /// <param name="loop">Whether to loop around to the beginning or end if at the last focusable item.</param>
     public void HandleTab(TabDirection tabDirection = TabDirection.Down, FrameworkElement requestingElement = null, bool loop = false)
     {
         if (requestingElement == null)

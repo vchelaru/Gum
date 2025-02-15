@@ -22,6 +22,7 @@ namespace Gum.Managers
         #region Fields
 
         WpfDataUi.DataUiGrid mVariablesDataGrid;
+        private LocalizationManager _localizationManager;
         MainPropertyGrid mainControl;
 
         static PropertyGridManager mPropertyGridManager;
@@ -85,8 +86,9 @@ namespace Gum.Managers
 
         // Normally plugins will initialize through the PluginManager. This needs to happen earlier (see where it's called for info)
         // so some of it will happen here:
-        public void InitializeEarly()
+        public void InitializeEarly(LocalizationManager localizationManager)
         {
+            _localizationManager = localizationManager;
             mainControl = new Gum.MainPropertyGrid();
 
             GumCommands.Self.GuiCommands.AddControl(mainControl, "Variables", TabLocation.CenterBottom);
@@ -791,7 +793,7 @@ namespace Gum.Managers
                     {
                         var rootVariable = (member as StateReferencingInstanceMember)?.GetRootVariableSave();
 
-                        var shouldShowLocalizationUi = LocalizationManager.HasDatabase && (member.CustomOptions?.Count > 0) == false &&
+                        var shouldShowLocalizationUi = _localizationManager.HasDatabase && (member.CustomOptions?.Count > 0) == false &&
                             ((member as StateReferencingInstanceMember)?.GetRootVariableSave())?.GetRootName() == "Text";
 
                         // See StandardElementsManager for Text on explanation why this is commented out.
@@ -811,7 +813,7 @@ namespace Gum.Managers
                             // give it options!
                             member.PreferredDisplayer = typeof(WpfDataUi.Controls.ComboBoxDisplay);
                             member.PropertiesToSetOnDisplayer[nameof(WpfDataUi.Controls.ComboBoxDisplay.IsEditable)] = true;
-                            member.CustomOptions = LocalizationManager.Keys.OrderBy(item => item).ToArray();
+                            member.CustomOptions = _localizationManager.Keys.OrderBy(item => item).ToArray();
                         }
                         else
                         {

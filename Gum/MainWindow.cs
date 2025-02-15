@@ -63,7 +63,7 @@ namespace Gum
 
 
             // Initialize before the StateView is created...
-            GumCommands.Self.Initialize(this, mainPanelControl);
+            GumCommands.Self.Initialize(this, mainPanelControl, Builder.Get<LocalizationManager>());
 
             TypeManager.Self.Initialize();
 
@@ -82,8 +82,9 @@ namespace Gum
             // to a wpf window and can get rid of this
             ElementTreeViewManager.Self.Initialize(this.components, ElementTreeImages, addCursor, CopyPasteLogic.Self);
 
-            // ProperGridManager before MenuStripManager
-            PropertyGridManager.Self.InitializeEarly();
+            // ProperGridManager before MenuStripManager. Why does it need to be initialized before MainMenuStripPlugin?
+            // Is htere a way to move this to a plugin?
+            PropertyGridManager.Self.InitializeEarly(Builder.Get<LocalizationManager>());
 
             // bah we have to do this before initializing all plugins because we need the menu strip to exist:
             MainMenuStripPlugin.InitializeMenuStrip();

@@ -46,6 +46,7 @@ namespace Gum.Wireframe
         const int width = 8192;
 
         GraphicalUiElementManager gueManager;
+        private LocalizationManager _localizationManager;
 
 
         #endregion
@@ -84,7 +85,9 @@ namespace Gum.Wireframe
 
         #region Initialize
 
-        public void Initialize(WireframeEditControl editControl, WireframeControl wireframeControl, System.Windows.Forms.Cursor addCursor)
+        public void Initialize(WireframeEditControl editControl, 
+            WireframeControl wireframeControl, 
+            System.Windows.Forms.Cursor addCursor, LocalizationManager localizationManager)
         {
             AddCursor = addCursor;
 
@@ -101,6 +104,8 @@ namespace Gum.Wireframe
             GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ConsumeSilently;
 
             ElementSaveExtensions.CustomCreateGraphicalComponentFunc = HandleCreateGraphicalComponent;
+
+            _localizationManager = localizationManager;
         }
 
         private IRenderable HandleCreateGraphicalComponent(string type, ISystemManagers systemManagers)
@@ -306,7 +311,7 @@ namespace Gum.Wireframe
                         //FontManager.Self.CreateAllMissingFontFiles(ObjectFinder.Self.GumProjectSave);
 
 
-                        if(LocalizationManager.HasDatabase)
+                        if(_localizationManager.HasDatabase)
                         {
                             ApplyLocalization();
                         }
@@ -393,7 +398,7 @@ namespace Gum.Wireframe
 
         public void ApplyLocalization()
         {
-            if(LocalizationManager.HasDatabase == false)
+            if(_localizationManager.HasDatabase == false)
             {
                 throw new InvalidOperationException("Cannot apply localization - the LocalizationManager doesn't have a localization database loaded");
             }
@@ -425,7 +430,7 @@ namespace Gum.Wireframe
                 }
  
                 // Go through the GraphicalUiElement to kick off a layout adjustment if necessary
-                gue.SetProperty("Text", LocalizationManager.Translate(stringId));
+                gue.SetProperty("Text", _localizationManager.Translate(stringId));
             }
         }
 

@@ -18,6 +18,8 @@ using Gum.Responses;
 using System.Runtime.CompilerServices;
 using Gum.Wireframe;
 using Gum.ToolStates;
+using Gum.Managers;
+using Gum.Services;
 
 namespace Gum.Plugins
 {
@@ -95,6 +97,8 @@ namespace Gum.Plugins
             }
         }
 
+        [Export("LocalizationManager")]
+        public LocalizationManager LocalizationManager => Builder.Get<LocalizationManager>();
 
         #endregion
 

@@ -14,9 +14,11 @@ namespace Gum.Commands
 {
     public class FileCommands
     {
+        private LocalizationManager _localizationManager;
         MainWindow mainWindow;
-        public void Initialize(MainWindow mainWindow)
+        public void Initialize(MainWindow mainWindow, LocalizationManager localizationManager)
         {
+            _localizationManager = localizationManager;
             this.mainWindow = mainWindow;
         }
 
@@ -217,7 +219,7 @@ namespace Gum.Commands
 
         internal void LoadLocalizationFile()
         {
-            LocalizationManager.Clear();
+            _localizationManager.Clear();
 
             if (!string.IsNullOrEmpty(GumState.Self.ProjectState.GumProjectSave.LocalizationFile))
             {
@@ -227,8 +229,8 @@ namespace Gum.Commands
                 {
                     try
                     {
-                        LocalizationManager.AddDatabase(file.FullPath, ',');
-                        LocalizationManager.CurrentLanguage = GumState.Self.ProjectState.GumProjectSave.CurrentLanguageIndex;
+                        _localizationManager.AddDatabase(file.FullPath, ',');
+                        _localizationManager.CurrentLanguage = GumState.Self.ProjectState.GumProjectSave.CurrentLanguageIndex;
                     }
                     catch (Exception e)
                     {

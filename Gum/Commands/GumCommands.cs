@@ -74,10 +74,10 @@ namespace Gum
             }
         }
 
-        public void Initialize(MainWindow mainWindow, MainPanelControl mainPanelControl)
+        public void Initialize(MainWindow mainWindow, MainPanelControl mainPanelControl, LocalizationManager localizationManager)
         {
             GuiCommands.Initialize(mainWindow, mainPanelControl);
-            FileCommands.Initialize(mainWindow);
+            FileCommands.Initialize(mainWindow, localizationManager);
         }
 
     }

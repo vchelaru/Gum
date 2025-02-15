@@ -55,6 +55,7 @@ namespace Gum.Managers
 
         
         static NameVerifier mSelf;
+        private readonly StandardElementsManager _standardElementsManager;
 
         public static NameVerifier Self
         {
@@ -82,6 +83,11 @@ namespace Gum.Managers
         }
 
         #endregion
+
+        public NameVerifier()
+        {
+            _standardElementsManager = StandardElementsManager.Self;
+        }
 
         public bool IsElementNameValid(string componentNameWithoutFolder, string folderName, ElementSave elementSave, out string whyNotValid)
         {
@@ -130,11 +136,34 @@ namespace Gum.Managers
             //    IsNameValidVariable(instanceName, out whyNotValid);
             //}
 
+            // See if this is a variable used by any state in the StandardElementsManager:
+            if(string.IsNullOrEmpty(whyNotValid))
+            {
+                IsNameUsedByStandardVariables(instanceName, out whyNotValid);
+            }
+
             if (string.IsNullOrEmpty(whyNotValid))
             {
                 IsNameAlreadyUsed(instanceName, instanceSave, instanceContainer, out whyNotValid);
             }
             return string.IsNullOrEmpty(whyNotValid);
+        }
+
+        private void IsNameUsedByStandardVariables(string nameToCheck, out string whyNotValid)
+        {
+            var variables = _standardElementsManager.DefaultStates.SelectMany(item => item.Value.Variables);
+
+            var names = variables.Select(item => item.Name).ToHashSet();
+
+            whyNotValid = null;
+            if(names.Contains(nameToCheck))
+            {
+                whyNotValid = $"The name {nameToCheck} cannot be used because it is a reserved variable name";
+            }
+            else if(nameToCheck == "Name")
+            {
+                whyNotValid = $"\"Name\" is a reserved keyword so it cannot be used as a name";
+            }
         }
 
         public bool IsVariableNameValid(string variableName, ElementSave elementSave, VariableSave variableSave, out string whyNotValid)

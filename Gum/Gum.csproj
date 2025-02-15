@@ -142,6 +142,9 @@
     <Compile Include="..\GumRuntime\InstanceSaveExtensionMethods.GumRuntime.cs">
       <Link>Wireframe\InstanceSaveExtensionMethods.GumRuntime.cs</Link>
     </Compile>
+    <Compile Include="..\MonoGameGum\Localization\ILocalizationService.cs">
+      <Link>Managers\ILocalizationService.cs</Link>
+    </Compile>
     <Compile Include="Commands\EditCommands.cs" />
     <Compile Include="Commands\FileCommands.cs" />
     <Compile Include="Commands\GuiCommands.cs" />

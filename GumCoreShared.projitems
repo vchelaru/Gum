@@ -53,6 +53,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Gum\Wireframe\ElementWithState.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Gum\Wireframe\RuntimeObjectCreator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Gum\Wireframe\TimeManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ILocalizationService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MonoGameIntegration\RuntimeLogic.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Camera.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Content\ContentLoader.cs" />
@@ -123,5 +124,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)ToolsUtilities\Helpers\Vector3Extensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ToolsUtilities\ReflectionManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ToolsUtilities\StringFunctions.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)Gum\Localization\" />
   </ItemGroup>
 </Project>

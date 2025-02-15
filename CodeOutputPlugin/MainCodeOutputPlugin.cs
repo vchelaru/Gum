@@ -3,6 +3,7 @@ using CodeOutputPlugin.Models;
 using Gum;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
 using Gum.ToolStates;
@@ -37,6 +38,13 @@ namespace CodeOutputPlugin
         private readonly RenameService _renameService;
         PluginTab pluginTab;
 
+        [Import("LocalizationManager")]
+        public LocalizationManager LocalizationManager
+        {
+            get;
+            set;
+        }
+
         #endregion
 
         #region Init/Startup
@@ -50,6 +58,7 @@ namespace CodeOutputPlugin
             _selectedState = SelectedState.Self;
 
             _renameService = new RenameService();
+
         }
 
         public override void StartUp()
