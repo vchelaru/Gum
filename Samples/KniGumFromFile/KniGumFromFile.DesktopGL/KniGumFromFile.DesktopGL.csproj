@@ -29,15 +29,15 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="nkast.Xna.Framework" Version="3.12.9001" />
-    <PackageReference Include="nkast.Xna.Framework.Content" Version="3.12.9001" />
-    <PackageReference Include="nkast.Xna.Framework.Graphics" Version="3.12.9001" />
-    <PackageReference Include="nkast.Xna.Framework.Audio" Version="3.12.9001" />
-    <PackageReference Include="nkast.Xna.Framework.Media" Version="3.12.9001" />
-    <PackageReference Include="nkast.Xna.Framework.Input" Version="3.12.9001" />
-    <PackageReference Include="nkast.Xna.Framework.Game" Version="3.12.9001" />
-    <PackageReference Include="MonoGame.Framework.DesktopGL.9000" Version="3.12.9001" />
-    <PackageReference Include="nkast.Xna.Framework.Content.Pipeline.Builder" Version="3.12.9001" />
+    <PackageReference Include="nkast.Xna.Framework" Version="3.13.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Content" Version="3.13.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Graphics" Version="3.13.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Audio" Version="3.13.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Media" Version="3.13.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Input" Version="3.13.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Game" Version="3.13.9001" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL.9000" Version="3.13.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Content.Pipeline.Builder" Version="3.13.9001" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />

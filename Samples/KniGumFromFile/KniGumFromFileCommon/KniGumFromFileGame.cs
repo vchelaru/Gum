@@ -20,6 +20,8 @@ using KniGumFromFile.ComponentRuntimes;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using ToolsUtilities;
+using MonoGameGum;
+using System.ComponentModel.Design.Serialization;
 
 namespace KniGumFromFile
 {
@@ -31,9 +33,6 @@ namespace KniGumFromFile
         ScreenSave currentGumScreenSave;
 
         GraphicalUiElement currentScreenGue;
-
-        Cursor cursor;
-        MonoGameGum.Input.Keyboard gumKeyboard;
 
         public KniGumFromFileGame()
         {
@@ -53,19 +52,14 @@ namespace KniGumFromFile
 
         protected override void Initialize()
         {
-            SystemManagers.Default = new SystemManagers();
-            SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
-
+            GumService.Default.Initialize(this, "GumProject.gumx");
             //SetSinglePixelTexture();
 
-            LoadGumProject();
 
             InitializeRuntimeMapping();
 
             ShowScreen("StartScreen");
             InitializeStartScreen();
-            cursor = new Cursor();
-            gumKeyboard = new MonoGameGum.Input.Keyboard();
 
             base.Initialize();
 
@@ -77,14 +71,6 @@ namespace KniGumFromFile
                 "Buttons/StandardButton", 
                 typeof(ClickableButton));
 
-        }
-
-        private static GumProjectSave LoadGumProject()
-        {
-            var gumProject = GumProjectSave.Load("GumProject.gumx");
-            ObjectFinder.Self.GumProjectSave = gumProject;
-            gumProject.Initialize();
-            return gumProject;
         }
 
 
@@ -287,23 +273,8 @@ namespace KniGumFromFile
         protected override void Update(GameTime gameTime)
         {
             MouseState mouseState = Mouse.GetState();
-            KeyboardState keyboardState = Microsoft.Xna.Framework.Input.Keyboard.GetState();
-            GamePadState gamePadState = default;
-            try { gamePadState = GamePad.GetState(PlayerIndex.One); }
-            catch (NotImplementedException) { /* ignore gamePadState */ }
 
-            if (keyboardState.IsKeyDown(Keys.Escape) ||
-                keyboardState.IsKeyDown(Keys.Back) ||
-                gamePadState.Buttons.Back == ButtonState.Pressed)
-            {
-                try { Exit(); }
-                catch (PlatformNotSupportedException) { /* ignore */ }
-            }
-
-            SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
-
-            cursor.Activity(gameTime.TotalGameTime.TotalSeconds);
-            gumKeyboard.Activity(gameTime.TotalGameTime.TotalSeconds);
+            GumService.Default.Update(this, gameTime, currentScreenGue);
 
             DoSwapScreenLogic();
 
@@ -313,7 +284,8 @@ namespace KniGumFromFile
             }
             else if(currentGumScreenSave?.Name == "InteractiveGueScreen")
             {
-                DoInteractiveGueScreenLogic(gameTime.TotalGameTime.TotalSeconds);
+                // this is handled by the Update method up top
+                //DoInteractiveGueScreenLogic(gameTime.TotalGameTime.TotalSeconds);
             }
 
             else if (currentGumScreenSave?.Name == "ZoomScreen")
@@ -339,10 +311,7 @@ namespace KniGumFromFile
         void DoStartScreenLogic() { }
 
         int clickCount = 0;
-        private void DoInteractiveGueScreenLogic(double currentGameTimeInSeconds)
-        {
-            currentScreenGue.DoUiActivityRecursively(cursor, gumKeyboard, currentGameTimeInSeconds);
-        }
+
 
         private void DoOffsetLayerScreenLogic(MouseState mouseState)
         {
