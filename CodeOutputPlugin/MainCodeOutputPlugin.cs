@@ -6,6 +6,7 @@ using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
+using Gum.Services;
 using Gum.ToolStates;
 using Newtonsoft.Json;
 using System;
@@ -36,14 +37,16 @@ namespace CodeOutputPlugin
         private readonly CodeGenerationService _codeGenerationService;
         private readonly ISelectedState _selectedState;
         private readonly RenameService _renameService;
+        private readonly LocalizationManager _localizationManager;
         PluginTab pluginTab;
 
-        [Import("LocalizationManager")]
-        public LocalizationManager LocalizationManager
-        {
-            get;
-            set;
-        }
+        // Not sure why this is null..., so getting it from the builder instead
+        //[Import("LocalizationManager")]
+        //public LocalizationManager LocalizationManager
+        //{
+        //    get;
+        //    set;
+        //}
 
         #endregion
 
@@ -59,6 +62,9 @@ namespace CodeOutputPlugin
 
             _renameService = new RenameService();
 
+            _localizationManager = Builder.Get<LocalizationManager>();
+
+            CodeGenerator.LocalizationManager = _localizationManager;
         }
 
         public override void StartUp()

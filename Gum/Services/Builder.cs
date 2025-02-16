@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace Gum.Services;
 
-internal class Builder
+public class Builder
 {
     public static IHost App { get; private set; }
 

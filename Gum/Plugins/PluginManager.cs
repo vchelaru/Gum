@@ -231,7 +231,7 @@ namespace Gum.Plugins
         }
 
 
-        private static void LoadPlugins(PluginManager instance, MainWindow mainWindow)
+        private void LoadPlugins(PluginManager instance, MainWindow mainWindow)
         {
             if(mainWindow.MainMenuStrip == null)
             {
