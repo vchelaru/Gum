@@ -10,11 +10,11 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<DefineConstants>$(DefineConstants);MONOGAME</DefineConstants>
+		<DefineConstants>$(DefineConstants);MONOGAME;FRB</DefineConstants>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-		<DefineConstants>$(DefineConstants);MONOGAME</DefineConstants>
+		<DefineConstants>$(DefineConstants);MONOGAME;FRB</DefineConstants>
 	</PropertyGroup>
 
 	<Import Project="..\..\..\GumCoreShared.projitems" Label="Shared" />
