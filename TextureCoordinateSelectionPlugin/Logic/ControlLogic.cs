@@ -202,7 +202,7 @@ public class ControlLogic : Singleton<ControlLogic>
 
         // todo - this hasn't been tested extensively to make sure it aligns
         // pixel-perfect with how NineSlices work, but it's a good initial guess
-        if (showNineSliceGuides && CurrentTexture != null && mainControl?.InnerControl?.RectangleSelector != null)
+        if (showNineSliceGuides && CurrentTexture != null)
         {
             var texture = CurrentTexture;
 
@@ -212,15 +212,29 @@ public class ControlLogic : Singleton<ControlLogic>
             var control = mainControl.InnerControl;
             var selector = control.RectangleSelector;
 
-            var left = selector.Left;
-            var right = selector.Right;
-            var top = selector.Top;
-            var bottom = selector.Bottom;
+            float left = 0;
+            float top = 0;
+            float right = CurrentTexture.Width;
+            float bottom = CurrentTexture.Height;
 
-            var guideLeft = selector.Left + selector.Width / 3.0f;
-            var guideRight = selector.Left + selector.Width * 2.0f / 3.0f;
-            var guideTop = selector.Top + selector.Height / 3.0f;
-            var guideBottom = selector.Top + selector.Height * 2.0f / 3.0f;
+            float width = CurrentTexture.Width;
+            float height = CurrentTexture.Height;
+
+            if (selector != null)
+            {
+                left = selector.Left;
+                right = selector.Right;
+                top = selector.Top;
+                bottom = selector.Bottom;
+
+                width = selector.Width;
+                height = selector.Height;
+            }
+
+            var guideLeft = left + width / 3.0f;
+            var guideRight = left + width * 2.0f / 3.0f;
+            var guideTop = top + height / 3.0f;
+            var guideBottom = top + height * 2.0f / 3.0f;
 
             if (customFrameTextureCoordinateWidth != null)
             {
