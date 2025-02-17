@@ -361,7 +361,7 @@ public class CustomSetPropertyOnRenderable
             handled = true;
         }
 
-        if (propertyName == "Text")
+        if (propertyName == "Text" || propertyName == "TextNoTranslate")
         {
             var asText = ((Text)mContainedObjectAsIpso);
             if (graphicalUiElement.WidthUnits == DimensionUnitType.RelativeToChildren ||
@@ -387,7 +387,7 @@ public class CustomSetPropertyOnRenderable
             {
                 asText.StoredMarkupText = null;
                 var rawText = valueAsString;
-                if(LocalizationService != null)
+                if(LocalizationService != null && propertyName == "Text")
                 {
                     rawText = LocalizationService.Translate(rawText);
                 }
