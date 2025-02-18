@@ -109,6 +109,12 @@ internal class ExposeVariableService : IExposeVariableService
                     StateSave stateToExposeOn = SelectedState.Self.SelectedElement.DefaultState;
 
                     var variableInDefault = ObjectFinder.Self.GetRootVariable(fullVariableName, instanceSave.ParentContainer);
+
+                    if(variableInDefault == null)
+                    {
+                        throw new Exception($"Error getting root variable for {fullVariableName} in {instanceSave.ParentContainer}");
+                    }
+
                     string variableType = variableInDefault.Type;
                     stateToExposeOn.SetValue(fullVariableName, null, instanceSave, variableType);
 
