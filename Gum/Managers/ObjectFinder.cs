@@ -1128,11 +1128,13 @@ namespace Gum.Managers
                 {
                     var baseElement = GetElementSave(element.BaseType);
 
+                    // Give the base a chance first since we want the root-most
                     if(baseElement != null)
                     {
                         toReturn = GetRootVariable(effectiveName, baseElement);
                     }
-                    else
+                    
+                    if(toReturn == null)
                     {
                         toReturn = element.DefaultState.Variables.FirstOrDefault(item => item.Name == effectiveName);
                     }
