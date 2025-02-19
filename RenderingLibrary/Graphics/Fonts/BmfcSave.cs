@@ -13,6 +13,8 @@ namespace RenderingLibrary.Graphics.Fonts
         public bool UseSmoothing = true;
         public bool IsItalic = false;
         public bool IsBold = false;
+        public int SpacingHorizontal = 1;
+        public int SpacingVertical = 1;
         const string DefaultRanges = "32-126,160-255";
         public string Ranges = DefaultRanges;
 
@@ -38,6 +40,11 @@ namespace RenderingLibrary.Graphics.Fonts
             template = template.Replace("{UseSmoothing}", UseSmoothing ? "1" : "0");
             template = template.Replace("{IsItalic}", IsItalic ? "1" : "0");
             template = template.Replace("{IsBold}", IsBold ? "1" : "0");
+
+            template = template.Replace("{SpacingHorizontal}", SpacingHorizontal.ToString());
+            template = template.Replace("{SpacingVertical}", SpacingVertical.ToString());
+
+
 
             //alphaChnl=alphaChnlValue
             //redChnl=redChnlValue
@@ -188,7 +195,7 @@ namespace RenderingLibrary.Graphics.Fonts
 
         // tool-necessary implementations
         public static void CreateBitmapFontFilesIfNecessary(int fontSize, string fontName, int outline, bool fontSmoothing,
-            bool isItalic = false, bool isBold = false, string fontRanges = DefaultRanges)
+            bool isItalic = false, bool isBold = false, string fontRanges = DefaultRanges, int spacingHorizontal = 1, int spacingVertical = 1)
         {
             BmfcSave bmfcSave = new BmfcSave();
             bmfcSave.FontSize = fontSize;
@@ -198,6 +205,8 @@ namespace RenderingLibrary.Graphics.Fonts
             bmfcSave.IsItalic = isItalic;
             bmfcSave.IsBold = isBold;
             bmfcSave.Ranges = fontRanges;
+            bmfcSave.SpacingHorizontal = spacingHorizontal;
+            bmfcSave.SpacingVertical = spacingVertical;
 
             bmfcSave.CreateBitmapFontFilesIfNecessary(bmfcSave.FontCacheFileName);
         }

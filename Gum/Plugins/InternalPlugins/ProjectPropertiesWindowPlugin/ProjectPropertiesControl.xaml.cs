@@ -62,6 +62,11 @@ namespace Gum.Gui.Controls
             DataGrid.MoveMemberToCategory(nameof(ViewModel.SinglePixelTextureRight), "Single Pixel Texture");
             DataGrid.MoveMemberToCategory(nameof(ViewModel.SinglePixelTextureBottom), "Single Pixel Texture");
 
+            DataGrid.MoveMemberToCategory(nameof(ViewModel.FontRanges), "Font Generation");
+            DataGrid.MoveMemberToCategory(nameof(ViewModel.FontSpacingHorizontal), "Font Generation");
+            DataGrid.MoveMemberToCategory(nameof(ViewModel.FontSpacingVertical), "Font Generation");
+
+            
 
             foreach (var category in DataGrid.Categories)
             {

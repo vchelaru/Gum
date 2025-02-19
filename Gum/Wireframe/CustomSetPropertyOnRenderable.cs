@@ -899,7 +899,10 @@ public class CustomSetPropertyOnRenderable
                             useFontSmoothingStack.Peek(),
                             isItalicStack.Peek(),
                             isBoldStack.Peek(),
-                            GumState.Self.ProjectState.GumProjectSave?.FontRanges
+                            GumState.Self.ProjectState.GumProjectSave?.FontRanges,
+                            GumState.Self.ProjectState.GumProjectSave?.FontSpacingHorizontal ?? 1,
+                            GumState.Self.ProjectState.GumProjectSave?.FontSpacingVertical ?? 1
+
                             );
                     }
                     catch

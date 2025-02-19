@@ -58,12 +58,14 @@ namespace Gum.Managers
         public void CreateAllMissingFontFiles(GumProjectSave project)
         {
             var fontRanges = project.FontRanges;
+            var spacingHorizontal = project.FontSpacingHorizontal;
+            var spacingVertical = project.FontSpacingVertical;
 
             foreach (var element in project.StandardElements)
             {
                 foreach(var state in element.AllStates)
                 {
-                    TryCreateFontFileFor(null, state, fontRanges);
+                    TryCreateFontFileFor(null, state, fontRanges, spacingHorizontal, spacingVertical);
 
                     // standard elements don't have instances
                 }
@@ -72,11 +74,11 @@ namespace Gum.Managers
             {
                 foreach (var state in component.AllStates)
                 {
-                    TryCreateFontFileFor(null, state, fontRanges);
+                    TryCreateFontFileFor(null, state, fontRanges, spacingHorizontal, spacingVertical);
 
                     foreach(var instance in component.Instances)
                     {
-                        TryCreateFontFileFor(instance, state, fontRanges);
+                        TryCreateFontFileFor(instance, state, fontRanges, spacingHorizontal, spacingVertical);
                     }
                 }
             }
@@ -84,11 +86,11 @@ namespace Gum.Managers
             {
                 foreach (var state in screen.AllStates)
                 {
-                    TryCreateFontFileFor(null, state, fontRanges);
+                    TryCreateFontFileFor(null, state, fontRanges, spacingHorizontal, spacingVertical);
 
                     foreach (var instance in screen.Instances)
                     {
-                        TryCreateFontFileFor(instance, state, fontRanges);
+                        TryCreateFontFileFor(instance, state, fontRanges, spacingHorizontal, spacingVertical);
                     }
                 }
             }
@@ -101,10 +103,10 @@ namespace Gum.Managers
                 throw new InvalidOperationException($"{nameof(stateSave)} is null");
             }
 
-            TryCreateFontFileFor(instance, stateSave, gumProject.FontRanges, forcedValues);
+            TryCreateFontFileFor(instance, stateSave, gumProject.FontRanges, gumProject.FontSpacingHorizontal, gumProject.FontSpacingVertical, forcedValues);
         }
 
-        public void TryCreateFontFileFor(InstanceSave instance, StateSave stateSave, string fontRanges, StateSave forcedValues = null)
+        public void TryCreateFontFileFor(InstanceSave instance, StateSave stateSave, string fontRanges, int spacingHorizontal, int spacingVertical, StateSave forcedValues = null)
         {
             string prefix = "";
             if (instance != null)
@@ -130,7 +132,9 @@ namespace Gum.Managers
                     fontSmoothing, 
                     isItalic, 
                     isBold,
-                    fontRanges
+                    fontRanges,
+                    spacingHorizontal,
+                    spacingVertical
                     );
             }
         }

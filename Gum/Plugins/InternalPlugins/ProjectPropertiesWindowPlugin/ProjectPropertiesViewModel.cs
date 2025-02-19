@@ -121,6 +121,17 @@ namespace Gum.Plugins.PropertiesWindowPlugin
             set => Set(value);
         }
 
+        public int FontSpacingHorizontal
+        {
+            get => Get<int>();
+            set => Set(value);
+        }
+        public int FontSpacingVertical
+        {
+            get => Get<int>();
+            set => Set(value);
+        }
+
         public string SinglePixelTextureFile
         {
             get => Get<string>();
@@ -166,10 +177,14 @@ namespace Gum.Plugins.PropertiesWindowPlugin
                 this.generalSettings = generalSettings;
                 this.gumProject = gumProject;
 
+
                 AutoSave = this.generalSettings.AutoSave;
                 ShowOutlines = this.gumProject.ShowOutlines;
                 ShowCanvasOutline = this.gumProject.ShowCanvasOutline;
                 FontRanges = this.gumProject.FontRanges;
+                FontSpacingHorizontal = this.gumProject.FontSpacingHorizontal;
+                FontSpacingVertical = this.gumProject.FontSpacingVertical;
+
                 RestrictToUnitValues = this.gumProject.RestrictToUnitValues;
                 CanvasHeight = this.gumProject.DefaultCanvasHeight;
                 CanvasWidth = this.gumProject.DefaultCanvasWidth;
@@ -249,6 +264,9 @@ namespace Gum.Plugins.PropertiesWindowPlugin
             this.gumProject.CurrentLanguageIndex = LanguageIndex;
             this.gumProject.ShowLocalizationInGum = ShowLocalization;
             this.gumProject.FontRanges = FontRanges;
+
+            this.gumProject.FontSpacingHorizontal = FontSpacingHorizontal;
+            this.gumProject.FontSpacingVertical = FontSpacingVertical;
 
             this.gumProject.SinglePixelTextureFile = SinglePixelTextureFile;
             this.gumProject.SinglePixelTextureTop = SinglePixelTextureTop;

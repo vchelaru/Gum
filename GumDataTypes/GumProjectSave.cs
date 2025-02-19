@@ -76,6 +76,9 @@ namespace Gum.DataTypes
 
         public string FontRanges { get; set; } = "32-126,160-255";
 
+        public int FontSpacingVertical { get; set; } = 1;
+        public int FontSpacingHorizontal { get; set; } = 1;
+
         public int Version { get; set; }
 
         public int DefaultCanvasWidth
