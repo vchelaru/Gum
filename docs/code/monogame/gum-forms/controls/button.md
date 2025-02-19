@@ -1,10 +1,10 @@
 # Button
 
-### Introduction
+## Introduction
 
 The Button control providing an event for handling clicks.
 
-### Code Example: Adding a Button
+## Code Example: Adding a Button
 
 The following code adds a button which increments every time it is clicked:
 
@@ -25,3 +25,21 @@ button.Click += (_, _) =>
 ```
 
 <figure><img src="../../../../.gitbook/assets/24_06 36 41 (1).gif" alt=""><figcaption><p>Button responding to clicks by incrementing clickCount</p></figcaption></figure>
+
+## Clicking Programatically
+
+Clicking can be performed programatically by calling PerformClick. The following example shows how to click a button when the Enter key is pressed:
+
+```csharp
+var keyboard = FormsUtilities.Keyboard;
+if(keyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Enter))
+{
+    button.PerformClick();
+}
+```
+
+Optionally you can pass the input device to the PerformClick method:
+
+```csharp
+button.PerformClick(keyboard);
+```
