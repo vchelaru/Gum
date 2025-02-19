@@ -178,8 +178,10 @@ namespace RenderingLibrary
 
                     XMLHttpRequest request = new XMLHttpRequest();
 
-                    var suffix =
-                        "?token=" + DateTime.Now.Ticks;
+                    var suffix = string.Empty;
+#if DEBUG
+                    suffix = "?token=" + DateTime.Now.Ticks;
+#endif
 
                     request.Open("GET", fileName + suffix, false);
                     request.OverrideMimeType("text/plain; charset=x-user-defined");
