@@ -18,12 +18,14 @@ namespace RenderingLibrary.Graphics
         public float ScaleY;
 
         public float Spacing;
+        public int XAdvance;
         /// <summary>
         /// The offset of the character when drawn from the current X position. This value lets
         /// a character get drawn further to the right or left without changing the X position of the
         /// next character.
         /// </summary>
         public float XOffset;
+        public int XOffsetInPixels;
         public float DistanceFromTopOfLine;
 
         public int GetPixelLeft(Texture2D texture)

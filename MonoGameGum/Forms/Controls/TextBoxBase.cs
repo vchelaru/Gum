@@ -492,7 +492,8 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
 
             if (characterInfo != null)
             {
-                advance = characterInfo.GetXAdvanceInPixels(coreTextObject.BitmapFont.LineHeightInPixels);
+                //advance = characterInfo.GetXAdvanceInPixels(coreTextObject.BitmapFont.LineHeightInPixels);
+                advance = characterInfo.XAdvance;
             }
 
             distanceMeasuredSoFar += advance;

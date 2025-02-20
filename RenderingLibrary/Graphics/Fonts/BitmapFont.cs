@@ -99,7 +99,6 @@ namespace RenderingLibrary.Graphics
             SetFontPattern(fontContents);
         }
 
-
         private void ReloadTextures(string fontFile, string fontContents)
         {
             var unqualifiedTextureNames = GetSourceTextures(fontContents);
@@ -383,6 +382,8 @@ namespace RenderingLibrary.Graphics
                         // Make the tab character be equivalent to 4 spaces:
                         mCharacterInfo['\t'].ScaleX = space.ScaleX * 4;
                         mCharacterInfo['\t'].Spacing = space.Spacing * 4;
+                        mCharacterInfo['\t'].XAdvance = space.XAdvance * 4;
+                        mCharacterInfo['\t'].XOffsetInPixels = space.XOffsetInPixels * 4;
                     }
                     if(mCharacterInfo.Length > (int)'\n')
                     {
@@ -391,6 +392,9 @@ namespace RenderingLibrary.Graphics
                         mCharacterInfo['\n'].TURight = 0;
                         mCharacterInfo['\n'].TULeft = 0;
                         mCharacterInfo['\n'].XOffset = 0;
+
+                        mCharacterInfo['\t'].XAdvance = 0;
+                        mCharacterInfo['\t'].XOffsetInPixels = 0;
 
                     }
                 }
@@ -843,7 +847,9 @@ namespace RenderingLibrary.Graphics
             int distanceFromTop = characterInfo.GetPixelDistanceFromTop(mLineHeightInPixels);
 
             // There could be some offset for this character
-            int xOffset = characterInfo.GetPixelXOffset(mLineHeightInPixels);
+            int xOffset = 
+                characterInfo.XOffsetInPixels;
+            //characterInfo.GetPixelXOffset(mLineHeightInPixels);
 
             // Shift the point by the xOffset, which affects destination (drawing) but does not affect the advance of the position for the next letter
             currentCharacterDrawPosition.X += xOffset * fontScale;
@@ -852,7 +858,9 @@ namespace RenderingLibrary.Graphics
 
             // Shift it back.
             currentCharacterDrawPosition.X -= xOffset * fontScale;
-            currentCharacterDrawPosition.X += characterInfo.GetXAdvanceInPixels(mLineHeightInPixels) * fontScale;
+            currentCharacterDrawPosition.X += 
+                //characterInfo.GetXAdvanceInPixels(mLineHeightInPixels) * fontScale;
+                characterInfo.XAdvance * fontScale;
 
 
             return sourceRectangle;
@@ -1007,7 +1015,8 @@ namespace RenderingLibrary.Graphics
                         int distanceFromTop = characterInfo.GetPixelDistanceFromTop(LineHeightInPixels);
 
                         // There could be some offset for this character
-                        int xOffset = characterInfo.GetPixelXOffset(LineHeightInPixels);
+                        //int xOffset = characterInfo.GetPixelXOffset(LineHeightInPixels);
+                        int xOffset = characterInfo.XOffsetInPixels;
                         point.X += xOffset;
 
                         point.Y = lineNumber * LineHeightInPixels + distanceFromTop;
@@ -1019,7 +1028,8 @@ namespace RenderingLibrary.Graphics
                         imageData.Blit(imageDatas[pageIndex], sourceRectangle, point);
 
                         point.X -= xOffset;
-                        point.X += characterInfo.GetXAdvanceInPixels(LineHeightInPixels);
+                        //point.X += characterInfo.GetXAdvanceInPixels(LineHeightInPixels);
+                        point.X += characterInfo.XAdvance;
 
                     }
                     point.X = 0;
@@ -1066,15 +1076,38 @@ namespace RenderingLibrary.Graphics
 
                     if (isLast)
                     {
-                        toReturn += characterInfo.GetPixelWidth(Texture) + characterInfo.GetPixelXOffset(LineHeightInPixels);
+                        //toReturn += characterInfo.GetPixelWidth(Texture) + characterInfo.GetPixelXOffset(LineHeightInPixels);
+                        toReturn += characterInfo.GetPixelWidth(Texture) + characterInfo.XOffsetInPixels;
                     }
                     else
                     {
-                        toReturn += characterInfo.GetXAdvanceInPixels(LineHeightInPixels);
+                        // moving off of this function, and just usign XAdvance directly
+                        //toReturn += characterInfo.GetXAdvanceInPixels(LineHeightInPixels);
+                        toReturn += characterInfo.XAdvance;
                     }
                 }
             }
             return toReturn;
+        }
+
+
+        public void MakeNumbersMonospaced()
+        {
+            var character0 = GetCharacterInfo('0');
+
+            int characterIndex = (int)'1';
+
+            for (int i = characterIndex; i <= (int)'9'; i++)
+            {
+                var characterInfo = Characters[i];
+
+                var xAdvanceDifference = character0.XAdvance - characterInfo.XAdvance;
+
+                characterInfo.XAdvance = character0.XAdvance;
+                characterInfo.XOffsetInPixels += (int)(xAdvanceDifference / 2);
+            }
+
+
         }
 
         #endregion
@@ -1115,7 +1148,9 @@ namespace RenderingLibrary.Graphics
                 ScaleX = charInfo.Width / (float)lineHeightInPixels,
                 ScaleY = charInfo.Height / (float)lineHeightInPixels,
                 Spacing = 2 * charInfo.XAdvance / (float)lineHeightInPixels,
+                XAdvance = charInfo.XAdvance,
                 XOffset = 2 * charInfo.XOffset / (float)lineHeightInPixels,
+                XOffsetInPixels = charInfo.XOffset,
                 PageNumber = charInfo.Page,
             };
         }

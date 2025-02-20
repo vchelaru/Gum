@@ -215,7 +215,7 @@ namespace RenderingLibrary.Graphics.Fonts
             bmfcSave.CreateBitmapFontFilesIfNecessary(bmfcSave.FontCacheFileName, force:false);
         }
 
-        public void CreateBitmapFontFilesIfNecessary(string fileName, bool force = false)
+        public void CreateBitmapFontFilesIfNecessary(string fileName, bool force = false, bool forceMonoSpacedNumber = false)
         {
             string resourceName = "RenderingLibrary.Libraries.bmfont.exe";
 
