@@ -184,7 +184,7 @@ namespace Gum.Managers
             {
                 numberOf256Blocks = 5;
             }
-            else if (fontSize < 72)
+            else if (fontSize < 70)
             {
                 numberOf256Blocks = 6;
             }
