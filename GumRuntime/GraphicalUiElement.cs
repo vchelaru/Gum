@@ -751,16 +751,28 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 mX = value;
 
                 var parentGue = Parent as GraphicalUiElement;
+                var skipLayout = false;
                 // special case:
-                if (
-                    // WE might be able to get away with more changes here to suppress layouts, but this is a start...
-                    (parentGue == null || parentGue.WidthUnits == DimensionUnitType.RelativeToContainer )
-                    && XUnits == GeneralUnitType.PixelsFromSmall 
-                    && XOrigin == HorizontalAlignment.Left)
+                if (XUnits == GeneralUnitType.PixelsFromSmall && XOrigin == HorizontalAlignment.Left)
                 {
+                    if(parentGue== null)
+                    {
+                        skipLayout = true;
+                    }
+                    else
+                    {
+                        // WE might be able to get away with more changes here to suppress layouts, but this is a start...
+                        if(parentGue.WidthUnits.GetDependencyType() != HierarchyDependencyType.DependsOnChildren && 
+                            parentGue.ChildrenLayout != ChildrenLayout.LeftToRightStack &&
+                            parentGue.ChildrenLayout != ChildrenLayout.TopToBottomStack)
+                        {
+                            skipLayout = true;
+                        }
+                    }
+                    
                     this.mContainedObjectAsIpso.X = mX;
                 }
-                else
+                if(!skipLayout)
                 {
                     var refreshParent = IgnoredByParentSize == false;
                     UpdateLayout(refreshParent, 0);
