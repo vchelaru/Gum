@@ -752,7 +752,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
                 var parentGue = Parent as GraphicalUiElement;
                 // special case:
-                if (Parent as GraphicalUiElement == null && XUnits == GeneralUnitType.PixelsFromSmall && XOrigin == HorizontalAlignment.Left)
+                if (
+                    // WE might be able to get away with more changes here to suppress layouts, but this is a start...
+                    (parentGue == null || parentGue.WidthUnits == DimensionUnitType.RelativeToContainer )
+                    && XUnits == GeneralUnitType.PixelsFromSmall 
+                    && XOrigin == HorizontalAlignment.Left)
                 {
                     this.mContainedObjectAsIpso.X = mX;
                 }
