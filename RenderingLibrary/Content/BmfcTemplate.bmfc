@@ -23,8 +23,8 @@ spacingHoriz={SpacingHorizontal}
 spacingVert={SpacingVertical}
 
 # output file
-outWidth=512
-outHeight=256
+outWidth={OutputWidth}
+outHeight={OutputHeight}
 outBitDepth=32
 fontDescFormat=0
 fourChnlPacked=0

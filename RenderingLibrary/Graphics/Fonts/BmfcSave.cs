@@ -17,6 +17,8 @@ namespace RenderingLibrary.Graphics.Fonts
         public int SpacingVertical = 1;
         const string DefaultRanges = "32-126,160-255";
         public string Ranges = DefaultRanges;
+        public int OutputWidth = 512;
+        public int OutputHeight = 256;
 
         public void Save(string fileName)
         {
@@ -42,7 +44,8 @@ namespace RenderingLibrary.Graphics.Fonts
             template = template.Replace("{IsBold}", IsBold ? "1" : "0");
 
             template = template.Replace("{SpacingHorizontal}", SpacingHorizontal.ToString());
-            template = template.Replace("{SpacingVertical}", SpacingVertical.ToString());
+            template = template.Replace("{OutputWidth}", OutputWidth.ToString());
+            template = template.Replace("{OutputHeight}", OutputHeight.ToString());
 
 
 
@@ -208,10 +211,10 @@ namespace RenderingLibrary.Graphics.Fonts
             bmfcSave.SpacingHorizontal = spacingHorizontal;
             bmfcSave.SpacingVertical = spacingVertical;
 
-            bmfcSave.CreateBitmapFontFilesIfNecessary(bmfcSave.FontCacheFileName);
+            bmfcSave.CreateBitmapFontFilesIfNecessary(bmfcSave.FontCacheFileName, force:false);
         }
 
-        public void CreateBitmapFontFilesIfNecessary(string fileName)
+        public void CreateBitmapFontFilesIfNecessary(string fileName, bool force = false)
         {
             string resourceName = "RenderingLibrary.Libraries.bmfont.exe";
 
@@ -231,7 +234,7 @@ namespace RenderingLibrary.Graphics.Fonts
 
             string desiredFntFile = FileManager.RelativeDirectory + fileName;
 
-            if (!FileManager.FileExists(desiredFntFile))
+            if (!FileManager.FileExists(desiredFntFile) || force)
             {
 
                 string bmfcFileToSave = FileManager.RelativeDirectory + FileManager.RemoveExtension(fileName) + ".bmfc";

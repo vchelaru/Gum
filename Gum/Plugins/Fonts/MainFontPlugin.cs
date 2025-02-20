@@ -18,9 +18,16 @@ namespace Gum.Plugins.Fonts
 
             var refreshFontCacheMenuItem = this.AddMenuItem(new[]
             {
-                "Content", "Refresh Font Cache"
+                "Content", "Re-create missing font files"
             });
+            refreshFontCacheMenuItem.Click += (_,_) => HandleRefreshFontCache(forceRecreate:false);
 
+
+            var forceFontRecreationMenuItem = this.AddMenuItem(new[]
+            {
+                "Content", "Force re-create all font files"
+            });
+            refreshFontCacheMenuItem.Click += (_, _) => HandleRefreshFontCache(forceRecreate: true);
 
             var viewFontCache = this.AddMenuItem(new[]
             {
@@ -28,7 +35,6 @@ namespace Gum.Plugins.Fonts
             viewFontCache.Click += HandleViewFontCache;
 
 
-            refreshFontCacheMenuItem.Click += HandleRefreshFontCache;
 
             this.ProjectLoad += HandleProjectLoaded;
 
@@ -61,7 +67,7 @@ namespace Gum.Plugins.Fonts
             System.Diagnostics.Process.Start(FontManager.Self.AbsoluteFontCacheFolder);
         }
 
-        private void HandleRefreshFontCache(object sender, EventArgs e)
+        private void HandleRefreshFontCache(bool forceRecreate)
         {
             var gumProjectSave = ProjectState.Self.GumProjectSave;
             if(gumProjectSave == null)
@@ -72,7 +78,7 @@ namespace Gum.Plugins.Fonts
             else
             {
                 FontManager.Self.CreateAllMissingFontFiles(
-                    ProjectState.Self.GumProjectSave);
+                    ProjectState.Self.GumProjectSave, forceRecreate:forceRecreate);
             }
         }
     }
