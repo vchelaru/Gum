@@ -1512,10 +1512,9 @@ public class CustomSetPropertyOnRenderable
         // the project doesn't actually use Arial12.
         // We need to wait until the graphical UI element is fully created before we try to throw an exception, so
         // that's what we're going to do here:
-        if (graphicalUiElement != null && graphicalUiElement.RenderableComponent is Text)
+        if (graphicalUiElement != null && graphicalUiElement.RenderableComponent is Text asText)
         {
             // check it
-            var asText = graphicalUiElement.RenderableComponent as Text;
             if (asText.BitmapFont == null)
             {
                 if (graphicalUiElement.UseCustomFont)
@@ -1550,7 +1549,7 @@ public class CustomSetPropertyOnRenderable
                     var expectedFont = graphicalUiElement.CustomFontFile?.Replace("\\", "/");
                     var currentFont = asText.BitmapFont.FontFile?.Replace("\\", "/");
 
-                    if (!expectedFont.Equals(currentFont, StringComparison.InvariantCultureIgnoreCase))
+                    if (expectedFont != null && !expectedFont.Equals(currentFont, StringComparison.InvariantCultureIgnoreCase))
                     {
                         throw new System.IO.FileNotFoundException($"Expected:{expectedFont} but currently using:{currentFont}");
                     }

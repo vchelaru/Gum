@@ -149,7 +149,14 @@ namespace Gum.Managers
                 bmfcSave.SpacingVertical = spacingVertical;
 
                 int numberWide, numberTall;
-                EstimateBlocksNeeded(out numberWide, out numberTall, fontSize.Value);
+
+                var effectiveFontSize = fontSize.Value + System.Math.Max(spacingHorizontal, spacingVertical);
+                if(isBold)
+                {
+                    effectiveFontSize += (int)(fontSize.Value * 0.08);
+                }
+
+                EstimateBlocksNeeded(out numberWide, out numberTall, effectiveFontSize);
 
                 bmfcSave.OutputWidth = numberWide * 256;
                 bmfcSave.OutputHeight = numberTall * 256;
@@ -158,57 +165,59 @@ namespace Gum.Managers
             }
         }
 
-        private static void EstimateBlocksNeeded(out int numberWide, out int numberTall, int fontSize)
+        private static void EstimateBlocksNeeded(out int numberWide, out int numberTall, int effectiveFontSize)
         {
             // todo - eventually this should look at the output and adjust in response. For now, we'll just estimate
             // based on the font size
             int numberOf256Blocks = 2;
 
-            if(fontSize < 20)
+            if(effectiveFontSize < 20)
             {
                 numberOf256Blocks = 1;
             }
-            else if(fontSize < 35)
+            else if(effectiveFontSize < 35)
             {
                 numberOf256Blocks = 2;
             }
-            else if(fontSize < 47)
+            else if(effectiveFontSize < 47)
             {
                 numberOf256Blocks = 3;
             }
-            else if(fontSize < 56)
+            else if(effectiveFontSize < 56)
             {
                 numberOf256Blocks = 4;
             }
-            else if (fontSize < 63)
+            else if (effectiveFontSize < 63)
             {
                 numberOf256Blocks = 5;
             }
-            else if (fontSize < 70)
+            // futura 65 with 3 spacing barely spills over
+            //else if (effectiveFontSize < 70)
+            else if (effectiveFontSize < 68)
             {
                 numberOf256Blocks = 6;
             }
-            else if (fontSize < 82)
+            else if (effectiveFontSize < 82)
             {
                 numberOf256Blocks = 8;
             }
-            else if (fontSize < 95)
+            else if (effectiveFontSize < 95)
             {
                 numberOf256Blocks = 10;
             }
-            else if (fontSize < 103)
+            else if (effectiveFontSize < 103)
             {
                 numberOf256Blocks = 12;
             }
-            else if (fontSize < 113)
+            else if (effectiveFontSize < 113)
             {
                 numberOf256Blocks = 14;
             }
-            else if (fontSize < 120)
+            else if (effectiveFontSize < 120)
             {
                 numberOf256Blocks = 16;
             }
-            else if(fontSize < 131)
+            else if(effectiveFontSize < 131)
             {
                 numberOf256Blocks = 18;
             }

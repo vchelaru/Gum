@@ -44,6 +44,7 @@ namespace RenderingLibrary.Graphics.Fonts
             template = template.Replace("{IsBold}", IsBold ? "1" : "0");
 
             template = template.Replace("{SpacingHorizontal}", SpacingHorizontal.ToString());
+            template = template.Replace("{SpacingVertical}", SpacingVertical.ToString());
             template = template.Replace("{OutputWidth}", OutputWidth.ToString());
             template = template.Replace("{OutputHeight}", OutputHeight.ToString());
 
