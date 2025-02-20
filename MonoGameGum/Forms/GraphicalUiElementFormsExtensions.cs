@@ -30,8 +30,8 @@ public static class GraphicalUiElementFormsExtensions
             throw new ArgumentException("The GraphicalUiElement with the name " + name + " is not an InteractiveGue");
         }
 
-        var formsControlAsObject = frameworkVisualAsInteractiveGue?.FormsControlAsObject;
 #endif
+        var formsControlAsObject = frameworkVisualAsInteractiveGue?.FormsControlAsObject;
 
 #if DEBUG
 
@@ -40,8 +40,8 @@ public static class GraphicalUiElementFormsExtensions
             throw new ArgumentException("The GraphicalUiElement with the name " + name + " does not have a FormsControlAsObject");
         }
 #endif
-
-        if (formsControlAsObject is FrameworkElementType frameworkElement == false)
+        var frameworkElement = formsControlAsObject as FrameworkElementType;
+        if (frameworkElement == null)
         {
 #if DEBUG
             throw new ArgumentException("The GraphicalUiElement with the name " + name + " is not of type " + typeof(FrameworkElementType));
