@@ -105,7 +105,7 @@ namespace Gum.Plugins.PropertiesWindowPlugin
                     if (!string.IsNullOrEmpty(viewModel.LocalizationFile) && FileManager.IsRelative(viewModel.LocalizationFile) == false)
                     {
                         viewModel.LocalizationFile = FileManager.MakeRelative(viewModel.LocalizationFile,
-                            GumState.Self.ProjectState.ProjectDirectory);
+                            GumState.Self.ProjectState.ProjectDirectory, preserveCase:true);
                         shouldSaveAndRefresh = false;
                     }
                     else
@@ -169,7 +169,7 @@ namespace Gum.Plugins.PropertiesWindowPlugin
                     {
                         // This will loop:
                         viewModel.SinglePixelTextureFile = FileManager.MakeRelative(viewModel.SinglePixelTextureFile,
-                            GumState.Self.ProjectState.ProjectDirectory);
+                            GumState.Self.ProjectState.ProjectDirectory, preserveCase:true);
                         shouldSaveAndRefresh = false;
                     }
                     else
