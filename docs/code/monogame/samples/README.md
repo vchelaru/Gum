@@ -10,6 +10,10 @@ Gum samples are located in the Gum repository. The GitHub repository can be foun
 
 {% embed url="https://github.com/vchelaru/Gum" %}
 
+Direct link to samples:
+
+{% embed url="https://github.com/vchelaru/Gum/tree/master/Samples" %}
+
 ### Opening Samples
 
 Once you have cloned the repository, navigate to the \<Gum Root>/Samples folder.
