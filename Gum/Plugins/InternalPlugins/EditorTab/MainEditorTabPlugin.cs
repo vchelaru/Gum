@@ -117,6 +117,14 @@ internal class MainEditorTabPlugin : InternalPlugin
         this.WireframeResized += _scrollbarService.HandleWireframeResized;
         this.ElementSelected += _scrollbarService.HandleElementSelected;
         this.UiZoomValueChanged += HandleUiZoomValueChanged;
+        this.ProjectLoad += HandleProjectLoad;
+    }
+
+    private void HandleProjectLoad(GumProjectSave save)
+    {
+
+        GraphicalUiElement.CanvasWidth = save.DefaultCanvasWidth;
+        GraphicalUiElement.CanvasHeight = save.DefaultCanvasHeight;
     }
 
     private void HandleElementDeleted(ElementSave save)

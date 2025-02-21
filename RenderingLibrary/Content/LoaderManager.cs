@@ -20,6 +20,8 @@ namespace RenderingLibrary.Content
         
         Dictionary<string, IDisposable> mCachedDisposables = new Dictionary<string, IDisposable>(StringComparer.OrdinalIgnoreCase);
 
+        public IReadOnlyDictionary<string, IDisposable> CachedDisposables => mCachedDisposables;
+
         ContentManager mContentManager;
 
         

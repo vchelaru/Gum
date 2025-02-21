@@ -234,9 +234,6 @@ namespace Gum
                 {
                     ProjectManager.Self.SaveProject(forceSaveContainedElements: true);
                 }
-
-                GraphicalUiElement.CanvasWidth = mGumProjectSave.DefaultCanvasWidth;
-                GraphicalUiElement.CanvasHeight = mGumProjectSave.DefaultCanvasHeight;
             }
             else
             {
