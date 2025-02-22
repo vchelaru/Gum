@@ -92,6 +92,15 @@ namespace RenderingLibrary
                 () => new ArcRuntime());
 
             ElementSaveExtensions.RegisterGueInstantiation(
+                "Circle",
+                () => new CircleRuntime());
+
+            ElementSaveExtensions.RegisterGueInstantiation(
+                "ColoredCircle",
+                () => new ColoredCircleRuntime());
+
+
+            ElementSaveExtensions.RegisterGueInstantiation(
                 "Container",
                 () => new ContainerRuntime());
 

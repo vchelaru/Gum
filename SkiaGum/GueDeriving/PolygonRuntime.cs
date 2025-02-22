@@ -56,6 +56,8 @@ namespace SkiaGum.GueDeriving
             if (fullInstantiation)
             {
                 SetContainedObject(new Polygon());
+                ContainedPolygon.IsFilled = false;
+                ContainedPolygon.StrokeWidth = 1;
                 // If width and height are 0, it won't draw
                 Width = 1;
                 Height = 1;

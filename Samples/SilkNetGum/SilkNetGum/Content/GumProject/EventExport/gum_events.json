@@ -294,6 +294,20 @@
         "ElementType": "Screens",
         "EventType": 5,
         "TimestampUtc": "2025-02-22T18:57:32.6655961Z"
+      },
+      {
+        "NewName": "GeneralScreen.CircleInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-02-22T19:01:26.4375204Z"
+      },
+      {
+        "NewName": "GeneralScreen.PolygonInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-02-22T19:14:42.4737755Z"
       }
     ]
   }

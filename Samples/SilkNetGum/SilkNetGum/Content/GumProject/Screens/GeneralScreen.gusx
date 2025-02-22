@@ -34,6 +34,18 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>string</Type>
+      <Name>CircleInstance.Parent</Name>
+      <Value xsi:type="xsd:string">Column2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>CircleInstance.Radius</Name>
+      <Value xsi:type="xsd:float">38</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>float</Type>
       <Name>ColoredCircleInstance.GradientInnerRadius</Name>
       <Value xsi:type="xsd:float">5</Value>
@@ -226,6 +238,24 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>string</Type>
+      <Name>PolygonInstance.Parent</Name>
+      <Value xsi:type="xsd:string">Column2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>PolygonInstance.X</Name>
+      <Value xsi:type="xsd:float">46</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>PolygonInstance.Y</Name>
+      <Value xsi:type="xsd:float">40</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>int</Type>
       <Name>RoundedRectangleInstance.Blue</Name>
       <Value xsi:type="xsd:int">0</Value>
@@ -397,7 +427,7 @@
     <Variable>
       <Type>float</Type>
       <Name>SvgInstance.Width</Name>
-      <Value xsi:type="xsd:float">211</Value>
+      <Value xsi:type="xsd:float">121</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -560,6 +590,38 @@
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value />
     </VariableList>
+    <VariableList xsi:type="VariableListSaveOfVector2">
+      <Type>Vector2</Type>
+      <Name>PolygonInstance.Points</Name>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <Vector2>
+          <X>-32</X>
+          <Y>-32</Y>
+        </Vector2>
+        <Vector2>
+          <X>52</X>
+          <Y>-42</Y>
+        </Vector2>
+        <Vector2>
+          <X>19.5</X>
+          <Y>-1.5</Y>
+        </Vector2>
+        <Vector2>
+          <X>49</X>
+          <Y>45</Y>
+        </Vector2>
+        <Vector2>
+          <X>-32</X>
+          <Y>32</Y>
+        </Vector2>
+        <Vector2>
+          <X>-32</X>
+          <Y>-32</Y>
+        </Vector2>
+      </Value>
+    </VariableList>
   </State>
   <Instance>
     <Name>TextInstance</Name>
@@ -614,6 +676,16 @@
   <Instance>
     <Name>SpriteInstance1</Name>
     <BaseType>Sprite</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>CircleInstance</Name>
+    <BaseType>Circle</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>PolygonInstance</Name>
+    <BaseType>Polygon</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Behaviors />

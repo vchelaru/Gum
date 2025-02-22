@@ -50,6 +50,19 @@ namespace SkiaGum
             }
             else if (mContainedObjectAsIpso is Circle asCircle)
             {
+                if(graphicalUiElement is CircleRuntime circleRuntime)
+                {
+                    switch (propertyName)
+                    {
+                        case "Radius":
+                            var radius = (float)value;
+                            graphicalUiElement.Width = radius * 2;
+                            graphicalUiElement.Height = radius * 2;
+                            break;
+                    }
+
+                }
+
                 handled = TrySetPropertiesOnRenderableBase(asCircle, graphicalUiElement, propertyName, value);
                 if (!handled)
                 {
@@ -72,11 +85,36 @@ namespace SkiaGum
                     handled = TrySetPropertyOnSprite(asSprite, graphicalUiElement, propertyName, value);
                 }
             }
+            else if(mContainedObjectAsIpso is Polygon asPolygon)
+            {
+                if(!handled)
+                {
+                    handled = TrySetPropertyOnPolygon(asPolygon, graphicalUiElement, propertyName, value);
+                }
+            }
             if (!handled)
             {
                 GraphicalUiElement.SetPropertyThroughReflection(mContainedObjectAsIpso, graphicalUiElement, propertyName, value);
                 //SetPropertyOnRenderable(mContainedObjectAsIpso, propertyName, value);
             }
+        }
+
+        private static bool TrySetPropertyOnPolygon(Polygon asPolygon, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+        {
+            switch(propertyName)
+            {
+                case "Points":
+                    if(value is List<System.Numerics.Vector2> vector2s)
+                    {
+                        var toAssign = new List<SKPoint>();
+                        toAssign.AddRange(vector2s.Select(item => new SKPoint(item.X, item.Y)));
+                        asPolygon.Points = toAssign;
+                        return true;
+                    }
+                    //asPolygon.Points = ;
+                    break;
+            }
+            return false;
         }
 
         private static bool TrySetPropertyOnSprite(Sprite asSprite, GraphicalUiElement graphicalUiElement, string propertyName, object value)
