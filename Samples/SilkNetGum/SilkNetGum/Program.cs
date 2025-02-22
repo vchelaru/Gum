@@ -65,14 +65,6 @@ unsafe class Program
 
     private static void Draw()
     {
-        sKPaint.Color = SKColors.Red;
-        canvas.DrawCircle(100, 100, 100, sKPaint);
-        sKPaint.Color = SKColors.Green;
-        sKPaint.FakeBoldText = true;
-        sKPaint.TextSize = 28;
-
-        canvas.DrawText("Custom Font from File", 20, 50, paintFromFile);
-
         GumService.Default.Draw();
 
         canvas.Flush();
