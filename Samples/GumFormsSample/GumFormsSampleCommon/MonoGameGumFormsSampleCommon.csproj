@@ -27,6 +27,7 @@
     <Compile Include="CustomRuntimes\FullyCustomizedButton.cs" />
     <Compile Include="GumFormsSampleGame.cs" />
     <Compile Include="Screens\DemoScreenGumRuntime.cs" />
+    <Compile Include="Screens\ListBoxBindingScreen.cs" />
     <Compile Include="ViewModels\DemoScreenViewModel.cs" />
   </ItemGroup>
 	

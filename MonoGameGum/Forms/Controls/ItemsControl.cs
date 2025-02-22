@@ -167,7 +167,16 @@ public class ItemsControl : ScrollViewer
     {
         if (VisualTemplate != null)
         {
-            return VisualTemplate.CreateContent(vm) as InteractiveGue;
+            var toReturn = VisualTemplate.CreateContent(vm);
+
+            if(toReturn != null && toReturn is not InteractiveGue)
+            {
+                throw new InvalidOperationException(
+                    "The visual template for this ListBox returned an instance which did not inherit from InteractiveGue. This is a requirement.");
+            }
+
+
+            return toReturn as InteractiveGue;
         }
         else
         {

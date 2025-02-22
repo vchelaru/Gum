@@ -52,7 +52,7 @@ public class GumFormsSampleGame : Game
         var gumProject = GumService.Default.Initialize(this, "FormsGumProject/GumProject.gumx");
         FormsUtilities.Cursor.TransformMatrix = Matrix.CreateScale(1/scale);
 
-        const int screenNumber = 0;
+        const int screenNumber = 4;
 
         switch (screenNumber)
         {
@@ -67,6 +67,11 @@ public class GumFormsSampleGame : Game
                 break;
             case 3:
                 InitializeComplexListBoxItemScreen();
+                break;
+            case 4:
+                var screen = new ListBoxBindingScreen();
+                screen.AddToManagers();
+                Roots.Add(screen);
                 break;
         }
 
