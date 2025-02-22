@@ -226,6 +226,7 @@
   * [Samples](code/monogame/samples/README.md)
     * [MonoGameGumFormsSample](code/monogame/samples/monogamegumformssample.md)
 * [Nez](code/nez.md)
+* [Silk.NET](code/silk.net.md)
 * [SkiaGum](code/skiagum/README.md)
   * [Setup](code/skiagum/setup/README.md)
     * [WPF](code/skiagum/setup/wpf.md)
