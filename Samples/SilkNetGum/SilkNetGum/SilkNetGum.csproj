@@ -1,0 +1,45 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+		<PublishAot>true</PublishAot>
+		<DefineConstants Condition="$([MSBuild]::IsOSPlatform('Windows'))">$(DefineConstants);WINDOWS</DefineConstants>
+		<DefineConstants Condition="$([MSBuild]::IsOSPlatform('OSX'))">$(DefineConstants);MACOS</DefineConstants>
+		<DefineConstants Condition="'$(TargetFramework)' == 'net7.0-ios'">$(DefineConstants);IOS</DefineConstants>
+		<DefineConstants Condition="'$(TargetFramework)' == 'net7.0-maccatalyst'">$(DefineConstants);MACCATALYST</DefineConstants>
+		<DefineConstants Condition="'$(TargetFramework)' == 'net7.0-android'">$(DefineConstants);ANDROID</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Avalonia.Skia" Version="11.2.3" />
+		<PackageReference Include="Silk.NET.EGL" Version="1.9.0" />
+		<PackageReference Include="Silk.NET.EGL.Extensions.ANGLE" Version="1.9.0" />
+		<PackageReference Include="Silk.NET.EGL.Extensions.EXT" Version="1.9.0" />
+		<PackageReference Include="Silk.NET.OpenGLES" Version="2.22.0" />
+		<PackageReference Include="Silk.NET.SDL" Version="2.21.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\..\SkiaGum\SkiaGum.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="libEGL.dll">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Update="libGLESv2.dll">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Super Morning.ttf">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Winter Selfie.ttf">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+
+</Project>

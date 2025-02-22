@@ -1,4 +1,7 @@
-﻿using RenderingLibrary.Graphics;
+﻿using Gum.Wireframe;
+using RenderingLibrary.Graphics;
+using SkiaGum;
+using System;
 
 namespace RenderingLibrary
 {
@@ -10,10 +13,15 @@ namespace RenderingLibrary
         /// </summary>
         public static float GlobalFontScale { get; set; } = 1.0f;
 
+        static SystemManagers _default;
         public static SystemManagers Default
         {
-            get;
-            set;
+            get => _default;
+            set
+            {
+                _default = value;
+                ISystemManagers.Default = value;
+            }
         }
 
         public SkiaSharp.SKCanvas Canvas { get; set; }
@@ -40,11 +48,31 @@ namespace RenderingLibrary
             //SpriteManager.Managers = this;
             //ShapeManager.Managers = this;
             //Tex
+
+            GraphicalUiElement.AddRenderableToManagers = AddRenderableToManagers;
+
+        }
+
+        private void AddRenderableToManagers(IRenderableIpso renderable, ISystemManagers managers, Layer layer)
+        {
+            if (layer == null)
+            {
+                managers.Renderer.Layers[0].Add(renderable);
+            }
+            else
+            {
+                layer.Add(renderable);
+            }
         }
 
         public void InvalidateSurface()
         {
-            
+
+        }
+
+        public void Draw()
+        {
+            Renderer.Draw(this);
         }
     }
 }

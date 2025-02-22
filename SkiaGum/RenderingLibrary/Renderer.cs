@@ -11,7 +11,7 @@ namespace RenderingLibrary.Graphics
     public class Renderer : IRenderer
     {
 
-        List<Layer> mLayers = new List<Layer>();
+        List<Layer> _layers = new List<Layer>();
         ReadOnlyCollection<Layer> mLayersReadOnly;
         public ReadOnlyCollection<Layer> Layers
         {
@@ -23,7 +23,7 @@ namespace RenderingLibrary.Graphics
 
         public Layer MainLayer => 
             // Not sure if we have any layers in skia so do a FirstOrDefault
-            mLayers.FirstOrDefault();
+            _layers.FirstOrDefault();
 
         /// <summary>
         /// Whether renderable objects should call Render
@@ -68,14 +68,39 @@ namespace RenderingLibrary.Graphics
         {
             Camera = new Camera();
 
-            mLayersReadOnly = new ReadOnlyCollection<Layer>(mLayers);
+            mLayersReadOnly = new ReadOnlyCollection<Layer>(_layers);
 
+            _layers.Add(new Layer());
+            _layers[0].Name = "Main Layer";
+        }
+
+        public void Draw(SystemManagers managers)
+        {
+            //ClearPerformanceRecordingVariables();
+
+            if (managers == null)
+            {
+                managers = SystemManagers.Default;
+            }
+
+            Draw(managers, _layers);
+
+            //ForceEnd();
+        }
+
+        public void Draw(SystemManagers managers, List<Layer> layers)
+        {
+            foreach(var layer in layers)
+            {
+                Draw(layer.Renderables, managers, isTopLevelDraw: true);
+            }
         }
 
         //public void Draw(SystemManagers systemManagers)
         //{
         //    var canvas = systemManagers.Canvas;
         //}
+
 
         // This syntax is a little different than standard Gum, but we're moving in that direction incrementally:
         public void Draw(IList<IRenderableIpso> whatToRender, SystemManagers managers)
@@ -89,11 +114,14 @@ namespace RenderingLibrary.Graphics
         }
 
         void Draw(IList<IRenderableIpso> whatToRender, SystemManagers managers, bool isTopLevelDraw = false)
-        { 
-            if (ClearsCanvas && isTopLevelDraw)
+        {
+            if (ClearsCanvas)
             {
                 managers.Canvas.Clear();
-            
+            }
+
+            if(isTopLevelDraw)
+            { 
                 if (Camera.Zoom != 1)
                 {
                     managers.Canvas.Scale(Camera.Zoom);
