@@ -4,6 +4,8 @@
 
 The MonoGameGumFormsSample includes a number of pages showing different features related to using Gum Forms.
 
+Direct link: [https://github.com/vchelaru/Gum/tree/master/Samples/GumFormsSample](https://github.com/vchelaru/Gum/tree/master/Samples/GumFormsSample)
+
 <figure><img src="../../../.gitbook/assets/27_12 03 49.gif" alt=""><figcaption><p>MonoGameGumFormsSample showing the FromFileDemoScreen</p></figcaption></figure>
 
 The screens can be switched by modifying the `screenNumber` variable in the Initialize code:
