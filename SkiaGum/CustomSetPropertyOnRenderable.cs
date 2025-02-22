@@ -1,8 +1,12 @@
-﻿using Gum.DataTypes;
+﻿using Gum.Converters;
+using Gum.DataTypes;
+using Gum.Managers;
 using Gum.RenderingLibrary;
 using Gum.Wireframe;
 using HarfBuzzSharp;
 using RenderingLibrary.Graphics;
+using SkiaGum.Content;
+using SkiaGum.Renderables;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,11 +30,244 @@ namespace SkiaGum
             {
                 handled = TrySetPropertyOnText(asText, graphicalUiElement, propertyName, value);
             }
-
+            else if(mContainedObjectAsIpso is Arc asArc)
+            {
+                handled = TrySetPropertiesOnRenderableBase(asArc, graphicalUiElement, propertyName, value);
+                if(!handled)
+                {
+                    handled = TrySetPropertyOnArc(asArc, graphicalUiElement, propertyName, value);
+                }
+            }
+            else if(mContainedObjectAsIpso is RoundedRectangle asRoundedRectangle)
+            {
+                handled = TrySetPropertiesOnRenderableBase(asRoundedRectangle, graphicalUiElement, propertyName, value);
+                if(!handled)
+                {
+                    handled = TrySetPropertyOnRoundedRectangle(asRoundedRectangle, graphicalUiElement, propertyName, value);
+                }
+            }
+            else if (mContainedObjectAsIpso is Circle asCircle)
+            {
+                handled = TrySetPropertiesOnRenderableBase(asCircle, graphicalUiElement, propertyName, value);
+                if (!handled)
+                {
+                    // todo - if there end up being circle-specific properties, set them here
+                    //handled = TrySetPropertyOnRoundedRectangle(asRoundedRectangle, graphicalUiElement, propertyName, value);
+                }
+            }
+            else if(mContainedObjectAsIpso is VectorSprite asSvg)
+            {
+                //handled = TrySetPropertiesOnRenderableBase(asSvg, graphicalUiElement, propertyName, value);
+                if(!handled)
+                {
+                    handled = TrySetPropertyOnSvg(asSvg, graphicalUiElement, propertyName, value);
+                }
+            }
             if (!handled)
             {
+                GraphicalUiElement.SetPropertyThroughReflection(mContainedObjectAsIpso, graphicalUiElement, propertyName, value);
                 //SetPropertyOnRenderable(mContainedObjectAsIpso, propertyName, value);
             }
+        }
+
+        private static bool TrySetPropertyOnSvg(VectorSprite asSvg, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+        {
+            switch(propertyName) 
+            {
+                case "SourceFile":
+                    var asString = value as string;
+
+                    if(!string.IsNullOrEmpty(asString))
+                    {
+                        asSvg.Texture = SkiaResourceManager.GetSvg(asString);
+                    }
+                    else
+                    {
+                        asSvg.Texture = null;
+                    }
+                    break;
+            }
+            return false;
+        }
+
+        private static bool TrySetPropertiesOnRenderableBase(RenderableBase renderableBase, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+        {
+            switch (propertyName)
+            {
+                case nameof(RenderableBase.Alpha):
+                    renderableBase.Alpha = (int)value;
+                    return true;
+                case nameof(RenderableBase.Alpha1):
+                    renderableBase.Alpha1 = (int)value;
+                    return true;
+                case nameof(RenderableBase.Alpha2):
+                    renderableBase.Alpha2 = (int)value;
+                    return true;
+                case nameof(RenderableBase.Blue):
+                    renderableBase.Blue = (int)value;
+                    return true;
+                case nameof(RenderableBase.Blue1):
+                    renderableBase.Blue1 = (int)value;
+                    return true;
+                case nameof(RenderableBase.Blue2):
+                    renderableBase.Blue2 = (int)value;
+                    return true;
+                case nameof(RenderableBase.DropshadowAlpha):
+                    renderableBase.DropshadowAlpha = (int)value;
+                    return true;
+                case nameof(RenderableBase.DropshadowBlue):
+                    renderableBase.DropshadowBlue = (int)value;
+                    return true;
+                case nameof(RenderableBase.DropshadowBlurX):
+                    renderableBase.DropshadowBlurX = (float)value;
+                    return true;
+                case nameof(RenderableBase.DropshadowBlurY):
+                    renderableBase.DropshadowBlurY = (float)value;
+                    return true;
+                case nameof(RenderableBase.DropshadowGreen):
+                    renderableBase.DropshadowGreen = (int)value;
+                    return true;
+                case nameof(RenderableBase.DropshadowOffsetX):
+                    renderableBase.DropshadowOffsetX = (float)value;
+                    return true;
+                case nameof(RenderableBase.DropshadowOffsetY):
+                    renderableBase.DropshadowOffsetY = (float)value;
+                    return true;
+                case nameof(RenderableBase.DropshadowRed):
+                    renderableBase.DropshadowRed = (int)value;
+                    return true;
+                case nameof(RenderableBase.GradientInnerRadius):
+                    renderableBase.GradientInnerRadius = (float)value;
+                    return true;
+                case nameof(RenderableBase.GradientInnerRadiusUnits):
+                    renderableBase.GradientInnerRadiusUnits = (DimensionUnitType)value;
+                    return true;
+                case nameof(RenderableBase.GradientOuterRadius):
+                    renderableBase.GradientOuterRadius = (float)value;
+                    return true;
+                case nameof(RenderableBase.GradientOuterRadiusUnits):
+                    renderableBase.GradientOuterRadiusUnits = (DimensionUnitType)value;
+                    return true;
+                case nameof(RenderableBase.GradientType):
+                    renderableBase.GradientType = (GradientType)value;
+                    return true;
+                case nameof(RenderableBase.GradientX1):
+                    renderableBase.GradientX1 = (float)value;
+                    return true;
+                case nameof(RenderableBase.GradientX1Units):
+                    {
+                        if (value is PositionUnitType positionUnitType)
+                        {
+                            renderableBase.GradientX1Units = UnitConverter.ConvertToGeneralUnit(positionUnitType);
+                        }
+                        else
+                        {
+                            renderableBase.GradientX1Units = (GeneralUnitType)value;
+                        }
+                    }
+                    return true;
+                case nameof(RenderableBase.GradientX2):
+                    renderableBase.GradientX2 = (float)value;
+                    return true;
+                case nameof(RenderableBase.GradientX2Units):
+                    {
+                        if (value is PositionUnitType positionUnitType)
+                        {
+                            renderableBase.GradientX2Units = UnitConverter.ConvertToGeneralUnit(positionUnitType);
+                        }
+                        else
+                        {
+                            renderableBase.GradientX2Units = (GeneralUnitType)value;
+                        }
+                    }
+                    return true;
+                case nameof(RenderableBase.GradientY1):
+                    renderableBase.GradientY1 = (float)value;
+                    return true;
+                case nameof(RenderableBase.GradientY1Units):
+                    {
+                        if(value is PositionUnitType positionUnitType)
+                        {
+                            renderableBase.GradientY1Units = UnitConverter.ConvertToGeneralUnit(positionUnitType);
+                        }
+                        else
+                        {
+                            renderableBase.GradientY1Units = (GeneralUnitType)value;
+                        }
+                    }
+                    return true;
+                case nameof(RenderableBase.GradientY2):
+                    renderableBase.GradientY2 = (float)value;
+                    return true;
+                case nameof(RenderableBase.GradientY2Units):
+                    {
+                        if(value is PositionUnitType positionUnitType)
+                        {
+                            renderableBase.GradientY2Units = UnitConverter.ConvertToGeneralUnit(positionUnitType);
+                        }
+                        else
+                        {
+                            renderableBase.GradientY2Units = (GeneralUnitType)value;
+                        }
+                    }
+
+                    return true;
+                case nameof(RenderableBase.Green):
+                    renderableBase.Green = (int)value;
+                    return true;
+                case nameof(RenderableBase.Green1):
+                    renderableBase.Green1 = (int)value;
+                    return true;
+                case nameof(RenderableBase.Green2):
+                    renderableBase.Green2 = (int)value;
+                    return true;
+                case nameof(RenderableBase.HasDropshadow):
+                    renderableBase.HasDropshadow = (bool)value;
+                    return true;
+                case nameof(RenderableBase.IsFilled):
+                    renderableBase.IsFilled = (bool)value;
+                    return true;
+                case nameof(RenderableBase.Red):
+                    renderableBase.Red = (int)value;
+                    return true;
+                case nameof(RenderableBase.Red1):
+                    renderableBase.Red1 = (int)value;
+                    return true;
+                case nameof(RenderableBase.Red2):
+                    renderableBase.Red2 = (int)value;
+                    return true;
+                case nameof(RenderableBase.StrokeWidth):
+                    renderableBase.StrokeWidth = (float)value;
+                    return true;
+                case nameof(RenderableBase.UseGradient):
+                    renderableBase.UseGradient = (bool)value;
+                    return true;
+                    // todo - more here...
+            }
+            return false;
+        }
+
+        private static bool TrySetPropertyOnArc(Arc asArc, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+        {
+            switch(propertyName)
+            {
+                case nameof(Arc.Thickness):
+                    asArc.Thickness = (float)value;
+                    return true;
+            }
+            return false;
+        }
+
+        private static bool TrySetPropertyOnRoundedRectangle(RoundedRectangle asRoundedRectangle, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+        {
+            switch (propertyName) 
+            {
+                case nameof(RoundedRectangle.CornerRadius):
+                    asRoundedRectangle.CornerRadius = (float)value;
+                    return true;
+            }
+
+            return false;
         }
 
         public static void UpdateToFontValues(IText itext, GraphicalUiElement graphicalUiElement)

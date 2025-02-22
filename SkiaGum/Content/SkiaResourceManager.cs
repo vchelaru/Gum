@@ -5,6 +5,7 @@ using System.Reflection;
 using SkiaSharp;
 using SkiaSharp.Skottie;
 using Svg.Skia;
+using ToolsUtilities;
 
 namespace SkiaGum.Content
 {
@@ -29,20 +30,31 @@ namespace SkiaGum.Content
 
         private static void CacheSvg(string resourceName)
         {
-            using (Stream stream = GetManifestResourceStream(
-                resourceName, ResourceAssembly))
+            var absoluteFile = FileManager.RelativeDirectory + resourceName;
+            if(System.IO.File.Exists(absoluteFile))
             {
+                using var fileStream = System.IO.File.OpenRead(absoluteFile);
                 SKSvg svg = new SKSvg();
-
-                try
-                {
-                    svg.Load(stream);
-                }
-                catch (Exception e)
-                {
-                    throw new Exception($"Error loading SVG {resourceName}\n{e}");
-                }
+                svg.Load(fileStream);
                 svgCache.Add(resourceName, svg);
+            }
+            else
+            {
+                using (Stream stream = GetManifestResourceStream(
+                    resourceName, ResourceAssembly))
+                {
+                    SKSvg svg = new SKSvg();
+
+                    try
+                    {
+                        svg.Load(stream);
+                    }
+                    catch (Exception e)
+                    {
+                        throw new Exception($"Error loading SVG {resourceName}\n{e}");
+                    }
+                    svgCache.Add(resourceName, svg);
+                }
             }
         }
 
@@ -221,7 +233,7 @@ namespace SkiaGum.Content
         {
             CustomResourceAssembly = resourceAssembly;
             svgCache = new Dictionary<string, SKSvg>();
-
+            animationCache = new Dictionary<string, Animation>();
             typefaceCache = new Dictionary<int, SKTypeface>();
 
             foreach (int i in Enum.GetValues(typeof(TypefaceType)))

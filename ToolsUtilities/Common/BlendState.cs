@@ -44,12 +44,12 @@ namespace Gum
     {
         string Name;
 
-        private Color _blendFactor;
-
-        private int _multiSampleMask;
-
-        private bool _independentBlendEnable;
-
+        // these are not used. They originally existed
+        // because MonoGame had them, so maybe we'll need
+        // them later?
+        //private Color _blendFactor;
+        //private int _multiSampleMask;
+        //private bool _independentBlendEnable;
 
         public BlendFunction AlphaBlendFunction { get; set; }
 

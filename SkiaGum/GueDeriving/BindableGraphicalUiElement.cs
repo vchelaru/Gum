@@ -11,12 +11,14 @@ using System.Threading.Tasks;
 
 namespace SkiaGum.GueDeriving
 {
+    
     public class BindingContextChangedEventArgs : EventArgs
     {
         public object OldBindingContext { get; set; }
     }
 
     [DebuggerDisplay("{DebugDetails}")]
+    [Obsolete("Use BindableGue")]
     public class BindableGraphicalUiElement : GraphicalUiElement
     {
         #region VmToUiProperty struct

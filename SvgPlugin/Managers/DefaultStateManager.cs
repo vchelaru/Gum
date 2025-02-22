@@ -10,8 +10,9 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+#if GUM
 using WpfDataUi.Controls;
-
+#endif
 namespace SkiaPlugin.Managers
 {
     public static class DefaultStateManager
@@ -30,7 +31,7 @@ namespace SkiaPlugin.Managers
         #region Svg State
         public static StateSave GetSvgState()
         {
-            if(svgState == null)
+            if (svgState == null)
             {
                 svgState = new StateSave();
                 svgState.Name = "Default";
@@ -64,7 +65,7 @@ namespace SkiaPlugin.Managers
 
         public static StateSave GetCanvasState()
         {
-            if(canvasState == null)
+            if (canvasState == null)
             {
                 canvasState = new StateSave();
                 canvasState.Name = "Default";
@@ -89,7 +90,7 @@ namespace SkiaPlugin.Managers
         #region Lottie Animation State
         public static StateSave GetLottieAnimationState()
         {
-            if(lottieAnimationState == null)
+            if (lottieAnimationState == null)
             {
                 lottieAnimationState = new StateSave();
                 lottieAnimationState.Name = "Default";
@@ -116,14 +117,14 @@ namespace SkiaPlugin.Managers
         #region Colored Circle State
         public static StateSave GetColoredCircleState()
         {
-            if(filledCircleState == null)
+            if (filledCircleState == null)
             {
                 filledCircleState = new StateSave();
                 filledCircleState.Name = "Default";
                 AddVisibleVariable(filledCircleState);
 
                 StandardElementsManager.AddPositioningVariables(filledCircleState);
-                StandardElementsManager.AddDimensionsVariables(filledCircleState, 64, 64, 
+                StandardElementsManager.AddDimensionsVariables(filledCircleState, 64, 64,
                     StandardElementsManager.DimensionVariableAction.ExcludeFileOptions);
                 StandardElementsManager.AddColorVariables(filledCircleState);
 
@@ -156,7 +157,7 @@ namespace SkiaPlugin.Managers
                 roundedRectangleState.Name = "Default";
                 AddVisibleVariable(roundedRectangleState);
 
-                roundedRectangleState.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 5f, Name = "CornerRadius", Category="Dimensions" });
+                roundedRectangleState.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 5f, Name = "CornerRadius", Category = "Dimensions" });
                 roundedRectangleState.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation" });
 
                 StandardElementsManager.AddPositioningVariables(roundedRectangleState);
@@ -188,18 +189,22 @@ namespace SkiaPlugin.Managers
 
         public static StateSave GetArcState()
         {
-            if(arcState == null)
+            if (arcState == null)
             {
                 arcState = new StateSave();
                 arcState.Name = "Default";
                 arcState.Variables.Add(new VariableSave { Type = "float", Value = 10f, Category = "Arc", Name = "Thickness", SetsValue = true });
 
                 var startAngle = new VariableSave { Type = "float", Value = 0f, Category = "Arc", Name = "StartAngle", SetsValue = true };
+#if GUM
                 StandardElementsManagerGumTool.MakeDegreesAngle(startAngle);
+#endif
                 arcState.Variables.Add(startAngle);
 
                 var sweepAngle = new VariableSave { Type = "float", Value = 90f, Category = "Arc", Name = "SweepAngle", SetsValue = true };
+#if GUM
                 StandardElementsManagerGumTool.MakeDegreesAngle(sweepAngle);
+#endif
                 arcState.Variables.Add(sweepAngle);
 
                 arcState.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Arc", Name = "IsEndRounded", SetsValue = true });
@@ -245,8 +250,15 @@ namespace SkiaPlugin.Managers
 
             state.Variables.Add(new VariableSave { Type = "bool", Value = false, Category = "Rendering", Name = "UseGradient", SetsValue = true });
 
-            state.Variables.Add(new VariableSave { SetsValue = true, Type = typeof(GradientType).Name, Value = GradientType.Linear, Name = "GradientType", Category = "Rendering", 
-                CustomTypeConverter = new EnumConverter(typeof(GradientType))});
+            state.Variables.Add(new VariableSave
+            {
+                SetsValue = true,
+                Type = typeof(GradientType).Name,
+                Value = GradientType.Linear,
+                Name = "GradientType",
+                Category = "Rendering",
+                CustomTypeConverter = new EnumConverter(typeof(GradientType))
+            });
 
 
             state.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = 0f, Category = "Rendering", Name = "GradientX1" });
@@ -332,9 +344,12 @@ namespace SkiaPlugin.Managers
                 rootName == "GradientType" ||
                 rootName == "HasDropshadow";
 
-            if(shouldRefresh)
+            if (shouldRefresh)
             {
+#if GUM
+// This should probably be handled in a plugin somewhere:
                 GumCommands.Self.GuiCommands.RefreshVariables(force: true);
+#endif
             }
         }
         internal static bool GetIfVariableIsExcluded(VariableSave variable, RecursiveVariableFinder recursiveVariableFinder)
@@ -365,7 +380,7 @@ namespace SkiaPlugin.Managers
                 var effectiveUsesGradient = usesGradients is bool asBool && asBool;
                 return !effectiveUsesGradient;
             }
-            else if(rootName == "GradientX2" || rootName == "GradientY2" || rootName == "GradientX2Units" || rootName == "GradientY2Units")
+            else if (rootName == "GradientX2" || rootName == "GradientY2" || rootName == "GradientX2Units" || rootName == "GradientY2Units")
             {
                 var usesGradients = recursiveVariableFinder.GetValue(prefix + "UseGradient");
                 var effectiveUsesGradient = usesGradients is bool asBool && asBool;
@@ -377,7 +392,7 @@ namespace SkiaPlugin.Managers
 
                 return hide;
             }
-            else if(rootName == "GradientInnerRadius" || rootName == "GradientOuterRadius" ||
+            else if (rootName == "GradientInnerRadius" || rootName == "GradientOuterRadius" ||
                 rootName == "GradientInnerRadiusUnits" || rootName == "GradientOuterRadiusUnits")
             {
                 var usesGradients = recursiveVariableFinder.GetValue(prefix + "UseGradient");
@@ -396,7 +411,7 @@ namespace SkiaPlugin.Managers
 
             #region Dropshadow
 
-            if(rootName == "DropshadowOffsetX" || rootName == "DropshadowOffsetY" || rootName == "DropshadowBlurX" || rootName == "DropshadowBlurY" ||
+            if (rootName == "DropshadowOffsetX" || rootName == "DropshadowOffsetY" || rootName == "DropshadowBlurX" || rootName == "DropshadowBlurY" ||
                 rootName == "DropshadowAlpha" || rootName == "DropshadowRed" || rootName == "DropshadowGreen" || rootName == "DropshadowBlue")
             {
                 var hasDropshadow = recursiveVariableFinder.GetValue(prefix + "HasDropshadow");

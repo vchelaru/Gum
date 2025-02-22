@@ -1,4 +1,6 @@
-﻿using Gum.DataTypes;
+﻿using Gum.Converters;
+using Gum.DataTypes;
+using RenderingLibrary.Graphics;
 using SkiaGum.Renderables;
 using SkiaSharp;
 
@@ -40,6 +42,50 @@ namespace SkiaGum.GueDeriving
             set => ContainedRenderable.Color = value;
         }
         #endregion
+
+        #region Gradient Colors
+
+
+        int Blue1 { get;set; }
+
+        int Green1 { get; set; }
+
+        int Red1 { get; set; }
+
+
+        int Blue2 { get; set; }
+
+        int Green2 { get; set; }
+
+        int Red2 { get; set; }
+
+        float GradientX1 { get; set; }
+        GeneralUnitType GradientX1Units { get; set; }
+
+        float GradientY1 { get; set; }
+        GeneralUnitType GradientY1Units { get; set; }
+
+        float GradientX2 { get; set; }
+        float GradientY2 { get; set; }
+
+        bool UseGradient { get; set; }
+
+        bool IsEndRounded { get; set; }
+
+        GradientType GradientType { get; set; }
+
+        float GradientInnerRadius { get; set; }
+
+        DimensionUnitType GradientInnerRadiusUnits { get; set; }
+
+        float GradientOuterRadius { get; set; }
+
+        DimensionUnitType GradientOuterRadiusUnits { get; set; }
+
+
+
+        #endregion
+
 
         #region Filled/Stroke
 

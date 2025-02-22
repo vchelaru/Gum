@@ -9,6 +9,9 @@ using Gum.Wireframe;
 using SkiaGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using SkiaGum;
+using SilkNetGum.Screens;
+using Gum.Managers;
+using GumRuntime;
 
 unsafe class Program
 {
@@ -41,26 +44,13 @@ unsafe class Program
 
     private static void InitializeGum(SKCanvas canvas)
     {
-        GumService.Default.Initialize(canvas);
+        GumService.Default.Initialize(canvas, "Content/GumProject/GumProject.gumx");
 
-        Root = new ContainerRuntime();
-        Root.AddToManagers();
-        Root.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+        //Root = new CodeOnlyScreen();
+        //Root.AddToManagers();
 
-        var random = new Random(0);
-
-        for(int i = 0; i < 5; i++)
-        {
-            var rectangle = new RoundedRectangleRuntime();
-            rectangle.Red = 50 + random.Next(150);
-            rectangle.Green = 50 + random.Next(150);
-            rectangle.Blue = 50 + random.Next(150);
-
-            rectangle.Width = 50;
-            rectangle.Height = 50;
-
-            Root.Children.Add(rectangle);
-        }
+        var screen = ObjectFinder.Self.GumProjectSave.Screens.First();
+        Root = screen.ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
     }
 
     private static void Draw()
