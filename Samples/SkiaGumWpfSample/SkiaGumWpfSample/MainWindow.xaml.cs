@@ -25,10 +25,26 @@ namespace SkiaGumWpfSample
         {
             InitializeComponent();
 
+            var container = new ContainerRuntime();
+            container.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+            container.StackSpacing = 3;
+            SkiaElement.Children.Add(container);
+
+
             var rectangle = new RoundedRectangleRuntime();
+
             rectangle.Red = 50;
             rectangle.Green = 100;
-            SkiaElement.Children.Add(rectangle);
+            rectangle.Blue = 0;
+            container.Children.Add(rectangle);
+
+            var rectangle2 = new RoundedRectangleRuntime();
+            rectangle2.Red = 200;
+            rectangle2.Green = 0;
+            rectangle2.Blue = 0;
+
+            container.Children.Add(rectangle2);
+
 
         }
     }

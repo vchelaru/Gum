@@ -13,8 +13,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GumDataTypesNet6", "GumData
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GumCommon", "GumCommon\GumCommon.csproj", "{C1AFB9E5-6076-4637-BC7D-A6555DA4770E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGameGum", "MonoGameGum\MonoGameGum.csproj", "{F5782ED2-BBA0-4E52-A8D4-EA48A56D9840}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,14 +61,6 @@ Global
 		{C1AFB9E5-6076-4637-BC7D-A6555DA4770E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C1AFB9E5-6076-4637-BC7D-A6555DA4770E}.Release|x86.ActiveCfg = Release|Any CPU
 		{C1AFB9E5-6076-4637-BC7D-A6555DA4770E}.Release|x86.Build.0 = Release|Any CPU
-		{F5782ED2-BBA0-4E52-A8D4-EA48A56D9840}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F5782ED2-BBA0-4E52-A8D4-EA48A56D9840}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F5782ED2-BBA0-4E52-A8D4-EA48A56D9840}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{F5782ED2-BBA0-4E52-A8D4-EA48A56D9840}.Debug|x86.Build.0 = Debug|Any CPU
-		{F5782ED2-BBA0-4E52-A8D4-EA48A56D9840}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F5782ED2-BBA0-4E52-A8D4-EA48A56D9840}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F5782ED2-BBA0-4E52-A8D4-EA48A56D9840}.Release|x86.ActiveCfg = Release|Any CPU
-		{F5782ED2-BBA0-4E52-A8D4-EA48A56D9840}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

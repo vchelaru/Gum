@@ -7,7 +7,12 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-        <wpf:GumSKElement x:Name="SkiaElement">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition></RowDefinition>
+        </Grid.RowDefinitions>
+        <Label Content="This is a wpf application with Gum" />
+        <wpf:GumSKElement x:Name="SkiaElement" Grid.Row="1">
         </wpf:GumSKElement>
     </Grid>
 </Window>

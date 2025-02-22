@@ -16,6 +16,9 @@ namespace SkiaGum
     public class CustomSetPropertyOnRenderable
     {
         // todo - fill this out for the sake of performance...
+        // If it's not filled out, then properties will be set by reflection
+        // It would be nice to share this with MonoGame at some point too so 
+        // we don't have to keep everything in duplicate
         public static void SetPropertyOnRenderable(IRenderableIpso mContainedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
         {
             bool handled = false;
