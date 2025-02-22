@@ -10,17 +10,17 @@ Default Child Container is typically set on containers which are designed to hol
 
 Consider a Component named Frame which has two instances: OuterRectangle and InnerRectangle.
 
-<figure><img src="../../../.gitbook/assets/image (1) (1) (3).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (1) (1) (3).png" alt=""><figcaption><p>Frame component with two children</p></figcaption></figure>
 
 This Component is designed to keep all of is children inside the InnerRectangle, so that any child automatically respects the margin specified by InnerRectangle.
 
 To make this kind of relationship the default, the Frame can set its Default Child Container property to InnerRectangle.
 
-<figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Setting the Default Child Container</p></figcaption></figure>
 
-Once this value is set, instances which are drag+dropped onto Frame instances will use the InnerRectangle as their parent, as shown in the following animation.
+Once this value is set, instances which are drag+dropped onto Frame instances use the InnerRectangle as their parent, as shown in the following animation.
 
-<figure><img src="../../../.gitbook/assets/11_20 05 09.gif" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/11_20 05 09.gif" alt=""><figcaption><p>Adding a child automatically uses the Default Child Container</p></figcaption></figure>
 
 ### Parent Details
 
@@ -29,3 +29,14 @@ When one instance is drag+dropped onto another instance, the Parent property is 
 Using the example above, the RectangleInstance is dropped on the ContainerTestInstance. Since the ContainerTestInstance is of type Frame, then the Default Child Container is applied on the drop, which results in the RectangleInstance's Parent being set to ContainerTestInstance.InnerRectangle.
 
 <figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
+
+## Ignoring Default Child Container
+
+As mentioned above, if an instance is added to a parent component, the instance automatically attaches itself to the parent's `Default Child Container`. This can be undone by manually changing the `Parent` property.
+
+For example, the `Parent` can be manually changed to **ContainerTestInstance**.
+
+<figure><img src="../../../.gitbook/assets/22_11 38 45.gif" alt=""><figcaption><p>Changing the Parent to the name of the instance can force a child to be attached to the root of the parent</p></figcaption></figure>
+
+
+
