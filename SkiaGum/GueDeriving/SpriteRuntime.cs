@@ -1,6 +1,7 @@
 ﻿using Gum.DataTypes;
 using SkiaGum.Renderables;
 using SkiaSharp;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace SkiaGum.GueDeriving
 {
@@ -25,10 +26,17 @@ namespace SkiaGum.GueDeriving
             get => null;
             set
             {
-                var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-                var contentLoader = loaderManager.ContentLoader;
-                var image = contentLoader.LoadContent<SKBitmap>(value);
-                Texture = image;
+                if(string.IsNullOrEmpty(value))
+                {
+                    Texture = null;
+                }
+                else
+                {
+                    var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+                    var contentLoader = loaderManager.ContentLoader;
+                    var image = contentLoader.LoadContent<SKBitmap>(value);
+                    Texture = image;
+                }
             }
         }
 

@@ -2,6 +2,7 @@
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
+using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using SkiaGum;
 using SkiaGum.Content;
@@ -68,6 +69,7 @@ namespace RenderingLibrary
 
             GraphicalUiElement.AddRenderableToManagers = AddRenderableToManagers;
             SkiaResourceManager.Initialize(null);
+            LoaderManager.Self.ContentLoader = new EmbeddedResourceContentLoader();
             RegisterComponentRuntimeInstantiations();
 
         }

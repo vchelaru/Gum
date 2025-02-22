@@ -150,11 +150,22 @@ namespace SkiaGum.Content
 
         private static void CacheSKImage(string resourceName)
         {
-            using (var stream = GetManifestResourceStream(
-                resourceName, ResourceAssembly))
+            var absoluteFile = FileManager.RelativeDirectory + resourceName;
+            if (System.IO.File.Exists(absoluteFile))
             {
-                var decoded = SKBitmap.Decode(stream);
+                using var fileStream = System.IO.File.OpenRead(absoluteFile);
+                var decoded = SKBitmap.Decode(fileStream);
                 skBitmapCache.Add(resourceName, decoded);
+            }
+            else
+            {
+
+                using (var stream = GetManifestResourceStream(
+                resourceName, ResourceAssembly))
+                {
+                    var decoded = SKBitmap.Decode(stream);
+                    skBitmapCache.Add(resourceName, decoded);
+                }
             }
         }
 

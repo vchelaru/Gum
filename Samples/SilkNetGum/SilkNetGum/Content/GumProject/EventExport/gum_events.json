@@ -203,6 +203,97 @@
         "ElementType": "Screens",
         "EventType": 5,
         "TimestampUtc": "2025-02-22T17:54:55.4429061Z"
+      },
+      {
+        "NewName": "Frame",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 0,
+        "TimestampUtc": "2025-02-22T18:34:15.5795611Z"
+      },
+      {
+        "NewName": "Frame (Container).ColoredRectangleInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2025-02-22T18:34:23.9812372Z"
+      },
+      {
+        "NewName": "Frame (Container).ColoredRectangleInstance1",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2025-02-22T18:34:25.7654091Z"
+      },
+      {
+        "NewName": "Frame (Container).OuterRectangle",
+        "OldName": "Frame (Container).ColoredRectangleInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2025-02-22T18:34:31.0396583Z"
+      },
+      {
+        "NewName": "Frame (Container).InnerRectangle",
+        "OldName": "Frame (Container).ColoredRectangleInstance1",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2025-02-22T18:34:36.6335816Z"
+      },
+      {
+        "NewName": "MainMenuGum",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 0,
+        "TimestampUtc": "2025-02-22T18:36:07.5883223Z"
+      },
+      {
+        "NewName": "MainMenuGum.FrameInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-02-22T18:36:10.1916296Z"
+      },
+      {
+        "NewName": "MainMenuGum.ColoredRectangleInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-02-22T18:36:13.9984027Z"
+      },
+      {
+        "NewName": "MainMenuGum.ContainerTestInstance",
+        "OldName": "MainMenuGum.FrameInstance",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2025-02-22T18:37:27.0442047Z"
+      },
+      {
+        "NewName": "GeneralScreen.SvgInstance1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-02-22T18:44:59.3093624Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "GeneralScreen.Svg SvgInstance1 in GeneralScreen",
+        "ElementType": "Screens",
+        "EventType": 6,
+        "TimestampUtc": "2025-02-22T18:45:02.9154454Z"
+      },
+      {
+        "NewName": "GeneralScreen.SpriteInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-02-22T18:45:08.1890036Z"
+      },
+      {
+        "NewName": "GeneralScreen.SpriteInstance1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-02-22T18:57:32.6655961Z"
       }
     ]
   }

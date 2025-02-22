@@ -1045,20 +1045,27 @@ namespace Gum.Managers
 
         public void SelectRecordedSelection()
         {
-            if (mRecordedSelectedObject != null)
+            try
             {
-                if (mRecordedSelectedObject is InstanceSave)
+                if (mRecordedSelectedObject != null)
                 {
-                    SelectedState.Self.SelectedInstance = mRecordedSelectedObject as InstanceSave;
+                    if (mRecordedSelectedObject is InstanceSave)
+                    {
+                        SelectedState.Self.SelectedInstance = mRecordedSelectedObject as InstanceSave;
+                    }
+                    else if (mRecordedSelectedObject is ElementSave)
+                    {
+                        SelectedState.Self.SelectedElement = mRecordedSelectedObject as ElementSave;
+                    }
+                    else if(mRecordedSelectedObject is BehaviorSave)
+                    {
+                        SelectedState.Self.SelectedBehavior = mRecordedSelectedObject as BehaviorSave;
+                    }
                 }
-                else if (mRecordedSelectedObject is ElementSave)
-                {
-                    SelectedState.Self.SelectedElement = mRecordedSelectedObject as ElementSave;
-                }
-                else if(mRecordedSelectedObject is BehaviorSave)
-                {
-                    SelectedState.Self.SelectedBehavior = mRecordedSelectedObject as BehaviorSave;
-                }
+            }
+            catch
+            {
+                // no big deal, this could have been re-loaded
             }
         }
 

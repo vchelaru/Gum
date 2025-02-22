@@ -6,7 +6,9 @@ using Gum.Wireframe;
 using HarfBuzzSharp;
 using RenderingLibrary.Graphics;
 using SkiaGum.Content;
+using SkiaGum.GueDeriving;
 using SkiaGum.Renderables;
+using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -63,11 +65,44 @@ namespace SkiaGum
                     handled = TrySetPropertyOnSvg(asSvg, graphicalUiElement, propertyName, value);
                 }
             }
+            else if(mContainedObjectAsIpso is Sprite asSprite)
+            {
+                if(!handled)
+                {
+                    handled = TrySetPropertyOnSprite(asSprite, graphicalUiElement, propertyName, value);
+                }
+            }
             if (!handled)
             {
                 GraphicalUiElement.SetPropertyThroughReflection(mContainedObjectAsIpso, graphicalUiElement, propertyName, value);
                 //SetPropertyOnRenderable(mContainedObjectAsIpso, propertyName, value);
             }
+        }
+
+        private static bool TrySetPropertyOnSprite(Sprite asSprite, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+        {
+            switch(propertyName)
+            {
+                case "SourceFile":
+                    var asString = value as string;
+                    if(graphicalUiElement is SpriteRuntime spriteRuntime)
+                    {
+                        spriteRuntime.SourceFile = asString;
+                    }
+                    else if (!string.IsNullOrEmpty(asString))
+                    {
+                        var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+                        var contentLoader = loaderManager.ContentLoader;
+                        var image = contentLoader.LoadContent<SKBitmap>(asString);
+                        asSprite.Texture = image;
+                    }
+                    else
+                    {
+                        asSprite.Texture = null;
+                    }
+                    break;
+            }
+            return false;
         }
 
         private static bool TrySetPropertyOnSvg(VectorSprite asSvg, GraphicalUiElement graphicalUiElement, string propertyName, object value)

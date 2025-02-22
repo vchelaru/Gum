@@ -45,6 +45,8 @@ namespace SkiaGum.Renderables
             }
             /////////End Early Out///////////////
 
+            using var paint = base.GetPaint(boundingRect, absoluteRotation);
+
             var applyRotation = absoluteRotation != 0;
 
             if (applyRotation)
@@ -96,20 +98,20 @@ namespace SkiaGum.Renderables
                             top, 
                             right, 
                             bottom);
-                        canvas.DrawBitmap(Texture, sourceRectangle, boundingRect);
+                        canvas.DrawBitmap(Texture, sourceRectangle, boundingRect, paint);
                     }
 
                 }
                 else
                 {
 
-                    canvas.DrawBitmap(Texture, sourceRectangle, boundingRect);
+                    canvas.DrawBitmap(Texture, sourceRectangle, boundingRect, paint);
                 }
 
             }
             else
             {
-                canvas.DrawBitmap(Texture, boundingRect);
+                canvas.DrawBitmap(Texture, boundingRect, paint);
             }
 
             if (applyRotation)
