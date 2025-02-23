@@ -129,5 +129,21 @@ public class DefaultMenuItemRuntime : InteractiveGue
 
     }
 
+    public override object FormsControlAsObject 
+    { 
+        get => base.FormsControlAsObject;
+        set
+        {
+            base.FormsControlAsObject = value;
+            if(value is MenuItem menuItem)
+            {
+                menuItem.ScrollViewerVisualTemplate = DefaultScrollVisualTemplate;
+            }
+        }
+    }
+
+    VisualTemplate DefaultScrollVisualTemplate => new VisualTemplate(() =>
+                new DefaultScrollViewerRuntimeSizedToChildren(fullInstantiation: true, tryCreateFormsObject: false));
+
     public MenuItem FormsControl => FormsControlAsObject as MenuItem;
 }

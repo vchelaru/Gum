@@ -628,7 +628,7 @@ public class ListBox : ItemsControl, IInputReceiver
     /// </summary>
     /// <param name="popup">The popup to show, for example a dropdown from a ComboBox or MenuItem</param>
     /// <param name="listBoxParent">The parent visual, which would be something like the ComboBox.Visual</param>
-    public static void ShowPopupListBox(ScrollViewer popup, GraphicalUiElement listBoxParent)
+    public static void ShowPopupListBox(ScrollViewer popup, GraphicalUiElement listBoxParent, bool forceAbsoluteSize = true)
     {
         popup.IsVisible = true;
         // this thing is going to be in front of everything:
@@ -639,8 +639,11 @@ public class ListBox : ItemsControl, IInputReceiver
         // and apply the absolutes:
         popup.Visual.XUnits = GeneralUnitType.PixelsFromSmall;
         popup.Visual.YUnits = GeneralUnitType.PixelsFromSmall;
-        popup.Visual.WidthUnits = DimensionUnitType.Absolute;
-        popup.Visual.HeightUnits = DimensionUnitType.Absolute;
+        if(forceAbsoluteSize)
+        {
+            popup.Visual.WidthUnits = DimensionUnitType.Absolute;
+            popup.Visual.HeightUnits = DimensionUnitType.Absolute;
+        }
 
         // let's just make sure it's removed
         popup.Visual.RemoveFromManagers();

@@ -85,6 +85,7 @@ namespace GumFormsSample.Screens
             var customScrollViewerVisualTemplate = new VisualTemplate(() =>
             {
                 var toReturn = new DefaultScrollViewerRuntime();
+                toReturn.MakeSizedToChildren();
                 var background = toReturn.GetGraphicalUiElementByName("Background")
                     as ColoredRectangleRuntime;
 

@@ -241,6 +241,18 @@ public class MenuItem : ItemsControl
         }
     }
 
+
+    private void HandleClick(object sender, EventArgs args)
+    {
+        if (MainCursor.LastInputDevice == InputDevice.TouchScreen &&
+            MainCursor.PrimaryClickNoSlide)
+        {
+            IsSelected = true;
+
+            Clicked?.Invoke(this, null);
+
+        }
+    }
     #endregion
 
 
@@ -352,23 +364,26 @@ public class MenuItem : ItemsControl
                 }
             }
 
-            itemsPopup.Width = 200;
-            itemsPopup.Height = 400;
+
+            ListBox.ShowPopupListBox(itemsPopup, this.Visual, forceAbsoluteSize:false);
+            if(visualTemplateVisual == null)
+            {
+                itemsPopup.Width = 200;
+                itemsPopup.Height = 400;
 
 
-            ListBox.ShowPopupListBox(itemsPopup, this.Visual);
+                itemsPopup.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+                itemsPopup.Visual.Height = 0;
+                itemsPopup.ClipContainer.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+                itemsPopup.ClipContainer.Height = 0;
 
-            itemsPopup.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-            itemsPopup.Visual.Height = 0;
-            itemsPopup.ClipContainer.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-            itemsPopup.ClipContainer.Height = 0;
-
-            itemsPopup.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-            itemsPopup.Visual.Width = 0;
-            itemsPopup.ClipContainer.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-            itemsPopup.ClipContainer.Width = 0;
-            itemsPopup.InnerPanel.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-            itemsPopup.InnerPanel.Width = 0;
+                itemsPopup.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+                itemsPopup.Visual.Width = 0;
+                itemsPopup.ClipContainer.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+                itemsPopup.ClipContainer.Width = 0;
+                itemsPopup.InnerPanel.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+                itemsPopup.InnerPanel.Width = 0;
+            }
 
 #if FRB
             GuiManager.SortZAndLayerBased();
@@ -417,18 +432,7 @@ public class MenuItem : ItemsControl
 
     #endregion
 
-    private void HandleClick(object sender, EventArgs args)
-    {
-        if (MainCursor.LastInputDevice == InputDevice.TouchScreen &&
-            MainCursor.PrimaryClickNoSlide)
-        {
-            IsSelected = true;
-
-            Clicked?.Invoke(this, null);
-
-        }
-    }
-
+    #region Update to state/object
 
     public virtual void UpdateToObject(object o)
     {
@@ -480,6 +484,8 @@ public class MenuItem : ItemsControl
             Visual.SetProperty(category, "Enabled");
         }
     }
+
+    #endregion
 
     public override string ToString()
     {
