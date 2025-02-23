@@ -11,9 +11,10 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace GumFormsSample.Screens;
-internal class ListBoxBindingScreen : InteractiveGue
+//internal class ListBoxBindingScreen : InteractiveGue
+internal class ListBoxBindingScreen : ContainerRuntime
 {
-    public ListBoxBindingScreen() : base(new InvisibleRenderable())
+    public ListBoxBindingScreen()
     {
         this.ExposeChildrenEvents = true;
 
