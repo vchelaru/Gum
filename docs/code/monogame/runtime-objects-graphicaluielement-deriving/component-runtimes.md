@@ -69,6 +69,12 @@ var container = ScreenRoot.GetGraphicalUiElementByName("DesiredContainer");
 container.Children.Add(newComponentRuntime);
 ```
 
+To destroy the component, remove it from its parent, or set its parent to null:
+
+```csharp
+newComponentRuntime.Parent = null;
+```
+
 ### Adding to PopupRoot/ModalRoot
 
 The newly instantiated component can be added either the PopupRoot or ModalRoot. PopupRoot is used for popups which should appear on top of other controls, but which should not steal input. ModalRoot is used for popups which should steal focus from all other controls.
@@ -93,6 +99,12 @@ FrameworkElement.ModalRoot.Children.Add(newMessageBoxRuntime);
 // the newMessageBoxRuntime needs to be removed from ModalRoot later
 ```
 
+To destroy the component, remove it from its parent, or set its parent to null:
+
+```csharp
+newMessageBoxRuntime.Parent = null;
+```
+
 ### Adding to Managers
 
 Components can be added directly to managers. Usually items are only added directly to managers in the following situations:
@@ -104,6 +116,12 @@ Components can be added directly to managers. Usually items are only added direc
 ```csharp
 var newComponentRuntime = componentSave.ToGraphicalUiElement(
     SystemManagers.Default, addToManagers:true);
+```
+
+To destroy the component, call RemoveFromManagers:
+
+```csharp
+newComponentRuntime.RemoveFromManagers();
 ```
 
 ## Troubleshooting Component Creation
