@@ -104,7 +104,6 @@ namespace Gum.Logic.FileWatch
         private void HandleFileSystemChange(object sender, FileSystemEventArgs e)
         {
             var fileName = new FilePath(e.FullPath);
-            // for now only do texture files like PNG:
             var extension = fileName.Extension;
 
             var isGum = extension is "gumx" or "gusx" or "gutx" or "gucx" or "ganx" or "behx";

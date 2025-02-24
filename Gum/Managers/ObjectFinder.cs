@@ -4,6 +4,7 @@ using System.Linq;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
+using Gum.Wireframe;
 using ToolsUtilities;
 
 namespace Gum.Managers
@@ -722,8 +723,18 @@ namespace Gum.Managers
             }
         }
 
-        private void FillListWithReferencedFiles(List<string> files, ElementSave element)
+        [Obsolete("Use FillListWithReferencedFilePaths")]
+        private void FillListWithReferencedFiles(List<string> absoluteFiles, ElementSave element)
         {
+            List<FilePath> files = new List<FilePath>();
+
+            FillWithReferencedFilePaths(files, element);
+
+            absoluteFiles.AddRange(files.Select(item => item.StandardizedCaseSensitive));
+        }
+
+        private void FillWithReferencedFilePaths(List<FilePath> absoluteFiles, ElementSave element)
+        { 
             RecursiveVariableFinder rvf;
             string value;
 
@@ -734,13 +745,13 @@ namespace Gum.Managers
                 value = rvf.GetValue<string>("SourceFile");
                 if (!string.IsNullOrEmpty(value))
                 {
-                    files.Add(value);
+                    absoluteFiles.Add(value);
                 }
 
                 value = rvf.GetValue<string>("CustomFontFile");
                 if (!string.IsNullOrEmpty(value))
                 {
-                    files.Add(value);
+                    absoluteFiles.Add(value);
                 }
 
                 List<Gum.Wireframe.ElementWithState> elementStack = new List<Wireframe.ElementWithState>();
@@ -754,9 +765,10 @@ namespace Gum.Managers
                     // the file name of the element? Isn't that a referenced
                     // file?
                     var instanceElement = GetElementSave(instance);
+                    string gumProjectDirectory = FileManager.GetDirectory(GumProjectSave.FullFileName);
                     if(instanceElement != null)
                     {
-                        string prefix = FileManager.GetDirectory(GumProjectSave.FullFileName);
+                        var prefix = gumProjectDirectory;
                         if(instanceElement is ComponentSave)
                         {
                             prefix += "Components/";
@@ -765,7 +777,7 @@ namespace Gum.Managers
                         {
                             prefix += "Standards/";
                         }
-                        files.Add(prefix + instanceElement.Name + "." + instanceElement.FileExtension);
+                        absoluteFiles.Add(prefix + instanceElement.Name + "." + instanceElement.FileExtension);
                     }
 
 
@@ -774,14 +786,47 @@ namespace Gum.Managers
                     value = rvf.GetValue<string>("SourceFile");
                     if (!string.IsNullOrEmpty(value))
                     {
-                        files.Add(value);
+                        absoluteFiles.Add(value);
                     }
 
-                    value = rvf.GetValue<string>("CustomFontFile");
-                    if (!string.IsNullOrEmpty(value))
+                    if(rvf.GetValue("UseCustomFont") is bool asBool)
                     {
-                        files.Add(value);
+
+                        if(asBool == true)
+                        {
+                            value = rvf.GetValue<string>("CustomFontFile");
+                            if (!string.IsNullOrEmpty(value))
+                            {
+                                absoluteFiles.Add(value);
+                            }
+                        }
+                        else
+                        {
+                            var fontSize = rvf.GetValue<int?>("FontSize");
+                            var font = rvf.GetValue<string?>("Font");
+                            var outlineThickness = rvf.GetValue<int?>("OutlineThickness");
+                            var useFontSmoothing = rvf.GetValue<bool?>("UseFontSmoothing");
+                            var isItalic = rvf.GetValue<bool?>("IsItalic");
+                            var isBold = rvf.GetValue<bool?>("IsBold");
+
+                            if(fontSize != null && font != null && outlineThickness != null && useFontSmoothing != null &&
+                                isItalic != null && isBold != null)
+                            {
+                                string fontName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
+                                    fontSize.Value,
+                                    font,
+                                    outlineThickness.Value,
+                                    useFontSmoothing.Value,
+                                    isItalic.Value,
+                                    isBold.Value);
+
+                                absoluteFiles.Add(
+                                    gumProjectDirectory + fontName);
+
+                            }
+                        }
                     }
+
                 }
             }
         }
