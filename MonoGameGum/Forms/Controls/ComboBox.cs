@@ -19,7 +19,6 @@ using Buttons = FlatRedBall.Input.Xbox360GamePad.Button;
 namespace FlatRedBall.Forms.Controls;
 #else
 using MonoGameGum.Input;
-using RenderingLibrary;
 namespace MonoGameGum.Forms.Controls;
 #endif
 

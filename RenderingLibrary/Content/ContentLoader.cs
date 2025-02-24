@@ -176,7 +176,7 @@ namespace RenderingLibrary.Content
         /// <param name="fileName">The filename to load</param>
         /// <param name="managers">The optional SystemManagers to use when loading the file to obtain a GraphicsDevice</param>
         /// <returns>The loaded Texture2D</returns>
-        private Texture2D LoadTextureFromFile(string fileName, SystemManagers managers = null)
+        private Texture2D LoadTextureFromFile(string fileName, SystemManagers? managers = null)
         {
             string fileNameStandardized = FileManager.Standardize(fileName, true, false);
 

@@ -58,7 +58,6 @@
 		<Compile Include="..\RenderingLibrary\Graphics\AtlasedTexture.cs" Link="Renderables\AtlasedTexture.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\BitmapCharacterInfo.cs" Link="Renderables\Fonts\BitmapCharacterInfo.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\Fonts\BitmapFont.cs" Link="Renderables\Fonts\BitmapFont.cs" />
-		<Compile Include="..\RenderingLibrary\Graphics\Fonts\BmfcSave.cs" Link="Renderables\Fonts\BmfcSave.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\IAnimation.cs" Link="Renderables\IAnimation.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\ImageData.cs" Link="RenderingLibrary\ImageData.cs" />
 		<Compile Include="..\RenderingLibrary\Graphics\NineSlice.cs" Link="Renderables\NineSlice.cs" />
