@@ -50,7 +50,7 @@ namespace Gum.Wireframe
 
         GraphicalOutline mGraphicalOutline;
 
-        Layer mUiLayer;
+        Layer _overlayLayer;
 
         HighlightManager highlightManager;
 
@@ -58,11 +58,11 @@ namespace Gum.Wireframe
 
         #region Properties
 
-        public Layer UiLayer
+        public Layer OverlayLayer
         {
             get
             {
-                return mUiLayer;
+                return _overlayLayer;
             }
         }
 
@@ -201,13 +201,12 @@ namespace Gum.Wireframe
         {
             _selectedState = SelectedState.Self;
 
-            // We used to have this set to 2, but now that we have dotted lines, I just do a value of 0
-            mUiLayer = Renderer.Self.AddLayer();
-            mUiLayer.Name = "UI Layer";
+            _overlayLayer = Renderer.Self.AddLayer();
+            _overlayLayer.Name = "Overlay Layer";
 
-            mGraphicalOutline = new GraphicalOutline(mUiLayer);
+            mGraphicalOutline = new GraphicalOutline(_overlayLayer);
 
-            highlightManager = new HighlightManager(mUiLayer);
+            highlightManager = new HighlightManager(_overlayLayer);
         }
 
         /// <summary>
@@ -612,7 +611,7 @@ namespace Gum.Wireframe
                     {
                         WireframeEditor.Destroy();
                     }
-                    WireframeEditor = new PolygonWireframeEditor(UiLayer, global::Gum.Managers.HotkeyManager.Self);
+                    WireframeEditor = new PolygonWireframeEditor(OverlayLayer, global::Gum.Managers.HotkeyManager.Self);
                 }
             }
             else if(SelectedGues.Count > 0 && SelectedGue?.Tag is ScreenSave == false)
@@ -632,7 +631,7 @@ namespace Gum.Wireframe
                         GumState.Self.ProjectState.GeneralSettings.GuideTextColorG,
                         GumState.Self.ProjectState.GeneralSettings.GuideTextColorB);
 
-                    WireframeEditor = new StandardWireframeEditor(UiLayer, lineColor, textColor, global::Gum.Managers.HotkeyManager.Self);
+                    WireframeEditor = new StandardWireframeEditor(OverlayLayer, lineColor, textColor, global::Gum.Managers.HotkeyManager.Self);
                 }
             }
             else if(WireframeEditor != null)

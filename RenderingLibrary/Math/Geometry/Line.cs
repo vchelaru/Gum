@@ -246,5 +246,16 @@ namespace RenderingLibrary.Math.Geometry
 
         void IRenderable.PreRender() { }
 
+        public override string ToString()
+        {
+            if(!string.IsNullOrEmpty(Name))
+            {
+                return $"{Name} (Line)";
+            }
+            else
+            {
+                return base.ToString() ;
+            }
+        }
     }
 }

@@ -46,11 +46,12 @@ namespace Gum.Wireframe.Editors
             _guiCommands = GumCommands.Self.GuiCommands;
         }
 
-        public void AddToManagers(SystemManagers systemManagers)
+        public void AddToManagers(SystemManagers systemManagers, Layer layer)
         {
-            void AddLineToManagers(Line line) => systemManagers.ShapeManager.Add(line);
+            void AddLineToManagers(Line line) => systemManagers.ShapeManager.Add(line, layer);
 
             middleLine = new Line(systemManagers);
+            middleLine.Name = "MiddleLine";
             AddLineToManagers(middleLine);
 
             dimensionDisplayText = new Text(systemManagers);
@@ -60,13 +61,15 @@ namespace Gum.Wireframe.Editors
             dimensionDisplayText.Name = "Dimension display text";
             dimensionDisplayText.BitmapFont = _toolFontService.ToolFont;
 
-            systemManagers.TextManager.Add(dimensionDisplayText);
+            systemManagers.TextManager.Add(dimensionDisplayText, layer);
             this.systemManagers = systemManagers;
 
             endCap1 = new Line(systemManagers);
+            endCap1.Name = "EndCap 1";
             AddLineToManagers(endCap1);
 
             endCap2 = new Line(systemManagers);
+            endCap2.Name = "EndCap 2";
             AddLineToManagers(endCap2);
         }
 

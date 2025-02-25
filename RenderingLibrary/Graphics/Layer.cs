@@ -63,6 +63,8 @@ namespace RenderingLibrary.Graphics
             get; set;
         }
 
+        public bool? IsLinearFilteringEnabled { get; set; } = null;
+
         #endregion
 
         public Layer()

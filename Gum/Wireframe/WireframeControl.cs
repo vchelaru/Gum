@@ -147,6 +147,7 @@ namespace Gum.Wireframe
                 ToolLayerService.Self.Initialize();
 
                 Renderer.TextureFilter = TextureFilter.Point;
+                //Renderer.TextureFilter = TextureFilter.Linear;
 
                 LoaderManager.Self.ContentLoader = new ContentLoader();
 
@@ -163,7 +164,7 @@ namespace Gum.Wireframe
                 mCanvasBounds.Width = 800;
                 mCanvasBounds.Height = 600;
                 mCanvasBounds.Color = ScreenBoundsColor;
-                ShapeManager.Self.Add(mCanvasBounds, SelectionManager.Self.UiLayer);              
+                ShapeManager.Self.Add(mCanvasBounds, SelectionManager.Self.OverlayLayer);              
 
                 this.KeyDown += OnKeyDown;
                 this.MouseDown += CameraController.Self.HandleMouseDown;

@@ -82,11 +82,11 @@ namespace Gum.Wireframe.Editors
             rotationHandle.Visible = false;
 
             widthDimensionDisplay = new DimensionDisplay();
-            widthDimensionDisplay.AddToManagers(SystemManagers.Default);
+            widthDimensionDisplay.AddToManagers(SystemManagers.Default, layer);
             widthDimensionDisplay.SetColor(lineColor, textColor);
 
             heightDimensionDisplay = new DimensionDisplay();
-            heightDimensionDisplay.AddToManagers(SystemManagers.Default);
+            heightDimensionDisplay.AddToManagers(SystemManagers.Default, layer);
             heightDimensionDisplay.SetColor(lineColor, textColor);
         }
 

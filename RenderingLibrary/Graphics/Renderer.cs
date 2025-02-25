@@ -346,6 +346,12 @@ namespace RenderingLibrary.Graphics
                 // in to linear to make it work:
                 mRenderStateVariables.Filtering = TextureFilter == TextureFilter.Linear;
 
+                if(layer.IsLinearFilteringEnabled != null)
+                {
+                    mRenderStateVariables.Filtering = layer.IsLinearFilteringEnabled.Value;
+
+                }
+
                 RenderLayer(managers, layer);
 
                 if (oldSampler != null)
@@ -372,18 +378,37 @@ namespace RenderingLibrary.Graphics
                 mRenderStateVariables.BlendState = Renderer.NormalBlendState;
                 mRenderStateVariables.Wrap = false;
 
-                // todo - need to handle more advanced filtering here, but for now let's hook
-                // in to linear to make it work:
-                mRenderStateVariables.Filtering = TextureFilter == TextureFilter.Linear;
+                var state = Microsoft.Xna.Framework.Input.Keyboard.GetState();
+                if(state.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.A))
+                {
+                    int m = 3;
+                }
 
                 for (int i = 0; i < layers.Count; i++)
                 {
-                    PreRender(layers[i].Renderables);
+                    var layer = layers[i];
+                    if(layer.IsLinearFilteringEnabled != null)
+                    {
+                        mRenderStateVariables.Filtering = layer.IsLinearFilteringEnabled.Value;
+                    }
+                    else
+                    {
+                        mRenderStateVariables.Filtering = TextureFilter == TextureFilter.Linear;
+                    }
+                    PreRender(layer.Renderables);
                 }
 
                 for (int i = 0; i < layers.Count; i++)
                 {
                     Layer layer = layers[i];
+                    if (layer.IsLinearFilteringEnabled != null)
+                    {
+                        mRenderStateVariables.Filtering = layer.IsLinearFilteringEnabled.Value;
+                    }
+                    else
+                    {
+                        mRenderStateVariables.Filtering = TextureFilter == TextureFilter.Linear;
+                    }
                     RenderLayer(managers, layer, prerender:false);
                 }
             }

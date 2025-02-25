@@ -276,7 +276,9 @@ namespace Gum.Wireframe
                     try
                     {
 
-                        RootGue = elementSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
+                        RootGue = elementSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
+                        RootGue.AddToManagers(SystemManagers.Default);
+
                         // Always set default first, then if the selected state is not the default, then apply that after:
                         RootGue.SetVariablesRecursively(elementSave, elementSave.DefaultState);
                         var selectedState = GumState.Self.SelectedState.SelectedStateSave;
