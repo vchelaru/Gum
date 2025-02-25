@@ -323,7 +323,13 @@ namespace Gum.Wireframe
                 if (IsComponentOrInstanceOfComponent(currentItem)
                     ||
                     asInteractive?.Push != null ||
-                    asInteractive?.Click != null
+                    asInteractive?.Click != null ||
+                    asInteractive?.RollOn != null ||
+                    asInteractive?.RollOff != null ||
+                    asInteractive?.RollOver != null ||
+                    asInteractive?.LosePush != null ||
+                    asInteractive?.HoverOver != null ||
+                    asInteractive?.Dragging != null
                     )
                 {
                     if (!handledByChild)
@@ -562,19 +568,30 @@ namespace Gum.Wireframe
             {
                 var instance = gue.Tag as Gum.DataTypes.InstanceSave;
 
-                if (
-                    instance.BaseType == "ColoredRectangle" ||
+                var baseType = instance.BaseType;
 
+                if (
+                    baseType == "Arc" ||
+                    baseType == "Canvas" ||
+                    baseType == "Circle" ||
+                    baseType == "ColoredCircle" ||
+                    baseType == "ColoredRectangle" ||
                     // Vic says - a user may want to click on a container like a track, 
                     // so we prob should allow clicks?
-                    // Update - no doing this seems to ruin all kinds of UI because containers
+                    // Update - no - doing this seems to ruin all kinds of UI because containers
                     // steal clicks from their children. We will check if the container has an explicit
                     // event, otherwise, it will pass it along to its children.
-                    instance.BaseType == "Container" ||
-                    instance.BaseType == "NineSlice" ||
+                    baseType == "Container" ||
+                    baseType == "LottieAnimation" ||
 
-                    instance.BaseType == "Sprite" ||
-                    instance.BaseType == "Text")
+                    baseType == "NineSlice" ||
+                    baseType == "Polygon" ||
+
+                    baseType == "Rectangle" ||
+                    baseType == "RoundedRectangle" ||
+                    baseType == "Sprite" ||
+                    baseType == "Svg" ||
+                    baseType == "Text")
                 {
                     return false;
                 }
