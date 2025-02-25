@@ -20,6 +20,7 @@ using Gum.Plugins;
 using Color = System.Drawing.Color;
 using Matrix = System.Numerics.Matrix4x4;
 using System.Security.Policy;
+using Gum.Plugins.InternalPlugins.EditorTab.Services;
 
 namespace Gum.Wireframe
 {
@@ -131,7 +132,10 @@ namespace Gum.Wireframe
 
         #region Initialize Methods
 
-        public void Initialize(WireframeEditControl wireframeEditControl, Panel wireframeParentPanel, HotkeyManager hotkeyManager)
+        public void Initialize(WireframeEditControl wireframeEditControl, 
+            Panel wireframeParentPanel, 
+            HotkeyManager hotkeyManager,
+            LayerService layerService)
         {
             try
             {
@@ -147,7 +151,7 @@ namespace Gum.Wireframe
                 ToolLayerService.Self.Initialize();
 
                 Renderer.TextureFilter = TextureFilter.Point;
-                //Renderer.TextureFilter = TextureFilter.Linear;
+
 
                 LoaderManager.Self.ContentLoader = new ContentLoader();
 
@@ -164,7 +168,11 @@ namespace Gum.Wireframe
                 mCanvasBounds.Width = 800;
                 mCanvasBounds.Height = 600;
                 mCanvasBounds.Color = ScreenBoundsColor;
-                ShapeManager.Self.Add(mCanvasBounds, SelectionManager.Self.OverlayLayer);              
+
+
+                SelectionManager.Self.Initialize(layerService);
+
+                ShapeManager.Self.Add(mCanvasBounds, layerService.OverlayLayer);              
 
                 this.KeyDown += OnKeyDown;
                 this.MouseDown += CameraController.Self.HandleMouseDown;

@@ -199,6 +199,7 @@
       <DependentUpon>DeleteOptionsWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Logic\CopyPasteLogic.cs" />
+    <Compile Include="Plugins\InternalPlugins\EditorTab\Services\LayerService.cs" />
     <Compile Include="Plugins\InternalPlugins\Errors\Views\ErrorTabHeader.xaml.cs">
       <DependentUpon>ErrorTabHeader.xaml</DependentUpon>
     </Compile>

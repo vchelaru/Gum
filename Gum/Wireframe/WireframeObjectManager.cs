@@ -16,6 +16,7 @@ using Rectangle = System.Drawing.Rectangle;
 using Matrix = System.Numerics.Matrix4x4;
 using GumRuntime;
 using RenderingLibrary.Math.Geometry;
+using Gum.Plugins.InternalPlugins.EditorTab.Services;
 
 namespace Gum.Wireframe
 {
@@ -40,6 +41,8 @@ namespace Gum.Wireframe
         WireframeEditControl mEditControl;
         public WireframeControl WireframeControl { get; private set; }
 
+        Layer MainEditorLayer;
+
         public Sprite BackgroundSprite { get; private set; }
 
         const int left = -4096;
@@ -47,6 +50,7 @@ namespace Gum.Wireframe
 
         GraphicalUiElementManager gueManager;
         private LocalizationManager _localizationManager;
+        private LayerService _layerService;
 
 
         #endregion
@@ -87,7 +91,10 @@ namespace Gum.Wireframe
 
         public void Initialize(WireframeEditControl editControl, 
             WireframeControl wireframeControl, 
-            System.Windows.Forms.Cursor addCursor, LocalizationManager localizationManager)
+            System.Windows.Forms.Cursor addCursor, 
+            LocalizationManager localizationManager,
+            LayerService layerService
+            )
         {
             AddCursor = addCursor;
 
@@ -106,6 +113,8 @@ namespace Gum.Wireframe
             ElementSaveExtensions.CustomCreateGraphicalComponentFunc = HandleCreateGraphicalComponent;
 
             _localizationManager = localizationManager;
+            _layerService = layerService;
+ 
         }
 
         private IRenderable HandleCreateGraphicalComponent(string type, ISystemManagers systemManagers)
@@ -277,7 +286,7 @@ namespace Gum.Wireframe
                     {
 
                         RootGue = elementSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
-                        RootGue.AddToManagers(SystemManagers.Default);
+                        RootGue.AddToManagers(SystemManagers.Default, _layerService.MainEditorLayer);
 
                         // Always set default first, then if the selected state is not the default, then apply that after:
                         RootGue.SetVariablesRecursively(elementSave, elementSave.DefaultState);

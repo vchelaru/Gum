@@ -14,6 +14,8 @@ using Gum.Undo;
 using Gum.Wireframe.Editors;
 using Color = System.Drawing.Color;
 using Matrix = System.Numerics.Matrix4x4;
+using Gum.Plugins.InternalPlugins.EditorTab.Services;
+using System.Security.RightsManagement;
 
 namespace Gum.Wireframe
 {
@@ -42,6 +44,7 @@ namespace Gum.Wireframe
         #region Fields
         
         static SelectionManager mSelf;
+        LayerService _layerService;
 
         public WireframeEditor WireframeEditor;
 
@@ -50,7 +53,6 @@ namespace Gum.Wireframe
 
         GraphicalOutline mGraphicalOutline;
 
-        Layer _overlayLayer;
 
         HighlightManager highlightManager;
 
@@ -58,13 +60,6 @@ namespace Gum.Wireframe
 
         #region Properties
 
-        public Layer OverlayLayer
-        {
-            get
-            {
-                return _overlayLayer;
-            }
-        }
 
         public InputLibrary.Cursor Cursor
         {
@@ -201,12 +196,18 @@ namespace Gum.Wireframe
         {
             _selectedState = SelectedState.Self;
 
-            _overlayLayer = Renderer.Self.AddLayer();
-            _overlayLayer.Name = "Overlay Layer";
 
-            mGraphicalOutline = new GraphicalOutline(_overlayLayer);
+        }
 
-            highlightManager = new HighlightManager(_overlayLayer);
+        public void Initialize(LayerService layerService)
+        {
+            _layerService = layerService;
+            var overlayLayer = layerService.OverlayLayer;
+
+            mGraphicalOutline = new GraphicalOutline(overlayLayer);
+
+            highlightManager = new HighlightManager(overlayLayer);
+
         }
 
         /// <summary>
@@ -611,7 +612,9 @@ namespace Gum.Wireframe
                     {
                         WireframeEditor.Destroy();
                     }
-                    WireframeEditor = new PolygonWireframeEditor(OverlayLayer, global::Gum.Managers.HotkeyManager.Self);
+                    WireframeEditor = new PolygonWireframeEditor(
+                        _layerService.OverlayLayer, 
+                        global::Gum.Managers.HotkeyManager.Self);
                 }
             }
             else if(SelectedGues.Count > 0 && SelectedGue?.Tag is ScreenSave == false)
@@ -631,7 +634,9 @@ namespace Gum.Wireframe
                         GumState.Self.ProjectState.GeneralSettings.GuideTextColorG,
                         GumState.Self.ProjectState.GeneralSettings.GuideTextColorB);
 
-                    WireframeEditor = new StandardWireframeEditor(OverlayLayer, lineColor, textColor, global::Gum.Managers.HotkeyManager.Self);
+                    WireframeEditor = new StandardWireframeEditor(
+                        _layerService.OverlayLayer, 
+                        lineColor, textColor, global::Gum.Managers.HotkeyManager.Self);
                 }
             }
             else if(WireframeEditor != null)

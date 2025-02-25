@@ -4,6 +4,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
+using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.Plugins.ScrollBarPlugin;
 using Gum.Services;
 using Gum.ToolStates;
@@ -86,6 +87,9 @@ internal class MainEditorTabPlugin : InternalPlugin
     private int _defaultWireframeEditControlHeight;
 
     Panel gumEditorPanel;
+    private LayerService _layerService;
+    private Cursor _addCursor;
+    private ContextMenuStrip _wireframeContextMenuStrip;
 
     #endregion
 
@@ -277,6 +281,21 @@ internal class MainEditorTabPlugin : InternalPlugin
 
     private void HandleXnaInitialized()
     {
+        _scrollbarService.HandleWireframeInitialized(_wireframeControl, gumEditorPanel);
+
+        ToolCommands.GuiCommands_Old.Self.Initialize(_wireframeControl);
+
+        var localizationManager = Builder.Get<LocalizationManager>();
+        _layerService = new Services.LayerService();
+        _layerService.Initialize();
+
+        Wireframe.WireframeObjectManager.Self.Initialize(_wireframeEditControl, _wireframeControl, _addCursor, localizationManager, _layerService);
+        _wireframeControl.Initialize(_wireframeEditControl, gumEditorPanel, HotkeyManager.Self, _layerService);
+
+        EditingManager.Self.Initialize(_wireframeContextMenuStrip);
+
+
+
         _scrollbarService.HandleXnaInitialized();
 
 
@@ -327,6 +346,7 @@ internal class MainEditorTabPlugin : InternalPlugin
         UpdateWireframeControlSizes();
     }
 
+
     public void HandleWireframeInitialized(
         System.Windows.Forms.ContextMenuStrip wireframeContextMenuStrip,
         System.Windows.Forms.Cursor addCursor)
@@ -337,13 +357,14 @@ internal class MainEditorTabPlugin : InternalPlugin
         // WireFrameControl needs to be added to the gumEditorPanel first
         // Otherwise, the combobox will be drawn ontop of the top yellow ruler
         CreateWireframeControl(wireframeContextMenuStrip);
+        _wireframeContextMenuStrip = wireframeContextMenuStrip;
 
         // The WireframeEditControl (Where the combobox lives) must
         // be added to the gumEditorPanel 2nd, no idea why
         CreateWireframeEditControl(gumEditorPanel);
 
         GumCommands.Self.GuiCommands.AddControl(gumEditorPanel, "Editor", TabLocation.RightTop);
-
+        _addCursor = addCursor;
 
         _wireframeControl.XnaUpdate += () =>
         {
@@ -351,16 +372,6 @@ internal class MainEditorTabPlugin : InternalPlugin
             ToolLayerService.Self.Activity();
         };
 
-        _scrollbarService.HandleWireframeInitialized(_wireframeControl, gumEditorPanel);
-
-        ToolCommands.GuiCommands_Old.Self.Initialize(_wireframeControl);
-
-        var localizationManager = Builder.Get<LocalizationManager>();
-
-        Wireframe.WireframeObjectManager.Self.Initialize(_wireframeEditControl, _wireframeControl, addCursor, localizationManager);
-        _wireframeControl.Initialize(_wireframeEditControl, gumEditorPanel, HotkeyManager.Self);
-
-        EditingManager.Self.Initialize(wireframeContextMenuStrip);
     }
 
     private void CreateWireframeControl(System.Windows.Forms.ContextMenuStrip WireframeContextMenuStrip)
