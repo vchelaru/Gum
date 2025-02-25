@@ -613,6 +613,8 @@ namespace Gum.Plugins
         internal void ProjectLoad(GumProjectSave newlyLoadedProject) =>
             CallMethodOnPlugin(plugin => plugin.CallProjectLoad(newlyLoadedProject));
 
+        internal void ProjectPropertySet(string propertyName) =>
+            CallMethodOnPlugin(plugin => plugin.CallProjectPropertySet(propertyName));
         internal void ProjectSave(GumProjectSave savedProject) =>
             CallMethodOnPlugin(plugin => plugin.CallProjectSave(savedProject));
 

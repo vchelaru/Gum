@@ -2,6 +2,8 @@
 using Gum.Mvvm;
 using Gum.Settings;
 using Gum.Wireframe;
+using Microsoft.Xna.Framework.Graphics;
+using System;
 using Color = System.Drawing.Color;
 using Matrix = System.Numerics.Matrix4x4;
 
@@ -23,6 +25,12 @@ namespace Gum.Plugins.PropertiesWindowPlugin
         {
             get => Get<bool>(); 
             set => Set(value); 
+        }
+
+        public TextureFilter TextureFilter
+        {
+            get => Get<TextureFilter>();
+            set => Set(value);
         }
 
         public bool ShowCanvasOutline
@@ -180,6 +188,14 @@ namespace Gum.Plugins.PropertiesWindowPlugin
 
                 AutoSave = this.generalSettings.AutoSave;
                 ShowOutlines = this.gumProject.ShowOutlines;
+                try
+                {
+                    TextureFilter =  (TextureFilter)Enum.Parse(typeof(TextureFilter),this.gumProject.TextureFilter);
+                }
+                catch
+                {
+                    TextureFilter = TextureFilter.Point;
+                }
                 ShowCanvasOutline = this.gumProject.ShowCanvasOutline;
                 FontRanges = this.gumProject.FontRanges;
                 FontSpacingHorizontal = this.gumProject.FontSpacingHorizontal;
@@ -224,7 +240,7 @@ namespace Gum.Plugins.PropertiesWindowPlugin
             GraphicalUiElement.CanvasHeight = CanvasHeight;
 
 
-
+            this.gumProject.TextureFilter = TextureFilter.ToString();
             this.gumProject.RestrictToUnitValues = RestrictToUnitValues;
             this.gumProject.DefaultCanvasHeight = CanvasHeight;
             this.gumProject.DefaultCanvasWidth = CanvasWidth;

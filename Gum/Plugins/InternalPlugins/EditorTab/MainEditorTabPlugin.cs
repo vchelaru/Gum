@@ -124,13 +124,44 @@ internal class MainEditorTabPlugin : InternalPlugin
         this.ElementSelected += _scrollbarService.HandleElementSelected;
         this.UiZoomValueChanged += HandleUiZoomValueChanged;
         this.ProjectLoad += HandleProjectLoad;
+        this.ProjectPropertySet += HandleProjectPropertySet;
     }
+
 
     private void HandleProjectLoad(GumProjectSave save)
     {
-
         GraphicalUiElement.CanvasWidth = save.DefaultCanvasWidth;
         GraphicalUiElement.CanvasHeight = save.DefaultCanvasHeight;
+
+        AdjustTextureFilter();
+    }
+
+    private void HandleProjectPropertySet(string propertyName)
+    {
+        if(propertyName == nameof(GumProjectSave.TextureFilter))
+        {
+            AdjustTextureFilter();
+        }
+    }
+
+    private void AdjustTextureFilter()
+    {
+        var project = ObjectFinder.Self.GumProjectSave;
+
+        if (project != null)
+        {
+            switch(project.TextureFilter)
+            {
+                case nameof(TextureFilter.Linear):
+                    _layerService.MainEditorLayer.IsLinearFilteringEnabled = true;
+                    break;
+                case nameof(TextureFilter.Point):
+                default:
+                    _layerService.MainEditorLayer.IsLinearFilteringEnabled = false;
+
+                    break;
+            }
+        }
     }
 
     private void HandleElementDeleted(ElementSave save)

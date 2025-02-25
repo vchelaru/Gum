@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using Gum.Plugins.PropertiesWindowPlugin;
+using Microsoft.Xna.Framework.Graphics;
 using WpfDataUi.Controls;
 using WpfDataUi.DataTypes;
 
@@ -66,7 +68,12 @@ namespace Gum.Gui.Controls
             DataGrid.MoveMemberToCategory(nameof(ViewModel.FontSpacingHorizontal), "Font Generation");
             DataGrid.MoveMemberToCategory(nameof(ViewModel.FontSpacingVertical), "Font Generation");
 
-            
+            var textureFilterMember = DataGrid.GetInstanceMember(nameof(ViewModel.TextureFilter));
+            textureFilterMember.CustomOptions = new List<object>()
+            {
+                TextureFilter.Point,
+                TextureFilter.Linear
+            };
 
             foreach (var category in DataGrid.Categories)
             {

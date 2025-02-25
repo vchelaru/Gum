@@ -181,6 +181,8 @@ namespace Gum.Plugins.PropertiesWindowPlugin
                     break;
             }
 
+            PluginManager.Self.ProjectPropertySet(e.PropertyName);
+
             if (shouldSaveAndRefresh)
             {
                 GumCommands.Self.WireframeCommands.Refresh(forceLayout: true, forceReloadContent: shouldReloadContent);

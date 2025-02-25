@@ -22,6 +22,7 @@ namespace Gum.Plugins.BaseClasses
         public event Action<GumProjectSave> AfterProjectSave;
         public event Action<GumProjectSave> BeforeProjectSave;
         public event Action<FilePath> ProjectLocationSet;
+        public event Action<string> ProjectPropertySet;
 
         public event Action<ElementSave> BeforeElementSave;
         public event Action<ElementSave> AfterElementSave;
@@ -341,6 +342,9 @@ namespace Gum.Plugins.BaseClasses
             AfterProjectSave?.Invoke(savedProject);
         public void CallProjectLocationSet(FilePath filePath) =>
             ProjectLocationSet?.Invoke(filePath);
+
+        public void CallProjectPropertySet(string propertyName) =>
+            ProjectPropertySet?.Invoke(propertyName);
 
         public void CallGuidesChanged() =>
             GuidesChanged?.Invoke();

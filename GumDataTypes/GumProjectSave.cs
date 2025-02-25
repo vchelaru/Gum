@@ -105,6 +105,8 @@ namespace Gum.DataTypes
 
         public bool ShowCheckerBackground { get; set; }
 
+        public string TextureFilter { get; set; } = "Point";
+
         public bool ConvertVariablesOnUnitTypeChange
         {
             get; set;
