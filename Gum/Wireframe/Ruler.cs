@@ -15,6 +15,7 @@ using Gum.Input;
 using Vector2 = System.Numerics.Vector2;
 using Color = System.Drawing.Color;
 using Gum.Managers;
+using Gum.Plugins.InternalPlugins.EditorTab.Services;
 
 namespace Gum.Wireframe
 {
@@ -35,8 +36,8 @@ namespace Gum.Wireframe
         private ToolLayerService _toolLayerService;
         XnaAndWinforms.GraphicsDeviceControl mControl;
         SystemManagers mManagers;
-        Layer mRulerLayer;
         Cursor mCursor;
+        private readonly LayerService _layerService;
         Keyboard mKeyboard;
 
         SolidRectangle mRectangle;
@@ -252,7 +253,7 @@ namespace Gum.Wireframe
 
 
         public Ruler(GraphicsDeviceControl control, SystemManagers managers, Cursor cursor, InputLibrary.Keyboard keyboard, 
-            ToolFontService toolFontService, ToolLayerService toolLayerService)
+            ToolFontService toolFontService, ToolLayerService toolLayerService, LayerService layerService)
         {
             _toolFontService = toolFontService;
             _toolLayerService = toolLayerService;
@@ -262,8 +263,7 @@ namespace Gum.Wireframe
             mManagers = managers;
             mCursor = cursor;
 
-            // do this before creating the arrows
-            CreateLayer();
+            _layerService = layerService;
 
             CreateArrows(managers);
 
@@ -312,7 +312,7 @@ namespace Gum.Wireframe
             _grabbedGuideText.RenderBoundary = false;
             _grabbedGuideText.Parent = mOffsetSprite;
             _grabbedGuideText.BitmapFont = _toolFontService.ToolFont;
-            TextManager.Add(_grabbedGuideText, mRulerLayer);
+            TextManager.Add(_grabbedGuideText, _layerService.RulerLayer);
         }
 
         private void CreateVisualRepresentation()
@@ -322,7 +322,7 @@ namespace Gum.Wireframe
 
             mRectangle = new SolidRectangle();
             mRectangle.Color = Color.Yellow;
-            ShapeManager.Add(mRectangle, mRulerLayer);
+            ShapeManager.Add(mRectangle, _layerService.RulerLayer);
 
             ReactToRulerSides();
 
@@ -400,16 +400,7 @@ namespace Gum.Wireframe
 
             line.Parent = mOffsetSprite;
             mRulerLines.Add(line);
-            ShapeManager.Add(line, mRulerLayer);
-        }
-
-
-        private void CreateLayer()
-        {
-            mRulerLayer = Renderer.AddLayer();
-            mRulerLayer.LayerCameraSettings = new LayerCameraSettings();
-            mRulerLayer.LayerCameraSettings.IsInScreenSpace = true;
-            mRulerLayer.Name = "Ruler Layer";
+            ShapeManager.Add(line, _layerService.RulerLayer);
         }
 
         private bool PerformGuidesActivity(bool isCursorInWindow)
@@ -747,7 +738,7 @@ namespace Gum.Wireframe
 
             line.Parent = mOffsetSprite;
             mGuides.Add(line);
-            ShapeManager.Add(line, mRulerLayer);
+            ShapeManager.Add(line, _layerService.RulerLayer);
         }
 
         private void ReactToRulerSides()

@@ -10,6 +10,8 @@ using Gum.Services;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using GumRuntime;
+using Microsoft.Xna.Framework.Graphics;
+using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
@@ -285,12 +287,16 @@ internal class MainEditorTabPlugin : InternalPlugin
 
         ToolCommands.GuiCommands_Old.Self.Initialize(_wireframeControl);
 
-        var localizationManager = Builder.Get<LocalizationManager>();
         _layerService = new Services.LayerService();
-        _layerService.Initialize();
+
+        var localizationManager = Builder.Get<LocalizationManager>();
 
         Wireframe.WireframeObjectManager.Self.Initialize(_wireframeEditControl, _wireframeControl, _addCursor, localizationManager, _layerService);
-        _wireframeControl.Initialize(_wireframeEditControl, gumEditorPanel, HotkeyManager.Self, _layerService);
+        _wireframeControl.Initialize(_wireframeEditControl, gumEditorPanel, HotkeyManager.Self);
+
+        // _layerService must be created after _wireframeControl so that the SystemManagers.Default are assigned
+        _layerService.Initialize();
+        _wireframeControl.ShareLayerReferences(_layerService);
 
         EditingManager.Self.Initialize(_wireframeContextMenuStrip);
 

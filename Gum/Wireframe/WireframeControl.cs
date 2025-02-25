@@ -132,10 +132,8 @@ namespace Gum.Wireframe
 
         #region Initialize Methods
 
-        public void Initialize(WireframeEditControl wireframeEditControl, 
-            Panel wireframeParentPanel, 
-            HotkeyManager hotkeyManager,
-            LayerService layerService)
+        public void Initialize(WireframeEditControl wireframeEditControl, Panel wireframeParentPanel, 
+            HotkeyManager hotkeyManager)
         {
             try
             {
@@ -169,17 +167,10 @@ namespace Gum.Wireframe
                 mCanvasBounds.Height = 600;
                 mCanvasBounds.Color = ScreenBoundsColor;
 
-
-                SelectionManager.Self.Initialize(layerService);
-
-                ShapeManager.Self.Add(mCanvasBounds, layerService.OverlayLayer);              
-
                 this.KeyDown += OnKeyDown;
                 this.MouseDown += CameraController.Self.HandleMouseDown;
                 this.MouseMove += CameraController.Self.HandleMouseMove;
                 this.MouseWheel += CameraController.Self.HandleMouseWheel;
-                this.mTopRuler = new Ruler(this, SystemManagers.Default, InputLibrary.Cursor.Self, InputLibrary.Keyboard.Self, 
-                    ToolFontService.Self, ToolLayerService.Self);
 
                 this.MouseEnter += (not, used) =>
                 {
@@ -189,10 +180,6 @@ namespace Gum.Wireframe
                 {
                     mouseHasEntered = false;
                 };
-
-                mLeftRuler = new Ruler(this, SystemManagers.Default, InputLibrary.Cursor.Self, InputLibrary.Keyboard.Self, 
-                    ToolFontService.Self, ToolLayerService.Self);
-                mLeftRuler.RulerSide = RulerSide.Left;
 
                 if (AfterXnaInitialize != null)
                 {
@@ -208,6 +195,30 @@ namespace Gum.Wireframe
             {
                 MessageBox.Show("Error initializing the wireframe control\n\n" + exception);
             }
+        }
+
+        public void ShareLayerReferences(LayerService layerService)
+        {
+
+            SelectionManager.Self.Initialize(layerService);
+
+            ShapeManager.Self.Add(mCanvasBounds, layerService.OverlayLayer);
+
+
+            this.mTopRuler = new Ruler(this, SystemManagers.Default,
+                InputLibrary.Cursor.Self, 
+                InputLibrary.Keyboard.Self,
+                ToolFontService.Self, 
+                ToolLayerService.Self,
+                layerService);
+            mLeftRuler = new Ruler(this, SystemManagers.Default, 
+                InputLibrary.Cursor.Self, 
+                InputLibrary.Keyboard.Self,
+                ToolFontService.Self, 
+                ToolLayerService.Self, 
+                layerService);
+            mLeftRuler.RulerSide = RulerSide.Left;
+
         }
 
         void HandleZoomChanged(object sender, EventArgs e)

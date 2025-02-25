@@ -11,9 +11,10 @@ public class LayerService
     public Layer OverlayLayer { get; private set; }
     public Layer MainEditorLayer { get; private set; }
 
+    public Layer RulerLayer { get; private set; }
+
     public LayerService()
     {
-
     }
 
     public void Initialize()
@@ -24,5 +25,10 @@ public class LayerService
 
         OverlayLayer = Renderer.Self.AddLayer();
         OverlayLayer.Name = "Overlay Layer";
+
+        RulerLayer = Renderer.Self.AddLayer();
+        RulerLayer.LayerCameraSettings = new LayerCameraSettings();
+        RulerLayer.LayerCameraSettings.IsInScreenSpace = true;
+        RulerLayer.Name = "Ruler Layer";
     }
 }
