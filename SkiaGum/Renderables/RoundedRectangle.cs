@@ -31,10 +31,8 @@ namespace SkiaGum.Renderables
 
         public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
         {
-            using (var paint = GetPaint(boundingRect, absoluteRotation))
-            {
-                canvas.DrawRoundRect(boundingRect, CornerRadius, CornerRadius, paint);
-            }
+            var paint = GetCachedPaint(boundingRect, absoluteRotation);
+            canvas.DrawRoundRect(boundingRect, CornerRadius, CornerRadius, paint);
         }
     }
 }

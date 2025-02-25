@@ -17,10 +17,16 @@ namespace SkiaGum.Renderables
     {
         #region Fields/Properties
 
+        SKColor _color = SKColors.Red;
         public SKColor Color
         {
-            get; set;
-        } = SKColors.Red;
+            get => _color;
+            set
+            {
+                _color = value;
+                ClearCachedPaint();
+            }
+        }
 
         public int Alpha
         {
@@ -104,16 +110,27 @@ namespace SkiaGum.Renderables
             get;
             set;
         }
+
+        float _width;
         public float Width
         {
-            get;
-            set;
+            get => _width;
+            set
+            {
+                _width = value;
+                ClearCachedPaint();
+            }
         }
 
+        float _height;
         public float Height
         {
-            get;
-            set;
+            get => _height;
+            set
+            {
+                _height = value;
+                ClearCachedPaint();
+            }
         }
         public string Name
         {
@@ -130,49 +147,282 @@ namespace SkiaGum.Renderables
         public ColorOperation ColorOperation { get; set; } = ColorOperation.Modulate;
 
 
-        public bool UseGradient { get; set; }
+        private bool _useGradient;
+        public bool UseGradient
+        {
+            get => _useGradient;
+            set
+            {
+                _useGradient = value;
+                ClearCachedPaint();
+            }
+        }
 
-        public GradientType GradientType { get; set; }
+        private GradientType _gradientType;
+        public GradientType GradientType
+        {
+            get => _gradientType; 
+            set
+            {
+                _gradientType = value;
+                ClearCachedPaint();
+            }
+        }
 
-        public int Alpha1 { get; set; }
-        public int Red1 { get; set; }
-        public int Green1 { get; set; }
-        public int Blue1 { get; set; }
+        private int _alpha1;
+        public int Alpha1
+        {
+            get => _alpha1; 
+            set
+            {
+                _alpha1 = value;
+                ClearCachedPaint();
+            }
+        }
+        private int _red1;
+        public int Red1
+        {
+            get => _red1; set
+            {
+                _red1 = value;
+                ClearCachedPaint();
+            }
+        }
+        private int _green1;
+        public int Green1
+        {
+            get => _green1;
+            set
+            {
+                _green1 = value;
+                ClearCachedPaint();
+            }
+        }
+        private int _blue1;
+        public int Blue1
+        {
+            get => _blue1;
+            set
+            {
+                _blue1 = value;
+                ClearCachedPaint();
+            }
+        }
 
-        public int Alpha2 { get; set; }
-        public int Red2 { get; set; }
-        public int Green2 { get; set; }
-        public int Blue2 { get; set; }
+        private int _alpha2;
+        public int Alpha2
+        {
+            get => _alpha2;
+            set
+            {
+                _alpha2 = value;
+                ClearCachedPaint();
+            }
+        }
+        private int _red2;
+        public int Red2
+        {
+            get => _red2;
+            set
+            {
+                _red2 = value;
+                ClearCachedPaint();
+            }
+        }
+        private int _green2;
+        public int Green2
+        {
+            get => _green2;
+            set
+            {
+                _green2 = value;
+                ClearCachedPaint();
+            }
+        }
+        private int _blue2;
+        public int Blue2
+        {
+            get => _blue2;
+            set
+            {
+                _blue2 = value;
+                ClearCachedPaint();
+            }
+        }
 
-        public float GradientX1 { get; set; }
-        public GeneralUnitType GradientX1Units { get; set; }
-        public float GradientY1 { get; set; }
-        public GeneralUnitType GradientY1Units { get; set; }
+        private float _gradientX1;
+        public float GradientX1
+        {
+            get => _gradientX1;
+            set
+            {
+                _gradientX1 = value;
+                ClearCachedPaint();
+            }
+        }
+        private GeneralUnitType _gradientX1Units;
+        public GeneralUnitType GradientX1Units
+        {
+            get => _gradientX1Units;
+            set
+            {
+                _gradientX1Units = value;
+                ClearCachedPaint();
+            }
+        }
+        private float _gradientY1;
+        public float GradientY1
+        {
+            get => _gradientY1;
+            set
+            {
+                _gradientY1 = value;
+                ClearCachedPaint();
+            }
+        }
+        private GeneralUnitType _gradientY1Units;
+        public GeneralUnitType GradientY1Units
+        {
+            get => _gradientY1Units;
+            set
+            {
+                _gradientY1Units = value;
+                ClearCachedPaint();
+            }
+        }
 
-        public float GradientX2 { get; set; }
-        public GeneralUnitType GradientX2Units { get; set; }
+        private float _gradientX2;
+        public float GradientX2
+        {
+            get => _gradientX2;
+            set
+            {
+                _gradientX2 = value;
+                ClearCachedPaint();
+            }
+        }
 
-        public float GradientY2 { get; set; }
-        public GeneralUnitType GradientY2Units { get; set; }
+        private GeneralUnitType _gradientX2Units;
+        public GeneralUnitType GradientX2Units
+        {
+            get => _gradientX2Units;
+            set
+            {
+                _gradientX2Units = value;
+                ClearCachedPaint();
+            }
+        }
+
+        private float _gradientY2;
+        public float GradientY2
+        {
+            get => _gradientY2;
+            set
+            {
+                _gradientY2 = value;
+                ClearCachedPaint();
+            }
+        }
+        private GeneralUnitType _gradientY2Units;
+        public GeneralUnitType GradientY2Units
+        {
+            get => _gradientY2Units;
+            set
+            {
+                _gradientY2Units = value;
+                ClearCachedPaint();
+            }
+        }
 
 
-        public float GradientInnerRadius { get; set; }
-        public DimensionUnitType GradientInnerRadiusUnits { get; set; }
+        private float _gradientInnerRadius;
+        public float GradientInnerRadius
+        {
+            get => _gradientInnerRadius;
+            set
+            {
+                _gradientInnerRadius = value;
+                ClearCachedPaint();
+            }
+        }
+        private DimensionUnitType _gradientInnerRadiusUnits;
+        public DimensionUnitType GradientInnerRadiusUnits
+        {
+            get => _gradientInnerRadiusUnits;
+            set
+            {
+                _gradientInnerRadiusUnits = value;
+                ClearCachedPaint();
+            }
+        }
 
-        public float GradientOuterRadius { get; set; }
-        public DimensionUnitType GradientOuterRadiusUnits { get; set; }
+        private float _gradientOuterRadius;
+        public float GradientOuterRadius
+        {
+            get => _gradientOuterRadius;
+            set
+            {
+                _gradientOuterRadius = value;
+                ClearCachedPaint();
+            }
+        }
+        private DimensionUnitType _gradientOuterRadiusUnits;
+        public DimensionUnitType GradientOuterRadiusUnits
+        {
+            get => _gradientOuterRadiusUnits;
+            set
+            {
+                _gradientOuterRadiusUnits = value;
+                ClearCachedPaint();
+            }
+        }
 
-        public bool IsDimmed { get; set; }
+        bool _isDimmed;
+        public bool IsDimmed
+        {
+            get => _isDimmed;
+            set
+            {
+                _isDimmed = value;
+                ClearCachedPaint();
+            }
+        }
 
 
-        public bool IsFilled { get; set; } = true;
-        public float StrokeWidth { get; set; } = 2;
+        bool _isFilled = true;
+        public bool IsFilled
+        {
+            get => _isFilled;
+            set
+            {
+                _isFilled = value;
+                ClearCachedPaint();
+            }
+        }
+
+        float _strokeWidth = 2;
+        public float StrokeWidth
+        {
+            get => _strokeWidth;
+            set
+            {
+                _strokeWidth = value;
+                ClearCachedPaint();
+            }
+        }
 
         #region Dropshadow
 
+        SKColor _dropshadowColor;
+
         public SKColor DropshadowColor
         {
-            get; set;
+            get => _dropshadowColor;
+            set
+            {
+                _dropshadowColor = value;
+                ClearCachedPaint();
+            }
         }
 
         public int DropshadowAlpha
@@ -211,13 +461,65 @@ namespace SkiaGum.Renderables
             }
         }
 
-        public bool HasDropshadow { get; set; }
+        private bool _hasDropshadow;
 
-        public float DropshadowOffsetX { get; set; }
-        public float DropshadowOffsetY { get; set; }
+        public bool HasDropshadow
+        {
+            get => _hasDropshadow;
+            set
+            {
+                _hasDropshadow = value;
+                ClearCachedPaint();
+            }
+        }
 
-        public float DropshadowBlurX { get; set; }
-        public float DropshadowBlurY { get; set; }
+        private float _dropshadowOffsetX;
+
+        public float DropshadowOffsetX
+        {
+            get => _dropshadowOffsetX;
+            set
+            {
+                _dropshadowOffsetX = value;
+                ClearCachedPaint();
+            }
+        }
+
+        private float _dropshadowOffsetY;
+
+        public float DropshadowOffsetY
+        {
+            get => _dropshadowOffsetY;
+            set
+            {
+                _dropshadowOffsetY = value;
+                ClearCachedPaint();
+            }
+        }
+
+        private float _dropshadowBlurX;
+
+        public float DropshadowBlurX
+        {
+            get => _dropshadowBlurX;
+            set
+            {
+                _dropshadowBlurX = value;
+                ClearCachedPaint();
+            }
+        }
+
+        private float _dropshadowBlurY;
+
+        public float DropshadowBlurY
+        {
+            get => _dropshadowBlurY;
+            set
+            {
+                _dropshadowBlurY = value;
+                ClearCachedPaint();
+            }
+        }
 
         #endregion
 
@@ -309,6 +611,34 @@ namespace SkiaGum.Renderables
         public BlendState BlendState => BlendState.AlphaBlend;
 
         public bool ClipsChildren { get; set; }
+
+        SKRect _lastBoundingRect;
+
+        SKPaint? _cachedPaint;
+        protected void ClearCachedPaint()
+        {
+            if (_cachedPaint != null)
+            {
+                _cachedPaint.Dispose();
+            }
+            _cachedPaint = null;
+
+        }
+        float _lastAbsoluteRotation;
+        protected SKPaint GetCachedPaint(SKRect boundingRect, float absoluteRotation)
+        {
+            if(boundingRect != _lastBoundingRect || absoluteRotation != _lastAbsoluteRotation)
+            {
+                _lastBoundingRect = boundingRect;
+                _lastAbsoluteRotation = absoluteRotation;
+                ClearCachedPaint();
+            }
+            if(_cachedPaint == null)
+            {
+                _cachedPaint = GetPaint(boundingRect, absoluteRotation);
+            }
+            return _cachedPaint;
+        }
 
         protected virtual SKPaint GetPaint(SKRect boundingRect, float absoluteRotation)
         {

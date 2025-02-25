@@ -15,23 +15,21 @@ namespace SkiaGum.Renderables {
 
         public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
         {
-            using(var paint = GetPaint(boundingRect, absoluteRotation))
+            var paint = GetCachedPaint(boundingRect, absoluteRotation);
+            float CellHeight = this.CellHeight;
+            int cellcount = (int)(boundingRect.Height / CellHeight);
+            for(int i = 1; i < cellcount; i++)
             {
-                float CellHeight = this.CellHeight;
-                int cellcount = (int)(boundingRect.Height / CellHeight);
-                for(int i = 1; i < cellcount; i++)
-                {
-                    float thisY = i * CellHeight + boundingRect.Top;
-                    canvas.DrawLine(boundingRect.Left, thisY, boundingRect.Right, thisY, paint);
-                }
+                float thisY = i * CellHeight + boundingRect.Top;
+                canvas.DrawLine(boundingRect.Left, thisY, boundingRect.Right, thisY, paint);
+            }
 
-                float CellWidth = this.CellWidth;
-                cellcount = (int)(boundingRect.Width / CellWidth);
-                for(int i = 1; i < cellcount; i++)
-                {
-                    float thisX = i * CellWidth + boundingRect.Left;
-                    canvas.DrawLine(thisX, boundingRect.Top, thisX, boundingRect.Bottom, paint);
-                }
+            float CellWidth = this.CellWidth;
+            cellcount = (int)(boundingRect.Width / CellWidth);
+            for(int i = 1; i < cellcount; i++)
+            {
+                float thisX = i * CellWidth + boundingRect.Left;
+                canvas.DrawLine(thisX, boundingRect.Top, thisX, boundingRect.Bottom, paint);
             }
         }
 

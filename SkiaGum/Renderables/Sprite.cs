@@ -45,7 +45,7 @@ namespace SkiaGum.Renderables
             }
             /////////End Early Out///////////////
 
-            using var paint = base.GetPaint(boundingRect, absoluteRotation);
+            var paint = base.GetCachedPaint(boundingRect, absoluteRotation);
 
             var applyRotation = absoluteRotation != 0;
 

@@ -30,32 +30,30 @@ namespace SkiaGum.Renderables
 
         public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
         {
-            using (var paint = GetPaint(boundingRect, absoluteRotation))
+            var paint = GetCachedPaint(boundingRect, absoluteRotation);
+            SKPath path = new SKPath();
+
+            var thisPosition = new SKPoint(boundingRect.Left, boundingRect.Top);
+
+            GetXY(boundingRect, Points[0], out float x, out float y);
+
+            path.MoveTo(new SKPoint(x, y) + thisPosition);
+
+            for (int i = 1; i < Points.Count; i++)
             {
-                SKPath path = new SKPath();
+                var point = Points[i];
+                GetXY(boundingRect, point, out x, out y);
 
-                var thisPosition = new SKPoint(boundingRect.Left, boundingRect.Top);
-
-                GetXY(boundingRect, Points[0], out float x, out float y);
-
-                path.MoveTo(new SKPoint(x, y) + thisPosition);
-
-                for (int i = 1; i < Points.Count; i++)
-                {
-                    var point = Points[i];
-                    GetXY(boundingRect, point, out x, out y);
-
-                    path.LineTo(new SKPoint(x, y) + thisPosition);
-                }
-
-                if (IsClosed)
-                {
-                    path.LineTo(Points[0] + thisPosition);
-                    path.Close();
-                }
-
-                canvas.DrawPath(path, paint);
+                path.LineTo(new SKPoint(x, y) + thisPosition);
             }
+
+            if (IsClosed)
+            {
+                path.LineTo(Points[0] + thisPosition);
+                path.Close();
+            }
+
+            canvas.DrawPath(path, paint);
         }
 
         private void GetXY(SKRect boundingRect, SKPoint point, out float x, out float y)

@@ -24,7 +24,16 @@ namespace SkiaGum.Renderables
             set => base.StrokeWidth = value;
         }
 
-        public bool IsEndRounded { get; set; }
+        bool _isEndRounded;
+        public bool IsEndRounded
+        {
+            get => _isEndRounded;
+            set
+            {
+                _isEndRounded = value;
+                ClearCachedPaint();
+            }
+        }
 
         #endregion
 
@@ -44,13 +53,11 @@ namespace SkiaGum.Renderables
 
         public override void DrawBound(SKRect boundingRect, SKCanvas canvas, float absoluteRotation)
         {
-            using (var paint = GetPaint(boundingRect, absoluteRotation))
+            var paint = GetCachedPaint(boundingRect, absoluteRotation);
+            using (var path = new SKPath())
             {
-                using (var path = new SKPath())
-                {
-                    path.AddArc(boundingRect, -StartAngle, -SweepAngle);
-                    canvas.DrawPath(path, paint);
-                }
+                path.AddArc(boundingRect, -StartAngle, -SweepAngle);
+                canvas.DrawPath(path, paint);
             }
         }
     }
