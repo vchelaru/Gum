@@ -166,6 +166,16 @@ namespace GumRuntime
 
             var containedObject = CustomCreateGraphicalComponentFunc(elementSave.Name, systemManagers);
 
+            // experimental: The point of this is to give Screens a GrahpicalUiElement so that everyone can use .children
+            if(containedObject == null && elementSave is ScreenSave && string.IsNullOrEmpty(elementSave.BaseType))
+            {
+                containedObject = new InvisibleRenderable();
+                graphicalElement.WidthUnits = DimensionUnitType.RelativeToContainer;
+                graphicalElement.HeightUnits = DimensionUnitType.RelativeToContainer;
+                graphicalElement.Width = 0;
+                graphicalElement.Height = 0;
+            }
+
             if (containedObject != null)
             {
                 graphicalElement.SetContainedObject(containedObject);
