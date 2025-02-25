@@ -131,6 +131,7 @@
 
 * [Gum Code Reference](code/gum-code-reference/README.md)
   * [Camera](code/gum-code-reference/camera.md)
+  * [Cursor](code/gum-code-reference/cursor.md)
   * [Gum Class Overview](code/gum-code-reference/gum-class-overview.md)
   * [DataUiGrid](code/gum-code-reference/datauigrid/README.md)
     * [Reflection](code/gum-code-reference/datauigrid/reflection.md)
