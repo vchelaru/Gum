@@ -569,8 +569,8 @@ namespace Gum.PropertyGridHelpers
             if (shouldInclude)
             {
                 TypeConverter typeConverter = null;
-                
-                if(typeConverter == null)
+
+                if (typeConverter == null)
                 {
                     typeConverter = defaultVariable.GetTypeConverter(elementSave);
                 }
@@ -586,7 +586,7 @@ namespace Gum.PropertyGridHelpers
                 {
                     category = "Exposed";
                 }
-                else if(isState)
+                else if (isState)
                 {
                     category = "States and Visibility";
                 }
@@ -624,15 +624,37 @@ namespace Gum.PropertyGridHelpers
                 property.TypeConverter = typeConverter;
                 property.Category = category;
 
-
-                property.Subtext = subtext;
-                if(!string.IsNullOrEmpty(defaultVariable?.DetailText))
-                {
-                    property.Subtext += "\n" + defaultVariable.DetailText;
-                }
+                GetSubtext(defaultVariable, subtext, property, elementSave, instanceSave);
                 return property;
             }
             return null;
+        }
+
+        private static void GetSubtext(VariableSave defaultVariable, string subtext, InstanceSavePropertyDescriptor property, ElementSave elementSave, InstanceSave instanceSave)
+        {
+            property.Subtext = subtext;
+            if (!string.IsNullOrEmpty(defaultVariable?.DetailText))
+            {
+                property.Subtext += "\n" + defaultVariable.DetailText;
+            }
+
+            if(defaultVariable.Name == "HasEvents")
+            {
+                var element = elementSave;
+                if(instanceSave != null)
+                {
+                    element = ObjectFinder.Self.GetElementSave(instanceSave);
+                }
+
+                if(element is StandardElementSave)
+                {
+                    if(!string.IsNullOrEmpty(property.Subtext ))
+                    {
+                        property.Subtext += "\n";
+                    }
+                    property.Subtext += "Assigns Cursor.WindowOver only if events are assigned at runtime";
+                }
+            }
         }
 
         private static void AddNameAndBaseTypeProperties(List<InstanceSavePropertyDescriptor> pdc, ElementSave elementSave, InstanceSave instance, bool isReadOnly)
