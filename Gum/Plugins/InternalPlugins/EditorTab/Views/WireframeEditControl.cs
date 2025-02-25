@@ -94,6 +94,8 @@ namespace FlatRedBall.AnimationEditorForms.Controls
             mAvailableZoomLevels.Add(50);
             mAvailableZoomLevels.Add(33);
             mAvailableZoomLevels.Add(25);
+            mAvailableZoomLevels.Add(10);
+            mAvailableZoomLevels.Add(5);
 
             foreach (var value in mAvailableZoomLevels)
             {
