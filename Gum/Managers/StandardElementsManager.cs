@@ -546,7 +546,7 @@ namespace Gum.Managers
             stateSave.VariableLists.Add(variableListSave);
         }
 
-        private void AddEventVariables(StateSave stateSave, bool defaultHasEvents = false)
+        public static void AddEventVariables(StateSave stateSave, bool defaultHasEvents = false)
         {
             var hasEventsVariable =
                 new VariableSave

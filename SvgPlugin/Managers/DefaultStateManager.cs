@@ -56,6 +56,9 @@ namespace SkiaPlugin.Managers
                 svgState.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation", SetsValue = true });
 
                 AddVariableReferenceList(svgState);
+
+                StandardElementsManager.AddEventVariables(svgState);
+
             }
             return svgState;
         }
@@ -80,6 +83,9 @@ namespace SkiaPlugin.Managers
                     StandardElementsManager.DimensionVariableAction.ExcludeFileOptions);
 
                 AddVariableReferenceList(canvasState);
+
+                StandardElementsManager.AddEventVariables(canvasState);
+
             }
 
             return canvasState;
@@ -108,6 +114,9 @@ namespace SkiaPlugin.Managers
 
 
                 AddVariableReferenceList(lottieAnimationState);
+
+                StandardElementsManager.AddEventVariables(lottieAnimationState);
+
 
             }
             return lottieAnimationState;
@@ -140,6 +149,7 @@ namespace SkiaPlugin.Managers
                 filledCircleState.Variables.Add(new VariableSave { Type = "float", Value = 0.0f, Category = "Flip and Rotation", Name = "Rotation", SetsValue = true });
 
                 AddVariableReferenceList(filledCircleState);
+                StandardElementsManager.AddEventVariables(filledCircleState);
 
             }
 
@@ -177,6 +187,7 @@ namespace SkiaPlugin.Managers
                 AddVariableReferenceList(roundedRectangleState);
 
                 StandardElementsManager.AddClipsChildren(roundedRectangleState);
+                StandardElementsManager.AddEventVariables(roundedRectangleState);
 
             }
 
@@ -215,6 +226,9 @@ namespace SkiaPlugin.Managers
                 StandardElementsManager.AddDimensionsVariables(arcState, 64, 64,
                     StandardElementsManager.DimensionVariableAction.ExcludeFileOptions);
                 StandardElementsManager.AddColorVariables(arcState);
+                StandardElementsManager.AddEventVariables(arcState);
+                //StandardElementsManager.
+
 
                 AddBlendVariable(arcState);
 
