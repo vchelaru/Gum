@@ -23,19 +23,53 @@ public class Text : IRenderableIpso, IVisible, IText
     float? mWidth = 200;
 
     //public SKTypeface Font { get; set; }
-    public string FontName { get; set; } = "Arial";
+    public string FontName
+    {
+        get => _fontName; 
+        set
+        {
+            _fontName = value;
+            _cachedTextBlock = null;
 
-    public int FontSize { get; set; } = 12;
+        }
+    }
+    public int FontSize
+    {
+        get => _fontSize; 
+        set
+        {
+            _fontSize = value;
+            _cachedTextBlock = null;
+        }
+    }
+    public float FontScale
+    {
+        get => _fontScale; 
+        set
+        {
+            _fontScale = value;
+            _cachedTextBlock = null;
+        }
+    }
 
-    public float FontScale { get; set; }
-
-    public float BoldWeight { get; set; } = 1;
-
+    public float BoldWeight
+    {
+        get => _boldWeight; 
+        set
+        {
+            _boldWeight = value;
+            _cachedTextBlock = null;
+        }
+    }
     // I don't know if this should be a skia, XamForms, or XNA color...
     public SKColor Color
     {
-        get;
-        set;
+        get => _color;
+        set
+        {
+            _color = value;
+            _cachedTextBlock = null;
+        }
     }
 
     public int Blue
@@ -77,12 +111,23 @@ public class Text : IRenderableIpso, IVisible, IText
 
     public int? MaximumNumberOfLines
     {
-        get; set;
+        get => _maximumNumberOfLines; set
+        {
+            _maximumNumberOfLines = value;
+            _cachedTextBlock = null;
+        }
     }
 
     public bool IsTruncatingWithEllipsisOnLastLine { get; set; }
 
-    public bool IsItalic { get; set; }
+    public bool IsItalic
+    {
+        get => _isItalic; set
+        {
+            _isItalic = value;
+            _cachedTextBlock = null;
+        }
+    }
 
     Vector2 Position;
     IRenderableIpso mParent;
@@ -168,7 +213,7 @@ public class Text : IRenderableIpso, IVisible, IText
         get
         {
             float toReturn = 0;
-            var textBlock = GetTextBlock();
+            var textBlock = GetCachedTextBlock();
             if (textBlock.Lines.Count > 0)
             {
                 toReturn = textBlock.Lines[textBlock.Lines.Count - 1].MaxDescent;
@@ -181,8 +226,12 @@ public class Text : IRenderableIpso, IVisible, IText
 
     public HorizontalAlignment HorizontalAlignment
     {
-        get;
-        set;
+        get => _horizontalAlignment;
+        set
+        {
+            _horizontalAlignment = value;
+            _cachedTextBlock = null;
+        }
     }
 
     // todo - currently this does nothing except satisfy the Gum text object interface
@@ -211,6 +260,8 @@ public class Text : IRenderableIpso, IVisible, IText
             if (mRawText != value)
             {
                 mRawText = value;
+                _cachedTextBlock = null;
+
                 //UpdateWrappedText();
 
                 //UpdatePreRenderDimensions();
@@ -234,13 +285,20 @@ public class Text : IRenderableIpso, IVisible, IText
         set;
     }
 
-    public float LineHeightMultiplier { get; set; } = 1;
-
+    public float LineHeightMultiplier
+    {
+        get => _lineHeightMultiplier;
+        set
+        {
+            _lineHeightMultiplier = value;
+            _cachedTextBlock = null;
+        }
+    }
     public float WrappedTextHeight
     {
         get
         {
-            var textBlock = GetTextBlock();
+            var textBlock = GetCachedTextBlock();
             return textBlock.MeasuredHeight;
         }
     }
@@ -249,7 +307,7 @@ public class Text : IRenderableIpso, IVisible, IText
     {
         get
         {
-            var textBlock = GetTextBlock();
+            var textBlock = GetCachedTextBlock();
             return textBlock.MeasuredWidth;
         }
     }
@@ -282,7 +340,7 @@ public class Text : IRenderableIpso, IVisible, IText
 
         if (AbsoluteVisible)
         {
-            var textBlock = GetTextBlock();
+            var textBlock = GetCachedTextBlock();
             
             //// Gum uses counter clockwise rotation, Skia uses clockwise, so invert:
             SKMatrix rotationMatrix = SKMatrix.CreateRotationDegrees(-Rotation);
@@ -337,6 +395,37 @@ public class Text : IRenderableIpso, IVisible, IText
 
     public bool ClipsChildren { get; set; }
 
+    TextBlock? _cachedTextBlock;
+    float? _lastEffectiveWidth;
+    decimal _lastScreenDensity;
+    private string _fontName = "Arial";
+    private int _fontSize = 12;
+    private float _fontScale;
+    private float _boldWeight = 1;
+    private SKColor _color;
+    private bool _isItalic;
+    private float _lineHeightMultiplier = 1;
+    private HorizontalAlignment _horizontalAlignment;
+    private int? _maximumNumberOfLines;
+
+    public TextBlock GetCachedTextBlock(float? forcedWidth = null)
+    {
+        var effectiveWidth = forcedWidth ?? this.Width;
+
+        if(effectiveWidth != _lastEffectiveWidth || _lastScreenDensity != ScreenDensity)
+        {
+            _cachedTextBlock = null;
+            _lastEffectiveWidth = effectiveWidth;
+            _lastScreenDensity = ScreenDensity;
+        }
+
+        if(_cachedTextBlock == null)
+        {
+            _cachedTextBlock = GetTextBlock(effectiveWidth);
+        }
+        return _cachedTextBlock;
+    }
+
     public TextBlock GetTextBlock(float? forcedWidth = null)
     {
         var textBlock = new TextBlock();
@@ -377,6 +466,7 @@ public class Text : IRenderableIpso, IVisible, IText
 
         return textBlock;
     }
+
 
     private Style GetStyle()
     {
