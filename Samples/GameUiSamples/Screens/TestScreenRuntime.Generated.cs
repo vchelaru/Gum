@@ -1,10 +1,9 @@
 //Code for TestScreen
+using GameUiSamples.Components;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Wireframe;
-
-using GameUiSamples.Components;
 
 using RenderingLibrary.Graphics;
 
@@ -20,7 +19,36 @@ namespace GameUiSamples.Screens
         {
             GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("TestScreen", typeof(TestScreenRuntime));
         }
-        public TextBoxRuntime TextBoxInstance { get; protected set; }
+        public enum TestCategory
+        {
+            State1,
+        }
+
+        public TestCategory TestCategoryState
+        {
+            set
+            {
+                if(Categories.ContainsKey("TestCategory"))
+                {
+                    var category = Categories["TestCategory"];
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.ApplyState(state);
+                }
+                else
+                {
+                    var category = ((Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "TestCategory");
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.ApplyState(state);
+                }
+            }
+        }
+        public TextBoxRuntime TextBoxInstance_with_space { get; protected set; }
+
+        public float TextBoxInstancewithspaceX
+        {
+            get => TextBoxInstance_with_space.X;
+            set => TextBoxInstance_with_space.X = value;
+        }
 
         public TestScreenRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         {
@@ -29,7 +57,7 @@ namespace GameUiSamples.Screens
         }
         public override void AfterFullCreation()
         {
-            TextBoxInstance = this.GetGraphicalUiElementByName("TextBoxInstance") as TextBoxRuntime;
+            TextBoxInstance_with_space = this.GetGraphicalUiElementByName("TextBoxInstance with space") as TextBoxRuntime;
             CustomInitialize();
         }
         //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

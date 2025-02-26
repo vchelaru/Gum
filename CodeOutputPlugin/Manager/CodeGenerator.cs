@@ -78,6 +78,8 @@ public struct CodeGenerationContext
         }
     }
 
+    public string InstanceNameInCode(InstanceSave instance) => instance.Name.Replace(" ", "_");
+
     public string CodePrefixNoTabs
     {
         get
@@ -97,11 +99,11 @@ public struct CodeGenerationContext
             {
                 if (string.IsNullOrEmpty(ThisPrefix))
                 {
-                    return "this." + Instance.Name;
+                    return "this." + InstanceNameInCode(Instance);
                 }
                 else
                 {
-                    return ThisPrefix + "." + Instance.Name;
+                    return ThisPrefix + "." + InstanceNameInCode(Instance);
                 }
             }
         }
@@ -295,8 +297,8 @@ public class CodeGenerator
             stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {exposedVariable.ExposedAsName}");
             stringBuilder.AppendLine(ToTabs(tabCount) + "{");
             tabCount++;
-            stringBuilder.AppendLine(ToTabs(tabCount) + $"get => ({type})GetValue({exposedVariable.ExposedAsName.Replace(" ", "")}Property);");
-            stringBuilder.AppendLine(ToTabs(tabCount) + $"set => SetValue({exposedVariable.ExposedAsName.Replace(" ", "")}Property, value);");
+            stringBuilder.AppendLine(ToTabs(tabCount) + $"get => ({type})GetValue({exposedVariable.ExposedAsName.Replace(" ", "_")}Property);");
+            stringBuilder.AppendLine(ToTabs(tabCount) + $"set => SetValue({exposedVariable.ExposedAsName.Replace(" ", "_")}Property, value);");
             tabCount--;
             stringBuilder.AppendLine(ToTabs(tabCount) + "}");
         }
@@ -320,8 +322,8 @@ public class CodeGenerator
             stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {exposedVariable.ExposedAsName}");
             stringBuilder.AppendLine(ToTabs(tabCount) + "{");
             tabCount++;
-            stringBuilder.AppendLine(ToTabs(tabCount) + $"get => ({type})GetValue({exposedVariable.ExposedAsName.Replace(" ", "")}Property);");
-            stringBuilder.AppendLine(ToTabs(tabCount) + $"set => SetValue({exposedVariable.ExposedAsName.Replace(" ", "")}Property, value);");
+            stringBuilder.AppendLine(ToTabs(tabCount) + $"get => ({type})GetValue({exposedVariable.ExposedAsName.Replace(" ", "_")}Property);");
+            stringBuilder.AppendLine(ToTabs(tabCount) + $"set => SetValue({exposedVariable.ExposedAsName.Replace(" ", "_")}Property, value);");
             tabCount--;
             stringBuilder.AppendLine(ToTabs(tabCount) + "}");
 
@@ -337,7 +339,7 @@ public class CodeGenerator
             }
             else
             {
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{exposedVariable.Name.Replace(" ", "")} = ({type})newValue;");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{exposedVariable.Name.Replace(" ", "_")} = ({type})newValue;");
             }
 
             tabCount--;
@@ -377,7 +379,7 @@ public class CodeGenerator
             }
             if (hasGetter)
             {
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => {exposedVariable.Name.Replace(" ", "")};");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => {exposedVariable.Name.Replace(" ", "_")};");
             }
 
             if(shouldSetStateByString)
@@ -387,7 +389,7 @@ public class CodeGenerator
             }
             else
             {
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {exposedVariable.Name.Replace(" ", "")} = value;");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {exposedVariable.Name.Replace(" ", "_")} = value;");
             }
             tabCount--;
 
@@ -425,8 +427,9 @@ public class CodeGenerator
         
         // If this is private, it cannot override anything. Therefore, we'll mark the setter as protected:
         //stringBuilder.AppendLine($"{tabs}{accessString}{className} {instance.Name} {{ get; private set; }}");
-        context.StringBuilder.AppendLine($"{context.Tabs}{accessString}{className} {context.Instance.Name} {{ get; protected set; }}");
+        context.StringBuilder.AppendLine($"{context.Tabs}{accessString}{className} {context.InstanceNameInCode(context.Instance)} {{ get; protected set; }}");
     }
+
 
 
     #endregion
@@ -539,13 +542,14 @@ public class CodeGenerator
     private static void AddFindByNameAssignment(CodeGenerationContext context)
     {
         context.StringBuilder.AppendLine(
-            $"{context.Tabs}{context.Instance.Name} = this.GetGraphicalUiElementByName(\"{context.Instance.Name}\") as " +
+            $"{context.Tabs}{context.InstanceNameInCode(context.Instance)} = this.GetGraphicalUiElementByName(\"{context.Instance.Name}\") as " +
             $"{GetClassNameForType(context.Instance.BaseType, context.VisualApi, context)};");
     }
 
     private static void FillWithInstanceInstantiation(CodeGenerationContext context)
     {
         var instance = context.Instance;
+        var instanceName = context.InstanceNameInCode(instance);
 
         var strippedType = instance.BaseType;
         if (strippedType.Contains("/"))
@@ -557,19 +561,20 @@ public class CodeGenerator
 
         var tabs = context.Tabs;
 
-        context.StringBuilder.AppendLine($"{tabs}{instance.Name} = new {GetClassNameForType(instance.BaseType, visualApi, context)}();");
+        context.StringBuilder.AppendLine($"{tabs}{instanceName} = new {GetClassNameForType(instance.BaseType, visualApi, context)}();");
 
         var shouldSetBinding =
             visualApi == VisualApi.XamarinForms && context.Element.DefaultState.Variables.Any(item => !string.IsNullOrEmpty(item.ExposedAsName) && item.SourceObject == instance.Name);
         // If it's xamarin forms and we have exposed variables, then let's set up binding to this
         if (shouldSetBinding)
         {
-            context.StringBuilder.AppendLine($"{tabs}{instance.Name}.BindingContext = this;");
+            context.StringBuilder.AppendLine($"{tabs}{instanceName}.BindingContext = this;");
         }
 
         if (visualApi == VisualApi.Gum)
         {
-            context.StringBuilder.AppendLine($"{tabs}{instance.Name}.Name = \"{instance.Name}\";");
+            // Use instance.Name so it is "raw"
+            context.StringBuilder.AppendLine($"{tabs}{instanceName}.Name = \"{instance.Name}\";");
         }
 
         if (visualApi == VisualApi.XamarinForms)
@@ -580,13 +585,14 @@ public class CodeGenerator
                 // Xamarin.Forms doesn't like an automation ID being set 2x
                 if (instance.DefinedByBase == false)
                 {
-                    context.StringBuilder.AppendLine($"{tabs}{instance.Name}.AutomationId = \"{instance.Name}\";");
+                    // Use instance.Name so it is "raw"
+                    context.StringBuilder.AppendLine($"{tabs}{instanceName}.AutomationId = \"{instance.Name}\";");
                 }
 
                 if (IsOfXamarinFormsType(context.Instance, "ActivityIndicator"))
                 {
                     // If we don't do this, it is invisible which is confusing for the user...
-                    context.StringBuilder.AppendLine($"{tabs}{instance.Name}.IsRunning = true;");
+                    context.StringBuilder.AppendLine($"{tabs}{context.InstanceNameInCode(instance)}.IsRunning = true;");
                 }
             }
         }
@@ -1890,6 +1896,7 @@ public class CodeGenerator
     {
         var container = context.Element;
         var instance = context.Instance;
+        var instanceNameInCode = context.InstanceNameInCode(instance);
         //context.Instance, context.Element, context.StringBuilder, context.TabCount, context.CodeOutputProjectSettings;
 
         // Some history on this:
@@ -1938,12 +1945,6 @@ public class CodeGenerator
             {
                 context.StringBuilder.AppendLine(context.Tabs + codeLine);
             }
-
-            var suffixCodeLine = GetSuffixCodeLine(instance, parentVariable, visualApi);
-            if (!string.IsNullOrEmpty(suffixCodeLine))
-            {
-                context.StringBuilder.AppendLine(context.Tabs + suffixCodeLine);
-            }
         }
 
         // For scrollable GumContainers we need to have the parent assigned *after* the AbsoluteLayout rectangle:
@@ -1961,17 +1962,17 @@ public class CodeGenerator
                     {
                         // If it's a screen it may have children, or it may not. We just don't know, so we need to check
 
-                        context.StringBuilder.AppendLine($"{context.Tabs}if(this.Children != null) this.Children.Add({instance.Name});");
-                        context.StringBuilder.AppendLine($"{context.Tabs}else this.WhatThisContains.Add({instance.Name});");
+                        context.StringBuilder.AppendLine($"{context.Tabs}if(this.Children != null) this.Children.Add({context.InstanceNameInCode(instance)});");
+                        context.StringBuilder.AppendLine($"{context.Tabs}else this.WhatThisContains.Add({context.InstanceNameInCode(instance)});");
                     }
                     else
                     {
-                        context.StringBuilder.AppendLine($"{context.Tabs}this.WhatThisContains.Add({instance.Name});");
+                        context.StringBuilder.AppendLine($"{context.Tabs}this.WhatThisContains.Add({context.InstanceNameInCode(instance)});");
                     }
                 }
                 else
                 {
-                    context.StringBuilder.AppendLine($"{context.Tabs}this.Children.Add({instance.Name});");
+                    context.StringBuilder.AppendLine($"{context.Tabs}this.Children.Add({context.InstanceNameInCode(instance)});");
                 }
             }
             else // forms
@@ -1985,21 +1986,21 @@ public class CodeGenerator
 
                 if (instanceBaseType.EndsWith("/GumCollectionView"))
                 {
-                    context.StringBuilder.AppendLine($"{context.Tabs}var tempFor{instance.Name} = GumScrollBar.CreateScrollableAbsoluteLayout({instance.Name}, ScrollableLayoutParentPlacement.Free);");
-                    instanceName = $"tempFor{instance.Name}";
+                    context.StringBuilder.AppendLine($"{context.Tabs}var tempFor{instanceNameInCode} = GumScrollBar.CreateScrollableAbsoluteLayout({instanceNameInCode}, ScrollableLayoutParentPlacement.Free);");
+                    instanceName = $"tempFor{instanceNameInCode}";
                 }
 
                 if (isContainerStackLayout || isContainerAbsoluteLayout)
                 {
-                    context.StringBuilder.AppendLine($"{context.Tabs}this.Children.Add({instanceName});");
+                    context.StringBuilder.AppendLine($"{context.Tabs}this.Children.Add({instanceNameInCode});");
                 }
                 else if (DoesTypeHaveContent(container.BaseType))
                 {
-                    context.StringBuilder.Append($"{context.Tabs}this.Content = {instanceName};");
+                    context.StringBuilder.Append($"{context.Tabs}this.Content = {instanceNameInCode};");
                 }
                 else
                 {
-                    context.StringBuilder.AppendLine($"{context.Tabs}MainLayout.Children.Add({instanceName});");
+                    context.StringBuilder.AppendLine($"{context.Tabs}MainLayout.Children.Add({instanceNameInCode});");
                 }
             }
         }
@@ -2395,8 +2396,8 @@ public class CodeGenerator
                     if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Maui)
                     {
                         context.StringBuilder.AppendLine("// This hurts performance a little but it's needed because of an iOS MAUI bug where these do not behave the same as in Android");
-                        context.StringBuilder.AppendLine(context.Tabs + instance.Name + ".ForceGumLayout();");
-                        context.StringBuilder.AppendLine(context.Tabs + instance.Name + ".UpdateDimensionsFromAutoSize();");
+                        context.StringBuilder.AppendLine(context.Tabs + context.InstanceNameInCode(instance) + ".ForceGumLayout();");
+                        context.StringBuilder.AppendLine(context.Tabs + context.InstanceNameInCode(instance) + ".UpdateDimensionsFromAutoSize();");
                     }
                 }
             }
@@ -2966,11 +2967,6 @@ public class CodeGenerator
                 {
                     var codeLine = GetCodeLine(variable, context.Element, visualApi, stateSave, context);
                     stringBuilder.AppendLine(ToTabs(tabCount) + codeLine);
-                    var suffixCodeLine = GetSuffixCodeLine(instance, variable, visualApi);
-                    if (!string.IsNullOrEmpty(suffixCodeLine))
-                    {
-                        stringBuilder.AppendLine(ToTabs(tabCount) + suffixCodeLine);
-                    }
                 }
             }
 
@@ -3105,12 +3101,6 @@ public class CodeGenerator
         {
             var codeLine = GetCodeLine(variable, element, visualApi, defaultState, context);
             stringBuilder.AppendLine(tabs + codeLine);
-
-            var suffixCodeLine = GetSuffixCodeLine(null, variable, visualApi);
-            if (!string.IsNullOrEmpty(suffixCodeLine))
-            {
-                stringBuilder.AppendLine(tabs + suffixCodeLine);
-            }
         }
 
     }
@@ -3216,7 +3206,7 @@ public class CodeGenerator
 
                 if (isPolygon)
                 {
-                    context.StringBuilder.AppendLine(context.Tabs + $"this.{instance.Name}.SetPoints(new System.Numerics.Vector2[]{{");
+                    context.StringBuilder.AppendLine(context.Tabs + $"this.{context.InstanceNameInCode(instance)}.SetPoints(new System.Numerics.Vector2[]{{");
                     context.TabCount++;
                     foreach (System.Numerics.Vector2 point in variable.ValueAsIList)
                     {
@@ -3514,6 +3504,7 @@ public class CodeGenerator
                 // a single content. In the future we may want to formalize the way we
                 // handle standard XamarinForms controls, but for now we'll hardcode some
                 // checks:
+
                 if (IsTabControl(parentInstance))
                 {
                     var stringBuilder = new StringBuilder();
@@ -3537,19 +3528,19 @@ public class CodeGenerator
 
                     stringBuilder.AppendLine($"{tabs}var tabItem = new {tabViewType}();");
                     stringBuilder.AppendLine($"{tabs}tabItem.{textProperty} = \"Tab Text\";");
-                    stringBuilder.AppendLine($"{tabs}tabItem.Content = {context.Instance.Name};");
-                    stringBuilder.AppendLine($"{tabs}{parentInstance.Name}.{tabItemsProperty}.Add(tabItem);");
+                    stringBuilder.AppendLine($"{tabs}tabItem.Content = {context.InstanceNameInCode(context.Instance)};");
+                    stringBuilder.AppendLine($"{tabs}{context.InstanceNameInCode(parentInstance)}.{tabItemsProperty}.Add(tabItem);");
                     tabs = tabs.Substring(4);
                     stringBuilder.AppendLine($"{tabs}}}");
                     return stringBuilder.ToString();
                 }
                 else if (hasContent)
                 {
-                    return $"{parentName}.Content = {context.Instance.Name};";
+                    return $"{parentName}.Content = {context.InstanceNameInCode( context.Instance)};";
                 }
                 else
                 {
-                    return $"{parentName}.Children.Add({context.Instance.Name});";
+                    return $"{parentName}.Children.Add({context.InstanceNameInCode(context.Instance)});";
                 }
             }
             // parent instance is null, so attach to "this" top level object
@@ -3661,12 +3652,6 @@ public class CodeGenerator
             {
                 stringBuilder.AppendLine(codeLine);
             }
-
-            var suffixCodeLine = GetSuffixCodeLine(instance, variable, visualApi);
-            if (!string.IsNullOrEmpty(suffixCodeLine))
-            {
-                stringBuilder.AppendLine(suffixCodeLine);
-            }
         }
         variablesToAssignValues.RemoveAll(item => item.IsState(container));
 
@@ -3685,12 +3670,6 @@ public class CodeGenerator
             if (!string.IsNullOrWhiteSpace(codeLine))
             {
                 stringBuilder.AppendLine(context.Tabs + codeLine);
-            }
-
-            var suffixCodeLine = GetSuffixCodeLine(instance, variable, visualApi);
-            if (!string.IsNullOrEmpty(suffixCodeLine))
-            {
-                stringBuilder.AppendLine(context.Tabs + suffixCodeLine);
             }
         }
     }
@@ -3757,7 +3736,8 @@ public class CodeGenerator
             {
                 context.StringBuilder.AppendLine(context.Tabs + $"if({screenOrComponent}?.DefaultState != null);");
                 context.TabCount++;
-                context.StringBuilder.AppendLine(context.Tabs + $"GumRuntime.ElementSaveExtensions.ApplyVariableReferences({instance.Name}, {screenOrComponent}.DefaultState);");
+                context.StringBuilder.AppendLine(context.Tabs + 
+                    $"GumRuntime.ElementSaveExtensions.ApplyVariableReferences({context.InstanceNameInCode(instance)}, {screenOrComponent}.DefaultState);");
                 context.TabCount--;
 
             }
@@ -3876,24 +3856,6 @@ public class CodeGenerator
     }
 
 
-    private static string GetSuffixCodeLine(InstanceSave instance, VariableSave variable, VisualApi visualApi)
-    {
-        if (visualApi == VisualApi.XamarinForms)
-        {
-            var rootName = variable.GetRootName();
-
-            //switch(rootName)
-            //{
-            // We don't do this anymore now that we are stuffing forms objects in absolute layouts
-            //case "Width": return $"{instance.Name}.HorizontalOptions = LayoutOptions.Start;";
-            //case "Height": return $"{instance.Name}.VerticalOptions = LayoutOptions.Start;";
-            //}
-        }
-
-        return null;
-    }
-
-
     public static bool DoesTypeHaveContent(string type)
     {
         return type?.EndsWith("/ScrollView") == true ||
@@ -3914,7 +3876,7 @@ public class CodeGenerator
             var owner = string.IsNullOrEmpty(variable.Value as string)
                 ? "this"
                 : variable.Value;
-            return $"{owner}.Children.Add({instance.Name});";
+            return $"{owner}.Children.Add({context.InstanceNameInCode(instance)});";
         }
         #endregion
         // ignored variables:
@@ -3950,7 +3912,7 @@ public class CodeGenerator
 
             if (isVariableDefinedByStandardElement)
             {
-                return $"{instance.Name}.SetProperty(\"{variable.GetRootName()}\", \"{variable.Value}\");";
+                return $"{context.InstanceNameInCode(instance)}.SetProperty(\"{variable.GetRootName()}\", \"{variable.Value}\");";
             }
 
 
@@ -4069,7 +4031,7 @@ public class CodeGenerator
 
             if (instanceComponentSettings?.LocalizeElement == true)
             {
-                stringBuilder.AppendLine(context.Tabs + $"{instance.Name}.ApplyLocalization();");
+                stringBuilder.AppendLine(context.Tabs + $"{context.InstanceNameInCode(instance)}.ApplyLocalization();");
 
             }
         }

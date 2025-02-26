@@ -17,20 +17,62 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>TestCategory</Type>
+      <Name>TestCategoryState</Name>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>float</Type>
-      <Name>TextBoxInstance.Width</Name>
-      <Value xsi:type="xsd:float">10</Value>
+      <Name>TextBoxInstance with space.Height</Name>
+      <Value xsi:type="xsd:float">23</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>TextBoxInstance with space.Width</Name>
+      <Value xsi:type="xsd:float">206</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>TextBoxInstance.WidthUnits</Name>
+      <Name>TextBoxInstance with space.WidthUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
       <SetsValue>true</SetsValue>
     </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>TextBoxInstance with space.X</Name>
+      <Value xsi:type="xsd:float">113</Value>
+      <ExposedAsName>TextBoxInstancewithspaceX</ExposedAsName>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>TextBoxInstance with space.Y</Name>
+      <Value xsi:type="xsd:float">44</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
   </State>
+  <Category>
+    <Name>TestCategory</Name>
+    <State>
+      <Name>State1</Name>
+      <Variable>
+        <Type>float</Type>
+        <Name>TextBoxInstance with space.X</Name>
+        <Value xsi:type="xsd:float">36</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>float</Type>
+        <Name>TextBoxInstance with space.Y</Name>
+        <Value xsi:type="xsd:float">81</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+    </State>
+  </Category>
   <Instance>
-    <Name>TextBoxInstance</Name>
+    <Name>TextBoxInstance with space</Name>
     <BaseType>Controls/TextBox</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
