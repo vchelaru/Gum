@@ -780,21 +780,27 @@ namespace Gum.Managers
 
         private void AdjustTextPreferredDisplayer(List<MemberCategory> categories, StateSave stateSave, InstanceSave instanceSave)
         {
+            /////////////////////////Early Out////////////////////
+            if(_localizationManager.HasDatabase == false)
+            {
+                return;
+            }
+            ///////////////////////End Early Out//////////////////
+
             // This used to only make Text objects multiline, but...maybe we should make all string values multiline?
             foreach(var category in categories)
             {
                 foreach(var member in category.Members)
                 {
                     var isStringMember = member.PreferredDisplayer == null &&
-                        member.PropertyType == typeof(string) &&
-                        member.Name != "Name" && member.Name.EndsWith(".Name") == false;
+                        member.PropertyType == typeof(string);
 
                     if (isStringMember)
                     {
-                        var rootVariable = (member as StateReferencingInstanceMember)?.GetRootVariableSave();
+                        var baseVariable = ObjectFinder.Self.GetRootVariable(member.Name, stateSave.ParentContainer);
 
-                        var shouldShowLocalizationUi = _localizationManager.HasDatabase && (member.CustomOptions?.Count > 0) == false &&
-                            ((member as StateReferencingInstanceMember)?.GetRootVariableSave())?.GetRootName() == "Text";
+                        var shouldShowLocalizationUi = (member.CustomOptions?.Count > 0) == false &&
+                            baseVariable?.Name == "Text";
 
                         // See StandardElementsManager for Text on explanation why this is commented out.
                         //if(shouldShowLocalizationUi)
