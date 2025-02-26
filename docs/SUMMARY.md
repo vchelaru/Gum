@@ -32,6 +32,7 @@
     * [Base Type (Inheritance)](gum-tool/gum-elements/general-properties/base-type-inheritance.md)
     * [Blend](gum-tool/gum-elements/general-properties/blend.md)
     * [Clips Children](gum-tool/gum-elements/general-properties/clips-children.md)
+    * [Has Events](gum-tool/gum-elements/general-properties/has-events.md)
     * [Height Units](gum-tool/gum-elements/general-properties/height-units.md)
     * [Ignored By Parent Size](gum-tool/gum-elements/general-properties/ignored-by-parent-size.md)
     * [Locked](gum-tool/gum-elements/general-properties/locked.md)
