@@ -160,17 +160,39 @@ public class CodeGenerator
     #region Using Statements
 
 
-    private static void GenerateUsingStatements(CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings, StringBuilder stringBuilder)
+    private static void GenerateUsingStatements(CodeOutputElementSettings elementSettings, 
+        CodeGenerationContext context)
     {
+
+        // This code is used to automatially add needed using statements:
+        // https://github.com/vchelaru/Gum/issues/598
+        HashSet<string> neededUsings = new HashSet<string>();
+        foreach(var instance in context.Element.Instances)
+        {
+            var gumType = instance.BaseType;
+
+            var instanceElement = ObjectFinder.Self.GetElementSave(instance);
+
+            if(instanceElement != null && instanceElement is not StandardElementSave)
+            {
+                var elementNamespace = GetElementNamespace(instanceElement, elementSettings, context.CodeOutputProjectSettings);
+
+                if(!string.IsNullOrEmpty(elementNamespace) && !neededUsings.Contains(elementNamespace))
+                {
+                    neededUsings.Add(elementNamespace);
+                    context.StringBuilder.AppendLine($"using {elementNamespace};");
+                }
+            }
+        }
+
         // The regex's here fix this bug:
         // https://github.com/vchelaru/Gum/issues/242
-
-        if (!string.IsNullOrWhiteSpace(projectSettings?.CommonUsingStatements))
+        if (!string.IsNullOrWhiteSpace(context.CodeOutputProjectSettings?.CommonUsingStatements))
         {
-            string originalString = projectSettings.CommonUsingStatements;
+            string originalString = context.CodeOutputProjectSettings.CommonUsingStatements;
             string result = Regex.Replace(originalString, @"(?<!\r)\n", "\r\n");
 
-            stringBuilder.AppendLine(result);
+            context.StringBuilder.AppendLine(result);
         }
 
         if (!string.IsNullOrEmpty(elementSettings?.UsingStatements))
@@ -179,7 +201,7 @@ public class CodeGenerator
             string result = Regex.Replace(originalString, @"(?<!\r)\n", "\r\n");
 
 
-            stringBuilder.AppendLine(result);
+            context.StringBuilder.AppendLine(result);
         }
     }
 
@@ -2416,12 +2438,15 @@ public class CodeGenerator
         var context = new CodeGenerationContext();
         context.TabCount = 0;
         context.Element = element;
+        context.CodeOutputProjectSettings = projectSettings;
+        context.StringBuilder = stringBuilder;
+
 
         #endregion
 
         #region Using Statements
 
-        GenerateUsingStatements(elementSettings, projectSettings, stringBuilder);
+        GenerateUsingStatements(elementSettings, context);
 
         #endregion
 
@@ -2437,9 +2462,6 @@ public class CodeGenerator
         }
 
         #endregion
-
-        context.CodeOutputProjectSettings = projectSettings;
-        context.StringBuilder = stringBuilder;
 
         #region Class Header/Opening {
 

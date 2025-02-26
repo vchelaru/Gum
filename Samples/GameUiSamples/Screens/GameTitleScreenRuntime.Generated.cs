@@ -1,10 +1,9 @@
 //Code for GameTitleScreen
+using GameUiSamples.Components;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Wireframe;
-
-using GameUiSamples.Components;
 
 using RenderingLibrary.Graphics;
 
