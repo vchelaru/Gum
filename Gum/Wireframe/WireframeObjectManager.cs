@@ -414,7 +414,9 @@ namespace Gum.Wireframe
                 throw new InvalidOperationException("Cannot apply localization - the LocalizationManager doesn't have a localization database loaded");
             }
 
-            foreach(var textContainer in GetTextsRecurisve(RootGue))
+            var texts = GetTextsRecurisve(RootGue);
+
+            foreach (var textContainer in texts)
             {
                 ApplyLocalization(textContainer);
             }
@@ -456,7 +458,9 @@ namespace Gum.Wireframe
                 // it won't have children, so go to the toplevel objects
                 foreach(var child in parent.ContainedElements)
                 {
-                    if(child.Parent == null)
+                    if(child.Parent == null || 
+                        // new as of February 2025 children can now have parents
+                        child.Parent == parent)
                     {
                         var textsInChild = GetTextsRecurisve(child);
                         foreach(var textInChild in textsInChild)
