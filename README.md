@@ -42,10 +42,11 @@ Gum produces genera-purpose XML so it is technically possible to use Gum in any 
 
 Gum integrations exist for the following environments:
 
-* MonoGame/FNA/Kni
+* MonoGame/FNA/Kni, including libraries like MonoGame.Extended and Nez
 * FlatRedBall
 * Meadow
 * SkiaSharp
+* Silk.NET
 * WPF
 * Xamarin.Forms/Maui
 
