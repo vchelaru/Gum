@@ -71,7 +71,7 @@ namespace GumFromZipFile
         private Stream GetStreamForFile(string fullPath)
         {
 
-            fullPath.Replace("\\", "/");
+            fullPath = fullPath.Replace("\\", "/");
 
             if(zipFileBytes.ContainsKey(fullPath))
             {
