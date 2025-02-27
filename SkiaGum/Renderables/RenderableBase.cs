@@ -117,8 +117,12 @@ namespace SkiaGum.Renderables
             get => _width;
             set
             {
+                var changed = _width != value;
                 _width = value;
-                ClearCachedPaint();
+                if(changed && UseGradient)
+                {
+                    ClearCachedPaint();
+                }
             }
         }
 
@@ -128,8 +132,12 @@ namespace SkiaGum.Renderables
             get => _height;
             set
             {
-                _height = value;
-                ClearCachedPaint();
+                var changed = _height != value;
+                if(changed && UseGradient)
+                {
+                    _height = value;
+                    ClearCachedPaint();
+                }
             }
         }
         public string Name
