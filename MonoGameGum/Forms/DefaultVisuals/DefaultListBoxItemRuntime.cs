@@ -13,22 +13,25 @@ namespace MonoGameGum.Forms.DefaultVisuals;
 
 public class DefaultListBoxItemRuntime : InteractiveGue
 {
+    public ColoredRectangleRuntime Background { get; private set; }
+    public TextRuntime TextInstance { get; private set; }
 
+    public RectangleRuntime FocusedIndicator { get; private set; }
 
     public DefaultListBoxItemRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
         if (fullInstantiation)
         {
-            this.Height = 30f;
+            this.Height = 6f;
             this.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
             this.Width = 0f;
             this.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
 
-            var Background = new ColoredRectangleRuntime();
+            Background = new ColoredRectangleRuntime();
             Background.Name = "Background";
-            var TextInstance = new TextRuntime();
+            TextInstance = new TextRuntime();
             TextInstance.Name = "TextInstance";
-            var FocusedIndicator = new RectangleRuntime();
+            FocusedIndicator = new RectangleRuntime();
             FocusedIndicator.Name = "FocusedIndicator";
 
             Background.Height = 0f;
