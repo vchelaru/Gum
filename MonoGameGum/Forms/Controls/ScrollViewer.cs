@@ -74,10 +74,14 @@ public class ScrollViewer : FrameworkElement
         set => verticalScrollBar.LargeChange = value;
     }
 
-    // made public for tests:
     public double VerticalScrollBarValue
     {
         get => verticalScrollBar.Value;
+        set
+        {
+            verticalScrollBar.Value = value;
+            PushValueToViewModel();
+        }
     }
 
     #endregion
