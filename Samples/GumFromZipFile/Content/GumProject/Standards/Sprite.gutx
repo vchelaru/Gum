@@ -18,6 +18,13 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>Blend</Type>
+      <Name>Blend</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <Category>Rendering</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>int</Type>
       <Name>Blue</Name>
       <Value xsi:type="xsd:int">255</Value>
@@ -59,12 +66,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>string</Type>
-      <Name>Guide</Name>
-      <Category>Position</Category>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>bool</Type>
       <Name>HasEvents</Name>
       <Value xsi:type="xsd:boolean">false</Value>
@@ -80,7 +81,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>Height Units</Name>
+      <Name>HeightUnits</Name>
       <Value xsi:type="xsd:int">3</Value>
       <Category>Dimensions</Category>
       <SetsValue>true</SetsValue>
@@ -117,60 +118,62 @@
       <Type>string</Type>
       <Name>SourceFile</Name>
       <Value xsi:type="xsd:string"></Value>
+      <Category>Source</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>State</Type>
       <Name>State</Name>
       <Value xsi:type="xsd:string">Default</Value>
+      <Category>States and Visibility</Category>
       <SetsValue>false</SetsValue>
     </Variable>
     <Variable>
       <Type>TextureAddress</Type>
-      <Name>Texture Address</Name>
+      <Name>TextureAddress</Name>
       <Value xsi:type="xsd:int">0</Value>
       <Category>Source</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>Texture Height</Name>
+      <Name>TextureHeight</Name>
       <Value xsi:type="xsd:int">0</Value>
       <Category>Source</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>float</Type>
-      <Name>Texture Height Scale</Name>
-      <Value xsi:type="xsd:float">0</Value>
+      <Name>TextureHeightScale</Name>
+      <Value xsi:type="xsd:float">1</Value>
       <Category>Source</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>Texture Left</Name>
+      <Name>TextureLeft</Name>
       <Value xsi:type="xsd:int">0</Value>
       <Category>Source</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>Texture Top</Name>
+      <Name>TextureTop</Name>
       <Value xsi:type="xsd:int">0</Value>
       <Category>Source</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
-      <Name>Texture Width</Name>
+      <Name>TextureWidth</Name>
       <Value xsi:type="xsd:int">0</Value>
       <Category>Source</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>float</Type>
-      <Name>Texture Width Scale</Name>
-      <Value xsi:type="xsd:float">0</Value>
+      <Name>TextureWidthScale</Name>
+      <Value xsi:type="xsd:float">1</Value>
       <Category>Source</Category>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -178,6 +181,7 @@
       <Type>bool</Type>
       <Name>Visible</Name>
       <Value xsi:type="xsd:boolean">true</Value>
+      <Category>States and Visibility</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -189,7 +193,7 @@
     </Variable>
     <Variable>
       <Type>DimensionUnitType</Type>
-      <Name>Width Units</Name>
+      <Name>WidthUnits</Name>
       <Value xsi:type="xsd:int">3</Value>
       <Category>Dimensions</Category>
       <SetsValue>true</SetsValue>
@@ -210,14 +214,14 @@
     </Variable>
     <Variable>
       <Type>HorizontalAlignment</Type>
-      <Name>X Origin</Name>
+      <Name>XOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <Category>Position</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>X Units</Name>
+      <Name>XUnits</Name>
       <Value xsi:type="xsd:int">0</Value>
       <Category>Position</Category>
       <SetsValue>true</SetsValue>
@@ -231,14 +235,14 @@
     </Variable>
     <Variable>
       <Type>VerticalAlignment</Type>
-      <Name>Y Origin</Name>
+      <Name>YOrigin</Name>
       <Value xsi:type="xsd:int">0</Value>
       <Category>Position</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>PositionUnitType</Type>
-      <Name>Y Units</Name>
+      <Name>YUnits</Name>
       <Value xsi:type="xsd:int">1</Value>
       <Category>Position</Category>
       <SetsValue>true</SetsValue>
@@ -247,14 +251,6 @@
       <Type>string</Type>
       <Name>VariableReferences</Name>
       <Category>References</Category>
-      <IsFile>false</IsFile>
-      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-      <Value />
-    </VariableList>
-    <VariableList xsi:type="VariableListSaveOfString">
-      <Type>string</Type>
-      <Name>AnimationFrames</Name>
-      <Category>Animation</Category>
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value />

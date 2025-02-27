@@ -1,0 +1,27 @@
+{
+  "UserEvents": {
+    "d1638316d18f4a1e23a287aaaa12b6c540f704e257a6549bc9a672497ccc934e": [
+      {
+        "NewName": "FirstScreen",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 0,
+        "TimestampUtc": "2025-02-27T12:57:52.0199829Z"
+      },
+      {
+        "NewName": "FirstScreen.ColoredRectangleInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-02-27T12:57:56.9871484Z"
+      },
+      {
+        "NewName": "FirstScreen.TextInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-02-27T12:58:03.5319307Z"
+      }
+    ]
+  }
+}

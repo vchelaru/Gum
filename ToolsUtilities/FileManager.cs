@@ -12,10 +12,6 @@ namespace ToolsUtilities
     /// <summary>
     /// Utility class used to help dealing with files.
     /// </summary>
-    /// <remarks>
-    /// This code is a copy of code from FlatRedBall.  It's ok,
-    /// Victor Chelaru wrote that code and he's the one who put it in here.
-    /// </remarks>
     public static partial class FileManager
     {
         public const char DefaultSlash = '\\';
