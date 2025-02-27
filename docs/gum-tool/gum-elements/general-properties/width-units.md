@@ -1,16 +1,16 @@
 # Width Units
 
-### Introduction
+## Introduction
 
 The `Width Units` variable controls how a unit is horizontally sized, which may be relative to its parent. By default elements uses `Absolute` width, where each unit represents 1 pixel of width in absolute terms. When using `Absolute`, an object ignores its parents' effective width.
 
-### Absolute
+## Absolute
 
 The following shows a child [ColoredRectangle](../coloredrectangle.md) with `50` `Absolute` `Width`:
 
 ![Rectangle with an Absolute Width of 50](<../../../.gitbook/assets/11_05 35 01.png>)
 
-### Relative to Parent
+## Relative to Parent
 
 The following image shows a child ColoredRectangle with `-10` `Relative to Parent` `Width`, so it sizes itself 10 pixels less wide than its parent.
 
@@ -26,7 +26,7 @@ If an instance does not have a parent, then it uses the canvas size when using a
 All relationships between parent and children depend only on the direct parent or child. Grandchildren and grandparents are not considered when performing calculations. For more information, see the [Parent](parent.md#children-outside-of-parent-bounds) page.
 {% endhint %}
 
-### Percentage of Parent
+## Percentage of Parent
 
 The following shows a child ColoredRectangle with `100` `Percentage of Parent` `Width`, which means it has 100% of the effective width of its parent. Note that 100 `Percentage of Parent` is the same as 0 `Relative to Parent`:
 
@@ -36,7 +36,7 @@ If an object does not have a parent, then the width of the canvas is used.
 
 <figure><img src="../../../.gitbook/assets/image (69).png" alt=""><figcaption><p>Rectangle using 100% of the screen when it has no direct parent</p></figcaption></figure>
 
-### Ratio of Parent
+## Ratio of Parent
 
 `Ratio of Parent` can be used to fill available space or to share available space with other objects using a ratio. It behaves similar to a Height Units of [Ratio of Parent](height-units.md#ratio-of-parent), but operates horizontally rather than vertically.
 
@@ -44,7 +44,7 @@ If an object does not have a parent, then the width of the canvas is used.
 
 `Ratio of Parent` is usually used with a parent that has its `Children Layout` set to `Left to Right Stack` or `Top to Bottom Stack`. For more information, see the [Children Layout](../container/children-layout.md) page.
 
-### Relative to Children
+## Relative to Children
 
 The following image shows a child ColoredRectangle with `50` `Relative to Children` `Width`, which means that it is sized 50 pixels wider than is necessary to contain its children. Since the rectangle has no children, this is the same as having `50` `Absolute` Width:
 
@@ -62,7 +62,7 @@ A non-zero `Width` when using `Relative to Children` can be used to add addition
 
 ![Adding children expands the effective width of the parent if the children are positioned in a horizontal stack.](<../../../.gitbook/assets/LeftToRightStackSizeChildren (1).gif>)
 
-#### Ignored Width Values
+### Ignored Width Values
 
 A parent container can ignore its children when it determines its absolute width when using a `Width Units` of `Relative to Children` if any of the following are true:
 
@@ -113,7 +113,7 @@ A parent ignores its child if the child uses an `X Units` of `Percentage of Pare
 
 <figure><img src="../../../.gitbook/assets/05_07 45 21.gif" alt=""><figcaption><p><code>X Units</code> of <code>Percentage of Parent Width</code> result in the child ignored</p></figcaption></figure>
 
-#### Relative to Children and Auto Grid Horizontal
+### Relative to Children and Auto Grid Horizontal
 
 If a parent sets its `Width Units` to `Relative to Children`, then it must resize itself to contain its children. Normally the width of the entire parent is determined by the child which needs the most space horizontally. If the parent uses an `Auto Grid Horizontal` layout, then the children control the size of the _cells_ rather than the entire parent. Since all cells must be the same size, the child which needs the most amount of space horizontally determines the width of all cells.
 
@@ -125,7 +125,7 @@ The largest child determines the cell size for all other children. Therefore, if
 
 <figure><img src="../../../.gitbook/assets/11_15 34 05.gif" alt=""><figcaption><p>Resizing or moving a child can result in all cells growing or shrinking</p></figcaption></figure>
 
-#### Relative to Children and Text
+### Relative to Children and Text
 
 Setting a Text instance's `Width Units` to `Relative to Children` results in the Text object adjusting according to its text contents. In other words if a Text's `Width Units` is set to `Relative To Children`, then the words in the Text do not wrap.
 
@@ -133,7 +133,7 @@ For example, setting the `Width Units` to `Relative to Children` and setting the
 
 ![Text with Relative to Children width results in the contents of the Text instance controlling its size](<../../../.gitbook/assets/11_05 52 48.png>)
 
-### Percentage of Height
+## Percentage of Height
 
 `Percentage of Height` adjusts the object's effective width so it remains proportional to the effective height value multiplied by the `Width` value (as a percentage). For example, if a `Width` value of `200` is entered, then the effective width is 200% (2x) of the height.
 
@@ -141,7 +141,7 @@ The following image shows a child ColoredRectangle with a `Width` of `200` `Perc
 
 ![Rectangle displaying a width 200% of its height](<../../../.gitbook/assets/11_05 55 15.png>)
 
-### Percentage of File Width
+## Percentage of File Width
 
 [Sprites](../sprite/) can select a `Width Unit` called `Percentage of File Width`, which sets the width of the Sprite according to the file that it is displaying. This is the default `Width Unit` for Sprites.
 
@@ -155,7 +155,7 @@ When using `Percentage of Source File` Width, the Sprite's absolute width depend
 
 For more information, see the Sprite [Texture Address](../sprite/texture-address.md) page.
 
-### Maintain File Aspect Ratio Width
+## Maintain File Aspect Ratio Width
 
 Sprites can select a `Width Unit` called `Maintain File Aspect Ratio Width`, which sets the effective width of the Sprite so that its aspect ratio matches its source file multiplied by the `Width` value. Usually `Maintain File Aspect Ratio Width` is used with a `Width` value of `100` so that the Sprite shows is source file at the correct aspect ratio.&#x20;
 
@@ -171,7 +171,7 @@ When using `Maintain File Aspect Ratio Width`, the Sprite's effective width depe
 
 <figure><img src="../../../.gitbook/assets/30_07 14 29.gif" alt=""><figcaption><p>Changing either <code>Height</code> or <code>Texture Width</code> affects the Sprite's effective width</p></figcaption></figure>
 
-### Absolute Multiplied by Font Scale
+## Absolute Multiplied by Font Scale
 
 `Absolute Multiplied by Font Scale` is a value which multiplies the `Font Scale` property at runtime with the `Width` value. This can be used to create widths which are responsive to font scales for devices which may have variable text sizes.
 
