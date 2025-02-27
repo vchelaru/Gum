@@ -1,10 +1,10 @@
 # Height Units
 
-### Introduction
+## Introduction
 
 `Height Units` controls how a unit is vertically sized, which may be relative to its parent. By default most types uses `Absolute` height, where each unit represents 1 pixel of height in pixels. When using `Absolute`, an object ignores its parent's Height.
 
-### Absolute
+## Absolute
 
 The following shows a child [ColoredRectangle](../coloredrectangle.md) with 50 `Absolute` Height:
 
@@ -14,7 +14,7 @@ The following shows a child [ColoredRectangle](../coloredrectangle.md) with 50 `
 Text instances which use an `Absolute` height of 0 size themselves to be the height of their contained text. This behavior will likely change in future versions of Gum so this combination is not recommended. Instead, to size a Text instance according to its contained text, Set `Height Units` to `Relative to Children`.
 {% endhint %}
 
-### Relative to Parent
+## Relative to Parent
 
 The following shows a child ColoredRectangle with -10 `Relative to Parent` Height, which means is sized 10 pixels less tall than its parent.
 
@@ -24,13 +24,13 @@ The following shows a child ColoredRectangle with -10 `Relative to Parent` Heigh
 All relationships between parent and children depend only on the direct parent or child. Grandchildren and grandparents are not considered when performing calculations. For more information, see the [Parent](parent.md#children-outside-of-parent-bounds) page.
 {% endhint %}
 
-### Percentage of Parent
+## Percentage of Parent
 
 The following shows a child ColoredRectangle with 100 `Percentage of Parent`, which means it has 100% of the height of its parent. Note that 100 `Percentage` is the same as 0 `Relative to Parent`:
 
 ![Rectangle using a Percentage of Parent value of 100](<../../../.gitbook/assets/11_06 24 44.png>)
 
-### Ratio of Parent
+## Ratio of Parent
 
 `Ratio of Parent` can be used to fill available space or to share available space with other objects using a ratio.
 
@@ -78,7 +78,7 @@ Gum ignores invisible objects when calculating available space for `Ratio of Par
 
 <figure><img src="../../../.gitbook/assets/13_06 20 22.gif" alt=""><figcaption><p>Increasing <code>Stack Spacing</code> reduces the available ratio space for all children</p></figcaption></figure>
 
-### Relative to Children
+## Relative to Children
 
 The following image shows a child [ColoredRectangle](height-units.md#relativetochildren) with 50 `Relative to Children` `Height`, which means that it is 50 pixels taller than is necessary to contain its children. Since the rectangle has no children, this is the same as having 50 `Absolute` `Height`:
 
@@ -92,7 +92,7 @@ A non-zero `Height` when using `Relative to Children` can be used to add additio
 
 ![Height is relative to the bottom-most child when using Relative to Children](<../../../.gitbook/assets/13_13 39 50.gif>)
 
-#### Ignored Height Values
+### Ignored Height Values
 
 A parent container can ignore its children when it determines its own height when using a `Height Units` of `Relative to Children` if any of the following are true:
 
@@ -147,7 +147,7 @@ A parent ignores its child if the child uses a `Y Units` of `Percentage of Paren
 
 <figure><img src="../../../.gitbook/assets/05_06 52 34.gif" alt=""><figcaption><p><code>Y Units</code> of <code>Percentage of Parent Height</code> results in the child ignored</p></figcaption></figure>
 
-#### Relative to Children and Auto Grid Vertical
+### Relative to Children and Auto Grid Vertical
 
 If a parent sets its `Height Units` to `Relative to Children`, then it must resize itself to contain its children. Normally, the height of the entire parent is determined by the child which needs the most space vertically. If the parent uses an `Auto Grid Vertical` layout, then the children control the size of the _cells_ rather than the entire parent. Since all cells must be the same size, the child which needs the most amount of space vertically determines the height of all cells.
 
@@ -159,7 +159,7 @@ The largest child determines the cell size for all other children. Therefore, if
 
 <figure><img src="../../../.gitbook/assets/11_15 50 47.gif" alt=""><figcaption><p>Resizing or moving a child can result in all cells growing or shrinking</p></figcaption></figure>
 
-#### Relative to Children and Text
+### Relative to Children and Text
 
 The term "children" can refer to:
 
@@ -184,7 +184,7 @@ In this case, the height is 41 pixels tall. This is based on the lineHeight as d
 
 <figure><img src="../../../.gitbook/assets/FntImage.png" alt=""><figcaption><p>Font36Arial has a lineHeight of 41.</p></figcaption></figure>
 
-### Percentage of Width
+## Percentage of Width
 
 `Percentage of Width` adjusts the object's effective height so it remains proportional to the `Width` value multiplied by the `Height` value (as a percentage). For example, if a `Height` value of 200 is entered, then the effective height is 200% (2x) of the `Width`.
 
@@ -192,7 +192,7 @@ The following image shows a child ColoredRectangle with a `Height` of 200 `Perce
 
 <figure><img src="../../../.gitbook/assets/11_06 29 41.png" alt=""><figcaption><p>Rectangle using <code>Percentage of Other Dimension</code> <code>Height</code> of 200</p></figcaption></figure>
 
-### Percentage of File Height
+## Percentage of File Height
 
 [Sprites](../sprite/) can select a `Height Units` called `Percentage of File Height`, which sets the height of the Sprite according to the file that it is displaying. This is the default `Height Units` for Sprites.
 
@@ -204,7 +204,7 @@ This value depends on the Sprite's `Texture Height` property, so changing `Textu
 
 <figure><img src="../../../.gitbook/assets/30_06 39 18.gif" alt=""><figcaption><p>Changing a Sprite's T<code>exture Height</code> adjusts its absolute height when using <code>Percentage of File Height</code></p></figcaption></figure>
 
-### Maintain File Aspect Ratio Height
+## Maintain File Aspect Ratio Height
 
 Sprites can select a `Height Unit` called `Maintain File Aspect Ratio Height` which sets the height of the sprite so its aspect ratio matches its source file multiplied by the `Height` value. Usually `Maintain File Aspect Ratio Height` is used with a `Height` value of 100 so that the Sprite shows is source file at the correct aspect ratio.
 
