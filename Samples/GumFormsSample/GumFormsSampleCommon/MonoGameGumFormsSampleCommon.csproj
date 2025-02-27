@@ -20,6 +20,7 @@
 	
   <ItemGroup>
     <Compile Include="CustomRuntimes\CustomListBoxItemRuntime.cs" />
+    <Compile Include="CustomRuntimes\CustomMenuItemRuntime.cs" />
     <Compile Include="CustomRuntimes\SimpleListBoxItemRuntime.cs" />
     <Compile Include="Screens\ComplexListBoxItemScreen.cs" />
     <Compile Include="Screens\FormsCustomizationScreen.cs" />

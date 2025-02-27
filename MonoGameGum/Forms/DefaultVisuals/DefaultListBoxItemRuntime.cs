@@ -159,7 +159,7 @@ public class DefaultListBoxItemRuntime : InteractiveGue
 
         if (tryCreateFormsObject)
         {
-            FormsControlAsObject = new ListBoxItem();
+            FormsControlAsObject = new ListBoxItem(this);
         }
     }
 

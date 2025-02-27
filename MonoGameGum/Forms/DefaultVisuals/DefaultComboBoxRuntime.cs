@@ -67,7 +67,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
             }
             if (tryCreateFormsObject)
             {
-                FormsControlAsObject = new ComboBox();
+                FormsControlAsObject = new ComboBox(this);
             }
         }
 

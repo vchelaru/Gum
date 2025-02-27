@@ -57,7 +57,7 @@ internal class DefaultMenuRuntime : InteractiveGue
 
         if (tryCreateFormsObject)
         {
-            FormsControlAsObject = new ListBox();
+            FormsControlAsObject = new Menu(this);
         }
     }
 

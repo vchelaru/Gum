@@ -35,7 +35,7 @@ public class DefaultLabelRuntime : InteractiveGue
         }
         if (tryCreateFormsObject)
         {
-            FormsControlAsObject = new Label();
+            FormsControlAsObject = new Label(this);
         }
 
     }

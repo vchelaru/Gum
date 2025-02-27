@@ -13,6 +13,8 @@ namespace MonoGameGum.Forms.DefaultVisuals;
 
 public class DefaultMenuItemRuntime : InteractiveGue
 {
+    public TextRuntime TextInstance { get; private set; }
+
     public DefaultMenuItemRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
         if (fullInstantiation)
@@ -42,7 +44,7 @@ public class DefaultMenuItemRuntime : InteractiveGue
             this.Children.Add(Background);
 
 
-            var TextInstance = new TextRuntime();
+            TextInstance = new TextRuntime();
             TextInstance.Name = "TextInstance";
             TextInstance.Text = "Label";
             TextInstance.X = 6;
@@ -124,7 +126,7 @@ public class DefaultMenuItemRuntime : InteractiveGue
         }
         if (tryCreateFormsObject)
         {
-            FormsControlAsObject = new MenuItem();
+            FormsControlAsObject = new MenuItem(this);
         }
 
     }

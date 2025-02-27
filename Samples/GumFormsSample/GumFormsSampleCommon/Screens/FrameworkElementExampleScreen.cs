@@ -1,4 +1,5 @@
 ﻿using Gum.Wireframe;
+using GumFormsSample.CustomRuntimes;
 using Microsoft.Xna.Framework;
 using MonoGameGum.Forms;
 using MonoGameGum.Forms.Controls;
@@ -98,7 +99,10 @@ namespace GumFormsSample.Screens
 
             for (int i = 0; i < 10; i++)
             {
-                customMenuItem.Items.Add($"Custom dropdown item {i}");
+                var customMenuItemRuntime = new CustomMenuItemRuntime();
+                customMenuItemRuntime.FormsControl.Header = $"Custom dropdown item {i}";
+
+                customMenuItem.Items.Add(customMenuItemRuntime.FormsControl);
             }
             menu.Items.Add(customMenuItem);
 

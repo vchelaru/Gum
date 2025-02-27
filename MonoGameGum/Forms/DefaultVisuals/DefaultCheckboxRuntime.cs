@@ -133,7 +133,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
             if (tryCreateFormsObject)
             {
-                FormsControlAsObject = new CheckBox();
+                FormsControlAsObject = new CheckBox(this);
             }
         }
 
