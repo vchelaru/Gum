@@ -115,7 +115,7 @@ namespace RenderingLibrary.Graphics
 
         void Draw(IList<IRenderableIpso> whatToRender, SystemManagers managers, bool isTopLevelDraw = false)
         {
-            if (ClearsCanvas)
+            if (ClearsCanvas && isTopLevelDraw)
             {
                 managers.Canvas.Clear();
             }

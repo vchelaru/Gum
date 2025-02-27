@@ -133,9 +133,9 @@ namespace SkiaGum.Renderables
             set
             {
                 var changed = _height != value;
+                _height = value;
                 if(changed && UseGradient)
                 {
-                    _height = value;
                     ClearCachedPaint();
                 }
             }
