@@ -29,6 +29,12 @@ public enum ScrollBarVisibility
 
 #endregion
 
+public class ScrollChangedEventArgs : EventArgs
+{
+    // todo - may expand this in the future, but creating this now
+    // to future proof event handlers
+}
+
 public class ScrollViewer : FrameworkElement
 {
     public const string VerticalScrollBarInstanceName = "VerticalScrollBarInstance";
@@ -194,6 +200,12 @@ public class ScrollViewer : FrameworkElement
 
     #endregion
 
+    #region Events
+
+    public event EventHandler ScrollChanged;
+
+    #endregion
+
     public override void AddChild(FrameworkElement child)
     {
         if (InnerPanel != null)
@@ -236,6 +248,8 @@ public class ScrollViewer : FrameworkElement
         innerPanel.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
         innerPanel.Y = -(float)verticalScrollBar.Value;
         reactToInnerPanelPositionOrSizeChanged = true;
+
+        ScrollChanged?.Invoke(this, null);
     }
 
     private void HandleInnerPanelSizeChanged(object sender, EventArgs e)

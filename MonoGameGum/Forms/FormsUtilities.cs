@@ -202,7 +202,11 @@ public class FormsUtilities
     {
         for (int i = 0; i < Gamepads.Length; i++)
         {
+#if FNA
+            var gamepadState = Microsoft.Xna.Framework.Input.GamePad.GetState((PlayerIndex)i);
+#else
             var gamepadState = Microsoft.Xna.Framework.Input.GamePad.GetState((int)i);
+#endif
             Gamepads[i].Activity(gamepadState, time);
         }
 

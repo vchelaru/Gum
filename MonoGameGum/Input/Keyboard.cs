@@ -92,13 +92,17 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
         if (game?.Window != null && windowTextInputBuffer == null)
         {
             windowTextInputBuffer = new StringBuilder();
+
+#if !FNA
             game.Window.TextInput += HandleWindowTextInput;
+#endif
         }
     }
 
     StringBuilder windowTextInputBuffer;
     string processedStringFromWindow;
 
+#if !FNA
     private void HandleWindowTextInput(object? sender, TextInputEventArgs e)
     {
         lock(windowTextInputBuffer)
@@ -106,6 +110,7 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
             windowTextInputBuffer.Append(e.Character);
         }
     }
+#endif
 
     public string GetStringTyped()
     {
