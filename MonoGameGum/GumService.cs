@@ -34,13 +34,18 @@ public class GumService
 
     public GumProjectSave? Initialize(Game game, string? gumProjectFile = null)
     {
-        return Initialize(game.GraphicsDevice, gumProjectFile);
+        return InitializeInternal(game, game.GraphicsDevice, gumProjectFile);
     }
 
     [Obsolete("Initialize passing Game as the first parameter rather than GraphicsDevice. Using this method does not support non-(EN-US) keyboard layouts, and " +
         "does not support ALT+numeric key codes for accents in TextBoxes. This method will be removed in future versions of Gum")]
     public GumProjectSave? Initialize(GraphicsDevice graphicsDevice, string? gumProjectFile = null)
     {
+        return InitializeInternal(null, graphicsDevice, gumProjectFile);
+    }
+
+    GumProjectSave? InitializeInternal(Game game, GraphicsDevice graphicsDevice, string? gumProjectFile = null)
+    { 
         RegisterRuntimeTypesThroughReflection();
         SystemManagers.Default = new SystemManagers();
 #if NET6_0_OR_GREATER

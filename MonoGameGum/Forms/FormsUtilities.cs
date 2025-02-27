@@ -35,7 +35,7 @@ public class FormsUtilities
     /// <remarks>
     /// Projects can make further customization to Forms such as by modifying the FrameworkElement.Root or the DefaultFormsComponents.
     /// </remarks>
-    public static void InitializeDefaults()
+    public static void InitializeDefaults(Game? game = null)
     {
         FrameworkElement.DefaultFormsComponents[typeof(Button)] = typeof(DefaultButtonRuntime);
         FrameworkElement.DefaultFormsComponents[typeof(CheckBox)] = typeof(DefaultCheckboxRuntime);
@@ -53,7 +53,7 @@ public class FormsUtilities
 
         cursor = new Cursor();
 
-        keyboard = new MonoGameGum.Input.Keyboard();
+        keyboard = new MonoGameGum.Input.Keyboard(game);
 
         for (int i = 0; i < Gamepads.Length; i++)
         {
