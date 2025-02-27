@@ -20,6 +20,7 @@ using KniGumFromFile.ComponentRuntimes;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using ToolsUtilities;
+using MonoGameGum;
 
 namespace KniGumFromFile
 {
@@ -53,14 +54,9 @@ namespace KniGumFromFile
 
         protected override void Initialize()
         {
-            SystemManagers.Default = new SystemManagers();
-            SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
+            GumService.Default.Initialize(this, "GumProject.gumx");
 
-            //SetSinglePixelTexture();
 
-            LoadGumProject();
-
-            InitializeRuntimeMapping();
 
             ShowScreen("StartScreen");
             InitializeStartScreen();
@@ -71,46 +67,6 @@ namespace KniGumFromFile
 
         }
 
-        private void InitializeRuntimeMapping()
-        {
-            ElementSaveExtensions.RegisterGueInstantiationType(
-                "Buttons/StandardButton", 
-                typeof(ClickableButton));
-
-        }
-
-        private static GumProjectSave LoadGumProject()
-        {
-            var gumProject = GumProjectSave.Load("GumProject.gumx");
-            ObjectFinder.Self.GumProjectSave = gumProject;
-            gumProject.Initialize();
-            return gumProject;
-        }
-
-
-        private void SetSinglePixelTexture()
-        {
-            using Stream textureStream = TitleContainer.OpenStream("Content/MainSpriteSheet.png");
-            var singlePixelTexture = Texture2D.FromStream(_graphics.GraphicsDevice, textureStream);
-
-            SystemManagers.Default.Renderer.SinglePixelTexture = singlePixelTexture;
-            SystemManagers.Default.Renderer.SinglePixelSourceRectangle = new System.Drawing.Rectangle(1, 1, 1, 1);
-        }
-
-        private void InitializeComponentInCode()
-        {
-            var componentSave = ObjectFinder.Self.GumProjectSave.Components
-                .First(item => item.Name == "ColoredRectangleComponent");
-
-            var componentRuntime = componentSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
-
-            componentRuntime.XUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
-            componentRuntime.XOrigin = RenderingLibrary.Graphics.HorizontalAlignment.Right;
-
-            componentRuntime.YUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
-            componentRuntime.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Bottom;
-
-        }
 
         protected override void LoadContent()
         {
@@ -289,8 +245,6 @@ namespace KniGumFromFile
             MouseState mouseState = Mouse.GetState();
             KeyboardState keyboardState = Microsoft.Xna.Framework.Input.Keyboard.GetState();
             GamePadState gamePadState = default;
-            try { gamePadState = GamePad.GetState(PlayerIndex.One); }
-            catch (NotImplementedException) { /* ignore gamePadState */ }
 
             if (keyboardState.IsKeyDown(Keys.Escape) ||
                 keyboardState.IsKeyDown(Keys.Back) ||

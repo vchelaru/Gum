@@ -5,7 +5,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-		<PackageId>Gum.KNI</PackageId>
+		<PackageId>Gum.FNA</PackageId>
 		<Version>2025.2.23.1</Version>
 
 
