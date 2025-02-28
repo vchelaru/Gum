@@ -90,7 +90,7 @@ Our forms controls already have some functionality even before we write any code
 
 We can interact with any of the Forms instances by using `GetFrameworkElementByName`. For example, to interact with the ListBox that we added in the previous section, add the following code to your Initialize method to add items to the ListBox:
 
-```csharp
+```diff
 protected override void Initialize()
 {
     var gumProject = MonoGameGum.GumService.Default.Initialize(
@@ -103,13 +103,11 @@ protected override void Initialize()
     Root = screen.ToGraphicalUiElement(
         RenderingLibrary.SystemManagers.Default, addToManagers: true);
 
-// Start of new code
-    var listBox = Root.GetFrameworkElementByName<ListBox>("ListBoxInstance");
-    for(int i = 0; i < 50; i++)
-    {
-        listBox.Items.Add("Item number " + i.ToString());
-    }
-// End of new code
++    var listBox = Root.GetFrameworkElementByName<ListBox>("ListBoxInstance");
++    for(int i = 0; i < 50; i++)
++    {
++        listBox.Items.Add("Item number " + i.ToString());
++    }
 
     base.Initialize();
 }

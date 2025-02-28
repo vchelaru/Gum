@@ -12,13 +12,9 @@ To add a new Screen:
 2.  Right-click on the Screens folder and select Add Screen
 
     <figure><img src="../../../../.gitbook/assets/image (99).png" alt=""><figcaption><p>Add Screen right-click item</p></figcaption></figure>
-
-
 3.  Name the screen TitleScreen and click OK
 
     <figure><img src="../../../../.gitbook/assets/image (100).png" alt=""><figcaption><p>Enter the new screen name and click OK</p></figcaption></figure>
-
-
 
 The newly created TitleScreen is now in the Screens folder.
 
@@ -26,7 +22,7 @@ The newly created TitleScreen is now in the Screens folder.
 
 ## Adding Instances
 
-We can add instances to Gum Screen by drag+dropping the files onto the Game screen.&#x20;
+We can add instances to Gum Screen by drag+dropping the files onto the Game screen.
 
 Add a Text instance by dropping the Standard/Text onto TitleScreen.
 
@@ -46,26 +42,25 @@ The Gum tool includes lots of functionality for creating and customizing UI. For
 
 To show the screen in game, modify the Initialize method as shown in the following snippet:
 
-<pre class="language-csharp" data-line-numbers><code class="lang-csharp">protected override void Initialize()
+<pre class="language-diff" data-line-numbers><code class="lang-diff">protected override void Initialize()
 {
     var gumProject = MonoGameGum.GumService.Default.Initialize(
         this,
         // This is relative to Content:
         "GumProject/GumProject.gumx");
 
-// Start of new code
-<strong>    // the Screens list contains all screens. Find the screen you want
-</strong>    var screen = gumProject.Screens.Find(item => item.Name == "TitleScreen");
-    // Calling GraphicalUiElement creates the visuals for the screen
-<strong>    screen.ToGraphicalUiElement(
-</strong><strong>        RenderingLibrary.SystemManagers.Default, addToManagers: true);
-</strong>// End of new code
+<strong>+    // the Screens list contains all screens. Find the screen you want
+</strong>+    var screen = gumProject.Screens.Find(item => item.Name == "TitleScreen");
++    // Calling GraphicalUiElement creates the visuals for the screen
+<strong>+    screen.ToGraphicalUiElement(
+</strong><strong>+        RenderingLibrary.SystemManagers.Default, addToManagers: true);
+</strong>
 
     base.Initialize();
 }
 </code></pre>
 
-The game now displays the Gum screen.&#x20;
+The game now displays the Gum screen.
 
 {% hint style="info" %}
 If you attempt to interact with the button, it does not show highlighted/clicked states. This is because we haven't yet passed the Screen to the Update method where UI interaction is performed. We'll make these changes in the next section.
@@ -93,14 +88,12 @@ Games usually need to interact with Gum screens in code. By convention the Scree
 
 The modified code is shown below in the following code snippet:
 
-```csharp
-public class Game1 : Game
+<pre class="language-diff"><code class="lang-diff">public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
 
-// Start of new code
-    GraphicalUiElement Root;
-// End of new code
++    GraphicalUiElement Root;
+
 
     ...
     
@@ -114,10 +107,8 @@ public class Game1 : Game
             
         var screen = gumProject.Screens.Find(item => item.Name == "TitleScreen");
             
-// Start of new code
-        Root = screen.ToGraphicalUiElement(
-            RenderingLibrary.SystemManagers.Default, addToManagers: true);
-// End of new code
+<strong>+        Root = screen.ToGraphicalUiElement(
+</strong>+            RenderingLibrary.SystemManagers.Default, addToManagers: true);
 
         base.Initialize();
     }
@@ -125,12 +116,10 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
-// Start of new code
-        MonoGameGum.GumService.Default.Update(this, gameTime, Root);
-// End of new code
++        MonoGameGum.GumService.Default.Update(this, gameTime, Root);
         base.Update(gameTime);
     }
-```
+</code></pre>
 
 Notice that we've added the Root as a parameter to the Update call. By doing this, we get the built-in behavior for Forms control such as Button.
 
@@ -150,8 +139,7 @@ Now that we have our screen stored in the Root object, we can access objects.
 
 We can modify the displayed string by getting an instance of the Text and modifying its properties as shown in the following code:
 
-```csharp
-protected override void Initialize()
+<pre class="language-diff"><code class="lang-diff">protected override void Initialize()
 {
     var gumProject = MonoGameGum.GumService.Default.Initialize(
         this,
@@ -163,15 +151,13 @@ protected override void Initialize()
     Root = screen.ToGraphicalUiElement(
         RenderingLibrary.SystemManagers.Default, addToManagers: true);
 
-// Start of new code
-    var textInstance = Root.GetGraphicalUiElementByName("TextInstance")
-        as TextRuntime;
-    textInstance.Text = "I am set in code";
-// End of new code
+<strong>+    var textInstance = Root.GetGraphicalUiElementByName("TextInstance")
+</strong>+        as TextRuntime;
++    textInstance.Text = "I am set in code";
 
     base.Initialize();
 }
-```
+</code></pre>
 
 <figure><img src="../../../../.gitbook/assets/image (104).png" alt=""><figcaption><p>Text modified in code</p></figcaption></figure>
 
@@ -179,7 +165,7 @@ The code above casts TextInstance to a TextRuntime. Each standard type in Gum (s
 
 We can also interact with Forms objects in code. The base type for all Forms objects is FrameworkElement, so we can use the GetFrameworkElementByName extension method as shown in the following code:
 
-```csharp
+```diff
 protected override void Initialize()
 {
     var gumProject = MonoGameGum.GumService.Default.Initialize(
@@ -196,10 +182,8 @@ protected override void Initialize()
         as TextRuntime;
     textInstance.Text = "I am set in code";
 
-// Start of new code
-    var button = Root.GetFrameworkElementByName<Button>("ButtonStandardInstance");
-    button.Click += (_, _) => textInstance.Text = "Button clicked at " + DateTime.Now;
-// End of new code
++    var button = Root.GetFrameworkElementByName<Button>("ButtonStandardInstance");
++    button.Click += (_, _) => textInstance.Text = "Button clicked at " + DateTime.Now;
 
     base.Initialize();
 }

@@ -9,6 +9,8 @@ This tutorial changes the screen which is loaded, so you must remove the code wh
 
 This tutorial assumes that you still have a Gum project and that you have set up your Game class to include the necessary Initialize, Draw, and Update calls.
 
+This tutorial also assumes that you have set up code generation for your project.
+
 If you would like a simpler starting point, feel free to delete all content in your TitleScreen in Gum, and feel free to delete all code aside from the bare minimum for your project. Be sure to keep your Root object as we'll be using that in this tutorial.
 
 For a full example of what your Game code might look like, see the start of the [Gum Forms](../../gum-forms/#introduction) tutorial.

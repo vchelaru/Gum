@@ -88,8 +88,11 @@ public partial class ScoreComponentRuntime
 
     public ScoreComponentRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {
-
-
+        if(fullInstantiation)
+        {
+            var element = ObjectFinder.Self.GetElementSave("ScoreComponent");
+            element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
+        }
     }
     public override void AfterFullCreation()
     {
