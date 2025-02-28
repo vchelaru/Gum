@@ -37,30 +37,27 @@ partial class MainMenuRuntime : Gum.Wireframe.BindableGue
 
             if (item == GameTitleScreenItem.FormsControlAsObject)
             {
-                GoToScreen("GameTitleScreen");
+                GoToScreen(new GameTitleScreenRuntime());
             }
             else if (item == GameHudHollowKnight.FormsControlAsObject)
             {
-                GoToScreen("HollowKnightHudScreen");
+                GoToScreen(new HollowKnightHudScreenRuntime());
             }
             else if(item == HotbarStardew.FormsControlAsObject)
             {
-                GoToScreen("StardewHotbarScreen");
+                GoToScreen(new StardewHotbarScreenRuntime());
             }
             else if(item == FrbClicker.FormsControlAsObject)
             {
-                Game1.Root.RemoveFromManagers();
-                var screen = new FrbClickerCodeOnly();
-                screen.AddToManagers();
-                Game1.Root = screen;
+                GoToScreen(new FrbClickerCodeOnly());
             }
         }
     }
 
-    private void GoToScreen(string screenName)
+    private void GoToScreen(GraphicalUiElement newScreen)
     {
         Game1.Root.RemoveFromManagers();
-        Game1.Root = ObjectFinder.Self.GetScreen(screenName)
-            .ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
+        newScreen.AddToManagers();
+        Game1.Root = newScreen;
     }
 }

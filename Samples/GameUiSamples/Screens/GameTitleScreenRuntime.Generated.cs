@@ -1,4 +1,5 @@
 //Code for GameTitleScreen
+using GumRuntime;
 using GameUiSamples.Components;
 using Gum.Converters;
 using Gum.DataTypes;
@@ -28,6 +29,12 @@ namespace GameUiSamples.Screens
 
         public GameTitleScreenRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         {
+            if(fullInstantiation)
+            {
+                var element = ObjectFinder.Self.GetElementSave("GameTitleScreen");
+                element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
+            }
+
 
 
         }

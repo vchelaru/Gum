@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 namespace GameUiSamples.Screens.FrbClicker;
 internal class FrbScreenViewModel : ViewModel
 {
+    int numberOfManualClicksDone = 0;
     public BigInteger CurrentBalls
     {
         get => Get<BigInteger>();
@@ -60,19 +61,30 @@ internal class FrbScreenViewModel : ViewModel
 
     public void DoManualClick()
     {
-        CurrentBalls++;
+        var toAdd = 1 + numberOfManualClicksDone / 10;
+
+        Add(toAdd);
+
+        numberOfManualClicksDone++;
     }
 
     public void Update(GameTime gameTime)
     {
+        var toAdd = EarningsPerSecond * (decimal)gameTime.ElapsedGameTime.TotalSeconds;
+
+        Add(toAdd);
+
+    }
+
+    private void Add(decimal toAdd)
+    {
         CurrentBallsDecimal +=
-            EarningsPerSecond * (decimal)gameTime.ElapsedGameTime.TotalSeconds;
+            toAdd;
 
         var cookiesToAdd = (int)CurrentBallsDecimal;
 
         CurrentBalls += cookiesToAdd;
         CurrentBallsDecimal -= cookiesToAdd;
-
     }
 
     internal void TryBuy(BuildingDef building)

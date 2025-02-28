@@ -83,12 +83,6 @@ namespace MonoGameGumFromFile
             // store off the original height so we can use it for zooming
             originalHeight = _graphics.GraphicsDevice.Viewport.Height;
 
-            // This example includes code that assocaites a particular screen with a
-            // runtime class
-            ElementSaveExtensions.RegisterGueInstantiation("StartScreen",
-                () => new StartScreenRuntime());
-
-
             InitializeRuntimeMapping();
 
             ShowScreen("StartScreen");
@@ -301,14 +295,13 @@ namespace MonoGameGumFromFile
             return isAlreadyShown;
         }
 
+
+
         private bool ShowScreen(string screenName)
         {
             var isAlreadyShown = GetIfIsAlreadyShown(screenName);
             if (!isAlreadyShown)
             {
-                var newScreenElement = ObjectFinder.Self.GumProjectSave.Screens.FirstOrDefault(item => item.Name == screenName);
-                FileManager.RelativeDirectory = "Content" + Path.DirectorySeparatorChar;
-                currentGumScreenSave = newScreenElement;
                 Root?.RemoveFromManagers();
                 var layers = SystemManagers.Default.Renderer.Layers;
                 while(layers.Count > 1)
@@ -316,7 +309,21 @@ namespace MonoGameGumFromFile
                     SystemManagers.Default.Renderer.RemoveLayer(SystemManagers.Default.Renderer.Layers.LastOrDefault());
                 }
 
-                Root = currentGumScreenSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
+                if(screenName == "StartScreen")
+                {
+                    var screen = new StartScreenRuntime(); ;
+                    screen.AddToManagers();
+                    screen.TextInstance.Text = "Meow";
+                    Root = screen;
+                }
+                else
+                {
+                    var newScreenElement = ObjectFinder.Self.GumProjectSave.Screens.FirstOrDefault(item => item.Name == screenName);
+                    Root = newScreenElement.ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
+                    (Root.GetGraphicalUiElementByName("TextRuntime") as TextRuntime).Text = "Meow";
+                }
+
+                currentGumScreenSave = Root.Tag as ScreenSave;
             }
             return !isAlreadyShown;
         }

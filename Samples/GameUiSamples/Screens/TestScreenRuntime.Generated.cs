@@ -1,4 +1,5 @@
 //Code for TestScreen
+using GumRuntime;
 using GameUiSamples.Components;
 using Gum.Converters;
 using Gum.DataTypes;
@@ -52,6 +53,12 @@ namespace GameUiSamples.Screens
 
         public TestScreenRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         {
+            if(fullInstantiation)
+            {
+                var element = ObjectFinder.Self.GetElementSave("TestScreen");
+                element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
+            }
+
 
 
         }

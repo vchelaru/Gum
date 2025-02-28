@@ -1,10 +1,10 @@
 //Code for MainMenu
+using GumRuntime;
+using GameUiSamples.Components;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Wireframe;
-
-using GameUiSamples.Components;
 
 using RenderingLibrary.Graphics;
 
@@ -29,6 +29,12 @@ namespace GameUiSamples.Screens
 
         public MainMenuRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         {
+            if(fullInstantiation)
+            {
+                var element = ObjectFinder.Self.GetElementSave("MainMenu");
+                element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
+            }
+
 
 
         }

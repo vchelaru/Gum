@@ -169,6 +169,8 @@ public class CodeGenerator
         // This code is used to automatially add needed using statements:
         // https://github.com/vchelaru/Gum/issues/598
         HashSet<string> neededUsings = new HashSet<string>();
+        neededUsings.Add("GumRuntime");
+        context.StringBuilder.AppendLine($"using GumRuntime;");
         foreach(var instance in context.Element.Instances)
         {
             var gumType = instance.BaseType;
@@ -2213,7 +2215,7 @@ public class CodeGenerator
         var stringBuilder = context.StringBuilder;
         var projectSettings = context.CodeOutputProjectSettings;
 
-        var elementName = GetClassNameForType(element.Name, visualApi, context);
+        var elementClassName = GetClassNameForType(element.Name, visualApi, context);
 
         if (visualApi == VisualApi.Gum)
         {
@@ -2224,11 +2226,11 @@ public class CodeGenerator
                 // MonoGame expects 0 or 2-arg constructors. We'll start with 0 for now, and eventually go to 2 if we need Forms support
                 // Update November 3, 2024 - there's code that is generated that expects fullInstantiation. Also the docs recommend a 2-arg
                 // approach so let's do that:
-                stringBuilder.AppendLine(context.Tabs + $"public {elementName}(bool fullInstantiation = true, bool tryCreateFormsObject = true)");
+                stringBuilder.AppendLine(context.Tabs + $"public {elementClassName}(bool fullInstantiation = true, bool tryCreateFormsObject = true)");
             }
             else
             {
-                stringBuilder.AppendLine(context.Tabs + $"public {elementName}(bool fullInstantiation = true)");
+                stringBuilder.AppendLine(context.Tabs + $"public {elementClassName}(bool fullInstantiation = true)");
             }
 
             stringBuilder.AppendLine(context.Tabs + "{");
@@ -2238,22 +2240,34 @@ public class CodeGenerator
 
             #region Gum-required constructor code
 
+            stringBuilder.AppendLine(context.Tabs + "if(fullInstantiation)");
+            stringBuilder.AppendLine(context.Tabs + "{");
+            context.TabCount++;
             if (projectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
             {
-
-                stringBuilder.AppendLine(context.Tabs + "if(fullInstantiation)");
-                stringBuilder.AppendLine(context.Tabs + "{");
-                context.TabCount++;
-
                 if (element.BaseType == "Container" &&
                     // In MonoGame the Container is a ContainerRuntime which handles this already
                     projectSettings.OutputLibrary != OutputLibrary.MonoGame)
                 {
                     stringBuilder.AppendLine(context.Tabs + "this.SetContainedObject(new InvisibleRenderable());");
                 }
-
-                stringBuilder.AppendLine();
             }
+            else
+            {
+                if(projectSettings.OutputLibrary == OutputLibrary.MonoGame)
+                {
+
+                    context.StringBuilder.AppendLine(context.Tabs + 
+                        $"var element = ObjectFinder.Self.GetElementSave(\"{element.Name}\");");
+
+                    context.StringBuilder.AppendLine(context.Tabs +
+                        "element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);");
+                }
+            }
+            context.TabCount--;
+            stringBuilder.AppendLine(context.Tabs + "}");
+
+            stringBuilder.AppendLine();
 
             #endregion
         }
@@ -2261,7 +2275,7 @@ public class CodeGenerator
         {
             #region Constructor Header
 
-            stringBuilder.AppendLine(context.Tabs + $"public {elementName}(bool fullInstantiation = true)");
+            stringBuilder.AppendLine(context.Tabs + $"public {elementClassName}(bool fullInstantiation = true)");
 
             stringBuilder.AppendLine(context.TabCount + "{");
             context.TabCount++;

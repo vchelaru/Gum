@@ -1,4 +1,6 @@
 //Code for StartScreen
+using GumRuntime;
+using MonoGameGumFromFile.Components;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Managers;
@@ -48,6 +50,12 @@ namespace MonoGameGumFromFile.Screens
 
         public StartScreenRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         {
+            if(fullInstantiation)
+            {
+                var element = ObjectFinder.Self.GetElementSave("StartScreen");
+                element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
+            }
+
 
 
         }
