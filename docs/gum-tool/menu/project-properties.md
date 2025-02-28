@@ -39,3 +39,20 @@ The following animation shows the Ā character being included and excluded from 
 ![](<../../.gitbook/assets/14_16 04 36.gif>)
 
 Note that expanding the character set results in larger font PNG files which can impact the size and performance of games using the Gum files.
+
+## Font Spacing Horizontal and Font Spacing Vertical
+
+The Font Spacing Horizontal and Font Spacing Vertical values control the amount of space (padding) added between each letter in the generated .fnt file. These values do not affect the size of the letters in the Editor tab or at runtime, but the additional spacing can be used to separate the letters. This is important if your font rendering may end up implementing any kind of blurring to improve font appearance. This type of blurring may occur if:
+
+* You are using linear filtering in your project
+* If you support zooming out, and if the font texture is blurred when creating mipmaps
+
+The following image shows a portion of an Arial 26 font png zoomed in with Font Spacing Horizontal and Font Spacing Vertical both set to 1 (default):
+
+<figure><img src="../../.gitbook/assets/28_06 32 22.png" alt=""><figcaption><p>Zoomed in Arial 26 font</p></figcaption></figure>
+
+If the Font Spacing Vertical and Font Spacing Horizontal are both increased to 5, then the spacing in between letters increases to 5 pixels, as shown in the following image:
+
+<figure><img src="../../.gitbook/assets/image.png" alt=""><figcaption><p>Font Horizontal Spacing and Font Vertical Spacing of 5</p></figcaption></figure>
+
+Typically the two values should be set equally, and the amount of spacing needed depends on how much blurring (mipmap levels) is needed.
