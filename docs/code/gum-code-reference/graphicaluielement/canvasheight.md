@@ -1,16 +1,16 @@
 # CanvasHeight
 
-### Introduction
+## Introduction
 
 CanvasHeight is a static property which tells the Gum layout engine the size of the canvas. This is used for layouts on GraphicalUiElements which have no parent.
 
-### Common Usage
+## Common Usage
 
 CanvasHeight and CanvasWidth are typically assigned to the height and width of your canvas. This can depend on the development environment. These values are used for layouts, especially layouts which depend on the canvas (or window) width and height.
 
 Setting these values does not automaticaly cause all GraphicalUiElements to perform their layout calls. If these values are changed then any GraphicalUiElements which have no parents should have their Layout method called. Setting properties on a GraphicalUiElement (such as changing WidthUnits) may also perform a layout.
 
-### Code Example - Setting the CanvasWidth and CanvasHeight in a MonoGame Project
+## Code Example - Setting the CanvasWidth and CanvasHeight in a MonoGame Project
 
 If your game is not zoomed, then the CanvasWidth and CanvasHeight should match the graphicsDevice width and height as shown in the following code:
 
@@ -26,4 +26,18 @@ If responding to a window resize or zoom change you may need to also call Update
 
 ```csharp
 RootInstance.UpdateLayout();
+```
+
+## Code Example - Reacting to Resized Browser in KNI
+
+The following code can be used to update Root in response to resized windows:
+
+```csharp
+if (GraphicsDevice.Viewport.Width != GraphicalUiElement.CanvasWidth ||
+    GraphicsDevice.Viewport.Height != GraphicalUiElement.CanvasHeight)
+{
+    GraphicalUiElement.CanvasWidth = GraphicsDevice.Viewport.Width;
+    GraphicalUiElement.CanvasHeight = GraphicsDevice.Viewport.Height;
+    Root?.UpdateLayout();
+}
 ```
