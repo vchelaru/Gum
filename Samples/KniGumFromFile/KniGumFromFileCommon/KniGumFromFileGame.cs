@@ -54,16 +54,24 @@ namespace KniGumFromFile
 
         protected override void Initialize()
         {
-            GumService.Default.Initialize(this, "GumProject.gumx");
+            try
+            {
+
+                GumService.Default.Initialize(this, "GumProject.gumx");
 
 
 
-            ShowScreen("StartScreen");
-            InitializeStartScreen();
-            cursor = new Cursor();
-            gumKeyboard = new MonoGameGum.Input.Keyboard();
+                ShowScreen("StartScreen");
+                InitializeStartScreen();
+                cursor = new Cursor();
+                gumKeyboard = new MonoGameGum.Input.Keyboard();
 
-            base.Initialize();
+                base.Initialize();
+            }
+            catch(Exception e)
+            {
+                int m = 3;
+            }
 
         }
 
