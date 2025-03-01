@@ -241,23 +241,38 @@ namespace MonoGameGum.Input
             int? x = null;
             int? y = null;
 
-            if (System.OperatingSystem.IsAndroid() || System.OperatingSystem.IsIOS())
+            var supportsMouse =
+                !System.OperatingSystem.IsAndroid() && !System.OperatingSystem.IsIOS();
+
+            if(supportsMouse)
+            {
+                LastInputDevice = InputDevice.Mouse;
+
+                _mouseState = Microsoft.Xna.Framework.Input.Mouse.GetState();
+                x = _mouseState.X;
+                y = _mouseState.Y;
+            }
+            else
             {
                 LastInputDevice = InputDevice.TouchScreen;
-                _touchCollection = TouchPanel.GetState();
+            }
 
-                if (_touchCollection.Count > 0)
+            _touchCollection = TouchPanel.GetState();
+
+            if (_touchCollection.Count > 0 || _lastFrameTouchCollection.Count > 0)
+            {
+                LastInputDevice = InputDevice.TouchScreen;
+
+                if(_touchCollection.Count > 0)
                 {
                     x = (int)_touchCollection[0].Position.X;
                     y = (int)_touchCollection[0].Position.Y;
                 }
-            }
-            else
-            {
-                LastInputDevice = InputDevice.Mouse;
-                _mouseState = Microsoft.Xna.Framework.Input.Mouse.GetState();
-                x = _mouseState.X;
-                y = _mouseState.Y;
+                else if(_lastFrameTouchCollection.Count > 0)
+                {
+                    x = (int)_lastFrameTouchCollection[0].Position.X;
+                    y = (int)_lastFrameTouchCollection[0].Position.Y;
+                }
             }
 
             if(x != null)

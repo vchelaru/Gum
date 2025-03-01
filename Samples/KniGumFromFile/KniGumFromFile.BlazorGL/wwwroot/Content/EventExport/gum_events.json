@@ -1,0 +1,216 @@
+{
+  "UserEvents": {
+    "d1638316d18f4a1e23a287aaaa12b6c540f704e257a6549bc9a672497ccc934e": [
+      {
+        "NewName": "FirstScreen",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 0,
+        "TimestampUtc": "2025-02-27T12:57:52.0199829Z"
+      },
+      {
+        "NewName": "FirstScreen.ColoredRectangleInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-02-27T12:57:56.9871484Z"
+      },
+      {
+        "NewName": "FirstScreen.TextInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-02-27T12:58:03.5319307Z"
+      },
+      {
+        "NewName": "MarioExampleScreen",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 0,
+        "TimestampUtc": "2025-03-01T13:49:46.4447153Z"
+      },
+      {
+        "NewName": "MarioExampleScreen.RoundedRectangleInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-03-01T13:50:08.803498Z"
+      },
+      {
+        "NewName": "MarioExampleScreen.RoundedRectangleInstance1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-03-01T13:52:16.9351637Z"
+      },
+      {
+        "NewName": "MarioExampleScreen.TextInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-03-01T13:53:20.9623699Z"
+      },
+      {
+        "NewName": "MarioExampleScreen.ColoredRectangleInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-03-01T14:01:31.3964067Z"
+      },
+      {
+        "NewName": "MarioExampleScreen.TextInstance1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-03-01T14:02:02.8534342Z"
+      },
+      {
+        "NewName": "MarioExampleScreen.CircleInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-03-01T14:14:27.1845028Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "InteractiveGueScreen",
+        "ElementType": "Screens",
+        "EventType": 1,
+        "TimestampUtc": "2025-03-01T18:57:07.7621372Z"
+      },
+      {
+        "NewName": "FormsScreen",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 0,
+        "TimestampUtc": "2025-03-01T18:57:59.5382862Z"
+      },
+      {
+        "NewName": null,
+        "OldName": "FormsScreen",
+        "ElementType": "Screens",
+        "EventType": 1,
+        "TimestampUtc": "2025-03-01T18:58:03.9119679Z"
+      },
+      {
+        "NewName": "ScreenChangingComponent",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 0,
+        "TimestampUtc": "2025-03-01T18:58:48.5831562Z"
+      },
+      {
+        "NewName": "ScreenChangingComponent (Container).ButtonStandardInstance",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2025-03-01T18:59:44.875608Z"
+      },
+      {
+        "NewName": "ScreenChangingComponent (Container).ButtonScreen1",
+        "OldName": "ScreenChangingComponent (Container).ButtonStandardInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2025-03-01T19:00:43.1082931Z"
+      },
+      {
+        "NewName": "ScreenChangingComponent (Container).ButtonScreen2",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2025-03-01T19:00:47.3325881Z"
+      },
+      {
+        "NewName": "ScreenChangingComponent (Container).ButtonScreen3",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2025-03-01T19:00:48.1626925Z"
+      },
+      {
+        "NewName": "ScreenChangingComponent (Container).ButtonScreen4",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2025-03-01T19:00:48.9189445Z"
+      },
+      {
+        "NewName": "ScreenChangingComponent (Container).ButtonScreen5",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2025-03-01T19:00:49.6643597Z"
+      },
+      {
+        "NewName": "ScreenChangingComponent (Container).ButtonScreen6",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2025-03-01T19:00:50.4126968Z"
+      },
+      {
+        "NewName": "ScreenChangingComponent (Container).ButtonScreen7",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2025-03-01T19:00:51.1593312Z"
+      },
+      {
+        "NewName": "ScreenChangingComponent (Container).ButtonScreen8",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2025-03-01T19:00:51.9180539Z"
+      },
+      {
+        "NewName": "StartScreen.ScreenChangingComponentInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-03-01T19:03:25.055605Z"
+      },
+      {
+        "NewName": "ZoomScreen.ScreenChangingComponentInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-03-01T20:43:21.331119Z"
+      },
+      {
+        "NewName": "ZoomLayerScreen.ScreenChangingComponentInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-03-01T20:44:04.2538607Z"
+      },
+      {
+        "NewName": "TextScreen.ScreenChangingComponentInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-03-01T20:44:14.4739661Z"
+      },
+      {
+        "NewName": "StateScreen.ScreenChangingComponentInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-03-01T20:44:22.9815013Z"
+      },
+      {
+        "NewName": "ParentChildScreen.ScreenChangingComponentInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-03-01T20:44:41.9499372Z"
+      },
+      {
+        "NewName": "OffsetLayerScreen.ScreenChangingComponentInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-03-01T20:44:45.964001Z"
+      }
+    ]
+  }
+}

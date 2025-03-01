@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <EnableDefaultItems>false</EnableDefaultItems>
     <TargetFramework>net8.0</TargetFramework>
     <ProjectGuid>{D8A96403-CE58-4391-B68D-CA6C1FE46398}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -17,11 +16,6 @@
 	
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
   </PropertyGroup>
-	
-  <ItemGroup>
-    <Compile Include="ComponentRuntimes\ClickableButton.cs" />
-    <Compile Include="KniGumFromFileGame.cs" />
-  </ItemGroup>
 	
   <ItemGroup>
 	  <PackageReference Include="nkast.Xna.Framework" Version="3.12.9001" />

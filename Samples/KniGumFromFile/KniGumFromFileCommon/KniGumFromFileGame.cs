@@ -21,384 +21,428 @@ using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using ToolsUtilities;
 using MonoGameGum;
+using MonoGameGum.Forms;
 
-namespace KniGumFromFile
+namespace KniGumFromFile;
+
+public class KniGumFromFileGame : Game
 {
-    public class KniGumFromFileGame : Game
+    public static KniGumFromFileGame Self
     {
-        private GraphicsDeviceManager _graphics;
-        private SpriteBatch _spriteBatch;
+        get; private set;
+    }
 
-        ScreenSave currentGumScreenSave;
+    private GraphicsDeviceManager _graphics;
+    private SpriteBatch _spriteBatch;
 
-        GraphicalUiElement currentScreenGue;
+    ScreenSave currentGumScreenSave;
 
-        Cursor cursor;
-        MonoGameGum.Input.Keyboard gumKeyboard;
+    GraphicalUiElement currentScreenGue;
 
-        public KniGumFromFileGame()
-        {
-            _graphics = new GraphicsDeviceManager(this);
-            Content.RootDirectory = "Content";
-            IsMouseVisible = true;
+    public KniGumFromFileGame()
+    {
+        Self = this;
+        _graphics = new GraphicsDeviceManager(this);
+        Content.RootDirectory = "Content";
+        IsMouseVisible = true;
 
-            _graphics.PreferredBackBufferWidth = 800;
-            _graphics.PreferredBackBufferHeight = 600;
+        _graphics.PreferredBackBufferWidth = 800;
+        _graphics.PreferredBackBufferHeight = 600;
 
-            _graphics.SupportedOrientations = DisplayOrientation.LandscapeLeft | DisplayOrientation.LandscapeRight;
+        _graphics.SupportedOrientations = DisplayOrientation.LandscapeLeft | DisplayOrientation.LandscapeRight;
 #if (ANDROID || iOS)
-            graphics.IsFullScreen = true;
+        graphics.IsFullScreen = true;
 #endif
 
+    }
+
+    protected override void Initialize()
+    {
+        try
+        {
+            GumService.Default.Initialize(this, "GumProject.gumx");
+
+            ShowScreen("StartScreen");
+            InitializeStartScreen();
+
+            base.Initialize();
+        }
+        catch(Exception e)
+        {
+            int m = 3;
         }
 
-        protected override void Initialize()
+    }
+
+
+    protected override void LoadContent()
+    {
+        _spriteBatch = new SpriteBatch(GraphicsDevice);
+    }
+
+    protected override void UnloadContent()
+    {
+    }
+
+    #region Swap Screens
+
+    private void DoSwapScreenLogic()
+    {
+        var state = Microsoft.Xna.Framework.Input.Keyboard.GetState();
+
+        int? screen1Based = null;
+
+        if (state.IsKeyDown(Keys.D1))
         {
-            try
-            {
-
-                GumService.Default.Initialize(this, "GumProject.gumx");
-
-
-
-                ShowScreen("StartScreen");
-                InitializeStartScreen();
-                cursor = new Cursor();
-                gumKeyboard = new MonoGameGum.Input.Keyboard();
-
-                base.Initialize();
-            }
-            catch(Exception e)
-            {
-                int m = 3;
-            }
-
+            screen1Based = 1;
+        }
+        else if (state.IsKeyDown(Keys.D2))
+        {
+            screen1Based = 2;
+        }
+        else if (state.IsKeyDown(Keys.D3))
+        {
+            screen1Based = 3;
+        }
+        else if (state.IsKeyDown(Keys.D4))
+        {
+            screen1Based = 4;
+        }
+        else if (state.IsKeyDown(Keys.D5))
+        {
+            screen1Based = 5;
+        }
+        else if (state.IsKeyDown(Keys.D6))
+        {
+            screen1Based = 6;
+        }
+        else if (state.IsKeyDown(Keys.D7))
+        {
+            screen1Based = 7;
+        }
+        else if (state.IsKeyDown(Keys.D8))
+        {
+            screen1Based = 8;
         }
 
-
-        protected override void LoadContent()
+        if(screen1Based != null)
         {
-            _spriteBatch = new SpriteBatch(GraphicsDevice);
+            SwitchToScreen1Based(screen1Based.Value);
         }
+    }
 
-        protected override void UnloadContent()
+    public void SwitchToScreen1Based(int screen1Based)
+    {
+        switch (screen1Based)
         {
-        }
-
-        #region Swap Screens
-
-        private void DoSwapScreenLogic()
-        {
-            var state = Microsoft.Xna.Framework.Input.Keyboard.GetState();
-
-            if (state.IsKeyDown(Keys.D1))
-            {
-                if(ShowScreen("StartScreen"))
+            case 1:
                 {
-                    InitializeStartScreen();
+                    if (ShowScreen("StartScreen"))
+                    {
+                        InitializeStartScreen();
+                    }
                 }
-            }
-            else if (state.IsKeyDown(Keys.D2))
-            {
-                var justShowed = ShowScreen("StateScreen");
-                if (justShowed)
+                break;
+            case 2:
                 {
-                    var setMeInCode = currentScreenGue.GetGraphicalUiElementByName("SetMeInCode");
-
-                    // States can be found in the Gum element's Categories and applied:
-                    var stateToSet = setMeInCode.ElementSave.Categories
-                        .FirstOrDefault(item => item.Name == "RightSideCategory")
-                        .States.Find(item => item.Name == "Blue");
-                    setMeInCode.ApplyState(stateToSet);
-
-                    // Alternatively states can be set in an "unqualified" way, which can be easier, but can 
-                    // result in unexpected behavior if there are multiple states with the same name:
-                    setMeInCode.ApplyState("Green");
-
-                    // states can be constructed dynamically too. This state makes the SetMeInCode instance bigger:
-                    var dynamicState = new StateSave();
-                    dynamicState.Variables.Add(new VariableSave()
+                    var justShowed = ShowScreen("StateScreen");
+                    if (justShowed)
                     {
-                        Value = 300f,
-                        Name = "Width",
-                        Type = "float",
-                        // values can exist on a state but be "disabled"
-                        SetsValue = true
-                    });
-                    dynamicState.Variables.Add(new VariableSave()
-                    {
-                        Value = 250f,
-                        Name = "Height",
-                        Type = "float",
-                        SetsValue = true
-                    });
-                    setMeInCode.ApplyState(dynamicState);
+                        var setMeInCode = currentScreenGue.GetGraphicalUiElementByName("SetMeInCode");
+
+                        // States can be found in the Gum element's Categories and applied:
+                        var stateToSet = setMeInCode.ElementSave.Categories
+                            .FirstOrDefault(item => item.Name == "RightSideCategory")
+                            .States.Find(item => item.Name == "Blue");
+                        setMeInCode.ApplyState(stateToSet);
+
+                        // Alternatively states can be set in an "unqualified" way, which can be easier, but can 
+                        // result in unexpected behavior if there are multiple states with the same name:
+                        setMeInCode.ApplyState("Green");
+
+                        // states can be constructed dynamically too. This state makes the SetMeInCode instance bigger:
+                        var dynamicState = new StateSave();
+                        dynamicState.Variables.Add(new VariableSave()
+                        {
+                            Value = 300f,
+                            Name = "Width",
+                            Type = "float",
+                            // values can exist on a state but be "disabled"
+                            SetsValue = true
+                        });
+                        dynamicState.Variables.Add(new VariableSave()
+                        {
+                            Value = 250f,
+                            Name = "Height",
+                            Type = "float",
+                            SetsValue = true
+                        });
+                        setMeInCode.ApplyState(dynamicState);
+                    }
                 }
-            }
-            else if (state.IsKeyDown(Keys.D3))
-            {
+                break;
+            case 3:
                 ShowScreen("ParentChildScreen");
-            }
-            else if (state.IsKeyDown(Keys.D4))
-            {
+                break;
+            case 4:
                 ShowScreen("TextScreen");
-            }
-            else if (state.IsKeyDown(Keys.D5))
-            {
+                break;
+            case 5:
                 ShowScreen("ZoomScreen");
-            }
-            else if (state.IsKeyDown(Keys.D6))
-            {
-                var justShowed = ShowScreen("ZoomLayerScreen");
-                if (justShowed)
+                break;
+            case 6:
                 {
-                    InitializeZoomScreen();
+                    var justShowed = ShowScreen("ZoomLayerScreen");
+                    if (justShowed)
+                    {
+                        InitializeZoomScreen();
+                    }
                 }
-            }
-            else if (state.IsKeyDown(Keys.D7))
-            {
-                if(ShowScreen("OffsetLayerScreen"))
+                break;
+            case 7:
+                if (ShowScreen("OffsetLayerScreen"))
                 {
                     InitializeOffsetLayerScreen();
                 }
-            }
-            else if(state.IsKeyDown(Keys.D8))
-            {
-                if(!GetIfIsAlreadyShown("InteractiveGueScreen"))
+                break;
+            case 8:
+                if (!GetIfIsAlreadyShown("InteractiveGueScreen"))
                 {
                     //ElementSaveExtensions.RegisterDefaultInstantiationType(() => new InteractiveGue());
                     ShowScreen("InteractiveGueScreen");
                     //InitializeInteractiveGueScreen();
                 }
-
-            }
+                break;
         }
+    }
 
-        private void InitializeInteractiveGueScreen()
+    private void InitializeInteractiveGueScreen()
+    {
+
+    }
+
+    private void InitializeStartScreen()
+    {
+        var exposedVariableInstance = currentScreenGue.GetGraphicalUiElementByName("ComponentWithExposedVariableInstance");
+        exposedVariableInstance.SetProperty("Text", "I'm set in code");
+    }
+
+    private void InitializeZoomScreen()
+    {
+        var layered = currentScreenGue.GetGraphicalUiElementByName("Layered");
+        var layer = SystemManagers.Default.Renderer.AddLayer();
+        layer.Name = "Zoomed-in Layer";
+        layered.MoveToLayer(layer);
+
+        layer.LayerCameraSettings = new LayerCameraSettings()
         {
+            Zoom = 2
+        };
 
-        }
+    }
 
-        private void InitializeStartScreen()
+    private void InitializeOffsetLayerScreen()
+    {
+        var layer = SystemManagers.Default.Renderer.AddLayer();
+        layer.Name = "Offset Layer";
+        layer.LayerCameraSettings = new LayerCameraSettings()
         {
-            var exposedVariableInstance = currentScreenGue.GetGraphicalUiElementByName("ComponentWithExposedVariableInstance");
-            exposedVariableInstance.SetProperty("Text", "I'm set in code");
-        }
+            IsInScreenSpace= true
+        };
 
-        private void InitializeZoomScreen()
+        var layeredText = currentScreenGue.GetGraphicalUiElementByName("LayeredText");
+        layeredText.MoveToLayer(layer);
+    }
+
+    bool GetIfIsAlreadyShown(string screenName)
+    {
+        var newScreenElement = ObjectFinder.Self.GumProjectSave.Screens.FirstOrDefault(item => item.Name == screenName);
+
+        var isAlreadyShown = false;
+        if (currentScreenGue != null)
         {
-            var layered = currentScreenGue.GetGraphicalUiElementByName("Layered");
-            var layer = SystemManagers.Default.Renderer.AddLayer();
-            layer.Name = "Zoomed-in Layer";
-            layered.MoveToLayer(layer);
-
-            layer.LayerCameraSettings = new LayerCameraSettings()
-            {
-                Zoom = 2
-            };
-
+            isAlreadyShown = currentScreenGue.Tag == newScreenElement;
         }
 
-        private void InitializeOffsetLayerScreen()
-        {
-            var layer = SystemManagers.Default.Renderer.AddLayer();
-            layer.Name = "Offset Layer";
-            layer.LayerCameraSettings = new LayerCameraSettings()
-            {
-                IsInScreenSpace= true
-            };
+        return isAlreadyShown;
+    }
 
-            var layeredText = currentScreenGue.GetGraphicalUiElementByName("LayeredText");
-            layeredText.MoveToLayer(layer);
-        }
-
-        bool GetIfIsAlreadyShown(string screenName)
+    private bool ShowScreen(string screenName)
+    {
+        var isAlreadyShown = GetIfIsAlreadyShown(screenName);
+        if (!isAlreadyShown)
         {
             var newScreenElement = ObjectFinder.Self.GumProjectSave.Screens.FirstOrDefault(item => item.Name == screenName);
-
-            var isAlreadyShown = false;
-            if (currentScreenGue != null)
+            FileManager.RelativeDirectory = "Content" + Path.DirectorySeparatorChar;
+            currentGumScreenSave = newScreenElement;
+            currentScreenGue?.RemoveFromManagers();
+            var layers = SystemManagers.Default.Renderer.Layers;
+            while(layers.Count > 1)
             {
-                isAlreadyShown = currentScreenGue.Tag == newScreenElement;
+                SystemManagers.Default.Renderer.RemoveLayer(SystemManagers.Default.Renderer.Layers.LastOrDefault());
             }
 
-            return isAlreadyShown;
+            currentScreenGue = currentGumScreenSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
+        }
+        return !isAlreadyShown;
+    }
+
+    #endregion
+
+    MouseState lastMouseState;
+    protected override void Update(GameTime gameTime)
+    {
+        MouseState mouseState = Mouse.GetState();
+
+        GumService.Default.Update(this, gameTime, currentScreenGue);
+
+        var cursor = FormsUtilities.Cursor;
+        var output =
+            $"PrimaryDown: {cursor.PrimaryDown} " +
+            $"PrimaryClick: {cursor.PrimaryClick} " +
+            $"WindowOver:{cursor.WindowOver} " +
+            $"WindowPushed:{cursor.WindowPushed}";
+        if(cursor.PrimaryClick)
+        {
+            System.Console.WriteLine(output);
         }
 
-        private bool ShowScreen(string screenName)
-        {
-            var isAlreadyShown = GetIfIsAlreadyShown(screenName);
-            if (!isAlreadyShown)
-            {
-                var newScreenElement = ObjectFinder.Self.GumProjectSave.Screens.FirstOrDefault(item => item.Name == screenName);
-                FileManager.RelativeDirectory = "Content" + Path.DirectorySeparatorChar;
-                currentGumScreenSave = newScreenElement;
-                currentScreenGue?.RemoveFromManagers();
-                var layers = SystemManagers.Default.Renderer.Layers;
-                while(layers.Count > 1)
-                {
-                    SystemManagers.Default.Renderer.RemoveLayer(SystemManagers.Default.Renderer.Layers.LastOrDefault());
-                }
+        DoSwapScreenLogic();
 
-                currentScreenGue = currentGumScreenSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
-            }
-            return !isAlreadyShown;
+        if (GraphicsDevice.Viewport.Width != GraphicalUiElement.CanvasWidth ||
+            GraphicsDevice.Viewport.Height != GraphicalUiElement.CanvasHeight)
+        {
+            GraphicalUiElement.CanvasWidth = GraphicsDevice.Viewport.Width;
+            GraphicalUiElement.CanvasHeight = GraphicsDevice.Viewport.Height;
+            currentScreenGue?.UpdateLayout();
         }
 
-        #endregion
-
-        MouseState lastMouseState;
-        protected override void Update(GameTime gameTime)
+        if (currentGumScreenSave?.Name == "StartScreen")
         {
-            MouseState mouseState = Mouse.GetState();
-            KeyboardState keyboardState = Microsoft.Xna.Framework.Input.Keyboard.GetState();
-            GamePadState gamePadState = default;
-
-            if (keyboardState.IsKeyDown(Keys.Escape) ||
-                keyboardState.IsKeyDown(Keys.Back) ||
-                gamePadState.Buttons.Back == ButtonState.Pressed)
-            {
-                try { Exit(); }
-                catch (PlatformNotSupportedException) { /* ignore */ }
-            }
-
-            SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
-
-            cursor.Activity(gameTime.TotalGameTime.TotalSeconds);
-            gumKeyboard.Activity(gameTime.TotalGameTime.TotalSeconds);
-
-            DoSwapScreenLogic();
-
-            if(currentGumScreenSave?.Name == "StartScreen")
-            {
-                DoStartScreenLogic();
-            }
-            else if(currentGumScreenSave?.Name == "InteractiveGueScreen")
-            {
-                DoInteractiveGueScreenLogic(gameTime.TotalGameTime.TotalSeconds);
-            }
-
-            else if (currentGumScreenSave?.Name == "ZoomScreen")
-            {
-                DoZoomScreenLogic(mouseState);
-            }
-            else if(currentGumScreenSave?.Name == "OffsetLayerScreen")
-            {
-                DoOffsetLayerScreenLogic(mouseState);
-            }
-
-            if(mouseState.LeftButton == ButtonState.Pressed && lastMouseState.LeftButton == ButtonState.Released)
-            {
-                // user just pushed on something so handle a push:
-                HandleMousePush(mouseState);
-            }
-
-            lastMouseState = mouseState;
-
-            base.Update(gameTime);
+            DoStartScreenLogic();
         }
 
-        void DoStartScreenLogic() { }
-
-        int clickCount = 0;
-        private void DoInteractiveGueScreenLogic(double currentGameTimeInSeconds)
+        else if (currentGumScreenSave?.Name == "ZoomScreen")
         {
-            currentScreenGue.DoUiActivityRecursively(cursor, gumKeyboard, currentGameTimeInSeconds);
+            DoZoomScreenLogic(mouseState);
+        }
+        else if(currentGumScreenSave?.Name == "OffsetLayerScreen")
+        {
+            DoOffsetLayerScreenLogic(mouseState);
         }
 
-        private void DoOffsetLayerScreenLogic(MouseState mouseState)
+        if(mouseState.LeftButton == ButtonState.Pressed && lastMouseState.LeftButton == ButtonState.Released)
         {
-            var layer = SystemManagers.Default.Renderer.Layers[1];
-
-            layer.LayerCameraSettings.Position = new System.Numerics.Vector2(
-                -mouseState.Position.X,
-                -mouseState.Position.Y);
+            // user just pushed on something so handle a push:
+            HandleMousePush(mouseState);
         }
 
-        private void DoZoomScreenLogic(MouseState mouseState)
+        lastMouseState = mouseState;
+
+        base.Update(gameTime);
+    }
+
+    void DoStartScreenLogic() 
+    {
+        var setMeInCode = currentScreenGue?.GetGraphicalUiElementByName("ComponentWithExposedVariableInstance");
+        setMeInCode?.SetProperty("Text", $"Resolution {GraphicsDevice.Viewport.Width}x{GraphicsDevice.Viewport.Height}");
+    }
+
+    int clickCount = 0;
+
+
+    private void DoOffsetLayerScreenLogic(MouseState mouseState)
+    {
+        var layer = SystemManagers.Default.Renderer.Layers[1];
+
+        layer.LayerCameraSettings.Position = new System.Numerics.Vector2(
+            -mouseState.Position.X,
+            -mouseState.Position.Y);
+    }
+
+    private void DoZoomScreenLogic(MouseState mouseState)
+    {
+        var camera = SystemManagers.Default.Renderer.Camera;
+
+        var needsRefresh = false;
+        if(mouseState.LeftButton == ButtonState.Pressed)
         {
-            var camera = SystemManagers.Default.Renderer.Camera;
-
-            var needsRefresh = false;
-            if(mouseState.LeftButton == ButtonState.Pressed)
-            {
-                camera.Zoom *= 1.01f;
-                needsRefresh = true;
-            }
-            else if(mouseState.RightButton == ButtonState.Pressed)
-            {
-                camera.Zoom *= .99f;
-                needsRefresh = true;
-            }
-
-            if(needsRefresh)
-            {
-                GraphicalUiElement.CanvasWidth = 800 / camera.Zoom;
-                GraphicalUiElement.CanvasHeight = 600 / camera.Zoom;
-
-                // need to update the layout in response to the canvas size changing:
-                currentScreenGue?.UpdateLayout();
-            }
+            camera.Zoom *= 1.01f;
+            needsRefresh = true;
+        }
+        else if(mouseState.RightButton == ButtonState.Pressed)
+        {
+            camera.Zoom *= .99f;
+            needsRefresh = true;
         }
 
-        private void HandleMousePush(MouseState mouseState)
+        if(needsRefresh)
         {
-            var itemOver = GetItemOver(mouseState.X, mouseState.Y, currentScreenGue);
+            GraphicalUiElement.CanvasWidth = 800 / camera.Zoom;
+            GraphicalUiElement.CanvasHeight = 600 / camera.Zoom;
 
-            if(itemOver?.Tag is InstanceSave instanceSave && instanceSave.Name == "ToggleFontSizes")
-            {
-                if(itemOver.FontSize == 16)
-                {
-                    itemOver.FontSize = 32;
-                }
-                else
-                {
-                    itemOver.FontSize = 16;
-                }
-            }
+            // need to update the layout in response to the canvas size changing:
+            currentScreenGue?.UpdateLayout();
         }
+    }
 
-        private GraphicalUiElement GetItemOver(int x, int y, GraphicalUiElement graphicalUiElement)
+    private void HandleMousePush(MouseState mouseState)
+    {
+        var itemOver = GetItemOver(mouseState.X, mouseState.Y, currentScreenGue);
+
+        if(itemOver?.Tag is InstanceSave instanceSave && instanceSave.Name == "ToggleFontSizes")
         {
-            if(graphicalUiElement.Children == null)
+            if(itemOver.FontSize == 16)
             {
-                // this is a top level screen
-                foreach(var child in graphicalUiElement.ContainedElements)
-                {
-                    var isOver = 
-                        x >= child.GetAbsoluteLeft() &&
-                        x < child.GetAbsoluteRight() &&
-                        y >= child.GetAbsoluteTop() &&
-                        y < child.GetAbsoluteBottom();
-                    if(isOver)
-                    {
-                        return child;
-                    }
-                    else
-                    {
-                        var foundItem = GetItemOver(x, y, child);
-                        if(foundItem != null)
-                        {
-                            return foundItem;
-                        }    
-                    }
-                }
+                itemOver.FontSize = 32;
             }
             else
             {
-                // todo
+                itemOver.FontSize = 16;
             }
-            return null;
         }
+    }
 
-
-        protected override void Draw(GameTime gameTime)
+    private GraphicalUiElement GetItemOver(int x, int y, GraphicalUiElement graphicalUiElement)
+    {
+        if(graphicalUiElement.Children == null)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
-
-            SystemManagers.Default.Draw();
-
-            base.Draw(gameTime);
+            // this is a top level screen
+            foreach(var child in graphicalUiElement.ContainedElements)
+            {
+                var isOver = 
+                    x >= child.GetAbsoluteLeft() &&
+                    x < child.GetAbsoluteRight() &&
+                    y >= child.GetAbsoluteTop() &&
+                    y < child.GetAbsoluteBottom();
+                if(isOver)
+                {
+                    return child;
+                }
+                else
+                {
+                    var foundItem = GetItemOver(x, y, child);
+                    if(foundItem != null)
+                    {
+                        return foundItem;
+                    }    
+                }
+            }
         }
+        else
+        {
+            // todo
+        }
+        return null;
+    }
+
+
+    protected override void Draw(GameTime gameTime)
+    {
+        GraphicsDevice.Clear(Color.CornflowerBlue);
+
+        SystemManagers.Default.Draw();
+
+        base.Draw(gameTime);
     }
 }
