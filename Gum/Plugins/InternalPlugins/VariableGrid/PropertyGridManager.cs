@@ -27,7 +27,7 @@ namespace Gum.Managers
 
         static PropertyGridManager mPropertyGridManager;
 
-        ElementSaveDisplayer mPropertyGridDisplayer = new ElementSaveDisplayer();
+        ElementSaveDisplayer mPropertyGridDisplayer;
 
         //ToolStripMenuItem mExposeVariable;
         //ToolStripMenuItem mResetToDefault;
@@ -88,6 +88,9 @@ namespace Gum.Managers
         // so some of it will happen here:
         public void InitializeEarly(LocalizationManager localizationManager)
         {
+
+            mPropertyGridDisplayer = new ElementSaveDisplayer(new SubtextLogic());
+
             _localizationManager = localizationManager;
             mainControl = new Gum.MainPropertyGrid();
 

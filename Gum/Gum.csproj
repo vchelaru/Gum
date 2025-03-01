@@ -282,6 +282,7 @@
     <Compile Include="Plugins\InternalPlugins\VariableGrid\ExclusionsPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\VariableGrid\MainVariableGridPlugin.cs" />
     <Compile Include="Plugins\InternalPlugins\VariableGrid\StateSaveCategoryDisplayer.cs" />
+    <Compile Include="Plugins\InternalPlugins\VariableGrid\SubtextLogic.cs" />
     <Compile Include="Plugins\InternalPlugins\VariableGrid\VariableReferenceLogic.cs" />
     <Compile Include="Plugins\InternalPlugins\VariableGrid\ViewModels\AddVariableViewModel.cs" />
     <Compile Include="Plugins\PluginTab.cs" />

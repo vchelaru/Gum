@@ -18,6 +18,7 @@ using Gum.DataTypes.Behaviors;
 using Newtonsoft.Json.Linq;
 using Gum.Undo;
 using System.Security.Principal;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 
 namespace Gum.PropertyGridHelpers
 {
@@ -36,8 +37,14 @@ namespace Gum.PropertyGridHelpers
         static EditorAttribute mFileWindowAttribute = new EditorAttribute(typeof(System.Windows.Forms.Design.FileNameEditor), typeof(System.Drawing.Design.UITypeEditor));
 
         static PropertyDescriptorHelper mHelper = new PropertyDescriptorHelper();
+        private readonly SubtextLogic _subtextLogic;
 
         #endregion
+
+        public ElementSaveDisplayer(SubtextLogic subtextLogic)
+        {
+            _subtextLogic = subtextLogic;
+        }
 
         private List<InstanceSavePropertyDescriptor> GetProperties(ElementSave elementSave, InstanceSave instanceSave, StateSave stateSave)
         {
@@ -61,7 +68,7 @@ namespace Gum.PropertyGridHelpers
             return propertyList;
         }
 
-        private static void FillPropertyList(List<InstanceSavePropertyDescriptor> pdc, ElementSave elementSave,
+        private void FillPropertyList(List<InstanceSavePropertyDescriptor> pdc, ElementSave elementSave,
             InstanceSave instanceSave, StateSave defaultState, AmountToDisplay amountToDisplay = AmountToDisplay.AllVariables)
         {
             var currentState = SelectedState.Self.SelectedStateSave;
@@ -412,7 +419,8 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        private static StateReferencingInstanceMember ToStateReferencingInstanceMember(ElementSave element, InstanceSave instance, StateSave stateSave, StateSaveCategory stateSaveCategory, InstanceSavePropertyDescriptor propertyDescriptor)
+        private StateReferencingInstanceMember ToStateReferencingInstanceMember(ElementSave element, InstanceSave instance, 
+            StateSave stateSave, StateSaveCategory stateSaveCategory, InstanceSavePropertyDescriptor propertyDescriptor)
         {
             StateReferencingInstanceMember srim;
 
@@ -425,20 +433,30 @@ namespace Gum.PropertyGridHelpers
                 return null;
             }
 
-
+            string variableName = "";
             if (instance != null)
             {
-                srim = new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, instance.Name + "." + propertyDescriptor.Name, instance, element, UndoManager.Self);
+                variableName = instance.Name + "." + propertyDescriptor.Name;
             }
             else
             {
-                srim =
-                    new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, propertyDescriptor.Name, instance, element, UndoManager.Self);
+                variableName = propertyDescriptor.Name;
             }
+
+            srim = new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, variableName, instance, element, UndoManager.Self);
 
             // moved to internal
             //srim.SetToDefault += (memberName) => ResetVariableToDefault(srim);
             srim.DetailText = propertyDescriptor.Subtext;
+            var extraDetail = _subtextLogic.GetSubtextForCurrentState(stateSave, variableName);
+            if(!string.IsNullOrEmpty(extraDetail))
+            {
+                if(!string.IsNullOrEmpty(srim.DetailText))
+                {
+                    srim.DetailText += "\n";
+                }
+                srim.DetailText += extraDetail;
+            }
             return srim;
         }
 
@@ -537,7 +555,7 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        private static InstanceSavePropertyDescriptor GetPropertyDescriptor(ElementSave elementSave, InstanceSave instanceSave, 
+        private InstanceSavePropertyDescriptor GetPropertyDescriptor(ElementSave elementSave, InstanceSave instanceSave, 
             AmountToDisplay amountToDisplay, VariableSave defaultVariable, bool forceReadOnly, string subtext, List<InstanceSavePropertyDescriptor> existingItems)
         {
             ElementSave container = elementSave;
@@ -624,38 +642,12 @@ namespace Gum.PropertyGridHelpers
                 property.TypeConverter = typeConverter;
                 property.Category = category;
 
-                GetSubtext(defaultVariable, subtext, property, elementSave, instanceSave);
+                _subtextLogic.GetDefaultSubtext(defaultVariable, subtext, property, elementSave, instanceSave);
                 return property;
             }
             return null;
         }
 
-        private static void GetSubtext(VariableSave defaultVariable, string subtext, InstanceSavePropertyDescriptor property, ElementSave elementSave, InstanceSave instanceSave)
-        {
-            property.Subtext = subtext;
-            if (!string.IsNullOrEmpty(defaultVariable?.DetailText))
-            {
-                property.Subtext += "\n" + defaultVariable.DetailText;
-            }
-
-            if(defaultVariable.Name == "HasEvents")
-            {
-                var element = elementSave;
-                if(instanceSave != null)
-                {
-                    element = ObjectFinder.Self.GetElementSave(instanceSave);
-                }
-
-                if(element is StandardElementSave)
-                {
-                    if(!string.IsNullOrEmpty(property.Subtext ))
-                    {
-                        property.Subtext += "\n";
-                    }
-                    property.Subtext += "Assigns Cursor.WindowOver only if events are assigned at runtime";
-                }
-            }
-        }
 
         private static void AddNameAndBaseTypeProperties(List<InstanceSavePropertyDescriptor> pdc, ElementSave elementSave, InstanceSave instance, bool isReadOnly)
         {

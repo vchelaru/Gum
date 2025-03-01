@@ -69,11 +69,14 @@ namespace Gum.Gui.Controls
             DataGrid.MoveMemberToCategory(nameof(ViewModel.FontSpacingVertical), "Font Generation");
 
             var textureFilterMember = DataGrid.GetInstanceMember(nameof(ViewModel.TextureFilter));
-            textureFilterMember.CustomOptions = new List<object>()
+            if(textureFilterMember != null)
             {
-                TextureFilter.Point,
-                TextureFilter.Linear
-            };
+                textureFilterMember.CustomOptions = new List<object>()
+                {
+                    TextureFilter.Point,
+                    TextureFilter.Linear
+                };
+            }
 
             foreach (var category in DataGrid.Categories)
             {

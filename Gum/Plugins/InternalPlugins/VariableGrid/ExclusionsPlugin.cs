@@ -32,6 +32,10 @@ public class ExclusionsPlugin : InternalPlugin
         "IsRenderTarget",
         "TextOverflowVerticalMode",
 
+        // these have special subtext depending on their values:
+        "XUnits", 
+        "YUnits"
+
     };
     private readonly ISelectedState _selectedState;
     private ObjectFinder _objectFinder;
