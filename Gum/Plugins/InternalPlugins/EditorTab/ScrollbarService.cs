@@ -62,9 +62,13 @@ namespace Gum.Plugins.ScrollBarPlugin
             minY = Math.Min(minY, item.GetAbsoluteTop());
             maxY = Math.Max(maxY, item.GetAbsoluteBottom());
 
-            foreach(var child in item.Children)
+            if(item.Children != null)
             {
-                UpdateMinMaxRecursively(child, ref minX, ref maxX, ref minY, ref maxY);
+                // this could be an invalid instance
+                foreach(var child in item.Children)
+                {
+                    UpdateMinMaxRecursively(child, ref minX, ref maxX, ref minY, ref maxY);
+                }
             }
         }
 

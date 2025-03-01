@@ -385,6 +385,8 @@ namespace Gum.Wireframe
 
         private void AddChildrenRecursively(GraphicalUiElement gue, HashSet<GraphicalUiElement> containedElements)
         {
+            if (gue.Children == null) return;
+
             foreach(var childAsRenderable in gue.Children)
             {
                 if(childAsRenderable is GraphicalUiElement child )
