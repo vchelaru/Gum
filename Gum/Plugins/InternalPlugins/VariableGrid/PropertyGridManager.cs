@@ -818,7 +818,7 @@ namespace Gum.Managers
                             member.PropertiesToSetOnDisplayer[nameof(WpfDataUi.Controls.ComboBoxDisplay.IsEditable)] = true;
                             member.CustomOptions = _localizationManager.Keys.OrderBy(item => item).ToArray();
                         }
-                        else
+                        else if(baseVariable?.Name == "Text")
                         {
                             //member.PreferredDisplayer = typeof(ToggleButtonOptionDisplay);
                             member.PreferredDisplayer = typeof(WpfDataUi.Controls.MultiLineTextBoxDisplay);
