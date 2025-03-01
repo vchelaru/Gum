@@ -18,37 +18,14 @@ namespace Gum.Managers
             }
         }
 
-        public string ScreensFolder
-        {
-            get
-            {
-                return ProjectFolder + "Screens/";
+        public string ScreensFolder => ProjectFolder + "Screens/";
 
-            }
-        }
+        public string ComponentsFolder => ProjectFolder + "Components/";
 
-        public string ComponentsFolder
-        {
-            get
-            {
-                return ProjectFolder + "Components/";
-            }
-        }
+        public string StandardsFolder => ProjectFolder + "Standards/";
 
-        public string BehaviorsFolder
-        {
-            get
-            {
-                return ProjectFolder + "Behaviors/";
-            }
-        }
+        public string BehaviorsFolder => ProjectFolder + "Behaviors/";
 
-        public string ProjectFolder 
-        {
-            get
-            {
-                return FileManager.GetDirectory(ObjectFinder.Self.GumProjectSave.FullFileName);
-            }
-        }
+        public string ProjectFolder  => FileManager.GetDirectory(ObjectFinder.Self.GumProjectSave.FullFileName);
     }
 }

@@ -685,11 +685,13 @@ namespace Gum.Managers
 
 
                 // add folders to the screens, entities, and standard elements
-                AddAndRemoveFolderNodes(mStandardElementsTreeNode.GetFullFilePath().FullPath, mStandardElementsTreeNode.Nodes);
-                AddAndRemoveFolderNodes(mScreensTreeNode.GetFullFilePath().FullPath, mScreensTreeNode.Nodes);
-                AddAndRemoveFolderNodes(mComponentsTreeNode.GetFullFilePath().FullPath, mComponentsTreeNode.Nodes);
-                AddAndRemoveFolderNodes(mBehaviorsTreeNode.GetFullFilePath().FullPath, mBehaviorsTreeNode.Nodes);
+                AddAndRemoveFolderNodesFromFileSystem(mStandardElementsTreeNode.GetFullFilePath().FullPath, mStandardElementsTreeNode.Nodes);
+                AddAndRemoveFolderNodesFromFileSystem(mScreensTreeNode.GetFullFilePath().FullPath, mScreensTreeNode.Nodes);
+                AddAndRemoveFolderNodesFromFileSystem(mComponentsTreeNode.GetFullFilePath().FullPath, mComponentsTreeNode.Nodes);
+                AddAndRemoveFolderNodesFromFileSystem(mBehaviorsTreeNode.GetFullFilePath().FullPath, mBehaviorsTreeNode.Nodes);
 
+
+                AddNeededButMissingFromFileSystemFolderNodes();
                 //AddAndRemoveFolderNodes(currentDirectory, this.mTreeView.Nodes);
             }
             else
@@ -701,7 +703,69 @@ namespace Gum.Managers
             }
         }
 
-        private void AddAndRemoveFolderNodes(string currentDirectory, TreeNodeCollection nodesToAddTo)
+        private void AddNeededButMissingFromFileSystemFolderNodes()
+        {
+            var project = ObjectFinder.Self.GumProjectSave;
+
+            HashSet<string> neededFolders = new HashSet<string>();
+
+            foreach(var element in project.AllElements)
+            {
+                var rootDirectoryForElementType =
+                    element is ScreenSave ? FileLocations.Self.ScreensFolder
+                    : element is ComponentSave ? FileLocations.Self.ComponentsFolder
+                    : element is StandardElementSave ? FileLocations.Self.StandardsFolder
+                    : string.Empty;
+
+                string fullPath = rootDirectoryForElementType + FileManager.GetDirectory(element.Name);
+
+                if(!neededFolders.Contains(fullPath))
+                {
+                    neededFolders.Add(fullPath);
+                }
+            }
+
+            foreach(var item in neededFolders)
+            {
+                CreateNodeIfNecessary(item);
+            }
+        }
+
+        private TreeNode CreateNodeIfNecessary(string directory)
+        {
+            var treeNode = GetTreeNodeFor(directory);
+
+            if(treeNode == null)
+            {
+                TreeNode parentNode = null;
+                string parentDirectory = string.Empty;
+                try
+                {
+                    parentDirectory = FileManager.GetDirectory(directory);
+                }
+                catch { }
+
+                if(parentDirectory != string.Empty)
+                {
+                    parentNode = CreateNodeIfNecessary(parentDirectory);
+                }
+
+                if(parentNode != null)
+                {
+                    var treeNodeText = FileManager.RemovePath(directory);
+                    if(treeNodeText?.EndsWith("/") == true)
+                    {
+                        treeNodeText = treeNodeText.Substring(0, treeNodeText.Length - 1);
+                    }
+                    treeNode = parentNode.Nodes.Add(treeNodeText);
+                    treeNode.ImageIndex = ExclamationIndex;
+                }
+            }
+
+            return treeNode;
+        }
+
+        private void AddAndRemoveFolderNodesFromFileSystem(string currentDirectory, TreeNodeCollection nodesToAddTo)
         {
             // todo: removes
             var directories = Directory.EnumerateDirectories(currentDirectory).ToArray();
@@ -715,7 +779,7 @@ namespace Gum.Managers
                     existingTreeNode = nodesToAddTo.Add(FileManager.RemovePath(directory));
                     existingTreeNode.ImageIndex = FolderImageIndex;
                 }
-                AddAndRemoveFolderNodes(directory, existingTreeNode.Nodes);
+                AddAndRemoveFolderNodesFromFileSystem(directory, existingTreeNode.Nodes);
             }
 
             for(int i = nodesToAddTo.Count - 1; i > -1; i--)
