@@ -1,0 +1,54 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35527.113
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGameAndGum", "MonoGameAndGum.csproj", "{A92765C8-A495-47AD-BFAD-CC02CB6A9BF1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGameGum", "..\..\MonoGameGum\MonoGameGum.csproj", "{D96B8542-BAE9-4A7B-91E1-46A702CE2A41}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumCommon", "..\..\GumCommon\GumCommon.csproj", "{4F68EEAD-E487-466C-902B-A519C60BE9B3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumDataTypesNet6", "..\..\GumDataTypes\GumDataTypesNet6.csproj", "{40415182-85AE-478A-A379-0517CD63C78F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToolsUtilitiesStandard", "..\..\ToolsUtilities\ToolsUtilitiesStandard.csproj", "{6567F22C-F57E-4E51-9BDD-CCD7E12AB051}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{B96781B4-3E3A-4C57-9362-82493CCB0D46}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A92765C8-A495-47AD-BFAD-CC02CB6A9BF1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A92765C8-A495-47AD-BFAD-CC02CB6A9BF1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A92765C8-A495-47AD-BFAD-CC02CB6A9BF1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A92765C8-A495-47AD-BFAD-CC02CB6A9BF1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D96B8542-BAE9-4A7B-91E1-46A702CE2A41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D96B8542-BAE9-4A7B-91E1-46A702CE2A41}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D96B8542-BAE9-4A7B-91E1-46A702CE2A41}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D96B8542-BAE9-4A7B-91E1-46A702CE2A41}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4F68EEAD-E487-466C-902B-A519C60BE9B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F68EEAD-E487-466C-902B-A519C60BE9B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4F68EEAD-E487-466C-902B-A519C60BE9B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4F68EEAD-E487-466C-902B-A519C60BE9B3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{40415182-85AE-478A-A379-0517CD63C78F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40415182-85AE-478A-A379-0517CD63C78F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40415182-85AE-478A-A379-0517CD63C78F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40415182-85AE-478A-A379-0517CD63C78F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6567F22C-F57E-4E51-9BDD-CCD7E12AB051}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6567F22C-F57E-4E51-9BDD-CCD7E12AB051}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6567F22C-F57E-4E51-9BDD-CCD7E12AB051}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6567F22C-F57E-4E51-9BDD-CCD7E12AB051}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{D96B8542-BAE9-4A7B-91E1-46A702CE2A41} = {B96781B4-3E3A-4C57-9362-82493CCB0D46}
+		{4F68EEAD-E487-466C-902B-A519C60BE9B3} = {B96781B4-3E3A-4C57-9362-82493CCB0D46}
+		{40415182-85AE-478A-A379-0517CD63C78F} = {B96781B4-3E3A-4C57-9362-82493CCB0D46}
+		{6567F22C-F57E-4E51-9BDD-CCD7E12AB051} = {B96781B4-3E3A-4C57-9362-82493CCB0D46}
+	EndGlobalSection
+EndGlobal

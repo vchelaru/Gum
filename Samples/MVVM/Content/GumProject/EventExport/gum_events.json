@@ -1,0 +1,154 @@
+{
+  "UserEvents": {
+    "vchel": [],
+    "d1638316d18f4a1e23a287aaaa12b6c540f704e257a6549bc9a672497ccc934e": [
+      {
+        "NewName": "MainMenu.ListBoxInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-03-01T21:31:54.8707102Z"
+      },
+      {
+        "NewName": "MainMenu.LabelInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-03-01T21:32:29.2883724Z"
+      },
+      {
+        "NewName": "MainMenu.ButtonStandardInstance1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-03-01T21:32:57.5867173Z"
+      },
+      {
+        "NewName": "MainMenu.LabelInstance1",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-03-01T21:33:26.1676165Z"
+      },
+      {
+        "NewName": "MainMenu.NotEnoughMoney",
+        "OldName": "MainMenu.LabelInstance1",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2025-03-01T21:34:06.5289545Z"
+      },
+      {
+        "NewName": "MainMenu.BuyButton",
+        "OldName": "MainMenu.ButtonStandardInstance",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2025-03-01T21:34:11.3260521Z"
+      },
+      {
+        "NewName": "MainMenu.MoneyDisplay",
+        "OldName": "MainMenu.LabelInstance",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2025-03-01T21:34:25.3398243Z"
+      },
+      {
+        "NewName": "MainMenu.AddMoneyButton",
+        "OldName": "MainMenu.ButtonStandardInstance1",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2025-03-01T21:34:34.9391122Z"
+      },
+      {
+        "NewName": "Controls/ListBoxItem1",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 0,
+        "TimestampUtc": "2025-03-01T22:48:01.1055494Z"
+      },
+      {
+        "NewName": "Controls/StoreListBoxItem",
+        "OldName": "Controls/ListBoxItem1",
+        "ElementType": "Components",
+        "EventType": 2,
+        "TimestampUtc": "2025-03-01T22:48:14.6409774Z"
+      },
+      {
+        "NewName": "Controls/StoreListBoxItem (Container).ItemNameTextInstance",
+        "OldName": "Controls/StoreListBoxItem (Container).TextInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2025-03-01T22:48:25.151481Z"
+      },
+      {
+        "NewName": "Controls/StoreListBoxItem (Container).ItemNameTextInstance",
+        "OldName": "Controls/StoreListBoxItem (Container).TextInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2025-03-01T22:48:25.1534821Z"
+      },
+      {
+        "NewName": "Controls/StoreListBoxItem (Container).ItemNameTextInstance",
+        "OldName": "Controls/StoreListBoxItem (Container).TextInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2025-03-01T22:48:25.1655232Z"
+      },
+      {
+        "NewName": "Controls/StoreListBoxItem (Container).ItemNameTextInstance",
+        "OldName": "Controls/StoreListBoxItem (Container).TextInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2025-03-01T22:48:25.1735575Z"
+      },
+      {
+        "NewName": "Controls/StoreListBoxItem (Container).ItemNameTextInstance",
+        "OldName": "Controls/StoreListBoxItem (Container).TextInstance",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2025-03-01T22:48:25.1805791Z"
+      },
+      {
+        "NewName": "Controls/StoreListBoxItem (Container).ItemNameTextInstance1",
+        "OldName": null,
+        "ElementType": "Components",
+        "EventType": 5,
+        "TimestampUtc": "2025-03-01T22:48:27.1590626Z"
+      },
+      {
+        "NewName": "Controls/StoreListBoxItem (Container).CostTextInstance",
+        "OldName": "Controls/StoreListBoxItem (Container).ItemNameTextInstance1",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2025-03-01T22:48:42.4892111Z"
+      },
+      {
+        "NewName": "Controls/StoreListBoxItem (Container).CostTextInstance",
+        "OldName": "Controls/StoreListBoxItem (Container).ItemNameTextInstance1",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2025-03-01T22:48:42.4905209Z"
+      },
+      {
+        "NewName": "Controls/StoreListBoxItem (Container).CostTextInstance",
+        "OldName": "Controls/StoreListBoxItem (Container).ItemNameTextInstance1",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2025-03-01T22:48:42.5068778Z"
+      },
+      {
+        "NewName": "Controls/StoreListBoxItem (Container).CostTextInstance",
+        "OldName": "Controls/StoreListBoxItem (Container).ItemNameTextInstance1",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2025-03-01T22:48:42.517894Z"
+      },
+      {
+        "NewName": "Controls/StoreListBoxItem (Container).CostTextInstance",
+        "OldName": "Controls/StoreListBoxItem (Container).ItemNameTextInstance1",
+        "ElementType": "Components",
+        "EventType": 7,
+        "TimestampUtc": "2025-03-01T22:48:42.5270391Z"
+      }
+    ]
+  }
+}

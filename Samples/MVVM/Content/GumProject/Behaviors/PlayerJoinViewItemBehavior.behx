@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BehaviorSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Name>PlayerJoinViewItemBehavior</Name>
+  <RequiredVariables />
+  <Category>
+    <Name>PlayerJoinCategory</Name>
+    <State>
+      <Name>NotConnected</Name>
+    </State>
+    <State>
+      <Name>Connected</Name>
+    </State>
+    <State>
+      <Name>ConnectedAndJoined</Name>
+    </State>
+  </Category>
+  <Category>
+    <Name>GamepadLayoutCategory</Name>
+    <State>
+      <Name>Unknown</Name>
+    </State>
+    <State>
+      <Name>Keyboard</Name>
+    </State>
+    <State>
+      <Name>NES</Name>
+    </State>
+    <State>
+      <Name>SuperNintendo</Name>
+    </State>
+    <State>
+      <Name>Nintendo64</Name>
+    </State>
+    <State>
+      <Name>GameCube</Name>
+    </State>
+    <State>
+      <Name>SwitchPro</Name>
+    </State>
+    <State>
+      <Name>Genesis</Name>
+    </State>
+    <State>
+      <Name>Xbox360</Name>
+    </State>
+    <State>
+      <Name>PlayStationDualShock</Name>
+    </State>
+  </Category>
+  <RequiredInstances />
+  <RequiredAnimations />
+</BehaviorSave>
