@@ -230,7 +230,8 @@ namespace Gum.Managers
                 
             optionsWindow.ObjectsToDelete = objectsToDelete;
 
-            GumCommands.Self.GuiCommands.PositionWindowByCursor(optionsWindow);
+            // do this in Loaded so it has height
+            //GumCommands.Self.GuiCommands.MoveToCursor(optionsWindow);
 
             PluginManager.Self.ShowDeleteDialog(optionsWindow, objectsToDelete);
 

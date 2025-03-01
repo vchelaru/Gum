@@ -187,26 +187,6 @@ namespace Gum.Commands
 
         #region Move to Cursor
 
-        public void PositionWindowByCursor(System.Windows.Window window)
-        {
-            window.WindowStartupLocation = System.Windows.WindowStartupLocation.Manual;
-
-            double width = window.Width;
-            if (double.IsNaN(width))
-            {
-                width = 0;
-            }
-            double height = window.Height;
-            if (double.IsNaN(height))
-            {
-                height = 0;
-            }
-
-            var mousePosition = GumCommands.Self.GuiCommands.GetMousePosition();
-            window.Left = mousePosition.X - width / 2;
-            window.Top = mousePosition.Y - height / 2;
-        }
-
         public void PositionWindowByCursor(System.Windows.Forms.Form window)
         {
             var mousePosition = GumCommands.Self.GuiCommands.GetMousePosition();
