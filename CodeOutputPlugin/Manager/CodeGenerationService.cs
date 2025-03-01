@@ -76,11 +76,20 @@ internal class CodeGenerationService
 
             if (elementsWithMissingCodeGen.Count > 0)
             {
-                var missingFiles = elementsWithMissingCodeGen.Select(item => item.Name);
+                var missingFiles = elementsWithMissingCodeGen.Select(item => item.Name).ToArray();
                 var missingFileMessage = $"The following elements are missing code generation files:\n{string.Join("\n", missingFiles)}";
                 if (showPopups)
                 {
-                    shouldGenerateMissingFiles = GumCommands.Self.GuiCommands.ShowYesNoMessageBox(missingFileMessage, "Generate missing files?") == System.Windows.MessageBoxResult.Yes;
+                    if(missingFiles.Length == 1)
+                    {
+                        missingFileMessage += "\n\nGenerate this file too?";
+                    }
+                    else
+                    {
+                        missingFileMessage += "\n\nGenerate these files too?";
+                    }
+                    shouldGenerateMissingFiles = 
+                        GumCommands.Self.GuiCommands.ShowYesNoMessageBox(missingFileMessage, "Generate missing files?") == System.Windows.MessageBoxResult.Yes;
                 }
                 else
                 {
