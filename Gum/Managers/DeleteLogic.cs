@@ -130,6 +130,10 @@ namespace Gum.Managers
                                 }
                             }
                         }
+                        else
+                        {
+                            objectsDeleted = null;
+                        }
                     }
                 }
                 else if (_selectedState.SelectedElements.Count() > 0)
