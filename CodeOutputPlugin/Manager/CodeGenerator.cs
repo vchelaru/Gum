@@ -2262,6 +2262,9 @@ public class CodeGenerator
 
                     context.StringBuilder.AppendLine(context.Tabs +
                         "element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);");
+
+                    context.StringBuilder.AppendLine(context.Tabs +
+                        "AfterFullCreation();");
                 }
             }
             context.TabCount--;
