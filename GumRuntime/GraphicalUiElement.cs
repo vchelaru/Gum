@@ -1141,7 +1141,14 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// </summary>
     public float AbsoluteTop => this.GetAbsoluteY();
 
+    /// <summary>
+    /// Returns the right side in absolute pixel coordinates
+    /// </summary>
     public float AbsoluteRight => AbsoluteLeft + this.GetAbsoluteWidth();
+
+    /// <summary>
+    /// Returns the bottom side in absolute pixel coordinates
+    /// </summary>
     public float AbsoluteBottom => AbsoluteTop + this.GetAbsoluteHeight();
 
     public IVisible ExplicitIVisibleParent
@@ -1155,10 +1162,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// </summary>
     public int TextureTop
     {
-        get
-        {
-            return mTextureTop;
-        }
+        get => mTextureTop;
         set
         {
             if (mTextureTop != value)
@@ -1173,14 +1177,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     }
 
     /// <summary>
-    /// The pixel coorinate of the left of the displayed region.
+    /// The pixel coordinate of the left of the displayed region.
     /// </summary>
     public int TextureLeft
     {
-        get
-        {
-            return mTextureLeft;
-        }
+        get => mTextureLeft;
         set
         {
             if (mTextureLeft != value)
