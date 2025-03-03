@@ -37,3 +37,33 @@ var editMenuItem = new MenuItem();
 editMenuItem.Header = "Edit";
 menu.Items.Add(editMenuItem);
 ```
+
+## IsSelected
+
+IsSelected controls whether the MenuItem displays its Selected state. If this value is true, the MenuItem displays its contained Items.
+
+Typically this property is set to true by clicking on a MenuItem, or by hovering over a MenuItem after its parent is selected, but it can also be explicitly set to true.
+
+The following code shows how to explicitly set IsSelected to true based on keyboard input:
+
+```csharp
+var keyboard = FormsUtilities.Keyboard;
+
+if(keyboard.IsAltDown)
+{
+    if(keyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.F))
+    {
+        FileMenuItem.IsSelected = true;
+    }
+    else if(keyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.E))
+    {
+        EditMenuItem.IsSelected = true;
+    }
+}
+
+```
+
+By default MenuItems in a Menu are not selected unless the user clicks on the MenuItem. Once an item is selected, the user can hover over any menu item (either in the Menu itself, or a child MenuItem) to automatically expand the MenuItem.
+
+<figure><img src="../../../../.gitbook/assets/02_21 36 48.gif" alt=""><figcaption><p>MenuItems automatically set their IsSelected to true after one item is selected with the cursor</p></figcaption></figure>
+
