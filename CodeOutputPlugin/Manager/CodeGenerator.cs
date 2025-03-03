@@ -500,7 +500,7 @@ public class CodeGenerator
 
         if(!isFullyInstantiatingInCode)
         {
-            var gumFormsType = GetGumFormsType(context.Element);
+            GetGumFormsType(context.Element, out string? gumFormsType, out _);
             if( gumFormsType != null )
             {
                 context.StringBuilder.AppendLine($"{context.Tabs}if (FormsControl == null)");
@@ -620,17 +620,21 @@ public class CodeGenerator
 
             builder.AppendLine(context.Tabs + $"GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType(\"{context.Element.Name}\", typeof({className}));");
 
-            //var formsType = GetGumFormsType(context.Element);
-
-            //if(formsType != null)
-            //{
-            //    var text = $"global:: GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType(@\"{context.Element.Name}\", typeof({className}));
-            //}
+            var element = context.Element;
+            GetGumFormsType(element, out string? formsType, out ElementBehaviorReference? behaviorReference);
+            if(formsType != null)
+            {
+                var behavior = ObjectFinder.Self.GetBehavior(behaviorReference);
+                if(behavior?.DefaultImplementation == element.Name)
+                {
+                    // This is the default, so let's register it:
+                    builder.AppendLine(context.Tabs +
+                        $"MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof({formsType})] = typeof({className});");
+                }
+            }
 
             context.TabCount--;
             builder.AppendLine(context.Tabs + "}");
-
-
         }
     }
 
@@ -638,18 +642,20 @@ public class CodeGenerator
 
     #region Gum Forms (MonoGame)
 
-    private static string? GetGumFormsType(ElementSave element)
+    private static void GetGumFormsType(ElementSave element, out string? formsType, out ElementBehaviorReference? behavior)
     {
+        formsType = null;
+        behavior = null;
         var behaviors = element.Behaviors;
-
-        foreach(var behavior in behaviors)
+        foreach (var possibleBehavior in behaviors)
         {
-            if(BehaviorGumFormsTypes.ContainsKey(behavior.BehaviorName))
+            if(BehaviorGumFormsTypes.ContainsKey(possibleBehavior.BehaviorName))
             {
-                return BehaviorGumFormsTypes[behavior.BehaviorName];
+                formsType = BehaviorGumFormsTypes[possibleBehavior.BehaviorName];
+                behavior = possibleBehavior;
+                break;
             }
         }
-        return null;
     }
 
     static Dictionary<string, string> BehaviorGumFormsTypes = new Dictionary<string, string>()
@@ -674,7 +680,7 @@ public class CodeGenerator
     {
         if (context.CodeOutputProjectSettings.OutputLibrary != OutputLibrary.MonoGame) return;
 
-        var gumFormsType = GetGumFormsType(context.Element);
+        GetGumFormsType(context.Element, out string? gumFormsType, out _);
 
         if (gumFormsType == null) return;
 

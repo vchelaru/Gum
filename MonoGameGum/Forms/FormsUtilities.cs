@@ -37,19 +37,27 @@ public class FormsUtilities
     /// </remarks>
     public static void InitializeDefaults(Game? game = null)
     {
-        FrameworkElement.DefaultFormsComponents[typeof(Button)] = typeof(DefaultButtonRuntime);
-        FrameworkElement.DefaultFormsComponents[typeof(CheckBox)] = typeof(DefaultCheckboxRuntime);
-        FrameworkElement.DefaultFormsComponents[typeof(ComboBox)] = typeof(DefaultComboBoxRuntime);
-        FrameworkElement.DefaultFormsComponents[typeof(Label)] = typeof(DefaultLabelRuntime);
-        FrameworkElement.DefaultFormsComponents[typeof(ListBox)] = typeof(DefaultListBoxRuntime);
-        FrameworkElement.DefaultFormsComponents[typeof(ListBoxItem)] = typeof(DefaultListBoxItemRuntime);
-        FrameworkElement.DefaultFormsComponents[typeof(Menu)] = typeof(DefaultMenuRuntime);
-        FrameworkElement.DefaultFormsComponents[typeof(MenuItem)] = typeof(DefaultMenuItemRuntime);
-        FrameworkElement.DefaultFormsComponents[typeof(ScrollBar)] = typeof(DefaultScrollBarRuntime);
-        FrameworkElement.DefaultFormsComponents[typeof(ScrollViewer)] = typeof(DefaultScrollViewerRuntime);
-        FrameworkElement.DefaultFormsComponents[typeof(TextBox)] = typeof(DefaultTextBoxRuntime);
-        FrameworkElement.DefaultFormsComponents[typeof(PasswordBox)] = typeof(DefaultTextBoxRuntime);
-        FrameworkElement.DefaultFormsComponents[typeof(Slider)] = typeof(DefaultSliderRuntime);
+        TryAdd(typeof(Button), typeof(DefaultButtonRuntime));
+        TryAdd(typeof(CheckBox), typeof(DefaultCheckboxRuntime));
+        TryAdd(typeof(ComboBox), typeof(DefaultComboBoxRuntime));
+        TryAdd(typeof(Label), typeof(DefaultLabelRuntime));
+        TryAdd(typeof(ListBox), typeof(DefaultListBoxRuntime));
+        TryAdd(typeof(ListBoxItem), typeof(DefaultListBoxItemRuntime));
+        TryAdd(typeof(Menu), typeof(DefaultMenuRuntime));
+        TryAdd(typeof(MenuItem), typeof(DefaultMenuItemRuntime));
+        TryAdd(typeof(ScrollBar), typeof(DefaultScrollBarRuntime));
+        TryAdd(typeof(ScrollViewer), typeof(DefaultScrollViewerRuntime));
+        TryAdd(typeof(TextBox), typeof(DefaultTextBoxRuntime));
+        TryAdd(typeof(PasswordBox), typeof(DefaultTextBoxRuntime));
+        TryAdd(typeof(Slider), typeof(DefaultSliderRuntime));
+
+        void TryAdd(Type formsType, Type runtimeType)
+        {
+            if(!FrameworkElement.DefaultFormsComponents.ContainsKey(formsType))
+            {
+                FrameworkElement.DefaultFormsComponents[formsType] = runtimeType;
+            }
+        }
 
         cursor = new Cursor();
 
