@@ -1,0 +1,12 @@
+﻿using Microsoft.Xna.Framework;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace GumFormsSample.Screens;
+internal interface IUpdateScreen
+{
+    void Update(GameTime gameTime);
+}

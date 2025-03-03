@@ -11,4 +11,5 @@
     </InstanceSave>
   </RequiredInstances>
   <RequiredAnimations />
+  <DefaultImplementation>Controls/Toast</DefaultImplementation>
 </BehaviorSave>

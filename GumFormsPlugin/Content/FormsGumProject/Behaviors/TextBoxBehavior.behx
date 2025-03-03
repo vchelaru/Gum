@@ -40,4 +40,5 @@
     </InstanceSave>
   </RequiredInstances>
   <RequiredAnimations />
+  <DefaultImplementation>Controls/TextBox</DefaultImplementation>
 </BehaviorSave>

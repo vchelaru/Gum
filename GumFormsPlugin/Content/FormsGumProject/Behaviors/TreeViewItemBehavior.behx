@@ -10,4 +10,5 @@
     </InstanceSave>
   </RequiredInstances>
   <RequiredAnimations />
+  <DefaultImplementation>Controls/TreeViewItem</DefaultImplementation>
 </BehaviorSave>

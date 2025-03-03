@@ -19,4 +19,5 @@
   </Category>
   <RequiredInstances />
   <RequiredAnimations />
+  <DefaultImplementation>Controls/ListBoxItem</DefaultImplementation>
 </BehaviorSave>

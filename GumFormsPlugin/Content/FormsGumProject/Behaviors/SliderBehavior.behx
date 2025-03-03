@@ -4,7 +4,6 @@
   <RequiredVariables />
   <Category>
     <Name>SliderCategory</Name>
-    <IsSetRecursively>false</IsSetRecursively>
     <State>
       <Name>Enabled</Name>
     </State>
@@ -30,4 +29,5 @@
     </InstanceSave>
   </RequiredInstances>
   <RequiredAnimations />
+  <DefaultImplementation>Controls/Slider</DefaultImplementation>
 </BehaviorSave>

@@ -11,4 +11,5 @@
     </InstanceSave>
   </RequiredInstances>
   <RequiredAnimations />
+  <DefaultImplementation>Elements/Label</DefaultImplementation>
 </BehaviorSave>

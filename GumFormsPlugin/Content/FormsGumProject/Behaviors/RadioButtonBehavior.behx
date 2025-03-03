@@ -61,4 +61,5 @@
     </InstanceSave>
   </RequiredInstances>
   <RequiredAnimations />
+  <DefaultImplementation>Controls/RadioButton</DefaultImplementation>
 </BehaviorSave>

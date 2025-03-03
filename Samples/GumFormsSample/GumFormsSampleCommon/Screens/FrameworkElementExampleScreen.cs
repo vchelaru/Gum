@@ -17,12 +17,16 @@ using ToolsUtilities;
 
 namespace GumFormsSample.Screens
 {
-    internal class FrameworkElementExampleScreen
+    internal class FrameworkElementExampleScreen : ContainerRuntime, IUpdateScreen
     {
+        MenuItem FileMenuItem;
+        MenuItem EditMenuItem;
+        MenuItem CustomMenuItem;
+
         public void Initialize(List<GraphicalUiElement> roots)
         {
             FileManager.RelativeDirectory = "Content/";
-            var root = roots[0];
+            var root = this;
             root.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
             root.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
             root.Width = 0;
@@ -44,8 +48,8 @@ namespace GumFormsSample.Screens
         {
             var menu = new Menu();
 
-            var fileMenuItem = new MenuItem();
-            fileMenuItem.Header = "File";
+            FileMenuItem = new MenuItem();
+            FileMenuItem.Header = "File";
 
             for(int i = 0; i < 10; i++)
             {
@@ -64,25 +68,25 @@ namespace GumFormsSample.Screens
                     subItem.Items.Add(jItem);
 
                 }
-                fileMenuItem.Items.Add(subItem);
+                FileMenuItem.Items.Add(subItem);
             }
 
-            menu.Items.Add(fileMenuItem);
+            menu.Items.Add(FileMenuItem);
 
-            var editItem = new MenuItem();
-            editItem.Header = "Edit";
+            EditMenuItem = new MenuItem();
+            EditMenuItem.Header = "Edit";
             for (int i = 0; i < 10; i++)
             {
-                editItem.Items.Add($"Edit Item {i}");
+                EditMenuItem.Items.Add($"Edit Item {i}");
             }
-            menu.Items.Add(editItem);
+            menu.Items.Add(EditMenuItem);
 
 
 
-            var customMenuItem = new MenuItem();
+            CustomMenuItem = new MenuItem();
 
 
-            customMenuItem.Header = "Custom Dropdown";
+            CustomMenuItem.Header = "Custom Dropdown";
             var customScrollViewerVisualTemplate = new VisualTemplate(() =>
             {
                 var toReturn = new DefaultScrollViewerRuntime();
@@ -94,7 +98,7 @@ namespace GumFormsSample.Screens
 
                 return toReturn;
             });
-            customMenuItem.ScrollViewerVisualTemplate = customScrollViewerVisualTemplate;
+            CustomMenuItem.ScrollViewerVisualTemplate = customScrollViewerVisualTemplate;
 
 
             for (int i = 0; i < 10; i++)
@@ -102,9 +106,9 @@ namespace GumFormsSample.Screens
                 var customMenuItemRuntime = new CustomMenuItemRuntime();
                 customMenuItemRuntime.FormsControl.Header = $"Custom dropdown item {i}";
 
-                customMenuItem.Items.Add(customMenuItemRuntime.FormsControl);
+                CustomMenuItem.Items.Add(customMenuItemRuntime.FormsControl);
             }
-            menu.Items.Add(customMenuItem);
+            menu.Items.Add(CustomMenuItem);
 
 
             menu.Items.Add("Help");
@@ -425,6 +429,27 @@ namespace GumFormsSample.Screens
                 container.RemoveFromManagers();
                 container.Parent = null;
             };
+        }
+
+        public void Update(GameTime gameTime)
+        {
+            var keyboard = FormsUtilities.Keyboard;
+
+            if(keyboard.IsAltDown)
+            {
+                if(keyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.F))
+                {
+                    FileMenuItem.IsSelected = true;
+                }
+                else if(keyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.E))
+                {
+                    EditMenuItem.IsSelected = true;
+                }
+                else if(keyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.C))
+                {
+                    CustomMenuItem.IsSelected = true;
+                }
+            }
         }
     }
 }

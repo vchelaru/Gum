@@ -49,4 +49,5 @@
   </Category>
   <RequiredInstances />
   <RequiredAnimations />
+  <DefaultImplementation>Controls/CheckBox</DefaultImplementation>
 </BehaviorSave>

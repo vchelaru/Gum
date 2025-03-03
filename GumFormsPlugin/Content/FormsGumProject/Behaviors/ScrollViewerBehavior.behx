@@ -33,4 +33,5 @@
     </InstanceSave>
   </RequiredInstances>
   <RequiredAnimations />
+  <DefaultImplementation>Controls/ScrollViewer</DefaultImplementation>
 </BehaviorSave>

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <EnableDefaultItems>false</EnableDefaultItems>
+    <EnableDefaultItems>true</EnableDefaultItems>
     <TargetFramework>net6.0</TargetFramework>
     <ProjectGuid>{7C9C5729-78E4-4C13-BBB2-05C25443A980}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -18,19 +18,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
   </PropertyGroup>
 	
-  <ItemGroup>
-    <Compile Include="CustomRuntimes\CustomListBoxItemRuntime.cs" />
-    <Compile Include="CustomRuntimes\CustomMenuItemRuntime.cs" />
-    <Compile Include="CustomRuntimes\SimpleListBoxItemRuntime.cs" />
-    <Compile Include="Screens\ComplexListBoxItemScreen.cs" />
-    <Compile Include="Screens\FormsCustomizationScreen.cs" />
-    <Compile Include="Screens\FrameworkElementExampleScreen.cs" />
-    <Compile Include="CustomRuntimes\FullyCustomizedButton.cs" />
-    <Compile Include="GumFormsSampleGame.cs" />
-    <Compile Include="Screens\DemoScreenGumRuntime.cs" />
-    <Compile Include="Screens\ListBoxBindingScreen.cs" />
-    <Compile Include="ViewModels\DemoScreenViewModel.cs" />
-  </ItemGroup>
+
 	
   <ItemGroup>
 	  <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303">

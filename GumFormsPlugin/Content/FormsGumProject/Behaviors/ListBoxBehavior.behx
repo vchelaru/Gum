@@ -39,4 +39,5 @@
     </InstanceSave>
   </RequiredInstances>
   <RequiredAnimations />
+  <DefaultImplementation>Controls/ListBox</DefaultImplementation>
 </BehaviorSave>

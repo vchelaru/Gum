@@ -52,7 +52,7 @@ public class GumFormsSampleGame : Game
         var gumProject = GumService.Default.Initialize(this, "FormsGumProject/GumProject.gumx");
         FormsUtilities.Cursor.TransformMatrix = Matrix.CreateScale(1/scale);
 
-        const int screenNumber = 1;
+        const int screenNumber = 0;
 
         switch (screenNumber)
         {
@@ -99,9 +99,9 @@ public class GumFormsSampleGame : Game
 
     private void InitializeFrameworkElementExampleScreen()
     {
-        var root = CreateRoot();
         var screen = new FrameworkElementExampleScreen();
-        Roots.Add(root);
+        screen.AddToManagers();
+        Roots.Add(screen);
         screen.Initialize(Roots);
     }
 
@@ -129,6 +129,12 @@ public class GumFormsSampleGame : Game
         var cursor = FormsUtilities.Cursor;
 
         GumService.Default.Update(this, gameTime, Roots);
+
+        foreach(var root in Roots)
+        {
+            (root as IUpdateScreen)?.Update(gameTime);
+
+        }
 
         // Set this to true to see WindowOver information in the output window
         bool printWindowOver = false;

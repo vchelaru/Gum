@@ -61,7 +61,7 @@ public class ListBoxItem : FrameworkElement
 
     #endregion
 
-    #region Initialize
+    #region Constructor / Initialize
 
     public ListBoxItem() : base() { }
 

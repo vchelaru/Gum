@@ -21,6 +21,7 @@ public class DemoScreenGumRuntime : BindableGue
 {
 
     Button detectResolutionButton;
+    MenuItem FileMenuItem;
 
     [ModuleInitializer]
     public static void RegisterRuntimeType()
@@ -89,7 +90,7 @@ public class DemoScreenGumRuntime : BindableGue
     {
         var menu = this.GetFrameworkElementByName<Menu>("MenuInstance");
 
-        var fileMenuItem = menu.MenuItems.FirstOrDefault(item => item.Header == "File");
+        FileMenuItem = menu.MenuItems.FirstOrDefault(item => item.Header == "File");
 
         //var fileMenuItem = new MenuItem();
         //fileMenuItem.Header = "File";
@@ -100,16 +101,16 @@ public class DemoScreenGumRuntime : BindableGue
         var menuItemElement = ObjectFinder.Self.GetElementSave("Controls/MenuItem");
         var newMenuItem = new MenuItem((InteractiveGue)menuItemElement.ToGraphicalUiElement(this.EffectiveManagers, addToManagers:false));
         newMenuItem.Header = "New";
-        fileMenuItem.Items.Add(newMenuItem);
+        FileMenuItem.Items.Add(newMenuItem);
 
         var saveMenuItem = new MenuItem((InteractiveGue)menuItemElement.ToGraphicalUiElement(this.EffectiveManagers, addToManagers: false));
         saveMenuItem.Header = "Save";
-        fileMenuItem.Items.Add(saveMenuItem);
+        FileMenuItem.Items.Add(saveMenuItem);
 
 
         var exitMenuItem = new MenuItem((InteractiveGue)menuItemElement.ToGraphicalUiElement(this.EffectiveManagers, addToManagers: false));
         exitMenuItem.Header = "Exit";
-        fileMenuItem.Items.Add(exitMenuItem);
+        FileMenuItem.Items.Add(exitMenuItem);
 
 
     }

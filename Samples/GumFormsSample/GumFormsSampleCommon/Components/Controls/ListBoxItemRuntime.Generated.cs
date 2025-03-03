@@ -1,4 +1,4 @@
-//Code for Controls/ButtonStandard (Container)
+//Code for Controls/ListBoxItem (Container)
 using GumRuntime;
 using Gum.Converters;
 using Gum.DataTypes;
@@ -10,38 +10,35 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 using MonoGameGum.GueDeriving;
-public partial class ButtonStandardRuntime:ContainerRuntime
+public partial class ListBoxItemRuntime
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ButtonStandard", typeof(ButtonStandardRuntime));
+        GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ListBoxItem", typeof(ListBoxItemRuntime));
     }
-    public MonoGameGum.Forms.Controls.Button FormsControl => FormsControlAsObject as MonoGameGum.Forms.Controls.Button;
-    public enum ButtonCategory
+    public MonoGameGum.Forms.Controls.ListBoxItem FormsControl => FormsControlAsObject as MonoGameGum.Forms.Controls.ListBoxItem;
+    public enum ListBoxItemCategory
     {
         Enabled,
-        Disabled,
         Highlighted,
-        Pushed,
-        HighlightedFocused,
+        Selected,
         Focused,
-        DisabledFocused,
     }
 
-    public ButtonCategory ButtonCategoryState
+    public ListBoxItemCategory ListBoxItemCategoryState
     {
         set
         {
-            if(Categories.ContainsKey("ButtonCategory"))
+            if(Categories.ContainsKey("ListBoxItemCategory"))
             {
-                var category = Categories["ButtonCategory"];
+                var category = Categories["ListBoxItemCategory"];
                 var state = category.States.Find(item => item.Name == value.ToString());
                 this.ApplyState(state);
             }
             else
             {
-                var category = ((Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "ButtonCategory");
+                var category = ((Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "ListBoxItemCategory");
                 var state = category.States.Find(item => item.Name == value.ToString());
                 this.ApplyState(state);
             }
@@ -51,19 +48,18 @@ public partial class ButtonStandardRuntime:ContainerRuntime
     public TextRuntime TextInstance { get; protected set; }
     public NineSliceRuntime FocusedIndicator { get; protected set; }
 
-    public string ButtonDisplayText
+    public string ListItemDisplayText
     {
         get => TextInstance.Text;
         set => TextInstance.Text = value;
     }
 
-    public ButtonStandardRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
+    public ListBoxItemRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {
         if(fullInstantiation)
         {
-            var element = ObjectFinder.Self.GetElementSave("Controls/ButtonStandard");
+            var element = ObjectFinder.Self.GetElementSave("Controls/ListBoxItem");
             element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
-
             AfterFullCreation();
         }
 
@@ -74,7 +70,7 @@ public partial class ButtonStandardRuntime:ContainerRuntime
     {
         if (FormsControl == null)
         {
-            FormsControlAsObject = new MonoGameGum.Forms.Controls.Button(this);
+            FormsControlAsObject = new MonoGameGum.Forms.Controls.ListBoxItem(this);
         }
         Background = this.GetGraphicalUiElementByName("Background") as NineSliceRuntime;
         TextInstance = this.GetGraphicalUiElementByName("TextInstance") as TextRuntime;
