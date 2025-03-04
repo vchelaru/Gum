@@ -159,17 +159,17 @@ The largest child determines the cell size for all other children. Therefore, if
 
 <figure><img src="../../../.gitbook/assets/11_15 50 47.gif" alt=""><figcaption><p>Resizing or moving a child can result in all cells growing or shrinking</p></figcaption></figure>
 
-The height of a container is determined by the height of the largest cell multiplied by the number of rows. If the cell contains enough rows to support all of its children, then the `Auto Grid Vertical Cells` value is used to determine the number of rows displayed.
+The height of a container is determined by the height of the largest cell multiplied by the number of rows. If the parent contains enough rows to support all of its children, then the `Auto Grid Vertical Cells` value is used to determine the number of rows displayed.
 
-For example, the following container has 4 columns and 3 rows, resulting in 12 cells. The height of the grid is set based on 3 rows multiplied by the necessary size for each column.
+For example, the following container has 4 columns and 3 rows, resulting in 12 cells. The height of the grid is based on 3 rows multiplied by the height of the largest cell.
 
 <figure><img src="../../../.gitbook/assets/04_05 33 18.png" alt=""><figcaption><p>Auto Grid Horizontal with Height Units Relative To Children</p></figcaption></figure>
 
-If children are removed from the container, the container's size remains consistent - `Auto Grid Vertical Cells` acts as a minimum number of rows.
+If children are removed from the container, the container's height does not change - `Auto Grid Vertical Cells` acts as a minimum number of rows.
 
-<figure><img src="../../../.gitbook/assets/04_05 36 35.png" alt=""><figcaption><p>Removed children do not shrink the container</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/04_05 36 35.png" alt=""><figcaption><p>Removed children do not shrink the container beyond its minimum number of rows</p></figcaption></figure>
 
-Since `Auto Grid Vertical Cells` acts only as a minimum and not maximum, more children can be added and the container expands to support the children.
+Since `Auto Grid Vertical Cells` acts only as a minimum and not maximum, more children can be added and the container expands to support the newly-added children.
 
 <figure><img src="../../../.gitbook/assets/04_05 38 04.gif" alt=""><figcaption><p>Container expanding as more children are added to the grid</p></figcaption></figure>
 

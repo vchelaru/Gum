@@ -125,6 +125,20 @@ The largest child determines the cell size for all other children. Therefore, if
 
 <figure><img src="../../../.gitbook/assets/11_15 34 05.gif" alt=""><figcaption><p>Resizing or moving a child can result in all cells growing or shrinking</p></figcaption></figure>
 
+The width of a container is determined by the width of the largest cell multiplied by the number of columns. If the parent contains enough columns to support all of its children, then the `Auto Grid Horizontal Cells` value is used to determine the number of columns displayed.
+
+For example, the following container has 3 columns and 4 rows, resulting in 12 cells. The width of the grid is based on 3 columns multiplied by the width of the largest cell.
+
+<figure><img src="../../../.gitbook/assets/04_05 48 27.png" alt=""><figcaption><p>Auto Grid vertical with Width Units Relative To Children</p></figcaption></figure>
+
+If children are removed from the container, the container's width does not change - `Auto Grid Horizontal Cells` acts as a minimum number of columns.
+
+<figure><img src="../../../.gitbook/assets/04_05 50 13.png" alt=""><figcaption><p>Removed children do not shrink the container beyond its minimum number of columns</p></figcaption></figure>
+
+Since `Auto Grid Horizontal Cells` acts only as a minimum and not maximum, more children can be added and the container expands to support the newly-added children.
+
+<figure><img src="../../../.gitbook/assets/04_05 52 58.gif" alt=""><figcaption><p>Container expanding as more children are added to the grid</p></figcaption></figure>
+
 ### Relative to Children and Text
 
 Setting a Text instance's `Width Units` to `Relative to Children` results in the Text object adjusting according to its text contents. In other words if a Text's `Width Units` is set to `Relative To Children`, then the words in the Text do not wrap.
