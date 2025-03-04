@@ -149,9 +149,11 @@ Children treat their particular cell in the grid as their parent, so any sizes o
 
 <figure><img src="../../../.gitbook/assets/30_15 33 38.gif" alt=""><figcaption><p>Changing Anchor and Dock values results in children being placed relative to their particular cell</p></figcaption></figure>
 
-The number of cells in a grid is determined by multiplying `Auto Grid Cells Horizontal` by `Auto Grid Cells Vertical`. If a container has more children than its total cells, additional children spill over the bounds of the grid. The following animation shows a 3x3 grid using `Auto Grid Horizontal`. As more children are added, additional rows are added below the bounds of the grid.
+The number of cells in a grid is determined by multiplying `Auto Grid Cells Horizontal` by `Auto Grid Cells Vertical`. If a container has more children than its total cells and if the container's size does not depend on its children, additional children spill over the bounds of the grid. The following animation shows a 3x3 grid using `Auto Grid Horizontal`. As more children are added, additional rows are added below the bounds of the grid.
 
 <figure><img src="../../../.gitbook/assets/30_15 39 54.gif" alt=""><figcaption><p>Additional children can create rows or columns outside of the bounds of the grid.</p></figcaption></figure>
+
+If the container has its `Width Units` or `Height Units` set to `Relative To Children`, then its size may adjust in response to adding more children. For more information, see the [Width Units](../general-properties/width-units.md#relative-to-children-and-auto-grid-horizontal) and [Height Units](../general-properties/height-units.md#relative-to-children-and-auto-grid-vertical) pages.
 
 When using `Auto Grid Horizontal`, the number of columns is fixed, but additional rows can be added beyond the bounds of the container.
 
