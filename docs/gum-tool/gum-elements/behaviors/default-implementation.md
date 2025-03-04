@@ -4,6 +4,8 @@
 
 The Default Implementation property can be used to indicate which component is the default implementation for a behavior. This property is not used by the Gum tool, but instead exists for runtime implementations (such as FlatRedBall) to decide which type of component to create when an instance of a behavior is requested.
 
+<figure><img src="../../../.gitbook/assets/03_18 47 10.png" alt=""><figcaption><p>ListBoxItemBehavior with a Default Implementation set to Controls/ListBoxItem</p></figcaption></figure>
+
 {% hint style="info" %}
 As of March 2025 this property is used in the following runtimes:
 
