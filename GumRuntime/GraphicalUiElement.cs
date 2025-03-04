@@ -2175,36 +2175,24 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 }
                 else
                 {
-                    for (int i = 0; i < Children.Count; i++)
-                    {
-                        var element = Children[i] as GraphicalUiElement;
-                        var childLayout = element.GetChildLayoutType(XOrY.Y, this);
-                        var considerChild = (childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped)) && element.IgnoredByParentSize == false;
-                        if (considerChild && element.Visible)
-                        {
-                            var elementHeight = element.GetRequiredParentHeight();
+                    float maxCellHeight = GetMaxCellHeight(considerWrappedStacked, maxHeight);
 
-                            if (this.ChildrenLayout == ChildrenLayout.TopToBottomStack)
-                            {
-                                // The first item in the stack doesn't consider the stack spacing, but all subsequent ones do:
-                                if (i != 0)
-                                {
-                                    maxHeight += StackSpacing;
-                                }
-                                maxHeight += elementHeight;
-                            }
-                            else
-                            {
-                                maxHeight = System.Math.Max(maxHeight, elementHeight);
-                            }
-                        }
-                    }
+                    maxHeight = maxCellHeight;
 
                     if (this.ChildrenLayout == ChildrenLayout.AutoGridHorizontal || this.ChildrenLayout == ChildrenLayout.AutoGridVertical)
                     {
+                        var numberOfVerticalCells =
+                            this.AutoGridVerticalCells;
+
+                        if (this.AutoGridHorizontalCells > 0)
+                        {
+                            var requiredRowCount = (int)Math.Ceiling((float)Children.Count / this.AutoGridHorizontalCells);
+                            numberOfVerticalCells = System.Math.Max(numberOfVerticalCells, requiredRowCount);
+                        }
+
                         // We got the largest size for one child, but that child must be contained within a cell, and all cells must be
                         // at least that same size, so we multiply the size by the number of cells tall
-                        maxHeight *= this.AutoGridVerticalCells;
+                        maxHeight *= numberOfVerticalCells;
                     }
 
                 }
@@ -2423,6 +2411,37 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         mContainedObjectAsIpso.Height = pixelHeightToSet;
     }
 
+    private float GetMaxCellHeight(bool considerWrappedStacked, float maxHeight)
+    {
+        float maxCellHeight = maxHeight;
+        for (int i = 0; i < Children.Count; i++)
+        {
+            var element = Children[i] as GraphicalUiElement;
+            var childLayout = element.GetChildLayoutType(XOrY.Y, this);
+            var considerChild = (childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped)) && element.IgnoredByParentSize == false;
+            if (considerChild && element.Visible)
+            {
+                var elementHeight = element.GetRequiredParentHeight();
+
+                if (this.ChildrenLayout == ChildrenLayout.TopToBottomStack)
+                {
+                    // The first item in the stack doesn't consider the stack spacing, but all subsequent ones do:
+                    if (i != 0)
+                    {
+                        maxCellHeight += StackSpacing;
+                    }
+                    maxCellHeight += elementHeight;
+                }
+                else
+                {
+                    maxCellHeight = System.Math.Max(maxCellHeight, elementHeight);
+                }
+            }
+        }
+
+        return maxCellHeight;
+    }
+
     public void UpdateWidth(float parentWidth, bool considerWrappedStacked)
     {
         float widthToSet = mWidth;
@@ -2502,37 +2521,23 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     }
                 }
 
-                for (int i = 0; i < this.Children.Count; i++)
-                {
-                    var element = this.Children[i] as GraphicalUiElement;
-                    var childLayout = element.GetChildLayoutType(XOrY.X, this);
-                    var considerChild = (childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped)) && element.IgnoredByParentSize == false;
+                float maxCellWidth = GetMaxCellWidth(considerWrappedStacked, maxWidth);
 
-                    if (considerChild && element.Visible)
-                    {
-                        var elementWidth = element.GetRequiredParentWidth();
-
-                        if (this.ChildrenLayout == ChildrenLayout.LeftToRightStack)
-                        {
-                            // The first item in the stack doesn't consider the stack spacing, but all subsequent ones do:
-                            if (i != 0)
-                            {
-                                maxWidth += StackSpacing;
-                            }
-                            maxWidth += elementWidth;
-                        }
-                        else
-                        {
-                            maxWidth = System.Math.Max(maxWidth, elementWidth);
-                        }
-                    }
-                }
+                maxWidth = maxCellWidth;
 
                 if (this.ChildrenLayout == ChildrenLayout.AutoGridHorizontal || this.ChildrenLayout == ChildrenLayout.AutoGridVertical)
                 {
+                    var numberOfHorizontalCells =
+                        this.AutoGridHorizontalCells;
+
+                    if(this.AutoGridVerticalCells > 0)
+                    {
+                        var requiredColumnCount = (int)Math.Ceiling((float)Children.Count / this.autoGridVerticalCells);
+                        numberOfHorizontalCells = System.Math.Max(numberOfHorizontalCells, requiredColumnCount);
+                    }
                     // We got the largest size for one child, but that child must be contained within a cell, and all cells must be
                     // at least that same size, so we multiply the size by the number of cells wide
-                    maxWidth *= this.AutoGridHorizontalCells;
+                    maxWidth *= numberOfHorizontalCells;
                 }
             }
             else
@@ -2748,6 +2753,37 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         mContainedObjectAsIpso.Width = widthToSet;
     }
 
+    private float GetMaxCellWidth(bool considerWrappedStacked, float maxWidth)
+    {
+        float maxCellWidth = maxWidth;
+        for (int i = 0; i < this.Children.Count; i++)
+        {
+            var element = this.Children[i] as GraphicalUiElement;
+            var childLayout = element.GetChildLayoutType(XOrY.X, this);
+            var considerChild = (childLayout == ChildType.Absolute || (considerWrappedStacked && childLayout == ChildType.StackedWrapped)) && element.IgnoredByParentSize == false;
+
+            if (considerChild && element.Visible)
+            {
+                var elementWidth = element.GetRequiredParentWidth();
+
+                if (this.ChildrenLayout == ChildrenLayout.LeftToRightStack)
+                {
+                    // The first item in the stack doesn't consider the stack spacing, but all subsequent ones do:
+                    if (i != 0)
+                    {
+                        maxCellWidth += StackSpacing;
+                    }
+                    maxCellWidth += elementWidth;
+                }
+                else
+                {
+                    maxCellWidth = System.Math.Max(maxWidth, elementWidth);
+                }
+            }
+        }
+
+        return maxCellWidth;
+    }
 
     ChildType GetChildLayoutType(GraphicalUiElement parent)
     {
@@ -3130,13 +3166,35 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         {
             if (Parent is GraphicalUiElement parentGue && (parentGue.ChildrenLayout == ChildrenLayout.AutoGridVertical || parentGue.ChildrenLayout == ChildrenLayout.AutoGridHorizontal))
             {
-                var horizontalCells = parentGue.AutoGridHorizontalCells;
-                if (horizontalCells < 1) horizontalCells = 1;
-                var verticalCells = parentGue.AutoGridVerticalCells;
-                if (verticalCells < 1) verticalCells = 1;
+                var effectiveHorizontalCells = parentGue.AutoGridHorizontalCells;
+                if (effectiveHorizontalCells < 1) effectiveHorizontalCells = 1;
+                var effectiveVerticalCells = parentGue.AutoGridVerticalCells;
+                if (effectiveVerticalCells < 1) effectiveVerticalCells = 1;
 
-                parentWidth = parentGue.GetAbsoluteWidth() / horizontalCells;
-                parentHeight = parentGue.GetAbsoluteHeight() / verticalCells;
+                var setCellCount = effectiveHorizontalCells * effectiveVerticalCells;
+
+                if(parentGue.Children?.Count > setCellCount)
+                {
+                    if(parentGue.ChildrenLayout == ChildrenLayout.AutoGridVertical)
+                    {
+                        // If stacking vertically, the number of rows (vertical cell count) depends on the children count
+                        // if the parent's size depends on its children
+                        if(parentGue.HeightUnits == DimensionUnitType.RelativeToChildren)
+                        {
+                            effectiveVerticalCells =(int)System.Math.Ceiling((float) parentGue.Children.Count / effectiveHorizontalCells);
+                        }
+                    }
+                    else
+                    {
+                        if(parentGue.WidthUnits == DimensionUnitType.RelativeToChildren)
+                        {
+                            effectiveHorizontalCells = (int)System.Math.Ceiling((float)parentGue.Children.Count / effectiveVerticalCells);
+                        }
+                    }
+                }
+
+                parentWidth = parentGue.GetAbsoluteWidth() / effectiveHorizontalCells;
+                parentHeight = parentGue.GetAbsoluteHeight() / effectiveVerticalCells;
             }
             else
             {
@@ -3527,6 +3585,18 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
         cellWidth = parentWidth / xRows;
         cellHeight = parentHeight / yRows;
+
+        if(effectiveParent.ChildrenLayout == ChildrenLayout.AutoGridHorizontal && 
+            effectiveParent.HeightUnits == DimensionUnitType.RelativeToChildren)
+        {
+            cellHeight = effectiveParent.GetMaxCellHeight(true, 0);
+        }
+        if(effectiveParent.ChildrenLayout == ChildrenLayout.AutoGridVertical &&
+            effectiveParent.WidthUnits == DimensionUnitType.RelativeToChildren)
+        {
+            cellWidth = effectiveParent.GetMaxCellWidth(true, 0);
+        }
+
     }
 
     private int GetIndexInVisibleSiblings()

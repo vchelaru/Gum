@@ -8,343 +8,342 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MonoGameGum.Input
+namespace MonoGameGum.Input;
+
+
+
+public class Cursor : ICursor
 {
+    public Matrix TransformMatrix { get; set; } = Matrix.Identity;
 
-
-    public class Cursor : ICursor
+    public InputDevice LastInputDevice
     {
-        public Matrix TransformMatrix { get; set; } = Matrix.Identity;
+        get;
+        private set;
+    } = InputDevice.Mouse;
 
-        public InputDevice LastInputDevice
+    public int X { get; private set; }
+
+    public float XRespectingGumZoomAndBounds()
+    {
+        var renderer = RenderingLibrary.SystemManagers.Default.Renderer;
+        var zoom = renderer.Camera.Zoom;
+        return (X / zoom) - renderer.GraphicsDevice.Viewport.Bounds.Left;
+    }
+
+    public int Y { get; private set; }
+
+    public float YRespectingGumZoomAndBounds()
+    {
+        var renderer = RenderingLibrary.SystemManagers.Default.Renderer;
+        var zoom = renderer.Camera.Zoom;
+        return (Y / zoom) - renderer.GraphicsDevice.Viewport.Bounds.Top;
+    }
+
+    public int LastX { get; private set; }
+    public int LastY { get; private set; }
+
+    /// <summary>
+    /// Returns the screen space (in pixels) change on the X axis since the last frame.
+    /// </summary>
+    public int XChange => X - LastX;
+
+    /// <summary>
+    /// Returns the screen space (in pixel) change on the Y axis since the last frame.
+    /// </summary>
+    public int YChange => Y - LastY;
+
+    public int ScrollWheelChange => (_mouseState.ScrollWheelValue - mLastFrameMouseState.ScrollWheelValue) / 120;
+
+
+    /// <summary>
+    /// The movement rate of the controlling input (usually mouse) on the z axis. For the mouse this refers to the scroll wheel.
+    /// </summary>
+    public float ZVelocity => ScrollWheelChange;
+
+    public bool PrimaryPush
+    {
+        get
         {
-            get;
-            private set;
-        } = InputDevice.Mouse;
-
-        public int X { get; private set; }
-
-        public float XRespectingGumZoomAndBounds()
-        {
-            var renderer = RenderingLibrary.SystemManagers.Default.Renderer;
-            var zoom = renderer.Camera.Zoom;
-            return (X / zoom) - renderer.GraphicsDevice.Viewport.Bounds.Left;
-        }
-
-        public int Y { get; private set; }
-
-        public float YRespectingGumZoomAndBounds()
-        {
-            var renderer = RenderingLibrary.SystemManagers.Default.Renderer;
-            var zoom = renderer.Camera.Zoom;
-            return (Y / zoom) - renderer.GraphicsDevice.Viewport.Bounds.Top;
-        }
-
-        public int LastX { get; private set; }
-        public int LastY { get; private set; }
-
-        /// <summary>
-        /// Returns the screen space (in pixels) change on the X axis since the last frame.
-        /// </summary>
-        public int XChange => X - LastX;
-
-        /// <summary>
-        /// Returns the screen space (in pixel) change on the Y axis since the last frame.
-        /// </summary>
-        public int YChange => Y - LastY;
-
-        public int ScrollWheelChange => (_mouseState.ScrollWheelValue - mLastFrameMouseState.ScrollWheelValue) / 120;
-
-
-        /// <summary>
-        /// The movement rate of the controlling input (usually mouse) on the z axis. For the mouse this refers to the scroll wheel.
-        /// </summary>
-        public float ZVelocity => ScrollWheelChange;
-
-        public bool PrimaryPush
-        {
-            get
+            if(LastInputDevice == InputDevice.Mouse)
             {
-                if(LastInputDevice == InputDevice.Mouse)
-                {
-                    return this.mLastFrameMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released &&
-                        this._mouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
-                }
-                else
-                {
-                    return _touchCollection.Count > 0 && _lastFrameTouchCollection.Count == 0;
-                }
-            }
-        }
-
-        public bool PrimaryDown
-        {
-            get
-            {
-                if(LastInputDevice == InputDevice.Mouse)
-                {
-                    return this._mouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
-                }
-                else
-                {
-                    return _touchCollection.Count > 0;
-                }
-            }
-        }
-
-        public bool PrimaryClick
-        {
-            get
-            {
-                if (LastInputDevice == InputDevice.Mouse)
-                {
-                    return this.mLastFrameMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed &&
-                        this._mouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released;
-                }
-                else
-                {
-                    return _touchCollection.Count == 0 && _lastFrameTouchCollection.Count > 0;
-                }
-            }
-        }
-
-        public bool PrimaryDoubleClick { get; private set; }
-        public bool PrimaryDoublePush { get; private set; }
-
-        // for now just return true, but we'll need to keep track of actual push/clicks eventually:
-        public bool PrimaryClickNoSlide => PrimaryClick;
-
-        public bool SecondaryPush
-        {
-            get
-            {
-                if (LastInputDevice == InputDevice.Mouse)
-                {
-                    return this.mLastFrameMouseState.RightButton == Microsoft.Xna.Framework.Input.ButtonState.Released &&
-                        this._mouseState.RightButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-        }
-
-        public bool SecondaryDown
-        {
-            get
-            {
-                if (LastInputDevice == InputDevice.Mouse)
-                {
-                    return this._mouseState.RightButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-        }
-
-        public bool SecondaryClick
-        {
-            get
-            {
-                if (LastInputDevice == InputDevice.Mouse)
-                {
-                    return this.mLastFrameMouseState.RightButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed &&
-                        this._mouseState.RightButton == Microsoft.Xna.Framework.Input.ButtonState.Released;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-        }
-
-        public bool SecondaryDoubleClick { get; private set; }
-
-        public bool MiddlePush
-        {
-            get
-            {
-                return this.mLastFrameMouseState.MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Released &&
-                    this._mouseState.MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
-            }
-        }
-
-        public bool MiddleDown
-        {
-            get
-            {
-                return this._mouseState.MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
-            }
-        }
-
-        public bool MiddleClick
-        {
-            get
-            {
-                return this.mLastFrameMouseState.MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed &&
-                    this._mouseState.MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Released;
-            }
-        }
-
-        public bool MiddleDoubleClick { get; private set; }
-
-        public InteractiveGue WindowPushed { get; set; }
-
-        /// <summary>
-        /// The last window that the cursor was over. This typically gets updated every frame in Update, usually by calls to 
-        /// FormsUtilities.
-        /// </summary>
-        public InteractiveGue WindowOver { get; set; }
-
-
-        MouseState _mouseState;
-        MouseState mLastFrameMouseState = new MouseState();
-
-        TouchCollection _touchCollection;
-        TouchCollection _lastFrameTouchCollection = new TouchCollection();
-
-
-        public const float MaximumSecondsBetweenClickForDoubleClick = .25f;
-        double mLastPrimaryClickTime = -999;
-        public double LastPrimaryClickTime => mLastPrimaryClickTime;
-        double mLastPrimaryPushTime = -999;
-        public double LastPrimaryPushTime => mLastPrimaryPushTime;
-        double mLastSecondaryClickTime = -999;
-        double mLastMiddleClickTime = -999;
-
-        public void ClearInputValues()
-        {
-            _lastFrameTouchCollection = new TouchCollection();
-            _touchCollection = new TouchCollection();
-
-            mLastFrameMouseState = new MouseState();
-            _mouseState = new MouseState();
-
-            // do we want to change X and Y?
-        }
-
-        public void Activity(double currentTime)
-        {
-            mLastFrameMouseState = _mouseState;
-            _lastFrameTouchCollection = _touchCollection;
-            PrimaryDoubleClick = false;
-            PrimaryDoublePush = false;
-
-            LastX = X;
-            LastY = Y;
-
-
-
-            int? x = null;
-            int? y = null;
-
-            var supportsMouse =
-                !System.OperatingSystem.IsAndroid() && !System.OperatingSystem.IsIOS();
-
-            if(supportsMouse)
-            {
-                LastInputDevice = InputDevice.Mouse;
-
-                _mouseState = Microsoft.Xna.Framework.Input.Mouse.GetState();
-                x = _mouseState.X;
-                y = _mouseState.Y;
+                return this.mLastFrameMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released &&
+                    this._mouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
             }
             else
             {
-                LastInputDevice = InputDevice.TouchScreen;
+                return _touchCollection.Count > 0 && _lastFrameTouchCollection.Count == 0;
             }
+        }
+    }
 
-            _touchCollection = TouchPanel.GetState();
-
-            if (_touchCollection.Count > 0 || _lastFrameTouchCollection.Count > 0)
+    public bool PrimaryDown
+    {
+        get
+        {
+            if(LastInputDevice == InputDevice.Mouse)
             {
-                LastInputDevice = InputDevice.TouchScreen;
-
-                if(_touchCollection.Count > 0)
-                {
-                    x = (int)_touchCollection[0].Position.X;
-                    y = (int)_touchCollection[0].Position.Y;
-                }
-                else if(_lastFrameTouchCollection.Count > 0)
-                {
-                    x = (int)_lastFrameTouchCollection[0].Position.X;
-                    y = (int)_lastFrameTouchCollection[0].Position.Y;
-                }
-            }
-
-            if(x != null)
-            {
-                var vector = new Vector2(x.Value, y.Value);
-                vector = Vector2.Transform(vector, TransformMatrix);
-                X = (int)vector.X;
-                Y = (int)vector.Y;
+                return this._mouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
             }
             else
             {
-                // do nothing
+                return _touchCollection.Count > 0;
             }
-
-            // We want to keep track of whether
-            // the user pushed in the window or not
-            // to prevent the user from pushing outside
-            // of the window and dragging "inward" (which 
-            // happens if the user is moving the resize bar).
-            // To do this we need to track if the user pushed in
-            // the window or not.  We can't use PrimaryPush because
-            // that checks IsInWindow, so we will manually do the MouseState
-            // checks here.
-            // Update, maybe we don't need this now that the wireframe window
-            // can receive focus.
-            //if(this.mLastFrameMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released &&
-            //        this.mMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed)
-            //{
-            //    mPushedInWindow = IsInWindow;
-            //}
-
-            if (PrimaryPush)
-            {
-                if (currentTime - mLastPrimaryPushTime < MaximumSecondsBetweenClickForDoubleClick)
-                {
-                    PrimaryDoublePush = true;
-                }
-                mLastPrimaryPushTime = currentTime;
-            }
-
-            if (PrimaryClick)
-            {
-                if (currentTime - mLastPrimaryClickTime < MaximumSecondsBetweenClickForDoubleClick)
-                {
-                    PrimaryDoubleClick = true;
-                }
-                mLastPrimaryClickTime = currentTime;
-            }
-
-            if (SecondaryClick)
-            {
-                if (currentTime - mLastSecondaryClickTime < MaximumSecondsBetweenClickForDoubleClick)
-                {
-                    SecondaryDoubleClick = true;
-                }
-                mLastSecondaryClickTime = currentTime;
-            }
-
-            if(MiddleClick)
-            {
-                if (currentTime - mLastMiddleClickTime < MaximumSecondsBetweenClickForDoubleClick)
-                {
-                    MiddleDoubleClick = true;
-                }
-                mLastMiddleClickTime = currentTime;
-            }
-
         }
+    }
 
-        public override string ToString()
+    public bool PrimaryClick
+    {
+        get
         {
-            return $"Cursor at ({X}, {Y}) Push:{PrimaryPush} Down:{PrimaryDown} Click:{PrimaryClick}";
+            if (LastInputDevice == InputDevice.Mouse)
+            {
+                return this.mLastFrameMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed &&
+                    this._mouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released;
+            }
+            else
+            {
+                return _touchCollection.Count == 0 && _lastFrameTouchCollection.Count > 0;
+            }
         }
+    }
+
+    public bool PrimaryDoubleClick { get; private set; }
+    public bool PrimaryDoublePush { get; private set; }
+
+    // for now just return true, but we'll need to keep track of actual push/clicks eventually:
+    public bool PrimaryClickNoSlide => PrimaryClick;
+
+    public bool SecondaryPush
+    {
+        get
+        {
+            if (LastInputDevice == InputDevice.Mouse)
+            {
+                return this.mLastFrameMouseState.RightButton == Microsoft.Xna.Framework.Input.ButtonState.Released &&
+                    this._mouseState.RightButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
+            }
+            else
+            {
+                return false;
+            }
+        }
+    }
+
+    public bool SecondaryDown
+    {
+        get
+        {
+            if (LastInputDevice == InputDevice.Mouse)
+            {
+                return this._mouseState.RightButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
+            }
+            else
+            {
+                return false;
+            }
+        }
+    }
+
+    public bool SecondaryClick
+    {
+        get
+        {
+            if (LastInputDevice == InputDevice.Mouse)
+            {
+                return this.mLastFrameMouseState.RightButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed &&
+                    this._mouseState.RightButton == Microsoft.Xna.Framework.Input.ButtonState.Released;
+            }
+            else
+            {
+                return false;
+            }
+        }
+    }
+
+    public bool SecondaryDoubleClick { get; private set; }
+
+    public bool MiddlePush
+    {
+        get
+        {
+            return this.mLastFrameMouseState.MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Released &&
+                this._mouseState.MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
+        }
+    }
+
+    public bool MiddleDown
+    {
+        get
+        {
+            return this._mouseState.MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
+        }
+    }
+
+    public bool MiddleClick
+    {
+        get
+        {
+            return this.mLastFrameMouseState.MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed &&
+                this._mouseState.MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Released;
+        }
+    }
+
+    public bool MiddleDoubleClick { get; private set; }
+
+    public InteractiveGue WindowPushed { get; set; }
+
+    /// <summary>
+    /// The last window that the cursor was over. This typically gets updated every frame in Update, usually by calls to 
+    /// FormsUtilities.
+    /// </summary>
+    public InteractiveGue WindowOver { get; set; }
+
+
+    MouseState _mouseState;
+    MouseState mLastFrameMouseState = new MouseState();
+
+    TouchCollection _touchCollection;
+    TouchCollection _lastFrameTouchCollection = new TouchCollection();
+
+
+    public const float MaximumSecondsBetweenClickForDoubleClick = .25f;
+    double mLastPrimaryClickTime = -999;
+    public double LastPrimaryClickTime => mLastPrimaryClickTime;
+    double mLastPrimaryPushTime = -999;
+    public double LastPrimaryPushTime => mLastPrimaryPushTime;
+    double mLastSecondaryClickTime = -999;
+    double mLastMiddleClickTime = -999;
+
+    public void ClearInputValues()
+    {
+        _lastFrameTouchCollection = new TouchCollection();
+        _touchCollection = new TouchCollection();
+
+        mLastFrameMouseState = new MouseState();
+        _mouseState = new MouseState();
+
+        // do we want to change X and Y?
+    }
+
+    public void Activity(double currentTime)
+    {
+        mLastFrameMouseState = _mouseState;
+        _lastFrameTouchCollection = _touchCollection;
+        PrimaryDoubleClick = false;
+        PrimaryDoublePush = false;
+
+        LastX = X;
+        LastY = Y;
+
+
+
+        int? x = null;
+        int? y = null;
+
+        var supportsMouse =
+            !System.OperatingSystem.IsAndroid() && !System.OperatingSystem.IsIOS();
+
+        if(supportsMouse)
+        {
+            LastInputDevice = InputDevice.Mouse;
+
+            _mouseState = Microsoft.Xna.Framework.Input.Mouse.GetState();
+            x = _mouseState.X;
+            y = _mouseState.Y;
+        }
+        else
+        {
+            LastInputDevice = InputDevice.TouchScreen;
+        }
+
+        _touchCollection = TouchPanel.GetState();
+
+        if (_touchCollection.Count > 0 || _lastFrameTouchCollection.Count > 0)
+        {
+            LastInputDevice = InputDevice.TouchScreen;
+
+            if(_touchCollection.Count > 0)
+            {
+                x = (int)_touchCollection[0].Position.X;
+                y = (int)_touchCollection[0].Position.Y;
+            }
+            else if(_lastFrameTouchCollection.Count > 0)
+            {
+                x = (int)_lastFrameTouchCollection[0].Position.X;
+                y = (int)_lastFrameTouchCollection[0].Position.Y;
+            }
+        }
+
+        if(x != null)
+        {
+            var vector = new Vector2(x.Value, y.Value);
+            vector = Vector2.Transform(vector, TransformMatrix);
+            X = (int)vector.X;
+            Y = (int)vector.Y;
+        }
+        else
+        {
+            // do nothing
+        }
+
+        // We want to keep track of whether
+        // the user pushed in the window or not
+        // to prevent the user from pushing outside
+        // of the window and dragging "inward" (which 
+        // happens if the user is moving the resize bar).
+        // To do this we need to track if the user pushed in
+        // the window or not.  We can't use PrimaryPush because
+        // that checks IsInWindow, so we will manually do the MouseState
+        // checks here.
+        // Update, maybe we don't need this now that the wireframe window
+        // can receive focus.
+        //if(this.mLastFrameMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released &&
+        //        this.mMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed)
+        //{
+        //    mPushedInWindow = IsInWindow;
+        //}
+
+        if (PrimaryPush)
+        {
+            if (currentTime - mLastPrimaryPushTime < MaximumSecondsBetweenClickForDoubleClick)
+            {
+                PrimaryDoublePush = true;
+            }
+            mLastPrimaryPushTime = currentTime;
+        }
+
+        if (PrimaryClick)
+        {
+            if (currentTime - mLastPrimaryClickTime < MaximumSecondsBetweenClickForDoubleClick)
+            {
+                PrimaryDoubleClick = true;
+            }
+            mLastPrimaryClickTime = currentTime;
+        }
+
+        if (SecondaryClick)
+        {
+            if (currentTime - mLastSecondaryClickTime < MaximumSecondsBetweenClickForDoubleClick)
+            {
+                SecondaryDoubleClick = true;
+            }
+            mLastSecondaryClickTime = currentTime;
+        }
+
+        if(MiddleClick)
+        {
+            if (currentTime - mLastMiddleClickTime < MaximumSecondsBetweenClickForDoubleClick)
+            {
+                MiddleDoubleClick = true;
+            }
+            mLastMiddleClickTime = currentTime;
+        }
+
+    }
+
+    public override string ToString()
+    {
+        return $"Cursor at ({X}, {Y}) Push:{PrimaryPush} Down:{PrimaryDown} Click:{PrimaryClick}";
     }
 }

@@ -7,7 +7,7 @@
   <Version>1</Version>
   <DefaultCanvasWidth>1024</DefaultCanvasWidth>
   <DefaultCanvasHeight>768</DefaultCanvasHeight>
-  <ShowOutlines>false</ShowOutlines>
+  <ShowOutlines>true</ShowOutlines>
   <ShowCanvasOutline>true</ShowCanvasOutline>
   <ShowRuler>true</ShowRuler>
   <ShowCheckerBackground>true</ShowCheckerBackground>
