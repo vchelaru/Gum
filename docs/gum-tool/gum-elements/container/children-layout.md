@@ -1,6 +1,6 @@
 # Children Layout
 
-### Introduction
+## Introduction
 
 **`Children Layout`** determines how a container positions its children. The default value is `Regular` which means that children are positioned according to their [X Units](../general-properties/x-units.md) and [Y Units](../general-properties/y-units.md).
 
@@ -14,29 +14,37 @@
 
 `Auto Grid Vertical` results in the children being placed in a grid, filling in vertically first before wrapping to a new column.
 
-### Example
+## Example
 
 The following animation shows how to use the `ChildrenLayout` variable to change the default position of a Container's children:
 
 <figure><img src="../../../.gitbook/assets/04_14 25 58.gif" alt=""><figcaption><p>Changing Children Layout updates the position of all contained children</p></figcaption></figure>
 
-### Regular
+## Regular
 
 `Regular` layout positions each child independent of every other child. The position of one child does not affect the position other children. This is the default layout for containers.
 
 <figure><img src="../../../.gitbook/assets/08_06 25 43.png" alt=""><figcaption><p>Two ColoredRectangles using Regular layout</p></figcaption></figure>
 
-### Top to Bottom Stack
+## Top to Bottom Stack
 
 `Top to Bottom Stack` results in each child being positioned after its previous sibling vertically. This can be used to create horizontal stacks.
 
 <figure><img src="../../../.gitbook/assets/08_06 28 12.png" alt=""><figcaption><p>Text Instances in a top to bottom stack</p></figcaption></figure>
 
-### Left to Right Stack
+## Left to Right Stack
 
 `Left to Right Stack` results in each child being positioned after its previous sibling horizontally. This can be used to create vertical stacks.
 
 <figure><img src="../../../.gitbook/assets/08_06 31 34.png" alt=""><figcaption><p>Sprites in a Left to Right Stack</p></figcaption></figure>
+
+### Stacking and Container Height Units and Width Units
+
+A container can stack its children and also have its size based on its children. This results in the container growing as children are added.
+
+For example, the following shows a container with its `Height Units` set to `Relative To Children` and its `Children Layout` set to **Top To Bottom Stack**. As more children are added the container grows vertically.
+
+<figure><img src="../../../.gitbook/assets/03_19 05 40.gif" alt=""><figcaption><p>Top To Bottom Stack can be used with Height Units of Relative To Children to grow the container as children are added</p></figcaption></figure>
 
 ### Stacking and X/Y Values
 
@@ -115,7 +123,7 @@ Alternatively, children order can be changed by clicking on the item in the tree
 
 For more information on ordering, see the [Order](../general-properties/order.md) page.
 
-### Auto Grid Horizontal and Auto Grid Vertical
+## Auto Grid Horizontal and Auto Grid Vertical
 
 `Auto Grid Horizontal` and `Auto Grid Vertical` layouts result in each child of the container being placed in its own cell. All position and size values are relative to the entire cell, so children can expand to fill their cell or be positioned according to any side or corner.
 
@@ -141,10 +149,14 @@ Children treat their particular cell in the grid as their parent, so any sizes o
 
 <figure><img src="../../../.gitbook/assets/30_15 33 38.gif" alt=""><figcaption><p>Changing Anchor and Dock values results in children being placed relative to their particular cell</p></figcaption></figure>
 
-If additional children are added beyond the number of cells in a grid, additional children will spill over the bounds of the grid. The following animation shows a 3x3 grid using `Auto Grid Horizontal`. As more children are added, additional rows are added below the bounds of the grid.
+The number of cells in a grid is determined by multiplying `Auto Grid Cells Horizontal` by `Auto Grid Cells Vertical`. If a container has more children than its total cells, additional children spill over the bounds of the grid. The following animation shows a 3x3 grid using `Auto Grid Horizontal`. As more children are added, additional rows are added below the bounds of the grid.
 
 <figure><img src="../../../.gitbook/assets/30_15 39 54.gif" alt=""><figcaption><p>Additional children can create rows or columns outside of the bounds of the grid.</p></figcaption></figure>
 
 When using `Auto Grid Horizontal`, the number of columns is fixed, but additional rows can be added beyond the bounds of the container.
 
 When using `Auto Grid Vertical`, the number of rows is fixed, but additional columns can be added beyond the bounds of the container.
+
+### Auto Grid and Width/Height Units
+
+If a container's `Children Layout` is set to `Auto Grid Horizontal` or `Auto Grid Vertical`, it can size itself according to the largest cell by using `Width Units` or `Height Units` of `Relative To Children`. For more information see the [Width Units](../general-properties/width-units.md#relative-to-children-and-auto-grid-horizontal) and [Height Units](../general-properties/height-units.md#relative-to-children-and-auto-grid-vertical) pages.
