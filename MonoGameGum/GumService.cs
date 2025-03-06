@@ -4,6 +4,7 @@ using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGameGum.Forms;
+using MonoGameGum.Input;
 using RenderingLibrary;
 using System;
 using System.Collections.Generic;
@@ -17,6 +18,7 @@ namespace MonoGameGum;
 
 public class GumService
 {
+    #region Default
     static GumService _default;
     public static GumService Default
     {
@@ -30,7 +32,15 @@ public class GumService
         }
     }
 
+    #endregion
+
     public GameTime GameTime { get; private set; }
+
+    public Cursor Cursor => FormsUtilities.Cursor;
+    public Keyboard Keyboard => FormsUtilities.Keyboard;
+    public GamePad[] Gamepads => FormsUtilities.Gamepads;
+
+    #region Initialize
 
     public GumProjectSave? Initialize(Game game, string? gumProjectFile = null)
     {
@@ -99,6 +109,10 @@ public class GumService
         }
     }
 
+    #endregion
+
+    #region Update
+
     public void Update(Game game, GameTime gameTime) =>
         Update(game, gameTime, (GraphicalUiElement)null);
 
@@ -119,8 +133,14 @@ public class GumService
         SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
     }
 
+    #endregion
+
+    #region Draw
+
     public void Draw()
     {
         SystemManagers.Default.Draw();
     }
+
+    #endregion
 }
