@@ -5121,7 +5121,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// </summary>
     /// <param name="name">The case-sensitive name to search for.</param>
     /// <returns>The found GraphicalUiElement, or null if no match is found.</returns>
-    public GraphicalUiElement GetGraphicalUiElementByName(string name)
+    public GraphicalUiElement? GetGraphicalUiElementByName(string name)
     {
         var containsDots = ToolsUtilities.StringFunctions.ContainsNoAlloc(name, '.');
         if (containsDots)
