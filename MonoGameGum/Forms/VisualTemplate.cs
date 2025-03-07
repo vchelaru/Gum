@@ -1,6 +1,8 @@
 ﻿using Gum.Wireframe;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics.SymbolStore;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,6 +13,14 @@ namespace MonoGameGum.Forms
     {
         Func<object, GraphicalUiElement> creationFunc;
 
+        static Type[] boolTypes = new Type[2];
+
+        static VisualTemplate()
+        {
+            boolTypes[0] = typeof(bool);
+            boolTypes[1] = typeof(bool);
+
+        }
 
         public VisualTemplate(Type type)
         {
@@ -21,17 +31,37 @@ namespace MonoGameGum.Forms
                     $"The type {type} must be derived from GraphicalUiElement (Gum Runtime usually)");
             }
 #endif
-            var constructor = type.GetConstructor(Type.EmptyTypes);
 
-#if DEBUG
-            if (constructor == null)
+            var foundConstructor = false;
+
+
+            var boolBoolconstructor = type.GetConstructor(boolTypes);
+            if(boolBoolconstructor != null)
             {
-                throw new ArgumentException(
-                    $"The type {type} must have a constructor with no arguments");
-            }
-#endif
+                foundConstructor = true;
+                var parameters = new object[2];
+                parameters[0] = true;
+                parameters[1] = false;
+                Initialize((throwaway) => boolBoolconstructor.Invoke(null, parameters) as GraphicalUiElement);
 
-            Initialize((throwaway) => constructor.Invoke(null) as GraphicalUiElement);
+            }
+
+            if(foundConstructor)
+            {
+
+                var constructor = type.GetConstructor(Type.EmptyTypes);
+
+    #if DEBUG
+                if (constructor == null)
+                {
+                    throw new ArgumentException(
+                        $"The type {type} must have a constructor with no arguments, or a constructor with (bool, bool)");
+                }
+    #endif
+
+                Initialize((throwaway) => constructor.Invoke(null) as GraphicalUiElement);
+            }
+
         }
 
         public VisualTemplate(Func<GraphicalUiElement> creationFunc)
