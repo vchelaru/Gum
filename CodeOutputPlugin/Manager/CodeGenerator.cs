@@ -2378,12 +2378,6 @@ public class CodeGenerator
 
         if (visualApi == VisualApi.Gum)
         {
-            // close the if fullInstantiation check
-            if (projectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
-            {
-                context.TabCount--;
-                stringBuilder.AppendLine(context.Tabs + "}");
-            }
         }
         else
         {
