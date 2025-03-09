@@ -2269,8 +2269,13 @@ public class CodeGenerator
                     context.StringBuilder.AppendLine(context.Tabs +
                         "element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);");
 
-                    context.StringBuilder.AppendLine(context.Tabs +
-                        "AfterFullCreation();");
+                    // March 8, 2025
+                    // This is not needed
+                    // because it's called
+                    // internally in element.SetGraphicalUiElement
+                    // I'm not sure why I put it here in the first place...
+                    //context.StringBuilder.AppendLine(context.Tabs +
+                        //"AfterFullCreation();");
                 }
             }
             context.TabCount--;
