@@ -88,6 +88,11 @@ internal class CodeGenerationService
                     {
                         missingFileMessage += "\n\nGenerate these files too?";
                     }
+
+                    missingFileMessage += "\n\nYou should click \"Yes\" unless you intend to create the code for these components by hand, or if you are using " +
+                        "an existing UI framework and would like to \"bait-and-switch\" these components.";
+
+
                     shouldGenerateMissingFiles = 
                         GumCommands.Self.GuiCommands.ShowYesNoMessageBox(missingFileMessage, "Generate missing files?") == System.Windows.MessageBoxResult.Yes;
                 }
