@@ -1,6 +1,7 @@
 ﻿using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Mvvm;
+using Gum.Plugins.AlignmentButtons;
 using Gum.ToolStates;
 using Gum.Undo;
 using System;
@@ -8,16 +9,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static Gum.Plugins.AlignmentButtons.CommonControlLogic;
 
 namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels
 {
     public class AlignmentViewModel : ViewModel
     {
+        private readonly CommonControlLogic _commonControlLogic;
+
         public float DockMargin
         {
             get => Get<float>();
             set => Set(value);
+        }
+
+        public AlignmentViewModel(CommonControlLogic commonControlLogic)
+        {
+            _commonControlLogic = commonControlLogic;
         }
 
         #region Anchor Actions
@@ -27,15 +34,15 @@ namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels
             using (UndoManager.Self.RequestLock())
             {
 
-                SetXValues(
+                _commonControlLogic.SetXValues(
                 global::RenderingLibrary.Graphics.HorizontalAlignment.Left,
                 PositionUnitType.PixelsFromLeft, DockMargin);
 
-                SetYValues(
+                _commonControlLogic.SetYValues(
                     global::RenderingLibrary.Graphics.VerticalAlignment.Top,
                     PositionUnitType.PixelsFromTop, DockMargin);
 
-                RefreshAndSave();
+                _commonControlLogic.RefreshAndSave();
             }
         }
 
@@ -44,15 +51,15 @@ namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels
             using (UndoManager.Self.RequestLock())
             {
 
-                SetXValues(
+                _commonControlLogic.SetXValues(
                 global::RenderingLibrary.Graphics.HorizontalAlignment.Center,
                 PositionUnitType.PixelsFromCenterX);
 
-                SetYValues(
+                _commonControlLogic.SetYValues(
                     global::RenderingLibrary.Graphics.VerticalAlignment.Top,
                     PositionUnitType.PixelsFromTop, DockMargin);
 
-                RefreshAndSave();
+                _commonControlLogic.RefreshAndSave();
             }
         }
 
@@ -61,15 +68,15 @@ namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels
             using (UndoManager.Self.RequestLock())
             {
 
-                SetXValues(
+                _commonControlLogic.SetXValues(
                 global::RenderingLibrary.Graphics.HorizontalAlignment.Right,
                 PositionUnitType.PixelsFromRight, -DockMargin);
 
-                SetYValues(
+                _commonControlLogic.SetYValues(
                     global::RenderingLibrary.Graphics.VerticalAlignment.Top,
                     PositionUnitType.PixelsFromTop, DockMargin);
 
-                RefreshAndSave();
+                _commonControlLogic.RefreshAndSave();
             }
         }
 
@@ -78,15 +85,15 @@ namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels
             using (UndoManager.Self.RequestLock())
             {
 
-                SetXValues(
+                _commonControlLogic.SetXValues(
                     global::RenderingLibrary.Graphics.HorizontalAlignment.Left,
                     PositionUnitType.PixelsFromLeft, DockMargin);
 
-                SetYValues(
+                _commonControlLogic.SetYValues(
                     global::RenderingLibrary.Graphics.VerticalAlignment.Center,
                     PositionUnitType.PixelsFromCenterY);
 
-                RefreshAndSave();
+                _commonControlLogic.RefreshAndSave();
             }
         }
 
@@ -94,15 +101,15 @@ namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels
         {
             using (UndoManager.Self.RequestLock())
             {
-                SetXValues(
+                _commonControlLogic.SetXValues(
                 global::RenderingLibrary.Graphics.HorizontalAlignment.Center,
                 PositionUnitType.PixelsFromCenterX);
 
-                SetYValues(
+                _commonControlLogic.SetYValues(
                     global::RenderingLibrary.Graphics.VerticalAlignment.Center,
                     PositionUnitType.PixelsFromCenterY);
 
-                RefreshAndSave();
+                _commonControlLogic.RefreshAndSave();
             }
         }
 
@@ -111,15 +118,15 @@ namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels
             using (UndoManager.Self.RequestLock())
             {
 
-                SetXValues(
+                _commonControlLogic.SetXValues(
                     global::RenderingLibrary.Graphics.HorizontalAlignment.Right,
                     PositionUnitType.PixelsFromRight, -DockMargin);
 
-                SetYValues(
+                _commonControlLogic.SetYValues(
                     global::RenderingLibrary.Graphics.VerticalAlignment.Center,
                     PositionUnitType.PixelsFromCenterY);
 
-                RefreshAndSave();
+                _commonControlLogic.RefreshAndSave();
             }
         }
 
@@ -128,15 +135,15 @@ namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels
             using (UndoManager.Self.RequestLock())
             {
 
-                SetXValues(
+                _commonControlLogic.SetXValues(
                     global::RenderingLibrary.Graphics.HorizontalAlignment.Left,
                     PositionUnitType.PixelsFromLeft, DockMargin);
 
-                SetYValues(
+                _commonControlLogic.SetYValues(
                     global::RenderingLibrary.Graphics.VerticalAlignment.Bottom,
                     PositionUnitType.PixelsFromBottom, -DockMargin);
 
-                RefreshAndSave();
+                _commonControlLogic.RefreshAndSave();
             }
         }
 
@@ -145,15 +152,15 @@ namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels
             using (UndoManager.Self.RequestLock())
             {
 
-                SetXValues(
+                _commonControlLogic.SetXValues(
                     global::RenderingLibrary.Graphics.HorizontalAlignment.Center,
                     PositionUnitType.PixelsFromCenterX);
 
-                SetYValues(
+                _commonControlLogic.SetYValues(
                     global::RenderingLibrary.Graphics.VerticalAlignment.Bottom,
                     PositionUnitType.PixelsFromBottom, -DockMargin);
 
-                RefreshAndSave();
+                _commonControlLogic.RefreshAndSave();
             }
         }
 
@@ -162,15 +169,15 @@ namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels
             using (UndoManager.Self.RequestLock())
             {
 
-                SetXValues(
+                _commonControlLogic.SetXValues(
                     global::RenderingLibrary.Graphics.HorizontalAlignment.Right,
                     PositionUnitType.PixelsFromRight, -DockMargin);
 
-                SetYValues(
+                _commonControlLogic.SetYValues(
                     global::RenderingLibrary.Graphics.VerticalAlignment.Bottom,
                     PositionUnitType.PixelsFromBottom, -DockMargin);
 
-                RefreshAndSave();
+                _commonControlLogic.RefreshAndSave();
             }
         }
 
@@ -184,14 +191,14 @@ namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels
             {
                 var state = SelectedState.Self.SelectedStateSave;
 
-                SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
-                SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Top, PositionUnitType.PixelsFromTop, DockMargin);
+                _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
+                _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Top, PositionUnitType.PixelsFromTop, DockMargin);
 
-                SetAndCallReact("Width", -DockMargin * 2, "float");
-                SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
+                _commonControlLogic.SetAndCallReact("Width", -DockMargin * 2, "float");
+                _commonControlLogic.SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
 
 
-                RefreshAndSave();
+                _commonControlLogic.RefreshAndSave();
             }
         }
 
@@ -201,11 +208,11 @@ namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels
             {
                 var state = SelectedState.Self.SelectedStateSave;
 
-                SetAndCallReact("Width", DockMargin * 2, "float");
-                SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToChildren, typeof(DimensionUnitType).Name);
+                _commonControlLogic.SetAndCallReact("Width", DockMargin * 2, "float");
+                _commonControlLogic.SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToChildren, typeof(DimensionUnitType).Name);
 
-                SetAndCallReact("Height", DockMargin * 2, "float");
-                SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToChildren, typeof(DimensionUnitType).Name);
+                _commonControlLogic.SetAndCallReact("Height", DockMargin * 2, "float");
+                _commonControlLogic.SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToChildren, typeof(DimensionUnitType).Name);
             }
         }
 
@@ -215,13 +222,13 @@ namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels
             {
                 var state = SelectedState.Self.SelectedStateSave;
 
-                SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Left, PositionUnitType.PixelsFromLeft, DockMargin);
-                SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
+                _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Left, PositionUnitType.PixelsFromLeft, DockMargin);
+                _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
 
-                SetAndCallReact("Height", -DockMargin * 2, "float");
-                SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
+                _commonControlLogic.SetAndCallReact("Height", -DockMargin * 2, "float");
+                _commonControlLogic.SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
 
-                RefreshAndSave();
+                _commonControlLogic.RefreshAndSave();
             }
         }
 
@@ -232,16 +239,16 @@ namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels
 
                 var state = SelectedState.Self.SelectedStateSave;
 
-                SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
-                SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
+                _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
+                _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
 
-                SetAndCallReact("Width", -DockMargin * 2, "float");
-                SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
+                _commonControlLogic.SetAndCallReact("Width", -DockMargin * 2, "float");
+                _commonControlLogic.SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
 
-                SetAndCallReact("Height", -DockMargin * 2, "float");
-                SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
+                _commonControlLogic.SetAndCallReact("Height", -DockMargin * 2, "float");
+                _commonControlLogic.SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
 
-                RefreshAndSave();
+                _commonControlLogic.RefreshAndSave();
             }
         }
 
@@ -252,13 +259,13 @@ namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels
 
                 var state = SelectedState.Self.SelectedStateSave;
 
-                SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Right, PositionUnitType.PixelsFromRight, -DockMargin);
-                SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
+                _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Right, PositionUnitType.PixelsFromRight, -DockMargin);
+                _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
 
-                SetAndCallReact("Height", -DockMargin * 2, "float");
-                SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
+                _commonControlLogic.SetAndCallReact("Height", -DockMargin * 2, "float");
+                _commonControlLogic.SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
 
-                RefreshAndSave();
+                _commonControlLogic.RefreshAndSave();
             }
         }
 
@@ -268,13 +275,13 @@ namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels
             {
                 var state = SelectedState.Self.SelectedStateSave;
 
-                SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
-                SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Bottom, PositionUnitType.PixelsFromBottom, -DockMargin);
+                _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
+                _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Bottom, PositionUnitType.PixelsFromBottom, -DockMargin);
 
-                SetAndCallReact("Width", -DockMargin * 2, "float");
-                SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
+                _commonControlLogic.SetAndCallReact("Width", -DockMargin * 2, "float");
+                _commonControlLogic.SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
 
-                RefreshAndSave();
+                _commonControlLogic.RefreshAndSave();
             }
         }
 
@@ -285,12 +292,12 @@ namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels
 
                 var state = SelectedState.Self.SelectedStateSave;
 
-                SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
+                _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
 
-                SetAndCallReact("Height", -DockMargin * 2, "float");
-                SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
+                _commonControlLogic.SetAndCallReact("Height", -DockMargin * 2, "float");
+                _commonControlLogic.SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
 
-                RefreshAndSave();
+                _commonControlLogic.RefreshAndSave();
             }
         }
 
@@ -301,12 +308,12 @@ namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels
 
                 var state = SelectedState.Self.SelectedStateSave;
 
-                SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
+                _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
 
-                SetAndCallReact("Width", -DockMargin * 2, "float");
-                SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
+                _commonControlLogic.SetAndCallReact("Width", -DockMargin * 2, "float");
+                _commonControlLogic.SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
 
-                RefreshAndSave();
+                _commonControlLogic.RefreshAndSave();
             }
         }
 

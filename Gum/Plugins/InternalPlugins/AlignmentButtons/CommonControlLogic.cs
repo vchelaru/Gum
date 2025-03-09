@@ -2,49 +2,50 @@
 using Gum.PropertyGridHelpers;
 using Gum.ToolStates;
 
-namespace Gum.Plugins.AlignmentButtons
+namespace Gum.Plugins.AlignmentButtons;
+
+public class CommonControlLogic
 {
-    static class CommonControlLogic
+    bool SelectionInheritsFromText()
     {
-        static bool SelectionInheritsFromText()
+        if(SelectedState.Self.SelectedInstance != null)
         {
-            if(SelectedState.Self.SelectedInstance != null)
-            {
-                return ObjectFinder.Self.GetRootStandardElementSave(SelectedState.Self.SelectedInstance)?.Name == "Text";
-            }
-            return false;
+            return ObjectFinder.Self.GetRootStandardElementSave(SelectedState.Self.SelectedInstance)?.Name == "Text";
         }
-        public static void SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment alignment, PositionUnitType xUnits, float value = 0f)
+        return false;
+    }
+    public void SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment alignment, PositionUnitType xUnits, float value = 0f)
+    {
+        SetAndCallReact("X", value, "float");
+        SetAndCallReact("XOrigin", alignment, "HorizontalAlignment");
+        SetAndCallReact("XUnits", xUnits, typeof(Gum.Managers.PositionUnitType).Name);
+
+        if (SelectionInheritsFromText())
         {
-            SetAndCallReact("X", value, "float");
-            SetAndCallReact("XOrigin", alignment, "HorizontalAlignment");
-            SetAndCallReact("XUnits", xUnits, typeof(Gum.Managers.PositionUnitType).Name);
-
-            if (SelectionInheritsFromText())
-            {
-                SetAndCallReact("HorizontalAlignment", alignment, "HorizontalAlignment");
-            }
-
+            SetAndCallReact("HorizontalAlignment", alignment, "HorizontalAlignment");
         }
 
-        public static void SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment alignment, PositionUnitType yUnits, float value = 0f)
+    }
+
+    public void SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment alignment, PositionUnitType yUnits, float value = 0f)
+    {
+        var state = SelectedState.Self.SelectedStateSave;
+
+        SetAndCallReact("Y", value, "float");
+        SetAndCallReact("YOrigin", alignment, typeof(global::RenderingLibrary.Graphics.VerticalAlignment).Name);
+        SetAndCallReact("YUnits", yUnits, typeof(PositionUnitType).Name);
+
+        if (SelectionInheritsFromText())
         {
-            var state = SelectedState.Self.SelectedStateSave;
-
-            SetAndCallReact("Y", value, "float");
-            SetAndCallReact("YOrigin", alignment, typeof(global::RenderingLibrary.Graphics.VerticalAlignment).Name);
-            SetAndCallReact("YUnits", yUnits, typeof(PositionUnitType).Name);
-
-            if (SelectionInheritsFromText())
-            {
-                SetAndCallReact("VerticalAlignment", alignment, "VerticalAlignment");
-            }
-
+            SetAndCallReact("VerticalAlignment", alignment, "VerticalAlignment");
         }
 
-        public static void SetAndCallReact(string unqualified, object value, string typeName)
+    }
+
+    public void SetAndCallReact(string unqualified, object value, string typeName)
+    {
+        foreach(var instance in SelectedState.Self.SelectedInstances)
         {
-            var instance = SelectedState.Self.SelectedInstance;
             string GetVariablePrefix()
             {
                 string prefixInternal = "";
@@ -66,24 +67,24 @@ namespace Gum.Plugins.AlignmentButtons
             SetVariableLogic.Self.ReactToPropertyValueChanged(unqualified, oldValue, SelectedState.Self.SelectedElement, instance, SelectedState.Self.SelectedStateSave, refresh: false);
             ResumeSetVariablePersistOptions();
         }
+    }
 
-        public static void RefreshAndSave()
-        {
-            GumCommands.Self.GuiCommands.RefreshVariables(force: true);
-            GumCommands.Self.WireframeCommands.Refresh();
-            GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-        }
+    public void RefreshAndSave()
+    {
+        GumCommands.Self.GuiCommands.RefreshVariables(force: true);
+        GumCommands.Self.WireframeCommands.Refresh();
+        GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+    }
 
-        static bool StoredAttemptToPersistPositionsOnUnitChanges;
-        private static void RecordSetVariablePersistPositions()
-        {
-            StoredAttemptToPersistPositionsOnUnitChanges = SetVariableLogic.Self.AttemptToPersistPositionsOnUnitChanges;
-            SetVariableLogic.Self.AttemptToPersistPositionsOnUnitChanges = false;
-        }
+    bool StoredAttemptToPersistPositionsOnUnitChanges;
+    private void RecordSetVariablePersistPositions()
+    {
+        StoredAttemptToPersistPositionsOnUnitChanges = SetVariableLogic.Self.AttemptToPersistPositionsOnUnitChanges;
+        SetVariableLogic.Self.AttemptToPersistPositionsOnUnitChanges = false;
+    }
 
-        private static void ResumeSetVariablePersistOptions()
-        {
-            SetVariableLogic.Self.AttemptToPersistPositionsOnUnitChanges = StoredAttemptToPersistPositionsOnUnitChanges;
-        }
+    private void ResumeSetVariablePersistOptions()
+    {
+        SetVariableLogic.Self.AttemptToPersistPositionsOnUnitChanges = StoredAttemptToPersistPositionsOnUnitChanges;
     }
 }

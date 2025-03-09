@@ -4,7 +4,6 @@ using Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels;
 using Gum.ToolStates;
 using Gum.Undo;
 using System.Windows.Controls;
-using static Gum.Plugins.AlignmentButtons.CommonControlLogic;
 
 namespace Gum.Plugins.AlignmentButtons
 {

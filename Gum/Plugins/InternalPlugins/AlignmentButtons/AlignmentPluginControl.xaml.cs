@@ -11,7 +11,7 @@ namespace Gum.Plugins.AlignmentButtons
         public AlignmentPluginControl()
         {
             InitializeComponent();
-            this.DataContext = new AlignmentViewModel();
+            this.DataContext = new AlignmentViewModel(new CommonControlLogic());
 
         }
     }
