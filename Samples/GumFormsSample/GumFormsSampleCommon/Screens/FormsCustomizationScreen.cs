@@ -15,8 +15,6 @@ internal class FormsCustomizationScreen
 {
     public void Initialize(GraphicalUiElement Root)
     {
-        FileManager.RelativeDirectory = "Content/";
-
         var button = new Button();
 
         var category = button.Visual.Categories["ButtonCategory"];
