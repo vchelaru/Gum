@@ -2777,7 +2777,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 }
                 else
                 {
-                    maxCellWidth = System.Math.Max(maxWidth, elementWidth);
+                    maxCellWidth = System.Math.Max(maxCellWidth, elementWidth);
                 }
             }
         }
