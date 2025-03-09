@@ -55,7 +55,7 @@ public class BasicShapes
         container.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
 
         // let's set a top to bottom stack
-        for (int i = 0; i < 6; i++)
+        for (int i = 0; i < 5; i++)
         {
             var sprite = new Sprite();
             sprite.Texture = texture;
@@ -64,6 +64,21 @@ public class BasicShapes
             child.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
             child.Width = 100;
             child.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
+            container.Children.Add(child);
+        }
+
+        for(int i = 0; i < 5; i++)
+
+        {
+            var text = new Text();
+            text.RawText = "Hello World";
+            var child = new GraphicalUiElement(text);
+            child.Height = 0;
+            child.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+            child.Width = 0;
+            child.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+            child.FontSize = 12 + i * 4;
+
             container.Children.Add(child);
         }
 
