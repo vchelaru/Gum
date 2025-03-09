@@ -92,12 +92,12 @@ namespace RenderingLibrary.Graphics
 
         IVisible IVisible.Parent { get { return Parent as IVisible; } }
 
-        public void PreRender()
+        public virtual void PreRender()
         {
 
         }
 
-        public void Render(ISystemManagers managers)
+        public virtual void Render(ISystemManagers managers)
         {
         }
 
