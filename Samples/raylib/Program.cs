@@ -1,4 +1,5 @@
 ﻿using Gum.Wireframe;
+using GumTest.Renderables;
 using Raylib_cs;
 using RenderingLibrary.Graphics;
 using static Raylib_cs.Raylib;
@@ -6,8 +7,7 @@ using static Raylib_cs.Raylib;
 namespace Examples.Shapes;
 
 
-public class RaylibSprite : InvisibleRenderable
-{ }
+
 
 public class BasicShapes
 {
@@ -28,24 +28,7 @@ public class BasicShapes
         // Our root contains everything:
         GraphicalUiElement Root = new GraphicalUiElement(new InvisibleRenderable());
 
-        // 
-        Root.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-        Root.Width = 0;
-        Root.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-        Root.Height = 0;
 
-        var container = new GraphicalUiElement(new InvisibleRenderable());
-        Root.Children.Add(container);
-        container.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
-
-        // let's set a top to bottom stack
-        for(int i = 0; i < 6; i++)
-        {
-            var child = new GraphicalUiElement(new RaylibSprite());
-            child.Height = 50;
-            child.Width = 50;
-            container.Children.Add(child);
-        }
 
         
         InitWindow(screenWidth, screenHeight, "Basic shape and image drawing");
@@ -59,6 +42,32 @@ public class BasicShapes
         //Unload/release it
         UnloadImage(image);
         //--------------------------------------------------------------------------------------
+
+
+        // 
+        Root.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+        Root.Width = 0;
+        Root.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+        Root.Height = 0;
+
+        var container = new GraphicalUiElement(new InvisibleRenderable());
+        Root.Children.Add(container);
+        container.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+
+        // let's set a top to bottom stack
+        for (int i = 0; i < 6; i++)
+        {
+            var sprite = new Sprite();
+            sprite.Texture = texture;
+            var child = new GraphicalUiElement(sprite);
+            child.Height = 100;
+            child.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
+            child.Width = 100;
+            child.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
+            container.Children.Add(child);
+        }
+
+
 
         // Main game loop
         while (!WindowShouldClose())
@@ -106,16 +115,9 @@ public class BasicShapes
 
     private static void DrawGumRecursively(GraphicalUiElement element)
     {
-        var shouldDrawSelf = element.RenderableComponent is RaylibSprite;
+        var shouldDrawSelf = element.RenderableComponent is Sprite;
 
-        if(shouldDrawSelf)
-        {
-            int x = (int)element.AbsoluteLeft;
-            int y = (int)element.AbsoluteTop;
-
-            //This is where we draw the texture
-            DrawTexture(texture, x, y, Color.White);
-        }
+        element.Render(null);
 
         if(element.Children != null)
         {
