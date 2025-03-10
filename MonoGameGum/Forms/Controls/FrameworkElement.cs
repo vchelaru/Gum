@@ -432,6 +432,7 @@ public class FrameworkElement
         if (visual != null)
         {
             this.Visual = visual;
+            this.Visual.FormsControlAsObject = this;
         }
     }
 

@@ -367,20 +367,6 @@ public class ListBox : ItemsControl, IInputReceiver
                     "This property must be set before adding any items");
             }
 #endif
-            var listBoxFormsConstructor = ItemFormsType.GetConstructor(new Type[] { typeof(InteractiveGue) });
-
-            if (listBoxFormsConstructor == null)
-            {
-#if FRB
-                const string TypeName = "GraphicalUiElement";
-#else
-                const string TypeName = "InteractiveGue";
-#endif
-                string message =
-                    $"Could not find a constructor for {ItemFormsType} which takes a single {TypeName} argument. " +
-                    $"If you defined {ItemFormsType} without specifying a constructor, you need to add a constructor which takes a GraphicalUiElement and calls the base constructor.";
-                throw new Exception(message);
-            }
 
             ListBoxItem item;
             if (visual.FormsControlAsObject is ListBoxItem asListBoxItem && !isItemTypeSetExplicitly)
@@ -389,6 +375,20 @@ public class ListBox : ItemsControl, IInputReceiver
             }
             else
             {
+                var listBoxFormsConstructor = ItemFormsType.GetConstructor(new Type[] { typeof(InteractiveGue) });
+
+                if (listBoxFormsConstructor == null)
+                {
+    #if FRB
+                    const string TypeName = "GraphicalUiElement";
+    #else
+                    const string TypeName = "InteractiveGue";
+    #endif
+                    string message =
+                        $"Could not find a constructor for {ItemFormsType} which takes a single {TypeName} argument. " +
+                        $"If you defined {ItemFormsType} without specifying a constructor, you need to add a constructor which takes a GraphicalUiElement and calls the base constructor.";
+                    throw new Exception(message);
+                }
                 item = listBoxFormsConstructor.Invoke(new object[] { visual }) as ListBoxItem;
             }
 
