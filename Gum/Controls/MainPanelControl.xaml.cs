@@ -319,4 +319,15 @@ public partial class MainPanelControl : UserControl
         }
     }
 
+    internal bool IsTabFocused(PluginTab pluginTab)
+    {
+        foreach (var tabControl in AllControls)
+        {
+            if(tabControl.SelectedItem == pluginTab.TabItem)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 }

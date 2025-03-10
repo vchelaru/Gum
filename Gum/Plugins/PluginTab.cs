@@ -28,13 +28,12 @@ namespace Gum.Plugins
                     if(tabItem != null)
                     {
                         tabItem.MiddleMouseClicked += (_, _) => HandleMiddleMouseClicked();
+                        tabItem.GotFocus += (_, _) => GotFocus?.Invoke();
                     }
-
-
-                    //page.TabSelected = RaiseTabShown;
                 }
             }
         }
+        public event Action GotFocus;
 
         private void HandleMiddleMouseClicked()
         {
@@ -43,20 +42,6 @@ namespace Gum.Plugins
                 Hide();
             }
         }
-
-        //TabPage page;
-        //internal TabPage Page
-        //{
-        //    get => page;
-        //    set
-        //    {
-        //        if (page != value)
-        //        {
-        //            page = value;
-        //            //page.TabSelected = RaiseTabShown;
-        //        }
-        //    }
-        //}
 
         public void Show(bool focus = true) => GumCommands.Self.GuiCommands.ShowTab(this, focus);
         public void Hide() => GumCommands.Self.GuiCommands.HideTab(this);
@@ -67,46 +52,12 @@ namespace Gum.Plugins
         public void RaiseTabHidden() => TabHidden?.Invoke();
         public event Action TabHidden;
 
-        //public void Hide()
-        //{
-        //    var items = Page.ParentTabControl as ObservableCollection<PluginTabPage>;
-        //    items?.Remove(Page);
-        //    Page.ParentTabControl = null;
 
-        //}
+        public void Focus() => TabItem.Focus();
 
-        //public void Show()
-        //{
-        //    if (Page.ParentTabControl == null)
-        //    {
-        //        var items = PluginBase.GetTabContainerFromLocation(SuggestedLocation);
-        //        items.Add(Page);
-        //        Page.ParentTabControl = items;
-        //    }
-        //}
-
-        public void Focus()
-        {
-            TabItem.Focus();
-        }
+        public bool IsFocused =>
+            GumCommands.Self.GuiCommands.IsTabFocused(this);
 
         public bool CanClose { get; set; }
-
-        //public void ForceLocation(TabLocation tabLocation)
-        //{
-        //    var desiredTabControl = PluginBase.GetTabContainerFromLocation(SuggestedLocation);
-        //    var parentTabControl = Page.ParentTabControl as ObservableCollection<PluginTabPage>;
-
-        //    if (desiredTabControl != parentTabControl)
-        //    {
-        //        if (parentTabControl != null)
-        //        {
-        //            desiredTabControl.Remove(Page);
-        //        }
-
-        //        parentTabControl.Add(Page);
-        //        Page.ParentTabControl = desiredTabControl;
-        //    }
-        //}
     }
 }

@@ -290,7 +290,7 @@ namespace CodeOutputPlugin
                 control.CodeOutputElementSettings = new Models.CodeOutputElementSettings();
             }
             ///////////////////////early out////////////////////
-            if(!viewModel.IsShowCodegenPreviewChecked)
+            if(!viewModel.IsShowCodegenPreviewChecked || !pluginTab.IsFocused)
             {
                 return;
             }
@@ -357,6 +357,7 @@ namespace CodeOutputPlugin
             control.DataContext = viewModel;
 
             pluginTab = GumCommands.Self.GuiCommands.AddControl(control, "Code", TabLocation.RightBottom);
+            pluginTab.GotFocus += () => RefreshCodeDisplay();
         }
 
         private void HandleMainViewModelPropertyChanged(string propertyName)
