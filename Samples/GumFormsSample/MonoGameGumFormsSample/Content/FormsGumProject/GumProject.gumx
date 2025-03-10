@@ -95,6 +95,11 @@
     <LinkType>ReferenceOriginal</LinkType>
   </ComponentReference>
   <ComponentReference>
+    <Name>Controls/FancyListBoxItem</Name>
+    <ElementType>Component</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </ComponentReference>
+  <ComponentReference>
     <Name>Controls/InputDeviceSelectionItem</Name>
     <ElementType>Component</ElementType>
     <LinkType>ReferenceOriginal</LinkType>

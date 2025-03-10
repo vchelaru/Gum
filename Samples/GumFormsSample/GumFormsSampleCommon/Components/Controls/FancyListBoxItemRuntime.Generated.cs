@@ -1,4 +1,4 @@
-//Code for Controls/ListBoxItem (Container)
+//Code for Controls/FancyListBoxItem (Container)
 using GumRuntime;
 using Gum.Converters;
 using Gum.DataTypes;
@@ -10,13 +10,12 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 using MonoGameGum.GueDeriving;
-public partial class ListBoxItemRuntime
+public partial class FancyListBoxItemRuntime
 {
     [System.Runtime.CompilerServices.ModuleInitializer]
     public static void RegisterRuntimeType()
     {
-        GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ListBoxItem", typeof(ListBoxItemRuntime));
-        MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(MonoGameGum.Forms.Controls.ListBoxItem)] = typeof(ListBoxItemRuntime);
+        GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/FancyListBoxItem", typeof(FancyListBoxItemRuntime));
     }
     public MonoGameGum.Forms.Controls.ListBoxItem FormsControl => FormsControlAsObject as MonoGameGum.Forms.Controls.ListBoxItem;
     public enum ListBoxItemCategory
@@ -48,6 +47,7 @@ public partial class ListBoxItemRuntime
     public NineSliceRuntime Background { get; protected set; }
     public TextRuntime TextInstance { get; protected set; }
     public NineSliceRuntime FocusedIndicator { get; protected set; }
+    public RectangleRuntime RectangleInstance { get; protected set; }
 
     public string ListItemDisplayText
     {
@@ -55,11 +55,11 @@ public partial class ListBoxItemRuntime
         set => TextInstance.Text = value;
     }
 
-    public ListBoxItemRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
+    public FancyListBoxItemRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {
         if(fullInstantiation)
         {
-            var element = ObjectFinder.Self.GetElementSave("Controls/ListBoxItem");
+            var element = ObjectFinder.Self.GetElementSave("Controls/FancyListBoxItem");
             element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
         }
 
@@ -75,6 +75,7 @@ public partial class ListBoxItemRuntime
         Background = this.GetGraphicalUiElementByName("Background") as NineSliceRuntime;
         TextInstance = this.GetGraphicalUiElementByName("TextInstance") as TextRuntime;
         FocusedIndicator = this.GetGraphicalUiElementByName("FocusedIndicator") as NineSliceRuntime;
+        RectangleInstance = this.GetGraphicalUiElementByName("RectangleInstance") as RectangleRuntime;
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

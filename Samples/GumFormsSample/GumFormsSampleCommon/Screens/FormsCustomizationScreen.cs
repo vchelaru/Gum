@@ -51,11 +51,16 @@ internal class FormsCustomizationScreen
         listBox.Height = 200;
 
         // assign the template before adding new list items
-        listBox.VisualTemplate =
-            new MonoGameGum.Forms.VisualTemplate(() =>
-                // do not create a forms object because this template will be
-                // automatically added to a ListBoxItem by the ListBox:
-                new CustomListBoxItemRuntime(tryCreateFormsObject: false));
+
+        // this template could be used to create list box items purely in code:
+
+        //listBox.VisualTemplate =
+        //    new MonoGameGum.Forms.VisualTemplate(() =>
+        //        new CustomListBoxItemRuntime(tryCreateFormsObject: false));
+
+        // ... or we can make a visual templte using gum-defined components:
+        //listBox.VisualTemplate = new MonoGameGum.Forms.VisualTemplate(typeof(FancyListBoxItemRuntime));
+        listBox.VisualTemplate = new MonoGameGum.Forms.VisualTemplate(() => new FancyListBoxItemRuntime());
 
         for (int i = 0; i < 20; i++)
         {

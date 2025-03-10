@@ -42,11 +42,11 @@ namespace MonoGameGum.Forms
                 var parameters = new object[2];
                 parameters[0] = true;
                 parameters[1] = false;
-                Initialize((throwaway) => boolBoolconstructor.Invoke(null, parameters) as GraphicalUiElement);
+                Initialize((throwaway) => boolBoolconstructor.Invoke(parameters) as GraphicalUiElement);
 
             }
 
-            if(foundConstructor)
+            if(!foundConstructor)
             {
 
                 var constructor = type.GetConstructor(Type.EmptyTypes);
