@@ -186,6 +186,7 @@ public class ErrorChecker
                         {
                             var error = new ErrorViewModel();
                             error.Message = $"{variable.SourceObject} has a parent set to {value} which does not exist in the state {state.Name}";
+                            toReturn.Add(error);
                         }
                     }
                 }
