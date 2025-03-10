@@ -46,7 +46,6 @@ public partial class TestScreenRuntime
         {
             var element = ObjectFinder.Self.GetElementSave("TestScreen");
             element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
-            AfterFullCreation();
         }
 
 
