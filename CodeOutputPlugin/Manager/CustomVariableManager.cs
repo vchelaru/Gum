@@ -13,7 +13,10 @@ namespace CodeOutputPlugin.Manager
 
         public static void HandleAddAndRemoveVariablesForType(string type, StateSave stateSave)
         {
-            if(ViewModel?.IsCodeGenPluginEnabled == true)
+            // this controls whether IsXamarinFormsControl and IsOverride variables exist.
+            // These were added to support maui/xamforms which are currently not supported, so
+            // we are killing these for now
+            if(false)
             {
                 bool Has(string variableName) => stateSave.Variables.Any(item => item.Name == variableName);
 

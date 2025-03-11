@@ -135,10 +135,14 @@ namespace CodeOutputPlugin.Views
 
             var optionsArray = Enum.GetValues(typeof(OutputLibrary));
             List<object> options = new List<object>();
-            foreach(var option in optionsArray)
-            {
-                options.Add(option);
-            }
+            //foreach(var option in optionsArray)
+            //{
+            //    options.Add(option);
+            //}
+
+            options.Add(OutputLibrary.MonoGame);
+            options.Add(OutputLibrary.Skia);
+
             member.CustomOptions = options;
 
 
@@ -223,6 +227,8 @@ namespace CodeOutputPlugin.Views
             // selecting files, and we want to select a folder. Maybe at some point 
             // in the future this could have a property for selecting folder, but until then....
             //member.PreferredDisplayer = typeof(FileSelectionDisplay);
+
+            member.PreferredDisplayer = typeof(CodeRootSelectionDisplay);
 
             return member;
         }
@@ -475,25 +481,26 @@ namespace CodeOutputPlugin.Views
             GenerateAllCodeClicked(this, null);
         }
 
-        private void CopyButtonClicked(object sender, RoutedEventArgs e)
-        {
-            TextBoxInstance.Focus();
-            TextBoxInstance.SelectAll();
-            if (!string.IsNullOrEmpty(TextBoxInstance.Text))
-            {
-                // from: https://stackoverflow.com/questions/68666/clipbrd-e-cant-open-error-when-setting-the-clipboard-from-net
-                for (int i = 0; i < 11; i++)
-                {
-                    try
-                    {
-                        Clipboard.SetText(TextBoxInstance.Text);
-                        return;
-                    }
-                    catch { }
-                    System.Threading.Thread.Sleep(15);
-                }
-            }
-        }
+        // maybe we'll bring this back later?
+        //private void CopyButtonClicked(object sender, RoutedEventArgs e)
+        //{
+        //    TextBoxInstance.Focus();
+        //    TextBoxInstance.SelectAll();
+        //    if (!string.IsNullOrEmpty(TextBoxInstance.Text))
+        //    {
+        //        // from: https://stackoverflow.com/questions/68666/clipbrd-e-cant-open-error-when-setting-the-clipboard-from-net
+        //        for (int i = 0; i < 11; i++)
+        //        {
+        //            try
+        //            {
+        //                Clipboard.SetText(TextBoxInstance.Text);
+        //                return;
+        //            }
+        //            catch { }
+        //            System.Threading.Thread.Sleep(15);
+        //        }
+        //    }
+        //}
 
         #endregion
     }

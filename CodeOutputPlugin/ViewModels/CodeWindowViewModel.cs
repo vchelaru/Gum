@@ -23,21 +23,6 @@ namespace CodeOutputPlugin.ViewModels
             set => Set(value);
         }
 
-        public bool IsCodeGenPluginEnabled
-        {
-            get => Get<bool>();
-            set => Set(value);
-        }
-
-        public bool IsShowCodegenPreviewChecked
-        {
-            get => Get<bool>();
-            set => Set(value);
-        }
-
-        [DependsOn(nameof(IsShowCodegenPreviewChecked))]
-        public Visibility CodePreviewWindowVisibility => IsShowCodegenPreviewChecked.ToVisibility();
-
         [DependsOn(nameof(WhatToView))]
         public bool IsSelectedObjectSelected
         {
@@ -64,6 +49,7 @@ namespace CodeOutputPlugin.ViewModels
             }
         }
 
+        // This exists in case we want to bring it back in the future, but the UI for it is gone.
         public InheritanceLocation InheritanceLocation
         {
             get => Get<InheritanceLocation>();

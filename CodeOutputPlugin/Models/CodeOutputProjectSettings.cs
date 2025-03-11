@@ -10,7 +10,7 @@ namespace CodeOutputPlugin.Models
     {
         XamarinForms,
         WPF,
-        RawSkia,
+        Skia,
         Maui,
         MonoGame
     }
@@ -47,9 +47,6 @@ using System.Linq;
 
         public string RootNamespace { get; set; }
 
-        public bool IsCodeGenPluginEnabled { get; set; }
-
-        public bool IsShowCodegenPreviewChecked { get; set; }
 
         public InheritanceLocation InheritanceLocation { get; set; } = InheritanceLocation.InGeneratedCode;
 
@@ -63,7 +60,7 @@ using System.Linq;
         public string DefaultScreenBase { get; set; } =
                 "Gum.Wireframe.BindableGue";
 
-        public OutputLibrary OutputLibrary { get; set; }
+        public OutputLibrary OutputLibrary { get; set; } = OutputLibrary.MonoGame;
 
         public bool AdjustPixelValuesForDensity { get; set; } = false;
 

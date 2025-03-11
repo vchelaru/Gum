@@ -23,13 +23,6 @@ internal class RenameService
 
     internal void HandleRename(ElementSave element, string oldName, CodeOutputProjectSettings codeOutputProjectSettings)
     {
-        /////////////////Early Out//////////////////////
-        if(!codeOutputProjectSettings.IsCodeGenPluginEnabled)
-        {
-            return;
-        }
-        ///////////////End Early Out///////////////////////
-
         var elementSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(element);
 
         var oldGeneratedFileName = _codeGenerationFileLocationsService.GetGeneratedFileName(element, elementSettings, codeOutputProjectSettings, oldName);
@@ -103,7 +96,7 @@ internal class RenameService
     internal void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue, CodeOutputProjectSettings codeOutputProjectSettings)
     {
         /////////////////////////Early Out////////////////////
-        if(variableName != "BaseType" || instance != null || !codeOutputProjectSettings.IsCodeGenPluginEnabled)
+        if(variableName != "BaseType" || instance != null)
         {
             return;
         }
