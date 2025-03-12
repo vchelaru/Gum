@@ -183,6 +183,10 @@ namespace Gum.Commands
             return mainPanelControl.ShowTabForControl(control);
         }
 
+
+        internal bool IsTabFocused(PluginTab pluginTab) =>
+                        mainPanelControl.IsTabFocused(pluginTab);
+
         #endregion
 
         #region Move to Cursor
@@ -628,5 +632,6 @@ namespace Gum.Commands
         {
             mainPanelControl.Dispatcher.Invoke(action);
         }
+
     }
 }

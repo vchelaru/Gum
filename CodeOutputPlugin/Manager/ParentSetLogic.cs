@@ -17,7 +17,7 @@ namespace CodeOutputPlugin.Manager
         public static void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue, CodeOutputProjectSettings codeOutputProjectSettings)
         {
             ///////////////////////Early Out//////////////////
-            if(variableName != "Parent" || instance == null || codeOutputProjectSettings.IsCodeGenPluginEnabled == false)
+            if(variableName != "Parent" || instance == null)
             {
                 return;
             }
@@ -63,13 +63,7 @@ namespace CodeOutputPlugin.Manager
 
         internal static void HandleNewCreatedInstance(ElementSave element, InstanceSave instance,  CodeOutputProjectSettings codeOutputProjectSettings)
         {
-            ///////////////////////Early Out//////////////////
-            if (codeOutputProjectSettings.IsCodeGenPluginEnabled == false)
-            {
-                return;
-            }
-            /////////////////////End Early Out////////////////
-            
+           
             var rfv = new RecursiveVariableFinder(element.DefaultState);
             var newParentName = rfv.GetValue<string>($"{instance.Name}.Parent");
 

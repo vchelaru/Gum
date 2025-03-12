@@ -143,8 +143,6 @@ namespace CodeOutputPlugin
         private void HandleProjectLoaded(GumProjectSave project)
         {
             codeOutputProjectSettings = CodeOutputProjectSettingsManager.CreateOrLoadSettingsForProject();
-            viewModel.IsCodeGenPluginEnabled = codeOutputProjectSettings.IsCodeGenPluginEnabled;
-            viewModel.IsShowCodegenPreviewChecked = codeOutputProjectSettings.IsShowCodegenPreviewChecked;
             viewModel.InheritanceLocation = codeOutputProjectSettings.InheritanceLocation;
             CustomVariableManager.ViewModel = viewModel;
             HandleElementSelected(null);
@@ -252,7 +250,7 @@ namespace CodeOutputPlugin
 
                 var elementSettings = control.CodeOutputElementSettings;
 
-                if (elementSettings.AutoGenerateOnChange && control.CodeOutputProjectSettings.IsCodeGenPluginEnabled)
+                if (elementSettings.AutoGenerateOnChange)
                 {
                     GenerateCodeForSelectedElement(showPopups: false);
                 }
@@ -290,7 +288,7 @@ namespace CodeOutputPlugin
                 control.CodeOutputElementSettings = new Models.CodeOutputElementSettings();
             }
             ///////////////////////early out////////////////////
-            if(!viewModel.IsShowCodegenPreviewChecked)
+            if(!pluginTab.IsFocused)
             {
                 return;
             }
@@ -357,6 +355,7 @@ namespace CodeOutputPlugin
             control.DataContext = viewModel;
 
             pluginTab = GumCommands.Self.GuiCommands.AddControl(control, "Code", TabLocation.RightBottom);
+            pluginTab.GotFocus += () => RefreshCodeDisplay();
         }
 
         private void HandleMainViewModelPropertyChanged(string propertyName)
@@ -370,14 +369,6 @@ namespace CodeOutputPlugin
             
             switch(propertyName)
             {
-                case nameof(viewModel.IsCodeGenPluginEnabled):
-                    codeOutputProjectSettings.IsCodeGenPluginEnabled = viewModel.IsCodeGenPluginEnabled;
-                    CodeOutputProjectSettingsManager.WriteSettingsForProject(codeOutputProjectSettings);
-                    break;
-                case nameof(viewModel.IsShowCodegenPreviewChecked):
-                    codeOutputProjectSettings.IsShowCodegenPreviewChecked = viewModel.IsShowCodegenPreviewChecked;
-                    CodeOutputProjectSettingsManager.WriteSettingsForProject(codeOutputProjectSettings);
-                    break;
                 case nameof(viewModel.InheritanceLocation):
                     codeOutputProjectSettings.InheritanceLocation = viewModel.InheritanceLocation;
                     CodeOutputProjectSettingsManager.WriteSettingsForProject(codeOutputProjectSettings);
