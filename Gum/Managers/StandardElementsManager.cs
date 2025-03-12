@@ -679,7 +679,8 @@ namespace Gum.Managers
             }
             stateSave.Variables.Add(variableSave);
 
-
+            var maxWidthVariable = new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "MaxWidth", Category = "Dimensions" };
+            stateSave.Variables.Add(maxWidthVariable);
 
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = defaultHeight, Name = "Height", Category = "Dimensions" });
 
@@ -690,6 +691,10 @@ namespace Gum.Managers
                 variableSave.ExcludedValuesForEnum.Add(DimensionUnitType.MaintainFileAspectRatio);
             }
             stateSave.Variables.Add(variableSave);
+
+            var maxHeightVariable = new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "MaxHeight", Category = "Dimensions" };
+            stateSave.Variables.Add(maxHeightVariable);
+
         }
 
         public static void AddPositioningVariables(StateSave stateSave, bool addOriginVariables = true, bool includeBaseline = false)

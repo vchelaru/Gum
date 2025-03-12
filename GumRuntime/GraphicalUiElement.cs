@@ -4654,6 +4654,14 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     this.IgnoredByParentSize = (bool)value;
                     toReturn = true;
                     break;
+                case nameof(MaxHeight):
+                    this.MaxHeight = (float)value;
+                    toReturn = true;
+                    break;
+                case nameof(MaxWidth):
+                    this.MaxWidth = (float)value;
+                    toReturn = true;
+                    break;
                 case "Parent":
                     {
                         string valueAsString = (string)value;
