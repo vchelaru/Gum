@@ -821,9 +821,26 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
+
+    float? _maxWidth;
+    public float? MaxWidth
+    {
+        get => _maxWidth;
+        set
+        {
+            if (_maxWidth != value)
+            {
+                _maxWidth = value;
+
+                UpdateLayout();
+            }
+
+        }
+    }
+
     public float Width
     {
-        get { return mWidth; }
+        get => mWidth; 
         set
         {
 #if DEBUG
@@ -838,6 +855,23 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             {
                 mWidth = value; UpdateLayout();
             }
+        }
+    }
+
+
+    float? _maxHeight;
+    public float? MaxHeight
+    {
+        get => _maxHeight;
+        set
+        {
+            if (_maxHeight != value)
+            {
+                _maxHeight = value;
+
+                UpdateLayout();
+            }
+
         }
     }
 
@@ -2061,6 +2095,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
+    #region Width/Height
+
     private void UpdateDimensions(float parentWidth, float parentHeight, XOrY? xOrY, bool considerWrappedStacked)
     {
         // special case - if the user has set both values to depend on the other value, we don't want to have an infinite recursion so we'll just apply the width and height values as pixel values.
@@ -2408,6 +2444,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
         #endregion
 
+        if(pixelHeightToSet > _maxHeight)
+        {
+            pixelHeightToSet = _maxHeight.Value;
+        }
+
         mContainedObjectAsIpso.Height = pixelHeightToSet;
     }
 
@@ -2444,13 +2485,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     public void UpdateWidth(float parentWidth, bool considerWrappedStacked)
     {
-        float widthToSet = mWidth;
+        float pixelWidthToSet = mWidth;
 
         #region AbsoluteMultipliedByFontScale
 
         if (mWidthUnit == DimensionUnitType.AbsoluteMultipliedByFontScale)
         {
-            widthToSet *= GlobalFontScale;
+            pixelWidthToSet *= GlobalFontScale;
         }
 
         #endregion
@@ -2462,7 +2503,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             var effectiveManagers = this.EffectiveManagers;
             if (effectiveManagers != null)
             {
-                widthToSet /= effectiveManagers.Renderer.Camera.Zoom;
+                pixelWidthToSet /= effectiveManagers.Renderer.Camera.Zoom;
             }
         }
 
@@ -2569,7 +2610,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 }
             }
 
-            widthToSet = maxWidth + mWidth;
+            pixelWidthToSet = maxWidth + mWidth;
         }
         #endregion
 
@@ -2577,7 +2618,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
         else if (mWidthUnit == DimensionUnitType.Percentage)
         {
-            widthToSet = parentWidth * mWidth / 100.0f;
+            pixelWidthToSet = parentWidth * mWidth / 100.0f;
         }
 
         #endregion
@@ -2590,7 +2631,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
             if (mTextureWidth > 0)
             {
-                widthToSet = mTextureWidth * mWidth / 100.0f;
+                pixelWidthToSet = mTextureWidth * mWidth / 100.0f;
                 wasSet = true;
             }
 
@@ -2599,7 +2640,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 var width = iTextureCoordinate.TextureWidth;
                 if (width != null)
                 {
-                    widthToSet = width.Value * mWidth / 100.0f;
+                    pixelWidthToSet = width.Value * mWidth / 100.0f;
                     wasSet = true;
                 }
 
@@ -2607,14 +2648,14 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 // can't make dimension based on texture coords as that would cause a circular reference
                 if (iTextureCoordinate.SourceRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
                 {
-                    widthToSet = iTextureCoordinate.SourceRectangle.Value.Width * mWidth / 100.0f;
+                    pixelWidthToSet = iTextureCoordinate.SourceRectangle.Value.Width * mWidth / 100.0f;
                     wasSet = true;
                 }
             }
 
             if (!wasSet)
             {
-                widthToSet = 64 * mWidth / 100.0f;
+                pixelWidthToSet = 64 * mWidth / 100.0f;
             }
         }
 
@@ -2629,7 +2670,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             if (mContainedObjectAsIpso is IAspectRatio aspectRatioObject)
             {
                 // mWidth is a percent where 100 means maintain aspect ratio
-                widthToSet = GetAbsoluteHeight() * aspectRatioObject.AspectRatio * (mWidth / 100.0f);
+                pixelWidthToSet = GetAbsoluteHeight() * aspectRatioObject.AspectRatio * (mWidth / 100.0f);
                 wasSet = true;
 
                 if (wasSet && mContainedObjectAsIpso is ITextureCoordinate iTextureCoordinate)
@@ -2637,13 +2678,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     if (iTextureCoordinate.SourceRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
                     {
                         var scale = GetAbsoluteHeight() / iTextureCoordinate.SourceRectangle.Value.Height;
-                        widthToSet = iTextureCoordinate.SourceRectangle.Value.Width * scale * mWidth / 100.0f;
+                        pixelWidthToSet = iTextureCoordinate.SourceRectangle.Value.Width * scale * mWidth / 100.0f;
                     }
                 }
             }
             if (!wasSet)
             {
-                widthToSet = 64 * mWidth / 100.0f;
+                pixelWidthToSet = 64 * mWidth / 100.0f;
             }
         }
 
@@ -2653,7 +2694,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
         else if (mWidthUnit == DimensionUnitType.RelativeToContainer)
         {
-            widthToSet = parentWidth + mWidth;
+            pixelWidthToSet = parentWidth + mWidth;
         }
 
         #endregion
@@ -2662,7 +2703,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
         else if (mWidthUnit == DimensionUnitType.PercentageOfOtherDimension)
         {
-            widthToSet = mContainedObjectAsIpso.Height * mWidth / 100.0f;
+            pixelWidthToSet = mContainedObjectAsIpso.Height * mWidth / 100.0f;
         }
 
         #endregion
@@ -2673,7 +2714,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         {
             if (this.Width == 0)
             {
-                widthToSet = 0;
+                pixelWidthToSet = 0;
             }
             else
             {
@@ -2738,19 +2779,26 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 }
                 if (totalRatio > 0)
                 {
-                    widthToSet = widthToSplit * (this.Width / totalRatio);
+                    pixelWidthToSet = widthToSplit * (this.Width / totalRatio);
 
                 }
                 else
                 {
-                    widthToSet = widthToSplit;
+                    pixelWidthToSet = widthToSplit;
                 }
             }
         }
 
         #endregion
 
-        mContainedObjectAsIpso.Width = widthToSet;
+        if(pixelWidthToSet > _maxWidth)
+        {
+            pixelWidthToSet = _maxWidth.Value;
+        }
+
+        mContainedObjectAsIpso.Width = pixelWidthToSet;
+
+
     }
 
     private float GetMaxCellWidth(bool considerWrappedStacked, float maxWidth)
@@ -2783,74 +2831,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
 
         return maxCellWidth;
-    }
-
-    ChildType GetChildLayoutType(GraphicalUiElement parent)
-    {
-        var doesParentWrapStack = parent.WrapsChildren && (parent.ChildrenLayout == ChildrenLayout.LeftToRightStack || parent.ChildrenLayout == ChildrenLayout.TopToBottomStack);
-
-        var parentWidthDependencyType = parent.WidthUnits.GetDependencyType();
-        var parentHeightDependencyType = parent.HeightUnits.GetDependencyType();
-
-        var isParentWidthNoDependencyOrOnParent = parentWidthDependencyType == HierarchyDependencyType.NoDependency || parentWidthDependencyType == HierarchyDependencyType.DependsOnParent;
-        var isParentHeightNoDependencyOrOnParent = parentHeightDependencyType == HierarchyDependencyType.NoDependency || parentHeightDependencyType == HierarchyDependencyType.DependsOnParent;
-
-        var isAbsolute = (mWidthUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent || isParentWidthNoDependencyOrOnParent) &&
-                        (mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent || isParentHeightNoDependencyOrOnParent) &&
-                        (mWidthUnit.GetDependencyType() != HierarchyDependencyType.DependsOnSiblings) &&
-                        (mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnSiblings) &&
-
-            (mXUnits == GeneralUnitType.PixelsFromSmall ||
-             (mXUnits == GeneralUnitType.PixelsFromMiddle && isParentWidthNoDependencyOrOnParent) ||
-             (mXUnits == GeneralUnitType.PixelsFromLarge && isParentWidthNoDependencyOrOnParent) ||
-             (mXUnits == GeneralUnitType.PixelsFromMiddleInverted && isParentWidthNoDependencyOrOnParent)) &&
-
-            (mYUnits == GeneralUnitType.PixelsFromSmall ||
-             (mYUnits == GeneralUnitType.PixelsFromMiddle && isParentHeightNoDependencyOrOnParent) ||
-             (mYUnits == GeneralUnitType.PixelsFromLarge && isParentHeightNoDependencyOrOnParent) ||
-             (mYUnits == GeneralUnitType.PixelsFromMiddleInverted && isParentHeightNoDependencyOrOnParent) ||
-             mYUnits == GeneralUnitType.PixelsFromBaseline);
-
-        if (doesParentWrapStack)
-        {
-            return isAbsolute ? ChildType.StackedWrapped : ChildType.Relative;
-        }
-        else
-        {
-            return isAbsolute ? ChildType.Absolute : ChildType.Relative;
-        }
-    }
-
-    ChildType GetChildLayoutType(XOrY xOrY, GraphicalUiElement parent)
-    {
-        bool isAbsolute;
-        var doesParentWrapStack = parent.WrapsChildren && (parent.ChildrenLayout == ChildrenLayout.LeftToRightStack || parent.ChildrenLayout == ChildrenLayout.TopToBottomStack);
-
-        if (xOrY == XOrY.X)
-        {
-            var widthUnitDependencyType = mWidthUnit.GetDependencyType();
-            isAbsolute = (widthUnitDependencyType != HierarchyDependencyType.DependsOnParent || this.WidthUnits.GetDependencyType() == HierarchyDependencyType.NoDependency) &&
-                (mXUnits == GeneralUnitType.PixelsFromLarge || mXUnits == GeneralUnitType.PixelsFromMiddle ||
-                    mXUnits == GeneralUnitType.PixelsFromSmall || mXUnits == GeneralUnitType.PixelsFromMiddleInverted);
-
-        }
-        else // Y
-        {
-            isAbsolute = (mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent || this.HeightUnits.GetDependencyType() == HierarchyDependencyType.NoDependency) &&
-                (mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromMiddle ||
-                    mYUnits == GeneralUnitType.PixelsFromSmall || mYUnits == GeneralUnitType.PixelsFromMiddleInverted &&
-                    mYUnits == GeneralUnitType.PixelsFromBaseline);
-
-        }
-
-        if (doesParentWrapStack)
-        {
-            return isAbsolute ? ChildType.StackedWrapped : ChildType.Relative;
-        }
-        else
-        {
-            return isAbsolute ? ChildType.Absolute : ChildType.Relative;
-        }
     }
 
     float GetRequiredParentWidth()
@@ -2960,6 +2940,249 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             return dimensionToReturn;
         }
 
+    }
+
+    private void GetParentDimensions(out float parentWidth, out float parentHeight)
+    {
+        parentWidth = CanvasWidth;
+        parentHeight = CanvasHeight;
+
+        // I think we want to obey the non GUE parent first if it exists, then the GUE
+        //if (this.ParentGue != null && this.ParentGue.mContainedObjectAsRenderable != null)
+        //{
+        //    parentWidth = this.ParentGue.mContainedObjectAsIpso.Width;
+        //    parentHeight = this.ParentGue.mContainedObjectAsIpso.Height;
+        //}
+        //else if (this.Parent != null)
+        //{
+        //    parentWidth = Parent.Width;
+        //    parentHeight = Parent.Height;
+        //}
+
+        if (this.Parent != null)
+        {
+            if (Parent is GraphicalUiElement parentGue && (parentGue.ChildrenLayout == ChildrenLayout.AutoGridVertical || parentGue.ChildrenLayout == ChildrenLayout.AutoGridHorizontal))
+            {
+                var effectiveHorizontalCells = parentGue.AutoGridHorizontalCells;
+                if (effectiveHorizontalCells < 1) effectiveHorizontalCells = 1;
+                var effectiveVerticalCells = parentGue.AutoGridVerticalCells;
+                if (effectiveVerticalCells < 1) effectiveVerticalCells = 1;
+
+                var setCellCount = effectiveHorizontalCells * effectiveVerticalCells;
+
+                if (parentGue.Children?.Count > setCellCount)
+                {
+                    if (parentGue.ChildrenLayout == ChildrenLayout.AutoGridVertical)
+                    {
+                        // If stacking vertically, the number of rows (vertical cell count) depends on the children count
+                        // if the parent's size depends on its children
+                        if (parentGue.HeightUnits == DimensionUnitType.RelativeToChildren)
+                        {
+                            effectiveVerticalCells = (int)System.Math.Ceiling((float)parentGue.Children.Count / effectiveHorizontalCells);
+                        }
+                    }
+                    else
+                    {
+                        if (parentGue.WidthUnits == DimensionUnitType.RelativeToChildren)
+                        {
+                            effectiveHorizontalCells = (int)System.Math.Ceiling((float)parentGue.Children.Count / effectiveVerticalCells);
+                        }
+                    }
+                }
+
+                parentWidth = parentGue.GetAbsoluteWidth() / effectiveHorizontalCells;
+                parentHeight = parentGue.GetAbsoluteHeight() / effectiveVerticalCells;
+            }
+            else
+            {
+                parentWidth = Parent.Width;
+                parentHeight = Parent.Height;
+            }
+        }
+        else if (this.ElementGueContainingThis != null && this.ElementGueContainingThis.mContainedObjectAsIpso != null)
+        {
+            parentWidth = this.ElementGueContainingThis.mContainedObjectAsIpso.Width;
+            parentHeight = this.ElementGueContainingThis.mContainedObjectAsIpso.Height;
+        }
+
+#if DEBUG
+        if (float.IsPositiveInfinity(parentHeight))
+        {
+            throw new Exception();
+        }
+#endif
+    }
+
+    private void UpdateTextureCoordinatesDimensionBased()
+    {
+        int left = mTextureLeft;
+        int top = mTextureTop;
+
+        int width = 0;
+
+        if (mTextureWidthScale != 0)
+        {
+            width = (int)(mContainedObjectAsIpso.Width / mTextureWidthScale);
+        }
+
+        int height = 0;
+
+        if (mTextureHeightScale != 0)
+        {
+            height = (int)(mContainedObjectAsIpso.Height / mTextureHeightScale);
+        }
+
+
+        if (mContainedObjectAsIpso is ITextureCoordinate containedTextureCoordinateObject)
+        {
+            switch (mTextureAddress)
+            {
+                case TextureAddress.DimensionsBased:
+                    containedTextureCoordinateObject.SourceRectangle = new Rectangle(
+                        left,
+                        top,
+                        width,
+                        height);
+                    containedTextureCoordinateObject.Wrap = mWrap;
+                    break;
+            }
+        }
+    }
+
+    private void UpdateTextureCoordinatesNotDimensionBased()
+    {
+        if (mContainedObjectAsIpso is ITextureCoordinate textureCoordinateObject)
+        {
+            var textureAddress = mTextureAddress;
+            switch (textureAddress)
+            {
+                case TextureAddress.EntireTexture:
+                    textureCoordinateObject.SourceRectangle = null;
+                    textureCoordinateObject.Wrap = false;
+                    break;
+                case TextureAddress.Custom:
+                    textureCoordinateObject.SourceRectangle = new Rectangle(
+                        mTextureLeft,
+                        mTextureTop,
+                        mTextureWidth,
+                        mTextureHeight);
+                    textureCoordinateObject.Wrap = mWrap;
+                    break;
+                case TextureAddress.DimensionsBased:
+                    // This is done *after* setting dimensions
+
+                    break;
+            }
+        }
+    }
+
+    private static float GetDimensionFromEdges(float smallEdge, float bigEdge, GeneralUnitType units)
+    {
+        float dimensionToReturn = 0;
+        if (units == GeneralUnitType.PixelsFromSmall)
+        // The value already comes in properly inverted
+        {
+            smallEdge = 0;
+
+            bigEdge = System.Math.Max(0, bigEdge);
+            dimensionToReturn = bigEdge - smallEdge;
+        }
+        else if (units == GeneralUnitType.PixelsFromMiddle ||
+            units == GeneralUnitType.PixelsFromMiddleInverted)
+        {
+            // use the full width
+            float abs1 = System.Math.Abs(smallEdge);
+            float abs2 = System.Math.Abs(bigEdge);
+
+            dimensionToReturn = 2 * System.Math.Max(abs1, abs2);
+        }
+        else if (units == GeneralUnitType.PixelsFromLarge)
+        {
+            smallEdge = System.Math.Min(0, smallEdge);
+            bigEdge = 0;
+            dimensionToReturn = bigEdge - smallEdge;
+
+        }
+        return dimensionToReturn;
+    }
+
+    public bool GetIfDimensionsDependOnChildren()
+    {
+        // If this is a Screen, then it doesn't have a size. Screens cannot depend on children:
+        bool isScreen = ElementSave != null && ElementSave is ScreenSave;
+        return !isScreen &&
+            (this.WidthUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren ||
+            this.HeightUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren);
+    }
+
+    #endregion
+
+    ChildType GetChildLayoutType(GraphicalUiElement parent)
+    {
+        var doesParentWrapStack = parent.WrapsChildren && (parent.ChildrenLayout == ChildrenLayout.LeftToRightStack || parent.ChildrenLayout == ChildrenLayout.TopToBottomStack);
+
+        var parentWidthDependencyType = parent.WidthUnits.GetDependencyType();
+        var parentHeightDependencyType = parent.HeightUnits.GetDependencyType();
+
+        var isParentWidthNoDependencyOrOnParent = parentWidthDependencyType == HierarchyDependencyType.NoDependency || parentWidthDependencyType == HierarchyDependencyType.DependsOnParent;
+        var isParentHeightNoDependencyOrOnParent = parentHeightDependencyType == HierarchyDependencyType.NoDependency || parentHeightDependencyType == HierarchyDependencyType.DependsOnParent;
+
+        var isAbsolute = (mWidthUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent || isParentWidthNoDependencyOrOnParent) &&
+                        (mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent || isParentHeightNoDependencyOrOnParent) &&
+                        (mWidthUnit.GetDependencyType() != HierarchyDependencyType.DependsOnSiblings) &&
+                        (mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnSiblings) &&
+
+            (mXUnits == GeneralUnitType.PixelsFromSmall ||
+             (mXUnits == GeneralUnitType.PixelsFromMiddle && isParentWidthNoDependencyOrOnParent) ||
+             (mXUnits == GeneralUnitType.PixelsFromLarge && isParentWidthNoDependencyOrOnParent) ||
+             (mXUnits == GeneralUnitType.PixelsFromMiddleInverted && isParentWidthNoDependencyOrOnParent)) &&
+
+            (mYUnits == GeneralUnitType.PixelsFromSmall ||
+             (mYUnits == GeneralUnitType.PixelsFromMiddle && isParentHeightNoDependencyOrOnParent) ||
+             (mYUnits == GeneralUnitType.PixelsFromLarge && isParentHeightNoDependencyOrOnParent) ||
+             (mYUnits == GeneralUnitType.PixelsFromMiddleInverted && isParentHeightNoDependencyOrOnParent) ||
+             mYUnits == GeneralUnitType.PixelsFromBaseline);
+
+        if (doesParentWrapStack)
+        {
+            return isAbsolute ? ChildType.StackedWrapped : ChildType.Relative;
+        }
+        else
+        {
+            return isAbsolute ? ChildType.Absolute : ChildType.Relative;
+        }
+    }
+
+    ChildType GetChildLayoutType(XOrY xOrY, GraphicalUiElement parent)
+    {
+        bool isAbsolute;
+        var doesParentWrapStack = parent.WrapsChildren && (parent.ChildrenLayout == ChildrenLayout.LeftToRightStack || parent.ChildrenLayout == ChildrenLayout.TopToBottomStack);
+
+        if (xOrY == XOrY.X)
+        {
+            var widthUnitDependencyType = mWidthUnit.GetDependencyType();
+            isAbsolute = (widthUnitDependencyType != HierarchyDependencyType.DependsOnParent || this.WidthUnits.GetDependencyType() == HierarchyDependencyType.NoDependency) &&
+                (mXUnits == GeneralUnitType.PixelsFromLarge || mXUnits == GeneralUnitType.PixelsFromMiddle ||
+                    mXUnits == GeneralUnitType.PixelsFromSmall || mXUnits == GeneralUnitType.PixelsFromMiddleInverted);
+
+        }
+        else // Y
+        {
+            isAbsolute = (mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent || this.HeightUnits.GetDependencyType() == HierarchyDependencyType.NoDependency) &&
+                (mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromMiddle ||
+                    mYUnits == GeneralUnitType.PixelsFromSmall || mYUnits == GeneralUnitType.PixelsFromMiddleInverted &&
+                    mYUnits == GeneralUnitType.PixelsFromBaseline);
+
+        }
+
+        if (doesParentWrapStack)
+        {
+            return isAbsolute ? ChildType.StackedWrapped : ChildType.Relative;
+        }
+        else
+        {
+            return isAbsolute ? ChildType.Absolute : ChildType.Relative;
+        }
     }
 
 
@@ -3145,139 +3368,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
-    private void GetParentDimensions(out float parentWidth, out float parentHeight)
-    {
-        parentWidth = CanvasWidth;
-        parentHeight = CanvasHeight;
-
-        // I think we want to obey the non GUE parent first if it exists, then the GUE
-        //if (this.ParentGue != null && this.ParentGue.mContainedObjectAsRenderable != null)
-        //{
-        //    parentWidth = this.ParentGue.mContainedObjectAsIpso.Width;
-        //    parentHeight = this.ParentGue.mContainedObjectAsIpso.Height;
-        //}
-        //else if (this.Parent != null)
-        //{
-        //    parentWidth = Parent.Width;
-        //    parentHeight = Parent.Height;
-        //}
-
-        if (this.Parent != null)
-        {
-            if (Parent is GraphicalUiElement parentGue && (parentGue.ChildrenLayout == ChildrenLayout.AutoGridVertical || parentGue.ChildrenLayout == ChildrenLayout.AutoGridHorizontal))
-            {
-                var effectiveHorizontalCells = parentGue.AutoGridHorizontalCells;
-                if (effectiveHorizontalCells < 1) effectiveHorizontalCells = 1;
-                var effectiveVerticalCells = parentGue.AutoGridVerticalCells;
-                if (effectiveVerticalCells < 1) effectiveVerticalCells = 1;
-
-                var setCellCount = effectiveHorizontalCells * effectiveVerticalCells;
-
-                if(parentGue.Children?.Count > setCellCount)
-                {
-                    if(parentGue.ChildrenLayout == ChildrenLayout.AutoGridVertical)
-                    {
-                        // If stacking vertically, the number of rows (vertical cell count) depends on the children count
-                        // if the parent's size depends on its children
-                        if(parentGue.HeightUnits == DimensionUnitType.RelativeToChildren)
-                        {
-                            effectiveVerticalCells =(int)System.Math.Ceiling((float) parentGue.Children.Count / effectiveHorizontalCells);
-                        }
-                    }
-                    else
-                    {
-                        if(parentGue.WidthUnits == DimensionUnitType.RelativeToChildren)
-                        {
-                            effectiveHorizontalCells = (int)System.Math.Ceiling((float)parentGue.Children.Count / effectiveVerticalCells);
-                        }
-                    }
-                }
-
-                parentWidth = parentGue.GetAbsoluteWidth() / effectiveHorizontalCells;
-                parentHeight = parentGue.GetAbsoluteHeight() / effectiveVerticalCells;
-            }
-            else
-            {
-                parentWidth = Parent.Width;
-                parentHeight = Parent.Height;
-            }
-        }
-        else if (this.ElementGueContainingThis != null && this.ElementGueContainingThis.mContainedObjectAsIpso != null)
-        {
-            parentWidth = this.ElementGueContainingThis.mContainedObjectAsIpso.Width;
-            parentHeight = this.ElementGueContainingThis.mContainedObjectAsIpso.Height;
-        }
-
-#if DEBUG
-        if (float.IsPositiveInfinity(parentHeight))
-        {
-            throw new Exception();
-        }
-#endif
-    }
-
-    private void UpdateTextureCoordinatesDimensionBased()
-    {
-        int left = mTextureLeft;
-        int top = mTextureTop;
-
-        int width = 0;
-
-        if (mTextureWidthScale != 0)
-        {
-            width = (int)(mContainedObjectAsIpso.Width / mTextureWidthScale);
-        }
-
-        int height = 0;
-
-        if (mTextureHeightScale != 0)
-        {
-            height = (int)(mContainedObjectAsIpso.Height / mTextureHeightScale);
-        }
-
-
-        if (mContainedObjectAsIpso is ITextureCoordinate containedTextureCoordinateObject)
-        {
-            switch (mTextureAddress)
-            {
-                case TextureAddress.DimensionsBased:
-                    containedTextureCoordinateObject.SourceRectangle = new Rectangle(
-                        left,
-                        top,
-                        width,
-                        height);
-                    containedTextureCoordinateObject.Wrap = mWrap;
-                    break;
-            }
-        }
-    }
-
-    private void UpdateTextureCoordinatesNotDimensionBased()
-    {
-        if (mContainedObjectAsIpso is ITextureCoordinate textureCoordinateObject)
-        {
-            var textureAddress = mTextureAddress;
-            switch (textureAddress)
-            {
-                case TextureAddress.EntireTexture:
-                    textureCoordinateObject.SourceRectangle = null;
-                    textureCoordinateObject.Wrap = false;
-                    break;
-                case TextureAddress.Custom:
-                    textureCoordinateObject.SourceRectangle = new Rectangle(
-                        mTextureLeft,
-                        mTextureTop,
-                        mTextureWidth,
-                        mTextureHeight);
-                    textureCoordinateObject.Wrap = mWrap;
-                    break;
-                case TextureAddress.DimensionsBased:
-                    // This is done *after* setting dimensions
-
-                    break;
-            }
-        }
-    }
 
     private void UpdatePosition(float parentWidth, float parentHeight, XOrY? xOrY, float parentAbsoluteRotation, bool isParentFlippedHorizontally)
     {
@@ -3671,44 +3761,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         return false;
     }
 
-    private static float GetDimensionFromEdges(float smallEdge, float bigEdge, GeneralUnitType units)
-    {
-        float dimensionToReturn = 0;
-        if (units == GeneralUnitType.PixelsFromSmall)
-        // The value already comes in properly inverted
-        {
-            smallEdge = 0;
-
-            bigEdge = System.Math.Max(0, bigEdge);
-            dimensionToReturn = bigEdge - smallEdge;
-        }
-        else if (units == GeneralUnitType.PixelsFromMiddle ||
-            units == GeneralUnitType.PixelsFromMiddleInverted)
-        {
-            // use the full width
-            float abs1 = System.Math.Abs(smallEdge);
-            float abs2 = System.Math.Abs(bigEdge);
-
-            dimensionToReturn = 2 * System.Math.Max(abs1, abs2);
-        }
-        else if (units == GeneralUnitType.PixelsFromLarge)
-        {
-            smallEdge = System.Math.Min(0, smallEdge);
-            bigEdge = 0;
-            dimensionToReturn = bigEdge - smallEdge;
-
-        }
-        return dimensionToReturn;
-    }
-
-    public bool GetIfDimensionsDependOnChildren()
-    {
-        // If this is a Screen, then it doesn't have a size. Screens cannot depend on children:
-        bool isScreen = ElementSave != null && ElementSave is ScreenSave;
-        return !isScreen &&
-            (this.WidthUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren ||
-            this.HeightUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren);
-    }
 
     bool GetIfShouldCallUpdateOnParent()
     {
