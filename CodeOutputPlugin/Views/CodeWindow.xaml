@@ -42,9 +42,15 @@
                 <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" />
                 <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
                     <StackPanel>
-                        <StackPanel>
-                            <WpfDataUi:DataUiGrid Name="DataGrid"></WpfDataUi:DataUiGrid>
+                        <StackPanel x:Name="AutoAndManualButtonStack">
+                            <Label>Choose a code generation option below:</Label>
+                            <Button MinHeight="36" x:Name="AutoSetupCodeGenerationButton" Click="HandleAutoSetupClicked">Auto Setup Code Generation</Button>
+                            <Button MinHeight="36" Click="HandleManualSetupClicked">Manually Setup Code Generation</Button>
+                        
+                        </StackPanel>
+                        <StackPanel x:Name="FullGenerationUiStack">
                             <Button Click="HandleGenerateCodeClicked">Generate Code</Button>
+                            <WpfDataUi:DataUiGrid Name="DataGrid"></WpfDataUi:DataUiGrid>
                             <!--Let's not do this ...it's dangerous for now until things stabilize (May 26, 2022)-->
                             <!--<Button Click="HandleGenerateAllCodeClicked">Generate All Code</Button>-->
                         </StackPanel>

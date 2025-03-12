@@ -17,8 +17,8 @@ namespace CodeOutputPlugin.Models
 
     public enum ObjectInstantiationType
     {
-        FullyInCode,
-        FindByName
+        FullyInCode = 0,
+        FindByName = 1
     }
 
     public enum InheritanceLocation

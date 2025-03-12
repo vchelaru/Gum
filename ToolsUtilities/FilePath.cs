@@ -112,7 +112,15 @@ namespace ToolsUtilities
 
         public FilePath GetDirectoryContainingThis()
         {
-            return FileManager.GetDirectory(this.StandardizedCaseSensitive);
+            var directoryAsString = FileManager.GetDirectory(this.StandardizedCaseSensitive);
+            if(string.IsNullOrEmpty(directoryAsString))
+            {
+                return null;
+            }
+            else
+            {
+                return directoryAsString;
+            }
         }
 
         public override int GetHashCode()

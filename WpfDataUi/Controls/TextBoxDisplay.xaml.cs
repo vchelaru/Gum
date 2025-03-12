@@ -55,11 +55,6 @@ namespace WpfDataUi.Controls
                 {
                     this.RefreshAllContextMenus(force:true);
                 }
-                //if (mInstanceMember != null)
-                //{
-                //    mInstanceMember.DebugInformation = "TextBoxDisplay " + mInstanceMember.Name;
-                //}
-
 
                 Refresh();
             }

@@ -7,16 +7,24 @@
              mc:Ignorable="d" 
              d:DesignHeight="30" d:DesignWidth="200">
     <Grid>
-        <Grid>
+        <Grid x:Name="SelectionButtonGrid">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Name="FirstColumn" Width="{Binding FirstGridLength}"></ColumnDefinition>
                 <ColumnDefinition></ColumnDefinition>
                 <ColumnDefinition Width="Auto"></ColumnDefinition>
             </Grid.ColumnDefinitions>
-            <Button>Use ../../File Location</Button>
-            <Button Grid.Column="1" Width="32">...</Button>
-        </Grid>
-        <Grid>
-            
+
+            <TextBlock x:Name="Label" MinWidth="100" TextWrapping="Wrap"  
+                       VerticalAlignment="Center"
+                       Padding="4,4,4,0"
+                       >Property Label:</TextBlock>
+
+            <Button x:Name="UseDotDotPathButton" 
+                    Click="UseDotDotPathButton_Click"
+                    Grid.Column="1">Use ../../File Location</Button>
+            <Button x:Name="OpenFileLocationButton" 
+                    Click="OpenFileLocationButton_Click" 
+                    Grid.Column="2" Width="32">...</Button>
         </Grid>
     </Grid>
 </UserControl>

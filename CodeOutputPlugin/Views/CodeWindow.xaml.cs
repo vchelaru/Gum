@@ -1,6 +1,7 @@
 ﻿using CodeOutputPlugin.Models;
 using CodeOutputPlugin.ViewModels;
 using Gum;
+using Gum.Mvvm;
 using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
@@ -31,6 +32,8 @@ namespace CodeOutputPlugin.Views
     {
         #region Fields/Properties
 
+        bool HasClickedManualSetup;
+
         CodeWindowViewModel ViewModel => DataContext as CodeWindowViewModel;
 
         public CodeOutputProjectSettings CodeOutputProjectSettings
@@ -48,7 +51,7 @@ namespace CodeOutputPlugin.Views
 
                 DataGrid.Instance = codeOutputElementSettings;
 
-                CreateGridCategories();
+                FullRefreshDataGrid();
 
             }
         }
@@ -68,10 +71,11 @@ namespace CodeOutputPlugin.Views
             InitializeComponent();
             DataGrid.PropertyChange += (not, used) => CodeOutputSettingsPropertyChanged?.Invoke(this, null);
 
-            CreateGridCategories();
+            FullRefreshDataGrid();
         }
 
-        private void CreateGridCategories()
+
+        private void FullRefreshDataGrid()
         {
             DataGrid.Categories.Clear();
 
@@ -86,7 +90,6 @@ namespace CodeOutputPlugin.Views
             elementCategory.Members.Add(CreateGenerateLocalizeMethod());
 
             DataGrid.Categories.Add(elementCategory);
-
         }
 
         #region Project-wide UI
@@ -94,17 +97,108 @@ namespace CodeOutputPlugin.Views
         private void CreateProjectWideUi()
         {
             var projectCategory = new MemberCategory("Project-Wide Code Generation");
+            projectCategory.Members.Add(CreateCodeProjectRootMember());
             projectCategory.Members.Add(CreateOutputLibrarySelectionMember());
             projectCategory.Members.Add(CreateGenerateObjectInstantiationTypeMember());
             projectCategory.Members.Add(CreateProjectUsingStatementsMember());
-            projectCategory.Members.Add(CreateCodeProjectRootMember());
             projectCategory.Members.Add(CreateRootNamespaceMember());
             projectCategory.Members.Add(CreateDefaultScreenBaseMember());
-            projectCategory.Members.Add(CreateAdjustPixelValuesForDensityMember());
-            projectCategory.Members.Add(CreateBaseTypesNotCodeGenerated());
-            projectCategory.Members.Add(CreateGenerateGumDataTypesCode());
+
+            var createAdjustPixelValues =
+                CodeOutputProjectSettings?.OutputLibrary == OutputLibrary.XamarinForms ||
+                CodeOutputProjectSettings?.OutputLibrary == OutputLibrary.WPF ||
+                CodeOutputProjectSettings?.OutputLibrary == OutputLibrary.Maui;
+            if(createAdjustPixelValues)
+            {
+                projectCategory.Members.Add(CreateAdjustPixelValuesForDensityMember());
+                projectCategory.Members.Add(CreateBaseTypesNotCodeGenerated());
+                // Not sure if this should be here or not...
+                projectCategory.Members.Add(CreateGenerateGumDataTypesCode());
+            }
+
             DataGrid.Categories.Add(projectCategory);
         }
+
+        private InstanceMember CreateCodeProjectRootMember()
+        {
+            var member = new InstanceMember("Code Project Root", this);
+
+            member.CustomSetPropertyEvent += (owner, args) =>
+            {
+                if (CodeOutputProjectSettings != null)
+                {
+                    var valueToSet = (string)args.Value;
+                    var needsAppendedSlash = !string.IsNullOrEmpty(valueToSet) &&
+                        !valueToSet.EndsWith("\\") &&
+                        !valueToSet.EndsWith("/");
+                    if (needsAppendedSlash)
+                    {
+                        valueToSet += "\\";
+                    }
+
+                    if(!string.IsNullOrWhiteSpace(valueToSet) && FileManager.IsRelative(valueToSet) == false)
+                    {
+                        var projectDirectory = GumState.Self.ProjectState.ProjectDirectory;
+                        valueToSet = FileManager.MakeRelative(valueToSet, projectDirectory, preserveCase:true);
+
+                        if(string.IsNullOrEmpty(valueToSet))
+                        {
+                            valueToSet = "./";
+                        }
+                    }
+
+                    var wasOldempty = string.IsNullOrEmpty(CodeOutputProjectSettings.CodeProjectRoot);
+
+                    CodeOutputProjectSettings.CodeProjectRoot = valueToSet;
+
+                    CodeOutputSettingsPropertyChanged?.Invoke(this, null);
+
+                }
+            };
+
+            member.CustomGetEvent += (owner) =>
+            {
+                var projectRoot = CodeOutputProjectSettings?.CodeProjectRoot;
+                if (string.IsNullOrEmpty(projectRoot))
+                {
+                    return String.Empty;
+                }
+                else if(projectRoot == "./")
+                {
+                    return GumState.Self.ProjectState.ProjectDirectory;
+                }
+                else if (projectRoot != null && FileManager.IsRelative(projectRoot))
+                {
+                    return FileManager.RemoveDotDotSlash( GumState.Self.ProjectState.ProjectDirectory + projectRoot);
+                }
+                else
+                {
+                    return projectRoot;
+                }
+            };
+            member.CustomGetTypeEvent += (owner) => typeof(string);
+            // Don't use a FileSelectionDisplay since it currently only supports
+            // selecting files, and we want to select a folder. Maybe at some point 
+            // in the future this could have a property for selecting folder, but until then....
+            //member.PreferredDisplayer = typeof(FileSelectionDisplay);
+
+            //var value = member.Value as string;
+            //if(string.IsNullOrEmpty(value))
+            //{
+            //    // let's see if we have a csproj:
+            var csproj = CodeRootSelectionDisplay.GetCsprojDirectory();
+
+            var areSetupButtonsVisible = 
+                csproj != null && 
+                string.IsNullOrEmpty(CodeOutputProjectSettings.CodeProjectRoot) &&
+                !HasClickedManualSetup;
+
+            this.AutoAndManualButtonStack.Visibility = areSetupButtonsVisible.ToVisibility();
+            this.FullGenerationUiStack.Visibility = (!areSetupButtonsVisible).ToVisibility();
+
+            return member;
+        }
+
 
         private InstanceMember CreateOutputLibrarySelectionMember()
         {
@@ -126,6 +220,8 @@ namespace CodeOutputPlugin.Views
                         }
                     }
                     CodeOutputSettingsPropertyChanged?.Invoke(this, null);
+
+                    FullRefreshDataGrid();
                 }
             };
 
@@ -165,70 +261,6 @@ namespace CodeOutputPlugin.Views
             member.CustomGetEvent += (owner) => CodeOutputProjectSettings?.CommonUsingStatements;
             member.CustomGetTypeEvent += (owner) => typeof(string);
             member.PreferredDisplayer = typeof(MultiLineTextBoxDisplay);
-
-            return member;
-        }
-
-        private InstanceMember CreateCodeProjectRootMember()
-        {
-            var member = new InstanceMember("Code Project Root", this);
-
-            member.CustomSetPropertyEvent += (owner, args) =>
-            {
-                if (CodeOutputProjectSettings != null)
-                {
-                    var valueToSet = (string)args.Value;
-                    var needsAppendedSlash = !string.IsNullOrEmpty(valueToSet) &&
-                        !valueToSet.EndsWith("\\") &&
-                        !valueToSet.EndsWith("/");
-                    if (needsAppendedSlash)
-                    {
-                        valueToSet += "\\";
-                    }
-
-                    if(!string.IsNullOrWhiteSpace(valueToSet) && FileManager.IsRelative(valueToSet) == false)
-                    {
-                        var projectDirectory = GumState.Self.ProjectState.ProjectDirectory;
-                        valueToSet = FileManager.MakeRelative(valueToSet, projectDirectory, preserveCase:true);
-
-                        if(string.IsNullOrEmpty(valueToSet))
-                        {
-                            valueToSet = "./";
-                        }
-                    }
-                    CodeOutputProjectSettings.CodeProjectRoot = valueToSet;
-
-                    CodeOutputSettingsPropertyChanged?.Invoke(this, null);
-                }
-            };
-
-            member.CustomGetEvent += (owner) =>
-            {
-                var projectRoot = CodeOutputProjectSettings?.CodeProjectRoot;
-                if (string.IsNullOrEmpty(projectRoot))
-                {
-                    return String.Empty;
-                }
-                else if(projectRoot == "./")
-                {
-                    return GumState.Self.ProjectState.ProjectDirectory;
-                }
-                else if (projectRoot != null && FileManager.IsRelative(projectRoot))
-                {
-                    return FileManager.RemoveDotDotSlash( GumState.Self.ProjectState.ProjectDirectory + projectRoot);
-                }
-                else
-                {
-                    return projectRoot;
-                }
-            };
-            member.CustomGetTypeEvent += (owner) => typeof(string);
-            // Don't use a FileSelectionDisplay since it currently only supports
-            // selecting files, and we want to select a folder. Maybe at some point 
-            // in the future this could have a property for selecting folder, but until then....
-            //member.PreferredDisplayer = typeof(FileSelectionDisplay);
-
-            member.PreferredDisplayer = typeof(CodeRootSelectionDisplay);
 
             return member;
         }
@@ -333,17 +365,43 @@ namespace CodeOutputPlugin.Views
         private InstanceMember CreateGenerateObjectInstantiationTypeMember()
         {
             var member = new InstanceMember("Object Instantiation Type", this);
+
+            const string FullyInCode = "Fully in Code (no loaded Gum Project)";
+            const string ReferenceGum = "Reference loaded Gum Project";
+
             member.CustomSetPropertyEvent += (owner, args) =>
             {
                 if (CodeOutputProjectSettings != null)
                 {
-                    CodeOutputProjectSettings.ObjectInstantiationType = (ObjectInstantiationType)args.Value;
+                    if((args.Value as string) == FullyInCode)
+                    {
+                        CodeOutputProjectSettings.ObjectInstantiationType = ObjectInstantiationType.FullyInCode;
+                    }
+                    else
+                    {
+                        CodeOutputProjectSettings.ObjectInstantiationType = ObjectInstantiationType.FindByName;
+                    }
                     CodeOutputSettingsPropertyChanged?.Invoke(this, null);
                 }
             };
 
-            member.CustomGetEvent += (owner) => CodeOutputProjectSettings?.ObjectInstantiationType;
+            member.CustomGetEvent += (owner) =>
+            {
+                switch(CodeOutputProjectSettings?.ObjectInstantiationType)
+                {
+                    case ObjectInstantiationType.FullyInCode: return FullyInCode;
+                    case ObjectInstantiationType.FindByName: return ReferenceGum;
+                }
+                return "";
+
+            };
             member.CustomGetTypeEvent += (owner) => typeof(ObjectInstantiationType);
+
+            member.CustomOptions = new List<object>
+            {
+                FullyInCode,
+                ReferenceGum
+            };
 
             return member;
         }
@@ -501,6 +559,76 @@ namespace CodeOutputPlugin.Views
         //        }
         //    }
         //}
+
+
+        private void HandleAutoSetupClicked(object sender, RoutedEventArgs e)
+        {
+            var csprojLocation = CodeRootSelectionDisplay.GetCsprojDirectory();
+
+            if(csprojLocation == null)
+            {
+                GumCommands.Self.GuiCommands.ShowMessage("No .csproj file found, so cannot automatically set up code generation.");
+                return;
+            }
+
+            CodeOutputProjectSettings.CodeProjectRoot = csprojLocation.FullPath;
+
+            // we're going to load the project, so let's set it to find by name:
+            CodeOutputProjectSettings.ObjectInstantiationType = ObjectInstantiationType.FindByName;
+
+            try
+            {
+                var csprojDirectory = CodeOutputProjectSettings.CodeProjectRoot;
+
+                var csproj = System.IO.Directory.GetFiles(csprojDirectory, "*.csproj", System.IO.SearchOption.TopDirectoryOnly)
+                    .Select(item => new FilePath(item))
+                    .FirstOrDefault();
+
+                if (csproj != null)
+                {
+                    var contents = System.IO.File.ReadAllText(csproj.FullPath);
+
+                    if (contents.Contains("<PackageReference Include=\"MonoGame.Framework.") ||
+                        contents.Contains("<PackageReference Include=\"nkast.Xna.Framework"))
+                    {
+                        CodeOutputProjectSettings.OutputLibrary = OutputLibrary.MonoGame;
+                    }
+                    // todo - add more here for automatically setting the output library
+
+
+                    var namespaceName = csproj.CaseSensitiveNoPathNoExtension
+                        .Replace(".", "_")
+                        .Replace("-", "_")
+                        .Replace(" ", "_")
+                        ;
+
+                    if(contents.Contains("<RootNamespace>"))
+                    {
+                        var startIndex = contents.IndexOf("<RootNamespace>") + "<RootNamespace>".Length;
+                        var endIndex = contents.IndexOf("</RootNamespace>");
+                        namespaceName = contents.Substring(startIndex, endIndex - startIndex);
+                    }
+
+                    CodeOutputProjectSettings.RootNamespace = namespaceName;
+                }
+
+                CodeOutputSettingsPropertyChanged?.Invoke(this, null);
+
+
+                FullRefreshDataGrid();
+
+            }
+            catch (Exception ex)
+            {
+                GumCommands.Self.GuiCommands.PrintOutput($"Error: {ex}");
+            }
+        }
+
+        private void HandleManualSetupClicked(object sender, RoutedEventArgs e)
+        {
+            HasClickedManualSetup = true;
+            FullRefreshDataGrid();
+        }
 
         #endregion
     }
