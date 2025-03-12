@@ -89,6 +89,13 @@ namespace CodeOutputPlugin.Views
             elementCategory.Members.Add(CreateFileLocationMember());
             elementCategory.Members.Add(CreateGenerateLocalizeMethod());
 
+            var isGenerateCodeButtonVisible =
+                !string.IsNullOrEmpty(CodeOutputProjectSettings?.CodeProjectRoot) &&
+                (CodeOutputElementSettings?.GenerationBehavior == GenerationBehavior.GenerateManually ||
+                 CodeOutputElementSettings?.GenerationBehavior == GenerationBehavior.GenerateAutomaticallyOnPropertyChange);
+
+            GenerateCodeButton.Visibility = isGenerateCodeButtonVisible.ToVisibility();
+
             DataGrid.Categories.Add(elementCategory);
         }
 
@@ -420,6 +427,8 @@ namespace CodeOutputPlugin.Views
                 {
                     codeOutputElementSettings.GenerationBehavior = (GenerationBehavior)args.Value;
                     CodeOutputSettingsPropertyChanged?.Invoke(this, null);
+
+                    FullRefreshDataGrid();
                 }
             };
 

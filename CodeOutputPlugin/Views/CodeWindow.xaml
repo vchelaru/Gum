@@ -49,7 +49,7 @@
                         
                         </StackPanel>
                         <StackPanel x:Name="FullGenerationUiStack">
-                            <Button Click="HandleGenerateCodeClicked">Generate Code</Button>
+                            <Button x:Name="GenerateCodeButton" Click="HandleGenerateCodeClicked">Generate Code</Button>
                             <WpfDataUi:DataUiGrid Name="DataGrid"></WpfDataUi:DataUiGrid>
                             <!--Let's not do this ...it's dangerous for now until things stabilize (May 26, 2022)-->
                             <!--<Button Click="HandleGenerateAllCodeClicked">Generate All Code</Button>-->
