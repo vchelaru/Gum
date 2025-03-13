@@ -4694,11 +4694,19 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     toReturn = true;
                     break;
                 case nameof(MaxHeight):
-                    this.MaxHeight = (float)value;
+                    this.MaxHeight = (float?)value;
                     toReturn = true;
                     break;
                 case nameof(MaxWidth):
-                    this.MaxWidth = (float)value;
+                    this.MaxWidth = (float?)value;
+                    toReturn = true;
+                    break;
+                case nameof(MinHeight):
+                    this.MinHeight = (float?)value;
+                    toReturn = true;
+                    break;
+                case nameof(MinWidth):
+                    this.MinWidth = (float?)value;
                     toReturn = true;
                     break;
                 case "Parent":

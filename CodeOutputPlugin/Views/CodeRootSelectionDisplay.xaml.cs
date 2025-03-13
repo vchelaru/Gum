@@ -56,39 +56,7 @@ public partial class CodeRootSelectionDisplay : UserControl, IDataUi
         }
     }
 
-    public static FilePath? GetCsprojDirectory ()
-    {
-        FilePath gumDirectory = GumState.Self.ProjectState.ProjectDirectory;
 
-        return GetCsprojDirectory(gumDirectory);
-    }
-
-    static FilePath? GetCsprojDirectory(FilePath filePath)
-    {
-        if(filePath == null)
-        {
-            return null;
-        }
-
-        var files = System.IO.Directory.GetFiles(filePath.FullPath)
-            .Select(item => new FilePath(item));
-
-        if(files.Any(item => item.Extension == "csproj"))
-        {
-            return filePath;
-        }
-
-        var parentDirectory = filePath.GetDirectoryContainingThis();
-
-        if(parentDirectory == null)
-        {
-            return null;
-        }
-        else
-        {
-            return GetCsprojDirectory(parentDirectory);
-        }
-    }
 
     #endregion
 

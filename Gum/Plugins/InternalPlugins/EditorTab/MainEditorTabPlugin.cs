@@ -55,6 +55,8 @@ internal class MainEditorTabPlugin : InternalPlugin
             nameof(GraphicalUiElement.MaxHeight),
             nameof(Text.MaxNumberOfLines),
             nameof(GraphicalUiElement.MaxWidth),
+            nameof(GraphicalUiElement.MinHeight),
+            nameof(GraphicalUiElement.MinWidth),
             "Red",
             "Rotation",
             "SourceFile",

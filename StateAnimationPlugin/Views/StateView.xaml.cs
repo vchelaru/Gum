@@ -55,7 +55,7 @@ namespace StateAnimationPlugin.Views
                 e.Handled = true;
 
                 // Make it lose and regain focus to apply the databainding
-                Focusable.Focus();
+                FocusableTextBox.Focus();
 
                 //InterpolationTypeComboBox.Focus();
                 TimeTextBox.Focus();

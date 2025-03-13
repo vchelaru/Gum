@@ -679,19 +679,24 @@ namespace Gum.Managers
             }
             stateSave.Variables.Add(variableSave);
 
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "MinWidth", Category = "Dimensions" });
             var maxWidthVariable = new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "MaxWidth", Category = "Dimensions" };
             stateSave.Variables.Add(maxWidthVariable);
+
+
 
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float", Value = defaultHeight, Name = "Height", Category = "Dimensions" });
 
             variableSave = new VariableSave { SetsValue = true, Type = typeof(DimensionUnitType).Name, Value = defaultValue, Name = "HeightUnits", Category = "Dimensions" };
             if (dimensionVariableAction == DimensionVariableAction.ExcludeFileOptions)
+
             {
                 variableSave.ExcludedValuesForEnum.Add(DimensionUnitType.PercentageOfSourceFile);
                 variableSave.ExcludedValuesForEnum.Add(DimensionUnitType.MaintainFileAspectRatio);
             }
             stateSave.Variables.Add(variableSave);
 
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "MinHeight", Category = "Dimensions" });
             var maxHeightVariable = new VariableSave { SetsValue = true, Type = "float?", Value = null, Name = "MaxHeight", Category = "Dimensions" };
             stateSave.Variables.Add(maxHeightVariable);
 
