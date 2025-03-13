@@ -91,9 +91,9 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
     {
         if (game?.Window != null && windowTextInputBuffer == null)
         {
+#if !FNA
             windowTextInputBuffer = new StringBuilder();
 
-#if !FNA
             game.Window.TextInput += HandleWindowTextInput;
 #endif
         }
