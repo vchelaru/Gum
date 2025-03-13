@@ -259,7 +259,15 @@ public class Cursor : ICursor
 
         _touchCollection = TouchPanel.GetState();
 
-        if (_touchCollection.Count > 0 || _lastFrameTouchCollection.Count > 0)
+        var lastFrameTouchCollectionCount = 0;
+        try
+        {
+            lastFrameTouchCollectionCount = _lastFrameTouchCollection.Count;
+        }
+        // FNA crashes here (maybe because XNA did?) if lastFrameTouchCollectionCount.GetState has never been called
+        catch { }
+
+        if (_touchCollection.Count > 0 || lastFrameTouchCollectionCount > 0)
         {
             LastInputDevice = InputDevice.TouchScreen;
 
