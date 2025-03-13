@@ -5,7 +5,6 @@
     <RollForward>Major</RollForward>
     <PublishReadyToRun>false</PublishReadyToRun>
     <TieredCompilation>false</TieredCompilation>
-    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <DefineConstants>DESKTOP;FNA</DefineConstants>
   </PropertyGroup>
   <PropertyGroup>
@@ -25,11 +24,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FileAliases.Generated.cs" />
-    <Compile Include="Game1.cs" />
-    <Compile Include="Program.cs" />
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="Icon.ico" />
     <EmbeddedResource Include="Icon.bmp" />
   </ItemGroup>
@@ -44,6 +38,9 @@
     <ProjectReference Include="..\..\..\MonoGameGum\FnaGum\FnaGum.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <None Update="Content\GumProject\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Content\Shader.fx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -74,6 +71,9 @@
     <None Update="SDL3.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Content\GumProject\" />
   </ItemGroup>
   <Target Name="RestoreDotnetTools" BeforeTargets="Restore">
     <Message Text="Restoring dotnet tools" Importance="High" />

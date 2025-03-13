@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FnaSample", "FnaSample\FnaS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FnaGum", "..\..\MonoGameGum\FnaGum\FnaGum.csproj", "{B28AFC01-B4E5-45CF-8664-776986EBFCCE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FNA.Core", "..\..\fna\FNA.Core.csproj", "{9DF5A0B8-814E-416C-A66C-0480798A9E66}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{B28AFC01-B4E5-45CF-8664-776986EBFCCE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B28AFC01-B4E5-45CF-8664-776986EBFCCE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B28AFC01-B4E5-45CF-8664-776986EBFCCE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9DF5A0B8-814E-416C-A66C-0480798A9E66}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9DF5A0B8-814E-416C-A66C-0480798A9E66}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9DF5A0B8-814E-416C-A66C-0480798A9E66}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9DF5A0B8-814E-416C-A66C-0480798A9E66}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

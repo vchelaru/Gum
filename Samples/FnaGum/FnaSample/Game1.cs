@@ -7,6 +7,11 @@ using System.Linq;
 
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MonoGameGum;
+using MonoGameGum.GueDeriving;
+using MonoGameGum.Forms.Controls;
+using Gum.Wireframe;
+using FnaSample.Screens;
 
 namespace FnaSample
 {
@@ -15,6 +20,8 @@ namespace FnaSample
         GraphicsDeviceManager graphics;
 
         SpriteBatch _spriteBatch;
+
+        GraphicalUiElement Root;
 
         public Game1() : base()
         {
@@ -30,27 +37,35 @@ namespace FnaSample
         protected override void Initialize()
         {
 
-            using var stream = System.IO.File.OpenRead("Content/GlobalContent/TextureFile.png");
-            TextureFile =
-                Texture2D.FromStream(GraphicsDevice, stream);
-            _spriteBatch = new SpriteBatch(graphics.GraphicsDevice);
+            GumService.Default.Initialize(this, "GumProject/GumProject.gumx");
+
+            IsMouseVisible = true;
+
+            Root = new MainScreenRuntime();
+            Root.AddToManagers();
+
+            //var rectangle = new ColoredRectangleRuntime();
+
+            //Root = new ContainerRuntime();
+            //Root.AddToManagers();
+
+            //var button = new Button();
+            //button.Text = "Click Me!";
+            //Root.Children.Add(button.Visual);
 
             base.Initialize();
         }
 
         protected override void Update(GameTime gameTime)
         {
+            GumService.Default.Update(this, gameTime, Root);
 
             base.Update(gameTime);
         }
 
         protected override void Draw(GameTime gameTime)
         {
-            _spriteBatch.Begin();
-
-            _spriteBatch.Draw(TextureFile, new Rectangle(0,0,150,150), Color.White);
-
-            _spriteBatch.End();
+            GumService.Default.Draw();
 
             base.Draw(gameTime);
         }

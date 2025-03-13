@@ -1,0 +1,12 @@
+{
+  "CommonUsingStatements": "using Gum.Converters;\nusing Gum.DataTypes;\nusing Gum.Managers;\nusing Gum.Wireframe;\n\nusing RenderingLibrary.Graphics;\n\nusing System.Linq;\nusing MonoGameGum.GueDeriving;\n",
+  "CodeProjectRoot": "C:\\Users\\vchel\\Documents\\GitHub\\Gum\\Samples\\FnaGum\\FnaSample\\",
+  "RootNamespace": "FnaSample",
+  "InheritanceLocation": 1,
+  "ObjectInstantiationType": 1,
+  "DefaultScreenBase": "Gum.Wireframe.BindableGue",
+  "OutputLibrary": 4,
+  "AdjustPixelValuesForDensity": false,
+  "BaseTypesNotCodeGenerated": null,
+  "GenerateGumDataTypes": false
+}
