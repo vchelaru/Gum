@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>StateInterpolation.FNA</name>
+    </assembly>
+    <members>
+        <member name="T:FlatRedBall.Glue.StateInterpolation.TweeningFunction">
+            <summary>
+            Delegate used for all tweening functions.
+            </summary>
+            <param name="timeElapsed">How much time has passed since the start of the tween.  If this is called over a period of time then this value will increase.</param>
+            <param name="startingValue">The starting value value for tweening.  For example this may be the X position of an object.</param>
+            <param name="endingValue">The value when the tween is finished.  For example this may be the ending X position of an object.</param>
+            <param name="durationInSeconds">How long (in seconds) that the tween will last.</param>
+            <returns>The resulting value.</returns>
+        </member>
+    </members>
+</doc>

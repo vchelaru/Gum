@@ -1,0 +1,76 @@
+{
+  "In2D": true,
+  "ResolutionWidth": 800,
+  "ResolutionHeight": 600,
+  "OrthogonalWidth": 800,
+  "OrthogonalHeight": 600,
+  "Screens": [],
+  "Entities": [],
+  "GlobalFiles": [
+    {
+      "Name": "GlobalContent/TextureFile.png",
+      "IsSharedStatic": true,
+      "DestroyOnUnload": false,
+      "HasPublicProperty": true,
+      "ProjectsToExcludeFrom": []
+    }
+  ],
+  "GlobalContentSettingsSave": {
+    "GenerateLoadGlobalContentCode": true
+  },
+  "SyncedProjects": [],
+  "StartUpScreen": "Screens\\MainMenu",
+  "ResolutionPresets": [],
+  "PerformanceSettingsSave": {},
+  "IgnoredDirectories": [],
+  "CustomClasses": [
+    {
+      "Name": "TileMapInfo",
+      "CsvFilesUsingThis": [],
+      "RequiredProperties": [
+        {
+          "Type": "string",
+          "Member": "Name",
+          "Time": 0.0
+        },
+        {
+          "Type": "System.Collections.Generic.List<FlatRedBall.Content.AnimationChain.AnimationFrameSave>",
+          "Member": "EmbeddedAnimation",
+          "Time": 0.0
+        }
+      ],
+      "GenerateCode": true
+    }
+  ],
+  "ApplyToFixedResolutionPlatforms": true,
+  "ExternallyBuiltFileDirectory": "../../",
+  "FileVersion": 63,
+  "ScreenReferences": [
+    {
+      "Name": "Screens\\GameScreen"
+    },
+    {
+      "Name": "Screens\\MainMenu"
+    }
+  ],
+  "EntityReferences": [],
+  "Bookmarks": [],
+  "PluginData": {
+    "RequiredPlugins": []
+  },
+  "DisplaySettings": {
+    "Name": "Custom",
+    "GenerateDisplayCode": true,
+    "Is2D": true,
+    "ResolutionWidth": 800,
+    "ResolutionHeight": 600,
+    "AspectRatioWidth": 16.0,
+    "AspectRatioHeight": 9.0,
+    "SupportLandscape": true,
+    "Scale": 100,
+    "ScaleGum": 100,
+    "DominantInternalCoordinates": 1,
+    "TextureFilter": 1
+  },
+  "AllDisplaySettings": []
+}

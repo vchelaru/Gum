@@ -1,0 +1,1533 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>GumCore.FNA</name>
+    </assembly>
+    <members>
+        <member name="P:Gum.DataTypes.Behaviors.ElementBehaviorReference.ProjectName">
+            <summary>
+            Currently unused - this will eventually be used to reference behaviors
+            from different Gum projects.
+            </summary>
+        </member>
+        <member name="M:Gum.DataTypes.DimensionUnitTypeExtensions.GetIsPixelBased(Gum.DataTypes.DimensionUnitType)">
+            <summary>
+            Returns whether one unit represents one pixel. 
+            </summary>
+            <param name="unitType">The unit type.</param>
+            <returns>Whether one unit represents one pixel.</returns>
+        </member>
+        <member name="P:Gum.DataTypes.ElementReference.Link">
+            <summary>
+            The location of the file relative to the project if it differs from the Name. By default
+            this will be empty, so the Name will be used to load/save the element. However, if this is not null,
+            then this value is used instead to load the referenced element.
+            </summary>
+        </member>
+        <member name="P:Gum.DataTypes.ElementSave.AllStates">
+            <summary>
+            Returns all states in the element including categorized states. For uncategorized states, see
+            the States property.
+            </summary>
+        </member>
+        <member name="M:Gum.DataTypes.ElementSave.GetInstance(System.String)">
+            <summary>
+            Returns the instance by name owned by this element.
+            </summary>
+            <remarks>
+            This only searches the top-level for instances, but inheritance will result in DefinedByBase being set to true, so
+            a true recursive search isn't needed.
+            </remarks>
+            <param name="name">The case-sensitive name of the instance.</param>
+            <returns>The found instance, or null if no matches are found.</returns>
+        </member>
+        <member name="P:Gum.DataTypes.GumLoadResult.ErrorMessage">
+            <summary>
+            Error message about why the load may have failed. This does not include errors about missing files - for missing files see the MissingFiles list.
+            </summary>
+            <remarks>
+            Errors include situations like a malformed XML file - errors which tools like Gum cannot recover from. Missing files, while resulting
+            in an incomplete load, do not put the project in an unusable state, so we do not consider them errors.
+            </remarks>
+        </member>
+        <member name="T:Gum.DataTypes.GumProjectSave">
+            <summary>
+            Represents the data stored in a .gumx file. GumProjectSave
+            instances can be XML Serialized to a .gumx file.
+            </summary>
+        </member>
+        <member name="P:Gum.DataTypes.GumProjectSave.ParentProjectRoot">
+            <summary>
+            The folder of the root of the parent project if this Gum project is part of a larger project (like a game project or android app).
+            This is a relative path like "../../"
+            </summary>
+        </member>
+        <member name="M:Gum.DataTypes.Variables.StateSave.GetValue(System.String)">
+            <summary>
+            Attempts to get the value for the argument variableName, or null if not found.
+            </summary>
+            <param name="variableName">The qualified variable name</param>
+            <returns>The value found, or null</returns>
+        </member>
+        <member name="P:Gum.DataTypes.Variables.VariableListSave.Type">
+            <summary>
+             The type of each individual item in the list
+            </summary>
+        </member>
+        <member name="T:Gum.DataTypes.Variables.VariableSaveValues">
+            <summary>
+            Struct representation of VariableSave which can be used in situations where
+            heap allocation should not occur
+            </summary>
+        </member>
+        <member name="P:Gum.DataTypes.Variables.VariableSave.SourceObject">
+            <summary>
+            The name of the object that this variable references. For example if the variable is "MyButton.Text", then the SourceObject is "MyButton"
+            </summary>
+        </member>
+        <member name="P:Gum.DataTypes.Variables.VariableSave.ExposedAsName">
+            <summary>
+            If a Component contains an instance then the variable
+            of that instance is only editable inside that component.
+            The user must explicitly expose that variable.  If the variable
+            is exposed then this variable is set.
+            </summary>
+        </member>
+        <member name="P:Gum.DataTypes.Variables.VariableSave.SetsValue">
+            <summary>
+            Determines whether a null value should be set, or whether the variable is
+            an ignored value.  If this value is true, then null values will be set on the underlying data.
+            </summary>
+        </member>
+        <member name="M:Gum.DataTypes.Variables.StateSaveExtensionMethods.Initialize(Gum.DataTypes.Variables.StateSave)">
+            <summary>
+            Fixes enumeration values and sorts all variables alphabetically
+            </summary>
+            <param name="stateSave">The state to initialize.</param>
+        </member>
+        <member name="M:Gum.DataTypes.Variables.StateSaveExtensionMethods.GetValueRecursive(Gum.DataTypes.Variables.StateSave,System.String)">
+            <summary>
+            Returns the value of the variable name from this state. If not found, will follow inheritance to find 
+            the value from the base.
+            </summary>
+            <param name="stateSave">The state in the current element.</param>
+            <param name="variableName">The variable name</param>
+            <returns>The value found recursively, where the most-derived value has priority.</returns>
+        </member>
+        <member name="M:Gum.DataTypes.Variables.StateSaveExtensionMethods.GetVariableRecursive(Gum.DataTypes.Variables.StateSave,System.String)">
+            <summary>
+            Returns the first instance of an existing VariableSave recursively. 
+            </summary>
+            <param name="stateSave">The possible state that contains the variable. If it doesn't, then the code will recursively go to base types.</param>
+            <param name="variableName"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Gum.DataTypes.Variables.StateSaveExtensionMethods.AssignVariableSave(Gum.DataTypes.Variables.StateSave,System.String,System.Object,Gum.DataTypes.InstanceSave,System.String,System.Boolean)">
+            <summary>
+            Assigns a value to a variable.  If the variable doesn't exist then the variable is instantiated, then the value is assigned.
+            </summary>
+            <param name="stateSave">The StateSave that contains the variable.  The variable will be added to this StateSave if it doesn't exist.</param>
+            <param name="variableName">The name of the variable to look for.</param>
+            <param name="value">The value to assign to the variable.</param>
+            <param name="instanceSave">The instance that owns this variable.  This may be null.</param>
+            <param name="variableType">The type of the variable.  This is only needed if the value is null.</param>
+        </member>
+        <member name="M:Gum.DataTypes.Variables.StateSaveExtensionMethods.Merge(Gum.DataTypes.Variables.StateSave,Gum.DataTypes.Variables.StateSave,System.Single,System.Collections.Generic.List{Gum.DataTypes.Variables.VariableSaveValues})">
+            <summary>
+            Merges two states into a list of VariableSaveValues. This is an efficient way to perform state interpolation.
+            </summary>
+            <param name="firstState">The first state.</param>
+            <param name="secondState">The second state.</param>
+            <param name="secondRatio">The ratio of the second state. This value should be between 0 and 1.</param>
+            <param name="mergedValues">The resulting values.</param>
+            <exception cref="T:System.ArgumentNullException">If either of the argument states are null.</exception>
+        </member>
+        <member name="M:Gum.DataTypes.Variables.StateSaveExtensionMethods.GetValueConsideringInterpolation(System.Object,System.Object,System.Single)">
+            <summary>
+            Returns a value that is the interpolation between the first and second values if the value is cast as an object. The value must ultimately be a numeric value.
+            </summary>
+            <param name="firstValue">The first value as a numeric value.</param>
+            <param name="secondValue">The second value as a numeric value.</param>
+            <param name="interpolationValue">A value between 0 and 1. A value of 0 returns the firstValue. A value of 1 returns the second value.</param>
+            <returns>The resulting interpolated value, matching the type of the arguments.</returns>
+        </member>
+        <member name="T:Gum.DataTypes.RecursiveVariableFinder">
+            <summary>
+            Class that can find variables
+            and values recursively.  There's
+            so many different ways that this
+            happens that this consolidates all
+            logic in one place
+            </summary>
+        </member>
+        <member name="M:Gum.DataTypes.RecursiveVariableFinder.GetValueByBottomName(System.String,System.Nullable{System.Int32})">
+            <summary>
+            Returns the value of the variable from the bottom of the stack by climbing back up to find the most derived assignment
+            </summary>
+        </member>
+        <member name="M:Gum.DataTypes.VariableSaveExtensionMethods.FixEnumerations(Gum.DataTypes.Variables.VariableSave)">
+            <summary>
+            Converts integer values to their corresponding enumeration values. This should be called
+            after variable saves are loaded from XML.
+            </summary>
+            <param name="variableSave">The VariableSave to fix.</param>
+            <returns>Whether any changes were made.</returns>
+        </member>
+        <member name="P:Gum.Managers.TypedElementReference.ReferencingObject">
+            <summary>
+            The object that is doing the referencing. This could be an InstanceSave, a VariableSave, a VariableListSave, or a BehaviorReference.
+            </summary>
+        </member>
+        <member name="F:Gum.Managers.ObjectFinder.cachedDictionary">
+            <summary>
+            Provides quick access to Gum objects by name. Elements do not prefix their type
+            so a Screen would be "MainScreen" rather than "Screens/MainScreen"
+            </summary>
+        </member>
+        <member name="M:Gum.Managers.ObjectFinder.GetScreen(System.String)">
+            <summary>
+            Returns the ScreenSave with matching name in the current glue project. Case is ignored when making name comparisons
+            </summary>
+            <param name="screenName"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Gum.Managers.ObjectFinder.GetElementSave(Gum.DataTypes.InstanceSave)">
+            <summary>
+            Returns the ElementSave (Screen, Component, or Standard Element) for the argument instance
+            </summary>
+            <param name="instance">The instance to find the matching element for</param>
+            <returns>The matching ElementSave, or null if none is found</returns>
+        </member>
+        <member name="M:Gum.Managers.ObjectFinder.GetElementSave(System.String)">
+            <summary>
+            Returns the ElementSave (Screen, Component, or Standard Element) for the argument elementName
+            </summary>
+            <param name="elementName">The name of the ElementSave to search for</param>
+            <returns>The matching ElementSave, or null if none is found</returns>
+        </member>
+        <member name="M:Gum.Managers.ObjectFinder.GetElementsReferencing(Gum.DataTypes.ElementSave,System.Collections.Generic.List{Gum.DataTypes.ElementSave},System.Collections.Generic.List{Gum.DataTypes.InstanceSave})">
+            <summary>
+            Returns a list of Elements that include InstanceSaves that use the argument
+            elementSave as their BaseType, or that use an ElementSave deriving from elementSave
+            as their BaseType.
+            </summary>
+            <param name="elementSave">The ElementSave to search for.</param>
+            <returns>A List containing all Elements</returns>
+        </member>
+        <member name="M:Gum.Managers.ObjectFinder.GetBaseElements(Gum.DataTypes.ElementSave)">
+            <summary>
+            Returns a list of ElementSaves inheriting from the argument elementSave, with the most derived first in the list, and the most base last in the list
+            </summary>
+            <param name="elementSave">The element for which to get the inheritance list.</param>
+            <returns>The list, with the most derived (direct inheritance) first.</returns>
+        </member>
+        <member name="M:Gum.Managers.ObjectFinder.GetRootVariable(System.String,Gum.DataTypes.InstanceSave)">
+            <summary>
+            Returns the root variable (defined on the standard element usually) for the argument instance.
+            </summary>
+            <param name="name">The name, including the period such as "InstanceName.X"</param>
+            <param name="instance">The instance, which should match the instance in the variable name.</param>
+            <returns>The root VariableSave</returns>
+        </member>
+        <member name="M:Gum.Wireframe.BbCodeParser.Parse(System.String,System.Collections.Generic.HashSet{System.String})">
+            <summary>
+            Returns a list of FoundTags in the argument text. Only tags in the availableTags set are returned.
+            </summary>
+            <param name="text">The text populated with tags.</param>
+            <param name="availableTags">The available tags for parsing. Tags can be lower-case.</param>
+            <returns>The list of found tags.</returns>
+        </member>
+        <member name="T:Gum.Wireframe.GraphicalUiElement">
+            <summary>
+            The base object for all Gum runtime objects. It contains functionality for
+            setting variables, states, and performing layout. The GraphicalUiElement can
+            wrap an underlying rendering object.
+            </summary>
+        </member>
+        <member name="F:Gum.Wireframe.GraphicalUiElement.mWhatThisContains">
+            <summary>
+            A flat list of all GraphicalUiElements contained by this element. For example, if this GraphicalUiElement
+            is a Screen, this list is all GraphicalUielements for every instance contained regardless of hierarchy.
+            </summary>
+        </member>
+        <member name="P:Gum.Wireframe.GraphicalUiElement.EffectiveManagers">
+            <summary>
+            Returns this instance's SystemManagers, or climbs up the parent/child relationship
+            until a non-null SystemsManager is found. Otherwise, returns null.
+            </summary>
+        </member>
+        <member name="P:Gum.Wireframe.GraphicalUiElement.CanvasWidth">
+            <summary>
+            The X "world units" that the entire gum rendering system uses. This is essentially the "top level" container's width.
+            For a game which renders at 1:1, this will match the game's resolution. 
+            </summary>
+        </member>
+        <member name="P:Gum.Wireframe.GraphicalUiElement.CanvasHeight">
+            <summary>
+            The Y "world units" that the entire gum rendering system uses. This is essentially the "top level" container's height.
+            For a game which renders at 1:1, this will match the game's resolution. 
+            </summary>
+        </member>
+        <member name="P:Gum.Wireframe.GraphicalUiElement.RenderingLibrary#IPositionedSizedObject#X">
+            <summary>
+            The X position of this object as an IPositionedSizedObject. This does not consider origins
+            so it will use the default origin, which is top-left for most types.
+            </summary>
+        </member>
+        <member name="P:Gum.Wireframe.GraphicalUiElement.RenderingLibrary#IPositionedSizedObject#Y">
+            <summary>
+            The Y position of this object as an IPositionedSizedObject. This does not consider origins
+            so it will use the default origin, which is top-left for most types.
+            </summary>
+        </member>
+        <member name="M:Gum.Wireframe.GraphicalUiElement.GetAbsoluteWidth">
+            <summary>
+            Returns the absolute width of the GraphicalUiElement in pixels (as opposed to using its WidthUnits)
+            </summary>
+            <returns>The absolute width in pixels.</returns>
+        </member>
+        <member name="M:Gum.Wireframe.GraphicalUiElement.GetAbsoluteHeight">
+            <summary>
+            Returns the absolute height of the GraphicalUiElement in pixels (as opposed to using its HeightUnits)
+            </summary>
+            <returns>The absolute height in pixels.</returns>
+        </member>
+        <member name="P:Gum.Wireframe.GraphicalUiElement.StackSpacing">
+            <summary>
+            The number of pixels spacing between each child if this is has a ChildrenLayout of 
+            TopToBottomStack or LeftToRightStack.
+            </summary>
+        </member>
+        <member name="P:Gum.Wireframe.GraphicalUiElement.Rotation">
+            <summary>
+            Rotation in degrees. Positive value rotates counterclockwise.
+            </summary>
+        </member>
+        <member name="P:Gum.Wireframe.GraphicalUiElement.ElementGueContainingThis">
+            <summary>
+            The ScreenSave or Component which contains this instance.
+            </summary>
+        </member>
+        <member name="P:Gum.Wireframe.GraphicalUiElement.ContainedElements">
+            <summary>
+            A flat list of all GraphicalUiElements contained by this element. For example, if this GraphicalUiElement
+            is a Screen, this list is all GraphicalUielements for every instance contained regardless of hierarchy.
+            </summary>
+            <remarks>
+            Since this is an interface using ContainedElements in a foreach allocates memory
+            and this can actually be significant in a game that updates its UI frequently.
+            </remarks>
+        </member>
+        <member name="P:Gum.Wireframe.GraphicalUiElement.Children">
+            <summary>
+            Returns the direct hierarchical children of this. Note that this does not return all objects contained in the element, only direct children. 
+            </summary>
+        </member>
+        <member name="P:Gum.Wireframe.GraphicalUiElement.AbsoluteX">
+            <summary>
+            Returns the absolute (screen space) X of the origin of the GraphicalUiElement. Note that
+            this considers the XOrigin, and will apply rotation.
+            </summary>
+        </member>
+        <member name="P:Gum.Wireframe.GraphicalUiElement.AbsoluteLeft">
+            <summary>
+            Returns the absolute X (in screen space) of the left edge of the GraphicalUielement.
+            </summary>
+        </member>
+        <member name="P:Gum.Wireframe.GraphicalUiElement.AbsoluteY">
+            <summary>
+            Returns the absolute Y (screen space) of the origin of the GraphicalUiElement. Note that
+            this considers the YOrigin, and will apply rotation
+            </summary>
+        </member>
+        <member name="P:Gum.Wireframe.GraphicalUiElement.AbsoluteTop">
+            <summary>
+            Returns the absolute Y (in screen space) of the top edge of the GraphicalUiElement.
+            </summary>
+        </member>
+        <member name="P:Gum.Wireframe.GraphicalUiElement.TextureTop">
+            <summary>
+            The pixel coorinate of the top of the displayed region.
+            </summary>
+        </member>
+        <member name="P:Gum.Wireframe.GraphicalUiElement.TextureLeft">
+            <summary>
+            The pixel coorinate of the left of the displayed region.
+            </summary>
+        </member>
+        <member name="P:Gum.Wireframe.GraphicalUiElement.TextureWidth">
+            <summary>
+            The pixel width of the source rectangle on the referenced texture.
+            </summary>
+        </member>
+        <member name="P:Gum.Wireframe.GraphicalUiElement.TextureHeight">
+            <summary>
+            The pixel height of the source rectangle on the referenced texture.
+            </summary>
+        </member>
+        <member name="P:Gum.Wireframe.GraphicalUiElement.Wrap">
+            <summary>
+            Whether the texture address should wrap.
+            </summary>
+        </member>
+        <member name="P:Gum.Wireframe.GraphicalUiElement.WrapsChildren">
+            <summary>
+            Whether contained children should wrap. This only applies if ChildrenLayout is set to 
+            ChildrenLayout.LeftToRightStack or ChildrenLayout.TopToBottomStack.
+            </summary>
+        </member>
+        <member name="P:Gum.Wireframe.GraphicalUiElement.ClipsChildren">
+            <summary>
+            Whether the rendering of this object's children should be clipped to the bounds of this object. If false
+            then children can render outside of the bounds of this object.
+            </summary>
+        </member>
+        <member name="E:Gum.Wireframe.GraphicalUiElement.SizeChanged">
+            <summary>
+            Event raised whenever this instance's absolute size changes. This size change can occur by a direct value being
+            set (such as Width or WidthUnits), or by an indirect value changing, such as if a Parent is resized and if
+            this uses a WidthUnits depending on the parent.
+            </summary>
+        </member>
+        <member name="M:Gum.Wireframe.GraphicalUiElement.SetInitialState">
+            <summary>
+            Sets the default state.
+            </summary>
+            <remarks>
+            This function is virtual so that derived classes can override it
+            and provide a quicker method for setting default states
+            </remarks>
+        </member>
+        <member name="M:Gum.Wireframe.GraphicalUiElement.AddToManagers(RenderingLibrary.ISystemManagers,RenderingLibrary.Graphics.Layer)">
+            <summary>
+            Adds this as a renderable to the SystemManagers on the argument layer if not already added
+            to SystemManagers. If already added
+            this does not perform any operations - it can be safely called multiple times, but
+            calling it multiple times will not move this to a different layer.
+            </summary>
+        </member>
+        <member name="M:Gum.Wireframe.GraphicalUiElement.GetGraphicalUiElementByName(System.String)">
+            <summary>
+            Searches for and returns a GraphicalUiElement in this instance by name. Returns null
+            if not found.
+            </summary>
+            <param name="name">The case-sensitive name to search for.</param>
+            <returns>The found GraphicalUiElement, or null if no match is found.</returns>
+        </member>
+        <member name="M:Gum.Wireframe.GraphicalUiElement.GetGraphicalUiElementByName(System.String[])">
+            <summary>
+            Performs a recursive search for graphical UI elements, where eacn name in the parameters
+            is the name of a GraphicalUiElement one level deeper than the last.
+            </summary>
+            <param name="names">The names to search for, allowing retrieval multiple levels deep.</param>
+            <returns>The found element, or null if no match is found.</returns>
+        </member>
+        <member name="M:Gum.Wireframe.GraphicalUiElement.SetProperty(System.String,System.Object)">
+            <summary>
+            Sets a variable on this object (such as "X") to the argument value
+            (such as 100.0f). This can be a primitive property like Height, or it can be
+            a state.
+            </summary>
+            <param name="propertyName">The name of the variable on this object such as X or Height. If the property is a state, then the name should be "{CategoryName}State".</param>
+            <param name="value">The value, casted to the correct type.</param>
+        </member>
+        <member name="M:Gum.Wireframe.GraphicalUiElement.AnimateSelf(System.Double)">
+            <summary>
+            Performs AnimationChain (.achx) animation on this and all children recurisvely.
+            This is typically called on the top-level object (usually Screen) when Gum is running
+            in a game.
+            </summary>
+        </member>
+        <member name="E:Gum.Wireframe.GraphicalUiElement.DragOver">
+            <summary>
+            Event raised when the user has grabbed the window and is dragging it.
+            Consider using RollOn, RollOff, and RollOver for most cases. This is similar
+            to RollOver, but is raised even if the cursor is not over the window.
+            </summary>
+        </member>
+        <member name="E:Gum.Wireframe.GraphicalUiElement.RollOn">
+            <summary>
+            Event raised when the cursor first moves over this object.
+            </summary>
+        </member>
+        <member name="E:Gum.Wireframe.GraphicalUiElement.RollOff">
+            <summary>
+            Event when the cursor first leaves this object.
+            </summary>
+        </member>
+        <member name="E:Gum.Wireframe.GraphicalUiElement.RollOver">
+            <summary>
+            Event raised every frame the cursor is over this object.
+            </summary>
+        </member>
+        <member name="E:Gum.Wireframe.GraphicalUiElement.LosePush">
+            <summary>
+            Event which is raised whenever this loses a push. A push occurs when the
+            cursor is over this window and the left mouse button is pushed. A push is lost
+            if the left mouse button is released or if the user moves the cursor so that it
+            is no longer over this while the mouse button is pressed. 
+            </summary>
+            <remarks>
+            LosePush is often used to change the state of a button back to its regular state.
+            </remarks>
+        </member>
+        <member name="M:Gum.Wireframe.GraphicalUiElement.TryHandleCursorActivity(FlatRedBall.Gui.Cursor,Gum.Wireframe.GraphicalUiElement.HandledActions)">
+            <summary>
+            Tries to handle cursor activity. If this returns true, then either this element or one of its
+            children handled the activity. 
+            </summary>
+            <param name="cursor">Reference to the cursor object</param>
+            <returns>Whether this or one of its children handled the cursor activity, blocking other windows from receiving cursor input this frame.</returns>
+            <remarks>This method will always allow children to handle the activity first, as children draw in front of their parents. Only components
+            can have UI elements. Standard elements such as Sprites or Containers cannot themselves handle the activity, but they do give their children the
+            opportunity to handle activity. This is because components (such as buttons) may be part of a container for stacking or other organization.
+            
+            Ultimately this hierarchical logic exists because only the top-most parent is added to the GuiManager, and it is responsible for
+            giving its children the opportunity to perform cursor-related input. </remarks>
+        </member>
+        <member name="M:Gum.Wireframe.GraphicalUiElement.Destroy">
+            <summary>
+            Completely removes the GraphicalUiElement from rendering managers, UI 
+            </summary>
+        </member>
+        <member name="T:Gum.Wireframe.ElementWithState">
+            <summary>
+            Represents an element with state and optional instance which can be used in a list to define the instance 
+            path from a screen down to the instance used to get variables recursively.
+            </summary>
+            <example>
+            A stack of elements may be as follows:
+            * MainPage.MainMenuInstance
+            * MainMenu.CancelButtonInstance
+            * StandardButton.TextInstance
+            * Text
+            </example>
+        </member>
+        <member name="T:Gum.Wireframe.TimeManager">
+            <summary>
+            A singleton intended to simplify timing.  Activity on TimeManager should
+            get called once per frame so that an entire frame can operate on the same
+            CurrentTime.
+            </summary>
+        </member>
+        <member name="F:Gum.Content.AnimationChain.AnimationChainListSave.FileRelativeTextures">
+            <summary>
+            Whether files (usually image files) referenced by this object (and .achx) are
+            relative to the .achx itself. If false, then file references will be stored as absolute. 
+            If true, then file reference,s will be stored relative to the .achx itself. This value should
+            be true so that a .achx can be moved to a different file system or computer and still
+            have valid references.
+            </summary>
+        </member>
+        <member name="M:Gum.Content.AnimationChain.AnimationChainListSave.ToAnimationChainList(System.String)">
+            <summary>
+            Create a "save" object from a regular animation chain list
+            </summary>
+        </member>
+        <member name="F:Gum.Content.AnimationChain.AnimationChainSave.ParentFile">
+            <summary>
+            This is used if the AnimationChain actually comes from 
+            a file like a .gif.
+            </summary>
+        </member>
+        <member name="F:Gum.Content.AnimationChain.AnimationFrameSave.FlipHorizontal">
+            <summary>
+            Whether the texture should be flipped horizontally.
+            </summary>
+        </member>
+        <member name="F:Gum.Content.AnimationChain.AnimationFrameSave.FlipVertical">
+            <summary>
+            Whether the texture should be flipped on the vertidally.
+            </summary>
+        </member>
+        <member name="F:Gum.Content.AnimationChain.AnimationFrameSave.TextureName">
+            <summary>
+            Used in XML Serialization of AnimationChains - this should
+            not explicitly be set by the user.
+            </summary>
+        </member>
+        <member name="F:Gum.Content.AnimationChain.AnimationFrameSave.FrameLength">
+            <summary>
+            The amount of time in seconds the AnimationFrame should be shown for.
+            </summary>
+        </member>
+        <member name="F:Gum.Content.AnimationChain.AnimationFrameSave.LeftCoordinate">
+            <summary>
+            The left coordinate in texture coordinates of the AnimationFrame.  Default is 0.
+            This may be in UV coordinates or pixel coordinates.
+            </summary>
+        </member>
+        <member name="F:Gum.Content.AnimationChain.AnimationFrameSave.RightCoordinate">
+            <summary>
+            The right coordinate in texture coordinates of the AnimationFrame.  Default is 1.
+            This may be in UV coordinates or pixel coordinates.
+            </summary>
+        </member>
+        <member name="F:Gum.Content.AnimationChain.AnimationFrameSave.TopCoordinate">
+            <summary>
+            The top coordinate in texture coordinates of the AnimationFrame.  Default is 0.
+            This may be in UV coordinates or pixel coordinates.
+            </summary>
+        </member>
+        <member name="F:Gum.Content.AnimationChain.AnimationFrameSave.BottomCoordinate">
+            <summary>
+            The bottom coordinate in texture coordinates of the AnimationFrame.  Default is 1.
+            This may be in UV coordinates or pixel coordinates.
+            </summary>
+        </member>
+        <member name="F:Gum.Content.AnimationChain.AnimationFrameSave.RelativeX">
+            <summary>
+            The relative X position of the object that is using this AnimationFrame.  This
+            is only applied if the IAnimationChainAnimatable's UseAnimationRelativePosition is
+            set to true.
+            </summary>
+        </member>
+        <member name="F:Gum.Content.AnimationChain.AnimationFrameSave.RelativeY">
+            <summary>
+            The relative Y position of the object that is using this AnimationFrame.  This
+            is only applied if the IAnimationChainAnimatable's UseAnimationRelativePosition is
+            set to true.
+            </summary>
+        </member>
+        <member name="M:Gum.MonoGameIntegration.RuntimeLogic.LoadGumProject(System.String)">
+            <summary>
+            Loads a Gum project and fully initializes it for runtime use.
+            </summary>
+            <param name="fileName">The .gumx file name (typically relative to the executable) to load.</param>
+            <returns>The fully-initialized GumProjectSave</returns>
+        </member>
+        <member name="T:Gum.Graphics.Animation.AnimationChain">
+            <summary>
+            Represents a collection of AnimationFrames which can be used to perform
+            texture flipping animation on IAnimationChainAnimatables such as Sprites.
+            </summary>
+        </member>
+        <member name="P:Gum.Graphics.Animation.AnimationChain.FrameTime">
+            <summary>
+            Sets the frame time to every frame in the animation to the value. For example, assigning a FrameTime of .2 will make every frame in the animation last .2 seconds.
+            </summary>
+        </member>
+        <member name="P:Gum.Graphics.Animation.AnimationChain.LastFrame">
+            <summary>
+            Gets the last AnimationFrame of the AnimationChain or null if 
+            there are no AnimationFrames.
+            </summary>
+        </member>
+        <member name="P:Gum.Graphics.Animation.AnimationChain.Name">
+            <summary>
+            The name of the AnimationChain.
+            </summary>
+        </member>
+        <member name="P:Gum.Graphics.Animation.AnimationChain.TotalLength">
+            <summary>
+            The total duration of the animation in seconds. This is obtained by adding the FrameTime of all contained frames.
+            </summary>
+        </member>
+        <member name="M:Gum.Graphics.Animation.AnimationChain.#ctor">
+            <summary>
+            Creates an empty AnimationChain.
+            </summary>
+        </member>
+        <member name="M:Gum.Graphics.Animation.AnimationChain.#ctor(System.Int32)">
+            <summary>
+            Creates a new AnimationChain with the argument capacity.
+            </summary>
+            <param name="capacity">Sets the initial capacity.  Used to reduce memory allocation.</param>
+        </member>
+        <member name="M:Gum.Graphics.Animation.AnimationChain.FindByName(System.String)">
+            <summary>
+            Searches for and returns the AnimationFrame with its Name matching
+            the nameToSearchFor argument, or null if none are found.
+            </summary>
+            <param name="nameToSearchFor">The name of the AnimationFrame to search for.</param>
+            <returns>The AnimationFrame with matching name, or null if none exists.</returns>
+        </member>
+        <member name="M:Gum.Graphics.Animation.AnimationChain.FrameToFrame(System.Int32,System.Int32)">
+            <summary>
+            Returns the shortest absolute number of frames between the two argument frame numbers.  This
+            method moves forward and backward and considers looping.
+            </summary>
+            <param name="frame1">The index of the first frame.</param>
+            <param name="frame2">The index of the second frame.</param>
+            <returns>The positive or negative number of frames between the two arguments.</returns>
+        </member>
+        <member name="T:Gum.Graphics.Animation.AnimationChainList">
+            <summary>
+            A list of AnimationChains.
+            </summary>
+            <remarks>
+            This class is often used by IAnimationChainAnimatables to store a list of
+            AnimationChains.  Since the AnimationChainList provides a string indexer, it
+            is common to get a reference to an AnimationChain by its name and set it as the
+            IAnimationChainAnimatable's current AnimationChain.
+            </remarks>
+        </member>
+        <member name="P:Gum.Graphics.Animation.AnimationChainList.FileRelativeTextures">
+            <summary>
+            Gets and sets whether the AnimationChainList will save the 
+            Texture2Ds that its AnimationFrames reference with names relative
+            to the .achx.  Otherwise, this property is not used during runtime.
+            </summary>
+        </member>
+        <member name="P:Gum.Graphics.Animation.AnimationChainList.TimeMeasurementUnit">
+            <summary>
+            Gets or sets the TimeMeasurementUnit.  This defaults to TimeMeasurementUnit.Millisecond and
+            should not be changed.  It is included for compatability with older versions of FlatRedBall.
+            </summary>
+        </member>
+        <member name="P:Gum.Graphics.Animation.AnimationChainList.Name">
+            <summary>
+            Gets and sets the intance's name.
+            </summary>
+        </member>
+        <member name="P:Gum.Graphics.Animation.AnimationChainList.Item(System.String)">
+            <summary>
+            Gets the AnimationChain by name.  Returns null if no AnimationChain is found.
+            </summary>
+            <param name="animationChainName">The name of the AnimationChain to return</param>
+            <returns>Reference to the AnimationChain with the specified name.</returns> 
+        </member>
+        <member name="M:Gum.Graphics.Animation.AnimationChainList.#ctor">
+            <summary>
+            Instantiates a new AnimationChainList.
+            </summary>
+        </member>
+        <member name="M:Gum.Graphics.Animation.AnimationChainList.#ctor(System.Int32)">
+            <summary>
+            Instantiates a new AnimationChainList.
+            </summary>
+            <param name="capacity">Sets the initial capacity to reduce memory allocation when subsequently calling Add.</param>
+        </member>
+        <member name="T:Gum.Graphics.Animation.AnimationFrame">
+            <summary>
+            Stores information about one frame in a texture-flipping animation.
+            </summary>
+            <remarks>
+            Includes
+            information about which Texture2D to show, whether the Texture2D should be flipped,
+            the length of time to show the Texture2D for, texture coordinates (for sprite sheets), and
+            relative positioning.
+            </remarks>
+        </member>
+        <member name="F:Gum.Graphics.Animation.AnimationFrame.Empty">
+            <summary>
+            Empty AnimationFrame.
+            </summary>
+        </member>
+        <member name="F:Gum.Graphics.Animation.AnimationFrame.Texture">
+            <summary>
+            The texture that the AnimationFrame will show.
+            </summary>
+        </member>
+        <member name="F:Gum.Graphics.Animation.AnimationFrame.FlipHorizontal">
+            <summary>
+            Whether the texture should be flipped horizontally.
+            </summary>
+        </member>
+        <member name="F:Gum.Graphics.Animation.AnimationFrame.FlipVertical">
+            <summary>
+            Whether the texture should be flipped on the vertidally.
+            </summary>
+        </member>
+        <member name="F:Gum.Graphics.Animation.AnimationFrame.TextureName">
+            <summary>
+            Used in XML Serialization of AnimationChains - this should
+            not explicitly be set by the user.
+            </summary>
+        </member>
+        <member name="F:Gum.Graphics.Animation.AnimationFrame.FrameLength">
+            <summary>
+            The amount of time in seconds the AnimationFrame should be shown for.
+            </summary>
+        </member>
+        <member name="F:Gum.Graphics.Animation.AnimationFrame.LeftCoordinate">
+            <summary>
+            The left coordinate in texture coordinates of the AnimationFrame.  Default is 0. 
+            This value is in texture coordinates, not pixels. A value of 1 represents the right-side
+            of the texture.
+            </summary>
+        </member>
+        <member name="F:Gum.Graphics.Animation.AnimationFrame.RightCoordinate">
+            <summary>
+            The right coordinate in texture coordinates of the AnimationFrame.  Default is 1.
+            This value is in texture coordinates, not pixels. A value of 1 represents the right-side
+            of the texture.
+            </summary>
+        </member>
+        <member name="F:Gum.Graphics.Animation.AnimationFrame.TopCoordinate">
+            <summary>
+            The top coordinate in texture coordinates of the AnimationFrame.  Default is 0.
+            This value is in texture coordinates, not pixels. A value of 1 represents the bottom
+            of the texture;
+            </summary>
+        </member>
+        <member name="F:Gum.Graphics.Animation.AnimationFrame.BottomCoordinate">
+            <summary>
+            The bottom coordinate in texture coordinates of the AnimationFrame.  Default is 1.
+            This value is in texture coordinates, not pixels. A value of 1 represents the bottom
+            of the texture;
+            </summary>
+        </member>
+        <member name="F:Gum.Graphics.Animation.AnimationFrame.RelativeX">
+            <summary>
+            The relative X position of the object that is using this AnimationFrame.  This
+            is only applied if the IAnimationChainAnimatable's UseAnimationRelativePosition is
+            set to true.
+            </summary>
+        </member>
+        <member name="F:Gum.Graphics.Animation.AnimationFrame.RelativeY">
+            <summary>
+            The relative Y position of the object that is using this AnimationFrame.  This
+            is only applied if the IAnimationChainAnimatable's UseAnimationRelativePosition is
+            set to true.
+            </summary>
+        </member>
+        <member name="M:Gum.Graphics.Animation.AnimationFrame.#ctor">
+            <summary>
+            Creates a new AnimationFrame.
+            </summary>
+        </member>
+        <member name="M:Gum.Graphics.Animation.AnimationFrame.#ctor(Microsoft.Xna.Framework.Graphics.Texture2D,System.Single)">
+            <summary>
+            Creates a new AnimationFrame.
+            </summary>
+            <param name="texture">The Texture2D to use for this AnimationFrame.</param>
+            <param name="frameLength">The amount of time in seconds that this AnimationFrame will display for when 
+            it is used in an AnimationChain.</param>
+        </member>
+        <member name="M:Gum.Graphics.Animation.AnimationFrame.Clone">
+            <summary>
+            Creates a new AnimationFrame with identical properties.  The new AnimationFrame
+            will not belong to the AnimationChain that this AnimationFrameBelongs to unless manually
+            added.
+            </summary>
+            <returns>The new AnimationFrame instance.</returns>
+        </member>
+        <member name="M:Gum.Graphics.Animation.AnimationFrame.ToString">
+            <summary>
+            Returns a string representation of this.
+            </summary>
+            <returns>String representation of this.</returns>
+        </member>
+        <member name="M:GumRuntime.ElementSaveExtensions.ApplyVariableReferences(Gum.Wireframe.GraphicalUiElement,Gum.DataTypes.Variables.StateSave)">
+            <summary>
+            Loops through all variable references in the argument graphicalUiElement, evaluates them, then applies the evlauated value to the
+            owner of each variable reference.
+            </summary>
+            <param name="graphicalElement">The top level owner for which to apply variables.</param>
+            <param name="stateSave">The current state, such as the argument graphicalElement's default state</param>
+        </member>
+        <member name="M:GumRuntime.ElementSaveExtensions.ApplyVariableReferencesOnSpecificOwner(Gum.Wireframe.GraphicalUiElement,System.String,Gum.DataTypes.Variables.StateSave)">
+            <summary>
+            Evaluates the reference string (such as X = SomeOtherItem.X), applying the right side to the left side.
+            </summary>
+            <param name="referenceOwner">The owner that owns the variable reference, such as the instance.</param>
+            <param name="referenceString">The string such as "X = SomeItem.X"</param>
+            <param name="stateSave">The state save which owns the variable reference.</param>
+        </member>
+        <member name="P:RenderingLibrary.Camera.Zoom">
+            <summary>
+            The zoom value for everything on this camera. Default value of 1.
+            A value of 2 will make everything appear twice as large.
+            </summary>
+        </member>
+        <member name="T:RenderingLibrary.Content.ContentLoader">
+            <summary>
+            Provides a simple implementation of IContentLoader for applications
+            using the LoaderManager and not specifying their own custom ContentLoader.
+            This content loader uses the default SystemManagers internally.
+            </summary>
+        </member>
+        <member name="M:RenderingLibrary.Content.ContentLoader.LoadTextureFromFile(System.String,RenderingLibrary.SystemManagers)">
+            <summary>
+            Performs a no-caching load of the texture. This will always go to disk to access a file and 
+            will always return a unique Texture2D. This should not be used in most cases, as caching is preferred
+            </summary>
+            <param name="fileName">The filename to load</param>
+            <param name="managers">The optional SystemManagers to use when loading the file to obtain a GraphicsDevice</param>
+            <returns>The loaded Texture2D</returns>
+        </member>
+        <member name="F:RenderingLibrary.Graphics.AnimationFrame.SourceRectangle">
+            <summary>
+            The source rectangle to display.  If this is null then the entire source file is used.
+            </summary>
+        </member>
+        <member name="F:RenderingLibrary.Graphics.AnimationFrame.FrameTime">
+            <summary>
+            The amount of time to show the frame for in seconds.
+            </summary>
+        </member>
+        <member name="F:RenderingLibrary.Graphics.BitmapCharacterInfo.XOffset">
+            <summary>
+            The offset of the character when drawn from the current X position. This value lets
+            a character get drawn further to the right or left without changing the X position of the
+            next character.
+            </summary>
+        </member>
+        <member name="M:RenderingLibrary.Graphics.BitmapFont.ReAssignTextures">
+            <summary>
+            Loops through all internally-stored texture names and reloads the textures.
+            Note, this does not clear any internal caches, so if these textures are cached,
+            the cache will be used.
+            </summary>
+        </member>
+        <member name="M:RenderingLibrary.Graphics.BitmapFont.RenderToTexture2D(System.Collections.Generic.List{System.String},RenderingLibrary.Graphics.HorizontalAlignment,RenderingLibrary.SystemManagers,Microsoft.Xna.Framework.Graphics.Texture2D,System.Object,System.Nullable{System.Int32},System.Single)">
+            <summary>
+            
+            </summary>
+            <param name="lines"></param>
+            <param name="horizontalAlignment"></param>
+            <param name="managers"></param>
+            <param name="toReplace"></param>
+            <param name="objectRequestingRender"></param>
+            <param name="numberOfLettersToRender">The maximum number of characters to render.</param>
+            <returns></returns>
+        </member>
+        <member name="M:RenderingLibrary.Graphics.BitmapFont.DrawTextLines(System.Collections.Generic.List{System.String},RenderingLibrary.Graphics.HorizontalAlignment,System.Object,System.Int32,System.Collections.Generic.List{System.Int32},RenderingLibrary.Graphics.SpriteRenderer,System.Drawing.Color,System.Single,System.Single,System.Single,System.Single,System.Single,System.Nullable{System.Int32},System.Nullable{RenderingLibrary.Graphics.TextRenderingPositionMode},System.Single)">
+            <summary>
+            
+            </summary>
+            <param name="lines"></param>
+            <param name="horizontalAlignment"></param>
+            <param name="objectRequestingChange"></param>
+            <param name="requiredWidth"></param>
+            <param name="widths"></param>
+            <param name="spriteRenderer"></param>
+            <param name="color"></param>
+            <param name="xOffset"></param>
+            <param name="yOffset"></param>
+            <param name="rotation"></param>
+            <param name="scaleX"></param>
+            <param name="scaleY"></param>
+            <param name="numberOfLettersToRender"></param>
+            <param name="overrideTextRenderingPositionMode"></param>
+            <param name="lineHeightMultiplier"></param>
+            <returns>The rectangle of the drawn text. This will return the same value regardless of alignment.</returns>
+        </member>
+        <member name="M:RenderingLibrary.Graphics.BitmapFont.RenderAtlasedTextureToScreen(System.Collections.Generic.List{System.String},RenderingLibrary.Graphics.HorizontalAlignment,System.Single,System.Drawing.Color,System.Single,System.Single,RenderingLibrary.SystemManagers,RenderingLibrary.Graphics.SpriteRenderer,System.Object)">
+            <summary>
+            Used for rendering directly to screen with an atlased texture.
+            </summary>
+        </member>
+        <member name="M:RenderingLibrary.Graphics.BitmapFont.GetCharacterRect(System.Char,System.Int32,System.Numerics.Vector2@,RenderingLibrary.Math.FloatRectangle@,System.Int32@,System.Single,System.Single)">
+            <summary>
+            
+            </summary>
+            <param name="c"></param>
+            <param name="lineNumber"></param>
+            <param name="currentCharacterDrawPosition">When passed in, this is the point used to draw the current character. This is used to set the destinationRectangle. This value is modified, increasing the position by XAdvance.</param>
+            <param name="destinationRectangle"></param>
+            <param name="pageIndex"></param>
+            <param name="fontScale"></param>
+            <param name="lineHeightMultiplier"></param>
+            <returns></returns>
+            <exception cref="T:System.InvalidOperationException"></exception>
+        </member>
+        <member name="M:RenderingLibrary.Graphics.BitmapFont.GetRequiredWidthAndHeight(System.Collections.Generic.List{System.String},System.Int32@,System.Int32@,System.Collections.Generic.List{System.Int32})">
+            <summary>
+            Returns the width and height required to render the argument line of text.
+            </summary>
+            <param name="lines">The lines of text, where each entry is one line of text.</param>
+            <param name="requiredWidth">The required width returned by this method.</param>
+            <param name="requiredHeight">The required height returned by this method.</param>
+            <param name="widths">The widths of the individual lines.</param>
+        </member>
+        <member name="M:RenderingLibrary.Graphics.BitmapFont.MeasureString(System.String)">
+            <summary>
+            Returns the number of pixels (horizontally) required to render the argument string.
+            </summary>
+            <param name="line">The line of text.</param>
+            <returns>The number of pixels needed to render this text horizontally.</returns>
+        </member>
+        <member name="M:RenderingLibrary.Graphics.ImageData.RemoveRow(System.Int32)">
+            <summary>
+            Removes the index row from the contained data.  Row 0 is the top of the texture.
+            </summary>
+            <param name="rowToRemove">The index of the row to remove.  Index 0 is the top row.</param>
+        </member>
+        <member name="M:RenderingLibrary.Graphics.IRenderable.PreRender">
+            <summary>
+            Perform logic which needs to occur before a SpriteBatch has been started
+            </summary>
+        </member>
+        <member name="P:RenderingLibrary.Graphics.ITextureCoordinate.SourceRectangle">
+            <summary>
+            The rectangle defining the source on the texture.  If null, the entire texture is used. Values are in pixels.
+            </summary>
+        </member>
+        <member name="P:RenderingLibrary.Graphics.ITextureCoordinate.Wrap">
+            <summary>
+            Whether to wrap when the SourceRectangle is larger than the texture. 
+            </summary>
+        </member>
+        <member name="P:RenderingLibrary.Graphics.ITextureCoordinate.TextureWidth">
+            <summary>
+            The width of the texture in pixels. Null if no texture is assigned.
+            </summary>
+        </member>
+        <member name="P:RenderingLibrary.Graphics.ITextureCoordinate.TextureHeight">
+            <summary>
+            The height of the texture in pixels. Null if no texture is assigned.
+            </summary>
+        </member>
+        <member name="P:RenderingLibrary.Graphics.ITextureCoordinate.FlipHorizontal">
+            <summary>
+            Whether to flip the sprite horizontally.
+            </summary>
+        </member>
+        <member name="P:RenderingLibrary.Graphics.Layer.LayerCameraSettings">
+            <summary>
+            Contains values which the Layer can use to override the camera settings.
+            By default this is null, which means the Layer uses the camera settings. 
+            </summary>
+        </member>
+        <member name="M:RenderingLibrary.Graphics.Layer.SortRenderables">
+            <summary>
+            This is a stable sort on Z.  It's incredibly fast on already-sorted lists so we'll do this over something like the built-in 
+            binary sorts that .NET offers.
+            </summary>
+        </member>
+        <member name="P:RenderingLibrary.Graphics.LayerCameraSettings.IsInScreenSpace">
+            <summary>
+            Whether the current layer is in Screen Space. If true, then the Camera position does
+            not impact the position of objects on this layer.
+            </summary>
+        </member>
+        <member name="M:RenderingLibrary.Graphics.NineSlice.LoadAtlasedTexture(System.String,RenderingLibrary.Graphics.AtlasedTexture)">
+            <summary>
+            Loads given texture(s) from atlas.
+            </summary>
+            <param name="valueAsString"></param>
+            <param name="atlasedTexture"></param>
+        </member>
+        <member name="M:RenderingLibrary.Graphics.NineSlice.SetTexturesUsingPattern(System.String,RenderingLibrary.SystemManagers,System.Boolean)">
+            <summary>
+            
+            </summary>
+            <param name="anyOf9Textures"></param>
+            <param name="managers"></param>
+            <param name="inAtlas">True if textures are atlased.</param>
+        </member>
+        <member name="F:RenderingLibrary.Graphics.Renderer.RenderUsingHierarchy">
+            <summary>
+            Whether renderable objects should call Render
+            on contained children. This is true by default, 
+            results in a hierarchical rendering order.
+            </summary>
+        </member>
+        <member name="P:RenderingLibrary.Graphics.Renderer.SinglePixelTexture">
+            <summary>
+            The texture used to render solid objects. If SinglePixelSourceRectangle is null, the entire texture is used. Otherwise
+            the portion of SinglePixelTexture is applied.
+            </summary>
+        </member>
+        <member name="F:RenderingLibrary.Graphics.Renderer.SinglePixelSourceRectangle">
+            <summary>
+            The rectangle to use when rendering single-pixel texture objects, such as ColoredRectangles.
+            By default this is null, indicating the entire texture is used.
+            </summary>
+        </member>
+        <member name="P:RenderingLibrary.Graphics.Renderer.NormalBlendState">
+            <summary>
+            Controls which XNA BlendState is used for the Rendering Library's Blend.Normal value.
+            </summary>
+            <remarks>
+            This should be either NonPremultiplied (if textures do not use premultiplied alpha), or
+            AlphaBlend if using premultiplied alpha textures.
+            </remarks>
+        </member>
+        <member name="P:RenderingLibrary.Graphics.Renderer.UseCustomEffectRendering">
+            <summary>
+            Use the custom effect for rendering. This setting takes priority if 
+            both UseCustomEffectRendering and UseBasicEffectRendering are enabled.
+            </summary>
+        </member>
+        <member name="P:RenderingLibrary.Graphics.Renderer.LinearizeTextures">
+            <summary>
+            When this is enabled texture colors will be translated to linear space before 
+            any other shader operations are performed. This is useful for games with 
+            lighting and other special shader effects. If the colors are left in gamma 
+            space the shader calculations will crush the colors and not look like natural 
+            lighting. Delinearization must be done by the developer in the last render 
+            step when rendering to the screen. This technique is called gamma correction.
+            Requires using the custom effect. Disabled by default.
+            </summary>
+        </member>
+        <member name="M:RenderingLibrary.Graphics.Renderer.ForceEnd">
+            <summary>
+            Ends the current SpriteBatchif it hasn't yet been ended. This is needed for projects which may need the
+            rendering to end itself so that they can start sprite batch.
+            </summary>
+        </member>
+        <member name="P:RenderingLibrary.Graphics.Sprite.EffectiveRectangle">
+            <summary>
+            Returns the effective source rectangle, which may be the same as the SourceRectangle unless an AtlasedTexture is used.
+            </summary>
+        </member>
+        <member name="F:RenderingLibrary.Graphics.InlineVariable.VariableName">
+            <summary>
+            Variable name, such as "Font". This translates to the left-side of the assignment in the tag. For example
+            [Font=Arial] would have a VariableName of "Font".
+            </summary>
+        </member>
+        <member name="F:RenderingLibrary.Graphics.InlineVariable.StartIndex">
+            <summary>
+            The start index of the tag in the "stripped" text (after all tags have been removed).
+            </summary>
+        </member>
+        <member name="F:RenderingLibrary.Graphics.InlineVariable.CharacterCount">
+            <summary>
+            The number of characters covered by this inline variable. This is the character count on the "stripped" text.
+            </summary>
+        </member>
+        <member name="P:RenderingLibrary.Graphics.Text.DefaultBitmapFont">
+            <summary>
+            The default BitmapFont to use if a Text instance is referencing a null font.
+            </summary>
+        </member>
+        <member name="F:RenderingLibrary.Graphics.Text.mPreRenderWidth">
+            <summary>
+            Stores the width of the text object's texture before it has had a chance to render, not including
+            the FontScale.
+            </summary>
+            <remarks>
+            A text object may need to be positioned according to its dimensions. Normally this would
+            use a text's render target texture. In some situations (before the render pass has occurred,
+            or when using character-by-character rendering), the text may not have a render target texture.
+            Therefore, the pre-rendered values provide size information.
+            </remarks>
+        </member>
+        <member name="F:RenderingLibrary.Graphics.Text.mPreRenderHeight">
+            <summary>
+            Stores the height of the text object's texture before it has had a chance to render, not including
+            the FontScale.
+            </summary>
+            <remarks>
+            See mPreRenderWidth for more information about this member.
+            </remarks>
+        </member>
+        <member name="P:RenderingLibrary.Graphics.Text.WrappedTextWidth">
+            <summary>
+            The width needed to display the wrapped text. 
+            </summary>
+        </member>
+        <member name="P:RenderingLibrary.Graphics.Text.MaxLettersToShow">
+            <summary>
+            The maximum letters to display. This can be used to 
+            create an effect where the text prints out letter-by-letter.
+            </summary>
+        </member>
+        <member name="P:RenderingLibrary.Graphics.Text.StoredMarkupText">
+            <summary>
+            Stores the markup text including BBCode. This should not be
+            directly set outside of custom property assignments since setting
+            it directly does not update the RawText, WrappedText, or InlineVariables.
+            This only exists to make it easier for the code that creates InlineVariables
+            to use this.
+            </summary>
+        </member>
+        <member name="M:RenderingLibrary.Graphics.SolidRectangle.GetAtlasedTexture">
+            <summary>
+            Checks if the Colored Rectangle texture is located in a loaded atlas.
+            </summary>
+            <returns>Returns atlased texture if it exists.</returns>
+        </member>
+        <member name="M:RenderingLibrary.IPositionedSizedObjectExtensionMethods.GetAbsoluteX(RenderingLibrary.Graphics.IRenderableIpso)">
+            <summary>
+            Returns the top-left world X coordinate of the argument RenderableIpso in screen space.
+            </summary>
+            <param name="ipso">The RenderableIpso to return the value for.</param>
+            <returns>The world X coordinate.</returns>
+        </member>
+        <member name="M:RenderingLibrary.IPositionedSizedObjectExtensionMethods.GetAbsoluteY(RenderingLibrary.Graphics.IRenderableIpso)">
+            <summary>
+            Returns the world Y coordinate of the argument RenderableIpso in screen space.
+            </summary>
+            <param name="ipso">The RenderableIpso to return the value for.</param>
+            <returns>The world Y coordinate.</returns>
+        </member>
+        <member name="M:RenderingLibrary.IPositionedSizedObjectExtensionMethods.GetTopParent(RenderingLibrary.Graphics.IRenderableIpso)">
+            <summary>
+            Returns the topmost parent in the hierarchy, returning this if there is no parent.
+            </summary>
+            <param name="ipso">The argument ipso</param>
+            <returns>The top parent</returns>
+        </member>
+        <member name="M:RenderingLibrary.IPositionedSizedObjectExtensionMethods.GetAbsoluteRotation(RenderingLibrary.Graphics.IRenderableIpso)">
+            <summary>
+            Returns the absolute rotation in degrees.
+            </summary>
+            <param name="ipso">The object for which to return rotation.</param>
+            <returns>The rotation in degrees.</returns>
+        </member>
+        <member name="M:RenderingLibrary.Math.Geometry.LinePolygon.IsPointInside(System.Single,System.Single)">
+            <summary>
+            Returns whether the world X, Y values are inside of the polygon.
+            </summary>
+            <param name="worldX">The coordinate in world coordinates.</param>
+            <param name="worldY"></param>
+            <returns>Whether the argument x,y values are inside of the polygon.</returns>
+        </member>
+        <member name="M:RenderingLibrary.Math.Geometry.LinePolygon.PointAt(System.Int32)">
+            <summary>
+            Returns the X,Y of the point at the argument index in object space (relative to the object's position)
+            </summary>
+            <param name="index">The 0-based index.</param>
+            <returns>The position of the point at the argument index in object space.</returns>
+        </member>
+        <member name="P:RenderingLibrary.Math.Geometry.LinePrimitive.BreakIntoSegments">
+            <summary>
+            Determines whether the line is broken up into separate segments or
+            if it should be treated as one continual line.  This defaults to false.
+            </summary>
+        </member>
+        <member name="F:RenderingLibrary.Math.Geometry.LinePrimitive.mVectors">
+            <summary>
+            The list of points relative to the LinePrimitive (in object space)
+            </summary>
+        </member>
+        <member name="F:RenderingLibrary.Math.Geometry.LinePrimitive.Color">
+            <summary>
+            Gets/sets the color of the primitive line object.
+            </summary>
+        </member>
+        <member name="F:RenderingLibrary.Math.Geometry.LinePrimitive.Position">
+            <summary>
+            Gets/sets the position of the primitive line object.
+            </summary>
+        </member>
+        <member name="F:RenderingLibrary.Math.Geometry.LinePrimitive.Depth">
+            <summary>
+            Gets/sets the render depth of the primitive line object (0 = front, 1 = back)
+            </summary>
+        </member>
+        <member name="P:RenderingLibrary.Math.Geometry.LinePrimitive.VectorCount">
+            <summary>
+            Gets the number of vectors which make up the primtive line object.
+            </summary>
+        </member>
+        <member name="M:RenderingLibrary.Math.Geometry.LinePrimitive.#ctor(Microsoft.Xna.Framework.Graphics.Texture2D)">
+            <summary>
+            Creates a new primitive line object.
+            </summary>
+            <param name="singlePixelTexture">The texture to use when rendering the line.</param>
+        </member>
+        <member name="M:RenderingLibrary.Math.Geometry.LinePrimitive.Add(System.Numerics.Vector2)">
+            <summary>
+            Adds a vector to the LinePrimitive object. The position is relative to the position of the LinePrimitive (object space)
+            </summary>
+            <param name="vector">The vector to add.</param>
+        </member>
+        <member name="M:RenderingLibrary.Math.Geometry.LinePrimitive.Add(System.Single,System.Single)">
+            <summary>
+            Adds a vector to the LinePrimitive object.
+            </summary>
+            <param name="x">The X position of the new point.</param>
+            <param name="y">The Y position of the new point.</param>
+        </member>
+        <member name="M:RenderingLibrary.Math.Geometry.LinePrimitive.Insert(System.Int32,System.Numerics.Vector2)">
+            <summary>
+            Insers a vector into the primitive line object.
+            </summary>
+            <param name="index">The index to insert it at.</param>
+            <param name="vector">The vector to insert.</param>
+        </member>
+        <member name="M:RenderingLibrary.Math.Geometry.LinePrimitive.Remove(System.Numerics.Vector2)">
+            <summary>
+            Removes a vector from the primitive line object.
+            </summary>
+            <param name="vector">The vector to remove.</param>
+        </member>
+        <member name="M:RenderingLibrary.Math.Geometry.LinePrimitive.RemoveAt(System.Int32)">
+            <summary>
+            Removes a vector from the primitive line object.
+            </summary>
+            <param name="index">The index of the vector to remove.</param>
+        </member>
+        <member name="M:RenderingLibrary.Math.Geometry.LinePrimitive.Replace(System.Int32,System.Numerics.Vector2)">
+            <summary>
+            Replaces a vector at the given index with the argument Vector2.
+            </summary>
+            <param name="index">What index to replace.</param>
+            <param name="whatToReplaceWith">The new vector that will be placed at the given index</param>
+        </member>
+        <member name="M:RenderingLibrary.Math.Geometry.LinePrimitive.ClearVectors">
+            <summary>
+            Clears all vectors from the primitive line object.
+            </summary>
+        </member>
+        <member name="M:RenderingLibrary.Math.Geometry.LinePrimitive.Render(RenderingLibrary.Graphics.SpriteRenderer,RenderingLibrary.SystemManagers)">
+            <summary>
+            Renders the primtive line object.
+            </summary>
+            <param name="spriteRenderer">The sprite renderer to use to render the primitive line object.</param>
+        </member>
+        <member name="M:RenderingLibrary.Math.Geometry.LinePrimitive.CreateCircle(System.Single,System.Int32)">
+            <summary>
+            Creates a circle starting from 0, 0.
+            </summary>
+            <param name="radius">The radius (half the width) of the circle.</param>
+            <param name="sides">The number of sides on the circle (the more the detailed).</param>
+        </member>
+        <member name="P:RenderingLibrary.Math.Geometry.LineRectangle.LocalVisible">
+            <summary>
+            This is similar to the Visible property, but affects only this.
+            This allows LineRectangles to not render without making their children invisible.
+            </summary>
+        </member>
+        <member name="M:RenderingLibrary.Math.MathFunctions.RoundToInt(System.Single)">
+            <summary>
+            Rounds the float to the nearest int, using MidpointRounding.AwayFromZero.
+            </summary>
+            <param name="floatToRound">The float to round.</param>
+            <returns>The rounded int.</returns>
+            <exception cref="T:System.ArgumentException">Thrown if the float is NaN (not a number)</exception>
+        </member>
+        <member name="M:RenderingLibrary.Math.MathFunctions.RotatePointAroundPoint(System.Drawing.Point,System.Drawing.Point@,System.Single)">
+            <summary>
+            Rotates a Point around another Point by a given number of radians.
+            </summary>
+            <param name="basePoint">Point to rotate around.</param>
+            <param name="pointToRotate">Point to rotate (changes position).</param>
+            <param name="radiansToChangeBy">Radians to rotate by.</param>
+        </member>
+        <member name="M:RenderingLibrary.Math.MathFunctions.RotateVector(System.Numerics.Vector2@,System.Single)">
+            <summary>
+            Rotates (and modifies) the argument vector2 by the argument radians, where a positive value is clockwise.
+            </summary>
+            <param name="vector2">The vector to rotate.</param>
+            <param name="radians">The radians to rotate counterclockwise.</param>
+        </member>
+        <member name="P:RenderingLibrary.SystemManagers.GlobalFontScale">
+            <summary>
+            The font scale value. This can be used to scale all fonts globally, 
+            generally in response to a font scaling value like the Android font scale setting.
+            </summary>
+        </member>
+        <member name="M:RenderingLibrary.SystemManagers.Activity(System.Double)">
+            <summary>
+            Performs every-frame activity for all contained systems in the SystemManager.
+            </summary>
+            <param name="currentTime">The amount of time that has passed since the game started.</param>
+            <exception cref="T:System.InvalidOperationException">Exception thrown if the SystemManagers hasn't yet been initialized.</exception>
+        </member>
+        <member name="T:ToolsUtilities.FileManager">
+            <summary>
+            Utility class used to help dealing with files.
+            </summary>
+            <remarks>
+            This code is a copy of code from FlatRedBall.  It's ok,
+            Victor Chelaru wrote that code and he's the one who put it in here.
+            </remarks>
+        </member>
+        <member name="M:ToolsUtilities.FileManager.GetExtension(System.String)">
+            <summary>
+            Returns the extension in a filename.
+            </summary>
+            <remarks>
+            The extension returned will not contain a period.
+            
+            <para>
+            <code>
+            // this code will return a string containing "png", not ".png"
+            FileManager.GetExtension(@"FolderName/myImage.png");
+            </code>
+            </para>
+            </remarks>
+            <param name="fileName">The filename.</param>
+            <returns>Returns the extension or an empty string if no period is found in the filename.</returns>
+        </member>
+        <member name="M:ToolsUtilities.FileManager.RemoveExtension(System.String)">
+            <summary>
+            Returns the fileName without an extension, or makes no changes if fileName has no extension.
+            </summary>
+            <param name="fileName">The file name.</param>
+            <returns>The file name with extension removed if an extension existed.</returns>
+        </member>
+        <member name="M:ToolsUtilities.FileManager.RemovePath(System.String@)">
+            <summary>
+            Modifies the fileName by removing its path, or makes no changes if the fileName has no path.
+            </summary>
+            <param name="fileName">The file name to change</param>
+        </member>
+        <member name="M:ToolsUtilities.FileManager.RemovePath(System.String)">
+            <summary>
+            Returns the fileName without a path, or makes no changes if the fileName has no path.
+            </summary>
+            <param name="fileName">The file name.</param>
+            <returns>The modified fileName if a path is found.</returns>
+        </member>
+        <member name="M:ToolsUtilities.FileManager.GetAllFilesInDirectory(System.String,System.String)">
+            <summary>
+            Returns a List containing all files which match the fileType argument which are 
+            in the directory argument or a subfolder.  This recurs, returning all files.
+            </summary>
+            <param name="directory">String representing the directory to search.  If an empty
+            string is passed, the method will search starting in the directory holding the .exe.</param>
+            <param name="fileType">The file type to search for specified as an extension.  The extension
+            can either have a period or not.  That is ".jpg" and "jpg" are both valid fileType arguments.  An empty
+            or null value for this parameter will return all files regardless of file type.</param>
+            <returns>A list containing all of the files found which match the fileType.</returns>
+        </member>
+        <member name="M:ToolsUtilities.FileManager.GetAllFilesInDirectory(System.String,System.String,System.Int32)">
+            <summary>
+            Returns a List containing all files which match the fileType argument which are within
+            the depthToSearch folder range relative to the directory argument.
+            </summary>
+            <param name="directory">String representing the directory to search.  If an empty
+            string is passed, the method will search starting in the directory holding the .exe.</param>
+            <param name="fileType">The file type to search for specified as an extension.  The extension
+            can either have a period or not.  That is ".jpg" and "jpg" are both valid fileType arguments.  An empty
+            or null value for this parameter will return all files regardless of file type.</param>
+            <param name="depthToSearch">The depth to search through.  If the depthToSearch
+            is 0, only the argument directory will be searched. To search infinte depth, use int.MaxValue</param>
+            <returns>A list containing all of the files found which match the fileType.</returns>
+        </member>
+        <member name="P:ToolsUtilities.FileManager.UserApplicationDataForThisApplication">
+            <summary>
+            Returns a full path for a folder which can be used to save user data. 
+            </summary>
+            <example>
+            System.IO.File.SaveText("File Contents", FlatRedBall.UserApplicationDataForThisApplication + "File.txt");
+            </example>
+        </member>
+        <member name="M:ToolsUtilities.StringFunctions.GetIntAfter(System.String,System.String)">
+            <summary>
+            Returns the first integer found after the argument stringToSearchFor in whereToSearch.
+            </summary>
+            <remarks>
+            This method is used to help simplify parsing of text files and data strings.
+            If stringToSearchFor is "Y:" and whereToSearch is "X: 30, Y:32", then the value
+            of 32 will be returned.
+            </remarks>
+            <param name="stringToSearchFor">The string pattern to search for.</param>
+            <param name="whereToSearch">The string that will be searched.</param>
+            <returns>The integer value found after the argument stringToSearchFor.</returns>
+        </member>
+        <member name="M:ToolsUtilities.StringFunctions.GetIntAfter(System.String,System.String,System.Int32)">
+            <summary>
+            Returns the first integer found after the argument stringToSearchFor.  The search begins
+            at the argument startIndex.
+            </summary>
+            <param name="stringToSearchFor">The string pattern to search for.</param>
+            <param name="whereToSearch">The string that will be searched.</param>
+            <param name="startIndex">The index to begin searching at.  This method
+            will ignore any instances of stringToSearchFor which begin at an index smaller
+            than the argument startIndex.</param>
+            <returns></returns>
+        </member>
+        <member name="M:ToolsUtilities.StringFunctions.IncrementNumberAtEnd(System.String)">
+            <summary>
+            Increments the number at the end of a string or adds a number if none exists.
+            </summary>
+            <remarks>
+            This method begins looking at the end of a string for numbers and moves towards the beginning of the string
+            until it encounters a character which is not a numerical digit or the beginning of the string.  "Sprite123" would return
+            "Sprite124", and "MyString" would return "MyString1".
+            </remarks>
+            <param name="originalString">The string to "increment".</param>
+            <returns>Returns a string with the number at the end incremented, or with a number added on the end if none existed before.</returns>
+        </member>
+        <member name="M:ToolsUtilities.StringFunctions.InsertSpacesInCamelCaseString(System.String)">
+            <summary>
+            Inserts spaces before every capital letter in a camel-case
+            string.  Ignores the first letter.
+            </summary>
+            <remarks>
+            For example "HelloThereIAmCamelCase" becomes
+            "Hello There I Am Camel Case".
+            </remarks>
+            <param name="originalString">The string in which to insert spaces.</param>
+            <returns>The string with spaces inserted.</returns>
+        </member>
+        <member name="M:ToolsUtilitiesStandard.Helpers.MathHelper.ToRadians(System.Single)">
+            <summary>Converts degrees to radians.</summary>
+            <param name="degrees">The angle in degrees.</param>
+        </member>
+        <member name="M:ToolsUtilitiesStandard.Helpers.MathHelper.ToDegrees(System.Single)">
+            <summary>Converts radians to degrees.</summary>
+            <param name="radians">The angle in radians.</param>
+        </member>
+        <member name="P:FlatRedBall.Gum.Animation.GumAnimation.AnimationSpeed">
+            <summary>
+            The speed multiplier used to play the animation. A value greater than 1 will make the animation
+            play faster than normal. For example, a value of 2 will make the animation play two times as fast.
+            This must be greater than 0
+            </summary>
+        </member>
+        <member name="F:FlatRedBall.Gum.Animation.GumAnimation.namedEvents">
+            <summary>
+            List of named events, used when the animation is played.
+            </summary>
+            <remarks>
+            This is not a Dictionary becuase we want to allow the same event name
+            to appear multiple times. For example, a user might create a "Bounce" event
+            where a sound effect plays. An animation may bounce multiple times, so the same
+            event might be added in multiple spots.
+            </remarks>
+        </member>
+        <member name="P:FlatRedBall.Gum.GumIdb.DisableDrawing">
+            <summary>
+            Makes the Gum IDB skip its rendering code. This can be used to isolate rendering performance bottlenecks.
+            </summary>
+        </member>
+        <member name="F:FlatRedBall.Gum.GumIdb.mLastDrawCall">
+            <summary>
+            Variable that stores the last draw call. It is used to determine if drawing a new frame.
+            </summary>
+        </member>
+        <member name="T:GumCoreShared.FlatRedBall.Embedded.PositionedObjectGueWrapper">
+            <summary>
+            A PositionedObject which can hold a reference to a Gum object (GraphicalUiElement) to position it in FlatRedBall coordinates. 
+            This allows Gum objects to be positioned in world space, and if the FrbObject is attached to another FlatRedBall object, then
+            the Gum object can move with the parent FlatRedBall object, enabling attachments.
+            </summary>
+        </member>
+        <member name="P:GumCoreShared.FlatRedBall.Embedded.PositionedObjectGueWrapper.FrbObject">
+            <summary>
+            The FlatRedBall object controlling the position of the Gum object. This is typically an entity instance, and codegen in the FRB Editor
+            assigns this automatically when adding a Gum object to a FlatRedBall entity.
+            </summary>
+        </member>
+        <member name="M:GumCoreShared.FlatRedBall.Embedded.PositionedObjectGueWrapper.UpdateDependencies(System.Double)">
+            <summary>
+            Calls base.UpdateDependencies to update this object's position and rotation, then updates the Gum object.
+            </summary>
+            <param name="currentTime">The current game time, used to prevent multiple calls from updating this.</param>
+        </member>
+        <member name="M:GumCoreShared.FlatRedBall.Embedded.PositionedObjectGueWrapper.GetAbsolutePositionInFrbSpace(Gum.Wireframe.GraphicalUiElement)">
+            <summary>
+            Returns the absolute world position of the center of the argument graphicalUiElement.
+            </summary>
+            <remarks>
+            This can be used to position FRB objects (such as collision shapes) according to the absolute
+            position of the Glue object.</remarks>
+            <param name="graphicalUiElement">The argument GraphicalUiElement.</param>
+            <returns>The absolute position of the center of the GraphicalUiElement</returns>
+        </member>
+        <member name="T:GumCoreShared.FlatRedBall.Embedded.GraphicalUiElementExtensions">
+            <summary>
+            Static class containing extension methods for updating FlatRedBall objects from a GraphicalUiElement.
+            </summary>
+        </member>
+        <member name="M:GumCoreShared.FlatRedBall.Embedded.GraphicalUiElementExtensions.SetCollision(Gum.Wireframe.GraphicalUiElement,FlatRedBall.Math.Geometry.ShapeCollection,FlatRedBall.PositionedObject,System.Boolean)">
+            <summary>
+            Updates the children shapes of the argument Parent to match the Gum object's shapes. This optionally
+            creates new shapes.
+            </summary>
+            <param name="graphicalUiElement">The GraphicalUiElement from which to pull shapes.</param>
+            <param name="shapeCollection">The ShapeCollection for the FlatRedBall shapes.</param>
+            <param name="parent">The parent for the FlatRedBall shapes.</param>
+            <param name="createMissingShapes">Whether to instantiate missing shapes, where the name is the property used to find matches.</param>
+        </member>
+        <member name="M:GumCoreShared.FlatRedBall.Embedded.GraphicalUiElementExtensions.SetSprites(Gum.Wireframe.GraphicalUiElement,FlatRedBall.PositionedObject,System.Boolean)">
+            <summary>
+            Updates the children sprite of the argument Parent to match the Gum object's sprites. This optionally
+            creates new Sprites.
+            </summary>
+            <param name="graphicalUiElement">The GraphicalUiElement from which to pull sprites.</param>
+            <param name="parent">The parent of the FlatRedBall Sprites.</param>
+            <param name="createMissingSprites">Whether to instantiate missing sprites, where the name is the property used to find matches.</param>
+        </member>
+    </members>
+</doc>

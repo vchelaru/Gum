@@ -1,0 +1,154 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "FlatRedBall.Forms.FNA/1.0.0": {
+        "dependencies": {
+          "FNA": "1.0.0",
+          "GumCore.FNA": "1.0.0",
+          "TextCopy": "6.1.0",
+          "FNA.Reference": "2025.2.21.787"
+        },
+        "runtime": {
+          "FlatRedBall.Forms.FNA.dll": {}
+        }
+      },
+      "AsepriteDotNet/1.8.1": {
+        "runtime": {
+          "lib/net8.0/AsepriteDotNet.dll": {
+            "assemblyVersion": "1.8.1.0",
+            "fileVersion": "1.8.1.0"
+          }
+        }
+      },
+      "Microsoft.Extensions.DependencyInjection.Abstractions/6.0.0": {
+        "runtime": {
+          "lib/net6.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll": {
+            "assemblyVersion": "6.0.0.0",
+            "fileVersion": "6.0.21.52210"
+          }
+        }
+      },
+      "TextCopy/6.1.0": {
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "6.0.0"
+        },
+        "runtime": {
+          "lib/net6.0/TextCopy.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "FlatRedBall.FNA/2025.2.21.787": {
+        "dependencies": {
+          "AsepriteDotNet": "1.8.1",
+          "FNA": "1.0.0"
+        },
+        "runtime": {
+          "FlatRedBall.FNA.dll": {
+            "assemblyVersion": "2025.2.21.787",
+            "fileVersion": "2025.2.21.787"
+          }
+        }
+      },
+      "FNA/1.0.0": {
+        "runtime": {
+          "FNA.dll": {
+            "assemblyVersion": "1.0.0",
+            "fileVersion": ""
+          }
+        }
+      },
+      "GumCore.FNA/1.0.0": {
+        "dependencies": {
+          "FNA": "1.0.0",
+          "StateInterpolation.FNA": "1.0.0"
+        },
+        "runtime": {
+          "GumCore.FNA.dll": {
+            "assemblyVersion": "1.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "StateInterpolation.FNA/1.0.0": {
+        "dependencies": {
+          "FNA": "1.0.0",
+          "FlatRedBall.FNA": "2025.2.21.787"
+        },
+        "runtime": {
+          "StateInterpolation.FNA.dll": {
+            "assemblyVersion": "1.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "FNA.Reference/2025.2.21.787": {
+        "runtime": {
+          "FNA.dll": {
+            "assemblyVersion": "2025.2.21.787",
+            "fileVersion": "2025.2.21.787"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "FlatRedBall.Forms.FNA/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "AsepriteDotNet/1.8.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-I0lIe23bIO9T2bicSuT/9EmsKM72sN8YSzDY/Y23NaK/abohN4IZA2OZrT1Db4S2Al+gS0MArT9LudvFUG5fDQ==",
+      "path": "asepritedotnet/1.8.1",
+      "hashPath": "asepritedotnet.1.8.1.nupkg.sha512"
+    },
+    "Microsoft.Extensions.DependencyInjection.Abstractions/6.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-xlzi2IYREJH3/m6+lUrQlujzX8wDitm4QGnUu6kUXTQAWPuZY8i+ticFJbzfqaetLA6KR/rO6Ew/HuYD+bxifg==",
+      "path": "microsoft.extensions.dependencyinjection.abstractions/6.0.0",
+      "hashPath": "microsoft.extensions.dependencyinjection.abstractions.6.0.0.nupkg.sha512"
+    },
+    "TextCopy/6.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-7CxK3AOMTvACGGpRz9ZSVt0k+Ohx9tSPxGtauYKh8IdjTGZ7XzclyQh3m94E5Zk3pvWbZ3j/HjHpSHCuRUtDjA==",
+      "path": "textcopy/6.1.0",
+      "hashPath": "textcopy.6.1.0.nupkg.sha512"
+    },
+    "FlatRedBall.FNA/2025.2.21.787": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "FNA/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "GumCore.FNA/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "StateInterpolation.FNA/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "FNA.Reference/2025.2.21.787": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
