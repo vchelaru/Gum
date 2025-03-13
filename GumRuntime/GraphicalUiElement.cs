@@ -838,6 +838,22 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
+    float? _minWidth;
+    public float? MinWidth
+    {
+        get => _minWidth;
+        set
+        {
+            if (_minWidth != value)
+            {
+                _minWidth = value;
+
+                UpdateLayout();
+            }
+
+        }
+    }
+
     public float Width
     {
         get => mWidth; 
@@ -868,6 +884,21 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             if (_maxHeight != value)
             {
                 _maxHeight = value;
+
+                UpdateLayout();
+            }
+
+        }
+    }
+    float? _minHeight;
+    public float? MinHeight
+    {
+        get => _minHeight;
+        set
+        {
+            if (_minHeight != value)
+            {
+                _minHeight = value;
 
                 UpdateLayout();
             }
@@ -2448,6 +2479,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         {
             pixelHeightToSet = _maxHeight.Value;
         }
+        if(pixelHeightToSet < _minHeight)
+        {
+            pixelHeightToSet = _minHeight.Value;
+        }
 
         mContainedObjectAsIpso.Height = pixelHeightToSet;
     }
@@ -2794,6 +2829,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         if(pixelWidthToSet > _maxWidth)
         {
             pixelWidthToSet = _maxWidth.Value;
+        }
+        if(pixelWidthToSet < _minWidth)
+        {
+            pixelWidthToSet = _minWidth.Value;
         }
 
         mContainedObjectAsIpso.Width = pixelWidthToSet;
