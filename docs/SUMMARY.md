@@ -48,6 +48,8 @@
     * [Y](gum-tool/gum-elements/general-properties/y.md)
     * [Y Origin](gum-tool/gum-elements/general-properties/y-origin.md)
     * [Y Units](gum-tool/gum-elements/general-properties/y-units.md)
+    * [Max Height](gum-tool/gum-elements/general-properties/max-height.md)
+    * [Max Width](gum-tool/gum-elements/general-properties/max-width.md)
   * [Behaviors](gum-tool/gum-elements/behaviors/README.md)
     * [Default Implementation](gum-tool/gum-elements/behaviors/default-implementation.md)
   * [Circle](gum-tool/gum-elements/circle.md)

@@ -2,4 +2,4 @@
 
 ## Introduction
 
-General properties are shared by all types of components.
+General properties are shared by all Standard Elements and Components.
