@@ -29,13 +29,14 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AsepriteDotNet" Version="1.9.0" />
+    <PackageReference Include="Gum.FNA" Version="2025.3.13.1" />
     <PackageReference Include="Newtonsoft.Json">
       <Version>13.0.3</Version>
     </PackageReference>
     <PackageReference Include="SkiaSharp" Version="2.88.6" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\MonoGameGum\FnaGum\FnaGum.csproj" />
+    <ProjectReference Include="..\..\..\fna\FNA.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="Content\GumProject\**\*.*">

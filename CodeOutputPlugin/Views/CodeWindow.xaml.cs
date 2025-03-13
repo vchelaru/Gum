@@ -193,7 +193,7 @@ namespace CodeOutputPlugin.Views
             //if(string.IsNullOrEmpty(value))
             //{
             //    // let's see if we have a csproj:
-            var csproj = CodeRootSelectionDisplay.GetCsprojDirectory();
+            var csproj = GetCsprojDirectory();
 
             var areSetupButtonsVisible = 
                 csproj != null && 
@@ -572,7 +572,7 @@ namespace CodeOutputPlugin.Views
 
         private void HandleAutoSetupClicked(object sender, RoutedEventArgs e)
         {
-            var csprojLocation = CodeRootSelectionDisplay.GetCsprojDirectory();
+            var csprojLocation = GetCsprojDirectory();
 
             if(csprojLocation == null)
             {
@@ -637,6 +637,41 @@ namespace CodeOutputPlugin.Views
         {
             HasClickedManualSetup = true;
             FullRefreshDataGrid();
+        }
+
+
+        FilePath? GetCsprojDirectory()
+        {
+            FilePath gumDirectory = GumState.Self.ProjectState.ProjectDirectory;
+
+            return GetCsprojDirectory(gumDirectory);
+        }
+
+        FilePath? GetCsprojDirectory(FilePath filePath)
+        {
+            if (filePath == null)
+            {
+                return null;
+            }
+
+            var files = System.IO.Directory.GetFiles(filePath.FullPath)
+                .Select(item => new FilePath(item));
+
+            if (files.Any(item => item.Extension == "csproj"))
+            {
+                return filePath;
+            }
+
+            var parentDirectory = filePath.GetDirectoryContainingThis();
+
+            if (parentDirectory == null)
+            {
+                return null;
+            }
+            else
+            {
+                return GetCsprojDirectory(parentDirectory);
+            }
         }
 
         #endregion
