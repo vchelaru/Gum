@@ -6,7 +6,7 @@
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.FNA</PackageId>
-		<Version>2025.3.12.1</Version>
+		<Version>2025.3.13.1</Version>
 
 
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -91,7 +91,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\fna\FNA.Core.csproj" />
+		<ProjectReference Include="..\..\fna\FNA.Core.csproj" PrivateAssets="All" />
 		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
 		<ProjectReference Include="..\..\GumDataTypes\GumDataTypesNet6.csproj" />
 		<ProjectReference Include="..\..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
@@ -105,9 +105,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<!--<PackageReference Include="nkast.Xna.Framework.Audio" Version="3.12.9001" />-->
-		<!--<PackageReference Include="nkast.Xna.Framework.Media" Version="3.12.9001" />-->
-
 		<PackageReference Include="TextCopy" Version="6.2.1" />
 	</ItemGroup>
 
