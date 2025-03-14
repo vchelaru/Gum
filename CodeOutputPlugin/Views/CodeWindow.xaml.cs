@@ -197,7 +197,7 @@ namespace CodeOutputPlugin.Views
 
             var areSetupButtonsVisible = 
                 csproj != null && 
-                string.IsNullOrEmpty(CodeOutputProjectSettings.CodeProjectRoot) &&
+                string.IsNullOrEmpty(CodeOutputProjectSettings?.CodeProjectRoot) &&
                 !HasClickedManualSetup;
 
             this.AutoAndManualButtonStack.Visibility = areSetupButtonsVisible.ToVisibility();
