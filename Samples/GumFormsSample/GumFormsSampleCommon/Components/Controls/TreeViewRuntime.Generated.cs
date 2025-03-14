@@ -15,6 +15,11 @@ namespace GumFormsSample.Components
 {
     public partial class TreeViewRuntime:ContainerRuntime
     {
+        [System.Runtime.CompilerServices.ModuleInitializer]
+        public static void RegisterRuntimeType()
+        {
+            GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/TreeView", typeof(TreeViewRuntime));
+        }
         public NineSliceRuntime Background { get; protected set; }
         public ScrollBarRuntime VerticalScrollBarInstance { get; protected set; }
         public ContainerRuntime ClipContainerInstance { get; protected set; }
@@ -33,6 +38,9 @@ namespace GumFormsSample.Components
 
             ApplyDefaultVariables();
             AssignParents();
+            if(tryCreateFormsObject)
+            {
+            }
             CustomInitialize();
         }
         protected virtual void InitializeInstances()

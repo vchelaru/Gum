@@ -10,75 +10,159 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 using MonoGameGum.GueDeriving;
-public partial class ButtonDenyRuntime
+namespace GumFormsSample.Components
 {
-    [System.Runtime.CompilerServices.ModuleInitializer]
-    public static void RegisterRuntimeType()
+    public partial class ButtonDenyRuntime:ContainerRuntime
     {
-        GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ButtonDeny", typeof(ButtonDenyRuntime));
-    }
-    public MonoGameGum.Forms.Controls.Button FormsControl => FormsControlAsObject as MonoGameGum.Forms.Controls.Button;
-    public enum ButtonCategory
-    {
-        Enabled,
-        Disabled,
-        Highlighted,
-        Pushed,
-        HighlightedFocused,
-        Focused,
-        DisabledFocused,
-    }
-
-    public ButtonCategory ButtonCategoryState
-    {
-        set
+        [System.Runtime.CompilerServices.ModuleInitializer]
+        public static void RegisterRuntimeType()
         {
-            if(Categories.ContainsKey("ButtonCategory"))
+            GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ButtonDeny", typeof(ButtonDenyRuntime));
+        }
+        public MonoGameGum.Forms.Controls.Button FormsControl => FormsControlAsObject as MonoGameGum.Forms.Controls.Button;
+        public enum ButtonCategory
+        {
+            Enabled,
+            Disabled,
+            Highlighted,
+            Pushed,
+            HighlightedFocused,
+            Focused,
+            DisabledFocused,
+        }
+
+        ButtonCategory mButtonCategoryState;
+        public ButtonCategory ButtonCategoryState
+        {
+            get => mButtonCategoryState;
+            set
             {
-                var category = Categories["ButtonCategory"];
-                var state = category.States.Find(item => item.Name == value.ToString());
-                this.ApplyState(state);
+                mButtonCategoryState = value;
+                var appliedDynamically = false;
+                if(!appliedDynamically)
+                {
+                    switch (value)
+                    {
+                        case ButtonCategory.Enabled:
+                            Background.SetProperty("ColorCategoryState", "Danger");
+                            this.FocusedIndicator.Visible = false;
+                            TextInstance.SetProperty("ColorCategoryState", "White");
+                            break;
+                        case ButtonCategory.Disabled:
+                            Background.SetProperty("ColorCategoryState", "DarkGray");
+                            this.FocusedIndicator.Visible = false;
+                            TextInstance.SetProperty("ColorCategoryState", "Gray");
+                            break;
+                        case ButtonCategory.Highlighted:
+                            Background.SetProperty("ColorCategoryState", "PrimaryLight");
+                            this.FocusedIndicator.Visible = false;
+                            TextInstance.SetProperty("ColorCategoryState", "White");
+                            break;
+                        case ButtonCategory.Pushed:
+                            Background.SetProperty("ColorCategoryState", "PrimaryDark");
+                            this.FocusedIndicator.Visible = false;
+                            TextInstance.SetProperty("ColorCategoryState", "White");
+                            break;
+                        case ButtonCategory.HighlightedFocused:
+                            Background.SetProperty("ColorCategoryState", "PrimaryLight");
+                            this.FocusedIndicator.Visible = true;
+                            TextInstance.SetProperty("ColorCategoryState", "White");
+                            break;
+                        case ButtonCategory.Focused:
+                            Background.SetProperty("ColorCategoryState", "Danger");
+                            this.FocusedIndicator.Visible = true;
+                            TextInstance.SetProperty("ColorCategoryState", "White");
+                            break;
+                        case ButtonCategory.DisabledFocused:
+                            Background.SetProperty("ColorCategoryState", "DarkGray");
+                            this.FocusedIndicator.Visible = true;
+                            TextInstance.SetProperty("ColorCategoryState", "Gray");
+                            break;
+                    }
+                }
             }
-            else
+        }
+        public NineSliceRuntime Background { get; protected set; }
+        public TextRuntime TextInstance { get; protected set; }
+        public NineSliceRuntime FocusedIndicator { get; protected set; }
+
+        public string ButtonDisplayText
+        {
+            get => TextInstance.Text;
+            set => TextInstance.Text = value;
+        }
+
+        public ButtonDenyRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
+        {
+            if(fullInstantiation)
             {
-                var category = ((Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "ButtonCategory");
-                var state = category.States.Find(item => item.Name == value.ToString());
-                this.ApplyState(state);
             }
+
+            this.Height = 32f;
+             
+            this.Width = 128f;
+
+            InitializeInstances();
+
+            ApplyDefaultVariables();
+            AssignParents();
+            if(tryCreateFormsObject)
+            {
+                if (FormsControl == null)
+                {
+                    FormsControlAsObject = new MonoGameGum.Forms.Controls.Button(this);
+                }
+            }
+            CustomInitialize();
         }
-    }
-    public NineSliceRuntime Background { get; protected set; }
-    public TextRuntime TextInstance { get; protected set; }
-    public NineSliceRuntime FocusedIndicator { get; protected set; }
-
-    public string ButtonDisplayText
-    {
-        get => TextInstance.Text;
-        set => TextInstance.Text = value;
-    }
-
-    public ButtonDenyRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
-    {
-        if(fullInstantiation)
+        protected virtual void InitializeInstances()
         {
-            var element = ObjectFinder.Self.GetElementSave("Controls/ButtonDeny");
-            element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
+            Background = new NineSliceRuntime();
+            Background.Name = "Background";
+            TextInstance = new TextRuntime();
+            TextInstance.Name = "TextInstance";
+            FocusedIndicator = new NineSliceRuntime();
+            FocusedIndicator.Name = "FocusedIndicator";
         }
-
-
-
-    }
-    public override void AfterFullCreation()
-    {
-        if (FormsControl == null)
+        protected virtual void AssignParents()
         {
-            FormsControlAsObject = new MonoGameGum.Forms.Controls.Button(this);
+            this.Children.Add(Background);
+            this.Children.Add(TextInstance);
+            this.Children.Add(FocusedIndicator);
         }
-        Background = this.GetGraphicalUiElementByName("Background") as NineSliceRuntime;
-        TextInstance = this.GetGraphicalUiElementByName("TextInstance") as TextRuntime;
-        FocusedIndicator = this.GetGraphicalUiElementByName("FocusedIndicator") as NineSliceRuntime;
-        CustomInitialize();
+        private void ApplyDefaultVariables()
+        {
+Background.SetProperty("ColorCategoryState", "Danger");
+Background.SetProperty("StyleCategoryState", "Bordered");
+            this.Background.Height = 0f;
+            this.Background.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            this.Background.Width = 0f;
+            this.Background.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            this.Background.X = 0f;
+            this.Background.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
+            this.Background.XUnits = GeneralUnitType.PixelsFromMiddle;
+            this.Background.Y = 0f;
+            this.Background.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+            this.Background.YUnits = GeneralUnitType.PixelsFromMiddle;
+
+TextInstance.SetProperty("ColorCategoryState", "White");
+TextInstance.SetProperty("StyleCategoryState", "Strong");
+            this.TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            this.TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
+            this.TextInstance.Text = @"Cancel";
+            this.TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+            this.TextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+
+FocusedIndicator.SetProperty("ColorCategoryState", "Warning");
+FocusedIndicator.SetProperty("StyleCategoryState", "Solid");
+            this.FocusedIndicator.Height = 2f;
+            this.FocusedIndicator.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+            this.FocusedIndicator.Visible = false;
+            this.FocusedIndicator.Y = 2f;
+            this.FocusedIndicator.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
+            this.FocusedIndicator.YUnits = GeneralUnitType.PixelsFromLarge;
+
+        }
+        partial void CustomInitialize();
     }
-    //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
-    partial void CustomInitialize();
 }

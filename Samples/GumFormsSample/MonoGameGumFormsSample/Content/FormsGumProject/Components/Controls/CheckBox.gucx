@@ -5,6 +5,18 @@
   <State>
     <Name>Default</Name>
     <Variable>
+      <Type>bool</Type>
+      <Name>Check.ExposeChildrenEvents</Name>
+      <Value xsi:type="xsd:boolean">false</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>bool</Type>
+      <Name>Check.HasEvents</Name>
+      <Value xsi:type="xsd:boolean">false</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>float</Type>
       <Name>Check.Height</Name>
       <Value xsi:type="xsd:float">0</Value>

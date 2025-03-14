@@ -15,6 +15,11 @@ namespace GumFormsSample.Components
 {
     public partial class ScrollBarRuntime:ContainerRuntime
     {
+        [System.Runtime.CompilerServices.ModuleInitializer]
+        public static void RegisterRuntimeType()
+        {
+            GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ScrollBar", typeof(ScrollBarRuntime));
+        }
         public MonoGameGum.Forms.Controls.ScrollBar FormsControl => FormsControlAsObject as MonoGameGum.Forms.Controls.ScrollBar;
         public enum ScrollBarCategory
         {
@@ -57,6 +62,13 @@ namespace GumFormsSample.Components
 
             ApplyDefaultVariables();
             AssignParents();
+            if(tryCreateFormsObject)
+            {
+                if (FormsControl == null)
+                {
+                    FormsControlAsObject = new MonoGameGum.Forms.Controls.ScrollBar(this);
+                }
+            }
             CustomInitialize();
         }
         protected virtual void InitializeInstances()

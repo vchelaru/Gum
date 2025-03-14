@@ -10,73 +10,150 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 using MonoGameGum.GueDeriving;
-public partial class ListBoxItemRuntime
+namespace GumFormsSample.Components
 {
-    [System.Runtime.CompilerServices.ModuleInitializer]
-    public static void RegisterRuntimeType()
+    public partial class ListBoxItemRuntime:ContainerRuntime
     {
-        GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ListBoxItem", typeof(ListBoxItemRuntime));
-        MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(MonoGameGum.Forms.Controls.ListBoxItem)] = typeof(ListBoxItemRuntime);
-    }
-    public MonoGameGum.Forms.Controls.ListBoxItem FormsControl => FormsControlAsObject as MonoGameGum.Forms.Controls.ListBoxItem;
-    public enum ListBoxItemCategory
-    {
-        Enabled,
-        Highlighted,
-        Selected,
-        Focused,
-    }
-
-    public ListBoxItemCategory ListBoxItemCategoryState
-    {
-        set
+        [System.Runtime.CompilerServices.ModuleInitializer]
+        public static void RegisterRuntimeType()
         {
-            if(Categories.ContainsKey("ListBoxItemCategory"))
+            GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ListBoxItem", typeof(ListBoxItemRuntime));
+            MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(MonoGameGum.Forms.Controls.ListBoxItem)] = typeof(ListBoxItemRuntime);
+        }
+        public MonoGameGum.Forms.Controls.ListBoxItem FormsControl => FormsControlAsObject as MonoGameGum.Forms.Controls.ListBoxItem;
+        public enum ListBoxItemCategory
+        {
+            Enabled,
+            Highlighted,
+            Selected,
+            Focused,
+        }
+
+        ListBoxItemCategory mListBoxItemCategoryState;
+        public ListBoxItemCategory ListBoxItemCategoryState
+        {
+            get => mListBoxItemCategoryState;
+            set
             {
-                var category = Categories["ListBoxItemCategory"];
-                var state = category.States.Find(item => item.Name == value.ToString());
-                this.ApplyState(state);
+                mListBoxItemCategoryState = value;
+                var appliedDynamically = false;
+                if(!appliedDynamically)
+                {
+                    switch (value)
+                    {
+                        case ListBoxItemCategory.Enabled:
+                            Background.SetProperty("ColorCategoryState", "DarkGray");
+                            this.Background.Visible = false;
+                            this.FocusedIndicator.Visible = false;
+                            break;
+                        case ListBoxItemCategory.Highlighted:
+                            Background.SetProperty("ColorCategoryState", "PrimaryLight");
+                            this.Background.Visible = true;
+                            this.FocusedIndicator.Visible = false;
+                            break;
+                        case ListBoxItemCategory.Selected:
+                            Background.SetProperty("ColorCategoryState", "Accent");
+                            this.Background.Visible = true;
+                            this.FocusedIndicator.Visible = false;
+                            break;
+                        case ListBoxItemCategory.Focused:
+                            Background.SetProperty("ColorCategoryState", "DarkGray");
+                            this.Background.Visible = false;
+                            this.FocusedIndicator.Visible = true;
+                            break;
+                    }
+                }
             }
-            else
+        }
+        public NineSliceRuntime Background { get; protected set; }
+        public TextRuntime TextInstance { get; protected set; }
+        public NineSliceRuntime FocusedIndicator { get; protected set; }
+
+        public string ListItemDisplayText
+        {
+            get => TextInstance.Text;
+            set => TextInstance.Text = value;
+        }
+
+        public ListBoxItemRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
+        {
+            if(fullInstantiation)
             {
-                var category = ((Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "ListBoxItemCategory");
-                var state = category.States.Find(item => item.Name == value.ToString());
-                this.ApplyState(state);
             }
+
+            this.Height = 0f;
+            this.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+             
+            this.Width = 0f;
+            this.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+
+            InitializeInstances();
+
+            ApplyDefaultVariables();
+            AssignParents();
+            if(tryCreateFormsObject)
+            {
+                if (FormsControl == null)
+                {
+                    FormsControlAsObject = new MonoGameGum.Forms.Controls.ListBoxItem(this);
+                }
+            }
+            CustomInitialize();
         }
-    }
-    public NineSliceRuntime Background { get; protected set; }
-    public TextRuntime TextInstance { get; protected set; }
-    public NineSliceRuntime FocusedIndicator { get; protected set; }
-
-    public string ListItemDisplayText
-    {
-        get => TextInstance.Text;
-        set => TextInstance.Text = value;
-    }
-
-    public ListBoxItemRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
-    {
-        if(fullInstantiation)
+        protected virtual void InitializeInstances()
         {
-            var element = ObjectFinder.Self.GetElementSave("Controls/ListBoxItem");
-            element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
+            Background = new NineSliceRuntime();
+            Background.Name = "Background";
+            TextInstance = new TextRuntime();
+            TextInstance.Name = "TextInstance";
+            FocusedIndicator = new NineSliceRuntime();
+            FocusedIndicator.Name = "FocusedIndicator";
         }
-
-
-
-    }
-    public override void AfterFullCreation()
-    {
-        if (FormsControl == null)
+        protected virtual void AssignParents()
         {
-            FormsControlAsObject = new MonoGameGum.Forms.Controls.ListBoxItem(this);
+            this.Children.Add(Background);
+            this.Children.Add(TextInstance);
+            this.Children.Add(FocusedIndicator);
         }
-        Background = this.GetGraphicalUiElementByName("Background") as NineSliceRuntime;
-        TextInstance = this.GetGraphicalUiElementByName("TextInstance") as TextRuntime;
-        FocusedIndicator = this.GetGraphicalUiElementByName("FocusedIndicator") as NineSliceRuntime;
-        CustomInitialize();
+        private void ApplyDefaultVariables()
+        {
+Background.SetProperty("ColorCategoryState", "DarkGray");
+Background.SetProperty("StyleCategoryState", "Solid");
+            this.Background.Height = 0f;
+            this.Background.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            this.Background.Width = 0f;
+            this.Background.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            this.Background.X = 0f;
+            this.Background.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
+            this.Background.XUnits = GeneralUnitType.PixelsFromMiddle;
+            this.Background.Y = 0f;
+            this.Background.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+            this.Background.YUnits = GeneralUnitType.PixelsFromMiddle;
+
+TextInstance.SetProperty("ColorCategoryState", "White");
+TextInstance.SetProperty("StyleCategoryState", "Normal");
+            this.TextInstance.Height = 0f;
+            this.TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+            this.TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
+            this.TextInstance.Text = @"ListBox Item";
+            this.TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+            this.TextInstance.Width = -8f;
+            this.TextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            this.TextInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
+            this.TextInstance.XUnits = GeneralUnitType.PixelsFromMiddle;
+            this.TextInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+            this.TextInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
+
+FocusedIndicator.SetProperty("ColorCategoryState", "Warning");
+FocusedIndicator.SetProperty("StyleCategoryState", "Solid");
+            this.FocusedIndicator.Height = 2f;
+            this.FocusedIndicator.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+            this.FocusedIndicator.Visible = false;
+            this.FocusedIndicator.Y = -2f;
+            this.FocusedIndicator.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
+            this.FocusedIndicator.YUnits = GeneralUnitType.PixelsFromLarge;
+
+        }
+        partial void CustomInitialize();
     }
-    //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
-    partial void CustomInitialize();
 }

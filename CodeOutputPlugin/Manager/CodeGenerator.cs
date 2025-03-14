@@ -2218,9 +2218,13 @@ public class CodeGenerator
             if (projectSettings.OutputLibrary == OutputLibrary.MonoGame)
             {
                 // for standards, append "Runtime"
-                var isStandard = ObjectFinder.Self.GetStandardElement(inheritance) != null;
-
-                if (isStandard)
+                // Update March 14, 2025
+                // Why only on standards?
+                // A component (such as MessageBox)
+                // could inherit from UserControl, which
+                // generates UserControlRuntime.
+                var parentElement = ObjectFinder.Self.GetElementSave(inheritance);
+                if(element != null)
                 {
                     inheritance = inheritance + "Runtime";
                 }

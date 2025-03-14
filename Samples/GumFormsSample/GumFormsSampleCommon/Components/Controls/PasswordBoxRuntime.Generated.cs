@@ -10,78 +10,190 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 using MonoGameGum.GueDeriving;
-public partial class PasswordBoxRuntime
+namespace GumFormsSample.Components
 {
-    [System.Runtime.CompilerServices.ModuleInitializer]
-    public static void RegisterRuntimeType()
+    public partial class PasswordBoxRuntime:ContainerRuntime
     {
-        GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/PasswordBox", typeof(PasswordBoxRuntime));
-    }
-    public MonoGameGum.Forms.Controls.PasswordBox FormsControl => FormsControlAsObject as MonoGameGum.Forms.Controls.PasswordBox;
-    public enum PasswordBoxCategory
-    {
-        Enabled,
-        Disabled,
-        Highlighted,
-        Selected,
-    }
-
-    public PasswordBoxCategory PasswordBoxCategoryState
-    {
-        set
+        [System.Runtime.CompilerServices.ModuleInitializer]
+        public static void RegisterRuntimeType()
         {
-            if(Categories.ContainsKey("PasswordBoxCategory"))
+            GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/PasswordBox", typeof(PasswordBoxRuntime));
+        }
+        public MonoGameGum.Forms.Controls.PasswordBox FormsControl => FormsControlAsObject as MonoGameGum.Forms.Controls.PasswordBox;
+        public enum PasswordBoxCategory
+        {
+            Enabled,
+            Disabled,
+            Highlighted,
+            Selected,
+        }
+
+        PasswordBoxCategory mPasswordBoxCategoryState;
+        public PasswordBoxCategory PasswordBoxCategoryState
+        {
+            get => mPasswordBoxCategoryState;
+            set
             {
-                var category = Categories["PasswordBoxCategory"];
-                var state = category.States.Find(item => item.Name == value.ToString());
-                this.ApplyState(state);
+                mPasswordBoxCategoryState = value;
+                var appliedDynamically = false;
+                if(!appliedDynamically)
+                {
+                    switch (value)
+                    {
+                        case PasswordBoxCategory.Enabled:
+                            Background.SetProperty("ColorCategoryState", "DarkGray");
+                            this.FocusedIndicator.Visible = false;
+                            PlaceholderTextInstance.SetProperty("ColorCategoryState", "Gray");
+                            break;
+                        case PasswordBoxCategory.Disabled:
+                            Background.SetProperty("ColorCategoryState", "DarkGray");
+                            this.FocusedIndicator.Visible = false;
+                            PlaceholderTextInstance.SetProperty("ColorCategoryState", "Gray");
+                            break;
+                        case PasswordBoxCategory.Highlighted:
+                            Background.SetProperty("ColorCategoryState", "Gray");
+                            this.FocusedIndicator.Visible = false;
+                            PlaceholderTextInstance.SetProperty("ColorCategoryState", "DarkGray");
+                            break;
+                        case PasswordBoxCategory.Selected:
+                            Background.SetProperty("ColorCategoryState", "DarkGray");
+                            this.FocusedIndicator.Visible = true;
+                            PlaceholderTextInstance.SetProperty("ColorCategoryState", "Gray");
+                            break;
+                    }
+                }
             }
-            else
+        }
+        public NineSliceRuntime Background { get; protected set; }
+        public NineSliceRuntime SelectionInstance { get; protected set; }
+        public TextRuntime TextInstance { get; protected set; }
+        public TextRuntime PlaceholderTextInstance { get; protected set; }
+        public NineSliceRuntime FocusedIndicator { get; protected set; }
+        public SpriteRuntime CaretInstance { get; protected set; }
+
+        public string PlaceholderText
+        {
+            get => PlaceholderTextInstance.Text;
+            set => PlaceholderTextInstance.Text = value;
+        }
+
+        public PasswordBoxRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
+        {
+            if(fullInstantiation)
             {
-                var category = ((Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "PasswordBoxCategory");
-                var state = category.States.Find(item => item.Name == value.ToString());
-                this.ApplyState(state);
             }
+
+            this.Height = 24f;
+             
+            this.Width = 256f;
+
+            InitializeInstances();
+
+            ApplyDefaultVariables();
+            AssignParents();
+            if(tryCreateFormsObject)
+            {
+                if (FormsControl == null)
+                {
+                    FormsControlAsObject = new MonoGameGum.Forms.Controls.PasswordBox(this);
+                }
+            }
+            CustomInitialize();
         }
-    }
-    public NineSliceRuntime Background { get; protected set; }
-    public NineSliceRuntime SelectionInstance { get; protected set; }
-    public TextRuntime TextInstance { get; protected set; }
-    public TextRuntime PlaceholderTextInstance { get; protected set; }
-    public NineSliceRuntime FocusedIndicator { get; protected set; }
-    public SpriteRuntime CaretInstance { get; protected set; }
-
-    public string PlaceholderText
-    {
-        get => PlaceholderTextInstance.Text;
-        set => PlaceholderTextInstance.Text = value;
-    }
-
-    public PasswordBoxRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
-    {
-        if(fullInstantiation)
+        protected virtual void InitializeInstances()
         {
-            var element = ObjectFinder.Self.GetElementSave("Controls/PasswordBox");
-            element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
+            Background = new NineSliceRuntime();
+            Background.Name = "Background";
+            SelectionInstance = new NineSliceRuntime();
+            SelectionInstance.Name = "SelectionInstance";
+            TextInstance = new TextRuntime();
+            TextInstance.Name = "TextInstance";
+            PlaceholderTextInstance = new TextRuntime();
+            PlaceholderTextInstance.Name = "PlaceholderTextInstance";
+            FocusedIndicator = new NineSliceRuntime();
+            FocusedIndicator.Name = "FocusedIndicator";
+            CaretInstance = new SpriteRuntime();
+            CaretInstance.Name = "CaretInstance";
         }
-
-
-
-    }
-    public override void AfterFullCreation()
-    {
-        if (FormsControl == null)
+        protected virtual void AssignParents()
         {
-            FormsControlAsObject = new MonoGameGum.Forms.Controls.PasswordBox(this);
+            this.Children.Add(Background);
+            this.Children.Add(SelectionInstance);
+            this.Children.Add(TextInstance);
+            this.Children.Add(PlaceholderTextInstance);
+            this.Children.Add(FocusedIndicator);
+            this.Children.Add(CaretInstance);
         }
-        Background = this.GetGraphicalUiElementByName("Background") as NineSliceRuntime;
-        SelectionInstance = this.GetGraphicalUiElementByName("SelectionInstance") as NineSliceRuntime;
-        TextInstance = this.GetGraphicalUiElementByName("TextInstance") as TextRuntime;
-        PlaceholderTextInstance = this.GetGraphicalUiElementByName("PlaceholderTextInstance") as TextRuntime;
-        FocusedIndicator = this.GetGraphicalUiElementByName("FocusedIndicator") as NineSliceRuntime;
-        CaretInstance = this.GetGraphicalUiElementByName("CaretInstance") as SpriteRuntime;
-        CustomInitialize();
+        private void ApplyDefaultVariables()
+        {
+Background.SetProperty("ColorCategoryState", "DarkGray");
+Background.SetProperty("StyleCategoryState", "Bordered");
+
+SelectionInstance.SetProperty("ColorCategoryState", "Accent");
+            this.SelectionInstance.Height = -4f;
+            this.SelectionInstance.Width = 7f;
+            this.SelectionInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+            this.SelectionInstance.X = 15f;
+            this.SelectionInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
+            this.SelectionInstance.XUnits = GeneralUnitType.PixelsFromSmall;
+            this.SelectionInstance.Y = 0f;
+
+TextInstance.SetProperty("ColorCategoryState", "White");
+TextInstance.SetProperty("StyleCategoryState", "Normal");
+            this.TextInstance.Height = -4f;
+            this.TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            this.TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
+            this.TextInstance.Text = @"";
+            this.TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+            this.TextInstance.Width = 0f;
+            this.TextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+            this.TextInstance.X = 4f;
+            this.TextInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
+            this.TextInstance.XUnits = GeneralUnitType.PixelsFromSmall;
+            this.TextInstance.Y = 0f;
+            this.TextInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+            this.TextInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
+
+PlaceholderTextInstance.SetProperty("ColorCategoryState", "Gray");
+            this.PlaceholderTextInstance.Height = -4f;
+            this.PlaceholderTextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            this.PlaceholderTextInstance.Text = @"Password";
+            this.PlaceholderTextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+            this.PlaceholderTextInstance.Width = -8f;
+            this.PlaceholderTextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            this.PlaceholderTextInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
+            this.PlaceholderTextInstance.XUnits = GeneralUnitType.PixelsFromMiddle;
+            this.PlaceholderTextInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+            this.PlaceholderTextInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
+
+FocusedIndicator.SetProperty("ColorCategoryState", "Warning");
+FocusedIndicator.SetProperty("StyleCategoryState", "Solid");
+            this.FocusedIndicator.Height = 2f;
+            this.FocusedIndicator.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+            this.FocusedIndicator.Visible = false;
+            this.FocusedIndicator.Y = 2f;
+            this.FocusedIndicator.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
+            this.FocusedIndicator.YUnits = GeneralUnitType.PixelsFromLarge;
+
+CaretInstance.SetProperty("ColorCategoryState", "Primary");
+            this.CaretInstance.Height = 14f;
+            this.CaretInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+            this.CaretInstance.SourceFileName = @"UISpriteSheet.png";
+            this.CaretInstance.TextureAddress = global::Gum.Managers.TextureAddress.Custom;
+            this.CaretInstance.TextureHeight = 24;
+            this.CaretInstance.TextureLeft = 0;
+            this.CaretInstance.TextureTop = 48;
+            this.CaretInstance.TextureWidth = 24;
+            this.CaretInstance.Width = 1f;
+            this.CaretInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+            this.CaretInstance.X = 4f;
+            this.CaretInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
+            this.CaretInstance.XUnits = GeneralUnitType.PixelsFromSmall;
+            this.CaretInstance.Y = 0f;
+            this.CaretInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+            this.CaretInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
+
+        }
+        partial void CustomInitialize();
     }
-    //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
-    partial void CustomInitialize();
 }

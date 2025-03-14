@@ -4,6 +4,12 @@
   <State>
     <Name>Default</Name>
     <Variable>
+      <Type>string</Type>
+      <Name>CheckBoxInstance.CheckboxDisplayText</Name>
+      <Value xsi:type="xsd:string">This is my label</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>bool</Type>
       <Name>IsOverrideInCodeGen</Name>
       <Value xsi:type="xsd:boolean">false</Value>
@@ -16,105 +22,10 @@
       <Category>Xamarin Forms</Category>
       <SetsValue>true</SetsValue>
     </Variable>
-    <Variable>
-      <Type>string</Type>
-      <Name>Background.Parent</Name>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>Background.YUnits</Name>
-      <Value xsi:type="xsd:int">7</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>VerticalAlignment</Type>
-      <Name>Background.YOrigin</Name>
-      <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Background.Y</Name>
-      <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>Background.XUnits</Name>
-      <Value xsi:type="xsd:int">6</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>Background.XOrigin</Name>
-      <Value xsi:type="xsd:int">1</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Background.X</Name>
-      <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Background.WidthUnits</Name>
-      <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Background.Width</Name>
-      <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>StyleCategory</Type>
-      <Name>Background.StyleCategoryState</Name>
-      <Value xsi:type="xsd:string">Bordered</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Background.Red</Name>
-      <Value xsi:type="xsd:int">70</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>DimensionUnitType</Type>
-      <Name>Background.HeightUnits</Name>
-      <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>float</Type>
-      <Name>Background.Height</Name>
-      <Value xsi:type="xsd:float">0</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Background.Green</Name>
-      <Value xsi:type="xsd:int">70</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>ColorCategory</Type>
-      <Name>Background.ColorCategoryState</Name>
-      <Value xsi:type="xsd:string">DarkGray</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>int</Type>
-      <Name>Background.Blue</Name>
-      <Value xsi:type="xsd:int">70</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
   </State>
   <Instance>
-    <Name>Background</Name>
-    <BaseType>NineSlice</BaseType>
+    <Name>CheckBoxInstance</Name>
+    <BaseType>Controls/CheckBox</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Behaviors />

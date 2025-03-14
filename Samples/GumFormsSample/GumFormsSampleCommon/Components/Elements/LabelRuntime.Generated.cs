@@ -10,64 +10,87 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 using MonoGameGum.GueDeriving;
-public partial class LabelRuntime
+namespace GumFormsSample.Components
 {
-    [System.Runtime.CompilerServices.ModuleInitializer]
-    public static void RegisterRuntimeType()
+    public partial class LabelRuntime:ContainerRuntime
     {
-        GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Elements/Label", typeof(LabelRuntime));
-    }
-    public MonoGameGum.Forms.Controls.Label FormsControl => FormsControlAsObject as MonoGameGum.Forms.Controls.Label;
-    public TextRuntime TextInstance { get; protected set; }
-
-    public string LabelColor
-    {
-        set => TextInstance.SetProperty("ColorCategoryState", value?.ToString());
-    }
-
-    public HorizontalAlignment HorizontalAlignment
-    {
-        get => TextInstance.HorizontalAlignment;
-        set => TextInstance.HorizontalAlignment = value;
-    }
-
-    public string Style
-    {
-        set => TextInstance.SetProperty("StyleCategoryState", value?.ToString());
-    }
-
-    public string LabelText
-    {
-        get => TextInstance.Text;
-        set => TextInstance.Text = value;
-    }
-
-    public VerticalAlignment VerticalAlignment
-    {
-        get => TextInstance.VerticalAlignment;
-        set => TextInstance.VerticalAlignment = value;
-    }
-
-    public LabelRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
-    {
-        if(fullInstantiation)
+        [System.Runtime.CompilerServices.ModuleInitializer]
+        public static void RegisterRuntimeType()
         {
-            var element = ObjectFinder.Self.GetElementSave("Elements/Label");
-            element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
+            GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Elements/Label", typeof(LabelRuntime));
+        }
+        public MonoGameGum.Forms.Controls.Label FormsControl => FormsControlAsObject as MonoGameGum.Forms.Controls.Label;
+        public TextRuntime TextInstance { get; protected set; }
+
+        public string LabelColor
+        {
+            set => TextInstance.SetProperty("ColorCategoryState", value?.ToString());
         }
 
-
-
-    }
-    public override void AfterFullCreation()
-    {
-        if (FormsControl == null)
+        public HorizontalAlignment HorizontalAlignment
         {
-            FormsControlAsObject = new MonoGameGum.Forms.Controls.Label(this);
+            get => TextInstance.HorizontalAlignment;
+            set => TextInstance.HorizontalAlignment = value;
         }
-        TextInstance = this.GetGraphicalUiElementByName("TextInstance") as TextRuntime;
-        CustomInitialize();
+
+        public string Style
+        {
+            set => TextInstance.SetProperty("StyleCategoryState", value?.ToString());
+        }
+
+        public string LabelText
+        {
+            get => TextInstance.Text;
+            set => TextInstance.Text = value;
+        }
+
+        public VerticalAlignment VerticalAlignment
+        {
+            get => TextInstance.VerticalAlignment;
+            set => TextInstance.VerticalAlignment = value;
+        }
+
+        public LabelRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
+        {
+            if(fullInstantiation)
+            {
+            }
+
+            this.Height = 0f;
+            this.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+             
+            this.Width = 128f;
+
+            InitializeInstances();
+
+            ApplyDefaultVariables();
+            AssignParents();
+            if(tryCreateFormsObject)
+            {
+                if (FormsControl == null)
+                {
+                    FormsControlAsObject = new MonoGameGum.Forms.Controls.Label(this);
+                }
+            }
+            CustomInitialize();
+        }
+        protected virtual void InitializeInstances()
+        {
+            TextInstance = new TextRuntime();
+            TextInstance.Name = "TextInstance";
+        }
+        protected virtual void AssignParents()
+        {
+            this.Children.Add(TextInstance);
+        }
+        private void ApplyDefaultVariables()
+        {
+TextInstance.SetProperty("ColorCategoryState", "White");
+TextInstance.SetProperty("StyleCategoryState", "Strong");
+            this.TextInstance.Text = @"Item Label";
+            this.TextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+
+        }
+        partial void CustomInitialize();
     }
-    //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
-    partial void CustomInitialize();
 }

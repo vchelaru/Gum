@@ -10,75 +10,159 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 using MonoGameGum.GueDeriving;
-public partial class ButtonTabRuntime
+namespace GumFormsSample.Components
 {
-    [System.Runtime.CompilerServices.ModuleInitializer]
-    public static void RegisterRuntimeType()
+    public partial class ButtonTabRuntime:ContainerRuntime
     {
-        GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ButtonTab", typeof(ButtonTabRuntime));
-    }
-    public MonoGameGum.Forms.Controls.Button FormsControl => FormsControlAsObject as MonoGameGum.Forms.Controls.Button;
-    public enum ButtonCategory
-    {
-        Enabled,
-        Disabled,
-        Highlighted,
-        Pushed,
-        HighlightedFocused,
-        Focused,
-        DisabledFocused,
-    }
-
-    public ButtonCategory ButtonCategoryState
-    {
-        set
+        [System.Runtime.CompilerServices.ModuleInitializer]
+        public static void RegisterRuntimeType()
         {
-            if(Categories.ContainsKey("ButtonCategory"))
+            GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ButtonTab", typeof(ButtonTabRuntime));
+        }
+        public MonoGameGum.Forms.Controls.Button FormsControl => FormsControlAsObject as MonoGameGum.Forms.Controls.Button;
+        public enum ButtonCategory
+        {
+            Enabled,
+            Disabled,
+            Highlighted,
+            Pushed,
+            HighlightedFocused,
+            Focused,
+            DisabledFocused,
+        }
+
+        ButtonCategory mButtonCategoryState;
+        public ButtonCategory ButtonCategoryState
+        {
+            get => mButtonCategoryState;
+            set
             {
-                var category = Categories["ButtonCategory"];
-                var state = category.States.Find(item => item.Name == value.ToString());
-                this.ApplyState(state);
+                mButtonCategoryState = value;
+                var appliedDynamically = false;
+                if(!appliedDynamically)
+                {
+                    switch (value)
+                    {
+                        case ButtonCategory.Enabled:
+                            Background.SetProperty("ColorCategoryState", "Primary");
+                            this.FocusedIndicator.Visible = false;
+                            TabText.SetProperty("ColorCategoryState", "White");
+                            break;
+                        case ButtonCategory.Disabled:
+                            Background.SetProperty("ColorCategoryState", "DarkGray");
+                            this.FocusedIndicator.Visible = false;
+                            TabText.SetProperty("ColorCategoryState", "Gray");
+                            break;
+                        case ButtonCategory.Highlighted:
+                            Background.SetProperty("ColorCategoryState", "PrimaryLight");
+                            this.FocusedIndicator.Visible = false;
+                            TabText.SetProperty("ColorCategoryState", "White");
+                            break;
+                        case ButtonCategory.Pushed:
+                            Background.SetProperty("ColorCategoryState", "PrimaryDark");
+                            this.FocusedIndicator.Visible = false;
+                            TabText.SetProperty("ColorCategoryState", "White");
+                            break;
+                        case ButtonCategory.HighlightedFocused:
+                            Background.SetProperty("ColorCategoryState", "PrimaryLight");
+                            this.FocusedIndicator.Visible = true;
+                            TabText.SetProperty("ColorCategoryState", "White");
+                            break;
+                        case ButtonCategory.Focused:
+                            Background.SetProperty("ColorCategoryState", "Primary");
+                            this.FocusedIndicator.Visible = true;
+                            TabText.SetProperty("ColorCategoryState", "White");
+                            break;
+                        case ButtonCategory.DisabledFocused:
+                            Background.SetProperty("ColorCategoryState", "DarkGray");
+                            this.FocusedIndicator.Visible = true;
+                            TabText.SetProperty("ColorCategoryState", "Gray");
+                            break;
+                    }
+                }
             }
-            else
+        }
+        public NineSliceRuntime Background { get; protected set; }
+        public TextRuntime TabText { get; protected set; }
+        public NineSliceRuntime FocusedIndicator { get; protected set; }
+
+        public string TabDisplayText
+        {
+            get => TabText.Text;
+            set => TabText.Text = value;
+        }
+
+        public ButtonTabRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
+        {
+            if(fullInstantiation)
             {
-                var category = ((Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "ButtonCategory");
-                var state = category.States.Find(item => item.Name == value.ToString());
-                this.ApplyState(state);
             }
+
+            this.Height = 32f;
+             
+            this.Width = 0f;
+            this.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+            this.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
+            this.XUnits = GeneralUnitType.PixelsFromMiddle;
+            this.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Bottom;
+
+            InitializeInstances();
+
+            ApplyDefaultVariables();
+            AssignParents();
+            if(tryCreateFormsObject)
+            {
+                if (FormsControl == null)
+                {
+                    FormsControlAsObject = new MonoGameGum.Forms.Controls.Button(this);
+                }
+            }
+            CustomInitialize();
         }
-    }
-    public NineSliceRuntime Background { get; protected set; }
-    public TextRuntime TabText { get; protected set; }
-    public NineSliceRuntime FocusedIndicator { get; protected set; }
-
-    public string TabDisplayText
-    {
-        get => TabText.Text;
-        set => TabText.Text = value;
-    }
-
-    public ButtonTabRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
-    {
-        if(fullInstantiation)
+        protected virtual void InitializeInstances()
         {
-            var element = ObjectFinder.Self.GetElementSave("Controls/ButtonTab");
-            element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
+            Background = new NineSliceRuntime();
+            Background.Name = "Background";
+            TabText = new TextRuntime();
+            TabText.Name = "TabText";
+            FocusedIndicator = new NineSliceRuntime();
+            FocusedIndicator.Name = "FocusedIndicator";
         }
-
-
-
-    }
-    public override void AfterFullCreation()
-    {
-        if (FormsControl == null)
+        protected virtual void AssignParents()
         {
-            FormsControlAsObject = new MonoGameGum.Forms.Controls.Button(this);
+            this.Children.Add(Background);
+            Background.Children.Add(TabText);
+            Background.Children.Add(FocusedIndicator);
         }
-        Background = this.GetGraphicalUiElementByName("Background") as NineSliceRuntime;
-        TabText = this.GetGraphicalUiElementByName("TabText") as TextRuntime;
-        FocusedIndicator = this.GetGraphicalUiElementByName("FocusedIndicator") as NineSliceRuntime;
-        CustomInitialize();
+        private void ApplyDefaultVariables()
+        {
+Background.SetProperty("ColorCategoryState", "Primary");
+Background.SetProperty("StyleCategoryState", "TabBordered");
+            this.Background.Width = 32f;
+            this.Background.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+
+TabText.SetProperty("ColorCategoryState", "White");
+TabText.SetProperty("StyleCategoryState", "Strong");
+            this.TabText.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            this.TabText.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
+            this.TabText.Text = @"Tab 1";
+            this.TabText.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+            this.TabText.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
+            this.TabText.XUnits = GeneralUnitType.PixelsFromMiddle;
+            this.TabText.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
+            this.TabText.YUnits = GeneralUnitType.PixelsFromMiddle;
+
+FocusedIndicator.SetProperty("ColorCategoryState", "Warning");
+FocusedIndicator.SetProperty("StyleCategoryState", "Solid");
+            this.FocusedIndicator.Height = 2f;
+            this.FocusedIndicator.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+            this.FocusedIndicator.Visible = false;
+            this.FocusedIndicator.Width = -8f;
+            this.FocusedIndicator.Y = 2f;
+            this.FocusedIndicator.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
+            this.FocusedIndicator.YUnits = GeneralUnitType.PixelsFromLarge;
+
+        }
+        partial void CustomInitialize();
     }
-    //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
-    partial void CustomInitialize();
 }

@@ -232,6 +232,7 @@ TextInstance.SetProperty("StyleCategoryState", "Normal");
 
 this.Check.IconCategoryState = IconRuntime.IconCategory.Check;
 Check.SetProperty("IconColor", "White");
+            this.Check.HasEvents = false;
             this.Check.Height = 0f;
             this.Check.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
             this.Check.Width = 0f;
