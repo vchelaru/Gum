@@ -5269,15 +5269,21 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     {
                         return item;
                     }
-                    else
-                    {
-                        var foundChild = item.GetChildByNameRecursively(name) as GraphicalUiElement;
+                    // This causes a problem - if we do this recursively we will find the wrong objects
+                    // like if we have a ListBox with a Background but also a button with a Background. This
+                    // could find the button background...
+                    // Either we don't do this recurisvely or we do top level first, then recursive. This hasn't
+                    // been recursive for a long time so maybe we need to keep it not recursive for now...
+                    
+                    //else
+                    //{
+                    //    var foundChild = item.GetChildByNameRecursively(name) as GraphicalUiElement;
 
-                        if(foundChild != null)
-                        {
-                            return foundChild;
-                        }
-                    }
+                    //    if(foundChild != null)
+                    //    {
+                    //        return foundChild;
+                    //    }
+                    //}
                 }
             }
         }

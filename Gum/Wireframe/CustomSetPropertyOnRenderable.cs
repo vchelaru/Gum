@@ -265,6 +265,21 @@ public class CustomSetPropertyOnRenderable
             }
             handled = true;
         }
+        else if(propertyName == "Red")
+        {
+            nineSlice.Red = (int)value;
+            handled = true;
+        }
+        else if (propertyName == "Green")
+        {
+            nineSlice.Green = (int)value;
+            handled = true;
+        }
+        else if (propertyName == "Blue")
+        {
+            nineSlice.Blue = (int)value;
+            handled = true;
+        }
 
         return handled;
     }
