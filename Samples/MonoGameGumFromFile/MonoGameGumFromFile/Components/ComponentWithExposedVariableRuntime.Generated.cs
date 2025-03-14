@@ -1,4 +1,5 @@
 //Code for ComponentWithExposedVariable (Container)
+using GumRuntime;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Managers;
@@ -7,7 +8,7 @@ using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 
 using MonoGameGum.GueDeriving;
-
+using MonoGameGumFromFile.Components;
 namespace MonoGameGumFromFile.Components
 {
     public partial class ComponentWithExposedVariableRuntime
@@ -27,6 +28,12 @@ namespace MonoGameGumFromFile.Components
 
         public ComponentWithExposedVariableRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         {
+            if(fullInstantiation)
+            {
+                var element = ObjectFinder.Self.GetElementSave("ComponentWithExposedVariable");
+                element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
+            }
+
 
 
         }

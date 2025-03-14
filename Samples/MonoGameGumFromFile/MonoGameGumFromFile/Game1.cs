@@ -320,7 +320,12 @@ namespace MonoGameGumFromFile
                 {
                     var newScreenElement = ObjectFinder.Self.GumProjectSave.Screens.FirstOrDefault(item => item.Name == screenName);
                     Root = newScreenElement.ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
-                    (Root.GetGraphicalUiElementByName("TextRuntime") as TextRuntime).Text = "Meow";
+                    var textRuntime = (Root.GetGraphicalUiElementByName("TextRuntime") as TextRuntime);
+                    if(textRuntime != null)
+                    {
+                        textRuntime.Text = "Meow";
+
+                    }
                 }
 
                 currentGumScreenSave = Root.Tag as ScreenSave;

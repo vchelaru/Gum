@@ -2,8 +2,6 @@
   "CommonUsingStatements": "using Gum.Converters;\nusing Gum.DataTypes;\nusing Gum.Managers;\nusing Gum.Wireframe;\n\nusing RenderingLibrary.Graphics;\n\nusing MonoGameGum.GueDeriving;\nusing MonoGameGumFromFile.Components;",
   "CodeProjectRoot": "..\\",
   "RootNamespace": "MonoGameGumFromFile",
-  "IsCodeGenPluginEnabled": true,
-  "IsShowCodegenPreviewChecked": true,
   "InheritanceLocation": 0,
   "ObjectInstantiationType": 1,
   "DefaultScreenBase": "Gum.Wireframe.InteractiveGue",

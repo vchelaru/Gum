@@ -109,6 +109,21 @@ namespace MonoGameGum.GueDeriving
             }
         }
 
+        public bool Animate
+        {
+            get => ContainedSprite.Animate;
+            set
+            {
+                ContainedSprite.Animate = value;
+            }
+        }
+
+        public string CurrentChainName
+        {
+            get => ContainedSprite.CurrentChainName;
+            set => ContainedSprite.CurrentChainName = value;
+        }
+
         [Obsolete("Use Texture")]
         public Microsoft.Xna.Framework.Graphics.Texture2D SourceFile
         {
