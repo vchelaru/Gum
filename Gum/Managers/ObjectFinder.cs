@@ -1060,7 +1060,10 @@ namespace Gum.Managers
 
                     elementNames[name] = element;
 
-                    GetElementReferencesByThisInternal(element, elementNames);
+                    if(element != null)
+                    {
+                        GetElementReferencesByThisInternal(element, elementNames);
+                    }
                 }
             }
         }

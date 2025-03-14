@@ -59,7 +59,7 @@ internal class CodeGenerationService
             var elementsWithMissingCodeGen = elementReferences
                 .Where(item =>
                 {
-                    if(item is StandardElementSave)
+                    if(item is StandardElementSave || item == null)
                     {
                         return false;
                     }
