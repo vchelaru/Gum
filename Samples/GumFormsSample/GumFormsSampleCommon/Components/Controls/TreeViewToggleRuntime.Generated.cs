@@ -32,75 +32,21 @@ namespace GumFormsSample.Components
             PushedOff,
         }
 
-        ToggleCategory mToggleCategoryState;
         public ToggleCategory ToggleCategoryState
         {
-            get => mToggleCategoryState;
             set
             {
-                mToggleCategoryState = value;
-                var appliedDynamically = false;
-                if(!appliedDynamically)
+                if(Categories.ContainsKey("ToggleCategory"))
                 {
-                    switch (value)
-                    {
-                        case ToggleCategory.EnabledOn:
-                            IconInstance.SetProperty("IconColor", "White");
-                            this.IconInstance.Rotation = -90f;
-                            this.IconInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
-                            this.IconInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Bottom;
-                            NineSliceInstance.SetProperty("ColorCategoryState", "Primary");
-                            break;
-                        case ToggleCategory.EnabledOff:
-                            IconInstance.SetProperty("IconColor", "White");
-                            this.IconInstance.Rotation = 0f;
-                            this.IconInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
-                            this.IconInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
-                            NineSliceInstance.SetProperty("ColorCategoryState", "Primary");
-                            break;
-                        case ToggleCategory.DisabledOn:
-                            IconInstance.SetProperty("IconColor", "Gray");
-                            this.IconInstance.Rotation = -90f;
-                            this.IconInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
-                            this.IconInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Bottom;
-                            NineSliceInstance.SetProperty("ColorCategoryState", "DarkGray");
-                            break;
-                        case ToggleCategory.DisabledOff:
-                            IconInstance.SetProperty("IconColor", "Gray");
-                            this.IconInstance.Rotation = 0f;
-                            this.IconInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
-                            this.IconInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
-                            NineSliceInstance.SetProperty("ColorCategoryState", "DarkGray");
-                            break;
-                        case ToggleCategory.HighlightedOn:
-                            IconInstance.SetProperty("IconColor", "White");
-                            this.IconInstance.Rotation = -90f;
-                            this.IconInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
-                            this.IconInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Bottom;
-                            NineSliceInstance.SetProperty("ColorCategoryState", "PrimaryLight");
-                            break;
-                        case ToggleCategory.HighlightedOff:
-                            IconInstance.SetProperty("IconColor", "White");
-                            this.IconInstance.Rotation = 0f;
-                            this.IconInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
-                            this.IconInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
-                            NineSliceInstance.SetProperty("ColorCategoryState", "PrimaryLight");
-                            break;
-                        case ToggleCategory.PushedOn:
-                            IconInstance.SetProperty("IconColor", "White");
-                            this.IconInstance.Rotation = -90f;
-                            this.IconInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
-                            this.IconInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Bottom;
-                            NineSliceInstance.SetProperty("ColorCategoryState", "PrimaryDark");
-                            break;
-                        case ToggleCategory.PushedOff:
-                            IconInstance.SetProperty("IconColor", "White");
-                            this.IconInstance.Rotation = 0f;
-                            this.IconInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
-                            this.IconInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
-                            NineSliceInstance.SetProperty("ColorCategoryState", "PrimaryDark");
-                            break;
-                    }
+                    var category = Categories["ToggleCategory"];
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.ApplyState(state);
+                }
+                else
+                {
+                    var category = ((Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "ToggleCategory");
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.ApplyState(state);
                 }
             }
         }
@@ -111,47 +57,20 @@ namespace GumFormsSample.Components
         {
             if(fullInstantiation)
             {
+                var element = ObjectFinder.Self.GetElementSave("Controls/TreeViewToggle");
+                element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
             }
 
-            this.Height = 24f;
-            this.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-             
-            this.Width = 24f;
-            this.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
 
-            InitializeInstances();
 
-            ApplyDefaultVariables();
-            AssignParents();
-            if(tryCreateFormsObject)
-            {
-            }
+        }
+        public override void AfterFullCreation()
+        {
+            NineSliceInstance = this.GetGraphicalUiElementByName("NineSliceInstance") as NineSliceRuntime;
+            IconInstance = this.GetGraphicalUiElementByName("IconInstance") as IconRuntime;
             CustomInitialize();
         }
-        protected virtual void InitializeInstances()
-        {
-            NineSliceInstance = new NineSliceRuntime();
-            NineSliceInstance.Name = "NineSliceInstance";
-            IconInstance = new IconRuntime();
-            IconInstance.Name = "IconInstance";
-        }
-        protected virtual void AssignParents()
-        {
-            this.Children.Add(NineSliceInstance);
-            NineSliceInstance.Children.Add(IconInstance);
-        }
-        private void ApplyDefaultVariables()
-        {
-NineSliceInstance.SetProperty("ColorCategoryState", "Primary");
-NineSliceInstance.SetProperty("StyleCategoryState", "Bordered");
-
-this.IconInstance.IconCategoryState = IconRuntime.IconCategory.Arrow2;
-            this.IconInstance.Height = 0f;
-            this.IconInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            this.IconInstance.Width = 0f;
-            this.IconInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-
-        }
+        //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
         partial void CustomInitialize();
     }
 }

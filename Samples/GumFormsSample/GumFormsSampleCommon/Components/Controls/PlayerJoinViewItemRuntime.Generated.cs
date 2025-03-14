@@ -47,113 +47,59 @@ namespace GumFormsSample.Components
             PlayStationDualShock,
         }
 
-        PlayerJoinCategory mPlayerJoinCategoryState;
         public PlayerJoinCategory PlayerJoinCategoryState
         {
-            get => mPlayerJoinCategoryState;
             set
             {
-                mPlayerJoinCategoryState = value;
-                var appliedDynamically = false;
-                if(!appliedDynamically)
+                if(Categories.ContainsKey("PlayerJoinCategory"))
                 {
-                    switch (value)
-                    {
-                        case PlayerJoinCategory.NotConnected:
-                            Background.SetProperty("ColorCategoryState", "Gray");
-                            this.ControllerDisplayNameTextInstance.Visible = false;
-                            break;
-                        case PlayerJoinCategory.Connected:
-                            Background.SetProperty("ColorCategoryState", "Primary");
-                            this.ControllerDisplayNameTextInstance.Visible = true;
-                            break;
-                        case PlayerJoinCategory.ConnectedAndJoined:
-                            Background.SetProperty("ColorCategoryState", "Success");
-                            this.ControllerDisplayNameTextInstance.Visible = true;
-                            break;
-                    }
+                    var category = Categories["PlayerJoinCategory"];
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.ApplyState(state);
+                }
+                else
+                {
+                    var category = ((Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "PlayerJoinCategory");
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.ApplyState(state);
                 }
             }
         }
 
-        PlayerIndexCategory mPlayerIndexCategoryState;
         public PlayerIndexCategory PlayerIndexCategoryState
         {
-            get => mPlayerIndexCategoryState;
             set
             {
-                mPlayerIndexCategoryState = value;
-                var appliedDynamically = false;
-                if(!appliedDynamically)
+                if(Categories.ContainsKey("PlayerIndexCategory"))
                 {
-                    switch (value)
-                    {
-                        case PlayerIndexCategory.Player1:
-                            break;
-                        case PlayerIndexCategory.Player2:
-                            break;
-                        case PlayerIndexCategory.Player3:
-                            break;
-                        case PlayerIndexCategory.Player4:
-                            break;
-                    }
+                    var category = Categories["PlayerIndexCategory"];
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.ApplyState(state);
+                }
+                else
+                {
+                    var category = ((Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "PlayerIndexCategory");
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.ApplyState(state);
                 }
             }
         }
 
-        GamepadLayoutCategory mGamepadLayoutCategoryState;
         public GamepadLayoutCategory GamepadLayoutCategoryState
         {
-            get => mGamepadLayoutCategoryState;
             set
             {
-                mGamepadLayoutCategoryState = value;
-                var appliedDynamically = false;
-                if(!appliedDynamically)
+                if(Categories.ContainsKey("GamepadLayoutCategory"))
                 {
-                    switch (value)
-                    {
-                        case GamepadLayoutCategory.Unknown:
-                            this.InputDeviceIcon.IconCategoryState = IconRuntime.IconCategory.GamepadXbox;
-                            this.InputDeviceIcon.Visible = false;
-                            break;
-                        case GamepadLayoutCategory.Keyboard:
-                            this.InputDeviceIcon.IconCategoryState = IconRuntime.IconCategory.Keyboard;
-                            this.InputDeviceIcon.Visible = true;
-                            break;
-                        case GamepadLayoutCategory.NES:
-                            this.InputDeviceIcon.IconCategoryState = IconRuntime.IconCategory.GamepadNES;
-                            this.InputDeviceIcon.Visible = true;
-                            break;
-                        case GamepadLayoutCategory.SuperNintendo:
-                            this.InputDeviceIcon.IconCategoryState = IconRuntime.IconCategory.GamepadSNES;
-                            this.InputDeviceIcon.Visible = true;
-                            break;
-                        case GamepadLayoutCategory.Nintendo64:
-                            this.InputDeviceIcon.IconCategoryState = IconRuntime.IconCategory.GamepadNintendo64;
-                            this.InputDeviceIcon.Visible = true;
-                            break;
-                        case GamepadLayoutCategory.GameCube:
-                            this.InputDeviceIcon.IconCategoryState = IconRuntime.IconCategory.GamepadGamecube;
-                            this.InputDeviceIcon.Visible = true;
-                            break;
-                        case GamepadLayoutCategory.SwitchPro:
-                            this.InputDeviceIcon.IconCategoryState = IconRuntime.IconCategory.GamepadSwitchPro;
-                            this.InputDeviceIcon.Visible = true;
-                            break;
-                        case GamepadLayoutCategory.Genesis:
-                            this.InputDeviceIcon.IconCategoryState = IconRuntime.IconCategory.GamepadSegaGenesis;
-                            this.InputDeviceIcon.Visible = true;
-                            break;
-                        case GamepadLayoutCategory.Xbox360:
-                            this.InputDeviceIcon.IconCategoryState = IconRuntime.IconCategory.GamepadXbox;
-                            this.InputDeviceIcon.Visible = true;
-                            break;
-                        case GamepadLayoutCategory.PlayStationDualShock:
-                            this.InputDeviceIcon.IconCategoryState = IconRuntime.IconCategory.GamepadPlaystationDualShock;
-                            this.InputDeviceIcon.Visible = true;
-                            break;
-                    }
+                    var category = Categories["GamepadLayoutCategory"];
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.ApplyState(state);
+                }
+                else
+                {
+                    var category = ((Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "GamepadLayoutCategory");
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.ApplyState(state);
                 }
             }
         }
@@ -165,69 +111,21 @@ namespace GumFormsSample.Components
         {
             if(fullInstantiation)
             {
+                var element = ObjectFinder.Self.GetElementSave("Controls/PlayerJoinViewItem");
+                element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
             }
 
-            this.Height = 80f;
-             
 
-            InitializeInstances();
 
-            ApplyDefaultVariables();
-            AssignParents();
-            if(tryCreateFormsObject)
-            {
-            }
+        }
+        public override void AfterFullCreation()
+        {
+            Background = this.GetGraphicalUiElementByName("Background") as NineSliceRuntime;
+            ControllerDisplayNameTextInstance = this.GetGraphicalUiElementByName("ControllerDisplayNameTextInstance") as TextRuntime;
+            InputDeviceIcon = this.GetGraphicalUiElementByName("InputDeviceIcon") as IconRuntime;
             CustomInitialize();
         }
-        protected virtual void InitializeInstances()
-        {
-            Background = new NineSliceRuntime();
-            Background.Name = "Background";
-            ControllerDisplayNameTextInstance = new TextRuntime();
-            ControllerDisplayNameTextInstance.Name = "ControllerDisplayNameTextInstance";
-            InputDeviceIcon = new IconRuntime();
-            InputDeviceIcon.Name = "InputDeviceIcon";
-        }
-        protected virtual void AssignParents()
-        {
-            this.Children.Add(Background);
-            this.Children.Add(ControllerDisplayNameTextInstance);
-            this.Children.Add(InputDeviceIcon);
-        }
-        private void ApplyDefaultVariables()
-        {
-Background.SetProperty("ColorCategoryState", "Black");
-Background.SetProperty("StyleCategoryState", "Panel");
-            this.Background.Height = 0f;
-            this.Background.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            this.Background.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Bottom;
-            this.Background.YUnits = GeneralUnitType.PixelsFromLarge;
-
-ControllerDisplayNameTextInstance.SetProperty("ColorCategoryState", "White");
-ControllerDisplayNameTextInstance.SetProperty("StyleCategoryState", "Tiny");
-            this.ControllerDisplayNameTextInstance.Height = 0f;
-            this.ControllerDisplayNameTextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-            this.ControllerDisplayNameTextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
-            this.ControllerDisplayNameTextInstance.Text = @"<Controller Type>";
-            this.ControllerDisplayNameTextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
-            this.ControllerDisplayNameTextInstance.Width = -16f;
-            this.ControllerDisplayNameTextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            this.ControllerDisplayNameTextInstance.X = 0f;
-            this.ControllerDisplayNameTextInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
-            this.ControllerDisplayNameTextInstance.XUnits = GeneralUnitType.PixelsFromMiddle;
-            this.ControllerDisplayNameTextInstance.Y = -29f;
-            this.ControllerDisplayNameTextInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
-            this.ControllerDisplayNameTextInstance.YUnits = GeneralUnitType.PixelsFromLarge;
-
-this.InputDeviceIcon.IconCategoryState = IconRuntime.IconCategory.GamepadXbox;
-            this.InputDeviceIcon.X = 0f;
-            this.InputDeviceIcon.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
-            this.InputDeviceIcon.XUnits = GeneralUnitType.PixelsFromMiddle;
-            this.InputDeviceIcon.Y = 0f;
-            this.InputDeviceIcon.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-            this.InputDeviceIcon.YUnits = GeneralUnitType.PixelsFromMiddle;
-
-        }
+        //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
         partial void CustomInitialize();
     }
 }

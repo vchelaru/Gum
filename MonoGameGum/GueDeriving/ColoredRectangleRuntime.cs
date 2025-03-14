@@ -8,122 +8,124 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MonoGameGum.GueDeriving
+namespace MonoGameGum.GueDeriving;
+
+public class ColoredRectangleRuntime : BindableGue
 {
-    public class ColoredRectangleRuntime : BindableGue
+    public static float DefaultWidth = 50;
+    public static float DefaultHeight = 50;
+
+    RenderingLibrary.Graphics.SolidRectangle mContainedColoredRectangle;
+    RenderingLibrary.Graphics.SolidRectangle ContainedColoredRectangle
     {
-        RenderingLibrary.Graphics.SolidRectangle mContainedColoredRectangle;
-        RenderingLibrary.Graphics.SolidRectangle ContainedColoredRectangle
+        get
         {
-            get
+            if (mContainedColoredRectangle == null)
             {
-                if (mContainedColoredRectangle == null)
-                {
-                    mContainedColoredRectangle = this.RenderableComponent as RenderingLibrary.Graphics.SolidRectangle;
-                }
-                return mContainedColoredRectangle;
+                mContainedColoredRectangle = this.RenderableComponent as RenderingLibrary.Graphics.SolidRectangle;
             }
+            return mContainedColoredRectangle;
         }
+    }
 
-        public int Alpha
+    public int Alpha
+    {
+        get
         {
-            get
-            {
-                return ContainedColoredRectangle.Alpha;
-            }
-            set
-            {
-                ContainedColoredRectangle.Alpha = value;
-                NotifyPropertyChanged();
-            }
+            return ContainedColoredRectangle.Alpha;
         }
+        set
+        {
+            ContainedColoredRectangle.Alpha = value;
+            NotifyPropertyChanged();
+        }
+    }
 
-        public Microsoft.Xna.Framework.Graphics.BlendState BlendState
+    public Microsoft.Xna.Framework.Graphics.BlendState BlendState
+    {
+        get => ContainedColoredRectangle.BlendState.ToXNA();
+        set
         {
-            get => ContainedColoredRectangle.BlendState.ToXNA();
-            set
-            {
-                ContainedColoredRectangle.BlendState = value.ToGum();
-                NotifyPropertyChanged();
-                NotifyPropertyChanged(nameof(Blend));
-            }
+            ContainedColoredRectangle.BlendState = value.ToGum();
+            NotifyPropertyChanged();
+            NotifyPropertyChanged(nameof(Blend));
         }
+    }
 
-        public Gum.RenderingLibrary.Blend Blend
+    public Gum.RenderingLibrary.Blend Blend
+    {
+        get
         {
-            get
-            {
-                return Gum.RenderingLibrary.BlendExtensions.ToBlend(ContainedColoredRectangle.BlendState);
-            }
-            set
-            {
-                BlendState = value.ToBlendState().ToXNA();
-                // NotifyPropertyChanged handled by BlendState:
-            }
+            return Gum.RenderingLibrary.BlendExtensions.ToBlend(ContainedColoredRectangle.BlendState);
         }
-        public int Blue
+        set
         {
-            get
-            {
-                return ContainedColoredRectangle.Blue;
-            }
-            set
-            {
-                ContainedColoredRectangle.Blue = value;
-                NotifyPropertyChanged();
-            }
+            BlendState = value.ToBlendState().ToXNA();
+            // NotifyPropertyChanged handled by BlendState:
         }
-        public int Green
+    }
+    public int Blue
+    {
+        get
         {
-            get
-            {
-                return ContainedColoredRectangle.Green;
-            }
-            set
-            {
-                ContainedColoredRectangle.Green = value;
-                NotifyPropertyChanged();
-            }
+            return ContainedColoredRectangle.Blue;
         }
-        public int Red
+        set
         {
-            get
-            {
-                return ContainedColoredRectangle.Red;
-            }
-            set
-            {
-                ContainedColoredRectangle.Red = value;
-                NotifyPropertyChanged();
-            }
+            ContainedColoredRectangle.Blue = value;
+            NotifyPropertyChanged();
         }
-        public Microsoft.Xna.Framework.Color Color
+    }
+    public int Green
+    {
+        get
         {
-            get
-            {
-                return RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedColoredRectangle.Color);
-            }
-            set
-            {
-                ContainedColoredRectangle.Color = RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
-                NotifyPropertyChanged();
-            }
+            return ContainedColoredRectangle.Green;
         }
+        set
+        {
+            ContainedColoredRectangle.Green = value;
+            NotifyPropertyChanged();
+        }
+    }
+    public int Red
+    {
+        get
+        {
+            return ContainedColoredRectangle.Red;
+        }
+        set
+        {
+            ContainedColoredRectangle.Red = value;
+            NotifyPropertyChanged();
+        }
+    }
+    public Microsoft.Xna.Framework.Color Color
+    {
+        get
+        {
+            return RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedColoredRectangle.Color);
+        }
+        set
+        {
+            ContainedColoredRectangle.Color = RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
+            NotifyPropertyChanged();
+        }
+    }
 
-        public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
+    public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 
-        public ColoredRectangleRuntime(bool fullInstantiation = true)
+    public ColoredRectangleRuntime(bool fullInstantiation = true)
+    {
+        if (fullInstantiation)
         {
-            if (fullInstantiation)
-            {
-                var solidRectangle = new SolidRectangle();
-                SetContainedObject(solidRectangle);
-                mContainedColoredRectangle = solidRectangle;
+            var solidRectangle = new SolidRectangle();
+            SetContainedObject(solidRectangle);
+            mContainedColoredRectangle = solidRectangle;
 
-                solidRectangle.Color = System.Drawing.Color.White;
-                Width = 50;
-                Height = 50;
-            }
+            solidRectangle.Color = System.Drawing.Color.White;
+            Width = DefaultWidth;
+            Height = DefaultHeight;
         }
     }
 }

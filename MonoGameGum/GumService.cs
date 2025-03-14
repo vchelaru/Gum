@@ -4,6 +4,7 @@ using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGameGum.Forms;
+using MonoGameGum.GueDeriving;
 using MonoGameGum.Input;
 using RenderingLibrary;
 using System;
@@ -77,9 +78,24 @@ public class GumService
             var gumDirectory = FileManager.GetDirectory(FileManager.MakeAbsolute(gumProjectFile));
 
             FileManager.RelativeDirectory = gumDirectory;
+
+            ApplyStandardElementDefaults(gumProject);
         }
 
         return gumProject;
+    }
+
+    private void ApplyStandardElementDefaults(GumProjectSave gumProject)
+    {
+        var current = gumProject.StandardElements.Find(item => item.Name == "ColoredRectangle");
+        ColoredRectangleRuntime.DefaultWidth = GetFloat("Width");
+        ColoredRectangleRuntime.DefaultHeight = GetFloat("Height");
+
+        current = gumProject.StandardElements.Find(item => item.Name == "NineSlice");
+        NineSliceRuntime.DefaultSourceFile = GetString("SourceFile");
+
+        float GetFloat (string variableName) => current.DefaultState.GetValueOrDefault<float>(variableName);
+        string GetString(string varialbeName) => current.DefaultState.GetValueOrDefault<string>(varialbeName);
     }
 
     // In December 31, 2024 we moved to using ModuleInitializer 

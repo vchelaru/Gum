@@ -30,66 +30,23 @@ namespace GumFormsSample.Components
         {
             if(fullInstantiation)
             {
+                var element = ObjectFinder.Self.GetElementSave("Controls/SettingsView");
+                element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
             }
 
-            this.ChildrenLayout = global::Gum.Managers.ChildrenLayout.TopToBottomStack;
-            this.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-             
 
-            InitializeInstances();
 
-            ApplyDefaultVariables();
-            AssignParents();
-            if(tryCreateFormsObject)
-            {
-            }
+        }
+        public override void AfterFullCreation()
+        {
+            FullscreenCheckboxInstance = this.GetGraphicalUiElementByName("FullscreenCheckboxInstance") as CheckBoxRuntime;
+            MusicVolumeLabel = this.GetGraphicalUiElementByName("MusicVolumeLabel") as LabelRuntime;
+            MusicSliderInstance = this.GetGraphicalUiElementByName("MusicSliderInstance") as SliderRuntime;
+            SoundVolumeLabel = this.GetGraphicalUiElementByName("SoundVolumeLabel") as LabelRuntime;
+            SoundSliderInstance = this.GetGraphicalUiElementByName("SoundSliderInstance") as SliderRuntime;
             CustomInitialize();
         }
-        protected virtual void InitializeInstances()
-        {
-            FullscreenCheckboxInstance = new CheckBoxRuntime();
-            FullscreenCheckboxInstance.Name = "FullscreenCheckboxInstance";
-            MusicVolumeLabel = new LabelRuntime();
-            MusicVolumeLabel.Name = "MusicVolumeLabel";
-            MusicSliderInstance = new SliderRuntime();
-            MusicSliderInstance.Name = "MusicSliderInstance";
-            SoundVolumeLabel = new LabelRuntime();
-            SoundVolumeLabel.Name = "SoundVolumeLabel";
-            SoundSliderInstance = new SliderRuntime();
-            SoundSliderInstance.Name = "SoundSliderInstance";
-        }
-        protected virtual void AssignParents()
-        {
-            this.Children.Add(FullscreenCheckboxInstance);
-            this.Children.Add(MusicVolumeLabel);
-            this.Children.Add(MusicSliderInstance);
-            this.Children.Add(SoundVolumeLabel);
-            this.Children.Add(SoundSliderInstance);
-        }
-        private void ApplyDefaultVariables()
-        {
-            this.FullscreenCheckboxInstance.CheckboxDisplayText = @"Fullscreen";
-            this.FullscreenCheckboxInstance.Width = 0f;
-            this.FullscreenCheckboxInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            this.FullscreenCheckboxInstance.Y = 0f;
-
-            this.MusicVolumeLabel.LabelText = @"Music Volume";
-            this.MusicVolumeLabel.Width = 0f;
-            this.MusicVolumeLabel.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            this.MusicVolumeLabel.Y = 12f;
-
-            this.MusicSliderInstance.Width = 0f;
-            this.MusicSliderInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-
-            this.SoundVolumeLabel.LabelText = @"Sound Effect Volume";
-            this.SoundVolumeLabel.Width = 0f;
-            this.SoundVolumeLabel.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            this.SoundVolumeLabel.Y = 12f;
-
-            this.SoundSliderInstance.Width = 0f;
-            this.SoundSliderInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-
-        }
+        //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
         partial void CustomInitialize();
     }
 }

@@ -24,28 +24,18 @@ namespace GumFormsSample.Screens
         {
             if(fullInstantiation)
             {
+                var element = ObjectFinder.Self.GetElementSave("UserControlPageGum");
+                element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
             }
 
-             
 
-            InitializeInstances();
 
-            ApplyDefaultVariables();
-            AssignParents();
-            if(tryCreateFormsObject)
-            {
-            }
+        }
+        public override void AfterFullCreation()
+        {
             CustomInitialize();
         }
-        protected virtual void InitializeInstances()
-        {
-        }
-        protected virtual void AssignParents()
-        {
-        }
-        private void ApplyDefaultVariables()
-        {
-        }
+        //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
         partial void CustomInitialize();
     }
 }

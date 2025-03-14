@@ -3,7 +3,7 @@
   "CodeProjectRoot": "..\\..\\..\\GumFormsSampleCommon\\",
   "RootNamespace": "GumFormsSample",
   "InheritanceLocation": 1,
-  "ObjectInstantiationType": 0,
+  "ObjectInstantiationType": 1,
   "DefaultScreenBase": "Gum.Wireframe.BindableGue",
   "OutputLibrary": 4,
   "AdjustPixelValuesForDensity": false,

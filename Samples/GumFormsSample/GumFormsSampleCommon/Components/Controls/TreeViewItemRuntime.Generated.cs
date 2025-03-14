@@ -28,57 +28,21 @@ namespace GumFormsSample.Components
         {
             if(fullInstantiation)
             {
+                var element = ObjectFinder.Self.GetElementSave("Controls/TreeViewItem");
+                element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
             }
 
-            this.Height = 0f;
-            this.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-             
-            this.Width = 0f;
-            this.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
 
-            InitializeInstances();
 
-            ApplyDefaultVariables();
-            AssignParents();
-            if(tryCreateFormsObject)
-            {
-            }
+        }
+        public override void AfterFullCreation()
+        {
+            ToggleButtonInstance = this.GetGraphicalUiElementByName("ToggleButtonInstance") as TreeViewToggleRuntime;
+            ListBoxItemInstance = this.GetGraphicalUiElementByName("ListBoxItemInstance") as ListBoxItemRuntime;
+            InnerPanelInstance = this.GetGraphicalUiElementByName("InnerPanelInstance") as ContainerRuntime;
             CustomInitialize();
         }
-        protected virtual void InitializeInstances()
-        {
-            ToggleButtonInstance = new TreeViewToggleRuntime();
-            ToggleButtonInstance.Name = "ToggleButtonInstance";
-            ListBoxItemInstance = new ListBoxItemRuntime();
-            ListBoxItemInstance.Name = "ListBoxItemInstance";
-            InnerPanelInstance = new ContainerRuntime();
-            InnerPanelInstance.Name = "InnerPanelInstance";
-        }
-        protected virtual void AssignParents()
-        {
-            this.Children.Add(ToggleButtonInstance);
-            this.Children.Add(ListBoxItemInstance);
-            this.Children.Add(InnerPanelInstance);
-        }
-        private void ApplyDefaultVariables()
-        {
-
-            this.ListBoxItemInstance.Height = 24f;
-            this.ListBoxItemInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-            this.ListBoxItemInstance.Width = -24f;
-            this.ListBoxItemInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Right;
-            this.ListBoxItemInstance.XUnits = GeneralUnitType.PixelsFromLarge;
-
-            this.InnerPanelInstance.ChildrenLayout = global::Gum.Managers.ChildrenLayout.TopToBottomStack;
-            this.InnerPanelInstance.Height = 0f;
-            this.InnerPanelInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-            this.InnerPanelInstance.Width = -24f;
-            this.InnerPanelInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            this.InnerPanelInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Right;
-            this.InnerPanelInstance.XUnits = GeneralUnitType.PixelsFromLarge;
-            this.InnerPanelInstance.Y = 24f;
-
-        }
+        //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
         partial void CustomInitialize();
     }
 }

@@ -4,12 +4,6 @@
   <State>
     <Name>Default</Name>
     <Variable>
-      <Type>string</Type>
-      <Name>CheckBoxInstance.CheckboxDisplayText</Name>
-      <Value xsi:type="xsd:string">This is my label</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>bool</Type>
       <Name>IsOverrideInCodeGen</Name>
       <Value xsi:type="xsd:boolean">false</Value>
@@ -23,10 +17,5 @@
       <SetsValue>true</SetsValue>
     </Variable>
   </State>
-  <Instance>
-    <Name>CheckBoxInstance</Name>
-    <BaseType>Controls/CheckBox</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
   <Behaviors />
 </ScreenSave>

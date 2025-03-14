@@ -25,7 +25,7 @@ namespace GumFormsSample.Screens
 
         public void Initialize(List<GraphicalUiElement> roots)
         {
-            FileManager.RelativeDirectory = "Content/";
+            //FileManager.RelativeDirectory = "Content/";
             var root = this;
             root.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
             root.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;

@@ -27,55 +27,20 @@ namespace GumFormsSample.Screens
         {
             if(fullInstantiation)
             {
+                var element = ObjectFinder.Self.GetElementSave("KeyboardScreenGum");
+                element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
             }
 
-             
 
-            InitializeInstances();
 
-            ApplyDefaultVariables();
-            AssignParents();
-            if(tryCreateFormsObject)
-            {
-            }
+        }
+        public override void AfterFullCreation()
+        {
+            KeyboardInstance = this.GetGraphicalUiElementByName("KeyboardInstance") as KeyboardRuntime;
+            TextBoxInstance = this.GetGraphicalUiElementByName("TextBoxInstance") as TextBoxRuntime;
             CustomInitialize();
         }
-        protected virtual void InitializeInstances()
-        {
-            KeyboardInstance = new KeyboardRuntime();
-            KeyboardInstance.Name = "KeyboardInstance";
-            TextBoxInstance = new TextBoxRuntime();
-            TextBoxInstance.Name = "TextBoxInstance";
-        }
-        protected virtual void AssignParents()
-        {
-            if(this.Children != null) this.Children.Add(KeyboardInstance);
-            else this.WhatThisContains.Add(KeyboardInstance);
-            if(this.Children != null) this.Children.Add(TextBoxInstance);
-            else this.WhatThisContains.Add(TextBoxInstance);
-        }
-        private void ApplyDefaultVariables()
-        {
-            this.KeyboardInstance.Height = 221f;
-            this.KeyboardInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-            this.KeyboardInstance.Width = 700f;
-            this.KeyboardInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-            this.KeyboardInstance.X = 0f;
-            this.KeyboardInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
-            this.KeyboardInstance.XUnits = GeneralUnitType.PixelsFromMiddle;
-            this.KeyboardInstance.Y = -77f;
-            this.KeyboardInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Bottom;
-            this.KeyboardInstance.YUnits = GeneralUnitType.PixelsFromLarge;
-
-            this.TextBoxInstance.Width = 700f;
-            this.TextBoxInstance.X = 0f;
-            this.TextBoxInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
-            this.TextBoxInstance.XUnits = GeneralUnitType.PixelsFromMiddle;
-            this.TextBoxInstance.Y = -309f;
-            this.TextBoxInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Bottom;
-            this.TextBoxInstance.YUnits = GeneralUnitType.PixelsFromLarge;
-
-        }
+        //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
         partial void CustomInitialize();
     }
 }

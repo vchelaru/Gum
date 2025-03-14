@@ -398,6 +398,7 @@ namespace CodeOutputPlugin
             {
                 if(viewModel.IsAllInProjectGenerating)
                 {
+                    int numberOfElements = 0;
                     foreach(var element in GumState.Self.ProjectState.GumProjectSave.AllElements)
                     {
                         if(element is StandardElementSave)
@@ -409,8 +410,11 @@ namespace CodeOutputPlugin
                         if(elementOutputSettings.GenerationBehavior != Models.GenerationBehavior.NeverGenerate)
                         {
                             _codeGenerationService.GenerateCodeForElement(element, elementOutputSettings, codeOutputProjectSettings, showPopups: false);
+                            numberOfElements++;
                         }
                     }
+
+                    GumCommands.Self.GuiCommands.ShowMessage($"Generated code for {numberOfElements} element(s)");
                 }
                 else
                 {

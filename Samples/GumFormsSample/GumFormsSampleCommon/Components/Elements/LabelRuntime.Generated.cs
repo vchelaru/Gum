@@ -54,43 +54,23 @@ namespace GumFormsSample.Components
         {
             if(fullInstantiation)
             {
+                var element = ObjectFinder.Self.GetElementSave("Elements/Label");
+                element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
             }
 
-            this.Height = 0f;
-            this.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-             
-            this.Width = 128f;
 
-            InitializeInstances();
 
-            ApplyDefaultVariables();
-            AssignParents();
-            if(tryCreateFormsObject)
+        }
+        public override void AfterFullCreation()
+        {
+            if (FormsControl == null)
             {
-                if (FormsControl == null)
-                {
-                    FormsControlAsObject = new MonoGameGum.Forms.Controls.Label(this);
-                }
+                FormsControlAsObject = new MonoGameGum.Forms.Controls.Label(this);
             }
+            TextInstance = this.GetGraphicalUiElementByName("TextInstance") as TextRuntime;
             CustomInitialize();
         }
-        protected virtual void InitializeInstances()
-        {
-            TextInstance = new TextRuntime();
-            TextInstance.Name = "TextInstance";
-        }
-        protected virtual void AssignParents()
-        {
-            this.Children.Add(TextInstance);
-        }
-        private void ApplyDefaultVariables()
-        {
-TextInstance.SetProperty("ColorCategoryState", "White");
-TextInstance.SetProperty("StyleCategoryState", "Strong");
-            this.TextInstance.Text = @"Item Label";
-            this.TextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-
-        }
+        //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
         partial void CustomInitialize();
     }
 }

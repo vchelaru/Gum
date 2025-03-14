@@ -25,34 +25,19 @@ namespace GumFormsSample.Components
         {
             if(fullInstantiation)
             {
+                var element = ObjectFinder.Self.GetElementSave("Controls/UserControl");
+                element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
             }
 
-             
 
-            InitializeInstances();
 
-            ApplyDefaultVariables();
-            AssignParents();
-            if(tryCreateFormsObject)
-            {
-            }
+        }
+        public override void AfterFullCreation()
+        {
+            Background = this.GetGraphicalUiElementByName("Background") as NineSliceRuntime;
             CustomInitialize();
         }
-        protected virtual void InitializeInstances()
-        {
-            Background = new NineSliceRuntime();
-            Background.Name = "Background";
-        }
-        protected virtual void AssignParents()
-        {
-            this.Children.Add(Background);
-        }
-        private void ApplyDefaultVariables()
-        {
-Background.SetProperty("ColorCategoryState", "Primary");
-Background.SetProperty("StyleCategoryState", "Panel");
-
-        }
+        //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
         partial void CustomInitialize();
     }
 }

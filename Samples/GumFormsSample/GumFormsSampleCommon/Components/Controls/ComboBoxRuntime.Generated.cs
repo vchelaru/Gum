@@ -32,54 +32,21 @@ namespace GumFormsSample.Components
             DisabledFocused,
         }
 
-        ComboBoxCategory mComboBoxCategoryState;
         public ComboBoxCategory ComboBoxCategoryState
         {
-            get => mComboBoxCategoryState;
             set
             {
-                mComboBoxCategoryState = value;
-                var appliedDynamically = false;
-                if(!appliedDynamically)
+                if(Categories.ContainsKey("ComboBoxCategory"))
                 {
-                    switch (value)
-                    {
-                        case ComboBoxCategory.Enabled:
-                            this.FocusedIndicator.Visible = false;
-                            IconInstance.SetProperty("IconColor", "Primary");
-                            TextInstance.SetProperty("ColorCategoryState", "White");
-                            break;
-                        case ComboBoxCategory.Disabled:
-                            this.FocusedIndicator.Visible = false;
-                            IconInstance.SetProperty("IconColor", "Gray");
-                            TextInstance.SetProperty("ColorCategoryState", "Gray");
-                            break;
-                        case ComboBoxCategory.Highlighted:
-                            this.FocusedIndicator.Visible = false;
-                            IconInstance.SetProperty("IconColor", "PrimaryLight");
-                            TextInstance.SetProperty("ColorCategoryState", "PrimaryLight");
-                            break;
-                        case ComboBoxCategory.Pushed:
-                            this.FocusedIndicator.Visible = false;
-                            IconInstance.SetProperty("IconColor", "PrimaryDark");
-                            TextInstance.SetProperty("ColorCategoryState", "PrimaryDark");
-                            break;
-                        case ComboBoxCategory.HighlightedFocused:
-                            this.FocusedIndicator.Visible = true;
-                            IconInstance.SetProperty("IconColor", "Primary");
-                            TextInstance.SetProperty("ColorCategoryState", "White");
-                            break;
-                        case ComboBoxCategory.Focused:
-                            this.FocusedIndicator.Visible = true;
-                            IconInstance.SetProperty("IconColor", "Primary");
-                            TextInstance.SetProperty("ColorCategoryState", "White");
-                            break;
-                        case ComboBoxCategory.DisabledFocused:
-                            this.FocusedIndicator.Visible = true;
-                            IconInstance.SetProperty("IconColor", "Primary");
-                            TextInstance.SetProperty("ColorCategoryState", "White");
-                            break;
-                    }
+                    var category = Categories["ComboBoxCategory"];
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.ApplyState(state);
+                }
+                else
+                {
+                    var category = ((Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "ComboBoxCategory");
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.ApplyState(state);
                 }
             }
         }
@@ -93,100 +60,27 @@ namespace GumFormsSample.Components
         {
             if(fullInstantiation)
             {
+                var element = ObjectFinder.Self.GetElementSave("Controls/ComboBox");
+                element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
             }
 
-            this.Height = 24f;
-             
-            this.Width = 256f;
 
-            InitializeInstances();
 
-            ApplyDefaultVariables();
-            AssignParents();
-            if(tryCreateFormsObject)
+        }
+        public override void AfterFullCreation()
+        {
+            if (FormsControl == null)
             {
-                if (FormsControl == null)
-                {
-                    FormsControlAsObject = new MonoGameGum.Forms.Controls.ComboBox(this);
-                }
+                FormsControlAsObject = new MonoGameGum.Forms.Controls.ComboBox(this);
             }
+            Background = this.GetGraphicalUiElementByName("Background") as NineSliceRuntime;
+            TextInstance = this.GetGraphicalUiElementByName("TextInstance") as TextRuntime;
+            ListBoxInstance = this.GetGraphicalUiElementByName("ListBoxInstance") as ListBoxRuntime;
+            IconInstance = this.GetGraphicalUiElementByName("IconInstance") as IconRuntime;
+            FocusedIndicator = this.GetGraphicalUiElementByName("FocusedIndicator") as NineSliceRuntime;
             CustomInitialize();
         }
-        protected virtual void InitializeInstances()
-        {
-            Background = new NineSliceRuntime();
-            Background.Name = "Background";
-            TextInstance = new TextRuntime();
-            TextInstance.Name = "TextInstance";
-            ListBoxInstance = new ListBoxRuntime();
-            ListBoxInstance.Name = "ListBoxInstance";
-            IconInstance = new IconRuntime();
-            IconInstance.Name = "IconInstance";
-            FocusedIndicator = new NineSliceRuntime();
-            FocusedIndicator.Name = "FocusedIndicator";
-        }
-        protected virtual void AssignParents()
-        {
-            this.Children.Add(Background);
-            this.Children.Add(TextInstance);
-            this.Children.Add(ListBoxInstance);
-            this.Children.Add(IconInstance);
-            this.Children.Add(FocusedIndicator);
-        }
-        private void ApplyDefaultVariables()
-        {
-Background.SetProperty("ColorCategoryState", "DarkGray");
-Background.SetProperty("StyleCategoryState", "Solid");
-            this.Background.Height = 0f;
-            this.Background.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            this.Background.Width = 0f;
-            this.Background.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            this.Background.X = 0f;
-            this.Background.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
-            this.Background.XUnits = GeneralUnitType.PixelsFromMiddle;
-            this.Background.Y = 0f;
-            this.Background.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-            this.Background.YUnits = GeneralUnitType.PixelsFromMiddle;
-
-TextInstance.SetProperty("ColorCategoryState", "White");
-TextInstance.SetProperty("StyleCategoryState", "Strong");
-            this.TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            this.TextInstance.Text = @"Selected Item";
-            this.TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-            this.TextInstance.Width = -8f;
-            this.TextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            this.TextInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
-            this.TextInstance.XUnits = GeneralUnitType.PixelsFromMiddle;
-            this.TextInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-            this.TextInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
-
-            this.ListBoxInstance.Height = 128f;
-            this.ListBoxInstance.Visible = false;
-            this.ListBoxInstance.Width = 0f;
-            this.ListBoxInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            this.ListBoxInstance.Y = 28f;
-
-this.IconInstance.IconCategoryState = IconRuntime.IconCategory.Arrow2;
-IconInstance.SetProperty("IconColor", "Primary");
-            this.IconInstance.HasEvents = false;
-            this.IconInstance.Height = 24f;
-            this.IconInstance.Rotation = -90f;
-            this.IconInstance.Width = 24f;
-            this.IconInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
-            this.IconInstance.XUnits = GeneralUnitType.PixelsFromLarge;
-            this.IconInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
-            this.IconInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
-
-FocusedIndicator.SetProperty("ColorCategoryState", "Warning");
-FocusedIndicator.SetProperty("StyleCategoryState", "Solid");
-            this.FocusedIndicator.Height = 2f;
-            this.FocusedIndicator.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-            this.FocusedIndicator.Visible = false;
-            this.FocusedIndicator.Y = 2f;
-            this.FocusedIndicator.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
-            this.FocusedIndicator.YUnits = GeneralUnitType.PixelsFromLarge;
-
-        }
+        //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
         partial void CustomInitialize();
     }
 }

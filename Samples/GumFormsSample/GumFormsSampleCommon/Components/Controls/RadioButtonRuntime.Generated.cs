@@ -39,117 +39,21 @@ namespace GumFormsSample.Components
             DisabledFocusedOff,
         }
 
-        RadioButtonCategory mRadioButtonCategoryState;
         public RadioButtonCategory RadioButtonCategoryState
         {
-            get => mRadioButtonCategoryState;
             set
             {
-                mRadioButtonCategoryState = value;
-                var appliedDynamically = false;
-                if(!appliedDynamically)
+                if(Categories.ContainsKey("RadioButtonCategory"))
                 {
-                    switch (value)
-                    {
-                        case RadioButtonCategory.EnabledOn:
-                            this.FocusedIndicator.Visible = false;
-                            Radio.SetProperty("IconColor", "White");
-                            this.Radio.Visible = true;
-                            RadioBackground.SetProperty("ColorCategoryState", "Primary");
-                            TextInstance.SetProperty("ColorCategoryState", "White");
-                            break;
-                        case RadioButtonCategory.EnabledOff:
-                            this.FocusedIndicator.Visible = false;
-                            Radio.SetProperty("IconColor", "White");
-                            this.Radio.Visible = false;
-                            RadioBackground.SetProperty("ColorCategoryState", "Primary");
-                            TextInstance.SetProperty("ColorCategoryState", "White");
-                            break;
-                        case RadioButtonCategory.DisabledOn:
-                            this.FocusedIndicator.Visible = false;
-                            Radio.SetProperty("IconColor", "Gray");
-                            this.Radio.Visible = true;
-                            RadioBackground.SetProperty("ColorCategoryState", "DarkGray");
-                            TextInstance.SetProperty("ColorCategoryState", "Gray");
-                            break;
-                        case RadioButtonCategory.DisabledOff:
-                            this.FocusedIndicator.Visible = false;
-                            Radio.SetProperty("IconColor", "Gray");
-                            this.Radio.Visible = false;
-                            RadioBackground.SetProperty("ColorCategoryState", "DarkGray");
-                            TextInstance.SetProperty("ColorCategoryState", "Gray");
-                            break;
-                        case RadioButtonCategory.HighlightedOn:
-                            this.FocusedIndicator.Visible = false;
-                            Radio.SetProperty("IconColor", "White");
-                            this.Radio.Visible = true;
-                            RadioBackground.SetProperty("ColorCategoryState", "PrimaryLight");
-                            TextInstance.SetProperty("ColorCategoryState", "White");
-                            break;
-                        case RadioButtonCategory.HighlightedOff:
-                            this.FocusedIndicator.Visible = false;
-                            Radio.SetProperty("IconColor", "White");
-                            this.Radio.Visible = false;
-                            RadioBackground.SetProperty("ColorCategoryState", "PrimaryLight");
-                            TextInstance.SetProperty("ColorCategoryState", "White");
-                            break;
-                        case RadioButtonCategory.PushedOn:
-                            this.FocusedIndicator.Visible = false;
-                            Radio.SetProperty("IconColor", "White");
-                            this.Radio.Visible = true;
-                            RadioBackground.SetProperty("ColorCategoryState", "PrimaryDark");
-                            TextInstance.SetProperty("ColorCategoryState", "White");
-                            break;
-                        case RadioButtonCategory.PushedOff:
-                            this.FocusedIndicator.Visible = false;
-                            Radio.SetProperty("IconColor", "White");
-                            this.Radio.Visible = false;
-                            RadioBackground.SetProperty("ColorCategoryState", "PrimaryDark");
-                            TextInstance.SetProperty("ColorCategoryState", "White");
-                            break;
-                        case RadioButtonCategory.FocusedOn:
-                            this.FocusedIndicator.Visible = true;
-                            Radio.SetProperty("IconColor", "White");
-                            this.Radio.Visible = true;
-                            RadioBackground.SetProperty("ColorCategoryState", "Primary");
-                            TextInstance.SetProperty("ColorCategoryState", "White");
-                            break;
-                        case RadioButtonCategory.FocusedOff:
-                            this.FocusedIndicator.Visible = true;
-                            Radio.SetProperty("IconColor", "White");
-                            this.Radio.Visible = false;
-                            RadioBackground.SetProperty("ColorCategoryState", "Primary");
-                            TextInstance.SetProperty("ColorCategoryState", "White");
-                            break;
-                        case RadioButtonCategory.HighlightedFocusedOn:
-                            this.FocusedIndicator.Visible = true;
-                            Radio.SetProperty("IconColor", "White");
-                            this.Radio.Visible = true;
-                            RadioBackground.SetProperty("ColorCategoryState", "PrimaryLight");
-                            TextInstance.SetProperty("ColorCategoryState", "White");
-                            break;
-                        case RadioButtonCategory.HighlightedFocusedOff:
-                            this.FocusedIndicator.Visible = true;
-                            Radio.SetProperty("IconColor", "White");
-                            this.Radio.Visible = false;
-                            RadioBackground.SetProperty("ColorCategoryState", "PrimaryLight");
-                            TextInstance.SetProperty("ColorCategoryState", "White");
-                            break;
-                        case RadioButtonCategory.DisabledFocusedOn:
-                            this.FocusedIndicator.Visible = true;
-                            Radio.SetProperty("IconColor", "Gray");
-                            this.Radio.Visible = true;
-                            RadioBackground.SetProperty("ColorCategoryState", "DarkGray");
-                            TextInstance.SetProperty("ColorCategoryState", "Gray");
-                            break;
-                        case RadioButtonCategory.DisabledFocusedOff:
-                            this.FocusedIndicator.Visible = true;
-                            Radio.SetProperty("IconColor", "Gray");
-                            this.Radio.Visible = false;
-                            RadioBackground.SetProperty("ColorCategoryState", "DarkGray");
-                            TextInstance.SetProperty("ColorCategoryState", "Gray");
-                            break;
-                    }
+                    var category = Categories["RadioButtonCategory"];
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.ApplyState(state);
+                }
+                else
+                {
+                    var category = ((Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "RadioButtonCategory");
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.ApplyState(state);
                 }
             }
         }
@@ -168,83 +72,26 @@ namespace GumFormsSample.Components
         {
             if(fullInstantiation)
             {
+                var element = ObjectFinder.Self.GetElementSave("Controls/RadioButton");
+                element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
             }
 
-            this.Height = 24f;
-             
-            this.Width = 128f;
 
-            InitializeInstances();
 
-            ApplyDefaultVariables();
-            AssignParents();
-            if(tryCreateFormsObject)
+        }
+        public override void AfterFullCreation()
+        {
+            if (FormsControl == null)
             {
-                if (FormsControl == null)
-                {
-                    FormsControlAsObject = new MonoGameGum.Forms.Controls.RadioButton(this);
-                }
+                FormsControlAsObject = new MonoGameGum.Forms.Controls.RadioButton(this);
             }
+            RadioBackground = this.GetGraphicalUiElementByName("RadioBackground") as NineSliceRuntime;
+            Radio = this.GetGraphicalUiElementByName("Radio") as IconRuntime;
+            TextInstance = this.GetGraphicalUiElementByName("TextInstance") as TextRuntime;
+            FocusedIndicator = this.GetGraphicalUiElementByName("FocusedIndicator") as NineSliceRuntime;
             CustomInitialize();
         }
-        protected virtual void InitializeInstances()
-        {
-            RadioBackground = new NineSliceRuntime();
-            RadioBackground.Name = "RadioBackground";
-            Radio = new IconRuntime();
-            Radio.Name = "Radio";
-            TextInstance = new TextRuntime();
-            TextInstance.Name = "TextInstance";
-            FocusedIndicator = new NineSliceRuntime();
-            FocusedIndicator.Name = "FocusedIndicator";
-        }
-        protected virtual void AssignParents()
-        {
-            this.Children.Add(RadioBackground);
-            RadioBackground.Children.Add(Radio);
-            this.Children.Add(TextInstance);
-            this.Children.Add(FocusedIndicator);
-        }
-        private void ApplyDefaultVariables()
-        {
-RadioBackground.SetProperty("ColorCategoryState", "Primary");
-RadioBackground.SetProperty("StyleCategoryState", "Bordered");
-            this.RadioBackground.Height = 24f;
-            this.RadioBackground.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-            this.RadioBackground.Width = 24f;
-            this.RadioBackground.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-            this.RadioBackground.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
-            this.RadioBackground.XUnits = GeneralUnitType.PixelsFromSmall;
-            this.RadioBackground.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-            this.RadioBackground.YUnits = GeneralUnitType.PixelsFromMiddle;
-
-this.Radio.IconCategoryState = IconRuntime.IconCategory.Circle2;
-Radio.SetProperty("IconColor", "White");
-            this.Radio.Height = 0f;
-            this.Radio.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            this.Radio.Width = 0f;
-            this.Radio.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-
-TextInstance.SetProperty("ColorCategoryState", "White");
-TextInstance.SetProperty("StyleCategoryState", "Normal");
-            this.TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            this.TextInstance.Text = @"Radio Label";
-            this.TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-            this.TextInstance.Width = -28f;
-            this.TextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            this.TextInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Right;
-            this.TextInstance.XUnits = GeneralUnitType.PixelsFromLarge;
-
-FocusedIndicator.SetProperty("ColorCategoryState", "Warning");
-FocusedIndicator.SetProperty("StyleCategoryState", "Solid");
-            this.FocusedIndicator.Height = 2f;
-            this.FocusedIndicator.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-            this.FocusedIndicator.Visible = false;
-            this.FocusedIndicator.Y = 2f;
-            this.FocusedIndicator.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
-            this.FocusedIndicator.YUnits = GeneralUnitType.PixelsFromLarge;
-
-        }
+        //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
         partial void CustomInitialize();
     }
 }

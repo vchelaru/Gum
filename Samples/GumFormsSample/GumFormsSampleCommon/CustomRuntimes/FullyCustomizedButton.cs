@@ -31,7 +31,7 @@ namespace GumFormsSample
                 // This depends on the current RelativeDirectory. Typically the RelativeDirectory
                 // is set to Content since that's where the Gum project lives. You may need to adjust
                 // your SourceFileName to account for the relative directory.
-                background.SourceFileName = "button_square_gradient.png";
+                background.SourceFileName = "../button_square_gradient.png";
                 this.Children.Add(background);
 
                 // TextInstance is copied as-is from DefaultButtonRuntime.cs

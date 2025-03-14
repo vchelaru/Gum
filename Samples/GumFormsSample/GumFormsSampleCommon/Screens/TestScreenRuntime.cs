@@ -16,6 +16,8 @@ partial class TestScreenRuntime : Gum.Wireframe.BindableGue
 {
     partial void CustomInitialize()
     {
-    
+        var instance = new NineSliceRuntime();
+
+        instance.AddToManagers();
     }
 }

@@ -32,61 +32,21 @@ namespace GumFormsSample.Components
             DisabledFocused,
         }
 
-        ButtonCategory mButtonCategoryState;
         public ButtonCategory ButtonCategoryState
         {
-            get => mButtonCategoryState;
             set
             {
-                mButtonCategoryState = value;
-                var appliedDynamically = false;
-                if(!appliedDynamically)
+                if(Categories.ContainsKey("ButtonCategory"))
                 {
-                    switch (value)
-                    {
-                        case ButtonCategory.Enabled:
-                            Background.SetProperty("ColorCategoryState", "Primary");
-                            this.FocusedIndicator.Visible = false;
-                            Icon.SetProperty("IconColor", "PrimaryDark");
-                            TextInstance.SetProperty("ColorCategoryState", "White");
-                            break;
-                        case ButtonCategory.Disabled:
-                            Background.SetProperty("ColorCategoryState", "DarkGray");
-                            this.FocusedIndicator.Visible = false;
-                            Icon.SetProperty("IconColor", "Gray");
-                            TextInstance.SetProperty("ColorCategoryState", "Gray");
-                            break;
-                        case ButtonCategory.Highlighted:
-                            Background.SetProperty("ColorCategoryState", "PrimaryLight");
-                            this.FocusedIndicator.Visible = false;
-                            Icon.SetProperty("IconColor", "Primary");
-                            TextInstance.SetProperty("ColorCategoryState", "White");
-                            break;
-                        case ButtonCategory.Pushed:
-                            Background.SetProperty("ColorCategoryState", "PrimaryDark");
-                            this.FocusedIndicator.Visible = false;
-                            Icon.SetProperty("IconColor", "Primary");
-                            TextInstance.SetProperty("ColorCategoryState", "White");
-                            break;
-                        case ButtonCategory.HighlightedFocused:
-                            Background.SetProperty("ColorCategoryState", "PrimaryLight");
-                            this.FocusedIndicator.Visible = true;
-                            Icon.SetProperty("IconColor", "Primary");
-                            TextInstance.SetProperty("ColorCategoryState", "White");
-                            break;
-                        case ButtonCategory.Focused:
-                            Background.SetProperty("ColorCategoryState", "Primary");
-                            this.FocusedIndicator.Visible = true;
-                            Icon.SetProperty("IconColor", "PrimaryDark");
-                            TextInstance.SetProperty("ColorCategoryState", "White");
-                            break;
-                        case ButtonCategory.DisabledFocused:
-                            Background.SetProperty("ColorCategoryState", "DarkGray");
-                            this.FocusedIndicator.Visible = true;
-                            Icon.SetProperty("IconColor", "Gray");
-                            TextInstance.SetProperty("ColorCategoryState", "Gray");
-                            break;
-                    }
+                    var category = Categories["ButtonCategory"];
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.ApplyState(state);
+                }
+                else
+                {
+                    var category = ((Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "ButtonCategory");
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.ApplyState(state);
                 }
             }
         }
@@ -110,80 +70,26 @@ namespace GumFormsSample.Components
         {
             if(fullInstantiation)
             {
+                var element = ObjectFinder.Self.GetElementSave("Controls/ButtonStandardIcon");
+                element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
             }
 
-             
-            this.Height = 32f;
-             
-            this.Width = 128f;
 
-            InitializeInstances();
 
-            ApplyDefaultVariables();
-            AssignParents();
-            if(tryCreateFormsObject)
+        }
+        public override void AfterFullCreation()
+        {
+            if (FormsControl == null)
             {
-                if (FormsControl == null)
-                {
-                    FormsControlAsObject = new MonoGameGum.Forms.Controls.Button(this);
-                }
+                FormsControlAsObject = new MonoGameGum.Forms.Controls.Button(this);
             }
+            Background = this.GetGraphicalUiElementByName("Background") as NineSliceRuntime;
+            TextInstance = this.GetGraphicalUiElementByName("TextInstance") as TextRuntime;
+            Icon = this.GetGraphicalUiElementByName("Icon") as IconRuntime;
+            FocusedIndicator = this.GetGraphicalUiElementByName("FocusedIndicator") as NineSliceRuntime;
             CustomInitialize();
         }
-        protected virtual void InitializeInstances()
-        {
-            Background = new NineSliceRuntime();
-            Background.Name = "Background";
-            TextInstance = new TextRuntime();
-            TextInstance.Name = "TextInstance";
-            Icon = new IconRuntime();
-            Icon.Name = "Icon";
-            FocusedIndicator = new NineSliceRuntime();
-            FocusedIndicator.Name = "FocusedIndicator";
-        }
-        protected virtual void AssignParents()
-        {
-            this.Children.Add(Background);
-            this.Children.Add(TextInstance);
-            this.Children.Add(Icon);
-            this.Children.Add(FocusedIndicator);
-        }
-        private void ApplyDefaultVariables()
-        {
-Background.SetProperty("ColorCategoryState", "Primary");
-Background.SetProperty("StyleCategoryState", "Bordered");
-            this.Background.Height = 0f;
-            this.Background.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            this.Background.Width = 0f;
-            this.Background.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            this.Background.X = 0f;
-            this.Background.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
-            this.Background.XUnits = GeneralUnitType.PixelsFromMiddle;
-            this.Background.Y = 0f;
-            this.Background.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-            this.Background.YUnits = GeneralUnitType.PixelsFromMiddle;
-
-TextInstance.SetProperty("ColorCategoryState", "White");
-TextInstance.SetProperty("StyleCategoryState", "Strong");
-            this.TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            this.TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
-            this.TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-            this.TextInstance.Width = -32f;
-            this.TextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            this.TextInstance.X = 32f;
-
-Icon.SetProperty("IconColor", "PrimaryDark");
-
-FocusedIndicator.SetProperty("ColorCategoryState", "Warning");
-FocusedIndicator.SetProperty("StyleCategoryState", "Solid");
-            this.FocusedIndicator.Height = 2f;
-            this.FocusedIndicator.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-            this.FocusedIndicator.Visible = false;
-            this.FocusedIndicator.Y = 2f;
-            this.FocusedIndicator.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
-            this.FocusedIndicator.YUnits = GeneralUnitType.PixelsFromLarge;
-
-        }
+        //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
         partial void CustomInitialize();
     }
 }

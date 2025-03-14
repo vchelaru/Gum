@@ -33,64 +33,40 @@ namespace GumFormsSample.Components
             Multi,
         }
 
-        TextBoxCategory mTextBoxCategoryState;
         public TextBoxCategory TextBoxCategoryState
         {
-            get => mTextBoxCategoryState;
             set
             {
-                mTextBoxCategoryState = value;
-                var appliedDynamically = false;
-                if(!appliedDynamically)
+                if(Categories.ContainsKey("TextBoxCategory"))
                 {
-                    switch (value)
-                    {
-                        case TextBoxCategory.Enabled:
-                            Background.SetProperty("ColorCategoryState", "DarkGray");
-                            this.FocusedIndicator.Visible = false;
-                            PlaceholderTextInstance.SetProperty("ColorCategoryState", "Gray");
-                            TextInstance.SetProperty("ColorCategoryState", "White");
-                            break;
-                        case TextBoxCategory.Disabled:
-                            Background.SetProperty("ColorCategoryState", "DarkGray");
-                            this.FocusedIndicator.Visible = false;
-                            PlaceholderTextInstance.SetProperty("ColorCategoryState", "Gray");
-                            TextInstance.SetProperty("ColorCategoryState", "Gray");
-                            break;
-                        case TextBoxCategory.Highlighted:
-                            Background.SetProperty("ColorCategoryState", "Gray");
-                            this.FocusedIndicator.Visible = false;
-                            PlaceholderTextInstance.SetProperty("ColorCategoryState", "DarkGray");
-                            TextInstance.SetProperty("ColorCategoryState", "White");
-                            break;
-                        case TextBoxCategory.Selected:
-                            Background.SetProperty("ColorCategoryState", "DarkGray");
-                            this.FocusedIndicator.Visible = true;
-                            PlaceholderTextInstance.SetProperty("ColorCategoryState", "Gray");
-                            TextInstance.SetProperty("ColorCategoryState", "White");
-                            break;
-                    }
+                    var category = Categories["TextBoxCategory"];
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.ApplyState(state);
+                }
+                else
+                {
+                    var category = ((Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "TextBoxCategory");
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.ApplyState(state);
                 }
             }
         }
 
-        LineModeCategory mLineModeCategoryState;
         public LineModeCategory LineModeCategoryState
         {
-            get => mLineModeCategoryState;
             set
             {
-                mLineModeCategoryState = value;
-                var appliedDynamically = false;
-                if(!appliedDynamically)
+                if(Categories.ContainsKey("LineModeCategory"))
                 {
-                    switch (value)
-                    {
-                        case LineModeCategory.Single:
-                            break;
-                        case LineModeCategory.Multi:
-                            break;
-                    }
+                    var category = Categories["LineModeCategory"];
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.ApplyState(state);
+                }
+                else
+                {
+                    var category = ((Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "LineModeCategory");
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.ApplyState(state);
                 }
             }
         }
@@ -111,120 +87,28 @@ namespace GumFormsSample.Components
         {
             if(fullInstantiation)
             {
+                var element = ObjectFinder.Self.GetElementSave("Controls/TextBox");
+                element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
             }
 
-            this.ClipsChildren = true;
-            this.Height = 24f;
-             
-            this.Width = 256f;
 
-            InitializeInstances();
 
-            ApplyDefaultVariables();
-            AssignParents();
-            if(tryCreateFormsObject)
+        }
+        public override void AfterFullCreation()
+        {
+            if (FormsControl == null)
             {
-                if (FormsControl == null)
-                {
-                    FormsControlAsObject = new MonoGameGum.Forms.Controls.TextBox(this);
-                }
+                FormsControlAsObject = new MonoGameGum.Forms.Controls.TextBox(this);
             }
+            Background = this.GetGraphicalUiElementByName("Background") as NineSliceRuntime;
+            SelectionInstance = this.GetGraphicalUiElementByName("SelectionInstance") as NineSliceRuntime;
+            TextInstance = this.GetGraphicalUiElementByName("TextInstance") as TextRuntime;
+            PlaceholderTextInstance = this.GetGraphicalUiElementByName("PlaceholderTextInstance") as TextRuntime;
+            FocusedIndicator = this.GetGraphicalUiElementByName("FocusedIndicator") as NineSliceRuntime;
+            CaretInstance = this.GetGraphicalUiElementByName("CaretInstance") as SpriteRuntime;
             CustomInitialize();
         }
-        protected virtual void InitializeInstances()
-        {
-            Background = new NineSliceRuntime();
-            Background.Name = "Background";
-            SelectionInstance = new NineSliceRuntime();
-            SelectionInstance.Name = "SelectionInstance";
-            TextInstance = new TextRuntime();
-            TextInstance.Name = "TextInstance";
-            PlaceholderTextInstance = new TextRuntime();
-            PlaceholderTextInstance.Name = "PlaceholderTextInstance";
-            FocusedIndicator = new NineSliceRuntime();
-            FocusedIndicator.Name = "FocusedIndicator";
-            CaretInstance = new SpriteRuntime();
-            CaretInstance.Name = "CaretInstance";
-        }
-        protected virtual void AssignParents()
-        {
-            this.Children.Add(Background);
-            this.Children.Add(SelectionInstance);
-            this.Children.Add(TextInstance);
-            this.Children.Add(PlaceholderTextInstance);
-            this.Children.Add(FocusedIndicator);
-            this.Children.Add(CaretInstance);
-        }
-        private void ApplyDefaultVariables()
-        {
-Background.SetProperty("ColorCategoryState", "DarkGray");
-Background.SetProperty("StyleCategoryState", "Bordered");
-
-SelectionInstance.SetProperty("ColorCategoryState", "Accent");
-            this.SelectionInstance.Height = -4f;
-            this.SelectionInstance.Width = 7f;
-            this.SelectionInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-            this.SelectionInstance.X = 15f;
-            this.SelectionInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
-            this.SelectionInstance.XUnits = GeneralUnitType.PixelsFromSmall;
-            this.SelectionInstance.Y = 0f;
-
-TextInstance.SetProperty("ColorCategoryState", "White");
-TextInstance.SetProperty("StyleCategoryState", "Normal");
-            this.TextInstance.Height = -4f;
-            this.TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            this.TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
-            this.TextInstance.Text = @"";
-            this.TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-            this.TextInstance.Width = 0f;
-            this.TextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-            this.TextInstance.X = 4f;
-            this.TextInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
-            this.TextInstance.XUnits = GeneralUnitType.PixelsFromSmall;
-            this.TextInstance.Y = 0f;
-            this.TextInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-            this.TextInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
-
-PlaceholderTextInstance.SetProperty("ColorCategoryState", "Gray");
-            this.PlaceholderTextInstance.Height = -4f;
-            this.PlaceholderTextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            this.PlaceholderTextInstance.Text = @"Text Placeholder";
-            this.PlaceholderTextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-            this.PlaceholderTextInstance.Width = -8f;
-            this.PlaceholderTextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            this.PlaceholderTextInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
-            this.PlaceholderTextInstance.XUnits = GeneralUnitType.PixelsFromMiddle;
-            this.PlaceholderTextInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-            this.PlaceholderTextInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
-
-FocusedIndicator.SetProperty("ColorCategoryState", "Warning");
-FocusedIndicator.SetProperty("StyleCategoryState", "Solid");
-            this.FocusedIndicator.Height = 2f;
-            this.FocusedIndicator.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-            this.FocusedIndicator.Visible = false;
-            this.FocusedIndicator.Y = 2f;
-            this.FocusedIndicator.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
-            this.FocusedIndicator.YUnits = GeneralUnitType.PixelsFromLarge;
-
-CaretInstance.SetProperty("ColorCategoryState", "Primary");
-            this.CaretInstance.Height = 14f;
-            this.CaretInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-            this.CaretInstance.SourceFileName = @"UISpriteSheet.png";
-            this.CaretInstance.TextureAddress = global::Gum.Managers.TextureAddress.Custom;
-            this.CaretInstance.TextureHeight = 24;
-            this.CaretInstance.TextureLeft = 0;
-            this.CaretInstance.TextureTop = 48;
-            this.CaretInstance.TextureWidth = 24;
-            this.CaretInstance.Width = 1f;
-            this.CaretInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
-            this.CaretInstance.X = 4f;
-            this.CaretInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
-            this.CaretInstance.XUnits = GeneralUnitType.PixelsFromSmall;
-            this.CaretInstance.Y = 0f;
-            this.CaretInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-            this.CaretInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
-
-        }
+        //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
         partial void CustomInitialize();
     }
 }

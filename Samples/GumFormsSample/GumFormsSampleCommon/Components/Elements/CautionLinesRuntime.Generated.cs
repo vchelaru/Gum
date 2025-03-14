@@ -36,44 +36,19 @@ namespace GumFormsSample.Components
         {
             if(fullInstantiation)
             {
+                var element = ObjectFinder.Self.GetElementSave("Elements/CautionLines");
+                element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
             }
 
-            this.ClipsChildren = true;
-            this.Height = 16f;
-             
-            this.Width = 128f;
 
-            InitializeInstances();
 
-            ApplyDefaultVariables();
-            AssignParents();
-            if(tryCreateFormsObject)
-            {
-            }
+        }
+        public override void AfterFullCreation()
+        {
+            LinesSprite = this.GetGraphicalUiElementByName("LinesSprite") as SpriteRuntime;
             CustomInitialize();
         }
-        protected virtual void InitializeInstances()
-        {
-            LinesSprite = new SpriteRuntime();
-            LinesSprite.Name = "LinesSprite";
-        }
-        protected virtual void AssignParents()
-        {
-            this.Children.Add(LinesSprite);
-        }
-        private void ApplyDefaultVariables()
-        {
-            this.LinesSprite.SourceFileName = @"UISpriteSheet.png";
-            this.LinesSprite.TextureAddress = global::Gum.Managers.TextureAddress.Custom;
-            this.LinesSprite.TextureHeight = 32;
-            this.LinesSprite.TextureLeft = 0;
-            this.LinesSprite.TextureTop = 992;
-            this.LinesSprite.TextureWidth = 1024;
-            this.LinesSprite.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
-            this.LinesSprite.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-            this.LinesSprite.YUnits = GeneralUnitType.PixelsFromMiddle;
-
-        }
+        //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
         partial void CustomInitialize();
     }
 }

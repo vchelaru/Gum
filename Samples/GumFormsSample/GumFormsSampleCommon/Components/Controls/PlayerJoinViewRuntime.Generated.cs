@@ -30,62 +30,23 @@ namespace GumFormsSample.Components
         {
             if(fullInstantiation)
             {
+                var element = ObjectFinder.Self.GetElementSave("Controls/PlayerJoinView");
+                element?.SetGraphicalUiElement(this, global::RenderingLibrary.SystemManagers.Default);
             }
 
-            this.Height = 463f;
-             
-            this.Width = 144f;
 
-            InitializeInstances();
 
-            ApplyDefaultVariables();
-            AssignParents();
-            if(tryCreateFormsObject)
-            {
-            }
+        }
+        public override void AfterFullCreation()
+        {
+            InnerPanelInstance = this.GetGraphicalUiElementByName("InnerPanelInstance") as ContainerRuntime;
+            PlayerJoinViewItem1 = this.GetGraphicalUiElementByName("PlayerJoinViewItem1") as PlayerJoinViewItemRuntime;
+            PlayerJoinViewItem2 = this.GetGraphicalUiElementByName("PlayerJoinViewItem2") as PlayerJoinViewItemRuntime;
+            PlayerJoinViewItem3 = this.GetGraphicalUiElementByName("PlayerJoinViewItem3") as PlayerJoinViewItemRuntime;
+            PlayerJoinViewItem4 = this.GetGraphicalUiElementByName("PlayerJoinViewItem4") as PlayerJoinViewItemRuntime;
             CustomInitialize();
         }
-        protected virtual void InitializeInstances()
-        {
-            InnerPanelInstance = new ContainerRuntime();
-            InnerPanelInstance.Name = "InnerPanelInstance";
-            PlayerJoinViewItem1 = new PlayerJoinViewItemRuntime();
-            PlayerJoinViewItem1.Name = "PlayerJoinViewItem1";
-            PlayerJoinViewItem2 = new PlayerJoinViewItemRuntime();
-            PlayerJoinViewItem2.Name = "PlayerJoinViewItem2";
-            PlayerJoinViewItem3 = new PlayerJoinViewItemRuntime();
-            PlayerJoinViewItem3.Name = "PlayerJoinViewItem3";
-            PlayerJoinViewItem4 = new PlayerJoinViewItemRuntime();
-            PlayerJoinViewItem4.Name = "PlayerJoinViewItem4";
-        }
-        protected virtual void AssignParents()
-        {
-            this.Children.Add(InnerPanelInstance);
-            InnerPanelInstance.Children.Add(PlayerJoinViewItem1);
-            InnerPanelInstance.Children.Add(PlayerJoinViewItem2);
-            InnerPanelInstance.Children.Add(PlayerJoinViewItem3);
-            InnerPanelInstance.Children.Add(PlayerJoinViewItem4);
-        }
-        private void ApplyDefaultVariables()
-        {
-            this.InnerPanelInstance.ChildrenLayout = global::Gum.Managers.ChildrenLayout.TopToBottomStack;
-            this.InnerPanelInstance.Height = 0f;
-            this.InnerPanelInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            this.InnerPanelInstance.StackSpacing = 32f;
-            this.InnerPanelInstance.Width = 0f;
-            this.InnerPanelInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            this.InnerPanelInstance.X = 0f;
-            this.InnerPanelInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
-            this.InnerPanelInstance.XUnits = GeneralUnitType.PixelsFromMiddle;
-            this.InnerPanelInstance.Y = 0f;
-            this.InnerPanelInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
-            this.InnerPanelInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
-
-
-
-
-
-        }
+        //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
         partial void CustomInitialize();
     }
 }

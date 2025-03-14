@@ -1,4 +1,5 @@
-﻿using Gum.RenderingLibrary;
+﻿using Gum.Managers;
+using Gum.RenderingLibrary;
 using Gum.Wireframe;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
@@ -12,7 +13,17 @@ namespace MonoGameGum.GueDeriving
 {
     public class NineSliceRuntime : BindableGue
     {
+
+        public static string DefaultSourceFile { get; set; }
+        public static int DefaultTextureLeft;
+        public static int DefaultTextureTop;
+        public static int DefaultTextureWidth;
+        public static int DefaultTextureHeight;
+        public static TextureAddress DefaultTextureAddress;
+
+
         RenderingLibrary.Graphics.NineSlice mContainedNineSlice;
+
         RenderingLibrary.Graphics.NineSlice ContainedNineSlice
         {
             get
@@ -145,7 +156,15 @@ namespace MonoGameGum.GueDeriving
             {
                 var mContainedNineSlice = new NineSlice();
                 SetContainedObject(mContainedNineSlice);
-                
+
+                // todo - need to make this work with different relative directories...
+                //this.SourceFileName = DefaultSourceFile;
+                this.TextureLeft = DefaultTextureLeft;
+                this.TextureTop = DefaultTextureTop;
+                this.TextureWidth = DefaultTextureWidth;
+                this.TextureHeight = DefaultTextureHeight;
+
+                this.TextureAddress = DefaultTextureAddress;
             }
         }
     }
