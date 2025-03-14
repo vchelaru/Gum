@@ -20,7 +20,6 @@ namespace GumFormsSample.Screens;
 partial class DemoScreenGumRuntime
 {
 
-    Button detectResolutionButton;
     MenuItem FileMenuItem;
 
     
@@ -29,43 +28,41 @@ partial class DemoScreenGumRuntime
         var viewModel = new GumFormsSample.ViewModels.DemoScreenViewModel();
         this.BindingContext = viewModel;
 
-        this.GetFrameworkElementByName<Button>("BindingButton").SetBinding(
+        this.BindingButton.FormsControl.SetBinding(
             nameof(Button.IsEnabled),
             nameof(viewModel.IsButtonEnabled));
 
-        this.GetFrameworkElementByName<CheckBox>("BindingCheckbox").SetBinding(
+        this.BindingCheckbox.FormsControl.SetBinding(
             nameof(CheckBox.IsChecked),
             nameof(viewModel.IsButtonEnabled));
 
-        this.GetFrameworkElementByName<ComboBox>("ComboBoxInstance").SetBinding(
+        this.ComboBoxInstance.FormsControl.SetBinding(
             nameof(ComboBox.Items),
             nameof(viewModel.ComboBoxItems));
 
-        this.GetFrameworkElementByName<ListBox>("ResolutionBox").SetBinding(
+        this.ResolutionBox.FormsControl.SetBinding(
             nameof(ListBox.Items),
             nameof(viewModel.ListBoxItems));
 
-        this.GetFrameworkElementByName<RadioButton>("KeyboardRadioButton").SetBinding(
+        this.KeyboardRadioButton.FormsControl.SetBinding(
             nameof(RadioButton.IsChecked),
             nameof(viewModel.IsKeyboardAndMouseChecked));
 
-        this.GetFrameworkElementByName<RadioButton>("GamepadRadioButton").SetBinding(
+        this.GamepadRadioButton.FormsControl.SetBinding(
             nameof(RadioButton.IsChecked),
             nameof(viewModel.IsGamepadChecked));
 
-        this.GetFrameworkElementByName<RadioButton>("TouchScreenRadioButton").SetBinding(
+        this.TouchScreenRadioButton.FormsControl.SetBinding(
             nameof(RadioButton.IsChecked),
             nameof(viewModel.IsTouchscreenChecked));
 
         InitializeMenuItem();
 
-        detectResolutionButton = this.GetFrameworkElementByName<Button>("DetectResolutionsButton");
 
-        var musicSlider = this.GetFrameworkElementByName<Slider>("MusicSlider");
-        musicSlider.LargeChange = 10;
+        MusicSlider.FormsControl.LargeChange = 10;
 
 
-        detectResolutionButton.Click += (not, used) =>
+        DetectResolutionsButton.Click += (not, used) =>
         {
             ShowPopup();
         };
@@ -75,7 +72,7 @@ partial class DemoScreenGumRuntime
         //if(gamepad.IsConnected)
         {
             FrameworkElement.GamePadsForUiControl.Add(gamepad);
-            detectResolutionButton.IsFocused = true;
+            DetectResolutionsButton.FormsControl.IsFocused = true;
         }
 
 
@@ -121,14 +118,14 @@ partial class DemoScreenGumRuntime
         okButton.Click += (not, used) =>
         {
             popupGue.RemoveFromManagers();
-            detectResolutionButton.IsFocused = true;
+            DetectResolutionsButton.FormsControl.IsFocused = true;
             popupGue.Parent = null;
         };
 
         popupGue.GetFrameworkElementByName<Button>("CancelButton").Click += (not, used) =>
         {
             popupGue.RemoveFromManagers();
-            detectResolutionButton.IsFocused = true;
+            DetectResolutionsButton.FormsControl.IsFocused = true;
             popupGue.Parent = null;
         };
     }

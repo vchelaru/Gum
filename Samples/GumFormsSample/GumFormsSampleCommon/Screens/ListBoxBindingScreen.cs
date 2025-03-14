@@ -43,7 +43,7 @@ internal class ListBoxBindingScreen : ContainerRuntime
         //    }
         //    );
 
-        listBox.VisualTemplate = new MonoGameGum.Forms.VisualTemplate(typeof(ListBoxRuntime));
+        listBox.VisualTemplate = new MonoGameGum.Forms.VisualTemplate(typeof(BoundedListBoxItemRuntime));
 
         var viewModel = new ListBoxBindingViewModel();
         this.BindingContext = viewModel;
@@ -128,9 +128,9 @@ public class SaveGameViewModel : ViewModel
     }
 }
 
-public class ListBoxRuntime : ContainerRuntime
+public class BoundedListBoxItemRuntime : ContainerRuntime
 {
-    public ListBoxRuntime()
+    public BoundedListBoxItemRuntime()
     {
         this.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
 

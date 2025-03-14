@@ -81,6 +81,13 @@ namespace GumFormsSample.Components
 
             ApplyDefaultVariables();
             AssignParents();
+            if(tryCreateFormsObject)
+            {
+                if (FormsControl == null)
+                {
+                    FormsControlAsObject = new MonoGameGum.Forms.Controls.Slider(this);
+                }
+            }
             CustomInitialize();
         }
         protected virtual void InitializeInstances()
