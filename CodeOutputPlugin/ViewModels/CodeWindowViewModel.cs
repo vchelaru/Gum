@@ -7,97 +7,134 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace CodeOutputPlugin.ViewModels
+namespace CodeOutputPlugin.ViewModels;
+
+public enum WhatToView
 {
-    public enum WhatToView
+    SelectedElement,
+    SelectedState
+}
+
+public enum WhichElementsToGenerate
+{
+    SelectedOnly,
+    AllInProject
+}
+
+public class CodeWindowViewModel : ViewModel
+{
+    public WhatToView WhatToView
     {
-        SelectedElement,
-        SelectedState
+        get => Get<WhatToView>();
+        set => Set(value);
     }
 
-    public class CodeWindowViewModel : ViewModel
+    [DependsOn(nameof(WhatToView))]
+    public bool IsSelectedObjectSelected
     {
-        public WhatToView WhatToView
+        get => WhatToView == WhatToView.SelectedElement;
+        set
         {
-            get => Get<WhatToView>();
-            set => Set(value);
-        }
-
-        [DependsOn(nameof(WhatToView))]
-        public bool IsSelectedObjectSelected
-        {
-            get => WhatToView == WhatToView.SelectedElement;
-            set
+            if(value)
             {
-                if(value)
-                {
-                    WhatToView = WhatToView.SelectedElement;
-                }
+                WhatToView = WhatToView.SelectedElement;
             }
         }
+    }
 
-        [DependsOn(nameof(WhatToView))]
-        public bool IsSelectedStateSelected
+    [DependsOn(nameof(WhatToView))]
+    public bool IsSelectedStateSelected
+    {
+        get => WhatToView == WhatToView.SelectedState;
+        set
         {
-            get => WhatToView == WhatToView.SelectedState;
-            set
+            if (value)
             {
-                if (value)
-                {
-                    WhatToView = WhatToView.SelectedState;
-                }
+                WhatToView = WhatToView.SelectedState;
             }
         }
+    }
 
-        // This exists in case we want to bring it back in the future, but the UI for it is gone.
-        public InheritanceLocation InheritanceLocation
-        {
-            get => Get<InheritanceLocation>();
-            set => Set(value);
-        }
+    // This exists in case we want to bring it back in the future, but the UI for it is gone.
+    public InheritanceLocation InheritanceLocation
+    {
+        get => Get<InheritanceLocation>();
+        set => Set(value);
+    }
 
-        [DependsOn(nameof(InheritanceLocation))]
-        public bool IsInCustomCodeChecked
+    [DependsOn(nameof(InheritanceLocation))]
+    public bool IsInCustomCodeChecked
+    {
+        get => InheritanceLocation == InheritanceLocation.InCustomCode;
+        set
         {
-            get => InheritanceLocation == InheritanceLocation.InCustomCode;
-            set
+            if (value)
             {
-                if (value)
-                {
-                    InheritanceLocation = InheritanceLocation.InCustomCode;
-                }
+                InheritanceLocation = InheritanceLocation.InCustomCode;
             }
         }
+    }
 
-        [DependsOn(nameof(InheritanceLocation))]
-        public bool IsInGeneratedCodeChecked
+    [DependsOn(nameof(InheritanceLocation))]
+    public bool IsInGeneratedCodeChecked
+    {
+        get => InheritanceLocation == InheritanceLocation.InGeneratedCode;
+        set
         {
-            get => InheritanceLocation == InheritanceLocation.InGeneratedCode;
-            set
+            if (value)
             {
-                if (value)
-                {
-                    InheritanceLocation = InheritanceLocation.InGeneratedCode;
-                }
+                InheritanceLocation = InheritanceLocation.InGeneratedCode;
             }
         }
+    }
 
-        public bool IsViewingStandardElement
+    public bool IsViewingStandardElement
+    {
+        get => Get<bool>();
+        set => Set(value);
+    }
+
+    [DependsOn(nameof(IsViewingStandardElement))]
+    public Visibility GenerateCodeUiVisibility => (IsViewingStandardElement == false).ToVisibility();
+
+    [DependsOn(nameof(IsViewingStandardElement))]
+    public Visibility ShowNoGenerationAvailableUiVisibility => IsViewingStandardElement.ToVisibility();
+
+    public WhichElementsToGenerate WhichElementsToGenerate
+    {
+        get => Get<WhichElementsToGenerate>();
+        set => Set(value);
+    }
+
+    [DependsOn(nameof(WhichElementsToGenerate))]
+    public bool IsSelectedOnlyGenerating
+    {
+        get => WhichElementsToGenerate == WhichElementsToGenerate.SelectedOnly;
+        set
         {
-            get => Get<bool>();
-            set => Set(value);
+            if (value)
+            {
+                WhichElementsToGenerate = WhichElementsToGenerate.SelectedOnly;
+            }
         }
+    }
 
-        [DependsOn(nameof(IsViewingStandardElement))]
-        public Visibility GenerateCodeUiVisibility => (IsViewingStandardElement == false).ToVisibility();
-
-        [DependsOn(nameof(IsViewingStandardElement))]
-        public Visibility ShowNoGenerationAvailableUiVisibility => IsViewingStandardElement.ToVisibility();
-
-        public string Code
+    [DependsOn(nameof(WhichElementsToGenerate))]
+    public bool IsAllInProjectGenerating
+    {
+        get => WhichElementsToGenerate == WhichElementsToGenerate.AllInProject;
+        set
         {
-            get => Get<string>();
-            set => Set(value);
+            if (value)
+            {
+                WhichElementsToGenerate = WhichElementsToGenerate.AllInProject;
+            }
         }
+    }
+
+    public string Code
+    {
+        get => Get<string>();
+        set => Set(value);
     }
 }

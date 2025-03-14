@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
+using System.Runtime;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -395,7 +396,26 @@ namespace CodeOutputPlugin
         {
             if(SelectedState.Self.SelectedElement != null)
             {
-                GenerateCodeForSelectedElement(showPopups:true);
+                if(viewModel.IsAllInProjectGenerating)
+                {
+                    foreach(var element in GumState.Self.ProjectState.GumProjectSave.AllElements)
+                    {
+                        if(element is StandardElementSave)
+                        {
+                            continue;
+                        }
+
+                        var elementOutputSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(element);
+                        if(elementOutputSettings.GenerationBehavior != Models.GenerationBehavior.NeverGenerate)
+                        {
+                            _codeGenerationService.GenerateCodeForElement(element, elementOutputSettings, codeOutputProjectSettings, showPopups: false);
+                        }
+                    }
+                }
+                else
+                {
+                    GenerateCodeForElement(showPopups:true, SelectedState.Self.SelectedElement);
+                }
             }
         }
 
@@ -422,11 +442,11 @@ namespace CodeOutputPlugin
             GenerateCodeForElement(showPopups, selectedElement);
         }
 
-        private void GenerateCodeForElement(bool showPopups, ElementSave element)
+        private void GenerateCodeForElement(bool showPopups, ElementSave element, CodeOutputElementSettings? settings = null)
         {
             if (element != null && element is not StandardElementSave)
             {
-                var settings = control.CodeOutputElementSettings;
+                settings = settings ?? control.CodeOutputElementSettings;
                 _codeGenerationService.GenerateCodeForElement(element, settings, codeOutputProjectSettings, showPopups);
             }
         }

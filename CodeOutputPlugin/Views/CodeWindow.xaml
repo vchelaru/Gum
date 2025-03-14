@@ -46,10 +46,20 @@
                             <Label>Choose a code generation option below:</Label>
                             <Button MinHeight="36" x:Name="AutoSetupCodeGenerationButton" Click="HandleAutoSetupClicked">Auto Setup Code Generation</Button>
                             <Button MinHeight="36" Click="HandleManualSetupClicked">Manually Setup Code Generation</Button>
-                        
+
                         </StackPanel>
                         <StackPanel x:Name="FullGenerationUiStack">
-                            <Button x:Name="GenerateCodeButton" Click="HandleGenerateCodeClicked">Generate Code</Button>
+
+                            <GroupBox>
+                                <StackPanel Margin="5">
+
+                                    <Button x:Name="GenerateCodeButton" Click="HandleGenerateCodeClicked">Generate Code</Button>
+                                    <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                        <RadioButton x:Name="RadioButtonSelectedObject" IsChecked="{Binding IsSelectedOnlyGenerating}">This element only</RadioButton>
+                                        <RadioButton x:Name="RadioButtonSelectedState" Margin="16,0,0,0" IsChecked="{Binding IsAllInProjectGenerating}">All elements in project</RadioButton>
+                                    </StackPanel>
+                                </StackPanel>
+                            </GroupBox>
                             <WpfDataUi:DataUiGrid Name="DataGrid"></WpfDataUi:DataUiGrid>
                             <!--Let's not do this ...it's dangerous for now until things stabilize (May 26, 2022)-->
                             <!--<Button Click="HandleGenerateAllCodeClicked">Generate All Code</Button>-->
@@ -63,6 +73,6 @@
             Standard Elements cannot be generated because the Gum NuGet packages linked by your project already include Standard Element runtime classes
             </TextBlock>
         </StackPanel>
-        
+
     </Grid>
 </UserControl>
