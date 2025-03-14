@@ -83,8 +83,14 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
             mKeysTyped[i] = false;
             mLastTypedFromPush[i] = false;
         }
+        try
+        {
+            TrySubscribeToGameWindowInput(game);
+        }
+        catch
+        {
 
-        TrySubscribeToGameWindowInput(game);
+        }
     }
 
     private void TrySubscribeToGameWindowInput(Game? game)
@@ -260,11 +266,18 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
         // This could be done in initialize, we don't want
         // to break projects. Instead, GumService.Initialize
         // now has the GraphicsDevice version obsolete 
-        if(windowTextInputBuffer == null && game != null)
+        if (windowTextInputBuffer == null && game != null)
         {
-            TrySubscribeToGameWindowInput(game);
+            try
+            {
+                TrySubscribeToGameWindowInput(game);
+            }
+            catch
+            {
+
+            }
         }
-        if(windowTextInputBuffer != null)
+        if (windowTextInputBuffer != null)
         {
             lock(windowTextInputBuffer)
             {
