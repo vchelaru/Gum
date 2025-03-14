@@ -17,17 +17,12 @@ using ToolsUtilities;
 
 namespace GumFormsSample.Screens;
 
-public class DemoScreenGumRuntime : BindableGue
+public partial class DemoScreenGumRuntime
 {
 
     Button detectResolutionButton;
     MenuItem FileMenuItem;
 
-    [ModuleInitializer]
-    public static void RegisterRuntimeType()
-    {
-        GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("DemoScreenGum", typeof(DemoScreenGumRuntime));
-    }
     
     public void Initialize()
     {
