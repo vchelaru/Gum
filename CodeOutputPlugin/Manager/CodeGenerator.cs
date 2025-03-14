@@ -625,8 +625,11 @@ public class CodeGenerator
 
     static void RegisterRuntimeType(CodeGenerationContext context)
     {
-        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame && 
-            context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FindByName)
+        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame  
+            // Other objects could still be instantiating this object by component, so let's register the type no matter
+            // how it's generated:
+            // && context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FindByName
+            )
         {
             var builder = context.StringBuilder;
 

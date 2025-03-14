@@ -15,6 +15,11 @@ namespace GumFormsSample.Components
 {
     public partial class ComboBoxRuntime:ContainerRuntime
     {
+        [System.Runtime.CompilerServices.ModuleInitializer]
+        public static void RegisterRuntimeType()
+        {
+            GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ComboBox", typeof(ComboBoxRuntime));
+        }
         public MonoGameGum.Forms.Controls.ComboBox FormsControl => FormsControlAsObject as MonoGameGum.Forms.Controls.ComboBox;
         public enum ComboBoxCategory
         {

@@ -15,6 +15,11 @@ namespace GumFormsSample.Components
 {
     public partial class ListBoxRuntime:ContainerRuntime
     {
+        [System.Runtime.CompilerServices.ModuleInitializer]
+        public static void RegisterRuntimeType()
+        {
+            GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ListBox", typeof(ListBoxRuntime));
+        }
         public MonoGameGum.Forms.Controls.ListBox FormsControl => FormsControlAsObject as MonoGameGum.Forms.Controls.ListBox;
         public enum ListBoxCategory
         {

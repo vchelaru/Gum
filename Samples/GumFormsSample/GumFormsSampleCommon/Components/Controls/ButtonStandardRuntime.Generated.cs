@@ -14,6 +14,12 @@ namespace GumFormsSample.Components
 {
     public partial class ButtonStandardRuntime:ContainerRuntime
     {
+        [System.Runtime.CompilerServices.ModuleInitializer]
+        public static void RegisterRuntimeType()
+        {
+            GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/ButtonStandard", typeof(ButtonStandardRuntime));
+            MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsComponents[typeof(MonoGameGum.Forms.Controls.Button)] = typeof(ButtonStandardRuntime);
+        }
         public MonoGameGum.Forms.Controls.Button FormsControl => FormsControlAsObject as MonoGameGum.Forms.Controls.Button;
         public enum ButtonCategory
         {

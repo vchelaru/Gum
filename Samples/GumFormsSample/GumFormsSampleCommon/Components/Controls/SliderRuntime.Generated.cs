@@ -15,6 +15,11 @@ namespace GumFormsSample.Components
 {
     public partial class SliderRuntime:ContainerRuntime
     {
+        [System.Runtime.CompilerServices.ModuleInitializer]
+        public static void RegisterRuntimeType()
+        {
+            GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/Slider", typeof(SliderRuntime));
+        }
         public MonoGameGum.Forms.Controls.Slider FormsControl => FormsControlAsObject as MonoGameGum.Forms.Controls.Slider;
         public enum SliderCategory
         {

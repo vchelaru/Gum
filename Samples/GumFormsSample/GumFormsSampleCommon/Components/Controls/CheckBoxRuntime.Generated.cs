@@ -15,6 +15,11 @@ namespace GumFormsSample.Components
 {
     public partial class CheckBoxRuntime:ContainerRuntime
     {
+        [System.Runtime.CompilerServices.ModuleInitializer]
+        public static void RegisterRuntimeType()
+        {
+            GumRuntime.ElementSaveExtensions.RegisterGueInstantiationType("Controls/CheckBox", typeof(CheckBoxRuntime));
+        }
         public MonoGameGum.Forms.Controls.CheckBox FormsControl => FormsControlAsObject as MonoGameGum.Forms.Controls.CheckBox;
         public enum CheckBoxCategory
         {
