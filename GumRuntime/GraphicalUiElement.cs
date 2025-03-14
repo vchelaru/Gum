@@ -2366,7 +2366,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     // can't make dimension based on texture coords as that would cause a circular reference
                     if (textureCoordinate.SourceRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
                     {
-                        var scale = GetAbsoluteWidth() / textureCoordinate.SourceRectangle.Value.Width;
+                        var scale = 1f;
+                        if(textureCoordinate.SourceRectangle.Value.Width != 0)
+                        {
+                            scale = GetAbsoluteWidth() / textureCoordinate.SourceRectangle.Value.Width;
+                        }
                         pixelHeightToSet = textureCoordinate.SourceRectangle.Value.Height * scale * mHeight / 100.0f;
                     }
                 }
@@ -2712,7 +2716,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 {
                     if (iTextureCoordinate.SourceRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
                     {
-                        var scale = GetAbsoluteHeight() / iTextureCoordinate.SourceRectangle.Value.Height;
+                        var scale = 1f;
+                        if(iTextureCoordinate.SourceRectangle.Value.Height != 0)
+                        {
+                            scale = GetAbsoluteHeight() / iTextureCoordinate.SourceRectangle.Value.Height;
+                        }
                         pixelWidthToSet = iTextureCoordinate.SourceRectangle.Value.Width * scale * mWidth / 100.0f;
                     }
                 }
@@ -3465,26 +3473,30 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         float unitOffsetX = 0;
         float unitOffsetY = 0;
 
+
         AdjustOffsetsByUnits(parentWidth, parentHeight, isParentFlippedHorizontally, xOrY, ref unitOffsetX, ref unitOffsetY);
 #if DEBUG
         if (float.IsNaN(unitOffsetX))
         {
-            throw new Exception("Invalid unitOffsetX: " + unitOffsetX);
+            throw new Exception("Invalid unitOffsetX after AdjustOffsetsByUnits - it's NaN");
         }
 
         if (float.IsNaN(unitOffsetY))
         {
-            throw new Exception("Invalid unitOffsetY: " + unitOffsetY);
+            throw new Exception("Invalid unitOffsetY after AdjustOffsetsByUnits - it's NaN");
         }
 #endif
 
 
-
         AdjustOffsetsByOrigin(isParentFlippedHorizontally, ref unitOffsetX, ref unitOffsetY);
 #if DEBUG
-        if (float.IsNaN(unitOffsetX) || float.IsNaN(unitOffsetY))
+        if (float.IsNaN(unitOffsetX))
         {
-            throw new Exception("Invalid unit offsets");
+            throw new Exception("Invalid unitOffsetX after AdjustOffsetsByOrigin - it's NaN");
+        }
+        if ( float.IsNaN(unitOffsetY))
+        {
+            throw new Exception("Invalid unitOffsetY after AdjustOffsetsByOrigin - it's NaN");
         }
 #endif
 
@@ -4080,6 +4092,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             offsetY -= mContainedObjectAsIpso.Height;
         }
         // no need to handle top
+
 
         // Adjust offsets by rotation
         if (mRotation != 0)

@@ -187,10 +187,20 @@ namespace RenderingLibrary.Graphics
             set;
         }
 
+        float _height;
         public float Height
         {
-            get;
-            set;
+            get => _height;
+            set
+            {
+#if DEBUG
+                if(float.IsNaN(value))
+                {
+                    throw new InvalidOperationException("Cannot assign a Sprite's Height to NaN");
+                }
+#endif
+                _height = value;
+            }
         }
 
         bool IRenderableIpso.ClipsChildren
