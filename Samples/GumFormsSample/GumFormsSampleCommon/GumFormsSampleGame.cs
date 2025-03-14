@@ -83,8 +83,10 @@ public class GumFormsSampleGame : Game
     {
         var screenSave = gumProject.Screens.Find(item => item.Name == "DemoScreenGum");
 
-        var screen = screenSave.ToGraphicalUiElement(
-            SystemManagers.Default, addToManagers: true) as DemoScreenGumRuntime;
+        //var screen = screenSave.ToGraphicalUiElement(
+        //    SystemManagers.Default, addToManagers: true) as DemoScreenGumRuntime;
+        var screen = new DemoScreenGumRuntime();
+        screen.AddToManagers();
         screen.Initialize();
         Roots.Add(screen);
     }

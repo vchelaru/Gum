@@ -46,7 +46,7 @@ public struct CodeGenerationContext
     /// the prefix with no period, such as "casted"
     /// </summary>
     public string ThisPrefix { get; set; }
-    public InstanceSave Instance { get; set; }
+    public InstanceSave? Instance { get; set; }
     public ElementSave Element { get; set; }
     public StringBuilder StringBuilder { get; set; }
 
@@ -498,20 +498,23 @@ public class CodeGenerator
         }
 
 
+        // Vic asks 
+        // March 14 2025
+        // Why are we doing
+        // this Forms generation
+        // only in find by name? 
+        // Because if this is fully
+        // instantiated in code, then
+        // the instances will not yet be
+        // attached to this, so the Forms
+        // control that searches for items 
+        // by name will not be able to find
+        // the needed instances. Therefore, this
+        // must be done in the constructor after instnaces
+        // are attached.
         if(!isFullyInstantiatingInCode)
         {
-            GetGumFormsType(context.Element, out string? gumFormsType, out _);
-            if( gumFormsType != null )
-            {
-                context.StringBuilder.AppendLine($"{context.Tabs}if (FormsControl == null)");
-                context.StringBuilder.AppendLine($"{context.Tabs}{{");
-                {
-                    context.TabCount++;
-                    context.StringBuilder.AppendLine($"{context.Tabs}FormsControlAsObject = new {gumFormsType}(this);");
-                    context.TabCount--;
-                }
-                context.StringBuilder.AppendLine($"{context.Tabs}}}");
-            }
+            TryInstantiateForms(context);
         }
 
         foreach (var instance in context.Element.Instances)
@@ -539,6 +542,22 @@ public class CodeGenerator
 
         context.TabCount--;
         context.StringBuilder.AppendLine(context.Tabs + "}");
+    }
+
+    private static void TryInstantiateForms(CodeGenerationContext context)
+    {
+        GetGumFormsType(context.Element, out string? gumFormsType, out _);
+        if (gumFormsType != null)
+        {
+            context.StringBuilder.AppendLine($"{context.Tabs}if (FormsControl == null)");
+            context.StringBuilder.AppendLine($"{context.Tabs}{{");
+            {
+                context.TabCount++;
+                context.StringBuilder.AppendLine($"{context.Tabs}FormsControlAsObject = new {gumFormsType}(this);");
+                context.TabCount--;
+            }
+            context.StringBuilder.AppendLine($"{context.Tabs}}}");
+        }
     }
 
     private static void AddFindByNameAssignment(CodeGenerationContext context)
@@ -2377,6 +2396,14 @@ public class CodeGenerator
                 stringBuilder.AppendLine(context.Tabs + "AssignParents();");
             }
 
+            stringBuilder.AppendLine(context.Tabs + "if(tryCreateFormsObject)");
+            stringBuilder.AppendLine(context.Tabs + "{");
+            context.TabCount++;
+            // Do this after assigning parents
+            TryInstantiateForms(context);
+            context.TabCount--;
+            stringBuilder.AppendLine(context.Tabs + "}");
+
             // If not fully in code, we do this in AfterFullCreation
             stringBuilder.AppendLine(context.Tabs + "CustomInitialize();");
         }
@@ -2426,7 +2453,7 @@ public class CodeGenerator
         }
     }
 
-    private static bool GetIfShouldAddMainLayout(ElementSave element, CodeOutputProjectSettings projectSettings)
+    private static bool GetIfShouldAddMainLayout(ElementSave element, CodeOutputProjectSettings? projectSettings)
     {
         var elementBaseType = element?.BaseType;
         var isThisAbsoluteLayout = IsOfXamarinFormsType(element, "AbsoluteLayout");
@@ -3639,7 +3666,7 @@ public class CodeGenerator
 
         else if (GetIsShouldBeLocalized(variable, context.Element.DefaultState, LocalizationManager))
         {
-            string assignment = GetLocalizedLine(instance, variable, context);
+            string assignment = GetLocalizedLine(variable, context);
 
             return assignment;
         }
@@ -3887,13 +3914,13 @@ public class CodeGenerator
                 type?.EndsWith("/Frame") == true;
     }
 
-    private static string TryGetFullGumLineReplacement(VariableSave variable, CodeGenerationContext context)
+    private static string? TryGetFullGumLineReplacement(VariableSave variable, CodeGenerationContext context)
     {
-        InstanceSave instance = context.Instance;
+        InstanceSave? instance = context.Instance;
         var rootName = variable.GetRootName();
         #region Parent
 
-        if (rootName == "Parent")
+        if (rootName == "Parent" && instance != null)
         {
             var owner = string.IsNullOrEmpty(variable.Value as string)
                 ? "this"
@@ -3916,7 +3943,7 @@ public class CodeGenerator
                 return " ";
             }
         }
-        else if (variable.IsState(context.Element) && context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame && context.Instance != null)
+        else if (variable.IsState(context.Element) && context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame && instance != null)
         {
             var rootVariable = ObjectFinder.Self.GetRootVariable(variable.GetRootName(), instance);
             var isVariableDefinedByStandardElement = false;
@@ -3941,7 +3968,7 @@ public class CodeGenerator
         }
         else if (GetIsShouldBeLocalized(variable, context.Element.DefaultState, LocalizationManager))
         {
-            string assignment = GetLocalizedLine(instance, variable, context);
+            string assignment = GetLocalizedLine(variable, context);
 
             return assignment;
         }
@@ -4020,7 +4047,7 @@ public class CodeGenerator
     #region Localization
 
 
-    private static string GetLocalizedLine(InstanceSave instance, VariableSave variable, CodeGenerationContext context)
+    private static string GetLocalizedLine(VariableSave variable, CodeGenerationContext context)
     {
         var valueAsString = variable.Value as string;
         var formattedStringIdAssignment = string.Format(FormattedLocalizationCode, valueAsString);
@@ -4074,7 +4101,7 @@ public class CodeGenerator
             context.Element = element;
             foreach (var variable in element.DefaultState.Variables)
             {
-                InstanceSave instance = null;
+                InstanceSave? instance = null;
                 if (!string.IsNullOrEmpty(variable.SourceObject))
                 {
                     instance = element.GetInstance(variable.SourceObject);
@@ -4085,7 +4112,7 @@ public class CodeGenerator
                 {
                     if (GetIsShouldBeLocalized(variable, context.Element.DefaultState, LocalizationManager))
                     {
-                        string assignment = GetLocalizedLine(instance, variable, context);
+                        string assignment = GetLocalizedLine(variable, context);
                         stringBuilder.AppendLine(ToTabs(tabCount) + assignment);
                     }
                     //else if(!string.IsNullOrEmpty(instance.BaseType))
@@ -4197,7 +4224,7 @@ public class CodeGenerator
 
     }
 
-    private static void AddAbsoluteLayoutIfNecessary(ElementSave element, int tabCount, StringBuilder stringBuilder, CodeOutputProjectSettings projectSettings)
+    private static void AddAbsoluteLayoutIfNecessary(ElementSave element, int tabCount, StringBuilder stringBuilder, CodeOutputProjectSettings? projectSettings)
     {
 
         var shouldAddMainLayout =
@@ -4205,7 +4232,7 @@ public class CodeGenerator
 
         if (shouldAddMainLayout)
         {
-            ElementSave baseElement = null;
+            ElementSave? baseElement = null;
             if (!string.IsNullOrEmpty(element.BaseType))
             {
                 baseElement = ObjectFinder.Self.GetElementSave(element.BaseType);

@@ -17,7 +17,7 @@ using ToolsUtilities;
 
 namespace GumFormsSample.Screens;
 
-public partial class DemoScreenGumRuntime
+partial class DemoScreenGumRuntime
 {
 
     Button detectResolutionButton;

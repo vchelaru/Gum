@@ -8,6 +8,9 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 using MonoGameGum.GueDeriving;
+
+namespace GumFormsSample.Components;
+
 partial class ComboBoxRuntime : ContainerRuntime
 {
     partial void CustomInitialize()

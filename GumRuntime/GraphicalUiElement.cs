@@ -5269,6 +5269,15 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     {
                         return item;
                     }
+                    else
+                    {
+                        var foundChild = item.GetChildByNameRecursively(name) as GraphicalUiElement;
+
+                        if(foundChild != null)
+                        {
+                            return foundChild;
+                        }
+                    }
                 }
             }
         }

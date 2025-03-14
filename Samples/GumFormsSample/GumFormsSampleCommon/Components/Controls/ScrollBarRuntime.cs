@@ -8,6 +8,8 @@ using RenderingLibrary.Graphics;
 using System.Linq;
 
 using MonoGameGum.GueDeriving;
+namespace GumFormsSample.Components;
+
 partial class ScrollBarRuntime : ContainerRuntime
 {
     partial void CustomInitialize()
