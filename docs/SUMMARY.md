@@ -40,6 +40,7 @@
     * [Max Height](gum-tool/gum-elements/general-properties/max-height.md)
     * [Max Width](gum-tool/gum-elements/general-properties/max-width.md)
     * [Min Height](gum-tool/gum-elements/general-properties/min-height.md)
+    * [Min Width](gum-tool/gum-elements/general-properties/min-width.md)
     * [Order](gum-tool/gum-elements/general-properties/order.md)
     * [Parent](gum-tool/gum-elements/general-properties/parent.md)
     * [Rotation](gum-tool/gum-elements/general-properties/rotation.md)
