@@ -4,7 +4,7 @@
 
 The NineSliceRuntime object is used to draw a visual object which references a Texture2D, but which does not stretch the corner pieces of a texture, and which only stretches the edges between the corners along their axis. In other words, the NineSlice (sometimes also referred to as a sprite frame) is used to draw frames in UI which can stretch without introducing visual artifacts.
 
-For more information about the NineSlice type, see the [NineSlice page](../../../gum-tool/gum-elements/nineslice/).
+For more information about the NineSlice type, see the [NineSlice page](../../gum-tool/gum-elements/nineslice/).
 
 ### Code Example
 
@@ -22,7 +22,7 @@ nineSlice.Height = 48;
 container.Children.Add(nineSlice);
 ```
 
-<figure><img src="../../../.gitbook/assets/image (3) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>NineSlice using Frame.png</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (3) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>NineSlice using Frame.png</p></figcaption></figure>
 
 ### Assigning NineSlice Texture
 
@@ -30,7 +30,7 @@ NineSlice textures can be assigned using a string property or Texture2D instance
 
 For example, consider a file called Frame.png which is located in the Content directory:
 
-<figure><img src="../../../.gitbook/assets/image (4) (1) (1) (1).png" alt=""><figcaption><p>Frame.png in Content</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (4) (1) (1) (1).png" alt=""><figcaption><p>Frame.png in Content</p></figcaption></figure>
 
 This file can be used as a texture by assigning the RelativeDirectory and then loading Frame.png. Note that RelativeDirectory is usually set to Content, or to the location of the .gumx file.
 
