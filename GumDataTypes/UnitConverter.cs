@@ -29,14 +29,51 @@ namespace Gum.Converters
 
     public enum GeneralUnitType
     {
+        /// <summary>
+        /// Units are measured in pixels. 
+        /// X values are measured relative to the left side.
+        /// Y values are measured relative to the top side.
+        /// </summary>
         PixelsFromSmall,
+
+        /// <summary>
+        /// Units are measured in pixels.
+        /// X values are measured relative to the right side.
+        /// Y values are measured relative to the bottom side.
+        /// </summary>
         PixelsFromLarge,
+
+        /// <summary>
+        /// Units are measured in pixels.
+        /// X values are measured relative to the horizontal center.
+        /// Y values are measured relative to the vertical center.
+        /// </summary>
         PixelsFromMiddle,
+
+        /// <summary>
+        /// Units are measured in percentage of the parent's dimensions.
+        /// X values are precentage of width, with 0 at the left edge, 100 at the right edge.
+        /// Y values are percentage of height, with 0 at the top edge, 100 at the bottom edge.
+        /// </summary>
         Percentage,
+
+        /// <summary>
+        /// Unit values are measured in percentage of the current object's file.
+        /// X values are a percentage of file width.
+        /// Y values are a percentage of file height.
+        /// </summary>
         PercentageOfFile,
+
+        [Obsolete("Use PixelsFromMiddle and invert the value. This is not supported horizontally.")]
         PixelsFromMiddleInverted,
+
         PercentageOfOtherDimension,
         MaintainFileAspectRatio,
+
+        /// <summary>
+        /// Pixels relative to the parent's baseline. This only applies for Y values,
+        /// and only if the parent type has baseline values (Text).
+        /// </summary>
         PixelsFromBaseline
     }
 
