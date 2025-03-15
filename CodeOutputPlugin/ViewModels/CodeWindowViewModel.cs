@@ -1,11 +1,13 @@
 ﻿using CodeOutputPlugin.Models;
 using Gum.Mvvm;
+using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using ToolsUtilities;
 
 namespace CodeOutputPlugin.ViewModels;
 
@@ -137,4 +139,40 @@ public class CodeWindowViewModel : ViewModel
         get => Get<string>();
         set => Set(value);
     }
+
+
+    public FilePath? GetCsprojDirectoryAboveGumx()
+    {
+        FilePath gumDirectory = GumState.Self.ProjectState.ProjectDirectory;
+
+        return GetCsprojDirectoryAboveGumx(gumDirectory);
+    }
+
+    FilePath? GetCsprojDirectoryAboveGumx(FilePath filePath)
+    {
+        if (filePath == null)
+        {
+            return null;
+        }
+
+        var files = System.IO.Directory.GetFiles(filePath.FullPath)
+            .Select(item => new FilePath(item));
+
+        if (files.Any(item => item.Extension == "csproj"))
+        {
+            return filePath;
+        }
+
+        var parentDirectory = filePath.GetDirectoryContainingThis();
+
+        if (parentDirectory == null)
+        {
+            return null;
+        }
+        else
+        {
+            return GetCsprojDirectoryAboveGumx(parentDirectory);
+        }
+    }
+
 }

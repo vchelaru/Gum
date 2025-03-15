@@ -66,9 +66,12 @@ namespace CodeOutputPlugin.Views
 
         #endregion
 
-        public CodeWindow()
+        public CodeWindow(CodeWindowViewModel viewModel)
         {
             InitializeComponent();
+
+            this.DataContext = viewModel;
+
             DataGrid.PropertyChange += (not, used) => CodeOutputSettingsPropertyChanged?.Invoke(this, null);
 
             FullRefreshDataGrid();
@@ -90,7 +93,6 @@ namespace CodeOutputPlugin.Views
             elementCategory.Members.Add(CreateGenerateLocalizeMethod());
 
             var isGenerateCodeButtonVisible =
-                !string.IsNullOrEmpty(CodeOutputProjectSettings?.CodeProjectRoot) &&
                 (CodeOutputElementSettings?.GenerationBehavior == GenerationBehavior.GenerateManually ||
                  CodeOutputElementSettings?.GenerationBehavior == GenerationBehavior.GenerateAutomaticallyOnPropertyChange);
 
@@ -193,7 +195,7 @@ namespace CodeOutputPlugin.Views
             //if(string.IsNullOrEmpty(value))
             //{
             //    // let's see if we have a csproj:
-            var csproj = GetCsprojDirectory();
+            var csproj = ViewModel.GetCsprojDirectoryAboveGumx();
 
             var areSetupButtonsVisible = 
                 csproj != null && 
@@ -540,6 +542,7 @@ namespace CodeOutputPlugin.Views
 
         private void HandleGenerateCodeClicked(object sender, RoutedEventArgs e)
         {
+
             GenerateCodeClicked(this, null);
         }
 
@@ -572,7 +575,7 @@ namespace CodeOutputPlugin.Views
 
         private void HandleAutoSetupClicked(object sender, RoutedEventArgs e)
         {
-            var csprojLocation = GetCsprojDirectory();
+            var csprojLocation = ViewModel.GetCsprojDirectoryAboveGumx();
 
             if(csprojLocation == null)
             {
@@ -639,40 +642,6 @@ namespace CodeOutputPlugin.Views
             FullRefreshDataGrid();
         }
 
-
-        FilePath? GetCsprojDirectory()
-        {
-            FilePath gumDirectory = GumState.Self.ProjectState.ProjectDirectory;
-
-            return GetCsprojDirectory(gumDirectory);
-        }
-
-        FilePath? GetCsprojDirectory(FilePath filePath)
-        {
-            if (filePath == null)
-            {
-                return null;
-            }
-
-            var files = System.IO.Directory.GetFiles(filePath.FullPath)
-                .Select(item => new FilePath(item));
-
-            if (files.Any(item => item.Extension == "csproj"))
-            {
-                return filePath;
-            }
-
-            var parentDirectory = filePath.GetDirectoryContainingThis();
-
-            if (parentDirectory == null)
-            {
-                return null;
-            }
-            else
-            {
-                return GetCsprojDirectory(parentDirectory);
-            }
-        }
 
         #endregion
     }

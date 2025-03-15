@@ -1,5 +1,6 @@
 ﻿using CodeOutputPlugin.Manager;
 using CodeOutputPlugin.Models;
+using CodeOutputPlugin.Views;
 using Gum;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
@@ -345,8 +346,8 @@ namespace CodeOutputPlugin
 
         private void CreateControl()
         {
-            control = new Views.CodeWindow();
             viewModel = new ViewModels.CodeWindowViewModel();
+            control = new Views.CodeWindow(viewModel);
 
             control.CodeOutputSettingsPropertyChanged += (not, used) => HandleCodeOutputPropertyChanged();
             control.GenerateCodeClicked += (not, used) => HandleGenerateCodeButtonClicked();
@@ -394,7 +395,21 @@ namespace CodeOutputPlugin
 
         private void HandleGenerateCodeButtonClicked()
         {
-            if(SelectedState.Self.SelectedElement != null)
+            if(string.IsNullOrEmpty(codeOutputProjectSettings.CodeProjectRoot))
+            {
+                var message = "To save generated code, you must specify a .csproj location.";
+
+                var csprojAboveGumx = viewModel.GetCsprojDirectoryAboveGumx();
+                if(csprojAboveGumx == null)
+                {
+                    message += "\n\n" +
+                        "Note: Your Gum project (.gumx) is currently not saved relative to a folder that contains a .csproj file. " +
+                        "Saving your Gum project relative to your .csproj is the recommended approach";
+                }
+
+                GumCommands.Self.GuiCommands.ShowMessage(message);
+            }
+            else if (SelectedState.Self.SelectedElement != null)
             {
                 if(viewModel.IsAllInProjectGenerating)
                 {
