@@ -19,7 +19,7 @@ All controls are in the `MonoGameGum.Forms.Controls` namespace.
 
 ## Common Control Properties
 
-All controls share a few common properties and characteristics. If you are familiar with these concepts then the following list may quickly get you familiar with forms controls. If the following list doesn't make sense don't worry, we'll cover each topic in this and following tutorials.
+All controls share a few common properties and characteristics. The following list provides a high-level introduction to forms control similarities. If the list doesn't make sense don't worry, we'll cover each topic in this and following tutorials.
 
 * All can controls can be added to a StackPanel. Technically, any control can be added to any other control, but for this tutorial we'll keep things simple by adding only to a StackPanel.
 * All controls have a Visual property which can be used to position, size, and perform advance layout behavior. This Visual property is ultimately a GraphicalUiElement which provides access to all Gum layout properties.
@@ -27,6 +27,20 @@ All controls share a few common properties and characteristics. If you are famil
 * All controls support binding by assigning their BindingContext property. Children controls inherit BindingContext from their parents if the BindingContext is not explicitly assigned.
 
 For the rest of this tutorial we'll add a few of the most common controls to our project and show how to work with them. Note that for this tutorial I've removed the Button control from the previous tutorial.
+
+## Forms Control vs Visual
+
+As we'll see below, each forms control has a specific purpose. Buttons are clicked, Labels display read-only strings, and TextBoxes can be used to input text. Each control provides properties and events specific to its purpose, standardizing the way each works.&#x20;
+
+However, each control also wraps a Visual object which gives you full layout control. The Visual property is of type GraphicalUiElement, and it has access to the full Gum layout engine. For example, a button could be made to be as wide as its parents using the following code:
+
+```csharp
+// assuming MyButton is a valid Button:
+MyButton.Visual.Width = 0;
+MyButton.Visual.WidthUnits = DimensionUnitType.RelativeToContainer;
+```
+
+For more information about all of the properties available to GraphicalUiElement, see the [General Properties](../../../../gum-tool/gum-elements/general-properties/) section of the Gum tool - all properties in the tool are also available in code:
 
 ## Code Organization
 
