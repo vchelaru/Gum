@@ -9,6 +9,9 @@ using Gum.Plugins.ImportPlugin.Manager;
 using ToolsUtilities;
 using Gum.Mvvm;
 using GumFormsPlugin.Services;
+using Gum.Managers;
+using System.Reflection.Metadata.Ecma335;
+using Newtonsoft.Json;
 
 namespace GumFormsPlugin.ViewModels;
 
@@ -105,7 +108,7 @@ public class AddFormsViewModel : ViewModel
     }
 
 
-    private static bool GetIfShouldSave(Dictionary<string, FilePath> sourceDestinations)
+    private bool GetIfShouldSave(Dictionary<string, FilePath> sourceDestinations)
     {
         var existingFiles = sourceDestinations.Values.Where(item => item.Exists());
 
@@ -140,12 +143,41 @@ public class AddFormsViewModel : ViewModel
                 .Select(item => item.RelativeTo(GumState.Self.ProjectState.ProjectDirectory))
                 .ToList();
 
+            var standardFiles = filesWhichWouldGetOverwritten.Where(item => item.EndsWith(".gutx")).ToList();
+            var otherFiles = filesWhichWouldGetOverwritten.Except(standardFiles)
+                // Be sure to ToList it here to evaluate on the spot
+                .ToList();
+
+            RemoveUnmodifiedAndUnusedStandards(standardFiles);
 
 
-            var message = "Creating Forms objects would result in overwriting the following files"
-                + "\n\n" + string.Join("\n", filesWhichWouldGetOverwritten) + "\nProceed?";
 
-            shouldSave = GumCommands.Self.GuiCommands.ShowYesNoMessageBox(message) == System.Windows.MessageBoxResult.Yes;
+            string message = "";
+            if(standardFiles.Any())
+            {
+                message += "Forms Component styling requires modifications to the Standard Elements " +
+                    "in your project." +
+                    "\n\nIf you have made any modification to any of the Standard Elements, " +
+                    "this will overwrite that styling." +
+                    "\n\nThe following components need to be modified:" +
+                    "\n\n" + string.Join("\n", standardFiles);
+            }
+
+            if(otherFiles.Any())
+            {
+                message += "\n\nThe following files will also be ovewritten:" +
+                    "\n\n" + string.Join("\n", otherFiles);
+            }
+
+            if(standardFiles.Any() || otherFiles.Any())
+            {
+                message += "\n\nProceed?";
+                shouldSave = GumCommands.Self.GuiCommands.ShowYesNoMessageBox(message, caption:"Ovewrite files?") == System.Windows.MessageBoxResult.Yes;
+            }
+            else
+            {
+                shouldSave = true;
+            }
         }
         else
         {
@@ -156,4 +188,52 @@ public class AddFormsViewModel : ViewModel
         return shouldSave;
     }
 
+    private void RemoveUnmodifiedAndUnusedStandards(List<string> standardFiles)
+    {
+        List<string> toRemove = new List<string>();
+        foreach (var standardFile in standardFiles)
+        {
+            FilePath filePath = new FilePath(standardFile);
+            var standardElementName = filePath.CaseSensitiveNoPathNoExtension;
+            var standardElement = ObjectFinder.Self.GetStandardElement(standardElementName);
+
+            if (standardElement != null)
+            {
+                // See if the states differ:
+                var potentiallyModifiedDefault = standardElement.DefaultState;
+                var actualDefault = StandardElementsManager.Self.GetDefaultStateFor(standardElementName).Clone();
+                actualDefault.Variables.Sort((a, b) => a.Name.CompareTo(b.Name));
+
+                // JSON comparison requires we have Newtonsoft, or requires running a newer version
+                // of .NET to have the JSON serailzier present. This isn't currently supported in Gum
+                // tool, so we need to use XML:
+                //var differ = JsonConvert.SerializeObject(potentiallyModifiedDefault) != JsonConvert.SerializeObject(actualDefault);
+                FileManager.XmlSerialize(potentiallyModifiedDefault, out string potentiallyModifiedSerialized);
+                FileManager.XmlSerialize(actualDefault, out string actualDefaultSerialized);
+                var differ = potentiallyModifiedSerialized != actualDefaultSerialized;
+
+                if (!differ)
+                {
+                    differ = standardElement.Categories.Count > 0;
+                }
+                if(!differ)
+                {
+                    toRemove.Add(standardFile);
+                }
+
+                if(differ)
+                {
+                    // If it differs, we don't care if this isn't used anywhere so let's check
+                    var referencesToThis = ObjectFinder.Self.GetElementReferencesToThis(standardElement);
+
+                    if(referencesToThis.Count == 0)
+                    {
+                        toRemove.Add(standardFile);
+                    }
+                }
+            }
+        }
+
+        standardFiles.RemoveAll(item => toRemove.Contains(item));
+    }
 }

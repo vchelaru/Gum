@@ -44,6 +44,7 @@ namespace GameUiSamples.Screens
             }
         }
         public TextBoxRuntime TextBoxInstance_with_space { get; protected set; }
+        public SpriteRuntime SpriteInstance { get; protected set; }
 
         public float TextBoxInstancewithspaceX
         {
@@ -65,6 +66,7 @@ namespace GameUiSamples.Screens
         public override void AfterFullCreation()
         {
             TextBoxInstance_with_space = this.GetGraphicalUiElementByName("TextBoxInstance with space") as TextBoxRuntime;
+            SpriteInstance = this.GetGraphicalUiElementByName("SpriteInstance") as SpriteRuntime;
             CustomInitialize();
         }
         //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

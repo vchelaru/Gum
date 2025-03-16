@@ -17,6 +17,55 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>float</Type>
+      <Name>SpriteInstance.Height</Name>
+      <Value xsi:type="xsd:float">49</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <IsFile>true</IsFile>
+      <Type>string</Type>
+      <Name>SpriteInstance.SourceFile</Name>
+      <Value xsi:type="xsd:string">..\..\..\..\..\..\..\onedrive\desktop\5_skiablend.png</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>TextureAddress</Type>
+      <Name>SpriteInstance.TextureAddress</Name>
+      <Value xsi:type="xsd:int">2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>SpriteInstance.TextureHeightScale</Name>
+      <Value xsi:type="xsd:float">1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>SpriteInstance.TextureWidthScale</Name>
+      <Value xsi:type="xsd:float">1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>SpriteInstance.Width</Name>
+      <Value xsi:type="xsd:float">48</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>SpriteInstance.X</Name>
+      <Value xsi:type="xsd:float">-82</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>SpriteInstance.Y</Name>
+      <Value xsi:type="xsd:float">58</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>TestCategory</Type>
       <Name>TestCategoryState</Name>
       <SetsValue>true</SetsValue>
@@ -52,6 +101,13 @@
       <Value xsi:type="xsd:float">44</Value>
       <SetsValue>true</SetsValue>
     </Variable>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>SpriteInstance.AnimationFrames</Name>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value />
+    </VariableList>
   </State>
   <Category>
     <Name>TestCategory</Name>
@@ -74,6 +130,11 @@
   <Instance>
     <Name>TextBoxInstance with space</Name>
     <BaseType>Controls/TextBox</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>SpriteInstance</Name>
+    <BaseType>Sprite</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Behaviors />
