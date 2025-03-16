@@ -49,7 +49,7 @@ customText.AddToManagers(SystemManagers.Default, null);
 
 For information on creating your own .fnt file with Bitmap Font Generator, see the [Use Custom Font](../../../gum-tool/gum-elements/text/use-custom-font.md) page.
 
-This code assumes a font file named WhitePeaberryOutline.fnt is located in the `Content/WhitePeaberryOutline` folder. By default all Gum content loading is performed relative to the Content folder; however, if UseCustomFont is set to false, then all font loading is performed from the FontCache folder. See the [Font Component Values](textruntime.md#font-component-values) section for more information on loading from the FontCache folder. See the [File Loading](../file-loading.md) page for more information about loading files in general.
+This code assumes a font file named WhitePeaberryOutline.fnt is located in the `Content/WhitePeaberryOutline` folder. By default all Gum content loading is performed relative to the Content folder; however, if UseCustomFont is set to false, then all font loading is performed from the FontCache folder. See the [Font Component Values](./#font-component-values) section for more information on loading from the FontCache folder. See the [File Loading](../../monogame/file-loading.md) page for more information about loading files in general.
 
 Note that .fnt files reference one or more image files, so the image file must also be added to the correct folder. In this case, the WhitePeaberryOutline.fnt file references a WhitePeaberryOutline.png file, so both files are in the same folder.
 
@@ -59,7 +59,7 @@ Also, note that files are loaded from-file rather than using the content pipelin
 
 <figure><img src="../../../.gitbook/assets/FontCopyIfNewer.png" alt=""><figcaption><p>Copy if newer property set</p></figcaption></figure>
 
-The easiest way to mark all content as "Copy to Output Directory" is to use wildcard items in your .csproj. This is explained in the [Loading .gumx (Gum project)](../loading-.gumx-gum-project.md#adding-the-gum-project-files-to-your-.csproj) page.
+The easiest way to mark all content as "Copy to Output Directory" is to use wildcard items in your .csproj. This is explained in the [Loading .gumx (Gum project)](../../monogame/loading-.gumx-gum-project.md#adding-the-gum-project-files-to-your-.csproj) page.
 
 ### Assigning BitmapFont
 
@@ -94,7 +94,7 @@ text.FontSize = 24;
 
 This results in the TextRuntime object searching for a font named `FontArial24.fnt`.
 
-As mentioned before, when UseCustomFont is set to false the Gum runtime looks for the font in the FontCache folder. For this particular example the font would be located at `Content/FontCache/FontArial24.fnt`. Note that if your Gum project is not located at the content root, then your FontCache folder will not be directly in the Content folder either. To fix this problem using the FileManager's RelativeDirectory, see the [File Loading](../file-loading.md) page.
+As mentioned before, when UseCustomFont is set to false the Gum runtime looks for the font in the FontCache folder. For this particular example the font would be located at `Content/FontCache/FontArial24.fnt`. Note that if your Gum project is not located at the content root, then your FontCache folder will not be directly in the Content folder either. To fix this problem using the FileManager's RelativeDirectory, see the [File Loading](../../monogame/file-loading.md) page.
 
 The following additional suffixes (in order listed below) are added to the font name.
 

@@ -46,5 +46,5 @@ for(int i = 0; i < 10; i++)
 
 <figure><img src="../../../../.gitbook/assets/20_15 51 35.png" alt=""><figcaption></figcaption></figure>
 
-The code above shows how to access a TextRuntime instance by calling GetGrahpicalUiElementByName. One the TextRuntime has been obtained, any property can be modified. The code above changes `Red`, `Green`, and `Blue`, but any property could be modified including changing the TextRuntime's font. For more information on working with TextRuntime instances, see the [TextRuntime page](../../runtime-objects-graphicaluielement-deriving/textruntime.md).
+The code above shows how to access a TextRuntime instance by calling GetGrahpicalUiElementByName. One the TextRuntime has been obtained, any property can be modified. The code above changes `Red`, `Green`, and `Blue`, but any property could be modified including changing the TextRuntime's font. For more information on working with TextRuntime instances, see the [TextRuntime page](../../../gum-code-reference/textruntime/).
 

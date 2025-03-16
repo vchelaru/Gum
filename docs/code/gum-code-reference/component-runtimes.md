@@ -9,7 +9,7 @@ Components in a Gum project can be instantiated in custom code. Custom component
 
 ## Code Example - Instantiating a Component
 
-Before instantiating a component from a Gum project, you must first have your Gum project loaded. For more information see the [Loading a Gum Project page](../loading-.gumx-gum-project.md).
+Before instantiating a component from a Gum project, you must first have your Gum project loaded. For more information see the [Loading a Gum Project page](../monogame/loading-.gumx-gum-project.md).
 
 Once you have instantiated your project, you can create a component as shown in the following code:
 
@@ -31,11 +31,11 @@ var componentRuntime = componentSave.ToGraphicalUiElement(SystemManagers.Default
 
 Note that the name passed to the First method should match the name given in Gum. For example, in this case the code searches for a component named ColoredRectangleComponent.
 
-<figure><img src="../../../.gitbook/assets/image (41).png" alt=""><figcaption><p>ColoredRectangleComponent in Gum</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (41).png" alt=""><figcaption><p>ColoredRectangleComponent in Gum</p></figcaption></figure>
 
 If a component is in a folder, then use the qualified name relative to the Components folder. For example, the following component's name at runtime is `"Buttons/StandardButton"`
 
-<figure><img src="../../../.gitbook/assets/image (42).png" alt=""><figcaption><p>StandardButton component in the Buttons folder in Gum</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (42).png" alt=""><figcaption><p>StandardButton component in the Buttons folder in Gum</p></figcaption></figure>
 
 The ToGraphicalUiElement method can automatically add the component to the root for rendering, or alternatively it can be added to an existing container. If adding to an existing container, then the ToGraphicalUiElement's addToManagers parameter should be false as shown in the following code:
 
@@ -126,7 +126,7 @@ newComponentRuntime.RemoveFromManagers();
 
 ## Troubleshooting Component Creation
 
-If your component is not visible, this may be a file issue. By default Gum project loading will not throw exceptions on missing files, and it will attempt to re-create missing file components. For more information, see the [Troubleshooting section in the Loading .gumx page](../loading-.gumx-gum-project.md#troubleshooting-gum-project-loading).
+If your component is not visible, this may be a file issue. By default Gum project loading will not throw exceptions on missing files, and it will attempt to re-create missing file components. For more information, see the [Troubleshooting section in the Loading .gumx page](../monogame/loading-.gumx-gum-project.md#troubleshooting-gum-project-loading).
 
 ## SetProperty
 
@@ -143,7 +143,7 @@ myTextInstance.SetProperty("Text", "I'm set in code");
 
 If a component has an exposed variable, then this variable can be assigned through SetProperty. For example, consider the following component which exposes its Text variable:
 
-<figure><img src="../../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Component exposing a Text variable</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (2) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Component exposing a Text variable</p></figcaption></figure>
 
 This can be assigned through the SetProperty. Be sure to use the name exactly as it appears in Gum:
 
