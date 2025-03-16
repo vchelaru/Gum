@@ -13,10 +13,10 @@ Most runtimes create a Cursor internally.&#x20;
 The cursor can be accessed through GumService.
 
 ```csharp
-var cursor = GumService.Self.Cursor;
+var cursor = GumService.Default.Cursor;
 ```
 
-GumService.Self.Cursor was introduced in March 2025. Older versions of Gum can access the cursor through FormsUtilities.
+GumService.Default.Cursor was introduced in March 2025. Older versions of Gum can access the cursor through FormsUtilities.
 
 ```csharp
 var cursor = FormsUtilities.Cursor;
@@ -40,7 +40,7 @@ The WindowOver property can be used to detect if clicks should be consumed or pa
 The following code shows how to check if the user is over Gum UI.
 
 ```csharp
-var cursor = FormsUtilities.Cursor;
+var cursor = GumService.Default.Cursor;
 var isOverUi = cursor.WindowOver != null;
 
 if(isOverUi == false)
