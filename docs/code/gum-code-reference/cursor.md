@@ -16,7 +16,7 @@ The cursor can be accessed through GumService.
 var cursor = GumService.Default.Cursor;
 ```
 
-GumService.Self.Cursor was introduced in March 2025. Older versions of Gum can access the cursor through FormsUtilities.
+GumService.Default.Cursor was introduced in March 2025. Older versions of Gum can access the cursor through FormsUtilities.
 
 ```csharp
 var cursor = FormsUtilities.Cursor;
