@@ -1,6 +1,7 @@
 ﻿using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Wireframe;
+using GumRuntime;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGameGum.Forms;
@@ -188,4 +189,13 @@ public static class GraphicalUiElementExtensionMethods
     {
         element.Parent = null;
     }
+}
+
+public static class ElementSaveExtensionMethods
+{
+    public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave)
+    {
+        return elementSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
+    }
+
 }

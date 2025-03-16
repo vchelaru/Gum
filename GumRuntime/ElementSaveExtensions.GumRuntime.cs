@@ -110,7 +110,8 @@ namespace GumRuntime
             return toReturn;
         }
 
-        public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave, ISystemManagers systemManagers,
+        public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave, 
+            ISystemManagers systemManagers,
             bool addToManagers, string genericType = null)
         {
             GraphicalUiElement toReturn = CreateGueForElement(elementSave, genericType: genericType);
