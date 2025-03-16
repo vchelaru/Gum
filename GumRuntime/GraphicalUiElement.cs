@@ -140,7 +140,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     protected float mHeight;
     float mRotation;
 
-    IRenderableIpso mParent;
+    IRenderableIpso? mParent;
 
     protected bool mIsLayoutSuspended = false;
     public bool IsLayoutSuspended => mIsLayoutSuspended;
@@ -926,7 +926,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
-    public IRenderableIpso Parent
+    public IRenderableIpso? Parent
     {
         get { return mParent; }
         set

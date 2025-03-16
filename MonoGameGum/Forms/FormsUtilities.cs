@@ -164,6 +164,7 @@ public class FormsUtilities
         else
         {
 
+
             if(roots != null)
             {
                 innerList.AddRange(roots);
@@ -229,7 +230,7 @@ public class FormsUtilities
 #endif
     }
 
-    static void SetDimensionsToCanvas(InteractiveGue container)
+    internal static void SetDimensionsToCanvas(InteractiveGue container)
     {
         // Just to be safe, we'll set X and Y:
         container.X = 0;

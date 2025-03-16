@@ -38,8 +38,12 @@ public class GumService
     public GameTime GameTime { get; private set; }
 
     public Cursor Cursor => FormsUtilities.Cursor;
+
     public Keyboard Keyboard => FormsUtilities.Keyboard;
+
     public GamePad[] Gamepads => FormsUtilities.Gamepads;
+
+    public InteractiveGue Root { get; private set; } = new InteractiveGue();
 
     #region Initialize
 
@@ -65,7 +69,15 @@ public class GumService
         SystemManagers.Default.Initialize(graphicsDevice, fullInstantiation: true);
         FormsUtilities.InitializeDefaults();
 
-        GumProjectSave gumProject = null;
+        Root.Width = 0;
+        Root.WidthUnits = DimensionUnitType.RelativeToParent;
+        Root.Height = 0;
+        Root.HeightUnits = DimensionUnitType.RelativeToParent;
+        Root.Name = "Main Root";
+
+        Root.AddToManagers();
+
+        GumProjectSave? gumProject = null;
 
         if (!string.IsNullOrEmpty(gumProjectFile))
         {
@@ -129,8 +141,12 @@ public class GumService
 
     #region Update
 
-    public void Update(Game game, GameTime gameTime) =>
-        Update(game, gameTime, (GraphicalUiElement)null);
+    public void Update(Game game, GameTime gameTime)
+    {
+        FormsUtilities.SetDimensionsToCanvas(this.Root);
+        Update(game, gameTime, this.Root);
+
+    }
 
     public void Update(Game game, GameTime gameTime, Forms.Controls.FrameworkElement root) =>
         Update(game, gameTime, root.Visual);
@@ -159,4 +175,17 @@ public class GumService
     }
 
     #endregion
+}
+
+public static class GraphicalUiElementExtensionMethods
+{
+    public static void AddToRoot(this GraphicalUiElement element)
+    {
+        GumService.Default.Root.Children.Add(element);
+    }
+
+    public static void RemoveFromRoot(this GraphicalUiElement element)
+    {
+        element.Parent = null;
+    }
 }
