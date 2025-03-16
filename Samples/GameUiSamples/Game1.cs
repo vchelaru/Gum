@@ -4,6 +4,7 @@ using GumRuntime;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MonoGameGum;
 using RenderingLibrary;
 using System;
 
@@ -13,8 +14,6 @@ public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
-
-    public static GraphicalUiElement Root;
 
     public Game1()
     {
@@ -35,9 +34,8 @@ public class Game1 : Game
     {
         var gumProject = MonoGameGum.GumService.Default.Initialize(this, "GumProject/GameUiSamplesgumProject.gumx");
 
-        Root = gumProject.Screens
-            .Find(item => item.Name == "MainMenu")
-            .ToGraphicalUiElement(SystemManagers.Default, addToManagers:true);
+        var startScreen = new MainMenuRuntime();
+        startScreen.AddToRoot();
 
         base.Initialize();
     }
@@ -51,10 +49,12 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
+        MonoGameGum.GumService.Default.Update(this, gameTime);
 
-        MonoGameGum.GumService.Default.Update(this, gameTime, Root);
-
-        (Root as IUpdateScreen)?.Update(gameTime);
+        foreach(var item in GumService.Default.Root.Children)
+        {
+            (item as IUpdateScreen)?.Update(gameTime);
+        }
 
         base.Update(gameTime);
     }

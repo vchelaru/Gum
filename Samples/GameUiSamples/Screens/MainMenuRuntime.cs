@@ -14,6 +14,7 @@ using System.ComponentModel.Design.Serialization;
 using GumRuntime;
 using RenderingLibrary;
 using GameUiSamples.Screens.FrbClicker;
+using MonoGameGum;
 namespace GameUiSamples.Screens;
 
 partial class MainMenuRuntime : Gum.Wireframe.BindableGue
@@ -56,8 +57,7 @@ partial class MainMenuRuntime : Gum.Wireframe.BindableGue
 
     private void GoToScreen(GraphicalUiElement newScreen)
     {
-        Game1.Root.RemoveFromManagers();
-        newScreen.AddToManagers();
-        Game1.Root = newScreen;
+        GumService.Default.Root.Children.Clear();
+        newScreen.AddToRoot();
     }
 }

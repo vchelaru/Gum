@@ -15,6 +15,7 @@ using System;
 using MonoGameGum.Forms;
 using GumRuntime;
 using RenderingLibrary;
+using MonoGameGum;
 namespace GameUiSamples.Screens;
 
 partial class HollowKnightHudScreenRuntime : Gum.Wireframe.BindableGue, IUpdateScreen
@@ -45,9 +46,9 @@ partial class HollowKnightHudScreenRuntime : Gum.Wireframe.BindableGue, IUpdateS
 
         this.ExitButton.FormsControl.Click += (_, _) =>
         {
-            Game1.Root.RemoveFromManagers();
-            Game1.Root = ObjectFinder.Self.GetScreen("MainMenu")
-                .ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
+            GumService.Default.Root.Children.Clear();
+            var mainMenu = new MainMenuRuntime();
+            mainMenu.AddToRoot();
         };
             
 

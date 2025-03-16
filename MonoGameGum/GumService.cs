@@ -43,7 +43,7 @@ public class GumService
 
     public GamePad[] Gamepads => FormsUtilities.Gamepads;
 
-    public InteractiveGue Root { get; private set; } = new InteractiveGue();
+    public InteractiveGue Root { get; private set; } = new ContainerRuntime();
 
     #region Initialize
 

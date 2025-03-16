@@ -16,6 +16,7 @@ using MonoGameGum.Forms;
 using Microsoft.Xna.Framework.Input;
 using System;
 using GumRuntime;
+using MonoGameGum;
 namespace GameUiSamples.Screens
 {
     partial class StardewHotbarScreenRuntime : Gum.Wireframe.BindableGue, IUpdateScreen
@@ -30,9 +31,9 @@ namespace GameUiSamples.Screens
             {
                 SetZoom(1);
 
-                Game1.Root.RemoveFromManagers();
-                Game1.Root = ObjectFinder.Self.GetScreen("MainMenu")
-                    .ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
+                GumService.Default.Root.Children.Clear();
+                var mainMenu = new MainMenuRuntime();
+                mainMenu.AddToRoot();
             };
 
             StatusInfo.Text = "Click below or press the number keys";

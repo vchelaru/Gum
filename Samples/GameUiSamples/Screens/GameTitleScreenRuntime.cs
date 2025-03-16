@@ -17,6 +17,7 @@ using System;
 using GumRuntime;
 using RenderingLibrary;
 using Microsoft.Xna.Framework;
+using MonoGameGum;
 namespace GameUiSamples.Screens;
 
 partial class GameTitleScreenRuntime : Gum.Wireframe.BindableGue, IUpdateScreen
@@ -40,9 +41,9 @@ partial class GameTitleScreenRuntime : Gum.Wireframe.BindableGue, IUpdateScreen
 
     private void HandleExitClicked(object sender, EventArgs e)
     {
-        Game1.Root.RemoveFromManagers();
-        Game1.Root = ObjectFinder.Self.GetScreen("MainMenu")
-            .ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
+        GumService.Default.Root.Children.Clear();
+        var mainMenu = new MainMenuRuntime();
+        mainMenu.AddToRoot();
     }
 
     public void Update(GameTime gameTime)
