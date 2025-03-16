@@ -5310,7 +5310,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// </summary>
     /// <param name="names">The names to search for, allowing retrieval multiple levels deep.</param>
     /// <returns>The found element, or null if no match is found.</returns>
-    public GraphicalUiElement GetGraphicalUiElementByName(params string[] names)
+    public GraphicalUiElement? GetGraphicalUiElementByName(params string[] names)
     {
         if (names.Length > 0)
         {

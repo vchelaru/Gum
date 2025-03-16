@@ -281,9 +281,12 @@ public class ListBox : ItemsControl, IInputReceiver
     /// this event when a button is pushed on an item.
     /// </remarks>
     public event Action<Buttons> ControllerButtonPushed;
-    public event Action<int> GenericGamepadButtonPushed;
 
-    #endregion
+#if FRB
+    public event Action<int> GenericGamepadButtonPushed;
+#endif
+
+#endregion
 
     #region Initialize Methods
 
@@ -379,11 +382,11 @@ public class ListBox : ItemsControl, IInputReceiver
 
                 if (listBoxFormsConstructor == null)
                 {
-    #if FRB
+#if FRB
                     const string TypeName = "GraphicalUiElement";
-    #else
+#else
                     const string TypeName = "InteractiveGue";
-    #endif
+#endif
                     string message =
                         $"Could not find a constructor for {ItemFormsType} which takes a single {TypeName} argument. " +
                         $"If you defined {ItemFormsType} without specifying a constructor, you need to add a constructor which takes a GraphicalUiElement and calls the base constructor.";

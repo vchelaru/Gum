@@ -434,7 +434,7 @@ namespace Gum.DataTypes
 
             foreach (ElementReference reference in StandardElementReferences)
             {
-                StandardElementSave toAdd = null;
+                StandardElementSave? toAdd = null;
                 try
                 {
                     toAdd = reference.ToElementSave<StandardElementSave>(projectRootDirectory, StandardExtension, result);

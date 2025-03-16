@@ -827,10 +827,10 @@ namespace SkiaGum.Renderables
 
                 switch (GradientOuterRadiusUnits)
                 {
-                    case Gum.DataTypes.DimensionUnitType.Percentage:
+                    case Gum.DataTypes.DimensionUnitType.PercentageOfParent:
                         effectiveOuterRadius = Width * GradientOuterRadius / 100;
                         break;
-                    case Gum.DataTypes.DimensionUnitType.RelativeToContainer:
+                    case Gum.DataTypes.DimensionUnitType.RelativeToParent:
                         effectiveOuterRadius = Width / 2 + GradientOuterRadius;
                         break;
                 }
