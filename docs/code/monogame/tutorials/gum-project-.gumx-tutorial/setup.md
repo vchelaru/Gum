@@ -57,7 +57,7 @@ This tutorial will not use the DemoScreenGum, so leave this option unchecked and
 
 <figure><img src="../../../../.gitbook/assets/image (7) (1).png" alt=""><figcaption><p>Leave Include DemoScreenGum unchecked</p></figcaption></figure>
 
-Forms components modify your default components (such as Text) for styling. Click OK to apply these changes.
+If asked, click **Yes** when asked about overwriting the default standards.
 
 <figure><img src="../../../../.gitbook/assets/image (10).png" alt=""><figcaption><p>Click, Yes to modify standards with the default Forms styling</p></figcaption></figure>
 
@@ -114,9 +114,13 @@ The steps to do this are:
 Now that we have a Gum project added to the .csproj, we can load the Gum project. We need to add code to Initialize, Update, and Draw. A simplified Game class with these calls would look like the following code:
 
 ```csharp
+using MonoGameGum;
+
 public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
+    GumService Gum => GumService.Default;
+    
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
@@ -126,7 +130,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        var gumProject = MonoGameGum.GumService.Default.Initialize(
+        var gumProject = Gum.Initialize(
             this,
             // This is relative to Content:
             "GumProject/GumProject.gumx");
@@ -136,14 +140,14 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
-        MonoGameGum.GumService.Default.Update(this, gameTime);
+        Gum.Update(this, gameTime);
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
-        MonoGameGum.GumService.Default.Draw();
+        Gum.Draw();
         base.Draw(gameTime);
     }
 }
@@ -154,7 +158,7 @@ The code above has the following three calls on GumService:
 * Initialize - this loads the argument Gum project and sets appropriate defaults. Note that we are loading a Gum project here, but the gum project is optional. Projects which are using Gum only in code would not pass the second parameter.
 
 ```csharp
-        var gumProject = MonoGameGum.GumService.Default.Initialize(
+        var gumProject = Gum.Initialize(
             this,
             // This is relative to Content:
             "GumProject/GumProject.gumx");
@@ -163,13 +167,13 @@ The code above has the following three calls on GumService:
 * Update - this updates the internal keyboard, mouse, and gamepad instances and applies default behavior to any components which implement Forms. For example, if a Button is added to the Screen, this code is responsible for checking if the cursor is overlapping the Button and adjusting the highlight/pressed state appropriately.
 
 ```csharp
-MonoGameGum.GumService.Default.Update(this, gameTime);
+Gum.Update(this, gameTime);
 ```
 
 * Draw - this method draws all Gum objects to the screen. Currently this method does not perform any drawing, but in the next tutorial we'll be adding a Gum screen which is drawn in this method.
 
 ```csharp
-MonoGameGum.GumService.Default.Draw();
+Gum.Draw();
 ```
 
 ## Conclusion

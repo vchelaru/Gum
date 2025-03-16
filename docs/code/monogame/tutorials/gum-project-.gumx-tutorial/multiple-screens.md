@@ -59,10 +59,7 @@ The first part of your Game1 class might look like the following code:
 public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
-
-// Start of new code
-    public static GraphicalUiElement Root;
-// End of new code
+    GumService Gum => GumService.Default;    
 
     public Game1()
     {
@@ -73,7 +70,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        var gumProject = MonoGameGum.GumService.Default.Initialize(
+        var gumProject = Gum.Initialize(
             this,
             // This is relative to Content:
             "GumProject/GumProject.gumx");
@@ -82,8 +79,9 @@ public class Game1 : Game
         var screen = gumProject.Screens.Find(item => item.Name == "Screen1");
 // End of new code
 
-        Root = screen.ToGraphicalUiElement(
-            RenderingLibrary.SystemManagers.Default, addToManagers: true);
+        var screenRuntime = screen.ToGraphicalUiElement(
+            RenderingLibrary.SystemManagers.Default, addToManagers: false);
+        screenRuntime.AddToRoot();
 
         base.Initialize();
     }
@@ -101,11 +99,12 @@ partial class Screen1Runtime : Gum.Wireframe.GraphicalUiElement
     {
         this.GetFrameworkElementByName<Button>("ButtonStandardInstance").Click += (_, _) =>
         {
-            Game1.Root.RemoveFromManagers();
+            GumService.Default.Root.Clear();
             var screen = ObjectFinder.Self.GumProjectSave.Screens.Find(
                 item => item.Name == "Screen2");
-            Game1.Root = screen.ToGraphicalUiElement(
-                RenderingLibrary.SystemManagers.Default, addToManagers: true);
+            var screenRuntime = screen.ToGraphicalUiElement(
+                RenderingLibrary.SystemManagers.Default, addToManagers: false);
+            screenRuntime.AddToRoot();
         };
     }
 }
@@ -118,11 +117,12 @@ partial class Screen2Runtime : Gum.Wireframe.GraphicalUiElement
     {
         this.GetFrameworkElementByName<Button>("ButtonStandardInstance").Click += (_, _) =>
         {
-            Game1.Root.RemoveFromManagers();
+            GumService.Default.Root.Clear();
             var screen = ObjectFinder.Self.GumProjectSave.Screens.Find(
                 item => item.Name == "Screen1");
-            Game1.Root = screen.ToGraphicalUiElement(
-                RenderingLibrary.SystemManagers.Default, addToManagers: true);
+            var screenRuntime = screen.ToGraphicalUiElement(
+                RenderingLibrary.SystemManagers.Default, addToManagers: false);
+            screenRuntime.AddToRoot();
         };
 
     }
@@ -135,14 +135,9 @@ Each screen removes itself from managers when its button is clicked, then create
 
 ### Showing No Screen
 
-This tutorial assumes that a Gum screen is always displayed. Whenever the Screen changes, the Game1.Root is changed to a new screen.
+This tutorial assumes that a Gum screen is always displayed.
 
-Games can also completely remove Gum screens altogether. To do this:
-
-1. Call `Game1.Root.RemoveFromManagers();` Of course, if you have organized your code differently, you will need to access the Root object through whatever pattern you have implemented (such as a service).
-2. Set `Game1.Root = null;` So that you can check for null when calling Update.
-
-No changes are needed to the Update method - `GumService.Update` can receive a null Root object.
+Games can also completely remove Gum screens altogether. To do this, do not create a new screen after calling `GumService.Default.Root.Clear();`
 
 ### Conclusion
 

@@ -72,13 +72,14 @@ To load a Gum Project:
 ```csharp
 protected override void Initialize()
 {
-    var gumProject = MonoGameGum.GumService.Default.Initialize(
+    var gumProject = Gum.Initialize(
         this, 
         "GumProject/GumProject.gumx");
 
     // This assumes that your project has at least 1 screen
-    gumProject.Screens.First().ToGraphicalUiElement(
-        SystemManagers.Default, addToManagers:true);
+    var screenRuntime = gumProject.Screens.First().ToGraphicalUiElement(
+        SystemManagers.Default, addToManagers:false);
+    screenRuntime.AddToRoot();
     
     base.Initialize();
 }
@@ -87,7 +88,7 @@ protected override void Initialize()
 The code above loads the Gum project using the file path `"GumProject/GumProject.gumx"`. By default this path is relative to your game's Content folder. If your Gum project is not part of the Content folder you can still load it by using the "../" prefix to step out of the Content folder. For example, the following code would load a Gum project located at `<exe location>/GumProject/GumProject.gumx`:
 
 ```csharp
-MonoGameGum.GumService.Default.Initialize(
+Gum.Initialize(
     this, "../GumProject/GumProject.gumx");
 ```
 
@@ -95,18 +96,7 @@ MonoGameGum.GumService.Default.Initialize(
 
 Once a Gum project is loaded, all of its screens and components can be accessed through the object returned from the Initialize method. The code above stores the project in a variable called `gumProject`. Any screen or component can be converted to a GraphicalUiElement, which is the visual object that displays in game.
 
-The code in the previous section creates a `GraphicalUiElement` from the first screen in the project. Note that the `ToGraphicalUiElement` method has an `addToManagers` parameter which determines whether the GraphicalUiElement is added to managers. If a `GraphicalUiElement` is not added to managers, it does not appear on screen.
-
-Alternatively, the `AddToManagers` method can be explicitly called as shown in the following code:
-
-```csharp
-var gumScreen = gumProject.Screens.First().ToGraphicalUiElement(
-    SystemManagers.Default, addToManagers:false);
-
-// AddToManagers provides more control, such as delaying addition, or adding 
-// a GraphicalUiElement to a Layer
-gumScreen.AddToManagers(SystemManagers.Default, layer:null);
-```
+The code in the previous section creates a `GraphicalUiElement` from the first screen in the project. Note that the `ToGraphicalUiElement` method has an `addToManagers` parameter which determines whether the GraphicalUiElement is added to managers. This is almost always set to false since we add the created screen to the root container, which in turn has already been added to managers.
 
 For an example of a Game1.cs file which loads a project file, see the MonoGameGumFromFile: [https://github.com/vchelaru/Gum/blob/0e266942560e585359f019ac090a6c1010621c0b/Samples/MonoGameGumFromFile/MonoGameGumFromFile/Game1.cs#L76-L82](https://github.com/vchelaru/Gum/blob/0e266942560e585359f019ac090a6c1010621c0b/Samples/MonoGameGumFromFile/MonoGameGumFromFile/Game1.cs#L76-L82)
 
@@ -116,12 +106,13 @@ You can get a reference to elements within the screen by calling `GetGraphicalUi
 
 ```csharp
 // Load the gum project (see code above)
-var screen = gumProject.Screens.First().ToGraphicalUiElement(
+var screenRuntime = gumProject.Screens.First().ToGraphicalUiElement(
   SystemManagers.Default, 
-  addToManagers:true);
+  addToManagers:false);
+screenRuntime.AddToRoot();
 
 // Items in the screen can be accessed using the GetGraphicalUiElementByName method:
-var child = screen.GetGraphicalUiElementByName("TitleInstance");
+var child = screenRuntime .GetGraphicalUiElementByName("TitleInstance");
 
 // All GraphicalUiElements have common properties, like X:
 child.X += 30;
@@ -137,11 +128,8 @@ A full Game1 class which loads a project might look like this:
 public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
-    // Gum renders and updates using a hierarchy. At least
-    // one object must have its AddToManagers method called.
-    // If not loading from-file, then the easiest way to do this
-    // is to create a ContainerRuntime and add it to the managers.
-    GraphicalUiElement Root;
+    GumService Gum => GumService.Default;
+    
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
@@ -150,25 +138,26 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        var gumProject = MonoGameGum.GumService.Default.Initialize(
+        var gumProject = Gum.Initialize(
             this, "GumProject/GumProject.gumx");
         // This assumes that your project has at least 1 screen
-        Root = gumProject.Screens.First().ToGraphicalUiElement(
-            SystemManagers.Default, addToManagers: true);
+        var screenRuntime = gumProject.Screens.First().ToGraphicalUiElement(
+            SystemManagers.Default, addToManagers: false);
+        screenRuntime.AddToRoot();
 
         base.Initialize();
     }
 
     protected override void Update(GameTime gameTime)
     {
-        MonoGameGum.GumService.Default.Update(this, gameTime, Root);
+        Gum.Update(this, gameTime);
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
-        MonoGameGum.GumService.Default.Draw();
+        Gum.Draw();
         base.Draw(gameTime);
     }
 }

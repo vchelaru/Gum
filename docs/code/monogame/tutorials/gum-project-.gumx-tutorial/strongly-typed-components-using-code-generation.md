@@ -53,7 +53,7 @@ One way to interact with this element is to call GetGraphicalUiElementByName. Yo
 
 ```csharp
 var scoreComponentInstance = 
-    Root.GetGraphicalUiElementByName("ScoreComponentInstance");
+    screenRuntime.GetGraphicalUiElementByName("ScoreComponentInstance");
 var scoreValue = 
     scoreComponentInstance.GetGraphicalUiElementByName("ScoreValue") as TextRuntime;
 scoreValue.Text = "999";
@@ -129,7 +129,7 @@ See below for a more detailed discussion about generated and custom code.
 This component can be used in code as shown in the following snippet:
 
 ```csharp
-var scoreComponentInstance = Root.GetGraphicalUiElementByName("ScoreComponentInstance")
+var scoreComponentInstance = screenRuntime.GetGraphicalUiElementByName("ScoreComponentInstance")
     as ScoreComponentRuntime;
 scoreComponentInstance.ScoreValue.Text = "999";
 ```

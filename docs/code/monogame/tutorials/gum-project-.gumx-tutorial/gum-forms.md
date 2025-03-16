@@ -28,7 +28,7 @@ In other words, you can reset your game screen to be as shown in the following c
 public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
-    GraphicalUiElement Root;
+    GumService Gum => GumService.Default;
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
@@ -38,29 +38,30 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        var gumProject = MonoGameGum.GumService.Default.Initialize(
+        var gumProject = Gum.Initialize(
             this,
             // This is relative to Content:
             "GumProject/GumProject.gumx");
             
         var screen = gumProject.Screens.Find(item => item.Name == "TitleScreen");
         
-        Root = screen.ToGraphicalUiElement(
-            RenderingLibrary.SystemManagers.Default, addToManagers: true);
-
+        var screenRuntime = screen.ToGraphicalUiElement(
+            RenderingLibrary.SystemManagers.Default, addToManagers: false);
+        screenRuntime.AddToRoot();
+        
         base.Initialize();
     }
 
     protected override void Update(GameTime gameTime)
     {
-        MonoGameGum.GumService.Default.Update(this, gameTime, Root);
+        Gum.Update(this, gameTime);
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
-        MonoGameGum.GumService.Default.Draw();
+        Gum.Draw();
         base.Draw(gameTime);
     }
 }
@@ -93,17 +94,18 @@ We can interact with any of the Forms instances by using `GetFrameworkElementByN
 ```diff
 protected override void Initialize()
 {
-    var gumProject = MonoGameGum.GumService.Default.Initialize(
+    var gumProject = Gum.Initialize(
         this,
         // This is relative to Content:
         "GumProject/GumProject.gumx");      
         
     var screen = gumProject.Screens.Find(item => item.Name == "TitleScreen");
         
-    Root = screen.ToGraphicalUiElement(
-        RenderingLibrary.SystemManagers.Default, addToManagers: true);
+    var screenRuntime = screen.ToGraphicalUiElement(
+        RenderingLibrary.SystemManagers.Default, addToManagers: false);
+    screenRuntime.AddToRoot();
 
-+    var listBox = Root.GetFrameworkElementByName<ListBox>("ListBoxInstance");
++    var listBox = screenRuntime.GetFrameworkElementByName<ListBox>("ListBoxInstance");
 +    for(int i = 0; i < 50; i++)
 +    {
 +        listBox.Items.Add("Item number " + i.ToString());

@@ -44,7 +44,7 @@ To show the screen in game, modify the Initialize method as shown in the followi
 
 <pre class="language-diff" data-line-numbers><code class="lang-diff">protected override void Initialize()
 {
-    var gumProject = MonoGameGum.GumService.Default.Initialize(
+    var gumProject = Gum.Initialize(
         this,
         // This is relative to Content:
         "GumProject/GumProject.gumx");
@@ -52,80 +52,23 @@ To show the screen in game, modify the Initialize method as shown in the followi
 <strong>+    // the Screens list contains all screens. Find the screen you want
 </strong>+    var screen = gumProject.Screens.Find(item => item.Name == "TitleScreen");
 +    // Calling GraphicalUiElement creates the visuals for the screen
-<strong>+    screen.ToGraphicalUiElement(
-</strong><strong>+        RenderingLibrary.SystemManagers.Default, addToManagers: true);
+<strong>+    var screenRuntime = screen.ToGraphicalUiElement(
+</strong><strong>+        RenderingLibrary.SystemManagers.Default, addToManagers: false);
+</strong><strong>+    screenRuntime.AddToRoot();
 </strong>
-
     base.Initialize();
 }
 </code></pre>
 
 The game now displays the Gum screen.
 
-{% hint style="info" %}
-If you attempt to interact with the button, it does not show highlighted/clicked states. This is because we haven't yet passed the Screen to the Update method where UI interaction is performed. We'll make these changes in the next section.
-{% endhint %}
-
 <figure><img src="../../../../.gitbook/assets/image (103).png" alt=""><figcaption><p>Gum Screen loaded and displayed in a MonoGame project</p></figcaption></figure>
 
-{% hint style="info" %}
-Our code now includes both the Initialize call and the ToGraphicalUiElement call.
+The new code has the following calls:
 
-The Initialize call is responsible for loading the .gumx file and all other Gum files into memory. This loads only the Gum files and it does not load any additional files such as .pngs or font files. This call only needs to happen one time in your game.
-
-The ToGraphicalUiElement method is responsible for converting the Gum screen into a visual object. It loads all other files referenced by the Screen and its instances such as .png and font files. This method is called whenever you want to show a new GraphicalUiElement, and it may be called multiple times in a game. For example, ToGraphicalUiElement is called whenever transitioning between screens, which we will do in a future tutorial.
-
-The `addToManagers` parameter results in the screen being added to the Gum rendering system. By passing `true` for this parameter, the Screen shows up automatically when Draw is called. Remember, Draw was added in the previous tutorial.
-{% endhint %}
-
-## Keeping a Screen Reference (Root)
-
-Games usually need to interact with Gum screens in code. By convention the Screen is stored in a variable named `Root`. We can modify the Game project by:
-
-1. Adding a Root member to Game
-2. Assigning Root when calling ToGraphicalUiElement
-3. Adding the Root to the Update call
-
-The modified code is shown below in the following code snippet:
-
-<pre class="language-diff"><code class="lang-diff">public class Game1 : Game
-{
-    private GraphicsDeviceManager _graphics;
-
-+    GraphicalUiElement Root;
-
-
-    ...
-    
-    
-    protected override void Initialize()
-    {
-        var gumProject = MonoGameGum.GumService.Default.Initialize(
-            this,
-            // This is relative to Content:
-            "GumProject/GumProject.gumx");      
-            
-        var screen = gumProject.Screens.Find(item => item.Name == "TitleScreen");
-            
-<strong>+        Root = screen.ToGraphicalUiElement(
-</strong>+            RenderingLibrary.SystemManagers.Default, addToManagers: true);
-
-        base.Initialize();
-    }
-    
-
-    protected override void Update(GameTime gameTime)
-    {
-+        MonoGameGum.GumService.Default.Update(this, gameTime, Root);
-        base.Update(gameTime);
-    }
-</code></pre>
-
-Notice that we've added the Root as a parameter to the Update call. By doing this, we get the built-in behavior for Forms control such as Button.
-
-{% hint style="info" %}
-More complicated games may have multiple roots, such as situations where UI may exist on multiple layers for sorting or independent zooming. This tutorial does not cover this more-complex setup, but if your game needs multiple Roots spread out over multiple layers, you can pass a list of roots to Update as well.
-{% endhint %}
+* Initialize - this loads our Gum project (.gumx). This call does not yet load any additional files such as .pngs or font files. This call only needs to happen one time in your game.
+* The ToGraphicalUiElement method is responsible for converting the Gum screen into a visual object. It loads all other files referenced by the Screen and its instances such as .png and font files. This method is called whenever you want to show a new GraphicalUiElement, and it may be called multiple times in a game. For example, ToGraphicalUiElement is called whenever transitioning between screens, which we will do in a future tutorial.
+* AddToRoot adds the screen so that it is drawn and updated every frame. Updating enables buttons responding to cursor events such as clicks.
 
 <figure><img src="../../../../.gitbook/assets/24_10 16 55.gif" alt=""><figcaption><p>Button with built-in highlight and click styling</p></figcaption></figure>
 
@@ -148,10 +91,12 @@ We can modify the displayed string by getting an instance of the Text and modify
         
     var screen = gumProject.Screens.Find(item => item.Name == "TitleScreen");
         
-    Root = screen.ToGraphicalUiElement(
-        RenderingLibrary.SystemManagers.Default, addToManagers: true);
+    var screenRuntime = screen.ToGraphicalUiElement(
+        RenderingLibrary.SystemManagers.Default, addToManagers: false);
+        
+    screenRuntime.AddToRoot();
 
-<strong>+    var textInstance = Root.GetGraphicalUiElementByName("TextInstance")
+<strong>+    var textInstance = screenRuntime.GetGraphicalUiElementByName("TextInstance")
 </strong>+        as TextRuntime;
 +    textInstance.Text = "I am set in code";
 
@@ -161,7 +106,7 @@ We can modify the displayed string by getting an instance of the Text and modify
 
 <figure><img src="../../../../.gitbook/assets/image (104).png" alt=""><figcaption><p>Text modified in code</p></figcaption></figure>
 
-The code above casts TextInstance to a TextRuntime. Each standard type in Gum (such as Text, Sprite, and Container) has a corresponding _runtime_ type (such as TextRuntime, SpriteRuntime, and ContainerRuntime). Therefore, if we wanted to interact with a Sprite in code, we would cast it to a SpriteRuntime.
+The code above casts TextInstance to a TextRuntime. Each standard type in Gum (such as Text, Sprite, and Container) has a corresponding _runtime_ type (such as TextRuntime, SpriteRuntime, and ContainerRuntime). Therefore, if we wanted to interact with a Text in code, we would cast it to a TextRuntime.
 
 We can also interact with Forms objects in code. The base type for all Forms objects is FrameworkElement, so we can use the GetFrameworkElementByName extension method as shown in the following code:
 
@@ -175,14 +120,16 @@ protected override void Initialize()
         
     var screen = gumProject.Screens.Find(item => item.Name == "TitleScreen");
         
-    Root = screen.ToGraphicalUiElement(
-        RenderingLibrary.SystemManagers.Default, addToManagers: true);
+    var screenRuntime = screen.ToGraphicalUiElement(
+        RenderingLibrary.SystemManagers.Default, addToManagers: false);
+        
+    screenRuntime.AddToRoot();
 
-    var textInstance = Root.GetGraphicalUiElementByName("TextInstance")
+    var textInstance = screenRuntime.GetGraphicalUiElementByName("TextInstance")
         as TextRuntime;
     textInstance.Text = "I am set in code";
 
-+    var button = Root.GetFrameworkElementByName<Button>("ButtonStandardInstance");
++    var button = screenRuntime.GetFrameworkElementByName<Button>("ButtonStandardInstance");
 +    button.Click += (_, _) => textInstance.Text = "Button clicked at " + DateTime.Now;
 
     base.Initialize();
