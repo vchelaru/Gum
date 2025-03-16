@@ -16,23 +16,40 @@ MonoGame Gum works on a variety of platforms including DesktopGL, DirectX, and m
 To initialize Gum, modify your Game project (such as Game1.cs) so that it includes the following calls:
 
 ```csharp
-protected override void Initialize()
-{
-    MonoGameGum.GumService.Default.Initialize(this);
-    base.Initialize();
-}
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using MonoGameGum;
 
-protected override void Update(GameTime gameTime)
+public class Game1 : Game
 {
-    MonoGameGum.GumService.Default.Update(this, gameTime);
-    base.Update(gameTime);
-}
+    GraphicsDeviceManager _graphics;
+    GumService Gum => GumService.Default;
+    
+    public Game1()
+    {
+        _graphics = new GraphicsDeviceManager(this);
+        Content.RootDirectory = "Content";
+        IsMouseVisible = true;
+    }    
+    
+    protected override void Initialize()
+    {
+        Gum.Initialize(this);
+        base.Initialize();
+    }
 
-protected override void Draw(GameTime gameTime)
-{
-    GraphicsDevice.Clear(Color.CornflowerBlue);
-    MonoGameGum.GumService.Default.Draw();
-    base.Draw(gameTime);
+    protected override void Update(GameTime gameTime)
+    {
+        Gum.Update(this, gameTime);
+        base.Update(gameTime);
+    }
+
+    protected override void Draw(GameTime gameTime)
+    {
+        GraphicsDevice.Clear(Color.CornflowerBlue);
+        Gum.Draw();
+        base.Draw(gameTime);
+    }
 }
 ```
 
@@ -43,13 +60,13 @@ To test that you have successfully added Gum to the project, modify your Initial
 ```csharp
 protected override void Initialize()
 {
-    MonoGameGum.GumService.Default.Initialize(this);
+    Gum.Initialize(this);
 
     var rectangle = new ColoredRectangleRuntime();
     rectangle.Width = 100;
     rectangle.Height = 100;
     rectangle.Color = Color.White;
-    rectangle.AddToManagers(SystemManagers.Default, null);
+    rectangle.AddToRoot();
 
     base.Initialize();
 }
