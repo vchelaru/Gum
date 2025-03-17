@@ -1,650 +1,105 @@
 {
   "UserEvents": {
     "vchel": [],
+    "Owner": [],
     "d1638316d18f4a1e23a287aaaa12b6c540f704e257a6549bc9a672497ccc934e": [
       {
-        "NewName": "LeaderboardScreenGum.SpriteInstance",
+        "NewName": "TestScreen.ColoredRectangleInstance1",
         "OldName": null,
         "ElementType": "Screens",
         "EventType": 5,
-        "TimestampUtc": "2025-03-02T14:25:51.5922331Z"
+        "TimestampUtc": "2025-03-07T12:27:01.4154925Z"
       },
       {
-        "NewName": "LeaderboardScreenGum.SpriteInstance1",
+        "NewName": "TestScreen.RectangleWithInvalidParent",
+        "OldName": "TestScreen.ColoredRectangleInstance1",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2025-03-07T12:27:15.5787244Z"
+      },
+      {
+        "NewName": "TestScreen.RectangleWithInvalidParent",
+        "OldName": "TestScreen.ColoredRectangleInstance1",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2025-03-07T12:27:15.5797247Z"
+      },
+      {
+        "NewName": "TestScreen.RectangleWithInvalidParent",
+        "OldName": "TestScreen.ColoredRectangleInstance1",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2025-03-07T12:27:15.5797247Z"
+      },
+      {
+        "NewName": "TestScreen.RectangleWithInvalidParent",
+        "OldName": "TestScreen.ColoredRectangleInstance1",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2025-03-07T12:27:15.5807245Z"
+      },
+      {
+        "NewName": "TestScreen.RectangleWithInvalidParent",
+        "OldName": "TestScreen.ColoredRectangleInstance1",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2025-03-07T12:27:15.5817245Z"
+      },
+      {
+        "NewName": "TestScreen.SpriteInstance",
         "OldName": null,
         "ElementType": "Screens",
         "EventType": 5,
-        "TimestampUtc": "2025-03-02T14:29:29.4835049Z"
+        "TimestampUtc": "2025-03-17T12:23:16.8585174Z"
       },
       {
-        "NewName": "PlayerHud (Container).TopNineSlice",
-        "OldName": "PlayerHud (Container).NineSliceInstance",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:24:51.5424016Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).TopNineSlice",
-        "OldName": "PlayerHud (Container).NineSliceInstance",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:24:51.5434016Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).TopNineSlice",
-        "OldName": "PlayerHud (Container).NineSliceInstance",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:24:51.5444026Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).TopNineSlice",
-        "OldName": "PlayerHud (Container).NineSliceInstance",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:24:51.5444026Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).TopNineSlice",
-        "OldName": "PlayerHud (Container).NineSliceInstance",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:24:51.5457887Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).TopNineSlice",
-        "OldName": "PlayerHud (Container).NineSliceInstance",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:24:51.5457887Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).TopNineSlice",
-        "OldName": "PlayerHud (Container).NineSliceInstance",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:24:51.5469915Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).TopNineSlice",
-        "OldName": "PlayerHud (Container).NineSliceInstance",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:24:51.5479983Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).TopNineSlice",
-        "OldName": "PlayerHud (Container).NineSliceInstance",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:24:51.5479983Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).TopNineSlice",
-        "OldName": "PlayerHud (Container).NineSliceInstance",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:24:51.5479983Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).TopNineSlice",
-        "OldName": "PlayerHud (Container).NineSliceInstance",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:24:51.5494876Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).TopNineSlice",
-        "OldName": "PlayerHud (Container).NineSliceInstance",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:24:51.5494876Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).TopNineSlice",
-        "OldName": "PlayerHud (Container).NineSliceInstance",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:24:51.5504954Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).TopNineSlice",
-        "OldName": "PlayerHud (Container).NineSliceInstance",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:24:51.5514944Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).TopNineSlice",
-        "OldName": "PlayerHud (Container).NineSliceInstance",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:24:51.5529997Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).TopNineSlice",
-        "OldName": "PlayerHud (Container).NineSliceInstance",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:24:51.5529997Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).TopNineSlice",
-        "OldName": "PlayerHud (Container).NineSliceInstance",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:24:51.5540076Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).TopNineSlice",
-        "OldName": "PlayerHud (Container).NineSliceInstance",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:24:51.5550087Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).MiddleNineslice",
-        "OldName": "PlayerHud (Container).NineSliceInstance1",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:02.5796704Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).MiddleNineslice",
-        "OldName": "PlayerHud (Container).NineSliceInstance1",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:02.5796704Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).MiddleNineslice",
-        "OldName": "PlayerHud (Container).NineSliceInstance1",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:02.581052Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).MiddleNineslice",
-        "OldName": "PlayerHud (Container).NineSliceInstance1",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:02.581052Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).MiddleNineslice",
-        "OldName": "PlayerHud (Container).NineSliceInstance1",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:02.5825293Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).MiddleNineslice",
-        "OldName": "PlayerHud (Container).NineSliceInstance1",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:02.5845347Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).MiddleNineslice",
-        "OldName": "PlayerHud (Container).NineSliceInstance1",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:02.5855345Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).MiddleNineslice",
-        "OldName": "PlayerHud (Container).NineSliceInstance1",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:02.586535Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).MiddleNineslice",
-        "OldName": "PlayerHud (Container).NineSliceInstance1",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:02.5879081Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).MiddleNineslice",
-        "OldName": "PlayerHud (Container).NineSliceInstance1",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:02.5891252Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).MiddleNineslice",
-        "OldName": "PlayerHud (Container).NineSliceInstance1",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:02.5905187Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).MiddleNineslice",
-        "OldName": "PlayerHud (Container).NineSliceInstance1",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:02.5925246Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).MiddleNineslice",
-        "OldName": "PlayerHud (Container).NineSliceInstance1",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:02.5935237Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).MiddleNineslice",
-        "OldName": "PlayerHud (Container).NineSliceInstance1",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:02.5945236Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).MiddleNineslice",
-        "OldName": "PlayerHud (Container).NineSliceInstance1",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:02.5955261Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).MiddleNineslice",
-        "OldName": "PlayerHud (Container).NineSliceInstance1",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:02.5975242Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).MiddleNineslice",
-        "OldName": "PlayerHud (Container).NineSliceInstance1",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:02.598524Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).MiddleNineslice",
-        "OldName": "PlayerHud (Container).NineSliceInstance1",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:02.598524Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).BottomNineSlice",
-        "OldName": "PlayerHud (Container).BottomFrame",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:14.4412447Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).BottomNineSlice",
-        "OldName": "PlayerHud (Container).BottomFrame",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:14.4422448Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).BottomNineSlice",
-        "OldName": "PlayerHud (Container).BottomFrame",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:14.4432458Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).BottomNineSlice",
-        "OldName": "PlayerHud (Container).BottomFrame",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:14.4442458Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).BottomNineSlice",
-        "OldName": "PlayerHud (Container).BottomFrame",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:14.445245Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).BottomNineSlice",
-        "OldName": "PlayerHud (Container).BottomFrame",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:14.4462464Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).BottomNineSlice",
-        "OldName": "PlayerHud (Container).BottomFrame",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:14.4472449Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).BottomNineSlice",
-        "OldName": "PlayerHud (Container).BottomFrame",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:14.4482454Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).BottomNineSlice",
-        "OldName": "PlayerHud (Container).BottomFrame",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:14.4492447Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).BottomNineSlice",
-        "OldName": "PlayerHud (Container).BottomFrame",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:14.450245Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).BottomNineSlice",
-        "OldName": "PlayerHud (Container).BottomFrame",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:14.4512459Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).BottomNineSlice",
-        "OldName": "PlayerHud (Container).BottomFrame",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:14.4522458Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).BottomNineSlice",
-        "OldName": "PlayerHud (Container).BottomFrame",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:14.4532447Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).BottomNineSlice",
-        "OldName": "PlayerHud (Container).BottomFrame",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:14.454245Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).BottomNineSlice",
-        "OldName": "PlayerHud (Container).BottomFrame",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:14.4552449Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).BottomNineSlice",
-        "OldName": "PlayerHud (Container).BottomFrame",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:14.4562465Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).BottomNineSlice",
-        "OldName": "PlayerHud (Container).BottomFrame",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:14.4572436Z"
-      },
-      {
-        "NewName": "PlayerHud (Container).BottomNineSlice",
-        "OldName": "PlayerHud (Container).BottomFrame",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-05T13:25:14.4602474Z"
-      },
-      {
-        "NewName": "UITestScreenGum.ButtonStandardInstance",
-        "OldName": null,
+        "NewName": "TestScreen.AnimatedSpriteInstance",
+        "OldName": "TestScreen.SpriteInstance",
         "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2025-03-06T02:07:23.5992211Z"
+        "EventType": 7,
+        "TimestampUtc": "2025-03-17T12:28:16.3165098Z"
       },
       {
-        "NewName": "UITestScreenGum.ButtonStandardInstance1",
-        "OldName": null,
+        "NewName": "TestScreen.AnimatedSpriteInstance",
+        "OldName": "TestScreen.SpriteInstance",
         "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2025-03-06T02:07:50.842788Z"
+        "EventType": 7,
+        "TimestampUtc": "2025-03-17T12:28:16.3177914Z"
+      },
+      {
+        "NewName": "TestScreen.AnimatedSpriteInstance",
+        "OldName": "TestScreen.SpriteInstance",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2025-03-17T12:28:16.3177914Z"
+      },
+      {
+        "NewName": "TestScreen.AnimatedSpriteInstance",
+        "OldName": "TestScreen.SpriteInstance",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2025-03-17T12:28:16.3187977Z"
+      },
+      {
+        "NewName": "TestScreen.AnimatedSpriteInstance",
+        "OldName": "TestScreen.SpriteInstance",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2025-03-17T12:28:16.3187977Z"
       },
       {
         "NewName": null,
-        "OldName": "UITestScreenGum.Controls/ButtonStandard ButtonStandardInstance1 in UITestScreenGum",
+        "OldName": "TestScreen.Sprite AnimatedSpriteInstance in TestScreen",
         "ElementType": "Screens",
         "EventType": 6,
-        "TimestampUtc": "2025-03-06T02:17:16.5261025Z"
+        "TimestampUtc": "2025-03-17T12:43:49.4557936Z"
       },
       {
-        "NewName": "Heart (Container).SpriteInstance1",
-        "OldName": null,
-        "ElementType": "Components",
-        "EventType": 5,
-        "TimestampUtc": "2025-03-06T12:54:16.7550993Z"
-      },
-      {
-        "NewName": "Heart (Container).FlashWhiteHeart",
-        "OldName": "Heart (Container).SpriteInstance1",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-06T12:54:26.7695157Z"
-      },
-      {
-        "NewName": "Heart (Container).FlashWhiteHeart",
-        "OldName": "Heart (Container).SpriteInstance1",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-06T12:54:26.7705129Z"
-      },
-      {
-        "NewName": "Heart (Container).FlashWhiteHeart",
-        "OldName": "Heart (Container).SpriteInstance1",
-        "ElementType": "Components",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-06T12:54:26.77151Z"
-      },
-      {
-        "NewName": "GameOverScreenGum.LeftPillarbox",
+        "NewName": "GumScreenStronglyTypedGum.AnimatedSpriteInstance",
         "OldName": null,
         "ElementType": "Screens",
         "EventType": 5,
-        "TimestampUtc": "2025-03-07T12:43:09.1705431Z"
-      },
-      {
-        "NewName": null,
-        "OldName": "GameOverScreenGum.ColoredRectangle LeftPillarbox in GameOverScreenGum",
-        "ElementType": "Screens",
-        "EventType": 6,
-        "TimestampUtc": "2025-03-07T12:43:17.0657968Z"
-      },
-      {
-        "NewName": "GameOverScreenGum.LeftPillarbox",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2025-03-07T12:43:21.9027685Z"
-      },
-      {
-        "NewName": null,
-        "OldName": "GameOverScreenGum.ColoredRectangle LeftPillarbox in GameOverScreenGum",
-        "ElementType": "Screens",
-        "EventType": 6,
-        "TimestampUtc": "2025-03-07T12:43:26.587526Z"
-      },
-      {
-        "NewName": "PauseMenu1",
-        "OldName": null,
-        "ElementType": "Components",
-        "EventType": 0,
-        "TimestampUtc": "2025-03-07T12:50:01.4462741Z"
-      },
-      {
-        "NewName": "InputBindingComponent",
-        "OldName": "PauseMenu1",
-        "ElementType": "Components",
-        "EventType": 2,
-        "TimestampUtc": "2025-03-07T12:50:11.1347105Z"
-      },
-      {
-        "NewName": null,
-        "OldName": "InputBindingComponent (Container).Container OptionsContainer in InputBindingComponent (Container)",
-        "ElementType": "Components",
-        "EventType": 6,
-        "TimestampUtc": "2025-03-07T12:50:21.6291703Z"
-      },
-      {
-        "NewName": null,
-        "OldName": "InputBindingComponent (Container).DefaultForms/TitleScreenButton Quit in InputBindingComponent (Container)",
-        "ElementType": "Components",
-        "EventType": 6,
-        "TimestampUtc": "2025-03-07T12:50:21.8295715Z"
-      },
-      {
-        "NewName": null,
-        "OldName": "InputBindingComponent (Container).DefaultForms/TitleScreenButton Unpause in InputBindingComponent (Container)",
-        "ElementType": "Components",
-        "EventType": 6,
-        "TimestampUtc": "2025-03-07T12:50:21.8305725Z"
-      },
-      {
-        "NewName": "InputBindingComponent (Container).TextInstance",
-        "OldName": null,
-        "ElementType": "Components",
-        "EventType": 5,
-        "TimestampUtc": "2025-03-07T12:50:59.6252919Z"
-      },
-      {
-        "NewName": null,
-        "OldName": "InputBindingComponent (Container).ConfirmationPopup ConfirmationPopupInstance in InputBindingComponent (Container)",
-        "ElementType": "Components",
-        "EventType": 6,
-        "TimestampUtc": "2025-03-07T12:51:07.0687081Z"
-      },
-      {
-        "NewName": null,
-        "OldName": "OptionsScreenGum.DefaultForms/TitleScreenButton KeyboardLayoutTextInstance in OptionsScreenGum",
-        "ElementType": "Screens",
-        "EventType": 6,
-        "TimestampUtc": "2025-03-07T13:29:29.3543785Z"
-      },
-      {
-        "NewName": null,
-        "OldName": "OptionsScreenGum.Text KeyboardLayoutValue in OptionsScreenGum",
-        "ElementType": "Screens",
-        "EventType": 6,
-        "TimestampUtc": "2025-03-07T13:29:33.4457604Z"
-      },
-      {
-        "NewName": "OptionsScreenGum.InputMappingTextInstance",
-        "OldName": "OptionsScreenGum.CustomControllerTextInstance",
-        "ElementType": "Screens",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-07T13:30:06.6479391Z"
-      },
-      {
-        "NewName": "OptionsScreenGum.Background",
-        "OldName": "OptionsScreenGum.BackgroundNOTVisible",
-        "ElementType": "Screens",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-07T13:34:52.3122006Z"
-      },
-      {
-        "NewName": "OptionsScreenGum.InputBindingComponentInstance",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2025-03-07T13:44:03.6463733Z"
-      },
-      {
-        "NewName": "InputBindingComponent (Container).IconInstance",
-        "OldName": null,
-        "ElementType": "Components",
-        "EventType": 5,
-        "TimestampUtc": "2025-03-08T17:28:39.5486013Z"
-      },
-      {
-        "NewName": "LevelSelectScreenGum.Level1Button1",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2025-03-11T00:47:23.818418Z"
-      },
-      {
-        "NewName": "LevelSelectScreenGum.Level1BossButton",
-        "OldName": "LevelSelectScreenGum.Level1Button1",
-        "ElementType": "Screens",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-11T00:47:29.7131596Z"
-      },
-      {
-        "NewName": "LevelSelectScreenGum.Level3Button1",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2025-03-11T00:47:41.3663933Z"
-      },
-      {
-        "NewName": "LevelSelectScreenGum.Level4Button",
-        "OldName": "LevelSelectScreenGum.Level3Button1",
-        "ElementType": "Screens",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-11T00:47:57.5492072Z"
-      },
-      {
-        "NewName": "LevelSelectScreenGum.TextInstance",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2025-03-11T02:28:15.5701019Z"
-      },
-      {
-        "NewName": "LevelSelectScreenGum.TextInstance1",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2025-03-11T02:28:40.5697428Z"
-      },
-      {
-        "NewName": "LevelSelectScreenGum.Level4Button1",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2025-03-11T02:32:01.5310822Z"
-      },
-      {
-        "NewName": "LevelSelectScreenGum.Level5Button",
-        "OldName": "LevelSelectScreenGum.Level4Button1",
-        "ElementType": "Screens",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-11T02:32:09.0375072Z"
-      },
-      {
-        "NewName": "LevelSelectScreenGum.Level5Button1",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2025-03-11T02:32:21.7996797Z"
-      },
-      {
-        "NewName": "LevelSelectScreenGum.Level6Button",
-        "OldName": "LevelSelectScreenGum.Level5Button1",
-        "ElementType": "Screens",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-11T02:32:33.6638559Z"
-      },
-      {
-        "NewName": "LevelSelectScreenGum.Level6Button1",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2025-03-11T02:41:35.9370563Z"
-      },
-      {
-        "NewName": "LevelSelectScreenGum.BackButton",
-        "OldName": "LevelSelectScreenGum.Level6Button1",
-        "ElementType": "Screens",
-        "EventType": 7,
-        "TimestampUtc": "2025-03-11T02:41:43.2110668Z"
+        "TimestampUtc": "2025-03-17T12:43:57.5372718Z"
       }
     ]
   }

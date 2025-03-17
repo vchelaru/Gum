@@ -1,6 +1,6 @@
 //Code for StartScreen
 using GumRuntime;
-using MonoGameGumFromFile.Components;
+using MonoGameGumFromFileAndroid.Components;
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Managers;
@@ -8,11 +8,13 @@ using Gum.Wireframe;
 
 using RenderingLibrary.Graphics;
 
-using MonoGameGum.GueDeriving;
-using MonoGameGumFromFile.Components;
-namespace MonoGameGumFromFile.Screens
+using SkiaGum;
+using SkiaGum.GueDeriving;
+using SkiaGum.Renderables;
+
+namespace MonoGameGumFromFileAndroid.Screens
 {
-    public partial class StartScreenRuntime:Gum.Wireframe.InteractiveGue
+    public partial class StartScreenRuntime:SkiaGum.GueDeriving.ContainerRuntime
     {
         [System.Runtime.CompilerServices.ModuleInitializer]
         public static void RegisterRuntimeType()
@@ -31,11 +33,8 @@ namespace MonoGameGumFromFile.Screens
         public ColoredRectangleRuntime ColoredRectangleInstance3 { get; protected set; }
         public ColoredRectangleRuntime ColoredRectangleInstance4 { get; protected set; }
         public TextRuntime TextInstance7 { get; protected set; }
-        public TextRuntime TextInstance11 { get; protected set; }
         public SpriteRuntime SpriteInstance1 { get; protected set; }
         public SpriteRuntime SpriteInstance2 { get; protected set; }
-        public SpriteRuntime AnimatedSprite { get; protected set; }
-        public TextRuntime TextInstance10 { get; protected set; }
         public TextRuntime TextInstance8 { get; protected set; }
         public NineSliceRuntime NineSliceInstance { get; protected set; }
         public TextRuntime TextInstance4 { get; protected set; }
@@ -73,11 +72,8 @@ namespace MonoGameGumFromFile.Screens
             ColoredRectangleInstance3 = this.GetGraphicalUiElementByName("ColoredRectangleInstance3") as ColoredRectangleRuntime;
             ColoredRectangleInstance4 = this.GetGraphicalUiElementByName("ColoredRectangleInstance4") as ColoredRectangleRuntime;
             TextInstance7 = this.GetGraphicalUiElementByName("TextInstance7") as TextRuntime;
-            TextInstance11 = this.GetGraphicalUiElementByName("TextInstance11") as TextRuntime;
             SpriteInstance1 = this.GetGraphicalUiElementByName("SpriteInstance1") as SpriteRuntime;
             SpriteInstance2 = this.GetGraphicalUiElementByName("SpriteInstance2") as SpriteRuntime;
-            AnimatedSprite = this.GetGraphicalUiElementByName("AnimatedSprite") as SpriteRuntime;
-            TextInstance10 = this.GetGraphicalUiElementByName("TextInstance10") as TextRuntime;
             TextInstance8 = this.GetGraphicalUiElementByName("TextInstance8") as TextRuntime;
             NineSliceInstance = this.GetGraphicalUiElementByName("NineSliceInstance") as NineSliceRuntime;
             TextInstance4 = this.GetGraphicalUiElementByName("TextInstance4") as TextRuntime;

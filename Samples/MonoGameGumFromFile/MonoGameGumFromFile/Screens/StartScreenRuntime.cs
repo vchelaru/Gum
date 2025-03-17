@@ -9,7 +9,7 @@ using MonoGameGum.GueDeriving;
 
 namespace MonoGameGumFromFile.Screens
 {
-    partial class StartScreenRuntime : Gum.Wireframe.InteractiveGue
+    partial class StartScreenRuntime
     {
         partial void CustomInitialize()
         {

@@ -1,119 +1,105 @@
 {
   "UserEvents": {
-    "vchel": [
+    "vchel": [],
+    "Owner": [],
+    "d1638316d18f4a1e23a287aaaa12b6c540f704e257a6549bc9a672497ccc934e": [
       {
-        "NewName": "InteractiveGueScreen",
+        "NewName": "TestScreen.ColoredRectangleInstance1",
         "OldName": null,
         "ElementType": "Screens",
-        "EventType": 0,
-        "TimestampUtc": "2024-06-01T12:45:25.3828691Z"
+        "EventType": 5,
+        "TimestampUtc": "2025-03-07T12:27:01.4154925Z"
+      },
+      {
+        "NewName": "TestScreen.RectangleWithInvalidParent",
+        "OldName": "TestScreen.ColoredRectangleInstance1",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2025-03-07T12:27:15.5787244Z"
+      },
+      {
+        "NewName": "TestScreen.RectangleWithInvalidParent",
+        "OldName": "TestScreen.ColoredRectangleInstance1",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2025-03-07T12:27:15.5797247Z"
+      },
+      {
+        "NewName": "TestScreen.RectangleWithInvalidParent",
+        "OldName": "TestScreen.ColoredRectangleInstance1",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2025-03-07T12:27:15.5797247Z"
+      },
+      {
+        "NewName": "TestScreen.RectangleWithInvalidParent",
+        "OldName": "TestScreen.ColoredRectangleInstance1",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2025-03-07T12:27:15.5807245Z"
+      },
+      {
+        "NewName": "TestScreen.RectangleWithInvalidParent",
+        "OldName": "TestScreen.ColoredRectangleInstance1",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2025-03-07T12:27:15.5817245Z"
+      },
+      {
+        "NewName": "TestScreen.SpriteInstance",
+        "OldName": null,
+        "ElementType": "Screens",
+        "EventType": 5,
+        "TimestampUtc": "2025-03-17T12:23:16.8585174Z"
+      },
+      {
+        "NewName": "TestScreen.AnimatedSpriteInstance",
+        "OldName": "TestScreen.SpriteInstance",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2025-03-17T12:28:16.3165098Z"
+      },
+      {
+        "NewName": "TestScreen.AnimatedSpriteInstance",
+        "OldName": "TestScreen.SpriteInstance",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2025-03-17T12:28:16.3177914Z"
+      },
+      {
+        "NewName": "TestScreen.AnimatedSpriteInstance",
+        "OldName": "TestScreen.SpriteInstance",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2025-03-17T12:28:16.3177914Z"
+      },
+      {
+        "NewName": "TestScreen.AnimatedSpriteInstance",
+        "OldName": "TestScreen.SpriteInstance",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2025-03-17T12:28:16.3187977Z"
+      },
+      {
+        "NewName": "TestScreen.AnimatedSpriteInstance",
+        "OldName": "TestScreen.SpriteInstance",
+        "ElementType": "Screens",
+        "EventType": 7,
+        "TimestampUtc": "2025-03-17T12:28:16.3187977Z"
       },
       {
         "NewName": null,
-        "OldName": "StartScreen.Buttons/StandardButton StandardButtonInstance in StartScreen",
+        "OldName": "TestScreen.Sprite AnimatedSpriteInstance in TestScreen",
         "ElementType": "Screens",
         "EventType": 6,
-        "TimestampUtc": "2024-06-01T12:45:46.4335803Z"
+        "TimestampUtc": "2025-03-17T12:43:49.4557936Z"
       },
       {
-        "NewName": "InteractiveGueScreen.StandardButtonInstance",
+        "NewName": "GumScreenStronglyTypedGum.AnimatedSpriteInstance",
         "OldName": null,
         "ElementType": "Screens",
         "EventType": 5,
-        "TimestampUtc": "2024-06-01T12:45:48.4481256Z"
-      },
-      {
-        "NewName": "Buttons/StandardButton (Container).RectangleInstance",
-        "OldName": null,
-        "ElementType": "Components",
-        "EventType": 5,
-        "TimestampUtc": "2024-06-02T12:25:52.9579149Z"
-      },
-      {
-        "NewName": "InteractiveGueScreen.StandardButtonInstance1",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2024-06-02T12:26:21.8079665Z"
-      },
-      {
-        "NewName": "InteractiveGueScreen.StandardButtonInstance2",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2024-06-02T12:26:25.6533866Z"
-      },
-      {
-        "NewName": "InteractiveGueScreen.ContainerInstance",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2024-06-02T12:26:36.6660763Z"
-      },
-      {
-        "NewName": "InteractiveGueScreen.StandardButtonInstance3",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2024-06-02T12:26:44.0951129Z"
-      },
-      {
-        "NewName": "InteractiveGueScreen.StandardButtonInstance4",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2024-06-02T12:26:54.2305177Z"
-      },
-      {
-        "NewName": "InteractiveGueScreen.StandardButtonInstance5",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2024-06-02T12:26:54.7168593Z"
-      },
-      {
-        "NewName": "GameScreenGum.ColoredRectangleInstance",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2024-06-03T12:16:10.1460854Z"
-      }
-    ],
-    "Owner": [
-      {
-        "NewName": "Buttons/StandardButton (Container).NineSliceInstance",
-        "OldName": null,
-        "ElementType": "Components",
-        "EventType": 5,
-        "TimestampUtc": "2024-05-30T20:43:23.2878676Z"
-      },
-      {
-        "NewName": null,
-        "OldName": "Buttons/StandardButton (Container).NineSlice NineSliceInstance in Buttons/StandardButton (Container)",
-        "ElementType": "Components",
-        "EventType": 6,
-        "TimestampUtc": "2024-05-30T20:43:35.7101626Z"
-      },
-      {
-        "NewName": "Buttons/StandardButton (Container).ColoredRectangleInstance",
-        "OldName": null,
-        "ElementType": "Components",
-        "EventType": 5,
-        "TimestampUtc": "2024-05-30T20:43:40.4143188Z"
-      },
-      {
-        "NewName": "Buttons/StandardButton (Container).TextInstance",
-        "OldName": null,
-        "ElementType": "Components",
-        "EventType": 5,
-        "TimestampUtc": "2024-05-30T20:44:12.7014161Z"
-      },
-      {
-        "NewName": "StartScreen.StandardButtonInstance",
-        "OldName": null,
-        "ElementType": "Screens",
-        "EventType": 5,
-        "TimestampUtc": "2024-05-30T20:45:22.8178303Z"
+        "TimestampUtc": "2025-03-17T12:43:57.5372718Z"
       }
     ]
   }
