@@ -125,12 +125,7 @@ Your project is now referenced in your game. Modify the Game file to initialize 
 public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
-
-    // Gum renders and updates using a hierarchy. At least
-    // one object must have its AddToManagers method called.
-    // If not loading from-file, then the easiest way to do this
-    // is to create a ContainerRuntime and add it to the managers.
-    GraphicalUiElement Root;
+    GumService Gum => GumService.Default;
 
     public Game1()
     {
@@ -141,28 +136,28 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        var gumProject = MonoGameGum.GumService.Default.Initialize(
+        var gumProject = Gum.Initialize(
             this,
             // This is relative to Content:
             "GumProject/GumProject.gumx");
 
         // This assumes that your project has at least 1 screen
-        Root = gumProject.Screens.First().ToGraphicalUiElement(
-            SystemManagers.Default, addToManagers: true);
+        var screen = gumProject.Screens.First().ToGraphicalUiElement();
+        screen.AddToRoot();
 
         base.Initialize();
     }
 
     protected override void Update(GameTime gameTime)
     {
-        MonoGameGum.GumService.Default.Update(this, gameTime, Root);
+        Gum.Update(this, gameTime);
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
-        MonoGameGum.GumService.Default.Draw();
+        Gum.Draw();
         base.Draw(gameTime);
     }
 }

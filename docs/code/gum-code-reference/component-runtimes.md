@@ -15,8 +15,10 @@ Once you have instantiated your project, you can create a component as shown in 
 
 ```csharp
 // This assumes that your project has at least 1 component
-ObjectFinder.Self.GumProjectSave.Components.First()
-    .ToGraphicalUiElement(SystemManagers.Default, addToManagers:true);
+var componentRuntime = ObjectFinder.Self.GumProjectSave.Components.First()
+    .ToGraphicalUiElement();
+
+// Add this component to the desired container
 ```
 
 The Components property contains a list of all components, so you can also access components by name or other property. For example, the First method can be used to find a component by name as shown in the following code:
@@ -25,8 +27,8 @@ The Components property contains a list of all components, so you can also acces
 var componentSave = ObjectFinder.Self.GumProjectSave.Components
     .First(item => item.Name == "ColoredRectangleComponent");
 
-var componentRuntime = componentSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
-// the componentRuntime can be modified here
+var componentRuntime = componentSave.ToGraphicalUiElement();
+// the componentRuntime can be modified here, and added to the desired container
 ```
 
 Note that the name passed to the First method should match the name given in Gum. For example, in this case the code searches for a component named ColoredRectangleComponent.
@@ -36,21 +38,6 @@ Note that the name passed to the First method should match the name given in Gum
 If a component is in a folder, then use the qualified name relative to the Components folder. For example, the following component's name at runtime is `"Buttons/StandardButton"`
 
 <figure><img src="../../.gitbook/assets/image (42).png" alt=""><figcaption><p>StandardButton component in the Buttons folder in Gum</p></figcaption></figure>
-
-The ToGraphicalUiElement method can automatically add the component to the root for rendering, or alternatively it can be added to an existing container. If adding to an existing container, then the ToGraphicalUiElement's addToManagers parameter should be false as shown in the following code:
-
-```csharp
-var component = var componentSave = ObjectFinder.Self.GumProjectSave.Components
-    .First(item => item.Name == "MyComponent");
-    
-var componentRuntime = componentSave.ToGraphicalUiElement(
-    SystemManagers.Default, addToManagers: false);
-// This assumes that container has been directly added to managers, or is a 
-// child of a root container which has been added to managers:
-container.Children.Add(componentRuntime);
-```
-
-For more information about how to add a newly-created component runtime to managers or to a container, see the next section.
 
 ## Adding a Component Runtime to a Parent
 
@@ -62,8 +49,7 @@ The newly instantiated component can be added to a container in the screen. This
 
 ```csharp
 // do not add to managers, since it will be added to a container
-var newComponentRuntime = componentSave.ToGraphicalUiElement(
-    SystemManagers.Default, addToManagers:false);
+var newComponentRuntime = componentSave.ToGraphicalUiElement();
 // assuming ScreenRoot is a valid root
 var container = ScreenRoot.GetGraphicalUiElementByName("DesiredContainer");
 container.Children.Add(newComponentRuntime);
@@ -83,8 +69,7 @@ The following code shows how to create a Toast instance to display a message to 
 
 ```csharp
 // assumes toastComponent is a valid component
-var newToastRuntime = toastComponent.ToGraphicalUiElement(
-    SystemManagers.Default, addToManagers:false);
+var newToastRuntime = toastComponent.ToGraphicalUiElement();
 FrameworkElement.PopupRoot.Children.Add(newToastRuntime);
 // the newToastRuntime needs to be removed from PopupRoot later
 ```
@@ -93,8 +78,7 @@ The following code shows how to create a MessageBox instance and add it to the M
 
 ```csharp
 // assumes toastComponent is a valid component
-var newMessageBoxRuntime = messageBoxComponent.ToGraphicalUiElement(
-    SystemManagers.Default, addToManagers:false);
+var newMessageBoxRuntime = messageBoxComponent.ToGraphicalUiElement();
 FrameworkElement.ModalRoot.Children.Add(newMessageBoxRuntime);
 // the newMessageBoxRuntime needs to be removed from ModalRoot later
 ```
@@ -105,23 +89,23 @@ To destroy the component, remove it from its parent, or set its parent to null:
 newMessageBoxRuntime.Parent = null;
 ```
 
-### Adding to Managers
+### Adding to GumService Root
 
-Components can be added directly to managers. Usually items are only added directly to managers in the following situations:
+Components can be added directly to the GumService Root. Usually items are only added directly to GumService Root in the following situations:
 
-* If they are the root runtime. Usually this is a Screen, but it can be a component if your project is not using screens.
+* If they are a Screen, or will not be contained by any other object, such as if your project is not using screens.
 * For testing/debugging.
 * If your game has multiple roots, you can add instances to a list of GraphicalUiElements which are passed to Update. This is considered an advanced scenario.
 
 ```csharp
-var newComponentRuntime = componentSave.ToGraphicalUiElement(
-    SystemManagers.Default, addToManagers:true);
+var newComponentRuntime = componentSave.ToGraphicalUiElement();
+newComponentRuntime.AddToRoot();
 ```
 
-To destroy the component, call RemoveFromManagers:
+To destroy the component, call RemoveFromRoot:
 
 ```csharp
-newComponentRuntime.RemoveFromManagers();
+newComponentRuntime.RemoveFromRoot();
 ```
 
 ## Troubleshooting Component Creation

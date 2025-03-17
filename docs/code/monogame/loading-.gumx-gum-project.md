@@ -77,8 +77,7 @@ protected override void Initialize()
         "GumProject/GumProject.gumx");
 
     // This assumes that your project has at least 1 screen
-    var screenRuntime = gumProject.Screens.First().ToGraphicalUiElement(
-        SystemManagers.Default, addToManagers:false);
+    var screenRuntime = gumProject.Screens.First().ToGraphicalUiElement();
     screenRuntime.AddToRoot();
     
     base.Initialize();
@@ -96,7 +95,7 @@ Gum.Initialize(
 
 Once a Gum project is loaded, all of its screens and components can be accessed through the object returned from the Initialize method. The code above stores the project in a variable called `gumProject`. Any screen or component can be converted to a GraphicalUiElement, which is the visual object that displays in game.
 
-The code in the previous section creates a `GraphicalUiElement` from the first screen in the project. Note that the `ToGraphicalUiElement` method has an `addToManagers` parameter which determines whether the GraphicalUiElement is added to managers. This is almost always set to false since we add the created screen to the root container, which in turn has already been added to managers.
+The code in the previous section creates a `GraphicalUiElement` from the first screen in the project.
 
 For an example of a Game1.cs file which loads a project file, see the MonoGameGumFromFile: [https://github.com/vchelaru/Gum/blob/0e266942560e585359f019ac090a6c1010621c0b/Samples/MonoGameGumFromFile/MonoGameGumFromFile/Game1.cs#L76-L82](https://github.com/vchelaru/Gum/blob/0e266942560e585359f019ac090a6c1010621c0b/Samples/MonoGameGumFromFile/MonoGameGumFromFile/Game1.cs#L76-L82)
 
@@ -106,9 +105,7 @@ You can get a reference to elements within the screen by calling `GetGraphicalUi
 
 ```csharp
 // Load the gum project (see code above)
-var screenRuntime = gumProject.Screens.First().ToGraphicalUiElement(
-  SystemManagers.Default, 
-  addToManagers:false);
+var screenRuntime = gumProject.Screens.First().ToGraphicalUiElement();
 screenRuntime.AddToRoot();
 
 // Items in the screen can be accessed using the GetGraphicalUiElementByName method:
@@ -141,8 +138,7 @@ public class Game1 : Game
         var gumProject = Gum.Initialize(
             this, "GumProject/GumProject.gumx");
         // This assumes that your project has at least 1 screen
-        var screenRuntime = gumProject.Screens.First().ToGraphicalUiElement(
-            SystemManagers.Default, addToManagers: false);
+        var screenRuntime = gumProject.Screens.First().ToGraphicalUiElement();
         screenRuntime.AddToRoot();
 
         base.Initialize();

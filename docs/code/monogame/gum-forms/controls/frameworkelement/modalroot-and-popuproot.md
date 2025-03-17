@@ -4,7 +4,7 @@
 
 The static ModalRoot and PopupRoot properties provide an InteractiveGue which serve as the root for any element which should appear on top of other elements. These properties have the following characteristics:
 
-* Automatically created by `FormsUtilities.InitializeDefaults`
+* Automatically created by `Gum.Initialize`
 * Automatically resized to fit the entire screen, including if the `GraphicalUiElement.CanvasHeight` and `GraphicalUiElement.CanvasWidth` change.
 * Both Remains on top of all other elements for its given layer. ModalRoot appears on top of PopupRoot.
 
@@ -70,11 +70,8 @@ private void ShowPopup(string text, bool isModal)
 Popups can also be created if your game is loading a Gum project. Since the GraphicalUiElement will be added to either ModalRoot or PopupRoot, it should not also be added to managers.
 
 ```csharp
-// Don't add to managers because it will be contained in a container
-// which has already been added to managers
-bool addToManagers = false;
 var popupComponent = gumProject.Components.First(item => item.Name == "MyPopup")
-    .ToGraphicalUiElement(SystemManagers.Default, addToManagers);
+    .ToGraphicalUiElement();
 
 popupComponent.Parent = FrameworkElement.ModalRoot;
 
@@ -86,13 +83,8 @@ popupComponent.Parent = null;
 If you are going to add a Screen to a ModalRoot, then the Screen must have a renderable contained object so that it can have its Parent assigned. You can do this by creating a Screen runtime which inherits from ContainerBase, or you can optionally add an InvisibleRenderable as shown in the following code:
 
 ```csharp
-// Don't add to managers because it will be contained in a container
-// which has already been added to managers
-bool addToManagers = false;
 var popupScreen = gumProject.Screens.First(item => item.Name == "MyScreen")
-    .ToGraphicalUiElement(SystemManagers.Default, addToManagers);
-// Give the Screen a ContainedObject so that it can have its parent assigned
-popupScreen.SetContainedObject (new InvisibleRenderable());
+    .ToGraphicalUiElement();
 popupScreen.Parent = FrameworkElement.ModalRoot;
 
 // later, the popup can be removed:

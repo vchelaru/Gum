@@ -45,8 +45,7 @@ public class Game1 : Game
             
         var screen = gumProject.Screens.Find(item => item.Name == "TitleScreen");
         
-        var screenRuntime = screen.ToGraphicalUiElement(
-            RenderingLibrary.SystemManagers.Default, addToManagers: false);
+        var screenRuntime = screen.ToGraphicalUiElement();
         screenRuntime.AddToRoot();
         
         base.Initialize();
@@ -101,8 +100,7 @@ protected override void Initialize()
         
     var screen = gumProject.Screens.Find(item => item.Name == "TitleScreen");
         
-    var screenRuntime = screen.ToGraphicalUiElement(
-        RenderingLibrary.SystemManagers.Default, addToManagers: false);
+    var screenRuntime = screen.ToGraphicalUiElement();
     screenRuntime.AddToRoot();
 
 +    var listBox = screenRuntime.GetFrameworkElementByName<ListBox>("ListBoxInstance");

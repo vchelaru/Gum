@@ -79,8 +79,7 @@ public class Game1 : Game
         var screen = gumProject.Screens.Find(item => item.Name == "Screen1");
 // End of new code
 
-        var screenRuntime = screen.ToGraphicalUiElement(
-            RenderingLibrary.SystemManagers.Default, addToManagers: false);
+        var screenRuntime = screen.ToGraphicalUiElement();
         screenRuntime.AddToRoot();
 
         base.Initialize();
@@ -102,8 +101,7 @@ partial class Screen1Runtime : Gum.Wireframe.GraphicalUiElement
             GumService.Default.Root.Clear();
             var screen = ObjectFinder.Self.GumProjectSave.Screens.Find(
                 item => item.Name == "Screen2");
-            var screenRuntime = screen.ToGraphicalUiElement(
-                RenderingLibrary.SystemManagers.Default, addToManagers: false);
+            var screenRuntime = screen.ToGraphicalUiElement();
             screenRuntime.AddToRoot();
         };
     }
@@ -120,8 +118,7 @@ partial class Screen2Runtime : Gum.Wireframe.GraphicalUiElement
             GumService.Default.Root.Clear();
             var screen = ObjectFinder.Self.GumProjectSave.Screens.Find(
                 item => item.Name == "Screen1");
-            var screenRuntime = screen.ToGraphicalUiElement(
-                RenderingLibrary.SystemManagers.Default, addToManagers: false);
+            var screenRuntime = screen.ToGraphicalUiElement();
             screenRuntime.AddToRoot();
         };
 

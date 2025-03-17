@@ -101,15 +101,17 @@ In this case, the Button is generated as part of the MainMenuRuntime.
 Therefore, the button would not be explicitly created in code. Instead, the code would create an instance of the MainMenuRuntime using the MainMenu screen. Code to create this screen might look like this:
 
 ```csharp
-Root = gumProject.Screens.First(item => item.Name == "MainMenu")
-    .ToGraphicalUiElement(SystemManagers.Default, addToManagers:true);
+var runtime = gumProject.Screens.First(item => item.Name == "MainMenu")
+    .ToGraphicalUiElement();
+// usually the screen runtime would be added to root
+runtime.AddToRoot();
 ```
 
 Of course, if the button needs to be created directly rather than part of a screen, then its element can be obtained and it can be created much the same as how a Screen is created.
 
 ```csharp
 var button = gumProject.Components.First(item => item.Name == "Button")
-    .ToGraphicalUiElement(SystemManagers.Default, addToManagers:false);
+    .ToGraphicalUiElement();
     
 // usually the button would be added to something else, like an existing root
 Root.Children.Add(button);
@@ -119,7 +121,7 @@ Note that the generated code for every component includes a method called Regist
 
 ```csharp
 var button = (ButtonRuntime)gumProject.Components.First(item => item.Name == "Button")
-    .ToGraphicalUiElement(SystemManagers.Default, addToManagers:false);
+    .ToGraphicalUiElement();
     
 ```
 

@@ -52,8 +52,7 @@ To show the screen in game, modify the Initialize method as shown in the followi
 <strong>+    // the Screens list contains all screens. Find the screen you want
 </strong>+    var screen = gumProject.Screens.Find(item => item.Name == "TitleScreen");
 +    // Calling GraphicalUiElement creates the visuals for the screen
-<strong>+    var screenRuntime = screen.ToGraphicalUiElement(
-</strong><strong>+        RenderingLibrary.SystemManagers.Default, addToManagers: false);
+<strong>+    var screenRuntime = screen.ToGraphicalUiElement();
 </strong><strong>+    screenRuntime.AddToRoot();
 </strong>
     base.Initialize();
@@ -91,8 +90,7 @@ We can modify the displayed string by getting an instance of the Text and modify
         
     var screen = gumProject.Screens.Find(item => item.Name == "TitleScreen");
         
-    var screenRuntime = screen.ToGraphicalUiElement(
-        RenderingLibrary.SystemManagers.Default, addToManagers: false);
+    var screenRuntime = screen.ToGraphicalUiElement();
         
     screenRuntime.AddToRoot();
 
@@ -120,8 +118,7 @@ protected override void Initialize()
         
     var screen = gumProject.Screens.Find(item => item.Name == "TitleScreen");
         
-    var screenRuntime = screen.ToGraphicalUiElement(
-        RenderingLibrary.SystemManagers.Default, addToManagers: false);
+    var screenRuntime = screen.ToGraphicalUiElement();
         
     screenRuntime.AddToRoot();
 
