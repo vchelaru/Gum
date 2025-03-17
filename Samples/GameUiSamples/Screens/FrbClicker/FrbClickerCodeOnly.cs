@@ -186,7 +186,7 @@ public class FrbClickerCodeOnly : BindableGue, IUpdateScreen
         if(windowOver == BallButton)
         {
             toolTip.Visible = true;
-            toolTip.Text = "Click to render a red ball manually";
+            toolTip.Text = ViewModel.ClickOverlayText;
         }
         else if(windowOver != null && 
             windowOver is BuildingButtonRuntime buildingButtonOver)

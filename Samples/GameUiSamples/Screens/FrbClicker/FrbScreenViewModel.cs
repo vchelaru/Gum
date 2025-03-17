@@ -41,6 +41,9 @@ internal class FrbScreenViewModel : ViewModel
     public string EarningsPerSecondDisplay =>
         (EarningsPerSecond).ToString() + " FRBs per second";
 
+    public string ClickOverlayText  => 
+        $"Click to render {NextClickValue} red balls manually";
+
     public event PropertyChangedEventHandler BuildingPropertyChanged;
 
     public FrbScreenViewModel()
@@ -59,11 +62,12 @@ internal class FrbScreenViewModel : ViewModel
         BuildingPropertyChanged?.Invoke(sender, e);
     }
 
+    int NextClickValue =>
+        1 + numberOfManualClicksDone / 10;
+
     public void DoManualClick()
     {
-        var toAdd = 1 + numberOfManualClicksDone / 10;
-
-        Add(toAdd);
+        Add(NextClickValue);
 
         numberOfManualClicksDone++;
     }
