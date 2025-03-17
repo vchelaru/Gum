@@ -336,6 +336,12 @@ public class FormsUtilities
                     component.Name,
                     typeof(DefaultFromFileSliderRuntime), overwriteIfAlreadyExists: false);
             }
+            else if(behaviorNames.Contains("ScrollViewerBehavior"))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileScrollViewerRuntime), overwriteIfAlreadyExists: false);
+            }
             else if (categoryNames.Contains("TextBoxCategory"))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(

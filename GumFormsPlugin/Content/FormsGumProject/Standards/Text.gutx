@@ -143,9 +143,33 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>float?</Type>
+      <Name>MaxHeight</Name>
+      <Category>Dimensions</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>int?</Type>
       <Name>MaxLettersToShow</Name>
       <Category>Text</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float?</Type>
+      <Name>MaxWidth</Name>
+      <Category>Dimensions</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float?</Type>
+      <Name>MinHeight</Name>
+      <Category>Dimensions</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float?</Type>
+      <Name>MinWidth</Name>
+      <Category>Dimensions</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
