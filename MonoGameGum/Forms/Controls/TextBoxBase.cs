@@ -4,6 +4,8 @@ using RenderingLibrary;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.ComponentModel;
+
 
 #if FRB
 using FlatRedBall.Forms.Input;
@@ -230,6 +232,12 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
 
     protected override void ReactToVisualChanged()
     {
+        if(textComponent != null)
+        {
+            // unsubscribe on old:
+            textComponent.PropertyChanged -= HandleTextComponentPropertyChanged;
+        }
+
         textComponent = base.Visual.GetGraphicalUiElementByName("TextInstance");
         caretComponent = base.Visual.GetGraphicalUiElementByName("CaretInstance");
 
@@ -277,12 +285,28 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
 
         this.textComponent.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
         caretComponent.X = 0;
+        this.textComponent.PropertyChanged += HandleTextComponentPropertyChanged;
         base.ReactToVisualChanged();
 
         // don't do this, the layout may not have yet been performed yet:
         //OffsetTextToKeepCaretInView();
 
         IsFocused = false;
+    }
+
+    private void HandleTextComponentPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        switch(e.PropertyName)
+        {
+            case "Text":
+                OnTextChanged(this.coreTextObject.RawText);
+                break;
+        }
+    }
+
+    protected virtual void OnTextChanged(string value)
+    {
+
     }
 
     private void RefreshTemplateFromSelectionInstance()

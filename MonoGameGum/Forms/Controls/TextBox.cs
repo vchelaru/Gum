@@ -29,15 +29,11 @@ public class TextBox : TextBoxBase
                 }
 
                 // go through the component instead of the core text object to force a layout refresh if necessary
+                // Calling SetProperty.
+                // This bypasses the Text change event so we need to explicitly handle text changing.
                 textComponent.SetProperty("Text", value);
 
-                CaretIndex = System.Math.Min(CaretIndex, value?.Length ?? 0);
-
-                TextChanged?.Invoke(this, EventArgs.Empty);
-
-                UpdatePlaceholderVisibility();
-
-                PushValueToViewModel();
+                OnTextChanged(value);
             }
         }
     }
@@ -273,5 +269,17 @@ public class TextBox : TextBoxBase
         }
 
         return text;
+    }
+
+    protected override void OnTextChanged(string value)
+    {
+
+        CaretIndex = System.Math.Min(CaretIndex, value?.Length ?? 0);
+
+        TextChanged?.Invoke(this, EventArgs.Empty);
+
+        UpdatePlaceholderVisibility();
+
+        PushValueToViewModel(nameof(Text));
     }
 }
