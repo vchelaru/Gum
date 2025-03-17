@@ -12,9 +12,9 @@ using ToolsUtilities;
 
 namespace GumFormsSample.Screens;
 
-internal class FormsCustomizationScreen
+internal class FormsCustomizationScreen : ContainerRuntime
 {
-    public void Initialize(GraphicalUiElement Root)
+    public void Initialize()
     {
         var button = new Button();
 
@@ -29,23 +29,23 @@ internal class FormsCustomizationScreen
             Value = Microsoft.Xna.Framework.Color.Yellow
         });
 
-        Root.Children.Add(button.Visual);
+        this.Children.Add(button.Visual);
         button.X = 0;
         button.Y = 10;
         button.Width = 100;
         button.Height = 42;
         button.Text = $"My highlight is yellow";
 
-        CreateListBoxWithCustomVisuals(Root);
+        CreateListBoxWithCustomVisuals();
 
-        CreateListBoxWithCustomUpdateToObject(Root);
+        CreateListBoxWithCustomUpdateToObject();
 
     }
 
-    private static void CreateListBoxWithCustomVisuals(GraphicalUiElement Root)
+    private void CreateListBoxWithCustomVisuals()
     {
         var listBox = new ListBox();
-        Root.Children.Add(listBox.Visual);
+        this.Children.Add(listBox.Visual);
         listBox.X = 0;
         listBox.Y = 100;
         listBox.Width = 220;
@@ -69,10 +69,10 @@ internal class FormsCustomizationScreen
         }
     }
 
-    private void CreateListBoxWithCustomUpdateToObject(GraphicalUiElement root)
+    private void CreateListBoxWithCustomUpdateToObject()
     {
         var listBox = new ListBox();
-        root.Children.Add(listBox.Visual);
+        this.Children.Add(listBox.Visual);
 
         listBox.X = 0;
         listBox.Y = 350;

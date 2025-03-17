@@ -17,12 +17,12 @@ using ToolsUtilities;
 
 namespace GumFormsSample.Screens;
 
-internal class ComplexListBoxItemScreen
+internal class ComplexListBoxItemScreen : ContainerRuntime
 {
-    public void Initialize(GraphicalUiElement root)
+    public void Initialize()
     {
         var listBox = new ListBox();
-        root.Children.Add(listBox.Visual);
+        this.Children.Add(listBox.Visual);
         listBox.X = 30;
         listBox.Y = 30;
         listBox.Width = 400;

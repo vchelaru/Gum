@@ -23,7 +23,7 @@ namespace GumFormsSample.Screens
         MenuItem EditMenuItem;
         MenuItem CustomMenuItem;
 
-        public void Initialize(List<GraphicalUiElement> roots)
+        public void Initialize()
         {
             //FileManager.RelativeDirectory = "Content/";
             var root = this;
@@ -40,7 +40,8 @@ namespace GumFormsSample.Screens
 
             CreateColumn2Ui(root);
 
-            CreateLayeredUi(roots);
+            // This requires custom roots which adds a lot of complexity so removing this for now
+            //CreateLayeredUi();
 
         }
 
@@ -328,7 +329,7 @@ namespace GumFormsSample.Screens
 
         }
 
-        void CreateLayeredUi(List<GraphicalUiElement> extraRoots)
+        void CreateLayeredUi()
         {
             var layer = new Layer();
             var layerCameraSettings = new LayerCameraSettings();
@@ -346,7 +347,7 @@ namespace GumFormsSample.Screens
             layeredContainer.XUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
             layeredContainer.XOrigin = HorizontalAlignment.Right;
             layeredContainer.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-            extraRoots.Add(layeredContainer);
+            this.Children.Add(layeredContainer);
 
             var zoomInButton = new Button();
             zoomInButton.Text = "Zoom layer in";

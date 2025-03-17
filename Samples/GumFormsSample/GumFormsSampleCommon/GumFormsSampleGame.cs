@@ -21,8 +21,6 @@ public class GumFormsSampleGame : Game
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
 
-    List<GraphicalUiElement> Roots = new List<GraphicalUiElement>();
-
     RenderTarget2D renderTarget;
 
     float scale = 1f;
@@ -49,7 +47,7 @@ public class GumFormsSampleGame : Game
         renderTarget = new RenderTarget2D(GraphicsDevice, 1024, 768);
         _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-        var gumProject = GumService.Default.Initialize(this, "FormsGumProject/GumProject.gumx");
+        GumService.Default.Initialize(this, "FormsGumProject/GumProject.gumx");
         FormsUtilities.Cursor.TransformMatrix = Matrix.CreateScale(1/scale);
 
         const int screenNumber = 1;
@@ -57,7 +55,7 @@ public class GumFormsSampleGame : Game
         switch (screenNumber)
         {
             case 0:
-                InitializeFromFileDemoScreen(gumProject);
+                InitializeFromFileDemoScreen();
                 break;
             case 1:
                 InitializeFrameworkElementExampleScreen();
@@ -71,15 +69,13 @@ public class GumFormsSampleGame : Game
             case 4:
                 {
                     var screen = new ListBoxBindingScreen();
-                    screen.AddToManagers();
-                    Roots.Add(screen);
+                    screen.AddToRoot();
                 }
                 break;
             case 5:
                 {
                     var screen = new TestScreenRuntime();
-                    screen.AddToManagers();
-                    Roots.Add(screen);
+                    screen.AddToRoot();
                 }
                 break;
         }
@@ -88,62 +84,44 @@ public class GumFormsSampleGame : Game
     }
 
 
-    private void InitializeFromFileDemoScreen(GumProjectSave gumProject)
+    private void InitializeFromFileDemoScreen()
     {
-        var screenSave = gumProject.Screens.Find(item => item.Name == "DemoScreenGum");
-
-        //var screen = screenSave.ToGraphicalUiElement(
-        //    SystemManagers.Default, addToManagers: true) as DemoScreenGumRuntime;
         var screen = new DemoScreenGumRuntime();
         screen.AddToManagers();
         screen.Initialize();
-        Roots.Add(screen);
     }
 
     private void InitializeFormsCustomizationScreen()
     {
-        var root = CreateRoot();
         var screen = new FormsCustomizationScreen();
-        screen.Initialize(root);
-        Roots.Add(root);
+        screen.Initialize();
+        screen.AddToRoot();
     }
 
     private void InitializeFrameworkElementExampleScreen()
     {
         var screen = new FrameworkElementExampleScreen();
-        screen.AddToManagers();
-        Roots.Add(screen);
-        screen.Initialize(Roots);
+        screen.AddToRoot();
+        screen.Initialize();
     }
 
 
     private void InitializeComplexListBoxItemScreen()
     {
-        var root = CreateRoot();
         var screen = new ComplexListBoxItemScreen();
-        screen.Initialize(root);
-        Roots.Add(root);
-    }
-
-    private GraphicalUiElement CreateRoot()
-    {
-        var root = new ContainerRuntime();
-
-        root.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-        root.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-        root.AddToManagers(SystemManagers.Default, null);
-        return root;
+        screen.AddToRoot();
+        screen.Initialize();
     }
 
     protected override void Update(GameTime gameTime)
     {
         var cursor = FormsUtilities.Cursor;
 
-        GumService.Default.Update(this, gameTime, Roots);
+        GumService.Default.Update(this, gameTime);
 
-        foreach(var root in Roots)
+        foreach(var item in GumService.Default.Root.Children)
         {
-            (root as IUpdateScreen)?.Update(gameTime);
+            (item as IUpdateScreen)?.Update(gameTime);
 
         }
 
