@@ -105,7 +105,7 @@
     * [Is Bold](gum-tool/gum-elements/text/is-bold.md)
     * [Is Italic](gum-tool/gum-elements/text/is-italic.md)
     * [MaxLettersToShow](gum-tool/gum-elements/text/maxletterstoshow.md)
-    * [OutlineThickness](gum-tool/gum-elements/text/outlinethickness.md)
+    * [Outline Thickness](gum-tool/gum-elements/text/outlinethickness.md)
     * [Red](gum-tool/gum-elements/text/red.md)
     * [Text](gum-tool/gum-elements/text/text.md)
     * [Text Overflow Horizontal Mode](gum-tool/gum-elements/text/text-overflow-horizontal-mode.md)

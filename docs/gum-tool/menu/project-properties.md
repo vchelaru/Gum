@@ -53,6 +53,6 @@ The following image shows a portion of an Arial 26 font png zoomed in with Font 
 
 If the Font Spacing Vertical and Font Spacing Horizontal are both increased to 5, then the spacing in between letters increases to 5 pixels, as shown in the following image:
 
-<figure><img src="../../.gitbook/assets/image.png" alt=""><figcaption><p>Font Horizontal Spacing and Font Vertical Spacing of 5</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (2).png" alt=""><figcaption><p>Font Horizontal Spacing and Font Vertical Spacing of 5</p></figcaption></figure>
 
 Typically the two values should be set equally, and the amount of spacing needed depends on how much blurring (mipmap levels) is needed.
