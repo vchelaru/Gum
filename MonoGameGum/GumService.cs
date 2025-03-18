@@ -14,6 +14,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using ToolsUtilities;
 
 namespace MonoGameGum;
@@ -46,6 +47,8 @@ public class GumService
 
     public InteractiveGue Root { get; private set; } = new ContainerRuntime();
 
+    Game _game;
+
     #region Initialize
 
     public GumProjectSave? Initialize(Game game, string? gumProjectFile = null)
@@ -61,7 +64,8 @@ public class GumService
     }
 
     GumProjectSave? InitializeInternal(Game game, GraphicsDevice graphicsDevice, string? gumProjectFile = null)
-    { 
+    {
+        _game = game;
         RegisterRuntimeTypesThroughReflection();
         SystemManagers.Default = new SystemManagers();
 #if NET6_0_OR_GREATER
@@ -141,6 +145,11 @@ public class GumService
     #endregion
 
     #region Update
+
+    public void Update(GameTime gameTime)
+    {
+        Update(_game, gameTime);
+    }
 
     public void Update(Game game, GameTime gameTime)
     {

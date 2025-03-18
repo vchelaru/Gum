@@ -366,6 +366,33 @@ namespace RenderingLibrary.Graphics
                 //ToDo: Atlas support  **************************************************************
                 var spaceCharInfo = parsedData.Chars.FirstOrDefault(x => x.Id == ' ');
 
+                // Hiero "Extended" does not include the space character.
+                // This used to cause a rendering crash. That was fixed but
+                // even with it fixed we want to make sure we have a valid space
+                // character since it's so common.
+                bool wasSpaceCreatedDynamically = false;
+                if(spaceCharInfo == null)
+                {
+                    wasSpaceCreatedDynamically = true;
+
+                    var fontSize = 18;
+
+                    if(parsedData.Info?.Size > 0)
+                    {
+                        fontSize = parsedData.Info.Size;
+                    }
+
+                    // Arial 32 has 9 spacing for 32, so let's try 3
+                    int spaceSize = fontSize / 3;
+
+                    spaceCharInfo = new FontFileCharLine
+                    {
+                        Id = (char)' ',
+                        XAdvance = spaceSize,
+                        Width = spaceSize
+                    };
+                }
+
                 // Added null check for space since some special fonts might not have a space inside them.
                 if (spaceCharInfo != null)
                 {
@@ -402,6 +429,12 @@ namespace RenderingLibrary.Graphics
                 foreach (var charInfo in parsedData.Chars)
                 {
                     mCharacterInfo[charInfo.Id] = FillBitmapCharacterInfo(charInfo, mTextures[0].Width,
+                        mTextures[0].Height, mLineHeightInPixels);
+                }
+
+                if(wasSpaceCreatedDynamically)
+                {
+                    mCharacterInfo[' '] = FillBitmapCharacterInfo(spaceCharInfo, mTextures[0].Width,
                         mTextures[0].Height, mLineHeightInPixels);
                 }
 
@@ -836,31 +869,49 @@ namespace RenderingLibrary.Graphics
             }
             BitmapCharacterInfo characterInfo = GetCharacterInfo(c);
 
-            int sourceLeft = characterInfo.GetPixelLeft(Texture);
-            int sourceTop = characterInfo.GetPixelTop(Texture);
-            int sourceWidth = characterInfo.GetPixelRight(Texture) - sourceLeft;
-            int sourceHeight = characterInfo.GetPixelBottom(Texture) - sourceTop;
+            int sourceLeft = 0;
+            int sourceTop = 0;
+            int sourceWidth = 0;
+            int sourceHeight = 0;
+
+            if(characterInfo != null)
+            {
+                sourceLeft = characterInfo.GetPixelLeft(Texture);
+                sourceTop = characterInfo.GetPixelTop(Texture);
+                sourceWidth = characterInfo.GetPixelRight(Texture) - sourceLeft;
+                sourceHeight = characterInfo.GetPixelBottom(Texture) - sourceTop;
+            }
+
             var sourceRectangle = new Rectangle(sourceLeft, sourceTop, sourceWidth, sourceHeight);
 
-            pageIndex = characterInfo.PageNumber;
+            if(characterInfo != null)
+            {
+                pageIndex = characterInfo.PageNumber;
 
-            int distanceFromTop = characterInfo.GetPixelDistanceFromTop(mLineHeightInPixels);
+                int distanceFromTop = characterInfo.GetPixelDistanceFromTop(mLineHeightInPixels);
 
-            // There could be some offset for this character
-            int xOffset = 
-                characterInfo.XOffsetInPixels;
-            //characterInfo.GetPixelXOffset(mLineHeightInPixels);
+                // There could be some offset for this character
+                int xOffset = 
+                    characterInfo.XOffsetInPixels;
+                //characterInfo.GetPixelXOffset(mLineHeightInPixels);
 
-            // Shift the point by the xOffset, which affects destination (drawing) but does not affect the advance of the position for the next letter
-            currentCharacterDrawPosition.X += xOffset * fontScale;
-            currentCharacterDrawPosition.Y = GetCharacterTop(lineNumber, distanceFromTop, fontScale, lineHeightMultiplier);
-            destinationRectangle = new FloatRectangle(currentCharacterDrawPosition.X, currentCharacterDrawPosition.Y, sourceWidth * fontScale, sourceHeight * fontScale);
+                // Shift the point by the xOffset, which affects destination (drawing) but does not affect the advance of the position for the next letter
+                currentCharacterDrawPosition.X += xOffset * fontScale;
+                currentCharacterDrawPosition.Y = GetCharacterTop(lineNumber, distanceFromTop, fontScale, lineHeightMultiplier);
+                destinationRectangle = new FloatRectangle(currentCharacterDrawPosition.X, currentCharacterDrawPosition.Y, sourceWidth * fontScale, sourceHeight * fontScale);
 
-            // Shift it back.
-            currentCharacterDrawPosition.X -= xOffset * fontScale;
-            currentCharacterDrawPosition.X += 
-                //characterInfo.GetXAdvanceInPixels(mLineHeightInPixels) * fontScale;
-                characterInfo.XAdvance * fontScale;
+                // Shift it back.
+                currentCharacterDrawPosition.X -= xOffset * fontScale;
+                currentCharacterDrawPosition.X += 
+                    //characterInfo.GetXAdvanceInPixels(mLineHeightInPixels) * fontScale;
+                    characterInfo.XAdvance * fontScale;
+            }
+            else
+            {
+                pageIndex = 0;
+                destinationRectangle = new FloatRectangle(currentCharacterDrawPosition.X, currentCharacterDrawPosition.Y, 0, 0);
+            }
+
 
 
             return sourceRectangle;
@@ -1248,6 +1299,7 @@ namespace RenderingLibrary.Graphics
                         else if (character == '"' && isInQuotes)
                         {
                             isInQuotes = false;
+                            currentAttributeName = null;
                             wordStartIndex = null; // ignore string attributes for now, we only use numerics
                         }
                     }
@@ -1312,12 +1364,17 @@ namespace RenderingLibrary.Graphics
         private class FontFileInfoLine
         {
             public int Outline { get; set; }
+            public int Size { get; set; }
 
             public FontFileInfoLine(ParsedFontLine line)
             {
                 if(line.NumericAttributes.ContainsKey("outline"))
                 {
                     Outline = line.NumericAttributes["outline"];
+                }
+                if(line.NumericAttributes.ContainsKey("size"))
+                {
+                    Size = line.NumericAttributes["size"];
                 }
             }
         }
@@ -1346,6 +1403,8 @@ namespace RenderingLibrary.Graphics
             public int XAdvance { get; set; }
             public int Page { get; set; }
 
+            public FontFileCharLine() { }
+
             public FontFileCharLine(ParsedFontLine line)
             {
                 Id = line.NumericAttributes["id"];
@@ -1360,6 +1419,11 @@ namespace RenderingLibrary.Graphics
                 {
                     Page = line.NumericAttributes["page"];
                 }
+            }
+
+            public override string ToString()
+            {
+                return (char)Id + " on page " + Page;
             }
         }
 
