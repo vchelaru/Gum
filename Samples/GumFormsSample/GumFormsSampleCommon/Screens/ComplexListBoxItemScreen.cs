@@ -19,6 +19,14 @@ namespace GumFormsSample.Screens;
 
 internal class ComplexListBoxItemScreen : ContainerRuntime
 {
+    public ComplexListBoxItemScreen()
+    {
+        this.Width = 0;
+        this.WidthUnits = DimensionUnitType.RelativeToParent;
+        this.Height = 0;
+        this.HeightUnits = DimensionUnitType.RelativeToParent;
+    }
+
     public void Initialize()
     {
         var listBox = new ListBox();
