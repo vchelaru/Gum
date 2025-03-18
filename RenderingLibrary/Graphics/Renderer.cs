@@ -572,11 +572,12 @@ namespace RenderingLibrary.Graphics
             Camera.Y = oldCameraY;
             GraphicsDevice.Viewport = oldViewport;
 
-            if(!System.IO.File.Exists("Output.png"))
-            {
-                using var stream = System.IO.File.OpenWrite("Output.png");
-                renderTarget.SaveAsPng(stream, renderTarget.Width, renderTarget.Height);
-            }
+            // Uncomment this to test saving...
+            //if(!System.IO.File.Exists("Output.png"))
+            //{
+            //    using var stream = System.IO.File.OpenWrite("Output.png");
+            //    renderTarget.SaveAsPng(stream, renderTarget.Width, renderTarget.Height);
+            //}
         }
 
         private void Render(IList<IRenderableIpso> whatToRender, SystemManagers managers, Layer layer)
@@ -619,7 +620,7 @@ namespace RenderingLibrary.Graphics
 
                     var renderTarget = renderTargetService.GetRenderTargetFor(GraphicsDevice, renderable, Camera);
 
-                    Sprite.Render(managers, spriteRenderer, renderable, renderTarget, color);                  
+                    Sprite.Render(managers, spriteRenderer, renderable, renderTarget, color, rotationInDegrees:renderable.Rotation);                  
                 }
                 else
                 {

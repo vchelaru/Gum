@@ -231,7 +231,11 @@ namespace RenderingLibrary.Graphics
                     sourceRect = SinglePixelTextureSourceRectangle;
                 }
 
-                Sprite.Render(managers as SystemManagers, renderer.SpriteRenderer, this, texture, Color, sourceRect, false, this.GetAbsoluteRotation());
+                var rotation =
+                    this.GetAbsoluteRotation(ignoreParentRotationIfRenderTarget: true);
+
+                Sprite.Render(managers as SystemManagers, renderer.SpriteRenderer, this, texture, Color, sourceRect, false, 
+                    rotation);
             }
         }
 

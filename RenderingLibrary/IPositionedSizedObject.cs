@@ -189,15 +189,23 @@ namespace RenderingLibrary
         /// </summary>
         /// <param name="ipso">The object for which to return rotation.</param>
         /// <returns>The rotation in degrees.</returns>
-        public static float GetAbsoluteRotation(this IRenderableIpso ipso)
+        public static float GetAbsoluteRotation(this IRenderableIpso ipso, bool ignoreParentRotationIfRenderTarget = false)
         {
-            if(ipso.Parent == null)
+            var thisRotation = ipso.Rotation;
+
+            if(ignoreParentRotationIfRenderTarget && ipso.IsRenderTarget)
             {
-                return ipso.Rotation;
+                thisRotation = 0;
+            }
+
+            if (ipso.Parent == null)
+            {
+
+                return thisRotation;
             }
             else
             {
-                return ipso.Rotation + ipso.Parent.GetAbsoluteRotation();
+                return thisRotation + ipso.Parent.GetAbsoluteRotation(ignoreParentRotationIfRenderTarget);
             }
         }
 
