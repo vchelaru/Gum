@@ -1,5 +1,4 @@
 ﻿using Gum.Wireframe;
-using Microsoft.Xna.Framework.Input;
 
 
 using RenderingLibrary.Graphics;
@@ -15,7 +14,10 @@ using ToolsUtilities;
 using System.Threading;
 
 
+
 #if FRB
+using Keys = Microsoft.Xna.Framework.Input.Keys;
+using Microsoft.Xna.Framework.Input;
 using static FlatRedBall.Input.Xbox360GamePad;
 using FlatRedBall.Forms.GumExtensions;
 using FlatRedBall.Forms.Input;
@@ -26,7 +28,12 @@ using InteractiveGue = global::Gum.Wireframe.GraphicalUiElement;
 using BindableGue = global::Gum.Wireframe.GraphicalUiElement;
 using Buttons = FlatRedBall.Input.Xbox360GamePad.Button;
 namespace FlatRedBall.Forms.Controls;
+#elif RAYLIB
+using RaylibGum;
 #else
+using Keys = Microsoft.Xna.Framework.Input.Keys;
+
+using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Input;
 namespace MonoGameGum.Forms.Controls;
 #endif

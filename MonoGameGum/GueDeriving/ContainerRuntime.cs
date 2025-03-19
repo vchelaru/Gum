@@ -1,5 +1,4 @@
 ﻿using Gum.Wireframe;
-using RaylibGum.RenderingLibrary;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
@@ -7,6 +6,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
+#if RAYLIB
+using RaylibGum.RenderingLibrary;
+#endif
 
 namespace MonoGameGum.GueDeriving
 {
