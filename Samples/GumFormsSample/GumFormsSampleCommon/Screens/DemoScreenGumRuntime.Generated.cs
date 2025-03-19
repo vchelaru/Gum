@@ -102,6 +102,7 @@ namespace GumFormsSample.Screens
         public MenuItemRuntime MenuItemInstance1 { get; protected set; }
         public MenuItemRuntime MenuItemInstance2 { get; protected set; }
         public MenuItemRuntime MenuItemInstance3 { get; protected set; }
+        public TextBoxRuntime SizedBasedOnContentsTextBox { get; protected set; }
 
         public DemoScreenGumRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         {
@@ -198,6 +199,7 @@ namespace GumFormsSample.Screens
             MenuItemInstance1 = this.GetGraphicalUiElementByName("MenuItemInstance1") as MenuItemRuntime;
             MenuItemInstance2 = this.GetGraphicalUiElementByName("MenuItemInstance2") as MenuItemRuntime;
             MenuItemInstance3 = this.GetGraphicalUiElementByName("MenuItemInstance3") as MenuItemRuntime;
+            SizedBasedOnContentsTextBox = this.GetGraphicalUiElementByName("SizedBasedOnContentsTextBox") as TextBoxRuntime;
             CustomInitialize();
         }
         //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

@@ -335,6 +335,11 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>Sizing</Type>
+      <Name>SizingState</Name>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>State</Type>
       <Name>State</Name>
       <Category>States and Visibility</Category>
@@ -567,6 +572,30 @@
     </State>
     <State>
       <Name>Multi</Name>
+    </State>
+  </Category>
+  <Category>
+    <Name>Sizing</Name>
+    <State>
+      <Name>BasedOnContents</Name>
+      <Variable>
+        <Type>float?</Type>
+        <Name>MinWidth</Name>
+        <Value xsi:type="xsd:float">50</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>float</Type>
+        <Name>Width</Name>
+        <Value xsi:type="xsd:float">5</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>DimensionUnitType</Type>
+        <Name>WidthUnits</Name>
+        <Value xsi:type="xsd:int">4</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
     </State>
   </Category>
   <Instance>

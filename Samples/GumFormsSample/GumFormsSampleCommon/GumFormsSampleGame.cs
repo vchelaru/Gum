@@ -50,7 +50,7 @@ public class GumFormsSampleGame : Game
         GumService.Default.Initialize(this, "FormsGumProject/GumProject.gumx");
         FormsUtilities.Cursor.TransformMatrix = Matrix.CreateScale(1/scale);
 
-        const int screenNumber = 3;
+        const int screenNumber = 0;
 
         switch (screenNumber)
         {
@@ -87,7 +87,7 @@ public class GumFormsSampleGame : Game
     private void InitializeFromFileDemoScreen()
     {
         var screen = new DemoScreenGumRuntime();
-        screen.AddToManagers();
+        screen.AddToRoot();
         screen.Initialize();
     }
 
@@ -116,8 +116,12 @@ public class GumFormsSampleGame : Game
     protected override void Update(GameTime gameTime)
     {
         var cursor = FormsUtilities.Cursor;
-
+        if(cursor.PrimaryPush)
+        {
+            int m = 3;
+        }
         GumService.Default.Update(this, gameTime);
+        System.Diagnostics.Debug.WriteLine(cursor.WindowOver);
 
         foreach(var item in GumService.Default.Root.Children)
         {

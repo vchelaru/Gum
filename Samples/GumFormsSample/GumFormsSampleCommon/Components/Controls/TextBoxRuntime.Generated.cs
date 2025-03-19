@@ -32,6 +32,10 @@ namespace GumFormsSample.Components
             Single,
             Multi,
         }
+        public enum Sizing
+        {
+            BasedOnContents,
+        }
 
         public TextBoxCategory TextBoxCategoryState
         {
@@ -65,6 +69,25 @@ namespace GumFormsSample.Components
                 else
                 {
                     var category = ((Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "LineModeCategory");
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.ApplyState(state);
+                }
+            }
+        }
+
+        public Sizing SizingState
+        {
+            set
+            {
+                if(Categories.ContainsKey("Sizing"))
+                {
+                    var category = Categories["Sizing"];
+                    var state = category.States.Find(item => item.Name == value.ToString());
+                    this.ApplyState(state);
+                }
+                else
+                {
+                    var category = ((Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == "Sizing");
                     var state = category.States.Find(item => item.Name == value.ToString());
                     this.ApplyState(state);
                 }
