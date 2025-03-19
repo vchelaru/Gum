@@ -71,7 +71,7 @@ public class FormsUtilities
         // Do an initial update to update connectivity
         UpdateGamepads(0);
 
-        FrameworkElement.MainCursor = cursor;
+        FrameworkElement.MainCursor = cursor;   
 
         if (SystemManagers.Default == null)
         {

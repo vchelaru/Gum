@@ -1,8 +1,10 @@
 ﻿using Gum.Wireframe;
 using GumTest.Renderables;
 using Raylib_cs;
+using RaylibGum;
 using RaylibGum.Renderables;
 using RenderingLibrary.Graphics;
+using System.Runtime.CompilerServices;
 using static Raylib_cs.Raylib;
 
 namespace Examples.Shapes;
@@ -44,17 +46,18 @@ public class BasicShapes
         UnloadImage(image);
         //--------------------------------------------------------------------------------------
 
-
+        GumService.Default.Initialize();
         // 
-        Root.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-        Root.Width = 0;
-        Root.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-        Root.Height = 0;
+
 
         var container = new GraphicalUiElement(new InvisibleRenderable());
-        Root.Children.Add(container);
+        container.AddToRoot();
         container.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
         container.StackSpacing = 2;
+        container.Width = 0;
+        container.Height = 0;
+        container.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        container.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
 
         // let's set a top to bottom stack
         for (int i = 0; i < 3; i++)
@@ -89,10 +92,16 @@ public class BasicShapes
             var rectangle = new SolidRectangle();
             rectangle.Color = Color.Green;
 
-            var child = new GraphicalUiElement(rectangle);
+            var child = new InteractiveGue(rectangle);
+            child.Name = "Rectangle " + i;
             child.Height = 30;
             child.Width = 60;
             container.Children.Add(child);
+
+            child.Click += (_,_) =>
+            {
+                child.X += 10;
+            };
         }
 
 
@@ -113,8 +122,6 @@ public class BasicShapes
             /* Raylib supports drawing simple 2d shapes with internal functions 
             so uncomment the following lines to see it in action */
 
-            // DrawText("some basic shapes available on raylib", 20, 20, 20, Color.DarkGray);
-
             // DrawLine(18, 42, screenWidth - 18, 42, Color.Black);
 
             // DrawCircle(screenWidth / 4, 120, 35, Color.DarkBlue);
@@ -124,11 +131,11 @@ public class BasicShapes
             //     new Vector2(screenWidth / 4 * 3 - 60, 150),
             //     new Vector2(screenWidth / 4 * 3 + 60, 150), Color.Violet
             // );
-            Root.UpdateLayout();
-            DrawGumRecursively(Root);
 
 
+            GumService.Default.Update(0);
 
+            GumService.Default.Draw();
 
             EndDrawing();
             //----------------------------------------------------------------------------------
@@ -141,22 +148,4 @@ public class BasicShapes
 
     }
 
-    private static void DrawGumRecursively(GraphicalUiElement element)
-    {
-        var shouldDrawSelf = element.RenderableComponent is Sprite;
-
-        element.Render(null);
-
-        if(element.Children != null)
-        {
-            foreach(var child in element.Children)
-            {
-                if(child is GraphicalUiElement childGue)
-                {
-                    DrawGumRecursively(childGue);
-                }
-            }
-        }
-
-    }
 }

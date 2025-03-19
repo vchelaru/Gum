@@ -7,11 +7,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\..\MonoGameGum\GueDeriving\ContainerRuntime.cs" Link="GueDeriving\ContainerRuntime.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Raylib-cs" Version="7.0.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="GueDeriving\" />
   </ItemGroup>
 
 </Project>
