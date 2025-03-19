@@ -67,7 +67,7 @@ namespace Gum.Managers
         /// Provides quick access to Gum objects by name. Elements do not prefix their type
         /// so a Screen would be "MainScreen" rather than "Screens/MainScreen"
         /// </summary>
-        Dictionary<string, ElementSave> cachedDictionary;
+        Dictionary<string, ElementSave>? cachedDictionary;
 
         public static ObjectFinder Self
         {
@@ -104,7 +104,7 @@ namespace Gum.Managers
             cacheEnableCount++;
             if (cacheEnableCount == 1)
             {
-                cachedDictionary = new Dictionary<string, ElementSave>();
+                cachedDictionary = new Dictionary<string, ElementSave>(StringComparer.OrdinalIgnoreCase);
 
                 var gumProject = GumProjectSave;
 
@@ -113,7 +113,7 @@ namespace Gum.Managers
 
                 foreach (var screen in gumProject.Screens)
                 {
-                    var name = screen.Name.ToLowerInvariant();
+                    var name = screen.Name;
                     if(!cachedDictionary.ContainsKey(name))
                     {
                         cachedDictionary.Add(name, screen);
@@ -122,7 +122,7 @@ namespace Gum.Managers
 
                 foreach(var component in gumProject.Components)
                 {
-                    var name = component.Name.ToLowerInvariant();
+                    var name = component.Name;
                     if (!cachedDictionary.ContainsKey(name))
                     {
                         cachedDictionary.Add(name, component);
@@ -131,7 +131,7 @@ namespace Gum.Managers
 
                 foreach (var standard in gumProject.StandardElements)
                 {
-                    var name = standard.Name.ToLowerInvariant();
+                    var name = standard.Name;
                     if (!cachedDictionary.ContainsKey(name))
                     {
                         cachedDictionary.Add(name, standard);
@@ -165,14 +165,13 @@ namespace Gum.Managers
         /// </summary>
         /// <param name="screenName"></param>
         /// <returns></returns>
-        public ScreenSave GetScreen(string screenName)
+        public ScreenSave? GetScreen(string screenName)
         {
             if(cachedDictionary != null)
             {
-                var nameInvariant = screenName.ToLowerInvariant();
-                if (nameInvariant != null && cachedDictionary.ContainsKey(nameInvariant))
+                if (screenName != null && cachedDictionary.ContainsKey(screenName))
                 {
-                    return cachedDictionary[nameInvariant] as ScreenSave;
+                    return cachedDictionary[screenName] as ScreenSave;
                 }
             }
             else
@@ -199,14 +198,13 @@ namespace Gum.Managers
 
         public ComponentSave GetComponent(InstanceSave instance) => GetComponent(instance.BaseType);
 
-        public ComponentSave GetComponent(string componentName)
+        public ComponentSave? GetComponent(string componentName)
         {
             if (cachedDictionary != null)
             {
-                var nameInvariant = componentName.ToLowerInvariant();
-                if (nameInvariant != null && cachedDictionary.ContainsKey(nameInvariant))
+                if (componentName != null && cachedDictionary.ContainsKey(componentName))
                 {
-                    return cachedDictionary[nameInvariant] as ComponentSave;
+                    return cachedDictionary[componentName] as ComponentSave;
                 }
             }
             else
@@ -232,14 +230,13 @@ namespace Gum.Managers
             return null;
         }
 
-        public StandardElementSave GetStandardElement(string elementName)
+        public StandardElementSave? GetStandardElement(string elementName)
         {
             if (cachedDictionary != null)
             {
-                var nameInvariant = elementName?.ToLowerInvariant();
-                if (nameInvariant != null && cachedDictionary.ContainsKey(nameInvariant))
+                if (elementName != null && cachedDictionary.ContainsKey(elementName))
                 {
-                    return cachedDictionary[nameInvariant] as StandardElementSave;
+                    return cachedDictionary[elementName] as StandardElementSave;
                 }
             }
             else
@@ -277,15 +274,13 @@ namespace Gum.Managers
         /// </summary>
         /// <param name="elementName">The name of the ElementSave to search for</param>
         /// <returns>The matching ElementSave, or null if none is found</returns>
-        public ElementSave GetElementSave(string elementName)
+        public ElementSave? GetElementSave(string elementName)
         {
             if(cachedDictionary != null)
             {
-                var nameInvariant = elementName?.ToLowerInvariant();
-
-                if(nameInvariant != null && cachedDictionary.ContainsKey(nameInvariant))
+                if(elementName != null && cachedDictionary.ContainsKey(elementName))
                 {
-                    return cachedDictionary[nameInvariant];
+                    return cachedDictionary[elementName];
                 }
             }
             else

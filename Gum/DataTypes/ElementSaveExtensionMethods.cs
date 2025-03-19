@@ -281,15 +281,22 @@ namespace Gum.DataTypes
             return null;
         }
 
-        public static StateSaveCategory GetStateSaveCategoryRecursively(this ElementSave element, string categoryName)
-        {
-            ElementSave throwaway;
-            return GetStateSaveCategoryRecursively(element, categoryName, out throwaway);
-        }
+        public static StateSaveCategory GetStateSaveCategoryRecursively(this ElementSave element, string categoryName) =>
+            GetStateSaveCategoryRecursively(element, categoryName, out ElementSave? _);
 
-        public static StateSaveCategory GetStateSaveCategoryRecursively(this ElementSave element, string categoryName, out ElementSave categoryContainer)
+        public static StateSaveCategory GetStateSaveCategoryRecursively(this ElementSave element, string categoryName, 
+            out ElementSave? categoryContainer)
         {
-            var foundCategory = element.Categories.FirstOrDefault(item => item.Name == categoryName);
+
+            StateSaveCategory? foundCategory = null;
+            foreach(var item in element.Categories)
+            {
+                if( item.Name == categoryName)
+                {
+                    foundCategory = item;
+                    break;
+                }
+            }
 
             if (foundCategory != null)
             {
