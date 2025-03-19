@@ -175,6 +175,7 @@ namespace GumRuntime
                 graphicalElement.HeightUnits = DimensionUnitType.RelativeToContainer;
                 graphicalElement.Width = 0;
                 graphicalElement.Height = 0;
+                graphicalElement.Visible = true;
             }
 
             if (containedObject != null)
