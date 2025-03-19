@@ -1,6 +1,7 @@
 ﻿using Gum.Wireframe;
 using GumTest.Renderables;
 using Raylib_cs;
+using RaylibGum.Renderables;
 using RenderingLibrary.Graphics;
 using static Raylib_cs.Raylib;
 
@@ -53,9 +54,10 @@ public class BasicShapes
         var container = new GraphicalUiElement(new InvisibleRenderable());
         Root.Children.Add(container);
         container.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+        container.StackSpacing = 2;
 
         // let's set a top to bottom stack
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < 3; i++)
         {
             var sprite = new Sprite();
             sprite.Texture = texture;
@@ -79,6 +81,17 @@ public class BasicShapes
             child.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
             child.FontSize = 12 + i * 4;
 
+            container.Children.Add(child);
+        }
+
+        for(int i = 0; i < 3; i++)
+        {
+            var rectangle = new SolidRectangle();
+            rectangle.Color = Color.Green;
+
+            var child = new GraphicalUiElement(rectangle);
+            child.Height = 30;
+            child.Width = 60;
             container.Children.Add(child);
         }
 

@@ -10,7 +10,7 @@ using System.Xml.Linq;
 using static Raylib_cs.Raylib;
 
 namespace GumTest.Renderables;
-internal class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate
+public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate
 {
     public Texture2D Texture { get; set; }
     public System.Drawing.Rectangle? SourceRectangle { get; set; }
@@ -31,5 +31,6 @@ internal class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate
         int y = (int)this.GetAbsoluteTop();
 
         DrawTexture(Texture, x, y, Color.White);
+
     }
 }

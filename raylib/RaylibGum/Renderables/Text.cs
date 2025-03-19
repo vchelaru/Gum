@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using static Raylib_cs.Raylib;
 
 namespace GumTest.Renderables;
-internal class Text : InvisibleRenderable, IText
+public class Text : InvisibleRenderable, IText
 {
     Font _font;
 
