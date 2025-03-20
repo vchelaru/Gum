@@ -256,6 +256,8 @@ public class TextBox : TextBoxBase
         }
     }
 
+    #region Truncation
+
     protected override void TruncateTextToMaxLength()
     {
         Text = TruncateTextToMaxLength(Text);
@@ -270,6 +272,8 @@ public class TextBox : TextBoxBase
 
         return text;
     }
+
+    #endregion
 
     protected override void OnTextChanged(string value)
     {
