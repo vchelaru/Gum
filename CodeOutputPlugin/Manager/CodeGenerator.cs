@@ -2110,10 +2110,15 @@ public class CodeGenerator
 
     private static void GenerateClassHeader(CodeGenerationContext context)
     {
-        const string access = "public";
+        //const string access = "public";
+        // According to this:https://github.com/vchelaru/Gum/issues/581
+        // We should not provide any access, an dinstead should
+        // default to internal so that users can control their class
+        // scope in the generated code.
+        const string accessWithSpace = "";
 
         var header =
-            $"{access} partial class {GetClassNameForType(context.Element.Name, context.VisualApi, context)}";
+            $"{accessWithSpace}partial class {GetClassNameForType(context.Element.Name, context.VisualApi, context)}";
 
         if (context.CodeOutputProjectSettings.InheritanceLocation == InheritanceLocation.InGeneratedCode)
         {

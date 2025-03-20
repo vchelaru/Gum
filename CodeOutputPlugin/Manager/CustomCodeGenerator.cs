@@ -81,6 +81,8 @@ namespace CodeOutputPlugin.Manager
             context.Element = element;
             context.CodeOutputProjectSettings = projectSettings;
 
+            // intentionally do not include "public" or "internal" so the user can customize this as desired
+            // https://github.com/vchelaru/Gum/issues/581
             var classHeader = $"partial class {CodeGenerator.GetClassNameForType(element.Name, visualApi, context)} : {inheritance}";
             return classHeader;
         }
