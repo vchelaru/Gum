@@ -219,7 +219,7 @@ public abstract class RangeBase : FrameworkElement
         // it. Not sure why...perhaps to
         // not break old FRB projects?
         var trackLocal = this.Visual.GetGraphicalUiElementByName("TrackInstance");
-#if MONOGAME
+#if MONOGAME && !FRB
 
 #if DEBUG
         if (trackLocal == null)
