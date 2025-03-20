@@ -145,6 +145,8 @@ public class ItemsControl : ScrollViewer
 
     #endregion
 
+    #region Constructor/Initialize
+
     public ItemsControl() : base()
     {
         Items = new ObservableCollection<object>();
@@ -154,6 +156,18 @@ public class ItemsControl : ScrollViewer
     {
         Items = new ObservableCollection<object>();
     }
+
+    protected override void ReactToVisualChanged()
+    {
+        base.ReactToVisualChanged();
+
+        if(InnerPanel != null)
+        {
+            InnerPanel.Children.CollectionChanged += HandleInnerPanelCollectionChanged;
+        }
+    }
+
+    #endregion
 
     protected virtual FrameworkElement CreateNewItemFrameworkElement(object o)
     {
@@ -198,16 +212,6 @@ public class ItemsControl : ScrollViewer
             var gumConstructor = listBoxItemGumType.GetConstructor(new[] { typeof(bool), typeof(bool) });
             var visual = gumConstructor.Invoke(new object[] { true, true }) as InteractiveGue;
             return visual;
-        }
-    }
-
-    protected override void ReactToVisualChanged()
-    {
-        base.ReactToVisualChanged();
-
-        if(InnerPanel != null)
-        {
-            InnerPanel.Children.CollectionChanged += HandleInnerPanelCollectionChanged;
         }
     }
 
