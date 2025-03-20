@@ -212,14 +212,14 @@ public abstract class RangeBase : FrameworkElement
 
     private void AssignExplicitTrack()
     {
-#if FRB
-        explicitTrack = this.Visual.GetGraphicalUiElementByName("TrackInstance");
-        if (explicitTrack != null)
-        {
-            explicitTrack.RaiseChildrenEventsOutsideOfBounds = true;
-        }
-#elif MONOGAME
+        // Vic says
+        // It seems FRB
+        // tolerates a missing
+        // track, but MonoGame requires
+        // it. Not sure why...perhaps to
+        // not break old FRB projects?
         var trackLocal = this.Visual.GetGraphicalUiElementByName("TrackInstance");
+#if MONOGAME
 
 #if DEBUG
         if (trackLocal == null)
@@ -232,12 +232,12 @@ public abstract class RangeBase : FrameworkElement
         }
 #endif
 
+#endif
         explicitTrack = (InteractiveGue)trackLocal;
         if (trackLocal is InteractiveGue trackAsInteractive)
         {
             trackAsInteractive.RaiseChildrenEventsOutsideOfBounds = true;
         }
-#endif
     }
 
 #if FRB
@@ -354,8 +354,8 @@ public abstract class RangeBase : FrameworkElement
         }
     }
 
-    #endregion
-
+    // This is handling ThisRollOver, but it only does anything if the user pushed on the thumb,
+    // so moving it to the ThumbEvents region
     private void HandleThisRollOver(object sender, EventArgs args)
     {
         var cursor = MainCursor;
@@ -364,6 +364,7 @@ public abstract class RangeBase : FrameworkElement
             UpdateThumbPositionToCursorDrag(cursor);
         }
     }
+    #endregion
 
 
     protected virtual double ApplyValueConsideringSnapping(double newValue)

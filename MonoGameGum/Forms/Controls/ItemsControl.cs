@@ -169,6 +169,8 @@ public class ItemsControl : ScrollViewer
 
     #endregion
 
+    #region Create New Item
+
     protected virtual FrameworkElement CreateNewItemFrameworkElement(object o)
     {
         var label = new Label();
@@ -215,7 +217,8 @@ public class ItemsControl : ScrollViewer
         }
     }
 
-    
+    #endregion
+
     /// <inheritdoc/>
     protected override void ReactToVisualRemoved()
     {
@@ -304,10 +307,7 @@ public class ItemsControl : ScrollViewer
                     {
                         var newItem = item as FrameworkElement ?? CreateNewItemFrameworkElement(item);
 
-                        if (InnerPanel != null)
-                        {
-                            InnerPanel.Children.Insert(index, newItem.Visual);
-                        }
+                        InnerPanel?.Children.Insert(index, newItem.Visual);
 
 
                         newItem.Visual.Parent = InnerPanel;

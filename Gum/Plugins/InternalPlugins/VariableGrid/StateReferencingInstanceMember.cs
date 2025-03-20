@@ -766,7 +766,7 @@ namespace Gum.PropertyGridHelpers
             //}
 
             StateSave state = SelectedState.Self.SelectedStateSave;
-            VariableSave variable = state.GetVariableSave(variableName);
+            VariableSave variable = state?.GetVariableSave(variableName);
             var oldValue = variable?.Value;
             LastOldFullCommitValue = oldValue;
 
@@ -853,7 +853,7 @@ namespace Gum.PropertyGridHelpers
                 else
                 {
                     // Maybe this is a variable list?
-                    VariableListSave variableList = state.GetVariableListSave(variableName);
+                    VariableListSave variableList = state?.GetVariableListSave(variableName);
                     if (variableList != null)
                     {
                         state.VariableLists.Remove(variableList);
@@ -864,7 +864,10 @@ namespace Gum.PropertyGridHelpers
                     }
                 }
 
-                ElementSaveExtensions.ApplyVariableReferences(selectedElement, state);
+                if(selectedElement != null)
+                {
+                    ElementSaveExtensions.ApplyVariableReferences(selectedElement, state);
+                }
 
 
                 if (wasChangeMade)

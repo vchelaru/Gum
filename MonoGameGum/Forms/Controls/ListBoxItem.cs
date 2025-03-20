@@ -16,7 +16,7 @@ public class ListBoxItem : FrameworkElement
     bool isSelected;
     public bool IsSelected
     {
-        get { return isSelected; }
+        get => isSelected; 
         set
         {
             if (value != isSelected)

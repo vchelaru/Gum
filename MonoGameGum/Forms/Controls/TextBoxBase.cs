@@ -258,13 +258,19 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
 
         placeholderComponent = base.Visual.GetGraphicalUiElementByName("PlaceholderTextInstance");
 
+#if DEBUG
+        if (textComponent == null) throw new Exception("Gum object must have an object called \"TextInstance\"");
+        if (caretComponent == null) throw new Exception("Gum object must have an object called \"CaretInstance\"");
+#endif
+
         coreTextObject = textComponent.RenderableComponent as RenderingLibrary.Graphics.Text;
         placeholderTextObject = placeholderComponent?.RenderableComponent as RenderingLibrary.Graphics.Text;
+
 #if DEBUG
-        if (textComponent == null) throw new Exception("Gum object must have an object called \"Text\"");
         if (coreTextObject == null) throw new Exception("The Text instance must be of type Text");
-        if (caretComponent == null) throw new Exception("Gum object must have an object called \"Caret\"");
 #endif
+
+
 
 #if FRB
         Visual.Click += _ => this.HandleClick(this, EventArgs.Empty);

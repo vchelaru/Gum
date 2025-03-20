@@ -43,6 +43,12 @@ public class SubtextLogic
 
     public string GetSubtextForCurrentState(StateSave stateSave, string variableName)
     {
+#if DEBUG
+        if(stateSave == null)
+        {
+            throw new ArgumentNullException(nameof(stateSave));
+        }
+#endif
         var root = ObjectFinder.Self.GetRootVariable(variableName, stateSave.ParentContainer);
         if(root?.Name == "YUnits")
         {

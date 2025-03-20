@@ -176,11 +176,17 @@ public class ScrollViewer : FrameworkElement
             Visual.RollOverBubbling -= HandleRollOver;
             Visual.SizeChanged -= HandleVisualSizeChanged;
 
-            innerPanel.SizeChanged -= HandleInnerPanelSizeChanged;
-            innerPanel.PositionChanged -= HandleInnerPanelPositionChanged;
+            if(innerPanel != null)
+            {
+                innerPanel.SizeChanged -= HandleInnerPanelSizeChanged;
+                innerPanel.PositionChanged -= HandleInnerPanelPositionChanged;
+            }
 
-            verticalScrollBar.Visual.SizeChanged -= HandleVerticalScrollBarThumbSizeChanged;
-            verticalScrollBar.ValueChanged -= HandleVerticalScrollBarValueChanged;
+            if(verticalScrollBar != null)
+            {
+                verticalScrollBar.Visual.SizeChanged -= HandleVerticalScrollBarThumbSizeChanged;
+                verticalScrollBar.ValueChanged -= HandleVerticalScrollBarValueChanged;
+            }
 
         }
 

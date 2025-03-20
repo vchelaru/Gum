@@ -21,6 +21,8 @@ namespace MonoGameGum.Forms.Controls;
 
 public class Menu : ItemsControl
 {
+    #region Fields/Properties
+
     public const string MenuCategoryState = "MenuCategoryState";
 
     protected List<MenuItem> MenuItemsInternal = new List<MenuItem>();
@@ -38,6 +40,8 @@ public class Menu : ItemsControl
             return menuItemsReadOnly;
         }
     }
+
+    #endregion
 
     public Menu() : base()
     {

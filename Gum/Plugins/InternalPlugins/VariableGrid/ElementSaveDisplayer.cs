@@ -448,7 +448,11 @@ namespace Gum.PropertyGridHelpers
             // moved to internal
             //srim.SetToDefault += (memberName) => ResetVariableToDefault(srim);
             srim.DetailText = propertyDescriptor.Subtext;
-            var extraDetail = _subtextLogic.GetSubtextForCurrentState(stateSave, variableName);
+            string? extraDetail = null;
+            if (stateSave != null)
+            {
+                extraDetail = _subtextLogic.GetSubtextForCurrentState(stateSave, variableName);
+            }
             if(!string.IsNullOrEmpty(extraDetail))
             {
                 if(!string.IsNullOrEmpty(srim.DetailText))

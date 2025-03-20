@@ -27,6 +27,12 @@
         </BehaviorReference>
       </Behaviors>
     </InstanceSave>
+    <InstanceSave>
+      <Name>TrackInstance</Name>
+      <BaseType>Container</BaseType>
+      <DefinedByBase>false</DefinedByBase>
+      <Behaviors />
+    </InstanceSave>
   </RequiredInstances>
   <RequiredAnimations />
   <DefaultImplementation>Controls/Slider</DefaultImplementation>

@@ -256,7 +256,6 @@ public class MenuItem : ItemsControl
     #endregion
 
 
-
     internal void SetSelectOnHighlightRecursively(bool value)
     {
         SelectOnHighlight = value;

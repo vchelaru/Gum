@@ -17,6 +17,8 @@ public enum Orientation
 
 public class StackPanel : FrameworkElement
 {
+    #region Fields/Properties
+
     Orientation orientation = Orientation.Vertical;
     public Orientation Orientation
     {
@@ -30,6 +32,8 @@ public class StackPanel : FrameworkElement
             }
         }
     }
+
+    #endregion
 
     protected override void ReactToVisualChanged()
     {
