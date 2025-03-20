@@ -1334,7 +1334,16 @@ namespace Gum.Managers
                 }
                 else
                 {
-                    return IsInstanceRecursivelyReferencingElement(instance, GetElementSave(baseType));
+                    var baseElementSave = GetElementSave(baseType);
+                    if(baseElementSave != null)
+                    {
+                        return IsInstanceRecursivelyReferencingElement(instance, baseElement);
+
+                    }
+                    else
+                    {
+                        return false;
+                    }
                 }
             }
         }
