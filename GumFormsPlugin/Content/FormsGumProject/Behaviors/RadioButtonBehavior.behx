@@ -47,19 +47,7 @@
       <Name>DisabledFocusedOff</Name>
     </State>
   </Category>
-  <RequiredInstances>
-    <InstanceSave>
-      <Name>TextInstance</Name>
-      <BaseType>Text</BaseType>
-      <DefinedByBase>false</DefinedByBase>
-      <Behaviors />
-    </InstanceSave>
-    <InstanceSave>
-      <Name>CaretInstance</Name>
-      <DefinedByBase>false</DefinedByBase>
-      <Behaviors />
-    </InstanceSave>
-  </RequiredInstances>
+  <RequiredInstances />
   <RequiredAnimations />
   <DefaultImplementation>Controls/RadioButton</DefaultImplementation>
 </BehaviorSave>

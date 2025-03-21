@@ -25,7 +25,7 @@
     <Variable>
       <Type>string</Type>
       <Name>Background.Parent</Name>
-      <Value xsi:type="xsd:string">DemoSettingsMenu</Value>
+      <Value xsi:type="xsd:string"></Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
