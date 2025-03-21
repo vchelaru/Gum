@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
@@ -44,6 +45,21 @@ namespace Gum.Plugins.Undos
                 element = VisualTreeHelper.GetParent(element);
             }
             return false;
+        }
+
+        private void HandleSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // This brings the selection into view:
+            var listBox = sender as ListBox;
+            if (listBox != null && listBox.SelectedItem != null)
+            {
+                listBox.Dispatcher.BeginInvoke(
+                    (Action)(() =>
+                    {
+                        listBox.UpdateLayout();
+                        listBox.ScrollIntoView(listBox.SelectedItem);
+                    }));
+            }
         }
     }
 }

@@ -494,7 +494,26 @@ public class SelectedState : ISelectedState
 
         if (SelectedElement != null && (SelectedStateSave == null || SelectedElement.AllStates.Contains(SelectedStateSave) == false))
         {
-            SelectedStateSave = SelectedElement.States[0];
+            var shouldSelectDefault = true;
+            // This can happen on a redo where the state gets re-created, so instances are not preserved. In this case, we should 
+            // check if there are any matching states in matching categories.
+            if(SelectedStateCategorySave != null)
+            {
+                var categoryInElement = SelectedElement.Categories.Find(item => item.Name == SelectedStateCategorySave.Name);
+
+                var state = categoryInElement?.States.Find(item => item.Name == SelectedStateSave.Name);
+
+                if(state != null)
+                {
+                    SelectedStateSave = state;
+                    shouldSelectDefault = false;
+                }
+            }
+
+            if(shouldSelectDefault)
+            {
+                SelectedStateSave = SelectedElement.States[0];
+            }
         }
 
         if (WireframeObjectManager.Self.ElementShowing != this.SelectedElement)

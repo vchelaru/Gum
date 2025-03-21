@@ -12,8 +12,9 @@
     </UserControl.Resources>
     <Grid>
         <ListBox x:Name="ListBoxInstance" ItemsSource="{Binding HistoryItems}" 
-                 SelectedIndex="{Binding UndoIndex, Mode=OneWay}" PreviewMouseDown="ListBox_PreviewMouseDown"
-                 AlternationCount="{Binding HistoryItems.Count}"
+                 SelectedIndex="{Binding UndoIndex, Mode=OneWay}" 
+                 PreviewMouseDown="ListBox_PreviewMouseDown"
+                 SelectionChanged="HandleSelectionChanged"
                  >
             <ListBox.ItemTemplate>
                 <DataTemplate>

@@ -24,9 +24,13 @@ namespace Gum.Plugins.InternalPlugins.StatePlugin.Views
     /// </summary>
     public partial class StateTreeView : UserControl
     {
+        #region Services
+
         private readonly StateTreeViewRightClickService _stateTreeViewRightClickService;
         private readonly HotkeyManager _hotkeyManager;
         private readonly ISelectedState _selectedState;
+
+        #endregion
 
         StateTreeViewModel ViewModel => DataContext as StateTreeViewModel;
 

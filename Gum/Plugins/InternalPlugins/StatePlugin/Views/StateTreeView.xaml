@@ -15,6 +15,13 @@
         <TreeView x:Name="TreeViewInstance" ItemsSource="{Binding Items}" SelectedItemChanged="TreeView_SelectedItemChanged" 
                   KeyDown="TreeViewInstance_KeyDown" PreviewMouseRightButtonDown="TreeViewInstance_PreviewMouseRightButtonDown">
             <TreeView.Resources>
+
+                <!-- These two SolidColorBrush definitions keep the tree view selection visible-->
+                <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}"
+                         Color="{DynamicResource {x:Static SystemColors.HighlightColorKey}}" />
+                <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}"
+                         Color="{DynamicResource {x:Static SystemColors.HighlightTextColorKey}}" />
+
                 <HierarchicalDataTemplate DataType="{x:Type viewmodels:CategoryViewModel}" ItemsSource="{Binding States}">
                     <StackPanel Orientation="Horizontal" Margin="0,2,0,2">
                         <Image SnapsToDevicePixels="True" Source="/Content/Icons/folder.png" Width="16" Height="16" VerticalAlignment="Center"/>
