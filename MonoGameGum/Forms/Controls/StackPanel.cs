@@ -15,7 +15,7 @@ public enum Orientation
 
 #endif
 
-public class StackPanel : FrameworkElement
+public class StackPanel : Panel
 {
     #region Fields/Properties
 
@@ -38,22 +38,17 @@ public class StackPanel : FrameworkElement
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        Visual.ExposeChildrenEvents = true;
         
         UpdateToOrientation();
     }
 
-    public StackPanel() : 
-        base(new InteractiveGue(new InvisibleRenderable()))
+    public StackPanel() :  base()
         //base(new global::Gum.Wireframe.GraphicalUiElement(new InvisibleRenderable(), null))
     {
         Width = 0;
         Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
         Height = 10;
         Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-
-        IsVisible = true;
-
     }
 
     private void UpdateToOrientation()

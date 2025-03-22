@@ -1,4 +1,5 @@
-﻿using Gum.Wireframe;
+﻿using Gum.RenderingLibrary;
+using Gum.Wireframe;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
@@ -27,6 +28,47 @@ namespace MonoGameGum.GueDeriving
             }
         }
 
+        public bool IsRenderTarget
+        {
+            get => (RenderableComponent as InvisibleRenderable)?.IsRenderTarget ?? false;
+            set
+            {
+                if (RenderableComponent is InvisibleRenderable invisibleRenderable)
+                {
+                    invisibleRenderable.IsRenderTarget = value;
+                }
+            }
+        }
+
+
+        public Microsoft.Xna.Framework.Graphics.BlendState BlendState
+        {
+            get => RenderableComponent.BlendState.ToXNA();
+            set
+            {
+                if (RenderableComponent is InvisibleRenderable invisibleRenderable)
+                {
+                    invisibleRenderable.BlendState = value.ToGum();
+                    NotifyPropertyChanged();
+                    NotifyPropertyChanged(nameof(Blend));
+                }
+            }
+        }
+
+        public Gum.RenderingLibrary.Blend Blend
+        {
+            get
+            {
+                return Gum.RenderingLibrary.BlendExtensions.ToBlend(RenderableComponent.BlendState);
+            }
+            set
+            {
+                BlendState = value.ToBlendState().ToXNA();
+
+                // NotifyPropertyChanged handled by BlendState:
+            }
+        }
+
         public ContainerRuntime(bool fullInstantiation = true)
         {
             if (fullInstantiation)
@@ -41,6 +83,6 @@ namespace MonoGameGum.GueDeriving
 
 
         public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
-        
+
     }
 }
