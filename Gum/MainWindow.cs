@@ -71,6 +71,7 @@ namespace Gum
             ProjectManager.Self.LoadSettings();
 
             Cursor addCursor = LoadAddCursor();
+            GumCommands.Self.GuiCommands.AddCursor = addCursor;
             // Vic says - I tried
             // to instantiate the ElementTreeImages
             // in the ElementTreeViewManager. I move 
@@ -80,7 +81,7 @@ namespace Gum
             // beyond the generation of code which isn't working when
             // I move it to custom code. Oh well, maybe one day I'll move
             // to a wpf window and can get rid of this
-            ElementTreeViewManager.Self.Initialize(this.components, ElementTreeImages, addCursor, CopyPasteLogic.Self);
+            ElementTreeViewManager.Self.Initialize(this.components, ElementTreeImages, CopyPasteLogic.Self);
 
             // ProperGridManager before MenuStripManager. Why does it need to be initialized before MainMenuStripPlugin?
             // Is htere a way to move this to a plugin?
@@ -97,12 +98,6 @@ namespace Gum
 
             GraphicalUiElement.AddRenderableToManagers = CustomSetPropertyOnRenderable.AddRenderableToManagers;
             GraphicalUiElement.RemoveRenderableFromManagers = CustomSetPropertyOnRenderable.RemoveRenderableFromManagers;
-
-            // do this after initializing the plugins. This is separate from where the initialize call is made, but it must
-            // happen after plugins are created:
-            MainEditorTabPlugin.Self.HandleWireframeInitialized(
-                WireframeContextMenuStrip,
-                addCursor);
 
             StandardElementsManager.Self.Initialize();
             StandardElementsManager.Self.CustomGetDefaultState =

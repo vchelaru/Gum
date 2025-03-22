@@ -31,7 +31,7 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
             this.ElementTreeImages = new System.Windows.Forms.ImageList(this.components);
-            this.WireframeContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
+
             this.PropertyGridMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.SuspendLayout();
             // 
@@ -49,12 +49,6 @@
             this.ElementTreeImages.Images.SetKeyName(7, "state.png");
             this.ElementTreeImages.Images.SetKeyName(8, "behavior.png");
             this.ElementTreeImages.Images.SetKeyName(9, "InheritedInstance.png");
-            // 
-            // WireframeContextMenuStrip
-            // 
-            this.WireframeContextMenuStrip.ImageScalingSize = new System.Drawing.Size(20, 20);
-            this.WireframeContextMenuStrip.Name = "WireframeContextMenuStrip";
-            this.WireframeContextMenuStrip.Size = new System.Drawing.Size(61, 4);
             // 
             // PropertyGridMenuStrip
             // 
@@ -77,7 +71,6 @@
         }
 
         #endregion
-        private System.Windows.Forms.ContextMenuStrip WireframeContextMenuStrip;
         private System.Windows.Forms.ContextMenuStrip PropertyGridMenuStrip;
 
         private System.Windows.Forms.ImageList ElementTreeImages;

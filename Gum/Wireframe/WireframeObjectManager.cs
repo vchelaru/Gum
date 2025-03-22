@@ -91,13 +91,10 @@ namespace Gum.Wireframe
 
         public void Initialize(WireframeEditControl editControl, 
             WireframeControl wireframeControl, 
-            System.Windows.Forms.Cursor addCursor, 
             LocalizationManager localizationManager,
             LayerService layerService
             )
         {
-            AddCursor = addCursor;
-
             WireframeControl = wireframeControl;
             WireframeControl.AfterXnaInitialize += HandleAfterXnaIntiailize;
 

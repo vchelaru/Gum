@@ -216,8 +216,6 @@ namespace Gum.Managers
 
         private CopyPasteLogic _copyPasteLogic;
 
-        System.Windows.Forms.Cursor AddCursor { get; set; }
-
         public bool HasMouseOver
         {
             get
@@ -435,11 +433,9 @@ namespace Gum.Managers
 
 
         public void Initialize(IContainer components, ImageList ElementTreeImages,
-            System.Windows.Forms.Cursor addCursor, CopyPasteLogic copyPasteLogic)
+            CopyPasteLogic copyPasteLogic)
         {
             _copyPasteLogic = copyPasteLogic;
-
-            AddCursor = addCursor;
 
             CreateObjectTreeView(ElementTreeImages);
 
@@ -570,13 +566,8 @@ namespace Gum.Managers
                 if(InputLibrary.Cursor.Self.IsInWindow)
                 {
                     e.UseDefaultCursors = false;
-                    System.Windows.Forms.Cursor.Current = AddCursor;
+                    System.Windows.Forms.Cursor.Current = GumCommands.Self.GuiCommands.AddCursor;
                 }
-
-                //if ((e.Effect & DragDropEffects.Move) == DragDropEffects.Move)
-                //    Cursor.Current = MyNormalCursor;
-                //else
-                //    Cursor.Current = MyNoDropCursor;
             };
         }
 

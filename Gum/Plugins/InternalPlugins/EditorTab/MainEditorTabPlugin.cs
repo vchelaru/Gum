@@ -78,11 +78,7 @@ internal class MainEditorTabPlugin : InternalPlugin
             "YUnits",
         };
     #endregion
-    public static MainEditorTabPlugin Self
-    {
-        get;
-        private set;
-    }
+
 
     readonly ScrollbarService _scrollbarService;
     private readonly GuiCommands _guiCommands;
@@ -94,7 +90,6 @@ internal class MainEditorTabPlugin : InternalPlugin
 
     Panel gumEditorPanel;
     private LayerService _layerService;
-    private Cursor _addCursor;
     private ContextMenuStrip _wireframeContextMenuStrip;
 
     #endregion
@@ -104,14 +99,13 @@ internal class MainEditorTabPlugin : InternalPlugin
         _scrollbarService = new ScrollbarService();
         _guiCommands = Builder.Get<GuiCommands>();
         _localizationManager = Builder.Get<LocalizationManager>();
-        Self = this;
     }
 
     public override void StartUp()
     {
         AssignEvents();
 
-
+        HandleWireframeInitialized();
     }
 
     private void AssignEvents()
@@ -326,7 +320,7 @@ internal class MainEditorTabPlugin : InternalPlugin
 
         var localizationManager = Builder.Get<LocalizationManager>();
 
-        Wireframe.WireframeObjectManager.Self.Initialize(_wireframeEditControl, _wireframeControl, _addCursor, localizationManager, _layerService);
+        Wireframe.WireframeObjectManager.Self.Initialize(_wireframeEditControl, _wireframeControl, localizationManager, _layerService);
         _wireframeControl.Initialize(_wireframeEditControl, gumEditorPanel, HotkeyManager.Self);
 
         // _layerService must be created after _wireframeControl so that the SystemManagers.Default are assigned
@@ -388,10 +382,15 @@ internal class MainEditorTabPlugin : InternalPlugin
     }
 
 
-    public void HandleWireframeInitialized(
-        System.Windows.Forms.ContextMenuStrip wireframeContextMenuStrip,
-        System.Windows.Forms.Cursor addCursor)
+    public void HandleWireframeInitialized()
     {
+        ContextMenuStrip wireframeContextMenuStrip;
+
+        wireframeContextMenuStrip = new System.Windows.Forms.ContextMenuStrip();
+        wireframeContextMenuStrip.ImageScalingSize = new System.Drawing.Size(20, 20);
+        wireframeContextMenuStrip.Name = "WireframeContextMenuStrip";
+        wireframeContextMenuStrip.Size = new System.Drawing.Size(61, 4);
+
         gumEditorPanel = new Panel();
 
         // 2025-01-02 UI Scale update
@@ -405,7 +404,6 @@ internal class MainEditorTabPlugin : InternalPlugin
         CreateWireframeEditControl(gumEditorPanel);
 
         GumCommands.Self.GuiCommands.AddControl(gumEditorPanel, "Editor", TabLocation.RightTop);
-        _addCursor = addCursor;
 
         _wireframeControl.XnaUpdate += () =>
         {

@@ -31,9 +31,12 @@ namespace Gum.Commands
 {
     public class GuiCommands
     {
-        #region FieldsProperties
+        #region Fields/Properties
 
         public MainWindow MainWindow { get; private set; }
+
+        public System.Windows.Forms.Cursor AddCursor { get; set; }
+
 
         MainPanelControl mainPanelControl;
 
