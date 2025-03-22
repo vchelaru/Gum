@@ -57,9 +57,9 @@ public class DefaultScrollViewerRuntime : InteractiveGue
             {
 
                 background.Height = 0f;
-                background.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                background.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 background.Width = 0f;
-                background.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                background.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 background.X = 0f;
                 background.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
                 background.XUnits = GeneralUnitType.PixelsFromMiddle;
@@ -71,9 +71,9 @@ public class DefaultScrollViewerRuntime : InteractiveGue
 
 
                 ScrollAndClipContainer.Width = 0;
-                ScrollAndClipContainer.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                ScrollAndClipContainer.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 ScrollAndClipContainer.Height = 0;
-                ScrollAndClipContainer.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                ScrollAndClipContainer.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 this.Children.Add(ScrollAndClipContainer);
 
                 {
@@ -83,14 +83,14 @@ public class DefaultScrollViewerRuntime : InteractiveGue
                     VerticalScrollBarInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
                     //VerticalScrollBarInstance.Width = 24;
                     VerticalScrollBarInstance.Height = 0;
-                    VerticalScrollBarInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                    VerticalScrollBarInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
                     ScrollAndClipContainer.Children.Add(VerticalScrollBarInstance);
 
                     // clip container container uses a ratio to fill available space,
                     // and the clip container is inside of that and adds its own margins
                     ClipContainerContainer = new ContainerRuntime();
                     ClipContainerContainer.Height = 0f;
-                    ClipContainerContainer.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                    ClipContainerContainer.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                     ClipContainerContainer.Width = 1;
                     ClipContainerContainer.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Ratio;
                     ScrollAndClipContainer.Children.Add(ClipContainerContainer);
@@ -98,9 +98,9 @@ public class DefaultScrollViewerRuntime : InteractiveGue
                     {
                         ClipContainer.ClipsChildren = true;
                         ClipContainer.Height = -4f;
-                        ClipContainer.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                        ClipContainer.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                         ClipContainer.Width = -4;
-                        ClipContainer.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                        ClipContainer.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                         ClipContainer.X = 2f;
                         ClipContainer.Y = 2f;
                         ClipContainer.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
@@ -112,7 +112,7 @@ public class DefaultScrollViewerRuntime : InteractiveGue
                             InnerPanel.Height = 0f;
                             InnerPanel.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
                             InnerPanel.Width = 0f;
-                            InnerPanel.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                            InnerPanel.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                             InnerPanel.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
                             ClipContainer.Children.Add(InnerPanel);
                         }

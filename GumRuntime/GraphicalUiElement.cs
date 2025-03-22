@@ -2383,9 +2383,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
         #endregion
 
-        #region RelativeToContainer (in pixels)
+        #region RelativeToParent (in pixels)
 
-        else if (mHeightUnit == DimensionUnitType.RelativeToContainer)
+        else if (mHeightUnit == DimensionUnitType.RelativeToParent)
         {
             pixelHeightToSet = parentHeight + mHeight;
         }
@@ -2427,7 +2427,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                                 {
                                     heightToSplit -= gue.Height;
                                 }
-                                else if (gue.HeightUnits == DimensionUnitType.RelativeToContainer)
+                                else if (gue.HeightUnits == DimensionUnitType.RelativeToParent)
                                 {
                                     var childAbsoluteWidth = parentHeight - gue.Height;
                                     heightToSplit -= childAbsoluteWidth;
@@ -2733,9 +2733,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
         #endregion
 
-        #region RelativeToContainer (in pixels)
+        #region RelativeToParent (in pixels)
 
-        else if (mWidthUnit == DimensionUnitType.RelativeToContainer)
+        else if (mWidthUnit == DimensionUnitType.RelativeToParent)
         {
             pixelWidthToSet = parentWidth + mWidth;
         }
@@ -2779,7 +2779,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                                 {
                                     widthToSplit -= gue.Width;
                                 }
-                                else if (gue.WidthUnits == DimensionUnitType.RelativeToContainer)
+                                else if (gue.WidthUnits == DimensionUnitType.RelativeToParent)
                                 {
                                     var childAbsoluteWidth = parentWidth - gue.Width;
                                     widthToSplit -= childAbsoluteWidth;

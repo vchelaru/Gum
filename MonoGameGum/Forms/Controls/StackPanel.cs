@@ -46,7 +46,7 @@ public class StackPanel : Panel
         //base(new global::Gum.Wireframe.GraphicalUiElement(new InvisibleRenderable(), null))
     {
         Width = 0;
-        Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+        Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         Height = 10;
         Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
     }

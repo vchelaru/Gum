@@ -36,9 +36,9 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
                 background.Color = new Microsoft.Xna.Framework.Color(32, 32, 32, 255);
                 background.Height = 0f;
-                background.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                background.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 background.Width = 0f;
-                background.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                background.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 background.X = 0f;
                 background.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
                 background.XUnits = GeneralUnitType.PixelsFromMiddle;
@@ -47,11 +47,11 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 background.YUnits = GeneralUnitType.PixelsFromMiddle;
                 this.Children.Add(background);
 
-                TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 TextInstance.Text = "Selected Item";
                 TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
                 TextInstance.Width = -8f;
-                TextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                TextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 TextInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
                 TextInstance.XUnits = GeneralUnitType.PixelsFromMiddle;
                 TextInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
@@ -60,7 +60,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
                 ListBoxInstance.Height = 128f;
                 ListBoxInstance.Width = 0f;
-                ListBoxInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                ListBoxInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 ListBoxInstance.Y = 28f;
                 this.Children.Add(ListBoxInstance);
                 ListBoxInstance.Visible = false;

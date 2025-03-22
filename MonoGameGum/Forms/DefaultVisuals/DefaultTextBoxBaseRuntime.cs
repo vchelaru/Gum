@@ -49,12 +49,12 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 Background.Color = new Microsoft.Xna.Framework.Color(70, 70, 70);
                 Background.Width = 0;
                 Background.Height = 0;
-                Background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-                Background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                Background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                Background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
 
                 SelectionInstance.Color = new Microsoft.Xna.Framework.Color(140, 48, 138);
                 SelectionInstance.Height = -4f;
-                SelectionInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                SelectionInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 SelectionInstance.Width = 7f;
                 SelectionInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
                 SelectionInstance.X = 15f;
@@ -63,7 +63,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 SelectionInstance.Y = 0f;
 
                 TextInstance.Height = -4f;
-                TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 TextInstance.HorizontalAlignment = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
                 TextInstance.Text = "";
                 TextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
@@ -80,11 +80,11 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 PlaceholderTextInstance.Blue = 128;
                 PlaceholderTextInstance.Green = 128;
                 PlaceholderTextInstance.Height = -4f;
-                PlaceholderTextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                PlaceholderTextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 PlaceholderTextInstance.Text = "Text Placeholder";
                 PlaceholderTextInstance.VerticalAlignment = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
                 PlaceholderTextInstance.Width = -8f;
-                PlaceholderTextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                PlaceholderTextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 PlaceholderTextInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
                 PlaceholderTextInstance.XUnits = GeneralUnitType.PixelsFromMiddle;
                 PlaceholderTextInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
@@ -206,7 +206,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                         new ()
                         {
                             Name = "SelectionInstance.HeightUnits",
-                            Value = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer
+                            Value = global::Gum.DataTypes.DimensionUnitType.RelativeToParent
                         },
                         new()
                         {
@@ -244,7 +244,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                         new()
                         {
                             Name = "TextInstance.WidthUnits",
-                            Value = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer
+                            Value = global::Gum.DataTypes.DimensionUnitType.RelativeToParent
                         }
                     }
                 });

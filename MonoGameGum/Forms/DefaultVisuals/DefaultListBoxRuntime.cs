@@ -30,9 +30,9 @@ public class DefaultListBoxRuntime : InteractiveGue
             //HorizontalScrollBarInstance.Name = "HorizontalScrollBarInstance";
 
             background.Height = 0f;
-            background.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            background.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
             background.Width = 0f;
-            background.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            background.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
             background.X = 0f;
             background.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
             background.XUnits = GeneralUnitType.PixelsFromMiddle;
@@ -48,15 +48,15 @@ public class DefaultListBoxRuntime : InteractiveGue
             VerticalScrollBarInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
             //VerticalScrollBarInstance.Width = 24;
             VerticalScrollBarInstance.Height = 0;
-            VerticalScrollBarInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            VerticalScrollBarInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
             this.Children.Add(VerticalScrollBarInstance);
 
 
             ClipContainer.ClipsChildren = true;
             ClipContainer.Height = -4f;
-            ClipContainer.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            ClipContainer.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
             ClipContainer.Width = -27f;
-            ClipContainer.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            ClipContainer.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
             ClipContainer.X = 2f;
             ClipContainer.Y = 2f;
             ClipContainer.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
@@ -67,7 +67,7 @@ public class DefaultListBoxRuntime : InteractiveGue
             InnerPanel.Height = 0f;
             InnerPanel.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
             InnerPanel.Width = 0f;
-            InnerPanel.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            InnerPanel.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
             InnerPanel.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
             ClipContainer.Children.Add(InnerPanel);
 

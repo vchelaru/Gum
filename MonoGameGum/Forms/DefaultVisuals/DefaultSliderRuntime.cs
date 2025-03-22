@@ -36,9 +36,9 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
 
                 TrackInstance.Height = 0f;
-                TrackInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                TrackInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 TrackInstance.Width = -32f;
-                TrackInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                TrackInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 TrackInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
                 TrackInstance.XUnits = GeneralUnitType.PixelsFromMiddle;
                 TrackInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
@@ -48,7 +48,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 NineSliceInstance.Height = 8f;
                 NineSliceInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
                 NineSliceInstance.Width = 0f;
-                NineSliceInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                NineSliceInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 NineSliceInstance.Y = 0;
                 NineSliceInstance.YOrigin = VerticalAlignment.Center;
                 NineSliceInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
@@ -73,8 +73,8 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 //var background = new ColoredRectangleRuntime();
                 //background.Width = 0;
                 //background.Height = 0;
-                //background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-                //background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                //background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                //background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 //background.Name = "SliderBackground";
                 //this.Children.Add(background);
 
@@ -82,7 +82,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 //thumb.Width = 0;
                 //thumb.Height = 0;
                 //thumb.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-                //thumb.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                //thumb.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 //thumb.Name = "SliderThumb";
                 //this.Children.Add(thumb);
 

@@ -378,9 +378,9 @@ namespace Gum.Converters
                 case DimensionUnitType.RelativeToChildren:
                 case DimensionUnitType.AbsoluteMultipliedByFontScale:
                     return GeneralUnitType.PixelsFromSmall;
-                case DimensionUnitType.Percentage:
+                case DimensionUnitType.PercentageOfParent:
                     return GeneralUnitType.Percentage;
-                case DimensionUnitType.RelativeToContainer:
+                case DimensionUnitType.RelativeToParent:
                     return GeneralUnitType.PixelsFromLarge;
                 case DimensionUnitType.PercentageOfSourceFile:
                     return GeneralUnitType.PercentageOfFile;

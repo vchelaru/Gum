@@ -93,7 +93,7 @@ namespace Gum.DataTypes
         public static bool GetIsPixelBased(this DimensionUnitType unitType)
         {
             return unitType == DimensionUnitType.Absolute || 
-                unitType == DimensionUnitType.RelativeToContainer ||
+                unitType == DimensionUnitType.RelativeToParent ||
                 unitType == DimensionUnitType.RelativeToChildren ||
                 unitType == DimensionUnitType.AbsoluteMultipliedByFontScale ||
                 unitType == DimensionUnitType.ScreenPixel
@@ -112,8 +112,8 @@ namespace Gum.DataTypes
                 case DimensionUnitType.AbsoluteMultipliedByFontScale:
                 case DimensionUnitType.ScreenPixel:
                     return HierarchyDependencyType.NoDependency;
-                case DimensionUnitType.Percentage:
-                case DimensionUnitType.RelativeToContainer:
+                case DimensionUnitType.PercentageOfParent:
+                case DimensionUnitType.RelativeToParent:
                     return HierarchyDependencyType.DependsOnParent;
                 case DimensionUnitType.RelativeToChildren:
                     return HierarchyDependencyType.DependsOnChildren;

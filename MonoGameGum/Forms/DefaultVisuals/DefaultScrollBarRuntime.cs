@@ -38,7 +38,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 UpButtonInstance.TextInstance.Text = "^";
                 UpButtonInstance.Height = 24f;
                 UpButtonInstance.Width = 0;
-                UpButtonInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                UpButtonInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 UpButtonInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
                 UpButtonInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
                 this.Children.Add(UpButtonInstance);
@@ -46,16 +46,16 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 DownButtonInstance.TextInstance.Text = "v";
                 DownButtonInstance.Height = 24f;
                 DownButtonInstance.Width = 0f;
-                DownButtonInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                DownButtonInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 DownButtonInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Left;
                 DownButtonInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Bottom;
                 DownButtonInstance.YUnits = GeneralUnitType.PixelsFromLarge;
                 this.Children.Add(DownButtonInstance);
 
                 ThumbContainer.Height = -48f;
-                ThumbContainer.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                ThumbContainer.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 ThumbContainer.Width = 0f;
-                ThumbContainer.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                ThumbContainer.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 ThumbContainer.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
                 ThumbContainer.XUnits = GeneralUnitType.PixelsFromMiddle;
                 ThumbContainer.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
@@ -64,9 +64,9 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
                 trackSolidRectangle.Color = System.Drawing.Color.FromArgb(255, 130, 130, 130);
                 TrackBackground.Height = 0f;
-                TrackBackground.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                TrackBackground.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 TrackBackground.Width = 0f;
-                TrackBackground.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                TrackBackground.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 TrackBackground.X = 0f;
                 TrackBackground.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
                 TrackBackground.XUnits = GeneralUnitType.PixelsFromMiddle;
@@ -77,7 +77,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
                 ThumbInstance.TextInstance.Text = String.Empty;
                 ThumbInstance.Width = 0f;
-                ThumbInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                ThumbInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 ThumbInstance.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
                 ThumbInstance.XUnits = GeneralUnitType.PixelsFromMiddle;
                 ThumbInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;

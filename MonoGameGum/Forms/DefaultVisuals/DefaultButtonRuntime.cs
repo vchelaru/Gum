@@ -24,8 +24,8 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 var background = new ColoredRectangleRuntime();
                 background.Width = 0;
                 background.Height = 0;
-                background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-                background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 background.Name = "ButtonBackground";
                 this.Children.Add(background);
 
@@ -35,8 +35,8 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 TextInstance.Width = 0;
                 TextInstance.Height = 0;
                 TextInstance.Name = "TextInstance";
-                TextInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-                TextInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                TextInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                TextInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 TextInstance.XOrigin = RenderingLibrary.Graphics.HorizontalAlignment.Center;
                 TextInstance.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Center;
                 TextInstance.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;

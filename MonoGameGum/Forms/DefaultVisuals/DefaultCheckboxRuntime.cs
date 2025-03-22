@@ -52,7 +52,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 text.Width = -36;
                 text.Height = 0;
                 text.Name = "TextInstance";
-                text.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+                text.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 this.Children.Add(text);
 
 

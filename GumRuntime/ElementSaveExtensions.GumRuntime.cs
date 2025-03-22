@@ -171,8 +171,8 @@ namespace GumRuntime
             if(containedObject == null && elementSave is ScreenSave && string.IsNullOrEmpty(elementSave.BaseType))
             {
                 containedObject = new InvisibleRenderable();
-                graphicalElement.WidthUnits = DimensionUnitType.RelativeToContainer;
-                graphicalElement.HeightUnits = DimensionUnitType.RelativeToContainer;
+                graphicalElement.WidthUnits = DimensionUnitType.RelativeToParent;
+                graphicalElement.HeightUnits = DimensionUnitType.RelativeToParent;
                 graphicalElement.Width = 0;
                 graphicalElement.Height = 0;
                 graphicalElement.Visible = true;

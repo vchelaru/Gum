@@ -18,7 +18,7 @@ internal class DefaultMenuRuntime : InteractiveGue
         if(fullInstantiation)
         {
             this.Width = 0;
-            this.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            this.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
             this.Height = 0;
             this.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
             this.X = 0;
@@ -31,9 +31,9 @@ internal class DefaultMenuRuntime : InteractiveGue
             InnerPanel.Name = "InnerPanelInstance";
 
             background.Height = 0f;
-            background.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            background.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
             background.Width = 0f;
-            background.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            background.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
             background.X = 0f;
             background.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
             background.XUnits = GeneralUnitType.PixelsFromMiddle;
@@ -46,7 +46,7 @@ internal class DefaultMenuRuntime : InteractiveGue
             InnerPanel.Height = 0f;
             InnerPanel.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
             InnerPanel.Width = 0f;
-            InnerPanel.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            InnerPanel.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
             InnerPanel.WrapsChildren = true;
             InnerPanel.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
             this.Children.Add(InnerPanel);

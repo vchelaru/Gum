@@ -31,10 +31,10 @@ public class DefaultMenuItemRuntime : InteractiveGue
 
 
             Background.Height = 0f;
-            Background.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            Background.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
             Background.Visible = false;
             Background.Width = 0f;
-            Background.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+            Background.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
             Background.X = 0f;
             Background.XOrigin = global::RenderingLibrary.Graphics.HorizontalAlignment.Center;
             Background.XUnits = GeneralUnitType.PixelsFromMiddle;
