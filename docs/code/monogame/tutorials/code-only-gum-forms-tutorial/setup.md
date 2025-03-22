@@ -106,14 +106,14 @@ protected override void Initialize()
 {
     Gum.Initialize(this);
 
-    mainStackPanel = new StackPanel();
-    mainStackPanel.Visual.AddToRoot();
+    mainPanel = new StackPanel();
+    mainPanel.Visual.AddToRoot();
 
     // Creates a button instance
     var button = new Button();
     // Adds the button as a child so that it is drawn and has its
     // events raised
-    mainStackPanel.AddChild(button);
+    mainPanel.AddChild(button);
     // Initial button text before being clicked
     button.Text = "Click Me";
     // Makes the button wider so the text fits
