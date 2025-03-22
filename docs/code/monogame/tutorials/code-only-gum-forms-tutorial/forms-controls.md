@@ -28,6 +28,8 @@ All controls share a few common properties and characteristics. The following li
 
 For the rest of this tutorial we'll add a few of the most common controls to our project and show how to work with them. Note that for this tutorial I've removed the Button control from the previous tutorial.
 
+We also assume that your project has a `mainStackPanel` to hold all controls.
+
 ## Forms Control vs Visual
 
 As we'll see below, each forms control has a specific purpose. Buttons are clicked, Labels display read-only strings, and TextBoxes can be used to input text. Each control provides properties and events specific to its purpose, standardizing the way each works.&#x20;
@@ -52,7 +54,7 @@ Labels are text objects which can display a string. Labels do not have any direc
 
 ```csharp
 var label = new Label();
-Root.AddChild(label);
+mainStackPanel.AddChild(label);
 label.Text = $"I was created at {System.DateTime.Now}";
 ```
 
@@ -68,13 +70,13 @@ The following code creates two buttons. One is disabled so it does not respond t
 
 ```csharp
 var button = new Button();
-Root.AddChild(button);
+mainStackPanel.AddChild(button);
 button.Text = "Click Me";
 button.Click += (_, _) => 
     label.Text = $"Button clicked @ {System.DateTime.Now}";
 
 var disabledButton = new Button();
-Root.AddChild(disabledButton);
+mainStackPanel.AddChild(disabledButton);
 disabledButton.Text = "Disabled Button";
 disabledButton.IsEnabled = false;
 disabledButton.Click += (_, _) =>
@@ -99,7 +101,7 @@ The following code creates two CheckBoxes:
 
 ```csharp
 var checkBox = new CheckBox();
-Root.AddChild(checkBox);
+mainStackPanel.AddChild(checkBox);
 checkBox.Text = "Click Me";
 checkBox.Checked += (_, _) => label.Text = "CheckBox checked";
 checkBox.Unchecked += (_, _) => label.Text = "CheckBox unchecked";

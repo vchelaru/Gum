@@ -29,7 +29,8 @@ public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
     
-    StackPanel Root;
+    StackPanel mainPanel;
+    GumService Gum => GumService.Default;
     
     public Game1()
     {
@@ -40,24 +41,24 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        var gumProject = MonoGameGum.GumService.Default.Initialize(this);
+        Gum.Initialize(this);
             
-        Root = new StackPanel();
-        Root.Visual.AddToManagers();
+        mainPanel = new StackPanel();
+        mainPanel.Visual.AddToRoot();
         
         base.Initialize();
     }
 
     protected override void Update(GameTime gameTime)
     {
-        MonoGameGum.GumService.Default.Update(this, gameTime, Root);
+        Gum.Update(this, gameTime);
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
-        MonoGameGum.GumService.Default.Draw();
+        Gum.Draw();
         base.Draw(gameTime);
     }
 }
@@ -65,31 +66,31 @@ public class Game1 : Game
 
 The code above includes the following sections:
 
-* StackPanel Root - Games using Gum usually have a Root object which contains all other instances. In this case we create a StackPanel which will hold all of our controls.&#x20;
+* StackPanel mainPanel - Games using Gum usually have an object which contains all other instances. In this case we create a StackPanel which will hold all of our controls.&#x20;
 
 ```csharp
-StackPanel Root;
+StackPanel mainPanel;
 ```
 
-* Initialize - The contents of the Initialize method calls GumService.Default.Initialize which prepares Gum. It also creates a Root instance of type StackPanel. Finally, the StackPanel has its AddToManagers method called which tells Gum to draw the StackPanel and its children that we'll add later.
+* Initialize - The Initialize method prepares Gum for use. It must be called one time for every Gum project. Once Gum is initialized, we can create controls such as the StackPanel.  By calling AddToRoot, the maniPanel will be drawn and will receive input. All items added to the StackPanel will also be drawn and receive input, so we only need to call AddToRoot to the StackPanel.
 
 ```csharp
-        var gumProject = MonoGameGum.GumService.Default.Initialize(this);
+Gum.Initialize(this);
             
-        Root = new StackPanel();
-        Root.Visual.AddToManagers();
+mainPanel = new StackPanel();
+mainPanel.Visual.AddToRoot();
 ```
 
 * Update - this updates the internal keyboard, mouse, and gamepad instances and applies default behavior to any components which implement Forms. For example, if a Button is added to the Screen, this code is responsible for checking if the cursor is overlapping the Button and adjusting the highlight/pressed state appropriately. We pass the Root instance so that it and all of its children can receive input events.
 
 ```csharp
-MonoGameGum.GumService.Default.Update(this, gameTime, Root);
+Gum.Update(this, gameTime, Root);
 ```
 
 * Draw - this method draws all Gum objects to the screen. This method does not yet perform any drawing since StackPanels are invisible, but we'll be adding controls later in this tutorial.
 
 ```csharp
-MonoGameGum.GumService.Default.Draw();
+Gum.Draw();
 ```
 
 We can run our project to see a blank (cornflower blue) screen.
@@ -103,16 +104,16 @@ Now that we have Gum running, we can add controls to our StackPanel (Root). The 
 ```csharp
 protected override void Initialize()
 {
-    MonoGameGum.GumService.Default.Initialize(this);
+    Gum.Initialize(this);
 
-    Root = new StackPanel();
-    Root.Visual.AddToManagers();
+    mainStackPanel = new StackPanel();
+    mainStackPanel.Visual.AddToRoot();
 
     // Creates a button instance
     var button = new Button();
     // Adds the button as a child so that it is drawn and has its
     // events raised
-    Root.AddChild(button);
+    mainStackPanel.AddChild(button);
     // Initial button text before being clicked
     button.Text = "Click Me";
     // Makes the button wider so the text fits
