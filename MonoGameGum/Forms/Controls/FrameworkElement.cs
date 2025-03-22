@@ -30,9 +30,12 @@ using Buttons = FlatRedBall.Input.Xbox360GamePad.Button;
 namespace FlatRedBall.Forms.Controls;
 #elif RAYLIB
 using RaylibGum;
+using RaylibGum.Input;
+using Keys = Raylib_cs.KeyboardKey;
+
 #else
 using Keys = Microsoft.Xna.Framework.Input.Keys;
-
+using GamePad = MonoGameGum.Input.GamePad;
 using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Input;
 namespace MonoGameGum.Forms.Controls;
@@ -58,7 +61,7 @@ public enum TabbingFocusBehavior
 #if !FRB
 public class KeyEventArgs : EventArgs
 {
-    public Microsoft.Xna.Framework.Input.Keys Key { get; set; }
+    public Keys Key { get; set; }
 }
 #endif
 
@@ -77,7 +80,7 @@ public class FrameworkElement
 #else
     public static ICursor MainCursor { get; set; }
 
-    public static List<Input.GamePad> GamePadsForUiControl { get; private set; } = new List<Input.GamePad>();
+    public static List<GamePad> GamePadsForUiControl { get; private set; } = new List<GamePad>();
 
 #endif
 
@@ -828,9 +831,11 @@ public class FrameworkElement
 #if FRB
     protected void HandleGamepadNavigation(Xbox360GamePad gamepad)
 #else
-    protected void HandleGamepadNavigation(Input.GamePad gamepad)
+    protected void HandleGamepadNavigation(GamePad gamepad)
 #endif
     {
+        // todo for raylib...
+#if !RAYLIB
         if (gamepad.ButtonRepeatRate(Buttons.DPadDown) ||
             (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.ButtonRepeatRate(Buttons.DPadRight)) ||
             gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Down) ||
@@ -845,6 +850,7 @@ public class FrameworkElement
         {
             this.HandleTab(TabDirection.Up, this);
         }
+#endif
     }
 
 #if FRB
@@ -1093,7 +1099,7 @@ public class FrameworkElement
                     element.GamepadTabbingFocusBehavior == TabbingFocusBehavior.FocusableIfInputReceiver;
     }
 
-    #endregion
+#endregion
 
     #region Updating State (visual appearance)
 
@@ -1127,11 +1133,13 @@ public class FrameworkElement
         var primaryDown = cursor.PrimaryDown;
 
         bool pushedByGamepads = false;
+
+#if !RAYLIB
         for(int i = 0; i < GamePadsForUiControl.Count; i++)
         {
             pushedByGamepads = pushedByGamepads || (GamePadsForUiControl[i].ButtonDown(Buttons.A));
         }
-
+#endif
         var isTouchScreen = cursor.LastInputDevice == InputDevice.TouchScreen;
 
         if (IsEnabled == false)
@@ -1225,7 +1233,7 @@ public class FrameworkElement
         }
     }
 
-    #endregion
+#endregion
 
     public override string ToString()
     {

@@ -5,7 +5,6 @@ using MonoGameGum.GueDeriving;
 using Raylib_cs;
 using RaylibGum.Forms;
 using RaylibGum.Input;
-using RaylibGum.RenderingLibrary;
 using RenderingLibrary;
 using System;
 using System.Collections.Generic;
@@ -80,8 +79,8 @@ public class GumService
         {
             var scissorX = (int)element.AbsoluteX;
             var scissorY = (int)element.AbsoluteY;
-            var scissorWidth = (int)element.Width;
-            var scissorHeight = (int)element.Height;
+            var scissorWidth = (int)element.GetAbsoluteWidth();
+            var scissorHeight = (int)element.GetAbsoluteHeight();
             Raylib.BeginScissorMode(scissorX, scissorY, scissorWidth, scissorHeight);
         }
 

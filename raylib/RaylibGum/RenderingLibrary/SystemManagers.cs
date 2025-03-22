@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RaylibGum.RenderingLibrary;
+namespace RenderingLibrary;
 public class SystemManagers : ISystemManagers
 {
     public bool EnableTouchEvents { get; set; }
@@ -18,7 +18,10 @@ public class SystemManagers : ISystemManagers
     }
 
     Renderer _renderer;
-    public IRenderer Renderer => _renderer;
+    public Renderer Renderer => _renderer;
+
+    IRenderer ISystemManagers.Renderer => Renderer;
+
 
     public SystemManagers()
     {

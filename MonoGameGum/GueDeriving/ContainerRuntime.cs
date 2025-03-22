@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 #if RAYLIB
-using RaylibGum.RenderingLibrary;
+using RenderingLibrary;
 #endif
 
 namespace MonoGameGum.GueDeriving
