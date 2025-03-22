@@ -2,6 +2,7 @@
 using Gum.Wireframe;
 using GumTest.Renderables;
 using MonoGameGum.GueDeriving;
+using Raylib_cs;
 using RaylibGum.Forms;
 using RaylibGum.Input;
 using RaylibGum.RenderingLibrary;
@@ -75,6 +76,15 @@ public class GumService
 
         element.Render(null);
 
+        if(element.ClipsChildren)
+        {
+            var scissorX = (int)element.AbsoluteX;
+            var scissorY = (int)element.AbsoluteY;
+            var scissorWidth = (int)element.Width;
+            var scissorHeight = (int)element.Height;
+            Raylib.BeginScissorMode(scissorX, scissorY, scissorWidth, scissorHeight);
+        }
+
         if (element.Children != null)
         {
             foreach (var child in element.Children)
@@ -84,6 +94,11 @@ public class GumService
                     DrawGumRecursively(childGue);
                 }
             }
+        }
+
+        if(element.ClipsChildren)
+        {
+            Raylib.EndScissorMode();
         }
 
     }

@@ -54,9 +54,10 @@ public class BasicShapes
         container.AddToRoot();
         container.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
         container.StackSpacing = 2;
-        container.Width = 0;
+        container.Width = 100;
         container.Height = 0;
-        container.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        container.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        container.ClipsChildren = true;
         container.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
 
         // let's set a top to bottom stack
