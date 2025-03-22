@@ -28,6 +28,8 @@ All controls share a few common properties and characteristics. The following li
 
 For the rest of this tutorial we'll add a few of the most common controls to our project and show how to work with them. Note that for this tutorial I've removed the Button control from the previous tutorial.
 
+We also assume that your project has a `mainStackPanel` to hold all controls.
+
 ## Forms Control vs Visual
 
 As we'll see below, each forms control has a specific purpose. Buttons are clicked, Labels display read-only strings, and TextBoxes can be used to input text. Each control provides properties and events specific to its purpose, standardizing the way each works.&#x20;
@@ -52,7 +54,7 @@ Labels are text objects which can display a string. Labels do not have any direc
 
 ```csharp
 var label = new Label();
-Root.AddChild(label);
+mainPanel.AddChild(label);
 label.Text = $"I was created at {System.DateTime.Now}";
 ```
 
@@ -68,13 +70,13 @@ The following code creates two buttons. One is disabled so it does not respond t
 
 ```csharp
 var button = new Button();
-Root.AddChild(button);
+mainPanel.AddChild(button);
 button.Text = "Click Me";
 button.Click += (_, _) => 
     label.Text = $"Button clicked @ {System.DateTime.Now}";
 
 var disabledButton = new Button();
-Root.AddChild(disabledButton);
+mainPanel.AddChild(disabledButton);
 disabledButton.Text = "Disabled Button";
 disabledButton.IsEnabled = false;
 disabledButton.Click += (_, _) =>
@@ -99,7 +101,7 @@ The following code creates two CheckBoxes:
 
 ```csharp
 var checkBox = new CheckBox();
-Root.AddChild(checkBox);
+mainPanel.AddChild(checkBox);
 checkBox.Text = "Click Me";
 checkBox.Checked += (_, _) => label.Text = "CheckBox checked";
 checkBox.Unchecked += (_, _) => label.Text = "CheckBox unchecked";
@@ -107,10 +109,45 @@ checkBox.Unchecked += (_, _) => label.Text = "CheckBox unchecked";
 
 <figure><img src="../../../../.gitbook/assets/13_08 46 53.gif" alt=""><figcaption><p>checkBox responds to clicks</p></figcaption></figure>
 
+## ListBox
+
+ListBox provides a way to display a list of items. Each item can be selected.
+
+The following code creates a ListBox which raises an event whenever an item is selected.
+
+```csharp
+var listBox = new ListBox();
+listBox.Visual.Width = 150;
+listBox.Visual.Height = 300;
+
+for (int i = 0; i < 20; i++)
+{
+    listBox.Items.Add($"Item {i}");
+}
+listBox.SelectionChanged += (_, _) =>
+{
+    label.Text = 
+        $"Selected item is {listBox.SelectedObject} at index {listBox.SelectedIndex}";
+};
+mainPanel.AddChild(listBox);
+```
+
+<figure><img src="../../../../.gitbook/assets/22_07 19 30.gif" alt=""><figcaption><p>ListBox responding to items being selected</p></figcaption></figure>
+
 ## TextBox
 
 TextBox controls allow the user to see and edit string values. TextBoxes support typing with the keyboard, copy/paste, selection, and multiple lines of text.
 
 TextBoxes are automatically focused when clicked, but IsFocused can be explicitly set to give focus.
 
-UNDER CONSTRUCTION.....
+The following code creates a TextBox which raises an event whenever its text is changed. The text is then copied over to a label.
+
+```csharp
+var textBox = new TextBox();
+textBox.Placeholder = "Enter text here...";
+textBox.TextChanged += (_, _) => 
+    label.Text = $"Text box text is now: {textBox.Text}";
+mainPanel.AddChild(textBox);
+```
+
+<figure><img src="../../../../.gitbook/assets/22_06 52 48.gif" alt=""><figcaption></figcaption></figure>
