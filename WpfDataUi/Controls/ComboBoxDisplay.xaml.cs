@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Input;
 using System.Windows.Media;
 using WpfDataUi.DataTypes;
 
@@ -106,7 +107,20 @@ namespace WpfDataUi.Controls
             this.RefreshContextMenu(TextBlock.ContextMenu);
 
             this.ComboBox.IsKeyboardFocusWithinChanged += HandleIsKeyboardFocusChanged;
+            this.ComboBox.PreviewKeyDown += HandlePreviewKeyDown;
+        }
 
+        private void HandlePreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            // by suppressing CTRL+Z, we prevent it from
+            // undoing a change to a bad value as shown here:
+            // https://github.com/vchelaru/Gum/issues/658
+            // But I'm not sure how to push this back up to the
+            // app to do app-level undo.
+            if (e.Key == Key.Z && Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+            {
+                e.Handled = true;
+            }
         }
 
         private void HandleIsKeyboardFocusChanged(object sender, DependencyPropertyChangedEventArgs e)

@@ -45,7 +45,7 @@ public class Tests
             new Uri(" http://127.0.0.1:4723/"), 
             options);
 
-        driver.FindElementByImage()
+        //driver.FindElementByImage();
 
         //var element = driver.FindElementByAccessibilityId("OutputTab");
         //element.Click();
