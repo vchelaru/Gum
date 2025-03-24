@@ -390,8 +390,9 @@ namespace Gum.PropertyGridHelpers
 
                     bool isWidthOrHeight = false;
 
+                    var editingCommands = GumCommands.Self.ProjectCommands.ElementCommands;
 
-                    object unitTypeAsObject = EditingManager.GetCurrentValueForVariable(changedMember, SelectedState.Self.SelectedInstance);
+                    object unitTypeAsObject = editingCommands.GetCurrentValueForVariable(changedMember, SelectedState.Self.SelectedInstance);
                     GeneralUnitType unitType = UnitConverter.ConvertToGeneralUnit(unitTypeAsObject);
 
 

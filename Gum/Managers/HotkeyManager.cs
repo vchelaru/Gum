@@ -465,7 +465,9 @@ public class HotkeyManager : Singleton<HotkeyManager>
                 oldY = (float)instance.GetValueFromThisOrBase(element, "Y");
             }
 
-            EditingManager.Self.MoveSelectedObjectsBy(nudgeX, nudgeY);
+            var editingCommands = GumCommands.Self.ProjectCommands.ElementCommands;
+
+            editingCommands.MoveSelectedObjectsBy(nudgeX, nudgeY);
             handled = true;
             if(nudgeX != 0)
             {

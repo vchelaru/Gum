@@ -218,7 +218,6 @@ namespace Gum
 
 
                 GraphicalUiElement.ShowLineRectangles = mGumProjectSave.ShowOutlines;
-                EditingManager.Self.RestrictToUnitValues = mGumProjectSave.RestrictToUnitValues;
 
                 CopyLinkedComponents();
 

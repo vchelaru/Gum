@@ -91,6 +91,7 @@ internal class MainEditorTabPlugin : InternalPlugin
     Panel gumEditorPanel;
     private LayerService _layerService;
     private ContextMenuStrip _wireframeContextMenuStrip;
+    private EditingManager _editingManager;
 
     #endregion
 
@@ -106,6 +107,8 @@ internal class MainEditorTabPlugin : InternalPlugin
         AssignEvents();
 
         HandleWireframeInitialized();
+
+        _editingManager = EditingManager.Self;
     }
 
     private void AssignEvents()
@@ -307,7 +310,7 @@ internal class MainEditorTabPlugin : InternalPlugin
     private void HandleInstanceSelected(ElementSave element, InstanceSave instance)
     {
         WireframeObjectManager.Self.RefreshAll(forceLayout: false);
-        EditingManager.Self.RefreshContextMenuStrip();
+        _editingManager.RefreshContextMenuStrip();
     }
 
     private void HandleXnaInitialized()
@@ -327,7 +330,7 @@ internal class MainEditorTabPlugin : InternalPlugin
         _layerService.Initialize();
         _wireframeControl.ShareLayerReferences(_layerService);
 
-        EditingManager.Self.Initialize(_wireframeContextMenuStrip);
+        _editingManager.Initialize(_wireframeContextMenuStrip);
 
 
 
@@ -452,7 +455,7 @@ internal class MainEditorTabPlugin : InternalPlugin
     {
         if (e.Button == MouseButtons.Right)
         {
-            EditingManager.Self.OnRightClick();
+            _editingManager.OnRightClick();
         }
     }
 

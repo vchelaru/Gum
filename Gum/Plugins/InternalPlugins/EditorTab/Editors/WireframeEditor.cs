@@ -131,8 +131,8 @@ namespace Gum.Wireframe
                 }
             }
 
-
-            var didMove = EditingManager.Self.MoveSelectedObjectsBy(effectiveXToMoveBy, effectiveYToMoveBy);
+            var editingCommands = GumCommands.Self.ProjectCommands.ElementCommands;
+            var didMove = editingCommands.MoveSelectedObjectsBy(effectiveXToMoveBy, effectiveYToMoveBy);
 
             bool isLockedToAxis = _hotkeyManager.LockMovementToAxis.IsPressed(InputLibrary.Keyboard.Self);
 

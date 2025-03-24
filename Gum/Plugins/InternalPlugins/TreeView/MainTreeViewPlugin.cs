@@ -3,6 +3,7 @@ using Gum.DataTypes.Behaviors;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using Gum.ToolStates;
+using Gum.Wireframe;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -45,6 +46,9 @@ internal class MainTreeViewPlugin : InternalPlugin
     private void HandleProjectLoad(GumProjectSave save)
     {
         ElementTreeViewManager.Self.RefreshUi();
+
+        SelectionManager.Self.RestrictToUnitValues = 
+            save.RestrictToUnitValues;
     }
 
     private void HandleElementAdd(ElementSave save)

@@ -185,14 +185,5 @@ namespace Gum.Wireframe
             ReorderLogic.Self.MoveSelectedInstanceInFrontOf(whatToMoveInFrontOf);
         }
 
-
-        public void RemoveSelectedElement()
-        {
-            ProjectCommands.Self.RemoveElement(SelectedState.Self.SelectedElement);
-            SelectedState.Self.SelectedElement = null;
-        }
-
-
-
     }
 }

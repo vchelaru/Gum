@@ -8,6 +8,7 @@ using Gum.Gui.Forms;
 using System.Diagnostics;
 using ExCSS;
 using Gum.Commands;
+using Gum.ToolCommands;
 
 namespace Gum.Managers
 {
@@ -397,7 +398,8 @@ namespace Gum.Managers
 
         private void RemoveElementClicked(object sender, EventArgs e)
         {
-            EditingManager.Self.RemoveSelectedElement();
+            ProjectCommands.Self.RemoveElement(SelectedState.Self.SelectedElement);
+            SelectedState.Self.SelectedElement = null;
         }
 
         private void RemoveStateOrCategoryClicked(object sender, EventArgs e)

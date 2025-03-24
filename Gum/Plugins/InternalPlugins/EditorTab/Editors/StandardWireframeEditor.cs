@@ -17,6 +17,7 @@ using Color = System.Drawing.Color;
 using Matrix = System.Numerics.Matrix4x4;
 using System.Windows.Input;
 using System;
+using Gum.ToolCommands;
 
 namespace Gum.Wireframe.Editors
 {
@@ -42,6 +43,7 @@ namespace Gum.Wireframe.Editors
         DimensionDisplay heightDimensionDisplay;
 
         bool mHasGrabbed = false;
+        private readonly ElementCommands _elementCommands;
 
         public InputLibrary.Cursor Cursor
         {
@@ -88,6 +90,8 @@ namespace Gum.Wireframe.Editors
             heightDimensionDisplay = new DimensionDisplay();
             heightDimensionDisplay.AddToManagers(SystemManagers.Default, layer);
             heightDimensionDisplay.SetColor(lineColor, textColor);
+
+            _elementCommands = GumCommands.Self.ProjectCommands.ElementCommands;
         }
 
         public override void Destroy()
@@ -546,11 +550,11 @@ namespace Gum.Wireframe.Editors
                 hasChangeOccurred = true;
                 if (instanceSave != null)
                 {
-                    EditingManager.Self.ModifyVariable("X", reposition.X, instanceSave);
+                    _elementCommands.ModifyVariable("X", reposition.X, instanceSave);
                 }
                 else
                 {
-                    EditingManager.Self.ModifyVariable("X", reposition.X, elementStack.Last().Element);
+                    _elementCommands.ModifyVariable("X", reposition.X, elementStack.Last().Element);
                 }
             }
             if (reposition.Y != 0)
@@ -558,11 +562,11 @@ namespace Gum.Wireframe.Editors
                 hasChangeOccurred = true;
                 if (instanceSave != null)
                 {
-                    EditingManager.Self.ModifyVariable("Y", reposition.Y, instanceSave);
+                    _elementCommands.ModifyVariable("Y", reposition.Y, instanceSave);
                 }
                 else
                 {
-                    EditingManager.Self.ModifyVariable("Y", reposition.Y, elementStack.Last().Element);
+                    _elementCommands.ModifyVariable("Y", reposition.Y, elementStack.Last().Element);
                 }
             }
 
@@ -573,11 +577,11 @@ namespace Gum.Wireframe.Editors
                 hasChangeOccurred = true;
                 if (instanceSave != null)
                 {
-                    EditingManager.Self.ModifyVariable("Height", cursorYChange * heightMultiplier, instanceSave);
+                    _elementCommands.ModifyVariable("Height", cursorYChange * heightMultiplier, instanceSave);
                 }
                 else
                 {
-                    EditingManager.Self.ModifyVariable("Height", cursorYChange * heightMultiplier, elementStack.Last().Element);
+                    _elementCommands.ModifyVariable("Height", cursorYChange * heightMultiplier, elementStack.Last().Element);
                 }
             }
             if (widthMultiplier != 0 && cursorXChange != 0)
@@ -585,11 +589,11 @@ namespace Gum.Wireframe.Editors
                 hasChangeOccurred = true;
                 if (instanceSave != null)
                 {
-                    EditingManager.Self.ModifyVariable("Width", cursorXChange * widthMultiplier, instanceSave);
+                    _elementCommands.ModifyVariable("Width", cursorXChange * widthMultiplier, instanceSave);
                 }
                 else
                 {
-                    EditingManager.Self.ModifyVariable("Width", cursorXChange * widthMultiplier, elementStack.Last().Element);
+                    _elementCommands.ModifyVariable("Width", cursorXChange * widthMultiplier, elementStack.Last().Element);
                 }
             }
             return hasChangeOccurred;
@@ -640,6 +644,7 @@ namespace Gum.Wireframe.Editors
         {
             bool wasAnythingModified = false;
 
+
             if (SelectedState.Self.SelectedInstances.Count() == 0 &&
                 (SelectedState.Self.SelectedComponent != null || SelectedState.Self.SelectedStandardElement != null))
             {
@@ -654,22 +659,22 @@ namespace Gum.Wireframe.Editors
 
                 if (differenceToUnitX != 0)
                 {
-                    gue.X = EditingManager.Self.ModifyVariable("X", differenceToUnitX, SelectedState.Self.SelectedElement);
+                    gue.X = _elementCommands.ModifyVariable("X", differenceToUnitX, SelectedState.Self.SelectedElement);
                     wasAnythingModified = true;
                 }
                 if (differenceToUnitY != 0)
                 {
-                    gue.Y = EditingManager.Self.ModifyVariable("Y", differenceToUnitY, SelectedState.Self.SelectedElement);
+                    gue.Y = _elementCommands.ModifyVariable("Y", differenceToUnitY, SelectedState.Self.SelectedElement);
                     wasAnythingModified = true;
                 }
                 if (differenceToUnitWidth != 0)
                 {
-                    gue.Width = EditingManager.Self.ModifyVariable("Width", differenceToUnitWidth, SelectedState.Self.SelectedElement);
+                    gue.Width = _elementCommands.ModifyVariable("Width", differenceToUnitWidth, SelectedState.Self.SelectedElement);
                     wasAnythingModified = true;
                 }
                 if (differenceToUnitHeight != 0)
                 {
-                    gue.Height = EditingManager.Self.ModifyVariable("Height", differenceToUnitHeight, SelectedState.Self.SelectedElement);
+                    gue.Height = _elementCommands.ModifyVariable("Height", differenceToUnitHeight, SelectedState.Self.SelectedElement);
                     wasAnythingModified = true;
                 }
             }
@@ -680,7 +685,7 @@ namespace Gum.Wireframe.Editors
                 {
                     var instanceSave = gue.Tag as InstanceSave;
 
-                    if (instanceSave != null && !EditingManager.Self.ShouldSkipDraggingMovementOn(instanceSave))
+                    if (instanceSave != null && !_elementCommands.ShouldSkipDraggingMovementOn(instanceSave))
                     {
                         float differenceToUnitX;
                         float differenceToUnitY;
@@ -692,22 +697,22 @@ namespace Gum.Wireframe.Editors
 
                         if (differenceToUnitX != 0)
                         {
-                            gue.X = EditingManager.Self.ModifyVariable("X", differenceToUnitX, instanceSave);
+                            gue.X = _elementCommands.ModifyVariable("X", differenceToUnitX, instanceSave);
                             wasAnythingModified = true;
                         }
                         if (differenceToUnitY != 0)
                         {
-                            gue.Y = EditingManager.Self.ModifyVariable("Y", differenceToUnitY, instanceSave);
+                            gue.Y = _elementCommands.ModifyVariable("Y", differenceToUnitY, instanceSave);
                             wasAnythingModified = true;
                         }
                         if (differenceToUnitWidth != 0)
                         {
-                            gue.Width = EditingManager.Self.ModifyVariable("Width", differenceToUnitWidth, instanceSave);
+                            gue.Width = _elementCommands.ModifyVariable("Width", differenceToUnitWidth, instanceSave);
                             wasAnythingModified = true;
                         }
                         if (differenceToUnitHeight != 0)
                         {
-                            gue.Height = EditingManager.Self.ModifyVariable("Height", differenceToUnitHeight, instanceSave);
+                            gue.Height = _elementCommands.ModifyVariable("Height", differenceToUnitHeight, instanceSave);
                             wasAnythingModified = true;
                         }
                     }
@@ -916,7 +921,7 @@ namespace Gum.Wireframe.Editors
 
         private float GetXMultiplierForLeft(InstanceSave instanceSave, IPositionedSizedObject ipso)
         {
-            object xOriginAsObject = EditingManager.GetCurrentValueForVariable("XOrigin", instanceSave);
+            object xOriginAsObject = _elementCommands.GetCurrentValueForVariable("XOrigin", instanceSave);
             bool shouldContiue = xOriginAsObject != null;
             if (shouldContiue)
             {
@@ -937,7 +942,7 @@ namespace Gum.Wireframe.Editors
 
         private float GetYMultiplierForTop(InstanceSave instanceSave, GraphicalUiElement gue)
         {
-            object yOriginAsObject = EditingManager.GetCurrentValueForVariable("YOrigin", instanceSave);
+            object yOriginAsObject = _elementCommands.GetCurrentValueForVariable("YOrigin", instanceSave);
             bool shouldContiue = yOriginAsObject != null;
             if (shouldContiue)
             {
@@ -958,7 +963,7 @@ namespace Gum.Wireframe.Editors
 
         private float GetYMultiplierForBottom(InstanceSave instanceSave, GraphicalUiElement ipso)
         {
-            object yOriginAsObject = EditingManager.GetCurrentValueForVariable("YOrigin", instanceSave);
+            object yOriginAsObject = _elementCommands.GetCurrentValueForVariable("YOrigin", instanceSave);
             bool shouldContiue = yOriginAsObject != null;
             if (shouldContiue)
             {
@@ -978,7 +983,7 @@ namespace Gum.Wireframe.Editors
 
         private float GetXMultiplierForRight(InstanceSave instanceSave, IPositionedSizedObject ipso)
         {
-            object xOriginAsObject = EditingManager.GetCurrentValueForVariable("XOrigin", instanceSave);
+            object xOriginAsObject = _elementCommands.GetCurrentValueForVariable("XOrigin", instanceSave);
 
             bool shouldContiue = xOriginAsObject != null;
 
