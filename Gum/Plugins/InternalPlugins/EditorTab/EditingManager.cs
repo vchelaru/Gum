@@ -57,13 +57,6 @@ public partial class EditingManager
     }
 
 
-
-    public void Activity()
-    {
-
-    }
-
-
     //public void UpdateSelectedObjectsPositionAndDimensions()
     //{
     //    var elementStack = SelectedState.Self.GetTopLevelElementStack();

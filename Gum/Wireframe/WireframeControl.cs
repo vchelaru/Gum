@@ -282,8 +282,6 @@ namespace Gum.Wireframe
                             ElementTreeViewManager.Self.HasMouseOver == false;
 
                         SelectionManager.Self.Activity(shouldForceNoHighlight);
-                        // EditingManager activity must happen after SelectionManager activity
-                        EditingManager.Self.Activity();
 
                         SelectionManager.Self.LateActivity();
                     }
