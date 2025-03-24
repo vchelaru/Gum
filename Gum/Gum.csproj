@@ -442,7 +442,7 @@
     <Compile Include="Wireframe\Ruler.cs" />
     <Compile Include="Wireframe\RuntimeObjectCreator.cs" />
     <Compile Include="Wireframe\ScrollBarControlLogic.cs" />
-    <Compile Include="Wireframe\SelectionManager.cs" />
+    <Compile Include="Plugins\InternalPlugins\EditorTab\SelectionManager.cs" />
     <Compile Include="Plugins\InternalPlugins\EditorTab\Editors\StandardWireframeEditor.cs" />
     <Compile Include="Wireframe\TimeManager.cs" />
     <Compile Include="Wireframe\WireframeControl.cs" />

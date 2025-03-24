@@ -82,6 +82,7 @@ public class SelectionManager
     }
 
     ISelectedState _selectedState;
+    private readonly EditingManager _editingManager;
 
     public bool IsOverBody
     {
@@ -195,7 +196,7 @@ public class SelectionManager
     SelectionManager()
     {
         _selectedState = SelectedState.Self;
-
+        _editingManager = EditingManager.Self;
 
     }
 
@@ -284,7 +285,7 @@ public class SelectionManager
 
             IPositionedSizedObject representationOver = null;
 
-            if (EditingManager.Self.ContextMenuStrip != null && EditingManager.Self.ContextMenuStrip.Visible)
+            if (_editingManager.ContextMenuStrip?.Visible == true)
             {
                 // do nothing!
             }
@@ -664,8 +665,7 @@ public class SelectionManager
 
     void SelectionActivity()
     {
-        if (EditingManager.Self.ContextMenuStrip == null ||
-            !EditingManager.Self.ContextMenuStrip.Visible)
+        if (_editingManager.ContextMenuStrip?.Visible != true)
         {
             if (Cursor.PrimaryPush || Cursor.SecondaryPush || Cursor.PrimaryDoubleClick)
             {
