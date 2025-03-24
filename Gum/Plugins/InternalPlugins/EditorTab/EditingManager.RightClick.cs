@@ -194,46 +194,5 @@ namespace Gum.Wireframe
 
 
 
-        public void RemoveSelectedBehavior()
-        {
-            var behavior = SelectedState.Self.SelectedBehavior;
-            string behaviorName = behavior.Name;
-
-            GumProjectSave gps = ProjectManager.Self.GumProjectSave;
-            List<BehaviorReference> references = gps.BehaviorReferences;
-
-            references.RemoveAll(item => item.Name == behavior.Name);
-
-            gps.Behaviors.Remove(behavior);
-
-            List<ElementSave> elementsReferencingBehavior = new List<ElementSave>();
-
-            foreach(var element in ObjectFinder.Self.GumProjectSave.AllElements)
-            {
-                var matchingBehavior = element.Behaviors.FirstOrDefault(item =>
-                    item.BehaviorName == behaviorName);
-
-                if(matchingBehavior != null)
-                {
-                    element.Behaviors.Remove(matchingBehavior);
-                    elementsReferencingBehavior.Add(element);
-                }
-            }
-
-            SelectedState.Self.SelectedBehavior = null;
-
-            GumCommands.Self.GuiCommands.RefreshElementTreeView();
-            GumCommands.Self.GuiCommands.RefreshStateTreeView();
-            GumCommands.Self.GuiCommands.RefreshVariables();
-            // I don't think we have to refresh the wireframe since nothing is being shown
-            //Wireframe.WireframeObjectManager.Self.RefreshAll(true);
-
-            GumCommands.Self.FileCommands.TryAutoSaveProject();
-
-            foreach(var element in elementsReferencingBehavior)
-            {
-                GumCommands.Self.FileCommands.TryAutoSaveElement(element);
-            }
-        }
     }
 }

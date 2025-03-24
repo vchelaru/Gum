@@ -167,7 +167,8 @@ namespace Gum.Managers
                     {
                         objectsDeleted = array;
                         // We need to remove the reference
-                        EditingManager.Self.RemoveSelectedBehavior();
+                        var behavior = SelectedState.Self.SelectedBehavior;
+                        GumCommands.Self.ProjectCommands.RemoveBehavior(behavior);
                     }
                 }
 

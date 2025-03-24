@@ -33,7 +33,7 @@ internal class MainEditorTabPlugin : InternalPlugin
 
     #region PropertiesSupportingIncrementalChange
 
-    static HashSet<string> PropertiesSupportingIncrementalChange = new HashSet<string>
+    HashSet<string> PropertiesSupportingIncrementalChange = new HashSet<string>
         {
             "Animate",
             "Alpha",
