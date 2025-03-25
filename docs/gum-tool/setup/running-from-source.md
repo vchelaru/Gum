@@ -23,7 +23,7 @@ Gum is an open source project so you can run it from source instead of running t
    2. If you cloned the repository, it is at the root of the Gum folder
 2. Double-click it to open Visual Studio, or open Visual Studio and load the .sln
 3. Run the build configuration in "x86". The build configuration may default to "Mixed Platforms". If you do not change it Gum will not compile.
-4. If your project depends on plugins, be sure to build solution, rather than pressing F5. This guarantees that all plugins are built and copied correctly. For more information see below.
+4. Be sure to build solution rather than pressing F5 (which only builds the current project). This guarantees that all plugins are built and copied correctly. For more information see below.
 
 ### Building Plugins
 
