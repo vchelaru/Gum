@@ -219,15 +219,6 @@ namespace CodeOutputPlugin.Views
                 {
                     CodeOutputProjectSettings.OutputLibrary = (OutputLibrary)args.Value;
 
-                    // Check for required using statements:
-                    if(CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
-                    {
-                        // This should have MonoGameGum.GueDeriving
-                        if(CodeOutputProjectSettings.CommonUsingStatements.Contains("using MonoGameGum.GueDeriving;")== false)
-                        {
-                            CodeOutputProjectSettings.CommonUsingStatements += "\nusing MonoGameGum.GueDeriving;";
-                        }
-                    }
                     CodeOutputSettingsPropertyChanged?.Invoke(this, null);
 
                     FullRefreshDataGrid();
@@ -246,6 +237,7 @@ namespace CodeOutputPlugin.Views
             //}
 
             options.Add(OutputLibrary.MonoGame);
+            options.Add(OutputLibrary.MonoGameForms);
             options.Add(OutputLibrary.Skia);
 
             member.CustomOptions = options;
