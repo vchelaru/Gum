@@ -158,7 +158,6 @@ public class CodeGenerator
         _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService();
     }
 
-
     #region Using Statements
 
 
@@ -221,6 +220,192 @@ public class CodeGenerator
 
     #endregion
 
+    #region Namespace
+
+    public static string GetElementNamespace(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
+    {
+        var namespaceName = elementSettings?.Namespace;
+
+        if (string.IsNullOrEmpty(namespaceName) && !string.IsNullOrWhiteSpace(projectSettings.RootNamespace))
+        {
+            namespaceName = projectSettings.RootNamespace;
+            if (element is ScreenSave)
+            {
+                namespaceName += ".Screens";
+            }
+            else if (element is ComponentSave)
+            {
+                namespaceName += ".Components";
+            }
+            else // standard element
+            {
+                namespaceName += ".Standards";
+            }
+
+            var splitElementName = element.Name.Split('\\').ToArray();
+            var splitPrefix = splitElementName.Take(splitElementName.Length - 1).ToArray();
+            var whatToAppend = string.Join(".", splitPrefix);
+            if (!string.IsNullOrEmpty(whatToAppend))
+            {
+                namespaceName += "." + whatToAppend;
+            }
+        }
+
+        return namespaceName;
+    }
+
+    #endregion
+
+    #region Class Name and Header
+
+    private static void GenerateClassHeader(CodeGenerationContext context)
+    {
+        //const string access = "public";
+        // According to this:https://github.com/vchelaru/Gum/issues/581
+        // We should not provide any access, an dinstead should
+        // default to internal so that users can control their class
+        // scope in the generated code.
+        const string accessWithSpace = "";
+
+        var header =
+            $"{accessWithSpace}partial class {GetClassNameForType(context.Element.Name, context.VisualApi, context)}";
+
+        if (context.CodeOutputProjectSettings.InheritanceLocation == InheritanceLocation.InGeneratedCode)
+        {
+            var inheritance = GetInheritance(context.Element, context.CodeOutputProjectSettings);
+            header += ":" + inheritance;
+        }
+
+        context.StringBuilder.AppendLine(context.Tabs + header);
+    }
+
+    public static string GetClassNameForType(string gumType, VisualApi visualApi, CodeGenerationContext context)
+    {
+        string className = null;
+        var specialHandledCase = false;
+
+        if (visualApi == VisualApi.XamarinForms)
+        {
+            switch (gumType)
+            {
+                case "Text":
+                    className = "Label";
+                    specialHandledCase = true;
+                    break;
+            }
+        }
+
+
+
+        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+        {
+            // see if it's a forms object:
+            var component = ObjectFinder.Self.GetComponent(gumType);
+
+            if (component != null)
+            {
+                var strippedType = gumType;
+                if (strippedType.Contains("/"))
+                {
+                    strippedType = strippedType.Substring(strippedType.LastIndexOf("/") + 1);
+                }
+                if (strippedType.Contains("\\"))
+                {
+                    strippedType = strippedType.Substring(strippedType.LastIndexOf("\\") + 1);
+                }
+
+                className = strippedType;
+                specialHandledCase = true;
+            }
+        }
+
+        if (!specialHandledCase)
+        {
+
+            var strippedType = gumType;
+            if (strippedType.Contains("/"))
+            {
+                strippedType = strippedType.Substring(strippedType.LastIndexOf("/") + 1);
+            }
+            if (strippedType.Contains("\\"))
+            {
+                strippedType = strippedType.Substring(strippedType.LastIndexOf("\\") + 1);
+            }
+
+            string suffix = visualApi == VisualApi.Gum ? "Runtime" : "";
+            className = $"{strippedType}{suffix}";
+
+        }
+        return className;
+    }
+
+    public static string GetInheritance(ElementSave element, CodeOutputProjectSettings projectSettings)
+    {
+        string inheritance = null;
+        if (element is ScreenSave)
+        {
+            if (projectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+            {
+                inheritance = element.BaseType ?? "MonoGameGum.Forms.Controls.FrameworkElement";
+            }
+            else
+            {
+                inheritance = element.BaseType ?? projectSettings.DefaultScreenBase;
+            }
+        }
+        else if (element.BaseType == "XamarinForms/SkiaGumCanvasView")
+        {
+            inheritance = "SkiaGum.SkiaGumCanvasView";
+        }
+        else if (element.BaseType == "Container")
+        {
+            if (projectSettings.OutputLibrary == OutputLibrary.MonoGame)
+            {
+                inheritance = "ContainerRuntime";
+            }
+            else if (projectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+            {
+                GetGumFormsType(element, out string? gumFormsType, out _);
+
+                if (string.IsNullOrEmpty(gumFormsType))
+                {
+                    gumFormsType = "MonoGameGum.Forms.Controls.FrameworkElement";
+                }
+                inheritance = gumFormsType;
+            }
+            else
+            {
+                inheritance = "BindableGraphicalUiElement";
+            }
+        }
+        else
+        {
+            inheritance = element.BaseType;
+            if (inheritance?.Contains("/") == true)
+            {
+                inheritance = inheritance.Substring(inheritance.LastIndexOf('/') + 1);
+            }
+            if (projectSettings.OutputLibrary == OutputLibrary.MonoGame)
+            {
+                // for standards, append "Runtime"
+                // Update March 14, 2025
+                // Why only on standards?
+                // A component (such as MessageBox)
+                // could inherit from UserControl, which
+                // generates UserControlRuntime.
+                var parentElement = ObjectFinder.Self.GetElementSave(inheritance);
+                if (element != null)
+                {
+                    inheritance = inheritance + "Runtime";
+                }
+            }
+        }
+
+        return inheritance;
+    }
+
+    #endregion
+
     #region BindingBehavior Enum
     enum BindingBehavior
     {
@@ -230,7 +415,6 @@ public class CodeGenerator
     }
 
     #endregion
-
 
     #region Generated Variables Properties (Exposed and "new")
 
@@ -310,7 +494,7 @@ public class CodeGenerator
                 string stateContainerType;
                 VisualApi visualApi = GetVisualApiForElement(stateContainer);
                 stateContainerType = GetClassNameForType(stateContainer.Name, visualApi, context);
-                type = $"{stateContainerType}.{category.Name}";
+                type = $"{stateContainerType}.{category.Name}?";
             }
 
             if (bindingBehavior == BindingBehavior.BindablePropertyWithBoundInstance)
@@ -2133,196 +2317,6 @@ public class CodeGenerator
         context.TabCount--;
         context.StringBuilder.AppendLine(context.Tabs + "}");
     }
-
-    #endregion
-
-    #region Namespace
-
-    public static string GetElementNamespace(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
-    {
-        var namespaceName = elementSettings?.Namespace;
-
-        if (string.IsNullOrEmpty(namespaceName) && !string.IsNullOrWhiteSpace(projectSettings.RootNamespace))
-        {
-            namespaceName = projectSettings.RootNamespace;
-            if (element is ScreenSave)
-            {
-                namespaceName += ".Screens";
-            }
-            else if (element is ComponentSave)
-            {
-                namespaceName += ".Components";
-            }
-            else // standard element
-            {
-                namespaceName += ".Standards";
-            }
-
-            var splitElementName = element.Name.Split('\\').ToArray();
-            var splitPrefix = splitElementName.Take(splitElementName.Length - 1).ToArray();
-            var whatToAppend = string.Join(".", splitPrefix);
-            if (!string.IsNullOrEmpty(whatToAppend))
-            {
-                namespaceName += "." + whatToAppend;
-            }
-        }
-
-        return namespaceName;
-    }
-
-    #endregion
-
-    #region Class Name and Header
-
-
-    private static void GenerateClassHeader(CodeGenerationContext context)
-    {
-        //const string access = "public";
-        // According to this:https://github.com/vchelaru/Gum/issues/581
-        // We should not provide any access, an dinstead should
-        // default to internal so that users can control their class
-        // scope in the generated code.
-        const string accessWithSpace = "";
-
-        var header =
-            $"{accessWithSpace}partial class {GetClassNameForType(context.Element.Name, context.VisualApi, context)}";
-
-        if (context.CodeOutputProjectSettings.InheritanceLocation == InheritanceLocation.InGeneratedCode)
-        {
-            var inheritance = GetInheritance(context.Element, context.CodeOutputProjectSettings);
-            header += ":" + inheritance;
-        }
-
-        context.StringBuilder.AppendLine(context.Tabs + header);
-    }
-
-    public static string GetClassNameForType(string gumType, VisualApi visualApi, CodeGenerationContext context)
-    {
-        string className = null;
-        var specialHandledCase = false;
-
-        if (visualApi == VisualApi.XamarinForms)
-        {
-            switch (gumType)
-            {
-                case "Text":
-                    className = "Label";
-                    specialHandledCase = true;
-                    break;
-            }
-        }
-
-
-
-        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
-        {
-            // see if it's a forms object:
-            var component = ObjectFinder.Self.GetComponent(gumType);
-
-            if (component != null)
-            {
-                var strippedType = gumType;
-                if (strippedType.Contains("/"))
-                {
-                    strippedType = strippedType.Substring(strippedType.LastIndexOf("/") + 1);
-                }
-                if (strippedType.Contains("\\"))
-                {
-                    strippedType = strippedType.Substring(strippedType.LastIndexOf("\\") + 1);
-                }
-
-                className = strippedType;
-                specialHandledCase = true;
-            }
-        }
-
-        if (!specialHandledCase)
-        {
-
-            var strippedType = gumType;
-            if (strippedType.Contains("/"))
-            {
-                strippedType = strippedType.Substring(strippedType.LastIndexOf("/") + 1);
-            }
-            if (strippedType.Contains("\\"))
-            {
-                strippedType = strippedType.Substring(strippedType.LastIndexOf("\\") + 1);
-            }
-
-            string suffix = visualApi == VisualApi.Gum ? "Runtime" : "";
-            className = $"{strippedType}{suffix}";
-
-        }
-        return className;
-    }
-
-
-    public static string GetInheritance(ElementSave element, CodeOutputProjectSettings projectSettings)
-    {
-        string inheritance = null;
-        if (element is ScreenSave)
-        {
-            if (projectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
-            {
-                inheritance = element.BaseType ?? "MonoGameGum.Forms.Controls.FrameworkElement";
-            }
-            else
-            {
-                inheritance = element.BaseType ?? projectSettings.DefaultScreenBase;
-            }
-        }
-        else if (element.BaseType == "XamarinForms/SkiaGumCanvasView")
-        {
-            inheritance = "SkiaGum.SkiaGumCanvasView";
-        }
-        else if (element.BaseType == "Container")
-        {
-            if (projectSettings.OutputLibrary == OutputLibrary.MonoGame)
-            {
-                inheritance = "ContainerRuntime";
-            }
-            else if (projectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
-            {
-                GetGumFormsType(element, out string? gumFormsType, out _);
-
-                if (string.IsNullOrEmpty(gumFormsType))
-                {
-                    gumFormsType = "MonoGameGum.Forms.Controls.FrameworkElement";
-                }
-                inheritance = gumFormsType;
-            }
-            else
-            {
-                inheritance = "BindableGraphicalUiElement";
-            }
-        }
-        else
-        {
-            inheritance = element.BaseType;
-            if (inheritance?.Contains("/") == true)
-            {
-                inheritance = inheritance.Substring(inheritance.LastIndexOf('/') + 1);
-            }
-            if (projectSettings.OutputLibrary == OutputLibrary.MonoGame)
-            {
-                // for standards, append "Runtime"
-                // Update March 14, 2025
-                // Why only on standards?
-                // A component (such as MessageBox)
-                // could inherit from UserControl, which
-                // generates UserControlRuntime.
-                var parentElement = ObjectFinder.Self.GetElementSave(inheritance);
-                if (element != null)
-                {
-                    inheritance = inheritance + "Runtime";
-                }
-            }
-        }
-
-        return inheritance;
-    }
-
-
 
     #endregion
 
