@@ -44,7 +44,10 @@ public static class GraphicalUiElementFormsExtensions
         if (frameworkElement == null)
         {
 #if DEBUG
-            throw new ArgumentException("The GraphicalUiElement with the name " + name + " is not of type " + typeof(FrameworkElementType));
+            var message = "The GraphicalUiElement with the name " + name +
+                " is expected to be of type " + typeof(FrameworkElementType) + " but is instead " + formsControlAsObject?.GetType();
+
+            throw new ArgumentException(message);
 #endif
         }
         return frameworkElement;

@@ -300,9 +300,9 @@ public class CodeGenerator
         if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
         {
             // see if it's a forms object:
-            var component = ObjectFinder.Self.GetComponent(gumType);
+            var element = ObjectFinder.Self.GetElementSave(gumType);
 
-            if (component != null)
+            if (element is ScreenSave or ComponentSave)
             {
                 var strippedType = gumType;
                 if (strippedType.Contains("/"))
@@ -678,6 +678,7 @@ public class CodeGenerator
         {
             var line = $"protected override void ReactToVisualChanged()";
             context.StringBuilder.AppendLine(context.Tabs + line);
+
         }
         else
         {
@@ -701,6 +702,11 @@ public class CodeGenerator
 
         context.TabCount++;
         context.Instance = null;
+
+        if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+        {
+            context.StringBuilder.AppendLine(context.Tabs + "base.ReactToVisualChanged();");
+        }
 
         if (isDerived)
         {
@@ -876,7 +882,67 @@ public class CodeGenerator
 
     static void RegisterRuntimeType(CodeGenerationContext context)
     {
-        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame
+
+        var outputLibrary = context.CodeOutputProjectSettings.OutputLibrary;
+
+        if(outputLibrary == OutputLibrary.MonoGameForms)
+        {
+            var builder = context.StringBuilder;
+
+            builder.AppendLine(context.Tabs + "[System.Runtime.CompilerServices.ModuleInitializer]");
+            builder.AppendLine(context.Tabs + "public static void RegisterRuntimeType()");
+            builder.AppendLine(context.Tabs + "{");
+            context.TabCount++;
+
+
+
+            var className = CodeGenerator.GetClassNameForType(context.Element.Name, context.VisualApi, context);
+
+
+
+
+            builder.AppendLine(context.Tabs + "var template = new MonoGameGum.Forms.VisualTemplate(() =>");
+            builder.AppendLine(context.Tabs + "{");
+            context.TabCount++;
+            builder.AppendLine(context.Tabs + "var visual = new MonoGameGum.GueDeriving.ContainerRuntime();");
+
+            builder.AppendLine(context.Tabs + $"var element = ObjectFinder.Self.GetElementSave(\"{context.Element.Name}\");");
+            builder.AppendLine(context.Tabs + "element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);");
+
+            if(context.Element is ScreenSave)
+            {
+                builder.AppendLine(context.Tabs + "visual.Width = 0;");
+                builder.AppendLine(context.Tabs + "visual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;");
+                builder.AppendLine(context.Tabs + "visual.Height = 0;");
+                builder.AppendLine(context.Tabs + "visual.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;");
+            }
+
+            builder.AppendLine(context.Tabs + "return visual;");
+
+            context.TabCount--;
+            builder.AppendLine(context.Tabs + "});");
+
+            builder.AppendLine(context.Tabs + 
+                $"MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates" +
+                $"[typeof({GetClassNameForType(context.Element.Name, context.VisualApi, context)})] = template;");
+
+            builder.AppendLine(context.Tabs +
+                $"ElementSaveExtensions.RegisterGueInstantiation(\"{context.Element.Name}\", () => ");
+            builder.AppendLine(context.Tabs + "{");
+            context.TabCount++;
+
+            builder.AppendLine(context.Tabs + "var gue = template.CreateContent(null) as InteractiveGue;");
+            builder.AppendLine(context.Tabs + $"gue.FormsControlAsObject = new {className}(gue);");
+            builder.AppendLine(context.Tabs + "return gue;");
+
+            context.TabCount--;
+            builder.AppendLine(context.Tabs + "});");
+
+            context.TabCount--;
+            builder.AppendLine(context.Tabs + "}");
+        }
+
+        else if (outputLibrary == OutputLibrary.MonoGame
             // Other objects could still be instantiating this object by component, so let's register the type no matter
             // how it's generated:
             // && context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FindByName
@@ -2322,7 +2388,7 @@ public class CodeGenerator
 
     #region Constructor
 
-    private static void GenerateConstructor(CodeGenerationContext context)
+    private static void GenerateConstructors(CodeGenerationContext context)
     {
         var element = context.Element;
         var visualApi = context.VisualApi;
@@ -2333,6 +2399,11 @@ public class CodeGenerator
 
         if (visualApi == VisualApi.Gum)
         {
+            if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+            {
+                stringBuilder.AppendLine(context.Tabs + $"public {elementClassName}(InteractiveGue visual) : base(visual) {{ }}");
+            }
+
             #region Constructor Header
 
             if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
@@ -2398,13 +2469,7 @@ public class CodeGenerator
                 }
                 else if (projectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
                 {
-
-                    context.StringBuilder.AppendLine(context.Tabs +
-                        $"var element = ObjectFinder.Self.GetElementSave(\"{element.Name}\");");
-
-
-                    context.StringBuilder.AppendLine(context.Tabs +
-                        $"this.Visual = MonoGameGum.ElementSaveExtensionMethods.ToGraphicalUiElement(element) as InteractiveGue;");
+                    // This is handled in the register function 
                 }
             }
 
@@ -2677,7 +2742,7 @@ public class CodeGenerator
         // -- no need for AppendLine here since FillWithExposedVariables does it after every variable --
         #endregion
 
-        GenerateConstructor(context);
+        GenerateConstructors(context);
 
         GenerateInitializeInstancesMethod(context);
 

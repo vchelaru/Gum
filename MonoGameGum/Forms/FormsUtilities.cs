@@ -53,9 +53,9 @@ public class FormsUtilities
 
         void TryAdd(Type formsType, Type runtimeType)
         {
-            if(!FrameworkElement.DefaultFormsComponents.ContainsKey(formsType))
+            if(!FrameworkElement.DefaultFormsTemplates.ContainsKey(formsType))
             {
-                FrameworkElement.DefaultFormsComponents[formsType] = runtimeType;
+                FrameworkElement.DefaultFormsTemplates[formsType] = new VisualTemplate(runtimeType);
             }
         }
 
