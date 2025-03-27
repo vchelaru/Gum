@@ -4116,9 +4116,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     #region Misc. Methods
 
+    public bool IsFullyCreated { get; private set; }
     public virtual void AfterFullCreation()
     {
-
+        IsFullyCreated = true;
     }
 
     /// <summary>

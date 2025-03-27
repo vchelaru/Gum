@@ -24,6 +24,8 @@ using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows.Media;
+using System.Windows.Media.Media3D;
 using ToolsUtilities;
 
 namespace CodeOutputPlugin.Manager;
@@ -906,10 +908,18 @@ public class CodeGenerator
             context.TabCount++;
             builder.AppendLine(context.Tabs + "var visual = new MonoGameGum.GueDeriving.ContainerRuntime();");
 
-            builder.AppendLine(context.Tabs + $"var element = ObjectFinder.Self.GetElementSave(\"{context.Element.Name}\");");
-            builder.AppendLine(context.Tabs + "element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);");
+            builder.AppendLine(context.Tabs +
+                $"var element = ObjectFinder.Self.GetElementSave(\"{context.Element.Name}\");");
 
-            if(context.Element is ScreenSave)
+            builder.AppendLine(context.Tabs +
+                $"element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);");
+
+            builder.AppendLine(context.Tabs +
+                $"visual.FormsControlAsObject = new {className}(visual);");
+
+
+
+            if (context.Element is ScreenSave)
             {
                 builder.AppendLine(context.Tabs + "visual.Width = 0;");
                 builder.AppendLine(context.Tabs + "visual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;");
@@ -924,7 +934,7 @@ public class CodeGenerator
 
             builder.AppendLine(context.Tabs + 
                 $"MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates" +
-                $"[typeof({GetClassNameForType(context.Element.Name, context.VisualApi, context)})] = template;");
+                $"[typeof({className})] = template;");
 
             builder.AppendLine(context.Tabs +
                 $"ElementSaveExtensions.RegisterGueInstantiation(\"{context.Element.Name}\", () => ");
@@ -932,7 +942,6 @@ public class CodeGenerator
             context.TabCount++;
 
             builder.AppendLine(context.Tabs + "var gue = template.CreateContent(null) as InteractiveGue;");
-            builder.AppendLine(context.Tabs + $"gue.FormsControlAsObject = new {className}(gue);");
             builder.AppendLine(context.Tabs + "return gue;");
 
             context.TabCount--;
