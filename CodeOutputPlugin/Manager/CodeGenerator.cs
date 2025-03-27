@@ -903,7 +903,7 @@ public class CodeGenerator
 
 
 
-            builder.AppendLine(context.Tabs + "var template = new MonoGameGum.Forms.VisualTemplate(() =>");
+            builder.AppendLine(context.Tabs + "var template = new MonoGameGum.Forms.VisualTemplate((vm, createForms) =>");
             builder.AppendLine(context.Tabs + "{");
             context.TabCount++;
             builder.AppendLine(context.Tabs + "var visual = new MonoGameGum.GueDeriving.ContainerRuntime();");
@@ -915,7 +915,7 @@ public class CodeGenerator
                 $"element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);");
 
             builder.AppendLine(context.Tabs +
-                $"visual.FormsControlAsObject = new {className}(visual);");
+                $"if(createForms) visual.FormsControlAsObject = new {className}(visual);");
 
 
 
@@ -941,7 +941,7 @@ public class CodeGenerator
             builder.AppendLine(context.Tabs + "{");
             context.TabCount++;
 
-            builder.AppendLine(context.Tabs + "var gue = template.CreateContent(null) as InteractiveGue;");
+            builder.AppendLine(context.Tabs + "var gue = template.CreateContent(null, true) as InteractiveGue;");
             builder.AppendLine(context.Tabs + "return gue;");
 
             context.TabCount--;

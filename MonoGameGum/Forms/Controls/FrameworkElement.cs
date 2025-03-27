@@ -384,7 +384,7 @@ public class FrameworkElement
     {
         if(DefaultFormsTemplates.ContainsKey(type))
         {
-            return DefaultFormsTemplates[type].CreateContent(null) as InteractiveGue;
+            return DefaultFormsTemplates[type].CreateContent(null, createFormsInternally:false) as InteractiveGue;
         }
         else if (DefaultFormsComponents.ContainsKey(type))
         {
