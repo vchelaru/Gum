@@ -11,7 +11,7 @@ namespace MonoGameGum.Forms
 {
     public class VisualTemplate
     {
-        Func<object, GraphicalUiElement> creationFunc;
+        Func<object, bool, GraphicalUiElement> creationFunc;
 
         static Type[] boolTypes = new Type[2];
 
@@ -42,7 +42,12 @@ namespace MonoGameGum.Forms
                 var parameters = new object[2];
                 parameters[0] = true;
                 parameters[1] = false;
-                Initialize((throwaway) => boolBoolconstructor.Invoke(parameters) as GraphicalUiElement);
+                Initialize((throwaway, createForms) =>
+                {
+                    parameters[1] = createForms;
+
+                    return boolBoolconstructor.Invoke(parameters) as GraphicalUiElement;
+                });
 
             }
 
@@ -59,30 +64,34 @@ namespace MonoGameGum.Forms
                 }
     #endif
 
-                Initialize((throwaway) => constructor.Invoke(null) as GraphicalUiElement);
+                Initialize((throwaway, createForms) => constructor.Invoke(null) as GraphicalUiElement);
             }
 
         }
 
         public VisualTemplate(Func<GraphicalUiElement> creationFunc)
         {
-            Initialize((throwaway) => creationFunc());
+            Initialize((throwaway, _) => creationFunc());
         }
 
         public VisualTemplate(Func<object, GraphicalUiElement> creationFunc)
         {
+            Initialize((vm, createForms) => creationFunc(vm));
+        }
+
+        public VisualTemplate(Func<object, bool, GraphicalUiElement> creationFunc)
+        {
             Initialize(creationFunc);
         }
 
-
-        private void Initialize(Func<object, GraphicalUiElement> creationFunc)
+        private void Initialize(Func<object, bool, GraphicalUiElement> creationFunc)
         {
             this.creationFunc = creationFunc;
         }
 
-        public GraphicalUiElement CreateContent(object bindingContext)
+        public GraphicalUiElement CreateContent(object bindingContext, bool createFormsInternally = false)
         {
-            return creationFunc(bindingContext);
+            return creationFunc(bindingContext, createFormsInternally);
         }
     }
 }

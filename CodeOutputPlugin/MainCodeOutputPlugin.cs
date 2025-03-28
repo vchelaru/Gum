@@ -20,456 +20,455 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using ToolsUtilities;
 
-namespace CodeOutputPlugin
+namespace CodeOutputPlugin;
+
+[Export(typeof(PluginBase))]
+public class MainCodeOutputPlugin : PluginBase
 {
-    [Export(typeof(PluginBase))]
-    public class MainCodeOutputPlugin : PluginBase
+    #region Fields/Properties
+
+    public override string FriendlyName => "Code Output Plugin";
+
+    public override Version Version => new Version(1, 0);
+
+    Views.CodeWindow control;
+    ViewModels.CodeWindowViewModel viewModel;
+    Models.CodeOutputProjectSettings codeOutputProjectSettings;
+
+    private readonly CodeGenerationFileLocationsService _codeGenerationFileLocationsService;
+    private readonly CodeGenerationService _codeGenerationService;
+    private readonly ISelectedState _selectedState;
+    private readonly RenameService _renameService;
+    private readonly LocalizationManager _localizationManager;
+    PluginTab pluginTab;
+
+    // Not sure why this is null..., so getting it from the builder instead
+    //[Import("LocalizationManager")]
+    //public LocalizationManager LocalizationManager
+    //{
+    //    get;
+    //    set;
+    //}
+
+    #endregion
+
+    #region Init/Startup
+
+    public MainCodeOutputPlugin()
     {
-        #region Fields/Properties
+        _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService();
 
-        public override string FriendlyName => "Code Output Plugin";
+        _codeGenerationService = new CodeGenerationService();
 
-        public override Version Version => new Version(1, 0);
+        _selectedState = SelectedState.Self;
 
-        Views.CodeWindow control;
-        ViewModels.CodeWindowViewModel viewModel;
-        Models.CodeOutputProjectSettings codeOutputProjectSettings;
+        _renameService = new RenameService();
 
-        private readonly CodeGenerationFileLocationsService _codeGenerationFileLocationsService;
-        private readonly CodeGenerationService _codeGenerationService;
-        private readonly ISelectedState _selectedState;
-        private readonly RenameService _renameService;
-        private readonly LocalizationManager _localizationManager;
-        PluginTab pluginTab;
+        _localizationManager = Builder.Get<LocalizationManager>();
 
-        // Not sure why this is null..., so getting it from the builder instead
-        //[Import("LocalizationManager")]
-        //public LocalizationManager LocalizationManager
-        //{
-        //    get;
-        //    set;
-        //}
+        CodeGenerator.LocalizationManager = _localizationManager;
+    }
 
-        #endregion
+    public override void StartUp()
+    {
+        AssignEvents();
 
-        #region Init/Startup
+        CreateControl();
+    }
 
-        public MainCodeOutputPlugin()
+    private void AssignEvents()
+    {
+        this.InstanceSelected += HandleInstanceSelected;
+        this.InstanceDelete += HandleInstanceDeleted;
+        this.InstanceAdd += HandleInstanceAdd;
+        this.InstanceReordered += HandleInstanceReordered;
+
+        this.ElementSelected += HandleElementSelected;
+        this.ElementRename += (element, oldName) => _renameService.HandleRename(element, oldName, codeOutputProjectSettings);
+        this.ElementAdd += HandleElementAdd;
+        this.ElementDelete += HandleElementDeleted;
+
+        this.VariableAdd += HandleVariableAdd;
+        this.VariableSet += HandleVariableSet;
+        this.VariableDelete += HandleVariableDelete;
+        this.VariableExcluded += HandleVariableExcluded;
+        this.AddAndRemoveVariablesForType += CustomVariableManager.HandleAddAndRemoveVariablesForType;
+
+        this.AfterUndo += () => HandleRefreshAndExport();
+
+        this.StateWindowTreeNodeSelected += HandleStateSelected;
+        this.StateRename += HandleStateRename;
+        this.StateAdd += HandleStateAdd;
+        this.StateDelete += HandleStateDelete;
+
+        this.CategoryRename += (category,newName) => HandleRefreshAndExport();
+        this.CategoryAdd += (category) => HandleRefreshAndExport();
+        this.CategoryDelete += (category) => HandleRefreshAndExport();
+        this.VariableRemovedFromCategory += (name, category) => HandleRefreshAndExport();
+
+        this.ProjectLoad += HandleProjectLoaded;
+    }
+
+    #endregion
+
+    private void HandleElementDeleted(ElementSave element)
+    {
+        var elementSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(element);
+
+        // If it's deleted, ask the user if they also want to delete generated code files
+        var generatedFile = _codeGenerationFileLocationsService.GetGeneratedFileName(element, elementSettings, codeOutputProjectSettings);
+        var customCodeFile = _codeGenerationFileLocationsService.GetCustomCodeFileName(element, elementSettings, codeOutputProjectSettings);
+
+        if(generatedFile?.Exists() == true || customCodeFile?.Exists() == true)
         {
-            _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService();
+            var message = $"Would you like to delete the generated and custom code files for {element}?";
 
-            _codeGenerationService = new CodeGenerationService();
+            var result = System.Windows.MessageBox.Show(message, "Delete Code?", System.Windows.MessageBoxButton.YesNo);
 
-            _selectedState = SelectedState.Self;
-
-            _renameService = new RenameService();
-
-            _localizationManager = Builder.Get<LocalizationManager>();
-
-            CodeGenerator.LocalizationManager = _localizationManager;
-        }
-
-        public override void StartUp()
-        {
-            AssignEvents();
-
-            CreateControl();
-        }
-
-        private void AssignEvents()
-        {
-            this.InstanceSelected += HandleInstanceSelected;
-            this.InstanceDelete += HandleInstanceDeleted;
-            this.InstanceAdd += HandleInstanceAdd;
-            this.InstanceReordered += HandleInstanceReordered;
-
-            this.ElementSelected += HandleElementSelected;
-            this.ElementRename += (element, oldName) => _renameService.HandleRename(element, oldName, codeOutputProjectSettings);
-            this.ElementAdd += HandleElementAdd;
-            this.ElementDelete += HandleElementDeleted;
-
-            this.VariableAdd += HandleVariableAdd;
-            this.VariableSet += HandleVariableSet;
-            this.VariableDelete += HandleVariableDelete;
-            this.VariableExcluded += HandleVariableExcluded;
-            this.AddAndRemoveVariablesForType += CustomVariableManager.HandleAddAndRemoveVariablesForType;
-
-            this.AfterUndo += () => HandleRefreshAndExport();
-
-            this.StateWindowTreeNodeSelected += HandleStateSelected;
-            this.StateRename += HandleStateRename;
-            this.StateAdd += HandleStateAdd;
-            this.StateDelete += HandleStateDelete;
-
-            this.CategoryRename += (category,newName) => HandleRefreshAndExport();
-            this.CategoryAdd += (category) => HandleRefreshAndExport();
-            this.CategoryDelete += (category) => HandleRefreshAndExport();
-            this.VariableRemovedFromCategory += (name, category) => HandleRefreshAndExport();
-
-            this.ProjectLoad += HandleProjectLoaded;
-        }
-
-        #endregion
-
-        private void HandleElementDeleted(ElementSave element)
-        {
-            var elementSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(element);
-
-            // If it's deleted, ask the user if they also want to delete generated code files
-            var generatedFile = _codeGenerationFileLocationsService.GetGeneratedFileName(element, elementSettings, codeOutputProjectSettings);
-            var customCodeFile = _codeGenerationFileLocationsService.GetCustomCodeFileName(element, elementSettings, codeOutputProjectSettings);
-
-            if(generatedFile?.Exists() == true || customCodeFile?.Exists() == true)
+            if(result == System.Windows.MessageBoxResult.Yes)
             {
-                var message = $"Would you like to delete the generated and custom code files for {element}?";
-
-                var result = System.Windows.MessageBox.Show(message, "Delete Code?", System.Windows.MessageBoxButton.YesNo);
-
-                if(result == System.Windows.MessageBoxResult.Yes)
+                if(generatedFile?.Exists() == true)
                 {
-                    if(generatedFile?.Exists() == true)
-                    {
-                        System.IO.File.Delete(generatedFile.FullPath);
-                    }
+                    System.IO.File.Delete(generatedFile.FullPath);
+                }
 
-                    if(customCodeFile?.Exists() == true)
-                    {
-                        System.IO.File.Delete(customCodeFile.FullPath);
-                    }
+                if(customCodeFile?.Exists() == true)
+                {
+                    System.IO.File.Delete(customCodeFile.FullPath);
                 }
             }
         }
+    }
 
-        private bool HandleVariableExcluded(VariableSave variable, RecursiveVariableFinder rvf) => VariableExclusionLogic.GetIfVariableIsExcluded(variable, rvf);
+    private bool HandleVariableExcluded(VariableSave variable, RecursiveVariableFinder rvf) => VariableExclusionLogic.GetIfVariableIsExcluded(variable, rvf);
 
-        private void HandleProjectLoaded(GumProjectSave project)
+    private void HandleProjectLoaded(GumProjectSave project)
+    {
+        codeOutputProjectSettings = CodeOutputProjectSettingsManager.CreateOrLoadSettingsForProject();
+        viewModel.InheritanceLocation = codeOutputProjectSettings.InheritanceLocation;
+        CustomVariableManager.ViewModel = viewModel;
+        HandleElementSelected(null);
+    }
+
+    private void HandleStateSelected(TreeNode obj)
+    {
+        if (control != null)
         {
-            codeOutputProjectSettings = CodeOutputProjectSettingsManager.CreateOrLoadSettingsForProject();
-            viewModel.InheritanceLocation = codeOutputProjectSettings.InheritanceLocation;
-            CustomVariableManager.ViewModel = viewModel;
-            HandleElementSelected(null);
-        }
-
-        private void HandleStateSelected(TreeNode obj)
-        {
-            if (control != null)
-            {
-                LoadCodeSettingsFile(GumState.Self.SelectedState.SelectedElement);
-
-                RefreshCodeDisplay();
-            }
-        }
-
-        private void HandleInstanceSelected(ElementSave arg1, InstanceSave instance)
-        {
-            if(control != null)
-            {
-                LoadCodeSettingsFile(GumState.Self.SelectedState.SelectedElement);
-
-                RefreshCodeDisplay();
-            }
-        }
-
-        private void HandleElementSelected(ElementSave element)
-        {
-            if (control != null)
-            {
-                LoadCodeSettingsFile(element);
-
-                RefreshCodeDisplay();
-            }
-        }
-
-
-        private void HandleElementAdd(ElementSave element)
-        {
-            HandleRefreshAndExport();
-            GenerateCodeForElement(showPopups: false, element);
-        }
-
-        private void LoadCodeSettingsFile(ElementSave element)
-        {
-            if(element != null && GumState.Self.ProjectState.GumProjectSave?.FullFileName != null)
-            {
-                control.CodeOutputElementSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(element);
-            }
-            else
-            {
-                control.CodeOutputElementSettings = new Models.CodeOutputElementSettings();
-            }
-        }
-
-        private void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue)
-        {
-            ParentSetLogic.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
-
-            _renameService.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
-
-            HandleRefreshAndExport();
-        }
-        private void HandleVariableAdd(ElementSave elementSave, string variableName)
-        {
-            if(control != null)
-            {
-                RefreshCodeDisplay();
-            }
-            HandleRefreshAndExport();
-        }
-        //private void /*/*HandleVariableRemoved*/*/(ElementSave elementSave, string variableName) => HandleRefreshAndExport();
-        private void HandleVariableDelete(ElementSave arg1, string arg2)
-        {
-            if (control != null)
-            {
-                RefreshCodeDisplay();
-            }
-            HandleRefreshAndExport();
-        }
-
-        private void HandleStateRename(StateSave arg1, string arg2) => HandleRefreshAndExport();
-        private void HandleStateAdd(StateSave obj) => HandleRefreshAndExport();
-        private void HandleStateDelete(StateSave obj) => HandleRefreshAndExport();
-
-        private void HandleInstanceDeleted(ElementSave arg1, InstanceSave arg2) => HandleRefreshAndExport();
-        private void HandleInstanceAdd(ElementSave element, InstanceSave instance)
-        {
-            ParentSetLogic.HandleNewCreatedInstance(element, instance, codeOutputProjectSettings);
-
-            HandleRefreshAndExport();
-        }
-        private void HandleInstanceReordered(InstanceSave obj) => HandleRefreshAndExport();
-
-
-        private void HandleRefreshAndExport()
-        {
-            if (control != null)
-            {
-                RefreshCodeDisplay();
-
-                if (control.CodeOutputElementSettings == null)
-                {
-                    control.CodeOutputElementSettings = new Models.CodeOutputElementSettings();
-                }
-
-                var elementSettings = control.CodeOutputElementSettings;
-
-                if (elementSettings.AutoGenerateOnChange)
-                {
-                    GenerateCodeForSelectedElement(showPopups: false);
-                }
-            }
-        }
-
-        private void HandleViewCodeClicked(object sender, EventArgs e)
-        {
-            //GumCommands.Self.GuiCommands.ShowControl(control);
-
             LoadCodeSettingsFile(GumState.Self.SelectedState.SelectedElement);
 
             RefreshCodeDisplay();
-
         }
+    }
 
-
-        private void RefreshCodeDisplay()
+    private void HandleInstanceSelected(ElementSave arg1, InstanceSave instance)
+    {
+        if(control != null)
         {
-            var shouldShow = _selectedState.SelectedElement != null &&
-                _selectedState.SelectedElement is not StandardElementSave;
+            LoadCodeSettingsFile(GumState.Self.SelectedState.SelectedElement);
 
-            if(shouldShow)
-            {
-                pluginTab.Show(focus:false);
-            }
-            else
-            {
-                pluginTab.Hide();
-            }
+            RefreshCodeDisplay();
+        }
+    }
 
-            control.CodeOutputProjectSettings = codeOutputProjectSettings;
-            if(control.CodeOutputElementSettings == null)
+    private void HandleElementSelected(ElementSave element)
+    {
+        if (control != null)
+        {
+            LoadCodeSettingsFile(element);
+
+            RefreshCodeDisplay();
+        }
+    }
+
+
+    private void HandleElementAdd(ElementSave element)
+    {
+        HandleRefreshAndExport();
+        GenerateCodeForElement(showPopups: false, element);
+    }
+
+    private void LoadCodeSettingsFile(ElementSave element)
+    {
+        if(element != null && GumState.Self.ProjectState.GumProjectSave?.FullFileName != null)
+        {
+            control.CodeOutputElementSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(element);
+        }
+        else
+        {
+            control.CodeOutputElementSettings = new Models.CodeOutputElementSettings();
+        }
+    }
+
+    private void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue)
+    {
+        ParentSetLogic.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
+
+        _renameService.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
+
+        HandleRefreshAndExport();
+    }
+    private void HandleVariableAdd(ElementSave elementSave, string variableName)
+    {
+        if(control != null)
+        {
+            RefreshCodeDisplay();
+        }
+        HandleRefreshAndExport();
+    }
+    //private void /*/*HandleVariableRemoved*/*/(ElementSave elementSave, string variableName) => HandleRefreshAndExport();
+    private void HandleVariableDelete(ElementSave arg1, string arg2)
+    {
+        if (control != null)
+        {
+            RefreshCodeDisplay();
+        }
+        HandleRefreshAndExport();
+    }
+
+    private void HandleStateRename(StateSave arg1, string arg2) => HandleRefreshAndExport();
+    private void HandleStateAdd(StateSave obj) => HandleRefreshAndExport();
+    private void HandleStateDelete(StateSave obj) => HandleRefreshAndExport();
+
+    private void HandleInstanceDeleted(ElementSave arg1, InstanceSave arg2) => HandleRefreshAndExport();
+    private void HandleInstanceAdd(ElementSave element, InstanceSave instance)
+    {
+        ParentSetLogic.HandleNewCreatedInstance(element, instance, codeOutputProjectSettings);
+
+        HandleRefreshAndExport();
+    }
+    private void HandleInstanceReordered(InstanceSave obj) => HandleRefreshAndExport();
+
+
+    private void HandleRefreshAndExport()
+    {
+        if (control != null)
+        {
+            RefreshCodeDisplay();
+
+            if (control.CodeOutputElementSettings == null)
             {
                 control.CodeOutputElementSettings = new Models.CodeOutputElementSettings();
             }
-            ///////////////////////early out////////////////////
-            if(!pluginTab.IsFocused)
+
+            var elementSettings = control.CodeOutputElementSettings;
+
+            if (elementSettings.AutoGenerateOnChange)
             {
-                return;
+                GenerateCodeForSelectedElement(showPopups: false);
             }
-            /////////////////////end early out/////////////////
+        }
+    }
 
-            var instance = SelectedState.Self.SelectedInstance;
-            var selectedElement = SelectedState.Self.SelectedElement;
+    private void HandleViewCodeClicked(object sender, EventArgs e)
+    {
+        //GumCommands.Self.GuiCommands.ShowControl(control);
 
-            viewModel.IsViewingStandardElement = selectedElement is StandardElementSave;
+        LoadCodeSettingsFile(GumState.Self.SelectedState.SelectedElement);
 
-            var settings = control.CodeOutputElementSettings;
+        RefreshCodeDisplay();
 
-            if(settings.GenerationBehavior != Models.GenerationBehavior.NeverGenerate)
+    }
+
+
+    private void RefreshCodeDisplay()
+    {
+        var shouldShow = _selectedState.SelectedElement != null &&
+            _selectedState.SelectedElement is not StandardElementSave;
+
+        if(shouldShow)
+        {
+            pluginTab.Show(focus:false);
+        }
+        else
+        {
+            pluginTab.Hide();
+        }
+
+        control.CodeOutputProjectSettings = codeOutputProjectSettings;
+        if(control.CodeOutputElementSettings == null)
+        {
+            control.CodeOutputElementSettings = new Models.CodeOutputElementSettings();
+        }
+        ///////////////////////early out////////////////////
+        if(!pluginTab.IsFocused)
+        {
+            return;
+        }
+        /////////////////////end early out/////////////////
+
+        var instance = SelectedState.Self.SelectedInstance;
+        var selectedElement = SelectedState.Self.SelectedElement;
+
+        viewModel.IsViewingStandardElement = selectedElement is StandardElementSave;
+
+        var settings = control.CodeOutputElementSettings;
+
+        if(settings.GenerationBehavior != Models.GenerationBehavior.NeverGenerate)
+        {
+            switch(viewModel.WhatToView)
             {
-                switch(viewModel.WhatToView)
+                case ViewModels.WhatToView.SelectedElement:
+
+                    if (instance != null)
+                    {
+                        string code = CodeGenerator.GetCodeForInstance(instance, selectedElement, codeOutputProjectSettings );
+                        viewModel.Code = code;
+                    }
+                    else if(selectedElement != null && selectedElement is not StandardElementSave)
+                    {
+
+                        string gumCode = CodeGenerator.GetGeneratedCodeForElement(selectedElement, settings, codeOutputProjectSettings);
+                        viewModel.Code = $"//Code for {selectedElement.ToString()}\r\n{gumCode}";
+                    }
+                    break;
+                case ViewModels.WhatToView.SelectedState:
+                    var state = SelectedState.Self.SelectedStateSave;
+
+                    if (state != null && selectedElement != null)
+                    {
+                        string gumCode = CodeGenerator.GetCodeForState(selectedElement, state, codeOutputProjectSettings);
+                        viewModel.Code = $"//State Code for {state.Name ?? "Default"}:\r\n{gumCode}";
+                    }
+                    break;
+            }
+        }
+        else if(selectedElement == null)
+        {
+            viewModel.Code = "// Select a Screen, Component, or Standard to see generated code";
+        }
+        else
+        {
+            viewModel.Code = "// code generation disabled for this object";
+        }
+
+
+    }
+
+    private void CreateControl()
+    {
+        viewModel = new ViewModels.CodeWindowViewModel();
+        control = new Views.CodeWindow(viewModel);
+
+        control.CodeOutputSettingsPropertyChanged += (not, used) => HandleCodeOutputPropertyChanged();
+        control.GenerateCodeClicked += (not, used) => HandleGenerateCodeButtonClicked();
+        control.GenerateAllCodeClicked += (not, used) => HandleGenerateAllCodeButtonClicked();
+        viewModel.PropertyChanged += (sender, args) => HandleMainViewModelPropertyChanged(args.PropertyName);
+
+        control.DataContext = viewModel;
+
+        pluginTab = GumCommands.Self.GuiCommands.AddControl(control, "Code", TabLocation.RightBottom);
+        pluginTab.GotFocus += () => RefreshCodeDisplay();
+    }
+
+    private void HandleMainViewModelPropertyChanged(string propertyName)
+    {
+        /////////////////Early Out////////////////////
+        if(GumState.Self.ProjectState.GumProjectSave == null)
+        {
+            return;
+        }
+        /////////////End Early Out////////////////////
+        
+        switch(propertyName)
+        {
+            case nameof(viewModel.InheritanceLocation):
+                codeOutputProjectSettings.InheritanceLocation = viewModel.InheritanceLocation;
+                CodeOutputProjectSettingsManager.WriteSettingsForProject(codeOutputProjectSettings);
+                break;
+            default:
+                RefreshCodeDisplay();
+                break;
+        }
+    }
+
+    private void HandleCodeOutputPropertyChanged()
+    {
+        var element = SelectedState.Self.SelectedElement;
+        if(element != null)
+        {
+            CodeOutputElementSettingsManager.WriteSettingsForElement(element, control.CodeOutputElementSettings);
+
+            RefreshCodeDisplay();
+        }
+        CodeOutputProjectSettingsManager.WriteSettingsForProject(codeOutputProjectSettings);
+    }
+
+    private void HandleGenerateCodeButtonClicked()
+    {
+        if(string.IsNullOrEmpty(codeOutputProjectSettings.CodeProjectRoot))
+        {
+            var message = "To save generated code, you must specify a .csproj location.";
+
+            var csprojAboveGumx = viewModel.GetCsprojDirectoryAboveGumx();
+            if(csprojAboveGumx == null)
+            {
+                message += "\n\n" +
+                    "Note: Your Gum project (.gumx) is currently not saved relative to a folder that contains a .csproj file. " +
+                    "Saving your Gum project relative to your .csproj is the recommended approach";
+            }
+
+            GumCommands.Self.GuiCommands.ShowMessage(message);
+        }
+        else if (SelectedState.Self.SelectedElement != null)
+        {
+            if(viewModel.IsAllInProjectGenerating)
+            {
+                int numberOfElements = 0;
+                foreach(var element in GumState.Self.ProjectState.GumProjectSave.AllElements)
                 {
-                    case ViewModels.WhatToView.SelectedElement:
+                    if(element is StandardElementSave)
+                    {
+                        continue;
+                    }
 
-                        if (instance != null)
-                        {
-                            string code = CodeGenerator.GetCodeForInstance(instance, selectedElement, codeOutputProjectSettings );
-                            viewModel.Code = code;
-                        }
-                        else if(selectedElement != null && selectedElement is not StandardElementSave)
-                        {
-
-                            string gumCode = CodeGenerator.GetGeneratedCodeForElement(selectedElement, settings, codeOutputProjectSettings);
-                            viewModel.Code = $"//Code for {selectedElement.ToString()}\r\n{gumCode}";
-                        }
-                        break;
-                    case ViewModels.WhatToView.SelectedState:
-                        var state = SelectedState.Self.SelectedStateSave;
-
-                        if (state != null && selectedElement != null)
-                        {
-                            string gumCode = CodeGenerator.GetCodeForState(selectedElement, state, codeOutputProjectSettings);
-                            viewModel.Code = $"//State Code for {state.Name ?? "Default"}:\r\n{gumCode}";
-                        }
-                        break;
+                    var elementOutputSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(element);
+                    if(elementOutputSettings.GenerationBehavior != Models.GenerationBehavior.NeverGenerate)
+                    {
+                        _codeGenerationService.GenerateCodeForElement(element, elementOutputSettings, codeOutputProjectSettings, showPopups: false);
+                        numberOfElements++;
+                    }
                 }
-            }
-            else if(selectedElement == null)
-            {
-                viewModel.Code = "// Select a Screen, Component, or Standard to see generated code";
+
+                GumCommands.Self.GuiCommands.ShowMessage($"Generated code for {numberOfElements} element(s)");
             }
             else
             {
-                viewModel.Code = "// code generation disabled for this object";
-            }
-
-
-        }
-
-        private void CreateControl()
-        {
-            viewModel = new ViewModels.CodeWindowViewModel();
-            control = new Views.CodeWindow(viewModel);
-
-            control.CodeOutputSettingsPropertyChanged += (not, used) => HandleCodeOutputPropertyChanged();
-            control.GenerateCodeClicked += (not, used) => HandleGenerateCodeButtonClicked();
-            control.GenerateAllCodeClicked += (not, used) => HandleGenerateAllCodeButtonClicked();
-            viewModel.PropertyChanged += (sender, args) => HandleMainViewModelPropertyChanged(args.PropertyName);
-
-            control.DataContext = viewModel;
-
-            pluginTab = GumCommands.Self.GuiCommands.AddControl(control, "Code", TabLocation.RightBottom);
-            pluginTab.GotFocus += () => RefreshCodeDisplay();
-        }
-
-        private void HandleMainViewModelPropertyChanged(string propertyName)
-        {
-            /////////////////Early Out////////////////////
-            if(GumState.Self.ProjectState.GumProjectSave == null)
-            {
-                return;
-            }
-            /////////////End Early Out////////////////////
-            
-            switch(propertyName)
-            {
-                case nameof(viewModel.InheritanceLocation):
-                    codeOutputProjectSettings.InheritanceLocation = viewModel.InheritanceLocation;
-                    CodeOutputProjectSettingsManager.WriteSettingsForProject(codeOutputProjectSettings);
-                    break;
-                default:
-                    RefreshCodeDisplay();
-                    break;
+                GenerateCodeForElement(showPopups:true, SelectedState.Self.SelectedElement);
             }
         }
-
-        private void HandleCodeOutputPropertyChanged()
-        {
-            var element = SelectedState.Self.SelectedElement;
-            if(element != null)
-            {
-                CodeOutputElementSettingsManager.WriteSettingsForElement(element, control.CodeOutputElementSettings);
-
-                RefreshCodeDisplay();
-            }
-            CodeOutputProjectSettingsManager.WriteSettingsForProject(codeOutputProjectSettings);
-        }
-
-        private void HandleGenerateCodeButtonClicked()
-        {
-            if(string.IsNullOrEmpty(codeOutputProjectSettings.CodeProjectRoot))
-            {
-                var message = "To save generated code, you must specify a .csproj location.";
-
-                var csprojAboveGumx = viewModel.GetCsprojDirectoryAboveGumx();
-                if(csprojAboveGumx == null)
-                {
-                    message += "\n\n" +
-                        "Note: Your Gum project (.gumx) is currently not saved relative to a folder that contains a .csproj file. " +
-                        "Saving your Gum project relative to your .csproj is the recommended approach";
-                }
-
-                GumCommands.Self.GuiCommands.ShowMessage(message);
-            }
-            else if (SelectedState.Self.SelectedElement != null)
-            {
-                if(viewModel.IsAllInProjectGenerating)
-                {
-                    int numberOfElements = 0;
-                    foreach(var element in GumState.Self.ProjectState.GumProjectSave.AllElements)
-                    {
-                        if(element is StandardElementSave)
-                        {
-                            continue;
-                        }
-
-                        var elementOutputSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(element);
-                        if(elementOutputSettings.GenerationBehavior != Models.GenerationBehavior.NeverGenerate)
-                        {
-                            _codeGenerationService.GenerateCodeForElement(element, elementOutputSettings, codeOutputProjectSettings, showPopups: false);
-                            numberOfElements++;
-                        }
-                    }
-
-                    GumCommands.Self.GuiCommands.ShowMessage($"Generated code for {numberOfElements} element(s)");
-                }
-                else
-                {
-                    GenerateCodeForElement(showPopups:true, SelectedState.Self.SelectedElement);
-                }
-            }
-        }
-
-        private void HandleGenerateAllCodeButtonClicked()
-        {
-            var gumProject = GumState.Self.ProjectState.GumProjectSave;
-            foreach (var screen in gumProject.Screens)
-            {
-                var screenOutputSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(screen);
-                _codeGenerationService.GenerateCodeForElement(screen, screenOutputSettings, codeOutputProjectSettings, showPopups: false);
-            }
-            foreach(var component in gumProject.Components)
-            {
-                var componentOutputSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(component);
-                _codeGenerationService.GenerateCodeForElement(component, componentOutputSettings, codeOutputProjectSettings, showPopups: false);
-            }
-
-            GumCommands.Self.GuiCommands.ShowMessage($"Generated code\nScreens: {gumProject.Screens.Count}\nComponents: {gumProject.Components.Count}");
-        }
-
-        private void GenerateCodeForSelectedElement(bool showPopups)
-        {
-            var selectedElement = SelectedState.Self.SelectedElement;
-            GenerateCodeForElement(showPopups, selectedElement);
-        }
-
-        private void GenerateCodeForElement(bool showPopups, ElementSave element, CodeOutputElementSettings? settings = null)
-        {
-            if (element != null && element is not StandardElementSave)
-            {
-                settings = settings ?? control.CodeOutputElementSettings;
-                _codeGenerationService.GenerateCodeForElement(element, settings, codeOutputProjectSettings, showPopups);
-            }
-        }
-
-        public override bool ShutDown(PluginShutDownReason shutDownReason) => true;
     }
+
+    private void HandleGenerateAllCodeButtonClicked()
+    {
+        var gumProject = GumState.Self.ProjectState.GumProjectSave;
+        foreach (var screen in gumProject.Screens)
+        {
+            var screenOutputSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(screen);
+            _codeGenerationService.GenerateCodeForElement(screen, screenOutputSettings, codeOutputProjectSettings, showPopups: false);
+        }
+        foreach(var component in gumProject.Components)
+        {
+            var componentOutputSettings = CodeOutputElementSettingsManager.LoadOrCreateSettingsFor(component);
+            _codeGenerationService.GenerateCodeForElement(component, componentOutputSettings, codeOutputProjectSettings, showPopups: false);
+        }
+
+        GumCommands.Self.GuiCommands.ShowMessage($"Generated code\nScreens: {gumProject.Screens.Count}\nComponents: {gumProject.Components.Count}");
+    }
+
+    private void GenerateCodeForSelectedElement(bool showPopups)
+    {
+        var selectedElement = SelectedState.Self.SelectedElement;
+        GenerateCodeForElement(showPopups, selectedElement);
+    }
+
+    private void GenerateCodeForElement(bool showPopups, ElementSave element, CodeOutputElementSettings? settings = null)
+    {
+        if (element != null && element is not StandardElementSave)
+        {
+            settings = settings ?? control.CodeOutputElementSettings;
+            _codeGenerationService.GenerateCodeForElement(element, settings, codeOutputProjectSettings, showPopups);
+        }
+    }
+
+    public override bool ShutDown(PluginShutDownReason shutDownReason) => true;
 }

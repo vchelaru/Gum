@@ -181,9 +181,10 @@ public class ItemsControl : ScrollViewer
 
     protected virtual InteractiveGue CreateNewVisual(object vm)
     {
-        if (VisualTemplate != null)
+        if (VisualTemplate != null || DefaultFormsTemplates.ContainsKey(typeof(ListBoxItem)))
         {
-            var toReturn = VisualTemplate.CreateContent(vm);
+            var template = VisualTemplate ?? DefaultFormsTemplates[typeof(ListBoxItem)];
+            var toReturn = template.CreateContent(vm);
 
             if(toReturn != null && toReturn is not InteractiveGue)
             {
@@ -205,7 +206,8 @@ public class ItemsControl : ScrollViewer
 #if DEBUG
             if (listBoxItemGumType == null)
             {
-                throw new Exception($"This {GetType().Name} named {this.Name} does not have a ItemGumType specified, nor does the DefaultFormsComponents have an entry for ListBoxItem. " +
+                throw new Exception($"This {GetType().Name} named {this.Name} does not have a ItemGumType specified, " +
+                    $"nor does the DefaultFormsTemplates have an entry for ListBoxItem. " +
                     "This property must be set before adding any items");
             }
 #endif

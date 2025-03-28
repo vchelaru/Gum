@@ -118,7 +118,10 @@ namespace GumRuntime
 
             toReturn.Name = elementSave.Name;
 
-            elementSave.SetGraphicalUiElement(toReturn, systemManagers);
+            if(toReturn.IsFullyCreated == false)
+            {
+                elementSave.SetGraphicalUiElement(toReturn, systemManagers);
+            }
 
             //no layering support yet
             if (addToManagers)

@@ -12,7 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace GameUiSamples.Screens.FrbClicker;
-public class FrbClickerCodeOnly : BindableGue, IUpdateScreen
+public class FrbClickerCodeOnly : Panel, IUpdateScreen
 {
     FrbScreenViewModel ViewModel => (FrbScreenViewModel)BindingContext;
     Button ManualClickButton;
@@ -21,12 +21,12 @@ public class FrbClickerCodeOnly : BindableGue, IUpdateScreen
 
     List<StackPanel> imagePanels = new List<StackPanel>();
 
-    public FrbClickerCodeOnly() : base(new InvisibleRenderable())
+    public FrbClickerCodeOnly()
     {
-        this.Width = 0;
-        this.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-        this.Height = 0;
-        this.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+        this.Visual.Width = 0;
+        this.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
+        this.Visual.Height = 0;
+        this.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
         CreateViewModel();
 
         CreateLeftColumn();
@@ -55,7 +55,7 @@ public class FrbClickerCodeOnly : BindableGue, IUpdateScreen
 
             var matchingPanel = imagePanels.First(item => item.BindingContext == sender);
 
-            while(matchingPanel.Visual.Children.Count < senderAsVm.Count)
+            while(matchingPanel.Children.Count < senderAsVm.Count)
             {
                 var image = new Image();
                 var relativeFile = senderAsVm.BackingData.Icon;
@@ -69,7 +69,7 @@ public class FrbClickerCodeOnly : BindableGue, IUpdateScreen
     {
         var leftPanel = new StackPanel();
 
-        this.Children.Add(leftPanel.Visual);
+        this.AddChild(leftPanel);
         leftPanel.Visual.Width = 33;
         leftPanel.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.Percentage;
         leftPanel.Visual.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Center;
@@ -107,7 +107,7 @@ public class FrbClickerCodeOnly : BindableGue, IUpdateScreen
         centerPanel.Visual.Y = 4;
         centerPanel.Visual.Height = -8;
         centerPanel.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-        this.Children.Add(centerPanel.Visual);
+        this.AddChild(centerPanel);
 
         foreach(var item in ViewModel.BuildingViewModels)
         {
@@ -127,7 +127,7 @@ public class FrbClickerCodeOnly : BindableGue, IUpdateScreen
     private void CreateRightColumn()
     {
         var scrollViewer = new ScrollViewer();
-        this.Children.Add(scrollViewer.Visual);
+        this.AddChild(scrollViewer);
 
         scrollViewer.Visual.Width = 33;
         scrollViewer.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.Percentage;
@@ -177,11 +177,6 @@ public class FrbClickerCodeOnly : BindableGue, IUpdateScreen
     {
         var cursor = FormsUtilities.Cursor;
         var windowOver = cursor.WindowOver;
-
-        if(FormsUtilities.Keyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Up))
-        {
-            int m = 3;
-        }
 
         if(windowOver == BallButton)
         {
