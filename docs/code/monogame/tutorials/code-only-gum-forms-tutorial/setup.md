@@ -51,7 +51,7 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
-        Gum.Update(this, gameTime);
+        Gum.Update(gameTime);
         base.Update(gameTime);
     }
 
@@ -81,10 +81,10 @@ mainPanel = new StackPanel();
 mainPanel.Visual.AddToRoot();
 ```
 
-* Update - this updates the internal keyboard, mouse, and gamepad instances and applies default behavior to any components which implement Forms. For example, if a Button is added to the Screen, this code is responsible for checking if the cursor is overlapping the Button and adjusting the highlight/pressed state appropriately. We pass the Root instance so that it and all of its children can receive input events.
+* Update - this updates the internal keyboard, mouse, and gamepad instances and applies default behavior to any components which implement Forms. For example, if a Button is added to the Screen, this code is responsible for checking if the cursor is overlapping the Button and adjusting the highlight/pressed state appropriately.
 
 ```csharp
-Gum.Update(this, gameTime, Root);
+Gum.Update(gameTime);
 ```
 
 * Draw - this method draws all Gum objects to the screen. This method does not yet perform any drawing since StackPanels are invisible, but we'll be adding controls later in this tutorial.
