@@ -43,7 +43,7 @@ partial class HollowKnightHudScreen : IUpdateScreen
         this.ExitButton.Click += (_, _) =>
         {
             GumService.Default.Root.Children.Clear();
-            var mainMenu = new MainMenuRuntime();
+            var mainMenu = new MainMenu();
             mainMenu.AddToRoot();
         };
 
