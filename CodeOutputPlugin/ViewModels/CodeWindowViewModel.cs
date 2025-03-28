@@ -228,17 +228,13 @@ public class CodeWindowViewModel : ViewModel
 
                         // This is arbitrary, but let's pick 2 behaviors which are common in forms
                         // and use those to determine if this project has forms:
-                        var hasForms = project.Behaviors.Any(item => item.Name == "ButtonBehavior") &&
-                            project.Behaviors.Any(item => item.Name == "TextBoxBehavior");
-
-                        if(hasForms)
-                        {
+                        //var hasForms = project.Behaviors.Any(item => item.Name == "ButtonBehavior") &&
+                        //    project.Behaviors.Any(item => item.Name == "TextBoxBehavior");
+                        // Update - why not always use forms? This seems like it will cause less confusion
+                        //if(hasForms)
+                        //{
                             codeOutputProjectSettings.OutputLibrary = OutputLibrary.MonoGameForms;
-                        }
-                        else
-                        {
-                            codeOutputProjectSettings.OutputLibrary = OutputLibrary.MonoGame;
-                        }
+                        //}
                     }
 
                     var namespaceName = csproj.CaseSensitiveNoPathNoExtension

@@ -209,15 +209,29 @@ public partial class CodeWindow : UserControl
     }
 
 
+
     private InstanceMember CreateOutputLibrarySelectionMember()
     {
+
+        var LibraryToString = new Dictionary<OutputLibrary, string>
+        {
+            {OutputLibrary.MonoGameForms, "MonoGame + Forms" },
+            {OutputLibrary.Skia, "SkiaSharp" },
+            {OutputLibrary.MonoGame, "MonoGame (no forms, deprecated)" }
+        };
+        var StringToLibrary = LibraryToString.ToDictionary((i) => i.Value, (i) => i.Key);
+
         var member = new InstanceMember("Output Library", this);
 
         member.CustomSetPropertyEvent += (owner, args) =>
         {
             if (CodeOutputProjectSettings != null)
             {
-                CodeOutputProjectSettings.OutputLibrary = (OutputLibrary)args.Value;
+                var asString = (string?)args.Value;
+                if(!string.IsNullOrEmpty(asString))
+                {
+                    CodeOutputProjectSettings.OutputLibrary =  StringToLibrary[asString];
+                }
 
                 CodeOutputSettingsPropertyChanged?.Invoke(this, null);
 
@@ -225,7 +239,9 @@ public partial class CodeWindow : UserControl
             }
         };
 
-        member.CustomGetEvent += (owner) => CodeOutputProjectSettings?.OutputLibrary;
+        member.CustomGetEvent += (owner) => CodeOutputProjectSettings?.OutputLibrary != null 
+        ? LibraryToString[CodeOutputProjectSettings.OutputLibrary]
+        : string.Empty;
 
 
 
@@ -236,9 +252,9 @@ public partial class CodeWindow : UserControl
         //    options.Add(option);
         //}
 
-        options.Add(OutputLibrary.MonoGame);
-        options.Add(OutputLibrary.MonoGameForms);
-        options.Add(OutputLibrary.Skia);
+        options.Add(LibraryToString[OutputLibrary.MonoGameForms]);
+        options.Add(LibraryToString[OutputLibrary.Skia]);
+        options.Add(LibraryToString[OutputLibrary.MonoGame]);
 
         member.CustomOptions = options;
 
