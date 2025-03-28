@@ -208,6 +208,8 @@
       * [Customizing Forms](code/monogame/tutorials/gum-project-.gumx-tutorial/customizing-forms.md)
       * [Strongly Typed Components Using Code Generation](code/monogame/tutorials/gum-project-.gumx-tutorial/strongly-typed-components-using-code-generation.md)
       * [Multiple Screens](code/monogame/tutorials/gum-project-.gumx-tutorial/multiple-screens.md)
+    * [Gum Project Forms Tutorial](code/monogame/tutorials/gum-project-forms-tutorial/README.md)
+      * [Setup](code/monogame/tutorials/gum-project-forms-tutorial/setup.md)
     * [Code-Only Gum Forms Tutorial](code/monogame/tutorials/code-only-gum-forms-tutorial/README.md)
       * [Setup](code/monogame/tutorials/code-only-gum-forms-tutorial/setup.md)
       * [Forms Controls](code/monogame/tutorials/code-only-gum-forms-tutorial/forms-controls.md)
