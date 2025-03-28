@@ -51,6 +51,11 @@ public class StackPanel : Panel
         Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
     }
 
+    public StackPanel(InteractiveGue visual) : base(visual) 
+    {
+    }
+
+
     private void UpdateToOrientation()
     {
         if(Visual != null)

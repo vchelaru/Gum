@@ -1016,11 +1016,13 @@ public class CodeGenerator
         { "ListBoxItemBehavior", "MonoGameGum.Forms.Controls.ListBoxItem" },
         { "MenuBehavior", "MonoGameGum.Forms.Controls.Menu" },
         { "MenuItemBehavior", "MonoGameGum.Forms.Controls.MenuItem" },
+        { "PanelBehavior", "MonoGameGum.Forms.Controls.Panel" },
         { "PasswordBoxBehavior", "MonoGameGum.Forms.Controls.PasswordBox" },
         { "RadioButtonBehavior", "MonoGameGum.Forms.Controls.RadioButton" },
         { "ScrollBarBehavior", "MonoGameGum.Forms.Controls.ScrollBar" },
         { "ScrollViewerBehavior", "MonoGameGum.Forms.Controls.ScrollViewer" },
         { "SliderBehavior", "MonoGameGum.Forms.Controls.Slider" },
+        { "StackPanelBehavior", "MonoGameGum.Forms.Controls.StackPanel" },
         { "TextBoxBehavior", "MonoGameGum.Forms.Controls.TextBox" },
     };
 
