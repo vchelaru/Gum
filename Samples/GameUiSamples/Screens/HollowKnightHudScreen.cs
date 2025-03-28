@@ -61,8 +61,7 @@ partial class HollowKnightHudScreen : IUpdateScreen
     {
         for (int i = 0; i < HealthContainer.Children.Count; i++)
         {
-            var childVisual = (InteractiveGue)HealthContainer.Children[i];
-            var child = (HealthItem)childVisual.FormsControlAsObject;
+            var child = (HealthItem)HealthContainer.Children[i];
 
             var isFilled = i < CurrentHealth;
 

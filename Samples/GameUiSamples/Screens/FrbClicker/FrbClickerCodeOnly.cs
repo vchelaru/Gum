@@ -55,7 +55,7 @@ public class FrbClickerCodeOnly : Panel, IUpdateScreen
 
             var matchingPanel = imagePanels.First(item => item.BindingContext == sender);
 
-            while(matchingPanel.Visual.Children.Count < senderAsVm.Count)
+            while(matchingPanel.Children.Count < senderAsVm.Count)
             {
                 var image = new Image();
                 var relativeFile = senderAsVm.BackingData.Icon;
@@ -177,11 +177,6 @@ public class FrbClickerCodeOnly : Panel, IUpdateScreen
     {
         var cursor = FormsUtilities.Cursor;
         var windowOver = cursor.WindowOver;
-
-        if(FormsUtilities.Keyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Up))
-        {
-            int m = 3;
-        }
 
         if(windowOver == BallButton)
         {

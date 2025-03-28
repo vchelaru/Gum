@@ -41,7 +41,7 @@ namespace GameUiSamples.Screens
         public ColoredRectangleRuntime ColoredRectangleInstance { get; protected set; }
         public ContainerRuntime MainHudContainer { get; protected set; }
         public ManaOrb ManaOrbInstance { get; protected set; }
-        public ContainerRuntime HealthContainer { get; protected set; }
+        public StackPanel HealthContainer { get; protected set; }
         public HealthItem HealthItemInstance { get; protected set; }
         public HealthItem HealthItemInstance1 { get; protected set; }
         public HealthItem HealthItemInstance2 { get; protected set; }
@@ -70,7 +70,7 @@ namespace GameUiSamples.Screens
             ColoredRectangleInstance = this.Visual?.GetGraphicalUiElementByName("ColoredRectangleInstance") as ColoredRectangleRuntime;
             MainHudContainer = this.Visual?.GetGraphicalUiElementByName("MainHudContainer") as ContainerRuntime;
             ManaOrbInstance = MonoGameGum.Forms.GraphicalUiElementFormsExtensions.GetFrameworkElementByName<ManaOrb>(this.Visual,"ManaOrbInstance");
-            HealthContainer = this.Visual?.GetGraphicalUiElementByName("HealthContainer") as ContainerRuntime;
+            HealthContainer = MonoGameGum.Forms.GraphicalUiElementFormsExtensions.GetFrameworkElementByName<StackPanel>(this.Visual,"HealthContainer");
             HealthItemInstance = MonoGameGum.Forms.GraphicalUiElementFormsExtensions.GetFrameworkElementByName<HealthItem>(this.Visual,"HealthItemInstance");
             HealthItemInstance1 = MonoGameGum.Forms.GraphicalUiElementFormsExtensions.GetFrameworkElementByName<HealthItem>(this.Visual,"HealthItemInstance1");
             HealthItemInstance2 = MonoGameGum.Forms.GraphicalUiElementFormsExtensions.GetFrameworkElementByName<HealthItem>(this.Visual,"HealthItemInstance2");

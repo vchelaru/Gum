@@ -44,7 +44,7 @@ namespace GameUiSamples.Components
         public ItemSlot ItemSlotInstance7 { get; protected set; }
         public ItemSlot ItemSlotInstance8 { get; protected set; }
         public ItemSlot ItemSlotInstance9 { get; protected set; }
-        public ContainerRuntime ItemSlotContainer { get; protected set; }
+        public StackPanel ItemSlotContainer { get; protected set; }
 
         public Hotbar(InteractiveGue visual) : base(visual) { }
         public Hotbar()
@@ -66,7 +66,7 @@ namespace GameUiSamples.Components
             ItemSlotInstance7 = MonoGameGum.Forms.GraphicalUiElementFormsExtensions.GetFrameworkElementByName<ItemSlot>(this.Visual,"ItemSlotInstance7");
             ItemSlotInstance8 = MonoGameGum.Forms.GraphicalUiElementFormsExtensions.GetFrameworkElementByName<ItemSlot>(this.Visual,"ItemSlotInstance8");
             ItemSlotInstance9 = MonoGameGum.Forms.GraphicalUiElementFormsExtensions.GetFrameworkElementByName<ItemSlot>(this.Visual,"ItemSlotInstance9");
-            ItemSlotContainer = this.Visual?.GetGraphicalUiElementByName("ItemSlotContainer") as ContainerRuntime;
+            ItemSlotContainer = MonoGameGum.Forms.GraphicalUiElementFormsExtensions.GetFrameworkElementByName<StackPanel>(this.Visual,"ItemSlotContainer");
             CustomInitialize();
         }
         //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

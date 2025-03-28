@@ -12,6 +12,8 @@ using System;
 using MonoGameGum.Forms;
 using MonoGameGum;
 using Microsoft.Xna.Framework.Input;
+using MonoGameGum.Forms.Controls;
+using MonoGameGum.ExtensionMethods;
 namespace GameUiSamples.Components;
 
 partial class Hotbar
@@ -36,9 +38,9 @@ partial class Hotbar
 
     partial void CustomInitialize()
     {
-        foreach (InteractiveGue child in ItemSlotContainer.Children)
+        foreach (FrameworkElement child in ItemSlotContainer.Children)
         {
-            child.Click += HandleItemSlotClicked;
+            child.Visual.Click += HandleItemSlotClicked;
         }
     }
 
@@ -66,9 +68,8 @@ partial class Hotbar
 
     private void HandleItemSlotClicked(object sender, EventArgs args)
     {
-        var itemSlot = (ItemSlot)(sender as InteractiveGue).FormsControlAsObject;
-
-        var index = ItemSlotContainer.Children.IndexOf(itemSlot.Visual);
+        var frameworkEement = (sender as InteractiveGue).FormsControlAsObject;
+        var index = ItemSlotContainer.Children.IndexOf((FrameworkElement)frameworkEement);
         SelectedIndex = index;
     }
 
@@ -76,8 +77,7 @@ partial class Hotbar
     {
         for (int i = 0; i < ItemSlotContainer.Children.Count; i++)
         {
-            var childGue = (InteractiveGue)ItemSlotContainer.Children[i];
-            var slot = (ItemSlot)childGue.FormsControlAsObject;
+            var slot = (ItemSlot)ItemSlotContainer.Children[i];
 
             slot.IsHighlighted = i == SelectedIndex;
         }
