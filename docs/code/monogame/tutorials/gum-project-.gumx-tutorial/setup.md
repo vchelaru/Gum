@@ -140,7 +140,7 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
-        Gum.Update(this, gameTime);
+        Gum.Update(gameTime);
         base.Update(gameTime);
     }
 
@@ -167,7 +167,7 @@ The code above has the following three calls on GumService:
 * Update - this updates the internal keyboard, mouse, and gamepad instances and applies default behavior to any components which implement Forms. For example, if a Button is added to the Screen, this code is responsible for checking if the cursor is overlapping the Button and adjusting the highlight/pressed state appropriately.
 
 ```csharp
-Gum.Update(this, gameTime);
+Gum.Update(gameTime);
 ```
 
 * Draw - this method draws all Gum objects to the screen. Currently this method does not perform any drawing, but in the next tutorial we'll be adding a Gum screen which is drawn in this method.

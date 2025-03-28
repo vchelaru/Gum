@@ -53,7 +53,7 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
-        Gum.Update(this, gameTime);
+        Gum.Update(gameTime);
         base.Update(gameTime);
     }
 

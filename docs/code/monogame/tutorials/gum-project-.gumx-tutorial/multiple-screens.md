@@ -98,7 +98,7 @@ partial class Screen1Runtime : Gum.Wireframe.GraphicalUiElement
     {
         this.GetFrameworkElementByName<Button>("ButtonStandardInstance").Click += (_, _) =>
         {
-            GumService.Default.Root.Clear();
+            GumService.Default.Root.Children.Clear();
             var screen = ObjectFinder.Self.GumProjectSave.Screens.Find(
                 item => item.Name == "Screen2");
             var screenRuntime = screen.ToGraphicalUiElement();
@@ -115,7 +115,7 @@ partial class Screen2Runtime : Gum.Wireframe.GraphicalUiElement
     {
         this.GetFrameworkElementByName<Button>("ButtonStandardInstance").Click += (_, _) =>
         {
-            GumService.Default.Root.Clear();
+            GumService.Default.Root.Children.Clear();
             var screen = ObjectFinder.Self.GumProjectSave.Screens.Find(
                 item => item.Name == "Screen1");
             var screenRuntime = screen.ToGraphicalUiElement();
