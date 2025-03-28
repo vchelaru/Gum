@@ -1,4 +1,6 @@
 ﻿using CodeOutputPlugin.Models;
+using Gum;
+using Gum.Managers;
 using Gum.Mvvm;
 using Gum.ToolStates;
 using System;
@@ -11,17 +13,24 @@ using ToolsUtilities;
 
 namespace CodeOutputPlugin.ViewModels;
 
+#region WhatToView Enum
 public enum WhatToView
 {
     SelectedElement,
     SelectedState
 }
 
+#endregion
+
+#region WhichElementsToGenerate Enum
+
 public enum WhichElementsToGenerate
 {
     SelectedOnly,
     AllInProject
 }
+
+#endregion
 
 public class CodeWindowViewModel : ViewModel
 {
@@ -175,4 +184,83 @@ public class CodeWindowViewModel : ViewModel
         }
     }
 
+    public bool HandleAutoSetupClicked(CodeOutputProjectSettings codeOutputProjectSettings)
+    {
+        var csprojLocation = GetCsprojDirectoryAboveGumx();
+
+        var shouldContinue = true;
+
+        if (csprojLocation == null)
+        {
+            GumCommands.Self.GuiCommands.ShowMessage("No .csproj file found, so cannot automatically set up code generation.");
+            shouldContinue = false;
+        }
+
+        if (shouldContinue)
+        {
+
+
+            codeOutputProjectSettings.CodeProjectRoot = csprojLocation.FullPath;
+
+            // we're going to load the project, so let's set it to find by name:
+            codeOutputProjectSettings.ObjectInstantiationType = ObjectInstantiationType.FindByName;
+
+            try
+            {
+                var csprojDirectory = codeOutputProjectSettings.CodeProjectRoot;
+
+                var csproj = System.IO.Directory.GetFiles(csprojDirectory, "*.csproj", System.IO.SearchOption.TopDirectoryOnly)
+                    .Select(item => new FilePath(item))
+                    .FirstOrDefault();
+
+                if (csproj != null)
+                {
+                    var contents = System.IO.File.ReadAllText(csproj.FullPath);
+
+                    var isMonoGameBased = contents.Contains("<PackageReference Include=\"MonoGame.Framework.") ||
+                        contents.Contains("<PackageReference Include=\"nkast.Xna.Framework");
+
+                    if (isMonoGameBased)
+                    {
+                        // if the user has added forms, let's default to Forms
+                        // Otherwise, fall back to normal monogame.
+                        var project = ObjectFinder.Self.GumProjectSave;
+
+                        // This is arbitrary, but let's pick 2 behaviors which are common in forms
+                        // and use those to determine if this project has forms:
+                        //var hasForms = project.Behaviors.Any(item => item.Name == "ButtonBehavior") &&
+                        //    project.Behaviors.Any(item => item.Name == "TextBoxBehavior");
+                        // Update - why not always use forms? This seems like it will cause less confusion
+                        //if(hasForms)
+                        //{
+                            codeOutputProjectSettings.OutputLibrary = OutputLibrary.MonoGameForms;
+                        //}
+                    }
+
+                    var namespaceName = csproj.CaseSensitiveNoPathNoExtension
+                        .Replace(".", "_")
+                        .Replace("-", "_")
+                        .Replace(" ", "_")
+                        ;
+
+                    if (contents.Contains("<RootNamespace>"))
+                    {
+                        var startIndex = contents.IndexOf("<RootNamespace>") + "<RootNamespace>".Length;
+                        var endIndex = contents.IndexOf("</RootNamespace>");
+                        namespaceName = contents.Substring(startIndex, endIndex - startIndex);
+                    }
+
+                    codeOutputProjectSettings.RootNamespace = namespaceName;
+                }
+
+
+            }
+            catch (Exception ex)
+            {
+                GumCommands.Self.GuiCommands.PrintOutput($"Error: {ex}");
+            }
+        }
+
+        return shouldContinue;
+    }
 }

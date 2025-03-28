@@ -597,7 +597,7 @@
   </Instance>
   <Instance>
     <Name>HealthContainer</Name>
-    <BaseType>Container</BaseType>
+    <BaseType>Controls/StackPanel</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>

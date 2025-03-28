@@ -369,7 +369,10 @@ public class FrameworkElement
     /// FrameworkElement.DefaultFormsComponents[typeof(FlatRedBall.Forms.Controls.Button)] = 
     ///     typeof(ProjectName.GumRuntimes.LargeMenuButtonRuntime);
     /// </example>
+    [Obsolete("Use DefaultFormsTemplates")]
     public static Dictionary<Type, Type> DefaultFormsComponents { get; private set; } = new Dictionary<Type, Type>();
+
+    public static Dictionary<Type, VisualTemplate> DefaultFormsTemplates { get; private set; } = new Dictionary<Type, VisualTemplate>();
 
     protected static InteractiveGue GetGraphicalUiElementFor(FrameworkElement element)
     {
@@ -379,7 +382,11 @@ public class FrameworkElement
 
     public static InteractiveGue GetGraphicalUiElementForFrameworkElement(Type type)
     {
-        if (DefaultFormsComponents.ContainsKey(type))
+        if(DefaultFormsTemplates.ContainsKey(type))
+        {
+            return DefaultFormsTemplates[type].CreateContent(null, createFormsInternally:false) as InteractiveGue;
+        }
+        else if (DefaultFormsComponents.ContainsKey(type))
         {
             var gumType = DefaultFormsComponents[type];
             // The bool/bool constructor is required to match the FlatRedBall.Forms functionality
@@ -406,7 +413,7 @@ public class FrameworkElement
             {
                 var message =
                     $"Could not find default Gum Component for {type}. You can solve this by adding a Gum type for {type} to " +
-                    $"{nameof(FrameworkElement)}.{nameof(DefaultFormsComponents)}, or constructing the Gum object itself.";
+                    $"{nameof(FrameworkElement)}.{nameof(DefaultFormsTemplates)}, or constructing the Gum object itself.";
 
                 throw new Exception(message);
             }

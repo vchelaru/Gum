@@ -75,7 +75,13 @@ namespace CodeOutputPlugin.Manager
         public static string GetClassHeader(ElementSave element, CodeOutputProjectSettings projectSettings)
         {
             var visualApi = CodeGenerator.GetVisualApiForElement(element);
-            string inheritance = CodeGenerator.GetInheritance(element, projectSettings);
+            string inheritance = "";
+            
+            
+            if(projectSettings.InheritanceLocation == InheritanceLocation.InCustomCode)
+            {
+                inheritance = CodeGenerator.GetInheritance(element, projectSettings);
+            }
 
             var context = new CodeGenerationContext();
             context.Element = element;
@@ -83,7 +89,11 @@ namespace CodeOutputPlugin.Manager
 
             // intentionally do not include "public" or "internal" so the user can customize this as desired
             // https://github.com/vchelaru/Gum/issues/581
-            var classHeader = $"partial class {CodeGenerator.GetClassNameForType(element.Name, visualApi, context)} : {inheritance}";
+            var classHeader = $"partial class {CodeGenerator.GetClassNameForType(element.Name, visualApi, context)}";
+            if(!string.IsNullOrEmpty(inheritance))
+            {
+                classHeader += $" : {inheritance}";
+            }
             return classHeader;
         }
 

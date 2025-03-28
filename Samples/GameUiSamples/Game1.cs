@@ -15,6 +15,8 @@ public class Game1 : Game
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
 
+    GumService Gum => MonoGameGum.GumService.Default;
+
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
@@ -32,9 +34,9 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        var gumProject = MonoGameGum.GumService.Default.Initialize(this, "GumProject/GameUiSamplesgumProject.gumx");
+        var gumProject = Gum.Initialize(this, "GumProject/GameUiSamplesgumProject.gumx");
 
-        var startScreen = new MainMenuRuntime();
+        var startScreen = new MainMenu();
         startScreen.AddToRoot();
 
         base.Initialize();
@@ -49,11 +51,14 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
-        MonoGameGum.GumService.Default.Update(this, gameTime);
+        Gum.Update(gameTime);
 
         foreach(var item in GumService.Default.Root.Children)
         {
-            (item as IUpdateScreen)?.Update(gameTime);
+            if(item is InteractiveGue asInteractiveGue)
+            {
+                (asInteractiveGue.FormsControlAsObject as IUpdateScreen)?.Update(gameTime);
+            }
         }
 
         base.Update(gameTime);
@@ -63,7 +68,7 @@ public class Game1 : Game
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
 
-        MonoGameGum.GumService.Default.Draw();
+        Gum.Draw();
 
         base.Draw(gameTime);
     }

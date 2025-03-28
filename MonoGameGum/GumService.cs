@@ -5,6 +5,7 @@ using GumRuntime;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGameGum.Forms;
+using MonoGameGum.Forms.Controls;
 using MonoGameGum.GueDeriving;
 using MonoGameGum.Input;
 using RenderingLibrary;
@@ -206,5 +207,17 @@ public static class ElementSaveExtensionMethods
     {
         return elementSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
     }
+}
 
+public static class FrameworkElementExtensionMethods
+{
+    public static void AddToRoot(this FrameworkElement element)
+    {
+        GumService.Default.Root.Children.Add(element.Visual);
+    }
+
+    public static void RemoveFromRoot(this FrameworkElement element)
+    {
+        element.Visual.Parent = null;
+    }
 }

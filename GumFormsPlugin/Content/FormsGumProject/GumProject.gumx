@@ -135,6 +135,11 @@
     <LinkType>ReferenceOriginal</LinkType>
   </ComponentReference>
   <ComponentReference>
+    <Name>Controls/Panel</Name>
+    <ElementType>Component</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </ComponentReference>
+  <ComponentReference>
     <Name>Controls/PasswordBox</Name>
     <ElementType>Component</ElementType>
     <LinkType>ReferenceOriginal</LinkType>
@@ -171,6 +176,11 @@
   </ComponentReference>
   <ComponentReference>
     <Name>Controls/Slider</Name>
+    <ElementType>Component</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </ComponentReference>
+  <ComponentReference>
+    <Name>Controls/StackPanel</Name>
     <ElementType>Component</ElementType>
     <LinkType>ReferenceOriginal</LinkType>
   </ComponentReference>
@@ -326,6 +336,9 @@
     <Name>OnScreenKeyboardBehavior</Name>
   </BehaviorReference>
   <BehaviorReference>
+    <Name>PanelBehavior</Name>
+  </BehaviorReference>
+  <BehaviorReference>
     <Name>PasswordBoxBehavior</Name>
   </BehaviorReference>
   <BehaviorReference>
@@ -348,6 +361,9 @@
   </BehaviorReference>
   <BehaviorReference>
     <Name>SliderBehavior</Name>
+  </BehaviorReference>
+  <BehaviorReference>
+    <Name>StackPanelBehavior</Name>
   </BehaviorReference>
   <BehaviorReference>
     <Name>TextBoxBehavior</Name>

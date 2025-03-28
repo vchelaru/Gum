@@ -24,6 +24,8 @@ using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows.Media;
+using System.Windows.Media.Media3D;
 using ToolsUtilities;
 
 namespace CodeOutputPlugin.Manager;
@@ -158,11 +160,10 @@ public class CodeGenerator
         _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService();
     }
 
-
     #region Using Statements
 
 
-    private static void GenerateUsingStatements(CodeOutputElementSettings elementSettings, 
+    private static void GenerateUsingStatements(CodeOutputElementSettings elementSettings,
         CodeGenerationContext context)
     {
 
@@ -171,17 +172,27 @@ public class CodeGenerator
         HashSet<string> neededUsings = new HashSet<string>();
         neededUsings.Add("GumRuntime");
         context.StringBuilder.AppendLine($"using GumRuntime;");
-        foreach(var instance in context.Element.Instances)
+
+        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
+        {
+            context.StringBuilder.AppendLine("using MonoGameGum.GueDeriving;");
+        }
+        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+        {
+            context.StringBuilder.AppendLine("using MonoGameGum.GueDeriving;");
+        }
+
+        foreach (var instance in context.Element.Instances)
         {
             var gumType = instance.BaseType;
 
             var instanceElement = ObjectFinder.Self.GetElementSave(instance);
 
-            if(instanceElement != null && instanceElement is not StandardElementSave)
+            if (instanceElement != null && instanceElement is not StandardElementSave)
             {
                 var elementNamespace = GetElementNamespace(instanceElement, elementSettings, context.CodeOutputProjectSettings);
 
-                if(!string.IsNullOrEmpty(elementNamespace) && !neededUsings.Contains(elementNamespace))
+                if (!string.IsNullOrEmpty(elementNamespace) && !neededUsings.Contains(elementNamespace))
                 {
                     neededUsings.Add(elementNamespace);
                     context.StringBuilder.AppendLine($"using {elementNamespace};");
@@ -211,6 +222,192 @@ public class CodeGenerator
 
     #endregion
 
+    #region Namespace
+
+    public static string GetElementNamespace(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
+    {
+        var namespaceName = elementSettings?.Namespace;
+
+        if (string.IsNullOrEmpty(namespaceName) && !string.IsNullOrWhiteSpace(projectSettings.RootNamespace))
+        {
+            namespaceName = projectSettings.RootNamespace;
+            if (element is ScreenSave)
+            {
+                namespaceName += ".Screens";
+            }
+            else if (element is ComponentSave)
+            {
+                namespaceName += ".Components";
+            }
+            else // standard element
+            {
+                namespaceName += ".Standards";
+            }
+
+            var splitElementName = element.Name.Split('\\').ToArray();
+            var splitPrefix = splitElementName.Take(splitElementName.Length - 1).ToArray();
+            var whatToAppend = string.Join(".", splitPrefix);
+            if (!string.IsNullOrEmpty(whatToAppend))
+            {
+                namespaceName += "." + whatToAppend;
+            }
+        }
+
+        return namespaceName;
+    }
+
+    #endregion
+
+    #region Class Name and Header
+
+    private static void GenerateClassHeader(CodeGenerationContext context)
+    {
+        //const string access = "public";
+        // According to this:https://github.com/vchelaru/Gum/issues/581
+        // We should not provide any access, an dinstead should
+        // default to internal so that users can control their class
+        // scope in the generated code.
+        const string accessWithSpace = "";
+
+        var header =
+            $"{accessWithSpace}partial class {GetClassNameForType(context.Element.Name, context.VisualApi, context)}";
+
+        if (context.CodeOutputProjectSettings.InheritanceLocation == InheritanceLocation.InGeneratedCode)
+        {
+            var inheritance = GetInheritance(context.Element, context.CodeOutputProjectSettings);
+            header += ":" + inheritance;
+        }
+
+        context.StringBuilder.AppendLine(context.Tabs + header);
+    }
+
+    public static string GetClassNameForType(string gumType, VisualApi visualApi, CodeGenerationContext context)
+    {
+        string className = null;
+        var specialHandledCase = false;
+
+        if (visualApi == VisualApi.XamarinForms)
+        {
+            switch (gumType)
+            {
+                case "Text":
+                    className = "Label";
+                    specialHandledCase = true;
+                    break;
+            }
+        }
+
+
+
+        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+        {
+            // see if it's a forms object:
+            var element = ObjectFinder.Self.GetElementSave(gumType);
+
+            if (element is ScreenSave or ComponentSave)
+            {
+                var strippedType = gumType;
+                if (strippedType.Contains("/"))
+                {
+                    strippedType = strippedType.Substring(strippedType.LastIndexOf("/") + 1);
+                }
+                if (strippedType.Contains("\\"))
+                {
+                    strippedType = strippedType.Substring(strippedType.LastIndexOf("\\") + 1);
+                }
+
+                className = strippedType;
+                specialHandledCase = true;
+            }
+        }
+
+        if (!specialHandledCase)
+        {
+
+            var strippedType = gumType;
+            if (strippedType.Contains("/"))
+            {
+                strippedType = strippedType.Substring(strippedType.LastIndexOf("/") + 1);
+            }
+            if (strippedType.Contains("\\"))
+            {
+                strippedType = strippedType.Substring(strippedType.LastIndexOf("\\") + 1);
+            }
+
+            string suffix = visualApi == VisualApi.Gum ? "Runtime" : "";
+            className = $"{strippedType}{suffix}";
+
+        }
+        return className;
+    }
+
+    public static string GetInheritance(ElementSave element, CodeOutputProjectSettings projectSettings)
+    {
+        string inheritance = null;
+        if (element is ScreenSave)
+        {
+            if (projectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+            {
+                inheritance = element.BaseType ?? "MonoGameGum.Forms.Controls.FrameworkElement";
+            }
+            else
+            {
+                inheritance = element.BaseType ?? projectSettings.DefaultScreenBase;
+            }
+        }
+        else if (element.BaseType == "XamarinForms/SkiaGumCanvasView")
+        {
+            inheritance = "SkiaGum.SkiaGumCanvasView";
+        }
+        else if (element.BaseType == "Container")
+        {
+            if (projectSettings.OutputLibrary == OutputLibrary.MonoGame)
+            {
+                inheritance = "ContainerRuntime";
+            }
+            else if (projectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+            {
+                GetGumFormsType(element, out string? gumFormsType, out _);
+
+                if (string.IsNullOrEmpty(gumFormsType))
+                {
+                    gumFormsType = "MonoGameGum.Forms.Controls.FrameworkElement";
+                }
+                inheritance = gumFormsType;
+            }
+            else
+            {
+                inheritance = "BindableGraphicalUiElement";
+            }
+        }
+        else
+        {
+            inheritance = element.BaseType;
+            if (inheritance?.Contains("/") == true)
+            {
+                inheritance = inheritance.Substring(inheritance.LastIndexOf('/') + 1);
+            }
+            if (projectSettings.OutputLibrary == OutputLibrary.MonoGame)
+            {
+                // for standards, append "Runtime"
+                // Update March 14, 2025
+                // Why only on standards?
+                // A component (such as MessageBox)
+                // could inherit from UserControl, which
+                // generates UserControlRuntime.
+                var parentElement = ObjectFinder.Self.GetElementSave(inheritance);
+                if (element != null)
+                {
+                    inheritance = inheritance + "Runtime";
+                }
+            }
+        }
+
+        return inheritance;
+    }
+
+    #endregion
+
     #region BindingBehavior Enum
     enum BindingBehavior
     {
@@ -220,7 +417,6 @@ public class CodeGenerator
     }
 
     #endregion
-
 
     #region Generated Variables Properties (Exposed and "new")
 
@@ -281,122 +477,138 @@ public class CodeGenerator
         var bindingBehavior = GetBindingBehavior(container, instanceName);
         var type = exposedVariable.Type;
 
-        if (exposedVariable.IsState(container, out ElementSave stateContainer, out StateSaveCategory category))
-        {
+        var isState = exposedVariable.IsState(container, out ElementSave stateContainer, out StateSaveCategory category);
 
-            string stateContainerType;
-            VisualApi visualApi = GetVisualApiForElement(stateContainer);
-            stateContainerType = GetClassNameForType(stateContainer.Name, visualApi, context);
-            type = $"{stateContainerType}.{category.Name}";
+        var shouldGenerate = true;
+
+        if (isState)
+        {
+            if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms && stateContainer is StandardElementSave)
+            {
+                shouldGenerate = false;
+            }
         }
 
-        if (bindingBehavior == BindingBehavior.BindablePropertyWithBoundInstance)
+        if (shouldGenerate)
         {
-            var containerClassName = GetClassNameForType(container.Name, VisualApi.XamarinForms, context);
-            stringBuilder.AppendLine($"{ToTabs(tabCount)}public static readonly BindableProperty {exposedVariable.ExposedAsName}Property = " +
-                $"BindableProperty.Create(nameof({exposedVariable.ExposedAsName}),typeof({type}),typeof({containerClassName}), defaultBindingMode: BindingMode.TwoWay);");
-
-            stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {exposedVariable.ExposedAsName}");
-            stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-            tabCount++;
-            stringBuilder.AppendLine(ToTabs(tabCount) + $"get => ({type})GetValue({exposedVariable.ExposedAsName.Replace(" ", "_")}Property);");
-            stringBuilder.AppendLine(ToTabs(tabCount) + $"set => SetValue({exposedVariable.ExposedAsName.Replace(" ", "_")}Property, value);");
-            tabCount--;
-            stringBuilder.AppendLine(ToTabs(tabCount) + "}");
-        }
-        else if (bindingBehavior == BindingBehavior.BindablePropertyWithEventAssignment)
-        {
-            var rcv = new RecursiveVariableFinder(container.DefaultState);
-            var defaultValue = rcv.GetValue(exposedVariable.Name);
-            var defaultValueAsString = VariableValueToGumCodeValue(exposedVariable, context, forcedValue: defaultValue);
-            var containerClassName = GetClassNameForType(container.Name, VisualApi.XamarinForms, context);
-
-            string defaultAssignmentWithComma = null;
-
-            if (!string.IsNullOrEmpty(defaultValueAsString))
-            {
-                defaultAssignmentWithComma = $", defaultValue:{defaultValueAsString}";
-            }
-
-            stringBuilder.AppendLine($"{ToTabs(tabCount)}public static readonly BindableProperty {exposedVariable.ExposedAsName}Property = " +
-                $"BindableProperty.Create(nameof({exposedVariable.ExposedAsName}),typeof({type}),typeof({containerClassName}), defaultBindingMode: BindingMode.TwoWay, propertyChanged:Handle{exposedVariable.ExposedAsName}PropertyChanged{defaultAssignmentWithComma});");
-
-            stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {exposedVariable.ExposedAsName}");
-            stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-            tabCount++;
-            stringBuilder.AppendLine(ToTabs(tabCount) + $"get => ({type})GetValue({exposedVariable.ExposedAsName.Replace(" ", "_")}Property);");
-            stringBuilder.AppendLine(ToTabs(tabCount) + $"set => SetValue({exposedVariable.ExposedAsName.Replace(" ", "_")}Property, value);");
-            tabCount--;
-            stringBuilder.AppendLine(ToTabs(tabCount) + "}");
-
-            stringBuilder.AppendLine(ToTabs(tabCount) + $"private static void Handle{exposedVariable.ExposedAsName}PropertyChanged(BindableObject bindable, object oldValue, object newValue)");
-            stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-            tabCount++;
-            stringBuilder.AppendLine(ToTabs(tabCount) + $"var casted = bindable as {containerClassName};");
-
-            if (!string.IsNullOrWhiteSpace(exposedVariable.SourceObject))
-            {
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{exposedVariable.SourceObject}.{exposedVariable.GetRootName()} = ({type})newValue;");
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{exposedVariable.SourceObject}?.EffectiveManagers?.InvalidateSurface();");
-            }
-            else
-            {
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{exposedVariable.Name.Replace(" ", "_")} = ({type})newValue;");
-            }
-
-            tabCount--;
-            stringBuilder.AppendLine(ToTabs(tabCount) + "}");
-        }
-        else
-        {
-
-            var shouldSetStateByString = false;
-            var isState = exposedVariable.IsState(context.Element);
-            if(isState && context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
-            {
-                // see if the state is defined by a standard element. If so, we 
-                var rootVariable = ObjectFinder.Self.GetRootVariable(exposedVariable.Name, context.Element);
-
-                if(rootVariable != null && ObjectFinder.Self.GetContainerOf(rootVariable) is StandardElementSave)
-                {
-                    shouldSetStateByString = true;
-                }
-            }
-
-            if(shouldSetStateByString)
-            {
-                type = "string";
-            }
-
-            stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {exposedVariable.ExposedAsName}");
-            stringBuilder.AppendLine(ToTabs(tabCount) + "{");
-            tabCount++;
-            var hasGetter = true;
             if (isState)
             {
-                if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
-                {
-                    hasGetter = false;
-                }
-            }
-            if (hasGetter)
-            {
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => {exposedVariable.Name.Replace(" ", "_")};");
+                string stateContainerType;
+                VisualApi visualApi = GetVisualApiForElement(stateContainer);
+                stateContainerType = GetClassNameForType(stateContainer.Name, visualApi, context);
+                type = $"{stateContainerType}.{category.Name}?";
             }
 
-            if(shouldSetStateByString)
+            if (bindingBehavior == BindingBehavior.BindablePropertyWithBoundInstance)
             {
-                var rightSide = $"{exposedVariable.SourceObject}.SetProperty(\"{exposedVariable.GetRootName()}\", value?.ToString())";
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {rightSide};");
+                var containerClassName = GetClassNameForType(container.Name, VisualApi.XamarinForms, context);
+                stringBuilder.AppendLine($"{ToTabs(tabCount)}public static readonly BindableProperty {exposedVariable.ExposedAsName}Property = " +
+                    $"BindableProperty.Create(nameof({exposedVariable.ExposedAsName}),typeof({type}),typeof({containerClassName}), defaultBindingMode: BindingMode.TwoWay);");
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {exposedVariable.ExposedAsName}");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => ({type})GetValue({exposedVariable.ExposedAsName.Replace(" ", "_")}Property);");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => SetValue({exposedVariable.ExposedAsName.Replace(" ", "_")}Property, value);");
+                tabCount--;
+                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+            }
+            else if (bindingBehavior == BindingBehavior.BindablePropertyWithEventAssignment)
+            {
+                var rcv = new RecursiveVariableFinder(container.DefaultState);
+                var defaultValue = rcv.GetValue(exposedVariable.Name);
+                var defaultValueAsString = VariableValueToGumCodeValue(exposedVariable, context, forcedValue: defaultValue);
+                var containerClassName = GetClassNameForType(container.Name, VisualApi.XamarinForms, context);
+
+                string defaultAssignmentWithComma = null;
+
+                if (!string.IsNullOrEmpty(defaultValueAsString))
+                {
+                    defaultAssignmentWithComma = $", defaultValue:{defaultValueAsString}";
+                }
+
+                stringBuilder.AppendLine($"{ToTabs(tabCount)}public static readonly BindableProperty {exposedVariable.ExposedAsName}Property = " +
+                    $"BindableProperty.Create(nameof({exposedVariable.ExposedAsName}),typeof({type}),typeof({containerClassName}), defaultBindingMode: BindingMode.TwoWay, propertyChanged:Handle{exposedVariable.ExposedAsName}PropertyChanged{defaultAssignmentWithComma});");
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {exposedVariable.ExposedAsName}");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"get => ({type})GetValue({exposedVariable.ExposedAsName.Replace(" ", "_")}Property);");
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => SetValue({exposedVariable.ExposedAsName.Replace(" ", "_")}Property, value);");
+                tabCount--;
+                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"private static void Handle{exposedVariable.ExposedAsName}PropertyChanged(BindableObject bindable, object oldValue, object newValue)");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"var casted = bindable as {containerClassName};");
+
+                if (!string.IsNullOrWhiteSpace(exposedVariable.SourceObject))
+                {
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{exposedVariable.SourceObject}.{exposedVariable.GetRootName()} = ({type})newValue;");
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{exposedVariable.SourceObject}?.EffectiveManagers?.InvalidateSurface();");
+                }
+                else
+                {
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"casted.{exposedVariable.Name.Replace(" ", "_")} = ({type})newValue;");
+                }
+
+                tabCount--;
+                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
             }
             else
             {
-                stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {exposedVariable.Name.Replace(" ", "_")} = value;");
-            }
-            tabCount--;
 
-            stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+                var shouldSetStateByString = false;
+
+                if (isState && context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
+                {
+                    // see if the state is defined by a standard element. If so, we 
+                    var rootVariable = ObjectFinder.Self.GetRootVariable(exposedVariable.Name, context.Element);
+
+                    if (rootVariable != null && ObjectFinder.Self.GetContainerOf(rootVariable) is StandardElementSave)
+                    {
+                        shouldSetStateByString = true;
+                    }
+                }
+
+                if (shouldSetStateByString)
+                {
+                    type = "string";
+                }
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + $"public {type} {exposedVariable.ExposedAsName}");
+                stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+                tabCount++;
+                var hasGetter = true;
+                if (isState)
+                {
+                    if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
+                    {
+                        hasGetter = false;
+                    }
+                }
+                if (hasGetter)
+                {
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"get => {exposedVariable.Name.Replace(" ", "_")};");
+                }
+
+                if (shouldSetStateByString)
+                {
+                    var rightSide = $"{exposedVariable.SourceObject}.SetProperty(\"{exposedVariable.GetRootName()}\", value?.ToString())";
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {rightSide};");
+                }
+                else
+                {
+                    stringBuilder.AppendLine(ToTabs(tabCount) + $"set => {exposedVariable.Name.Replace(" ", "_")} = value;");
+                }
+                tabCount--;
+
+                stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+            }
         }
+
+
     }
 
     #endregion
@@ -426,7 +638,7 @@ public class CodeGenerator
             accessString += "override ";
         }
 
-        
+
         // If this is private, it cannot override anything. Therefore, we'll mark the setter as protected:
         //stringBuilder.AppendLine($"{tabs}{accessString}{className} {instance.Name} {{ get; private set; }}");
         context.StringBuilder.AppendLine($"{context.Tabs}{accessString}{className} {context.InstanceNameInCode(context.Instance)} {{ get; protected set; }}");
@@ -464,25 +676,39 @@ public class CodeGenerator
         bool isFullyInstantiatingInCode =
             context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode;
 
-        if (isFullyInstantiatingInCode)
+        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
         {
-            var virtualOrOverride = isDerived
-                ? "override"
-                : "virtual";
-
-            var line = $"protected {virtualOrOverride} void InitializeInstances()";
+            var line = $"protected override void ReactToVisualChanged()";
             context.StringBuilder.AppendLine(context.Tabs + line);
+
         }
         else
         {
-            var line = $"public override void AfterFullCreation()";
-            context.StringBuilder.AppendLine(context.Tabs + line);
+            if (isFullyInstantiatingInCode)
+            {
+                var virtualOrOverride = isDerived
+                    ? "override"
+                    : "virtual";
+
+                var line = $"protected {virtualOrOverride} void InitializeInstances()";
+                context.StringBuilder.AppendLine(context.Tabs + line);
+            }
+            else
+            {
+                var line = $"public override void AfterFullCreation()";
+                context.StringBuilder.AppendLine(context.Tabs + line);
+            }
         }
 
         context.StringBuilder.AppendLine(context.Tabs + "{");
 
         context.TabCount++;
         context.Instance = null;
+
+        if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+        {
+            context.StringBuilder.AppendLine(context.Tabs + "base.ReactToVisualChanged();");
+        }
 
         if (isDerived)
         {
@@ -512,7 +738,7 @@ public class CodeGenerator
         // the needed instances. Therefore, this
         // must be done in the constructor after instnaces
         // are attached.
-        if(!isFullyInstantiatingInCode)
+        if (!isFullyInstantiatingInCode)
         {
             TryInstantiateForms(context);
         }
@@ -546,25 +772,58 @@ public class CodeGenerator
 
     private static void TryInstantiateForms(CodeGenerationContext context)
     {
-        GetGumFormsType(context.Element, out string? gumFormsType, out _);
-        if (gumFormsType != null)
+        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
         {
-            context.StringBuilder.AppendLine($"{context.Tabs}if (FormsControl == null)");
-            context.StringBuilder.AppendLine($"{context.Tabs}{{");
+            GetGumFormsType(context.Element, out string? gumFormsType, out _);
+            if (gumFormsType != null)
             {
-                context.TabCount++;
-                context.StringBuilder.AppendLine($"{context.Tabs}FormsControlAsObject = new {gumFormsType}(this);");
-                context.TabCount--;
+                context.StringBuilder.AppendLine($"{context.Tabs}if (FormsControl == null)");
+                context.StringBuilder.AppendLine($"{context.Tabs}{{");
+                {
+                    context.TabCount++;
+                    context.StringBuilder.AppendLine($"{context.Tabs}FormsControlAsObject = new {gumFormsType}(this);");
+                    context.TabCount--;
+                }
+                context.StringBuilder.AppendLine($"{context.Tabs}}}");
             }
-            context.StringBuilder.AppendLine($"{context.Tabs}}}");
+
         }
     }
 
     private static void AddFindByNameAssignment(CodeGenerationContext context)
     {
-        context.StringBuilder.AppendLine(
-            $"{context.Tabs}{context.InstanceNameInCode(context.Instance)} = this.GetGraphicalUiElementByName(\"{context.Instance.Name}\") as " +
-            $"{GetClassNameForType(context.Instance.BaseType, context.VisualApi, context)};");
+        var isGeneratingFormsControls = context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms;
+
+        if (isGeneratingFormsControls)
+        {
+            var instance = context.Instance;
+
+            var element = ObjectFinder.Self.GetElementSave(instance);
+
+            var isInstanceFormsForms = element is ComponentSave;
+
+            if (isInstanceFormsForms)
+            {
+
+                var classNameString = GetClassNameForType(context.Instance.BaseType, context.VisualApi, context);
+
+                context.StringBuilder.AppendLine(
+                    $"{context.Tabs}{context.InstanceNameInCode(context.Instance)} = " +
+                    $"MonoGameGum.Forms.GraphicalUiElementFormsExtensions.GetFrameworkElementByName<{classNameString}>(this.Visual,\"{context.Instance.Name}\");");
+            }
+            else
+            {
+                context.StringBuilder.AppendLine(
+                    $"{context.Tabs}{context.InstanceNameInCode(context.Instance)} = this.Visual?.GetGraphicalUiElementByName(\"{context.Instance.Name}\") as " +
+                    $"{GetClassNameForType(context.Instance.BaseType, context.VisualApi, context)};");
+            }
+        }
+        else
+        {
+            context.StringBuilder.AppendLine(
+                $"{context.Tabs}{context.InstanceNameInCode(context.Instance)} = this.GetGraphicalUiElementByName(\"{context.Instance.Name}\") as " +
+                $"{GetClassNameForType(context.Instance.BaseType, context.VisualApi, context)};");
+        }
     }
 
     private static void FillWithInstanceInstantiation(CodeGenerationContext context)
@@ -625,7 +884,74 @@ public class CodeGenerator
 
     static void RegisterRuntimeType(CodeGenerationContext context)
     {
-        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame  
+
+        var outputLibrary = context.CodeOutputProjectSettings.OutputLibrary;
+
+        if(outputLibrary == OutputLibrary.MonoGameForms)
+        {
+            var builder = context.StringBuilder;
+
+            builder.AppendLine(context.Tabs + "[System.Runtime.CompilerServices.ModuleInitializer]");
+            builder.AppendLine(context.Tabs + "public static void RegisterRuntimeType()");
+            builder.AppendLine(context.Tabs + "{");
+            context.TabCount++;
+
+
+
+            var className = CodeGenerator.GetClassNameForType(context.Element.Name, context.VisualApi, context);
+
+
+
+
+            builder.AppendLine(context.Tabs + "var template = new MonoGameGum.Forms.VisualTemplate((vm, createForms) =>");
+            builder.AppendLine(context.Tabs + "{");
+            context.TabCount++;
+            builder.AppendLine(context.Tabs + "var visual = new MonoGameGum.GueDeriving.ContainerRuntime();");
+
+            builder.AppendLine(context.Tabs +
+                $"var element = ObjectFinder.Self.GetElementSave(\"{context.Element.Name}\");");
+
+            builder.AppendLine(context.Tabs +
+                $"element.SetGraphicalUiElement(visual, RenderingLibrary.SystemManagers.Default);");
+
+            builder.AppendLine(context.Tabs +
+                $"if(createForms) visual.FormsControlAsObject = new {className}(visual);");
+
+
+
+            if (context.Element is ScreenSave)
+            {
+                builder.AppendLine(context.Tabs + "visual.Width = 0;");
+                builder.AppendLine(context.Tabs + "visual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;");
+                builder.AppendLine(context.Tabs + "visual.Height = 0;");
+                builder.AppendLine(context.Tabs + "visual.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;");
+            }
+
+            builder.AppendLine(context.Tabs + "return visual;");
+
+            context.TabCount--;
+            builder.AppendLine(context.Tabs + "});");
+
+            builder.AppendLine(context.Tabs + 
+                $"MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates" +
+                $"[typeof({className})] = template;");
+
+            builder.AppendLine(context.Tabs +
+                $"ElementSaveExtensions.RegisterGueInstantiation(\"{context.Element.Name}\", () => ");
+            builder.AppendLine(context.Tabs + "{");
+            context.TabCount++;
+
+            builder.AppendLine(context.Tabs + "var gue = template.CreateContent(null, true) as InteractiveGue;");
+            builder.AppendLine(context.Tabs + "return gue;");
+
+            context.TabCount--;
+            builder.AppendLine(context.Tabs + "});");
+
+            context.TabCount--;
+            builder.AppendLine(context.Tabs + "}");
+        }
+
+        else if (outputLibrary == OutputLibrary.MonoGame
             // Other objects could still be instantiating this object by component, so let's register the type no matter
             // how it's generated:
             // && context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FindByName
@@ -644,10 +970,10 @@ public class CodeGenerator
 
             var element = context.Element;
             GetGumFormsType(element, out string? formsType, out ElementBehaviorReference? behaviorReference);
-            if(formsType != null)
+            if (formsType != null)
             {
                 var behavior = ObjectFinder.Self.GetBehavior(behaviorReference);
-                if(behavior?.DefaultImplementation == element.Name)
+                if (behavior?.DefaultImplementation == element.Name)
                 {
                     // This is the default, so let's register it:
                     builder.AppendLine(context.Tabs +
@@ -671,7 +997,7 @@ public class CodeGenerator
         var behaviors = element.Behaviors;
         foreach (var possibleBehavior in behaviors)
         {
-            if(BehaviorGumFormsTypes.ContainsKey(possibleBehavior.BehaviorName))
+            if (BehaviorGumFormsTypes.ContainsKey(possibleBehavior.BehaviorName))
             {
                 formsType = BehaviorGumFormsTypes[possibleBehavior.BehaviorName];
                 behavior = possibleBehavior;
@@ -690,11 +1016,13 @@ public class CodeGenerator
         { "ListBoxItemBehavior", "MonoGameGum.Forms.Controls.ListBoxItem" },
         { "MenuBehavior", "MonoGameGum.Forms.Controls.Menu" },
         { "MenuItemBehavior", "MonoGameGum.Forms.Controls.MenuItem" },
+        { "PanelBehavior", "MonoGameGum.Forms.Controls.Panel" },
         { "PasswordBoxBehavior", "MonoGameGum.Forms.Controls.PasswordBox" },
         { "RadioButtonBehavior", "MonoGameGum.Forms.Controls.RadioButton" },
         { "ScrollBarBehavior", "MonoGameGum.Forms.Controls.ScrollBar" },
         { "ScrollViewerBehavior", "MonoGameGum.Forms.Controls.ScrollViewer" },
         { "SliderBehavior", "MonoGameGum.Forms.Controls.Slider" },
+        { "StackPanelBehavior", "MonoGameGum.Forms.Controls.StackPanel" },
         { "TextBoxBehavior", "MonoGameGum.Forms.Controls.TextBox" },
     };
 
@@ -2069,183 +2397,9 @@ public class CodeGenerator
 
     #endregion
 
-    #region Namespace
-
-    public static string GetElementNamespace(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
-    {
-        var namespaceName = elementSettings?.Namespace;
-
-        if (string.IsNullOrEmpty(namespaceName) && !string.IsNullOrWhiteSpace(projectSettings.RootNamespace))
-        {
-            namespaceName = projectSettings.RootNamespace;
-            if (element is ScreenSave)
-            {
-                namespaceName += ".Screens";
-            }
-            else if (element is ComponentSave)
-            {
-                namespaceName += ".Components";
-            }
-            else // standard element
-            {
-                namespaceName += ".Standards";
-            }
-
-            var splitElementName = element.Name.Split('\\').ToArray();
-            var splitPrefix = splitElementName.Take(splitElementName.Length - 1).ToArray();
-            var whatToAppend = string.Join(".", splitPrefix);
-            if (!string.IsNullOrEmpty(whatToAppend))
-            {
-                namespaceName += "." + whatToAppend;
-            }
-        }
-
-        return namespaceName;
-    }
-
-    #endregion
-
-    #region Class Name and Header
-
-
-    private static void GenerateClassHeader(CodeGenerationContext context)
-    {
-        //const string access = "public";
-        // According to this:https://github.com/vchelaru/Gum/issues/581
-        // We should not provide any access, an dinstead should
-        // default to internal so that users can control their class
-        // scope in the generated code.
-        const string accessWithSpace = "";
-
-        var header =
-            $"{accessWithSpace}partial class {GetClassNameForType(context.Element.Name, context.VisualApi, context)}";
-
-        if (context.CodeOutputProjectSettings.InheritanceLocation == InheritanceLocation.InGeneratedCode)
-        {
-            var inheritance = GetInheritance(context.Element, context.CodeOutputProjectSettings);
-            header += ":" + inheritance;
-        }
-
-        context.StringBuilder.AppendLine(context.Tabs + header);
-    }
-
-    public static string GetClassNameForType(string gumType, VisualApi visualApi, CodeGenerationContext context)
-    {
-        string className = null;
-        var specialHandledCase = false;
-
-        if (visualApi == VisualApi.XamarinForms)
-        {
-            switch (gumType)
-            {
-                case "Text":
-                    className = "Label";
-                    specialHandledCase = true;
-                    break;
-            }
-        }
-
-        if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
-        {
-            // see if it's a forms object:
-            var component = ObjectFinder.Self.GetComponent(gumType);
-
-            if(component != null)
-            {
-                var behaviors = component.Behaviors;
-
-                var formsBehavior = behaviors.FirstOrDefault(item => IsGumFormsBehavior(item));
-
-                if(formsBehavior != null)
-                {
-                    className = formsBehavior.BehaviorName;
-                    specialHandledCase = true;
-                }
-            }
-        }
-
-        if (!specialHandledCase)
-        {
-
-            var strippedType = gumType;
-            if (strippedType.Contains("/"))
-            {
-                strippedType = strippedType.Substring(strippedType.LastIndexOf("/") + 1);
-            }
-            if (strippedType.Contains("\\"))
-            {
-                strippedType = strippedType.Substring(strippedType.LastIndexOf("\\") + 1);
-            }
-
-            string suffix = visualApi == VisualApi.Gum ? "Runtime" : "";
-            className = $"{strippedType}{suffix}";
-
-        }
-        return className;
-    }
-
-    private static bool IsGumFormsBehavior(ElementBehaviorReference item)
-    {
-        var behaviorName = item.BehaviorName;
-
-        return false;
-    }
-
-    public static string GetInheritance(ElementSave element, CodeOutputProjectSettings projectSettings)
-    {
-        string inheritance = null;
-        if (element is ScreenSave)
-        {
-            inheritance = element.BaseType ?? projectSettings.DefaultScreenBase;
-        }
-        else if (element.BaseType == "XamarinForms/SkiaGumCanvasView")
-        {
-            inheritance = "SkiaGum.SkiaGumCanvasView";
-        }
-        else if (element.BaseType == "Container")
-        {
-            if (projectSettings.OutputLibrary == OutputLibrary.MonoGame)
-            {
-                inheritance = "ContainerRuntime";
-            }
-            else
-            {
-                inheritance = "BindableGraphicalUiElement";
-            }
-        }
-        else
-        {
-            inheritance = element.BaseType;
-            if (inheritance?.Contains("/") == true)
-            {
-                inheritance = inheritance.Substring(inheritance.LastIndexOf('/') + 1);
-            }
-            if (projectSettings.OutputLibrary == OutputLibrary.MonoGame)
-            {
-                // for standards, append "Runtime"
-                // Update March 14, 2025
-                // Why only on standards?
-                // A component (such as MessageBox)
-                // could inherit from UserControl, which
-                // generates UserControlRuntime.
-                var parentElement = ObjectFinder.Self.GetElementSave(inheritance);
-                if(element != null)
-                {
-                    inheritance = inheritance + "Runtime";
-                }
-            }
-        }
-
-        return inheritance;
-    }
-
-
-
-    #endregion
-
     #region Constructor
 
-    private static void GenerateConstructor(CodeGenerationContext context)
+    private static void GenerateConstructors(CodeGenerationContext context)
     {
         var element = context.Element;
         var visualApi = context.VisualApi;
@@ -2256,6 +2410,11 @@ public class CodeGenerator
 
         if (visualApi == VisualApi.Gum)
         {
+            if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+            {
+                stringBuilder.AppendLine(context.Tabs + $"public {elementClassName}(InteractiveGue visual) : base(visual) {{ }}");
+            }
+
             #region Constructor Header
 
             if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
@@ -2264,6 +2423,10 @@ public class CodeGenerator
                 // Update November 3, 2024 - there's code that is generated that expects fullInstantiation. Also the docs recommend a 2-arg
                 // approach so let's do that:
                 stringBuilder.AppendLine(context.Tabs + $"public {elementClassName}(bool fullInstantiation = true, bool tryCreateFormsObject = true)");
+            }
+            else if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+            {
+                stringBuilder.AppendLine(context.Tabs + $"public {elementClassName}()");
             }
             else
             {
@@ -2277,9 +2440,16 @@ public class CodeGenerator
 
             #region Gum-required constructor code
 
-            stringBuilder.AppendLine(context.Tabs + "if(fullInstantiation)");
-            stringBuilder.AppendLine(context.Tabs + "{");
-            context.TabCount++;
+            var shouldGenerateFullInstantiation =
+                context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame ||
+                context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Skia;
+
+            if (shouldGenerateFullInstantiation)
+            {
+                stringBuilder.AppendLine(context.Tabs + "if(fullInstantiation)");
+                stringBuilder.AppendLine(context.Tabs + "{");
+                context.TabCount++;
+            }
             if (projectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
             {
                 if (element.BaseType == "Container" &&
@@ -2291,10 +2461,10 @@ public class CodeGenerator
             }
             else
             {
-                if(projectSettings.OutputLibrary == OutputLibrary.MonoGame)
+                if (projectSettings.OutputLibrary == OutputLibrary.MonoGame)
                 {
 
-                    context.StringBuilder.AppendLine(context.Tabs + 
+                    context.StringBuilder.AppendLine(context.Tabs +
                         $"var element = ObjectFinder.Self.GetElementSave(\"{element.Name}\");");
 
                     context.StringBuilder.AppendLine(context.Tabs +
@@ -2306,11 +2476,20 @@ public class CodeGenerator
                     // internally in element.SetGraphicalUiElement
                     // I'm not sure why I put it here in the first place...
                     //context.StringBuilder.AppendLine(context.Tabs +
-                        //"AfterFullCreation();");
+                    //"AfterFullCreation();");
+                }
+                else if (projectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+                {
+                    // This is handled in the register function 
                 }
             }
-            context.TabCount--;
-            stringBuilder.AppendLine(context.Tabs + "}");
+
+            if (shouldGenerateFullInstantiation)
+            {
+                context.TabCount--;
+                stringBuilder.AppendLine(context.Tabs + "}");
+
+            }
 
             stringBuilder.AppendLine();
 
@@ -2574,7 +2753,7 @@ public class CodeGenerator
         // -- no need for AppendLine here since FillWithExposedVariables does it after every variable --
         #endregion
 
-        GenerateConstructor(context);
+        GenerateConstructors(context);
 
         GenerateInitializeInstancesMethod(context);
 
@@ -2842,33 +3021,68 @@ public class CodeGenerator
         }
         else
         {
-            stringBuilder.AppendLine(ToTabs(tabCount) + $"public {category.Name} {category.Name}State");
+            var propertyName = $"{category.Name}State";
+
+            var fieldName = "_" + char.ToLower(propertyName[0]) + propertyName.Substring(1);
+
+            stringBuilder.AppendLine(ToTabs(tabCount) + $"{category.Name}? {fieldName};");
+
+
+            stringBuilder.AppendLine(ToTabs(tabCount) + $"public {category.Name}? {propertyName}");
 
             stringBuilder.AppendLine(ToTabs(tabCount) + "{");
             tabCount++;
+
+            stringBuilder.AppendLine(ToTabs(tabCount) + $"get => {fieldName};");
+
             stringBuilder.AppendLine(ToTabs(tabCount) + $"set");
 
             stringBuilder.AppendLine(ToTabs(tabCount) + "{");
             tabCount++;
 
-            stringBuilder.AppendLine(ToTabs(tabCount) + $"if(Categories.ContainsKey(\"{category}\"))");
+            stringBuilder.AppendLine(ToTabs(tabCount) + $"{fieldName} = value;");
+
+
+            var categories = "Categories";
+            var thisOptionalVisual = "this";
+            if(codeProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+            {
+                categories = "Visual.Categories";
+                thisOptionalVisual = "this.Visual";
+            }
+
+            stringBuilder.AppendLine(ToTabs(tabCount) + $"if(value != null)");
             stringBuilder.AppendLine(ToTabs(tabCount) + "{");
             tabCount++;
-            stringBuilder.AppendLine(ToTabs(tabCount) + $"var category = Categories[\"{category}\"];");
+
+            stringBuilder.AppendLine(ToTabs(tabCount) + $"if({categories}.ContainsKey(\"{category}\"))");
+            stringBuilder.AppendLine(ToTabs(tabCount) + "{");
+            tabCount++;
+            stringBuilder.AppendLine(ToTabs(tabCount) + $"var category = {categories}[\"{category}\"];");
             stringBuilder.AppendLine(ToTabs(tabCount) + $"var state = category.States.Find(item => item.Name == value.ToString());");
-            stringBuilder.AppendLine(ToTabs(tabCount) + $"this.ApplyState(state);");
+            stringBuilder.AppendLine(ToTabs(tabCount) + $"{thisOptionalVisual}.ApplyState(state);");
             tabCount--;
             stringBuilder.AppendLine(ToTabs(tabCount) + "}");
             stringBuilder.AppendLine(ToTabs(tabCount) + $"else");
             stringBuilder.AppendLine(ToTabs(tabCount) + "{");
             tabCount++;
 
+            string tagCategories = "((Gum.DataTypes.ElementSave)this.Tag).Categories";
+            if(codeProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+            {
+                tagCategories = "((Gum.DataTypes.ElementSave)this.Visual.Tag).Categories";
+            }
 
-            stringBuilder.AppendLine(ToTabs(tabCount) + $"var category = ((Gum.DataTypes.ElementSave)this.Tag).Categories.FirstOrDefault(item => item.Name == \"{category}\");");
+            stringBuilder.AppendLine(ToTabs(tabCount) + $"var category = {tagCategories}.FirstOrDefault(item => item.Name == \"{category}\");");
             stringBuilder.AppendLine(ToTabs(tabCount) + $"var state = category.States.Find(item => item.Name == value.ToString());");
-            stringBuilder.AppendLine(ToTabs(tabCount) + $"this.ApplyState(state);");
+            stringBuilder.AppendLine(ToTabs(tabCount) + $"{thisOptionalVisual}.ApplyState(state);");
             tabCount--;
             stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+
+
+            tabCount--;
+            stringBuilder.AppendLine(ToTabs(tabCount) + "}");
+
             tabCount--;
             stringBuilder.AppendLine(ToTabs(tabCount) + "}");
             tabCount--;
@@ -3597,7 +3811,7 @@ public class CodeGenerator
                 }
                 else if (hasContent)
                 {
-                    return $"{parentName}.Content = {context.InstanceNameInCode( context.Instance)};";
+                    return $"{parentName}.Content = {context.InstanceNameInCode(context.Instance)};";
                 }
                 else
                 {
@@ -3797,7 +4011,7 @@ public class CodeGenerator
             {
                 context.StringBuilder.AppendLine(context.Tabs + $"if({screenOrComponent}?.DefaultState != null);");
                 context.TabCount++;
-                context.StringBuilder.AppendLine(context.Tabs + 
+                context.StringBuilder.AppendLine(context.Tabs +
                     $"GumRuntime.ElementSaveExtensions.ApplyVariableReferences({context.InstanceNameInCode(instance)}, {screenOrComponent}.DefaultState);");
                 context.TabCount--;
 
@@ -4359,7 +4573,7 @@ public class CodeGenerator
     static bool IsOfXamarinFormsType(InstanceSave instance, string xamarinFormsType)
     {
         var element = ObjectFinder.Self.GetElementSave(instance);
-        if(element == null)
+        if (element == null)
         {
             return false;
         }

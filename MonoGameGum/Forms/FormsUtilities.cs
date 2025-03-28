@@ -53,9 +53,9 @@ public class FormsUtilities
 
         void TryAdd(Type formsType, Type runtimeType)
         {
-            if(!FrameworkElement.DefaultFormsComponents.ContainsKey(formsType))
+            if(!FrameworkElement.DefaultFormsTemplates.ContainsKey(formsType))
             {
-                FrameworkElement.DefaultFormsComponents[formsType] = runtimeType;
+                FrameworkElement.DefaultFormsTemplates[formsType] = new VisualTemplate(runtimeType);
             }
         }
 
@@ -312,6 +312,12 @@ public class FormsUtilities
                     component.Name,
                     typeof(DefaultFromFileMenuItemRuntime), overwriteIfAlreadyExists: false);
             }
+            else if (behaviorNames.Contains("PanelBehavior"))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFilePanelRuntime), overwriteIfAlreadyExists: false);
+            }
             else if (categoryNames.Contains("PasswordBoxCategory"))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
@@ -341,6 +347,12 @@ public class FormsUtilities
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileScrollViewerRuntime), overwriteIfAlreadyExists: false);
+            }
+            else if(behaviorNames.Contains("StackPanel"))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileStackPanelRuntime), overwriteIfAlreadyExists: false);
             }
             else if (categoryNames.Contains("TextBoxCategory"))
             {

@@ -174,6 +174,11 @@
     <LinkType>ReferenceOriginal</LinkType>
   </ComponentReference>
   <ComponentReference>
+    <Name>Controls/StackPanel</Name>
+    <ElementType>Component</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </ComponentReference>
+  <ComponentReference>
     <Name>Controls/TextBox</Name>
     <ElementType>Component</ElementType>
     <LinkType>ReferenceOriginal</LinkType>
@@ -387,6 +392,9 @@
   </BehaviorReference>
   <BehaviorReference>
     <Name>SliderBehavior</Name>
+  </BehaviorReference>
+  <BehaviorReference>
+    <Name>StackPanelBehavior</Name>
   </BehaviorReference>
   <BehaviorReference>
     <Name>TextBoxBehavior</Name>
