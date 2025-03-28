@@ -180,7 +180,14 @@ public class ErrorChecker
 
                     if(!string.IsNullOrEmpty(value))
                     {
-                        var instance = elementSave.GetInstance(value);
+                        var instanceName = value;
+                        if(value?.Contains('.') == true)
+                        {
+                            instanceName = value.Substring(0, value.IndexOf('.'));
+                        }
+
+                        // for now if it's a sub-instance we'll assume it's a valid reference.
+                        var instance = elementSave.GetInstance(instanceName);
 
                         if(instance == null)
                         {
