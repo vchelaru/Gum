@@ -10,7 +10,7 @@ Gum Forms is a set of classes which provide fully-functional forms controls whic
 * TextBox
 * Slider
 
-Gum Forms can be used purely in code (no .gumx project required), or you can fully style your forms objects in a Gum project.&#x20;
+Gum Forms can be used purely in code (no .gumx project required), or you can fully style your forms objects in a Gum project.
 
 ### Quick Setup - Forms in code
 
@@ -22,12 +22,8 @@ The following code snippet shows how to initialize Forms and Gum, and how to add
 public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
-
-    // Gum renders and updates using a hierarchy. At least
-    // one object must have its AddToManagers method called.
-    // If not loading from-file, then the easiest way to do this
-    // is to create a ContainerRuntime and add it to the managers.
-    ContainerRuntime Root;
+    
+    GumService Gum => GumService.Default;
 
     public Game1()
     {
@@ -38,21 +34,14 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        var gumProject = MonoGameGum.GumService.Default.Initialize(
-            this);
+        var gumProject = Gum.Initialize(this);
 
-        Root = new ContainerRuntime();
-        Root.Width = 0;
-        Root.Height = 0;
-        Root.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-        Root.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-        Root.AddToManagers();
+        var stackPanel = new StackPanel();
+        stackPanel.AddToRoot();
 
 
         var button = new Button();
-        Root.Children.Add(button.Visual);
-        button.X = 50;
-        button.Y = 50;
+        stackPanel.AddChild(button);
         button.Width = 100;
         button.Height = 50;
         button.Text = "Hello MonoGame!";
@@ -67,14 +56,14 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
-        MonoGameGum.GumService.Default.Update(this, gameTime, Root);
+        Gum.Update(gameTime);
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
-        MonoGameGum.GumService.Default.Draw();
+        Gum.Draw();
         base.Draw(gameTime);
     }
 }
@@ -100,8 +89,7 @@ To add components which are used for Forms visuals:
 
 1. Open your project in Gum, or create a new project
    1. If creating a new project, save the project in a subfolder of your game's Content folder
-2.  Select Content ->  **Add Forms Components**\
-
+2.  Select Content -> **Add Forms Components**\\
 
     <figure><img src="../../../.gitbook/assets/17_13 25 25.png" alt=""><figcaption><p>Menu item to add Forms Components</p></figcaption></figure>
 3. Check the option to include DemoScreenGum, or alternatively add a new screen to your project and drag+drop the desired components into your screen
@@ -162,4 +150,3 @@ public class Game1 : Game
     }
 }
 ```
-
