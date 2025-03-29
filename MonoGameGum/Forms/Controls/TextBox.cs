@@ -116,6 +116,7 @@ public class TextBox : TextBoxBase
 
 
             newText = TruncateTextToMaxLength(newText);
+            var caretIndexBefore = caretIndex;
 
             var wasHandledByEvent = false;
             if (addedCharacter)
@@ -135,6 +136,11 @@ public class TextBox : TextBoxBase
             {
                 UpdateCaretPositionFromCaretIndex();
                 OffsetTextToKeepCaretInView();
+            }
+
+            if(caretIndex != caretIndexBefore)
+            {
+                RaiseCaretIndexChanged();
             }
         }
     }

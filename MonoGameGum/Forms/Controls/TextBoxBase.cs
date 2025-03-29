@@ -73,12 +73,17 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
     protected int caretIndex;
     public int CaretIndex
     {
-        get { return caretIndex; }
+        get => caretIndex; 
         set
         {
-            caretIndex = value;
-            UpdateCaretPositionFromCaretIndex();
-            OffsetTextToKeepCaretInView();
+            if(value != caretIndex)
+            {
+                caretIndex = value;
+                UpdateCaretPositionFromCaretIndex();
+                OffsetTextToKeepCaretInView();
+                PushValueToViewModel();
+                CaretIndexChanged?.Invoke(this, EventArgs.Empty);
+            }
         }
     }
 
@@ -213,7 +218,8 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
 
     public event Action<Buttons> ControllerButtonPushed;
     public event Action<object, TextCompositionEventArgs> PreviewTextInput;
-
+    public event EventHandler CaretIndexChanged;
+    protected void RaiseCaretIndexChanged() => CaretIndexChanged?.Invoke(this, EventArgs.Empty);
     protected TextCompositionEventArgs RaisePreviewTextInput(string newText)
     {
         var args = new TextCompositionEventArgs(newText);
@@ -681,6 +687,7 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
                 UpdateToCaretChanged(oldIndex, caretIndex, isShiftDown);
                 UpdateCaretPositionFromCaretIndex();
                 OffsetTextToKeepCaretInView();
+                CaretIndexChanged?.Invoke(this, EventArgs.Empty);
             }
 
             var keyEventArg = new KeyEventArgs();

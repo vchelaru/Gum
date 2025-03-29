@@ -76,13 +76,13 @@ namespace RenderingLibrary
 
         private void UpdateFonts(IText text, GraphicalUiElement element)
         {
-            var asText = text as Text;
-
-            asText.FontName = element.Font ?? "Arial";
-            asText.IsItalic = element.IsItalic;
-            asText.BoldWeight = element.IsBold ? 700 : 400;
-            asText.FontSize = element.FontSize;
-
+            if(text is Text asText)
+            {
+                asText.FontName = element.Font ?? "Arial";
+                asText.IsItalic = element.IsItalic;
+                asText.BoldWeight = element.IsBold ? 700 : 400;
+                asText.FontSize = element.FontSize;
+            }
         }
 
         private void RegisterComponentRuntimeInstantiations()
