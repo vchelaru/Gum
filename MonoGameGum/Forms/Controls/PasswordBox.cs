@@ -98,6 +98,7 @@ public class PasswordBox : TextBoxBase
     {
         // See TextBox on why we don't check IsFocused
         //if (HasFocus)
+        if(!IsReadOnly)
         {
             if (selectionLength != 0)
             {

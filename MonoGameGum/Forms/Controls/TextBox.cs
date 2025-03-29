@@ -78,6 +78,7 @@ public class TextBox : TextBoxBase
         // not sure why we require this to be focused. It blocks things like the
         // OnScreenKeyboard from adding characters
         //if(IsFocused)
+        if(!IsReadOnly)
         {
             if (selectionLength != 0)
             {
@@ -85,8 +86,8 @@ public class TextBox : TextBoxBase
             }
 
             // If text is null force it to be an empty string so we can add characters
-            string newText = Text ?? "";
-
+            string textAfterAdd = Text ?? "";
+            string? newlyAddedText = null;
             var addedCharacter = false;
 
             // Do we want to handle backspace here or should it be in the Keys handler?
@@ -103,32 +104,34 @@ public class TextBox : TextBoxBase
             {
                 if (AcceptsReturn)
                 {
-                    newText = newText.Insert(caretIndex, "\n");
+                    newlyAddedText = "\n";
+                    textAfterAdd = textAfterAdd.Insert(caretIndex, newlyAddedText);
                     addedCharacter = true;
                 }
             }
             else
             {
-                newText = newText.Insert(caretIndex, "" + character);
+                newlyAddedText = "" + character;
+                textAfterAdd = textAfterAdd.Insert(caretIndex, newlyAddedText);
                 // could be limited by MaxLength:
                 addedCharacter = true;
             }
 
-
-            newText = TruncateTextToMaxLength(newText);
+            // Vic asks - should RaisePreviewTextInput be called before truncating max length? 
+            textAfterAdd = TruncateTextToMaxLength(textAfterAdd);
             var caretIndexBefore = caretIndex;
 
             var wasHandledByEvent = false;
             if (addedCharacter)
             {
-                var args = RaisePreviewTextInput(newText);
+                var args = RaisePreviewTextInput(newlyAddedText);
                 wasHandledByEvent = args.Handled;
                 if (!wasHandledByEvent)
                 {
                     // set caretIndex before assigning Text so that the events are
                     // raised with the new caretIndex value
-                    caretIndex = System.Math.Min(caretIndex + 1, newText.Length);
-                    Text = newText;
+                    caretIndex = System.Math.Min(caretIndex + 1, textAfterAdd.Length);
+                    Text = textAfterAdd;
                 }
             }
 

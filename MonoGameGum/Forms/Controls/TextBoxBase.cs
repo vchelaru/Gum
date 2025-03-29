@@ -212,6 +212,10 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
         }
     }
 
+    public bool IsReadOnly { get; set; }
+
+    public bool IsCaretVisibleWhenReadOnly { get; set; }
+
     #endregion
 
     #region Events
@@ -604,7 +608,10 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
                     caretIndex = (DisplayedText?.Length ?? 0);
                     break;
                 case Keys.Back:
-                    HandleBackspace(isCtrlDown);
+                    if(!IsReadOnly)
+                    {
+                        HandleBackspace(isCtrlDown);
+                    }
                     break;
                 case Microsoft.Xna.Framework.Input.Keys.Right:
                     if (selectionLength != 0 && isShiftDown == false)
@@ -649,27 +656,37 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
                     MoveCursorDownOneLine();
                     break;
                 case Microsoft.Xna.Framework.Input.Keys.Delete:
-                    if (caretIndex < (DisplayedText?.Length ?? 0) || selectionLength > 0)
+                    if (!IsReadOnly)
                     {
-                        HandleDelete();
+                        if (caretIndex < (DisplayedText?.Length ?? 0) || selectionLength > 0)
+                        {
+                            HandleDelete();
+                        }
                     }
                     break;
                 case Keys.C:
+                    
                     if (isCtrlDown)
                     {
                         HandleCopy();
                     }
                     break;
                 case Keys.X:
-                    if (isCtrlDown)
+                    if (!IsReadOnly)
                     {
-                        HandleCut();
+                        if (isCtrlDown)
+                        {
+                            HandleCut();
+                        }
                     }
                     break;
                 case Keys.V:
-                    if (isCtrlDown)
+                    if (!IsReadOnly)
                     {
-                        HandlePaste();
+                        if (isCtrlDown)
+                        {
+                            HandlePaste();
+                        }
                     }
                     break;
                 case Keys.A:
@@ -1073,13 +1090,19 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
 
     private void UpdateCaretVisibility()
     {
-        caretComponent.Visible = (isFocused || IsCaretVisibleWhenNotFocused)
+        var isCaretVisible = (isFocused || IsCaretVisibleWhenNotFocused)
          // Visual Studio and VSCode show the caret when you have a selection
          // Apps like Discord and (it seems) WPF TextBoxes do not.
          // We are going to mimic WPF for now, but we may want to make this
          // editable.
          && selectionLength == 0;
 
+        if(IsReadOnly && isCaretVisible)
+        {
+            isCaretVisible = IsCaretVisibleWhenReadOnly;
+        }
+
+        caretComponent.Visible = isCaretVisible;
     }
 
     private void UpdateToTextWrappingChanged()
