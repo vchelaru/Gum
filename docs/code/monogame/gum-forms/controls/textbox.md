@@ -41,6 +41,54 @@ The TextBox respects the OS-level repat rate. For example, the following animati
 
 <figure><img src="../../../../.gitbook/assets/03_08 07 14.gif" alt=""><figcaption><p>Key repeat rate adjusted in Windows</p></figcaption></figure>
 
+## PreviewTextInput
+
+The `PreviewTextInput` event is raised whenever text is added to a text box. This includes regular typing and also pasting. This method can be used to react to text before it has been added to the TextBox.
+
+The event includes arguments with a `Handled` property. Setting this to true prevents the Text from being added to the `TextBox`. The argument's `Text` property contains the newly-added text. Keep in mind this can be a longer string if the user has pasted text, so you may need to check all letters rather than only the first.
+
+For example, the following code shows how to only allow numbers in a TextBox:
+
+```csharp
+var label = new Label();
+panel.AddChild(label);
+
+var textBox = new TextBox();
+textBox.PreviewTextInput += (sender, args) =>
+{
+    label.Text = "Handling text " + args.Text;
+    if (args.Text.Any(item => !char.IsDigit(item)))
+    {
+        args.Handled = true;
+    }
+};
+panel.AddChild(textBox);
+```
+
+<figure><img src="../../../../.gitbook/assets/29_06 41 48.gif" alt=""><figcaption><p>TextBox only allowing numbers</p></figcaption></figure>
+
+## IsReadOnly
+
+If `IsReadOnly` is set to true, then the user cannot modify a `TextBox`'s `Text`. Setting `IsReadOnly` to true results in the following TextBox behavior:
+
+* Text cannot be changed by typing, pasting, cutting, or deleting text with the keyboard
+* Text can be selected with the mouse or with key combinations (shift + arrow key)
+* Text can be copied
+* The TextBox can receive focus
+* The Caret is optionally visible depending on whether `IsCaretVisibleWhenReadOnly` is set to true. By default `IsCaretVisibleWhenReadOnly` is false.
+
+The following code shows how to create a read-only TextBox:
+
+```csharp
+var textBox = new TextBox();
+textBox.Width = 200;
+textBox.IsReadOnly = true;
+textBox.Text = "This is read-only text";
+panel.AddChild(textBox);
+```
+
+<figure><img src="../../../../.gitbook/assets/29_07 24 39.gif" alt=""><figcaption><p>TextBox with IsReadOnly set to true responding to mouse click+drag and double-click</p></figcaption></figure>
+
 ## Selection
 
 Selection can be performed programmatically or by the user using the cursor.
@@ -83,13 +131,49 @@ Holding down the shift key and pressing the arrow keys adjusts the selection.
 
 <figure><img src="../../../../.gitbook/assets/16_11 22 37.gif" alt=""><figcaption><p>Arrow keys + shift to select</p></figcaption></figure>
 
+## CaretIndex
+
+`CaretIndex` returns the index of the caret where 0 is before the first letter. This value is updated automatically when letters are typed, the caret is moved with arrow/home/end, and when the cursor is clicked and the cursor is moved.
+
+`CaretIndex` can be explicitly set in code to move the caret position.
+
+When `CaretIndex` changes the `CaretIndexChanged` event is raised.
+
+The following code shows how to display the CaretIndex in a label:
+
+```csharp
+var panel = new StackPanel();
+panel.AddToRoot();
+
+var label = new Label();
+panel.AddChild(label);
+
+var textBox = new TextBox();
+textBox.TextWrapping = TextWrapping.Wrap;
+textBox.Height = 140;
+panel.AddChild(textBox);
+
+textBox.CaretIndexChanged += (_, _) =>
+{
+    UpdateLabelToTextBox(label, textBox);
+};
+
+static void UpdateLabelToTextBox(Label label, TextBox textBox)
+{
+    label.Text = "Text box text: " + textBox.Text + 
+        " with caret index " + textBox.CaretIndex;
+}
+```
+
+<figure><img src="../../../../.gitbook/assets/29_06 20 44.gif" alt=""><figcaption><p>CaretIndexChanged is invoked whenever the caret index changes, which updates the Label's text.</p></figcaption></figure>
+
 ## TextWrapping
 
 The `TextWrapping` property can be used to set whether the TextBox wraps text. By default this value is set to `TextWrapping.NoWrap` which means the text does not wrap, but instead extends horizontally.
 
 <figure><img src="../../../../.gitbook/assets/16_11 32 07.gif" alt=""><figcaption><p>TextWrapping.NoWrap causes text to scroll</p></figcaption></figure>
 
-If `TextWrapping` is set to \`TextWrapping.Wrap, then text wraps to multiple lines. Note that usually this is combined with a taller text box so that multiple lines display properly.
+If `TextWrapping` is set to `TextWrapping.Wrap`, then text wraps to multiple lines. Note that usually this is combined with a taller text box so that multiple lines display properly.
 
 ```csharp
 wrappedTextBox.TextWrapping = TextWrapping.Wrap;
@@ -97,7 +181,7 @@ wrappedTextBox.TextWrapping = TextWrapping.Wrap;
 wrappedTextBox.Height = 140;
 ```
 
-<figure><img src="../../../../.gitbook/assets/16_11 39 19.gif" alt=""><figcaption><p>TextWrapping.Wrap causes text to wrap</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/16_11 39 19.gif" alt=""><figcaption><p><code>TextWrapping.Wrap</code> causes text to wrap</p></figcaption></figure>
 
 ## Extended Character Sets and Keyboards
 
