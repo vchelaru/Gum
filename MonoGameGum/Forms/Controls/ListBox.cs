@@ -738,6 +738,10 @@ public class ListBox : ItemsControl, IInputReceiver
             DoTopLevelFocusUpdate();
         }
 
+#if MONOGAME && !FRB
+        base.HandleKeyboardFocusUpdate();
+#endif
+
         FocusUpdate?.Invoke(this);
     }
 

@@ -82,6 +82,9 @@ public class FrameworkElement
 
     public static List<GamePad> GamePadsForUiControl { get; private set; } = new List<GamePad>();
 
+    public static List<IInputReceiverKeyboardMonoGame> KeyboardsForUiControl { get; private set; } = new List<IInputReceiverKeyboardMonoGame>();
+
+
 #endif
 
 #if !FRB
@@ -901,6 +904,30 @@ public class FrameworkElement
     }
 #endif
 
+#if !FRB && MONOGAME
+
+    protected void HandleKeyboardFocusUpdate()
+    {
+        foreach (var keyboard in KeyboardsForUiControl)
+        {
+            if (keyboard.KeysTyped.Contains(Keys.Tab))
+            {
+
+                var isShift = keyboard.IsShiftDown;
+
+                if (isShift)
+                {
+                    this.HandleTab(TabDirection.Up, this, loop: true);
+                }
+                else
+                {
+                    this.HandleTab(TabDirection.Down, this, loop: true);
+                }
+            }
+        }
+    }
+#endif
+
     /// <summary>
     /// Shifts focus to the next or previous element in the tab depending on the tabDirection argument.
     /// </summary>
@@ -1139,12 +1166,20 @@ public class FrameworkElement
 
         var primaryDown = cursor.PrimaryDown;
 
-        bool pushedByGamepads = false;
+        bool pushedByInput = false;
 
 #if !RAYLIB
         for(int i = 0; i < GamePadsForUiControl.Count; i++)
         {
-            pushedByGamepads = pushedByGamepads || (GamePadsForUiControl[i].ButtonDown(Buttons.A));
+            pushedByInput = pushedByInput || (GamePadsForUiControl[i].ButtonDown(Buttons.A));
+        }
+
+        for(int i = 0; i < KeyboardsForUiControl.Count; i++)
+        {
+#if MONOGAME
+            var keyboard = KeyboardsForUiControl[i] as MonoGameGum.Input.Keyboard;
+            pushedByInput = pushedByInput || keyboard.KeyDown(Keys.Enter);
+#endif
         }
 #endif
         var isTouchScreen = cursor.LastInputDevice == InputDevice.TouchScreen;
@@ -1166,7 +1201,7 @@ public class FrameworkElement
             {
                 return PushedState;
             }
-            else if(pushedByGamepads)
+            else if(pushedByInput)
             {
                 return PushedState;
             }

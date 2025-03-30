@@ -431,6 +431,10 @@ public class Slider : RangeBase, IInputReceiver
             }
         }
 #endif
+
+#if MONOGAME && !FRB
+        base.HandleKeyboardFocusUpdate();
+#endif
     }
 
     public void OnGainFocus()

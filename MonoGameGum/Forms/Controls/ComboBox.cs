@@ -443,6 +443,10 @@ public class ComboBox : FrameworkElement, IInputReceiver
             DoClosedDropDownFocusUpdate();
         }
 
+#if MONOGAME && !FRB
+        base.HandleKeyboardFocusUpdate();
+#endif
+
     }
 
     private void DoOpenDropDownFocusUpdate()

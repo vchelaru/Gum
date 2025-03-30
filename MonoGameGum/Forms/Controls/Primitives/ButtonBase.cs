@@ -236,6 +236,30 @@ public class ButtonBase : FrameworkElement, IInputReceiver
             }
         }
 #endif
+
+#if MONOGAME && !FRB
+
+        foreach(var keyboard in KeyboardsForUiControl)
+        {
+            var mgKeyboard = keyboard as MonoGameGum.Input.Keyboard;
+            if(mgKeyboard?.KeyPushed(Keys.Enter)== true)
+            {
+                this.HandleClick(this, new InputEventArgs() { InputDevice = keyboard });
+
+                UpdateState();
+            }
+
+            if(mgKeyboard?.KeyReleased(Keys.Enter) == true)
+            {
+                UpdateState();
+            }
+
+        }
+
+        base.HandleKeyboardFocusUpdate();
+
+
+#endif
         FocusUpdate?.Invoke(this);
     }
 

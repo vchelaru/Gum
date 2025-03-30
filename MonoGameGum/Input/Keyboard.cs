@@ -258,6 +258,18 @@ public class Keyboard : IInputReceiverKeyboardMonoGame
         return /* !InputManager.CurrentFrameInputSuspended && */ keyboardStateProcessor.KeyPushed(key);
     }
 
+    public bool KeyReleased(Keys key)
+    {
+        if (mKeysIgnoredForThisFrame[(int)key] /*|| InputManager.mIgnorePushesThisFrame*/)
+        {
+            return false;
+        }
+
+        return /* !InputManager.CurrentFrameInputSuspended && */ keyboardStateProcessor.KeyReleased(key);
+
+    }
+
+
     public void Activity(double currentTime, Game? game = null)
     {
 #if ANDROID

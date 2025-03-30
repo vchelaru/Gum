@@ -865,6 +865,10 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
             }
         }
 #endif
+
+#if MONOGAME && !FRB
+        base.HandleKeyboardFocusUpdate();
+#endif
     }
 
     public void OnGainFocus()
