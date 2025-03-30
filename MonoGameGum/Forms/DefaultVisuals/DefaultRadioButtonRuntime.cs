@@ -24,11 +24,12 @@ public class DefaultRadioButtonRuntime : InteractiveGue
             this.Width = 128;
 
             var radioButtonBackground = new CircleRuntime();
+
             //radioButtonBackground.Width = 24;
             //radioButtonBackground.Height = 24;
-            //radioButtonBackground.Radius = 12;
-            //radioButtonBackground.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-            //radioButtonBackground.YOrigin = VerticalAlignment.Center;
+            radioButtonBackground.Radius = 12;
+            radioButtonBackground.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+            radioButtonBackground.YOrigin = VerticalAlignment.Center;
             radioButtonBackground.Color = Color.White;
             radioButtonBackground.Name = "RadioButtonBackground";
             this.Children.Add(radioButtonBackground);

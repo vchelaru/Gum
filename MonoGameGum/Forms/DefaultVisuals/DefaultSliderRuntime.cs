@@ -1,5 +1,8 @@
 ﻿using Gum.Converters;
+using Gum.DataTypes.Variables;
 using Gum.Wireframe;
+using Microsoft.Xna.Framework;
+using MonoGameGum.Forms.Controls;
 using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
 using System;
@@ -12,6 +15,8 @@ namespace MonoGameGum.Forms.DefaultVisuals
 {
     public class DefaultSliderRuntime : InteractiveGue
     {
+        public RectangleRuntime FocusedIndicator { get; private set; }
+
         public DefaultSliderRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
         {
             if(fullInstantiation)
@@ -25,13 +30,10 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 NineSliceInstance.Name = "NineSliceInstance";
                 var ThumbInstance = new DefaultButtonRuntime();
                 ThumbInstance.Name = "ThumbInstance";
-                var FocusedIndicator = new ColoredRectangleRuntime();
-                FocusedIndicator.Name = "FocusedIndicator";
 
                 this.Children.Add(TrackInstance);
                 TrackInstance.Children.Add(NineSliceInstance);
                 TrackInstance.Children.Add(ThumbInstance);
-                this.Children.Add(FocusedIndicator);
 
 
 
@@ -61,14 +63,21 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 ThumbInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
                 ThumbInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
 
-                //FocusedIndicator.ColorCategoryState = NineSliceRuntime.ColorCategory.Warning;
-                //FocusedIndicator.StyleCategoryState = NineSliceRuntime.StyleCategory.Solid;
-                FocusedIndicator.Height = 2f;
-                FocusedIndicator.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+                FocusedIndicator = new RectangleRuntime();
+                FocusedIndicator.X = 0;
+                FocusedIndicator.Y = 0;
+                FocusedIndicator.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+                FocusedIndicator.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+                FocusedIndicator.XOrigin = HorizontalAlignment.Center;
+                FocusedIndicator.YOrigin = VerticalAlignment.Center;
+                FocusedIndicator.Width = 0;
+                FocusedIndicator.Height = 0;
+                FocusedIndicator.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                FocusedIndicator.Color = Color.White;
                 FocusedIndicator.Visible = false;
-                FocusedIndicator.Y = 2f;
-                FocusedIndicator.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Top;
-                FocusedIndicator.YUnits = GeneralUnitType.PixelsFromLarge;
+                FocusedIndicator.Name = "FocusedIndicator";
+                this.Children.Add(FocusedIndicator);
 
                 //var background = new ColoredRectangleRuntime();
                 //background.Width = 0;
@@ -86,25 +95,52 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 //thumb.Name = "SliderThumb";
                 //this.Children.Add(thumb);
 
+
                 var sliderCategory = new Gum.DataTypes.Variables.StateSaveCategory();
                 sliderCategory.Name = "SliderCategory";
-                sliderCategory.States.Add(new ()
+                this.AddCategory(sliderCategory);
+
+                StateSave currentState;
+
+                void AddState(string name)
                 {
-                    //Name = "Enabled",
-                    //Variables = new ()
-                    //{
-                    //    new ()
-                    //    {
-                    //        Name = "SliderBackground.Color",
-                    //        Value = new Microsoft.Xna.Framework.Color(0, 0, 128),
-                    //    },
-                    //    new ()
-                    //    {
-                    //        Name = "SliderThumb.Color",
-                    //        Value = new Microsoft.Xna.Framework.Color(128, 0, 0),
-                    //    }
-                    //}
-                });
+                    var state = new StateSave();
+                    state.Name = name;
+                    sliderCategory.States.Add(state);
+                    currentState = state;
+                }
+
+                void AddVariable(string name, object value)
+                {
+                    currentState.Variables.Add(new VariableSave
+                    {
+                        Name = name,
+                        Value = value
+                    });
+                }
+
+
+                AddState(FrameworkElement.DisabledState);
+                AddVariable("FocusedIndicator.Visible", false);
+
+                AddState(FrameworkElement.DisabledFocusedState);
+                AddVariable("FocusedIndicator.Visible", true);
+
+                AddState(FrameworkElement.EnabledState);
+                AddVariable("FocusedIndicator.Visible", false);
+
+                AddState(FrameworkElement.FocusedState);
+                AddVariable("FocusedIndicator.Visible", true);
+
+                AddState(FrameworkElement.HighlightedState);
+                AddVariable("FocusedIndicator.Visible", false);
+
+                AddState(FrameworkElement.HighlightedFocusedState);
+                AddVariable("FocusedIndicator.Visible", true);
+
+                AddState(FrameworkElement.PushedState);
+                AddVariable("FocusedIndicator.Visible", false);
+
 
                 this.AddCategory(sliderCategory);
             }

@@ -118,12 +118,13 @@ public class CircleRuntime : BindableGue
         if (fullInstantiation)
         {
             var circle = new RenderingLibrary.Math.Geometry.LineCircle();
+            circle.CircleOrigin = CircleOrigin.TopLeft;
             SetContainedObject(circle);
             containedLineCircle = circle;
 
             circle.Color = System.Drawing.Color.White;
-            Width = 16;
-            Height = 16;
+            Width = 32;
+            Height = 32;
             circle.Radius = 16;
         }
     }

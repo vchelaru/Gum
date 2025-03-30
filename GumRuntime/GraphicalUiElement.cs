@@ -4359,8 +4359,19 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     {
         if (e.Action == NotifyCollectionChangedAction.Add)
         {
-            foreach (IRenderableIpso ipso in e.NewItems)
+            foreach (var newItem in e.NewItems)
             {
+#if DEBUG
+                if(newItem == null)
+                {
+                    throw new InvalidOperationException("Cannot add a null child");
+                }
+#endif
+                var ipso = newItem as IRenderableIpso;
+                if(ipso == null)
+                {
+                    int m = 3;
+                }
                 if (ipso.Parent != this)
                 {
                     ipso.Parent = this;
