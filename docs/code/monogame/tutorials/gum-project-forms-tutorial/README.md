@@ -2,6 +2,10 @@
 
 ## Introduction
 
+{% hint style="warning" %}
+This tutorial series is under construction and relies on an unreleased version of Gum. Look for this to be completed, and for a new Gum tool to be released, in early April 2025.
+{% endhint %}
+
 This series of tutorials covers how to use the Gum tool to create UI for your project. This tutorial shows how to create a _full featured_ Gum project including:
 
 * Creating and loading a Gum project
