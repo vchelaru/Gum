@@ -1231,8 +1231,14 @@ public class CustomSetPropertyOnRenderable
 
         else if (propertyName == "Color")
         {
-            var valueAsColor = (Color)value;
-            ((LineCircle)mContainedObjectAsIpso).Color = valueAsColor;
+            if(value is System.Drawing.Color drawingColor)
+            {
+                ((LineCircle)mContainedObjectAsIpso).Color = drawingColor;
+            }
+            else if(value is Microsoft.Xna.Framework.Color xnaColor)
+            {
+                ((LineCircle)mContainedObjectAsIpso).Color = xnaColor.ToSystemDrawing();
+            }
             handled = true;
         }
 

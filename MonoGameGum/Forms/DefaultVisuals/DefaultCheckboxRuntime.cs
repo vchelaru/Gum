@@ -22,8 +22,6 @@ namespace MonoGameGum.Forms.DefaultVisuals
         {
             if (fullInstantiation)
             {
-
-
                 this.Height = 32;
                 this.Width = 128;
 
@@ -45,7 +43,6 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 innerCheck.YOrigin = VerticalAlignment.Center;
                 innerCheck.Name = "InnerCheck";
                 innerCheck.Color = new Color(128, 255, 0);
-
                 checkboxBackground.Children.Add(innerCheck);
 
                 var text = new TextRuntime();
@@ -85,7 +82,6 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
                 var checkboxCategory = new Gum.DataTypes.Variables.StateSaveCategory();
                 checkboxCategory.Name = "CheckBoxCategory";
-
                 StateSave currentState;
 
                 void AddState(string name)

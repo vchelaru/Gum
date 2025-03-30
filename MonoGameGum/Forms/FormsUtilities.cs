@@ -45,6 +45,7 @@ public class FormsUtilities
         TryAdd(typeof(ListBoxItem), typeof(DefaultListBoxItemRuntime));
         TryAdd(typeof(Menu), typeof(DefaultMenuRuntime));
         TryAdd(typeof(MenuItem), typeof(DefaultMenuItemRuntime));
+        TryAdd(typeof(RadioButton), typeof(DefaultRadioButtonRuntime));
         TryAdd(typeof(ScrollBar), typeof(DefaultScrollBarRuntime));
         TryAdd(typeof(ScrollViewer), typeof(DefaultScrollViewerRuntime));
         TryAdd(typeof(TextBox), typeof(DefaultTextBoxRuntime));
