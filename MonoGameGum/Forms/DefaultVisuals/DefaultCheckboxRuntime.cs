@@ -1,4 +1,5 @@
-﻿using Gum.Wireframe;
+﻿using Gum.DataTypes.Variables;
+using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using MonoGameGum.Forms.Controls;
 using MonoGameGum.GueDeriving;
@@ -14,6 +15,9 @@ namespace MonoGameGum.Forms.DefaultVisuals
 {
     public class DefaultCheckboxRuntime : InteractiveGue
     {
+        public RectangleRuntime FocusedIndicator { get; private set; }
+
+
         public DefaultCheckboxRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
         {
             if (fullInstantiation)
@@ -55,78 +59,74 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 text.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 this.Children.Add(text);
 
+                FocusedIndicator = new RectangleRuntime();
+                FocusedIndicator.X = 0;
+                FocusedIndicator.Y = 0;
+                FocusedIndicator.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+                FocusedIndicator.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+                FocusedIndicator.XOrigin = HorizontalAlignment.Center;
+                FocusedIndicator.YOrigin = VerticalAlignment.Center;
+                FocusedIndicator.Width = 0;
+                FocusedIndicator.Height = 0;
+                FocusedIndicator.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                FocusedIndicator.Color = Color.White;
+                FocusedIndicator.Visible = false;
+                FocusedIndicator.Name = "FocusedIndicator";
+                this.Children.Add(FocusedIndicator);
+
+                //DisabledState = "Disabled";
+                //DisabledFocusedState = "DisabledFocused";
+                //EnabledState = "Enabled";
+                //FocusedState = "Focused";
+                //HighlightedState = "Highlighted";
+                //HighlightedFocusedState = "HighlightedFocused";
+                //PushedState = "Pushed";
 
                 var checkboxCategory = new Gum.DataTypes.Variables.StateSaveCategory();
                 checkboxCategory.Name = "CheckBoxCategory";
-                checkboxCategory.States.Add(new Gum.DataTypes.Variables.StateSave()
-                {
-                    Name = "EnabledOn",
-                    Variables = new List<Gum.DataTypes.Variables.VariableSave>()
-                    {
-                        new Gum.DataTypes.Variables.VariableSave()
-                        {
-                            Name = "InnerCheck.Visible",
-                            Value = true,
-                        },
-                        new Gum.DataTypes.Variables.VariableSave()
-                        {
-                            Name = "CheckBoxBackground.Color",
-                            Value = new Color(41, 55, 52),
-                        }
-                    }
-                });
-                checkboxCategory.States.Add(new Gum.DataTypes.Variables.StateSave()
-                {
-                    Name = "EnabledOff",
-                    Variables = new List<Gum.DataTypes.Variables.VariableSave>()
-                    {
-                        new Gum.DataTypes.Variables.VariableSave()
-                        {
-                            Name = "InnerCheck.Visible",
-                            Value = false,
-                        },
-                        new Gum.DataTypes.Variables.VariableSave()
-                        {
-                            Name = "CheckBoxBackground.Color",
-                            Value = new Color(41, 55, 52),
-                        }
-                    }
-                });
 
-                checkboxCategory.States.Add(new ()
+                StateSave currentState;
+
+                void AddState(string name)
                 {
-                    Name = "HighlightedOn",
-                    Variables = new ()
-                    {
-                        new ()
-                        {
-                            Name = "InnerCheck.Visible",
-                            Value = true,
-                        },
-                        new ()
-                        {
-                            Name = "CheckBoxBackground.Color",
-                            Value = new Color(51, 65, 62),
-                        }
-                    }
-                });
-                checkboxCategory.States.Add(new ()
+                    var state = new StateSave();
+                    state.Name = name;
+                    checkboxCategory.States.Add(state);
+                    currentState = state;
+                }
+
+                void AddVariable(string name, object value)
                 {
-                    Name = "HighlightedOff",
-                    Variables = new ()
+                    currentState.Variables.Add(new VariableSave
                     {
-                        new ()
-                        {
-                            Name = "InnerCheck.Visible",
-                            Value = false,
-                        },
-                        new ()
-                        {
-                            Name = "CheckBoxBackground.Color",
-                            Value = new Color(61, 65, 62),
-                        }
-                    }
-                });
+                        Name = name,
+                        Value = value
+                    });
+                }
+
+                void AddOnOffState(string state, Color checkboxColor, bool isFocused)
+                {
+                    AddState(state + "On");
+                    AddVariable("InnerCheck.Visible", true);
+                    AddVariable("CheckBoxBackground.Color", checkboxColor);
+                    AddVariable("FocusedIndicator.Visible", isFocused);
+
+
+                    AddState(state + "Off");
+                    AddVariable("InnerCheck.Visible", false);
+                    AddVariable("CheckBoxBackground.Color", checkboxColor);
+                    AddVariable("FocusedIndicator.Visible", isFocused);
+                }
+
+                AddOnOffState(FrameworkElement.DisabledState, DefaultButtonRuntime.DisabledButtonColor, false);
+                AddOnOffState(FrameworkElement.DisabledFocusedState, DefaultButtonRuntime.DisabledButtonColor, true);
+                AddOnOffState(FrameworkElement.EnabledState, DefaultButtonRuntime.EnabledbuttonColor, false);
+                AddOnOffState(FrameworkElement.FocusedState, DefaultButtonRuntime.EnabledbuttonColor, true);
+                AddOnOffState(FrameworkElement.HighlightedState, DefaultButtonRuntime.HighlightedButtonColor, false);
+                AddOnOffState(FrameworkElement.HighlightedFocusedState, DefaultButtonRuntime.HighlightedButtonColor, true);
+                AddOnOffState(FrameworkElement.PushedState, DefaultButtonRuntime.HighlightedButtonColor, false);
+
 
                 this.AddCategory(checkboxCategory);
             }

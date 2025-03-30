@@ -1,5 +1,7 @@
 ﻿using Gum.Converters;
+using Gum.DataTypes.Variables;
 using Gum.Wireframe;
+using Microsoft.Xna.Framework;
 using MonoGameGum.Forms.Controls;
 using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
@@ -13,10 +15,15 @@ namespace MonoGameGum.Forms.DefaultVisuals;
 
 public class DefaultListBoxRuntime : InteractiveGue
 {
+    public RectangleRuntime FocusedIndicator { get; private set; }
+
     public DefaultListBoxRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
     {
         if (fullInstantiation)
         {
+            Width = 150;
+            Height = 150;
+
             var background = new ColoredRectangleRuntime();
             background.Name = "Background";
 
@@ -71,10 +78,73 @@ public class DefaultListBoxRuntime : InteractiveGue
             InnerPanel.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
             ClipContainer.Children.Add(InnerPanel);
 
-            var listBoxCategory = new Gum.DataTypes.Variables.StateSaveCategory();
-            listBoxCategory.Name = "ListBoxCategory";
 
-            // todo - add here:
+            FocusedIndicator = new RectangleRuntime();
+            FocusedIndicator.X = 0;
+            FocusedIndicator.Y = 0;
+            FocusedIndicator.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+            FocusedIndicator.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+            FocusedIndicator.XOrigin = HorizontalAlignment.Center;
+            FocusedIndicator.YOrigin = VerticalAlignment.Center;
+            FocusedIndicator.Width = 0;
+            FocusedIndicator.Height = 0;
+            FocusedIndicator.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            FocusedIndicator.Color = Color.White;
+            FocusedIndicator.Visible = true;
+            FocusedIndicator.Name = "FocusedIndicator";
+            this.Children.Add(FocusedIndicator);
+
+
+            var listBoxCategory = new StateSaveCategory();
+            listBoxCategory.Name = "ListBoxCategory";
+            this.AddCategory(listBoxCategory);
+
+            StateSave currentState;
+
+            void AddState(string name)
+            {
+                var state = new StateSave();
+                state.Name = name;
+                listBoxCategory.States.Add(state);
+                currentState = state;
+            }
+
+            void AddVariable(string name, object value)
+            {
+                currentState.Variables.Add(new VariableSave
+                {
+                    Name = name,
+                    Value = value
+                });
+            }
+
+            // For now let's just have the focus indicator show/hide.
+
+            AddState(FrameworkElement.DisabledState);
+            AddVariable("FocusedIndicator.Visible", false);
+
+            AddState(FrameworkElement.DisabledFocusedState);
+            AddVariable("FocusedIndicator.Visible", true);
+
+            AddState(FrameworkElement.EnabledState);
+            AddVariable("FocusedIndicator.Visible", false);
+
+            AddState(FrameworkElement.FocusedState);
+            AddVariable("FocusedIndicator.Visible", true);
+
+            AddState(FrameworkElement.HighlightedState);
+            AddVariable("FocusedIndicator.Visible", false);
+
+            AddState(FrameworkElement.HighlightedFocusedState);
+            AddVariable("FocusedIndicator.Visible", true);
+
+            AddState(FrameworkElement.PushedState);
+            AddVariable("FocusedIndicator.Visible", false);
+
+
+
+
         }
 
         if (tryCreateFormsObject)

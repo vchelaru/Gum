@@ -605,20 +605,20 @@ public class ListBox : ItemsControl, IInputReceiver
         {
             if (IsFocused)
             {
-                Visual.SetProperty(category, "DisabledFocused");
+                Visual.SetProperty(category, DisabledFocusedState);
             }
             else
             {
-                Visual.SetProperty(category, "Disabled");
+                Visual.SetProperty(category, DisabledState);
             }
         }
         else if (IsFocused)
         {
-            Visual.SetProperty(category, "Focused");
+            Visual.SetProperty(category, FocusedState);
         }
         else
         {
-            Visual.SetProperty(category, "Enabled");
+            Visual.SetProperty(category, EnabledState);
         }
 
         // The default state may update the visibility of the scroll bar. Whenever setting the state

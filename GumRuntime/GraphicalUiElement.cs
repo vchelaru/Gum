@@ -5351,13 +5351,20 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     private IRenderableIpso GetChildByName(ObservableCollection<IRenderableIpso> children, string name)
     {
+        // This is a recursive call, but we want to find the most-shallow child
+        // first before going deeper. This is important for controls like ListBox
+        // which may have a FocusedIndicator at the top level, and each individual
+        // ListBoxItem has a FocusedIndicator too.
         foreach (var child in children)
         {
             if (child.Name == name)
             {
                 return child;
             }
+        }
 
+        foreach (var child in children)
+        {
             var subChild = GetChildByName(child.Children, name);
             if (subChild != null)
             {

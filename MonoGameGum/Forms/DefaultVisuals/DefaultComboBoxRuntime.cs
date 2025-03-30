@@ -1,5 +1,7 @@
 ﻿using Gum.Converters;
+using Gum.DataTypes.Variables;
 using Gum.Wireframe;
+using Microsoft.Xna.Framework;
 using MonoGameGum.Forms.Controls;
 using MonoGameGum.GueDeriving;
 using RenderingLibrary.Graphics;
@@ -14,6 +16,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
     public class DefaultComboBoxRuntime : InteractiveGue
     {
         public DefaultListBoxRuntime ListBoxInstance;
+        public RectangleRuntime FocusedIndicator { get; private set; }
 
         public DefaultComboBoxRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
         {
@@ -45,6 +48,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 background.Y = 0f;
                 background.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
                 background.YUnits = GeneralUnitType.PixelsFromMiddle;
+                background.Name = "Background";
                 this.Children.Add(background);
 
                 TextInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
@@ -58,12 +62,89 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 TextInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
                 this.Children.Add(TextInstance);
 
+                FocusedIndicator = new RectangleRuntime();
+                FocusedIndicator.X = 0;
+                FocusedIndicator.Y = 0;
+                FocusedIndicator.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+                FocusedIndicator.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
+                FocusedIndicator.XOrigin = HorizontalAlignment.Center;
+                FocusedIndicator.YOrigin = VerticalAlignment.Center;
+                FocusedIndicator.Width = -4;
+                FocusedIndicator.Height = -4;
+                FocusedIndicator.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+                FocusedIndicator.Color = Color.White;
+                FocusedIndicator.Visible = false;
+                FocusedIndicator.Name = "FocusedIndicator";
+                this.Children.Add(FocusedIndicator);
+
+                var rightSideText = new TextRuntime();
+                rightSideText.Text = "v";
+                rightSideText.XOrigin = HorizontalAlignment.Right;
+                rightSideText.XUnits = GeneralUnitType.PixelsFromLarge;
+                rightSideText.X = -10;
+                rightSideText.HorizontalAlignment = HorizontalAlignment.Right;
+
+                this.Children.Add(rightSideText);
+
                 ListBoxInstance.Height = 128f;
                 ListBoxInstance.Width = 0f;
                 ListBoxInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 ListBoxInstance.Y = 28f;
                 this.Children.Add(ListBoxInstance);
                 ListBoxInstance.Visible = false;
+
+                var comboBoxCategory = new StateSaveCategory();
+                comboBoxCategory.Name = "ComboBoxCategory";
+                this.AddCategory(comboBoxCategory);
+
+                StateSave currentState;
+
+                void AddState(string name)
+                {
+                    var state = new StateSave();
+                    state.Name = name;
+                    comboBoxCategory.States.Add(state);
+                    currentState = state;
+                }
+
+                void AddVariable(string name, object value)
+                {
+                    currentState.Variables.Add(new VariableSave
+                    {
+                        Name = name,
+                        Value = value
+                    });
+                }
+
+                AddState(FrameworkElement.DisabledState);
+                AddVariable("Background.Color", DefaultButtonRuntime.DisabledButtonColor);
+                AddVariable("FocusedIndicator.Visible", false);
+
+                AddState(FrameworkElement.DisabledFocusedState);
+                AddVariable("Background.Color", DefaultButtonRuntime.DisabledButtonColor);
+                AddVariable("FocusedIndicator.Visible", true);
+
+                AddState(FrameworkElement.EnabledState);
+                AddVariable("Background.Color", DefaultButtonRuntime.EnabledbuttonColor);
+                AddVariable("FocusedIndicator.Visible", false);
+
+                AddState(FrameworkElement.FocusedState);
+                AddVariable("Background.Color", DefaultButtonRuntime.EnabledbuttonColor);
+                AddVariable("FocusedIndicator.Visible", true);
+
+                AddState(FrameworkElement.HighlightedState);
+                AddVariable("Background.Color", DefaultButtonRuntime.HighlightedButtonColor);
+                AddVariable("FocusedIndicator.Visible", false);
+
+                AddState(FrameworkElement.HighlightedFocusedState);
+                AddVariable("Background.Color", DefaultButtonRuntime.HighlightedButtonColor);
+                AddVariable("FocusedIndicator.Visible", true);
+
+                AddState(FrameworkElement.PushedState);
+                AddVariable("Background.Color", DefaultButtonRuntime.PushedButtonColor);
+                AddVariable("FocusedIndicator.Visible", false);
+
             }
             if (tryCreateFormsObject)
             {
