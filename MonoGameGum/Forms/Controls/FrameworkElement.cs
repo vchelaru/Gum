@@ -1174,13 +1174,13 @@ public class FrameworkElement
             pushedByInput = pushedByInput || (GamePadsForUiControl[i].ButtonDown(Buttons.A));
         }
 
+#if MONOGAME && !FRB
         for(int i = 0; i < KeyboardsForUiControl.Count; i++)
         {
-#if MONOGAME
             var keyboard = KeyboardsForUiControl[i] as MonoGameGum.Input.Keyboard;
             pushedByInput = pushedByInput || keyboard.KeyDown(Keys.Enter);
-#endif
         }
+#endif
 #endif
         var isTouchScreen = cursor.LastInputDevice == InputDevice.TouchScreen;
 
