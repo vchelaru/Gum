@@ -12,7 +12,7 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>FullscreenCheckboxInstance.CheckboxDisplayText</Name>
+      <Name>FullscreenCheckboxInstance.Text</Name>
       <Value xsi:type="xsd:string">Fullscreen</Value>
       <SetsValue>true</SetsValue>
     </Variable>

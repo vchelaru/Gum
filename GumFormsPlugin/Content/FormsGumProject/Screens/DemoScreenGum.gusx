@@ -719,14 +719,14 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>FullScreenCheckbox.CheckboxDisplayText</Name>
-      <Value xsi:type="xsd:string">Run Fullscreen</Value>
+      <Name>FullScreenCheckbox.Parent</Name>
+      <Value xsi:type="xsd:string">MenuItems</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>FullScreenCheckbox.Parent</Name>
-      <Value xsi:type="xsd:string">MenuItems</Value>
+      <Name>FullScreenCheckbox.Text</Name>
+      <Value xsi:type="xsd:string">Run Fullscreen</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -1452,7 +1452,7 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>RadioButtonInstance.RadioDisplayText</Name>
+      <Name>RadioButtonInstance.Text</Name>
       <Value xsi:type="xsd:string">Keyboard &amp; Mouse</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1482,7 +1482,7 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>RadioButtonInstance1.RadioDisplayText</Name>
+      <Name>RadioButtonInstance1.Text</Name>
       <Value xsi:type="xsd:string">Gamepad</Value>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -1518,7 +1518,7 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>RadioButtonInstance2.RadioDisplayText</Name>
+      <Name>RadioButtonInstance2.Text</Name>
       <Value xsi:type="xsd:string">Touchscreen</Value>
       <SetsValue>true</SetsValue>
     </Variable>

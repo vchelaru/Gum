@@ -223,7 +223,7 @@
       <Type>string</Type>
       <Name>TextInstance.Text</Name>
       <Value xsi:type="xsd:string">Radio Label</Value>
-      <ExposedAsName>RadioDisplayText</ExposedAsName>
+      <ExposedAsName>Text</ExposedAsName>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>

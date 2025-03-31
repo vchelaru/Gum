@@ -121,9 +121,9 @@ public class EditVariableService : IEditVariableService
     private void ShowEditExposedUi(VariableSave variable, IStateContainer container)
     {
         var tiw = new CustomizableTextInputWindow();
-        tiw.Message = "Enter new exposed variable name.";
+        tiw.Message = "Enter desired exposed variable name.";
         tiw.Width = 600;
-        tiw.Title = "New exposed variable";
+        tiw.Title = "Edit Variable Name";
 
 
 

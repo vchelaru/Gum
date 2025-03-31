@@ -229,7 +229,7 @@
       <Type>string</Type>
       <Name>TextInstance.Text</Name>
       <Value xsi:type="xsd:string">Checkbox Label</Value>
-      <ExposedAsName>CheckboxDisplayText</ExposedAsName>
+      <ExposedAsName>Text</ExposedAsName>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
