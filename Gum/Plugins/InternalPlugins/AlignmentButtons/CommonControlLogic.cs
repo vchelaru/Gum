@@ -1,16 +1,23 @@
 ﻿using Gum.Managers;
 using Gum.PropertyGridHelpers;
 using Gum.ToolStates;
+using System.Management.Instrumentation;
 
 namespace Gum.Plugins.AlignmentButtons;
 
 public class CommonControlLogic
 {
+    ISelectedState _selectedState;
+    public CommonControlLogic(ISelectedState selectedState)
+    {
+        _selectedState = selectedState;
+    }
+
     bool SelectionInheritsFromText()
     {
-        if(SelectedState.Self.SelectedInstance != null)
+        if(_selectedState.SelectedInstance != null)
         {
-            return ObjectFinder.Self.GetRootStandardElementSave(SelectedState.Self.SelectedInstance)?.Name == "Text";
+            return ObjectFinder.Self.GetRootStandardElementSave(_selectedState.SelectedInstance)?.Name == "Text";
         }
         return false;
     }
@@ -29,7 +36,7 @@ public class CommonControlLogic
 
     public void SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment alignment, PositionUnitType yUnits, float value = 0f)
     {
-        var state = SelectedState.Self.SelectedStateSave;
+        var state = _selectedState.SelectedStateSave;
 
         SetAndCallReact("Y", value, "float");
         SetAndCallReact("YOrigin", alignment, typeof(global::RenderingLibrary.Graphics.VerticalAlignment).Name);
@@ -44,7 +51,21 @@ public class CommonControlLogic
 
     public void SetAndCallReact(string unqualified, object value, string typeName)
     {
-        foreach(var instance in SelectedState.Self.SelectedInstances)
+        if(_selectedState.SelectedComponent != null || _selectedState.SelectedStandardElement != null)
+        {
+            var state = _selectedState.SelectedStateSave;
+
+
+            var oldValue = state.GetValue(unqualified);
+            state.SetValue(unqualified, value, typeName);
+
+            // do this so the SetVariableLogic doesn't attempt to hold the object in-place which causes all kinds of weirdness
+            RecordSetVariablePersistPositions();
+            SetVariableLogic.Self.ReactToPropertyValueChanged(unqualified, oldValue, _selectedState.SelectedElement, null, _selectedState.SelectedStateSave, refresh: false);
+            ResumeSetVariablePersistOptions();
+        }
+
+        foreach(var instance in _selectedState.SelectedInstances)
         {
             string GetVariablePrefix()
             {
@@ -55,7 +76,7 @@ public class CommonControlLogic
                 }
                 return prefixInternal;
             }
-            var state = SelectedState.Self.SelectedStateSave;
+            var state = _selectedState.SelectedStateSave;
             string prefix = GetVariablePrefix();
 
 
@@ -64,7 +85,7 @@ public class CommonControlLogic
 
             // do this so the SetVariableLogic doesn't attempt to hold the object in-place which causes all kinds of weirdness
             RecordSetVariablePersistPositions();
-            SetVariableLogic.Self.ReactToPropertyValueChanged(unqualified, oldValue, SelectedState.Self.SelectedElement, instance, SelectedState.Self.SelectedStateSave, refresh: false);
+            SetVariableLogic.Self.ReactToPropertyValueChanged(unqualified, oldValue, _selectedState.SelectedElement, instance, _selectedState.SelectedStateSave, refresh: false);
             ResumeSetVariablePersistOptions();
         }
     }
