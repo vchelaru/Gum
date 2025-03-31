@@ -234,6 +234,7 @@
       * [ListBoxItem](code/monogame/gum-forms/controls/listboxitem.md)
       * [MenuItem](code/monogame/gum-forms/controls/menuitem.md)
       * [PasswordBox](code/monogame/gum-forms/controls/passwordbox.md)
+      * [RadioButton](code/monogame/gum-forms/controls/radiobutton.md)
       * [ScrollViewer](code/monogame/gum-forms/controls/scrollviewer.md)
       * [Slider](code/monogame/gum-forms/controls/slider.md)
       * [TextBox](code/monogame/gum-forms/controls/textbox.md)

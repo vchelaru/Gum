@@ -20,3 +20,257 @@ By default StackPanels display a dotted outline in the Gum tool, but are invisib
 
 Label provides a way to display read-only strings to the user. A Label's Text property can be used to change the displayed string.
 
+We can add a label to StackPanelInstance by drag+dropping the Label component in the Project tab.
+
+<figure><img src="../../../../.gitbook/assets/31_04 59 53.png" alt=""><figcaption><p>LabelInstance in a StackPanelInstance</p></figcaption></figure>
+
+We can change its Text, Color, and Style in the Expoed section in the Variables tab.
+
+<figure><img src="../../../../.gitbook/assets/image.png" alt=""><figcaption><p>Common Label properties in Gum</p></figcaption></figure>
+
+We can override these properties in code through the generated instance. For example, we can modify our TitleScreen's CustomInitialize method to change the label text.
+
+```diff
+partial class TitleScreen
+{
+    partial void CustomInitialize()
+    {
++        LabelInstance.Text = "I am set in code";
+    }
+}
+
+```
+
+<figure><img src="../../../../.gitbook/assets/31_05 05 43.png" alt=""><figcaption><p>Label at runtime with its Text property changed</p></figcaption></figure>
+
+{% hint style="info" %}
+All properties available in the Gum tool are also available in code. To keep the tutorial shorter we will not set show all properties both in Gum and in code unless there are important differences. Feel free to experiment and try setting properties in code as you are reading through the remainder of this tutorial.
+{% endhint %}
+
+## Button
+
+By default Gum provides a variety of Buttons. We'll use ButtonStandard, but feel free to experiment with other button components.
+
+<figure><img src="../../../../.gitbook/assets/31_05 11 58 (1).png" alt=""><figcaption><p>Button components in Gum</p></figcaption></figure>
+
+We can add a ButtonStandard to our stack panel by drag+dropping the ButtonStandard component onto the TitleScreen's StackPanelInstance.
+
+<figure><img src="../../../../.gitbook/assets/31_05 14 10.png" alt=""><figcaption><p>ButtonStandard in StackPanelInstance</p></figcaption></figure>
+
+Notice that the button automatically stacks below the LabelInstance because the StackPanelInstance stacks top-to-bottom by default.
+
+The most common way to interact with a Button is to assign its Click event. The following code can be used to increment the button's text whenever it is clicked.
+
+```diff
+partial class TitleScreen
+{
++    int clickCount = 0;
+    partial void CustomInitialize()
+    {
+        LabelInstance.Text = "I am set in code";
+
++        ButtonStandardInstance.Click += (_, _) =>
++            ButtonStandardInstance.Text = $"Clicked {++clickCount} Time(s)";
+    }
+}
+```
+
+<figure><img src="../../../../.gitbook/assets/31_05 18 20.gif" alt=""><figcaption><p>Button responding to clicks</p></figcaption></figure>
+
+## CheckBox
+
+CheckBox provides a way to display and edit bool values. We can add a CheckBox instance by drag+dropping the CheckBox component onto our StackPanelInstance.
+
+<figure><img src="../../../../.gitbook/assets/31_05 26 07.png" alt=""><figcaption><p>CheckBox in StackPanelInstance</p></figcaption></figure>
+
+CheckBox provides a number of events for responding to changes:
+
+* Click - whenever the CheckBox is clicked
+* Checked - whenever the CheckBox's IsChecked is set to true
+* Unchecked - whenever the CheckBox's IsChecked is set to false
+* Indetermine - whenever the CheckBox's IsChecked is set to null
+
+We can display the checked state by handling the Click event as shown in the following code:
+
+```diff
+partial void CustomInitialize()
+{
++    CheckBoxInstance.Click += (_, _) =>
++    {
++        CheckBoxInstance.Text = CheckBoxInstance.IsChecked == true
++            ? "Checked"
++            : CheckBoxInstance.IsChecked == false
++                ? "Unchecked"
++                : "Indeterminate";
++    };
+}
+
+```
+
+{% hint style="info" %}
+The rest of this tutorial omits the full CustomInitialize function and only shows the newly-added code to keep the displayed code shorter.
+{% endhint %}
+
+<figure><img src="../../../../.gitbook/assets/31_05 32 52.gif" alt=""><figcaption><p>CheckBox in StackPanelInstance</p></figcaption></figure>
+
+## ComboBox
+
+ComboBoxes provide a list of options for the user to select. ComboBoxes internally use a ListBox to display their options.
+
+We can add a ComboBox instance by drag+dropping the ComboBox component onto StackPanelInstance.
+
+<figure><img src="../../../../.gitbook/assets/31_05 37 10.png" alt=""><figcaption><p>ComboBox in StackPanelInstance</p></figcaption></figure>
+
+{% hint style="info" %}
+Now that we've seen how stacking works in our StackPanelInstance, the reminder of this tutorial only displays a single component at a time in the StackPanelInstance as to avoid the UI getting too cluttered. Of course, you should feel free to add and remove component instances to experiment on your own.
+{% endhint %}
+
+Notice that our ComboBoxInstance extends horizontally beyond the bounds of our StackPanelInstance. This can be problematic because the portion which is outside of the StackPanelInstance will not respond to clicks.
+
+We can solve this by extending the horizontal size of our StackPanelInstance to include all of its children.
+
+To do this, select the StackPanelInstance and set the following values:
+
+* Width = 0
+* Width Units = Relative to Children
+* Min Width = 50
+
+We can do the same for Height values:
+
+* Height = 0
+* Height Units = Relative to Children
+* Min Height = 50
+
+Now the StackPanel sizes itself according to its children.&#x20;
+
+<figure><img src="../../../../.gitbook/assets/31_05 41 18.png" alt=""><figcaption><p>StackPanelInstance adjusted to size itself according to its children</p></figcaption></figure>
+
+We can populate objects in a ComboBox by adding to its Items property. We can also react to object being selected by using the SelectionChanged event:
+
+```diff
+partial void CustomInitialize()
+{
++    for(int i = 0; i < 10; i++)
++    {
++        ComboBoxInstance.Items.Add($"Item {i}");
++    }
+
++    ComboBoxInstance.SelectionChanged += (_, _) =>
++    {
++        var selectedObject = ComboBoxInstance.SelectedObject;
++        System.Diagnostics.Debug.WriteLine($"Selected object: {selectedObject}");
++    };
+}
+
+```
+
+<figure><img src="../../../../.gitbook/assets/31_05 51 00.gif" alt=""><figcaption><p>ComboBox reacting to SelectionChanged event</p></figcaption></figure>
+
+## ListBox
+
+ListBox provides a way to view and select from a list of items. It is similar to a ComboBox, but it does not collapse when an item is selected.
+
+We can add a ListBox instance by drag+dropping a ListBox onto StackPanelInstance.
+
+<figure><img src="../../../../.gitbook/assets/31_05 54 17.png" alt=""><figcaption><p>ListBox in StackPanelInstance</p></figcaption></figure>
+
+We can populate objects in a ListBox by adding to its Items property. We can also react to object being selected by using the SelectionChanged event:
+
+```diff
+partial void CustomInitialize()
+{
++    for(int i = 0; i < 10; i++)
++    {
++        ListBoxInstance.Items.Add($"Item {i}");
++    }
+
++    ListBoxInstance.SelectionChanged += (_, _) =>
++    {
++        var selectedObject = ListBoxInstance.SelectedObject;
++        System.Diagnostics.Debug.WriteLine($"Selected object: {selectedObject}");
++    };
+}
+
+```
+
+<figure><img src="../../../../.gitbook/assets/31_05 57 26.gif" alt=""><figcaption><p>ListBox reacting to SelectionChanged event</p></figcaption></figure>
+
+## RadioButton
+
+RadioButton provides a way to select from a set of options. Unlike ComboBox, RadioButtons are always expanded. Unlike CheckBox, when one RadioButton is selected, other RadioButton instances in the group are deselected.
+
+We can add multiple RadioButton instances by drag+dropping the RadioButton component onto StackPanelInstance multiple times.
+
+<figure><img src="../../../../.gitbook/assets/31_06 07 08 (1).png" alt=""><figcaption><p>RadioButtons in StackPanelInstance</p></figcaption></figure>
+
+We can modify the Text property of each instance to differentiate between them.
+
+<figure><img src="../../../../.gitbook/assets/31_06 09 08.png" alt=""><figcaption><p>RadioButton instances displaying different text</p></figcaption></figure>
+
+We can handle the Checked event to respond to a RadioButton being checked.
+
+```diff
+partial void CustomInitialize()
+{
++    RadioButtonInstance.Checked += (_, _) =>
++        System.Diagnostics.Debug.WriteLine("Option 1 Checked");
+
++    RadioButtonInstance1.Checked += (_, _) =>
++        System.Diagnostics.Debug.WriteLine("Option 2 Checked");
+
++    RadioButtonInstance2.Checked += (_, _) =>
++        System.Diagnostics.Debug.WriteLine("Option 3 Checked");
+}
+```
+
+<figure><img src="../../../../.gitbook/assets/31_06 13 20.gif" alt=""><figcaption><p>RadioButtons reacting to Checked event</p></figcaption></figure>
+
+{% hint style="info" %}
+RadioButtons group according to their common parent. For more information on grouping, see the [RadioButton page](../../gum-forms/controls/radiobutton.md).
+{% endhint %}
+
+## Slider
+
+Sliders provide a way to select a value within a range, as specified by `Minimum` and `Maximum`.
+
+We can add a Slider by drag+dropping a Slider component on StackPanelInstance.
+
+<figure><img src="../../../../.gitbook/assets/31_06 23 14.png" alt=""><figcaption><p>Slider in StackPanelInstance</p></figcaption></figure>
+
+We can set the slider minimum and maximum and react to value changes using the following code:
+
+```diff
+partial void CustomInitialize()
+{
++    SliderInstance.Minimum = 0;
++    SliderInstance.Maximum = 100;
++    SliderInstance.ValueChanged += (_, _) =>
++        System.Diagnostics.Debug.WriteLine($"Slider Value: {SliderInstance.Value}");
+}
+```
+
+<figure><img src="../../../../.gitbook/assets/31_06 27 13.gif" alt=""><figcaption><p>Slider value changed by dragging the thumb or clicking on the track</p></figcaption></figure>
+
+## TextBox
+
+TextBoxes provide a way to view and edit string values.
+
+We can add a TextBox by drag+dropping a TextBox component on StackPanelInstance.
+
+<figure><img src="../../../../.gitbook/assets/31_06 31 32.png" alt=""><figcaption><p>TextBox in StackPanelInstance</p></figcaption></figure>
+
+We can respond to text being entered in the TextBox as shown in the following code:
+
+```diff
+partial void CustomInitialize()
+{
++    TextBoxInstance.TextChanged += (_,_) =>
++        System.Diagnostics.Debug.WriteLine($"TextBox text: '{TextBoxInstance.Text}'");
+}
+```
+
+<figure><img src="../../../../.gitbook/assets/31_06 34 10.gif" alt=""><figcaption><p>Handling the TextChanged event</p></figcaption></figure>
+
+## Conclusion
+
+This tutorial covers the basics of working with the most common types of forms components. As mentioned above, feel free to experiment with controls and explore the [Controls documentation section](../../gum-forms/controls/) for more information about each control.
