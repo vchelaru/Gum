@@ -1914,7 +1914,7 @@
   </Instance>
   <Instance>
     <Name>ResolutionLabel</Name>
-    <BaseType>Elements/Label</BaseType>
+    <BaseType>Controls/Label</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>
@@ -1949,7 +1949,7 @@
   </Instance>
   <Instance>
     <Name>MusicLabel</Name>
-    <BaseType>Elements/Label</BaseType>
+    <BaseType>Controls/Label</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>
@@ -1959,7 +1959,7 @@
   </Instance>
   <Instance>
     <Name>SoundLabel</Name>
-    <BaseType>Elements/Label</BaseType>
+    <BaseType>Controls/Label</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>
@@ -1974,7 +1974,7 @@
   </Instance>
   <Instance>
     <Name>ControlLabel</Name>
-    <BaseType>Elements/Label</BaseType>
+    <BaseType>Controls/Label</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>
@@ -1999,7 +1999,7 @@
   </Instance>
   <Instance>
     <Name>DifficultyLabel</Name>
-    <BaseType>Elements/Label</BaseType>
+    <BaseType>Controls/Label</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>
@@ -2039,7 +2039,7 @@
   </Instance>
   <Instance>
     <Name>LabelInstance</Name>
-    <BaseType>Elements/Label</BaseType>
+    <BaseType>Controls/Label</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>
