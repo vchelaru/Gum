@@ -62,7 +62,6 @@ namespace RenderingLibrary.Graphics
                     return null;
             }
         }
-        bool mJustChangedFrame;
         bool mJustCycled;
 
         string desiredCurrentChainName;
@@ -868,7 +867,8 @@ namespace RenderingLibrary.Graphics
                 if (mCurrentFrameIndex != frameBefore)
                 {
                     didChange = UpdateToCurrentAnimationFrame();
-                    mJustChangedFrame = true;
+                    // Eventually we may need this? FRB uses it, but not sure if Gum needs it...
+                    //mJustChangedFrame = true;
                 }
             }
 

@@ -13,7 +13,7 @@
     <Variable>
       <Type>int</Type>
       <Name>Blue</Name>
-      <Value xsi:type="xsd:int">0</Value>
+      <Value xsi:type="xsd:int">255</Value>
       <Category>Rendering</Category>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -55,14 +55,14 @@
     <Variable>
       <Type>int</Type>
       <Name>FontSize</Name>
-      <Value xsi:type="xsd:int">12</Value>
+      <Value xsi:type="xsd:int">14</Value>
       <Category>Font</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
       <Name>Green</Name>
-      <Value xsi:type="xsd:int">0</Value>
+      <Value xsi:type="xsd:int">255</Value>
       <Category>Rendering</Category>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -188,7 +188,7 @@
     <Variable>
       <Type>int</Type>
       <Name>Red</Name>
-      <Value xsi:type="xsd:int">0</Value>
+      <Value xsi:type="xsd:int">255</Value>
       <Category>Rendering</Category>
       <SetsValue>true</SetsValue>
     </Variable>

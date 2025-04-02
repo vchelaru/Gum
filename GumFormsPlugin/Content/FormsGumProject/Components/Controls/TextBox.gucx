@@ -238,6 +238,12 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>StyleCategory</Type>
+      <Name>PlaceholderTextInstance.StyleCategoryState</Name>
+      <Value xsi:type="xsd:string">Normal</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>string</Type>
       <Name>PlaceholderTextInstance.Text</Name>
       <Value xsi:type="xsd:string">Text Placeholder</Value>
