@@ -7,6 +7,8 @@
     <UseWindowsForms>true</UseWindowsForms>
     <UseWPF>true</UseWPF>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
+	  <Platforms>x86</Platforms>
+
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <OutputPath>bin\x86\Debug\</OutputPath>
@@ -41,10 +43,10 @@
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
   </ItemGroup>
   <PropertyGroup>
-    <PostBuildEvent>md "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"
-copy "$(TargetPath)" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"
-copy "$(TargetDir)$(TargetName).pdb" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"
+    <PostBuildEvent>md "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)"
+copy "$(TargetPath)" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)"
+copy "$(TargetDir)$(TargetName).pdb" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)"
 
-copy "$(TargetDir)FlatRedBall.SpecializedXnaControls.dll" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\FlatRedBall.SpecializedXnaControls.dll"</PostBuildEvent>
+copy "$(TargetDir)FlatRedBall.SpecializedXnaControls.dll" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\FlatRedBall.SpecializedXnaControls.dll"</PostBuildEvent>
   </PropertyGroup>
 </Project>

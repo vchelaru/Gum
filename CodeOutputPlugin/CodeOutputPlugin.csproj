@@ -1,48 +1,43 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
-    <OutputType>Library</OutputType>
-    <LangVersion>12.0</LangVersion>
-    <Nullable>enable</Nullable>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <UseWindowsForms>true</UseWindowsForms>
-    <UseWPF>true</UseWPF>
-    <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
-    <OutputPath>bin\x86\Debug\</OutputPath>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <LangVersion>12.0</LangVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
-    <OutputPath>bin\x86\Release\</OutputPath>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <LangVersion>12.0</LangVersion>
-  </PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\FlatRedBall.SpecializedXnaControls\FlatRedBall.SpecializedXnaControls.csproj" />
-    <ProjectReference Include="..\GumDataTypes\GumDataTypes.csproj" />
-    <ProjectReference Include="..\Gum\Gum.csproj" />
-    <ProjectReference Include="..\InputLibrary\InputLibrary.csproj" />
-    <ProjectReference Include="..\RenderingLibrary\RenderingLibrary.csproj" />
-    <ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
-    <ProjectReference Include="..\WpfDataUi\WpfDataUi.csproj" />
-    <ProjectReference Include="..\XnaAndWinforms\XnaAndWinforms.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="System.ComponentModel.Composition" Version="9.0.3" />
-    <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-  </ItemGroup>
-  <PropertyGroup>
-    <PostBuildEvent>echo Copying to "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)\"
-IF NOT EXIST "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)" md "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)\"
-
-copy "$(TargetPath)" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"
-
-copy "$(TargetDir)$(TargetName).pdb" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"</PostBuildEvent>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net472</TargetFramework>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<LangVersion>12.0</LangVersion>
+		<Nullable>enable</Nullable>
+		<UseWindowsForms>true</UseWindowsForms>
+		<UseWPF>true</UseWPF>
+		<ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
+		<Platforms>x86</Platforms>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+		<OutputPath>bin\Debug\</OutputPath>
+		<CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+		<LangVersion>12.0</LangVersion>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+		<OutputPath>bin\Release\</OutputPath>
+		<CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+		<LangVersion>12.0</LangVersion>
+	</PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\FlatRedBall.SpecializedXnaControls\FlatRedBall.SpecializedXnaControls.csproj" />
+		<ProjectReference Include="..\GumDataTypes\GumDataTypes.csproj" />
+		<ProjectReference Include="..\Gum\Gum.csproj" />
+		<ProjectReference Include="..\InputLibrary\InputLibrary.csproj" />
+		<ProjectReference Include="..\RenderingLibrary\RenderingLibrary.csproj" />
+		<ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
+		<ProjectReference Include="..\WpfDataUi\WpfDataUi.csproj" />
+		<ProjectReference Include="..\XnaAndWinforms\XnaAndWinforms.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+		<PackageReference Include="System.ComponentModel.Composition" Version="9.0.3" />
+		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+	</ItemGroup>
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+		<Exec Command="echo Copying to &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)\&quot;&#xD;&#xA;IF NOT EXIST &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot; md &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)\&quot;&#xD;&#xA;&#xD;&#xA;copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;&#xD;&#xA;copy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;" />
+	</Target>
 </Project>

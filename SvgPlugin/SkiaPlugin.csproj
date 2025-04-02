@@ -5,6 +5,8 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <UseWindowsForms>true</UseWindowsForms>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
+	  <Platforms>x86</Platforms>
+
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <OutputPath>bin\x86\Debug\</OutputPath>
@@ -85,21 +87,22 @@
     <Compile Remove="SkiaInGumShared\SkiaSpriteCanvas.cs" />
   </ItemGroup>
   <PropertyGroup>
-    <PostBuildEvent>echo Copying to "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)\"
-IF NOT EXIST "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)" md "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)\"
+    <PostBuildEvent>echo Copying to "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)\"
+IF NOT EXIST "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)" md "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)\"
 
-copy "$(TargetPath)" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"
+copy "$(TargetPath)" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)"
 
-copy "$(TargetDir)$(TargetName).pdb" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"
+copy "$(TargetDir)$(TargetName).pdb" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)"
 
 
-copy "$(TargetDir)SvgPlugin.dll" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"
-copy "$(TargetDir)SvgPlugin.dll.config" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"
-copy "$(TargetDir)System.Buffers.dll" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"
-copy "$(TargetDir)System.Memory.dll" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"
-copy "$(TargetDir)System.Numerics.Vectors.dll" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"
-copy "$(TargetDir)System.Runtime.CompilerServices.Unsafe.dll" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"
+copy "$(TargetDir)SvgPlugin.dll" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)"
+copy "$(TargetDir)SvgPlugin.dll.config" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)"
+copy "$(TargetDir)System.Buffers.dll" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)"
+copy "$(TargetDir)System.Memory.dll" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)"
+copy "$(TargetDir)System.Numerics.Vectors.dll" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)"
+copy "$(TargetDir)System.Runtime.CompilerServices.Unsafe.dll" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)"
 
 </PostBuildEvent>
   </PropertyGroup>
+  <Import Project="SkiaInGumShared\SkiaInGumShared.projitems" Label="Shared" />
 </Project>

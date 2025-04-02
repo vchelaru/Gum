@@ -8,10 +8,12 @@
     <UseWPF>true</UseWPF>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+	  <Platforms>x86</Platforms>
+
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug2|x86'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x86\Debug2\</OutputPath>
+    <OutputPath>bin\x86\Debug\</OutputPath>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
@@ -67,10 +69,10 @@
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
   </ItemGroup>
   <PropertyGroup>
-    <PostBuildEvent>IF NOT EXIST "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)" md "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"
-copy "$(TargetPath)" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"
-copy "$(TargetDir)$(TargetName).pdb" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"
-copy "$(TargetDir)FlatRedBall.InterpolationCore.dll" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"
-copy "$(TargetDir)FlatRedBall.InterpolationCore.pdb" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"</PostBuildEvent>
+    <PostBuildEvent>IF NOT EXIST "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)" md "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)"
+copy "$(TargetPath)" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)"
+copy "$(TargetDir)$(TargetName).pdb" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)"
+copy "$(TargetDir)FlatRedBall.InterpolationCore.dll" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)"
+copy "$(TargetDir)FlatRedBall.InterpolationCore.pdb" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)"</PostBuildEvent>
   </PropertyGroup>
 </Project>

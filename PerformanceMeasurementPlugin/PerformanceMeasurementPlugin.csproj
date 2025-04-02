@@ -7,6 +7,8 @@
     <UseWPF>true</UseWPF>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+	  <Platforms>x86</Platforms>
+
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug2|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -28,9 +30,7 @@
     <PackageReference Include="System.ComponentModel.Composition" Version="9.0.3" />
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
   </ItemGroup>
-  <PropertyGroup>
-    <PostBuildEvent>md "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"
-copy "$(TargetPath)" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"
-copy "$(TargetDir)$(TargetName).pdb" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"</PostBuildEvent>
-  </PropertyGroup>
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+		<Exec Command="echo Copying to &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)\&quot;&#xD;&#xA;IF NOT EXIST &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot; md &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)\&quot;&#xD;&#xA;&#xD;&#xA;copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;&#xD;&#xA;copy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;" />
+	</Target>
 </Project>

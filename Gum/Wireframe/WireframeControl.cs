@@ -137,6 +137,8 @@ namespace Gum.Wireframe
         {
             try
             {
+                LoaderManager.Self.ContentLoader = new ContentLoader();
+
                 mWireframeEditControl = wireframeEditControl;
 
 
@@ -151,7 +153,6 @@ namespace Gum.Wireframe
                 Renderer.TextureFilter = TextureFilter.Point;
 
 
-                LoaderManager.Self.ContentLoader = new ContentLoader();
 
                 LoaderManager.Self.Initialize(null, "content/TestFont.fnt", Services, null);
                 CameraController.Self.Initialize(Camera, mWireframeEditControl, Width, Height, hotkeyManager);

@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.33516.290
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gum", "Gum\Gum.csproj", "{121AC5A5-8F6A-42B2-8863-DEBC45B052BC}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumDataTypes", "GumDataTypes\GumDataTypes.csproj", "{5971A187-F6B2-4D65-A277-5613DED1F50F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XnaAndWinforms", "XnaAndWinforms\XnaAndWinforms.csproj", "{C39A973C-66D6-4A6C-82B5-AE0042F210F8}"
@@ -49,16 +47,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{E9BDDA50
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutomatedTests", "AutomatedTests\AutomatedTests.csproj", "{CFB9FA78-7C2C-44AC-85DE-7653DD12C581}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gum", "Gum\Gum.csproj", "{44575902-06A3-424F-A94C-4B7B8EC3ED2C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{121AC5A5-8F6A-42B2-8863-DEBC45B052BC}.Debug|x86.ActiveCfg = Debug|x86
-		{121AC5A5-8F6A-42B2-8863-DEBC45B052BC}.Debug|x86.Build.0 = Debug|x86
-		{121AC5A5-8F6A-42B2-8863-DEBC45B052BC}.Release|x86.ActiveCfg = Release|x86
-		{121AC5A5-8F6A-42B2-8863-DEBC45B052BC}.Release|x86.Build.0 = Release|x86
 		{5971A187-F6B2-4D65-A277-5613DED1F50F}.Debug|x86.ActiveCfg = Debug|x86
 		{5971A187-F6B2-4D65-A277-5613DED1F50F}.Debug|x86.Build.0 = Debug|x86
 		{5971A187-F6B2-4D65-A277-5613DED1F50F}.Release|x86.ActiveCfg = Release|x86
@@ -127,6 +123,10 @@ Global
 		{CFB9FA78-7C2C-44AC-85DE-7653DD12C581}.Debug|x86.Build.0 = Debug|Any CPU
 		{CFB9FA78-7C2C-44AC-85DE-7653DD12C581}.Release|x86.ActiveCfg = Release|Any CPU
 		{CFB9FA78-7C2C-44AC-85DE-7653DD12C581}.Release|x86.Build.0 = Release|Any CPU
+		{44575902-06A3-424F-A94C-4B7B8EC3ED2C}.Debug|x86.ActiveCfg = Debug|x86
+		{44575902-06A3-424F-A94C-4B7B8EC3ED2C}.Debug|x86.Build.0 = Debug|x86
+		{44575902-06A3-424F-A94C-4B7B8EC3ED2C}.Release|x86.ActiveCfg = Release|Any CPU
+		{44575902-06A3-424F-A94C-4B7B8EC3ED2C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -156,6 +156,7 @@ Global
 		SolutionGuid = {691B2E2F-58CB-4FD2-8480-695E8DE0CCE2}
 	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		SvgPlugin\SkiaInGumShared\SkiaInGumShared.projitems*{0fee460b-616c-45ac-86d5-087b7e32546e}*SharedItemsImports = 5
 		SvgPlugin\SkiaInGumShared\SkiaInGumShared.projitems*{ee3c8564-6cb2-411c-a43c-19d33c819b90}*SharedItemsImports = 13
 	EndGlobalSection
 EndGlobal
