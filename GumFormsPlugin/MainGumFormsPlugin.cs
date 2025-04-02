@@ -17,16 +17,19 @@ using ToolsUtilities;
 
 namespace GumFormsPlugin;
 
-
 [Export(typeof(PluginBase))]
 internal class MainGumFormsPlugin : PluginBase
 {
+    #region Fields/Properties
+
     public override string FriendlyName => "Gum Forms Plugin";
     public override Version Version => new Version(1, 0);
     public override bool ShutDown(PluginShutDownReason shutDownReason) => true;
 
     System.Windows.Forms.ToolStripMenuItem _addFormsMenuItem;
     private readonly FormsFileService _formsFileService;
+
+    #endregion
 
     public MainGumFormsPlugin()
     {

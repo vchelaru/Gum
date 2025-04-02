@@ -127,7 +127,7 @@
   </State>
   <Instance>
     <Name>TextInstance</Name>
-    <BaseType>Elements/Label</BaseType>
+    <BaseType>Controls/Label</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>

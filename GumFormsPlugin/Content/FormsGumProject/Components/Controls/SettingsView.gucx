@@ -139,7 +139,7 @@
   </Instance>
   <Instance>
     <Name>MusicVolumeLabel</Name>
-    <BaseType>Elements/Label</BaseType>
+    <BaseType>Controls/Label</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>
@@ -149,7 +149,7 @@
   </Instance>
   <Instance>
     <Name>SoundVolumeLabel</Name>
-    <BaseType>Elements/Label</BaseType>
+    <BaseType>Controls/Label</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>

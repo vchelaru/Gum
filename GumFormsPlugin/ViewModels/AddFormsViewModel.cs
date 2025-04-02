@@ -17,6 +17,8 @@ namespace GumFormsPlugin.ViewModels;
 
 public class AddFormsViewModel : ViewModel
 {
+    #region Fields/Properties
+
     private readonly FormsFileService _formsFileService;
 
     public bool IsIncludeDemoScreenGum
@@ -24,6 +26,8 @@ public class AddFormsViewModel : ViewModel
         get => Get<bool>();
         set => Set(value);
     }
+
+    #endregion
 
     public AddFormsViewModel(FormsFileService formsFileService)
     {

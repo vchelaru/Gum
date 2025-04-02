@@ -43,7 +43,37 @@ namespace WpfDataUi.DataTypes
             }
         }
 
-        public List<InstanceMember> InstanceMembers { get; set; }
+        IReadOnlyList<InstanceMember> instanceMembers;
+        public IReadOnlyList<InstanceMember> InstanceMembers 
+        {
+            get => instanceMembers;
+            set
+            {
+                instanceMembers = value;
+                ReactToInstanceMembersSet();
+            }
+        }
+
+        private void ReactToInstanceMembersSet()
+        {
+            // we should only allow custom options based on the first instance member
+            // This is faster than going through all of them to see what they all have
+            if(instanceMembers?.Count > 0)
+            {
+                this.CustomOptions = instanceMembers[0].CustomOptions;
+                this.PreferredDisplayer = instanceMembers[0].PreferredDisplayer;
+                foreach(var kvp in instanceMembers[0].PropertiesToSetOnDisplayer)
+                {
+                    this.PropertiesToSetOnDisplayer.Add(kvp.Key, kvp.Value);
+                }
+            }
+            else
+            {
+                this.CustomOptions = new List<object>();
+                this.PreferredDisplayer = null;
+                this.PropertiesToSetOnDisplayer.Clear();
+            }
+        }
 
         public MultiSelectInstanceMember() 
         {
@@ -51,6 +81,7 @@ namespace WpfDataUi.DataTypes
             CustomSetPropertyEvent += HandleCustomSetEvent;
             CustomGetEvent += HandleCustomGetEvent;
             CustomGetTypeEvent += HandleCustomGetTypeEvent;
+
             SetValueError = HandleValueError;
         }
 

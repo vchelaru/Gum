@@ -13,7 +13,7 @@
     <Variable>
       <Type>int</Type>
       <Name>Blue</Name>
-      <Value xsi:type="xsd:int">0</Value>
+      <Value xsi:type="xsd:int">255</Value>
       <Category>Rendering</Category>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -55,14 +55,14 @@
     <Variable>
       <Type>int</Type>
       <Name>FontSize</Name>
-      <Value xsi:type="xsd:int">12</Value>
+      <Value xsi:type="xsd:int">14</Value>
       <Category>Font</Category>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>int</Type>
       <Name>Green</Name>
-      <Value xsi:type="xsd:int">0</Value>
+      <Value xsi:type="xsd:int">255</Value>
       <Category>Rendering</Category>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -188,7 +188,7 @@
     <Variable>
       <Type>int</Type>
       <Name>Red</Name>
-      <Value xsi:type="xsd:int">0</Value>
+      <Value xsi:type="xsd:int">255</Value>
       <Category>Rendering</Category>
       <SetsValue>true</SetsValue>
     </Variable>
@@ -347,13 +347,24 @@
         <Value xsi:type="xsd:int">0</Value>
         <SetsValue>true</SetsValue>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.Black.Red</string>
+          <string>Green = Components/Styles.Black.Green</string>
+          <string>Blue = Components/Styles.Black.Blue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>DarkGray</Name>
       <Variable>
         <Type>int</Type>
         <Name>Blue</Name>
-        <Value xsi:type="xsd:int">70</Value>
+        <Value xsi:type="xsd:int">80</Value>
         <Category>Rendering</Category>
         <SetsValue>true</SetsValue>
       </Variable>
@@ -371,6 +382,18 @@
         <Category>Rendering</Category>
         <SetsValue>true</SetsValue>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.DarkGray.Red</string>
+          <string>Green = Components/Styles.DarkGray.Green</string>
+          <string>Blue = Components/Styles.DarkGray.Blue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>Gray</Name>
@@ -395,6 +418,18 @@
         <Category>Rendering</Category>
         <SetsValue>true</SetsValue>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.Gray.Red</string>
+          <string>Green = Components/Styles.Gray.Green</string>
+          <string>Blue = Components/Styles.Gray.Blue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>LightGray</Name>
@@ -419,6 +454,18 @@
         <Category>Rendering</Category>
         <SetsValue>true</SetsValue>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.LightGray.Red</string>
+          <string>Green = Components/Styles.LightGray.Green</string>
+          <string>Blue = Components/Styles.LightGray.Blue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>White</Name>
@@ -443,6 +490,18 @@
         <Category>Rendering</Category>
         <SetsValue>true</SetsValue>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.White.Red</string>
+          <string>Green = Components/Styles.White.Green</string>
+          <string>Blue = Components/Styles.White.Blue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>PrimaryDark</Name>
@@ -467,6 +526,18 @@
         <Category>Rendering</Category>
         <SetsValue>true</SetsValue>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.PrimaryDark.Red</string>
+          <string>Green = Components/Styles.PrimaryDark.Green</string>
+          <string>Blue = Components/Styles.PrimaryDark.Blue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>Primary</Name>
@@ -491,6 +562,18 @@
         <Category>Rendering</Category>
         <SetsValue>true</SetsValue>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.Primary.Red</string>
+          <string>Green = Components/Styles.Primary.Green</string>
+          <string>Blue = Components/Styles.Primary.Blue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>PrimaryLight</Name>
@@ -515,6 +598,18 @@
         <Category>Rendering</Category>
         <SetsValue>true</SetsValue>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.PrimaryLight.Red</string>
+          <string>Green = Components/Styles.PrimaryLight.Green</string>
+          <string>Blue = Components/Styles.PrimaryLight.Blue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>Success</Name>
@@ -539,6 +634,18 @@
         <Category>Rendering</Category>
         <SetsValue>true</SetsValue>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.Success.Red</string>
+          <string>Green = Components/Styles.Success.Green</string>
+          <string>Blue = Components/Styles.Success.Blue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>Warning</Name>
@@ -563,6 +670,18 @@
         <Category>Rendering</Category>
         <SetsValue>true</SetsValue>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.Warning.Red</string>
+          <string>Green = Components/Styles.Warning.Green</string>
+          <string>Blue = Components/Styles.Warning.Blue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>Danger</Name>
@@ -587,6 +706,18 @@
         <Category>Rendering</Category>
         <SetsValue>true</SetsValue>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.Danger.Red</string>
+          <string>Green = Components/Styles.Danger.Green</string>
+          <string>Blue = Components/Styles.Danger.Blue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>Accent</Name>
@@ -611,12 +742,31 @@
         <Category>Rendering</Category>
         <SetsValue>true</SetsValue>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.Accent.Red</string>
+          <string>Green = Components/Styles.Accent.Green</string>
+          <string>Blue = Components/Styles.Accent.Blue</string>
+        </Value>
+      </VariableList>
     </State>
   </Category>
   <Category>
     <Name>StyleCategory</Name>
     <State>
       <Name>Tiny</Name>
+      <Variable>
+        <IsFont>true</IsFont>
+        <Type>string</Type>
+        <Name>Font</Name>
+        <Value xsi:type="xsd:string">Arial</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
       <Variable>
         <Type>int</Type>
         <Name>FontSize</Name>
@@ -638,9 +788,28 @@
         <Category>Font</Category>
         <SetsValue>true</SetsValue>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Font = Components/Styles.Tiny.Font</string>
+          <string>FontSize = Components/Styles.Tiny.FontSize</string>
+          <string>IsBold = Components/Styles.Tiny.IsBold</string>
+          <string>IsItalic = Components/Styles.Tiny.IsItalic</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>Small</Name>
+      <Variable>
+        <IsFont>true</IsFont>
+        <Type>string</Type>
+        <Name>Font</Name>
+        <Value xsi:type="xsd:string">Arial</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
       <Variable>
         <Type>int</Type>
         <Name>FontSize</Name>
@@ -661,10 +830,30 @@
         <Category>Font</Category>
         <SetsValue>true</SetsValue>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Font = Components/Styles.Small.Font</string>
+          <string>FontSize = Components/Styles.Small.FontSize</string>
+          <string>IsBold = Components/Styles.Small.IsBold</string>
+          <string>IsItalic = Components/Styles.Small.IsItalic</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>Normal</Name>
       <Variable>
+        <IsFont>true</IsFont>
+        <Type>string</Type>
+        <Name>Font</Name>
+        <Value xsi:type="xsd:string">Arial</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
         <Type>int</Type>
         <Name>FontSize</Name>
         <Value xsi:type="xsd:int">14</Value>
@@ -685,10 +874,30 @@
         <Category>Font</Category>
         <SetsValue>true</SetsValue>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Font = Components/Styles.Normal.Font</string>
+          <string>FontSize = Components/Styles.Normal.FontSize</string>
+          <string>IsBold = Components/Styles.Normal.IsBold</string>
+          <string>IsItalic = Components/Styles.Normal.IsItalic</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>Emphasis</Name>
       <Variable>
+        <IsFont>true</IsFont>
+        <Type>string</Type>
+        <Name>Font</Name>
+        <Value xsi:type="xsd:string">Arial</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
         <Type>int</Type>
         <Name>FontSize</Name>
         <Value xsi:type="xsd:int">14</Value>
@@ -708,10 +917,30 @@
         <Value xsi:type="xsd:boolean">true</Value>
         <SetsValue>true</SetsValue>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Font = Components/Styles.Emphasis.Font</string>
+          <string>FontSize = Components/Styles.Emphasis.FontSize</string>
+          <string>IsBold = Components/Styles.Emphasis.IsBold</string>
+          <string>IsItalic = Components/Styles.Emphasis.IsItalic</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>Strong</Name>
       <Variable>
+        <IsFont>true</IsFont>
+        <Type>string</Type>
+        <Name>Font</Name>
+        <Value xsi:type="xsd:string">Arial</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
         <Type>int</Type>
         <Name>FontSize</Name>
         <Value xsi:type="xsd:int">14</Value>
@@ -731,9 +960,29 @@
         <Category>Font</Category>
         <SetsValue>true</SetsValue>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Font = Components/Styles.Strong.Font</string>
+          <string>FontSize = Components/Styles.Strong.FontSize</string>
+          <string>IsBold = Components/Styles.Strong.IsBold</string>
+          <string>IsItalic = Components/Styles.Strong.IsItalic</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>H3</Name>
+      <Variable>
+        <IsFont>true</IsFont>
+        <Type>string</Type>
+        <Name>Font</Name>
+        <Value xsi:type="xsd:string">Arial</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
       <Variable>
         <Type>int</Type>
         <Name>FontSize</Name>
@@ -755,9 +1004,29 @@
         <Category>Font</Category>
         <SetsValue>true</SetsValue>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Font = Components/Styles.H3.Font</string>
+          <string>FontSize = Components/Styles.H3.FontSize</string>
+          <string>IsBold = Components/Styles.H3.IsBold</string>
+          <string>IsItalic = Components/Styles.H3.IsItalic</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>H2</Name>
+      <Variable>
+        <IsFont>true</IsFont>
+        <Type>string</Type>
+        <Name>Font</Name>
+        <Value xsi:type="xsd:string">Arial</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
       <Variable>
         <Type>int</Type>
         <Name>FontSize</Name>
@@ -779,9 +1048,29 @@
         <Category>Font</Category>
         <SetsValue>true</SetsValue>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Font = Components/Styles.H2.Font</string>
+          <string>FontSize = Components/Styles.H2.FontSize</string>
+          <string>IsBold = Components/Styles.H2.IsBold</string>
+          <string>IsItalic = Components/Styles.H2.IsItalic</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>H1</Name>
+      <Variable>
+        <IsFont>true</IsFont>
+        <Type>string</Type>
+        <Name>Font</Name>
+        <Value xsi:type="xsd:string">Arial</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
       <Variable>
         <Type>int</Type>
         <Name>FontSize</Name>
@@ -803,9 +1092,29 @@
         <Category>Font</Category>
         <SetsValue>true</SetsValue>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Font = Components/Styles.H1.Font</string>
+          <string>FontSize = Components/Styles.H1.FontSize</string>
+          <string>IsBold = Components/Styles.H1.IsBold</string>
+          <string>IsItalic = Components/Styles.H1.IsItalic</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>Title</Name>
+      <Variable>
+        <IsFont>true</IsFont>
+        <Type>string</Type>
+        <Name>Font</Name>
+        <Value xsi:type="xsd:string">Arial</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
       <Variable>
         <Type>int</Type>
         <Name>FontSize</Name>
@@ -827,6 +1136,19 @@
         <Category>Font</Category>
         <SetsValue>true</SetsValue>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Font = Components/Styles.Title.Font</string>
+          <string>FontSize = Components/Styles.Title.FontSize</string>
+          <string>IsBold = Components/Styles.Title.IsBold</string>
+          <string>IsItalic = Components/Styles.Title.IsItalic</string>
+        </Value>
+      </VariableList>
     </State>
   </Category>
   <Behaviors />
