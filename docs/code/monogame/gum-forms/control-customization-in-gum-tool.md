@@ -4,6 +4,12 @@
 
 Gum Forms controls can be fully customized in Gum. Customization using the Gum tool allows immediate previewing of states.
 
+{% hint style="warning" %}
+As of April 2025 Gum Forms is undergoing a change which will simplify how styling is performed. This document is kept here for while the next version of Gum is being built.
+
+If you would like to try the new styling, see the latest preview release on Github and read through the new [Gum Project Forms Tutorial](../tutorials/gum-project-forms-tutorial/).
+{% endhint %}
+
 ## Setup
 
 Before customizing controls you should add the default set of forms components to your project. You can check if these components exist by looking in the Components folder.

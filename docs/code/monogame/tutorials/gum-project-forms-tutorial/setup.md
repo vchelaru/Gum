@@ -54,9 +54,9 @@ To add Gum Forms components in Gum, select Content -> Add Forms Components.
 
 <figure><img src="../../../../.gitbook/assets/image (181).png" alt=""><figcaption><p>Add Forms Components menu item</p></figcaption></figure>
 
-This tutorial will not use the DemoScreenGum, so leave this option unchecked and press OK.
+Later tutorials will reference the demo screen, so check the **Include DemoScreenGum** option and click **OK**.
 
-<figure><img src="../../../../.gitbook/assets/image (182).png" alt=""><figcaption><p>Leave Include DemoScreenGum unchecked</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/02_06 52 11.png" alt=""><figcaption><p>Include DemoScreenGum</p></figcaption></figure>
 
 If asked, click **Yes** when asked about overwriting the default standards.
 
@@ -159,7 +159,7 @@ public class Game1 : Game
 }
 ```
 
-The code above has the following three calls on GumService:
+The code above has the following three calls on Gum:
 
 * Initialize - this loads the argument Gum project and sets appropriate defaults. Note that we are loading a Gum project here, but the gum project is optional. Projects which are using Gum only in code would not pass the second parameter.
 
