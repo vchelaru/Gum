@@ -36,4 +36,30 @@ These colors are defined on ColoredRectangle instances. We can select one of the
 
 Notice that the rectangles are named based on their usage. Since gray, black, and white colors are so common, there are dedicated rectangles for those. Aside from those, each rectangle is named based on its usage. For example, the three primary rectangles (PrimaryLight, Primary, and PrimaryDark) indicate that their color is used as the main color throughout the Gum project.
 
+For example, notice that DemoScrenGum uses the Primary color on labels, radio buttons, and labels.
+
+<figure><img src="../../../../.gitbook/assets/02_08 07 06.png" alt=""><figcaption><p>DemoScreenGum displaying the primary color throughout the UI</p></figcaption></figure>
+
+{% hint style="info" %}
+The outlines that are drawn by Gum can get in the way of viewing styles. You can disable this by selecting **Edit ->** Properties, then unchecking **Show Outlines**.
+
+![](<../../../../.gitbook/assets/02_08 10 43.png>)
+{% endhint %}
+
+We can change the color values i the Styles component by selecting any of the rectangles and changing their colors. The names suggest their purpose, so if you are changing the Primary color values, be sure to consider the Light and Dark suffixes. For example, we can change the teal colors to orange colors in Styles.
+
+<figure><img src="../../../../.gitbook/assets/02_08 13 32.png" alt=""><figcaption><p>Primary colors changed to orange</p></figcaption></figure>
+
+Now if we select our DemoScreenGum, notice that the UI has updated in response to these color changes.
+
+<figure><img src="../../../../.gitbook/assets/02_08 14 37.png" alt=""><figcaption><p>DemoScreenGum restyled orange</p></figcaption></figure>
+
+Of course, you are free to modify all other colors including the different shades of gray or the other colors like Success, Danger, and Warning.
+
+## Fonts
+
+We can also modify the fonts used in our project by changing the Text instances in the Styles component.
+
+
+
 UNDER CONSTRUCTION
