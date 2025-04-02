@@ -347,13 +347,24 @@
         <Value xsi:type="xsd:int">0</Value>
         <SetsValue>true</SetsValue>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.Black.Red</string>
+          <string>Green = Components/Styles.Black.Green</string>
+          <string>Blue = Components/Styles.Black.Blue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>DarkGray</Name>
       <Variable>
         <Type>int</Type>
         <Name>Blue</Name>
-        <Value xsi:type="xsd:int">70</Value>
+        <Value xsi:type="xsd:int">80</Value>
         <Category>Rendering</Category>
         <SetsValue>true</SetsValue>
       </Variable>
@@ -371,6 +382,18 @@
         <Category>Rendering</Category>
         <SetsValue>true</SetsValue>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.DarkGray.Red</string>
+          <string>Green = Components/Styles.DarkGray.Green</string>
+          <string>Blue = Components/Styles.DarkGray.Blue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>Gray</Name>
@@ -395,6 +418,18 @@
         <Category>Rendering</Category>
         <SetsValue>true</SetsValue>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.Gray.Red</string>
+          <string>Green = Components/Styles.Gray.Green</string>
+          <string>Blue = Components/Styles.Gray.Blue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>LightGray</Name>
@@ -419,6 +454,18 @@
         <Category>Rendering</Category>
         <SetsValue>true</SetsValue>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.LightGray.Red</string>
+          <string>Green = Components/Styles.LightGray.Green</string>
+          <string>Blue = Components/Styles.LightGray.Blue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>White</Name>
@@ -443,6 +490,18 @@
         <Category>Rendering</Category>
         <SetsValue>true</SetsValue>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.White.Red</string>
+          <string>Green = Components/Styles.White.Green</string>
+          <string>Blue = Components/Styles.White.Blue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>PrimaryDark</Name>
@@ -467,6 +526,18 @@
         <Category>Rendering</Category>
         <SetsValue>true</SetsValue>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.PrimaryDark.Red</string>
+          <string>Green = Components/Styles.PrimaryDark.Green</string>
+          <string>Blue = Components/Styles.PrimaryDark.Blue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>Primary</Name>
@@ -491,6 +562,18 @@
         <Category>Rendering</Category>
         <SetsValue>true</SetsValue>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.Primary.Red</string>
+          <string>Green = Components/Styles.Primary.Green</string>
+          <string>Blue = Components/Styles.Primary.Blue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>PrimaryLight</Name>
@@ -515,6 +598,18 @@
         <Category>Rendering</Category>
         <SetsValue>true</SetsValue>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.PrimaryLight.Red</string>
+          <string>Green = Components/Styles.PrimaryLight.Green</string>
+          <string>Blue = Components/Styles.PrimaryLight.Blue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>Success</Name>
@@ -539,6 +634,18 @@
         <Category>Rendering</Category>
         <SetsValue>true</SetsValue>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.Success.Red</string>
+          <string>Green = Components/Styles.Success.Green</string>
+          <string>Blue = Components/Styles.Success.Blue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>Warning</Name>
@@ -563,6 +670,18 @@
         <Category>Rendering</Category>
         <SetsValue>true</SetsValue>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.Warning.Red</string>
+          <string>Green = Components/Styles.Warning.Green</string>
+          <string>Blue = Components/Styles.Warning.Blue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>Danger</Name>
@@ -587,6 +706,18 @@
         <Category>Rendering</Category>
         <SetsValue>true</SetsValue>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.Danger.Red</string>
+          <string>Green = Components/Styles.Danger.Green</string>
+          <string>Blue = Components/Styles.Danger.Blue</string>
+        </Value>
+      </VariableList>
     </State>
     <State>
       <Name>Accent</Name>
@@ -611,6 +742,18 @@
         <Category>Rendering</Category>
         <SetsValue>true</SetsValue>
       </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Red = Components/Styles.Accent.Red</string>
+          <string>Green = Components/Styles.Accent.Green</string>
+          <string>Blue = Components/Styles.Accent.Blue</string>
+        </Value>
+      </VariableList>
     </State>
   </Category>
   <Category>
