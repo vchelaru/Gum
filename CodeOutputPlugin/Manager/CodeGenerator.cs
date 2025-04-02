@@ -1043,7 +1043,7 @@ public class CodeGenerator
 
     #region Position / Size
 
-    private static void ProcessXamarinFormsPositionAndSize(List<VariableSave> variablesToConsider, StateSave state, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, CodeGenerationContext context)
+    private static void ProcessXamarinFormsPositionAndSize(List<VariableSave> variablesToConsider, StateSave state, InstanceSave? instance, ElementSave container, StringBuilder stringBuilder, CodeGenerationContext context)
     {
         //////////////////Early out/////////////////////
         if (container is ScreenSave && instance == null)
@@ -1057,7 +1057,7 @@ public class CodeGenerator
 
         bool setsAny = GetIfStateSetsAnyPositionValues(state, variablePrefix, variablesToConsider);
 
-        InstanceSave parent = null;
+        InstanceSave? parent = null;
         if (instance != null)
         {
             var parentName = state.GetValueRecursive(instance.Name + ".Parent") as string;
@@ -1067,7 +1067,7 @@ public class CodeGenerator
             }
         }
 
-        string parentType = parent?.BaseType;
+        string? parentType = parent?.BaseType;
         if (parent == null)
         {
             if (instance == null && context.VisualApi == VisualApi.XamarinForms)
@@ -3704,7 +3704,7 @@ public class CodeGenerator
     }
 
 
-    private static string TryGetFullXamarinFormsLineReplacement(InstanceSave instance, ElementSave container, VariableSave variable, StateSave state, CodeGenerationContext context)
+    private static string? TryGetFullXamarinFormsLineReplacement(InstanceSave instance, ElementSave container, VariableSave variable, StateSave state, CodeGenerationContext context)
     {
         var rootVariableName = variable.GetRootName();
 
@@ -3903,11 +3903,14 @@ public class CodeGenerator
 
     private static void FillWithVariableAssignments(CodeGenerationContext context, StringBuilder stringBuilder, List<VariableSave> variablesToAssignValues)
     {
-        var defaultState = context.Element.DefaultState;
-        VisualApi visualApi = GetVisualApiForInstance(context.Instance, context.Element);
-
         var container = context.Element;
         var instance = context.Instance;
+        if(instance == null)
+        {
+            throw new InvalidOperationException("Instance cannot be null");
+        }
+        var defaultState = context.Element.DefaultState;
+        VisualApi visualApi = GetVisualApiForInstance(instance, context.Element);
 
         // We used to do this, but now spacing is supported in FRB:
         //if (visualApi == VisualApi.XamarinForms && instance.BaseType?.EndsWith("/StackLayout") == true)
@@ -3966,7 +3969,7 @@ public class CodeGenerator
                 var matchingExposed = instanceElement?.DefaultState.Variables.FirstOrDefault(item => item.ExposedAsName == variableRoot);
                 if (matchingExposed != null)
                 {
-                    var instanceInInstanceElement = instanceElement.GetInstance(matchingExposed.SourceObject);
+                    var instanceInInstanceElement = instanceElement!.GetInstance(matchingExposed.SourceObject);
 
                     if (instanceInInstanceElement != null)
                     {
@@ -4028,7 +4031,7 @@ public class CodeGenerator
     {
         if (visualApi == VisualApi.XamarinForms)
         {
-            string baseType = null;
+            string? baseType = null;
             if (context.Instance != null)
             {
                 var standardElement = ObjectFinder.Self.GetRootStandardElementSave(context.Instance);
@@ -4041,9 +4044,9 @@ public class CodeGenerator
             switch (baseType)
             {
                 case "Text":
-                    ProcessColorForLabel(variablesToConsider, defaultState, context.Instance, stringBuilder, context);
+                    ProcessColorForLabel(variablesToConsider, defaultState, stringBuilder, context);
                     ProcessXamarinFormsPositionAndSize(variablesToConsider, defaultState, context.Instance, context.Element, stringBuilder, context);
-                    ProcessXamarinFormsLabelBold(variablesToConsider, defaultState, context.Instance, context.Element, stringBuilder, context);
+                    ProcessXamarinFormsLabelBold(variablesToConsider, defaultState, context.Element, stringBuilder, context);
                     break;
                 default:
                     ProcessXamarinFormsPositionAndSize(variablesToConsider, defaultState, context.Instance, context.Element, stringBuilder, context);
@@ -4084,7 +4087,7 @@ public class CodeGenerator
 
     #endregion
 
-    private static void ProcessColorForLabel(List<VariableSave> variablesToConsider, StateSave defaultState, InstanceSave instance, StringBuilder stringBuilder, CodeGenerationContext context)
+    private static void ProcessColorForLabel(List<VariableSave> variablesToConsider, StateSave defaultState, StringBuilder stringBuilder, CodeGenerationContext context)
     {
         var rfv = new RecursiveVariableFinder(defaultState);
 
@@ -4425,7 +4428,7 @@ public class CodeGenerator
         }
     }
 
-    private static void ProcessXamarinFormsLabelBold(List<VariableSave> variablesToConsider, StateSave state, InstanceSave instance, ElementSave container, StringBuilder stringBuilder, CodeGenerationContext context)
+    private static void ProcessXamarinFormsLabelBold(List<VariableSave> variablesToConsider, StateSave state, ElementSave container, StringBuilder stringBuilder, CodeGenerationContext context)
     {
         var boldName = context.GumVariablePrefix + "IsBold";
 

@@ -84,7 +84,6 @@ namespace Gum.Commands
 
             ProjectManager.Self.CreateNewProject();
 
-            GumCommands.Self.GuiCommands.RefreshElementTreeView();
             GumCommands.Self.GuiCommands.RefreshStateTreeView();
             GumCommands.Self.GuiCommands.RefreshVariables();
             WireframeObjectManager.Self.RefreshAll(true);

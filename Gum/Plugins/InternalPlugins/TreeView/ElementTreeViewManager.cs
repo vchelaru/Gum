@@ -441,7 +441,7 @@ namespace Gum.Managers
 
             CreateContextMenuStrip(components);
 
-            GumCommands.Self.GuiCommands.RefreshElementTreeView();
+            RefreshUi();
 
             InitializeMenuItems();
 

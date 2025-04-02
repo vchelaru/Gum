@@ -1406,7 +1406,26 @@ public class DeviceManager : IGraphicsDeviceService
 
     public event EventHandler<EventArgs> DeviceCreated;
     public event EventHandler<EventArgs> DeviceDisposing;
-    public event EventHandler<EventArgs> DeviceReset;
+
+    private EventHandler<EventArgs> deviceReset;
+    event EventHandler<EventArgs> IGraphicsDeviceService.DeviceReset
+    {
+        add
+        {
+            lock (this)
+            {
+                deviceReset += value;
+            }
+        }
+        remove
+        {
+            lock (this)
+            {
+                deviceReset -= value;
+            }
+        }
+    }
+
     public event EventHandler<EventArgs> DeviceResetting;
 }
 
