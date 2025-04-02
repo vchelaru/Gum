@@ -36,7 +36,7 @@ public class FormsFileService
         {
             var extension = FileManager.GetExtension(resourceName);
 
-            if (extension == "gusx" && isIncludeDemoScreenGum == false)
+            if (extension == "gusx")
             {
                 var shouldInclude = resourceName.Contains("DemoScreenGum.gusx") && isIncludeDemoScreenGum;
 
