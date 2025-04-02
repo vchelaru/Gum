@@ -399,7 +399,7 @@ namespace Gum.DataTypes
 
             foreach (ElementReference reference in ScreenReferences)
             {
-                ScreenSave toAdd = null;
+                ScreenSave? toAdd = null;
                 try
                 {
                     toAdd = reference.ToElementSave<ScreenSave>(projectRootDirectory, ScreenExtension, result);
@@ -416,7 +416,7 @@ namespace Gum.DataTypes
 
             foreach (ElementReference reference in ComponentReferences)
             {
-                ComponentSave toAdd = null;
+                ComponentSave? toAdd = null;
 
                 try
                 {
@@ -453,7 +453,7 @@ namespace Gum.DataTypes
             {
                 foreach (var reference in BehaviorReferences)
                 {
-                    BehaviorSave toAdd = null;
+                    BehaviorSave? toAdd = null;
 
                     try
                     {
@@ -499,12 +499,15 @@ namespace Gum.DataTypes
             {
                 var matchingReference = ScreenReferences.FirstOrDefault(item => item.Name == element.Name);
 
-                ScreenSave newScreen = matchingReference?.ToElementSave<ScreenSave>(
+                ScreenSave? newScreen = matchingReference?.ToElementSave<ScreenSave>(
                     projectRootDirectory, GumProjectSave.ScreenExtension, gumLoadResult);
 
                 if (newScreen != null)
                 {
-                    Screens.Remove(element as ScreenSave);
+                    if(element is ScreenSave oldScreen)
+                    {
+                        Screens.Remove(oldScreen);
+                    }
                     Screens.Add(newScreen);
                 }
             }

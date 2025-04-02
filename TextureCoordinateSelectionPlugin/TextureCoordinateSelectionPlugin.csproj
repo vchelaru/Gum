@@ -1,55 +1,22 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{C6157099-F5FD-4632-8097-4071FE2BD982}</ProjectGuid>
+    <TargetFramework>net472</TargetFramework>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>TextureCoordinateSelectionPlugin</RootNamespace>
-    <AssemblyName>TextureCoordinateSelectionPlugin</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
     <LangVersion>12.0</LangVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <LangVersion>12.0</LangVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <LangVersion>12.0</LangVersion>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <UseWindowsForms>true</UseWindowsForms>
+    <UseWPF>true</UseWPF>
+    <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
+	  <Platforms>x86</Platforms>
+
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
-    <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x86\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
     <LangVersion>12.0</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <OutputPath>bin\x86\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
     <LangVersion>12.0</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Xna.Framework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86">
@@ -60,75 +27,26 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Gum\Libraries\Xna\Microsoft.Xna.Framework.Graphics.dll</HintPath>
     </Reference>
-    <Reference Include="PresentationCore" />
-    <Reference Include="PresentationFramework" />
-    <Reference Include="System" />
-    <Reference Include="System.ComponentModel.Composition" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Numerics" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xaml" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
-    <Reference Include="WindowsBase" />
-    <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Logic\ControlLogic.cs" />
-    <Compile Include="MainTextureCoordinatePlugin.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ViewModels\MainControlViewModel.cs" />
-    <Compile Include="Views\MainControl.xaml.cs">
-      <DependentUpon>MainControl.xaml</DependentUpon>
-    </Compile>
+    <ProjectReference Include="..\FlatRedBall.SpecializedXnaControls\FlatRedBall.SpecializedXnaControls.csproj" />
+    <ProjectReference Include="..\GumDataTypes\GumDataTypes.csproj" />
+    <ProjectReference Include="..\Gum\Gum.csproj" />
+    <ProjectReference Include="..\InputLibrary\InputLibrary.csproj" />
+    <ProjectReference Include="..\RenderingLibrary\RenderingLibrary.csproj" />
+    <ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
+    <ProjectReference Include="..\XnaAndWinforms\XnaAndWinforms.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\FlatRedBall.SpecializedXnaControls\FlatRedBall.SpecializedXnaControls.csproj">
-      <Project>{8c80ba7b-1cba-4579-9382-d9dc6c365070}</Project>
-      <Name>FlatRedBall.SpecializedXnaControls</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\GumDataTypes\GumDataTypes.csproj">
-      <Project>{5971A187-F6B2-4D65-A277-5613DED1F50F}</Project>
-      <Name>GumDataTypes</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Gum\Gum.csproj">
-      <Project>{121AC5A5-8F6A-42B2-8863-DEBC45B052BC}</Project>
-      <Name>Gum</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\InputLibrary\InputLibrary.csproj">
-      <Project>{938d9a00-8529-4ce8-9077-e0a3994a73ea}</Project>
-      <Name>InputLibrary</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\RenderingLibrary\RenderingLibrary.csproj">
-      <Project>{A86EE399-7C93-42E1-80ED-CA4CBF4CA573}</Project>
-      <Name>RenderingLibrary</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj">
-      <Project>{cae35f4b-8a10-4a85-b2fb-7f4a8d7c7138}</Project>
-      <Name>ToolsUtilitiesStandard</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\XnaAndWinforms\XnaAndWinforms.csproj">
-      <Project>{C39A973C-66D6-4A6C-82B5-AE0042F210F8}</Project>
-      <Name>XnaAndWinforms</Name>
-    </ProjectReference>
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="System.ComponentModel.Composition" Version="9.0.3" />
+    <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
   </ItemGroup>
-  <ItemGroup>
-    <Page Include="Views\MainControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>md "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"
-copy "$(TargetPath)" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"
-copy "$(TargetDir)$(TargetName).pdb" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"
+    <PostBuildEvent>md "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)"
+copy "$(TargetPath)" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)"
+copy "$(TargetDir)$(TargetName).pdb" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)"
 
-copy "$(TargetDir)FlatRedBall.SpecializedXnaControls.dll" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\FlatRedBall.SpecializedXnaControls.dll"</PostBuildEvent>
+copy "$(TargetDir)FlatRedBall.SpecializedXnaControls.dll" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\FlatRedBall.SpecializedXnaControls.dll"</PostBuildEvent>
   </PropertyGroup>
 </Project>

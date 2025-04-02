@@ -1,55 +1,20 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{0FEE460B-616C-45AC-86D5-087B7E32546E}</ProjectGuid>
+    <TargetFramework>net472</TargetFramework>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SkiaPlugin</RootNamespace>
-    <AssemblyName>SkiaPlugin</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <Deterministic>true</Deterministic>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
+	  <Platforms>x86</Platforms>
+
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
-    <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x86\Debug\</OutputPath>
     <DefineConstants>TRACE;DEBUG;INCLUDE_SVG; GUM</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <LangVersion>7.3</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <OutputPath>bin\x86\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <LangVersion>7.3</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
@@ -61,56 +26,19 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Gum\Libraries\Xna\Microsoft.Xna.Framework.Graphics.dll</HintPath>
     </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.ComponentModel.Composition" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
     <Reference Include="System.Drawing.Primitives">
       <HintPath>C:\Windows\Microsoft.NET\Framework64\v4.0.30319\System.Drawing.Primitives.dll</HintPath>
     </Reference>
-    <Reference Include="System.Numerics" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MainSvgPlugin.cs" />
-    <Compile Include="Managers\DefaultStateManager.cs" />
-    <Compile Include="Managers\StandardAdder.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <ProjectReference Include="..\GumDataTypes\GumDataTypes.csproj" />
+    <ProjectReference Include="..\Gum\Gum.csproj" />
+    <ProjectReference Include="..\InputLibrary\InputLibrary.csproj" />
+    <ProjectReference Include="..\RenderingLibrary\RenderingLibrary.csproj" />
+    <ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
+    <ProjectReference Include="..\WpfDataUi\WpfDataUi.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\GumDataTypes\GumDataTypes.csproj">
-      <Project>{5971a187-f6b2-4d65-a277-5613ded1f50f}</Project>
-      <Name>GumDataTypes</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Gum\Gum.csproj">
-      <Project>{121ac5a5-8f6a-42b2-8863-debc45b052bc}</Project>
-      <Name>Gum</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\InputLibrary\InputLibrary.csproj">
-      <Project>{938d9a00-8529-4ce8-9077-e0a3994a73ea}</Project>
-      <Name>InputLibrary</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\RenderingLibrary\RenderingLibrary.csproj">
-      <Project>{a86ee399-7c93-42e1-80ed-ca4cbf4ca573}</Project>
-      <Name>RenderingLibrary</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj">
-      <Project>{cae35f4b-8a10-4a85-b2fb-7f4a8d7c7138}</Project>
-      <Name>ToolsUtilitiesStandard</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\WpfDataUi\WpfDataUi.csproj">
-      <Project>{47241002-7eb5-433b-b931-a530bb6b84ee}</Project>
-      <Name>WpfDataUi</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
     <EmbeddedResource Include="Embedded\Svg.gutx" />
     <EmbeddedResource Include="Embedded\ColoredCircle.gutx" />
     <EmbeddedResource Include="Embedded\RoundedRectangle.gutx" />
@@ -119,6 +47,7 @@
     <EmbeddedResource Include="Embedded\Canvas.gutx" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="SkiaSharp.Extended">
       <Version>1.60.0</Version>
     </PackageReference>
@@ -131,25 +60,49 @@
     <PackageReference Include="Svg.Skia">
       <Version>0.5.18</Version>
     </PackageReference>
+    <PackageReference Include="System.ComponentModel.Composition" Version="9.0.3" />
+    <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
   </ItemGroup>
-  <Import Project="SkiaInGumShared\SkiaInGumShared.projitems" Label="Shared" />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <Compile Remove="SkiaInGumShared\obj\Debug\net6.0\.NETCoreApp,Version=v6.0.AssemblyAttributes.cs" />
+    <Compile Remove="SkiaInGumShared\obj\Debug\net6.0\SkiaInGum.AssemblyInfo.cs" />
+    <Compile Remove="SkiaInGumShared\obj\Debug\net6.0\SkiaInGum.GlobalUsings.g.cs" />
+    <Compile Remove="SkiaInGumShared\obj\Debug\net8.0\.NETCoreApp,Version=v8.0.AssemblyAttributes.cs" />
+    <Compile Remove="SkiaInGumShared\obj\Debug\net8.0\SkiaInGum.FNA.AssemblyInfo.cs" />
+    <Compile Remove="SkiaInGumShared\obj\Debug\net8.0\SkiaInGum.FNA.GlobalUsings.g.cs" />
+    <Compile Remove="SkiaInGumShared\obj\Release\net6.0\.NETCoreApp,Version=v6.0.AssemblyAttributes.cs" />
+    <Compile Remove="SkiaInGumShared\obj\Release\net6.0\SkiaInGum.AssemblyInfo.cs" />
+    <Compile Remove="SkiaInGumShared\obj\Release\net6.0\SkiaInGum.GlobalUsings.g.cs" />
+    <Compile Remove="SkiaInGumShared\Renderables\RenderableArc.cs" />
+    <Compile Remove="SkiaInGumShared\Renderables\RenderableCanvas.cs" />
+    <Compile Remove="SkiaInGumShared\Renderables\RenderableCircle.cs" />
+    <Compile Remove="SkiaInGumShared\Renderables\RenderableLottieAnimation.cs" />
+    <Compile Remove="SkiaInGumShared\Renderables\RenderableRoundedRectangle.cs" />
+    <Compile Remove="SkiaInGumShared\Renderables\RenderableSkiaObject.cs" />
+    <Compile Remove="SkiaInGumShared\Renderables\RenderableSvg.cs" />
+    <Compile Remove="SkiaInGumShared\Rendering\ISkiaRenderable.cs" />
+    <Compile Remove="SkiaInGumShared\Rendering\SkiaGLUtils.cs" />
+    <Compile Remove="SkiaInGumShared\Rendering\SkiaRenderableInfo.cs" />
+    <Compile Remove="SkiaInGumShared\Rendering\SkiaRenderer.cs" />
+    <Compile Remove="SkiaInGumShared\SkiaSpriteCanvas.cs" />
+  </ItemGroup>
   <PropertyGroup>
-    <PostBuildEvent>echo Copying to "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)\"
-IF NOT EXIST "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)" md "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)\"
+    <PostBuildEvent>echo Copying to "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)\"
+IF NOT EXIST "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)" md "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)\"
 
-copy "$(TargetPath)" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"
+copy "$(TargetPath)" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)"
 
-copy "$(TargetDir)$(TargetName).pdb" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"
+copy "$(TargetDir)$(TargetName).pdb" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)"
 
 
-copy "$(TargetDir)SvgPlugin.dll" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"
-copy "$(TargetDir)SvgPlugin.dll.config" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"
-copy "$(TargetDir)System.Buffers.dll" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"
-copy "$(TargetDir)System.Memory.dll" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"
-copy "$(TargetDir)System.Numerics.Vectors.dll" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"
-copy "$(TargetDir)System.Runtime.CompilerServices.Unsafe.dll" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Data\Plugins\$(TargetName)"
+copy "$(TargetDir)SvgPlugin.dll" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)"
+copy "$(TargetDir)SvgPlugin.dll.config" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)"
+copy "$(TargetDir)System.Buffers.dll" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)"
+copy "$(TargetDir)System.Memory.dll" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)"
+copy "$(TargetDir)System.Numerics.Vectors.dll" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)"
+copy "$(TargetDir)System.Runtime.CompilerServices.Unsafe.dll" "$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)"
 
 </PostBuildEvent>
   </PropertyGroup>
+  <Import Project="SkiaInGumShared\SkiaInGumShared.projitems" Label="Shared" />
 </Project>
