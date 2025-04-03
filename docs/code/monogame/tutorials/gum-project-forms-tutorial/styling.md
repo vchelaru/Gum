@@ -102,10 +102,33 @@ We can change the color used by picking a different color in the dropdown. For e
 
 ## Changing Colors in States
 
-Some colors are used depending on the state of the component. For example, the TextBox's Background changes depending on whether it is enabled or highlighted.
+Some colors are applied depending on the state of the component. For example, the TextBox's Background changes depending on whether it is enabled or highlighted.
 
-When making any styling edits, be sure to first check if the variable is modified by any states. If so, then the changes will be overwritten at runtime in response to actions like highlights, clicks, and changes to IsEnabled.
+When making any styling edits, be sure to first check if the variable is modified by any states. If it is, then you must make your modifications on the non-default state.
 
-To see if a variable is modified in a state, click on the category to see which variables are modified.&#x20;
+As mentioned above, to change the TextBox's background, you must first select one of the states within the TextBoxCategory. To see if a variable is modified in a state, click on the category to see which variables are modified. In this case, the TextBoxCategory modifies the following variables:
+
+* Background.ColorCategoryState
+* FocusedIndicator.Visible
+* PlaceholderTextInstance.ColorCategoryState
+* TextInstance.ColorCategoryState
+
+<figure><img src="../../../../.gitbook/assets/02_18 20 39.png" alt=""><figcaption><p>Variables modified by TextBoxCategory states</p></figcaption></figure>
+
+So to change the background color of the text box, we must select each of the categories under TextBoxCategory, then change the variable in each one. The following image shows how to change the TextBox's background to Black in the Enabled state.&#x20;
+
+<figure><img src="../../../../.gitbook/assets/03_05 05 09.png" alt=""><figcaption><p>Changing TextBoxBackground to Black</p></figcaption></figure>
+
+You may need to modify the other states under TextBoxCategory as well so the TextBox appears as desired in all states.
+
+{% hint style="info" %}
+At runtime a TextBox always applies one of its TextBoxCategory states. However, these states do not apply in the Gum tool. Usually any changes made to the Enabled state should also be made to the Default state so the TextBox appears the same at runtime and in the tool.
+{% endhint %}
+
+As a reminder be sure to always check if a variable is modified by any states. If it is, then the change should be made in those states. Otherwise, it should be made in the Default state.
+
+## Adding New Colors
+
+
 
 UNDER CONSTRUCTION
