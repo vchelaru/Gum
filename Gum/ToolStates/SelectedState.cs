@@ -501,12 +501,15 @@ public class SelectedState : ISelectedState
             {
                 var categoryInElement = SelectedElement.Categories.Find(item => item.Name == SelectedStateCategorySave.Name);
 
-                var state = categoryInElement?.States.Find(item => item.Name == SelectedStateSave.Name);
-
-                if(state != null)
+                if(SelectedStateSave != null)
                 {
-                    SelectedStateSave = state;
-                    shouldSelectDefault = false;
+                    var state = categoryInElement?.States.Find(item => item.Name == SelectedStateSave.Name);
+
+                    if(state != null)
+                    {
+                        SelectedStateSave = state;
+                        shouldSelectDefault = false;
+                    }
                 }
             }
 
