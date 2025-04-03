@@ -104,4 +104,8 @@ We can change the color used by picking a different color in the dropdown. For e
 
 Some colors are used depending on the state of the component. For example, the TextBox's Background changes depending on whether it is enabled or highlighted.
 
+When making any styling edits, be sure to first check if the variable is modified by any states. If so, then the changes will be overwritten at runtime in response to actions like highlights, clicks, and changes to IsEnabled.
+
+To see if a variable is modified in a state, click on the category to see which variables are modified.&#x20;
+
 UNDER CONSTRUCTION
