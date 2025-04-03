@@ -257,6 +257,30 @@ Feel free to open this file and add more frames to be used by your NineSlice.
 
 <figure><img src="../../../../.gitbook/assets/image (196).png" alt=""><figcaption><p>Blank space in UISpriteSheet.png</p></figcaption></figure>
 
+Notice that most of the frames are white so that they can be colored in Gum using the pre-defined color values in the Styles component. If you intend for your borders to be dynamically colored, you should also use the white color. For example, a new rounded rectangle style can be added below the existing styles.
+
+<figure><img src="../../../../.gitbook/assets/image.png" alt=""><figcaption><p>New rounded rectangle style </p></figcaption></figure>
+
+Be sure to save your .png file so it shows up in Gum.
+
+To create a new style:
+
+1. Duplicate one of the existing style states in NineSlice
+2. Rename the newly-created style as desired
+3. Use the Texture Coordinate tab to select the new area of the sprite sheet
+
+<figure><img src="../../../../.gitbook/assets/03_07 00 24 (1).png" alt=""><figcaption><p>New RoundedFilled style</p></figcaption></figure>
+
+Once this style has been added, it can be referenced by any component using a NineSlice background, such as ButtonStandard.
+
+<figure><img src="../../../../.gitbook/assets/03_07 02 29 (1).png" alt=""><figcaption><p>Button using RoundedFilled style</p></figcaption></figure>
+
+{% hint style="info" %}
+As mentioned above, white styles allow for dyamic coloring using the Styles component colors. If you would like to include the color as part of the border, you are free to do so, but this does limit your ability to set color explicitly. Whether you do this depends on your game's design, so as always feel free to experiment.
+{% endhint %}
+
+## Creating new Styled Components
 
 
-UNDER CONSTRUCTION
+
+UDNER CONSTRUCTION
