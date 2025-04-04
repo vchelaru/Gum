@@ -276,11 +276,37 @@ Once this style has been added, it can be referenced by any component using a Ni
 <figure><img src="../../../../.gitbook/assets/03_07 02 29 (1).png" alt=""><figcaption><p>Button using RoundedFilled style</p></figcaption></figure>
 
 {% hint style="info" %}
-As mentioned above, white styles allow for dyamic coloring using the Styles component colors. If you would like to include the color as part of the border, you are free to do so, but this does limit your ability to set color explicitly. Whether you do this depends on your game's design, so as always feel free to experiment.
+As mentioned above, white styles allow for dynamic coloring using the Styles component colors. If you would like to include the color as part of the border, you are free to do so, but this does limit your ability to set color explicitly. Whether you do this depends on your game's design, so as always feel free to experiment.
 {% endhint %}
 
-## Creating new Styled Components
+## Customizing Individual Component Instances
+
+Component instances can be customized on an instance basis if the variable being customized is not associated with a state. For example, we can modify a button's Style Category State to change the text size.
+
+To do this we must first expose the variable that should be available per instance. We can do this on the Button Standard by following these steps:
+
+1. Expand the ButtonStandard component
+2. Select TextInstance
+3.  Right-click on the `Style State Category` variable and select **Expose Variable**\
 
 
+    <figure><img src="../../../../.gitbook/assets/03_21 23 37.png" alt=""><figcaption><p>Expose Variable right click option</p></figcaption></figure>
+4. Enter an appropriate name, such as **TextStyle**
 
-UDNER CONSTRUCTION
+Now this variable can be accessed per-instance.
+
+<figure><img src="../../../../.gitbook/assets/03_21 26 58.png" alt=""><figcaption></figcaption></figure>
+
+## Customizing State Variables
+
+At the time of this writing Gum does not support changing states values per-instance. Any changes to state variables, such as ButtonStandard's background, must be done at the component level. This means you must create a copy of the component and modify the states on the copy.
+
+For example, we can create a copy of ButtonStandard by following these steps:
+
+1. Select ButtonStandard
+2. Press CTRL+C, CTRL+V to create a copy
+3. Rename the new Button to ButtonDark
+4. Select each of the states under ButtonCategory and change the background's color as desired
+
+<figure><img src="../../../../.gitbook/assets/04_03 27 32.png" alt=""><figcaption><p>Change ButtonDark's Background color </p></figcaption></figure>
+
