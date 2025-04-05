@@ -17,6 +17,10 @@ Forms controls are a collection of classes which provide common UI behavior. You
 
 All controls are in the `MonoGameGum.Forms.Controls` namespace.
 
+{% hint style="info" %}
+Forms naming is based on naming from WPF. If you are familiar with WPF or similar libraries like Avalonia, you may find many of the names and concepts familiar.
+{% endhint %}
+
 ## Common Control Properties
 
 All controls share a few common properties and characteristics. The following list provides a high-level introduction to forms control similarities. If the list doesn't make sense don't worry, we'll cover each topic in this and following tutorials.
@@ -42,7 +46,7 @@ MyButton.Visual.Width = 0;
 MyButton.Visual.WidthUnits = DimensionUnitType.RelativeToContainer;
 ```
 
-For more information about all of the properties available to GraphicalUiElement, see the [General Properties](../../../../gum-tool/gum-elements/general-properties/) section of the Gum tool - all properties in the tool are also available in code:
+For more information about all of the properties available to GraphicalUiElement, see the [General Properties](../../../../gum-tool/gum-elements/general-properties/) section of the Gum tool - all properties in the tool are also available in code.
 
 ## Code Organization
 
@@ -107,7 +111,28 @@ checkBox.Checked += (_, _) => label.Text = "CheckBox checked";
 checkBox.Unchecked += (_, _) => label.Text = "CheckBox unchecked";
 ```
 
-<figure><img src="../../../../.gitbook/assets/13_08 46 53.gif" alt=""><figcaption><p>checkBox responds to clicks</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/13_08 46 53.gif" alt=""><figcaption><p>CheckBox responds to clicks</p></figcaption></figure>
+
+## ComboBox
+
+ComboBox provides a collapsible way to display and select from a list of options.
+
+The following code creates a ComboBox which raises an event whenever an item is selected.
+
+```csharp
+var comboBox = new ComboBox();
+for (int i = 0; i < 20; i++)
+{
+    comboBox.Items.Add($"Item {i}");
+}
+comboBox.SelectionChanged += (_, _) =>
+{
+    label.Text = "Selected: " + comboBox.SelectedObject;
+};
+mainPanel.AddChild(comboBox);
+```
+
+<figure><img src="../../../../.gitbook/assets/05_09 12 43.gif" alt=""><figcaption><p>ComboBox responding to items being selected</p></figcaption></figure>
 
 ## ListBox
 
@@ -134,6 +159,88 @@ mainPanel.AddChild(listBox);
 
 <figure><img src="../../../../.gitbook/assets/22_07 19 30.gif" alt=""><figcaption><p>ListBox responding to items being selected</p></figcaption></figure>
 
+## RadioButton
+
+RadioButton controls allow the user to view a set of options and pick from one of the available options. Radio buttons are mutually exclusive within their group. Radio buttons can be grouped together by putting them in common containers, such as StackLayouts.
+
+The following creates six radio buttons in two separate groups.
+
+```csharp
+var group1 = new StackPanel();
+mainPanel.AddChild(group1);
+
+var group2 = new StackPanel();
+// move group 2 down slightly:
+group2.Y = 10;
+mainPanel.AddChild(group2);
+
+var radioButtonA = new RadioButton();
+radioButtonA.Text = "Option A";
+group1.AddChild(radioButtonA);
+
+var radioButtonB = new RadioButton();
+radioButtonB.Text = "Option B";
+group1.AddChild(radioButtonB);
+
+var radioButtonC = new RadioButton();
+radioButtonC.Text = "Option C";
+group1.AddChild(radioButtonC);
+
+
+var radioButton1 = new RadioButton();
+radioButton1.Text = "Option 1";
+group2.AddChild(radioButton1);
+
+var radioButton2 = new RadioButton();
+radioButton2.Text = "Option 2";
+group2.AddChild(radioButton2);
+
+var radioButton3 = new RadioButton();
+radioButton3.Text = "Option 3";
+group2.AddChild(radioButton3);
+```
+
+<figure><img src="../../../../.gitbook/assets/05_09 41 48 (2).gif" alt=""><figcaption><p>RadioButtons responding to clicks in two different groups</p></figcaption></figure>
+
+## ScrollViewer
+
+ScrollViewer provides a scrollable panel for controls. ScrollViewers are similar in concept to ListBoxes, but they can contain any type of item rather than only ListBoxItems.
+
+The following code creates a ScrollViewer and adds buttons using AddChild.
+
+```csharp
+var scrollViewer = new ScrollViewer();
+scrollViewer.Width = 200;
+mainPanel.AddChild(scrollViewer);
+
+for(int i = 0; i < 15; i++)
+{
+    var button = new Button();
+    button.Text = "Button " + i;
+    scrollViewer.AddChild(button);
+}
+```
+
+<figure><img src="../../../../.gitbook/assets/05_10 05 52.gif" alt=""><figcaption><p>ScrollViewer containing buttons</p></figcaption></figure>
+
+## Slider
+
+Slider controls allow the user to select a value between a minimum and maximum value.
+
+The following code creates a Slider which raises an event whenever its Value changes.
+
+```csharp
+var slider = new Slider();
+slider.Width = 200;
+slider.Minimum = 0;
+slider.Maximum = 100;
+slider.ValueChanged += (_,_) => 
+    label.Text = $"Slider value: {slider.Value}";
+mainPanel.AddChild(slider);
+```
+
+<figure><img src="../../../../.gitbook/assets/05_09 52 41.gif" alt=""><figcaption><p>Slider responding to cursor input</p></figcaption></figure>
+
 ## TextBox
 
 TextBox controls allow the user to see and edit string values. TextBoxes support typing with the keyboard, copy/paste, selection, and multiple lines of text.
@@ -150,4 +257,4 @@ textBox.TextChanged += (_, _) =>
 mainPanel.AddChild(textBox);
 ```
 
-<figure><img src="../../../../.gitbook/assets/22_06 52 48.gif" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/22_06 52 48.gif" alt=""><figcaption><p>TextBox responding to text input</p></figcaption></figure>

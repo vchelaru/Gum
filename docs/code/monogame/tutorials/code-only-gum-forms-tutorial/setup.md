@@ -127,3 +127,7 @@ protected override void Initialize()
 ```
 
 <figure><img src="../../../../.gitbook/assets/13_07 53 14.gif" alt=""><figcaption></figcaption></figure>
+
+## Conclusion
+
+Now that we have a basic project set up with a single button. The next tutorial covers the most common forms controls.
