@@ -91,7 +91,7 @@ public class DefaultListBoxRuntime : InteractiveGue
             FocusedIndicator.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
             FocusedIndicator.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
             FocusedIndicator.Color = Color.White;
-            FocusedIndicator.Visible = true;
+            FocusedIndicator.Visible = false;
             FocusedIndicator.Name = "FocusedIndicator";
             this.Children.Add(FocusedIndicator);
 

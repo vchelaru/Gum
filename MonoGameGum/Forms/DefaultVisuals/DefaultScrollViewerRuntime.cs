@@ -45,7 +45,8 @@ public class DefaultScrollViewerRuntime : InteractiveGue
     {
         if (fullInstantiation)
         {
-
+            this.Width = 150;
+            this.Height = 200;
 
             background.Name = "Background";
             InnerPanel.Name = "InnerPanelInstance";

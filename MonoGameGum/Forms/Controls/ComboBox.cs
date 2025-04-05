@@ -395,7 +395,7 @@ public class ComboBox : FrameworkElement, IInputReceiver
         var isTextBound = vmPropsToUiProps?.Values.Any(item => item == nameof(Text)) == true;
         if (isTextBound == false)
         {
-            coreTextObject.RawText = listBox.SelectedObject?.ToString();
+            UpdateToObject(listBox.SelectedObject);
         }
 
         // Why do we hide the list box here? We don't want to do it if
@@ -408,6 +408,11 @@ public class ComboBox : FrameworkElement, IInputReceiver
         SelectionChanged?.Invoke(this, args);
 
 
+    }
+
+    public virtual void UpdateToObject(object o)
+    {
+        coreTextObject.RawText = o?.ToString();
     }
 
     private void HandleListBoxItemPushed(object sender, EventArgs args)
