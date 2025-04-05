@@ -117,7 +117,7 @@ checkBox.Unchecked += (_, _) => label.Text = "CheckBox unchecked";
 
 ComboBox provides a collapsible way to display and select from a list of options.
 
-The fllowing code creates a ComboBox which raises an event whenever an item is selected.
+The following code creates a ComboBox which raises an event whenever an item is selected.
 
 ```csharp
 var comboBox = new ComboBox();
@@ -202,7 +202,44 @@ group2.AddChild(radioButton3);
 
 <figure><img src="../../../../.gitbook/assets/05_09 41 48 (2).gif" alt=""><figcaption><p>RadioButtons responding to clicks in two different groups</p></figcaption></figure>
 
+## ScrollViewer
+
+ScrollViewer provides a scrollable panel for controls. ScrollViewers are similar in concept to ListBoxes, but they can contain any type of item rather than only ListBoxItems.
+
+The following code creates a ScrollViewer and adds buttons using AddChild.
+
+```csharp
+var scrollViewer = new ScrollViewer();
+scrollViewer.Width = 200;
+mainPanel.AddChild(scrollViewer);
+
+for(int i = 0; i < 15; i++)
+{
+    var button = new Button();
+    button.Text = "Button " + i;
+    scrollViewer.AddChild(button);
+}
+```
+
+<figure><img src="../../../../.gitbook/assets/05_10 05 52.gif" alt=""><figcaption><p>ScrollViewer containing buttons</p></figcaption></figure>
+
 ## Slider
+
+Slider controls allow the user to select a value between a minimum and maximum value.
+
+The following code creates a Slider which raises an event whenever its Value changes.
+
+```csharp
+var slider = new Slider();
+slider.Width = 200;
+slider.Minimum = 0;
+slider.Maximum = 100;
+slider.ValueChanged += (_,_) => 
+    label.Text = $"Slider value: {slider.Value}";
+mainPanel.AddChild(slider);
+```
+
+<figure><img src="../../../../.gitbook/assets/05_09 52 41.gif" alt=""><figcaption><p>Slider responding to cursor input</p></figcaption></figure>
 
 ## TextBox
 
