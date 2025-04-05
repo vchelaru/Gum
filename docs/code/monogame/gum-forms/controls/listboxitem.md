@@ -40,7 +40,7 @@ for (int i = 0; i < 20; i++)
 }
 ```
 
-<figure><img src="../../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>An object's ToString is displayed by default ListBoxItems</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>An object's ToString is displayed by default ListBoxItems</p></figcaption></figure>
 
 This also includes adding Gum objects (such as Sprite). If a Sprite is added, the Sprite is not displayed, but rather the type of the Sprite is displayed, as shown in the following code:
 
@@ -54,5 +54,5 @@ for (int i = 0; i < 20; i++)
 }
 ```
 
-<figure><img src="../../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Sprites (and all Gum objects) return their name when ToString is called</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Sprites (and all Gum objects) return their name when ToString is called</p></figcaption></figure>
 

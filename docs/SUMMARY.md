@@ -216,6 +216,7 @@
     * [Code-Only Gum Forms Tutorial](code/monogame/tutorials/code-only-gum-forms-tutorial/README.md)
       * [Setup](code/monogame/tutorials/code-only-gum-forms-tutorial/setup.md)
       * [Forms Controls](code/monogame/tutorials/code-only-gum-forms-tutorial/forms-controls.md)
+      * [ListBox Items](code/monogame/tutorials/code-only-gum-forms-tutorial/listbox-items.md)
   * [Setup for GumBatch (Optional)](code/monogame/setup-for-gumbatch.md)
   * [Loading a Gum Project (Optional)](code/monogame/loading-.gumx-gum-project.md)
   * [async Programming](code/monogame/async-programming.md)
