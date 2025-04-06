@@ -13,3 +13,5 @@ Every element automatically includes a Default state which cannot be removed. Th
 
 <figure><img src="../../../.gitbook/assets/07_04 03 32.png" alt=""><figcaption><p>Default state in a component named DefaultComponent</p></figcaption></figure>
 
+Additional states can be created in Screens, Components, and Standard elements. These states must be created in Categories. For more information, see the [Categories page](categories.md).
+
