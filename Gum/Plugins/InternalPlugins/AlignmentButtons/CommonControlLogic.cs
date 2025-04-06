@@ -51,22 +51,10 @@ public class CommonControlLogic
 
     public void SetAndCallReact(string unqualified, object value, string typeName)
     {
-        if(_selectedState.SelectedComponent != null || _selectedState.SelectedStandardElement != null)
-        {
-            var state = _selectedState.SelectedStateSave;
-
-
-            var oldValue = state.GetValue(unqualified);
-            state.SetValue(unqualified, value, typeName);
-
-            // do this so the SetVariableLogic doesn't attempt to hold the object in-place which causes all kinds of weirdness
-            RecordSetVariablePersistPositions();
-            SetVariableLogic.Self.ReactToPropertyValueChanged(unqualified, oldValue, _selectedState.SelectedElement, null, _selectedState.SelectedStateSave, refresh: false);
-            ResumeSetVariablePersistOptions();
-        }
-
+        bool handledByInstance = false;
         foreach(var instance in _selectedState.SelectedInstances)
         {
+            handledByInstance = true;
             string GetVariablePrefix()
             {
                 string prefixInternal = "";
@@ -79,7 +67,6 @@ public class CommonControlLogic
             var state = _selectedState.SelectedStateSave;
             string prefix = GetVariablePrefix();
 
-
             var oldValue = state.GetValue(prefix + unqualified);
             state.SetValue(prefix + unqualified, value, typeName);
 
@@ -87,6 +74,22 @@ public class CommonControlLogic
             RecordSetVariablePersistPositions();
             SetVariableLogic.Self.ReactToPropertyValueChanged(unqualified, oldValue, _selectedState.SelectedElement, instance, _selectedState.SelectedStateSave, refresh: false);
             ResumeSetVariablePersistOptions();
+        }
+
+        if(!handledByInstance)
+        {
+            if (_selectedState.SelectedComponent != null || _selectedState.SelectedStandardElement != null)
+            {
+                var state = _selectedState.SelectedStateSave;
+
+                var oldValue = state.GetValue(unqualified);
+                state.SetValue(unqualified, value, typeName);
+
+                // do this so the SetVariableLogic doesn't attempt to hold the object in-place which causes all kinds of weirdness
+                RecordSetVariablePersistPositions();
+                SetVariableLogic.Self.ReactToPropertyValueChanged(unqualified, oldValue, _selectedState.SelectedElement, null, _selectedState.SelectedStateSave, refresh: false);
+                ResumeSetVariablePersistOptions();
+            }
         }
     }
 
