@@ -1,4 +1,5 @@
 ﻿using Gum.Converters;
+using Gum.DataTypes.Variables;
 using Gum.Wireframe;
 using MonoGameGum.Forms.Controls;
 using MonoGameGum.GueDeriving;
@@ -117,77 +118,45 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 var textboxCategory = new Gum.DataTypes.Variables.StateSaveCategory();
                 textboxCategory.Name = CategoryName;
                 this.AddCategory(textboxCategory);
-                textboxCategory.States.Add(new()
-                {
-                    Name = "Enabled",
-                    Variables = new()
-                    {
-                        new ()
-                        {
-                            Name = "TextInstance.Color",
-                            Value = new Microsoft.Xna.Framework.Color(255,255,255),
-                        },
-                        new ()
-                        {
-                            Name = "Background.Color",
-                            Value = new Microsoft.Xna.Framework.Color(70,70,70),
-                        }
-                    }
-                });
 
-                textboxCategory.States.Add(new()
-                {
-                    Name = "Disabled",
-                    Variables = new()
-                    {
-                        new ()
-                        {
-                            Name = "TextInstance.Color",
-                            Value = new Microsoft.Xna.Framework.Color(128,128,128),
-                        },
-                        new ()
-                        {
-                            Name = "Background.Color",
-                            Value = new Microsoft.Xna.Framework.Color(70,70,70),
-                        }
-                    }
-                });
 
-                textboxCategory.States.Add(new()
-                {
-                    Name = "Highlighted",
-                    Variables = new()
-                    {
-                        new ()
-                        {
-                            Name = "TextInstance.Color",
-                            Value = new Microsoft.Xna.Framework.Color(255,255,255),
-                        },
-                        new ()
-                        {
-                            Name = "Background.Color",
-                            Value = new Microsoft.Xna.Framework.Color(130,130,130),
-                        }
-                    }
-                });
+                StateSave currentState;
 
-                textboxCategory.States.Add(new()
+                void AddState(string name)
                 {
-                    Name = "Selected",
-                    Variables = new()
+                    var state = new StateSave();
+                    state.Name = name;
+                    textboxCategory.States.Add(state);
+                    currentState = state;
+                }
+
+                void AddVariable(string name, object value)
+                {
+                    currentState.Variables.Add(new VariableSave
                     {
-                        new ()
-                        {
-                            Name = "TextInstance.Color",
-                            Value = new Microsoft.Xna.Framework.Color(255,255,255),
-                        },
-                        new ()
-                        {
-                            Name = "Background.Color",
-                            Value = new Microsoft.Xna.Framework.Color(130,130,130),
-                        }
-                    }
-                });
+                        Name = name,
+                        Value = value
+                    });
+                }
+
+                AddState(FrameworkElement.EnabledState);
+                AddVariable("TextInstance.Color", new Microsoft.Xna.Framework.Color(255, 255, 255));
+                AddVariable("Background.Color", new Microsoft.Xna.Framework.Color(70, 70, 70));
+
+                AddState(FrameworkElement.DisabledState);
+                AddVariable("TextInstance.Color", new Microsoft.Xna.Framework.Color(128, 128, 128));
+                AddVariable("Background.Color", new Microsoft.Xna.Framework.Color(70, 70, 70));
+
+                AddState(FrameworkElement.HighlightedState);
+                AddVariable("TextInstance.Color", new Microsoft.Xna.Framework.Color(255, 255, 255));
+                AddVariable("Background.Color", new Microsoft.Xna.Framework.Color(130, 130, 130));
+
+                // todo - this is using the wrong state name. It should be Focused,
+                // but the TextBoxBase expects Selected. This will change in future 
+                // versions of Gum...
+                AddState("Selected");
+                AddVariable("TextInstance.Color", new Microsoft.Xna.Framework.Color(255, 255, 255));
+                AddVariable("Background.Color", new Microsoft.Xna.Framework.Color(130, 130, 130));
 
 
                 var lineModeCategory = new Gum.DataTypes.Variables.StateSaveCategory();

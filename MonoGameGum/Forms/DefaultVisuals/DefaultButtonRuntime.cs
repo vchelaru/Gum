@@ -1,4 +1,5 @@
-﻿using Gum.Wireframe;
+﻿using Gum.DataTypes.Variables;
+using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using MonoGameGum.Forms.Controls;
 using MonoGameGum.GueDeriving;
@@ -71,134 +72,55 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
                 var buttonCategory = new Gum.DataTypes.Variables.StateSaveCategory();
                 buttonCategory.Name = "ButtonCategory";
-
-                buttonCategory.States.Add(new ()
-                {
-                    Name = FrameworkElement.EnabledState,
-                    Variables = new ()
-                    {
-                        new ()
-                        {
-                            Name = "ButtonBackground.Color",
-                            Value = EnabledbuttonColor,
-                        },
-                        new ()
-                        {
-                            Name = "FocusedIndicator.Visible",
-                            Value = false,
-                        },
-                    }
-                });
-
-                buttonCategory.States.Add(new()
-                {
-                    Name = FrameworkElement.FocusedState,
-                    Variables = new()
-                    {
-                        new ()
-                        {
-                            Name = "ButtonBackground.Color",
-                            Value = EnabledbuttonColor,
-                        },
-                        new ()
-                        {
-                            Name = "FocusedIndicator.Visible",
-                            Value = true,
-                        },
-                    }
-                });
-
-                buttonCategory.States.Add(new ()
-                {
-                    Name = FrameworkElement.HighlightedState,
-                    Variables = new ()
-                    {
-                        new ()
-                        {
-                            Name = "ButtonBackground.Color",
-                            Value = HighlightedButtonColor,
-                        },
-                        new ()
-                        {
-                            Name = "FocusedIndicator.Visible",
-                            Value = false,
-                        },
-                    }
-                });
-
-                buttonCategory.States.Add(new()
-                {
-                    Name = FrameworkElement.HighlightedFocusedState,
-                    Variables = new()
-                    {
-                        new ()
-                        {
-                            Name = "ButtonBackground.Color",
-                            Value = HighlightedButtonColor,
-                        },
-                        new ()
-                        {
-                            Name = "FocusedIndicator.Visible",
-                            Value = true,
-                        },
-                    }
-                });
-
-                buttonCategory.States.Add(new ()
-                {
-                    Name = FrameworkElement.PushedState,
-                    Variables = new ()
-                    {
-                        new ()
-                        {
-                            Name = "ButtonBackground.Color",
-                            Value = PushedButtonColor,
-                        },
-                        new ()
-                        {
-                            Name = "FocusedIndicator.Visible",
-                            Value = false,
-                        },
-                    }
-                });
-
-                buttonCategory.States.Add(new ()
-                {
-                    Name = FrameworkElement.DisabledState,
-                    Variables = new ()
-                    {
-                        new ()
-                        {
-                            Name = "ButtonBackground.Color",
-                            Value = DisabledButtonColor,
-                        },
-                        new ()
-                        {
-                            Name = "FocusedIndicator.Visible",
-                            Value = false,
-                        },
-                    }
-                });
-
-                buttonCategory.States.Add(new()
-                {
-                    Name = FrameworkElement.DisabledFocusedState,
-                    Variables = new()
-                    {
-                        new ()
-                        {
-                            Name = "ButtonBackground.Color",
-                            Value = DisabledButtonColor,
-                        },
-                        new ()
-                        {
-                            Name = "FocusedIndicator.Visible",
-                            Value = true,
-                        },
-                    }
-                });
-
                 this.AddCategory(buttonCategory);
+
+                StateSave currentState;
+
+                void AddState(string name)
+                {
+                    var state = new StateSave();
+                    state.Name = name;
+                    buttonCategory.States.Add(state);
+                    currentState = state;
+                }
+
+                void AddVariable(string name, object value)
+                {
+                    currentState.Variables.Add(new VariableSave
+                    {
+                        Name = name,
+                        Value = value
+                    });
+                }
+
+                AddState(FrameworkElement.EnabledState);
+                AddVariable("ButtonBackground.Color", EnabledbuttonColor);
+                AddVariable("FocusedIndicator.Visible", false);
+
+                AddState(FrameworkElement.FocusedState);
+                AddVariable("ButtonBackground.Color", EnabledbuttonColor);
+                AddVariable("FocusedIndicator.Visible", true);
+
+                AddState(FrameworkElement.HighlightedState);
+                AddVariable("ButtonBackground.Color", HighlightedButtonColor);
+                AddVariable("FocusedIndicator.Visible", false);
+
+                AddState(FrameworkElement.HighlightedFocusedState);
+                AddVariable("ButtonBackground.Color", HighlightedButtonColor);
+                AddVariable("FocusedIndicator.Visible", true);
+
+                AddState(FrameworkElement.PushedState);
+                AddVariable("ButtonBackground.Color", PushedButtonColor);
+                AddVariable("FocusedIndicator.Visible", false);
+
+                AddState(FrameworkElement.DisabledState);
+                AddVariable("ButtonBackground.Color", DisabledButtonColor);
+                AddVariable("FocusedIndicator.Visible", false);
+
+                AddState(FrameworkElement.DisabledFocusedState);
+                AddVariable("ButtonBackground.Color", DisabledButtonColor);
+                AddVariable("FocusedIndicator.Visible", true);
+
             }
 
             if(tryCreateFormsObject)

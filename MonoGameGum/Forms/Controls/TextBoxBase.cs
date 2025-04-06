@@ -937,6 +937,10 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
         }
         else if (IsFocused)
         {
+            // todo - need to unify this by using
+            // Focused instead of Selected. Will need
+            // to do a gradual migration by checking which
+            // state exists and setting the proper state...
             Visual.SetProperty(CategoryName, "Selected");
         }
         else if (cursor.LastInputDevice != InputDevice.TouchScreen && Visual.EffectiveManagers != null && Visual.HasCursorOver(cursor))
