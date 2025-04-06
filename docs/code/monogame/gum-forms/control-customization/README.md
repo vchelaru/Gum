@@ -16,7 +16,7 @@ The following code shows how to modify a Button instance.  A default button can 
 
 ```csharp
 var customizedButton = new Button();
-this.Root.Children.Add(customizedButton.Visual);
+customizedButton.AddToRoot();
 ```
 
 Notice that this button has subtle color changes when the cursor hovers over or pushes on it.
@@ -26,7 +26,7 @@ Notice that this button has subtle color changes when the cursor hovers over or 
 These cursor actions result in different states being applied to the button. These states are initialized by default when calling the following code:
 
 ```csharp
-FormsUtilities.InitializeDefaults();
+Gum.Initialize(this);
 ```
 
 We can customize the state by modifying the values. For example, we can change the color of the background by adding the following code:
@@ -36,7 +36,8 @@ We can customize the state by modifying the values. For example, we can change t
 var category = customizedButton.Visual.Categories["ButtonCategory"];
 
 // Highlighted state is applied when the button is hovered over
-var highlightedState = category.States.Find(item => item.Name == "Highlighted");
+var highlightedState = category.States.Find(item => 
+    item.Name == FrameworkElement.HighlightedState);
 // remove all old styling:
 highlightedState.Variables.Clear();
 // Add the new color:
@@ -93,7 +94,8 @@ The reason that the hover state is not unset is because all variables which are 
 In this case we can fix the larger text by setting the TextInstance's color and FontScale back to its default:
 
 ```csharp
-var enabledState = category.States.Find(item => item.Name == "Enabled");
+var enabledState = category.States.Find(item => 
+    item.Name == FrameworkElement.EnabledState);
 enabledState.Variables.Clear();
 enabledState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
 {
@@ -110,7 +112,7 @@ enabledState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
 enabledState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
 {
     Name = "TextInstance.FontScale",
-    // FontScale expects a float value, so use 2.0f instead of 2
+    // FontScale expects a float value, so use 1.0f instead of 1
     Value = 1.0f
 });
 
@@ -188,7 +190,8 @@ if(fullInstantiation)
 {
     var category = this.Categories["ButtonCategory"];
 
-    var highlightedState = category.States.Find(item => item.Name == "Highlighted");
+    var highlightedState = category.States.Find(item => 
+        item.Name == FrameworkElement.HighlightedState);
     highlightedState.Variables.Clear();
     highlightedState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
     {
@@ -196,7 +199,8 @@ if(fullInstantiation)
         Value = new Microsoft.Xna.Framework.Color(255,0,191)
     });
 
-    var enabledState = category.States.Find(item => item.Name == "Enabled");
+    var enabledState = category.States.Find(item => 
+        item.Name == FrameworkElement.EnabledState);
     enabledState.Variables.Clear();
     enabledState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
     {
@@ -208,14 +212,12 @@ if(fullInstantiation)
 }
 ```
 
-Next we need to tell Gum Forms to use our new button as the default Button type. We can do this by replacing the default type associated with `Button` as shown in the following code. This code should go in Game1 right after `FormsUtilities.InitializeDefaults();`, before instantiating any Buttons as shown in the following code:
+Next we need to tell Gum Forms to use our new button as the default Button type. We can do this by replacing the default type associated with `Button` as shown in the following code. This code should go in Game1 right after `Gum.Initialize(this);`, before instantiating any Buttons as shown in the following code:
 
 ```csharp
 protected override void Initialize()
 {
-    SystemManagers.Default = new SystemManagers(); 
-    SystemManagers.Default.Initialize(_graphics.GraphicsDevice, fullInstantiation: true);
-    FormsUtilities.InitializeDefaults();
+    Gum.Initialize(this);
 
     FrameworkElement.DefaultFormsComponents[typeof(Button)] = 
         typeof(StyledButtonRuntime);
@@ -228,7 +230,7 @@ By instantiating a `Button`, Forms automatically uses your new `StyledButtonRunt
 
 ```csharp
 var customizedButton = new Button();
-this.Root.Children.Add(customizedButton.Visual);
+customizedButton.AddToRoot();
 ```
 
 <figure><img src="../../../../.gitbook/assets/27_06 45 57.gif" alt=""><figcaption><p>Pink button using styling defined in StyledButtonRuntime</p></figcaption></figure>
@@ -302,7 +304,7 @@ namespace GumFormsSample
                 buttonCategory.Name = "ButtonCategory";
                 buttonCategory.States.Add(new()
                 {
-                    Name = "Enabled",
+                    Name = FrameworkElement.EnabledState,
                     Variables = new()
                     {
                         new ()
@@ -315,7 +317,7 @@ namespace GumFormsSample
 
                 buttonCategory.States.Add(new()
                 {
-                    Name = "Highlighted",
+                    Name = FrameworkElement.HighlightedState,
                     Variables = new()
                     {
                         new ()
@@ -328,7 +330,7 @@ namespace GumFormsSample
 
                 buttonCategory.States.Add(new()
                 {
-                    Name = "Pushed",
+                    Name = FrameworkElement.PushedState,
                     Variables = new()
                     {
                         new ()
@@ -387,6 +389,12 @@ CheckBoxes append the words On, Off, and Indeterminate to the states. For exampl
 * DisabledOff
 * DisabledIndetermate
 * ... and so on.
+
+These states can be accessed through the FrameworkElement const strings, such as:
+
+```csharp
+var highlightedState = FrameworkElement.HighlightedState;
+```
 
 ### Defining a Custom Runtime from Gum
 
