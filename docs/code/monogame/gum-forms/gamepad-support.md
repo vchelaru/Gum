@@ -16,7 +16,7 @@ For example, the following code enables gamepad control for a game assuming MyBu
 
 ```csharp
 // The first gamepad:
-var gamepad = FormsUtilities.Gamepads[0];
+var gamepad = Gum.Gamepads[0];
 // If this code is run multiple times then the gamepad
 // may get added multiple times as well. To be safe, clear
 // the list:
@@ -31,13 +31,13 @@ By default a gamepad's A button can be used to select the focused control. If th
 
 ```csharp
 FrameworkElement.GamePadsForUiControl.AddRange(
-    FormsUtilities.Gamepads);
+    Gum.Gamepads);
 
-TopButton.FormsControl.IsFocused = true;
-TopButton.FormsControl.Click += (_, _) =>
+TopButton.IsFocused = true;
+TopButton.Click += (_, _) =>
     TextInstance.Text = $"Top button clicked at {DateTime.Now}";
 
-BottomButton.FormsControl.Click += (_, _) =>
+BottomButton.Click += (_, _) =>
     TextInstance.Text = $"Bottom button clicked at {DateTime.Now}";
 ```
 
@@ -48,7 +48,7 @@ Pressing the A button raises the focused button's Click event.
 Handling buttons specifically can be handled by subscribing to ControllerButtonPushed.
 
 ```csharp
-TopButton.FormsControl.ControllerButtonPushed += (button) =>
+TopButton.ControllerButtonPushed += (button) =>
     TextInstance.Text = $"Top button button pushed: {button} @ {DateTime.Now}";
 ```
 
