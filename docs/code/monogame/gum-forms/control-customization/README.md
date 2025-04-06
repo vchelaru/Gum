@@ -26,7 +26,7 @@ Notice that this button has subtle color changes when the cursor hovers over or 
 These cursor actions result in different states being applied to the button. These states are initialized by default when calling the following code:
 
 ```csharp
-FormsUtilities.InitializeDefaults();
+Gum.Initialize(this);
 ```
 
 We can customize the state by modifying the values. For example, we can change the color of the background by adding the following code:
@@ -110,7 +110,7 @@ enabledState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
 enabledState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
 {
     Name = "TextInstance.FontScale",
-    // FontScale expects a float value, so use 2.0f instead of 2
+    // FontScale expects a float value, so use 1.0f instead of 1
     Value = 1.0f
 });
 
