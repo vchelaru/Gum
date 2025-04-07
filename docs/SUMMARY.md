@@ -137,6 +137,7 @@
 
 * [Gum Code Reference](code/gum-code-reference/README.md)
   * [Camera](code/gum-code-reference/camera.md)
+  * [CircleRuntime](code/gum-code-reference/circleruntime.md)
   * [ColoredRectangleRuntime](code/gum-code-reference/coloredrectangleruntime.md)
   * [Component Runtimes](code/gum-code-reference/component-runtimes.md)
   * [ContainerRuntime](code/gum-code-reference/containerruntime.md)
