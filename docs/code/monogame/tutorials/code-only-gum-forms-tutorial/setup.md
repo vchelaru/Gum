@@ -72,7 +72,7 @@ The code above includes the following sections:
 StackPanel mainPanel;
 ```
 
-* Initialize - The Initialize method prepares Gum for use. It must be called one time for every Gum project. Once Gum is initialized, we can create controls such as the StackPanel.  By calling AddToRoot, the maniPanel will be drawn and will receive input. All items added to the StackPanel will also be drawn and receive input, so we only need to call AddToRoot to the StackPanel.
+* Initialize - The Initialize method prepares Gum for use. It must be called one time for every Gum project. Once Gum is initialized, we can create controls such as the StackPanel.  By calling AddToRoot, the mainPanel will be drawn and will receive input. All items added to the StackPanel will also be drawn and receive input, so we only need to call AddToRoot to the StackPanel.
 
 ```csharp
 Gum.Initialize(this);
@@ -99,7 +99,7 @@ We can run our project to see a blank (cornflower blue) screen.
 
 ### Adding Controls
 
-Now that we have Gum running, we can add controls to our StackPanel (Root). The following code in Initialize adds a button which responds to being clicked by modifying its Text property:
+Now that we have Gum running, we can add controls to our StackPanel (mainPanel). The following code in Initialize adds a button which responds to being clicked by modifying its Text property:
 
 ```csharp
 protected override void Initialize()
