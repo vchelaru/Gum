@@ -32,7 +32,7 @@ All controls share a few common properties and characteristics. The following li
 
 For the rest of this tutorial we'll add a few of the most common controls to our project and show how to work with them. Note that for this tutorial I've removed the Button control from the previous tutorial.
 
-We also assume that your project has a `mainStackPanel` to hold all controls.
+We also assume that your project has a `mainPanel` to hold all controls.
 
 ## Forms Control vs Visual
 
