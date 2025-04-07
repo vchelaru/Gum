@@ -1,18 +1,104 @@
 # Control Customization In Code
 
-### Introduction
+## Introduction
 
 Gum Forms provide fully functional controls with minimal setup. These controls can be restyled in code, either per-instance, or globally per control type. Customization can be performed in-code or in the Gum tool.
 
-### Customizing an Instance
+## States vs Direct Property Assignments
+
+To customize a component, either the instances can be modified directly, such as directly changing a Text's color), or a variable can be modified through a state, such as changing a background color when the button is highlighted.
+
+Whether you use a direct property assignment or whether you use a state depends on whether the variable should always be applied or whether it should only be applied depending on the actions the user has taken and other UI related properties like enabled/disabled.
+
+This document covers both approaches.
+
+{% hint style="info" %}
+Note that all code in this document assumes that Gum Forms has already been initialized. For more information on setting up a code-only Gum Forms project, see&#x20;
+{% endhint %}
+
+## Directly Setting an Instance's Values
+
+Values can be directly assigned on items within an instance. If the variable being assigned does not change in response to user interaction or in response to the control being disabled, the variable can be directly assigned instead of using states.
+
+For example we can adjust the font color on a Button directly.
+
+The following code shows how to modify the text color on a Button.
+
+```csharp
+var customizedButton = new Button();
+customizedButton.AddToRoot();
+var text = customizedButton.Visual
+    .GetGraphicalUiElementByName("TextInstance") as TextRuntime;
+text.Color = Color.Purple;
+```
+
+<figure><img src="../../../../.gitbook/assets/07_05 34 17.gif" alt=""><figcaption><p>A button with purple text</p></figcaption></figure>
+
+We can see the type of objects in a control by inspecting the `Visual.Children` collection in a debugger, or by printing out the children to text output. For example, we can see that a default Button has the following items:
+
+* ButtonBackground of type ColoredRectangleRuntime
+* TextInstance of type TextRuntime
+* FocusedIndicator of type RectangleRuntime
+
+<figure><img src="../../../../.gitbook/assets/07_05 37 33.png" alt=""><figcaption><p>Button children</p></figcaption></figure>
+
+Components are ultimately made out of the following base runtimes:
+
+* [CircleRuntime](../../../gum-code-reference/circleruntime.md)
+* [ColoredRectangleRuntime](../../../gum-code-reference/coloredrectangleruntime.md)
+* [ContainerRuntime](../../../gum-code-reference/containerruntime.md)
+* [NineSliceRuntime](../../../gum-code-reference/ninesliceruntime.md)
+* [RectangleRuntime](../../../gum-code-reference/rectangleruntime.md)
+* [SpriteRuntime](../../../gum-code-reference/spriteruntime/)
+* [TextRuntime](../../../gum-code-reference/textruntime/)
+
+For information on working with the individual components, click the links in the list above.
+
+## Identifying State vs Direct Assignment Variables
+
+Some variables are assigned in states on default controls. We can identify which variables are assigned in states by inspecting the category for the control type. We can add the control's `Visual.Categories` property to the debugger or output its information to text output to see this information. For example, a default Button has the following category:
+
+* ButtonCategory
+  * Enabled
+  * Focused
+  * Highlighted
+  * HighlightedFocused
+  * Pushed
+  * Disabled
+  * DisabledFocused
+
+<figure><img src="../../../../.gitbook/assets/07_05 49 37.png" alt=""><figcaption><p>Default states in ButtonCategory</p></figcaption></figure>
+
+These states modify some of the existing variables which are listed if we expand the states in the watch window. For example, if we expand Enabled, we see that the state modifies:
+
+* ButtonBackground.Color
+* FocusedIndicator.Visible
+
+<figure><img src="../../../../.gitbook/assets/07_05 51 44.png" alt=""><figcaption><p>Variables modified by the Enabled state</p></figcaption></figure>
+
+Since these variables are modified by our button's states, that means these variables are changed in response to button interactions.
+
+Keep in mind that these variables are assigned only when a button is interacted with. Therefore, if we explicitly change the ButtonBackground's color when we initialize the button, this color **will apply until we hover or click on the button,** at which point our changes are overwritten by the application of the button's states.
+
+We can see this by assigning the button background. The change shows initially but then the button reverts to the values assigned in its states when the mouse moves over the button:
+
+```csharp
+var customizedButton = new Button();
+customizedButton.AddToRoot();
+var background = customizedButton.Visual
+    .GetGraphicalUiElementByName("ButtonBackground") as ColoredRectangleRuntime;
+background.Color = Color.Orange;
+```
+
+<figure><img src="../../../../.gitbook/assets/07_06 00 50.gif" alt=""><figcaption><p>Button is initially orange, but then changes back to default colors when highlighted</p></figcaption></figure>
+
+To apply changes to variables which are modified by state, we must do so through the state, as shown in the next section.
+
+## Customizing an Instance's States
 
 Individual instances can be customized by modifying the built-in states which are added automatically by the default implementations.
 
-{% hint style="info" %}
-Note that all code in this document assumes that Gum Forms has already been initialized.
-{% endhint %}
-
-The following code shows how to modify a Button instance.  A default button can be constructed using the following code:
+First we'll begin with a default button as shown in the following code block:
 
 ```csharp
 var customizedButton = new Button();
@@ -22,12 +108,6 @@ customizedButton.AddToRoot();
 Notice that this button has subtle color changes when the cursor hovers over or pushes on it.
 
 <figure><img src="../../../../.gitbook/assets/26_07 28 29.gif" alt=""><figcaption><p>Button responding to hover and push events</p></figcaption></figure>
-
-These cursor actions result in different states being applied to the button. These states are initialized by default when calling the following code:
-
-```csharp
-Gum.Initialize(this);
-```
 
 We can customize the state by modifying the values. For example, we can change the color of the background by adding the following code:
 
@@ -121,7 +201,7 @@ customizedButton.UpdateState();
 
 <figure><img src="../../../../.gitbook/assets/26_07 50 10.gif" alt=""><figcaption><p>Enabled state resetting text color and size</p></figcaption></figure>
 
-### Available Instances
+## Available Instances
 
 Each default control type is made up of individual instances, most of which are standard types such as ColoredRectangle and TextInstance. The example above assigns properties on two instances:
 
@@ -154,7 +234,7 @@ By inspecting the code of other controls we can see which instances are availabl
 
 Keep in mind that the Name property of the internal instances is important. For example using the code above, the background object is accessed through "ButtonBackground" rather than "background" when creating new states.
 
-### Replacing Styling Globally with Derived Classes
+## Replacing Styling Globally with Derived Classes
 
 The example above shows how to replace styling on a single Button instance. Instead of changing each instance manually, we can create a derived class which defines its own custom styling.
 
@@ -235,7 +315,7 @@ customizedButton.AddToRoot();
 
 <figure><img src="../../../../.gitbook/assets/27_06 45 57.gif" alt=""><figcaption><p>Pink button using styling defined in StyledButtonRuntime</p></figcaption></figure>
 
-### Defining a ButtonRuntime Without Inheritance
+## Defining a ButtonRuntime Without Inheritance
 
 The section above shows how to customize a button using inheritance. This approach is beneificial if you would like to modify the styling colors on the existing children of the button. Since Gum visuals are regular Gum objects, you can achieve even more customization by creating a new Button class which inherits from InteractiveGue and adding your own controls. In other words, you can add your own instances to the button (such as additional Text instances) or replace existing instances with your own (such as replacing the background ColoredRectangleRuntime with a NineSlice or Sprite).
 
@@ -368,7 +448,7 @@ Now we can run our game and see the button in action:
 
 As mentioned above, you are free to add any controls to your custom button including icons, additional Text instances, and additional Sprites for other effects. You can customize your Forms objects to look however you want.
 
-### Available States
+## Available States
 
 Most controls in Forms share the same common states. The exception is components which can be toggled on/off such as CheckBox. For all other controls the following states exist:
 
@@ -396,7 +476,7 @@ These states can be accessed through the FrameworkElement const strings, such as
 var highlightedState = FrameworkElement.HighlightedState;
 ```
 
-### Defining a Custom Runtime from Gum
+## Defining a Custom Runtime from Gum
 
 Buttons can be defined fully in the Gum tool. This approach allows you to preview your visuals in the editor, and allows editing of the styles without writing any code.
 
@@ -449,7 +529,7 @@ Note that in this case, we can only associate one type of component runtime with
 
 Of course, you are not required to create buttons this way - you can also create buttons by adding instances of your component in your Gum screen in the tool, or by instantiating the desired runtime.
 
-### Modifying ListBoxItems
+## Modifying ListBoxItems
 
 ListBoxItems are typically created automatically when items are added to a ListBox instance. We can modify ListBoxItems by creating a runtime object for our ListBoxItem then assigning the ListBox's VisualTemplate.
 
