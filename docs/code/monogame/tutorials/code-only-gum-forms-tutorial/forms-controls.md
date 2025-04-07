@@ -25,7 +25,7 @@ Forms naming is based on naming from WPF. If you are familiar with WPF or simila
 
 All controls share a few common properties and characteristics. The following list provides a high-level introduction to forms control similarities. If the list doesn't make sense don't worry, we'll cover each topic in this and following tutorials.
 
-* All can controls can be added to a StackPanel. Technically, any control can be added to any other control, but for this tutorial we'll keep things simple by adding only to a StackPanel.
+* All controls can be added to a StackPanel. Technically, any control can be added to any other control, but for this tutorial we'll keep things simple by adding only to a StackPanel.
 * All controls have a Visual property which can be used to position, size, and perform advance layout behavior. This Visual property is ultimately a GraphicalUiElement which provides access to all Gum layout properties.
 * All controls can receive input from the mouse (usually through the Gum Cursor object). Most controls can also receive focus and input from gamepads.
 * All controls support binding by assigning their BindingContext property. Children controls inherit BindingContext from their parents if the BindingContext is not explicitly assigned.
