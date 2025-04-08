@@ -220,11 +220,26 @@ namespace Gum.PropertyGridHelpers
                         subtext += "Exposed as " + exposedVariables[defaultVariable.Name];
                     }
                 }
-                var property = GetPropertyDescriptor(elementSave, instanceSave, amountToDisplay, defaultVariable, isReadonly, subtext, pdc);
-                if(property != null)
+
+                var shouldSkip = false;
+
+                if(currentState != elementSave.DefaultState &&
+                    defaultVariable.IsState(elementSave, out ElementSave categoryContainer, out StateSaveCategory category))
                 {
-                    property.IsAssignedByReference = isSetByReference;
-                    pdc.Add(property);
+                    if(category?.States.Contains(currentState) == true)
+                    {
+                        shouldSkip = true;
+                    }
+                }
+
+                if(!shouldSkip)
+                {
+                    var property = GetPropertyDescriptor(elementSave, instanceSave, amountToDisplay, defaultVariable, isReadonly, subtext, pdc);
+                    if(property != null)
+                    {
+                        property.IsAssignedByReference = isSetByReference;
+                        pdc.Add(property);
+                    }
                 }
             }
 
