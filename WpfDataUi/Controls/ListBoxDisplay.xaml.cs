@@ -155,10 +155,20 @@ namespace WpfDataUi.Controls
                 newList.AddRange(valueAsList);
                 ListBox.ItemsSource = newList;
             }
+            else if(InstanceMember?.PropertyType == typeof(List<string>))
+            {
+                var newList = new List<string>();
+                ListBox.ItemsSource = newList;
+            }
             else if(value is List<int> valueAsIntList)
             {
                 var newList = new List<int>();
                 newList.AddRange(valueAsIntList);
+                ListBox.ItemsSource = newList;
+            }
+            else if(InstanceMember?.PropertyType == typeof(List<int>))
+            {
+                var newList = new List<int>();
                 ListBox.ItemsSource = newList;
             }
             else if(value is List<float> valueAsFloatList)
@@ -167,13 +177,23 @@ namespace WpfDataUi.Controls
                 newList.AddRange(valueAsFloatList);
                 ListBox.ItemsSource = newList;
             }
+            else if (InstanceMember?.PropertyType == typeof(List<float>))
+            {
+                var newList = new List<float>();
+                ListBox.ItemsSource = newList;
+            }
             else if(value is List<Vector2> valueAsVectorList)
             {
                 var newList = new List<Vector2>();
                 newList.AddRange(valueAsVectorList);
                 ListBox.ItemsSource = newList;
             }
-            else
+            else if (InstanceMember?.PropertyType == typeof(List<Vector2>))
+            {
+                var newList = new List<Vector2>();
+                ListBox.ItemsSource = newList;
+            }
+            else if(value is not null)
             {
                 var newList = Activator.CreateInstance(value.GetType()) as IList;
 
@@ -182,6 +202,21 @@ namespace WpfDataUi.Controls
                     newList.Add(item);
                 }
                 ListBox.ItemsSource = newList;
+            }
+            else
+            {
+                // what do we do here?
+                if(InstanceMember?.PropertyType != null)
+                {
+                    var newList = Activator.CreateInstance(InstanceMember.PropertyType) as IList;
+                    ListBox.ItemsSource = newList;
+                }
+                else
+                {
+                    throw new InvalidOperationException(
+                        "Could not set UI value on ListBoxDisplay in TrySetValueOnUi because the value is null and the InstanceMember does not specify a property type");
+                }
+
             }
             return ApplyValueResult.Success;
         }
