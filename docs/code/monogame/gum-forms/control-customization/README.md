@@ -201,38 +201,79 @@ customizedButton.UpdateState();
 
 <figure><img src="../../../../.gitbook/assets/26_07 50 10.gif" alt=""><figcaption><p>Enabled state resetting text color and size</p></figcaption></figure>
 
-## Available Instances
+## Removing and Replacing Instances
 
-Each default control type is made up of individual instances, most of which are standard types such as ColoredRectangle and TextInstance. The example above assigns properties on two instances:
+As mentioned above, all Forms components are made of individual objects which are referenced through the `Visual.Children` property. For example, a default Button includes the following children:
 
-* ButtonBackground
-* TextInstance
+* ButtonBackground of type ColoredRectangleRuntime
+* TextInstance of type TextRuntime
+* FocusedIndicator of type RectangleRuntime
 
-Since each control (such as Button, CheckBox, or TextBox) has its own individual instances, we need to know the names and types of these instances to add VariableSaves to our states.
+Forms components have almost no requirements for their children unless the children are critical for the function of the component. For example, a Button can function without any of its children since the Button itself is a container which has size and which can be clicked. Therefore, we are free to remove elements from the button to achieve more flexibility in our styling.
 
-We can find the names of these instances by looking at the source code for the default forms implementations.
-
-These can be found in the Gum repository here:
-
-{% embed url="https://github.com/vchelaru/Gum/tree/master/MonoGameGum/Forms/DefaultVisuals" %}
-Forms DefaultVisuals Folder
-{% endembed %}
-
-For example, we can look at the DefaultButtonRuntime.cs file and notice that it has a ButtonBackground and TextInstance:
+For example, we can remove the background from a Button so it only displays its Text instance. Notice that it is still fully functional as shown by the click handler.
 
 ```csharp
-var background = new ColoredRectangleRuntime();
-// ...
-background.Name = "ButtonBackground";
+var label = new Label();
+label.AddToRoot();
 
-TextInstance = new TextRuntime();
-// ...
-TextInstance.Name = "TextInstance";
+var button = new Button();
+var background = button.Visual.GetGraphicalUiElementByName("ButtonBackground");
+button.Visual.Children.Remove(background);
+button.AddToRoot();
+button.Y = 20;
+button.Click += (_, _) =>
+{
+    label.Text = "Clicked at " + DateTime.Now;
+};
 ```
 
-By inspecting the code of other controls we can see which instances are available for styling. We can also look at the existing states which are provided by the default implementations. For example the DefaultButtonRuntime adds states for Enabled, Highlighted, Pushed, and Disabled. Note that this list may change in the future as Gum Forms continues to be developed.
+<figure><img src="../../../../.gitbook/assets/09_06 21 11.gif" alt=""><figcaption><p>Button with no background</p></figcaption></figure>
 
-Keep in mind that the Name property of the internal instances is important. For example using the code above, the background object is accessed through "ButtonBackground" rather than "background" when creating new states.
+In this case the Button still has its default states which are attempting to set the ButtonBackground's color in response to hover and click. If a state references a missing instance then the component ignores the state value.
+
+We are also free to add additional objects to any component by modifying its Visual. For example, we could use a NineSliceRuntime, SpriteRuntime, or even a regular RectangleRuntime for the button's background.
+
+The following code shows how to replace the background with a RectangleRuntime so that the button has an outline instead of a filled background.
+
+```csharp
+using Gum.DataTypes;
+
+var label = new Label();
+label.AddToRoot();
+
+var button = new Button();
+var background = button.Visual.GetGraphicalUiElementByName("ButtonBackground");
+button.Visual.Children.Remove(background);
+
+// replace the background with a RectangleRuntime
+var rectangle = new RectangleRuntime();
+rectangle.WidthUnits = DimensionUnitType.RelativeToParent;
+rectangle.Width = 0;
+rectangle.HeightUnits = DimensionUnitType.RelativeToParent;
+rectangle.Height = 0;
+// By using the same name, we can take advantage of the existing 
+// states. 
+rectangle.Name = "ButtonBackground";
+button.Visual.Children.Insert(0, rectangle);
+
+// do this so it immediately updates the new background
+// to the proper color
+button.UpdateState();
+
+button.AddToRoot();
+button.Y = 20;
+button.Click += (_, _) =>
+{
+    label.Text = "Clicked at " + DateTime.Now;
+};
+```
+
+<figure><img src="../../../../.gitbook/assets/09_06 31 37.gif" alt=""><figcaption><p>Button with a RectangleRuntime</p></figcaption></figure>
+
+In this example we are creating a RectangleRuntime as a replacement for the existing background, but keep in mind Gum controls can contain any children. You are free to add and remove controls to style your component as needed.
+
+
 
 ## Replacing Styling Globally with Derived Classes
 
