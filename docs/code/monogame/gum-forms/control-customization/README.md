@@ -273,6 +273,50 @@ button.Click += (_, _) =>
 
 In this example we are creating a RectangleRuntime as a replacement for the existing background, but keep in mind Gum controls can contain any children. You are free to add and remove controls to style your component as needed.
 
+### Required Children
+
+Some Forms components require having children of a certain type to function properly. For example, a TextBox must have a TextInstance child to be able to display its text. These children should not be removed from the the control's Visual.Children so that the control can remain functional. The following lists the children which should not be removed:
+
+* Button
+  * TextInstance of type TextRuntime - optional, but needed if the Text property is used
+* CheckBox
+  * TextInstance of type TextRuntime - optional, but needed if the Text property is used
+* ComboBox
+  * ListBoxInstance of type InteractiveGue with a Forms control of ListBox
+  * TextInstance of type TextRuntime
+* Label
+  * TextInstance of type TextRuntime
+* ListBox
+  * InnerPanel of type InteractiveGue
+* ListBoxItem
+  * TextInstance of type TextRuntime - optional, is used to display text if it exists
+* MenuItem
+  * TextInstance of type TextRuntime - optional, is used to display text if it exists
+* PasswordBox
+  * TextInstance of type TextRuntime
+  * CaretInstance of type InteractiveGue
+  * SelectionInstance of type InteractiveGue
+  * PlaceholderTextInstance of type TextRuntime - optional, is used to display placeholder text if it exists
+* RadioButton
+  * TextInstance of type TextRuntime - optional, is used to display text if it exists
+* ScrollBar
+  * UpButtonInstance of type InteractiveGue
+  * DownButtonInstance of type InteractiveGue
+  * ThumbInstance of type InteractiveGue
+  * TrackInstance of type InteractiveGue
+* ScrollViewer
+  * VerticalScrollBarInstance of type InteractiveGue
+  * InnerPanelInstance of type InteractiveGue
+  * ClipContainerInstance of type InteractiveGue
+* Slider
+  * ThumbInstance of type InteractiveGue
+  * TrackInstance of type InteractiveGue
+* TextBox
+  * TextInstance of type TextRuntime
+  * CaretInstance of type InteractiveGue
+  * SelectionInstance of type InteractiveGue
+  * PlaceholderTextInstance of type TextRuntime - optional, is used to display placeholder text if it exists
+
 
 
 ## Replacing Styling Globally with Derived Classes
