@@ -225,6 +225,18 @@ background.Color = Color.Orange;
 
 <figure><img src="../../../../.gitbook/assets/09_20 16 07.gif" alt=""><figcaption><p>States removed from the ButtonCategory results in no changes when a Button is Highlighted and Pressed</p></figcaption></figure>
 
+## Accessing Children Instances
+
+Some Forms components contain other Forms components. For example, the ListBox component contains a scroll bar named VerticalScrollBar, which itself contains a button named UpButtonInstance. These children can be obtained by calling GetGraphicalUiElementByName. This method searches for items recursively, so it can be called at the top level object. For example, the following code can be used to obtain a reference to the UpButtonInstance's Visual.
+
+```csharp
+var listBox = new ListBox();
+listBox.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
+var scrollBarVisual = listBox.Visual.GetGraphicalUiElementByName("VerticalScrollBar");
+var upButtonVisual = scrollBarVisual.GetGraphicalUiElementByName("UpButtonInstance");
+// modify upButtonVisual directly, or modify its states
+```
+
 ## Removing and Replacing Instances
 
 As mentioned above, all Forms components are made of individual objects which are referenced through the `Visual.Children` property. For example, a default Button includes the following children:
@@ -311,7 +323,9 @@ Some Forms components require having children of a certain type to function prop
 * Label
   * TextInstance of type TextRuntime
 * ListBox
-  * InnerPanel of type InteractiveGue
+  * VerticalScrollBarInstance of type InteractiveGue
+  * InnerPanelInstance of type InteractiveGue
+  * ClipContainerInstance of type InteractiveGue
 * ListBoxItem
   * TextInstance of type TextRuntime - optional, is used to display text if it exists
 * MenuItem
