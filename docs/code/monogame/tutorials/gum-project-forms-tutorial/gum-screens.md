@@ -11,28 +11,28 @@ To add a new Screen:
 1. Open the project in the Gum tool
 2.  Right-click on the Screens folder and select Add Screen
 
-    <figure><img src="../../../../.gitbook/assets/image (99).png" alt=""><figcaption><p>Add Screen right-click item</p></figcaption></figure>
+    <figure><img src="../../../../.gitbook/assets/10_05 20 15.png" alt=""><figcaption><p>Add Screen right-click item</p></figcaption></figure>
 3.  Name the screen TitleScreen and click OK
 
     <figure><img src="../../../../.gitbook/assets/image (100).png" alt=""><figcaption><p>Enter the new screen name and click OK</p></figcaption></figure>
 
 The newly created TitleScreen is now in the Screens folder.
 
-<figure><img src="../../../../.gitbook/assets/image (101).png" alt=""><figcaption><p>TitleScreen in Gum</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/10_05 21 55.png" alt=""><figcaption><p>TitleScreen in Gum</p></figcaption></figure>
 
 ## Adding Instances
 
-We can add instances to Gum Screen by drag+dropping the files onto the Game screen.
+We can add new instances to Gum Screen by drag+dropping the files onto the Game screen.
 
 Add a ButtonStandard to TitleScreen.
 
-<figure><img src="../../../../.gitbook/assets/29_14 39 25.gif" alt=""><figcaption><p>Drag+drop ButtonStandard onto TitleScreen to create a Text instance</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/10_05 26 49.gif" alt=""><figcaption><p>Drag+drop ButtonStandard onto TitleScreen to create a Text instance</p></figcaption></figure>
 
 Instances can also be created by selecting the TitleScreen, then drag+dropping the item in the editor window.
 
 Add a ButtonStandard instance by dropping Components/Controls/ButtonStandard onto TitleScreen.
 
-<figure><img src="../../../../.gitbook/assets/29_14 41 26.gif" alt=""><figcaption><p>Drag+drop a component onto the Editor tab to add it to TitleScreen</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/10_05 27 50.gif" alt=""><figcaption><p>Drag+drop a component onto the Editor tab to add it to TitleScreen</p></figcaption></figure>
 
 Be sure to select the TitleScreen first, then drag+drop. If you click the component instead, then it will be selected, so you must re-select the TitleScreen.
 
@@ -44,10 +44,19 @@ Code generation reduces the amount of code you have to write to work with Gum. I
 
 To set up code generation for your project:
 
-1. Click on the Code tab
-2. Click the **Auto Setup Code Generation** button. Gum locates your .csproj file and sets up default values.
+1. Select a Screen such as TitleScreen - the Code tab does not appear unless a Screen or Component is selected
+2. Click on the Code tab
+3.  Click the **Auto Setup Code Generation** button\
+
+
+    <figure><img src="../../../../.gitbook/assets/10_05 34 13.png" alt=""><figcaption></figcaption></figure>
+4. Gum locates your .csproj file and sets up default values.
 
 <figure><img src="../../../../.gitbook/assets/29_15 00 30.png" alt=""><figcaption><p>Code tab in Gum</p></figcaption></figure>
+
+{% hint style="warning" %}
+If you do not see the Auto Setup Code Generation button, that means you saved your Gum project in a location that is not relative to your game's .csproj. Be sure to save Gum projects in a subfolder of where your .csproj is located, usually in a folder in side the Content folder.
+{% endhint %}
 
 Once you have set this up, you can click the Generate Code button to generate code for your TitleScreen.&#x20;
 

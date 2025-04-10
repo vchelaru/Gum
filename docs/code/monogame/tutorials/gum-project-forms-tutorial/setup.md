@@ -48,13 +48,13 @@ After your project is saved it should appear in Visual Studio.
 
 <figure><img src="../../../../.gitbook/assets/image (180).png" alt=""><figcaption><p>Gum project in Visual Studio</p></figcaption></figure>
 
-We can add default Forms components to our project. Forms components are premade components for standard UI elements such as Button, TextBox, and ListBox. We'll use these components in later tutorials.
+Next, add default Forms components to the Gum project. Forms components are premade components for standard UI elements such as Button, TextBox, and ListBox. We'll use these components in later tutorials.
 
-To add Gum Forms components in Gum, select Content -> Add Forms Components.
+To add Gum Forms components in Gum, select **Content** -> **Add Forms Components**.
 
 <figure><img src="../../../../.gitbook/assets/image (181).png" alt=""><figcaption><p>Add Forms Components menu item</p></figcaption></figure>
 
-Later tutorials will reference the demo screen, so check the **Include DemoScreenGum** option and click **OK**.
+Later tutorials will reference the demo screen, so check the **Include DemoScreenGum** option and click **OK**. Don't worry, you can delete this screen later as you develop your game.
 
 <figure><img src="../../../../.gitbook/assets/02_06 52 11.png" alt=""><figcaption><p>Include DemoScreenGum</p></figcaption></figure>
 
@@ -98,6 +98,8 @@ First, we'll set up our project so all Gum files are copied when the project is 
 {% hint style="info" %}
 At the time of this writing, Gum does not use the MonoGame Content Builder to build XNBs for any of its files. This means that referenced image files (.png) will also be copied to the output folder.
 
+As you build your Gum project it's best to keep all referenced PNGs inside your Gum folder to keep it portable.
+
 Future versions may be expanded to support using either the .XNB file format or _raw_ PNGs.
 {% endhint %}
 
@@ -136,8 +138,7 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-        var gumProject = Gum.Initialize(
-            this,
+        var gumProject = Gum.Initialize(this,
             // This is relative to Content:
             "GumProject/GumProject.gumx");
 
@@ -164,8 +165,7 @@ The code above has the following three calls on Gum:
 * Initialize - this loads the argument Gum project and sets appropriate defaults. Note that we are loading a Gum project here, but the gum project is optional. Projects which are using Gum only in code would not pass the second parameter.
 
 ```csharp
-        var gumProject = Gum.Initialize(
-            this,
+        var gumProject = Gum.Initialize(this,
             // This is relative to Content:
             "GumProject/GumProject.gumx");
 ```

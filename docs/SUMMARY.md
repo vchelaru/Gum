@@ -239,6 +239,7 @@
       * [PasswordBox](code/monogame/gum-forms/controls/passwordbox.md)
       * [RadioButton](code/monogame/gum-forms/controls/radiobutton.md)
       * [ScrollViewer](code/monogame/gum-forms/controls/scrollviewer.md)
+      * [StackPanel](code/monogame/gum-forms/controls/stackpanel.md)
       * [Slider](code/monogame/gum-forms/controls/slider.md)
       * [TextBox](code/monogame/gum-forms/controls/textbox.md)
     * [Control Customization In Code](code/monogame/gum-forms/control-customization/README.md)

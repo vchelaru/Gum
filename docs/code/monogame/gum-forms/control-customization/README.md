@@ -92,7 +92,10 @@ background.Color = Color.Orange;
 
 <figure><img src="../../../../.gitbook/assets/07_06 00 50.gif" alt=""><figcaption><p>Button is initially orange, but then changes back to default colors when highlighted</p></figcaption></figure>
 
-To apply changes to variables which are modified by state, we must do so through the state, as shown in the next section.
+To apply changes to variables which are modified by state, we have two options:
+
+1. We can modify the state so that the color is assigned whenever the state is applied
+2. We can clear the variables in the states so that the states do not overwrite our values
 
 ## Customizing an Instance's States
 
@@ -199,40 +202,160 @@ enabledState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
 customizedButton.UpdateState();
 ```
 
-<figure><img src="../../../../.gitbook/assets/26_07 50 10.gif" alt=""><figcaption><p>Enabled state resetting text color and size</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/26_07 50 10.gif" alt=""><figcaption><p>rEnabled state resetting text color and size</p></figcaption></figure>
 
-## Available Instances
+## Removing Variables from States
 
-Each default control type is made up of individual instances, most of which are standard types such as ColoredRectangle and TextInstance. The example above assigns properties on two instances:
-
-* ButtonBackground
-* TextInstance
-
-Since each control (such as Button, CheckBox, or TextBox) has its own individual instances, we need to know the names and types of these instances to add VariableSaves to our states.
-
-We can find the names of these instances by looking at the source code for the default forms implementations.
-
-These can be found in the Gum repository here:
-
-{% embed url="https://github.com/vchelaru/Gum/tree/master/MonoGameGum/Forms/DefaultVisuals" %}
-Forms DefaultVisuals Folder
-{% endembed %}
-
-For example, we can look at the DefaultButtonRuntime.cs file and notice that it has a ButtonBackground and TextInstance:
+We can also remove variables from states so that the states do not overwrite our explicitly set color. For example, if we want buttons to always be orange, we can clear the states and set the color as shown in the following code:
 
 ```csharp
-var background = new ColoredRectangleRuntime();
-// ...
-background.Name = "ButtonBackground";
+var customizedButton = new Button();
+customizedButton.AddToRoot();
 
-TextInstance = new TextRuntime();
-// ...
-TextInstance.Name = "TextInstance";
+var category = customizedButton.Visual.Categories["ButtonCategory"];
+foreach(var state in category.States)
+{
+    state.Variables.Clear();
+}
+
+var background = customizedButton.Visual
+    .GetGraphicalUiElementByName("ButtonBackground") as ColoredRectangleRuntime;
+background.Color = Color.Orange;
 ```
 
-By inspecting the code of other controls we can see which instances are available for styling. We can also look at the existing states which are provided by the default implementations. For example the DefaultButtonRuntime adds states for Enabled, Highlighted, Pushed, and Disabled. Note that this list may change in the future as Gum Forms continues to be developed.
+<figure><img src="../../../../.gitbook/assets/09_20 16 07.gif" alt=""><figcaption><p>States removed from the ButtonCategory results in no changes when a Button is Highlighted and Pressed</p></figcaption></figure>
 
-Keep in mind that the Name property of the internal instances is important. For example using the code above, the background object is accessed through "ButtonBackground" rather than "background" when creating new states.
+## Accessing Children Instances
+
+Some Forms components contain other Forms components. For example, the ListBox component contains a scroll bar named VerticalScrollBar, which itself contains a button named UpButtonInstance. These children can be obtained by calling GetGraphicalUiElementByName. This method searches for items recursively, so it can be called at the top level object. For example, the following code can be used to obtain a reference to the UpButtonInstance's Visual.
+
+```csharp
+var listBox = new ListBox();
+listBox.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
+var scrollBarVisual = listBox.Visual.GetGraphicalUiElementByName("VerticalScrollBar");
+var upButtonVisual = scrollBarVisual.GetGraphicalUiElementByName("UpButtonInstance");
+// modify upButtonVisual directly, or modify its states
+```
+
+## Removing and Replacing Instances
+
+As mentioned above, all Forms components are made of individual objects which are referenced through the `Visual.Children` property. For example, a default Button includes the following children:
+
+* ButtonBackground of type ColoredRectangleRuntime
+* TextInstance of type TextRuntime
+* FocusedIndicator of type RectangleRuntime
+
+Forms components have almost no requirements for their children unless the children are critical for the function of the component. For example, a Button can function without any of its children since the Button itself is a container which has size and which can be clicked. Therefore, we are free to remove elements from the button to achieve more flexibility in our styling.
+
+For example, we can remove the background from a Button so it only displays its Text instance. Notice that it is still fully functional as shown by the click handler.
+
+```csharp
+var label = new Label();
+label.AddToRoot();
+
+var button = new Button();
+var background = button.Visual.GetGraphicalUiElementByName("ButtonBackground");
+button.Visual.Children.Remove(background);
+button.AddToRoot();
+button.Y = 20;
+button.Click += (_, _) =>
+{
+    label.Text = "Clicked at " + DateTime.Now;
+};
+```
+
+<figure><img src="../../../../.gitbook/assets/09_06 21 11.gif" alt=""><figcaption><p>Button with no background</p></figcaption></figure>
+
+In this case the Button still has its default states which are attempting to set the ButtonBackground's color in response to hover and click. If a state references a missing instance then the component ignores the state value.
+
+We are also free to add additional objects to any component by modifying its Visual. For example, we could use a NineSliceRuntime, SpriteRuntime, or even a regular RectangleRuntime for the button's background.
+
+The following code shows how to replace the background with a RectangleRuntime so that the button has an outline instead of a filled background.
+
+```csharp
+using Gum.DataTypes;
+
+var label = new Label();
+label.AddToRoot();
+
+var button = new Button();
+var background = button.Visual.GetGraphicalUiElementByName("ButtonBackground");
+button.Visual.Children.Remove(background);
+
+// replace the background with a RectangleRuntime
+var rectangle = new RectangleRuntime();
+rectangle.WidthUnits = DimensionUnitType.RelativeToParent;
+rectangle.Width = 0;
+rectangle.HeightUnits = DimensionUnitType.RelativeToParent;
+rectangle.Height = 0;
+// By using the same name, we can take advantage of the existing 
+// states. 
+rectangle.Name = "ButtonBackground";
+button.Visual.Children.Insert(0, rectangle);
+
+// do this so it immediately updates the new background
+// to the proper color
+button.UpdateState();
+
+button.AddToRoot();
+button.Y = 20;
+button.Click += (_, _) =>
+{
+    label.Text = "Clicked at " + DateTime.Now;
+};
+```
+
+<figure><img src="../../../../.gitbook/assets/09_06 31 37.gif" alt=""><figcaption><p>Button with a RectangleRuntime</p></figcaption></figure>
+
+In this example we are creating a RectangleRuntime as a replacement for the existing background, but keep in mind Gum controls can contain any children. You are free to add and remove controls to style your component as needed.
+
+### Required Children
+
+Some Forms components require having children of a certain type to function properly. For example, a TextBox must have a TextInstance child to be able to display its text. These children should not be removed from the the control's Visual.Children so that the control can remain functional. The following lists the children which should not be removed:
+
+* Button
+  * TextInstance of type TextRuntime - optional, but needed if the Text property is used
+* CheckBox
+  * TextInstance of type TextRuntime - optional, but needed if the Text property is used
+* ComboBox
+  * ListBoxInstance of type InteractiveGue with a Forms control of ListBox
+  * TextInstance of type TextRuntime
+* Label
+  * TextInstance of type TextRuntime
+* ListBox
+  * VerticalScrollBarInstance of type InteractiveGue
+  * InnerPanelInstance of type InteractiveGue
+  * ClipContainerInstance of type InteractiveGue
+* ListBoxItem
+  * TextInstance of type TextRuntime - optional, is used to display text if it exists
+* MenuItem
+  * TextInstance of type TextRuntime - optional, is used to display text if it exists
+* PasswordBox
+  * TextInstance of type TextRuntime
+  * CaretInstance of type InteractiveGue
+  * SelectionInstance of type InteractiveGue
+  * PlaceholderTextInstance of type TextRuntime - optional, is used to display placeholder text if it exists
+* RadioButton
+  * TextInstance of type TextRuntime - optional, is used to display text if it exists
+* ScrollBar
+  * UpButtonInstance of type InteractiveGue
+  * DownButtonInstance of type InteractiveGue
+  * ThumbInstance of type InteractiveGue
+  * TrackInstance of type InteractiveGue
+* ScrollViewer
+  * VerticalScrollBarInstance of type InteractiveGue
+  * InnerPanelInstance of type InteractiveGue
+  * ClipContainerInstance of type InteractiveGue
+* Slider
+  * ThumbInstance of type InteractiveGue
+  * TrackInstance of type InteractiveGue
+* TextBox
+  * TextInstance of type TextRuntime
+  * CaretInstance of type InteractiveGue
+  * SelectionInstance of type InteractiveGue
+  * PlaceholderTextInstance of type TextRuntime - optional, is used to display placeholder text if it exists
+
+
 
 ## Replacing Styling Globally with Derived Classes
 
