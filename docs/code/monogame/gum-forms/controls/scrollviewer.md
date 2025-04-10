@@ -6,13 +6,40 @@ The ScrollViewer control provides a container which can hold Gum objects (includ
 
 By default the ScrollViewer's InnerPanel expands automatically in response to its children and stacks its children top-to-bottom. Of course, this behavior can be changed since the InnterPanel is a standard GraphicalUiElement.
 
-### Code Example: Creating a ScrollViewer
+### Code Example: Acreating a ScrollViewer with Forms Children
 
-The following code creates a ScrollViewer and adds ColoredRectangleRuntimes to the ScrollViewer.
+ScrollViewers can contanin forms controls. The following code creates a ScrollViewer and adds buttons using the AddChild method.
 
 ```csharp
 var scrollViewer = new ScrollViewer();
-this.Root.Children.Add(scrollViewer.Visual);
+scrollViewer.AddToRoot();
+scrollViewer.X = 50;
+scrollViewer.Y = 50;
+scrollViewer.Width = 200;
+scrollViewer.Height = 200;
+scrollViewer.InnerPanel.StackSpacing = 2;
+
+var random = new System.Random();
+for (int i = 0; i < 30; i++)
+{
+    var button = new Button();
+    scrollViewer.AddChild(button);
+    button.Text = "Button " + i;
+    button.Height = 36;
+    button.Click += (_, _) => 
+        button.Text = DateTime.Now.ToString();
+}
+```
+
+<figure><img src="../../../../.gitbook/assets/09_19 09 46.gif" alt=""><figcaption><p>Children in a ScrollViewer</p></figcaption></figure>
+
+### Code Example: Creating a ScrollViewer With Non-Forms Children
+
+The following code creates a ScrollViewer and adds ColoredRectangleRuntimes to the ScrollViewer. Any non-Forms visual object can be be added to the ScrollViewer through its InnerPanel.
+
+```csharp
+var scrollViewer = new ScrollViewer();
+scrollViewer.AddToRoot();
 scrollViewer.X = 50;
 scrollViewer.Y = 50;
 scrollViewer.Width = 200;
