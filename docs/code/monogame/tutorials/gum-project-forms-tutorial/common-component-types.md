@@ -24,7 +24,7 @@ We can add a label to StackPanelInstance by drag+dropping the Label component in
 
 <figure><img src="../../../../.gitbook/assets/31_04 59 53.png" alt=""><figcaption><p>LabelInstance in a StackPanelInstance</p></figcaption></figure>
 
-We can change its Text, Color, and Style in the Expoed section in the Variables tab.
+We can change its Text, Color, and Style in the Exposed section in the Variables tab.
 
 <figure><img src="../../../../.gitbook/assets/image (1) (1).png" alt=""><figcaption><p>Common Label properties in Gum</p></figcaption></figure>
 
@@ -44,7 +44,7 @@ partial class TitleScreen
 <figure><img src="../../../../.gitbook/assets/31_05 05 43.png" alt=""><figcaption><p>Label at runtime with its Text property changed</p></figcaption></figure>
 
 {% hint style="info" %}
-All properties available in the Gum tool are also available in code. To keep the tutorial shorter we will not set show all properties both in Gum and in code unless there are important differences. Feel free to experiment and try setting properties in code as you are reading through the remainder of this tutorial.
+All properties available in the Gum tool are also available in code. To keep the tutorial shorter we will not cover all properties both in Gum and in code unless there are important differences. Feel free to experiment and try setting properties in code as you are reading through the remainder of this tutorial.
 {% endhint %}
 
 ## Button
@@ -131,15 +131,17 @@ We can solve this by extending the horizontal size of our StackPanelInstance to 
 
 To do this, select the StackPanelInstance and set the following values:
 
-* Width = 0
-* Width Units = Relative to Children
-* Min Width = 50
+| Width       | 0                    |
+| ----------- | -------------------- |
+| Width Units | Relative to Children |
+| Min Width   | 50                   |
 
 We can do the same for Height values:
 
-* Height = 0
-* Height Units = Relative to Children
-* Min Height = 50
+| Height       | 0                    |
+| ------------ | -------------------- |
+| Height Units | Relative to Children |
+| Min Height   | 50                   |
 
 Now the StackPanel sizes itself according to its children.&#x20;
 
@@ -174,7 +176,7 @@ We can add a ListBox instance by drag+dropping a ListBox onto StackPanelInstance
 
 <figure><img src="../../../../.gitbook/assets/31_05 54 17.png" alt=""><figcaption><p>ListBox in StackPanelInstance</p></figcaption></figure>
 
-We can populate objects in a ListBox by adding to its Items property. We can also react to object being selected by using the SelectionChanged event:
+We can populate objects in a ListBox by adding to its Items property. We can also react to objects being selected by using the `SelectionChanged` event:
 
 ```diff
 partial void CustomInitialize()
@@ -197,7 +199,7 @@ partial void CustomInitialize()
 
 ## RadioButton
 
-RadioButton provides a way to select from a set of options. Unlike ComboBox, RadioButtons are always expanded. Unlike CheckBox, when one RadioButton is selected, other RadioButton instances in the group are deselected.
+RadioButton provides a way to select from a set of options. Unlike CheckBox, when one RadioButton is selected, other RadioButton instances in the group are deselected.
 
 We can add multiple RadioButton instances by drag+dropping the RadioButton component onto StackPanelInstance multiple times.
 
@@ -207,7 +209,7 @@ We can modify the Text property of each instance to differentiate between them.
 
 <figure><img src="../../../../.gitbook/assets/31_06 09 08.png" alt=""><figcaption><p>RadioButton instances displaying different text</p></figcaption></figure>
 
-We can handle the Checked event to respond to a RadioButton being checked.
+We can handle the `Checked` event to respond to a RadioButton being checked.
 
 ```diff
 partial void CustomInitialize()
