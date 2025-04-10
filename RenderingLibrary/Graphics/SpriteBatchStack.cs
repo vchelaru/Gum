@@ -210,7 +210,7 @@ namespace RenderingLibrary.Graphics
             }
             catch (Exception e)
             {
-                throw new Exception("Error trying to set scissor rectangle:" + scissorRectangle.ToString());
+                throw new Exception("Error trying to set scissor rectangle:" + scissorRectangle.ToString(), e);
             }
             beginEndState = SpriteBatchBeginEndState.Began;
             SpriteBatch.Begin(sortMode,

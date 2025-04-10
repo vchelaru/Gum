@@ -841,9 +841,6 @@ namespace RenderingLibrary.Graphics
             }
             else
             {
-
-                bool didTruncate = false;
-
                 // This allocates like crazy but we're
                 // on the PC and prob won't be calling this
                 // very frequently so let's 
@@ -930,7 +927,6 @@ namespace RenderingLibrary.Graphics
                             lines.Add(line);
                             if (lines.Count == effectiveMaxNumberOfLines)
                             {
-                                didTruncate = true;
                                 break;
                             }
                         }
@@ -966,8 +962,6 @@ namespace RenderingLibrary.Graphics
 
                         if (lines.Count == effectiveMaxNumberOfLines)
                         {
-                            didTruncate = true;
-
                             break;
                         }
                         line = string.Empty;

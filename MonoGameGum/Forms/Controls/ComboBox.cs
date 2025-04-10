@@ -188,7 +188,7 @@ public class ComboBox : FrameworkElement, IInputReceiver
 
         if (textComponent == null)
         {
-            throw new Exception("Gum object must have an object called \"Text\"");
+            throw new Exception("Gum object must have an object called \"TextInstance\"");
         }
 #endif
         // remove it because it's gotta be a "popup"

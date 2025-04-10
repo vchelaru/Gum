@@ -378,12 +378,6 @@ public class Renderer : IRenderer
             mRenderStateVariables.BlendState = Renderer.NormalBlendState;
             mRenderStateVariables.Wrap = false;
 
-            var state = Microsoft.Xna.Framework.Input.Keyboard.GetState();
-            if(state.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.A))
-            {
-                int m = 3;
-            }
-
             for (int i = 0; i < layers.Count; i++)
             {
                 var layer = layers[i];

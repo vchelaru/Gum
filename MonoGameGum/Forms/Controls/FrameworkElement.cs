@@ -475,6 +475,20 @@ public class FrameworkElement
         child.Visual.Parent = this.Visual;
     }
 
+    public virtual void AddChild(GraphicalUiElement child)
+    {
+        if(child == null)
+        {
+            throw new ArgumentNullException(nameof(child));
+        }
+        if (this.Visual == null)
+        {
+            throw new InvalidOperationException("This must have its Visual set before having children added");
+        }
+
+        child.Parent = this.Visual;
+
+    }
 
     public void Close()
     {

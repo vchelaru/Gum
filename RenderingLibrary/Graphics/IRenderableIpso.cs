@@ -13,7 +13,7 @@ namespace RenderingLibrary.Graphics
         bool IsRenderTarget { get; }
 
         bool ClipsChildren { get;  }
-        IRenderableIpso Parent { get; set; }
+        new IRenderableIpso Parent { get; set; }
         ObservableCollection<IRenderableIpso> Children { get; }
         ColorOperation ColorOperation { get; }
 

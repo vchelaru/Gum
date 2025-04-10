@@ -1164,8 +1164,20 @@ public class CustomSetPropertyOnRenderable
         }
         else if (propertyName == "Color")
         {
-            var valueAsColor = (Color)value;
-            ((LineRectangle)mContainedObjectAsIpso).Color = valueAsColor;
+            //var valueAsColor = (Color)value;
+            //((LineRectangle)mContainedObjectAsIpso).Color = valueAsColor;
+            var lineRectangle = (LineRectangle) mContainedObjectAsIpso;
+            //var valueAsColor = (Color)value;
+            if (value is System.Drawing.Color drawingColor)
+            {
+                lineRectangle.Color = drawingColor;
+            }
+            else if (value is Microsoft.Xna.Framework.Color xnaColor)
+            {
+                lineRectangle.Color = xnaColor.ToSystemDrawing();
+
+            }
+
             handled = true;
         }
         else if(propertyName == "IsRenderTarget")
