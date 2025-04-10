@@ -19,7 +19,6 @@ scrollViewer.Width = 200;
 scrollViewer.Height = 200;
 scrollViewer.InnerPanel.StackSpacing = 2;
 
-var random = new System.Random();
 for (int i = 0; i < 30; i++)
 {
     var button = new Button();
