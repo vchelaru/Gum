@@ -1,45 +1,23 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{47241002-7EB5-433B-B931-A530BB6B84EE}</ProjectGuid>
+    <TargetFramework>net472</TargetFramework>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>WpfDataUi</RootNamespace>
-    <AssemblyName>WpfDataUi</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <WarningLevel>4</WarningLevel>
-    <TargetFrameworkProfile />
     <LangVersion>12.0</LangVersion>
-
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <UseWindowsForms>true</UseWindowsForms>
+    <UseWPF>true</UseWPF>
+    <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
+    <Platforms>AnyCPU;x86</Platforms>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>TRACE;DEBUG;WpfDataUi</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <Prefer32Bit>true</Prefer32Bit>
     <LangVersion>12.0</LangVersion>
-
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
-    <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE;WpfDataUi</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <Prefer32Bit>true</Prefer32Bit>
     <LangVersion>12.0</LangVersion>
-
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject />
@@ -48,181 +26,30 @@
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x86\Debug2\</OutputPath>
     <DefineConstants>TRACE;DEBUG;WpfDataUi</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <Prefer32Bit>true</Prefer32Bit>
     <LangVersion>12.0</LangVersion>
-
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Numerics" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="System.Xaml">
-      <RequiredTargetFramework>4.0</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="WindowsBase" />
-    <Reference Include="PresentationCore" />
-    <Reference Include="PresentationFramework" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Controls\AngleSelectorDisplay.xaml.cs">
-      <DependentUpon>AngleSelectorDisplay.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Controls\FileSelectionDisplay.xaml.cs">
-      <DependentUpon>FileSelectionDisplay.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Controls\ListBoxDisplay.xaml.cs">
-      <DependentUpon>ListBoxDisplay.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Controls\MultiLineTextBoxDisplay.cs" />
-    <Compile Include="Controls\NullableBoolDisplay.xaml.cs">
-      <DependentUpon>NullableBoolDisplay.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Controls\SingleDataUiContainer.xaml.cs">
-      <DependentUpon>SingleDataUiContainer.xaml</DependentUpon>
-    </Compile>
-    <Page Include="Controls\AngleSelectorDisplay.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Controls\CheckBoxDisplay.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Controls\FileSelectionDisplay.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Controls\ListBoxDisplay.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Controls\NullableBoolDisplay.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Controls\SliderDisplay.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Controls\StringListTextBoxDisplay.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Controls\TextBoxDisplay.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Controls\ToggleButtonOptionDisplay.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="DataUiGrid.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="MainWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Compile Include="App.xaml.cs">
-      <DependentUpon>App.xaml</DependentUpon>
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Controls\CheckBoxDisplay.xaml.cs">
-      <DependentUpon>CheckBoxDisplay.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Controls\ComboBoxDisplay.xaml.cs">
-    </Compile>
-    <Compile Include="Controls\SliderDisplay.xaml.cs">
-      <DependentUpon>SliderDisplay.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Controls\StringListTextBoxDisplay.xaml.cs">
-      <DependentUpon>StringListTextBoxDisplay.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Controls\TextBoxDisplay.xaml.cs">
-      <DependentUpon>TextBoxDisplay.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Controls\TextBoxDisplayLogic.cs" />
-    <Compile Include="Controls\ToggleButtonOptionDisplay.xaml.cs">
-      <DependentUpon>ToggleButtonOptionDisplay.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Converters\AddDoubleConverter.cs" />
-    <Compile Include="DataGridAttachedProperties.cs" />
-    <Compile Include="DataTypes\IMemberDefinition.cs" />
-    <Compile Include="DataTypes\IMemberDefinitionContainer.cs" />
-    <Compile Include="DataTypes\InstanceMember.cs" />
-    <Compile Include="DataTypes\InstanceMemberDisplayProperties.cs" />
-    <Compile Include="DataTypes\MemberCategory.cs" />
-    <Compile Include="DataTypes\MultiSelectInstanceMember.cs" />
-    <Compile Include="DataTypes\TypeMemberDisplayProperties.cs" />
-    <Compile Include="DataUiGrid.xaml.cs">
-      <DependentUpon>DataUiGrid.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Decorators\NoSizeDecorator.cs" />
-    <Compile Include="EventArguments\BeforePropertyChangedArgs.cs" />
-    <Compile Include="EventArguments\PropertyChangedArgs.cs" />
-    <Compile Include="IDataUi.cs" />
-    <Compile Include="IDataUiExtensionMethods.cs" />
-    <Compile Include="ISetDefaultable.cs" />
-    <Compile Include="LateBinder.cs" />
-    <Compile Include="MainWindow.xaml.cs">
-      <DependentUpon>MainWindow.xaml</DependentUpon>
-      <SubType>Code</SubType>
-    </Compile>
-    <Page Include="Controls\SingleDataUiContainer.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="MemberInfoExtensionMethods.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="Properties\Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-    </Compile>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <Resource Include="Content\Icons\OpenFolder.png" />
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+  <ItemGroup>
+    <Compile Remove="Controls\EditableComboBoxDisplay.cs" />
+    <Compile Remove="SampleProject\SampleProject\App.xaml.cs" />
+    <Compile Remove="SampleProject\SampleProject\Character.cs" />
+    <Compile Remove="SampleProject\SampleProject\MainWindow.xaml.cs" />
+    <Compile Remove="SampleProject\SampleProject\Properties\AssemblyInfo.cs" />
+    <Compile Remove="SampleProject\SampleProject\Properties\Resources.Designer.cs" />
+    <Compile Remove="SampleProject\SampleProject\Properties\Settings.Designer.cs" />
+    <EmbeddedResource Remove="SampleProject\SampleProject\Properties\Resources.resx" />
+    <Page Remove="Controls\ComboBoxDisplay.xaml" />
+    <Page Remove="SampleProject\SampleProject\App.xaml" />
+    <Page Remove="SampleProject\SampleProject\MainWindow.xaml" />
+  </ItemGroup>
 </Project>
