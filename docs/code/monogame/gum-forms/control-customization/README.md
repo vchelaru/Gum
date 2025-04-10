@@ -92,7 +92,10 @@ background.Color = Color.Orange;
 
 <figure><img src="../../../../.gitbook/assets/07_06 00 50.gif" alt=""><figcaption><p>Button is initially orange, but then changes back to default colors when highlighted</p></figcaption></figure>
 
-To apply changes to variables which are modified by state, we must do so through the state, as shown in the next section.
+To apply changes to variables which are modified by state, we have two options:
+
+1. We can modify the state so that the color is assigned whenever the state is applied
+2. We can clear the variables in the states so that the states do not overwrite our values
 
 ## Customizing an Instance's States
 
@@ -199,7 +202,28 @@ enabledState.Variables.Add(new Gum.DataTypes.Variables.VariableSave
 customizedButton.UpdateState();
 ```
 
-<figure><img src="../../../../.gitbook/assets/26_07 50 10.gif" alt=""><figcaption><p>Enabled state resetting text color and size</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/26_07 50 10.gif" alt=""><figcaption><p>rEnabled state resetting text color and size</p></figcaption></figure>
+
+## Removing Variables from States
+
+We can also remove variables from states so that the states do not overwrite our explicitly set color. For example, if we want buttons to always be orange, we can clear the states and set the color as shown in the following code:
+
+```csharp
+var customizedButton = new Button();
+customizedButton.AddToRoot();
+
+var category = customizedButton.Visual.Categories["ButtonCategory"];
+foreach(var state in category.States)
+{
+    state.Variables.Clear();
+}
+
+var background = customizedButton.Visual
+    .GetGraphicalUiElementByName("ButtonBackground") as ColoredRectangleRuntime;
+background.Color = Color.Orange;
+```
+
+<figure><img src="../../../../.gitbook/assets/09_20 16 07.gif" alt=""><figcaption><p>States removed from the ButtonCategory results in no changes when a Button is Highlighted and Pressed</p></figcaption></figure>
 
 ## Removing and Replacing Instances
 
