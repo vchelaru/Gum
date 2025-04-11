@@ -42,7 +42,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 innerCheck.XOrigin = HorizontalAlignment.Center;
                 innerCheck.YOrigin = VerticalAlignment.Center;
                 innerCheck.Name = "InnerCheck";
-                innerCheck.Color = new Color(128, 255, 0);
+                innerCheck.Color = Styling.Colors.White;
                 checkboxBackground.Children.Add(innerCheck);
 
                 var text = new TextRuntime();
@@ -101,27 +101,43 @@ namespace MonoGameGum.Forms.DefaultVisuals
                     });
                 }
 
-                void AddOnOffState(string state, Color checkboxColor, bool isFocused)
+                void AddOnOffState(string state, Color checkboxBackgroundColor, 
+                    Color textColor, Color checkColor, bool isFocused)
                 {
                     AddState(state + "On");
                     AddVariable("InnerCheck.Visible", true);
-                    AddVariable("CheckBoxBackground.Color", checkboxColor);
+                    AddVariable("InnerCheck.Color", checkColor);
+                    AddVariable("CheckBoxBackground.Color", checkboxBackgroundColor);
                     AddVariable("FocusedIndicator.Visible", isFocused);
+                    AddVariable("TextInstance.Color", textColor);
 
 
                     AddState(state + "Off");
                     AddVariable("InnerCheck.Visible", false);
-                    AddVariable("CheckBoxBackground.Color", checkboxColor);
+                    AddVariable("InnerCheck.Color", checkColor);
+                    AddVariable("CheckBoxBackground.Color", checkboxBackgroundColor);
                     AddVariable("FocusedIndicator.Visible", isFocused);
+                    AddVariable("TextInstance.Color", textColor);
+
                 }
 
-                AddOnOffState(FrameworkElement.DisabledState, DefaultButtonRuntime.DisabledButtonColor, false);
-                AddOnOffState(FrameworkElement.DisabledFocusedState, DefaultButtonRuntime.DisabledButtonColor, true);
-                AddOnOffState(FrameworkElement.EnabledState, DefaultButtonRuntime.EnabledbuttonColor, false);
-                AddOnOffState(FrameworkElement.FocusedState, DefaultButtonRuntime.EnabledbuttonColor, true);
-                AddOnOffState(FrameworkElement.HighlightedState, DefaultButtonRuntime.HighlightedButtonColor, false);
-                AddOnOffState(FrameworkElement.HighlightedFocusedState, DefaultButtonRuntime.HighlightedButtonColor, true);
-                AddOnOffState(FrameworkElement.PushedState, DefaultButtonRuntime.HighlightedButtonColor, false);
+                AddOnOffState(FrameworkElement.DisabledState, Styling.Colors.DarkGray,
+                    Styling.Colors.Gray, Styling.Colors.Gray, false);
+                AddOnOffState(FrameworkElement.DisabledFocusedState, Styling.Colors.DarkGray,
+                    Styling.Colors.Gray, Styling.Colors.Gray, true);
+                AddOnOffState(FrameworkElement.EnabledState, Styling.Colors.Primary,
+                    Styling.Colors.White, Styling.Colors.White, false);
+                AddOnOffState(FrameworkElement.FocusedState, Styling.Colors.Primary,
+                    Styling.Colors.White, Styling.Colors.White, true);
+                AddOnOffState(FrameworkElement.HighlightedState, Styling.Colors.PrimaryLight,
+                    Styling.Colors.White, Styling.Colors.White, false);
+                AddOnOffState(FrameworkElement.HighlightedFocusedState, Styling.Colors.PrimaryLight,
+                    Styling.Colors.White, Styling.Colors.White, true);
+
+                // dark looks weird so staying with normal primary. This matches the default template
+                //AddOnOffState(FrameworkElement.PushedState, Styling.Colors.PrimaryDark,
+                AddOnOffState(FrameworkElement.PushedState, Styling.Colors.Primary,
+                    Styling.Colors.White, Styling.Colors.White, false);
 
 
                 this.AddCategory(checkboxCategory);

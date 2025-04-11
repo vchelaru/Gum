@@ -95,28 +95,43 @@ public class DefaultRadioButtonRuntime : InteractiveGue
                 });
             }
 
-            void AddOnOffState(string state, Color backgroundColor, bool isFocused)
+            void AddOnOffState(string state, Color backgroundColor, 
+                Color textColor, Color checkColor, bool isFocused)
             {
                 AddState(state + "On");
                 AddVariable("InnerCheck.Visible", true);
+                AddVariable("InnerCheck.Color", checkColor);
                 AddVariable("RadioButtonBackground.Color", backgroundColor);
                 AddVariable("FocusedIndicator.Visible", isFocused);
+                AddVariable("TextInstance.Color", textColor);
 
 
                 AddState(state + "Off");
                 AddVariable("InnerCheck.Visible", false);
+                AddVariable("InnerCheck.Color", checkColor);
                 AddVariable("RadioButtonBackground.Color", backgroundColor);
                 AddVariable("FocusedIndicator.Visible", isFocused);
+                AddVariable("TextInstance.Color", textColor);
             }
 
 
-            AddOnOffState(FrameworkElement.DisabledState, Color.Gray, false);
-            AddOnOffState(FrameworkElement.DisabledFocusedState, Color.Gray, true);
-            AddOnOffState(FrameworkElement.EnabledState, Color.White, false);
-            AddOnOffState(FrameworkElement.FocusedState, Color.White, true);
-            AddOnOffState(FrameworkElement.HighlightedState, Color.Yellow, false);
-            AddOnOffState(FrameworkElement.HighlightedFocusedState, Color.Yellow, true);
-            AddOnOffState(FrameworkElement.PushedState, Color.White, false);
+            AddOnOffState(FrameworkElement.DisabledState, Styling.Colors.DarkGray,
+                Styling.Colors.Gray, Styling.Colors.Gray, false);
+            AddOnOffState(FrameworkElement.DisabledFocusedState, Styling.Colors.DarkGray,
+                Styling.Colors.Gray, Styling.Colors.Gray, true);
+            AddOnOffState(FrameworkElement.EnabledState, Styling.Colors.Primary,
+                Styling.Colors.White, Styling.Colors.White, false);
+            AddOnOffState(FrameworkElement.FocusedState, Styling.Colors.Primary,
+                Styling.Colors.White, Styling.Colors.White, true);
+            AddOnOffState(FrameworkElement.HighlightedState, Styling.Colors.PrimaryLight,
+                Styling.Colors.White, Styling.Colors.White, false);
+            AddOnOffState(FrameworkElement.HighlightedFocusedState, Styling.Colors.PrimaryLight,
+                Styling.Colors.White, Styling.Colors.White, true);
+
+            // dark looks weird so staying with normal primary. This matches the default template
+            //AddOnOffState(FrameworkElement.PushedState, Styling.Colors.PrimaryDark,
+            AddOnOffState(FrameworkElement.PushedState, Styling.Colors.Primary,
+                Styling.Colors.White, Styling.Colors.White, false);
 
 
         }

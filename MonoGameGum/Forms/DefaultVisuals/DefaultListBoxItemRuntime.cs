@@ -1,4 +1,5 @@
 ﻿using Gum.Converters;
+using Gum.DataTypes.Variables;
 using Gum.Wireframe;
 using MonoGameGum.Forms.Controls;
 using MonoGameGum.GueDeriving;
@@ -73,91 +74,45 @@ public class DefaultListBoxItemRuntime : InteractiveGue
 
             var listBoxItemCategory = new Gum.DataTypes.Variables.StateSaveCategory();
             listBoxItemCategory.Name = "ListBoxItemCategory";
-
-            listBoxItemCategory.States.Add(new Gum.DataTypes.Variables.StateSave()
-            {
-                Name = "Enabled",
-                Variables = new List<Gum.DataTypes.Variables.VariableSave>()
-                {
-                    new Gum.DataTypes.Variables.VariableSave()
-                    {
-                        Value = false,
-                        Name = "Background.Visible"
-                    },
-                    new Gum.DataTypes.Variables.VariableSave()
-                    {
-                        Value = false,
-                        Name = "FocusedIndicator.Visible"
-                    }
-                }
-            });
-
-            listBoxItemCategory.States.Add(new Gum.DataTypes.Variables.StateSave()
-            {
-                Name = "Highlighted",
-                Variables = new List<Gum.DataTypes.Variables.VariableSave>()
-                {
-                    new Gum.DataTypes.Variables.VariableSave()
-                    {
-                        Value = true,
-                        Name = "Background.Visible"
-                    },
-                    new Gum.DataTypes.Variables.VariableSave()
-                    {
-                        Value = new Microsoft.Xna.Framework.Color(205, 142, 44),
-                        Name = "Background.Color"
-                    },
-                    new Gum.DataTypes.Variables.VariableSave()
-                    {
-                        Value = false,
-                        Name = "FocusedIndicator.Visible"
-                    }
-                }
-            });
-
-            listBoxItemCategory.States.Add(new Gum.DataTypes.Variables.StateSave()
-            {
-                Name = "Selected",
-                Variables = new List<Gum.DataTypes.Variables.VariableSave>()
-                {
-                    new Gum.DataTypes.Variables.VariableSave()
-                    {
-                        Value = true,
-                        Name = "Background.Visible"
-                    },
-                    new Gum.DataTypes.Variables.VariableSave()
-                    {
-                        Value = new Microsoft.Xna.Framework.Color(143, 68, 121),
-                        Name = "Background.Color"
-                    },
-                    new Gum.DataTypes.Variables.VariableSave()
-                    {
-                        Value = false,
-                        Name = "FocusedIndicator.Visible"
-                    }
-                }
-            });
-
-            listBoxItemCategory.States.Add(new Gum.DataTypes.Variables.StateSave()
-            {
-                Name = "Focused",
-                Variables = new List<Gum.DataTypes.Variables.VariableSave>()
-                {
-                    new Gum.DataTypes.Variables.VariableSave()
-                    {
-                        Value = false,
-                        Name = "Background.Visible"
-                    },
-                    new Gum.DataTypes.Variables.VariableSave()
-                    {
-                        Value = true,
-                        Name = "FocusedIndicator.Visible"
-                    }
-                }
-            });
-
             this.AddCategory(listBoxItemCategory);
 
+
+            StateSave currentState;
+
+            void AddState(string name)
+            {
+                var state = new StateSave();
+                state.Name = name;
+                listBoxItemCategory.States.Add(state);
+                currentState = state;
+            }
+
+            void AddVariable(string name, object value)
+            {
+                currentState.Variables.Add(new VariableSave
+                {
+                    Name = name,
+                    Value = value
+                });
+            }
+
+            AddState(FrameworkElement.EnabledState);
+            AddVariable("Background.Visible", false);
+            AddVariable("FocusedIndicator.Visible", false);
+
+            AddState(FrameworkElement.HighlightedState);
+            AddVariable("Background.Visible", true);
+            AddVariable("Background.Color", Styling.Colors.Primary);
+            AddVariable("FocusedIndicator.Visible", false);
+
+            AddState("Selected");
+            AddVariable("Background.Visible", true);
+            AddVariable("Background.Color", Styling.Colors.Accent);
+            AddVariable("FocusedIndicator.Visible", false);
+
+            AddState(FrameworkElement.FocusedState);
+            AddVariable("Background.Visible", false);
+            AddVariable("FocusedIndicator.Visible", true);
         }
 
         if (tryCreateFormsObject)
