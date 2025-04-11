@@ -80,6 +80,7 @@ public class GumService
         Root.Height = 0;
         Root.HeightUnits = DimensionUnitType.RelativeToParent;
         Root.Name = "Main Root";
+        Root.HasEvents = false;
 
         Root.AddToManagers();
 

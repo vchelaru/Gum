@@ -165,7 +165,20 @@ namespace Gum.Wireframe
         /// <remarks>
         /// LosePush is often used to change the state of a button back to its regular state.
         /// </remarks>
-        public event EventHandler LosePush;
+        //public event EventHandler LosePush;
+        public event EventHandler LosePush
+        {
+            add
+            {
+                _losePush += value;
+                TrySubscribeToLosePushEvents();
+            }
+            remove
+            {
+                _losePush -= value;
+            }
+        }
+        private EventHandler _losePush;
 
 
         /// <summary>
@@ -327,7 +340,7 @@ namespace Gum.Wireframe
                     asInteractive?.RollOn != null ||
                     asInteractive?.RollOff != null ||
                     asInteractive?.RollOver != null ||
-                    asInteractive?.LosePush != null ||
+                    asInteractive?._losePush != null ||
                     asInteractive?.HoverOver != null ||
                     asInteractive?.Dragging != null
                     )
@@ -606,18 +619,20 @@ namespace Gum.Wireframe
 
         public InteractiveGue()
         {
-            InitializeEvents();
         }
 
         public InteractiveGue(IRenderable renderable) : base(renderable)
         {
-            InitializeEvents();
         }
 
-        private void InitializeEvents()
+        bool _hasSubscribedLosePusheEvents = false;
+        private void TrySubscribeToLosePushEvents()
         {
-            Click += (not, used) => LosePush?.Invoke(this, EventArgs.Empty);
-            RollOff += (not, used) => LosePush?.Invoke(this, EventArgs.Empty);
+            if(!_hasSubscribedLosePusheEvents)
+            {
+                Click += (not, used) => _losePush?.Invoke(this, EventArgs.Empty);
+                RollOff += (not, used) => _losePush?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         /// <summary>

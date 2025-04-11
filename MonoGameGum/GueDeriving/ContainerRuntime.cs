@@ -69,18 +69,27 @@ namespace MonoGameGum.GueDeriving
             }
         }
 
+        public ContainerRuntime()
+        {
+            Instantiate();
+        }
+
         public ContainerRuntime(bool fullInstantiation = true)
         {
             if (fullInstantiation)
             {
-                SetContainedObject(new InvisibleRenderable());
-                Width = 150;
-                Height = 150;
-                Visible = true;
+                Instantiate();
             }
         }
 
+        private void Instantiate()
+        {
+            SetContainedObject(new InvisibleRenderable());
+            Width = 150;
+            Height = 150;
+            Visible = true;
 
+        }
 
         public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 
