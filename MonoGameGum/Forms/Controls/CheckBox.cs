@@ -35,23 +35,6 @@ public class CheckBox : ToggleButton
         }
     }
 
-    public override bool IsEnabled
-    {
-        get
-        {
-            return base.IsEnabled;
-        }
-        set
-        {
-            base.IsEnabled = value;
-            if (!IsEnabled)
-            {
-                // todo - to add focus eventually
-                //HasFocus = false;
-            }
-            UpdateState();
-        }
-    }
 
     #endregion
 

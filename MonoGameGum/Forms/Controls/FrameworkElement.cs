@@ -250,6 +250,11 @@ public class FrameworkElement
     }
 
     bool isEnabled = true;
+    /// <summary>
+    /// Whether the element is enabled or not. When disabled, the element does
+    /// not respond to user input, and displays a disabled state.
+    /// </summary>
+
     public virtual bool IsEnabled
     {
         get => isEnabled;
@@ -274,6 +279,7 @@ public class FrameworkElement
                 isEnabled = value;
                 Visual.IsEnabled = value;
 
+                UpdateState();
             }
         }
     }

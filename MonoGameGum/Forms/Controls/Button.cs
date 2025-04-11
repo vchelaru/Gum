@@ -46,23 +46,6 @@ public class Button : ButtonBase
         }
     }
 
-    /// <summary>
-    /// Whether the button is enabled or not. When disabled, the button will not respond to user input, and will display
-    /// a disabled state.
-    /// </summary>
-    public override bool IsEnabled
-    {
-        get
-        {
-            return base.IsEnabled;
-        }
-        set
-        {
-            base.IsEnabled = value;
-
-            UpdateState();
-        }
-    }
 
     #endregion
 
