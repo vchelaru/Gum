@@ -80,7 +80,6 @@ public abstract class RangeBase : FrameworkElement
     private double TrackPushedTime;
     private float TrackPushedSignRelativeToThumb;
     private double LastRepeatRate;
-
     public double Value
     {
         get => value;
@@ -116,6 +115,19 @@ public abstract class RangeBase : FrameworkElement
                 }
 
                 PushValueToViewModel();
+            }
+        }
+    }
+
+    public override bool IsEnabled 
+    { 
+        get => base.IsEnabled;
+        set
+        {
+            base.IsEnabled = value;
+            if (thumb != null)
+            {
+                thumb.IsEnabled = value;
             }
         }
     }
