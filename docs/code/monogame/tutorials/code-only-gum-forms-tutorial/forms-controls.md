@@ -87,7 +87,7 @@ disabledButton.Click += (_, _) =>
     label.Text = "This never happens";
 ```
 
-<figure><img src="../../../../.gitbook/assets/13_08 38 27.gif" alt=""><figcaption><p>Buttons only respond to Click if IsEnabled is set to true (default)</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/11_08 27 05.gif" alt=""><figcaption><p>Buttons only respond to Click if IsEnabled is set to true (default)</p></figcaption></figure>
 
 {% hint style="info" %}
 Notice that the Label and two Buttons are stacked top-to-bottom. This is the default behavior layout behavior of StackPanels.
@@ -111,7 +111,7 @@ checkBox.Checked += (_, _) => label.Text = "CheckBox checked";
 checkBox.Unchecked += (_, _) => label.Text = "CheckBox unchecked";
 ```
 
-<figure><img src="../../../../.gitbook/assets/13_08 46 53.gif" alt=""><figcaption><p>CheckBox responds to clicks</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/11_08 29 21.gif" alt=""><figcaption><p>CheckBox responds to clicks</p></figcaption></figure>
 
 ## ComboBox
 
@@ -132,7 +132,7 @@ comboBox.SelectionChanged += (_, _) =>
 mainPanel.AddChild(comboBox);
 ```
 
-<figure><img src="../../../../.gitbook/assets/05_09 12 43.gif" alt=""><figcaption><p>ComboBox responding to items being selected</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/11_08 31 12.gif" alt=""><figcaption><p>ComboBox responding to items being selected</p></figcaption></figure>
 
 ## ListBox
 
@@ -157,7 +157,7 @@ listBox.SelectionChanged += (_, _) =>
 mainPanel.AddChild(listBox);
 ```
 
-<figure><img src="../../../../.gitbook/assets/22_07 19 30.gif" alt=""><figcaption><p>ListBox responding to items being selected</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/11_08 35 33.gif" alt=""><figcaption><p>ListBox responding to items being selected</p></figcaption></figure>
 
 ## RadioButton
 
@@ -200,7 +200,7 @@ radioButton3.Text = "Option 3";
 group2.AddChild(radioButton3);
 ```
 
-<figure><img src="../../../../.gitbook/assets/05_09 41 48 (2).gif" alt=""><figcaption><p>RadioButtons responding to clicks in two different groups</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/11_08 36 54.gif" alt=""><figcaption><p>RadioButtons responding to clicks in two different groups</p></figcaption></figure>
 
 ## ScrollViewer
 
@@ -221,7 +221,7 @@ for(int i = 0; i < 15; i++)
 }
 ```
 
-<figure><img src="../../../../.gitbook/assets/05_10 05 52.gif" alt=""><figcaption><p>ScrollViewer containing buttons</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/11_08 38 28.gif" alt=""><figcaption><p>ScrollViewer containing buttons</p></figcaption></figure>
 
 ## Slider
 
@@ -239,7 +239,7 @@ slider.ValueChanged += (_,_) =>
 mainPanel.AddChild(slider);
 ```
 
-<figure><img src="../../../../.gitbook/assets/05_09 52 41.gif" alt=""><figcaption><p>Slider responding to cursor input</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/11_08 42 45.gif" alt=""><figcaption><p>Slider responding to cursor input</p></figcaption></figure>
 
 ## TextBox
 

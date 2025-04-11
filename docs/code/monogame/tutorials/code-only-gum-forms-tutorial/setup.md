@@ -29,7 +29,6 @@ public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
     
-    StackPanel mainPanel;
     GumService Gum => GumService.Default;
     
     public Game1()
@@ -43,7 +42,7 @@ public class Game1 : Game
     {
         Gum.Initialize(this);
             
-        mainPanel = new StackPanel();
+        var mainPanel = new StackPanel();
         mainPanel.Visual.AddToRoot();
         
         base.Initialize();
@@ -66,20 +65,14 @@ public class Game1 : Game
 
 The code above includes the following sections:
 
-* StackPanel mainPanel - Games using Gum usually have an object which contains all other instances. In this case we create a StackPanel which will hold all of our controls.&#x20;
+* Initialize - The Initialize method prepares Gum for use. It must be called one time for every Gum project.
+* Once Gum is initialized, we can create controls such as the StackPanel which contains all other controls.  By calling AddToRoot, the mainPanel will be drawn and will receive input. All items added to the StackPanel will also be drawn and receive input, so we only need to call AddToRoot to the StackPanel.
 
-```csharp
-StackPanel mainPanel;
-```
-
-* Initialize - The Initialize method prepares Gum for use. It must be called one time for every Gum project. Once Gum is initialized, we can create controls such as the StackPanel.  By calling AddToRoot, the mainPanel will be drawn and will receive input. All items added to the StackPanel will also be drawn and receive input, so we only need to call AddToRoot to the StackPanel.
-
-```csharp
-Gum.Initialize(this);
+<pre class="language-csharp"><code class="lang-csharp">Gum.Initialize(this);
             
-mainPanel = new StackPanel();
-mainPanel.Visual.AddToRoot();
-```
+<strong>var mainPanel = new StackPanel();
+</strong>mainPanel.Visual.AddToRoot();
+</code></pre>
 
 * Update - this updates the internal keyboard, mouse, and gamepad instances and applies default behavior to any components which implement Forms. For example, if a Button is added to the Screen, this code is responsible for checking if the cursor is overlapping the Button and adjusting the highlight/pressed state appropriately.
 
@@ -101,32 +94,31 @@ We can run our project to see a blank (cornflower blue) screen.
 
 Now that we have Gum running, we can add controls to our StackPanel (mainPanel). The following code in Initialize adds a button which responds to being clicked by modifying its Text property:
 
-```csharp
-protected override void Initialize()
+<pre class="language-diff"><code class="lang-diff">protected override void Initialize()
 {
     Gum.Initialize(this);
 
-    mainPanel = new StackPanel();
+    var mainPanel = new StackPanel();
     mainPanel.Visual.AddToRoot();
 
-    // Creates a button instance
-    var button = new Button();
-    // Adds the button as a child so that it is drawn and has its
-    // events raised
-    mainPanel.AddChild(button);
-    // Initial button text before being clicked
-    button.Text = "Click Me";
-    // Makes the button wider so the text fits
-    button.Visual.Width = 350;
-    // Click event can be handled with a lambda
-    button.Click += (_, _) =>
-        button.Text = $"Clicked at {System.DateTime.Now}";
+<strong>+    // Creates a button instance
+</strong>+    var button = new Button();
++    // Adds the button as a child so that it is drawn and has its
++    // events raised
++    mainPanel.AddChild(button);
++    // Initial button text before being clicked
++    button.Text = "Click Me";
++    // Makes the button wider so the text fits
++    button.Visual.Width = 350;
++    // Click event can be handled with a lambda
++    button.Click += (_, _) =>
++        button.Text = $"Clicked at {System.DateTime.Now}";
 
     base.Initialize();
 }
-```
+</code></pre>
 
-<figure><img src="../../../../.gitbook/assets/13_07 53 14.gif" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/11_07 52 42.gif" alt=""><figcaption></figcaption></figure>
 
 ## Conclusion
 
