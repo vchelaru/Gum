@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGameGum;
 using MonoGameGum.GueDeriving;
+using MonoGameGumInCode.Screens;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
@@ -36,11 +37,18 @@ namespace MonoGameGumInCode
             //Renderer.TextureFilter = TextureFilter.Linear;
 
             // uncomment one of these to create a layout. Only have one uncommented or else UI overlaps
-            CreateMixedLayout();
+            CreateFormsScreen();
+            //CreateMixedLayout();
             //CreateTextLayout();
             //CreateInvisibleLayout();
 
             base.Initialize();
+        }
+
+        private void CreateFormsScreen()
+        {
+            var formsScreen = new FormsScreen();
+            formsScreen.AddToRoot();
         }
 
         private void CreateInvisibleLayout()
@@ -106,21 +114,6 @@ namespace MonoGameGumInCode
 
         private void CreateMixedLayout()
         {
-            //bool addLayeredObject = false;
-            //if(addLayeredObject)
-            //{
-            //    layer = SystemManagers.Default.Renderer.AddLayer();
-            //    layer.LayerCameraSettings = new LayerCameraSettings();
-            //    layer.LayerCameraSettings.IsInScreenSpace = true;
-
-            //    var layeredRectangle = new ColoredRectangleRuntime();
-            //    layeredRectangle.X = 10;
-            //    layeredRectangle.Y = 10;
-            //    layeredRectangle.Width = 120;
-            //    layeredRectangle.Height = 120;
-            //    layeredRectangle.Color = Color.Blue;
-            //    layeredRectangle.AddToManagers(SystemManagers.Default, layer);
-            //}
 
             var container = new ContainerRuntime();
             container.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
