@@ -49,7 +49,7 @@ public class FormsUtilities
         TryAdd(typeof(ScrollBar), typeof(DefaultScrollBarRuntime));
         TryAdd(typeof(ScrollViewer), typeof(DefaultScrollViewerRuntime));
         TryAdd(typeof(TextBox), typeof(DefaultTextBoxRuntime));
-        TryAdd(typeof(PasswordBox), typeof(DefaultTextBoxRuntime));
+        TryAdd(typeof(PasswordBox), typeof(DefaultPasswordBoxRuntime));
         TryAdd(typeof(Slider), typeof(DefaultSliderRuntime));
 
         void TryAdd(Type formsType, Type runtimeType)

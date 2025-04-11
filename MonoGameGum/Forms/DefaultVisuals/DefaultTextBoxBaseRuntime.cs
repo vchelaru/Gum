@@ -140,23 +140,23 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 }
 
                 AddState(FrameworkElement.EnabledState);
-                AddVariable("TextInstance.Color", new Microsoft.Xna.Framework.Color(255, 255, 255));
-                AddVariable("Background.Color", new Microsoft.Xna.Framework.Color(70, 70, 70));
+                AddVariable("TextInstance.Color", Styling.Colors.White);
+                AddVariable("Background.Color", Styling.Colors.DarkGray);
 
                 AddState(FrameworkElement.DisabledState);
-                AddVariable("TextInstance.Color", new Microsoft.Xna.Framework.Color(128, 128, 128));
-                AddVariable("Background.Color", new Microsoft.Xna.Framework.Color(70, 70, 70));
+                AddVariable("TextInstance.Color", Styling.Colors.Gray);
+                AddVariable("Background.Color", Styling.Colors.DarkGray);
 
                 AddState(FrameworkElement.HighlightedState);
-                AddVariable("TextInstance.Color", new Microsoft.Xna.Framework.Color(255, 255, 255));
-                AddVariable("Background.Color", new Microsoft.Xna.Framework.Color(130, 130, 130));
+                AddVariable("TextInstance.Color", Styling.Colors.White);
+                AddVariable("Background.Color", Styling.Colors.Gray);
 
                 // todo - this is using the wrong state name. It should be Focused,
                 // but the TextBoxBase expects Selected. This will change in future 
                 // versions of Gum...
                 AddState("Selected");
-                AddVariable("TextInstance.Color", new Microsoft.Xna.Framework.Color(255, 255, 255));
-                AddVariable("Background.Color", new Microsoft.Xna.Framework.Color(130, 130, 130));
+                AddVariable("TextInstance.Color", Styling.Colors.White);
+                AddVariable("Background.Color", Styling.Colors.DarkGray);
 
 
                 var lineModeCategory = new Gum.DataTypes.Variables.StateSaveCategory();

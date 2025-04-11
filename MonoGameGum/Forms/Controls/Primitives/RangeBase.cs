@@ -348,7 +348,7 @@ public abstract class RangeBase : FrameworkElement
     {
         var cursor = MainCursor;
 
-        if (cursor.WindowPushed == thumb.Visual)
+        if (cursor.WindowPushed == thumb.Visual && IsEnabled)
         {
             UpdateThumbPositionToCursorDrag(cursor);
         }
@@ -359,7 +359,7 @@ public abstract class RangeBase : FrameworkElement
     private void HandleThisRollOver(object sender, EventArgs args)
     {
         var cursor = MainCursor;
-        if (cursor.WindowPushed == thumb.Visual)
+        if (cursor.WindowPushed == thumb.Visual && IsEnabled)
         {
             UpdateThumbPositionToCursorDrag(cursor);
         }

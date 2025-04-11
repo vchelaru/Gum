@@ -162,6 +162,13 @@ public class Slider : RangeBase, IInputReceiver
     private void HandleTrackPush(object sender, EventArgs args)
 #endif
     {
+        //////////////////////////Early Out//////////////////////////
+        if(!IsEnabled)
+        {
+            return;
+        }
+        /////////////////////////////////////////////////////////////
+
         var valueBefore = Value;
         if (IsMoveToPointEnabled)
         {

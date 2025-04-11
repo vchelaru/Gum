@@ -30,7 +30,6 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 NineSliceInstance.Name = "NineSliceInstance";
                 var ThumbInstance = new DefaultButtonRuntime();
                 ThumbInstance.Name = "ThumbInstance";
-
                 this.Children.Add(TrackInstance);
                 TrackInstance.Children.Add(NineSliceInstance);
                 TrackInstance.Children.Add(ThumbInstance);
@@ -122,12 +121,16 @@ namespace MonoGameGum.Forms.DefaultVisuals
 
                 AddState(FrameworkElement.DisabledState);
                 AddVariable("FocusedIndicator.Visible", false);
+                AddVariable("ThumbInstance.IsEnabled", false);
+
 
                 AddState(FrameworkElement.DisabledFocusedState);
                 AddVariable("FocusedIndicator.Visible", true);
+                AddVariable("ThumbInstance.IsEnabled", false);
 
                 AddState(FrameworkElement.EnabledState);
                 AddVariable("FocusedIndicator.Visible", false);
+                AddVariable("ThumbInstance.IsEnabled", true);
 
                 AddState(FrameworkElement.FocusedState);
                 AddVariable("FocusedIndicator.Visible", true);
