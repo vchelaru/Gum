@@ -82,15 +82,20 @@ public class ListBoxItem : FrameworkElement
         Visual.RollOff += this.HandleRollOff;
         Visual.RollOver += this.HandleRollOver;
 #endif
-        // optional
-        text = Visual.GetGraphicalUiElementByName("TextInstance");
-        coreText = text?.RenderableComponent as RenderingLibrary.Graphics.Text;
+        RefreshInternalVisualReferences();
 
         // Just in case it needs to set the state to "enabled"
         UpdateState();
 
 
         base.ReactToVisualChanged();
+    }
+
+    protected virtual void RefreshInternalVisualReferences()
+    {
+        // optional
+        text = Visual.GetGraphicalUiElementByName("TextInstance");
+        coreText = text?.RenderableComponent as RenderingLibrary.Graphics.Text;
     }
 
 

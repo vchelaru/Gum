@@ -110,8 +110,9 @@ public class ScrollViewer : FrameworkElement
         //}
 #endif
 
-        var scrollBarVisual = scrollBarVisualAsGue as InteractiveGue;
+        RefreshInternalVisualReferences();
 
+        var scrollBarVisual = scrollBarVisualAsGue as InteractiveGue;
 #if DEBUG
         //if (scrollBarVisual == null)
         //{
@@ -150,13 +151,11 @@ public class ScrollViewer : FrameworkElement
             verticalScrollBar.Visual.SizeChanged += HandleVerticalScrollBarThumbSizeChanged;
         }
 
-        innerPanel = Visual.GetGraphicalUiElementByName("InnerPanelInstance");
-        if(innerPanel != null)
+        if (innerPanel != null)
         {
             innerPanel.SizeChanged += HandleInnerPanelSizeChanged;
             innerPanel.PositionChanged += HandleInnerPanelPositionChanged;
         }
-        clipContainer = Visual.GetGraphicalUiElementByName("ClipContainerInstance");
 
         Visual.MouseWheelScroll += HandleMouseWheelScroll;
         Visual.RollOverBubbling += HandleRollOver;
@@ -165,6 +164,12 @@ public class ScrollViewer : FrameworkElement
         UpdateVerticalScrollBarValues();
 
         base.ReactToVisualChanged();
+    }
+
+    protected virtual void RefreshInternalVisualReferences()
+    {
+        innerPanel = Visual.GetGraphicalUiElementByName("InnerPanelInstance");
+        clipContainer = Visual.GetGraphicalUiElementByName("ClipContainerInstance");
     }
 
     /// <inheritdoc/>

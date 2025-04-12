@@ -81,9 +81,12 @@ public class Image : FrameworkElement
 
     protected override void ReactToVisualChanged()
     {
-        mContainedSprite = Visual?.RenderableComponent as Sprite;
-
+        RefreshInternalVisualReferences();
         base.ReactToVisualChanged();
     }
 
+    protected override void RefreshInternalVisualReferences()
+    {
+        mContainedSprite = Visual?.RenderableComponent as Sprite;
+    }
 }

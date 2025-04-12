@@ -685,10 +685,9 @@ public class FrameworkElement
         }
     }
 
-    protected virtual void ReactToVisualChanged()
-    {
+    protected virtual void ReactToVisualChanged() { }
 
-    }
+    protected virtual void RefreshInternalVisualReferences() { }
 
     /// <summary>
     /// Method raised when the current visual is changed or set to null. If the visual

@@ -82,7 +82,11 @@ public class PasswordBox : TextBoxBase
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
+        RefreshInternalVisualReferences();
+    }
 
+    protected virtual void RefreshInternalVisualReferences()
+    {
         if (selectionInstance != null)
         {
             selectionInstance.Visible = false;

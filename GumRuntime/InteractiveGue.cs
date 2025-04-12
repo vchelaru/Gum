@@ -630,6 +630,7 @@ namespace Gum.Wireframe
         {
             if(!_hasSubscribedLosePusheEvents)
             {
+                _hasSubscribedLosePusheEvents = true;
                 Click += (not, used) => _losePush?.Invoke(this, EventArgs.Empty);
                 RollOff += (not, used) => _losePush?.Invoke(this, EventArgs.Empty);
             }

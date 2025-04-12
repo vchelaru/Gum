@@ -57,10 +57,15 @@ public class Button : ButtonBase
 
     protected override void ReactToVisualChanged()
     {
+        RefreshInternalVisualReferences();
+        base.ReactToVisualChanged();
+    }
+
+    protected override void RefreshInternalVisualReferences()
+    {
         // text component is optional:
         textComponent = base.Visual.GetGraphicalUiElementByName("TextInstance");
         coreTextObject = textComponent?.RenderableComponent as RenderingLibrary.Graphics.Text;
-        base.ReactToVisualChanged();
     }
 
 

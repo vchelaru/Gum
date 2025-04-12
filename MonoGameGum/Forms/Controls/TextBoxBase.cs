@@ -242,43 +242,12 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
 
     protected override void ReactToVisualChanged()
     {
-        if(textComponent != null)
+        if (textComponent != null)
         {
             // unsubscribe on old:
             textComponent.PropertyChanged -= HandleTextComponentPropertyChanged;
         }
-
-        textComponent = base.Visual.GetGraphicalUiElementByName("TextInstance");
-        caretComponent = base.Visual.GetGraphicalUiElementByName("CaretInstance");
-
-        // optional:
-
-        if (_selectionInstances == null)
-        {
-            _selectionInstances = new List<GraphicalUiElement>();
-        }
-
-        selectionInstance = base.Visual.GetGraphicalUiElementByName("SelectionInstance");
-        if (selectionInstance != null)
-        {
-            _selectionInstances.Add(selectionInstance);
-        }
-        
-        RefreshTemplateFromSelectionInstance();
-
-        placeholderComponent = base.Visual.GetGraphicalUiElementByName("PlaceholderTextInstance");
-
-#if DEBUG
-        if (textComponent == null) throw new Exception("Gum object must have an object called \"TextInstance\"");
-        if (caretComponent == null) throw new Exception("Gum object must have an object called \"CaretInstance\"");
-#endif
-
-        coreTextObject = textComponent.RenderableComponent as RenderingLibrary.Graphics.Text;
-        placeholderTextObject = placeholderComponent?.RenderableComponent as RenderingLibrary.Graphics.Text;
-
-#if DEBUG
-        if (coreTextObject == null) throw new Exception("The Text instance must be of type Text");
-#endif
+        RefreshInternalVisualReferences();
 
 
 
@@ -299,8 +268,6 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
 #endif
         Visual.SizeChanged += HandleVisualSizeChanged;
 
-        this.textComponent.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
-        caretComponent.X = 0;
         this.textComponent.PropertyChanged += HandleTextComponentPropertyChanged;
         base.ReactToVisualChanged();
 
@@ -308,6 +275,43 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
         //OffsetTextToKeepCaretInView();
 
         IsFocused = false;
+    }
+
+    protected virtual void RefreshInternalVisualReferences()
+    {
+        textComponent = base.Visual.GetGraphicalUiElementByName("TextInstance");
+        caretComponent = base.Visual.GetGraphicalUiElementByName("CaretInstance");
+
+        // optional:
+
+        if (_selectionInstances == null)
+        {
+            _selectionInstances = new List<GraphicalUiElement>();
+        }
+
+        selectionInstance = base.Visual.GetGraphicalUiElementByName("SelectionInstance");
+        if (selectionInstance != null)
+        {
+            _selectionInstances.Add(selectionInstance);
+        }
+
+        RefreshTemplateFromSelectionInstance();
+
+        placeholderComponent = base.Visual.GetGraphicalUiElementByName("PlaceholderTextInstance");
+
+#if DEBUG
+        if (textComponent == null) throw new Exception("Gum object must have an object called \"TextInstance\"");
+        if (caretComponent == null) throw new Exception("Gum object must have an object called \"CaretInstance\"");
+#endif
+
+        coreTextObject = textComponent.RenderableComponent as RenderingLibrary.Graphics.Text;
+        placeholderTextObject = placeholderComponent?.RenderableComponent as RenderingLibrary.Graphics.Text;
+
+#if DEBUG
+        if (coreTextObject == null) throw new Exception("The Text instance must be of type Text");
+#endif
+        this.textComponent.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
+        caretComponent.X = 0;
     }
 
     private void HandleTextComponentPropertyChanged(object? sender, PropertyChangedEventArgs e)

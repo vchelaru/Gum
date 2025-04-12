@@ -67,8 +67,6 @@ public class Panel : FrameworkElement
             };
         }
 
-        
-
         base.ReactToVisualChanged();
     }
 }

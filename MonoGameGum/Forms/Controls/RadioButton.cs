@@ -148,6 +148,17 @@ public class RadioButton : ToggleButton
      */
     protected override void ReactToVisualChanged()
     {
+        RefreshInternalVisualReferences();
+
+        base.ReactToVisualChanged();
+
+        Visual.ParentChanged += HandleParentChanged;
+
+        UpdateState();
+    }
+
+    protected override void RefreshInternalVisualReferences()
+    {
         // text component is optional:
         textComponent = base.Visual.GetGraphicalUiElementByName("TextInstance");
 
@@ -162,12 +173,6 @@ public class RadioButton : ToggleButton
         {
             GroupName = GroupName; //this will force the dictionary to be updated for the current <group name, visual> pair
         }
-
-        base.ReactToVisualChanged();
-
-        Visual.ParentChanged += HandleParentChanged;
-
-        UpdateState();
     }
     #endregion
 

@@ -58,38 +58,7 @@ public class ScrollBar : RangeBase
 
     protected override void ReactToVisualChanged()
     {
-        var upButtonVisual = this.Visual.GetGraphicalUiElementByName("UpButtonInstance") as InteractiveGue;
-#if DEBUG
-        if (upButtonVisual == null)
-        {
-            throw new Exception("The ScrollBar Gum object must have a button called UpButtonInstance");
-        }
-#endif
-        if (upButtonVisual.FormsControlAsObject == null)
-        {
-            upButton = new Button(upButtonVisual);
-        }
-        else
-        {
-            upButton = upButtonVisual.FormsControlAsObject as Button;
-        }
-
-        var downButtonVisual = this.Visual.GetGraphicalUiElementByName("DownButtonInstance") as InteractiveGue;
-#if DEBUG
-        if (downButtonVisual == null)
-        {
-            throw new Exception("The ScrollBar Gum object must have a button called DownButtonInstance");
-        }
-#endif
-        if (downButtonVisual.FormsControlAsObject == null)
-        {
-            downButton = new Button(downButtonVisual);
-        }
-        else
-        {
-            downButton = downButtonVisual.FormsControlAsObject as Button;
-        }
-
+        RefreshInternalVisualReferences();
 
         base.ReactToVisualChanged();
 
@@ -130,6 +99,41 @@ public class ScrollBar : RangeBase
             ViewportSize = 10;
             LargeChange = 10;
             SmallChange = 2;
+        }
+    }
+
+    protected override void RefreshInternalVisualReferences()
+    {
+        var upButtonVisual = this.Visual.GetGraphicalUiElementByName("UpButtonInstance") as InteractiveGue;
+#if DEBUG
+        if (upButtonVisual == null)
+        {
+            throw new Exception("The ScrollBar Gum object must have a button called UpButtonInstance");
+        }
+#endif
+        if (upButtonVisual.FormsControlAsObject == null)
+        {
+            upButton = new Button(upButtonVisual);
+        }
+        else
+        {
+            upButton = upButtonVisual.FormsControlAsObject as Button;
+        }
+
+        var downButtonVisual = this.Visual.GetGraphicalUiElementByName("DownButtonInstance") as InteractiveGue;
+#if DEBUG
+        if (downButtonVisual == null)
+        {
+            throw new Exception("The ScrollBar Gum object must have a button called DownButtonInstance");
+        }
+#endif
+        if (downButtonVisual.FormsControlAsObject == null)
+        {
+            downButton = new Button(downButtonVisual);
+        }
+        else
+        {
+            downButton = downButtonVisual.FormsControlAsObject as Button;
         }
     }
 

@@ -124,11 +124,6 @@ public class MenuItem : ItemsControl
 
     protected override void ReactToVisualChanged()
     {
-        if(lastVisual != null && lastVisual != Visual)
-        {
-            lastVisual.Children.CollectionChanged -= HandleVisualChildrenChanged;
-        }
-
 #if FRB
         Visual.Push += _=> this.HandlePush(this, EventArgs.Empty);
         Visual.Click += _ => this.HandleClick(this, EventArgs.Empty);
@@ -142,6 +137,22 @@ public class MenuItem : ItemsControl
         Visual.RollOff += this.HandleRollOff;
         Visual.RollOver += this.HandleRollOver;
 #endif
+        RefreshInternalVisualReferences();
+
+        // Just in case it needs to set the state to "enabled"
+        UpdateState();
+
+
+        base.ReactToVisualChanged();
+    }
+
+    protected virtual void RefreshInternalVisualReferences()
+    {
+        if (lastVisual != null && lastVisual != Visual)
+        {
+            lastVisual.Children.CollectionChanged -= HandleVisualChildrenChanged;
+        }
+
         // optional
         text = Visual.GetGraphicalUiElementByName("TextInstance");
         coreText = text?.RenderableComponent as RenderingLibrary.Graphics.Text;
@@ -149,12 +160,6 @@ public class MenuItem : ItemsControl
         Visual.Children.CollectionChanged += HandleVisualChildrenChanged;
 
         lastVisual = Visual;
-
-        // Just in case it needs to set the state to "enabled"
-        UpdateState();
-
-
-        base.ReactToVisualChanged();
     }
 
     private void HandleVisualChildrenChanged(object? sender, NotifyCollectionChangedEventArgs e)

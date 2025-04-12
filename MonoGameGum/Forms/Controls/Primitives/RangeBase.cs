@@ -167,39 +167,7 @@ public abstract class RangeBase : FrameworkElement
         base.ReactToVisualChanged();
 
         var thumbVisual = this.Visual.GetGraphicalUiElementByName("ThumbInstance") as InteractiveGue;
-#if DEBUG
-        // Update April 12, 2025 
-        // Thumbs are no longer required
-        //if (thumbVisual == null)
-        //{
-        //    var message =
-        //        $"The {this.GetType().Name} Gum object must have a button called ThumbInstance.";
-
-        //    if (Visual.Children != null)
-        //    {
-        //        if (Visual.Children.Count == 0)
-        //        {
-        //            message += " This visual has no children";
-        //        }
-        //        else
-        //        {
-        //            message += " The visual has the following children:";
-        //            foreach (var child in Visual.Children)
-        //            {
-        //                message += "\n" + child.Name;
-        //            }
-        //        }
-        //    }
-        //    else //if(Visual.Children == null)
-        //    {
-        //        message += " This visual has null children";
-        //    }
-
-        //    throw new Exception(message);
-        //}
-#endif
-        // assign explicit track before adding events
-        AssignExplicitTrack();
+        RefreshInternalVisualReferences();
 
         if (thumbVisual != null)
         {
@@ -224,7 +192,7 @@ public abstract class RangeBase : FrameworkElement
 
 #else
         if (thumb != null)
-        { 
+        {
             thumb.Visual.Dragging += HandleThumbRollOver;
         }
         Visual.RollOver += HandleThisRollOver;
@@ -244,6 +212,12 @@ public abstract class RangeBase : FrameworkElement
         SmallChange = 10;
         Value = 0;
 
+    }
+
+    protected virtual void RefreshInternalVisualReferences()
+    {
+        // assign explicit track before adding events
+        AssignExplicitTrack();
     }
 
     private void AssignExplicitTrack()

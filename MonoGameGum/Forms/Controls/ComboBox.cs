@@ -177,6 +177,33 @@ public class ComboBox : FrameworkElement, IInputReceiver
 
     protected override void ReactToVisualChanged()
     {
+        RefreshInternalVisualReferences();
+
+#if FRB
+        Visual.Click += _=> this.HandleClick(this, EventArgs.Empty);
+        Visual.Push += _ => this.HandlePush(this, EventArgs.Empty);
+        Visual.LosePush += _ => this.HandleLosePush(this, EventArgs.Empty);
+        Visual.RollOn += _ => this.HandleRollOn(this, EventArgs.Empty);
+        Visual.RollOff += _ => this.HandleRollOff(this, EventArgs.Empty);
+#else
+        Visual.Click += this.HandleClick;
+        Visual.Push += this.HandlePush;
+        Visual.LosePush += this.HandleLosePush;
+        Visual.RollOn += this.HandleRollOn;
+        Visual.RollOff += this.HandleRollOff;
+#endif
+
+        listBox.SelectionChanged += HandleSelectionChanged;
+        listBox.ItemPushed += HandleListBoxItemPushed;
+
+
+        base.ReactToVisualChanged();
+
+        UpdateState();
+    }
+
+    protected override void RefreshInternalVisualReferences()
+    {
         var listBoxInstance = Visual.GetGraphicalUiElementByName("ListBoxInstance") as InteractiveGue;
         textComponent = base.Visual.GetGraphicalUiElementByName("TextInstance");
 
@@ -214,21 +241,6 @@ public class ComboBox : FrameworkElement, IInputReceiver
             }
 #endif
         }
-
-#if FRB
-        Visual.Click += _=> this.HandleClick(this, EventArgs.Empty);
-        Visual.Push += _ => this.HandlePush(this, EventArgs.Empty);
-        Visual.LosePush += _ => this.HandleLosePush(this, EventArgs.Empty);
-        Visual.RollOn += _ => this.HandleRollOn(this, EventArgs.Empty);
-        Visual.RollOff += _ => this.HandleRollOff(this, EventArgs.Empty);
-#else
-        Visual.Click += this.HandleClick;
-        Visual.Push += this.HandlePush;
-        Visual.LosePush += this.HandleLosePush;
-        Visual.RollOn += this.HandleRollOn;
-        Visual.RollOff += this.HandleRollOff;
-#endif
-
         var effectiveParent = listBox.Visual.EffectiveParentGue as InteractiveGue;
         if (effectiveParent != null)
         {
@@ -238,15 +250,9 @@ public class ComboBox : FrameworkElement, IInputReceiver
         {
             Visual.RaiseChildrenEventsOutsideOfBounds = true;
         }
-        listBox.SelectionChanged += HandleSelectionChanged;
-        listBox.ItemPushed += HandleListBoxItemPushed;
 
         listBox.IsVisible = false;
         Text = null;
-
-        base.ReactToVisualChanged();
-
-        UpdateState();
     }
 
     #endregion

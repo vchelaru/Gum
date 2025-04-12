@@ -48,7 +48,13 @@ public class Label : FrameworkElement
 
     protected override void ReactToVisualChanged()
     {
-        if(base.Visual?.Name == "TextInstance")
+        RefreshInternalVisualReferences();
+        base.ReactToVisualChanged();
+    }
+
+    protected virtual void RefreshInternalVisualReferences()
+    {
+        if (base.Visual?.Name == "TextInstance")
         {
             textComponent = base.Visual;
         }
@@ -62,7 +68,6 @@ public class Label : FrameworkElement
 #endif
 
         coreTextObject = (RenderingLibrary.Graphics.Text)textComponent!.RenderableComponent;
-        base.ReactToVisualChanged();
     }
 
 #if DEBUG

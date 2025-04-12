@@ -46,14 +46,19 @@ public class CheckBox : ToggleButton
 
     protected override void ReactToVisualChanged()
     {
-        // text component is optional:
-        textComponent = base.Visual.GetGraphicalUiElementByName("TextInstance");
-        coreTextObject = textComponent?.RenderableComponent as RenderingLibrary.Graphics.Text;
+        RefreshInternalVisualReferences();
 
         base.ReactToVisualChanged();
 
         // In case the check is visible - the checkbox starts in a IsChecked = false state:
         UpdateState();
+    }
+
+    protected override void RefreshInternalVisualReferences()
+    {
+        // text component is optional:
+        textComponent = base.Visual.GetGraphicalUiElementByName("TextInstance");
+        coreTextObject = textComponent?.RenderableComponent as RenderingLibrary.Graphics.Text;
     }
 
     #endregion
