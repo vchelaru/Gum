@@ -21,6 +21,8 @@ using ToolsUtilitiesStandard.Helpers;
 using System.Net;
 using System.IO;
 using MonoGameGum.Localization;
+using System.Security.Policy;
+
 
 
 
@@ -116,7 +118,7 @@ public class CustomSetPropertyOnRenderable
         }
         else if (renderableIpso is NineSlice)
         {
-            handled = TrySetPropertyOnNineSlice(renderableIpso, propertyName, value, handled);
+            handled = TrySetPropertyOnNineSlice(renderableIpso, graphicalUiElement, propertyName, value, handled);
         }
         else if (renderableIpso is InvisibleRenderable)
         {
@@ -173,65 +175,13 @@ public class CustomSetPropertyOnRenderable
         return didSet;
     }
 
-    private static bool TrySetPropertyOnNineSlice(IRenderableIpso renderableIpso, string propertyName, object value, bool handled)
+    private static bool TrySetPropertyOnNineSlice(IRenderableIpso renderableIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value, bool handled)
     {
         var nineSlice = renderableIpso as NineSlice;
 
         if (propertyName == "SourceFile")
         {
-            string valueAsString = value as string;
-
-            if (string.IsNullOrEmpty(valueAsString))
-            {
-                nineSlice.SetSingleTexture(null);
-            }
-            else
-            {
-                if (ToolsUtilities.FileManager.IsRelative(valueAsString))
-                {
-                    valueAsString = ToolsUtilities.FileManager.RelativeDirectory + valueAsString;
-                    valueAsString = ToolsUtilities.FileManager.RemoveDotDotSlash(valueAsString);
-                }
-
-                //check if part of atlas
-                //Note: assumes that if this filename is in an atlas that all 9 are in an atlas
-                var atlasedTexture = global::RenderingLibrary.Content.LoaderManager.Self.TryLoadContent<AtlasedTexture>(valueAsString);
-                if (atlasedTexture != null)
-                {
-                    nineSlice.LoadAtlasedTexture(valueAsString, atlasedTexture);
-                }
-                else
-                {
-                    if (NineSliceExtensions.GetIfShouldUsePattern(valueAsString))
-                    {
-                        nineSlice.SetTexturesUsingPattern(valueAsString, SystemManagers.Default, false);
-                    }
-                    else
-                    {
-                        var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-
-                        Microsoft.Xna.Framework.Graphics.Texture2D texture =
-                            Sprite.InvalidTexture;
-
-                        try
-                        {
-                            texture =
-                                loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(valueAsString);
-                        }
-                        catch (Exception e)
-                        {
-                            if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
-                            {
-                                string message = $"Error setting SourceFile on NineSlice named {nineSlice.Name}:\n{valueAsString}";
-                                throw new System.IO.FileNotFoundException(message);
-                            }
-                            // do nothing?
-                        }
-                        nineSlice.SetSingleTexture(texture);
-
-                    }
-                }
-            }
+            AssignSourceFileOnNineSlice(value as string, graphicalUiElement, nineSlice);
             handled = true;
         }
         else if (propertyName == "Blend")
@@ -282,6 +232,75 @@ public class CustomSetPropertyOnRenderable
         }
 
         return handled;
+    }
+
+    private static void AssignSourceFileOnNineSlice(string value, GraphicalUiElement graphicalUiElement, NineSlice nineSlice)
+    {
+        var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+
+        if (string.IsNullOrEmpty(value))
+        {
+            nineSlice.SetSingleTexture(null);
+        }
+        else if (value.EndsWith(".achx"))
+        {
+            AnimationChainList animationChainList = GetAnimationChainList(ref value, loaderManager);
+
+            nineSlice.AnimationChains = animationChainList;
+
+            nineSlice.RefreshCurrentChainToDesiredName();
+
+            nineSlice.UpdateToCurrentAnimationFrame();
+
+            graphicalUiElement.UpdateTextureValuesFrom(nineSlice);
+
+        }
+        else
+        {
+            if (ToolsUtilities.FileManager.IsRelative(value))
+            {
+                value = ToolsUtilities.FileManager.RelativeDirectory + value;
+                value = ToolsUtilities.FileManager.RemoveDotDotSlash(value);
+            }
+
+            //check if part of atlas
+            //Note: assumes that if this filename is in an atlas that all 9 are in an atlas
+            var atlasedTexture = global::RenderingLibrary.Content.LoaderManager.Self.TryLoadContent<AtlasedTexture>(value);
+            if (atlasedTexture != null)
+            {
+                nineSlice.LoadAtlasedTexture(value, atlasedTexture);
+            }
+            else
+            {
+                if (NineSliceExtensions.GetIfShouldUsePattern(value))
+                {
+                    nineSlice.SetTexturesUsingPattern(value, SystemManagers.Default, false);
+                }
+                else
+                {
+
+                    Microsoft.Xna.Framework.Graphics.Texture2D texture =
+                        Sprite.InvalidTexture;
+
+                    try
+                    {
+                        texture =
+                            loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(value);
+                    }
+                    catch (Exception e)
+                    {
+                        if (GraphicalUiElement.MissingFileBehavior == MissingFileBehavior.ThrowException)
+                        {
+                            string message = $"Error setting SourceFile on NineSlice named {nineSlice.Name}:\n{value}";
+                            throw new System.IO.FileNotFoundException(message);
+                        }
+                        // do nothing?
+                    }
+                    nineSlice.SetSingleTexture(texture);
+
+                }
+            }
+        }
     }
 
     private static bool TrySetPropertyOnSprite(IRenderableIpso renderableIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
@@ -1354,31 +1373,7 @@ public class CustomSetPropertyOnRenderable
         }
         else if (value.EndsWith(".achx"))
         {
-            if (ToolsUtilities.FileManager.IsRelative(value))
-            {
-                value = ToolsUtilities.FileManager.RelativeDirectory + value;
-
-                value = ToolsUtilities.FileManager.RemoveDotDotSlash(value);
-            }
-
-
-
-            AnimationChainList animationChainList = null;
-
-            if (loaderManager.CacheTextures)
-            {
-                animationChainList = loaderManager.GetDisposable(value) as AnimationChainList;
-            }
-
-            if (animationChainList == null)
-            {
-                var animationChainListSave = AnimationChainListSave.FromFile(value);
-                animationChainList = animationChainListSave.ToAnimationChainList(null);
-                if (loaderManager.CacheTextures)
-                {
-                    loaderManager.AddDisposable(value, animationChainList);
-                }
-            }
+            AnimationChainList animationChainList = GetAnimationChainList(ref value, loaderManager);
 
             sprite.AnimationChains = animationChainList;
 
@@ -1431,6 +1426,35 @@ public class CustomSetPropertyOnRenderable
         }
         handled = true;
         return handled;
+    }
+
+    private static AnimationChainList GetAnimationChainList(ref string value, LoaderManager loaderManager)
+    {
+        if (ToolsUtilities.FileManager.IsRelative(value))
+        {
+            value = ToolsUtilities.FileManager.RelativeDirectory + value;
+
+            value = ToolsUtilities.FileManager.RemoveDotDotSlash(value);
+        }
+
+        AnimationChainList animationChainList = null;
+
+        if (loaderManager.CacheTextures)
+        {
+            animationChainList = loaderManager.GetDisposable(value) as AnimationChainList;
+        }
+
+        if (animationChainList == null)
+        {
+            var animationChainListSave = AnimationChainListSave.FromFile(value);
+            animationChainList = animationChainListSave.ToAnimationChainList(null);
+            if (loaderManager.CacheTextures)
+            {
+                loaderManager.AddDisposable(value, animationChainList);
+            }
+        }
+
+        return animationChainList;
     }
 
     public static void AddRenderableToManagers(IRenderableIpso renderable, ISystemManagers iSystemManagers, Layer layer)

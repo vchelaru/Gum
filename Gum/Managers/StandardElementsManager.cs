@@ -442,6 +442,13 @@ namespace Gum.Managers
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "", Name = "SourceFile", IsFile = true, Category = "Source" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "Visible", Category = "States and Visibility" });
 
+                stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Category = "Animation", Name = "Animate" });
+
+                var currentChainNameVariable = new VariableSave { SetsValue = true, Type = "string", Value = null, Category = "Animation", Name = "CurrentChainName" };
+                currentChainNameVariable.PropertiesToSetOnDisplayer["IsEditable"] = true;
+                stateSave.Variables.Add(currentChainNameVariable);
+
+
                 AddColorVariables(stateSave);
                 stateSave.Variables.Add(CreateBlendVariable());
 
