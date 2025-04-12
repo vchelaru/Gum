@@ -24,7 +24,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Compile Include="..\WpfDataUi\App.xaml.cs" Link="App.xaml.cs" />
 		<Compile Include="..\WpfDataUi\Controls\AngleSelectorDisplay.xaml.cs" Link="Controls\AngleSelectorDisplay.xaml.cs" />
 		<Compile Include="..\WpfDataUi\Controls\CheckBoxDisplay.xaml.cs" Link="Controls\CheckBoxDisplay.xaml.cs" />
 		<Compile Include="..\WpfDataUi\Controls\ComboBoxDisplay.xaml.cs" Link="Controls\ComboBoxDisplay.xaml.cs" />

@@ -35,7 +35,7 @@ public abstract class RangeBase : FrameworkElement
     protected float cursorGrabOffsetRelativeToThumb = 0;
 
     /// <summary>
-    /// The amount to change Value when the user clicks on the track.
+    /// The amount to change Value when the user clicks on the track. Only applies if IsMoveToPointEnabled is false.
     /// </summary>
     public double LargeChange { get; set; }
 
@@ -82,6 +82,10 @@ public abstract class RangeBase : FrameworkElement
     private double TrackPushedTime;
     private float TrackPushedSignRelativeToValue;
     private double LastRepeatRate;
+
+    /// <summary>
+    /// The current value of the RangeBase. This value is clamped to be between Minimum and Maximum.
+    /// </summary>
     public double Value
     {
         get => value;
