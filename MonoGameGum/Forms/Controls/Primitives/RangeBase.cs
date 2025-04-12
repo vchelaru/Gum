@@ -1,5 +1,7 @@
 ﻿using Gum.Wireframe;
 using System;
+using RenderingLibrary;
+
 
 
 #if FRB
@@ -78,7 +80,7 @@ public abstract class RangeBase : FrameworkElement
 
     double value;
     private double TrackPushedTime;
-    private float TrackPushedSignRelativeToThumb;
+    private float TrackPushedSignRelativeToValue;
     private double LastRepeatRate;
     public double Value
     {
@@ -108,7 +110,7 @@ public abstract class RangeBase : FrameworkElement
 
                 ValueChanged?.Invoke(this, EventArgs.Empty);
 
-                if (MainCursor.WindowPushed != thumb.Visual)
+                if (MainCursor.WindowPushed != thumb?.Visual)
                 {
                     // Make sure the user isn't currently grabbing the thumb
                     ValueChangeCompleted?.Invoke(this, EventArgs.Empty);
@@ -131,6 +133,13 @@ public abstract class RangeBase : FrameworkElement
             }
         }
     }
+
+    /// <summary>
+    /// Controls whether clicking on the track sets the value to the clicked position.
+    /// If true, the value moves to the clicked position. If false, the value increases or decreases
+    /// according to the LargeChange value.
+    /// </summary>
+    public bool IsMoveToPointEnabled { get; set; }
 
     #endregion
 
@@ -155,54 +164,65 @@ public abstract class RangeBase : FrameworkElement
 
         var thumbVisual = this.Visual.GetGraphicalUiElementByName("ThumbInstance") as InteractiveGue;
 #if DEBUG
-        if (thumbVisual == null)
-        {
-            var message =
-                $"The {this.GetType().Name} Gum object must have a button called ThumbInstance.";
+        // Update April 12, 2025 
+        // Thumbs are no longer required
+        //if (thumbVisual == null)
+        //{
+        //    var message =
+        //        $"The {this.GetType().Name} Gum object must have a button called ThumbInstance.";
 
-            if (Visual.Children != null)
-            {
-                if (Visual.Children.Count == 0)
-                {
-                    message += " This visual has no children";
-                }
-                else
-                {
-                    message += " The visual has the following children:";
-                    foreach (var child in Visual.Children)
-                    {
-                        message += "\n" + child.Name;
-                    }
-                }
-            }
-            else //if(Visual.Children == null)
-            {
-                message += " This visual has null children";
-            }
+        //    if (Visual.Children != null)
+        //    {
+        //        if (Visual.Children.Count == 0)
+        //        {
+        //            message += " This visual has no children";
+        //        }
+        //        else
+        //        {
+        //            message += " The visual has the following children:";
+        //            foreach (var child in Visual.Children)
+        //            {
+        //                message += "\n" + child.Name;
+        //            }
+        //        }
+        //    }
+        //    else //if(Visual.Children == null)
+        //    {
+        //        message += " This visual has null children";
+        //    }
 
-            throw new Exception(message);
-        }
+        //    throw new Exception(message);
+        //}
 #endif
         // assign explicit track before adding events
         AssignExplicitTrack();
 
-        if (thumbVisual.FormsControlAsObject == null)
+        if (thumbVisual != null)
         {
-            thumb = new Button(thumbVisual);
+            if (thumbVisual.FormsControlAsObject == null)
+            {
+                thumb = new Button(thumbVisual);
+            }
+            else
+            {
+                thumb = thumbVisual.FormsControlAsObject as Button;
+            }
+            thumb.Push += HandleThumbPush;
         }
-        else
-        {
-            thumb = thumbVisual.FormsControlAsObject as Button;
-        }
-        thumb.Push += HandleThumbPush;
 #if FRB
-        thumb.Visual.DragOver += HandleThumbRollOverFrb;
+        if(thumb != null)
+        {
+            thumb.Visual.DragOver += HandleThumbRollOverFrb;
+        }
         Visual.RollOver += HandleThisRollOverFrb;
         Track.Push += HandleTrackPushFrb;
         Track.RollOver += HandleTrackHoverFrb;
 
 #else
-        thumb.Visual.Dragging += HandleThumbRollOver;
+        if (thumb != null)
+        { 
+            thumb.Visual.Dragging += HandleThumbRollOver;
+        }
         Visual.RollOver += HandleThisRollOver;
         Track.Push += HandleTrackPush;
         Track.HoverOver += HandleTrackHover;
@@ -289,14 +309,13 @@ public abstract class RangeBase : FrameworkElement
     {
         TrackPushedTime = MainCursor.LastPrimaryPushTime;
 
-        TrackPushedSignRelativeToThumb = GetCurrentSignRelativeToThumb();
-
+        TrackPushedSignRelativeToValue = GetCurrentSignRelativeToValue();
     }
 
     private void HandleTrackHover(object? sender, EventArgs e)
     {
         var cursor = MainCursor;
-        if (cursor.WindowPushed == Track && cursor.WindowOver != thumb.Visual)
+        if (cursor.WindowPushed == Track && cursor.WindowOver != thumb?.Visual)
         {
             // Should we be respecting MoveToPoint?
 
@@ -316,21 +335,40 @@ public abstract class RangeBase : FrameworkElement
     {
         var valueBefore = Value;
         double newValue;
-        int currentSignRelativeToThumb = GetCurrentSignRelativeToThumb();
+        int currentSignRelativeToThumb = GetCurrentSignRelativeToValue();
 
-        // This prevents the Thumb from hopping back and forth around the cursor's position
-        if(currentSignRelativeToThumb == TrackPushedSignRelativeToThumb)
+        if(IsMoveToPointEnabled)
         {
-            if (currentSignRelativeToThumb == -1)
-            {
-                newValue = Value - LargeChange;
-                ApplyValueConsideringSnapping(newValue);
-            }
-            else if (currentSignRelativeToThumb == 1)
-            {
-                newValue = Value + LargeChange;
+            var left = Track.GetAbsoluteX();
+            var right = Track.GetAbsoluteX() + Track.GetAbsoluteWidth();
 
-                ApplyValueConsideringSnapping(newValue);
+            var screenX = MainCursor.XRespectingGumZoomAndBounds();
+
+            var ratio = (screenX - left) / (right - left);
+
+            ratio = System.Math.Max(0, ratio);
+            ratio = System.Math.Min(1, ratio);
+
+            var value = Minimum + (Maximum - Minimum) * ratio;
+
+            ApplyValueConsideringSnapping(value);            
+        }
+        else
+        {
+            // This prevents the Thumb from hopping back and forth around the cursor's position
+            if(currentSignRelativeToThumb == TrackPushedSignRelativeToValue)
+            {
+                if (currentSignRelativeToThumb == -1)
+                {
+                    newValue = Value - LargeChange;
+                    ApplyValueConsideringSnapping(newValue);
+                }
+                else if (currentSignRelativeToThumb == 1)
+                {
+                    newValue = Value + LargeChange;
+
+                    ApplyValueConsideringSnapping(newValue);
+                }
             }
         }
 
@@ -340,14 +378,33 @@ public abstract class RangeBase : FrameworkElement
         }
     }
 
-    private int GetCurrentSignRelativeToThumb()
+    protected int GetCurrentSignRelativeToValue()
     {
         var cursorX = MainCursor.XRespectingGumZoomAndBounds();
 
-        var currentSignRelativeToThumb = cursorX < thumb.AbsoluteLeft
-            ? -1
-            : cursorX > thumb.AbsoluteLeft + thumb.ActualWidth ? 1 : 0;
-        return currentSignRelativeToThumb;
+        //var currentSignRelativeToThumb = cursorX < thumb.AbsoluteLeft
+        //    ? -1
+        //    : cursorX > thumb.AbsoluteLeft + thumb.ActualWidth ? 1 : 0;
+        //return currentSignRelativeToThumb;
+
+        var currentPercentageOver = (Value - Minimum) / (Maximum - Minimum);
+        var trackAbsoluteLeft = Track.AbsoluteLeft;
+        var trackAbsoluteRight = Track.AbsoluteRight;
+        var trackWidth = Track.GetAbsoluteWidth();
+        var clickedPercentageOver = (cursorX - AbsoluteLeft) / trackWidth;
+
+        if(clickedPercentageOver < currentPercentageOver)
+        {
+            return -1;
+        }
+        else if (clickedPercentageOver > currentPercentageOver)
+        {
+            return 1;
+        }
+        else
+        {
+            return 0;
+        }
     }
 
     #endregion

@@ -40,8 +40,6 @@ public class Slider : RangeBase, IInputReceiver
     /// </summary>
     public bool IsSnapToTickEnabled { get; set; } = false;
 
-    public bool IsMoveToPointEnabled { get; set; }
-
     public bool IsThumbGrabbed => MainCursor.WindowPushed == this.thumb?.Visual;
 
     public List<Keys> IgnoredKeys => throw new NotImplementedException();
@@ -93,12 +91,14 @@ public class Slider : RangeBase, IInputReceiver
 
         Track.Push += HandleTrackPush;
 
-
-#if FRB
-        base.thumb.Visual.RemovedAsPushedWindow += _ => HandleRemovedAsPushedWindow(this, EventArgs.Empty);
-#else
-        base.thumb.Visual.RemovedAsPushed += HandleRemovedAsPushedWindow;
-#endif
+        if(thumb != null)
+        {
+    #if FRB
+            base.thumb.Visual.RemovedAsPushedWindow += _ => HandleRemovedAsPushedWindow(this, EventArgs.Empty);
+    #else
+            base.thumb.Visual.RemovedAsPushed += HandleRemovedAsPushedWindow;
+    #endif
+        }
         UpdateState();
     }
 
@@ -190,13 +190,14 @@ public class Slider : RangeBase, IInputReceiver
         {
             double newValue;
 
-            var gumX = MainCursor.XRespectingGumZoomAndBounds();
-            if (gumX < thumb.AbsoluteLeft)
+            var sign = GetCurrentSignRelativeToValue();
+
+            if (sign < 0)
             {
                 newValue = Value - LargeChange;
                 ApplyValueConsideringSnapping(newValue);
             }
-            else if (gumX > thumb.AbsoluteLeft + thumb.ActualWidth)
+            else if (sign > 0)
             {
                 newValue = Value + LargeChange;
 
@@ -305,8 +306,11 @@ public class Slider : RangeBase, IInputReceiver
         //thumb.X = Microsoft.Xna.Framework.MathHelper.Lerp(0, Track.GetAbsoluteWidth(),
         //    (float)ratioOver);
 
-        thumb.Visual.XUnits = global::Gum.Converters.GeneralUnitType.Percentage;
-        thumb.X = 100 * (float)ratioOver;
+        if(thumb != null)
+        {
+            thumb.Visual.XUnits = global::Gum.Converters.GeneralUnitType.Percentage;
+            thumb.X = 100 * (float)ratioOver;
+        }
     }
 
 #if FRB
