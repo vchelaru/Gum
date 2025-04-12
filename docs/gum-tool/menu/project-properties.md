@@ -40,6 +40,18 @@ The following animation shows the Ā character being included and excluded from 
 
 Note that expanding the character set results in larger font PNG files which can impact the size and performance of games using the Gum files.
 
+### Font Character Limitations
+
+Each font has its own range of supported characters. You can open Bitmap Font Generator to see which characters are supported for each type. The following screenshot shows the font ranges supported by the Arial font.
+
+<figure><img src="../../.gitbook/assets/11_21 24 25.png" alt=""><figcaption><p>Characters supported by the Arial font</p></figcaption></figure>
+
+Notice that the CJK characters are not supported. By contrast the Batang font face supports CJK Unified Ideographs as shown in the following image:
+
+<figure><img src="../../.gitbook/assets/image.png" alt=""><figcaption><p>CJK Unified Ideographs in the Batang font</p></figcaption></figure>
+
+Gum does not check whether the font range you have added is supported in each of the font faces used in your application. If you are extending your character set, you should verify that the font is supported in Bitmap Font Generator.
+
 ## Font Spacing Horizontal and Font Spacing Vertical
 
 The Font Spacing Horizontal and Font Spacing Vertical values control the amount of space (padding) added between each letter in the generated .fnt file. These values do not affect the size of the letters in the Editor tab or at runtime, but the additional spacing can be used to separate the letters. This is important if your font rendering may end up implementing any kind of blurring to improve font appearance. This type of blurring may occur if:
