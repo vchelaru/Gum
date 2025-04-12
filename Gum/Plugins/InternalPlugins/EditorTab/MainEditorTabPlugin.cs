@@ -253,6 +253,9 @@ internal class MainEditorTabPlugin : InternalPlugin
                     gue = WireframeObjectManager.Self.GetSelectedRepresentation();
                 }
 
+                // If we dispose a file, we should re-create the screen for sure!
+                var disposedFile = false;
+
                 if (gue != null)
                 {
                     VariableSave variable = null;
@@ -269,8 +272,15 @@ internal class MainEditorTabPlugin : InternalPlugin
                             standardized = ToolsUtilities.FileManager.RemoveDotDotSlash(standardized);
                             // invalidate files...
                             var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+
+                            var existing = loaderManager.GetDisposable(standardized);
+
+                            disposedFile = existing != null;
+
                             loaderManager.Dispose(standardized);
+
                         }
+
                         catch
                         {
                             // this could be an invalid file name, so tolerate crashes
@@ -282,7 +292,7 @@ internal class MainEditorTabPlugin : InternalPlugin
                     WireframeObjectManager.Self.RootGue?.ApplyVariableReferences(SelectedState.Self.SelectedStateSave);
                     //gue.ApplyVariableReferences(SelectedState.Self.SelectedStateSave);
 
-                    handledByDirectSet = true;
+                    handledByDirectSet = !disposedFile;
                 }
                 if (unqualifiedMember == "Text" && _localizationManager.HasDatabase)
                 {
