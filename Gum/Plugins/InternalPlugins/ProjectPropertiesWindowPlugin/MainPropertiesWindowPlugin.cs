@@ -145,10 +145,30 @@ namespace Gum.Plugins.PropertiesWindowPlugin
                         {
                             if (GumState.Self.ProjectState.GumProjectSave != null)
                             {
-                                FontManager.Self.DeleteFontCacheFolder();
+                                var wasAbleToDelete = false;
+                                try
+                                {
+                                    FontManager.Self.DeleteFontCacheFolder();
+                                    wasAbleToDelete = true;
+                                }
+                                catch(System.IO.IOException exception)
+                                {
+                                    wasAbleToDelete = false;
 
-                                FontManager.Self.CreateAllMissingFontFiles(
-                                    ProjectState.Self.GumProjectSave);
+                                    var message =
+                                        "Attempted to delete font cache folder to re-create it with the new font range values " +
+                                        $"but was unable to do so:\n\n{exception}";
+                                    GumCommands.Self.GuiCommands.ShowMessage(message);
+                                }
+
+
+
+
+                                if(wasAbleToDelete)
+                                {
+                                    FontManager.Self.CreateAllMissingFontFiles(
+                                        ProjectState.Self.GumProjectSave);
+                                }
 
                             }
                             shouldSaveAndRefresh = true;

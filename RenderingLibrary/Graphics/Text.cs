@@ -85,7 +85,7 @@ namespace RenderingLibrary.Graphics
         public static BitmapFont DefaultBitmapFont
         {
             get { return mDefaultBitmapFont; }
-            set {  mDefaultBitmapFont = value; }
+            set { mDefaultBitmapFont = value; }
         }
 
         /// <summary>
@@ -512,7 +512,7 @@ namespace RenderingLibrary.Graphics
             }
             set
             {
-                if(mBitmapFont != value)
+                if (mBitmapFont != value)
                 {
                     mBitmapFont = value;
 
@@ -532,27 +532,27 @@ namespace RenderingLibrary.Graphics
 
         public int Alpha
         {
-            get  => mAlpha; 
-            set 
-            { 
+            get => mAlpha;
+            set
+            {
                 mAlpha = System.Math.Max(0, System.Math.Min(value, 255));
             }
         }
 
         public int Red
         {
-            get => mRed; 
-            set 
-            { 
+            get => mRed;
+            set
+            {
 
-                mRed = System.Math.Max(0, System.Math.Min(value, 255)); 
+                mRed = System.Math.Max(0, System.Math.Min(value, 255));
             }
         }
 
         public int Green
         {
-            get  => mGreen; 
-        
+            get => mGreen;
+
             set
             {
                 mGreen = System.Math.Max(0, System.Math.Min(value, 255));
@@ -562,8 +562,8 @@ namespace RenderingLibrary.Graphics
         public int Blue
         {
             get => mBlue;
-            set 
-            { 
+            set
+            {
                 mBlue = System.Math.Max(0, System.Math.Min(value, 255));
             }
         }
@@ -573,13 +573,13 @@ namespace RenderingLibrary.Graphics
             get { return mFontScale; }
             set
             {
-                #if DEBUG
+#if DEBUG
                 if (float.IsNaN(value) || float.IsInfinity(value))
                 {
                     throw new ArgumentException($"Invalid value: {value}. FontScale cannot be NaN.");
                 }
-                #endif
-                
+#endif
+
                 var newValue = System.Math.Max(0, value);
 
                 if (newValue != mFontScale)
@@ -1117,6 +1117,7 @@ namespace RenderingLibrary.Graphics
 
         public void Render(ISystemManagers managers)
         {
+
             if (AbsoluteVisible)
             {
                 var systemManagers = (SystemManagers)managers;
@@ -1149,6 +1150,7 @@ namespace RenderingLibrary.Graphics
                     }
                 }
             }
+
         }
 
         // todo: reduce allocs by using a static here (static is prob okay since it can't be multithreaded)
@@ -1178,12 +1180,27 @@ namespace RenderingLibrary.Graphics
                 {
                     var absoluteLeft = mTempForRendering.GetAbsoluteLeft();
                     var absoluteTop = mTempForRendering.GetAbsoluteTop();
-                    fontToUse.DrawTextLines(WrappedText, HorizontalAlignment,
-                        this,
-                        requiredWidth, widths, spriteRenderer, Color,
-                        absoluteLeft,
-                        absoluteTop,
-                        this.GetAbsoluteRotation(), mFontScale, mFontScale, maxLettersToShow, OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier);
+
+                    var sourceRectangle = new Rectangle(0, 0, 32, 32);
+
+                    if (fontToUse.Texture == null)
+                    {
+                        spriteRenderer.Draw(Sprite.InvalidTexture,
+                            new Rectangle((int)absoluteLeft, (int)absoluteTop, 16, 16),
+                            sourceRectangle,
+                            Color.White,
+                            this);
+
+                    }
+                    else
+                    {
+                        fontToUse.DrawTextLines(WrappedText, HorizontalAlignment,
+                            this,
+                            requiredWidth, widths, spriteRenderer, Color,
+                            absoluteLeft,
+                            absoluteTop,
+                            this.GetAbsoluteRotation(), mFontScale, mFontScale, maxLettersToShow, OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier);
+                    }
                 }
 
             }
@@ -1222,7 +1239,7 @@ namespace RenderingLibrary.Graphics
             var lettersLeft = maxLettersToShow;
             for (int i = 0; i < WrappedText.Count; i++)
             {
-                if(lettersLeft <= 0)
+                if (lettersLeft <= 0)
                 {
                     break;
                 }
@@ -1334,7 +1351,7 @@ namespace RenderingLibrary.Graphics
                             effectiveTopOfLine,
                             rotation, fontScale, fontScale, lettersLeft, OverrideTextRenderingPositionMode, lineHeightMultiplier: LineHeightMultiplier);
 
-                        if(lettersLeft != null)
+                        if (lettersLeft != null)
                         {
                             lettersLeft -= substring.Substring.Length;
                         }
@@ -1389,7 +1406,7 @@ namespace RenderingLibrary.Graphics
                     }
                 }
 
-                if(endLastRun && substrings.Count > 0)
+                if (endLastRun && substrings.Count > 0)
                 {
                     var lastSubstring = substrings.Last();
                     lastSubstring.Substring = lineOfText.Substring(currentSubstringStart, relativeLetterIndex - currentSubstringStart);

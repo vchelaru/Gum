@@ -10,9 +10,10 @@ using System.Threading.Tasks;
 
 namespace MonoGameGum.Forms.DefaultVisuals;
 
-public class DefaultLabelRuntime : InteractiveGue
+public class DefaultLabelRuntime : TextRuntime
 {
-    public DefaultLabelRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
+
+    public DefaultLabelRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(fullInstantiation)
     {
         if (fullInstantiation)
         {
@@ -23,15 +24,12 @@ public class DefaultLabelRuntime : InteractiveGue
             this.X = 0;
             this.Y = 0;
 
-            var TextInstance = new TextRuntime();
-            TextInstance.Name = "TextInstance";
-            TextInstance.Text = "Label";
-            TextInstance.Width = 0;
-            TextInstance.Height = 0;
-            TextInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-            TextInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-
-            this.Children.Add(TextInstance);
+            Name = "TextInstance";
+            Text = "Label";
+            Width = 0;
+            Height = 0;
+            WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+            HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
         }
         if (tryCreateFormsObject)
         {

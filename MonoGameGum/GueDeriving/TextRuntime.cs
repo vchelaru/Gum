@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace MonoGameGum.GueDeriving
 {
-    public class TextRuntime : BindableGue
+    public class TextRuntime : InteractiveGue
     {
         Text mContainedText;
         Text ContainedText
@@ -67,6 +67,13 @@ namespace MonoGameGum.GueDeriving
             get => mContainedText.Blue;
             set => mContainedText.Blue = value;
         }
+
+        public int Alpha
+        {
+            get => mContainedText.Alpha;
+            set => mContainedText.Alpha = value;
+        }
+
 
         public Microsoft.Xna.Framework.Color Color
         {
@@ -210,6 +217,7 @@ namespace MonoGameGum.GueDeriving
                 HeightUnits = DefaultHeightUnits;
                 this.FontSize = DefaultFontSize;
                 this.Font = DefaultFont;
+                HasEvents = false;
 
                 textRenderable.RawText = "Hello World";
             }

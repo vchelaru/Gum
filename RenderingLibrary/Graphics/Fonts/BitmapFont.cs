@@ -245,7 +245,11 @@ namespace RenderingLibrary.Graphics
 
         public BitmapCharacterInfo GetCharacterInfo(int asciiNumber)
         {
-            if (asciiNumber < mCharacterInfo.Length)
+            if(mCharacterInfo.Length == 0)
+            {
+                return null;
+            }
+            else if (asciiNumber < mCharacterInfo.Length)
             {
                 return mCharacterInfo[asciiNumber];
             }
@@ -1118,7 +1122,16 @@ namespace RenderingLibrary.Graphics
             for (int i = 0; i < line.Length; i++)
             {
                 char character = line[i];
-                BitmapCharacterInfo characterInfo = GetCharacterInfo(character);
+                BitmapCharacterInfo characterInfo = null;
+                try
+                {
+                    characterInfo = GetCharacterInfo(character);
+                }
+                catch
+                {
+                    // If we can't measure a character due to it missing, we shouldn't throw an exception here.
+                    // By catching the exception, we allow Gum to work even if it's missing characters
+                }
 
                 if (characterInfo != null)
                 {

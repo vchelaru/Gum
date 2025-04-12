@@ -109,7 +109,15 @@ namespace MonoGameGum.GueDeriving
                 NotifyPropertyChanged();
             }
         }
+
+        [Obsolete("Use Texture")]
         public Microsoft.Xna.Framework.Graphics.Texture2D SourceFile
+        {
+            get => Texture;
+            set => Texture = value;
+        }
+
+        public Microsoft.Xna.Framework.Graphics.Texture2D Texture
         {
             get
             {
@@ -117,6 +125,9 @@ namespace MonoGameGum.GueDeriving
             }
             set => ContainedNineSlice.SetSingleTexture(value);
         }
+
+
+
         public Microsoft.Xna.Framework.Color Color
         {
             get

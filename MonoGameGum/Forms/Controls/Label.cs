@@ -13,6 +13,8 @@ public class Label : FrameworkElement
     protected GraphicalUiElement textComponent;
     protected RenderingLibrary.Graphics.Text coreTextObject;
 
+    public GraphicalUiElement TextComponent => textComponent;
+
     public string Text
     {
         get
@@ -46,8 +48,20 @@ public class Label : FrameworkElement
 
     protected override void ReactToVisualChanged()
     {
-        textComponent = base.Visual.GetGraphicalUiElementByName("TextInstance");
-        coreTextObject = textComponent.RenderableComponent as RenderingLibrary.Graphics.Text;
+        if(base.Visual?.Name == "TextInstance")
+        {
+            textComponent = base.Visual;
+        }
+        else
+        {
+            textComponent = base.Visual.GetGraphicalUiElementByName("TextInstance");
+        }
+
+#if DEBUG
+        ReportMissingTextInstance();
+#endif
+
+        coreTextObject = (RenderingLibrary.Graphics.Text)textComponent!.RenderableComponent;
         base.ReactToVisualChanged();
     }
 
