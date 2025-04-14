@@ -300,6 +300,8 @@ public class ListBox : ItemsControl, IInputReceiver
 
     protected override void ReactToVisualChanged()
     {
+        // do base first, so InnerPanel can get assigned by the base
+        base.ReactToVisualChanged();
         if(InnerPanel == null)
         {
             string message = "The ListBox is being created with a Visual that does not have an InnerPanel " +
@@ -322,7 +324,6 @@ public class ListBox : ItemsControl, IInputReceiver
                 }
             }
         }
-        base.ReactToVisualChanged();
     }
 
     #endregion

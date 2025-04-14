@@ -199,6 +199,7 @@ public class HotkeyManager : Singleton<HotkeyManager>
 
     private readonly CopyPasteLogic _copyPasteLogic;
     private readonly Commands.GuiCommands _guiCommands;
+    private readonly ISelectedState _selectedState;
 
     // If adding any new keys here, modify HotkeyViewModel
 
@@ -206,6 +207,7 @@ public class HotkeyManager : Singleton<HotkeyManager>
     {
         _copyPasteLogic = CopyPasteLogic.Self;
         _guiCommands = GumCommands.Self.GuiCommands;
+        _selectedState = SelectedState.Self;
     }
 
     #region App Wide Keys
@@ -313,14 +315,15 @@ public class HotkeyManager : Singleton<HotkeyManager>
     {
         if(Rename.IsPressed(e))
         {
-            if(SelectedState.Self.SelectedInstance != null)
+            if(_selectedState.SelectedInstance != null)
             {
-
+                // todo - and then close this: https://github.com/vchelaru/Gum/issues/680
+                //_guiCommands.ShowRenameInstanceWidow(_selectedState.SelectedInstance);
             }
-            else if(SelectedState.Self.SelectedElement != null && 
-                SelectedState.Self.SelectedElement is not StandardElementSave)
+            else if(_selectedState.SelectedElement != null &&
+                _selectedState.SelectedElement is not StandardElementSave)
             {
-                GumCommands.Self.GuiCommands.ShowRenameElementWindow(SelectedState.Self.SelectedElement);
+                _guiCommands.ShowRenameElementWindow(_selectedState.SelectedElement);
                 e.Handled = true;
 
             }
@@ -367,18 +370,18 @@ public class HotkeyManager : Singleton<HotkeyManager>
         if (GoToDefinition.IsPressed(e))
         {
             DataTypes.ElementSave elementToGoTo = null;
-            if (SelectedState.Self.SelectedInstance != null)
+            if (_selectedState.SelectedInstance != null)
             {
-                elementToGoTo = ObjectFinder.Self.GetElementSave(SelectedState.Self.SelectedInstance.BaseType);
+                elementToGoTo = ObjectFinder.Self.GetElementSave(_selectedState.SelectedInstance.BaseType);
             }
             else if (!string.IsNullOrWhiteSpace(SelectedState.Self.SelectedElement?.BaseType))
             {
-                elementToGoTo = ObjectFinder.Self.GetElementSave(SelectedState.Self.SelectedElement.BaseType);
+                elementToGoTo = ObjectFinder.Self.GetElementSave(_selectedState.SelectedElement.BaseType);
             }
 
             if (elementToGoTo != null)
             {
-                SelectedState.Self.SelectedElement = elementToGoTo;
+                _selectedState.SelectedElement = elementToGoTo;
             }
         }
     }
@@ -453,9 +456,9 @@ public class HotkeyManager : Singleton<HotkeyManager>
 
         if (nudgeX != 0 || nudgeY != 0)
         {
-            var instance = SelectedState.Self.SelectedInstance;
+            var instance = _selectedState.SelectedInstance;
 
-            var element = SelectedState.Self.SelectedElement;
+            var element = _selectedState.SelectedElement;
 
             float oldX = 0;
             float oldY = 0;
