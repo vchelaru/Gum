@@ -160,7 +160,14 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
                 {
                     throw new Exception($"Value cannot be less than 0, but is {value}");
                 }
-                selectionLength = value;
+
+                var maxSelectionLengthAllowed = 0;
+                if (!string.IsNullOrEmpty(this.DisplayedText))
+                {
+                    maxSelectionLengthAllowed = DisplayedText.Length - selectionStart;
+                }
+
+                selectionLength = Math.Min(maxSelectionLengthAllowed, value);
                 UpdateToSelection();
                 UpdateCaretVisibility();
             }
