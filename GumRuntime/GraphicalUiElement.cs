@@ -35,6 +35,31 @@ public enum MissingFileBehavior
     ThrowException
 }
 
+public enum Anchor
+{
+    TopLeft,
+    Top,
+    TopRight,
+    Left,
+    Center,
+    Right,
+    BottomLeft,
+    Bottom,
+    BottomRight
+}
+
+public enum Dock
+{
+    Top,
+    Left,
+    Fill,
+    Right,
+    Bottom,
+    FillHorizontally,
+    FillVertically,
+    SizeToChildren
+}
+
 #endregion
 
 /// <summary>
@@ -755,24 +780,24 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 // special case:
                 if (XUnits == GeneralUnitType.PixelsFromSmall && XOrigin == HorizontalAlignment.Left)
                 {
-                    if(parentGue== null)
+                    if (parentGue == null)
                     {
                         skipLayout = true;
                     }
                     else
                     {
                         // WE might be able to get away with more changes here to suppress layouts, but this is a start...
-                        if(parentGue.WidthUnits.GetDependencyType() != HierarchyDependencyType.DependsOnChildren && 
+                        if (parentGue.WidthUnits.GetDependencyType() != HierarchyDependencyType.DependsOnChildren &&
                             parentGue.ChildrenLayout != ChildrenLayout.LeftToRightStack &&
                             parentGue.ChildrenLayout != ChildrenLayout.TopToBottomStack)
                         {
                             skipLayout = true;
                         }
                     }
-                    
+
                     this.mContainedObjectAsIpso.X = mX;
                 }
-                if(!skipLayout)
+                if (!skipLayout)
                 {
                     var refreshParent = IgnoredByParentSize == false;
                     UpdateLayout(refreshParent, 0);
@@ -856,7 +881,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     public float Width
     {
-        get => mWidth; 
+        get => mWidth;
         set
         {
 #if DEBUG
@@ -2367,7 +2392,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     if (textureCoordinate.SourceRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
                     {
                         var scale = 1f;
-                        if(textureCoordinate.SourceRectangle.Value.Width != 0)
+                        if (textureCoordinate.SourceRectangle.Value.Width != 0)
                         {
                             scale = GetAbsoluteWidth() / textureCoordinate.SourceRectangle.Value.Width;
                         }
@@ -2479,11 +2504,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
         #endregion
 
-        if(pixelHeightToSet > _maxHeight)
+        if (pixelHeightToSet > _maxHeight)
         {
             pixelHeightToSet = _maxHeight.Value;
         }
-        if(pixelHeightToSet < _minHeight)
+        if (pixelHeightToSet < _minHeight)
         {
             pixelHeightToSet = _minHeight.Value;
         }
@@ -2610,7 +2635,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     var numberOfHorizontalCells =
                         this.AutoGridHorizontalCells;
 
-                    if(this.AutoGridVerticalCells > 0)
+                    if (this.AutoGridVerticalCells > 0)
                     {
                         var requiredColumnCount = (int)Math.Ceiling((float)Children.Count / this.autoGridVerticalCells);
                         numberOfHorizontalCells = System.Math.Max(numberOfHorizontalCells, requiredColumnCount);
@@ -2717,7 +2742,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     if (iTextureCoordinate.SourceRectangle.HasValue && mTextureAddress != TextureAddress.DimensionsBased)
                     {
                         var scale = 1f;
-                        if(iTextureCoordinate.SourceRectangle.Value.Height != 0)
+                        if (iTextureCoordinate.SourceRectangle.Value.Height != 0)
                         {
                             scale = GetAbsoluteHeight() / iTextureCoordinate.SourceRectangle.Value.Height;
                         }
@@ -2834,11 +2859,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
         #endregion
 
-        if(pixelWidthToSet > _maxWidth)
+        if (pixelWidthToSet > _maxWidth)
         {
             pixelWidthToSet = _maxWidth.Value;
         }
-        if(pixelWidthToSet < _minWidth)
+        if (pixelWidthToSet < _minWidth)
         {
             pixelWidthToSet = _minWidth.Value;
         }
@@ -3494,7 +3519,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         {
             throw new Exception("Invalid unitOffsetX after AdjustOffsetsByOrigin - it's NaN");
         }
-        if ( float.IsNaN(unitOffsetY))
+        if (float.IsNaN(unitOffsetY))
         {
             throw new Exception("Invalid unitOffsetY after AdjustOffsetsByOrigin - it's NaN");
         }
@@ -3727,12 +3752,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         cellWidth = parentWidth / xRows;
         cellHeight = parentHeight / yRows;
 
-        if(effectiveParent.ChildrenLayout == ChildrenLayout.AutoGridHorizontal && 
+        if (effectiveParent.ChildrenLayout == ChildrenLayout.AutoGridHorizontal &&
             effectiveParent.HeightUnits == DimensionUnitType.RelativeToChildren)
         {
             cellHeight = effectiveParent.GetMaxCellHeight(true, 0);
         }
-        if(effectiveParent.ChildrenLayout == ChildrenLayout.AutoGridVertical &&
+        if (effectiveParent.ChildrenLayout == ChildrenLayout.AutoGridVertical &&
             effectiveParent.WidthUnits == DimensionUnitType.RelativeToChildren)
         {
             cellWidth = effectiveParent.GetMaxCellWidth(true, 0);
@@ -3787,18 +3812,18 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     {
         var effectiveParentGue = this.EffectiveParentGue;
 
-        if(effectiveParentGue?.Children != null)
+        if (effectiveParentGue?.Children != null)
         {
             // do we care about situations with no parent?
-            foreach(var child in effectiveParentGue.Children)
+            foreach (var child in effectiveParentGue.Children)
             {
-                if(child is GraphicalUiElement childGue && (childGue.WidthUnits == DimensionUnitType.Ratio || childGue.HeightUnits == DimensionUnitType.Ratio))
+                if (child is GraphicalUiElement childGue && (childGue.WidthUnits == DimensionUnitType.Ratio || childGue.HeightUnits == DimensionUnitType.Ratio))
                 {
                     return true;
                 }
             }
         }
-        else if(effectiveParentGue != null)
+        else if (effectiveParentGue != null)
         {
             foreach (var child in effectiveParentGue.ContainedElements)
             {
@@ -4114,6 +4139,266 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     #endregion
 
+    #region Alignment (Anchor/Dock)
+
+    public void Dock(Dock dock)
+    {
+        switch (dock)
+        {
+            case Wireframe.Dock.Left:
+                this.XOrigin = HorizontalAlignment.Left;
+                this.XUnits = GeneralUnitType.PixelsFromSmall;
+                this.X = 0;
+
+                this.YOrigin = VerticalAlignment.Center;
+                this.YUnits = GeneralUnitType.PixelsFromMiddle;
+                this.Y = 0;
+
+                this.Height = 0;
+                this.HeightUnits = DimensionUnitType.RelativeToParent;
+                if (RenderableComponent is IText)
+                {
+                    SetProperty("HorizontalAlignment", HorizontalAlignment.Left);
+                    SetProperty("VerticalAlignment", VerticalAlignment.Center);
+                }
+                break;
+            case Wireframe.Dock.Right:
+                this.XOrigin = HorizontalAlignment.Right;
+                this.XUnits = GeneralUnitType.PixelsFromLarge;
+                this.X = 0;
+
+                this.YOrigin = VerticalAlignment.Center;
+                this.YUnits = GeneralUnitType.PixelsFromMiddle;
+                this.Y = 0;
+
+                this.Height = 0;
+                this.HeightUnits = DimensionUnitType.RelativeToParent;
+                if (RenderableComponent is IText)
+                {
+                    SetProperty("HorizontalAlignment", HorizontalAlignment.Right);
+                    SetProperty("VerticalAlignment", VerticalAlignment.Center);
+                }
+                break;
+            case Wireframe.Dock.Top:
+                this.XOrigin = HorizontalAlignment.Center;
+                this.XUnits = GeneralUnitType.PixelsFromMiddle;
+                this.X = 0;
+
+                this.YOrigin = VerticalAlignment.Top;
+                this.YUnits = GeneralUnitType.PixelsFromSmall;
+                this.Y = 0;
+
+                this.Width = 0;
+                this.WidthUnits = DimensionUnitType.RelativeToParent;
+                if (RenderableComponent is IText)
+                {
+                    SetProperty("HorizontalAlignment", HorizontalAlignment.Center);
+                    SetProperty("VerticalAlignment", VerticalAlignment.Top);
+                }
+                break;
+            case Wireframe.Dock.Bottom:
+                this.XOrigin = HorizontalAlignment.Center;
+                this.XUnits = GeneralUnitType.PixelsFromMiddle;
+                this.X = 0;
+
+                this.YOrigin = VerticalAlignment.Bottom;
+                this.YUnits = GeneralUnitType.PixelsFromLarge;
+                this.Y = 0;
+
+                this.Width = 0;
+                this.WidthUnits = DimensionUnitType.RelativeToParent;
+                if (RenderableComponent is IText)
+                {
+                    SetProperty("HorizontalAlignment", HorizontalAlignment.Center);
+                    SetProperty("VerticalAlignment", VerticalAlignment.Bottom);
+                }
+                break;
+            case Wireframe.Dock.Fill:
+                this.XOrigin = HorizontalAlignment.Center;
+                this.XUnits = GeneralUnitType.PixelsFromMiddle;
+                this.X = 0;
+
+                this.YOrigin = VerticalAlignment.Center;
+                this.YUnits = GeneralUnitType.PixelsFromMiddle;
+                this.Y = 0;
+
+                this.Width = 0;
+                this.WidthUnits = DimensionUnitType.RelativeToParent;
+
+                this.Height = 0;
+                this.HeightUnits = DimensionUnitType.RelativeToParent;
+
+                if (RenderableComponent is IText)
+                {
+                    SetProperty("HorizontalAlignment", HorizontalAlignment.Center);
+                    SetProperty("VerticalAlignment", VerticalAlignment.Center);
+                }
+                break;
+            case Wireframe.Dock.FillHorizontally:
+                this.XOrigin = HorizontalAlignment.Center;
+                this.XUnits = GeneralUnitType.PixelsFromMiddle;
+                this.X = 0;
+
+                this.Width = 0;
+                this.WidthUnits = DimensionUnitType.RelativeToParent;
+                if (RenderableComponent is IText)
+                {
+                    SetProperty("HorizontalAlignment", HorizontalAlignment.Center);
+                }
+                break;
+            case Wireframe.Dock.FillVertically:
+                this.YOrigin = VerticalAlignment.Center;
+                this.YUnits = GeneralUnitType.PixelsFromMiddle;
+                this.Y = 0;
+                this.Height = 0;
+                this.HeightUnits = DimensionUnitType.RelativeToParent;
+                if (RenderableComponent is IText)
+                {
+                    SetProperty("HorizontalAlignment", HorizontalAlignment.Center);
+                    SetProperty("VerticalAlignment", VerticalAlignment.Center);
+                }
+                break;
+            case Wireframe.Dock.SizeToChildren:
+                this.Width = 0;
+                this.WidthUnits = DimensionUnitType.RelativeToChildren;
+
+                this.Height = 0;
+                this.HeightUnits = DimensionUnitType.RelativeToChildren;
+                break;
+            default:
+                throw new NotImplementedException();
+        }
+    }
+
+    public void Anchor(Anchor anchor)
+    {
+        switch (anchor)
+        {
+            case Wireframe.Anchor.TopLeft:
+                this.XOrigin = HorizontalAlignment.Left;
+                this.XUnits = GeneralUnitType.PixelsFromSmall;
+                this.X = 0;
+                this.YOrigin = VerticalAlignment.Top;
+                this.YUnits = GeneralUnitType.PixelsFromSmall;
+                this.Y = 0;
+
+                if(RenderableComponent is IText)
+                {
+                    SetProperty("HorizontalAlignment", HorizontalAlignment.Left);
+                    SetProperty("VerticalAlignment", VerticalAlignment.Top);
+                }
+                break;
+            case Wireframe.Anchor.Top:
+                this.XOrigin = HorizontalAlignment.Center;
+                this.XUnits = GeneralUnitType.PixelsFromMiddle;
+                this.X = 0;
+                this.YOrigin = VerticalAlignment.Top;
+                this.YUnits = GeneralUnitType.PixelsFromSmall;
+                this.Y = 0;
+                if (RenderableComponent is IText)
+                {
+                    SetProperty("HorizontalAlignment", HorizontalAlignment.Center);
+                    SetProperty("VerticalAlignment", VerticalAlignment.Top);
+                }
+                break;
+            case Wireframe.Anchor.TopRight:
+                this.XOrigin = HorizontalAlignment.Right;
+                this.XUnits = GeneralUnitType.PixelsFromLarge;
+                this.X = 0;
+                this.YOrigin = VerticalAlignment.Top;
+                this.YUnits = GeneralUnitType.PixelsFromSmall;
+                this.Y = 0;
+                if (RenderableComponent is IText)
+                {
+                    SetProperty("HorizontalAlignment", HorizontalAlignment.Right);
+                    SetProperty("VerticalAlignment", VerticalAlignment.Top);
+                }
+                break;
+            case Wireframe.Anchor.Left:
+                this.XOrigin = HorizontalAlignment.Left;
+                this.XUnits = GeneralUnitType.PixelsFromSmall;
+                this.X = 0;
+                this.YOrigin = VerticalAlignment.Center;
+                this.YUnits = GeneralUnitType.PixelsFromMiddle;
+                this.Y = 0;
+                if (RenderableComponent is IText)
+                {
+                    SetProperty("HorizontalAlignment", HorizontalAlignment.Left);
+                    SetProperty("VerticalAlignment", VerticalAlignment.Center);
+                }
+                break;
+            case Wireframe.Anchor.Center:
+                this.XOrigin = HorizontalAlignment.Center;
+                this.XUnits = GeneralUnitType.PixelsFromMiddle;
+                this.X = 0;
+                this.YOrigin = VerticalAlignment.Center;
+                this.YUnits = GeneralUnitType.PixelsFromMiddle;
+                this.Y = 0;
+                if (RenderableComponent is IText)
+                {
+                    SetProperty("HorizontalAlignment", HorizontalAlignment.Center);
+                    SetProperty("VerticalAlignment", VerticalAlignment.Center);
+                }
+                break;
+            case Wireframe.Anchor.Right:
+                this.XOrigin = HorizontalAlignment.Right;
+                this.XUnits = GeneralUnitType.PixelsFromLarge;
+                this.X = 0;
+                this.YOrigin = VerticalAlignment.Center;
+                this.YUnits = GeneralUnitType.PixelsFromMiddle;
+                this.Y = 0;
+                if (RenderableComponent is IText)
+                {
+                    SetProperty("HorizontalAlignment", HorizontalAlignment.Right);
+                    SetProperty("VerticalAlignment", VerticalAlignment.Center);
+                }
+                break;
+            case Wireframe.Anchor.BottomLeft:
+                this.XOrigin = HorizontalAlignment.Left;
+                this.XUnits = GeneralUnitType.PixelsFromSmall;
+                this.X = 0;
+                this.YOrigin = VerticalAlignment.Bottom;
+                this.YUnits = GeneralUnitType.PixelsFromLarge;
+                this.Y = 0;
+                if (RenderableComponent is IText)
+                {
+                    SetProperty("HorizontalAlignment", HorizontalAlignment.Left);
+                    SetProperty("VerticalAlignment", VerticalAlignment.Bottom);
+                }
+                break;
+            case Wireframe.Anchor.Bottom:
+                this.XOrigin = HorizontalAlignment.Center;
+                this.XUnits = GeneralUnitType.PixelsFromMiddle;
+                this.X = 0;
+                this.YOrigin = VerticalAlignment.Bottom;
+                this.YUnits = GeneralUnitType.PixelsFromLarge;
+                this.Y = 0;
+                if (RenderableComponent is IText)
+                {
+                    SetProperty("HorizontalAlignment", HorizontalAlignment.Center);
+                    SetProperty("VerticalAlignment", VerticalAlignment.Bottom);
+                }
+                break;
+            case Wireframe.Anchor.BottomRight:
+                this.XOrigin = HorizontalAlignment.Right;
+                this.XUnits = GeneralUnitType.PixelsFromLarge;
+                this.X = 0;
+                this.YOrigin = VerticalAlignment.Bottom;
+                this.YUnits = GeneralUnitType.PixelsFromLarge;
+                this.Y = 0;
+                if (RenderableComponent is IText)
+                {
+                    SetProperty("HorizontalAlignment", HorizontalAlignment.Right);
+                    SetProperty("VerticalAlignment", VerticalAlignment.Bottom);
+                }
+                break;
+            default:
+                throw new NotImplementedException();
+        }
+    }
+
+    #endregion
+
     #region Misc. Methods
 
     public bool IsFullyCreated { get; private set; }
@@ -4362,13 +4647,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             foreach (var newItem in e.NewItems)
             {
 #if DEBUG
-                if(newItem == null)
+                if (newItem == null)
                 {
                     throw new InvalidOperationException("Cannot add a null child");
                 }
 #endif
                 var ipso = newItem as IRenderableIpso;
-                if(ipso == null)
+                if (ipso == null)
                 {
                     int m = 3;
                 }
@@ -5244,8 +5529,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     #endregion
 
-    #region Get Child/Element
+    #region Get/Add Child/Element
 
+    public void AddChild(GraphicalUiElement child) => this.Children.Add(child);
 
     /// <summary>
     /// Searches for and returns a GraphicalUiElement in this instance by name. Returns null
@@ -5299,7 +5585,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     // could find the button background...
                     // Either we don't do this recurisvely or we do top level first, then recursive. This hasn't
                     // been recursive for a long time so maybe we need to keep it not recursive for now...
-                    
+
                     //else
                     //{
                     //    var foundChild = item.GetChildByNameRecursively(name) as GraphicalUiElement;
@@ -5613,9 +5899,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     #endregion
 }
 
+#region Interfaces
+
 // additional interfaces, added here to make it easier to manage multiple projects.
 public interface IManagedObject
 {
     void AddToManagers();
     void RemoveFromManagers();
 }
+
+#endregion

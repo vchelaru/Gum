@@ -275,7 +275,7 @@ public class CodeGenerator
         if (context.CodeOutputProjectSettings.InheritanceLocation == InheritanceLocation.InGeneratedCode)
         {
             var inheritance = GetInheritance(context.Element, context.CodeOutputProjectSettings);
-            header += ":" + inheritance;
+            header += " : " + inheritance;
         }
 
         context.StringBuilder.AppendLine(context.Tabs + header);
@@ -2316,7 +2316,11 @@ public class CodeGenerator
                 // add it to "this"
                 if (container is ScreenSave)
                 {
-                    if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
+                    if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+                    {
+                        context.StringBuilder.AppendLine($"{context.Tabs}this.AddChild({context.InstanceNameInCode(instance)});");
+                    }
+                    else if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
                     {
                         // If it's a screen it may have children, or it may not. We just don't know, so we need to check
 
@@ -2330,7 +2334,14 @@ public class CodeGenerator
                 }
                 else
                 {
-                    context.StringBuilder.AppendLine($"{context.Tabs}this.Children.Add({context.InstanceNameInCode(instance)});");
+                    if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+                    {
+                        context.StringBuilder.AppendLine($"{context.Tabs}this.AddChild({context.InstanceNameInCode(instance)});");
+                    }
+                    else
+                    {
+                        context.StringBuilder.AppendLine($"{context.Tabs}this.Children.Add({context.InstanceNameInCode(instance)});");
+                    }
                 }
             }
             else // forms
@@ -2697,9 +2708,7 @@ public class CodeGenerator
 
         if (!string.IsNullOrEmpty(namespaceName))
         {
-            stringBuilder.AppendLine(context.Tabs + $"namespace {namespaceName}");
-            stringBuilder.AppendLine(context.Tabs + "{");
-            context.TabCount++;
+            stringBuilder.AppendLine(context.Tabs + $"namespace {namespaceName};");
         }
 
         #endregion
@@ -2781,12 +2790,6 @@ public class CodeGenerator
         context.TabCount--;
         stringBuilder.AppendLine(context.Tabs + "}");
         #endregion
-
-        if (!string.IsNullOrEmpty(namespaceName))
-        {
-            context.TabCount--;
-            stringBuilder.AppendLine(context.Tabs + "}");
-        }
 
         return stringBuilder.ToString();
     }
@@ -3560,7 +3563,7 @@ public class CodeGenerator
             if (type == typeof(PositionUnitType))
             {
                 var converted = UnitConverter.ConvertToGeneralUnit(value);
-                return $"GeneralUnitType.{converted}";
+                return $"global::Gum.Converters.GeneralUnitType.{converted}";
             }
             else
             {
@@ -3664,7 +3667,7 @@ public class CodeGenerator
             if (type == typeof(PositionUnitType))
             {
                 var converted = UnitConverter.ConvertToGeneralUnit(value);
-                return $"GeneralUnitType.{converted}";
+                return $"global::Gum.Converters.GeneralUnitType.{converted}";
             }
             else if (type == typeof(HorizontalAlignment))
             {
@@ -4154,7 +4157,16 @@ public class CodeGenerator
             var owner = string.IsNullOrEmpty(variable.Value as string)
                 ? "this"
                 : variable.Value;
-            return $"{owner}.Children.Add({context.InstanceNameInCode(instance)});";
+
+            if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+            {
+                return $"{owner}.AddChild({context.InstanceNameInCode(instance)});";
+
+            }
+            else
+            {
+                return $"{owner}.Children.Add({context.InstanceNameInCode(instance)});";
+            }
         }
         #endregion
         // ignored variables:
@@ -4222,14 +4234,17 @@ public class CodeGenerator
         {
             return variable.GetRootName().Replace(" ", "");
         }
-        else if (variable.GetRootName() == "SourceFile" && context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
+        else if (variable.GetRootName() == "SourceFile")
         {
-            return "SourceFileName";
+            if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame ||
+                context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+            {
+                return "SourceFileName";
+            }
         }
-        else
-        {
-            return variable.GetRootName().Replace(" ", "");
-        }
+
+
+        return variable.GetRootName().Replace(" ", "");
     }
 
 

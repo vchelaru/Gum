@@ -10,313 +10,312 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels
+namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels;
+
+public class AlignmentViewModel : ViewModel
 {
-    public class AlignmentViewModel : ViewModel
+    private readonly CommonControlLogic _commonControlLogic;
+
+    public float DockMargin
     {
-        private readonly CommonControlLogic _commonControlLogic;
+        get => Get<float>();
+        set => Set(value);
+    }
 
-        public float DockMargin
+    public AlignmentViewModel(CommonControlLogic commonControlLogic)
+    {
+        _commonControlLogic = commonControlLogic;
+    }
+
+    #region Anchor Actions
+
+    public void TopLeftButton_Click()
+    {
+        using (UndoManager.Self.RequestLock())
         {
-            get => Get<float>();
-            set => Set(value);
+
+            _commonControlLogic.SetXValues(
+            global::RenderingLibrary.Graphics.HorizontalAlignment.Left,
+            PositionUnitType.PixelsFromLeft, DockMargin);
+
+            _commonControlLogic.SetYValues(
+                global::RenderingLibrary.Graphics.VerticalAlignment.Top,
+                PositionUnitType.PixelsFromTop, DockMargin);
+
+            _commonControlLogic.RefreshAndSave();
         }
+    }
 
-        public AlignmentViewModel(CommonControlLogic commonControlLogic)
+    public void TopButton_Click()
+    {
+        using (UndoManager.Self.RequestLock())
         {
-            _commonControlLogic = commonControlLogic;
+
+            _commonControlLogic.SetXValues(
+            global::RenderingLibrary.Graphics.HorizontalAlignment.Center,
+            PositionUnitType.PixelsFromCenterX);
+
+            _commonControlLogic.SetYValues(
+                global::RenderingLibrary.Graphics.VerticalAlignment.Top,
+                PositionUnitType.PixelsFromTop, DockMargin);
+
+            _commonControlLogic.RefreshAndSave();
         }
+    }
 
-        #region Anchor Actions
-
-        public void TopLeftButton_Click()
+    public void TopRightButton_Click()
+    {
+        using (UndoManager.Self.RequestLock())
         {
-            using (UndoManager.Self.RequestLock())
-            {
 
-                _commonControlLogic.SetXValues(
+            _commonControlLogic.SetXValues(
+            global::RenderingLibrary.Graphics.HorizontalAlignment.Right,
+            PositionUnitType.PixelsFromRight, -DockMargin);
+
+            _commonControlLogic.SetYValues(
+                global::RenderingLibrary.Graphics.VerticalAlignment.Top,
+                PositionUnitType.PixelsFromTop, DockMargin);
+
+            _commonControlLogic.RefreshAndSave();
+        }
+    }
+
+    public void MiddleLeftButton_Click()
+    {
+        using (UndoManager.Self.RequestLock())
+        {
+
+            _commonControlLogic.SetXValues(
                 global::RenderingLibrary.Graphics.HorizontalAlignment.Left,
                 PositionUnitType.PixelsFromLeft, DockMargin);
 
-                _commonControlLogic.SetYValues(
-                    global::RenderingLibrary.Graphics.VerticalAlignment.Top,
-                    PositionUnitType.PixelsFromTop, DockMargin);
+            _commonControlLogic.SetYValues(
+                global::RenderingLibrary.Graphics.VerticalAlignment.Center,
+                PositionUnitType.PixelsFromCenterY);
 
-                _commonControlLogic.RefreshAndSave();
-            }
+            _commonControlLogic.RefreshAndSave();
         }
+    }
 
-        public void TopButton_Click()
+    public void MiddleMiddleButton_Click()
+    {
+        using (UndoManager.Self.RequestLock())
         {
-            using (UndoManager.Self.RequestLock())
-            {
+            _commonControlLogic.SetXValues(
+            global::RenderingLibrary.Graphics.HorizontalAlignment.Center,
+            PositionUnitType.PixelsFromCenterX);
 
-                _commonControlLogic.SetXValues(
-                global::RenderingLibrary.Graphics.HorizontalAlignment.Center,
-                PositionUnitType.PixelsFromCenterX);
+            _commonControlLogic.SetYValues(
+                global::RenderingLibrary.Graphics.VerticalAlignment.Center,
+                PositionUnitType.PixelsFromCenterY);
 
-                _commonControlLogic.SetYValues(
-                    global::RenderingLibrary.Graphics.VerticalAlignment.Top,
-                    PositionUnitType.PixelsFromTop, DockMargin);
-
-                _commonControlLogic.RefreshAndSave();
-            }
+            _commonControlLogic.RefreshAndSave();
         }
+    }
 
-        public void TopRightButton_Click()
+    public void MiddleRightButton_Click()
+    {
+        using (UndoManager.Self.RequestLock())
         {
-            using (UndoManager.Self.RequestLock())
-            {
 
-                _commonControlLogic.SetXValues(
+            _commonControlLogic.SetXValues(
                 global::RenderingLibrary.Graphics.HorizontalAlignment.Right,
                 PositionUnitType.PixelsFromRight, -DockMargin);
 
-                _commonControlLogic.SetYValues(
-                    global::RenderingLibrary.Graphics.VerticalAlignment.Top,
-                    PositionUnitType.PixelsFromTop, DockMargin);
+            _commonControlLogic.SetYValues(
+                global::RenderingLibrary.Graphics.VerticalAlignment.Center,
+                PositionUnitType.PixelsFromCenterY);
 
-                _commonControlLogic.RefreshAndSave();
-            }
+            _commonControlLogic.RefreshAndSave();
         }
+    }
 
-        public void MiddleLeftButton_Click()
+    public void BottomLeftButton_Click()
+    {
+        using (UndoManager.Self.RequestLock())
         {
-            using (UndoManager.Self.RequestLock())
-            {
 
-                _commonControlLogic.SetXValues(
-                    global::RenderingLibrary.Graphics.HorizontalAlignment.Left,
-                    PositionUnitType.PixelsFromLeft, DockMargin);
+            _commonControlLogic.SetXValues(
+                global::RenderingLibrary.Graphics.HorizontalAlignment.Left,
+                PositionUnitType.PixelsFromLeft, DockMargin);
 
-                _commonControlLogic.SetYValues(
-                    global::RenderingLibrary.Graphics.VerticalAlignment.Center,
-                    PositionUnitType.PixelsFromCenterY);
+            _commonControlLogic.SetYValues(
+                global::RenderingLibrary.Graphics.VerticalAlignment.Bottom,
+                PositionUnitType.PixelsFromBottom, -DockMargin);
 
-                _commonControlLogic.RefreshAndSave();
-            }
+            _commonControlLogic.RefreshAndSave();
         }
+    }
 
-        public void MiddleMiddleButton_Click()
+    public void BottomMiddleButton_Click()
+    {
+        using (UndoManager.Self.RequestLock())
         {
-            using (UndoManager.Self.RequestLock())
-            {
-                _commonControlLogic.SetXValues(
+
+            _commonControlLogic.SetXValues(
                 global::RenderingLibrary.Graphics.HorizontalAlignment.Center,
                 PositionUnitType.PixelsFromCenterX);
 
-                _commonControlLogic.SetYValues(
-                    global::RenderingLibrary.Graphics.VerticalAlignment.Center,
-                    PositionUnitType.PixelsFromCenterY);
+            _commonControlLogic.SetYValues(
+                global::RenderingLibrary.Graphics.VerticalAlignment.Bottom,
+                PositionUnitType.PixelsFromBottom, -DockMargin);
 
-                _commonControlLogic.RefreshAndSave();
-            }
+            _commonControlLogic.RefreshAndSave();
         }
-
-        public void MiddleRightButton_Click()
-        {
-            using (UndoManager.Self.RequestLock())
-            {
-
-                _commonControlLogic.SetXValues(
-                    global::RenderingLibrary.Graphics.HorizontalAlignment.Right,
-                    PositionUnitType.PixelsFromRight, -DockMargin);
-
-                _commonControlLogic.SetYValues(
-                    global::RenderingLibrary.Graphics.VerticalAlignment.Center,
-                    PositionUnitType.PixelsFromCenterY);
-
-                _commonControlLogic.RefreshAndSave();
-            }
-        }
-
-        public void BottomLeftButton_Click()
-        {
-            using (UndoManager.Self.RequestLock())
-            {
-
-                _commonControlLogic.SetXValues(
-                    global::RenderingLibrary.Graphics.HorizontalAlignment.Left,
-                    PositionUnitType.PixelsFromLeft, DockMargin);
-
-                _commonControlLogic.SetYValues(
-                    global::RenderingLibrary.Graphics.VerticalAlignment.Bottom,
-                    PositionUnitType.PixelsFromBottom, -DockMargin);
-
-                _commonControlLogic.RefreshAndSave();
-            }
-        }
-
-        public void BottomMiddleButton_Click()
-        {
-            using (UndoManager.Self.RequestLock())
-            {
-
-                _commonControlLogic.SetXValues(
-                    global::RenderingLibrary.Graphics.HorizontalAlignment.Center,
-                    PositionUnitType.PixelsFromCenterX);
-
-                _commonControlLogic.SetYValues(
-                    global::RenderingLibrary.Graphics.VerticalAlignment.Bottom,
-                    PositionUnitType.PixelsFromBottom, -DockMargin);
-
-                _commonControlLogic.RefreshAndSave();
-            }
-        }
-
-        public void BottomRightButton_Click()
-        {
-            using (UndoManager.Self.RequestLock())
-            {
-
-                _commonControlLogic.SetXValues(
-                    global::RenderingLibrary.Graphics.HorizontalAlignment.Right,
-                    PositionUnitType.PixelsFromRight, -DockMargin);
-
-                _commonControlLogic.SetYValues(
-                    global::RenderingLibrary.Graphics.VerticalAlignment.Bottom,
-                    PositionUnitType.PixelsFromBottom, -DockMargin);
-
-                _commonControlLogic.RefreshAndSave();
-            }
-        }
-
-        #endregion
-
-        #region Dock Actions
-
-        public void DockTopButton_Click()
-        {
-            using (UndoManager.Self.RequestLock())
-            {
-                var state = SelectedState.Self.SelectedStateSave;
-
-                _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
-                _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Top, PositionUnitType.PixelsFromTop, DockMargin);
-
-                _commonControlLogic.SetAndCallReact("Width", -DockMargin * 2, "float");
-                _commonControlLogic.SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
-
-
-                _commonControlLogic.RefreshAndSave();
-            }
-        }
-
-        public void SizeToChildren_Click()
-        {
-            using (UndoManager.Self.RequestLock())
-            {
-                var state = SelectedState.Self.SelectedStateSave;
-
-                _commonControlLogic.SetAndCallReact("Width", DockMargin * 2, "float");
-                _commonControlLogic.SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToChildren, typeof(DimensionUnitType).Name);
-
-                _commonControlLogic.SetAndCallReact("Height", DockMargin * 2, "float");
-                _commonControlLogic.SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToChildren, typeof(DimensionUnitType).Name);
-            }
-        }
-
-        public void DockLeftButton_Click()
-        {
-            using (UndoManager.Self.RequestLock())
-            {
-                var state = SelectedState.Self.SelectedStateSave;
-
-                _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Left, PositionUnitType.PixelsFromLeft, DockMargin);
-                _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
-
-                _commonControlLogic.SetAndCallReact("Height", -DockMargin * 2, "float");
-                _commonControlLogic.SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
-
-                _commonControlLogic.RefreshAndSave();
-            }
-        }
-
-        public void DockFillButton_Click()
-        {
-            using (UndoManager.Self.RequestLock())
-            {
-
-                var state = SelectedState.Self.SelectedStateSave;
-
-                _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
-                _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
-
-                _commonControlLogic.SetAndCallReact("Width", -DockMargin * 2, "float");
-                _commonControlLogic.SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
-
-                _commonControlLogic.SetAndCallReact("Height", -DockMargin * 2, "float");
-                _commonControlLogic.SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
-
-                _commonControlLogic.RefreshAndSave();
-            }
-        }
-
-        public void DockRightButton_Click()
-        {
-            using (UndoManager.Self.RequestLock())
-            {
-
-                var state = SelectedState.Self.SelectedStateSave;
-
-                _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Right, PositionUnitType.PixelsFromRight, -DockMargin);
-                _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
-
-                _commonControlLogic.SetAndCallReact("Height", -DockMargin * 2, "float");
-                _commonControlLogic.SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
-
-                _commonControlLogic.RefreshAndSave();
-            }
-        }
-
-        public void DockBottomButton_Click()
-        {
-            using (UndoManager.Self.RequestLock())
-            {
-                var state = SelectedState.Self.SelectedStateSave;
-
-                _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
-                _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Bottom, PositionUnitType.PixelsFromBottom, -DockMargin);
-
-                _commonControlLogic.SetAndCallReact("Width", -DockMargin * 2, "float");
-                _commonControlLogic.SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
-
-                _commonControlLogic.RefreshAndSave();
-            }
-        }
-
-        public void DockFillVerticallyButton_Click()
-        {
-            using (UndoManager.Self.RequestLock())
-            {
-
-                var state = SelectedState.Self.SelectedStateSave;
-
-                _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
-
-                _commonControlLogic.SetAndCallReact("Height", -DockMargin * 2, "float");
-                _commonControlLogic.SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
-
-                _commonControlLogic.RefreshAndSave();
-            }
-        }
-
-        public void DockFillHorizontallyButton_Click()
-        {
-            using (UndoManager.Self.RequestLock())
-            {
-
-                var state = SelectedState.Self.SelectedStateSave;
-
-                _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
-
-                _commonControlLogic.SetAndCallReact("Width", -DockMargin * 2, "float");
-                _commonControlLogic.SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToContainer, typeof(DimensionUnitType).Name);
-
-                _commonControlLogic.RefreshAndSave();
-            }
-        }
-
-        #endregion
     }
+
+    public void BottomRightButton_Click()
+    {
+        using (UndoManager.Self.RequestLock())
+        {
+
+            _commonControlLogic.SetXValues(
+                global::RenderingLibrary.Graphics.HorizontalAlignment.Right,
+                PositionUnitType.PixelsFromRight, -DockMargin);
+
+            _commonControlLogic.SetYValues(
+                global::RenderingLibrary.Graphics.VerticalAlignment.Bottom,
+                PositionUnitType.PixelsFromBottom, -DockMargin);
+
+            _commonControlLogic.RefreshAndSave();
+        }
+    }
+
+    #endregion
+
+    #region Dock Actions
+
+    public void DockTopButton_Click()
+    {
+        using (UndoManager.Self.RequestLock())
+        {
+            var state = SelectedState.Self.SelectedStateSave;
+
+            _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
+            _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Top, PositionUnitType.PixelsFromTop, DockMargin);
+
+            _commonControlLogic.SetAndCallReact("Width", -DockMargin * 2, "float");
+            _commonControlLogic.SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToParent, typeof(DimensionUnitType).Name);
+
+
+            _commonControlLogic.RefreshAndSave();
+        }
+    }
+
+    public void SizeToChildren_Click()
+    {
+        using (UndoManager.Self.RequestLock())
+        {
+            var state = SelectedState.Self.SelectedStateSave;
+
+            _commonControlLogic.SetAndCallReact("Width", DockMargin * 2, "float");
+            _commonControlLogic.SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToChildren, typeof(DimensionUnitType).Name);
+
+            _commonControlLogic.SetAndCallReact("Height", DockMargin * 2, "float");
+            _commonControlLogic.SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToChildren, typeof(DimensionUnitType).Name);
+        }
+    }
+
+    public void DockLeftButton_Click()
+    {
+        using (UndoManager.Self.RequestLock())
+        {
+            var state = SelectedState.Self.SelectedStateSave;
+
+            _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Left, PositionUnitType.PixelsFromLeft, DockMargin);
+            _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
+
+            _commonControlLogic.SetAndCallReact("Height", -DockMargin * 2, "float");
+            _commonControlLogic.SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToParent, typeof(DimensionUnitType).Name);
+
+            _commonControlLogic.RefreshAndSave();
+        }
+    }
+
+    public void DockFillButton_Click()
+    {
+        using (UndoManager.Self.RequestLock())
+        {
+
+            var state = SelectedState.Self.SelectedStateSave;
+
+            _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
+            _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
+
+            _commonControlLogic.SetAndCallReact("Width", -DockMargin * 2, "float");
+            _commonControlLogic.SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToParent, typeof(DimensionUnitType).Name);
+
+            _commonControlLogic.SetAndCallReact("Height", -DockMargin * 2, "float");
+            _commonControlLogic.SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToParent, typeof(DimensionUnitType).Name);
+
+            _commonControlLogic.RefreshAndSave();
+        }
+    }
+
+    public void DockRightButton_Click()
+    {
+        using (UndoManager.Self.RequestLock())
+        {
+
+            var state = SelectedState.Self.SelectedStateSave;
+
+            _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Right, PositionUnitType.PixelsFromRight, -DockMargin);
+            _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
+
+            _commonControlLogic.SetAndCallReact("Height", -DockMargin * 2, "float");
+            _commonControlLogic.SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToParent, typeof(DimensionUnitType).Name);
+
+            _commonControlLogic.RefreshAndSave();
+        }
+    }
+
+    public void DockBottomButton_Click()
+    {
+        using (UndoManager.Self.RequestLock())
+        {
+            var state = SelectedState.Self.SelectedStateSave;
+
+            _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
+            _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Bottom, PositionUnitType.PixelsFromBottom, -DockMargin);
+
+            _commonControlLogic.SetAndCallReact("Width", -DockMargin * 2, "float");
+            _commonControlLogic.SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToParent, typeof(DimensionUnitType).Name);
+
+            _commonControlLogic.RefreshAndSave();
+        }
+    }
+
+    public void DockFillVerticallyButton_Click()
+    {
+        using (UndoManager.Self.RequestLock())
+        {
+
+            var state = SelectedState.Self.SelectedStateSave;
+
+            _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
+
+            _commonControlLogic.SetAndCallReact("Height", -DockMargin * 2, "float");
+            _commonControlLogic.SetAndCallReact("HeightUnits", DimensionUnitType.RelativeToParent, typeof(DimensionUnitType).Name);
+
+            _commonControlLogic.RefreshAndSave();
+        }
+    }
+
+    public void DockFillHorizontallyButton_Click()
+    {
+        using (UndoManager.Self.RequestLock())
+        {
+
+            var state = SelectedState.Self.SelectedStateSave;
+
+            _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
+
+            _commonControlLogic.SetAndCallReact("Width", -DockMargin * 2, "float");
+            _commonControlLogic.SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToParent, typeof(DimensionUnitType).Name);
+
+            _commonControlLogic.RefreshAndSave();
+        }
+    }
+
+    #endregion
 }

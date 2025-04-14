@@ -211,7 +211,7 @@ public class UndoManager
                 }
             }
 
-            UndoSnapshot undoSnapshot = GetUndoSnapshotToAdd(newStateSave, newElement, oldState,
+            UndoSnapshot undoSnapshot = TryGetUndoSnapshotToAdd(newStateSave, newElement, oldState,
                 recordedSnapshot.Element, recordedSnapshot.CategoryName, recordedSnapshot.StateName);
 
             if (undoSnapshot != null)
@@ -233,7 +233,7 @@ public class UndoManager
                 history.Actions.Add(action);
                 history.UndoIndex = history.Actions.Count - 1;
 
-                var redoSnapshot = GetUndoSnapshotToAdd(oldState, recordedSnapshot.Element, newStateSave, newElement, recordedSnapshot.CategoryName, recordedSnapshot.StateName);
+                var redoSnapshot = TryGetUndoSnapshotToAdd(oldState, recordedSnapshot.Element, newStateSave, newElement, recordedSnapshot.CategoryName, recordedSnapshot.StateName);
 
                 if(redoSnapshot != null)
                 {
@@ -249,7 +249,17 @@ public class UndoManager
 
     }
 
-    private UndoSnapshot GetUndoSnapshotToAdd(StateSave newState, ElementSave newElement, 
+    /// <summary>
+    /// Checks if anything has changed and if so returns an UndoSnapshot
+    /// </summary>
+    /// <param name="newState"></param>
+    /// <param name="newElement"></param>
+    /// <param name="oldState"></param>
+    /// <param name="oldElement"></param>
+    /// <param name="categoryName"></param>
+    /// <param name="stateName"></param>
+    /// <returns></returns>
+    private UndoSnapshot? TryGetUndoSnapshotToAdd(StateSave newState, ElementSave newElement, 
         StateSave oldState, ElementSave oldElement, string categoryName, string stateName)
     {
         bool doStatesDiffer = FileManager.AreSaveObjectsEqual(oldState, newState) == false;
@@ -266,7 +276,7 @@ public class UndoManager
         //    recordedSnapshot.StateName != currentStateSave?.Name;
 
         // todo : need to add behavior differences
-        UndoSnapshot snapshotToAdd = null;
+        UndoSnapshot? snapshotToAdd = null;
 
         bool didAnythingChange = doStatesDiffer || doStateCategoriesDiffer || doInstanceListsDiffer || doTypesDiffer || doNamesDiffer ||
             doBehaviorsDiffer
