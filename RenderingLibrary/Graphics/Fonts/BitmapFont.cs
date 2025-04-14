@@ -302,18 +302,6 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        public float GetCharacterXOffset(int asciiNumber)
-        {
-            if (asciiNumber < mCharacterInfo.Length)
-            {
-                return mCharacterInfo[asciiNumber].XOffset;
-            }
-            else
-            {
-                return mCharacterInfo[' '].XOffset;
-            }
-        }
-
         public float GetCharacterWidth(char character)
         {
             return GetCharacterScaleX(character) * 2;
@@ -422,11 +410,8 @@ namespace RenderingLibrary.Graphics
                         mCharacterInfo['\n'].Spacing = 0;
                         mCharacterInfo['\n'].TURight = 0;
                         mCharacterInfo['\n'].TULeft = 0;
-                        mCharacterInfo['\n'].XOffset = 0;
-
-                        mCharacterInfo['\t'].XAdvance = 0;
-                        mCharacterInfo['\t'].XOffsetInPixels = 0;
-
+                        //mCharacterInfo['\n'].XOffset = 0;
+                        mCharacterInfo['\n'].XOffsetInPixels = 0;
                     }
                 }
 
@@ -1213,7 +1198,7 @@ namespace RenderingLibrary.Graphics
                 ScaleY = charInfo.Height / (float)lineHeightInPixels,
                 Spacing = 2 * charInfo.XAdvance / (float)lineHeightInPixels,
                 XAdvance = charInfo.XAdvance,
-                XOffset = 2 * charInfo.XOffset / (float)lineHeightInPixels,
+                //XOffset = 2 * charInfo.XOffset / (float)lineHeightInPixels,
                 XOffsetInPixels = charInfo.XOffset,
                 PageNumber = charInfo.Page,
             };

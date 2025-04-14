@@ -19,12 +19,15 @@ namespace RenderingLibrary.Graphics
 
         public float Spacing;
         public int XAdvance;
+
+        [Obsolete("This value is confusingly named and it does not use the expected pixel unit. use XoffsetInPixels instead", error:true)]
+        public float XOffset;
+
         /// <summary>
         /// The offset of the character when drawn from the current X position. This value lets
         /// a character get drawn further to the right or left without changing the X position of the
         /// next character.
         /// </summary>
-        public float XOffset;
         public int XOffsetInPixels;
         public float DistanceFromTopOfLine;
 
@@ -54,10 +57,6 @@ namespace RenderingLibrary.Graphics
         }
 
 
-        public int GetPixelXOffset(int lineHeightInPixels)
-        {
-            return MathFunctions.RoundToInt(lineHeightInPixels * XOffset / 2.0f);
-        }
 
         public int GetPixelDistanceFromTop(int lineHeightInPixels)
         {
