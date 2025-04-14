@@ -105,6 +105,11 @@ namespace Gum.Controls.DataUi
                 windowsColor.B = color.B;
 
                 this.ColorPicker.SelectedColor = windowsColor;
+                // This is beign set from the underlying data object to the UI
+                // which means the UI hasn't updated yet, so we don't want to push
+                // the value back to the UI
+                needsToPushFullCommitOnMouseUp = false;
+                 
                 return ApplyValueResult.Success;
             }
             else if(valueOnInstance is System.Drawing.Color drawingColor)
