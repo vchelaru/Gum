@@ -167,7 +167,7 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
                     maxSelectionLengthAllowed = DisplayedText.Length - selectionStart;
                 }
 
-                selectionLength = Math.Min(maxSelectionLengthAllowed, value);
+                selectionLength = System.Math.Min(maxSelectionLengthAllowed, value);
                 UpdateToSelection();
                 UpdateCaretVisibility();
             }
@@ -449,7 +449,7 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
                 var xChange = MainCursor.XChange / RenderingLibrary.SystemManagers.Default.Renderer.Camera.Zoom;
 
                 var bitmapFont = this.coreTextObject.BitmapFont;
-                var stringLength = bitmapFont.MeasureString(DisplayedText);
+                var stringLength = bitmapFont.MeasureString(DisplayedText, RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
 
                 var minimumShift = System.Math.Min(
                     edgeToTextPadding,
@@ -1259,13 +1259,13 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
         else
         {
             var selectionPosition = new SelectionPosition();
-            var firstMeasure = this.coreTextObject.BitmapFont.MeasureString(substring);
+            var firstMeasure = this.coreTextObject.BitmapFont.MeasureString(substring, RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
             substring = DisplayedText.Substring(0, selectionStart + selectionLength);
 
             selectionPosition.XStart = this.textComponent.X + firstMeasure;
             selectionPosition.Y = this.textComponent.Y;
             selectionPosition.Width = 1 +
-                this.coreTextObject.BitmapFont.MeasureString(substring) - firstMeasure;
+                this.coreTextObject.BitmapFont.MeasureString(substring, RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full) - firstMeasure;
 
             selectionStartEnds.Add(selectionPosition);
         }
@@ -1367,7 +1367,7 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
         caretComponent.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
         if (this.coreTextObject.BitmapFont != null)
         {
-            var measure = this.coreTextObject.BitmapFont.MeasureString(substring);
+            var measure = this.coreTextObject.BitmapFont.MeasureString(substring, RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
             return measure + this.textComponent.X;
         }
         else
