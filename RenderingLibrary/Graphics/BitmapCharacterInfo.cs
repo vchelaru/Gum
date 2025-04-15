@@ -18,6 +18,11 @@ namespace RenderingLibrary.Graphics
         public float ScaleY;
 
         public float Spacing;
+
+        /// <summary>
+        /// The number of pixels to advance after this character as the starting point for the next character. This value
+        /// ignores XOffsetInPixels, and it is not affected by the texture coordinate values.
+        /// </summary>
         public int XAdvance;
 
         [Obsolete("This value is confusingly named and it does not use the expected pixel unit. use XoffsetInPixels instead", error:true)]
