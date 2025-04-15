@@ -11,6 +11,13 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
+      <Type>bool</Type>
+      <Name>Animate</Name>
+      <Value xsi:type="xsd:boolean">false</Value>
+      <Category>Animation</Category>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
       <Type>Blend</Type>
       <Name>Blend</Name>
       <Value xsi:type="xsd:int">0</Value>
@@ -28,6 +35,12 @@
       <Type>ColorCategory</Type>
       <Name>ColorCategoryState</Name>
       <SetsValue>false</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>CurrentChainName</Name>
+      <Category>Animation</Category>
+      <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
       <Type>float?</Type>

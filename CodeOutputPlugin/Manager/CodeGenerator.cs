@@ -936,6 +936,19 @@ public class CodeGenerator
                 $"MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates" +
                 $"[typeof({className})] = template;");
 
+            var element = context.Element;
+            GetGumFormsType(element, out string? formsType, out ElementBehaviorReference? behaviorReference);
+            if (formsType != null)
+            {
+                var behavior = ObjectFinder.Self.GetBehavior(behaviorReference);
+                if (behavior?.DefaultImplementation == element.Name)
+                {
+                    // This is the default, so let's register it:
+                    builder.AppendLine(context.Tabs +
+                        $"MonoGameGum.Forms.Controls.FrameworkElement.DefaultFormsTemplates[typeof({formsType})] = template;");
+                }
+            }
+
             builder.AppendLine(context.Tabs +
                 $"ElementSaveExtensions.RegisterGueInstantiation(\"{context.Element.Name}\", () => ");
             builder.AppendLine(context.Tabs + "{");
