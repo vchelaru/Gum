@@ -136,6 +136,8 @@
 ## Code
 
 * [Gum Code Reference](code/gum-code-reference/README.md)
+  * [BitmapCharacterInfo](code/gum-code-reference/bitmapcharacterinfo.md)
+  * [BitmapFont](code/gum-code-reference/bitmapfont.md)
   * [Camera](code/gum-code-reference/camera.md)
   * [CircleRuntime](code/gum-code-reference/circleruntime.md)
   * [ColoredRectangleRuntime](code/gum-code-reference/coloredrectangleruntime.md)
