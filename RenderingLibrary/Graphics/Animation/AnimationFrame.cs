@@ -43,11 +43,9 @@ namespace Gum.Graphics.Animation
         public Texture2D Texture;
 #endif
 
-        #region XML Docs
         /// <summary>
         /// Whether the texture should be flipped horizontally.
         /// </summary>
-        #endregion
         public bool FlipHorizontal;
 
         #region XML Docs

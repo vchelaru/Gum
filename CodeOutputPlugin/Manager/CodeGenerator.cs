@@ -48,11 +48,60 @@ public struct CodeGenerationContext
     /// the prefix with no period, such as "casted"
     /// </summary>
     public string ThisPrefix { get; set; }
-    public InstanceSave? Instance { get; set; }
+
+    bool? _isInstanceFormsObject;
+
+    InstanceSave? _instance;
+    public InstanceSave? Instance 
+    {
+        get => _instance;
+        set
+        {
+            if(_instance != value)
+            {
+                _instance = value;
+
+                RefreshIsInstanceFormsObject();
+            }
+
+        }
+    }
+
+    private void RefreshIsInstanceFormsObject()
+    {
+        if (_instance == null || CodeOutputProjectSettings?.OutputLibrary != OutputLibrary.MonoGameForms)
+        {
+            _isInstanceFormsObject = false;
+        }
+        else
+        {
+            _isInstanceFormsObject = false;
+            var instanceElement = ObjectFinder.Self.GetElementSave(_instance);
+            if (instanceElement != null)
+            {
+                CodeGenerator.GetGumFormsType(instanceElement, out string? formsType, out _);
+
+                _isInstanceFormsObject = !string.IsNullOrEmpty(formsType);
+            }
+        }
+    }
+
     public ElementSave Element { get; set; }
     public StringBuilder StringBuilder { get; set; }
 
-    public CodeOutputProjectSettings CodeOutputProjectSettings { get; set; }
+    CodeOutputProjectSettings _codeOutputProjectSettings;
+    public CodeOutputProjectSettings CodeOutputProjectSettings 
+    {
+        get => _codeOutputProjectSettings;
+        set
+        {
+            if (_codeOutputProjectSettings != value)
+            {
+                _codeOutputProjectSettings = value;
+                RefreshIsInstanceFormsObject();
+            }
+        }
+    }
 
     public string GumVariablePrefix
     {
@@ -90,7 +139,14 @@ public struct CodeGenerationContext
             {
                 if (string.IsNullOrEmpty(ThisPrefix))
                 {
-                    return "this";
+                    if(CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+                    {
+                        return "this.Visual";
+                    }
+                    else
+                    {
+                        return "this";
+                    }
                 }
                 else
                 {
@@ -99,13 +155,27 @@ public struct CodeGenerationContext
             }
             else
             {
-                if (string.IsNullOrEmpty(ThisPrefix))
+                if(_isInstanceFormsObject == true)
                 {
-                    return "this." + InstanceNameInCode(Instance);
+                    if (string.IsNullOrEmpty(ThisPrefix))
+                    {
+                        return "this." + InstanceNameInCode(Instance) + "." + "Visual";
+                    }
+                    else
+                    {
+                        return ThisPrefix + "." + InstanceNameInCode(Instance) + "." + "Visual";
+                    }
                 }
                 else
                 {
-                    return ThisPrefix + "." + InstanceNameInCode(Instance);
+                    if (string.IsNullOrEmpty(ThisPrefix))
+                    {
+                        return "this." + InstanceNameInCode(Instance);
+                    }
+                    else
+                    {
+                        return ThisPrefix + "." + InstanceNameInCode(Instance);
+                    }
                 }
             }
         }
@@ -1003,7 +1073,7 @@ public class CodeGenerator
 
     #region Gum Forms (MonoGame)
 
-    private static void GetGumFormsType(ElementSave element, out string? formsType, out ElementBehaviorReference? behavior)
+    internal static void GetGumFormsType(ElementSave element, out string? formsType, out ElementBehaviorReference? behavior)
     {
         formsType = null;
         behavior = null;
@@ -1118,7 +1188,7 @@ public class CodeGenerator
 
             if (isParentAbsoluteLayout)
             {
-                SetAbsoluteLayoutPosition(variablesToConsider, state, context, stringBuilder, parentType);
+                SetXamarinFormsLayoutPosition(variablesToConsider, state, context, stringBuilder, parentType);
             }
             else //if(parent?.BaseType?.EndsWith("/StackLayout") == true)
             {
@@ -1512,7 +1582,7 @@ public class CodeGenerator
     const string YProportionalFlag = "AbsoluteLayoutFlags.YProportional";
     #endregion
 
-    private static void SetAbsoluteLayoutPosition(List<VariableSave> variablesToConsider, StateSave state, CodeGenerationContext context, StringBuilder stringBuilder, string parentBaseType)
+    private static void SetXamarinFormsLayoutPosition(List<VariableSave> variablesToConsider, StateSave state, CodeGenerationContext context, StringBuilder stringBuilder, string parentBaseType)
     {
         var variableFinder = new RecursiveVariableFinder(state);
 

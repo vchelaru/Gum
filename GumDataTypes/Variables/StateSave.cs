@@ -40,6 +40,10 @@ public class StateSave
 
     #endregion
 
+
+    [XmlIgnore]
+    public Action Apply;
+
     #region Methods
 
     public StateSave()

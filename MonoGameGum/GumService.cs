@@ -168,6 +168,7 @@ public class GumService
         GameTime = gameTime;
         FormsUtilities.Update(game, gameTime, root);
         SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
+        root.AnimateSelf(gameTime.ElapsedGameTime.TotalSeconds);
     }
 
     public void Update(Game game, GameTime gameTime, IEnumerable<GraphicalUiElement> roots)
@@ -175,6 +176,10 @@ public class GumService
         GameTime = gameTime;
         FormsUtilities.Update(game, gameTime, roots);
         SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
+        foreach(var item in roots)
+        {
+            item.AnimateSelf(gameTime.ElapsedGameTime.TotalSeconds);
+        }
     }
 
     #endregion
@@ -199,6 +204,11 @@ public static class GraphicalUiElementExtensionMethods
     public static void RemoveFromRoot(this GraphicalUiElement element)
     {
         element.Parent = null;
+    }
+
+    public static void AddChild(this GraphicalUiElement element, FrameworkElement child)
+    {
+        element.Children.Add(child.Visual);
     }
 }
 

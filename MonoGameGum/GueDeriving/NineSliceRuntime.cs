@@ -1,4 +1,5 @@
-﻿using Gum.Managers;
+﻿using Gum.Graphics.Animation;
+using Gum.Managers;
 using Gum.RenderingLibrary;
 using Gum.Wireframe;
 using RenderingLibrary;
@@ -13,14 +14,16 @@ namespace MonoGameGum.GueDeriving
 {
     public class NineSliceRuntime : BindableGue
     {
-
+        #region Static Defaults
         public static string DefaultSourceFile { get; set; }
         public static int DefaultTextureLeft;
         public static int DefaultTextureTop;
         public static int DefaultTextureWidth;
         public static int DefaultTextureHeight;
         public static TextureAddress DefaultTextureAddress;
+        #endregion
 
+        #region Contained Nineslice
 
         RenderingLibrary.Graphics.NineSlice mContainedNineSlice;
 
@@ -35,6 +38,10 @@ namespace MonoGameGum.GueDeriving
                 return mContainedNineSlice;
             }
         }
+
+        #endregion
+
+        #region Color/Blend
 
         public int Alpha
         {
@@ -110,6 +117,51 @@ namespace MonoGameGum.GueDeriving
             }
         }
 
+        public Microsoft.Xna.Framework.Color Color
+        {
+            get
+            {
+                return RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedNineSlice.Color);
+            }
+            set
+            {
+                ContainedNineSlice.Color = RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
+                NotifyPropertyChanged();
+            }
+        }
+
+        #endregion
+
+        public bool Animate
+        {
+            get => ContainedNineSlice.Animate;
+            set
+            {
+                ContainedNineSlice.Animate = value;
+            }
+        }
+
+        public string CurrentChainName
+        {
+            get => ContainedNineSlice.CurrentChainName;
+            set => ContainedNineSlice.CurrentChainName = value;
+        }
+
+        public AnimationChainList AnimationChains
+        {
+            get => ContainedNineSlice.AnimationChains;
+            set
+            {
+                ContainedNineSlice.AnimationChains = value;
+                if (ContainedNineSlice.UpdateToCurrentAnimationFrame())
+                {
+                    UpdateTextureValuesFrom(ContainedNineSlice);
+                }
+            }
+        }
+
+        #region Source File / Texture
+
         [Obsolete("Use Texture")]
         public Microsoft.Xna.Framework.Graphics.Texture2D SourceFile
         {
@@ -126,20 +178,19 @@ namespace MonoGameGum.GueDeriving
             set => ContainedNineSlice.SetSingleTexture(value);
         }
 
-
-
-        public Microsoft.Xna.Framework.Color Color
+        public string SourceFileName
         {
-            get
-            {
-                return RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedNineSlice.Color);
-            }
             set
             {
-                ContainedNineSlice.Color = RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
-                NotifyPropertyChanged();
+                base.SetProperty("SourceFile", value);
+                if (ContainedNineSlice.UpdateToCurrentAnimationFrame())
+                {
+                    UpdateTextureValuesFrom(ContainedNineSlice);
+                }
             }
         }
+
+        #endregion
 
         public float? CustomFrameTextureCoordinateWidth
         {
@@ -149,17 +200,6 @@ namespace MonoGameGum.GueDeriving
 
         public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 
-        public string SourceFileName
-        {
-            set
-            {
-                base.SetProperty("SourceFile", value);
-                //if (ContainedSprite.UpdateToCurrentAnimationFrame())
-                //{
-                //    UpdateTextureValuesFrom(ContainedSprite);
-                //}
-            }
-        }
 
         public NineSliceRuntime(bool fullInstantiation = true)
         {

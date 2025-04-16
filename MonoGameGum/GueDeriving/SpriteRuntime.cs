@@ -1,4 +1,5 @@
-﻿using Gum.RenderingLibrary;
+﻿using Gum.Graphics.Animation;
+using Gum.RenderingLibrary;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
@@ -11,6 +12,7 @@ namespace MonoGameGum.GueDeriving
 {
     public class SpriteRuntime : global::Gum.Wireframe.BindableGue
     {
+        #region Contained Sprite
         RenderingLibrary.Graphics.Sprite mContainedSprite;
         RenderingLibrary.Graphics.Sprite ContainedSprite
         {
@@ -23,6 +25,10 @@ namespace MonoGameGum.GueDeriving
                 return mContainedSprite;
             }
         }
+
+        #endregion
+
+        #region Color/Blend
 
         public int Alpha
         {
@@ -108,6 +114,20 @@ namespace MonoGameGum.GueDeriving
                 NotifyPropertyChanged();
             }
         }
+        public Microsoft.Xna.Framework.Color Color
+        {
+            get
+            {
+                return RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedSprite.Color);
+            }
+            set
+            {
+                ContainedSprite.Color = RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
+                NotifyPropertyChanged();
+            }
+        }
+
+        #endregion
 
         public bool Animate
         {
@@ -124,6 +144,21 @@ namespace MonoGameGum.GueDeriving
             set => ContainedSprite.CurrentChainName = value;
         }
 
+        public AnimationChainList AnimationChains
+        {
+            get => ContainedSprite.AnimationChains;
+            set
+            {
+                ContainedSprite.AnimationChains = value;
+                if (ContainedSprite.UpdateToCurrentAnimationFrame())
+                {
+                    UpdateTextureValuesFrom(ContainedSprite);
+                }
+            }
+        }
+
+        #region Source File/Texture
+
         [Obsolete("Use Texture")]
         public Microsoft.Xna.Framework.Graphics.Texture2D SourceFile
         {
@@ -134,18 +169,6 @@ namespace MonoGameGum.GueDeriving
             set
             {
                 this.Texture = value;
-            }
-        }
-        public Microsoft.Xna.Framework.Color Color
-        {
-            get
-            {
-                return RenderingLibrary.Graphics.XNAExtensions.ToXNA(ContainedSprite.Color);
-            }
-            set
-            {
-                ContainedSprite.Color = RenderingLibrary.Graphics.XNAExtensions.ToSystemDrawing(value);
-                NotifyPropertyChanged();
             }
         }
         public Microsoft.Xna.Framework.Graphics.Texture2D Texture
@@ -198,6 +221,9 @@ namespace MonoGameGum.GueDeriving
                 }
             }
         }
+
+        #endregion
+
         public SpriteRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
         {
             if (fullInstantiation)

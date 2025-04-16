@@ -4282,7 +4282,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 this.YUnits = GeneralUnitType.PixelsFromSmall;
                 this.Y = 0;
 
-                if(RenderableComponent is IText)
+                if (RenderableComponent is IText)
                 {
                     SetProperty("HorizontalAlignment", HorizontalAlignment.Left);
                     SetProperty("VerticalAlignment", VerticalAlignment.Top);
@@ -4967,7 +4967,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 #if !FRB && NET6_0_OR_GREATER
                 case "ExposeChildrenEvents":
                     {
-                        if(this is InteractiveGue interactiveGue)
+                        if (this is InteractiveGue interactiveGue)
                         {
                             interactiveGue.ExposeChildrenEvents = (bool)value;
                             toReturn = true;
@@ -4982,7 +4982,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 #if !FRB && NET6_0_OR_GREATER
                 case "HasEvents":
                     {
-                        if(this is InteractiveGue interactiveGue)
+                        if (this is InteractiveGue interactiveGue)
                         {
                             interactiveGue.HasEvents = (bool)value;
                             toReturn = true;
@@ -5267,70 +5267,77 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         //{
         //    throw new InvalidOperationException("State.ParentContainer is null - did you remember to initialize the state?");
         //}
-
 #endif
-        if (GraphicalUiElement.IsAllLayoutSuspended == false)
+
+        if (state.Apply != null)
         {
-            this.SuspendLayout(true);
+            state.Apply();
         }
-
-        var variablesWithoutStatesOnParent =
-            state.Variables.Where(item =>
-            {
-                if (item.SetsValue)
-                {
-                    // We can set the variable if it's not setting a state (to prevent recursive setting).
-                    // Update May 4, 2023 - But if you have a base element that defines a state, and the derived
-                    // element sets that state, then we want to allow it.  But should we just allow all states?
-                    // Or should we check if it's defined by the base...
-                    //return (item.IsState(state.ParentContainer) == false ||
-                    //    // If it is setting a state we'll allow it if it's on a child.
-                    //    !string.IsNullOrEmpty(item.SourceObject));
-                    // let's test this out:
-                    return true;
-
-                }
-                return false;
-            }).ToArray();
-
-
-        var parentSettingVariables =
-            variablesWithoutStatesOnParent
-                .Where(item => item.GetRootName() == "Parent")
-                .OrderBy(item => GetOrderedIndexForParentVariable(item))
-                .ToArray();
-
-        var nonParentSettingVariables =
-            variablesWithoutStatesOnParent
-                .Except(parentSettingVariables)
-                // Even though we removed state-setting variables on the parent, we still allow setting
-                // states on the contained objects
-                .OrderBy(item => state.ParentContainer == null || !item.IsState(state.ParentContainer))
-                .ToArray();
-
-        var variablesToConsider =
-            parentSettingVariables.Concat(nonParentSettingVariables)
-            .ToArray();
-
-        int variableCount = variablesToConsider.Length;
-        for (int i = 0; i < variableCount; i++)
+        else
         {
-            var variable = variablesToConsider[i];
-            if (variable.SetsValue && variable.Value != null)
+            if (GraphicalUiElement.IsAllLayoutSuspended == false)
             {
-                this.SetProperty(variable.Name, variable.Value);
+                this.SuspendLayout(true);
             }
-        }
 
-        foreach (var variableList in state.VariableLists)
-        {
-            this.SetProperty(variableList.Name, variableList.ValueAsIList);
-        }
+            var variablesWithoutStatesOnParent =
+                state.Variables.Where(item =>
+                {
+                    if (item.SetsValue)
+                    {
+                        // We can set the variable if it's not setting a state (to prevent recursive setting).
+                        // Update May 4, 2023 - But if you have a base element that defines a state, and the derived
+                        // element sets that state, then we want to allow it.  But should we just allow all states?
+                        // Or should we check if it's defined by the base...
+                        //return (item.IsState(state.ParentContainer) == false ||
+                        //    // If it is setting a state we'll allow it if it's on a child.
+                        //    !string.IsNullOrEmpty(item.SourceObject));
+                        // let's test this out:
+                        return true;
 
-        if (GraphicalUiElement.IsAllLayoutSuspended == false)
-        {
-            this.ResumeLayout(true);
+                    }
+                    return false;
+                }).ToArray();
 
+
+            var parentSettingVariables =
+                variablesWithoutStatesOnParent
+                    .Where(item => item.GetRootName() == "Parent")
+                    .OrderBy(item => GetOrderedIndexForParentVariable(item))
+                    .ToArray();
+
+            var nonParentSettingVariables =
+                variablesWithoutStatesOnParent
+                    .Except(parentSettingVariables)
+                    // Even though we removed state-setting variables on the parent, we still allow setting
+                    // states on the contained objects
+                    .OrderBy(item => state.ParentContainer == null || !item.IsState(state.ParentContainer))
+                    .ToArray();
+
+            var variablesToConsider =
+                parentSettingVariables.Concat(nonParentSettingVariables)
+                .ToArray();
+
+            int variableCount = variablesToConsider.Length;
+            for (int i = 0; i < variableCount; i++)
+            {
+                var variable = variablesToConsider[i];
+                if (variable.SetsValue && variable.Value != null)
+                {
+                    this.SetProperty(variable.Name, variable.Value);
+                }
+            }
+
+            foreach (var variableList in state.VariableLists)
+            {
+                this.SetProperty(variableList.Name, variableList.ValueAsIList);
+            }
+
+            if (GraphicalUiElement.IsAllLayoutSuspended == false)
+            {
+                this.ResumeLayout(true);
+
+            }
         }
     }
 

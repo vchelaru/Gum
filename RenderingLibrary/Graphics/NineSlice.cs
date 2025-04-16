@@ -1089,7 +1089,10 @@ public class NineSlice : IRenderableIpso, IVisible, ITextureCoordinate, IAnimata
 
             SetSingleTexture(frame.Texture);
 
-
+            if(frame.Texture == null)
+            {
+                throw new InvalidOperationException($"The animation {mAnimationChains[mCurrentChainIndex].Name} has a frame with a null texture. Frames must have a texture");
+            }
             var left = MathFunctions.RoundToInt(frame.LeftCoordinate * frame.Texture.Width);
             var width = MathFunctions.RoundToInt(frame.RightCoordinate * frame.Texture.Width) - left;
 
@@ -1121,21 +1124,29 @@ public class NineSlice : IRenderableIpso, IVisible, ITextureCoordinate, IAnimata
             )
         {
             int frameIndex = 0;
-            while (timeIntoAnimation >= 0)
+
+            if(CurrentChain.TotalLength == 0)
             {
-                double frameTime = CurrentChain[frameIndex].FrameLength;
-
-                if (timeIntoAnimation < frameTime)
+                // do nothing:
+            }
+            else
+            {
+                while (timeIntoAnimation >= 0)
                 {
-                    mCurrentFrameIndex = frameIndex;
+                    double frameTime = CurrentChain[frameIndex].FrameLength;
 
-                    break;
-                }
-                else
-                {
-                    timeIntoAnimation -= frameTime;
+                    if (timeIntoAnimation < frameTime)
+                    {
+                        mCurrentFrameIndex = frameIndex;
 
-                    frameIndex = (frameIndex + 1) % CurrentChain.Count;
+                        break;
+                    }
+                    else
+                    {
+                        timeIntoAnimation -= frameTime;
+
+                        frameIndex = (frameIndex + 1) % CurrentChain.Count;
+                    }
                 }
             }
         }

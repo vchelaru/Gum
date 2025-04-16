@@ -297,14 +297,22 @@ public abstract class RangeBase : FrameworkElement
         {
             // Should we be respecting MoveToPoint?
 
-            var shouldRepeat = InteractiveGue.CurrentGameTime - TrackPushedTime > InitialRepeatRate.TotalSeconds &&
-                InteractiveGue.CurrentGameTime - LastRepeatRate > SubsequentRepeatRate.TotalSeconds;
-
-            if (shouldRepeat)
+            if(IsMoveToPointEnabled)
             {
+                // do this immediately!
                 ApplyTrackDownRepeatRate();
-                // act as if the thumb was pushed:
-                LastRepeatRate = InteractiveGue.CurrentGameTime;
+            }
+            else
+            {
+                var shouldRepeat = InteractiveGue.CurrentGameTime - TrackPushedTime > InitialRepeatRate.TotalSeconds &&
+                    InteractiveGue.CurrentGameTime - LastRepeatRate > SubsequentRepeatRate.TotalSeconds;
+
+                if (shouldRepeat)
+                {
+                    ApplyTrackDownRepeatRate();
+                    // act as if the thumb was pushed:
+                    LastRepeatRate = InteractiveGue.CurrentGameTime;
+                }
             }
         }
     }
