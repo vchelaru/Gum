@@ -504,9 +504,11 @@ public class Slider : RangeBase, IInputReceiver
 
     public void HandleKeyDown(Keys key, bool isShiftDown, bool isAltDown, bool isCtrlDown)
     {
+#if MONOGAME && !FRB
         var args = new KeyEventArgs();
         args.Key = key;
         base.RaiseKeyDown(args);
+#endif
     }
 
     public void HandleCharEntered(char character)
@@ -514,5 +516,5 @@ public class Slider : RangeBase, IInputReceiver
     }
 
 
-    #endregion
+#endregion
 }
