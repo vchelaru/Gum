@@ -100,6 +100,8 @@ public class Slider : RangeBase, IInputReceiver
     #endif
         }
         UpdateState();
+
+        RaiseValueChangeCompleted();
     }
 
     /// <inheritdoc/>
@@ -502,6 +504,9 @@ public class Slider : RangeBase, IInputReceiver
 
     public void HandleKeyDown(Keys key, bool isShiftDown, bool isAltDown, bool isCtrlDown)
     {
+        var args = new KeyEventArgs();
+        args.Key = key;
+        base.RaiseKeyDown(args);
     }
 
     public void HandleCharEntered(char character)

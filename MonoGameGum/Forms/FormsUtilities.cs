@@ -91,6 +91,7 @@ public class FormsUtilities
         container.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
         container.Width = GraphicalUiElement.CanvasWidth;
         container.Height = GraphicalUiElement.CanvasHeight;
+        container.Name = name;
 
         container.AddToManagers();
 

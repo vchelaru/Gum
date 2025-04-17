@@ -69,7 +69,7 @@ public class StateSave
         {
             toReturn.VariableLists.Add(VariableLists[i].Clone());
         }
-
+        toReturn.Apply = this.Apply;
         toReturn.ParentContainer = this.ParentContainer;
 
         return toReturn;

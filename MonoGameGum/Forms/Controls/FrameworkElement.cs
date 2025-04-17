@@ -345,8 +345,14 @@ public class FrameworkElement
 
 
                 visual = value;
+
                 if (visual != null)
                 {
+
+                    if(visual is InteractiveGue newVisualInteractiveGue)
+                    {
+                        newVisualInteractiveGue.FormsControlAsObject = this;
+                    }
                     ReactToVisualChanged();
                     UpdateAllUiPropertiesToVm();
 

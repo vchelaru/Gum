@@ -64,8 +64,15 @@ public class GumService
         return InitializeInternal(null, graphicsDevice, gumProjectFile);
     }
 
+    bool hasBeenInitialized = false;
     GumProjectSave? InitializeInternal(Game game, GraphicsDevice graphicsDevice, string? gumProjectFile = null)
     {
+        if(hasBeenInitialized)
+        {
+            throw new InvalidOperationException("Initialize has already been called once. It cannot be called again");
+        }
+        hasBeenInitialized = true;
+
         _game = game;
         RegisterRuntimeTypesThroughReflection();
         SystemManagers.Default = new SystemManagers();
