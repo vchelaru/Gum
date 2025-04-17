@@ -9,6 +9,7 @@ using MonoGameGum.Forms.Controls;
 using MonoGameGum.GueDeriving;
 using MonoGameGum.Input;
 using RenderingLibrary;
+using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -45,6 +46,20 @@ public class GumService
     public Keyboard Keyboard => FormsUtilities.Keyboard;
 
     public GamePad[] Gamepads => FormsUtilities.Gamepads;
+
+    public Renderer Renderer => SystemManagers.Default.Renderer;
+
+    public float CanvasWidth
+    {
+        get => GraphicalUiElement.CanvasWidth;
+        set => GraphicalUiElement.CanvasWidth = value;
+    }
+
+    public float CanvasHeight
+    {
+        get => GraphicalUiElement.CanvasHeight;
+        set => GraphicalUiElement.CanvasHeight = value;
+    }
 
     public InteractiveGue Root { get; private set; } = new ContainerRuntime();
 
