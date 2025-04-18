@@ -401,7 +401,7 @@ public class FrameworkElement
         return GetGraphicalUiElementForFrameworkElement(type);
     }
 
-    public static InteractiveGue GetGraphicalUiElementForFrameworkElement(Type type)
+    public static InteractiveGue? GetGraphicalUiElementForFrameworkElement(Type type)
     {
         if(DefaultFormsTemplates.ContainsKey(type))
         {
@@ -432,11 +432,12 @@ public class FrameworkElement
             var baseType = type.BaseType;
             if (baseType == typeof(object) || baseType == typeof(FrameworkElement))
             {
-                var message =
-                    $"Could not find default Gum Component for {type}. You can solve this by adding a Gum type for {type} to " +
-                    $"{nameof(FrameworkElement)}.{nameof(DefaultFormsTemplates)}, or constructing the Gum object itself.";
+                //var message =
+                //    $"Could not find default Gum Component for {type}. You can solve this by adding a Gum type for {type} to " +
+                //    $"{nameof(FrameworkElement)}.{nameof(DefaultFormsTemplates)}, or constructing the Gum object itself.";
 
-                throw new Exception(message);
+                //throw new Exception(message);
+                return null;
             }
             else
             {
@@ -462,8 +463,12 @@ public class FrameworkElement
 
     public FrameworkElement()
     {
-        Visual = GetGraphicalUiElementFor(this);
-        Visual.FormsControlAsObject = this;
+        var possibleVisual = GetGraphicalUiElementFor(this); 
+        if(possibleVisual != null)
+        {
+            Visual = possibleVisual;
+            Visual.FormsControlAsObject = this;
+        }
     }
 
     public FrameworkElement(InteractiveGue visual)
