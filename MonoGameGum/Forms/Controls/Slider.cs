@@ -48,7 +48,7 @@ public class Slider : RangeBase, IInputReceiver
 
     public IInputReceiver NextInTabSequence { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
-    double ValueOnThumbPush;
+    double ValueOnThumbOrTrackPush;
 
     public const string SliderCategoryName = "SliderCategory";
 
@@ -93,13 +93,19 @@ public class Slider : RangeBase, IInputReceiver
 
         Track.Push += HandleTrackPush;
 
-        if(thumb != null)
+#if FRB
+        Track.RemovedAsPushedWindow += _ => HandleTrackRemovedAsPushedWindow(this, EventArgs.Empty);
+#else
+        Track.RemovedAsPushed += HandleTrackRemovedAsPushedWindow;
+#endif
+
+        if (thumb != null)
         {
-    #if FRB
-            base.thumb.Visual.RemovedAsPushedWindow += _ => HandleRemovedAsPushedWindow(this, EventArgs.Empty);
-    #else
-            base.thumb.Visual.RemovedAsPushed += HandleRemovedAsPushedWindow;
-    #endif
+#if FRB
+            base.thumb.Visual.RemovedAsPushedWindow += _ => HandleThumbRemovedAsPushedWindow(this, EventArgs.Empty);
+#else
+            base.thumb.Visual.RemovedAsPushed += HandleThumbRemovedAsPushedWindow;
+#endif
         }
         UpdateState();
 
@@ -115,7 +121,7 @@ public class Slider : RangeBase, IInputReceiver
 
     }
 
-    #endregion
+#endregion
 
     #region Event Handlers
     protected override void HandleThumbPush(object sender, EventArgs e)
@@ -134,12 +140,20 @@ public class Slider : RangeBase, IInputReceiver
 
         cursorGrabOffsetRelativeToThumb = cursorScreen - leftOfThumb;
 
-        ValueOnThumbPush = Value;
+        ValueOnThumbOrTrackPush = Value;
     }
 
-    private void HandleRemovedAsPushedWindow(object sender, EventArgs args)
+    private void HandleThumbRemovedAsPushedWindow(object sender, EventArgs args)
     {
-        if (ValueOnThumbPush != Value)
+        if (ValueOnThumbOrTrackPush != Value)
+        {
+            RaiseValueChangeCompleted();
+        }
+    }
+
+    private void HandleTrackRemovedAsPushedWindow(object sender, EventArgs args)
+    {
+        if (ValueOnThumbOrTrackPush != Value && IsMoveToPointEnabled)
         {
             RaiseValueChangeCompleted();
         }
@@ -174,6 +188,9 @@ public class Slider : RangeBase, IInputReceiver
         /////////////////////////////////////////////////////////////
 
         var valueBefore = Value;
+
+        ValueOnThumbOrTrackPush = Value;
+
         if (IsMoveToPointEnabled)
         {
             var left = Track.GetAbsoluteX();

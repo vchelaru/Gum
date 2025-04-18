@@ -35,14 +35,15 @@ public abstract class RangeBase : FrameworkElement
     protected float cursorGrabOffsetRelativeToThumb = 0;
 
     /// <summary>
-    /// The amount to change Value when the user clicks on the track. Only applies if IsMoveToPointEnabled is false.
+    /// The amount to change Value when the user clicks on the track. 
+    /// Only applies if IsMoveToPointEnabled is false.
     /// </summary>
     public double LargeChange { get; set; }
 
     /// <summary>
-    /// The amount of to change Value when the user presses the up or down buttons on a scrollbar.
-    /// Also currently the amount of distance to move per mouse wheel tick - note that this may change
-    /// in future versions of Forms.
+    /// The amount to change Value when the user presses the up or down buttons on a scrollbar, 
+    /// per mouse wheel tick on a scrollbar, and the amount to change the value in response
+    /// to left/right presses on gamepad or keyboard on a Slider.
     /// </summary>
     public double SmallChange { get; set; }
 
@@ -114,7 +115,19 @@ public abstract class RangeBase : FrameworkElement
 
                 ValueChanged?.Invoke(this, EventArgs.Empty);
 
-                if (MainCursor.WindowPushed != thumb?.Visual)
+                var shouldRaiseChangeCompleted = true;
+
+                if(thumb != null && MainCursor.WindowPushed == thumb.Visual)
+                {
+                    shouldRaiseChangeCompleted = false;
+                }
+
+                if(MainCursor.WindowPushed == Track && IsMoveToPointEnabled)
+                {
+                    shouldRaiseChangeCompleted = false;
+                }
+
+                if (shouldRaiseChangeCompleted)
                 {
                     // Make sure the user isn't currently grabbing the thumb
                     ValueChangeCompleted?.Invoke(this, EventArgs.Empty);
@@ -149,9 +162,31 @@ public abstract class RangeBase : FrameworkElement
 
     #region Events
 
+    /// <summary>
+    /// Event raised whenever the Value property changes regardless
+    /// of source. This event may be raised multiple times if the user
+    /// pushes+drags on the track or thumb.
+    /// </summary>
     public event EventHandler ValueChanged;
+
+    /// <summary>
+    /// Event raised whenever a Value change has completed. This event is raised for discrete
+    /// changes such as pressing left/right on a keyboard, or pushes on the track when
+    /// IsMoveToPointEnabled is set to false.
+    /// </summary>
+    /// <remarks>
+    /// This event can be used to prevent responding to changes every frame as a user
+    /// is dragging a thumb or clicking on a track with IsMoveToPointEnabled set to true.
+    /// Examples of when to use ValueChangeCompleted would be to play an audio cue when changing
+    /// volume, or committing changes which are too expensive to perform every frame such as saving
+    /// settings to disk.
+    /// </remarks>
     public event EventHandler ValueChangeCompleted;
 
+    /// <summary>
+    /// Event raised whenever a Value change is initiated by the UI. This event is not raised
+    /// when Value changes are performed in code, such as by assigning the Value property.
+    /// </summary>
     public event EventHandler ValueChangedByUi;
 
     #endregion
