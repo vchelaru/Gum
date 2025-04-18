@@ -50,6 +50,8 @@ public class Slider : RangeBase, IInputReceiver
 
     double ValueOnThumbPush;
 
+    public const string SliderCategoryName = "SliderCategory";
+
     #endregion
 
     #region Events
@@ -279,11 +281,8 @@ public class Slider : RangeBase, IInputReceiver
         if (Visual == null) //don't try to update the UI when the UI is not set yet, mmmmkay?
             return;
 
-        string category = "SliderCategoryState";
-
         var state = GetDesiredState();
-
-        Visual.SetProperty(category, state);
+        Visual.SetProperty(SliderCategoryName + "State", state);
     }
 
     private void UpdateThumbPositionAccordingToValue()

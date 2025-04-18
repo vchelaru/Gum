@@ -139,15 +139,15 @@ namespace MonoGameGum.Forms.DefaultVisuals
                     });
                 }
 
-                AddState(FrameworkElement.EnabledState);
+                AddState(FrameworkElement.EnabledStateName);
                 AddVariable("TextInstance.Color", Styling.Colors.White);
                 AddVariable("Background.Color", Styling.Colors.DarkGray);
 
-                AddState(FrameworkElement.DisabledState);
+                AddState(FrameworkElement.DisabledStateName);
                 AddVariable("TextInstance.Color", Styling.Colors.Gray);
                 AddVariable("Background.Color", Styling.Colors.DarkGray);
 
-                AddState(FrameworkElement.HighlightedState);
+                AddState(FrameworkElement.HighlightedStateName);
                 AddVariable("TextInstance.Color", Styling.Colors.White);
                 AddVariable("Background.Color", Styling.Colors.Gray);
 

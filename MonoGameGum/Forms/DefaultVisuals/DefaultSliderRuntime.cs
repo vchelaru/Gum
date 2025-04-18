@@ -119,29 +119,29 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 }
 
 
-                AddState(FrameworkElement.DisabledState);
+                AddState(FrameworkElement.DisabledStateName);
                 AddVariable("FocusedIndicator.Visible", false);
                 AddVariable("ThumbInstance.IsEnabled", false);
 
 
-                AddState(FrameworkElement.DisabledFocusedState);
+                AddState(FrameworkElement.DisabledFocusedStateName);
                 AddVariable("FocusedIndicator.Visible", true);
                 AddVariable("ThumbInstance.IsEnabled", false);
 
-                AddState(FrameworkElement.EnabledState);
+                AddState(FrameworkElement.EnabledStateName);
                 AddVariable("FocusedIndicator.Visible", false);
                 AddVariable("ThumbInstance.IsEnabled", true);
 
-                AddState(FrameworkElement.FocusedState);
+                AddState(FrameworkElement.FocusedStateName);
                 AddVariable("FocusedIndicator.Visible", true);
 
-                AddState(FrameworkElement.HighlightedState);
+                AddState(FrameworkElement.HighlightedStateName);
                 AddVariable("FocusedIndicator.Visible", false);
 
-                AddState(FrameworkElement.HighlightedFocusedState);
+                AddState(FrameworkElement.HighlightedFocusedStateName);
                 AddVariable("FocusedIndicator.Visible", true);
 
-                AddState(FrameworkElement.PushedState);
+                AddState(FrameworkElement.PushedStateName);
                 AddVariable("FocusedIndicator.Visible", false);
 
 

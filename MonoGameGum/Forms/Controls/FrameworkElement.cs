@@ -1207,13 +1207,29 @@ public class FrameworkElement
     public virtual void UpdateState() { }
 
 
+    [Obsolete("Use DisabledStateName")]
     public const string DisabledState = "Disabled";
+    [Obsolete("Use DisabledFocusedStateName")]
     public const string DisabledFocusedState = "DisabledFocused";
+    [Obsolete("Use EnabledStateName")]
     public const string EnabledState = "Enabled";
+    [Obsolete("Use FocusedStateName")]
     public const string FocusedState = "Focused";
+    [Obsolete("Use HighlightedStateName")]
     public const string HighlightedState = "Highlighted";
+    [Obsolete("Use HighlightedFocusedStateName")]
     public const string HighlightedFocusedState = "HighlightedFocused";
+    [Obsolete("Use PushedStateName")]
     public const string PushedState = "Pushed";
+
+    public const string DisabledStateName = "Disabled";
+    public const string DisabledFocusedStateName = "DisabledFocused";
+    public const string EnabledStateName = "Enabled";
+    public const string FocusedStateName = "Focused";
+    public const string HighlightedStateName = "Highlighted";
+    public const string HighlightedFocusedStateName = "HighlightedFocused";
+    public const string PushedStateName = "Pushed";
+
 
 
     protected string GetDesiredState()

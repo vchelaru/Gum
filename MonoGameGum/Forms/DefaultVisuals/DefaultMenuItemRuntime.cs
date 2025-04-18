@@ -62,7 +62,7 @@ public class DefaultMenuItemRuntime : InteractiveGue
 
             menuItemCategory.States.Add(new Gum.DataTypes.Variables.StateSave()
             {
-                Name = "Enabled",
+                Name = FrameworkElement.EnabledStateName,
                 Variables = new List<Gum.DataTypes.Variables.VariableSave>()
                 {
                     new Gum.DataTypes.Variables.VariableSave()
@@ -80,7 +80,7 @@ public class DefaultMenuItemRuntime : InteractiveGue
 
             menuItemCategory.States.Add(new Gum.DataTypes.Variables.StateSave()
             {
-                Name = "Highlighted",
+                Name = FrameworkElement.HighlightedStateName,
                 Variables = new List<Gum.DataTypes.Variables.VariableSave>()
                 {
                     new Gum.DataTypes.Variables.VariableSave()
@@ -103,6 +103,7 @@ public class DefaultMenuItemRuntime : InteractiveGue
 
             menuItemCategory.States.Add(new Gum.DataTypes.Variables.StateSave()
             {
+                // todo - need this to be a const in FrameworkElement
                 Name = "Selected",
                 Variables = new List<Gum.DataTypes.Variables.VariableSave>()
                 {

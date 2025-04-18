@@ -4649,7 +4649,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 #if DEBUG
                 if (newItem == null)
                 {
-                    throw new InvalidOperationException("Cannot add a null child");
+                    throw new InvalidOperationException($"Attempting to add a null child to {this}");
                 }
 #endif
                 var ipso = newItem as IRenderableIpso;

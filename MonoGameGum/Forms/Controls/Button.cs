@@ -15,7 +15,7 @@ public class Button : ButtonBase
     /// <summary>
     /// The name of the Category containing visual states for the Button object.
     /// </summary>
-    public const string ButtonCategoryState = "ButtonCategoryState";
+    public const string ButtonCategoryName = "ButtonCategory";
 
     #region Fields/Properties
 
@@ -77,7 +77,7 @@ public class Button : ButtonBase
     {
         var state = base.GetDesiredState();
 
-        Visual.SetProperty(ButtonCategoryState, state);
+        Visual.SetProperty(ButtonCategoryName + "State", state);
     }
 
     #endregion

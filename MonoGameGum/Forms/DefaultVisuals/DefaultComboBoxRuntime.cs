@@ -120,37 +120,37 @@ namespace MonoGameGum.Forms.DefaultVisuals
                     });
                 }
 
-                AddState(FrameworkElement.DisabledState);
+                AddState(FrameworkElement.DisabledStateName);
                 AddVariable("TextInstance.Color", Styling.Colors.Gray);
                 AddVariable("DropdownIndicator.Color", Styling.Colors.Gray);
                 AddVariable("FocusedIndicator.Visible", false);
 
-                AddState(FrameworkElement.DisabledFocusedState);
+                AddState(FrameworkElement.DisabledFocusedStateName);
                 AddVariable("TextInstance.Color", Styling.Colors.Gray);
                 AddVariable("DropdownIndicator.Color", Styling.Colors.Gray);
                 AddVariable("FocusedIndicator.Visible", true);
 
-                AddState(FrameworkElement.EnabledState);
+                AddState(FrameworkElement.EnabledStateName);
                 AddVariable("TextInstance.Color", Styling.Colors.White);
                 AddVariable("DropdownIndicator.Color", Styling.Colors.White);
                 AddVariable("FocusedIndicator.Visible", false);
 
-                AddState(FrameworkElement.FocusedState);
+                AddState(FrameworkElement.FocusedStateName);
                 AddVariable("TextInstance.Color", Styling.Colors.White);
                 AddVariable("DropdownIndicator.Color", Styling.Colors.White);
                 AddVariable("FocusedIndicator.Visible", true);
 
-                AddState(FrameworkElement.HighlightedState);
+                AddState(FrameworkElement.HighlightedStateName);
                 AddVariable("TextInstance.Color", Styling.Colors.PrimaryLight);
                 AddVariable("DropdownIndicator.Color", Styling.Colors.PrimaryLight);
                 AddVariable("FocusedIndicator.Visible", false);
 
-                AddState(FrameworkElement.HighlightedFocusedState);
+                AddState(FrameworkElement.HighlightedFocusedStateName);
                 AddVariable("TextInstance.Color", Styling.Colors.PrimaryLight);
                 AddVariable("DropdownIndicator.Color", Styling.Colors.PrimaryLight);
                 AddVariable("FocusedIndicator.Visible", true);
 
-                AddState(FrameworkElement.PushedState);
+                AddState(FrameworkElement.PushedStateName);
                 AddVariable("TextInstance.Color", Styling.Colors.PrimaryDark);
                 AddVariable("DropdownIndicator.Color", Styling.Colors.PrimaryDark);
                 AddVariable("FocusedIndicator.Visible", false);

@@ -96,11 +96,11 @@ public class DefaultListBoxItemRuntime : InteractiveGue
                 });
             }
 
-            AddState(FrameworkElement.EnabledState);
+            AddState(FrameworkElement.EnabledStateName);
             AddVariable("Background.Visible", false);
             AddVariable("FocusedIndicator.Visible", false);
 
-            AddState(FrameworkElement.HighlightedState);
+            AddState(FrameworkElement.HighlightedStateName);
             AddVariable("Background.Visible", true);
             AddVariable("Background.Color", Styling.Colors.Primary);
             AddVariable("FocusedIndicator.Visible", false);
@@ -110,7 +110,7 @@ public class DefaultListBoxItemRuntime : InteractiveGue
             AddVariable("Background.Color", Styling.Colors.Accent);
             AddVariable("FocusedIndicator.Visible", false);
 
-            AddState(FrameworkElement.FocusedState);
+            AddState(FrameworkElement.FocusedStateName);
             AddVariable("Background.Visible", false);
             AddVariable("FocusedIndicator.Visible", true);
         }

@@ -115,22 +115,22 @@ public class DefaultRadioButtonRuntime : InteractiveGue
             }
 
 
-            AddOnOffState(FrameworkElement.DisabledState, Styling.Colors.DarkGray,
+            AddOnOffState(FrameworkElement.DisabledStateName, Styling.Colors.DarkGray,
                 Styling.Colors.Gray, Styling.Colors.Gray, false);
-            AddOnOffState(FrameworkElement.DisabledFocusedState, Styling.Colors.DarkGray,
+            AddOnOffState(FrameworkElement.DisabledFocusedStateName, Styling.Colors.DarkGray,
                 Styling.Colors.Gray, Styling.Colors.Gray, true);
-            AddOnOffState(FrameworkElement.EnabledState, Styling.Colors.Primary,
+            AddOnOffState(FrameworkElement.EnabledStateName, Styling.Colors.Primary,
                 Styling.Colors.White, Styling.Colors.White, false);
-            AddOnOffState(FrameworkElement.FocusedState, Styling.Colors.Primary,
+            AddOnOffState(FrameworkElement.FocusedStateName, Styling.Colors.Primary,
                 Styling.Colors.White, Styling.Colors.White, true);
-            AddOnOffState(FrameworkElement.HighlightedState, Styling.Colors.PrimaryLight,
+            AddOnOffState(FrameworkElement.HighlightedStateName, Styling.Colors.PrimaryLight,
                 Styling.Colors.White, Styling.Colors.White, false);
-            AddOnOffState(FrameworkElement.HighlightedFocusedState, Styling.Colors.PrimaryLight,
+            AddOnOffState(FrameworkElement.HighlightedFocusedStateName, Styling.Colors.PrimaryLight,
                 Styling.Colors.White, Styling.Colors.White, true);
 
             // dark looks weird so staying with normal primary. This matches the default template
             //AddOnOffState(FrameworkElement.PushedState, Styling.Colors.PrimaryDark,
-            AddOnOffState(FrameworkElement.PushedState, Styling.Colors.Primary,
+            AddOnOffState(FrameworkElement.PushedStateName, Styling.Colors.Primary,
                 Styling.Colors.White, Styling.Colors.White, false);
 
 
