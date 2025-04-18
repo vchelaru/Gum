@@ -9,6 +9,7 @@ using MonoGameGum.Forms.Controls;
 using MonoGameGum.GueDeriving;
 using MonoGameGum.Input;
 using RenderingLibrary;
+using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
@@ -60,6 +61,8 @@ public class GumService
         get => GraphicalUiElement.CanvasHeight;
         set => GraphicalUiElement.CanvasHeight = value;
     }
+
+    public ContentLoader? ContentLoader => LoaderManager.Self.ContentLoader as ContentLoader;
 
     public InteractiveGue Root { get; private set; } = new ContainerRuntime();
 

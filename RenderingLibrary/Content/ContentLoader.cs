@@ -15,6 +15,13 @@ namespace RenderingLibrary.Content
     {
         public SystemManagers SystemManagers { get; set; }
 
+#if MONOGAME && !FRB
+        /// <summary>
+        /// The ContentManager to use when loading files processed by the content pipeline.
+        /// </summary>
+        public Microsoft.Xna.Framework.Content.ContentManager XnaContentManager { get; set; }
+#endif
+
         //List<Atlas> atlases = new List<Atlas>();
 
         public T LoadContent<T>(string contentName)
@@ -198,6 +205,7 @@ namespace RenderingLibrary.Content
             {
                 renderer = managers.Renderer;
             }
+            
             if (extension == "tga")
             {
 #if RENDERING_LIB_SUPPORTS_TGA
@@ -248,10 +256,25 @@ namespace RenderingLibrary.Content
                 toReturn = texture;
             }
 #endif
+
+#if MONOGAME && !FRB
+            else if (string.IsNullOrEmpty(extension) && XnaContentManager != null)
+            {
+                toReturn = LoadFromContentManager(fileName, fileNameStandardized);
+            }
+#endif
+
+
             else
             {
-                using (var stream = FileManager.GetStreamForFile(fileNameStandardized))
+                // This file could be a reference from a .fnt file (with extension), 
+                // but the file could be a content pipeline file. If so, we need to tolerate
+                // missing streams if we have an XnaContentManager, and if so we should try to 
+                // load from there.
+                try
                 {
+                    using var stream = FileManager.GetStreamForFile(fileNameStandardized);
+
                     Texture2D texture = null;
 
                     texture = Texture2D.FromStream(renderer.GraphicsDevice,
@@ -260,11 +283,46 @@ namespace RenderingLibrary.Content
                     texture.Name = fileNameStandardized;
 
                     toReturn = texture;
-
                 }
+                catch(Exception e)
+                {
+#if MONOGAME && !FRB
+                    if(XnaContentManager != null)
+                    {
+                        var noExtension = FileManager.RemoveExtension(fileNameStandardized);
+
+                        toReturn = LoadFromContentManager(fileName, noExtension);
+                        if(toReturn is Texture2D asTexture2D)
+                        {
+                            // Since we asked with extension, include the extension:
+                            asTexture2D.Name = fileNameStandardized;
+                        }
+
+                    }
+                    else
+                    {
+                        throw;
+                    }
+#else
+                    throw;      
+#endif
+                }
+
             }
 
             return toReturn;
+#if MONOGAME && !FRB
+
+            Texture2D LoadFromContentManager(string fileName, string fileNameStandardized)
+            {
+                Texture2D toReturn;
+                var relativeFileName = FileManager.MakeRelative(fileNameStandardized, FileManager.RelativeDirectory, preserveCase: true);
+                Texture2D texture = XnaContentManager.Load<Texture2D>(relativeFileName);
+                texture.Name = fileNameStandardized;
+                toReturn = texture;
+                return toReturn;
+            }
+#endif
         }        
     }
 }

@@ -268,7 +268,6 @@ namespace ToolsUtilities
             return directoryToReturn;
         }
 
-        #region XML Docs
         /// <summary>
         /// Returns the extension in a filename.
         /// </summary>
@@ -277,14 +276,13 @@ namespace ToolsUtilities
         /// 
         /// <para>
         /// <code>
-        /// // this code will return a string containing "png", not ".png"
+        /// // this code returns a string containing "png", not ".png"
         /// FileManager.GetExtension(@"FolderName/myImage.png");
         /// </code>
         /// </para>
         /// </remarks>
         /// <param name="fileName">The filename.</param>
         /// <returns>Returns the extension or an empty string if no period is found in the filename.</returns>
-        #endregion
         public static string GetExtension(string fileName)
         {
             try
@@ -295,17 +293,23 @@ namespace ToolsUtilities
                 }
 
 
-                int i = fileName.LastIndexOf('.');
-                if (i != -1)
+                int dotIndex = fileName.LastIndexOf('.');
+                int lastSlash = fileName.LastIndexOf("/");
+                int lastBackSlash = fileName.LastIndexOf("\\");
+
+                if (dotIndex != -1)
                 {
                     bool hasDotSlash = false;
 
-                    if (i == fileName.Length - 1)
+                    if (dotIndex == fileName.Length - 1 || lastSlash > dotIndex || lastBackSlash > dotIndex)
                     {
                         return "";
                     }
 
-                    if (i < fileName.Length - 1 && (fileName[i + 1] == '/' || fileName[i + 1] == '\\'))
+
+
+
+                    if (dotIndex < fileName.Length - 1 && (fileName[dotIndex + 1] == '/' || fileName[dotIndex + 1] == '\\'))
                     {
                         hasDotSlash = true;
                     }
@@ -316,7 +320,7 @@ namespace ToolsUtilities
                     }
                     else
                     {
-                        return fileName.Substring(i + 1, fileName.Length - (i + 1)).ToLower();
+                        return fileName.Substring(dotIndex + 1, fileName.Length - (dotIndex + 1)).ToLower();
                     }
                 }
                 else
@@ -675,6 +679,11 @@ namespace ToolsUtilities
             // normalize slash direction
             newFileName = newFileName.Replace('\\', Path.DirectorySeparatorChar)
                 .Replace('/', Path.DirectorySeparatorChar);
+
+            if(newFileName.Contains(".." + Path.DirectorySeparatorChar))
+            {
+                newFileName = RemoveDotDotSlash(newFileName);
+            }
 
             return newFileName;
         }
