@@ -16,7 +16,7 @@ namespace MonoGameGum.Input;
 public interface IInputReceiverKeyboardMonoGame : IInputReceiverKeyboard
 {
     IReadOnlyCollection<Microsoft.Xna.Framework.Input.Keys> KeysTyped { get; }
-
+    bool KeyDown(Keys key);
 }
 
 #endregion

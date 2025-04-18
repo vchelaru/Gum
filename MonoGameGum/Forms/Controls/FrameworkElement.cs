@@ -69,6 +69,12 @@ public delegate void KeyEventHandler(object sender, KeyEventArgs e);
 
 #endregion
 
+public struct KeyCombo
+{
+    public Keys PushedKey;
+    public Keys? HeldKey;
+}
+
 public class FrameworkElement
 {
     #region Fields/Properties
@@ -931,22 +937,49 @@ public class FrameworkElement
 
 #if !FRB && MONOGAME
 
+    public static List<KeyCombo> TabKeyCombos = new List<KeyCombo>
+    {
+        new KeyCombo { PushedKey = Keys.Tab }
+    };
+
+    public static List<KeyCombo> TabReverseKeyCombos = new List<KeyCombo>
+    {
+        new KeyCombo { HeldKey = Keys.LeftShift, PushedKey = Keys.Tab },
+        new KeyCombo { HeldKey = Keys.RightShift, PushedKey = Keys.Tab },
+    };
+
+    bool IsComboPushed(KeyCombo keyCombo)
+    {
+        foreach (var keyboard in KeyboardsForUiControl)
+        {
+            var isHeld = keyCombo.HeldKey == null || keyboard.KeyDown(keyCombo.HeldKey.Value);
+            if( isHeld && keyboard.KeysTyped.Contains(keyCombo.PushedKey))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     protected void HandleKeyboardFocusUpdate()
     {
         foreach (var keyboard in KeyboardsForUiControl)
         {
-            if (keyboard.KeysTyped.Contains(Keys.Tab))
+            foreach(var tabKeyCombo in TabKeyCombos)
             {
-
-                var isShift = keyboard.IsShiftDown;
-
-                if (isShift)
-                {
-                    this.HandleTab(TabDirection.Up, this, loop: true);
-                }
-                else
+                if(IsComboPushed(tabKeyCombo))
                 {
                     this.HandleTab(TabDirection.Down, this, loop: true);
+                    break; // one tab per frame
+                }
+            }
+
+            foreach(var tabReverseKeyCombo in TabReverseKeyCombos)
+            {
+                if(IsComboPushed(tabReverseKeyCombo))
+                {
+                    this.HandleTab(TabDirection.Up, this, loop: true);
+                    break;
                 }
             }
         }
