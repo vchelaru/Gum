@@ -342,7 +342,8 @@ namespace Gum.Wireframe
                     asInteractive?.RollOver != null ||
                     asInteractive?._losePush != null ||
                     asInteractive?.HoverOver != null ||
-                    asInteractive?.Dragging != null
+                    asInteractive?.Dragging != null ||
+                    asInteractive?.MouseWheelScroll != null
                     )
                 {
                     if (!handledByChild)
