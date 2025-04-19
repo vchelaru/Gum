@@ -23,6 +23,8 @@ mainPanel.AddChild(listBox);
 
 <figure><img src="../../../../.gitbook/assets/image (1).png" alt=""><figcaption><p>ListBox displaying integers</p></figcaption></figure>
 
+{% tabs %}
+{% tab title="Full Code" %}
 {% hint style="info" %}
 The following code produces similar results, although explicitly creating ListBoxItems is less common:
 
@@ -37,6 +39,24 @@ for (int i = 0; i < 10; i++)
 mainPanel.AddChild(listBox);
 ```
 {% endhint %}
+{% endtab %}
+
+{% tab title="Diff" %}
+{% hint style="info" %}
+The following code produces similar results, although explicitly creating ListBoxItems is less common:
+
+<pre class="language-diff"><code class="lang-diff">var listBox = new ListBox();
+for (int i = 0; i &#x3C; 10; i++)
+{
+<strong>+   var listBoxItem = new ListBoxItem();
+</strong>+   listBoxItem.UpdateToObject(i);
++   listBox.Items.Add(listBoxItem);
+}
+mainPanel.AddChild(listBox);
+</code></pre>
+{% endhint %}
+{% endtab %}
+{% endtabs %}
 
 By default the ListBoxItem displays the ToString of whatever is added to the Items property. In the case of integers, the string representation of the integer is displayed. However, if we display an object, such as information about a weapon, the default display is not very useful.
 
@@ -85,6 +105,22 @@ In this case ToString is called on WeaponDefinition, but this doesn't provide us
 
 We can change the displayed string by modifying the ToString method in WeaponDefinition.
 
+{% tabs %}
+{% tab title="Full Code" %}
+```csharp
+class WeaponDefinition
+{
+    public string Name { get; set; }
+    public int DamageDealt { get; set; }
+    public int RequiredLevel { get; set; }
+    public int Price { get; set; }
+    public override string ToString() => 
+        $"{Name} {DamageDealt}dmg requires lvl{RequiredLevel}";
+}
+```
+{% endtab %}
+
+{% tab title="Diff" %}
 ```diff
 class WeaponDefinition
 {
@@ -96,6 +132,8 @@ class WeaponDefinition
 +       $"{Name} {DamageDealt}dmg requires lvl{RequiredLevel}";
 }
 ```
+{% endtab %}
+{% endtabs %}
 
 <figure><img src="../../../../.gitbook/assets/05_11 51 53.png" alt=""><figcaption></figcaption></figure>
 
@@ -112,6 +150,43 @@ To do this, we need to perform the following steps:
 
 The following code has been modified to create and use a WeaponDefinitionListBoxItem:
 
+{% tabs %}
+{% tab title="First Tab" %}
+```csharp
+class WeaponDefinition
+{
+    public string Name { get; set; }
+    public int DamageDealt { get; set; }
+    public int RequiredLevel { get; set; }
+    public int Price { get; set; }
+}
+
+public class WeaponDefinitionListBoxItem : ListBoxItem
+{
+    public override void UpdateToObject(object objectInstance)
+    {
+        if(objectInstance is WeaponDefinition definition)
+        {
+            var textToDisplay =
+                $"{definition.Name} {definition.DamageDealt}dmg requires lvl{definition.RequiredLevel}";
+            base.UpdateToObject(textToDisplay);
+        }
+        else
+        {
+            base.UpdateToObject($"Error updating to {objectInstance}");
+        }
+    }
+}
+
+// Later, create the ListBox
+var listBox = new ListBox();
+listBox.FrameworkElementTemplate =
+    new FrameworkElementTemplate(typeof(WeaponDefinitionListBoxItem));
+//...
+```
+{% endtab %}
+
+{% tab title="Diff" %}
 ```diff
 class WeaponDefinition
 {
@@ -146,6 +221,8 @@ var listBox = new ListBox();
 +    new FrameworkElementTemplate(typeof(WeaponDefinitionListBoxItem));
 //...
 ```
+{% endtab %}
+{% endtabs %}
 
 <figure><img src="../../../../.gitbook/assets/05_11 51 53 (1).png" alt=""><figcaption><p>WeaponDefinitionListBoxItem displaying custom text</p></figcaption></figure>
 
@@ -211,6 +288,17 @@ public class WeaponDefinitionComboBox : ComboBox
 
 Now we can use this new ComboBox-deriving class:
 
+{% tabs %}
+{% tab title="Full Code" %}
+```csharp
+var comboBox = new WeaponDefinitionComboBox();
+comboBox.FrameworkElementTemplate =
+    new FrameworkElementTemplate(typeof(WeaponDefinitionListBoxItem));
+// ...
+```
+{% endtab %}
+
+{% tab title="Diff" %}
 ```diff
 -var comboBox = new ComboBox();
 +var comboBox = new WeaponDefinitionComboBox();
@@ -218,6 +306,8 @@ comboBox.FrameworkElementTemplate =
     new FrameworkElementTemplate(typeof(WeaponDefinitionListBoxItem));
 // ...
 ```
+{% endtab %}
+{% endtabs %}
 
 
 

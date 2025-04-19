@@ -101,7 +101,7 @@ These tutorials focus on the Forms controls themselves but for more information 
 
 CheckBox controls allow the user to toggle a bool value by clicking on it. Just like Button, the CheckBoxes support clicking with mouse and gamepad and changing the IsChecked property in code.
 
-The following code creates two CheckBoxes:
+The following code creates a CheckBox with two method handlers (Checked/Unchecked):
 
 ```csharp
 var checkBox = new CheckBox();

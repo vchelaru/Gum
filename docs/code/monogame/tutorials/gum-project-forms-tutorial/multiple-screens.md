@@ -17,9 +17,9 @@ First we'll create Screen1:
 
 
     <figure><img src="../../../../.gitbook/assets/10_06 06 33.png" alt=""><figcaption><p>Add a Label to Screen1</p></figcaption></figure>
-3. Set the Text property on the newly created LabelInstance to **Screen 1** so that you can tell that you are on Screen1 when running your game
-4. Drag+drop a ButtonStandard component into Screen1
-5. Set the Text property on the newly created ButtonStandardInstance to **Go to Screen 2**
+3. Set the **Label Text** property on the newly created LabelInstance to **Screen 1** so that you can tell that you are on Screen1 when running your game
+4. Drag+drop a **ButtonStandard** component into Screen1
+5. Set the Text property on the newly created **ButtonStandardInstance** to **Go to Screen 2**
 6. Arrange the two instances so they are not overlapping
 
 <figure><img src="../../../../.gitbook/assets/10_06 08 46.png" alt=""><figcaption><p>Label and Button in Screen1</p></figcaption></figure>
@@ -49,9 +49,10 @@ By generating code for both screens, you can access each screen as a strongly-ty
 
 You can load Screen1 by adding the following code to your Game class.
 
-```diff
-public class Game1 : Game
-{
+{% tabs %}
+{% tab title="Full Code" %}
+<pre class="language-csharp"><code class="lang-csharp"><strong>public class Game1 : Game
+</strong>{
     private GraphicsDeviceManager _graphics;
     GumService Gum => GumService.Default;    
 
@@ -68,13 +69,43 @@ public class Game1 : Game
             // This is relative to Content:
             "GumProject/GumProject.gumx");
 
-+        var screen = new Screen1();
-+        screen.AddToRoot();
+        var screen = new Screen1();
+        screen.AddToRoot();
 
         base.Initialize();
     }
-    ...
-```
+// ...
+</code></pre>
+{% endtab %}
+
+{% tab title="Diff" %}
+<pre class="language-diff"><code class="lang-diff"><strong>public class Game1 : Game
+</strong>{
+    private GraphicsDeviceManager _graphics;
+    GumService Gum => GumService.Default;    
+
+    public Game1()
+    {
+        _graphics = new GraphicsDeviceManager(this);
+        Content.RootDirectory = "Content";
+        IsMouseVisible = true;
+    }
+
+    protected override void Initialize()
+    {
+        Gum.Initialize(this,
+            // This is relative to Content:
+            "GumProject/GumProject.gumx");
+
++       var screen = new Screen1();
++       screen.AddToRoot();
+
+        base.Initialize();
+    }
+// ...
+</code></pre>
+{% endtab %}
+{% endtabs %}
 
 <figure><img src="../../../../.gitbook/assets/10_06 23 17.png" alt=""><figcaption><p>Screen1 loaded in game</p></figcaption></figure>
 
@@ -88,6 +119,8 @@ We can modify Screen1.cs and Screen2.cs to include code to move from one screen 
 
 Add a Click handler to our button which removes the existing screen and creates the new screen so your two screens look like the code shown in the following blocks.
 
+{% tabs %}
+{% tab title="Full Code" %}
 ```csharp
 using MonoGameGum;
 
@@ -104,7 +137,30 @@ partial class Screen1
     }
 }
 ```
+{% endtab %}
 
+{% tab title="Diff" %}
+```diff
+using MonoGameGum;
+
+partial class Screen1
+{
+    partial void CustomInitialize()
+    {
++       ButtonStandardInstance.Click += (_, _) =>
++       {
++           GumService.Default.Root.Children.Clear();
++           var screen = new Screen2();
++           screen.AddToRoot();
++       };
+    }
+}
+```
+{% endtab %}
+{% endtabs %}
+
+{% tabs %}
+{% tab title="Full Code" %}
 ```csharp
 using MonoGameGum;
 
@@ -120,8 +176,27 @@ partial class Screen2
         };
     }
 }
-
 ```
+{% endtab %}
+
+{% tab title="Diff" %}
+<pre class="language-diff"><code class="lang-diff">using MonoGameGum;
+
+partial class Screen2
+{
+    partial void CustomInitialize()
+    {
+<strong>+       ButtonStandardInstance.Click += (_, _) =>
+</strong>+       {
++           GumService.Default.Root.Children.Clear();
++           var screen = new Screen1();
++           screen.AddToRoot();
++       };
+    }
+}
+</code></pre>
+{% endtab %}
+{% endtabs %}
 
 Each screen clears the root (removes the previous screen) when its button is clicked, then creates and adds the next screen to the root.
 

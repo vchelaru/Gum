@@ -22,7 +22,7 @@ Label provides a way to display read-only strings to the user. A Label's Text pr
 
 We can add a label to StackPanelInstance by drag+dropping the Label component in the Project tab.
 
-<figure><img src="../../../../.gitbook/assets/31_04 59 53.png" alt=""><figcaption><p>LabelInstance in a StackPanelInstance</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/FormsLabelInstanceOnScreenStackPanel.png" alt=""><figcaption><p>LabelInstance in a StackPanelInstance</p></figcaption></figure>
 
 We can change its Text, Color, and Style in the Exposed section in the Variables tab.
 
@@ -30,16 +30,31 @@ We can change its Text, Color, and Style in the Exposed section in the Variables
 
 We can override these properties in code through the generated instance. For example, we can modify our TitleScreen's CustomInitialize method to change the label text.
 
+{% tabs %}
+{% tab title="Full Code" %}
+```csharp
+partial class TitleScreen
+{
+    partial void CustomInitialize()
+    {
+        LabelInstance.Text = "I am set in code";
+    }
+}
+```
+{% endtab %}
+
+{% tab title="Diff" %}
 ```diff
 partial class TitleScreen
 {
     partial void CustomInitialize()
     {
-+        LabelInstance.Text = "I am set in code";
++       LabelInstance.Text = "I am set in code";
     }
 }
-
 ```
+{% endtab %}
+{% endtabs %}
 
 <figure><img src="../../../../.gitbook/assets/31_05 05 43.png" alt=""><figcaption><p>Label at runtime with its Text property changed</p></figcaption></figure>
 
@@ -61,19 +76,39 @@ Notice that the button automatically stacks below the LabelInstance because the 
 
 The most common way to interact with a Button is to assign its Click event. The following code can be used to increment the button's text whenever it is clicked.
 
-```diff
+{% tabs %}
+{% tab title="Full Code" %}
+```csharp
 partial class TitleScreen
 {
-+    int clickCount = 0;
+    int clickCount = 0;
     partial void CustomInitialize()
     {
         LabelInstance.Text = "I am set in code";
 
-+        ButtonStandardInstance.Click += (_, _) =>
-+            ButtonStandardInstance.Text = $"Clicked {++clickCount} Time(s)";
+        ButtonStandardInstance.Click += (_, _) =>
+            ButtonStandardInstance.Text = $"Clicked {++clickCount} Time(s)";
     }
 }
 ```
+{% endtab %}
+
+{% tab title="Diff" %}
+```diff
+partial class TitleScreen
+{
++   int clickCount = 0;
+    partial void CustomInitialize()
+    {
+        LabelInstance.Text = "I am set in code";
+
++       ButtonStandardInstance.Click += (_, _) =>
++           ButtonStandardInstance.Text = $"Clicked {++clickCount} Time(s)";
+    }
+}
+```
+{% endtab %}
+{% endtabs %}
 
 <figure><img src="../../../../.gitbook/assets/31_05 18 20.gif" alt=""><figcaption><p>Button responding to clicks</p></figcaption></figure>
 
@@ -88,24 +123,43 @@ CheckBox provides a number of events for responding to changes:
 * Click - whenever the CheckBox is clicked
 * Checked - whenever the CheckBox's IsChecked is set to true
 * Unchecked - whenever the CheckBox's IsChecked is set to false
-* Indetermine - whenever the CheckBox's IsChecked is set to null
+* Indeterminate - whenever the CheckBox's IsChecked is set to null
 
 We can display the checked state by handling the Click event as shown in the following code:
 
+{% tabs %}
+{% tab title="First Tab" %}
+```csharp
+partial void CustomInitialize()
+{
+    CheckBoxInstance.Click += (_, _) =>
+    {
+        CheckBoxInstance.Text = CheckBoxInstance.IsChecked == true
+            ? "Checked"
+            : CheckBoxInstance.IsChecked == false
+                ? "Unchecked"
+                : "Indeterminate";
+    };
+}
+```
+{% endtab %}
+
+{% tab title="Diff" %}
 ```diff
 partial void CustomInitialize()
 {
-+    CheckBoxInstance.Click += (_, _) =>
-+    {
-+        CheckBoxInstance.Text = CheckBoxInstance.IsChecked == true
-+            ? "Checked"
-+            : CheckBoxInstance.IsChecked == false
-+                ? "Unchecked"
-+                : "Indeterminate";
-+    };
++   CheckBoxInstance.Click += (_, _) =>
++   {
++       CheckBoxInstance.Text = CheckBoxInstance.IsChecked == true
++           ? "Checked"
++           : CheckBoxInstance.IsChecked == false
++               ? "Unchecked"
++               : "Indeterminate";
++   };
 }
-
 ```
+{% endtab %}
+{% endtabs %}
 
 {% hint style="info" %}
 The rest of this tutorial omits the full CustomInitialize function and only shows the newly-added code to keep the displayed code shorter.
@@ -131,17 +185,13 @@ We can solve this by extending the horizontal size of our StackPanelInstance to 
 
 To do this, select the StackPanelInstance and set the following values:
 
-| Width       | 0                    |
-| ----------- | -------------------- |
-| Width Units | Relative to Children |
-| Min Width   | 50                   |
+<table><thead><tr><th width="151.5999755859375">Variable</th><th width="199.59991455078125">Value</th></tr></thead><tbody><tr><td>Width</td><td>0</td></tr><tr><td>Width Units</td><td>Relative to Children</td></tr><tr><td>Min Width</td><td>50</td></tr></tbody></table>
+
+
 
 We can do the same for Height values:
 
-| Height       | 0                    |
-| ------------ | -------------------- |
-| Height Units | Relative to Children |
-| Min Height   | 50                   |
+<table><thead><tr><th width="151.5999755859375">Variable</th><th width="199.5999755859375">Value</th></tr></thead><tbody><tr><td>Height</td><td>0</td></tr><tr><td>Height Units</td><td>Relative to Children</td></tr><tr><td>Min Height</td><td>50</td></tr></tbody></table>
 
 Now the StackPanel sizes itself according to its children.&#x20;
 
@@ -149,22 +199,42 @@ Now the StackPanel sizes itself according to its children.&#x20;
 
 We can populate objects in a ComboBox by adding to its Items property. We can also react to object being selected by using the SelectionChanged event:
 
+{% tabs %}
+{% tab title="Full Code" %}
+<pre class="language-csharp"><code class="lang-csharp">partial void CustomInitialize()
+{
+<strong>    for(int i = 0; i &#x3C; 10; i++)
+</strong>    {
+        ComboBoxInstance.Items.Add($"Item {i}");
+    }
+
+    ComboBoxInstance.SelectionChanged += (_, _) =>
+    {
+        var selectedObject = ComboBoxInstance.SelectedObject;
+        System.Diagnostics.Debug.WriteLine($"Selected object: {selectedObject}");
+    };
+}
+</code></pre>
+{% endtab %}
+
+{% tab title="Diff" %}
 ```diff
 partial void CustomInitialize()
 {
-+    for(int i = 0; i < 10; i++)
-+    {
-+        ComboBoxInstance.Items.Add($"Item {i}");
-+    }
++   for(int i = 0; i < 10; i++)
++   {
++       ComboBoxInstance.Items.Add($"Item {i}");
++   }
 
-+    ComboBoxInstance.SelectionChanged += (_, _) =>
-+    {
-+        var selectedObject = ComboBoxInstance.SelectedObject;
-+        System.Diagnostics.Debug.WriteLine($"Selected object: {selectedObject}");
-+    };
++   ComboBoxInstance.SelectionChanged += (_, _) =>
++   {
++       var selectedObject = ComboBoxInstance.SelectedObject;
++       System.Diagnostics.Debug.WriteLine($"Selected object: {selectedObject}");
++   };
 }
-
 ```
+{% endtab %}
+{% endtabs %}
 
 <figure><img src="../../../../.gitbook/assets/31_05 51 00.gif" alt=""><figcaption><p>ComboBox reacting to SelectionChanged event</p></figcaption></figure>
 
@@ -178,22 +248,43 @@ We can add a ListBox instance by drag+dropping a ListBox onto StackPanelInstance
 
 We can populate objects in a ListBox by adding to its Items property. We can also react to objects being selected by using the `SelectionChanged` event:
 
+{% tabs %}
+{% tab title="Full Code" %}
+```csharp
+partial void CustomInitialize()
+{
+    for(int i = 0; i < 10; i++)
+    {
+        ListBoxInstance.Items.Add($"Item {i}");
+    }
+
+    ListBoxInstance.SelectionChanged += (_, _) =>
+    {
+        var selectedObject = ListBoxInstance.SelectedObject;
+        System.Diagnostics.Debug.WriteLine($"Selected object: {selectedObject}");
+    };
+}
+```
+{% endtab %}
+
+{% tab title="Diff" %}
 ```diff
 partial void CustomInitialize()
 {
-+    for(int i = 0; i < 10; i++)
-+    {
-+        ListBoxInstance.Items.Add($"Item {i}");
-+    }
++   for(int i = 0; i < 10; i++)
++   {
++       ListBoxInstance.Items.Add($"Item {i}");
++   }
 
-+    ListBoxInstance.SelectionChanged += (_, _) =>
-+    {
-+        var selectedObject = ListBoxInstance.SelectedObject;
-+        System.Diagnostics.Debug.WriteLine($"Selected object: {selectedObject}");
-+    };
++   ListBoxInstance.SelectionChanged += (_, _) =>
++   {
++       var selectedObject = ListBoxInstance.SelectedObject;
++       System.Diagnostics.Debug.WriteLine($"Selected object: {selectedObject}");
++   };
 }
-
 ```
+{% endtab %}
+{% endtabs %}
 
 <figure><img src="../../../../.gitbook/assets/31_05 57 26.gif" alt=""><figcaption><p>ListBox reacting to SelectionChanged event</p></figcaption></figure>
 
@@ -211,19 +302,38 @@ We can modify the Text property of each instance to differentiate between them.
 
 We can handle the `Checked` event to respond to a RadioButton being checked.
 
+{% tabs %}
+{% tab title="Full Code" %}
+<pre class="language-csharp"><code class="lang-csharp">partial void CustomInitialize()
+{
+<strong>    RadioButtonInstance.Checked += (_, _) =>
+</strong>        System.Diagnostics.Debug.WriteLine("Option 1 Checked");
+
+    RadioButtonInstance1.Checked += (_, _) =>
+        System.Diagnostics.Debug.WriteLine("Option 2 Checked");
+
+    RadioButtonInstance2.Checked += (_, _) =>
+        System.Diagnostics.Debug.WriteLine("Option 3 Checked");
+}
+</code></pre>
+{% endtab %}
+
+{% tab title="Diff" %}
 ```diff
 partial void CustomInitialize()
 {
-+    RadioButtonInstance.Checked += (_, _) =>
-+        System.Diagnostics.Debug.WriteLine("Option 1 Checked");
++   RadioButtonInstance.Checked += (_, _) =>
++       System.Diagnostics.Debug.WriteLine("Option 1 Checked");
 
-+    RadioButtonInstance1.Checked += (_, _) =>
-+        System.Diagnostics.Debug.WriteLine("Option 2 Checked");
++   RadioButtonInstance1.Checked += (_, _) =>
++       System.Diagnostics.Debug.WriteLine("Option 2 Checked");
 
-+    RadioButtonInstance2.Checked += (_, _) =>
-+        System.Diagnostics.Debug.WriteLine("Option 3 Checked");
++   RadioButtonInstance2.Checked += (_, _) =>
++       System.Diagnostics.Debug.WriteLine("Option 3 Checked");
 }
 ```
+{% endtab %}
+{% endtabs %}
 
 <figure><img src="../../../../.gitbook/assets/31_06 13 20.gif" alt=""><figcaption><p>RadioButtons reacting to Checked event</p></figcaption></figure>
 
@@ -241,15 +351,31 @@ We can add a Slider by drag+dropping a Slider component on StackPanelInstance.
 
 We can set the slider minimum and maximum and react to value changes using the following code:
 
+{% tabs %}
+{% tab title="Full Code" %}
+```csharp
+partial void CustomInitialize()
+{
+    SliderInstance.Minimum = 0;
+    SliderInstance.Maximum = 100;
+    SliderInstance.ValueChanged += (_, _) =>
+        System.Diagnostics.Debug.WriteLine($"Slider Value: {SliderInstance.Value}");
+}
+```
+{% endtab %}
+
+{% tab title="Diff" %}
 ```diff
 partial void CustomInitialize()
 {
-+    SliderInstance.Minimum = 0;
-+    SliderInstance.Maximum = 100;
-+    SliderInstance.ValueChanged += (_, _) =>
-+        System.Diagnostics.Debug.WriteLine($"Slider Value: {SliderInstance.Value}");
++   SliderInstance.Minimum = 0;
++   SliderInstance.Maximum = 100;
++   SliderInstance.ValueChanged += (_, _) =>
++       System.Diagnostics.Debug.WriteLine($"Slider Value: {SliderInstance.Value}");
 }
 ```
+{% endtab %}
+{% endtabs %}
 
 <figure><img src="../../../../.gitbook/assets/31_06 27 13.gif" alt=""><figcaption><p>Slider value changed by dragging the thumb or clicking on the track</p></figcaption></figure>
 
@@ -263,13 +389,27 @@ We can add a TextBox by drag+dropping a TextBox component on StackPanelInstance.
 
 We can respond to text being entered in the TextBox as shown in the following code:
 
+{% tabs %}
+{% tab title="Full Code" %}
+```csharp
+partial void CustomInitialize()
+{
+    TextBoxInstance.TextChanged += (_,_) =>
+        System.Diagnostics.Debug.WriteLine($"TextBox text: '{TextBoxInstance.Text}'");
+}
+```
+{% endtab %}
+
+{% tab title="Diff" %}
 ```diff
 partial void CustomInitialize()
 {
-+    TextBoxInstance.TextChanged += (_,_) =>
-+        System.Diagnostics.Debug.WriteLine($"TextBox text: '{TextBoxInstance.Text}'");
++   TextBoxInstance.TextChanged += (_,_) =>
++       System.Diagnostics.Debug.WriteLine($"TextBox text: '{TextBoxInstance.Text}'");
 }
 ```
+{% endtab %}
+{% endtabs %}
 
 <figure><img src="../../../../.gitbook/assets/31_06 34 10.gif" alt=""><figcaption><p>Handling the TextChanged event</p></figcaption></figure>
 

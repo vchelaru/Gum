@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This tutorial walks you through creating an empty Gum project which acts as a starting point for the rest of the tutorials.&#x20;
+This tutorial walks you through turning an empty MonoGame project into a Code only Gum project, which acts as a starting point for the rest of the tutorials.&#x20;
 
 This tutorial covers:
 
@@ -22,6 +22,8 @@ Once you are finished, your game project should reference the `Gum.MonoGame` pro
 
 Gum requires a few lines of code to get started. A simplified Game class with the required calls would look like the following code:
 
+{% tabs %}
+{% tab title="Full Code" %}
 ```csharp
 using MonoGameGum.Forms.Controls;
 
@@ -62,11 +64,56 @@ public class Game1 : Game
     }
 }
 ```
+{% endtab %}
+
+{% tab title="Diff" %}
+```diff
++using MonoGameGum.Forms.Controls;
+
+public class Game1 : Game
+{
+    private GraphicsDeviceManager _graphics;
+    
++   GumService Gum => GumService.Default;
+    
+    public Game1()
+    {
+        _graphics = new GraphicsDeviceManager(this);
+        Content.RootDirectory = "Content";
+        IsMouseVisible = true;
+    }
+
+    protected override void Initialize()
+    {
++       Gum.Initialize(this);
+            
++       var mainPanel = new StackPanel();
++       mainPanel.Visual.AddToRoot();
+        
+        base.Initialize();
+    }
+
+    protected override void Update(GameTime gameTime)
+    {
++       Gum.Update(gameTime);
+        base.Update(gameTime);
+    }
+
+    protected override void Draw(GameTime gameTime)
+    {
+        GraphicsDevice.Clear(Color.CornflowerBlue);
++       Gum.Draw();
+        base.Draw(gameTime);
+    }
+}
+```
+{% endtab %}
+{% endtabs %}
 
 The code above includes the following sections:
 
 * Initialize - The Initialize method prepares Gum for use. It must be called one time for every Gum project.
-* Once Gum is initialized, we can create controls such as the StackPanel which contains all other controls.  By calling AddToRoot, the mainPanel will be drawn and will receive input. All items added to the StackPanel will also be drawn and receive input, so we only need to call AddToRoot to the StackPanel.
+* Once Gum is initialized, we can create controls such as the StackPanel which contains all other controls.  By calling AddToRoot, the mainPanel will be drawn and will receive input. All items added to the StackPanel will also be drawn and receive input, so we only need to call AddToRoot for the StackPanel.
 
 <pre class="language-csharp"><code class="lang-csharp">Gum.Initialize(this);
             
@@ -94,6 +141,34 @@ We can run our project to see a blank (cornflower blue) screen.
 
 Now that we have Gum running, we can add controls to our StackPanel (mainPanel). The following code in Initialize adds a button which responds to being clicked by modifying its Text property:
 
+{% tabs %}
+{% tab title="Full Code" %}
+<pre class="language-csharp"><code class="lang-csharp">protected override void Initialize()
+{
+    Gum.Initialize(this);
+
+    var mainPanel = new StackPanel();
+    mainPanel.Visual.AddToRoot();
+
+<strong>    // Creates a button instance
+</strong>    var button = new Button();
+    // Adds the button as a child so that it is drawn and has its
+    // events raised
+    mainPanel.AddChild(button);
+    // Initial button text before being clicked
+    button.Text = "Click Me";
+    // Makes the button wider so the text fits
+    button.Visual.Width = 350;
+    // Click event can be handled with a lambda
+    button.Click += (_, _) =>
+        button.Text = $"Clicked at {System.DateTime.Now}";
+
+    base.Initialize();
+}
+</code></pre>
+{% endtab %}
+
+{% tab title="Diff" %}
 <pre class="language-diff"><code class="lang-diff">protected override void Initialize()
 {
     Gum.Initialize(this);
@@ -101,22 +176,24 @@ Now that we have Gum running, we can add controls to our StackPanel (mainPanel).
     var mainPanel = new StackPanel();
     mainPanel.Visual.AddToRoot();
 
-<strong>+    // Creates a button instance
-</strong>+    var button = new Button();
-+    // Adds the button as a child so that it is drawn and has its
-+    // events raised
-+    mainPanel.AddChild(button);
-+    // Initial button text before being clicked
-+    button.Text = "Click Me";
-+    // Makes the button wider so the text fits
-+    button.Visual.Width = 350;
-+    // Click event can be handled with a lambda
-+    button.Click += (_, _) =>
-+        button.Text = $"Clicked at {System.DateTime.Now}";
+<strong>+   // Creates a button instance
+</strong>+   var button = new Button();
++   // Adds the button as a child so that it is drawn and has its
++   // events raised
++   mainPanel.AddChild(button);
++   // Initial button text before being clicked
++   button.Text = "Click Me";
++   // Makes the button wider so the text fits
++   button.Visual.Width = 350;
++   // Click event can be handled with a lambda
++   button.Click += (_, _) =>
++       button.Text = $"Clicked at {System.DateTime.Now}";
 
     base.Initialize();
 }
 </code></pre>
+{% endtab %}
+{% endtabs %}
 
 <figure><img src="../../../../.gitbook/assets/11_07 52 42.gif" alt=""><figcaption></figcaption></figure>
 

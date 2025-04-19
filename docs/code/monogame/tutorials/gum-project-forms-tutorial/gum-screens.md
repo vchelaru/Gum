@@ -30,7 +30,7 @@ Add a ButtonStandard to TitleScreen.
 
 Instances can also be created by selecting the TitleScreen, then drag+dropping the item in the editor window.
 
-Add a ButtonStandard instance by dropping Components/Controls/ButtonStandard onto TitleScreen.
+Add a second ButtonStandard instance by dropping Components/Controls/ButtonStandard onto TitleScreen.
 
 <figure><img src="../../../../.gitbook/assets/10_05 27 50.gif" alt=""><figcaption><p>Drag+drop a component onto the Editor tab to add it to TitleScreen</p></figcaption></figure>
 
@@ -77,18 +77,35 @@ Note that each screen and component generates two .cs files:
 
 To show the TitleScreen in game, we can use the newly-generated TitleScreen class as shown in the following snippet:
 
+{% tabs %}
+{% tab title="Full Code" %}
+```csharp
+protected override void Initialize()
+{
+    Gum.Initialize(this, "GumProject/GumProject.gumx");
+
+    var screen = new TitleScreen();
+    screen.AddToRoot();
+
+    base.Initialize();
+}
+```
+{% endtab %}
+
+{% tab title="Diff" %}
 ```diff
 protected override void Initialize()
 {
     Gum.Initialize(this, "GumProject/GumProject.gumx");
 
-+    var screen = new TitleScreen();
-+    screen.AddToRoot();
++   var screen = new TitleScreen();
++   screen.AddToRoot();
 
     base.Initialize();
 }
-
 ```
+{% endtab %}
+{% endtabs %}
 
 The game now displays the TitleScreen.
 
@@ -107,19 +124,40 @@ We can access the buttons in our TitleScreen using the generated code. We can ac
 
 For example, the following code could be used to set the time when a button was clicked in the Game class. Notice that we access the button using the same name as is given in the Gum screen. If you changed the name of your button to something other than ButtonStandardInstance, then you should use that new name in code too:
 
+{% tabs %}
+{% tab title="Full Code" %}
+```csharp
+// In your Game class:
+protected override void Initialize()
+{
+    Gum.Initialize(this, "GumProject/GumProject.gumx");
+
+    var screen = new TitleScreen();
+    screen.ButtonStandardInstance.Click += (_, _) =>
+        screen.ButtonStandardInstance.Text = DateTime.Now.ToString();
+    screen.AddToRoot();
+
+    base.Initialize();
+}
+```
+{% endtab %}
+
+{% tab title="Diff" %}
 <pre class="language-diff"><code class="lang-diff">// In your Game class:
 protected override void Initialize()
 {
     Gum.Initialize(this, "GumProject/GumProject.gumx");
 
     var screen = new TitleScreen();
-<strong>+    screen.ButtonStandardInstance.Click += (_, _) =>
-</strong>+        screen.ButtonStandardInstance.Text = DateTime.Now.ToString();
+<strong>+   screen.ButtonStandardInstance.Click += (_, _) =>
+</strong>+       screen.ButtonStandardInstance.Text = DateTime.Now.ToString();
     screen.AddToRoot();
 
     base.Initialize();
 }
 </code></pre>
+{% endtab %}
+{% endtabs %}
 
 The button now responds to clicks by updating its text.
 
@@ -127,16 +165,31 @@ The button now responds to clicks by updating its text.
 
 Alternatively, you can write code directly in the TitleScreen. Remember, TitleScreen.cs exists so you can write your own code. It contains a CustomInitialize method which is called when the Screen is first created. We can assign events in CustomInitialize as shown in the following code snippet:
 
+{% tabs %}
+{% tab title="Full Code" %}
+<pre class="language-csharp"><code class="lang-csharp">partial class TitleScreen
+{
+    partial void CustomInitialize()
+    {
+<strong>        ButtonStandardInstance1.Click += (_, _) =>
+</strong>            ButtonStandardInstance1.Text = DateTime.Now.ToString();
+    }
+}
+</code></pre>
+{% endtab %}
+
+{% tab title="Diff" %}
 <pre class="language-diff"><code class="lang-diff">partial class TitleScreen
 {
     partial void CustomInitialize()
     {
-<strong>+        ButtonStandardInstance1.Click += (_, _) =>
-</strong>+            ButtonStandardInstance1.Text = DateTime.Now.ToString();
+<strong>+       ButtonStandardInstance1.Click += (_, _) =>
+</strong>+           ButtonStandardInstance1.Text = DateTime.Now.ToString();
     }
 }
-
 </code></pre>
+{% endtab %}
+{% endtabs %}
 
 Remember, add your code to CustomInitialize, not the constructor.
 

@@ -46,7 +46,7 @@ The outlines that are drawn by Gum can get in the way of viewing styles. You can
 ![](<../../../../.gitbook/assets/02_08 10 43.png>)
 {% endhint %}
 
-We can change the color values i the Styles component by selecting any of the rectangles and changing their colors. The names suggest their purpose, so if you are changing the Primary color values, be sure to consider the Light and Dark suffixes. For example, we can change the teal colors to orange colors in Styles.
+We can change the color values in the Styles component by selecting any of the rectangles and changing their colors. The names suggest their purpose, so if you are changing the Primary color values, be sure to consider the Light and Dark suffixes. For example, we can change the teal colors to orange colors in Styles.
 
 <figure><img src="../../../../.gitbook/assets/02_08 13 32.png" alt=""><figcaption><p>Primary colors changed to orange</p></figcaption></figure>
 
@@ -158,13 +158,13 @@ As a reminder, the values assigned here will not automatically appear in the Sty
 
 As recommended above, keeping all colors in the Styles component can make it easier to maintain styles in the long run. This process requires slightly more work because we need to make modifications in multiple places. At a high level, the steps are:
 
-1. Add a new ColoredRectangle to the Styles component
+1. Add a new **ColoredRectangle** to the Styles component
 2. Create new states on the Standards which will use this color. These states will use variable references to stay up-to-date with any changes on the source Styles component rectangles. To use the color through the entire project we need to modify
    1. ColoredRectangle
    2. NineSlice
    3. Sprite
    4. Text
-3. Update the TextBox (or any other component) to use this new color
+3. Update the **TextBox** (or any other component) to use this new color
 
 ### Adding a new ColoredRectangle to the Styles Component
 
@@ -172,7 +172,7 @@ First we'll define a new color in Styles. To do this:
 
 1. Select an existing color
 2. Copy/paste the rectangle (CTRL+C, CTRL+V)
-3. Rename the new rectangle. Be sure to name the new color according to its use. In general you should avoid giving the names colors because those may change in the future. Instead they can be generic names like "Error", or more specific names like "TextBoxBackground"
+3. Rename the new rectangle. Be sure to name the new color according to its use. In general you should avoid making the name the same as the color because the color may change in the future. Instead they can be generic names like "Error", or more specific names like "TextBoxBackground"
 4. Set the desired color for the rectangle
 
 <figure><img src="../../../../.gitbook/assets/03_05 58 09.png" alt=""><figcaption><p>TextBoxBackground color</p></figcaption></figure>
@@ -263,7 +263,7 @@ Notice that most of the frames are white so that they can be colored in Gum usin
 
 Be sure to save your .png file so it shows up in Gum.
 
-To create a new style:
+### Creating a new Style
 
 1. Duplicate one of the existing style states in NineSlice
 2. Rename the newly-created style as desired
