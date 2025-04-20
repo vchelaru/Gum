@@ -247,25 +247,24 @@ namespace RenderingLibrary
 
                 var assembly = typeof(SystemManagers).Assembly;
 #if KNI
-                var bitmapPattern = ToolsUtilities.FileManager.GetStringFromEmbeddedResource(assembly, "KniGum.Font18Arial.fnt");
-                using var stream = ToolsUtilities.FileManager.GetStreamFromEmbeddedResource(assembly, "KniGum.Font18Arial_0.png");
+                string prefix = "KniGum";
 #elif FNA
-                var bitmapPattern = ToolsUtilities.FileManager.GetStringFromEmbeddedResource(assembly, "FnaGum.Font18Arial.fnt");
-                using var stream = ToolsUtilities.FileManager.GetStreamFromEmbeddedResource(assembly, "FnaGum.Font18Arial_0.png");
-
+                string prefix = "FnaGum";
 #else
-                var bitmapPattern = ToolsUtilities.FileManager.GetStringFromEmbeddedResource(assembly, "MonoGameGum.Content.Font18Arial.fnt");
-                using var stream = ToolsUtilities.FileManager.GetStreamFromEmbeddedResource(assembly, "MonoGameGum.Content.Font18Arial_0.png");
+                string prefix = "MonoGameGum.Content";
 #endif
+                var bitmapPattern = ToolsUtilities.FileManager.GetStringFromEmbeddedResource(assembly, $"{prefix}.Font18Arial.fnt");
+                using var stream = ToolsUtilities.FileManager.GetStreamFromEmbeddedResource(assembly, $"{prefix}.Font18Arial_0.png");
                 var defaultFontTexture = Texture2D.FromStream(graphicsDevice, stream);
                 Text.DefaultBitmapFont = new BitmapFont(defaultFontTexture, bitmapPattern);
+                Renderer.InternalShapesTexture = defaultFontTexture;
 
                 GraphicalUiElement.CanvasWidth = graphicsDevice.Viewport.Width;
                 GraphicalUiElement.CanvasHeight = graphicsDevice.Viewport.Height;
                 GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
                 GraphicalUiElement.UpdateFontFromProperties = CustomSetPropertyOnRenderable.UpdateToFontValues;
                 GraphicalUiElement.ThrowExceptionsForMissingFiles = CustomSetPropertyOnRenderable.ThrowExceptionsForMissingFiles;
-                global::Gum.Wireframe.GraphicalUiElement.CloneRenderableFunction = global::RenderingLibrary.Graphics.RenderableCloneLogic.Clone;
+                GraphicalUiElement.CloneRenderableFunction = RenderableCloneLogic.Clone;
 
                 GraphicalUiElement.AddRenderableToManagers = CustomSetPropertyOnRenderable.AddRenderableToManagers;
                 GraphicalUiElement.RemoveRenderableFromManagers = CustomSetPropertyOnRenderable.RemoveRenderableFromManagers;

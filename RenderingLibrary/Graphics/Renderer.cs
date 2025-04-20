@@ -140,6 +140,8 @@ public class Renderer : IRenderer
         }
     }
 
+    internal Texture2D InternalShapesTexture { get; set; }
+
     public GraphicsDevice GraphicsDevice
     {
         get

@@ -3,6 +3,7 @@ using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using MonoGameGum.Forms.Controls;
 using MonoGameGum.GueDeriving;
+using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
@@ -23,24 +24,38 @@ public class DefaultRadioButtonRuntime : InteractiveGue
             this.Height = 32;
             this.Width = 128;
 
-            var radioButtonBackground = new CircleRuntime();
+            var radioButtonBackground = new SpriteRuntime();
 
-            //radioButtonBackground.Width = 24;
-            //radioButtonBackground.Height = 24;
-            radioButtonBackground.Radius = 12;
+            radioButtonBackground.Width = 100;
+            radioButtonBackground.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
+            radioButtonBackground.Height = 100;
+            radioButtonBackground.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
+            radioButtonBackground.Texture = SystemManagers.Default.Renderer.InternalShapesTexture;
+            radioButtonBackground.TextureAddress = Gum.Managers.TextureAddress.Custom;
+            radioButtonBackground.TextureLeft = 0;
+            radioButtonBackground.TextureTop = 160;
+            radioButtonBackground.TextureHeight = 24;
+            radioButtonBackground.TextureWidth = 24;
+
+            //radioButtonBackground.Radius = 12;
             radioButtonBackground.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
             radioButtonBackground.YOrigin = VerticalAlignment.Center;
             radioButtonBackground.Color = Color.White;
             radioButtonBackground.Name = "RadioButtonBackground";
             this.Children.Add(radioButtonBackground);
 
-            var innerCheck = new ColoredRectangleRuntime();
-            innerCheck.Width = 12;
-            innerCheck.Height = 12;
-            innerCheck.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-            innerCheck.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-            innerCheck.XOrigin = HorizontalAlignment.Center;
-            innerCheck.YOrigin = VerticalAlignment.Center;
+            var innerCheck = new SpriteRuntime();
+            innerCheck.Width = 100;
+            innerCheck.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
+            innerCheck.Height = 100;
+            innerCheck.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
+            innerCheck.Texture = SystemManagers.Default.Renderer.InternalShapesTexture;
+            innerCheck.TextureAddress = Gum.Managers.TextureAddress.Custom;
+            innerCheck.TextureLeft = 32;
+            innerCheck.TextureTop = 160;
+            innerCheck.TextureHeight = 16;
+            innerCheck.TextureWidth = 16;
+            innerCheck.Anchor(Gum.Wireframe.Anchor.Center);
             innerCheck.Name = "InnerCheck";
             innerCheck.Color = new Color(128, 255, 0);
             radioButtonBackground.Children.Add(innerCheck);

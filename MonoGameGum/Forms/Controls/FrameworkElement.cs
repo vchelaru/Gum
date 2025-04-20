@@ -966,6 +966,8 @@ public class FrameworkElement
         return false;
     }
 
+    public virtual bool IsTabNavigationEnabled => true;
+
     protected void HandleKeyboardFocusUpdate()
     {
         foreach (var keyboard in KeyboardsForUiControl)
@@ -974,8 +976,12 @@ public class FrameworkElement
             {
                 if(IsComboPushed(tabKeyCombo))
                 {
-                    this.HandleTab(TabDirection.Down, this, loop: true);
-                    break; // one tab per frame
+                    // This allows TextBoes to set AcceptsTab to true
+                    if(IsTabNavigationEnabled == true || tabKeyCombo.PushedKey != Keys.Tab)
+                    {
+                        this.HandleTab(TabDirection.Down, this, loop: true);
+                        break; // one tab per frame
+                    }
                 }
             }
 
@@ -983,8 +989,12 @@ public class FrameworkElement
             {
                 if(IsComboPushed(tabReverseKeyCombo))
                 {
-                    this.HandleTab(TabDirection.Up, this, loop: true);
-                    break;
+                    // This allows TextBoes to set AcceptsTab to true
+                    if (IsTabNavigationEnabled == true || tabReverseKeyCombo.PushedKey != Keys.Tab)
+                    {
+                        this.HandleTab(TabDirection.Up, this, loop: true);
+                        break;
+                    }
                 }
             }
         }

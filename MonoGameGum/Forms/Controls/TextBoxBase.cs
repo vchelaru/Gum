@@ -223,6 +223,10 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
 
     public bool IsCaretVisibleWhenReadOnly { get; set; }
 
+    public bool AcceptsTab { get; set; } = true;
+
+    public override bool IsTabNavigationEnabled => AcceptsTab == false;
+
     #endregion
 
     #region Events
@@ -924,8 +928,19 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
         {
             for (int i = 0; i < stringTyped.Length; i++)
             {
+                // If a \t character is here it could be from..
+                // * pressing tab
+                // * repeat rate tab
+                // * paste
+                // If AcceptsTab is false, we should ignore tabs altogether
+                // Maybe in the future we can inspect if it was pasted but this
+                // is trickier because we are relying on the Windows implementation.
                 // receiver could get nulled out by itself when something like enter is pressed
-                HandleCharEntered(stringTyped[i]);
+                var character = stringTyped[i];
+                if(character != '\t' || AcceptsTab)
+                {
+                    HandleCharEntered(character);
+                }
             }
         }
 #endif
