@@ -223,7 +223,7 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
 
     public bool IsCaretVisibleWhenReadOnly { get; set; }
 
-    public bool AcceptsTab { get; set; } = true;
+    public bool AcceptsTab { get; set; } = false;
 
     public override bool IsTabNavigationEnabled => AcceptsTab == false;
 

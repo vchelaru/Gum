@@ -20,6 +20,11 @@ public class ItemsControl : ScrollViewer
 
     Type itemFormsType = typeof(ListBoxItem);
 
+    public virtual string DisplayMemberPath
+    {
+        get;
+        set;
+    }
 
     // There can be a logical conflict when dealing with list items.
     // When creating a Gum list item, the Gum object may specify a Forms

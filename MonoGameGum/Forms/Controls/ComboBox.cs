@@ -45,6 +45,12 @@ public class ComboBox : FrameworkElement, IInputReceiver
         }
     }
 
+    public string DisplayMemberPath
+    {
+        get => listBox.DisplayMemberPath;
+        set => listBox.DisplayMemberPath = value;
+    }
+    
     public IList Items
     {
         get => listBox.Items;

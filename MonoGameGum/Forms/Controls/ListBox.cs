@@ -261,6 +261,37 @@ public class ListBox : ItemsControl, IInputReceiver
     /// </remarks>
     public bool LoseListItemFocusOnPrimaryInput { get; set; } = true;
 
+    public override string DisplayMemberPath
+    { 
+        get => base.DisplayMemberPath;
+        set
+        {
+            if(value != base.DisplayMemberPath)
+            {
+                base.DisplayMemberPath = value;
+
+                for(int i = 0; i < Items.Count; i++)
+                {
+                    var listBoxItem = ListBoxItems[i];
+
+                    if(value == string.Empty)
+                    {
+                        listBoxItem.UpdateToObject(Items[i]);
+                    }
+                    else
+                    {
+                        var item = Items[i];
+                        var display = item.GetType()
+                            .GetProperty(DisplayMemberPath)
+                            .GetValue(item, null) as string;
+                        listBoxItem.UpdateToObject(display);
+                    }
+
+                }
+            }
+        }
+    }
+
     #endregion
 
     #region Events
@@ -343,7 +374,18 @@ public class ListBox : ItemsControl, IInputReceiver
         {
             var visual = CreateNewVisual(o);
             item = CreateNewListBoxItem(visual);
-            item.UpdateToObject(o);
+            if(!string.IsNullOrEmpty(DisplayMemberPath))
+            {
+                var display = o.GetType()
+                    .GetProperty(DisplayMemberPath)
+                    .GetValue(o, null) as string;
+                item.UpdateToObject(display);
+
+            }
+            else
+            {
+                item.UpdateToObject(o);
+            }
             item.BindingContext = o;
         }
 
