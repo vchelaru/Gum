@@ -200,7 +200,7 @@ radioButton3.Text = "Option 3";
 group2.AddChild(radioButton3);
 ```
 
-<figure><img src="../../../../.gitbook/assets/11_08 36 54.gif" alt=""><figcaption><p>RadioButtons responding to clicks in two different groups</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/19_15 47 50.gif" alt=""><figcaption><p>RadioButtons responding to clicks in two different groups</p></figcaption></figure>
 
 ## ScrollViewer
 

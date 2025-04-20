@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This tutorial walks you through turning an empty MonoGame project into a Code only Gum project, which acts as a starting point for the rest of the tutorials.&#x20;
+This tutorial walks you through turning an empty MonoGame project into a code-only Gum project, which acts as a starting point for the rest of the tutorials.&#x20;
 
 This tutorial covers:
 
@@ -12,7 +12,7 @@ This tutorial covers:
 
 ## Adding Gum NuGet Packages
 
-Before writing any code, we must add the Gum nuget package. Add the Gum.MonoGame package to your game. For more information see the [Setup page](https://docs.flatredball.com/gum/code/monogame/setup).
+Before writing any code, we must add the Gum NuGet package. Add the Gum.MonoGame package to your game. For more information see the [Setup page](https://docs.flatredball.com/gum/code/monogame/setup).
 
 Once you are finished, your game project should reference the `Gum.MonoGame` project.
 
@@ -113,7 +113,7 @@ public class Game1 : Game
 The code above includes the following sections:
 
 * Initialize - The Initialize method prepares Gum for use. It must be called one time for every Gum project.
-* Once Gum is initialized, we can create controls such as the StackPanel which contains all other controls.  By calling AddToRoot, the mainPanel will be drawn and will receive input. All items added to the StackPanel will also be drawn and receive input, so we only need to call AddToRoot for the StackPanel.
+* Once Gum is initialized, we can create controls such as the `StackPanel` which contains all other controls.  By calling `AddToRoot`, the `mainPanel` is drawn and receives input. All items added to the `StackPanel` will also be drawn and receive input, so we only need to call `AddToRoot` for the `StackPanel`.
 
 <pre class="language-csharp"><code class="lang-csharp">Gum.Initialize(this);
             
@@ -121,13 +121,13 @@ The code above includes the following sections:
 </strong>mainPanel.Visual.AddToRoot();
 </code></pre>
 
-* Update - this updates the internal keyboard, mouse, and gamepad instances and applies default behavior to any components which implement Forms. For example, if a Button is added to the Screen, this code is responsible for checking if the cursor is overlapping the Button and adjusting the highlight/pressed state appropriately.
+* Update - this updates the internal keyboard, mouse, and gamepad instances and applies default behavior to any forms components. For example, if a `Button` is added to the `StackPanel`, this code is responsible for checking if the cursor is overlapping the `Button` and adjusting the highlight/pressed state appropriately.
 
 ```csharp
 Gum.Update(gameTime);
 ```
 
-* Draw - this method draws all Gum objects to the screen. This method does not yet perform any drawing since StackPanels are invisible, but we'll be adding controls later in this tutorial.
+* Draw - this method draws all Gum objects to the screen. This method does not yet perform any drawing since `StackPanels` are invisible, but we'll be adding controls later in this tutorial.
 
 ```csharp
 Gum.Draw();
@@ -139,7 +139,7 @@ We can run our project to see a blank (cornflower blue) screen.
 
 ### Adding Controls
 
-Now that we have Gum running, we can add controls to our StackPanel (mainPanel). The following code in Initialize adds a button which responds to being clicked by modifying its Text property:
+Now that we have Gum running, we can add controls to our `StackPanel` (`mainPanel`). The following code in Initialize adds a `Button` which responds to being clicked by modifying its `Text` property:
 
 {% tabs %}
 {% tab title="Full Code" %}
@@ -199,4 +199,4 @@ Now that we have Gum running, we can add controls to our StackPanel (mainPanel).
 
 ## Conclusion
 
-Now that we have a basic project set up with a single button. The next tutorial covers the most common forms controls.
+Now that we have a basic project set up with a single `Button`. The next tutorial covers the most common forms controls.
