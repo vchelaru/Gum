@@ -37,6 +37,8 @@ public class Panel : FrameworkElement
         
         IsVisible = true;
 
+        this.Visual.Dock(Dock.Fill);
+
     }
 
     public Panel(InteractiveGue visual) : base(visual) { }
