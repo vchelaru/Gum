@@ -45,11 +45,6 @@ public class StackPanel : Panel
     public StackPanel() :  base()
         //base(new global::Gum.Wireframe.GraphicalUiElement(new InvisibleRenderable(), null))
     {
-        this.Visual.Anchor(Anchor.TopLeft);
-        Width = 0;
-        Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        Height = 10;
-        Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
     }
 
     public StackPanel(InteractiveGue visual) : base(visual) 
