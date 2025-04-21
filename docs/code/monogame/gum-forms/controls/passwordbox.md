@@ -4,6 +4,8 @@
 
 The PasswordBox control is a TextBox-like control which can be used for entering passwords. It uses a `SecureString` rather than regular `string` and hides the entered characters by using the `*` key for each character typed. For more information see the SecureString documentation: [https://learn.microsoft.com/en-us/dotnet/api/system.security.securestring?view=net-8.0](https://learn.microsoft.com/en-us/dotnet/api/system.security.securestring?view=net-8.0)
 
+PasswordBox does not support the CTRL+C copy hotkey.
+
 ### Code Example: Adding a PasswordBox
 
 The following code adds a password box.&#x20;
