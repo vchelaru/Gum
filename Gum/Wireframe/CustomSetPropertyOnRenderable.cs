@@ -1428,7 +1428,9 @@ public class CustomSetPropertyOnRenderable
         return handled;
     }
 
-    private static AnimationChainList GetAnimationChainList(ref string value, LoaderManager loaderManager)
+    private static AnimationChainList GetAnimationChainList(ref string value, 
+        // fully qualify to avoid Android namign conflicts
+        global::RenderingLibrary.Content.LoaderManager loaderManager)
     {
         if (ToolsUtilities.FileManager.IsRelative(value))
         {
