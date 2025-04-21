@@ -137,7 +137,98 @@ class WeaponDefinition
 
 <figure><img src="../../../../.gitbook/assets/05_11 51 53.png" alt=""><figcaption></figcaption></figure>
 
-By implementing a custom ToString method on the WeaponDefinition class we can customize how it is displayed in the ListBox. While this is handy, it does limit us because we may want to modify ToString for other purposes such as customizing information in the debugger.
+By implementing a custom ToString method on the WeaponDefinition class we can customize how it is displayed in the ListBox. While this is handy, it does limit us because we may want to modify ToString for other purposes such as customizing information in the debugger.&#x20;
+
+## DisplayMemberPath
+
+`DisplayMemberPath` can be used to change which property is used to display each item. If this value is its default value of an empty string, then the `ToString` method is used. If this value is assigned, then it must be the name of a property on the source item. This property has the benefit of not relying on `ToString` which might be used for debugging or might change for other reasons in the future.
+
+For example, the following code shows how to display the weapon's name:
+
+{% tabs %}
+{% tab title="Full Code" %}
+```csharp
+//Define WeaponDefinition
+class WeaponDefinition
+{
+    public string Name { get; set; }
+    public int DamageDealt { get; set; }
+    public int RequiredLevel { get; set; }
+    public int Price { get; set; }
+}
+
+// Later, create the ListBox:
+var listBox = new ListBox();
+listBox.Width = 400;
+listBox.Items.Add(new WeaponDefinition
+{
+    Name = "Dagger",
+    DamageDealt = 5,
+    RequiredLevel = 1,
+    Price = 10
+});
+listBox.Items.Add(new WeaponDefinition
+{
+    Name = "Sword",
+    DamageDealt = 10,
+    RequiredLevel = 2,
+    Price = 20
+});
+listBox.Items.Add(new WeaponDefinition
+{
+    Name = "Axe",
+    DamageDealt = 15,
+    RequiredLevel = 3,
+    Price = 30
+});
+listBox.DisplayMemberPath = nameof(WeaponDefinition.Name);
+mainPanel.AddChild(listBox);
+```
+{% endtab %}
+
+{% tab title="Diff" %}
+<pre class="language-diff"><code class="lang-diff">//Define WeaponDefinition
+class WeaponDefinition
+{
+    public string Name { get; set; }
+    public int DamageDealt { get; set; }
+    public int RequiredLevel { get; set; }
+    public int Price { get; set; }
+}
+
+// Later, create the ListBox:
+var listBox = new ListBox();
+listBox.Width = 400;
+listBox.Items.Add(new WeaponDefinition
+{
+    Name = "Dagger",
+    DamageDealt = 5,
+    RequiredLevel = 1,
+    Price = 10
+});
+listBox.Items.Add(new WeaponDefinition
+{
+    Name = "Sword",
+    DamageDealt = 10,
+    RequiredLevel = 2,
+    Price = 20
+});
+listBox.Items.Add(new WeaponDefinition
+{
+    Name = "Axe",
+    DamageDealt = 15,
+    RequiredLevel = 3,
+    Price = 30
+});
+<strong>+listBox.DisplayMemberPath = nameof(WeaponDefinition.Name);
+</strong>mainPanel.AddChild(listBox);
+</code></pre>
+{% endtab %}
+{% endtabs %}
+
+<figure><img src="../../../../.gitbook/assets/21_06 12 02 (1).png" alt=""><figcaption></figcaption></figure>
+
+Although this approach is more flexible than using ToString, it does not provide the full benefits of running code on each item to customize its appearance. The next section shows how to create derived forms classes to customize their `UpdateToObject` method.
 
 ## FrameworkElementTemplate
 
