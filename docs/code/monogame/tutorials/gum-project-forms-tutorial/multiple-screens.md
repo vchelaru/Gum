@@ -206,7 +206,7 @@ Each screen clears the root (removes the previous screen) when its button is cli
 
 This tutorial assumes that a Gum screen is always displayed.
 
-Games can also completely remove Gum screens altogether. To do this, do not create a new screen after calling `GumService.Default.Root.Clear();`
+Games can also completely remove Gum screens altogether. To do this, do not create a new screen after calling `GumService.Default.Root.Children.Clear();`
 
 ## Conclusion
 
