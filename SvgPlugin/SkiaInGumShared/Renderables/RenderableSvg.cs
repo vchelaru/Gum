@@ -64,11 +64,11 @@ namespace SkiaGum.Renderables
                 var scaleX = this.Width / skiaSvg.Picture.CullRect.Width;
                 var scaleY = this.Height / skiaSvg.Picture.CullRect.Height;
 
-                SKMatrix scaleMatrix = SKMatrix.MakeScale(scaleX, scaleY);
+                SKMatrix scaleMatrix = SKMatrix.CreateScale(scaleX, scaleY);
 
                 {
 
-                    surface.Canvas.DrawPicture(skiaSvg.Picture, ref scaleMatrix);
+                    surface.Canvas.DrawPicture(skiaSvg.Picture , scaleMatrix);
                 }
             }
             else

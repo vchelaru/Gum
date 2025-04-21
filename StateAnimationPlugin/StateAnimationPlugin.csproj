@@ -63,7 +63,7 @@
       <Version>13.0.1</Version>
     </PackageReference>
     <PackageReference Include="SkiaSharp.Views.WPF">
-      <Version>2.88.6</Version>
+      <Version>3.116.1</Version>
     </PackageReference>
     <PackageReference Include="System.ComponentModel.Composition" Version="9.0.3" />
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />

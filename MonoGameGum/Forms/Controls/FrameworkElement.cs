@@ -940,6 +940,8 @@ public class FrameworkElement
     }
 #endif
 
+    public virtual bool IsTabNavigationEnabled => true;
+
 #if !FRB && MONOGAME
 
     public static List<KeyCombo> TabKeyCombos = new List<KeyCombo>
@@ -966,7 +968,6 @@ public class FrameworkElement
         return false;
     }
 
-    public virtual bool IsTabNavigationEnabled => true;
 
     protected void HandleKeyboardFocusUpdate()
     {
