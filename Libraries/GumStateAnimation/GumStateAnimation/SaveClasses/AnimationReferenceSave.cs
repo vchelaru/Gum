@@ -5,60 +5,59 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
-namespace StateAnimationPlugin.SaveClasses
+namespace StateAnimationPlugin.SaveClasses;
+
+public class AnimationReferenceSave
 {
-    public class AnimationReferenceSave
+    public string Name
     {
-        public string Name
-        {
-            get;
-            set;
-        }
+        get;
+        set;
+    }
 
-        public float Time
-        {
-            get;
-            set;
-        }
+    public float Time
+    {
+        get;
+        set;
+    }
 
-        [XmlIgnore]
-        public string SourceObject
+    [XmlIgnore]
+    public string SourceObject
+    {
+        get
         {
-            get
+            if(Name.Contains('.'))
             {
-                if(Name.Contains('.'))
-                {
-                    return Name.Substring(0, Name.IndexOf('.'));
-                }
-                else
-                {
-                    return null;
-                }
+                return Name.Substring(0, Name.IndexOf('.'));
+            }
+            else
+            {
+                return null;
             }
         }
+    }
 
-        [XmlIgnore]
-        public string RootName
+    [XmlIgnore]
+    public string RootName
+    {
+        get
         {
-            get
+            if (Name.Contains('.'))
             {
-                if (Name.Contains('.'))
-                {
-                    int indexOfDot = Name.IndexOf('.');
-                    int startingIndex = indexOfDot + 1;
+                int indexOfDot = Name.IndexOf('.');
+                int startingIndex = indexOfDot + 1;
 
-                    return Name.Substring(startingIndex, Name.Length - startingIndex);
-                }
-                else
-                {
-                    return Name;
-                }
+                return Name.Substring(startingIndex, Name.Length - startingIndex);
+            }
+            else
+            {
+                return Name;
             }
         }
+    }
 
-        public override string ToString()
-        {
-            return Name + " " + Time;
-        }
+    public override string ToString()
+    {
+        return Name + " " + Time;
     }
 }

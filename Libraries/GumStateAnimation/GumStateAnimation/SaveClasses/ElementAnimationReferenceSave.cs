@@ -4,14 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace StateAnimationPlugin.SaveClasses
+namespace StateAnimationPlugin.SaveClasses;
+
+public class ElementAnimationReferenceSave
 {
-    public class ElementAnimationReferenceSave
-    {
-        public string AnimationName { get; set; }
+    public string AnimationName { get; set; }
 
-        public float Time { get; set; }
+    public float Time { get; set; }
 
-        public bool Loop { get; set; }
-    }
+    public bool Loop { get; set; }
 }
