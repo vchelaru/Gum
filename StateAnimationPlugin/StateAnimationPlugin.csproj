@@ -17,16 +17,17 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="FlatRedBall.InterpolationCore, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>Libraries\FlatRedBall.InterpolationCore.dll</HintPath>
-    </Reference>
+    <Compile Remove="SaveClasses\**" />
+    <EmbeddedResource Remove="SaveClasses\**" />
+    <None Remove="SaveClasses\**" />
+    <Page Remove="SaveClasses\**" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CommonFormsAndControls\CommonFormsAndControls.csproj" />
     <ProjectReference Include="..\GumDataTypes\GumDataTypes.csproj" />
     <ProjectReference Include="..\Gum\Gum.csproj" />
     <ProjectReference Include="..\InputLibrary\InputLibrary.csproj" />
+    <ProjectReference Include="..\Libraries\GumStateAnimation\GumStateAnimation\GumStateAnimation.csproj" />
     <ProjectReference Include="..\RenderingLibrary\RenderingLibrary.csproj" />
     <ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
   </ItemGroup>
@@ -53,11 +54,13 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Content\" />
+    <Folder Include="Libraries\" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\redExclamation.png" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="FlatRedBall.InterpolationCore" Version="2025.4.22.1" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="Newtonsoft.Json">
       <Version>13.0.1</Version>
@@ -69,6 +72,6 @@
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
   </ItemGroup>  
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="IF NOT EXIST &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot; md &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)FlatRedBall.InterpolationCore.dll&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)FlatRedBall.InterpolationCore.pdb&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;" />
+    <Exec Command="IF NOT EXIST &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot; md &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;" />
   </Target>
 </Project>
