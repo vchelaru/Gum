@@ -7,21 +7,25 @@ The TextBox control allows users to enter a string. It supports highlighting, co
 The following code creates a TextBox.
 
 ```csharp
+var panel = new StackPanel();
+panel.Spacing = 5;
+panel.AddToRoot();
+
 var textBox = new TextBox();
-this.Root.Children.Add(textBox.Visual);
 textBox.X = 50;
 textBox.Y = 50;
 textBox.Width = 200;
 textBox.Height = 34;
 textBox.Placeholder = "Placeholder Text...";
+panel.AddChild(textBox);
 
 var textBox2 = new TextBox();
-this.Root.Children.Add(textBox2.Visual);
 textBox2.X = 50;
 textBox2.Y = 90;
 textBox2.Width = 200;
 textBox2.Height = 34;
 textBox2.Placeholder = "Placeholder Text...";
+panel.AddChild(textBox2);
 ```
 
 <figure><img src="../../../../.gitbook/assets/24_07 22 19.gif" alt=""><figcaption><p>Interacting with TextBoxes</p></figcaption></figure>
@@ -30,11 +34,11 @@ textBox2.Placeholder = "Placeholder Text...";
 
 TextBox supports reading characters from the keyboard. It supports:
 
-* Regular character typing
-* Backspace
-* Delete
-* Enter (if multi-line)
-* Keyboard repeat rate
+* Regular character typing - inserts a character the the caret position (`CaretIndex`)
+* Backspace - removes a character at the index before the caret
+* Delete - removes a character at the caret index
+* Enter (if multi-line) - inserts the newline character (`'\n'`)&#x20;
+* Keyboard repeat rate - if a key is held, the repeat rate applies according to the OS settings
 * CTRL X, C, and V for cut, copy, and paste
 
 The TextBox respects the OS-level repat rate. For example, the following animation shows the TextBox responding to the Windows Key repeat rate.
@@ -134,6 +138,16 @@ Holding down the shift key and pressing the arrow keys adjusts the selection.
 ## CaretIndex
 
 `CaretIndex` returns the index of the caret where 0 is before the first letter. This value is updated automatically when letters are typed, the caret is moved with arrow/home/end, and when the cursor is clicked and the cursor is moved.
+
+The user can modify the `CaretIndex` using the following actions:
+
+* Clicking in the text box places the caret at the nearest index to the click point
+* Typing text moves the caret to the right by one character
+* Pasting text moves the caret to the end of the pasted text
+* Left arrow and right arrow on the keyboard moves the caret to the left or right by one index
+* CTRL + left arrow and CTRL + right arrow move the caret to the left or right by one word
+* Home key moves the caret to the beginning of the line
+* End key moves the caret to the end of the line
 
 `CaretIndex` can be explicitly set in code to move the caret position.
 
