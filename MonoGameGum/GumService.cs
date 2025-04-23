@@ -70,6 +70,12 @@ public class GumService
 
     #region Initialize
 
+    /// <summary>
+    /// Initializes Gum, optionally loading a Gum project.
+    /// </summary>
+    /// <param name="game">The game instance.</param>
+    /// <param name="gumProjectFile">An optional project to load. If not specified, no project is loaded and Gum can be used "code only".</param>
+    /// <returns>The loaded project, or null if no project is loaded</returns>
     public GumProjectSave? Initialize(Game game, string? gumProjectFile = null)
     {
         return InitializeInternal(game, game.GraphicsDevice, gumProjectFile);

@@ -278,13 +278,13 @@ public class FormsUtilities
                     component.Name,
                     typeof(DefaultFromFileCheckBoxRuntime), overwriteIfAlreadyExists: false);
             }
-            else if (categoryNames.Contains("ComboBoxCategory"))
+            else if (categoryNames.Contains("ComboBoxCategory") || behaviorNames.Contains("ComboBoxBehavior"))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileComboBoxRuntime), overwriteIfAlreadyExists: false);
             }
-            else if(categoryNames.Contains("LabelCategory"))
+            else if(categoryNames.Contains("LabelCategory") || behaviorNames.Contains("LabelBehavior"))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,

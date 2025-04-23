@@ -320,6 +320,8 @@ public class ComboBox : FrameworkElement, IInputReceiver
         this.Visual.Children.Remove(listBox.Visual);
         listBox.X = x;
         listBox.Y = y;
+        listBox.Visual.WidthUnits = DimensionUnitType.Absolute;
+        listBox.Visual.HeightUnits = DimensionUnitType.Absolute;
         listBox.Width = width;
         listBox.Height = height;
         ListBox.ShowPopupListBox(listBox, this.Visual);
