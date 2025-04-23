@@ -519,7 +519,20 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
 
             if (lineOn < coreTextObject.WrappedText.Count)
             {
-                index = GetIndex(cursorOffset, coreTextObject.WrappedText[lineOn]);
+                int indexInThisLine = GetIndex(cursorOffset, coreTextObject.WrappedText[lineOn]);
+
+                var isOnLastLine = lineOn == coreTextObject.WrappedText.Count - 1;
+                if(!isOnLastLine && 
+                    indexInThisLine == coreTextObject.WrappedText[lineOn].Length &&
+                    indexInThisLine > 0 &&
+                    char.IsWhiteSpace( coreTextObject.WrappedText[lineOn][indexInThisLine-1]))
+                {
+                    index = indexInThisLine - 1;
+                }
+                else
+                {
+                    index = indexInThisLine;
+                }
             }
 
             for (int line = 0; line < lineOn; line++)
