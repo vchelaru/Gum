@@ -617,10 +617,31 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
                     }
                     break;
                 case Keys.Home:
-                    caretIndex = 0;
+                    {
+                        this.GetLineNumber(caretIndex, out int lineNumber, out int absoluteStartOfLine, out int _);
+                        caretIndex = absoluteStartOfLine;
+                    }
                     break;
                 case Keys.End:
-                    caretIndex = (DisplayedText?.Length ?? 0);
+                    {
+                        if (string.IsNullOrEmpty(DisplayedText))
+                        {
+                            caretIndex = 0;
+                        }
+                        else
+                        {
+                            this.GetLineNumber(caretIndex, out int lineNumber, out int absoluteStartOfLine, out int _);
+                            if(lineNumber == coreTextObject.WrappedText.Count-1)
+                            {
+                                caretIndex = (DisplayedText?.Length ?? 0);
+                            }
+                            else
+                            {
+                                var startofIndex = GetAbsoluteCharacterIndexForLine(lineNumber + 1);
+                                caretIndex = startofIndex - 1;
+                            }
+                        }
+                    }
                     break;
                 case Keys.Back:
                     if(!IsReadOnly)
@@ -979,6 +1000,24 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
         }
     }
 
+    public int GetAbsoluteCharacterIndexForLine(int lineNumber)
+    {
+        int absoluteIndex = 0;
+
+        for(int i = 0; i < lineNumber && i < coreTextObject.WrappedText.Count; i++)
+        {
+            absoluteIndex += coreTextObject.WrappedText[i].Length;
+        }
+        return absoluteIndex;
+    }
+
+    /// <summary>
+    /// Returns the line number, start of the line, and relative index into the line given an absolute character index
+    /// </summary>
+    /// <param name="absoluteCharacterIndex">The absolute character index, where 0 is the first character in the entire text box.</param>
+    /// <param name="lineNumber">The line number containing the arugment character index.</param>
+    /// <param name="absoluteStartOfLine">The index of the first character in the argument lineNumber.</param>
+    /// <param name="relativeIndexOnLine">The relative index in the line, where 0 is the first character in the line.</param>
     public void GetLineNumber(int absoluteCharacterIndex, out int lineNumber, out int absoluteStartOfLine, out int relativeIndexOnLine)
     {
         lineNumber = 0;
