@@ -194,7 +194,7 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
         }
     }
 
-    public string Placeholder
+    public string? Placeholder
     {
         get => placeholderTextObject?.RawText;
         set

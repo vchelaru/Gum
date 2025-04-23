@@ -76,6 +76,8 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 TextInstance.Y = 0f;
                 TextInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
                 TextInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
+                TextInstance.VerticalAlignment = VerticalAlignment.Center;
+
 
                 PlaceholderTextInstance.Red = 128;
                 PlaceholderTextInstance.Blue = 128;
@@ -90,6 +92,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 PlaceholderTextInstance.XUnits = GeneralUnitType.PixelsFromMiddle;
                 PlaceholderTextInstance.YOrigin = global::RenderingLibrary.Graphics.VerticalAlignment.Center;
                 PlaceholderTextInstance.YUnits = GeneralUnitType.PixelsFromMiddle;
+                PlaceholderTextInstance.VerticalAlignment = VerticalAlignment.Center;
 
                 FocusedIndicator.Height = 2f;
                 FocusedIndicator.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
@@ -162,7 +165,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 var lineModeCategory = new Gum.DataTypes.Variables.StateSaveCategory();
                 lineModeCategory.Name = "LineModeCategory";
                 this.AddCategory(lineModeCategory);
-                lineModeCategory.States.Add(new()
+                var singleLineState = new StateSave()
                 {
                     Name = "Single",
                     Variables = new()
@@ -186,11 +189,24 @@ namespace MonoGameGum.Forms.DefaultVisuals
                         {
                             Name = "TextInstance.WidthUnits",
                             Value = global::Gum.DataTypes.DimensionUnitType.RelativeToChildren
+                        },
+                        new ()
+                        {
+                            Name = "PlaceholderTextInstance.VerticalAlignment",
+                            Value = VerticalAlignment.Center
+                        },
+                        new ()
+                        {
+                            Name = "TextInstance.VerticalAlignment",
+                            Value = VerticalAlignment.Center
                         }
-                    }
-                });
 
-                lineModeCategory.States.Add(new()
+                    }
+                };
+
+                lineModeCategory.States.Add(singleLineState);
+
+                var multiLineState = new StateSave()
                 {
                     Name = "Multi",
                     Variables = new()
@@ -214,9 +230,20 @@ namespace MonoGameGum.Forms.DefaultVisuals
                         {
                             Name = "TextInstance.WidthUnits",
                             Value = global::Gum.DataTypes.DimensionUnitType.RelativeToParent
+                        },
+                        new ()
+                        {
+                            Name = "PlaceholderTextInstance.VerticalAlignment",
+                            Value = VerticalAlignment.Top
+                        },
+                        new ()
+                        {
+                            Name = "TextInstance.VerticalAlignment",
+                            Value = VerticalAlignment.Top
                         }
                     }
-                });
+                };
+                lineModeCategory.States.Add(multiLineState);
             }
 
 
