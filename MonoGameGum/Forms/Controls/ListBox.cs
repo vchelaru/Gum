@@ -894,6 +894,36 @@ public class ListBox : ItemsControl, IInputReceiver
 
         }
 #endif
+
+#if MONOGAME && !FRB
+
+        foreach (var keyboard in KeyboardsForUiControl)
+        {
+            var mgKeyboard = keyboard as MonoGameGum.Input.Keyboard;
+            var pressedButton = false;
+            if (mgKeyboard?.KeyPushed(Keys.Enter) == true)
+            {
+                pressedButton = true;
+            }
+            RepositionDirections? direction = null;
+
+            if (mgKeyboard?.KeyPushed(Keys.Up) == true)
+            {
+                direction = RepositionDirections.Up;
+            }
+            if (mgKeyboard?.KeyPushed(Keys.Down) == true)
+            {
+                direction = RepositionDirections.Down;
+            }
+
+            DoListItemFocusUpdate(direction, pressedButton);
+        }
+
+        base.HandleKeyboardFocusUpdate();
+#endif
+
+
+
     }
 
     private int? GetListBoxIndexAt(float x, float y)
@@ -928,7 +958,11 @@ public class ListBox : ItemsControl, IInputReceiver
     /// </summary>
     public float AdditionalOffsetToCheckForDPadNavigation { get; set; } = 4;
 
-    private void DoListItemFocusUpdate(RepositionDirections? direction, bool pressedButton)
+    private void DoListItemFocusUpdate(RepositionDirections? direction, 
+        // Whether a button was pushed to consider this a selection.
+        // Currently we don't differentiate between A and B on combo
+        // box. Should we in the future?
+        bool pressedButton)
     {
         var wraps = InnerPanel.WrapsChildren;
         var handledByWrapping = false;
@@ -1029,6 +1063,7 @@ public class ListBox : ItemsControl, IInputReceiver
 
         if (pressedButton)
         {
+            HandleListBoxItemPushed(this.ListBoxItemsInternal[SelectedIndex], EventArgs.Empty);
             if (CanListItemsLoseFocus)
             {
                 DoListItemsHaveFocus = false;

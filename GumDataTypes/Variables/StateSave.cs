@@ -52,6 +52,13 @@ public class StateSave
         VariableLists = new List<VariableListSave>();
     }
 
+    public void Clear()
+    {
+        Apply = null;
+        Variables.Clear();
+        VariableLists.Clear();
+    }
+
     public StateSave Clone()
     {
         StateSave toReturn = new StateSave();

@@ -33,6 +33,12 @@ public class StackPanel : Panel
         }
     }
 
+    public float Spacing
+    {
+        get => Visual.StackSpacing;
+        set => Visual.StackSpacing = value;
+    }
+
     #endregion
 
     protected override void ReactToVisualChanged()

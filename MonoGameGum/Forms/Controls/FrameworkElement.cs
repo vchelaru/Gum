@@ -12,6 +12,8 @@ using System.Text;
 using System.Threading.Tasks;
 using ToolsUtilities;
 using System.Threading;
+using Gum.DataTypes.Variables;
+
 
 
 
@@ -254,6 +256,9 @@ public class FrameworkElement
         get { return Visual.Y; }
         set { Visual.Y = value; }
     }
+
+    public void Anchor(Anchor anchor) => Visual.Anchor(anchor);
+    public void Dock(Dock dock) => Visual.Dock(dock);
 
     bool isEnabled = true;
     /// <summary>
@@ -715,6 +720,24 @@ public class FrameworkElement
 
     }
 
+    public GraphicalUiElement GetVisual(string name) => 
+        Visual.GetGraphicalUiElementByName(name) as GraphicalUiElement;
+
+    public StateSave GetState(string stateName)
+    {
+        foreach (var category in Visual.Categories.Values)
+        {
+            foreach (var state in category.States)
+            {
+                if (state.Name == stateName)
+                {
+                    return state;
+                }
+            }
+        }
+        throw new InvalidOperationException($"Could not find a state named {stateName}");
+    }
+
     #region Binding/ViewModel
 
     private void HandleViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -887,14 +910,14 @@ public class FrameworkElement
             gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Down) ||
             (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Right)))
         {
-            this.HandleTab(TabDirection.Down, this);
+            this.HandleTab(TabDirection.Down, this, loop:true);
         }
         else if (gamepad.ButtonRepeatRate(Buttons.DPadUp) ||
             (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.ButtonRepeatRate(Buttons.DPadLeft)) ||
             gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Up) ||
             (IsUsingLeftAndRightGamepadDirectionsForNavigation && gamepad.LeftStick.AsDPadPushedRepeatRate(DPadDirection.Left)))
         {
-            this.HandleTab(TabDirection.Up, this);
+            this.HandleTab(TabDirection.Up, this, loop: true);
         }
 #endif
     }
