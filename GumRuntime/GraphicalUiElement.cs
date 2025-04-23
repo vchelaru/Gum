@@ -5609,6 +5609,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         return null;
     }
 
+
     /// <summary>
     /// Performs a recursive search for graphical UI elements, where eacn name in the parameters
     /// is the name of a GraphicalUiElement one level deeper than the last.

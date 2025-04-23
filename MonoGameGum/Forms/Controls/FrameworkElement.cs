@@ -720,8 +720,57 @@ public class FrameworkElement
 
     }
 
+    public T? GetVisual<T>(string? name = null) where T : GraphicalUiElement
+    {
+        var currentItem = Visual;
+
+        return GetVisual<T>(name,  currentItem);
+    }
+
+    private T? GetVisual<T>(string? name, GraphicalUiElement currentItem) where T : GraphicalUiElement
+    {
+        if(IsMatch(currentItem))
+        {
+            return currentItem as T;
+        }
+
+        if (currentItem.Children != null)
+        {
+            foreach (var child in currentItem.Children)
+            {
+                var found = GetVisual<T>(name, child as GraphicalUiElement);
+                if (found != null)
+                {
+                    return found;
+                }
+            }
+        }
+        else
+        {
+            foreach(var item in currentItem.ContainedElements)
+            {
+                var found = GetVisual<T>(name, item as GraphicalUiElement);
+                if (found != null)
+                {
+                    return found;
+                }
+            }
+        }
+
+        return null;
+
+        bool IsMatch(GraphicalUiElement potentialMatch)
+        {
+            var isNameMatch = string.IsNullOrEmpty(name) || potentialMatch.Name == name;
+            return isNameMatch && currentItem is T;
+        }
+    }
+
+
     public GraphicalUiElement GetVisual(string name) => 
         Visual.GetGraphicalUiElementByName(name) as GraphicalUiElement;
+
+
 
     public StateSave GetState(string stateName)
     {
