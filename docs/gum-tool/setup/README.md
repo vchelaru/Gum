@@ -21,7 +21,7 @@ You can click **More info,** then **Run anyway**. Alternatively, you can right-c
 
 <figure><img src="../../.gitbook/assets/image (78).png" alt=""><figcaption><p>Unblocking the .zip file removes the "Windows protected your PC" popup</p></figcaption></figure>
 
-### Mac
+### Mac/Linux
 
 #### Prerequisites
 
