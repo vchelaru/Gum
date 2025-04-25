@@ -76,10 +76,10 @@ Before proceeding, ensure that you have the following prerequisites installed on
 
 You can install WINE and Winetricks using Homebrew. Open a terminal and run the following commands:
 
-If your distro is not listed bellow please use your prefered search engine to find out how to install 
-wine and winetricks properly on your system. 
+If your distro is not listed bellow please use your prefered search engine to find out how to install\
+wine and winetricks properly on your system.
 
-Ubuntu 22.04 
+Ubuntu 22.04
 
 ```sh
 sudo dpkg --add-architecture i386 
@@ -109,7 +109,7 @@ sudo dnf install winetricks
 ```
 
 Linux Mint 20
- 
+
 ```sh
 sudo apt install dirmngr ca-certificates software-properties-common apt-transport-https curl -y
 sudo dpkg --add-architecture i386
@@ -119,7 +119,7 @@ sudo apt-get install winetricks
 ```
 
 Linux Mint 21
- 
+
 ```sh
 sudo apt install dirmngr ca-certificates software-properties-common apt-transport-https curl -y
 sudo dpkg --add-architecture i386
@@ -129,7 +129,7 @@ sudo apt-get install winetricks
 ```
 
 Linux Mint 22
- 
+
 ```sh
 sudo apt install dirmngr ca-certificates software-properties-common apt-transport-https curl -y
 sudo dpkg --add-architecture i386
@@ -140,10 +140,10 @@ sudo apt-get install winetricks
 
 #### Automated Setup Linux
 
-The following goes through the steps do download and run the `setup_gum_mac.sh` automation script. This script goes through the steps for you with minimal interaction to setup your environment on macOS to run the GUM tool using WINE. If you would prefer to do this setup manually, please see the Manual Setup Steps section below.
+The following goes through the steps do download and run the `setup_gum_linux.sh` automation script. This script goes through the steps for you with minimal interaction to setup your Linux environment to run the GUM tool using WINE. If you would prefer to do this setup manually, please see the Manual Setup Steps section below.
 
 1. Download the setup\_gum.linux.sh script\
-   [https://gist.githubusercontent.com/erievs/4c79b24930535248c3cc976692c91a65/raw/ad5947f09b3bddf8118b56757996e172f886a3aa/setup_gum_linux.sh](https://gist.githubusercontent.com/erievs/4c79b24930535248c3cc976692c91a65/raw/ad5947f09b3bddf8118b56757996e172f886a3aa/setup_gum_linux.sh)
+   [https://raw.githubusercontent.com/vchelaru/Gum/master/setup\_gum\_linux.sh](https://raw.githubusercontent.com/vchelaru/Gum/master/setup_gum_mac.sh)
 2. Open a terminal and `cd` to the directory that the script was downloaded to
 3. Make the script executable
 
