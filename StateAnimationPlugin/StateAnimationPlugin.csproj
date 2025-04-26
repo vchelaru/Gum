@@ -24,7 +24,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CommonFormsAndControls\CommonFormsAndControls.csproj" />
-    <ProjectReference Include="..\GumDataTypes\GumDataTypes.csproj" />
+    <ProjectReference Include="..\GumDataTypes\GumDataTypesNet6.csproj" />
     <ProjectReference Include="..\Gum\Gum.csproj" />
     <ProjectReference Include="..\InputLibrary\InputLibrary.csproj" />
     <ProjectReference Include="..\Libraries\GumStateAnimation\GumStateAnimation\GumStateAnimation.csproj" />

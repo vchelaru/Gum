@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.33516.290
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumDataTypes", "GumDataTypes\GumDataTypes.csproj", "{5971A187-F6B2-4D65-A277-5613DED1F50F}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XnaAndWinforms", "XnaAndWinforms\XnaAndWinforms.csproj", "{C39A973C-66D6-4A6C-82B5-AE0042F210F8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RenderingLibrary", "RenderingLibrary\RenderingLibrary.csproj", "{A86EE399-7C93-42E1-80ED-CA4CBF4CA573}"
@@ -53,16 +51,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "StateAnimation", "StateAnim
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumStateAnimation", "Libraries\GumStateAnimation\GumStateAnimation\GumStateAnimation.csproj", "{D1F26E57-397F-490A-B738-80DB708A242D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumDataTypesNet6", "GumDataTypes\GumDataTypesNet6.csproj", "{29DBC0A6-F95A-442A-A063-B722DDCB02C6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{5971A187-F6B2-4D65-A277-5613DED1F50F}.Debug|x86.ActiveCfg = Debug|x86
-		{5971A187-F6B2-4D65-A277-5613DED1F50F}.Debug|x86.Build.0 = Debug|x86
-		{5971A187-F6B2-4D65-A277-5613DED1F50F}.Release|x86.ActiveCfg = Release|x86
-		{5971A187-F6B2-4D65-A277-5613DED1F50F}.Release|x86.Build.0 = Release|x86
 		{C39A973C-66D6-4A6C-82B5-AE0042F210F8}.Debug|x86.ActiveCfg = Debug|x86
 		{C39A973C-66D6-4A6C-82B5-AE0042F210F8}.Debug|x86.Build.0 = Debug|x86
 		{C39A973C-66D6-4A6C-82B5-AE0042F210F8}.Release|x86.ActiveCfg = Release|x86
@@ -135,12 +131,15 @@ Global
 		{D1F26E57-397F-490A-B738-80DB708A242D}.Debug|x86.Build.0 = Debug|Any CPU
 		{D1F26E57-397F-490A-B738-80DB708A242D}.Release|x86.ActiveCfg = Release|Any CPU
 		{D1F26E57-397F-490A-B738-80DB708A242D}.Release|x86.Build.0 = Release|Any CPU
+		{29DBC0A6-F95A-442A-A063-B722DDCB02C6}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{29DBC0A6-F95A-442A-A063-B722DDCB02C6}.Debug|x86.Build.0 = Debug|Any CPU
+		{29DBC0A6-F95A-442A-A063-B722DDCB02C6}.Release|x86.ActiveCfg = Release|Any CPU
+		{29DBC0A6-F95A-442A-A063-B722DDCB02C6}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{5971A187-F6B2-4D65-A277-5613DED1F50F} = {C66AD07F-C683-4C24-8E6B-20638ACC3A25}
 		{C39A973C-66D6-4A6C-82B5-AE0042F210F8} = {C66AD07F-C683-4C24-8E6B-20638ACC3A25}
 		{A86EE399-7C93-42E1-80ED-CA4CBF4CA573} = {C66AD07F-C683-4C24-8E6B-20638ACC3A25}
 		{938D9A00-8529-4CE8-9077-E0A3994A73EA} = {C66AD07F-C683-4C24-8E6B-20638ACC3A25}
@@ -161,6 +160,7 @@ Global
 		{7261EDF9-108A-4563-8B73-6B72DED72AE9} = {C66AD07F-C683-4C24-8E6B-20638ACC3A25}
 		{E411E9B5-7C05-4704-86CC-18C584BB15D6} = {28BBCA70-AFC9-4C9B-9114-E0E23FA01C3F}
 		{D1F26E57-397F-490A-B738-80DB708A242D} = {E411E9B5-7C05-4704-86CC-18C584BB15D6}
+		{29DBC0A6-F95A-442A-A063-B722DDCB02C6} = {C66AD07F-C683-4C24-8E6B-20638ACC3A25}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {691B2E2F-58CB-4FD2-8480-695E8DE0CCE2}
