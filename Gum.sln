@@ -53,6 +53,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumStateAnimation", "Librar
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumDataTypesNet6", "GumDataTypes\GumDataTypesNet6.csproj", "{29DBC0A6-F95A-442A-A063-B722DDCB02C6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GumCommon", "GumCommon\GumCommon.csproj", "{6F20DA16-FDC2-485E-B6ED-433EE2A97E59}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -135,6 +137,10 @@ Global
 		{29DBC0A6-F95A-442A-A063-B722DDCB02C6}.Debug|x86.Build.0 = Debug|Any CPU
 		{29DBC0A6-F95A-442A-A063-B722DDCB02C6}.Release|x86.ActiveCfg = Release|Any CPU
 		{29DBC0A6-F95A-442A-A063-B722DDCB02C6}.Release|x86.Build.0 = Release|Any CPU
+		{6F20DA16-FDC2-485E-B6ED-433EE2A97E59}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{6F20DA16-FDC2-485E-B6ED-433EE2A97E59}.Debug|x86.Build.0 = Debug|Any CPU
+		{6F20DA16-FDC2-485E-B6ED-433EE2A97E59}.Release|x86.ActiveCfg = Release|Any CPU
+		{6F20DA16-FDC2-485E-B6ED-433EE2A97E59}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -161,6 +167,7 @@ Global
 		{E411E9B5-7C05-4704-86CC-18C584BB15D6} = {28BBCA70-AFC9-4C9B-9114-E0E23FA01C3F}
 		{D1F26E57-397F-490A-B738-80DB708A242D} = {E411E9B5-7C05-4704-86CC-18C584BB15D6}
 		{29DBC0A6-F95A-442A-A063-B722DDCB02C6} = {C66AD07F-C683-4C24-8E6B-20638ACC3A25}
+		{6F20DA16-FDC2-485E-B6ED-433EE2A97E59} = {C66AD07F-C683-4C24-8E6B-20638ACC3A25}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {691B2E2F-58CB-4FD2-8480-695E8DE0CCE2}

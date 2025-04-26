@@ -81,9 +81,6 @@
 		<Compile Include="..\GumRuntime\ElementSaveExtensions.GumRuntime.cs">
 			<Link>Wireframe\ElementSaveExtensions.GumRuntime.cs</Link>
 		</Compile>
-		<Compile Include="..\GumRuntime\GraphicalUiElement.cs">
-			<Link>Wireframe\GraphicalUiElement.cs</Link>
-		</Compile>
 		<Compile Include="..\GumRuntime\InstanceSaveExtensionMethods.GumRuntime.cs">
 			<Link>Wireframe\InstanceSaveExtensionMethods.GumRuntime.cs</Link>
 		</Compile>
@@ -103,6 +100,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\CommonFormsAndControls\CommonFormsAndControls.csproj" />
 		<ProjectReference Include="..\CsvLibrary\CsvLibrary.csproj" />
+		<ProjectReference Include="..\GumCommon\GumCommon.csproj" />
 		<ProjectReference Include="..\GumDataTypes\GumDataTypesNet6.csproj" />
 		<ProjectReference Include="..\InputLibrary\InputLibrary.csproj" />
 		<ProjectReference Include="..\Libraries\GumStateAnimation\GumStateAnimation\GumStateAnimation.csproj" />
@@ -373,6 +371,8 @@
 		<PackageReference Include="System.Management" Version="9.0.3" />
 	</ItemGroup>
 	<ItemGroup>
+		<Compile Remove="Managers\ObjectFinder.cs" />
+		<Compile Remove="Mvvm\ViewModel.cs" />
 		<Compile Remove="objNetFramework\x86\Debug\.NETFramework,Version=v4.7.2.AssemblyAttributes.cs" />
 		<Compile Remove="objNetFramework\x86\Debug\Controls\ColorDisplay.g.cs" />
 		<Compile Remove="objNetFramework\x86\Debug\Controls\ColorDisplay.g.i.cs" />

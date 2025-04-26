@@ -97,10 +97,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Camera.cs" />
     <Compile Include="Content\ContentLoader.cs" />
     <Compile Include="Content\IContentLoader.cs" />
-    <Compile Include="Content\LoaderManager.cs" />
     <Compile Include="Graphics\AnimationFrame.cs" />
     <Compile Include="Graphics\Animation\AnimationChain.cs" />
     <Compile Include="Graphics\Animation\AnimationChainList.cs" />
@@ -111,22 +109,13 @@
     <Compile Include="Graphics\Fonts\BitmapFont.cs" />
     <Compile Include="Graphics\Fonts\BmfcSave.cs" />
     <Compile Include="Graphics\GradientType.cs" />
-    <Compile Include="Graphics\HorizontalAlignment.cs" />
     <Compile Include="Graphics\IAnimatable.cs" />
     <Compile Include="Graphics\IAnimation.cs" />
     <Compile Include="Graphics\IAspectRatio.cs" />
     <Compile Include="Graphics\ImageData.cs" />
-    <Compile Include="Graphics\InvisibleRenderable.cs" />
-    <Compile Include="Graphics\IRenderable.cs" />
-    <Compile Include="Graphics\IRenderableIpso.cs" />
-    <Compile Include="Graphics\IRenderer.cs" />
     <Compile Include="Graphics\ISetClipsChildren.cs" />
-    <Compile Include="Graphics\IText.cs" />
     <Compile Include="Graphics\ITexturable.cs" />
     <Compile Include="Graphics\ITextureCoordinate.cs" />
-    <Compile Include="Graphics\IVisible.cs" />
-    <Compile Include="Graphics\Layer.cs" />
-    <Compile Include="Graphics\LayerCameraSettings.cs" />
     <Compile Include="Graphics\NineSlice.cs" />
     <Compile Include="Graphics\NineSliceExtensions.cs" />
     <Compile Include="Graphics\Renderer.cs" />
@@ -134,11 +123,8 @@
     <Compile Include="Graphics\SortableLayer.cs" />
     <Compile Include="Graphics\SpriteBatchStack.cs" />
     <Compile Include="Graphics\SpriteRenderer.cs" />
-    <Compile Include="Graphics\TextOverflowMode.cs" />
     <Compile Include="Graphics\TimedSpriteSheetAnimation.cs" />
-    <Compile Include="Graphics\VerticalAlignment.cs" />
     <Compile Include="Graphics\XNAExtensions.cs" />
-    <Compile Include="ISystemManagers.cs" />
     <Compile Include="Math\FloatRectangle.cs" />
     <Compile Include="Math\Geometry\Line.cs" />
     <Compile Include="Math\Geometry\LineGrid.cs" />
@@ -149,7 +135,6 @@
     <Compile Include="Graphics\Text.cs" />
     <Compile Include="Graphics\TextManager.cs" />
     <Compile Include="Graphics\TextureFlipAnimation.cs" />
-    <Compile Include="IPositionedSizedObject.cs" />
     <Compile Include="Math\Geometry\LineCircle.cs" />
     <Compile Include="Math\Geometry\LinePrimitive.cs" />
     <Compile Include="Math\Geometry\LineRectangle.cs" />
@@ -177,6 +162,10 @@
     <EmbeddedResource Include="Libraries\bmfont.exe" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\GumCommon\GumCommon.csproj">
+      <Project>{6f20da16-fdc2-485e-b6ed-433ee2a97e59}</Project>
+      <Name>GumCommon</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj">
       <Project>{cae35f4b-8a10-4a85-b2fb-7f4a8d7c7138}</Project>
       <Name>ToolsUtilitiesStandard</Name>
