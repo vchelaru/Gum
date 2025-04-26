@@ -7,7 +7,7 @@ using Gum.Mvvm;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using StateAnimationPlugin.Managers;
-using StateAnimationPlugin.SaveClasses;
+using Gum.StateAnimation.SaveClasses;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -289,7 +289,7 @@ public class AnimationViewModel : ViewModel
         {
             if(SelectedState.Self.SelectedElement != null)
             {
-                RefreshCombinedStates(SelectedState.Self.SelectedElement);
+                RefreshCumulativeStates(SelectedState.Self.SelectedElement);
             }
         }
 
@@ -343,7 +343,7 @@ public class AnimationViewModel : ViewModel
     /// the keyframes so that when animations are played they can properly interpolate.
     /// 
     /// </summary>
-    public void RefreshCombinedStates(ElementSave element, bool useDefaultAsStarting = true)
+    public void RefreshCumulativeStates(ElementSave element, bool useDefaultAsStarting = true)
     {
         StateSave previous = null;
 
@@ -392,14 +392,14 @@ public class AnimationViewModel : ViewModel
             if (instance == null)
             {
                 // Null check in case the referenced instance was removed
-                subAnimation.SubAnimationViewModel?.RefreshCombinedStates(element, false);
+                subAnimation.SubAnimationViewModel?.RefreshCumulativeStates(element, false);
             }
             else
             {
                 var instanceElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance);
                 if (instanceElement != null)
                 {
-                    subAnimation.SubAnimationViewModel.RefreshCombinedStates(instanceElement, false);
+                    subAnimation.SubAnimationViewModel.RefreshCumulativeStates(instanceElement, false);
                 }
             }
         }
@@ -490,7 +490,7 @@ public class AnimationViewModel : ViewModel
             {
                 if (element != null)
                 {
-                    RefreshCombinedStates(element);
+                    RefreshCumulativeStates(element);
                 }
             }
 
@@ -505,7 +505,7 @@ public class AnimationViewModel : ViewModel
             {
                 if (element != null)
                 {
-                    RefreshCombinedStates(element);
+                    RefreshCumulativeStates(element);
                 }
             }
             SetCustomState(stateVmBefore.CachedCumulativeState);
@@ -519,7 +519,7 @@ public class AnimationViewModel : ViewModel
             {
                 if (element != null)
                 {
-                    RefreshCombinedStates(element);
+                    RefreshCumulativeStates(element);
                 }
             }
             double linearRatio = GetLinearRatio(animationTime, stateVmBefore, stateVmAfter);

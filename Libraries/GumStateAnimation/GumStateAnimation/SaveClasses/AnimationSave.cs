@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace StateAnimationPlugin.SaveClasses;
+namespace Gum.StateAnimation.SaveClasses;
 
+/// <summary>
+/// A serializable animation which contains a list of States (keyframes), Animations (sub-animations), and Events (timed named events)
+/// </summary>
 public class AnimationSave
 {
     public bool Loops { get; set; }

@@ -448,7 +448,7 @@ namespace StateAnimationPlugin.Views
         {
             if (this.ViewModel != null && SelectedState.Self.SelectedElement != null && this.ViewModel.SelectedAnimation != null)
             {
-                this.ViewModel.SelectedAnimation.RefreshCombinedStates(SelectedState.Self.SelectedElement);
+                this.ViewModel.SelectedAnimation.RefreshCumulativeStates(SelectedState.Self.SelectedElement);
             }
 
             ViewModel.TogglePlayStop();

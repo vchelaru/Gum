@@ -1,7 +1,7 @@
 ﻿using Gum.DataTypes;
 using Gum.ToolStates;
 using StateAnimationPlugin.Managers;
-using StateAnimationPlugin.SaveClasses;
+using Gum.StateAnimation.SaveClasses;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -93,7 +93,7 @@ public class ElementAnimationsViewModel : ViewModel
                     {
                         return;
                     }
-                    SelectedAnimation.RefreshCombinedStates(selectedElement);
+                    SelectedAnimation.RefreshCumulativeStates(selectedElement);
 
                     if(SelectedAnimation.SelectedKeyframe != null)
                     {

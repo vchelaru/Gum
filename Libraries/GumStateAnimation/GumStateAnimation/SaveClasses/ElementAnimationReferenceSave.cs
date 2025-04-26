@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace StateAnimationPlugin.SaveClasses;
+namespace Gum.StateAnimation.SaveClasses;
 
 public class ElementAnimationReferenceSave
 {

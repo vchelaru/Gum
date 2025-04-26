@@ -3,7 +3,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Mvvm;
 using StateAnimationPlugin.Managers;
-using StateAnimationPlugin.SaveClasses;
+using Gum.StateAnimation.SaveClasses;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using Gum.StateAnimation.Runtime;
 
 namespace StateAnimationPlugin.ViewModels;
 
@@ -192,11 +193,7 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
         }
     }
 
-    public StateSave CachedCumulativeState
-    {
-        get;
-        set;
-    }
+    public KeyframeRuntime KeyframeRuntime { get; set; }
 
     public System.Windows.Visibility InterpolationElementVisibility
     {
@@ -252,6 +249,23 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
 
     }
 
+    public StateSave CachedCumulativeState
+    {
+        get => KeyframeRuntime?.CachedCumulativeState;
+        set
+        {
+            if(value != null && KeyframeRuntime == null)
+            {
+                KeyframeRuntime = new KeyframeRuntime();
+            }
+
+            if(KeyframeRuntime != null)
+            {
+                KeyframeRuntime.CachedCumulativeState = value;
+            }
+        }
+    }
+
     public AnimatedKeyframeViewModel Clone()
     {
         var newInstance = new AnimatedKeyframeViewModel();
@@ -271,7 +285,8 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
         newInstance.HasValidState = HasValidState;
 
         // do we assign this?
-        newInstance.CachedCumulativeState = CachedCumulativeState;
+        newInstance.KeyframeRuntime = new KeyframeRuntime();
+        newInstance.KeyframeRuntime.CachedCumulativeState = KeyframeRuntime?.CachedCumulativeState;
 
         return newInstance;
     }

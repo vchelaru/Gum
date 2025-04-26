@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
-namespace StateAnimationPlugin.SaveClasses;
+namespace Gum.StateAnimation.SaveClasses;
 
 public class AnimationReferenceSave
 {
