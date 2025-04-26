@@ -26,12 +26,15 @@ namespace Gum.PropertyGridHelpers
     public class SetVariableLogic : Singleton<SetVariableLogic>
     {
         private static readonly VariableReferenceLogic _variableReferenceLogic;
+        private static readonly FontManager _fontManager;
 
         static SetVariableLogic()
         {
 
             _variableReferenceLogic = new VariableReferenceLogic(
                 Builder.Get<GuiCommands>());
+
+            _fontManager = Builder.Get<FontManager>();
         }
 
         public bool AttemptToPersistPositionsOnUnitChanges { get; set; } = true;
@@ -330,7 +333,7 @@ namespace Gum.PropertyGridHelpers
                     }
 
 
-                    FontManager.Self.ReactToFontValueSet(instance, GumState.Self.ProjectState.GumProjectSave, stateSave, forcedValues);
+                    _fontManager.ReactToFontValueSet(instance, GumState.Self.ProjectState.GumProjectSave, stateSave, forcedValues);
                 }
             }
 

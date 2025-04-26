@@ -241,7 +241,7 @@ namespace Gum.Commands
 
         public void PrintOutput(string output)
         {
-            OutputManager.Self.AddOutput(output);
+            DoOnUiThread(() => OutputManager.Self.AddOutput(output));
         }
 
         #region Show/Hide Tools
@@ -312,6 +312,7 @@ namespace Gum.Commands
 
         #endregion
 
+        #region Show Add XXX Widows
         public void ShowAddVariableWindow()
         {
             var canShow = SelectedState.Self.SelectedBehavior != null || SelectedState.Self.SelectedElement != null;
@@ -492,6 +493,16 @@ namespace Gum.Commands
                     GumCommands.Self.GuiCommands.RefreshElementTreeView();
                 }
             }
+        }
+
+        #endregion
+
+        public Spinner ShowSpinner()
+        {
+            var spinner = new Gum.Controls.Spinner();
+            spinner.Show();
+
+            return spinner;
         }
 
         public void ShowRenameFolderWindow(TreeNode node)

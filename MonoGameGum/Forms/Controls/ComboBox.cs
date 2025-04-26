@@ -162,7 +162,7 @@ public class ComboBox : FrameworkElement, IInputReceiver
         }
     }
 
-
+    bool _hadFocusOnListBoxOpened;
 
     #endregion
 
@@ -295,6 +295,7 @@ public class ComboBox : FrameworkElement, IInputReceiver
 
     private void ShowListBoxInstance()
     {
+        _hadFocusOnListBoxOpened = IsFocused;
         listBox.IsVisible = true;
 
         // Adding this to the Visual will force a layout....
@@ -319,6 +320,8 @@ public class ComboBox : FrameworkElement, IInputReceiver
         this.Visual.Children.Remove(listBox.Visual);
         listBox.X = x;
         listBox.Y = y;
+        listBox.Visual.WidthUnits = DimensionUnitType.Absolute;
+        listBox.Visual.HeightUnits = DimensionUnitType.Absolute;
         listBox.Width = width;
         listBox.Height = height;
         ListBox.ShowPopupListBox(listBox, this.Visual);
@@ -393,6 +396,11 @@ public class ComboBox : FrameworkElement, IInputReceiver
 #endif
 
             UpdateState();
+        }
+
+        if(_hadFocusOnListBoxOpened)
+        {
+            IsFocused = true;
         }
     }
 
@@ -558,12 +566,7 @@ public class ComboBox : FrameworkElement, IInputReceiver
 
             if (gamepad.ButtonPushed(Buttons.A))
             {
-                IsDropDownOpen = IsDropDownOpen = true;
-
-                if(SelectedIndex > -1 && SelectedIndex < this.Items.Count)
-                {
-                    this.listBox.ListBoxItems[SelectedIndex].IsFocused = true;
-                }
+                OpenAndFocusListBox();
             }
 
             void RaiseIfPushedAndEnabled(Buttons button)
@@ -579,6 +582,20 @@ public class ComboBox : FrameworkElement, IInputReceiver
             RaiseIfPushedAndEnabled(Buttons.Y);
             RaiseIfPushedAndEnabled(Buttons.Start);
             RaiseIfPushedAndEnabled(Buttons.Back);
+        }
+
+        void OpenAndFocusListBox()
+        {
+            IsDropDownOpen = true;
+
+            this.listBox.IsFocused = true;
+            this.listBox.DoListItemsHaveFocus = true;
+            
+            if (SelectedIndex > -1 && SelectedIndex < this.Items.Count)
+            {
+                this.listBox.ListBoxItems[SelectedIndex].IsFocused = true;
+            }
+            
         }
 #if FRB
 
@@ -611,6 +628,30 @@ public class ComboBox : FrameworkElement, IInputReceiver
             }
         }
 #endif
+#if MONOGAME && !FRB
+
+        foreach (var keyboard in KeyboardsForUiControl)
+        {
+            var mgKeyboard = keyboard as MonoGameGum.Input.Keyboard;
+            if (mgKeyboard?.KeyPushed(Keys.Enter) == true)
+            {
+                this.HandleClick(this, new InputEventArgs() { InputDevice = keyboard });
+
+                OpenAndFocusListBox();
+                UpdateState();
+            }
+
+            if (mgKeyboard?.KeyReleased(Keys.Enter) == true)
+            {
+                UpdateState();
+            }
+
+        }
+
+        base.HandleKeyboardFocusUpdate();
+#endif
+
+
     }
 
     public void OnGainFocus()
@@ -639,7 +680,17 @@ public class ComboBox : FrameworkElement, IInputReceiver
 #if !FRB
     public void DoKeyboardAction(IInputReceiverKeyboard keyboard)
     {
-
+        var asKeyboard = keyboard as MonoGameGum.Input.Keyboard;
+        if (asKeyboard != null)
+        {
+            foreach (var key in asKeyboard.KeysTyped)
+            {
+                HandleKeyDown(key,
+                    keyboard.IsShiftDown,
+                    keyboard.IsAltDown,
+                    keyboard.IsCtrlDown);
+            }
+        }
     }
 #endif
 

@@ -37,7 +37,7 @@ public class Panel : FrameworkElement
         
         IsVisible = true;
 
-        this.Visual.Dock(Dock.SizeToChildren);
+        this.Dock(global::Gum.Wireframe.Dock.SizeToChildren);
 
     }
 

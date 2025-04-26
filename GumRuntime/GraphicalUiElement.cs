@@ -66,10 +66,10 @@ public enum Dock
 /// The base object for all Gum runtime objects. It contains functionality for
 /// setting variables, states, and performing layout. The GraphicalUiElement can
 /// wrap an underlying rendering object.
+/// GraphicalUiElements are also considered "Visuals" for Forms objects such as Button and TextBox.
 /// </summary>
 public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyPropertyChanged
 {
-
     #region Enums/Internal Classes
 
     enum ChildType
@@ -113,6 +113,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         set => isFontDirty = value;
     }
 
+    /// <summary>
+    /// The total number of layout calls that have been performed since the application has started running.
+    /// This value can be used as a rough indication of the layout cost and to measure whether efforts to reduce
+    /// layout calls have been effective.
+    /// </summary>
     public static int UpdateLayoutCallCount;
     public static int ChildrenUpdatingParentLayoutCalls;
 
@@ -671,7 +676,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     float stackSpacing;
     /// <summary>
-    /// The number of pixels spacing between each child if this is has a ChildrenLayout of 
+    /// The number of pixels spacing between each child if this has a ChildrenLayout of 
     /// TopToBottomStack or LeftToRightStack.
     /// </summary>
     public float StackSpacing
@@ -691,6 +696,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     }
 
     bool useFixedStackChildrenSize;
+    /// <summary>
+    /// Whether to use the same spacing for all children. If true then the size of the first element is used as the height for all other children. This option
+    /// is primraily used for performance reasons as it can make layouts for large collections of stacked children faster.
+    /// </summary>
     public bool UseFixedStackChildrenSize
     {
         get => useFixedStackChildrenSize;
@@ -1793,7 +1802,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             if (hasChildDependency && childrenUpdateDepth > 0)
             {
                 // This causes a double-update of children. For list boxes, this can be expensive.
-                // We can special-case this IF
+                // We can special-case this IF all are true:
                 // 1. This depends on children
                 // 2. This stacks in the same axis as the children
                 // 3. This is using FixedStackSpacing
@@ -5608,6 +5617,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
         return null;
     }
+
 
     /// <summary>
     /// Performs a recursive search for graphical UI elements, where eacn name in the parameters

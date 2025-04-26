@@ -60,12 +60,14 @@ public class MainCodeOutputPlugin : PluginBase
 
         _codeGenerationService = new CodeGenerationService();
 
-        _selectedState = SelectedState.Self;
 
         _renameService = new RenameService();
 
+        _selectedState = Builder.Get<ISelectedState>();
         _localizationManager = Builder.Get<LocalizationManager>();
 
+        // The methos in CodeGenerator need to be changed to not be static then we can get rid
+        // of this:
         CodeGenerator.LocalizationManager = _localizationManager;
     }
 

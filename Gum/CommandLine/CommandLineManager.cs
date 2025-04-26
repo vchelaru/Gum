@@ -1,13 +1,16 @@
 ﻿using Gum.DataTypes;
 using Gum.Managers;
+using Gum.Services;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using ToolsUtilities;
 
 namespace Gum.CommandLine
 {
     public class CommandLineManager : Singleton<CommandLineManager>
     {
+        private readonly FontManager _fontManager;
         #region Fields/Properties
 
         public string GlueProjectToLoad
@@ -26,7 +29,12 @@ namespace Gum.CommandLine
 
         #endregion
 
-        public void ReadCommandLine()
+        public CommandLineManager()
+        {
+            _fontManager = Builder.Get<FontManager>();
+        }
+
+        public async Task ReadCommandLine()
         {
             string[] commandLineArgs = Environment.GetCommandLineArgs();
             GumCommands.Self.GuiCommands.PrintOutput(commandLineArgs.Length + " command line argument(s)...");
@@ -41,7 +49,7 @@ namespace Gum.CommandLine
                 {
                     if(arg?.ToLowerInvariant() == "--rebuildfonts")
                     {
-                        HandleRebuildFontCommand(commandLineArgs, i);
+                        await HandleRebuildFontCommand(commandLineArgs, i);
                         ShouldExitImmediately = true;
                         break;
                     }
@@ -72,7 +80,7 @@ namespace Gum.CommandLine
             }
         }
 
-        private void HandleRebuildFontCommand(string[] commandLineArgs, int index)
+        private async Task HandleRebuildFontCommand(string[] commandLineArgs, int index)
         {
             // param 1 should be the .gumx
 
@@ -88,7 +96,7 @@ namespace Gum.CommandLine
             GumCommands.Self.FileCommands.LoadProject(gumxFile);
 
             // 3.
-            FontManager.Self.CreateAllMissingFontFiles(ProjectManager.Self.GumProjectSave);
+            await _fontManager.CreateAllMissingFontFiles(ProjectManager.Self.GumProjectSave);
 
             // 4.
             GumCommands.Self.FileCommands.Exit();

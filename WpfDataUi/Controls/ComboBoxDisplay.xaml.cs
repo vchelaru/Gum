@@ -428,6 +428,15 @@ namespace WpfDataUi.Controls
 
         private void HandleChange()
         {
+            // April 23, 2025 - I would like
+            // to detect if this was assigned
+            // by explicitly selecting an item in
+            // the dropdown, or if it's a set while
+            // searching through items which would be
+            // an SetPropertyCommitType.Intermediate. However
+            // as soon as an item is selected, the textbox is
+            // focused. This is preventing us from fixing this
+            // problem: https://github.com/vchelaru/Gum/issues/676.
             this.TrySetValueOnInstance();
 
             SyncForegroundWithState();

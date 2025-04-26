@@ -172,9 +172,9 @@ namespace Gum
             }
         }
 
-        private void MainWindow_Load(object sender, EventArgs e)
+        private async void MainWindow_Load(object sender, EventArgs e)
         {
-            ProjectManager.Self.Initialize();
+            await ProjectManager.Self.Initialize();
 
             if(CommandLine.CommandLineManager.Self.ShouldExitImmediately == false)
             {

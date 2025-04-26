@@ -35,6 +35,7 @@ public class Builder
         builder.Services.AddSingleton(typeof(NameVerifier), NameVerifier.Self);
         builder.Services.AddSingleton(typeof(RenameLogic));
         builder.Services.AddSingleton(typeof(LocalizationManager));
+        builder.Services.AddSingleton(typeof(FontManager));
         builder.Services.AddSingleton<IEditVariableService, EditVariableService>();
         builder.Services.AddSingleton<IExposeVariableService, ExposeVariableService>();
         builder.Services.AddSingleton<IDeleteVariableService, DeleteVariableService>();
