@@ -113,7 +113,6 @@
     <Compile Include="Graphics\ImageData.cs" />
     <Compile Include="Graphics\ISetClipsChildren.cs" />
     <Compile Include="Graphics\ITexturable.cs" />
-    <Compile Include="Graphics\ITextureCoordinate.cs" />
     <Compile Include="Graphics\NineSlice.cs" />
     <Compile Include="Graphics\Renderer.cs" />
     <Compile Include="Graphics\RendererSettings.cs" />

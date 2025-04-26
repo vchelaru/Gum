@@ -365,6 +365,8 @@
 		<PackageReference Include="System.Management" Version="9.0.3" />
 	</ItemGroup>
 	<ItemGroup>
+		<Compile Remove="DataTypes\BehaviorSaveExtensionMethods.cs" />
+		<Compile Remove="DataTypes\ComponentSaveExtensionMethods.cs" />
 		<Compile Remove="DataTypes\ElementSaveExtensionMethods.cs" />
 		<Compile Remove="DataTypes\GumProjectSaveExtensionMethods.cs" />
 		<Compile Remove="DataTypes\InstanceSaveExtensionMethods.cs" />
@@ -431,6 +433,7 @@
 		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\VariableGrid\VariableRemoveButton.g.cs" />
 		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\VariableGrid\VariableRemoveButton.g.i.cs" />
 		<Compile Remove="Plugins\InternalPlugins\AlignmentButtons\AlignmentControl.xaml.cs" />
+		<Compile Remove="Wireframe\ElementWithState.cs" />
 		<Page Remove="Plugins\InternalPlugins\AlignmentButtons\AlignmentControl.xaml" />
 	</ItemGroup>
 </Project>
