@@ -192,7 +192,7 @@ namespace Gum.Plugins.BaseClasses
 
         public abstract string FriendlyName { get; }
 
-        public abstract Version Version { get; }
+        public virtual Version Version => new Version(1, 0);
 
         public abstract void StartUp();
         public abstract bool ShutDown(PluginShutDownReason shutDownReason);

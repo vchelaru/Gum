@@ -19,6 +19,7 @@ using System.Reflection;
 using System.ComponentModel;
 using System.Management.Instrumentation;
 using Gum.ToolCommands;
+using System.Threading.Tasks;
 
 namespace Gum
 {
@@ -84,10 +85,10 @@ namespace Gum
             GeneralSettingsFile = GeneralSettingsFile.LoadOrCreateNew();
         }
 
-        public void Initialize()
+        public async Task Initialize()
         {
 
-            CommandLineManager.Self.ReadCommandLine();
+            await CommandLineManager.Self.ReadCommandLine();
 
             if (!CommandLineManager.Self.ShouldExitImmediately)
             {

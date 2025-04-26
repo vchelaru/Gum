@@ -224,7 +224,8 @@ public class CodeGenerator
     static CodeGenerationFileLocationsService _codeGenerationFileLocationsService;
 
     #endregion
-    // All the methods here need to not be static, then we can get rid of this and make it a proper constructor with DI
+    // All the methods here need be changed to instance first (not be static),
+    // then we can get rid of this and make it a proper constructor with DI
     static CodeGenerator()
     {
         _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService();

@@ -14,242 +14,249 @@ using ToolsUtilities;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
 using Matrix = System.Numerics.Matrix4x4;
+using Gum.Services;
 
-namespace Gum.Plugins.PropertiesWindowPlugin
+namespace Gum.Plugins.PropertiesWindowPlugin;
+
+/// <summary>
+/// Plugin for displaying project properties
+/// </summary>
+[Export(typeof(PluginBase))]
+class MainPropertiesWindowPlugin : InternalPlugin
 {
-    /// <summary>
-    /// Plugin for displaying project properties
-    /// </summary>
-    [Export(typeof(PluginBase))]
-    class MainPropertiesWindowPlugin : InternalPlugin
+    #region Fields/Properties
+
+    ProjectPropertiesControl control;
+
+    ProjectPropertiesViewModel viewModel;
+    [Import("LocalizationManager")]
+    public LocalizationManager LocalizationManager
     {
-        #region Fields/Properties
+        get;
+        set;
+    }
+    #endregion
 
-        ProjectPropertiesControl control;
+    FontManager _fontManager;
 
-        ProjectPropertiesViewModel viewModel;
-        [Import("LocalizationManager")]
-        public LocalizationManager LocalizationManager
+    public MainPropertiesWindowPlugin()
+    {
+        _fontManager = Builder.Get<FontManager>();
+    }
+
+    public override void StartUp()
+    {
+        this.AddMenuItem(new List<string> { "Edit", "Properties" }).Click += HandlePropertiesClicked;
+
+        viewModel = new PropertiesWindowPlugin.ProjectPropertiesViewModel();
+        viewModel.PropertyChanged += HandlePropertyChanged;
+
+        // todo - handle loading new Gum project when this window is shown - re-call BindTo
+        this.ProjectLoad += HandleProjectLoad;
+    }
+
+    private void HandleProjectLoad(GumProjectSave obj)
+    {
+        if (control != null && viewModel != null)
         {
-            get;
-            set;
+            viewModel.SetFrom(ProjectManager.Self.GeneralSettingsFile, ProjectState.Self.GumProjectSave);
+            control.ViewModel = null;
+            control.ViewModel = viewModel;
         }
-        #endregion
+    }
 
-        public override void StartUp()
+    private void HandlePropertiesClicked(object sender, EventArgs e)
+    {
+        try
         {
-            this.AddMenuItem(new List<string> { "Edit", "Properties" }).Click += HandlePropertiesClicked;
-
-            viewModel = new PropertiesWindowPlugin.ProjectPropertiesViewModel();
-            viewModel.PropertyChanged += HandlePropertyChanged;
-
-            // todo - handle loading new Gum project when this window is shown - re-call BindTo
-            this.ProjectLoad += HandleProjectLoad;
-        }
-
-        private void HandleProjectLoad(GumProjectSave obj)
-        {
-            if (control != null && viewModel != null)
+            if (control == null)
             {
-                viewModel.SetFrom(ProjectManager.Self.GeneralSettingsFile, ProjectState.Self.GumProjectSave);
-                control.ViewModel = null;
+                control = new ProjectPropertiesControl();
+                control.CloseClicked += HandleCloseClicked;
+            }
+
+            viewModel.SetFrom(ProjectManager.Self.GeneralSettingsFile, ProjectState.Self.GumProjectSave);
+            var wasShown = 
+                GumCommands.Self.GuiCommands.ShowTabForControl(control);
+
+            if(!wasShown)
+            {
+                var tab = GumCommands.Self.GuiCommands.AddControl(control, "Project Properties");
+                tab.CanClose = true;
                 control.ViewModel = viewModel;
+                GumCommands.Self.GuiCommands.ShowTabForControl(control);
             }
         }
-
-        private void HandlePropertiesClicked(object sender, EventArgs e)
+        catch (Exception ex)
         {
-            try
-            {
-                if (control == null)
-                {
-                    control = new ProjectPropertiesControl();
-                    control.CloseClicked += HandleCloseClicked;
-                }
-
-                viewModel.SetFrom(ProjectManager.Self.GeneralSettingsFile, ProjectState.Self.GumProjectSave);
-                var wasShown = 
-                    GumCommands.Self.GuiCommands.ShowTabForControl(control);
-
-                if(!wasShown)
-                {
-                    var tab = GumCommands.Self.GuiCommands.AddControl(control, "Project Properties");
-                    tab.CanClose = true;
-                    control.ViewModel = viewModel;
-                    GumCommands.Self.GuiCommands.ShowTabForControl(control);
-                }
-            }
-            catch (Exception ex)
-            {
-                GumCommands.Self.GuiCommands.PrintOutput($"Error showing project properties:\n{ex.ToString()}");
-            }
+            GumCommands.Self.GuiCommands.PrintOutput($"Error showing project properties:\n{ex.ToString()}");
         }
+    }
 
-        private void HandlePropertyChanged(object sender, PropertyChangedEventArgs e)
+    private async void HandlePropertyChanged(object sender, PropertyChangedEventArgs e)
+    {
+        ////////////////////Early Out//////////////////
+        if (viewModel.IsUpdatingFromModel)
         {
-            ////////////////////Early Out//////////////////
-            if (viewModel.IsUpdatingFromModel)
-            {
-                return;
-            }
-            ///////////////////End early Out////////////////
-            viewModel.ApplyToModelObjects();
+            return;
+        }
+        ///////////////////End early Out////////////////
+        viewModel.ApplyToModelObjects();
 
-            var shouldSaveAndRefresh = true;
-            var shouldReloadContent = false;
-            switch (e.PropertyName)
-            {
-                case nameof(viewModel.LocalizationFile):
+        var shouldSaveAndRefresh = true;
+        var shouldReloadContent = false;
+        switch (e.PropertyName)
+        {
+            case nameof(viewModel.LocalizationFile):
 
 
-                    if (!string.IsNullOrEmpty(viewModel.LocalizationFile) && FileManager.IsRelative(viewModel.LocalizationFile) == false)
+                if (!string.IsNullOrEmpty(viewModel.LocalizationFile) && FileManager.IsRelative(viewModel.LocalizationFile) == false)
+                {
+                    viewModel.LocalizationFile = FileManager.MakeRelative(viewModel.LocalizationFile,
+                        GumState.Self.ProjectState.ProjectDirectory, preserveCase:true);
+                    shouldSaveAndRefresh = false;
+                }
+                else
+                {
+                    GumCommands.Self.FileCommands.LoadLocalizationFile();
+
+                    WireframeObjectManager.Self.RefreshAll(forceLayout: true, forceReloadTextures: false);
+                }
+                break;
+            case nameof(viewModel.LanguageIndex):
+                LocalizationManager.CurrentLanguage = viewModel.LanguageIndex;
+                break;
+            case nameof(viewModel.ShowLocalization):
+                shouldSaveAndRefresh = true;
+                break;
+            case nameof(viewModel.FontRanges):
+                var isValid = BmfcSave.GetIfIsValidRange(viewModel.FontRanges);
+                var didFixChangeThings = false;
+                if (!isValid)
+                {
+                    var fixedRange = BmfcSave.TryFixRange(viewModel.FontRanges);
+                    if (fixedRange != viewModel.FontRanges)
                     {
-                        viewModel.LocalizationFile = FileManager.MakeRelative(viewModel.LocalizationFile,
-                            GumState.Self.ProjectState.ProjectDirectory, preserveCase:true);
-                        shouldSaveAndRefresh = false;
+                        // this will recursively call this property, so we'll use this bool to leave this method
+                        didFixChangeThings = true;
+                        viewModel.FontRanges = fixedRange;
+                    }
+                }
+
+                if (!didFixChangeThings)
+                {
+                    if (isValid == false)
+                    {
+                        GumCommands.Self.GuiCommands.ShowMessage("The entered Font Range is not valid.");
                     }
                     else
                     {
-                        GumCommands.Self.FileCommands.LoadLocalizationFile();
-
-                        WireframeObjectManager.Self.RefreshAll(forceLayout: true, forceReloadTextures: false);
-                    }
-                    break;
-                case nameof(viewModel.LanguageIndex):
-                    LocalizationManager.CurrentLanguage = viewModel.LanguageIndex;
-                    break;
-                case nameof(viewModel.ShowLocalization):
-                    shouldSaveAndRefresh = true;
-                    break;
-                case nameof(viewModel.FontRanges):
-                    var isValid = BmfcSave.GetIfIsValidRange(viewModel.FontRanges);
-                    var didFixChangeThings = false;
-                    if (!isValid)
-                    {
-                        var fixedRange = BmfcSave.TryFixRange(viewModel.FontRanges);
-                        if (fixedRange != viewModel.FontRanges)
+                        if (GumState.Self.ProjectState.GumProjectSave != null)
                         {
-                            // this will recursively call this property, so we'll use this bool to leave this method
-                            didFixChangeThings = true;
-                            viewModel.FontRanges = fixedRange;
-                        }
-                    }
-
-                    if (!didFixChangeThings)
-                    {
-                        if (isValid == false)
-                        {
-                            GumCommands.Self.GuiCommands.ShowMessage("The entered Font Range is not valid.");
-                        }
-                        else
-                        {
-                            if (GumState.Self.ProjectState.GumProjectSave != null)
+                            var wasAbleToDelete = false;
+                            try
                             {
-                                var wasAbleToDelete = false;
-                                try
-                                {
-                                    FontManager.Self.DeleteFontCacheFolder();
-                                    wasAbleToDelete = true;
-                                }
-                                catch(System.IO.IOException exception)
-                                {
-                                    wasAbleToDelete = false;
-
-                                    var message =
-                                        "Attempted to delete font cache folder to re-create it with the new font range values " +
-                                        $"but was unable to do so:\n\n{exception}";
-                                    GumCommands.Self.GuiCommands.ShowMessage(message);
-                                }
-
-
-
-
-                                if(wasAbleToDelete)
-                                {
-                                    FontManager.Self.CreateAllMissingFontFiles(
-                                        ProjectState.Self.GumProjectSave);
-                                }
-
+                                _fontManager.DeleteFontCacheFolder();
+                                wasAbleToDelete = true;
                             }
-                            shouldSaveAndRefresh = true;
-                            shouldReloadContent = true;
+                            catch(System.IO.IOException exception)
+                            {
+                                wasAbleToDelete = false;
+
+                                var message =
+                                    "Attempted to delete font cache folder to re-create it with the new font range values " +
+                                    $"but was unable to do so:\n\n{exception}";
+                                GumCommands.Self.GuiCommands.ShowMessage(message);
+                            }
+
+
+
+
+                            if(wasAbleToDelete)
+                            {
+                                await _fontManager.CreateAllMissingFontFiles(
+                                    ProjectState.Self.GumProjectSave);
+                            }
+
                         }
+                        shouldSaveAndRefresh = true;
+                        shouldReloadContent = true;
                     }
-                    break;
-                case nameof(viewModel.GuideLineColor):
-                    GumCommands.Self.WireframeCommands.RefreshGuides();
-                    break;
-                case nameof(viewModel.SinglePixelTextureFile):
-                case nameof(viewModel.SinglePixelTextureTop):
-                case nameof(viewModel.SinglePixelTextureLeft):
-                case nameof(viewModel.SinglePixelTextureRight):
-                case nameof(viewModel.SinglePixelTextureBottom):
+                }
+                break;
+            case nameof(viewModel.GuideLineColor):
+                GumCommands.Self.WireframeCommands.RefreshGuides();
+                break;
+            case nameof(viewModel.SinglePixelTextureFile):
+            case nameof(viewModel.SinglePixelTextureTop):
+            case nameof(viewModel.SinglePixelTextureLeft):
+            case nameof(viewModel.SinglePixelTextureRight):
+            case nameof(viewModel.SinglePixelTextureBottom):
 
-                    if(!string.IsNullOrEmpty(viewModel.SinglePixelTextureFile) && FileManager.IsRelative(viewModel.SinglePixelTextureFile) == false)
-                    {
-                        // This will loop:
-                        viewModel.SinglePixelTextureFile = FileManager.MakeRelative(viewModel.SinglePixelTextureFile,
-                            GumState.Self.ProjectState.ProjectDirectory, preserveCase:true);
-                        shouldSaveAndRefresh = false;
-                    }
-                    else
-                    {
-                        RefreshSinglePixelTexture();
-                        WireframeObjectManager.Self.RefreshAll(forceLayout: true, forceReloadTextures: true);
-                    }
+                if(!string.IsNullOrEmpty(viewModel.SinglePixelTextureFile) && FileManager.IsRelative(viewModel.SinglePixelTextureFile) == false)
+                {
+                    // This will loop:
+                    viewModel.SinglePixelTextureFile = FileManager.MakeRelative(viewModel.SinglePixelTextureFile,
+                        GumState.Self.ProjectState.ProjectDirectory, preserveCase:true);
+                    shouldSaveAndRefresh = false;
+                }
+                else
+                {
+                    RefreshSinglePixelTexture();
+                    WireframeObjectManager.Self.RefreshAll(forceLayout: true, forceReloadTextures: true);
+                }
 
-                    break;
-            }
-
-            PluginManager.Self.ProjectPropertySet(e.PropertyName);
-
-            if (shouldSaveAndRefresh)
-            {
-                GumCommands.Self.WireframeCommands.Refresh(forceLayout: true, forceReloadContent: shouldReloadContent);
-
-                GumCommands.Self.FileCommands.TryAutoSaveProject();
-            }
+                break;
         }
 
-        private void RefreshSinglePixelTexture()
+        PluginManager.Self.ProjectPropertySet(e.PropertyName);
+
+        if (shouldSaveAndRefresh)
         {
-            var hasCustomSinglePixelTexture =
-                viewModel.SinglePixelTextureFile != null &&
-                viewModel.SinglePixelTextureTop != null &&
-                viewModel.SinglePixelTextureLeft != null &&
-                viewModel.SinglePixelTextureRight != null &&
-                viewModel.SinglePixelTextureBottom != null;
+            GumCommands.Self.WireframeCommands.Refresh(forceLayout: true, forceReloadContent: shouldReloadContent);
 
-            var renderer = global::RenderingLibrary.Graphics.Renderer.Self;
-
-            if(hasCustomSinglePixelTexture)
-            {
-                var loaderManager =
-                    global::RenderingLibrary.Content.LoaderManager.Self;
-
-                renderer.SinglePixelTexture = loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(viewModel.SinglePixelTextureFile);
-
-                renderer.SinglePixelSourceRectangle = new Rectangle(
-                    viewModel.SinglePixelTextureLeft.Value,
-                    viewModel.SinglePixelTextureTop.Value,
-                    width: viewModel.SinglePixelTextureRight.Value - viewModel.SinglePixelTextureLeft.Value,
-                    height: viewModel.SinglePixelTextureBottom.Value - viewModel.SinglePixelTextureTop.Value);
-            }
-            else
-            {
-                var texture = new Texture2D(renderer.GraphicsDevice, 1, 1, false, SurfaceFormat.Color);
-                Microsoft.Xna.Framework.Color[] pixels = new Microsoft.Xna.Framework.Color[1];
-                pixels[0] = Microsoft.Xna.Framework.Color.White;
-                texture.SetData(pixels);
-
-                renderer.SinglePixelTexture = texture;
-                renderer.SinglePixelSourceRectangle = null;
-            }
+            GumCommands.Self.FileCommands.TryAutoSaveProject();
         }
+    }
 
-        private void HandleCloseClicked(object sender, EventArgs e)
+    private void RefreshSinglePixelTexture()
+    {
+        var hasCustomSinglePixelTexture =
+            viewModel.SinglePixelTextureFile != null &&
+            viewModel.SinglePixelTextureTop != null &&
+            viewModel.SinglePixelTextureLeft != null &&
+            viewModel.SinglePixelTextureRight != null &&
+            viewModel.SinglePixelTextureBottom != null;
+
+        var renderer = global::RenderingLibrary.Graphics.Renderer.Self;
+
+        if(hasCustomSinglePixelTexture)
         {
-            GumCommands.Self.GuiCommands.RemoveControl(control);
+            var loaderManager =
+                global::RenderingLibrary.Content.LoaderManager.Self;
+
+            renderer.SinglePixelTexture = loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(viewModel.SinglePixelTextureFile);
+
+            renderer.SinglePixelSourceRectangle = new Rectangle(
+                viewModel.SinglePixelTextureLeft.Value,
+                viewModel.SinglePixelTextureTop.Value,
+                width: viewModel.SinglePixelTextureRight.Value - viewModel.SinglePixelTextureLeft.Value,
+                height: viewModel.SinglePixelTextureBottom.Value - viewModel.SinglePixelTextureTop.Value);
         }
+        else
+        {
+            var texture = new Texture2D(renderer.GraphicsDevice, 1, 1, false, SurfaceFormat.Color);
+            Microsoft.Xna.Framework.Color[] pixels = new Microsoft.Xna.Framework.Color[1];
+            pixels[0] = Microsoft.Xna.Framework.Color.White;
+            texture.SetData(pixels);
+
+            renderer.SinglePixelTexture = texture;
+            renderer.SinglePixelSourceRectangle = null;
+        }
+    }
+
+    private void HandleCloseClicked(object sender, EventArgs e)
+    {
+        GumCommands.Self.GuiCommands.RemoveControl(control);
     }
 }
