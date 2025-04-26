@@ -103,6 +103,10 @@ namespace Gum
             StandardElementsManager.Self.CustomGetDefaultState =
                 PluginManager.Self.GetDefaultStateFor;
 
+            ElementSaveExtensionMethods.VariableChangedThroughReference +=
+                Gum.Plugins.PluginManager.Self.VariableSet;
+
+
             StandardElementsManagerGumTool.Self.Initialize();
 
             VariableSaveExtensionMethods.CustomFixEnumerations = VariableSaveExtensionMethodsGumTool.FixEnumerationsWithReflection;

@@ -107,8 +107,6 @@
     <Compile Include="Graphics\AtlasedTexture.cs" />
     <Compile Include="Graphics\BitmapCharacterInfo.cs" />
     <Compile Include="Graphics\Fonts\BitmapFont.cs" />
-    <Compile Include="Graphics\Fonts\BmfcSave.cs" />
-    <Compile Include="Graphics\GradientType.cs" />
     <Compile Include="Graphics\IAnimatable.cs" />
     <Compile Include="Graphics\IAnimation.cs" />
     <Compile Include="Graphics\IAspectRatio.cs" />
@@ -117,7 +115,6 @@
     <Compile Include="Graphics\ITexturable.cs" />
     <Compile Include="Graphics\ITextureCoordinate.cs" />
     <Compile Include="Graphics\NineSlice.cs" />
-    <Compile Include="Graphics\NineSliceExtensions.cs" />
     <Compile Include="Graphics\Renderer.cs" />
     <Compile Include="Graphics\RendererSettings.cs" />
     <Compile Include="Graphics\SortableLayer.cs" />
@@ -139,7 +136,6 @@
     <Compile Include="Math\Geometry\LinePrimitive.cs" />
     <Compile Include="Math\Geometry\LineRectangle.cs" />
     <Compile Include="Math\Geometry\ShapeManager.cs" />
-    <Compile Include="Math\MathFunctions.cs" />
     <Compile Include="Packing\RectangleNode.cs" />
     <Compile Include="Packing\RectangleTree.cs" />
     <Compile Include="Packing\TextureAtlas.cs" />

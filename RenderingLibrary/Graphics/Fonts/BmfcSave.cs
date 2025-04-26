@@ -326,7 +326,7 @@ public class BmfcSave
         return didCreate;
     }
 
-
+    // todo - this needs to move to Gum Tool and not GumCommon!!
     public async Task<bool> CreateBitmapFontFilesIfNecessaryAsync(string fileName, bool force = false, bool forceMonoSpacedNumber = false)
     {
         string resourceName = "RenderingLibrary.Libraries.bmfont.exe";

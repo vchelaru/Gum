@@ -78,12 +78,6 @@
 		<Compile Include="..\GumRuntime\BbCodeParser.cs">
 			<Link>Wireframe\BbCodeParser.cs</Link>
 		</Compile>
-		<Compile Include="..\GumRuntime\ElementSaveExtensions.GumRuntime.cs">
-			<Link>Wireframe\ElementSaveExtensions.GumRuntime.cs</Link>
-		</Compile>
-		<Compile Include="..\GumRuntime\InstanceSaveExtensionMethods.GumRuntime.cs">
-			<Link>Wireframe\InstanceSaveExtensionMethods.GumRuntime.cs</Link>
-		</Compile>
 		<Compile Include="..\MonoGameGum\Localization\ILocalizationService.cs">
 			<Link>Managers\ILocalizationService.cs</Link>
 		</Compile>
@@ -371,7 +365,13 @@
 		<PackageReference Include="System.Management" Version="9.0.3" />
 	</ItemGroup>
 	<ItemGroup>
+		<Compile Remove="DataTypes\ElementSaveExtensionMethods.cs" />
+		<Compile Remove="DataTypes\GumProjectSaveExtensionMethods.cs" />
+		<Compile Remove="DataTypes\InstanceSaveExtensionMethods.cs" />
+		<Compile Remove="DataTypes\StateSaveExtensionMethods.cs" />
+		<Compile Remove="DataTypes\VariableSaveExtensionMethods.cs" />
 		<Compile Remove="Managers\ObjectFinder.cs" />
+		<Compile Remove="Managers\StandardElementsManager.cs" />
 		<Compile Remove="Mvvm\ViewModel.cs" />
 		<Compile Remove="objNetFramework\x86\Debug\.NETFramework,Version=v4.7.2.AssemblyAttributes.cs" />
 		<Compile Remove="objNetFramework\x86\Debug\Controls\ColorDisplay.g.cs" />

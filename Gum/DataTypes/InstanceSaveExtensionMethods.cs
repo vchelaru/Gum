@@ -5,10 +5,6 @@ using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Wireframe;
 
-//#if GUM
-//using Gum.ToolStates;
-//#endif
-
 namespace Gum.DataTypes
 {
     class InstanceStatePair
@@ -159,13 +155,6 @@ namespace Gum.DataTypes
             // October 19, 2023
             // I don't know if this is actually needed anymore. I'm commenting it out so we can move this to GumCommon
             // and my simple tests seem to indicate this is not needed.
-//#if GUM
-//            if (SelectedState.Self.SelectedElement != null)
-//            {
-//                statesToPullFrom = new List<StateSave> { SelectedState.Self.SelectedElement.DefaultState };
-//                defaultState = SelectedState.Self.SelectedElement.DefaultState;
-//            }
-//#endif
 
             if (elementStack.Count != 0)
             {
@@ -176,17 +165,6 @@ namespace Gum.DataTypes
                 statesToPullFrom = elementStack.Last().AllStates.ToList();
                 defaultState = elementStack.Last().Element.DefaultState;
             }
-
-
-//#if GUM
-//            if (elementStack.Count != 0 && elementStack.Last().Element == SelectedState.Self.SelectedElement &&
-//                SelectedState.Self.SelectedStateSave != null &&
-//                !forceDefault)
-//            {
-//                statesToPullFrom = new List<StateSave> { SelectedState.Self.SelectedStateSave };
-//            }
-//#endif
-
         }
 
         private static VariableSave TryGetVariableFromStatesOnInstance(InstanceSave instance, string variable, ElementSave instanceBase, IEnumerable<StateSave> statesToPullFrom)
