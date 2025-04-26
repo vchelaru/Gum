@@ -22,9 +22,12 @@ using System.Net;
 using System.IO;
 using MonoGameGum.Localization;
 using System.Security.Policy;
-using Gum.Services;
 using Gum.Managers;
 
+#if GUM
+using Gum.Services;
+
+#endif
 
 
 
