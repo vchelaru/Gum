@@ -44,6 +44,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <PackageReference Include="FlatRedBall.InterpolationCore" Version="2025.4.22.1" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
 	</ItemGroup>
 

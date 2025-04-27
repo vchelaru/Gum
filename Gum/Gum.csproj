@@ -97,7 +97,6 @@
 		<ProjectReference Include="..\GumCommon\GumCommon.csproj" />
 		<ProjectReference Include="..\GumDataTypes\GumDataTypesNet6.csproj" />
 		<ProjectReference Include="..\InputLibrary\InputLibrary.csproj" />
-		<ProjectReference Include="..\Libraries\GumStateAnimation\GumStateAnimation\GumStateAnimation.csproj" />
 		<ProjectReference Include="..\RenderingLibrary\RenderingLibrary.csproj" />
 		<ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
 		<ProjectReference Include="..\WpfDataUi\WpfDataUi.csproj" />
