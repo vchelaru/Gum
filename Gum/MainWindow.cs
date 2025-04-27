@@ -17,6 +17,7 @@ using Gum.Undo;
 using Gum.Logic;
 using Gum.Plugins.InternalPlugins.EditorTab;
 using Gum.Plugins.InternalPlugins.MenuStripPlugin;
+using GumRuntime;
 
 namespace Gum
 {
@@ -103,7 +104,7 @@ namespace Gum
             StandardElementsManager.Self.CustomGetDefaultState =
                 PluginManager.Self.GetDefaultStateFor;
 
-            ElementSaveExtensionMethods.VariableChangedThroughReference +=
+            ElementSaveExtensions.VariableChangedThroughReference +=
                 Gum.Plugins.PluginManager.Self.VariableSet;
 
 

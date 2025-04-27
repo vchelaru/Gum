@@ -297,7 +297,7 @@ public class ElementAnimationsViewModel : ViewModel
         }
     }
 
-    private void HandleDeleteKeyframe(object sender, RoutedEventArgs e)
+    private void HandleDeleteKeyframe(object sender, System.Windows.RoutedEventArgs e)
     {
         if(SelectedAnimation != null && SelectedAnimation.SelectedKeyframe != null)
         {
@@ -305,7 +305,7 @@ public class ElementAnimationsViewModel : ViewModel
         }
     }
 
-    private void HandleRenameAnimation(object sender, RoutedEventArgs e)
+    private void HandleRenameAnimation(object sender, System.Windows.RoutedEventArgs e)
     {
         TextInputWindow tiw = new TextInputWindow();
         tiw.Message = "Enter new animation name:";
@@ -332,7 +332,7 @@ public class ElementAnimationsViewModel : ViewModel
         }
     }
 
-    private void HandleSquashStretchTimes(object sender, RoutedEventArgs e)
+    private void HandleSquashStretchTimes(object sender, System.Windows.RoutedEventArgs e)
     {
         TextInputWindow tiw = new TextInputWindow();
         tiw.Message = "Set desired animation length (in seconds):";
@@ -374,7 +374,7 @@ public class ElementAnimationsViewModel : ViewModel
         }
     }
 
-    private void HandleDeleteAnimation(object sender, RoutedEventArgs e)
+    private void HandleDeleteAnimation(object sender, System.Windows.RoutedEventArgs e)
     {
         var result = MessageBox.Show("Delete animation " + SelectedAnimation.Name + "?", "Delete?", MessageBoxButton.YesNo);
 

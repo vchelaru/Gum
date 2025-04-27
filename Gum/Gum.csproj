@@ -248,6 +248,7 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<EmbeddedResource Include="Content\Cursors\AddCursor.cur" />
+		<EmbeddedResource Include="Libraries\bmfont.exe" />
 		<None Update="Content\Icons\HeightUnits\Ratio.png">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
@@ -370,6 +371,7 @@
 		<Compile Remove="DataTypes\ElementSaveExtensionMethods.cs" />
 		<Compile Remove="DataTypes\GumProjectSaveExtensionMethods.cs" />
 		<Compile Remove="DataTypes\InstanceSaveExtensionMethods.cs" />
+		<Compile Remove="DataTypes\RecursiveVariableFinder.cs" />
 		<Compile Remove="DataTypes\StateSaveExtensionMethods.cs" />
 		<Compile Remove="DataTypes\VariableSaveExtensionMethods.cs" />
 		<Compile Remove="Managers\ObjectFinder.cs" />
@@ -433,6 +435,7 @@
 		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\VariableGrid\VariableRemoveButton.g.cs" />
 		<Compile Remove="objNetFramework\x86\Debug\Plugins\InternalPlugins\VariableGrid\VariableRemoveButton.g.i.cs" />
 		<Compile Remove="Plugins\InternalPlugins\AlignmentButtons\AlignmentControl.xaml.cs" />
+		<Compile Remove="RenderingLibrary\Blend.cs" />
 		<Compile Remove="Wireframe\ElementWithState.cs" />
 		<Page Remove="Plugins\InternalPlugins\AlignmentButtons\AlignmentControl.xaml" />
 	</ItemGroup>

@@ -233,7 +233,8 @@ public class FontManager
     private async Task<bool> TryCreateFontFor(BmfcSave bmfcSave, bool force)
     {
         EstimateNeededDimensions(bmfcSave);
-        var didCreate = await bmfcSave.CreateBitmapFontFilesIfNecessaryAsync(bmfcSave.FontCacheFileName, force);
+        var assembly = GetType().Assembly;
+        var didCreate = await bmfcSave.CreateBitmapFontFilesIfNecessaryAsync(bmfcSave.FontCacheFileName, assembly, force);
         return didCreate;
     }
 

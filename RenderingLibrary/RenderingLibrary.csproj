@@ -98,7 +98,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Content\ContentLoader.cs" />
-    <Compile Include="Content\IContentLoader.cs" />
+    <Compile Include="Content\LoaderManagerExtensionMethods.cs" />
     <Compile Include="Graphics\AnimationFrame.cs" />
     <Compile Include="Graphics\Animation\AnimationChain.cs" />
     <Compile Include="Graphics\Animation\AnimationChainList.cs" />
@@ -109,7 +109,6 @@
     <Compile Include="Graphics\Fonts\BitmapFont.cs" />
     <Compile Include="Graphics\IAnimatable.cs" />
     <Compile Include="Graphics\IAnimation.cs" />
-    <Compile Include="Graphics\IAspectRatio.cs" />
     <Compile Include="Graphics\ImageData.cs" />
     <Compile Include="Graphics\ISetClipsChildren.cs" />
     <Compile Include="Graphics\ITexturable.cs" />

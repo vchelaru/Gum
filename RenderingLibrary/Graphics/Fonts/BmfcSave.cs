@@ -327,9 +327,11 @@ public class BmfcSave
     }
 
     // todo - this needs to move to Gum Tool and not GumCommon!!
-    public async Task<bool> CreateBitmapFontFilesIfNecessaryAsync(string fileName, bool force = false, bool forceMonoSpacedNumber = false)
+    public async Task<bool> CreateBitmapFontFilesIfNecessaryAsync(string fileName, Assembly assemblyContainingBitmapFontGenerator,
+        bool force = false, 
+        bool forceMonoSpacedNumber = false)
     {
-        string resourceName = "RenderingLibrary.Libraries.bmfont.exe";
+        string resourceName = "Gum.Libraries.bmfont.exe";
 
         string mainExecutablePath = FileManager.GetDirectory(Assembly.GetExecutingAssembly().Location);
 
@@ -339,7 +341,7 @@ public class BmfcSave
         if (!FileManager.FileExists(bmFontExeLocation))
         {
             FileManager.SaveEmbeddedResource(
-                Assembly.GetAssembly(typeof(BmfcSave)),
+                assemblyContainingBitmapFontGenerator,
                 resourceName,
                 bmFontExeLocation);
 
