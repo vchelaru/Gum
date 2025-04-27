@@ -300,7 +300,8 @@ namespace StateAnimationPlugin
                     mCurrentViewModel.SelectedAnimation.Keyframes.BubbleSort();
 
                     mCurrentViewModel.SelectedAnimation.Keyframes.Add(newVm);
-                    // Call this *before* setting SelectedKeyframe so the available states are assigned. Otherwise
+                    // Call this *before* setting SelectedKeyframe so the available
+                    // states are assigned. Otherwise
                     // StateName will be nulled out.
                     HandleAnimationKeyrameAdded(newVm);
                     mCurrentViewModel.SelectedAnimation.SelectedKeyframe = newVm;

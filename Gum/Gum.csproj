@@ -327,6 +327,9 @@
 		<PackageReference Include="DynamicExpresso.Core">
 			<Version>2.16.1</Version>
 		</PackageReference>
+
+			<PackageReference Include="FlatRedBall.InterpolationCore" Version="2025.4.22.1" />
+		
 		<PackageReference Include="Microsoft.AppCenter.Analytics">
 			<Version>4.2.0</Version>
 		</PackageReference>
