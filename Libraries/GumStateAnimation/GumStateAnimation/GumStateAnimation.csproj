@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\GumCommon\GumCommon.csproj" />
     <ProjectReference Include="..\..\..\GumDataTypes\GumDataTypesNet6.csproj" />
   </ItemGroup>
 
