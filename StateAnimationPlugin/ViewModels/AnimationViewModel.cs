@@ -546,7 +546,7 @@ public class AnimationViewModel : ViewModel
 
         if(stateToSet == null && defaultIfNull)
         {
-            stateToSet = element.DefaultState.Clone();
+            stateToSet = element?.DefaultState.Clone();
         }
         else if(stateToSet == null)
         {
