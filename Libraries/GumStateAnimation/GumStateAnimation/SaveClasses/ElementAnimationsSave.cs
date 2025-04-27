@@ -14,6 +14,11 @@ public class ElementAnimationsSave
         set;
     }
 
+    public string ElementName
+    {
+        get; set;
+    }
+
     public ElementAnimationsSave()
     {
         Animations = new List<AnimationSave>();

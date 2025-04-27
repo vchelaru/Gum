@@ -2,13 +2,16 @@
 using Gum.StateAnimation.SaveClasses;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 
 namespace Gum.StateAnimation.Runtime;
 internal class AnimationRuntimeExtensions
 {
-    public static AnimationRuntime ToRuntime(AnimationSave animationSave)
+    public static AnimationRuntime ToRuntime(AnimationSave animationSave, ElementSave element, 
+        List<ElementAnimationsSave> allAnimationsSaves
+        )
     {
         AnimationRuntime runtime = new AnimationRuntime();
         runtime.Name = animationSave.Name;
@@ -27,7 +30,7 @@ internal class AnimationRuntimeExtensions
 
         foreach (var animationReferenceSave in animationSave.Animations)
         {
-            runtime.Keyframes.Add(ToRuntime(animationReferenceSave));
+            runtime.Keyframes.Add(ToRuntime(animationReferenceSave, element, allAnimationsSaves));
         }
 
 
@@ -57,54 +60,54 @@ internal class AnimationRuntimeExtensions
         return keyframeRuntime;
     }
 
-    private static KeyframeRuntime ToRuntime(AnimationReferenceSave animationReferenceSave)
+    private static KeyframeRuntime ToRuntime(AnimationReferenceSave animationReferenceSave, 
+        ElementSave element, List<ElementAnimationsSave> elementAnimationsSaves)
     {
-        //AnimationSave animationSave = null;
-        //ElementSave subAnimationElement = null;
-        //ElementAnimationsSave subAnimationSiblings = null;
+        AnimationSave animationSave = null;
+        ElementSave subAnimationElement = null;
+        ElementAnimationsSave subAnimationSiblings = null;
 
-        //if (string.IsNullOrEmpty(animationReferenceSave.SourceObject))
-        //{
-        //    if (allAnimationSaves == null)
-        //    {
-        //        allAnimationSaves = AnimationCollectionViewModelManager.Self.GetElementAnimationsSave(element);
-        //    }
+        if (string.IsNullOrEmpty(animationReferenceSave.SourceObject))
+        {
+            var elementAnimationsSave = elementAnimationsSaves.FirstOrDefault(item => item.ElementName == element.Name);
 
-        //    animationSave = allAnimationSaves.Animations.FirstOrDefault(item => item.Name == animationReference.RootName);
-        //    subAnimationElement = element;
-        //    subAnimationSiblings = allAnimationSaves;
-        //}
-        //else
-        //{
-        //    var instance = element.Instances.FirstOrDefault(item => item.Name == animationReference.SourceObject);
+            animationSave = elementAnimationsSave.Animations.FirstOrDefault(item => item.Name == animationReferenceSave.RootName);
+            subAnimationElement = element;
+            subAnimationSiblings = elementAnimationsSave;
+        }
+        else
+        {
+            var instance = element.Instances.FirstOrDefault(item => item.Name == animationReferenceSave.SourceObject);
 
-        //    if (instance != null)
-        //    {
-        //        ElementSave instanceElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance);
-        //        subAnimationElement = instanceElement;
+            if (instance != null)
+            {
+                ElementSave instanceElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance);
+                subAnimationElement = instanceElement;
 
-        //        if (instanceElement != null)
-        //        {
-        //            var allAnimations = AnimationCollectionViewModelManager.Self.GetElementAnimationsSave(instanceElement);
+                if (instanceElement != null)
+                {
+                    var siblingAnimations = elementAnimationsSaves.FirstOrDefault(item => item.ElementName == instanceElement.Name);
 
-        //            animationSave = allAnimations.Animations.FirstOrDefault(item => item.Name == animationReference.RootName);
-        //            subAnimationElement = instanceElement;
-        //            subAnimationSiblings = allAnimations;
-        //        }
-        //    }
-        //}
-        //var newVm = AnimatedKeyframeViewModel.FromSave(animationReference, element);
+                    animationSave = siblingAnimations.Animations.FirstOrDefault(item => item.Name == animationReferenceSave.RootName);
+                    subAnimationElement = instanceElement;
+                    subAnimationSiblings = siblingAnimations;
+                }
+            }
+        }
 
-        //if (animationSave != null)
-        //{
-        //    newVm.SubAnimationViewModel = AnimationViewModel.FromSave(animationSave, subAnimationElement, subAnimationSiblings);
-        //}
+        KeyframeRuntime keyframeRuntime = new KeyframeRuntime();
+        keyframeRuntime.AnimationName = animationReferenceSave.Name;
+        keyframeRuntime.Time = animationReferenceSave.Time;
 
+        if (animationSave != null)
+        {
+            // can we track references and share them?
+            // I suppose for now we duplicate...
 
-        //newVm.HasValidState = animationReference != null;
+            keyframeRuntime.SubAnimation = 
+                ToRuntime(animationSave, subAnimationElement, elementAnimationsSaves);
+        }
 
-        //toReturn.Keyframes.Add(newVm);
+        return keyframeRuntime;
     }
-
-
 }
