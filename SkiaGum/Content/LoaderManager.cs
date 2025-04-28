@@ -103,6 +103,16 @@ namespace RenderingLibrary.Content
             mCachedDisposables.Add(name, disposable);
         }
 
+        public void DisposeAndClear()
+        {
+            foreach (var item in mCachedDisposables.Values)
+            {
+                item.Dispose();
+            }
+
+            mCachedDisposables.Clear();
+        }
+
         public void Dispose(string name)
         {
             if (mCachedDisposables.ContainsKey(name))

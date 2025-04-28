@@ -43,8 +43,20 @@ namespace Gum.Managers
                         variable.Category = "States and Visibility";
                         variable.CustomTypeConverter = new AvailableStatesConverter(null);
                     }
+                    else if(variable.Name == "Red" ||
+                        variable.Name == "Green" ||
+                        variable.Name == "Blue" ||
+                        variable.Name == "Alpha")
+                    {
+                        variable.PropertiesToSetOnDisplayer["MinValue"] = 0.0;
+                        variable.PropertiesToSetOnDisplayer["MaxValue"] = 255.0;
+                        variable.PreferredDisplayer = typeof(SliderDisplay);
+                    }
                 }
             }
+
+
+
 
             RefreshStateVariablesThroughPlugins();
 

@@ -25,6 +25,10 @@ using Rectangle = System.Drawing.Rectangle;
 using Matrix = System.Numerics.Matrix4x4;
 using GumRuntime;
 
+#if !FRB
+using Gum.StateAnimation.Runtime;
+#endif
+
 namespace Gum.Wireframe;
 
 #region Enums
@@ -1427,8 +1431,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
+#if !FRB
+    public List<AnimationRuntime>? Animations { get; set; }
+#endif
 
-    #endregion
+#endregion
 
     #region Events
 
