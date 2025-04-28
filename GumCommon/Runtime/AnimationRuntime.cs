@@ -1,6 +1,7 @@
 ﻿using FlatRedBall.Glue.StateInterpolation;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Wireframe;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -130,12 +131,12 @@ public class AnimationRuntime
             animationTime = animationTime % this.Length;
         }
 
-        var stateVmBefore = stateKeyframes.LastOrDefault(item => item.Time <= animationTime);
-        var stateVmAfter = stateKeyframes.FirstOrDefault(item => item.Time >= animationTime);
+        var keyframeBefore = stateKeyframes.LastOrDefault(item => item.Time <= animationTime);
+        var keyframeAfter = stateKeyframes.FirstOrDefault(item => item.Time >= animationTime);
 
-        if (stateVmBefore == null && stateVmAfter != null)
+        if (keyframeBefore == null && keyframeAfter != null)
         {
-            if (stateVmAfter.CachedCumulativeState == null)
+            if (keyframeAfter.CachedCumulativeState == null)
             {
                 if (element != null)
                 {
@@ -144,11 +145,11 @@ public class AnimationRuntime
             }
 
             // The custom state can be null if the animation window references states which don't exist:
-            stateToSet = stateVmAfter.CachedCumulativeState.Clone();
+            stateToSet = keyframeAfter.CachedCumulativeState.Clone();
         }
-        else if (stateVmBefore != null && stateVmAfter == null)
+        else if (keyframeBefore != null && keyframeAfter == null)
         {
-            if (stateVmBefore.CachedCumulativeState == null)
+            if (keyframeBefore.CachedCumulativeState == null)
             {
                 if (element != null)
                 {
@@ -156,25 +157,25 @@ public class AnimationRuntime
                 }
             }
 
-            stateToSet = stateVmBefore.CachedCumulativeState.Clone();
+            stateToSet = keyframeBefore.CachedCumulativeState.Clone();
         }
-        else if (stateVmBefore != null && stateVmAfter != null)
+        else if (keyframeBefore != null && keyframeAfter != null)
         {
-            if (stateVmAfter.CachedCumulativeState == null ||
-                stateVmAfter.CachedCumulativeState == null)
+            if (keyframeAfter.CachedCumulativeState == null ||
+                keyframeAfter.CachedCumulativeState == null)
             {
                 if (element != null)
                 {
                     RefreshCumulativeStates(element);
                 }
             }
-            double linearRatio = GetLinearRatio(animationTime, stateVmBefore, stateVmAfter);
-            var stateBefore = stateVmBefore.CachedCumulativeState;
-            var stateAfter = stateVmAfter.CachedCumulativeState;
+            double linearRatio = GetLinearRatio(animationTime, keyframeBefore, keyframeAfter);
+            var stateBefore = keyframeBefore.CachedCumulativeState;
+            var stateAfter = keyframeAfter.CachedCumulativeState;
 
             if (stateBefore != null && stateAfter != null)
             {
-                double processedRatio = ProcessRatio(stateVmBefore.InterpolationType, stateVmBefore.Easing, linearRatio);
+                double processedRatio = ProcessRatio(keyframeBefore.InterpolationType, keyframeBefore.Easing, linearRatio);
 
 
                 var combined = stateBefore.Clone();
@@ -268,6 +269,11 @@ public class AnimationRuntime
         return interpolationFunction.Invoke((float)linearRatio, 0, 1, 1);
     }
 
+    public void ApplyAtTimeTo(double secondsFromBeginning, GraphicalUiElement graphicalUiElement)
+    {
+        var state = GetStateToSet(secondsFromBeginning, graphicalUiElement.ElementSave, true);
+        graphicalUiElement.ApplyState(state);
+    }
 
     public override string ToString()
     {

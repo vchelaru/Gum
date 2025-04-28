@@ -11,6 +11,10 @@ using Gum.Managers;
 using System.ComponentModel;
 using System.Text;
 
+#if !FRB
+using Gum.StateAnimation.Runtime;
+#endif
+
 namespace GumRuntime
 {
     public static class ElementSaveExtensions
@@ -559,12 +563,27 @@ namespace GumRuntime
 
             toReturn.CreateChildrenRecursively(elementSave, systemManagers);
 
+
             toReturn.Tag = elementSave;
             toReturn.ElementSave = elementSave;
 
             toReturn.SetInitialState();
 
-            toReturn.AfterFullCreation();
+#if !FRB
+            if (ObjectFinder.Self.GumProjectSave?.ElementAnimations.Count > 0)
+            {
+                var elementAnimationsSave = ObjectFinder.Self.GumProjectSave.ElementAnimations.FirstOrDefault(item =>
+                    item.ElementName == elementSave.Name);
+                if (elementAnimationsSave != null)
+                {
+                    var animationRuntime = elementAnimationsSave.ToRuntime();
+                    toReturn.Animations = animationRuntime;
+                }
+            }
+#endif
+
+
+                toReturn.AfterFullCreation();
         }
 
         public static void CreateChildrenRecursively(GraphicalUiElement graphicalUiElement, ElementSave elementSave, ISystemManagers systemManagers)

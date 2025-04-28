@@ -3,12 +3,21 @@ using Gum.StateAnimation.SaveClasses;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml.Linq;
 
 namespace Gum.StateAnimation.Runtime;
 public static class AnimationRuntimeExtensions
 {
+
+    public static List<AnimationRuntime> ToRuntime(this ElementAnimationsSave elementAnimationsSave)
+    {
+        var element = Gum.Managers.ObjectFinder.Self.GetElementSave(elementAnimationsSave.ElementName);
+        var allAnimationsSaves = Gum.Managers.ObjectFinder.Self.GumProjectSave.ElementAnimations;
+        return elementAnimationsSave.Animations.Select(item => item.ToRuntime(element, allAnimationsSaves)).ToList();
+    }
+
     public static AnimationRuntime ToRuntime(this AnimationSave animationSave, ElementSave element, 
         List<ElementAnimationsSave> allAnimationsSaves
         )

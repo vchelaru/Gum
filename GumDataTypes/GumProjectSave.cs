@@ -180,12 +180,14 @@ public class GumProjectSave
         get; set;
     } = new List<BehaviorSave>();
 
+#if !FRB
     [XmlIgnore]
     public List<ElementAnimationsSave> ElementAnimations
     {
         get;
         set;
     } = new List<ElementAnimationsSave>();
+#endif
 
     [XmlIgnore]
     public IEnumerable<ElementSave> AllElements
