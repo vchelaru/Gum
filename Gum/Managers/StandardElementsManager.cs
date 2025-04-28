@@ -8,9 +8,7 @@ using Gum.RenderingLibrary;
 using Vector2 = System.Numerics.Vector2;
 using Matrix = System.Numerics.Matrix4x4;
 using System.Linq;
-#if GUM
-using WpfDataUi.Controls;
-#endif
+
 
 namespace Gum.Managers
 {
@@ -636,17 +634,6 @@ namespace Gum.Managers
             };
             stateSave.Variables.Add(blueValue);
 
-#if GUM
-            redValue.PropertiesToSetOnDisplayer["MinValue"] = 0.0;
-            redValue.PropertiesToSetOnDisplayer["MaxValue"] = 255.0;
-            greenValue.PropertiesToSetOnDisplayer["MinValue"] = 0.0;
-            greenValue.PropertiesToSetOnDisplayer["MaxValue"] = 255.0;
-            blueValue.PropertiesToSetOnDisplayer["MinValue"] = 0.0;
-            blueValue.PropertiesToSetOnDisplayer["MaxValue"] = 255.0;
-            redValue.PreferredDisplayer = typeof(SliderDisplay);
-            blueValue.PreferredDisplayer = typeof(SliderDisplay);
-            greenValue.PreferredDisplayer = typeof(SliderDisplay);
-#endif
         }
 
         private static VariableSave CreateAlphaVariable()
@@ -659,11 +646,7 @@ namespace Gum.Managers
                 Name = "Alpha",
                 Category = "Rendering",
             };
-#if GUM
-            alphaValue.PreferredDisplayer = typeof(SliderDisplay);
-            alphaValue.PropertiesToSetOnDisplayer["MinValue"] = 0.0;
-            alphaValue.PropertiesToSetOnDisplayer["MaxValue"] = 255.0;
-#endif
+
             return alphaValue;
         }
 

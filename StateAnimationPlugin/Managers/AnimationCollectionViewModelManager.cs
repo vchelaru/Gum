@@ -2,7 +2,7 @@
 using Gum.Logic.FileWatch;
 using Gum.Managers;
 using Gum.ToolStates;
-using StateAnimationPlugin.SaveClasses;
+using Gum.StateAnimation.SaveClasses;
 using StateAnimationPlugin.ViewModels;
 using System;
 using System.Collections.Generic;

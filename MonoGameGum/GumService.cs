@@ -1,5 +1,6 @@
 ﻿using Gum.DataTypes;
 using Gum.Managers;
+using Gum.StateAnimation.SaveClasses;
 using Gum.Wireframe;
 using GumRuntime;
 using Microsoft.Xna.Framework;
@@ -79,6 +80,39 @@ public class GumService
     public GumProjectSave? Initialize(Game game, string? gumProjectFile = null)
     {
         return InitializeInternal(game, game.GraphicsDevice, gumProjectFile);
+    }
+
+    [Obsolete("Experimental - this API may change in future versions")]
+    public void LoadAnimations()
+    {
+        var project = ObjectFinder.Self.GumProjectSave;
+
+        foreach (var element in project.AllElements)
+        {
+            var animation = TryLoadAnimation(element);
+
+            if(animation != null)
+            {
+                project.ElementAnimations.Add(animation);
+            }
+        }
+    }
+
+    private ElementAnimationsSave? TryLoadAnimation(ElementSave element)
+    {
+        string prefix = element is ScreenSave ? "Screens/" :
+            element is ComponentSave ? "Components/" :
+            element is StandardElementSave ? "StandardElements/" : string.Empty;
+
+        var fileName = prefix + element.Name + "Animations.ganx";
+
+        if(FileManager.FileExists(fileName))
+        {
+            var animation = FileManager.XmlDeserialize<ElementAnimationsSave>(fileName);
+            animation.ElementName = element.Name;
+            return animation;
+        }
+        return null;
     }
 
     [Obsolete("Initialize passing Game as the first parameter rather than GraphicsDevice. Using this method does not support non-(EN-US) keyboard layouts, and " +

@@ -281,7 +281,6 @@ namespace Gum.Wireframe
 
                     try
                     {
-
                         RootGue = elementSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
                         RootGue.AddToManagers(SystemManagers.Default, _layerService.MainEditorLayer);
 

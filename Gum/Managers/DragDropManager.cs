@@ -254,10 +254,23 @@ public class DragDropManager
         return null;
     }
 
+    public IEnumerable<string> ValidTextureExtensions
+    {
+        get
+        {
+            yield return "png";
+            yield return "jpg";
+            yield return "tga";
+            yield return "gif";
+            yield return "svg";
+            yield return "bmp";
+        }
+    }
+
     private bool IsValidExtensionForFileDrop(string file)
     {
         string extension = FileManager.GetExtension(file);
-        return LoaderManager.Self.ValidTextureExtensions.Contains(extension);
+        return ValidTextureExtensions.Contains(extension);
     }
 
     #endregion

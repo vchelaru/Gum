@@ -16,7 +16,7 @@
     <LangVersion>12.0</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\GumDataTypes\GumDataTypes.csproj" />
+    <ProjectReference Include="..\GumDataTypes\GumDataTypesNet6.csproj" />
     <ProjectReference Include="..\Gum\Gum.csproj" />
     <ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
   </ItemGroup>

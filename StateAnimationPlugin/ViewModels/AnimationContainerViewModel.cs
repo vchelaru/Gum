@@ -5,49 +5,48 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace StateAnimationPlugin.ViewModels
+namespace StateAnimationPlugin.ViewModels;
+
+public class AnimationContainerViewModel
 {
-    public class AnimationContainerViewModel
+    public string Name
     {
-        public string Name
+        get
         {
-            get
+            if(mInstanceSave == null)
             {
-                if(mInstanceSave == null)
-                {
-                    return mElementSave.Name + " (container)";
-                }
-                else
-                {
-                    return mInstanceSave.Name + " (" + InstanceSave.BaseType + ")";
-                }
+                return mElementSave.Name + " (container)";
+            }
+            else
+            {
+                return mInstanceSave.Name + " (" + InstanceSave.BaseType + ")";
             }
         }
+    }
 
-        public ElementSave ElementSave
+    public ElementSave ElementSave
+    {
+        get
         {
-            get
-            {
-                return mElementSave;
-            }
+            return mElementSave;
         }
+    }
 
-        public InstanceSave InstanceSave
+    public InstanceSave InstanceSave
+    {
+        get
         {
-            get
-            {
-                return mInstanceSave;
-            }
+            return mInstanceSave;
         }
+    }
 
 
-        ElementSave mElementSave;
-        InstanceSave mInstanceSave;
+    ElementSave mElementSave;
+    InstanceSave mInstanceSave;
 
-        public AnimationContainerViewModel(ElementSave element, InstanceSave instance)
-        {
-            mElementSave = element;
-            mInstanceSave = instance;
-        }
+    public AnimationContainerViewModel(ElementSave element, InstanceSave instance)
+    {
+        mElementSave = element;
+        mInstanceSave = instance;
     }
 }
