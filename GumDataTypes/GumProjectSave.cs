@@ -1,5 +1,4 @@
 ﻿using Gum.DataTypes.Behaviors;
-using Gum.StateAnimation.SaveClasses;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -7,6 +6,10 @@ using System.Linq;
 using System.Text;
 using System.Xml.Serialization;
 using ToolsUtilities;
+
+#if !FRB
+using Gum.StateAnimation.SaveClasses;
+#endif
 
 namespace Gum.DataTypes;
 
