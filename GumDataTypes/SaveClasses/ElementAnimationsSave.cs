@@ -12,7 +12,7 @@ public class ElementAnimationsSave
     {
         get;
         set;
-    }
+    } = new List<AnimationSave>();
 
     public string ElementName
     {
@@ -22,5 +22,10 @@ public class ElementAnimationsSave
     public ElementAnimationsSave()
     {
         Animations = new List<AnimationSave>();
+    }
+
+    public override string ToString()
+    {
+        return $"{ElementName} ({Animations.Count} animations)";
     }
 }

@@ -1,4 +1,5 @@
-﻿using Gum.DataTypes;
+﻿using FlatRedBall.Glue.StateInterpolation;
+using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,21 @@ public class AnimationRuntime
 {
     public string Name { get; set; }
     public bool Loops { get; set; }
+
+    public float Length
+    {
+        get
+        {
+            if (Keyframes.Count == 0)
+            {
+                return 0;
+            }
+            else
+            {
+                return Keyframes.Max(item => item.Time + item.Length);
+            }
+        }
+    }
 
     public List<KeyframeRuntime> Keyframes { get; private set; } = new List<KeyframeRuntime>();
 
@@ -94,5 +110,167 @@ public class AnimationRuntime
         }
     }
 
+    public StateSave GetStateToSet(double animationTime, ElementSave element, bool defaultIfNull)
+    {
+        StateSave stateToSet = null;
 
+        GetStateToSetFromStateKeyframes(animationTime, element, ref stateToSet, defaultIfNull);
+
+        CombineStateFromAnimations(animationTime, element, ref stateToSet);
+
+        return stateToSet;
+    }
+
+    private StateSave GetStateToSetFromStateKeyframes(double animationTime, ElementSave element, ref StateSave stateToSet, bool defaultIfNull)
+    {
+        var stateKeyframes = this.Keyframes.Where(item => !string.IsNullOrEmpty(item.StateName));
+
+        if(this.Loops)
+        {
+            animationTime = animationTime % this.Length;
+        }
+
+        var stateVmBefore = stateKeyframes.LastOrDefault(item => item.Time <= animationTime);
+        var stateVmAfter = stateKeyframes.FirstOrDefault(item => item.Time >= animationTime);
+
+        if (stateVmBefore == null && stateVmAfter != null)
+        {
+            if (stateVmAfter.CachedCumulativeState == null)
+            {
+                if (element != null)
+                {
+                    RefreshCumulativeStates(element);
+                }
+            }
+
+            // The custom state can be null if the animation window references states which don't exist:
+            stateToSet = stateVmAfter.CachedCumulativeState.Clone();
+        }
+        else if (stateVmBefore != null && stateVmAfter == null)
+        {
+            if (stateVmBefore.CachedCumulativeState == null)
+            {
+                if (element != null)
+                {
+                    RefreshCumulativeStates(element);
+                }
+            }
+
+            stateToSet = stateVmBefore.CachedCumulativeState.Clone();
+        }
+        else if (stateVmBefore != null && stateVmAfter != null)
+        {
+            if (stateVmAfter.CachedCumulativeState == null ||
+                stateVmAfter.CachedCumulativeState == null)
+            {
+                if (element != null)
+                {
+                    RefreshCumulativeStates(element);
+                }
+            }
+            double linearRatio = GetLinearRatio(animationTime, stateVmBefore, stateVmAfter);
+            var stateBefore = stateVmBefore.CachedCumulativeState;
+            var stateAfter = stateVmAfter.CachedCumulativeState;
+
+            if (stateBefore != null && stateAfter != null)
+            {
+                double processedRatio = ProcessRatio(stateVmBefore.InterpolationType, stateVmBefore.Easing, linearRatio);
+
+
+                var combined = stateBefore.Clone();
+                combined.MergeIntoThis(stateAfter, (float)processedRatio);
+
+                // for performance we will only update wireframe:
+                //SelectedState.Self.UpdateToSelectedStateSave();
+                //WireframeObjectManager.Self.RefreshAll(true);
+
+                stateToSet = combined;
+            }
+        }
+
+        if (stateToSet == null && defaultIfNull)
+        {
+            stateToSet = element?.DefaultState.Clone();
+        }
+        else if (stateToSet == null)
+        {
+
+            stateToSet = new StateSave();
+        }
+        return stateToSet;
+    }
+
+
+
+    private void CombineStateFromAnimations(double animationTime, ElementSave element, ref StateSave stateToSet)
+    {
+        var animationKeyframes = this.Keyframes.Where(item => item.SubAnimation != null && item.Time <= animationTime);
+
+        foreach (var keyframe in animationKeyframes)
+        {
+            var subAnimationElement = element;
+
+            string instanceName = null;
+
+            if (keyframe.AnimationName.Contains('.'))
+            {
+                instanceName = keyframe.AnimationName.Substring(0, keyframe.AnimationName.IndexOf('.'));
+
+                InstanceSave instance = element.Instances.FirstOrDefault(item => item.Name == instanceName);
+
+                if (instance != null)
+                {
+                    subAnimationElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance);
+                }
+            }
+
+            var relativeTime = animationTime - keyframe.Time;
+
+            var stateFromAnimation = keyframe.SubAnimation.GetStateToSet(relativeTime, subAnimationElement, false);
+
+            if (stateFromAnimation != null)
+            {
+                if (subAnimationElement != element)
+                {
+                    foreach (var variable in stateFromAnimation.Variables)
+                    {
+                        variable.Name = instanceName + "." + variable.Name;
+                    }
+                }
+
+                stateToSet.MergeIntoThis(stateFromAnimation, 1);
+            }
+        }
+
+    }
+
+    private static double GetLinearRatio(double value, KeyframeRuntime stateVmBefore, KeyframeRuntime stateVmAfter)
+    {
+        double valueBefore = stateVmBefore.Time;
+        double valueAfter = stateVmAfter.Time;
+
+        double range = valueAfter - valueBefore;
+        double timeIn = value - valueBefore;
+
+        double ratio = 0;
+
+        if (valueAfter != valueBefore)
+        {
+            ratio = timeIn / range;
+        }
+        return ratio;
+    }
+
+    private double ProcessRatio(FlatRedBall.Glue.StateInterpolation.InterpolationType interpolationType, FlatRedBall.Glue.StateInterpolation.Easing easing, double linearRatio)
+    {
+        var interpolationFunction = Tweener.GetInterpolationFunction(interpolationType, easing);
+
+        return interpolationFunction.Invoke((float)linearRatio, 0, 1, 1);
+    }
+
+
+    public override string ToString()
+    {
+        return $"{Name} with {Keyframes.Count} keyframes";
+    }
 }

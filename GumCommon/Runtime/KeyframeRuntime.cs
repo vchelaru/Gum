@@ -32,6 +32,37 @@ public class KeyframeRuntime
         set;
     }
     public float Time { get; set; }
+
+    public float Length
+    {
+        get
+        {
+            if (SubAnimation == null)
+            {
+                return 0;
+            }
+            else
+            {
+                return SubAnimation.Length;
+            }
+        }
+    }
     public InterpolationType InterpolationType { get; internal set; }
     public Easing Easing { get; internal set; }
+
+    public override string ToString()
+    {
+        if(!string.IsNullOrEmpty(StateName))
+        {
+            return $"{StateName} @ {Time}";
+        }
+        else if(!string.IsNullOrEmpty(AnimationName))
+        {
+            return AnimationName;
+        }
+        else
+        {
+            return EventName;
+        }
+    }
 }

@@ -109,7 +109,7 @@ public class GumService
         if(FileManager.FileExists(fileName))
         {
             var animation = FileManager.XmlDeserialize<ElementAnimationsSave>(fileName);
-
+            animation.ElementName = element.Name;
             return animation;
         }
         return null;

@@ -7,9 +7,9 @@ using System.Text;
 using System.Xml.Linq;
 
 namespace Gum.StateAnimation.Runtime;
-internal class AnimationRuntimeExtensions
+public static class AnimationRuntimeExtensions
 {
-    public static AnimationRuntime ToRuntime(AnimationSave animationSave, ElementSave element, 
+    public static AnimationRuntime ToRuntime(this AnimationSave animationSave, ElementSave element, 
         List<ElementAnimationsSave> allAnimationsSaves
         )
     {
