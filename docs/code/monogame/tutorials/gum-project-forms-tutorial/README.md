@@ -2,10 +2,6 @@
 
 ## Introduction
 
-{% hint style="warning" %}
-This tutorial series is intended to replace the main Gum Project (.gumx) Tutorial. To work through this tutorial you will need to download [Gum Pre Release April 10 2025](https://github.com/vchelaru/Gum/releases/tag/PreRelease_April_10_2025).
-{% endhint %}
-
 This series of tutorials covers how to use the Gum tool to create UI for your project. This tutorial shows how to create a _full featured_ Gum project including:
 
 * Creating and loading a Gum project
