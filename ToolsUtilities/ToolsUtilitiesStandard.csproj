@@ -9,6 +9,7 @@
 		<PackageId>FlatRedBall.ToolsUtilities.NetStandard</PackageId>
 		<Version>2025.4.28.1</Version>
 
+		<Platforms>AnyCPU;x86</Platforms>
 
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<IncludeSymbols>true</IncludeSymbols>
