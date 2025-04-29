@@ -1,20 +1,28 @@
 # TextRuntime
 
-### Introduction
+## Introduction
 
 The TextRuntime object is used to draw strings to the screen. It supports a variety of options for rendering text including alignment, fonts, coloring, and line wrapping.
 
-### Example - Creating a TextRuntime
+## Example - Creating a TextRuntime
 
 To create a TextRuntime, instantiate it and add it to the managers as shown in the following code:
 
 ```csharp
 var textInstance = new TextRuntime();
 textInstance.Text = "Hello world";
-textInstance.AddToManagers(SystemManagers.Default, null);
+textInstance.AddToRoot();
 ```
 
-### Example - Obtaining a TextRuntime Reference From a Gum Project
+Usually TextRuntime instances are created and added to children such as a StackPanel or the visual of a component as shown in the following code:
+
+```csharp
+var textInstance = new TextRuntime();
+textInstance.Text = "Hello world";
+MainStackPanel.AddChild(textInstance);
+```
+
+## Example - Obtaining a TextRuntime Reference From a Gum Project
 
 To get a TextRuntime instance from a loaded Gum (gumx) project, add the following code. This code assumes you have an object named CurrentScreen, and that it contains a Text instance named TextInstance:
 
@@ -23,7 +31,7 @@ var textInstance = (TextRuntime)CurrentScreen.GetGraphicalUiElementByName("TextI
 textInstance.Text = "I've been modified in code";
 ```
 
-### Fonts
+## Fonts
 
 By default all TextRuntime instances use an Arial 18 pt font. This can be changed by specifying ta custom font.
 
@@ -118,7 +126,7 @@ var desiredFntName = BmfcSave.GetFontCacheFileNameFor(
 
 Note that this method does not take into consideration the content folder.
 
-### Creating Fonts
+## Creating Fonts
 
 To create a .fnt file, you have a few options:
 
@@ -136,11 +144,11 @@ As you make changes to the Text object, new files are created and added to the f
 
 <figure><img src="../../../.gitbook/assets/07_06 22 49 (1).gif" alt=""><figcaption><p>Changing the Font Size creates new fonts in FontCache</p></figcaption></figure>
 
-### Missing Font Exceptions
+## Missing Font Exceptions
 
-By default TextRuntime instances do not throw exceptions for missing font files even if GraphicalUiElement.ThrowExceptionsForMissingFiles is set to CustomSetPropertyOnRenderable.ThrowExceptionsForMissingFiles. The reason for this is because a TextRuntime's font is decided by a combination multiple properties.
+By default TextRuntime instances do not throw exceptions for missing font files even if `GraphicalUiElement.ThrowExceptionsForMissingFiles` is set to `CustomSetPropertyOnRenderable.ThrowExceptionsForMissingFiles`. The reason for this is because a TextRuntime's font is decided by a combination multiple properties.
 
-If UseCustomFont is set to false, then the font is determined by the combination of font values (as discussed above). If useCustomFont is set to true, then the font is determined by the CustomFontFile (also as discussed above).
+If UseCustomFont is set to false, then the font is determined by the combination of font values (as discussed above). If UseCustomFont is set to true, then the font is determined by the CustomFontFile (also as discussed above).
 
 Ultimately the variables which are used for fonts can be assigned in any order, and can be assigned from multiple spots (such as direct assignments, states, or creation from Gum projects).
 

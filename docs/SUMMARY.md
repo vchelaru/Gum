@@ -161,6 +161,7 @@
     * [CanvasWidth](code/gum-code-reference/graphicaluielement/canvaswidth.md)
     * [Children](code/gum-code-reference/graphicaluielement/children.md)
     * [ContainedElements](code/gum-code-reference/graphicaluielement/containedelements.md)
+    * [Font Values](code/gum-code-reference/graphicaluielement/font-values.md)
     * [GetAbsoluteHeight](code/gum-code-reference/graphicaluielement/getabsoluteheight.md)
     * [GetAbsoluteWidth](code/gum-code-reference/graphicaluielement/getabsolutewidth.md)
     * [GetChildByNameRecursively](code/gum-code-reference/graphicaluielement/getchildbynamerecursively.md)
