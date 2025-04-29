@@ -1029,6 +1029,13 @@ public class CustomSetPropertyOnRenderable
         // extra calls in generated code, or an "UpdateAll" method
         //if (!mIsLayoutSuspended && !IsAllLayoutSuspended)
 
+        // Residual properties could exist on a Text instnace, so we need to
+        // tolerate a missing item and not crash. 
+        if(text == null)
+        {
+            return;
+        }
+
         BitmapFont font = null;
 
         var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
