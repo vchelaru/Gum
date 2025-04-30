@@ -2012,161 +2012,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     #endregion
 
-    private void AdjustParentOriginOffsetsByUnits(float parentWidth, float parentHeight, bool isParentFlippedHorizontally,
-        ref float unitOffsetX, ref float unitOffsetY, ref bool wasHandledX, ref bool wasHandledY)
-    {
-
-        var shouldAdd = Parent is GraphicalUiElement parentGue &&
-            (parentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.AutoGridVertical || parentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.AutoGridHorizontal);
-
-        if (!wasHandledX)
-        {
-            var units = isParentFlippedHorizontally ? mXUnits.Flip() : mXUnits;
-
-            var value = 0f;
-            if (units == GeneralUnitType.PixelsFromLarge)
-            {
-                value = parentWidth;
-                wasHandledX = true;
-            }
-            else if (units == GeneralUnitType.PixelsFromMiddle)
-            {
-                value = parentWidth / 2.0f;
-                wasHandledX = true;
-            }
-            else if (units == GeneralUnitType.PixelsFromSmall)
-            {
-                // no need to do anything
-            }
-
-            if (shouldAdd)
-            {
-                unitOffsetX += value;
-            }
-            else if (mXUnits != GeneralUnitType.PixelsFromSmall)
-            {
-                unitOffsetX = value;
-            }
-        }
-
-        if (!wasHandledY)
-        {
-            var value = 0f;
-            if (mYUnits == GeneralUnitType.PixelsFromLarge)
-            {
-                value = parentHeight;
-                wasHandledY = true;
-            }
-            else if (mYUnits == GeneralUnitType.PixelsFromMiddle || mYUnits == GeneralUnitType.PixelsFromMiddleInverted)
-            {
-                value = parentHeight / 2.0f;
-                wasHandledY = true;
-            }
-            else if (mYUnits == GeneralUnitType.PixelsFromBaseline)
-            {
-                if (Parent is GraphicalUiElement gue && gue.RenderableComponent is IText text)
-                {
-                    // January 9, 2025 - breaking layout logic to address this:
-                    // https://github.com/vchelaru/Gum/issues/473
-                    //value = parentHeight - text.DescenderHeight;
-                    value = text.WrappedTextHeight - text.DescenderHeight;
-                }
-                else
-                {
-                    // use the bottom as baseline:
-                    value = parentHeight;
-                }
-                wasHandledY = true;
-            }
-
-            if (shouldAdd)
-            {
-                unitOffsetY += value;
-            }
-            else if (mYUnits != GeneralUnitType.PixelsFromSmall)
-            {
-                unitOffsetY = value;
-            }
-        }
-    }
-
-    private void AdjustOffsetsByUnits(float parentWidth, float parentHeight, bool isParentFlippedHorizontally, XOrY? xOrY, ref float unitOffsetX, ref float unitOffsetY)
-    {
-        bool doX = xOrY == null || xOrY == XOrY.X;
-        bool doY = xOrY == null || xOrY == XOrY.Y;
-
-        if (doX)
-        {
-            if (mXUnits == GeneralUnitType.Percentage)
-            {
-                unitOffsetX = parentWidth * mX / 100.0f;
-            }
-            else if (mXUnits == GeneralUnitType.PercentageOfFile)
-            {
-                bool wasSet = false;
-
-                if (mContainedObjectAsIpso is ITextureCoordinate asITextureCoordinate)
-                {
-                    if (asITextureCoordinate.TextureWidth != null)
-                    {
-                        unitOffsetX = asITextureCoordinate.TextureWidth.Value * mX / 100.0f;
-                    }
-                }
-
-                if (!wasSet)
-                {
-                    unitOffsetX = 64 * mX / 100.0f;
-                }
-            }
-            else
-            {
-                if (isParentFlippedHorizontally)
-                {
-                    unitOffsetX -= mX;
-                }
-                else
-                {
-                    unitOffsetX += mX;
-                }
-            }
-        }
-
-        if (doY)
-        {
-            if (mYUnits == GeneralUnitType.Percentage)
-            {
-                unitOffsetY = parentHeight * mY / 100.0f;
-            }
-            else if (mYUnits == GeneralUnitType.PercentageOfFile)
-            {
-
-                bool wasSet = false;
-
-
-                if (mContainedObjectAsIpso is ITextureCoordinate asITextureCoordinate)
-                {
-                    if (asITextureCoordinate.TextureHeight != null)
-                    {
-                        unitOffsetY = asITextureCoordinate.TextureHeight.Value * mY / 100.0f;
-                    }
-                }
-
-                if (!wasSet)
-                {
-                    unitOffsetY = 64 * mY / 100.0f;
-                }
-            }
-            else if (mYUnits == GeneralUnitType.PixelsFromMiddleInverted)
-            {
-                unitOffsetY += -mY;
-            }
-            else
-            {
-                unitOffsetY += mY;
-            }
-        }
-    }
-
     #region Width/Height
 
     private void UpdateDimensions(float parentWidth, float parentHeight, XOrY? xOrY, bool considerWrappedStacked)
@@ -3205,6 +3050,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     #endregion
 
+    #region Get Child Layout Type
+
     ChildType GetChildLayoutType(GraphicalUiElement parent)
     {
         var doesParentWrapStack = parent.WrapsChildren && (parent.ChildrenLayout == ChildrenLayout.LeftToRightStack || parent.ChildrenLayout == ChildrenLayout.TopToBottomStack);
@@ -3273,6 +3120,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
+    #endregion
 
     private void UpdateChildren(int childrenUpdateDepth, ChildType childrenUpdateType, bool skipIgnoreByParentSize, HashSet<IRenderableIpso> alreadyUpdated = null, HashSet<IRenderableIpso> newlyUpdated = null)
     {
@@ -3456,6 +3304,162 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
+    #region Position/Offsets
+
+    private void AdjustParentOriginOffsetsByUnits(float parentWidth, float parentHeight, bool isParentFlippedHorizontally,
+        ref float unitOffsetX, ref float unitOffsetY, ref bool wasHandledX, ref bool wasHandledY)
+    {
+
+        var shouldAdd = Parent is GraphicalUiElement parentGue &&
+            (parentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.AutoGridVertical || parentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.AutoGridHorizontal);
+
+        if (!wasHandledX)
+        {
+            var units = isParentFlippedHorizontally ? mXUnits.Flip() : mXUnits;
+
+            var value = 0f;
+            if (units == GeneralUnitType.PixelsFromLarge)
+            {
+                value = parentWidth;
+                wasHandledX = true;
+            }
+            else if (units == GeneralUnitType.PixelsFromMiddle)
+            {
+                value = parentWidth / 2.0f;
+                wasHandledX = true;
+            }
+            else if (units == GeneralUnitType.PixelsFromSmall)
+            {
+                // no need to do anything
+            }
+
+            if (shouldAdd)
+            {
+                unitOffsetX += value;
+            }
+            else if (mXUnits != GeneralUnitType.PixelsFromSmall)
+            {
+                unitOffsetX = value;
+            }
+        }
+
+        if (!wasHandledY)
+        {
+            var value = 0f;
+            if (mYUnits == GeneralUnitType.PixelsFromLarge)
+            {
+                value = parentHeight;
+                wasHandledY = true;
+            }
+            else if (mYUnits == GeneralUnitType.PixelsFromMiddle || mYUnits == GeneralUnitType.PixelsFromMiddleInverted)
+            {
+                value = parentHeight / 2.0f;
+                wasHandledY = true;
+            }
+            else if (mYUnits == GeneralUnitType.PixelsFromBaseline)
+            {
+                if (Parent is GraphicalUiElement gue && gue.RenderableComponent is IText text)
+                {
+                    // January 9, 2025 - breaking layout logic to address this:
+                    // https://github.com/vchelaru/Gum/issues/473
+                    //value = parentHeight - text.DescenderHeight;
+                    value = text.WrappedTextHeight - text.DescenderHeight;
+                }
+                else
+                {
+                    // use the bottom as baseline:
+                    value = parentHeight;
+                }
+                wasHandledY = true;
+            }
+
+            if (shouldAdd)
+            {
+                unitOffsetY += value;
+            }
+            else if (mYUnits != GeneralUnitType.PixelsFromSmall)
+            {
+                unitOffsetY = value;
+            }
+        }
+    }
+
+    private void AdjustOffsetsByUnits(float parentWidth, float parentHeight, bool isParentFlippedHorizontally, XOrY? xOrY, ref float unitOffsetX, ref float unitOffsetY)
+    {
+        bool doX = xOrY == null || xOrY == XOrY.X;
+        bool doY = xOrY == null || xOrY == XOrY.Y;
+
+        if (doX)
+        {
+            if (mXUnits == GeneralUnitType.Percentage)
+            {
+                unitOffsetX = parentWidth * mX / 100.0f;
+            }
+            else if (mXUnits == GeneralUnitType.PercentageOfFile)
+            {
+                bool wasSet = false;
+
+                if (mContainedObjectAsIpso is ITextureCoordinate asITextureCoordinate)
+                {
+                    if (asITextureCoordinate.TextureWidth != null)
+                    {
+                        unitOffsetX = asITextureCoordinate.TextureWidth.Value * mX / 100.0f;
+                    }
+                }
+
+                if (!wasSet)
+                {
+                    unitOffsetX = 64 * mX / 100.0f;
+                }
+            }
+            else
+            {
+                if (isParentFlippedHorizontally)
+                {
+                    unitOffsetX -= mX;
+                }
+                else
+                {
+                    unitOffsetX += mX;
+                }
+            }
+        }
+
+        if (doY)
+        {
+            if (mYUnits == GeneralUnitType.Percentage)
+            {
+                unitOffsetY = parentHeight * mY / 100.0f;
+            }
+            else if (mYUnits == GeneralUnitType.PercentageOfFile)
+            {
+
+                bool wasSet = false;
+
+
+                if (mContainedObjectAsIpso is ITextureCoordinate asITextureCoordinate)
+                {
+                    if (asITextureCoordinate.TextureHeight != null)
+                    {
+                        unitOffsetY = asITextureCoordinate.TextureHeight.Value * mY / 100.0f;
+                    }
+                }
+
+                if (!wasSet)
+                {
+                    unitOffsetY = 64 * mY / 100.0f;
+                }
+            }
+            else if (mYUnits == GeneralUnitType.PixelsFromMiddleInverted)
+            {
+                unitOffsetY += -mY;
+            }
+            else
+            {
+                unitOffsetY += mY;
+            }
+        }
+    }
 
     private void UpdatePosition(float parentWidth, float parentHeight, XOrY? xOrY, float parentAbsoluteRotation, bool isParentFlippedHorizontally)
     {
@@ -3618,6 +3622,135 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     }
 
+    private void AdjustOffsetsByOrigin(bool isParentFlippedHorizontally, ref float unitOffsetX, ref float unitOffsetY)
+    {
+#if DEBUG
+        if (float.IsPositiveInfinity(mRotation) || float.IsNegativeInfinity(mRotation))
+        {
+            throw new Exception("Rotation cannot be negative/positive infinity");
+        }
+#endif
+        float offsetX = 0;
+        float offsetY = 0;
+
+        HorizontalAlignment effectiveXorigin = isParentFlippedHorizontally ? mXOrigin.Flip() : mXOrigin;
+
+        if (!float.IsNaN(mContainedObjectAsIpso.Width))
+        {
+            if (effectiveXorigin == HorizontalAlignment.Center)
+            {
+                offsetX -= mContainedObjectAsIpso.Width / 2.0f;
+            }
+            else if (effectiveXorigin == HorizontalAlignment.Right)
+            {
+                offsetX -= mContainedObjectAsIpso.Width;
+            }
+        }
+        // no need to handle left
+
+
+        if (mYOrigin == VerticalAlignment.Center)
+        {
+            offsetY -= mContainedObjectAsIpso.Height / 2.0f;
+        }
+        else if (mYOrigin == VerticalAlignment.TextBaseline)
+        {
+            if (mContainedObjectAsIpso is IText text)
+            {
+                offsetY += -mContainedObjectAsIpso.Height + text.DescenderHeight * text.FontScale;
+            }
+            else
+            {
+                offsetY -= mContainedObjectAsIpso.Height;
+            }
+        }
+        else if (mYOrigin == VerticalAlignment.Bottom)
+        {
+            offsetY -= mContainedObjectAsIpso.Height;
+        }
+        // no need to handle top
+
+
+        // Adjust offsets by rotation
+        if (mRotation != 0)
+        {
+            var rotation = isParentFlippedHorizontally ? -mRotation : mRotation;
+
+            GetRightAndUpFromRotation(rotation, out Vector3 right, out Vector3 up);
+
+            var unrotatedX = offsetX;
+            var unrotatedY = offsetY;
+
+            offsetX = right.X * unrotatedX + up.X * unrotatedY;
+            offsetY = right.Y * unrotatedX + up.Y * unrotatedY;
+        }
+
+        unitOffsetX += offsetX;
+        unitOffsetY += offsetY;
+    }
+
+    private void TryAdjustOffsetsByParentLayoutType(bool canWrap, bool shouldWrap, ref float unitOffsetX, ref float unitOffsetY)
+    {
+
+
+        if (GetIfParentStacks())
+        {
+            float whatToStackAfterX;
+            float whatToStackAfterY;
+
+            var whatToStackAfter = GetWhatToStackAfter(canWrap, shouldWrap, out whatToStackAfterX, out whatToStackAfterY);
+
+
+
+            float xRelativeTo = 0;
+            float yRelativeTo = 0;
+
+            if (whatToStackAfter != null)
+            {
+                var effectiveParent = this.EffectiveParentGue;
+                switch (effectiveParent.ChildrenLayout)
+                {
+                    case Gum.Managers.ChildrenLayout.TopToBottomStack:
+
+                        if (canWrap)
+                        {
+                            xRelativeTo = whatToStackAfterX;
+                        }
+
+                        yRelativeTo = whatToStackAfterY;
+
+                        break;
+                    case Gum.Managers.ChildrenLayout.LeftToRightStack:
+
+                        xRelativeTo = whatToStackAfterX;
+
+                        if (canWrap)
+                        {
+                            yRelativeTo = whatToStackAfterY;
+                        }
+                        break;
+                    default:
+                        throw new NotImplementedException();
+                }
+            }
+
+            unitOffsetX += xRelativeTo;
+            unitOffsetY += yRelativeTo;
+        }
+        else if (GetIfParentIsAutoGrid())
+        {
+            var indexInSiblingList = this.GetIndexInVisibleSiblings();
+            int xIndex, yIndex;
+            float cellWidth, cellHeight;
+            GetCellDimensions(indexInSiblingList, out xIndex, out yIndex, out cellWidth, out cellHeight);
+
+            unitOffsetX += cellWidth * xIndex;
+            unitOffsetY += cellHeight * yIndex;
+        }
+    }
+
+    #endregion
+
     private void RefreshParentRowColumnDimensionForThis()
     {
         // If it stacks, then update this row/column's dimensions given the index of this
@@ -3682,66 +3815,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             }
         }
 
-    }
-
-    private void TryAdjustOffsetsByParentLayoutType(bool canWrap, bool shouldWrap, ref float unitOffsetX, ref float unitOffsetY)
-    {
-
-
-        if (GetIfParentStacks())
-        {
-            float whatToStackAfterX;
-            float whatToStackAfterY;
-
-            var whatToStackAfter = GetWhatToStackAfter(canWrap, shouldWrap, out whatToStackAfterX, out whatToStackAfterY);
-
-
-
-            float xRelativeTo = 0;
-            float yRelativeTo = 0;
-
-            if (whatToStackAfter != null)
-            {
-                var effectiveParent = this.EffectiveParentGue;
-                switch (effectiveParent.ChildrenLayout)
-                {
-                    case Gum.Managers.ChildrenLayout.TopToBottomStack:
-
-                        if (canWrap)
-                        {
-                            xRelativeTo = whatToStackAfterX;
-                        }
-
-                        yRelativeTo = whatToStackAfterY;
-
-                        break;
-                    case Gum.Managers.ChildrenLayout.LeftToRightStack:
-
-                        xRelativeTo = whatToStackAfterX;
-
-                        if (canWrap)
-                        {
-                            yRelativeTo = whatToStackAfterY;
-                        }
-                        break;
-                    default:
-                        throw new NotImplementedException();
-                }
-            }
-
-            unitOffsetX += xRelativeTo;
-            unitOffsetY += yRelativeTo;
-        }
-        else if (GetIfParentIsAutoGrid())
-        {
-            var indexInSiblingList = this.GetIndexInVisibleSiblings();
-            int xIndex, yIndex;
-            float cellWidth, cellHeight;
-            GetCellDimensions(indexInSiblingList, out xIndex, out yIndex, out cellWidth, out cellHeight);
-
-            unitOffsetX += cellWidth * xIndex;
-            unitOffsetY += cellHeight * yIndex;
-        }
     }
 
     private void GetCellDimensions(int indexInSiblingList, out int xIndex, out int yIndex, out float cellWidth, out float cellHeight)
@@ -4084,73 +4157,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
 
         return whatToStackAfter as GraphicalUiElement;
-    }
-
-    private void AdjustOffsetsByOrigin(bool isParentFlippedHorizontally, ref float unitOffsetX, ref float unitOffsetY)
-    {
-#if DEBUG
-        if (float.IsPositiveInfinity(mRotation) || float.IsNegativeInfinity(mRotation))
-        {
-            throw new Exception("Rotation cannot be negative/positive infinity");
-        }
-#endif
-        float offsetX = 0;
-        float offsetY = 0;
-
-        HorizontalAlignment effectiveXorigin = isParentFlippedHorizontally ? mXOrigin.Flip() : mXOrigin;
-
-        if (!float.IsNaN(mContainedObjectAsIpso.Width))
-        {
-            if (effectiveXorigin == HorizontalAlignment.Center)
-            {
-                offsetX -= mContainedObjectAsIpso.Width / 2.0f;
-            }
-            else if (effectiveXorigin == HorizontalAlignment.Right)
-            {
-                offsetX -= mContainedObjectAsIpso.Width;
-            }
-        }
-        // no need to handle left
-
-
-        if (mYOrigin == VerticalAlignment.Center)
-        {
-            offsetY -= mContainedObjectAsIpso.Height / 2.0f;
-        }
-        else if (mYOrigin == VerticalAlignment.TextBaseline)
-        {
-            if (mContainedObjectAsIpso is IText text)
-            {
-                offsetY += -mContainedObjectAsIpso.Height + text.DescenderHeight * text.FontScale;
-            }
-            else
-            {
-                offsetY -= mContainedObjectAsIpso.Height;
-            }
-        }
-        else if (mYOrigin == VerticalAlignment.Bottom)
-        {
-            offsetY -= mContainedObjectAsIpso.Height;
-        }
-        // no need to handle top
-
-
-        // Adjust offsets by rotation
-        if (mRotation != 0)
-        {
-            var rotation = isParentFlippedHorizontally ? -mRotation : mRotation;
-
-            GetRightAndUpFromRotation(rotation, out Vector3 right, out Vector3 up);
-
-            var unrotatedX = offsetX;
-            var unrotatedY = offsetY;
-
-            offsetX = right.X * unrotatedX + up.X * unrotatedY;
-            offsetY = right.Y * unrotatedX + up.Y * unrotatedY;
-        }
-
-        unitOffsetX += offsetX;
-        unitOffsetY += offsetY;
     }
 
     #endregion
@@ -5715,6 +5721,17 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     }
 
     bool useCustomFont;
+    /// <summary>
+    /// Whether to use the CustomFontFile to determine the font value. 
+    /// If false, then the font is determiend by looking for an existing
+    /// font based on:
+    /// * Font
+    /// * FontSize
+    /// * IsItalic
+    /// * IsBold
+    /// * UseFontSmoothing
+    /// * OutlineThickness
+    /// </summary>
     public bool UseCustomFont
     {
         get { return useCustomFont; }
