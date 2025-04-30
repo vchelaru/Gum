@@ -3317,7 +3317,44 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         {
             var units = isParentFlippedHorizontally ? mXUnits.Flip() : mXUnits;
 
+            // For information on why this force exists, see https://github.com/vchelaru/Gum/issues/695
+            bool forcePixelsFromSmall = false;
+
+            if (mXUnits == GeneralUnitType.PixelsFromMiddle || mXUnits == GeneralUnitType.PixelsFromMiddleInverted ||
+                mXUnits == GeneralUnitType.PixelsFromLarge)
+            {
+                if (this.EffectiveParentGue.ChildrenLayout == ChildrenLayout.LeftToRightStack)
+                {
+                    System.Collections.IList siblings = null;
+
+                    if (this.Parent == null)
+                    {
+                        siblings = this.ElementGueContainingThis.mWhatThisContains;
+                    }
+                    else if (this.Parent is GraphicalUiElement)
+                    {
+                        siblings = ((GraphicalUiElement)Parent).Children as System.Collections.IList;
+                    }
+                    var thisIndex = siblings.IndexOf(this);
+                    if (thisIndex > 0)
+                    {
+                        forcePixelsFromSmall = true;
+
+
+                        if (mXUnits == GeneralUnitType.Percentage)
+                        {
+                            shouldAdd = true;
+                        }
+                    }
+                }
+            }
+
+
             var value = 0f;
+            if (forcePixelsFromSmall)
+            {
+                wasHandledX = true;
+            }
             if (units == GeneralUnitType.PixelsFromLarge)
             {
                 value = parentWidth;
@@ -3337,7 +3374,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             {
                 unitOffsetX += value;
             }
-            else if (mXUnits != GeneralUnitType.PixelsFromSmall)
+            else if (mXUnits != GeneralUnitType.PixelsFromSmall && !forcePixelsFromSmall)
             {
                 unitOffsetX = value;
             }
@@ -3346,7 +3383,44 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         if (!wasHandledY)
         {
             var value = 0f;
-            if (mYUnits == GeneralUnitType.PixelsFromLarge)
+
+            // For information on why this force exists, see https://github.com/vchelaru/Gum/issues/695
+            bool forcePixelsFromSmall = false;
+
+            if(mYUnits == GeneralUnitType.PixelsFromMiddle || mYUnits == GeneralUnitType.PixelsFromMiddleInverted ||
+                mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromBaseline ||
+                mYUnits == GeneralUnitType.Percentage)
+            {
+                if (this.EffectiveParentGue.ChildrenLayout == ChildrenLayout.TopToBottomStack)
+                {
+                    System.Collections.IList siblings = null;
+
+                    if (this.Parent == null)
+                    {
+                        siblings = this.ElementGueContainingThis.mWhatThisContains;
+                    }
+                    else if (this.Parent is GraphicalUiElement)
+                    {
+                        siblings = ((GraphicalUiElement)Parent).Children as System.Collections.IList;
+                    }
+                    var thisIndex = siblings.IndexOf(this);
+                    if(thisIndex > 0)
+                    {
+                        forcePixelsFromSmall = true;
+
+                        if(mYUnits == GeneralUnitType.Percentage)
+                        {
+                            shouldAdd = true;
+                        }
+                    }
+                }
+            }
+
+            if(forcePixelsFromSmall)
+            {
+                wasHandledY = true;
+            }
+            else if (mYUnits == GeneralUnitType.PixelsFromLarge)
             {
                 value = parentHeight;
                 wasHandledY = true;
@@ -3377,7 +3451,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             {
                 unitOffsetY += value;
             }
-            else if (mYUnits != GeneralUnitType.PixelsFromSmall)
+            else if (mYUnits != GeneralUnitType.PixelsFromSmall && !forcePixelsFromSmall)
             {
                 unitOffsetY = value;
             }
