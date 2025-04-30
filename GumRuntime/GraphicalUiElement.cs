@@ -134,7 +134,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     protected IRenderableIpso mContainedObjectAsIpso;
     protected IVisible mContainedObjectAsIVisible;
 
-    GraphicalUiElement mWhatContainsThis;
+    GraphicalUiElement? mWhatContainsThis;
 
     /// <summary>
     /// A flat list of all GraphicalUiElements contained by this element. For example, if this GraphicalUiElement
@@ -1014,7 +1014,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// <summary>
     /// The ScreenSave or Component which contains this instance.
     /// </summary>
-    public GraphicalUiElement ElementGueContainingThis
+    public GraphicalUiElement? ElementGueContainingThis
     {
         get
         {
@@ -1039,7 +1039,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
-    public GraphicalUiElement EffectiveParentGue
+    public GraphicalUiElement? EffectiveParentGue
     {
         get
         {
@@ -3323,7 +3323,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             if (mXUnits == GeneralUnitType.PixelsFromMiddle || mXUnits == GeneralUnitType.PixelsFromMiddleInverted ||
                 mXUnits == GeneralUnitType.PixelsFromLarge)
             {
-                if (this.EffectiveParentGue.ChildrenLayout == ChildrenLayout.LeftToRightStack)
+                if (this.EffectiveParentGue?.ChildrenLayout == ChildrenLayout.LeftToRightStack)
                 {
                     System.Collections.IList siblings = null;
 
@@ -3391,7 +3391,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromBaseline ||
                 mYUnits == GeneralUnitType.Percentage)
             {
-                if (this.EffectiveParentGue.ChildrenLayout == ChildrenLayout.TopToBottomStack)
+                if (this.EffectiveParentGue?.ChildrenLayout == ChildrenLayout.TopToBottomStack)
                 {
                     System.Collections.IList siblings = null;
 
@@ -3582,7 +3582,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         bool wasHandledX;
         bool wasHandledY;
 
-        bool canWrap = EffectiveParentGue != null && EffectiveParentGue.WrapsChildren;
+        bool canWrap = EffectiveParentGue?.WrapsChildren == true;
 
         GetParentOffsets(canWrap, shouldWrap, parentWidth, parentHeight, isParentFlippedHorizontally,
             out parentOriginOffsetX, out parentOriginOffsetY,

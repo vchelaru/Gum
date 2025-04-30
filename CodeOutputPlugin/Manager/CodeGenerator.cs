@@ -4343,17 +4343,22 @@ public class CodeGenerator
         else
         {
             var baseDefaultState = baseElement?.DefaultState;
-            RecursiveVariableFinder baseRecursiveVariableFinder = new RecursiveVariableFinder(baseDefaultState);
+            if (baseDefaultState != null)
+            {
 
-            var defaultState = currentElement.DefaultState;
-            var variablesToConsider = defaultState.Variables
-                .Where(item =>
-                {
-                    return GetIfVariableShouldBeIncludedForInstance(instance, item, baseRecursiveVariableFinder);
-                })
-                .ToArray();
-            return variablesToConsider;
+                RecursiveVariableFinder baseRecursiveVariableFinder = new RecursiveVariableFinder(baseDefaultState);
+
+                var defaultState = currentElement.DefaultState;
+                var variablesToConsider = defaultState.Variables
+                    .Where(item =>
+                    {
+                        return GetIfVariableShouldBeIncludedForInstance(instance, item, baseRecursiveVariableFinder);
+                    })
+                    .ToArray();
+                return variablesToConsider;
+            }
         }
+        return new VariableSave[0];
     }
 
     private static bool GetIfVariableShouldBeIncludedForInstance(InstanceSave instance, VariableSave item, RecursiveVariableFinder baseRecursiveVariableFinder)
@@ -4685,12 +4690,16 @@ public class CodeGenerator
         }
     }
 
-    private static bool IsOfXamarinFormsType(ElementSave element, string xamarinFormsType)
+    private static bool IsOfXamarinFormsType(ElementSave? element, string xamarinFormsType)
     {
-        bool isRightType = element?.Name.EndsWith("/" + xamarinFormsType) == true;
+        if(element == null)
+        {
+            return false;
+        }
+        bool isRightType = element.Name.EndsWith("/" + xamarinFormsType) == true;
         if (!isRightType)
         {
-            var elementBaseType = element?.BaseType;
+            var elementBaseType = element.BaseType;
 
             isRightType = elementBaseType?.EndsWith("/" + xamarinFormsType) == true;
         }
