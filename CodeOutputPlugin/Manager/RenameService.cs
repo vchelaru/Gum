@@ -15,10 +15,10 @@ internal class RenameService
     private readonly CodeGenerationFileLocationsService _codeGenerationFileLocationsService;
     private CodeGenerationService _codeGenerationService;
 
-    public RenameService()
+    public RenameService(CodeGenerationService codeGenerationService)
     {
         _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService();
-        _codeGenerationService = new CodeGenerationService();
+        _codeGenerationService = codeGenerationService;
     }
 
     internal void HandleRename(ElementSave element, string oldName, CodeOutputProjectSettings codeOutputProjectSettings)

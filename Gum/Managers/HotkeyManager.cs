@@ -317,15 +317,14 @@ public class HotkeyManager : Singleton<HotkeyManager>
         {
             if(_selectedState.SelectedInstance != null)
             {
-                // todo - and then close this: https://github.com/vchelaru/Gum/issues/680
-                //_guiCommands.ShowRenameInstanceWidow(_selectedState.SelectedInstance);
+                _guiCommands.ShowRenameInstanceWidow(_selectedState.SelectedInstance);
+                e.Handled = true;
             }
             else if(_selectedState.SelectedElement != null &&
                 _selectedState.SelectedElement is not StandardElementSave)
             {
                 _guiCommands.ShowRenameElementWindow(_selectedState.SelectedElement);
                 e.Handled = true;
-
             }
         }
     }

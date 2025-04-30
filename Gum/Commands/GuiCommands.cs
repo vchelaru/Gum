@@ -42,6 +42,11 @@ namespace Gum.Commands
 
         #endregion
 
+        public GuiCommands()
+        {
+
+        }
+
         internal void Initialize(MainWindow mainWindow, MainPanelControl mainPanelControl)
         {
             this.MainWindow = mainWindow;
@@ -637,6 +642,28 @@ namespace Gum.Commands
             {
                 element.Name = folder + window.Result;
                 SetVariableLogic.Self.PropertyValueChanged("Name", oldName, null, refresh: true,
+                    recordUndo: true,
+                    trySave: true);
+            }
+        }
+
+        public void ShowRenameInstanceWidow(InstanceSave instance)
+        {
+            var oldName = instance.Name;
+
+            var window = new CustomizableTextInputWindow();
+            window.Title = "Enter new name:";
+            window.Message = string.Empty;
+            window.HighlightText();
+
+            window.Result = oldName;
+
+            var dialogResult = window.ShowDialog();
+
+            if (dialogResult == true)
+            {
+                instance.Name = window.Result;
+                SetVariableLogic.Self.PropertyValueChanged("Name", oldName, instance, refresh: true,
                     recordUndo: true,
                     trySave: true);
             }

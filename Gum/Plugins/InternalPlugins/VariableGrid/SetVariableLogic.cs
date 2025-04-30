@@ -25,10 +25,11 @@ namespace Gum.PropertyGridHelpers
 {
     public class SetVariableLogic : Singleton<SetVariableLogic>
     {
-        private static readonly VariableReferenceLogic _variableReferenceLogic;
-        private static readonly FontManager _fontManager;
+        private VariableReferenceLogic _variableReferenceLogic;
+        private FontManager _fontManager;
 
-        static SetVariableLogic()
+        // this is needed as we unroll all the other singletons...
+        public void Initialize()
         {
 
             _variableReferenceLogic = new VariableReferenceLogic(
