@@ -231,6 +231,7 @@
   * [Custom Runtimes](code/monogame/custom-runtimes.md)
   * [GumBatch](code/monogame/gumbatch.md)
   * [Gum Forms](code/monogame/gum-forms/README.md)
+    * [Binding (ViewModels)](code/monogame/gum-forms/binding-viewmodels.md)
     * [Controls](code/monogame/gum-forms/controls/README.md)
       * [Button](code/monogame/gum-forms/controls/button.md)
       * [CheckBox](code/monogame/gum-forms/controls/checkbox.md)
