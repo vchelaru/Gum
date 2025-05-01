@@ -87,11 +87,11 @@ For example, the following image shows a component with a state called **State1*
 
 As mentioned in the introduction, if a variable is explicitly set on one state in a category, then all other states in that category will that same variable set to its default. For example, if we set the **X** variable in the **LeftSide** state, the **X** variable in the **RightSide** state will become explicitly set (black instead of green).
 
-![](<../../../.gitbook/assets/sharedexplicitset (1).gif>)
+![Setting X on LeftSide also sets X on other states](<../../../.gitbook/assets/30_20 07 19.gif>)
 
 Once the **X** variable is set on one state in a category, all other states in the same category will automatically have this value set - even new states:
 
-![](../../../.gitbook/assets/newcategorizedstate.gif)
+![New state automatically having variables set](<../../../.gitbook/assets/30_20 08 43.gif>)
 
 ## Removing Variables from Categories
 
