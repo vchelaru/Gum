@@ -533,13 +533,13 @@ namespace Gum.PropertyGridHelpers
 
         private void FillPropertyList(List<InstanceSavePropertyDescriptor> pdc, InstanceSave instanceSave)
         {
-            ElementSave elementSave;
+            ElementSave instanceBaseType;
             StateSave defaultState;
-            GetDefaultState(instanceSave, out elementSave, out defaultState);
+            GetDefaultState(instanceSave, out instanceBaseType, out defaultState);
 
-            if(elementSave != null)
+            if(instanceBaseType != null)
             {
-                FillPropertyList(pdc, elementSave, instanceSave, defaultState, AmountToDisplay.ElementAndExposedOnly);
+                FillPropertyList(pdc, instanceBaseType, instanceSave, defaultState, AmountToDisplay.ElementAndExposedOnly);
             }
         }
 
