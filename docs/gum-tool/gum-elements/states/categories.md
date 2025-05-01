@@ -42,7 +42,7 @@ Once the state has been created it can be selected and variables can be changed 
 
 ## Categories Create Variables
 
-Once a category is created, the screen, component, or standard element which contains the category i automatically given a variable for that category type. This variable can be assigned on the element itself or on instances of the element.
+Once a category is created, the screen, component, or standard element which contains the category is automatically given a variable for that category type. This variable can be assigned on the element itself or on instances of the element.
 
 For example, consider a component with a category named ExampleCategory with two states: State1 and State2.
 
@@ -79,25 +79,19 @@ These states can be combined in a new category. For example, a category called C
 
 ## Explicit Values Across States in a Category
 
-Normally, when a new state is created, all variables are explicitly unset. The value displayed in the properties window will be the value inherited from the default state.
+Normally, when a new category is created and new states are added, all states are _empty_ - they do not assign any variables. The value displayed in the properties window is inherited from the default state.
 
 For example, the following image shows a component with a state called **State1** with no variables explicitly assigned. Notice all values are green:
 
-![](../../../.gitbook/assets/unassignedvalues.png)
+![](<../../../.gitbook/assets/30_19 46 57.png>)
 
-We can see the same behavior on a categorized state. The following image shows the categorized **LeftSide** state with all inherited values:
+As mentioned in the introduction, if a variable is explicitly set on one state in a category, then all other states in that category will that same variable set to its default. For example, if we set the **X** variable in the **LeftSide** state, the **X** variable in the **RightSide** state will become explicitly set (black instead of green).
 
-![](../../../.gitbook/assets/unassignedcategorized.png)
-
-As mentioned in the introduction, if a variable is explicitly set on one state in a category, then all other states in that category will that same variable set to its default.
-
-For example, if we set the **X** variable in the **LeftSide** state, the **X** variable in the **RightSide** state will become explicitly set (black instead of green).
-
-![](<../../../.gitbook/assets/sharedexplicitset (1).gif>)
+![Setting X on LeftSide also sets X on other states](<../../../.gitbook/assets/30_20 07 19.gif>)
 
 Once the **X** variable is set on one state in a category, all other states in the same category will automatically have this value set - even new states:
 
-![](../../../.gitbook/assets/newcategorizedstate.gif)
+![New state automatically having variables set](<../../../.gitbook/assets/30_20 08 43.gif>)
 
 ## Removing Variables from Categories
 
