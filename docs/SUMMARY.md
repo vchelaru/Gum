@@ -165,6 +165,7 @@
     * [GetAbsoluteHeight](code/gum-code-reference/graphicaluielement/getabsoluteheight.md)
     * [GetAbsoluteWidth](code/gum-code-reference/graphicaluielement/getabsolutewidth.md)
     * [GetChildByNameRecursively](code/gum-code-reference/graphicaluielement/getchildbynamerecursively.md)
+    * [GetFrameworkElementByName](code/gum-code-reference/graphicaluielement/getframeworkelementbyname.md)
     * [IsAllLayoutSuspended](code/gum-code-reference/graphicaluielement/isalllayoutsuspended.md)
     * [Parent](code/gum-code-reference/graphicaluielement/parent.md)
     * [RemoveFromManagers](code/gum-code-reference/graphicaluielement/removefrommanagers.md)

@@ -63,6 +63,14 @@ public class OptionsScreenViewModel : ViewModel
 }
 ```
 
+## BindingContext
+
+The `BindingContext` property exists on `FrameworkElement` types as well as all visuals which inherit from `BindableGue` such as TextRuntime and ContainerRuntime.
+
+This property is used to assign the view model that a control should use. The assignment of `BindingContext` cascades from parent to all children recursively, so typically the BindingContext is only assigned at the top level, such as on a screen or `StackPanel`.&#x20;
+
+Once `BindingContext` is assigned, individual UI properties can be bound to properties on the view model. To bind to a property, a reference to a UI control is needed. This reference can be obtained by using properties in generated code or by getting an instance of a FrameworkElement by calling `GetFrameworkElementByName`.
+
 
 
 UNDER CONSTRUCTION....
