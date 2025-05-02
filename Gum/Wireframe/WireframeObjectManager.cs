@@ -52,6 +52,7 @@ namespace Gum.Wireframe
         GraphicalUiElementManager gueManager;
         private LocalizationManager _localizationManager;
         private LayerService _layerService;
+        private CameraController _cameraController;
 
 
         #endregion
@@ -93,9 +94,14 @@ namespace Gum.Wireframe
         public void Initialize(WireframeEditControl editControl, 
             WireframeControl wireframeControl, 
             LocalizationManager localizationManager,
-            LayerService layerService
+            LayerService layerService,
+            CameraController cameraController
             )
         {
+            _localizationManager = localizationManager;
+            _layerService = layerService;
+            _cameraController = cameraController;
+ 
             WireframeControl = wireframeControl;
             WireframeControl.AfterXnaInitialize += HandleAfterXnaIntiailize;
 
@@ -110,9 +116,6 @@ namespace Gum.Wireframe
 
             ElementSaveExtensions.CustomCreateGraphicalComponentFunc = HandleCreateGraphicalComponent;
 
-            _localizationManager = localizationManager;
-            _layerService = layerService;
- 
         }
 
         private IRenderable HandleCreateGraphicalComponent(string type, ISystemManagers systemManagers)
@@ -155,7 +158,7 @@ namespace Gum.Wireframe
 
         private void HandleKeyPress(object sender, System.Windows.Forms.KeyEventArgs e)
         {
-            CameraController.Self.HandleKeyPress(e);
+            _cameraController.HandleKeyPress(e);
         }
 
         private void HandleAfterXnaIntiailize(object sender, EventArgs e)

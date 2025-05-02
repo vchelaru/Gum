@@ -440,7 +440,7 @@ internal class MainEditorTabPlugin : InternalPlugin
 
         var localizationManager = Builder.Get<LocalizationManager>();
 
-        Wireframe.WireframeObjectManager.Self.Initialize(_wireframeEditControl, _wireframeControl, localizationManager, _layerService);
+        Wireframe.WireframeObjectManager.Self.Initialize(_wireframeEditControl, _wireframeControl, localizationManager, _layerService, CameraController.Self);
         _wireframeControl.Initialize(_wireframeEditControl, gumEditorPanel, HotkeyManager.Self, _selectionManager);
 
         // _layerService must be created after _wireframeControl so that the SystemManagers.Default are assigned
