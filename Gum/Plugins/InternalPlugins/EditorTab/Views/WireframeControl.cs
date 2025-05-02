@@ -25,24 +25,6 @@ using Gum.Wireframe;
 
 namespace Gum.Plugins.InternalPlugins.EditorTab.Views;
 
-#region WireframeControlPlugin Class
-
-[Export(typeof(PluginBase))]
-public class WireframeControlPlugin : InternalPlugin
-{
-
-    public override void StartUp()
-    {
-        ProjectLoad += new Action<GumProjectSave>(OnProjectLoad);
-    }
-
-    void OnProjectLoad(GumProjectSave obj)
-    {
-        GuiCommands_Old.Self.UpdateWireframeToProject();
-    }
-}
-
-#endregion
 
 public class WireframeControl : GraphicsDeviceControl
 {

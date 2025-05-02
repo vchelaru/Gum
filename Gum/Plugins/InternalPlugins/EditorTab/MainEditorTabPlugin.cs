@@ -234,6 +234,10 @@ internal class MainEditorTabPlugin : InternalPlugin
         GraphicalUiElement.CanvasWidth = save.DefaultCanvasWidth;
         GraphicalUiElement.CanvasHeight = save.DefaultCanvasHeight;
 
+
+        _wireframeControl.UpdateCanvasBoundsToProject();
+
+
         _selectionManager.RestrictToUnitValues =
             save.RestrictToUnitValues;
 
@@ -433,8 +437,6 @@ internal class MainEditorTabPlugin : InternalPlugin
     private void HandleXnaInitialized()
     {
         _scrollbarService.HandleWireframeInitialized(_wireframeControl, gumEditorPanel);
-
-        ToolCommands.GuiCommands_Old.Self.Initialize(_wireframeControl);
 
         _layerService = new Services.LayerService();
 
@@ -709,7 +711,7 @@ internal class MainEditorTabPlugin : InternalPlugin
 
 
 
-    public void HandleWireframeInitialized()
+    void HandleWireframeInitialized()
     {
         ContextMenuStrip wireframeContextMenuStrip;
 
