@@ -25,6 +25,7 @@ internal class MainTreeViewPlugin : InternalPlugin
     private void AssignEvents()
     {
         this.InstanceSelected += MainTreeViewPlugin_InstanceSelected;
+        this.InstanceAdd += HandleInstanceAdd;
         this.ElementSelected += HandleElementSelected;
 
         this.BehaviorSelected += HandleBehaviorSelected;
@@ -36,6 +37,11 @@ internal class MainTreeViewPlugin : InternalPlugin
         this.BehaviorCreated += HandleBehaviorCreated;
 
         this.ProjectLoad += HandleProjectLoad;
+    }
+
+    private void HandleInstanceAdd(ElementSave save1, InstanceSave save2)
+    {
+        ElementTreeViewManager.Self.RefreshUi();
     }
 
     private void HandleBehaviorDeleted(BehaviorSave save)

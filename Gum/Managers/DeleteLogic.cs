@@ -466,7 +466,6 @@ namespace Gum.Managers
                 GumCommands.Self.GuiCommands.RefreshStateTreeView();
                 GumCommands.Self.GuiCommands.RefreshVariables();
                 WireframeObjectManager.Self.RefreshAll(true);
-                SelectionManager.Self.Refresh();
 
                 PluginManager.Self.CategoryDelete(category);
             }
@@ -510,7 +509,6 @@ namespace Gum.Managers
                     GumCommands.Self.GuiCommands.RefreshStateTreeView();
                     GumCommands.Self.GuiCommands.RefreshVariables();
                     WireframeObjectManager.Self.RefreshAll(true);
-                    SelectionManager.Self.Refresh();
 
                     if (shouldSelectAfterRemoval)
                     {
