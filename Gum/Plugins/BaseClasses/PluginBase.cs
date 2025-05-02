@@ -11,6 +11,7 @@ using Gum.Responses;
 using Gum.Wireframe;
 using ToolsUtilities;
 using Gum.ToolStates;
+using ExCSS;
 
 namespace Gum.Plugins.BaseClasses
 {
@@ -81,6 +82,7 @@ namespace Gum.Plugins.BaseClasses
         /// </summary>
         public event Func<VariableSave, RecursiveVariableFinder, bool> VariableExcluded;
         public event Action WireframeRefreshed;
+        public event Action<string> WireframePropertyChanged;
 
         /// <summary>
         /// Event raised when an ElementSave's variable is set.
@@ -468,6 +470,9 @@ namespace Gum.Plugins.BaseClasses
         public void CallBeforeProjectSave(GumProjectSave savedProject) => BeforeProjectSave?.Invoke(savedProject);
 
         public void CallWireframeRefreshed() => WireframeRefreshed?.Invoke();
+
+        public void CallWireframePropertyChanged(string propertyName) =>
+            WireframePropertyChanged?.Invoke(propertyName);
 
         public StateSave CallGetDefaultStateFor(string type) => GetDefaultStateForType?.Invoke(type);
 

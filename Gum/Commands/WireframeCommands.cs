@@ -1,4 +1,5 @@
-﻿using Gum.Wireframe;
+﻿using Gum.Plugins;
+using Gum.Wireframe;
 
 namespace Gum.Commands
 {
@@ -32,10 +33,15 @@ namespace Gum.Commands
             set => WireframeObjectManager.Self.BackgroundSprite.Visible = value;
         }
 
+        bool areHighlightsVisible;
         public bool AreHighlightsVisible
         {
-            get => SelectionManager.Self.AreHighlightsVisible;
-            set => SelectionManager.Self.AreHighlightsVisible = value;
+            get => areHighlightsVisible;
+            set
+            {
+                areHighlightsVisible = value;
+                PluginManager.Self.WireframePropertyChanged(nameof(AreHighlightsVisible));
+            }
         }
     }
 }

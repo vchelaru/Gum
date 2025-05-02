@@ -321,6 +321,7 @@
 	<ItemGroup>
 		<Folder Include="Converters\" />
 		<Folder Include="Libraries\Xna\" />
+		<Folder Include="Plugins\InternalPlugins\ScreenshotPlugin\" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="DynamicExpresso.Core">

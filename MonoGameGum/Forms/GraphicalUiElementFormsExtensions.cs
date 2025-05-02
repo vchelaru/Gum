@@ -53,7 +53,7 @@ public static class GraphicalUiElementFormsExtensions
         return frameworkElement;
     }
 
-    public static FrameworkElementType? TryGetFrameworkElementByName<FrameworkElementType>(this GraphicalUiElement graphicalUiElement, string name) where FrameworkElementType : FrameworkElement
+    public static FrameworkElementType TryGetFrameworkElementByName<FrameworkElementType>(this GraphicalUiElement graphicalUiElement, string name) where FrameworkElementType : FrameworkElement
     {
         var frameworkVisual = graphicalUiElement.GetGraphicalUiElementByName(name);
 

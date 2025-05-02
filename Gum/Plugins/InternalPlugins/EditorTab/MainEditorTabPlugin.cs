@@ -83,6 +83,8 @@ internal class MainEditorTabPlugin : InternalPlugin
     readonly ScrollbarService _scrollbarService;
     private readonly GuiCommands _guiCommands;
     private readonly LocalizationManager _localizationManager;
+    private readonly ScreenshotService _screenshotService;
+    private readonly SelectionManager _selectionManager;
     WireframeControl _wireframeControl;
 
     private FlatRedBall.AnimationEditorForms.Controls.WireframeEditControl _wireframeEditControl;
@@ -100,11 +102,18 @@ internal class MainEditorTabPlugin : InternalPlugin
         _scrollbarService = new ScrollbarService();
         _guiCommands = Builder.Get<GuiCommands>();
         _localizationManager = Builder.Get<LocalizationManager>();
+        _screenshotService = new ScreenshotService();
+        _selectionManager = SelectionManager.Self;
     }
 
     public override void StartUp()
     {
         AssignEvents();
+
+        var menuItem = AddMenuItem("File", "Export as Image");
+        _screenshotService.InitializeMenuItem(menuItem);
+        BeforeRender += _screenshotService.HandleBeforeRender;
+        AfterRender += _screenshotService.HandleAfterRender;
 
         HandleWireframeInitialized();
 
@@ -114,20 +123,46 @@ internal class MainEditorTabPlugin : InternalPlugin
     private void AssignEvents()
     {
         this.ReactToStateSaveSelected += HandleStateSelected;
+
         this.InstanceSelected += HandleInstanceSelected;
+        this.InstanceReordered += HandleInstanceReordered;
+        this.InstanceDelete += HandleInstanceDelete;
+
         this.ElementSelected += HandleElementSelected;
+        this.ElementSelected += _scrollbarService.HandleElementSelected;
         this.ElementDelete += HandleElementDeleted;
+
         this.VariableSetLate += HandleVariableSetLate;
 
         this.CameraChanged += _scrollbarService.HandleCameraChanged;
         this.XnaInitialized += HandleXnaInitialized;
         this.WireframeResized += _scrollbarService.HandleWireframeResized;
-        this.ElementSelected += _scrollbarService.HandleElementSelected;
         this.UiZoomValueChanged += HandleUiZoomValueChanged;
+
         this.ProjectLoad += HandleProjectLoad;
         this.ProjectPropertySet += HandleProjectPropertySet;
+
+        this.WireframePropertyChanged += HandleWireframePropertyChanged;
     }
 
+    private void HandleInstanceDelete(ElementSave save1, InstanceSave save2)
+    {
+        _selectionManager.Refresh();
+    }
+
+    private void HandleInstanceReordered(InstanceSave save)
+    {
+        _selectionManager.Refresh();
+    }
+
+    private void HandleWireframePropertyChanged(string name)
+    {
+        if(name == nameof(WireframeCommands.AreHighlightsVisible))
+        {
+            _selectionManager.AreHighlightsVisible = 
+                GumCommands.Self.WireframeCommands.AreHighlightsVisible;
+        }
+    }
 
     private void HandleProjectLoad(GumProjectSave save)
     {
@@ -306,7 +341,7 @@ internal class MainEditorTabPlugin : InternalPlugin
             }
 
 
-            SelectionManager.Self.Refresh();
+            _selectionManager.Refresh();
         }
     }
 

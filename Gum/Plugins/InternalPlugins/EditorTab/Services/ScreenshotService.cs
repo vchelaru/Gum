@@ -1,24 +1,22 @@
-﻿using Gum.Plugins.BaseClasses;
+﻿using Gum.Commands;
+using Gum.Plugins.BaseClasses;
 using Gum.ToolStates;
 using RenderingLibrary.Graphics;
 using System;
 using System.ComponentModel.Composition;
+using System.Security.Cryptography;
+using System.Windows.Forms;
 
-namespace Gum.Plugins.InternalPlugins.ScreenshotPlugin
+namespace Gum.Plugins.InternalPlugins.EditorTab.Services
 {
-    [Export(typeof(PluginBase))]
-    internal class MainScreenshotPlugin : InternalPlugin
+    internal class ScreenshotService
     {
         string nextScreenshotFileLocation = null;
         Microsoft.Xna.Framework.Graphics.RenderTarget2D renderTarget;
 
-        public override void StartUp()
+        public void InitializeMenuItem(ToolStripMenuItem item)
         {
-            var item = this.AddMenuItem("File", "Export as Image");
             item.Click += HandleExportAsImageClicked;
-
-            BeforeRender += HandleBeforeRender;
-            AfterRender += HandleAfterRender;
         }
 
         private void HandleExportAsImageClicked(object sender, EventArgs e)
@@ -40,7 +38,7 @@ namespace Gum.Plugins.InternalPlugins.ScreenshotPlugin
             if (result == true)
             {
                 nextScreenshotFileLocation = dlg.FileName;
-                
+
             }
         }
 
@@ -48,9 +46,9 @@ namespace Gum.Plugins.InternalPlugins.ScreenshotPlugin
         bool wereRulersVisible;
         bool wasBackgroundVisible;
         bool wereHighlightsVisible;
-        private void HandleBeforeRender()
+        public void HandleBeforeRender()
         {
-            if(nextScreenshotFileLocation != null)
+            if (nextScreenshotFileLocation != null)
             {
                 wereRulersVisible =
                     GumCommands.Self.WireframeCommands.AreRulersVisible;
@@ -65,13 +63,14 @@ namespace Gum.Plugins.InternalPlugins.ScreenshotPlugin
                 GumCommands.Self.WireframeCommands.AreRulersVisible = false;
                 GumCommands.Self.WireframeCommands.AreCanvasBoundsVisible = false;
                 GumCommands.Self.WireframeCommands.IsBackgroundGridVisible = false;
+                GumCommands.Self.WireframeCommands.AreHighlightsVisible = false;
 
                 SelectedState.Self.SelectedIpso = null;
 
                 var graphicsDevice = Renderer.Self.GraphicsDevice;
 
                 var width = graphicsDevice.Viewport.Width;
-                var height= graphicsDevice.Viewport.Height;
+                var height = graphicsDevice.Viewport.Height;
 
                 renderTarget = new Microsoft.Xna.Framework.Graphics.RenderTarget2D(
                     graphicsDevice, width, height);
@@ -84,21 +83,21 @@ namespace Gum.Plugins.InternalPlugins.ScreenshotPlugin
             }
         }
 
-        private void HandleAfterRender()
+        public void HandleAfterRender()
         {
-            if(nextScreenshotFileLocation != null && renderTarget != null)
+            if (nextScreenshotFileLocation != null && renderTarget != null)
             {
                 var graphicsDevice = Renderer.Self.GraphicsDevice;
                 graphicsDevice.SetRenderTarget(null);
 
                 try
                 {
-                    using(var stream = System.IO.File.OpenWrite(nextScreenshotFileLocation))
+                    using (var stream = System.IO.File.OpenWrite(nextScreenshotFileLocation))
                     {
                         renderTarget.SaveAsPng(stream, renderTarget.Width, renderTarget.Height);
                     }
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     GumCommands.Self.GuiCommands.PrintOutput(e.ToString());
                 }
@@ -114,6 +113,6 @@ namespace Gum.Plugins.InternalPlugins.ScreenshotPlugin
 
             }
         }
-        
+
     }
 }

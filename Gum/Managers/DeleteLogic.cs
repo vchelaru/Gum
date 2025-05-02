@@ -325,9 +325,6 @@ namespace Gum.Managers
             ElementSave elementToReselect = selectedElement;
             BehaviorSave behaviorToReselect = behavior;
 
-            // Deselect before selecting the new
-            // selected element and before refreshing everything
-            SelectionManager.Self.Deselect();
 
             SelectedState.Self.SelectedInstance = null;
             if(selectedElement != null)
@@ -342,8 +339,6 @@ namespace Gum.Managers
             }
 
             WireframeObjectManager.Self.RefreshAll(true);
-
-            SelectionManager.Self.Refresh();
         }
 
         public void RemoveStateCategory(StateSaveCategory category, IStateContainer stateCategoryListContainer)

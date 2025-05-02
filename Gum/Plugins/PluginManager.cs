@@ -790,11 +790,12 @@ namespace Gum.Plugins
         internal void BehaviorReferencesChanged(ElementSave elementSave) => 
             CallMethodOnPlugin(plugin => plugin.CallBehaviorReferencesChanged(elementSave));
 
-        internal void WireframeRefreshed()
-        {
+        internal void WireframeRefreshed() =>
             CallMethodOnPlugin(
                 plugin => plugin.CallWireframeRefreshed());
-        }
+
+        internal void WireframePropertyChanged(string propertyName) =>
+            CallMethodOnPlugin(plugin => plugin.CallWireframePropertyChanged(propertyName));
 
         internal IRenderableIpso CreateRenderableForType(string type)
         {
