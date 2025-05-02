@@ -52,9 +52,6 @@ internal class MainTreeViewPlugin : InternalPlugin
     private void HandleProjectLoad(GumProjectSave save)
     {
         ElementTreeViewManager.Self.RefreshUi();
-
-        SelectionManager.Self.RestrictToUnitValues = 
-            save.RestrictToUnitValues;
     }
 
     private void HandleElementAdd(ElementSave save)

@@ -139,6 +139,7 @@ internal class MainEditorTabPlugin : InternalPlugin
         this.ElementSelected += _scrollbarService.HandleElementSelected;
         this.ElementDelete += HandleElementDeleted;
 
+        this.VariableSet += HandleVariableSet;
         this.VariableSetLate += HandleVariableSetLate;
 
         this.CategoryDelete += HandleCategoryDelete;
@@ -150,10 +151,29 @@ internal class MainEditorTabPlugin : InternalPlugin
         this.WireframeResized += _scrollbarService.HandleWireframeResized;
         this.UiZoomValueChanged += HandleUiZoomValueChanged;
 
+        this.IpsoSelected += HandleIpsoSelected;
+        this.SetHighlightedIpso += HandleSetHighlightedElement;
+
         this.ProjectLoad += HandleProjectLoad;
         this.ProjectPropertySet += HandleProjectPropertySet;
 
         this.WireframePropertyChanged += HandleWireframePropertyChanged;
+    }
+
+    private void HandleIpsoSelected(IPositionedSizedObject ipso)
+    {
+        _selectionManager.SelectedGue = ipso as GraphicalUiElement;
+    }
+
+    private void HandleVariableSet(ElementSave save1, InstanceSave save2, string arg3, object arg4)
+    {
+        _selectionManager.Refresh();
+
+    }
+
+    private void HandleSetHighlightedElement(IPositionedSizedObject whatToHighlight)
+    {
+        _selectionManager.HighlightedIpso = whatToHighlight;
     }
 
     private void HandleStateDelete(StateSave save)
@@ -190,6 +210,9 @@ internal class MainEditorTabPlugin : InternalPlugin
     {
         GraphicalUiElement.CanvasWidth = save.DefaultCanvasWidth;
         GraphicalUiElement.CanvasHeight = save.DefaultCanvasHeight;
+
+        _selectionManager.RestrictToUnitValues =
+            save.RestrictToUnitValues;
 
         AdjustTextureFilter();
     }
@@ -372,12 +395,16 @@ internal class MainEditorTabPlugin : InternalPlugin
     private void HandleElementSelected(ElementSave save)
     {
         WireframeObjectManager.Self.RefreshAll(forceLayout: true);
+        _selectionManager.Refresh();
+
     }
 
     private void HandleInstanceSelected(ElementSave element, InstanceSave instance)
     {
         WireframeObjectManager.Self.RefreshAll(forceLayout: false);
         _editingManager.RefreshContextMenuStrip();
+        _selectionManager.WireframeEditor?.UpdateAspectRatioForGrabbedIpso();
+        _selectionManager.Refresh();
     }
 
     private void HandleXnaInitialized()
@@ -541,7 +568,7 @@ internal class MainEditorTabPlugin : InternalPlugin
         elementStack.Add(new ElementWithState(SelectedState.Self.SelectedElement) { StateName = SelectedState.Self.SelectedStateSave.Name });
 
         // see if it's over the component:
-        IPositionedSizedObject ipsoOver = SelectionManager.Self.GetRepresentationAt(worldX, worldY, false, elementStack);
+        IPositionedSizedObject ipsoOver = _selectionManager.GetRepresentationAt(worldX, worldY, false, elementStack);
         if (ipsoOver?.Tag is ComponentSave component && (component.BaseType == "Sprite" || component.BaseType == "NineSlice"))
         {
             string fileName = FileManager.MakeRelative(files[0], FileLocations.Self.ProjectFolder);
@@ -640,7 +667,7 @@ internal class MainEditorTabPlugin : InternalPlugin
         List<ElementWithState> elementStack = new List<ElementWithState>();
         elementStack.Add(new ElementWithState(SelectedState.Self.SelectedElement) { StateName = SelectedState.Self.SelectedStateSave.Name });
 
-        IPositionedSizedObject ipsoOver = SelectionManager.Self.GetRepresentationAt(worldX, worldY, false, elementStack);
+        IPositionedSizedObject ipsoOver = _selectionManager.GetRepresentationAt(worldX, worldY, false, elementStack);
 
         if (ipsoOver != null && ipsoOver.Tag is InstanceSave)
         {

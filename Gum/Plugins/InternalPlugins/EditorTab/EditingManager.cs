@@ -47,13 +47,6 @@ public partial class EditingManager
     public void Initialize(System.Windows.Forms.ContextMenuStrip contextMenuStrip)
     {
         RightClickInitialize(contextMenuStrip);
-
-        // this should be moved to a plugin.
-        GumEvents.Self.InstanceSelected +=
-            () =>
-            {
-                SelectionManager.Self.WireframeEditor?.UpdateAspectRatioForGrabbedIpso();
-            };
     }
 
 

@@ -20,6 +20,7 @@ using Gum.Wireframe;
 using Gum.ToolStates;
 using Gum.Managers;
 using Gum.Services;
+using RenderingLibrary;
 
 namespace Gum.Plugins
 {
@@ -917,6 +918,11 @@ namespace Gum.Plugins
         internal void HandleUiZoomValueChanged() =>
             CallMethodOnPlugin(plugin => plugin.CallUiZoomValueChanged());
 
+        public void SetHighlightedIpso(IPositionedSizedObject positionedSizedObject) =>
+            CallMethodOnPlugin(plugin => plugin.CallSetHighlightedIpso(positionedSizedObject));
+
+        public void IpsoSelected(IPositionedSizedObject? positionedSizedObject) =>
+            CallMethodOnPlugin(plugin => plugin.CallIpsoSelected(positionedSizedObject));
 
         #endregion
 

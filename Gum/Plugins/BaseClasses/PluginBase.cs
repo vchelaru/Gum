@@ -12,6 +12,7 @@ using Gum.Wireframe;
 using ToolsUtilities;
 using Gum.ToolStates;
 using ExCSS;
+using RenderingLibrary;
 
 namespace Gum.Plugins.BaseClasses
 {
@@ -182,6 +183,9 @@ namespace Gum.Plugins.BaseClasses
         public event Func<string, ElementSave, InstanceSave, string, bool> IsExtensionValid;
 
         public event Action UiZoomValueChanged;
+
+        public event Action<IPositionedSizedObject> SetHighlightedIpso;
+        public event Action<IPositionedSizedObject?>? IpsoSelected;
 
         #endregion
 
@@ -494,6 +498,12 @@ namespace Gum.Plugins.BaseClasses
             IsExtensionValid?.Invoke(extension, parentElement, instance, changedMember) ?? false;
 
         public void CallUiZoomValueChanged() => UiZoomValueChanged?.Invoke();
+
+        public void CallSetHighlightedIpso(IPositionedSizedObject element) =>
+            SetHighlightedIpso?.Invoke(element);
+
+        public void CallIpsoSelected(IPositionedSizedObject? ipso) =>
+            IpsoSelected?.Invoke(ipso);
 
         #endregion
     }
