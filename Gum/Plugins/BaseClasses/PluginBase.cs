@@ -170,22 +170,24 @@ namespace Gum.Plugins.BaseClasses
         public Func<StateSave, IStateContainer, DeleteResponse> GetDeleteStateResponse;
         public Func<StateSaveCategory, IStateContainer, DeleteResponse> GetDeleteStateCategoryResponse;
 
-        public event Action CameraChanged;
-        public event Action XnaInitialized;
-        public event Action WireframeResized;
+        public event Action? CameraChanged;
+        public event Action? XnaInitialized;
+        public event Action? WireframeResized;
 
-        public event Action BeforeRender;
-        public event Action AfterRender;
+        public event Action? BeforeRender;
+        public event Action? AfterRender;
 
-        public event Action<FilePath> ReactToFileChanged;
+        public event Action<FilePath>? ReactToFileChanged;
 
         // Parameters are: extension, parentElement, instance, changedMember
-        public event Func<string, ElementSave, InstanceSave, string, bool> IsExtensionValid;
+        public event Func<string, ElementSave, InstanceSave, string, bool>? IsExtensionValid;
 
-        public event Action UiZoomValueChanged;
+        public event Action? UiZoomValueChanged;
 
-        public event Action<IPositionedSizedObject> SetHighlightedIpso;
+        public event Action<IPositionedSizedObject>? SetHighlightedIpso;
         public event Action<IPositionedSizedObject?>? IpsoSelected;
+
+        public event Func<bool>? TryHandleDelete;
 
         #endregion
 
@@ -361,6 +363,14 @@ namespace Gum.Plugins.BaseClasses
         public void CallExport(ElementSave elementSave) =>
             Export?.Invoke(elementSave);
 
+        public bool CallTryHandleDelete()
+        {
+            if (TryHandleDelete != null)
+            {
+                return TryHandleDelete();
+            }
+            return false;
+        }
 
         public void CallDeleteOptionsWindowShow(DeleteOptionsWindow optionsWindow, Array objectsToDelete) =>
                 DeleteOptionsWindowShow?.Invoke(optionsWindow, objectsToDelete);

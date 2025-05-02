@@ -1,8 +1,10 @@
-﻿namespace Gum.ToolCommands
+﻿using Gum.Plugins.InternalPlugins.EditorTab.Views;
+
+namespace Gum.ToolCommands
 {
     public class GuiCommands_Old
     {
-        Wireframe.WireframeControl mWireframeControl;
+        WireframeControl mWireframeControl;
 
         static GuiCommands_Old mSelf = new GuiCommands_Old();
 
@@ -13,7 +15,7 @@
             set { mSelf = value; }
         }
 
-        public void Initialize(Wireframe.WireframeControl wireframeControl)
+        public void Initialize(WireframeControl wireframeControl)
         {
             mWireframeControl = wireframeControl;
         }

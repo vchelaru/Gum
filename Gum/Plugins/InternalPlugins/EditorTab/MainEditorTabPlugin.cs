@@ -6,6 +6,7 @@ using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using Gum.Plugins.InternalPlugins.EditorTab.Services;
+using Gum.Plugins.InternalPlugins.EditorTab.Views;
 using Gum.Plugins.ScrollBarPlugin;
 using Gum.PropertyGridHelpers;
 using Gum.Services;
@@ -143,12 +144,18 @@ internal class MainEditorTabPlugin : InternalPlugin
         this.VariableSetLate += HandleVariableSetLate;
 
         this.CategoryDelete += HandleCategoryDelete;
+        this.TryHandleDelete += HandleDelete;
 
         this.StateDelete += HandleStateDelete;
 
         this.CameraChanged += _scrollbarService.HandleCameraChanged;
+
         this.XnaInitialized += HandleXnaInitialized;
+        
         this.WireframeResized += _scrollbarService.HandleWireframeResized;
+        this.WireframeRefreshed += HandleWireframeRefreshed;
+        this.WireframePropertyChanged += HandleWireframePropertyChanged;
+        
         this.UiZoomValueChanged += HandleUiZoomValueChanged;
 
         this.IpsoSelected += HandleIpsoSelected;
@@ -157,7 +164,23 @@ internal class MainEditorTabPlugin : InternalPlugin
         this.ProjectLoad += HandleProjectLoad;
         this.ProjectPropertySet += HandleProjectPropertySet;
 
-        this.WireframePropertyChanged += HandleWireframePropertyChanged;
+
+        this.AfterUndo += HandleAfterUndo;
+    }
+
+    private bool HandleDelete()
+    {
+        return _selectionManager.TryHandleDelete();
+    }
+
+    private void HandleWireframeRefreshed()
+    {
+        _selectionManager.Refresh();
+    }
+
+    private void HandleAfterUndo()
+    {
+        _selectionManager.Refresh();
     }
 
     private void HandleIpsoSelected(IPositionedSizedObject ipso)
@@ -418,10 +441,12 @@ internal class MainEditorTabPlugin : InternalPlugin
         var localizationManager = Builder.Get<LocalizationManager>();
 
         Wireframe.WireframeObjectManager.Self.Initialize(_wireframeEditControl, _wireframeControl, localizationManager, _layerService);
-        _wireframeControl.Initialize(_wireframeEditControl, gumEditorPanel, HotkeyManager.Self);
+        _wireframeControl.Initialize(_wireframeEditControl, gumEditorPanel, HotkeyManager.Self, _selectionManager);
 
         // _layerService must be created after _wireframeControl so that the SystemManagers.Default are assigned
         _layerService.Initialize();
+        _selectionManager.Initialize(_layerService);
+
         _wireframeControl.ShareLayerReferences(_layerService);
 
         _editingManager.Initialize(_wireframeContextMenuStrip);
@@ -717,7 +742,7 @@ internal class MainEditorTabPlugin : InternalPlugin
 
     private void CreateWireframeControl(System.Windows.Forms.ContextMenuStrip WireframeContextMenuStrip)
     {
-        this._wireframeControl = new Gum.Wireframe.WireframeControl();
+        this._wireframeControl = new WireframeControl();
         this._wireframeControl.AllowDrop = true;
         this._wireframeControl.Dock = DockStyle.Fill;
         this._wireframeControl.ContextMenuStrip = WireframeContextMenuStrip;

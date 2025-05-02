@@ -90,7 +90,7 @@ public class SelectionManager
         set;
     }
 
-    public GraphicalUiElement SelectedGue
+    public GraphicalUiElement? SelectedGue
     {
         get
         {
@@ -100,7 +100,7 @@ public class SelectionManager
             }
             else
             {
-                return mSelectedIpsos[0] as GraphicalUiElement;
+                return mSelectedIpsos[0];
             }
         }
         set

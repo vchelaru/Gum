@@ -17,6 +17,7 @@ using Matrix = System.Numerics.Matrix4x4;
 using GumRuntime;
 using RenderingLibrary.Math.Geometry;
 using Gum.Plugins.InternalPlugins.EditorTab.Services;
+using Gum.Plugins.InternalPlugins.EditorTab.Views;
 
 namespace Gum.Wireframe
 {
@@ -230,8 +231,6 @@ namespace Gum.Wireframe
 
 
             RefreshAll(forceLayout, forceReloadTextures, elementSave);
-
-            SelectionManager.Self.Refresh();
 
             WireframeControl.UpdateCanvasBoundsToProject();
 
@@ -485,7 +484,7 @@ namespace Gum.Wireframe
 
         public GraphicalUiElement GetSelectedRepresentation()
         {
-            if (!SelectionManager.Self.HasSelection)
+            if (SelectedState.Self.SelectedIpso == null)
             {
                 return null;
             }
@@ -505,7 +504,7 @@ namespace Gum.Wireframe
 
         public GraphicalUiElement[] GetSelectedRepresentations()
         {
-            if (!SelectionManager.Self.HasSelection)
+            if (SelectedState.Self.SelectedIpso == null)
             {
                 return null;
             }

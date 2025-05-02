@@ -31,7 +31,7 @@ namespace Gum.Managers
 
         public void HandleDeleteCommand()
         {
-            var handled = SelectionManager.Self.TryHandleDelete();
+            var handled = PluginManager.Self.TryHandleDelete();
             if (!handled)
             {
                 DoDeletingLogic();

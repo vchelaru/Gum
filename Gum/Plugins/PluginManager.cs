@@ -628,6 +628,40 @@ namespace Gum.Plugins
         internal void ModifyDefaultStandardState(string type, StateSave stateSave) =>
             CallMethodOnPlugin(plugin => plugin.CallAddAndRemoveVariablesForType(type, stateSave));
 
+        internal bool TryHandleDelete()
+        {
+            bool toReturn = false;
+
+#if !TEST
+            // let internal plugins handle changes first before external plugins.
+            var sortedPlugins = this.Plugins.OrderBy(item => !(item is InternalPlugin)).ToArray();
+            foreach (var plugin in sortedPlugins)
+            {
+                PluginContainer container = this.PluginContainers[plugin];
+
+                if (container.IsEnabled)
+                {
+                    try
+                    {
+                        if(plugin.CallTryHandleDelete())
+                        {
+                            toReturn = true;
+                            break;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+#if DEBUG
+                        MessageBox.Show("Error in plugin " + plugin.FriendlyName + ":\n\n" + e.ToString());
+#endif
+                        container.Fail(e, "Failed in " + TryHandleDelete);
+                    }
+                }
+            }
+#endif
+            return toReturn;
+        }
+
         /// <summary>
         /// Allows all plugins to adjust the DeleteOptionsWindow whenever any object is deleted, including
         /// elements, instances, and behaviors.
@@ -756,9 +790,9 @@ namespace Gum.Plugins
         internal void InstancesDelete(ElementSave elementSave, InstanceSave[] instances) =>
             CallMethodOnPlugin(plugin => plugin.CallInstancesDelete(elementSave, instances));
 
-        internal StateSave GetDefaultStateFor(string type)
+        internal StateSave? GetDefaultStateFor(string type)
         {
-            StateSave toReturn = null;
+            StateSave? toReturn = null;
             CallMethodOnPlugin(plugin => toReturn = plugin.CallGetDefaultStateFor(type) ?? toReturn);
             return toReturn;
         }

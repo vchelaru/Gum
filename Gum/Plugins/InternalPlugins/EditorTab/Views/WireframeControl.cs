@@ -21,18 +21,19 @@ using Color = System.Drawing.Color;
 using Matrix = System.Numerics.Matrix4x4;
 using System.Security.Policy;
 using Gum.Plugins.InternalPlugins.EditorTab.Services;
+using Gum.Wireframe;
 
-namespace Gum.Wireframe
+namespace Gum.Plugins.InternalPlugins.EditorTab.Views
 {
     #region WireframeControlPlugin Class
 
-    [Export(typeof(Gum.Plugins.BaseClasses.PluginBase))]
+    [Export(typeof(PluginBase))]
     public class WireframeControlPlugin : InternalPlugin
     {
 
         public override void StartUp()
         {
-            this.ProjectLoad += new Action<GumProjectSave>(OnProjectLoad);
+            ProjectLoad += new Action<GumProjectSave>(OnProjectLoad);
         }
 
         void OnProjectLoad(GumProjectSave obj)
@@ -48,6 +49,7 @@ namespace Gum.Wireframe
         #region Fields
 
         WireframeEditControl mWireframeEditControl;
+        private SelectionManager _selectionManager;
 
         LineRectangle mCanvasBounds;
 
@@ -132,9 +134,13 @@ namespace Gum.Wireframe
 
         #region Initialize Methods
 
-        public void Initialize(WireframeEditControl wireframeEditControl, Panel wireframeParentPanel, 
-            HotkeyManager hotkeyManager)
+        public void Initialize(
+            WireframeEditControl wireframeEditControl, 
+            Panel wireframeParentPanel,
+            HotkeyManager hotkeyManager,
+            SelectionManager selectionManager)
         {
+            _selectionManager = selectionManager;
             try
             {
                 LoaderManager.Self.ContentLoader = new ContentLoader();
@@ -168,16 +174,16 @@ namespace Gum.Wireframe
                 mCanvasBounds.Height = 600;
                 mCanvasBounds.Color = ScreenBoundsColor;
 
-                this.KeyDown += OnKeyDown;
-                this.MouseDown += CameraController.Self.HandleMouseDown;
-                this.MouseMove += CameraController.Self.HandleMouseMove;
-                this.MouseWheel += CameraController.Self.HandleMouseWheel;
+                KeyDown += OnKeyDown;
+                MouseDown += CameraController.Self.HandleMouseDown;
+                MouseMove += CameraController.Self.HandleMouseMove;
+                MouseWheel += CameraController.Self.HandleMouseWheel;
 
-                this.MouseEnter += (not, used) =>
+                MouseEnter += (not, used) =>
                 {
                     mouseHasEntered = true;
                 };
-                this.MouseLeave += (not, used) =>
+                MouseLeave += (not, used) =>
                 {
                     mouseHasEntered = false;
                 };
@@ -192,7 +198,7 @@ namespace Gum.Wireframe
                 mHasInitialized = true;
 
             }
-            catch(Exception exception)
+            catch (Exception exception)
             {
                 MessageBox.Show("Error initializing the wireframe control\n\n" + exception);
             }
@@ -201,22 +207,20 @@ namespace Gum.Wireframe
         public void ShareLayerReferences(LayerService layerService)
         {
 
-            SelectionManager.Self.Initialize(layerService);
-
             ShapeManager.Self.Add(mCanvasBounds, layerService.OverlayLayer);
 
 
-            this.mTopRuler = new Ruler(this, SystemManagers.Default,
-                InputLibrary.Cursor.Self, 
+            mTopRuler = new Ruler(this, SystemManagers.Default,
+                InputLibrary.Cursor.Self,
                 InputLibrary.Keyboard.Self,
-                ToolFontService.Self, 
+                ToolFontService.Self,
                 ToolLayerService.Self,
                 layerService);
-            mLeftRuler = new Ruler(this, SystemManagers.Default, 
-                InputLibrary.Cursor.Self, 
+            mLeftRuler = new Ruler(this, SystemManagers.Default,
+                InputLibrary.Cursor.Self,
                 InputLibrary.Keyboard.Self,
-                ToolFontService.Self, 
-                ToolLayerService.Self, 
+                ToolFontService.Self,
+                ToolLayerService.Self,
                 layerService);
             mLeftRuler.RulerSide = RulerSide.Left;
 
@@ -224,8 +228,8 @@ namespace Gum.Wireframe
 
         void HandleZoomChanged(object sender, EventArgs e)
         {
-            this.mLeftRuler.ZoomValue = mWireframeEditControl.PercentageValue / 100.0f;
-            this.mTopRuler.ZoomValue = mWireframeEditControl.PercentageValue / 100.0f;
+            mLeftRuler.ZoomValue = mWireframeEditControl.PercentageValue / 100.0f;
+            mTopRuler.ZoomValue = mWireframeEditControl.PercentageValue / 100.0f;
 
             Invalidate();
         }
@@ -261,7 +265,7 @@ namespace Gum.Wireframe
 
                     //}
 
-                    bool isOver = this.mTopRuler.HandleXnaUpdate(InputLibrary.Cursor.Self.IsInWindow) ||
+                    bool isOver = mTopRuler.HandleXnaUpdate(InputLibrary.Cursor.Self.IsInWindow) ||
                         mLeftRuler.HandleXnaUpdate(InputLibrary.Cursor.Self.IsInWindow);
 
 
@@ -275,16 +279,16 @@ namespace Gum.Wireframe
                     // I may have to update this at some point to force deselection if the mouse
                     // has not entered so things don't stay highlighted when exiting the control
                     // Update 2 - yea, we def need to pass in mouseHasEntered == false to force no highlight
-                    
+
                     if (mTopRuler.IsCursorOver == false && mLeftRuler.IsCursorOver == false)
                     {
                         var shouldForceNoHighlight = mouseHasEntered == false &&
                             // If the mouse is over the element tree view, we don't want to force unhlighlights since they can highlight when over the tree view items
                             ElementTreeViewManager.Self.HasMouseOver == false;
 
-                        SelectionManager.Self.Activity(shouldForceNoHighlight);
+                        _selectionManager.Activity(shouldForceNoHighlight);
 
-                        SelectionManager.Self.LateActivity();
+                        _selectionManager.LateActivity();
                     }
                     DragDropManager.Self.Activity();
 
@@ -330,7 +334,7 @@ namespace Gum.Wireframe
             if (mHasInitialized)
             {
                 var backgroundColor = new Microsoft.Xna.Framework.Color();
-                if(ProjectManager.Self.GeneralSettingsFile != null)
+                if (ProjectManager.Self.GeneralSettingsFile != null)
                 {
                     backgroundColor.R = ProjectManager.Self.GeneralSettingsFile.CheckerColor1R;
                     backgroundColor.G = ProjectManager.Self.GeneralSettingsFile.CheckerColor1G;

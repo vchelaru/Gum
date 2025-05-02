@@ -1,5 +1,6 @@
 ﻿using Gum.DataTypes;
 using Gum.Plugins.BaseClasses;
+using Gum.Plugins.InternalPlugins.EditorTab.Views;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using RenderingLibrary;
