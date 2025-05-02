@@ -43,7 +43,6 @@ public class SelectionManager
 
     #region Fields
     
-    static SelectionManager mSelf;
     LayerService _layerService;
 
     public WireframeEditor WireframeEditor;
@@ -69,17 +68,6 @@ public class SelectionManager
         }
     }
 
-    public static SelectionManager Self
-    {
-        get
-        {
-            if (mSelf == null)
-            {
-                mSelf = new SelectionManager();
-            }
-            return mSelf;
-        }
-    }
 
     ISelectedState _selectedState;
     private readonly EditingManager _editingManager;
@@ -193,10 +181,10 @@ public class SelectionManager
 
     #region Methods
 
-    SelectionManager()
+    internal SelectionManager(ISelectedState selectedState, EditingManager editingManager)
     {
-        _selectedState = SelectedState.Self;
-        _editingManager = EditingManager.Self;
+        _selectedState = selectedState;
+        _editingManager = editingManager;
 
     }
 

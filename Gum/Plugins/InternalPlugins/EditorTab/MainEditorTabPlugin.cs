@@ -109,7 +109,7 @@ internal class MainEditorTabPlugin : InternalPlugin
         _guiCommands = Builder.Get<GuiCommands>();
         _localizationManager = Builder.Get<LocalizationManager>();
         _screenshotService = new ScreenshotService();
-        _selectionManager = SelectionManager.Self;
+        _selectionManager = new SelectionManager(SelectedState.Self, EditingManager.Self);
         _elementCommands = ElementCommands.Self;
 
     }
