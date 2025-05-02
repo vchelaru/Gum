@@ -71,6 +71,57 @@ This property is used to assign the view model that a control should use. The as
 
 Once `BindingContext` is assigned, individual UI properties can be bound to properties on the view model. To bind to a property, a reference to a UI control is needed. This reference can be obtained by using properties in generated code or by getting an instance of a FrameworkElement by calling `GetFrameworkElementByName`.
 
+The following code shows how to assign an instance of an `OptionsScreenViewModel` to a code generated OptionsScreen:
 
+```csharp
+var optionsScreen = new OptionsScreen();
+optionsScreen.AddToRoot();
+
+var viewModel = new OptionsScreenViewModel();
+optionsScreen.BindingContext = viewModel;
+// All items within OptionsScreenViewModel inherit the binding context
+```
+
+BindingContext can also be assigned on Forms controls created in code, as shown in the following block:
+
+```csharp
+var stackPanel = new StackPanel();
+stackPanel.AddToRoot();
+
+var viewModel = new OptionsScreenViewModel();
+stackPanel.BindingContext = viewModel;
+// all items added to stackPanel inherit the binding context. 
+// For example, the following button would inherit binding context:
+var button = new Button();
+stackPanel.AddChild(button);
+```
+
+BindingContext can be assigned on FrameworkElements obrained from non-code-generated screens as well. For example, the following code shows how to obtain a StackPanel that was added to a Gum screen and assign its BindingContext.
+
+```csharp
+var stackPanel = myScreen.GetFrameworkElementByName<StackPanel>("StackPanelInstance");
+stackPanel.BindingContext = viewModel;
+// all children of stackPanel inherit the binding context
+```
+
+## SetBinding Method
+
+Once a FrameworkElement is assigned a BindingContext, either directly or indirectly through its parent, it can bind any of its properties to a property on the view model. Usually binding is performed using the `nameof` keyword for compile time safety.
+
+For example, the following code shows how to bind a `Button` instance's `Text` property to a view model's `ButtonText` property.&#x20;
+
+```csharp
+buttonInstance.SetBinding(
+    nameof(buttonInstance.Text), 
+    nameof(viewModel.ButtonText));
+```
+
+Binding can be performed on properties which might change during normal interaction, such as a `ListBox` instance's `SelectedObject`. In this case if the `SelectedObject` changes, the view model's property is automatically updated.
+
+```csharp
+listBoxInstance.SetBinding(
+    nameof(listBoxInstance.SelectedObject),
+    nameof(viewModel.SelectedObject));
+```
 
 UNDER CONSTRUCTION....
