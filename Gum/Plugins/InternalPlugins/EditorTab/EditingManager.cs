@@ -17,31 +17,6 @@ namespace Gum.Wireframe;
 
 public partial class EditingManager
 {
-    #region Fields
-
-    static EditingManager mSelf;
-
-
-
-    #endregion
-
-    #region Properties
-
-    public static EditingManager Self
-    {
-        get
-        {
-            if (mSelf == null)
-            {
-                mSelf = new EditingManager();
-            }
-            return mSelf;
-        }
-    }
-
-
-    #endregion
-
     #region Methods
 
     public void Initialize(System.Windows.Forms.ContextMenuStrip contextMenuStrip)

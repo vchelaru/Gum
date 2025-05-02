@@ -109,7 +109,8 @@ internal class MainEditorTabPlugin : InternalPlugin
         _guiCommands = Builder.Get<GuiCommands>();
         _localizationManager = Builder.Get<LocalizationManager>();
         _screenshotService = new ScreenshotService();
-        _selectionManager = new SelectionManager(SelectedState.Self, EditingManager.Self);
+        _editingManager = new EditingManager();
+        _selectionManager = new SelectionManager(SelectedState.Self, _editingManager);
         _elementCommands = ElementCommands.Self;
 
     }
@@ -125,7 +126,6 @@ internal class MainEditorTabPlugin : InternalPlugin
 
         HandleWireframeInitialized();
 
-        _editingManager = EditingManager.Self;
     }
 
     private void AssignEvents()
