@@ -401,6 +401,21 @@ public class GumProjectSave
 		}
 #endif
 
+    /// <summary>
+    ///  shortcut function to fetch a specific screen from your gum project.
+    /// <code ang="csharp">
+    /// //same as :
+    /// screen.Find(item => item.Name == "name");
+    /// </code>
+    ///  
+    /// </summary>
+    /// <param name="screenName"></param>
+    /// <returns></returns>
+    public ScreenSave? GetScreenSave(string screenName)
+    {
+        return Screens.FirstOrDefault(item => item.Name == screenName);
+    }
+
     private void PopulateElementSavesFromReferences(string projectRootDirectory, LinkLoadingPreference linkLoadingPreference, GumLoadResult result)
     {
         string errors = "";
