@@ -27,10 +27,15 @@ namespace Gum.Commands
             set => WireframeObjectManager.Self.WireframeControl.CanvasBoundsVisible = value;
         }
 
+        bool isBackgroundGridVisible = true;
         public bool IsBackgroundGridVisible
         {
-            get => WireframeObjectManager.Self.BackgroundSprite.Visible;
-            set => WireframeObjectManager.Self.BackgroundSprite.Visible = value;
+            get => isBackgroundGridVisible;
+            set
+            {
+                isBackgroundGridVisible = value;
+                PluginManager.Self.WireframePropertyChanged(nameof(IsBackgroundGridVisible));
+            }
         }
 
         bool areHighlightsVisible;

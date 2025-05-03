@@ -43,7 +43,6 @@ public partial class WireframeObjectManager
 
     Layer MainEditorLayer;
 
-    public Sprite BackgroundSprite { get; private set; }
 
     const int left = -4096;
     const int width = 8192;
@@ -102,9 +101,7 @@ public partial class WireframeObjectManager
         _cameraController = cameraController;
 
         WireframeControl = wireframeControl;
-        WireframeControl.AfterXnaInitialize += HandleAfterXnaIntiailize;
 
-        WireframeControl.KeyDown += HandleKeyPress;
 
 
 
@@ -142,65 +139,10 @@ public partial class WireframeObjectManager
     {
         gueManager.Activity();
 
-        if(ProjectManager.Self.GeneralSettingsFile != null) {
-            BackgroundSprite.Color = System.Drawing.Color.FromArgb(255,
-                ProjectManager.Self.GeneralSettingsFile.CheckerColor2R,
-                ProjectManager.Self.GeneralSettingsFile.CheckerColor2G,
-                ProjectManager.Self.GeneralSettingsFile.CheckerColor2B
-            );
-
-        }
     }
 
     #endregion
 
-    private void HandleKeyPress(object sender, System.Windows.Forms.KeyEventArgs e)
-    {
-        _cameraController.HandleKeyPress(e);
-    }
-
-    private void HandleAfterXnaIntiailize(object sender, EventArgs e)
-    {
-        // Create the Texture2D here
-        ImageData imageData = new ImageData(2, 2, null);
-
-        Microsoft.Xna.Framework.Color opaqueColor = Microsoft.Xna.Framework.Color.White;
-        Microsoft.Xna.Framework.Color transparent = new Microsoft.Xna.Framework.Color(0,0,0,0);
-
-        for (int y = 0; y < 2; y++)
-        {
-            for (int x = 0; x < 2; x++)
-            {
-                bool isDark = ((x + y) % 2 == 0);
-                if (isDark)
-                {
-                    imageData.SetPixel(x, y, transparent);
-
-                }
-                else
-                {
-                    imageData.SetPixel(x, y, opaqueColor);
-                }
-            }
-        }
-
-        Texture2D texture = imageData.ToTexture2D(false);
-        texture.Name = "Background Checkerboard";
-        BackgroundSprite = new Sprite(texture);
-        BackgroundSprite.Name = "Background checkerboard Sprite";
-        BackgroundSprite.Wrap = true;
-        BackgroundSprite.X = -4096;
-        BackgroundSprite.Y = -4096;
-        BackgroundSprite.Width = 8192;
-        BackgroundSprite.Height = 8192;
-        BackgroundSprite.Color = System.Drawing.Color.FromArgb(255, 150, 150, 150);
-
-        BackgroundSprite.Wrap = true;
-        int timesToRepeat = 256;
-        BackgroundSprite.SourceRectangle = new Rectangle(0, 0, timesToRepeat * texture.Width, timesToRepeat * texture.Height);
-
-        SpriteManager.Self.Add(BackgroundSprite);
-    }
 
     private void ClearAll()
     {

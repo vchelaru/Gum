@@ -15,6 +15,7 @@ using Gum.ToolStates;
 using Gum.Wireframe;
 using GumRuntime;
 using Microsoft.Xna.Framework.Graphics;
+using Newtonsoft.Json.Linq;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
@@ -226,6 +227,11 @@ internal class MainEditorTabPlugin : InternalPlugin
         {
             _selectionManager.AreHighlightsVisible = 
                 GumCommands.Self.WireframeCommands.AreHighlightsVisible;
+        }
+        else if(name == nameof(WireframeCommands.IsBackgroundGridVisible))
+        {
+            _wireframeControl.BackgroundSprite.Visible = 
+                GumCommands.Self.WireframeCommands.IsBackgroundGridVisible;
         }
     }
 
