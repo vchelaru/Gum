@@ -187,6 +187,7 @@ namespace Gum.Plugins.BaseClasses
 
         public event Action<IPositionedSizedObject>? SetHighlightedIpso;
         public event Action<IPositionedSizedObject?>? IpsoSelected;
+        public event Func<IEnumerable<IPositionedSizedObject>?> GetSelectedIpsos;
 
         public event Func<ElementSave, GraphicalUiElement?>? CreateGraphicalUiElement;
 
@@ -526,6 +527,9 @@ namespace Gum.Plugins.BaseClasses
 
         public Vector2? CallGetWorldCursorPosition(InputLibrary.Cursor cursor) =>
             GetWorldCursorPosition?.Invoke(cursor);
+
+        public IEnumerable<IPositionedSizedObject>? CallGetSelectedIpsos() =>
+            GetSelectedIpsos?.Invoke();
 
         #endregion
     }

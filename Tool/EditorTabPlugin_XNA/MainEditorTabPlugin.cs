@@ -179,9 +179,38 @@ internal class MainEditorTabPlugin : InternalPlugin
         this.ProjectPropertySet += HandleProjectPropertySet;
 
         this.CreateRenderableForType += HandleCreateRenderableForType;
-
+        this.GetSelectedIpsos += HandleGetSelectedIpsos;
 
         this.AfterUndo += HandleAfterUndo;
+    }
+
+    List<IPositionedSizedObject> ipsosToReturn = new List<IPositionedSizedObject>();
+    private IEnumerable<IPositionedSizedObject>? HandleGetSelectedIpsos()
+    {
+        ipsosToReturn.Clear();
+
+        if (SelectedState.Self.SelectedInstance != null)
+        {
+            foreach (var instance in SelectedState.Self.SelectedElement.Instances)
+            {
+                var representation = WireframeObjectManager.Self.GetRepresentation(instance);
+                if (representation != null)
+                {
+                    ipsosToReturn.Add(representation);
+                }
+            }
+        }
+        else if (SelectedState.Self.SelectedElement != null)
+        {
+            var representation = WireframeObjectManager.Self.GetRepresentation(SelectedState.Self.SelectedElement);
+            if (representation != null)
+            {
+                ipsosToReturn.Add(representation);
+            }
+        }
+
+        return ipsosToReturn;
+
     }
 
     private IRenderableIpso? HandleCreateRenderableForType(string type)

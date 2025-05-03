@@ -550,6 +550,20 @@ namespace Gum.Plugins
         public void IpsoSelected(IPositionedSizedObject? positionedSizedObject) =>
             CallMethodOnPlugin(plugin => plugin.CallIpsoSelected(positionedSizedObject));
 
+        public IEnumerable<IPositionedSizedObject>? GetSelectedIpsos()
+        {
+            IEnumerable<IPositionedSizedObject>? toReturn = null;
+            CallMethodOnPlugin(plugin =>
+            {
+                var innerResult = plugin.CallGetSelectedIpsos();
+                if (innerResult != null)
+                {
+                    toReturn = innerResult;
+                }
+            });
+            return toReturn;
+        }
+
         public System.Numerics.Vector2? GetWorldCursorPosition(InputLibrary.Cursor cursor)
         {
             Vector2? toReturn = null;

@@ -23,7 +23,7 @@ namespace Gum.ToolStates
         StateSaveCategory SelectedStateCategorySave { get; set; }
         ComponentSave SelectedComponent { get; set; }
         InstanceSave SelectedInstance { get; set; }
-        IPositionedSizedObject? SelectedIpso { get; set; }
+        IPositionedSizedObject? SelectedIpso { get; }
 
         IEnumerable<InstanceSave> SelectedInstances { get; set;  }
         string SelectedVariableName { get; }

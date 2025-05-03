@@ -65,7 +65,6 @@ internal class ScreenshotService
             GumCommands.Self.WireframeCommands.IsBackgroundGridVisible = false;
             GumCommands.Self.WireframeCommands.AreHighlightsVisible = false;
 
-            SelectedState.Self.SelectedIpso = null;
 
             var graphicsDevice = Renderer.Self.GraphicsDevice;
 
