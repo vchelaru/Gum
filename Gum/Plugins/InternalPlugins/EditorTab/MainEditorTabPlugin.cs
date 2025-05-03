@@ -477,8 +477,6 @@ internal class MainEditorTabPlugin : InternalPlugin
 
         _wireframeEditControl.ZoomChanged += HandleControlZoomChange;
 
-        var localizationManager = Builder.Get<LocalizationManager>();
-        Wireframe.WireframeObjectManager.Self.Initialize(localizationManager);
         _wireframeControl.Initialize(_wireframeEditControl, gumEditorPanel, HotkeyManager.Self, _selectionManager);
 
         // _layerService must be created after _wireframeControl so that the SystemManagers.Default are assigned
