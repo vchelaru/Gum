@@ -749,7 +749,10 @@ namespace Gum.Plugins
             }
 
             //MessageBox.Show("Couldn't find assembly: " + args.Name + " for " + args.RequestingAssembly);
-            GumCommands.Self.GuiCommands.PrintOutput("Couldn't find assembly: " + args.Name + " for " + args.RequestingAssembly);
+            if(args.RequestingAssembly != null)
+            {
+                GumCommands.Self.GuiCommands.PrintOutput("Couldn't find assembly: " + args.Name + " for " + args.RequestingAssembly);
+            }
 
             return null;
         }
