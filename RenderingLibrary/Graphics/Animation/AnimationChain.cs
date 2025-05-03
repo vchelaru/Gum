@@ -1,5 +1,7 @@
+using Gum.Content.AnimationChain;
 using System;
 using System.Collections.Generic;
+using System.Xml.Linq;
 using Texture2D = Microsoft.Xna.Framework.Graphics.Texture2D;
 
 
@@ -222,4 +224,49 @@ namespace Gum.Graphics.Animation
 
         #endregion
     }
+
+    public static class AnimationChainSaveExtensionMethods
+    {
+        public static Gum.Graphics.Animation.AnimationChain ToAnimationChain(this AnimationChainSave animationChainSave, string contentManagerName, TimeMeasurementUnit timeMeasurementUnit)
+        {
+            return animationChainSave.ToAnimationChain(contentManagerName, timeMeasurementUnit, TextureCoordinateType.UV);
+        }
+
+        public static Gum.Graphics.Animation.AnimationChain ToAnimationChain(this AnimationChainSave animationChainSave, string contentManagerName, TimeMeasurementUnit timeMeasurementUnit, TextureCoordinateType coordinateType)
+        {
+            if (!string.IsNullOrEmpty(animationChainSave.ParentFile))
+            {
+                throw new NotImplementedException();
+            }
+            else
+            {
+                Gum.Graphics.Animation.AnimationChain animationChain =
+                    new Gum.Graphics.Animation.AnimationChain();
+
+                animationChain.Name = animationChainSave.Name;
+
+                float divisor = 1;
+
+                if (timeMeasurementUnit == TimeMeasurementUnit.Millisecond)
+                    divisor = 1000;
+
+                foreach (AnimationFrameSave save in animationChainSave.Frames)
+                {
+                    // process the AnimationFrame and add it to the newly-created AnimationChain
+                    AnimationFrame frame = null;
+
+                    bool loadTexture = true;
+                    frame = save.ToAnimationFrame(contentManagerName, loadTexture, coordinateType);
+
+                    frame.FrameLength /= divisor;
+                    animationChain.Add(frame);
+
+                }
+
+                return animationChain;
+            }
+        }
+
+    }
+
 }

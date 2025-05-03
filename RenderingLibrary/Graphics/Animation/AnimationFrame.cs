@@ -1,4 +1,6 @@
 using System;
+using Gum.Content.AnimationChain;
+
 
 
 #if MONOGAME || KNI || XNA4
@@ -9,11 +11,6 @@ using System.Xml.Serialization;
 
 namespace Gum.Graphics.Animation
 {
-    public enum TextureCoordinateType
-    {
-        UV,
-        Pixel
-    }
 
     /// <summary>
     /// Stores information about one frame in a texture-flipping animation.
@@ -24,7 +21,7 @@ namespace Gum.Graphics.Animation
     /// the length of time to show the Texture2D for, texture coordinates (for sprite sheets), and
     /// relative positioning.
     /// </remarks>
-    public class AnimationFrame :  IEquatable<AnimationFrame>
+    public class AnimationFrame : IEquatable<AnimationFrame>
     {
         #region Fields
 
@@ -137,7 +134,7 @@ namespace Gum.Graphics.Animation
         /// Creates a new AnimationFrame.
         /// </summary>
         #endregion
-        public AnimationFrame() 
+        public AnimationFrame()
         {
             //Instructions = new List<Instruction>();
         }
@@ -156,7 +153,7 @@ namespace Gum.Graphics.Animation
             FrameLength = frameLength;
             FlipHorizontal = false;
             FlipVertical = false;
-            
+
             //Instructions = new List<Instruction>();
 
             if (texture != null)
@@ -213,4 +210,101 @@ namespace Gum.Graphics.Animation
 
         #endregion
     }
+
+    public static class AnimationFrameExtensionMethods
+    {
+
+        public static AnimationFrame ToAnimationFrame(this AnimationFrameSave animationFrameSave, string contentManagerName)
+        {
+            return animationFrameSave.ToAnimationFrame(contentManagerName, true);
+        }
+
+        public static AnimationFrame ToAnimationFrame(this AnimationFrameSave animationFrameSave, string contentManagerName, bool loadTexture)
+        {
+
+            return animationFrameSave.ToAnimationFrame(contentManagerName, loadTexture, TextureCoordinateType.UV);
+        }
+
+        public static AnimationFrame ToAnimationFrame(this AnimationFrameSave animationFrameSave, string contentManagerName, bool loadTexture, TextureCoordinateType coordinateType)
+        {
+            AnimationFrame frame = new AnimationFrame();
+
+            #region Set basic variables
+
+            frame.TextureName = animationFrameSave.TextureName;
+            frame.FrameLength = animationFrameSave.FrameLength;
+
+            if (loadTexture)
+            {
+                //if (animationFrameSave.mTextureInstance != null)
+                //{
+                //    frame.Texture = animationFrameSave.mTextureInstance;
+                //}
+                // I think we should tolerate frames with a null Texture
+                if (!string.IsNullOrEmpty(animationFrameSave.TextureName))
+                {
+                    //throw new NotImplementedException();
+                    //frame.Texture = FlatRedBallServices.Load<Texture2D>(TextureName, contentManagerName);
+                    try
+                    {
+                        var fileName = ToolsUtilities.FileManager.RemoveDotDotSlash(ToolsUtilities.FileManager.RelativeDirectory + animationFrameSave.TextureName);
+                        frame.Texture = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(
+                            fileName);
+                    }
+                    catch (System.IO.FileNotFoundException)
+                    {
+                        if (Wireframe.GraphicalUiElement.MissingFileBehavior == Wireframe.MissingFileBehavior.ThrowException)
+                        {
+                            string message = $"Error loading texture in animation :\n{animationFrameSave.TextureName}";
+                            throw new System.IO.FileNotFoundException(message);
+                        }
+                        frame.Texture = null;
+                    }
+
+                }
+                //frame.Texture = FlatRedBallServices.Load<Texture2D>(TextureName, contentManagerName);
+            }
+            frame.FlipHorizontal = animationFrameSave.FlipHorizontal;
+            frame.FlipVertical = animationFrameSave.FlipVertical;
+
+            if (coordinateType == TextureCoordinateType.UV)
+            {
+                frame.LeftCoordinate = animationFrameSave.LeftCoordinate;
+                frame.RightCoordinate = animationFrameSave.RightCoordinate;
+                frame.TopCoordinate = animationFrameSave.TopCoordinate;
+                frame.BottomCoordinate = animationFrameSave.BottomCoordinate;
+            }
+            else if (coordinateType == TextureCoordinateType.Pixel)
+            {
+                // April 16, 2015
+                // Victor Chelaru
+                // We used to throw this exception, but I don't know why we should, because
+                // the Sprite won't show up, and the problem should be discoverable in tools
+                // without a crash
+                //if (frame.Texture == null)
+                //{
+                //    throw new Exception("The frame must have its texture loaded to use the Pixel coordinate type");
+                //}
+
+                if (frame.Texture != null)
+                {
+                    frame.LeftCoordinate = animationFrameSave.LeftCoordinate / frame.Texture.Width;
+                    frame.RightCoordinate = animationFrameSave.RightCoordinate / frame.Texture.Width;
+
+                    frame.TopCoordinate = animationFrameSave.TopCoordinate / frame.Texture.Height;
+                    frame.BottomCoordinate = animationFrameSave.BottomCoordinate / frame.Texture.Height;
+                }
+            }
+
+
+            frame.RelativeX = animationFrameSave.RelativeX;
+            frame.RelativeY = animationFrameSave.RelativeY;
+
+            #endregion
+
+            return frame;
+        }
+
+    }
+
 }

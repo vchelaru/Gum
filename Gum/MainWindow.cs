@@ -92,13 +92,6 @@ namespace Gum
 
             PluginManager.Self.Initialize(this);
 
-            GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
-            GraphicalUiElement.UpdateFontFromProperties = CustomSetPropertyOnRenderable.UpdateToFontValues;
-            GraphicalUiElement.ThrowExceptionsForMissingFiles = CustomSetPropertyOnRenderable.ThrowExceptionsForMissingFiles;
-
-            GraphicalUiElement.AddRenderableToManagers = CustomSetPropertyOnRenderable.AddRenderableToManagers;
-            GraphicalUiElement.RemoveRenderableFromManagers = CustomSetPropertyOnRenderable.RemoveRenderableFromManagers;
-
             StandardElementsManager.Self.Initialize();
             StandardElementsManager.Self.CustomGetDefaultState =
                 PluginManager.Self.GetDefaultStateFor;

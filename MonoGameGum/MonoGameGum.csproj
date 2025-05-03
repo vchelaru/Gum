@@ -43,10 +43,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Compile Include="..\GumRuntime\BbCodeParser.cs" Link="Renderables\BbCodeParser.cs" />
-		<Compile Include="..\Gum\Graphics\Animation\Content\AnimationChainListSave.cs" Link="Animation\Content\AnimationChainListSave.cs" />
-		<Compile Include="..\Gum\Graphics\Animation\Content\AnimationChainSave.cs" Link="Animation\Content\AnimationChainSave.cs" />
-		<Compile Include="..\Gum\Graphics\Animation\Content\AnimationFrameSave.cs" Link="Animation\Content\AnimationFrameSave.cs" />
 		<Compile Include="..\Gum\RenderingLibrary\BlendExtensions.cs" Link="RenderingLibrary\BlendExtensions.cs" />
 		<Compile Include="..\Gum\Wireframe\CustomSetPropertyOnRenderable.cs" Link="Utilities\CustomSetPropertyOnRenderable.cs" />
 		<Compile Include="..\Gum\Wireframe\RuntimeObjectCreator.cs" Link="GueDeriving\RuntimeObjectCreator.cs" />

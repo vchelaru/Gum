@@ -78,4 +78,14 @@
 		<Compile Remove="ISystemManagers.cs" />
 		<Compile Remove="Math\MathFunctions.cs" />
 	</ItemGroup>
+	<ItemGroup>
+	  <Compile Include="..\Gum\Graphics\Animation\Content\AnimationChainListSave.cs" Link="Animation\Content\AnimationChainListSave.cs" />
+	  <Compile Include="..\Gum\Graphics\Animation\Content\AnimationChainSave.cs" Link="Animation\Content\AnimationChainSave.cs" />
+	  <Compile Include="..\Gum\Graphics\Animation\Content\AnimationFrameSave.cs" Link="Animation\Content\AnimationFrameSave.cs" />
+	  <Compile Include="..\Gum\RenderingLibrary\BlendExtensions.cs" Link="Graphics\BlendExtensions.cs" />
+	  <Compile Include="..\Gum\Wireframe\CustomSetPropertyOnRenderable.cs" Link="CustomSetPropertyOnRenderable.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Animation\Content\" />
+	</ItemGroup>
 </Project>

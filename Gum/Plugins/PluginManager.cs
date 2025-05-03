@@ -21,6 +21,7 @@ using Gum.ToolStates;
 using Gum.Managers;
 using Gum.Services;
 using RenderingLibrary;
+using System.Numerics;
 
 namespace Gum.Plugins
 {
@@ -548,6 +549,22 @@ namespace Gum.Plugins
 
         public void IpsoSelected(IPositionedSizedObject? positionedSizedObject) =>
             CallMethodOnPlugin(plugin => plugin.CallIpsoSelected(positionedSizedObject));
+
+        public System.Numerics.Vector2? GetWorldCursorPosition(InputLibrary.Cursor cursor)
+        {
+            Vector2? toReturn = null;
+            CallMethodOnPlugin(plugin =>
+            {
+                var innerResult = plugin.CallGetWorldCursorPosition(cursor);
+
+                if(innerResult != null)
+                {
+                    toReturn = innerResult;
+                }
+            });
+
+            return toReturn;
+        }
 
         #endregion
 

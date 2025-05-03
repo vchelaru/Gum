@@ -22,6 +22,9 @@
 		<CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
 		<LangVersion>12.0</LangVersion>
 	</PropertyGroup>
+	<ItemGroup>
+	  <Compile Include="..\..\Gum\Wireframe\RuntimeObjectCreator.cs" Link="Services\RuntimeObjectCreator.cs" />
+	</ItemGroup>
 
 
 	<ItemGroup>
@@ -44,6 +47,7 @@
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
 		<ProjectReference Include="..\..\Gum\Gum.csproj" />
+		<ProjectReference Include="..\..\RenderingLibrary\RenderingLibrary.csproj" />
 		<ProjectReference Include="..\..\XnaAndWinforms\XnaAndWinforms.csproj" />
 
 		<Reference Include="Microsoft.Xna.Framework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86">
