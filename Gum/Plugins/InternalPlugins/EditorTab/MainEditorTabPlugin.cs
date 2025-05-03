@@ -442,7 +442,10 @@ internal class MainEditorTabPlugin : InternalPlugin
 
         var localizationManager = Builder.Get<LocalizationManager>();
 
-        Wireframe.WireframeObjectManager.Self.Initialize(_wireframeEditControl, _wireframeControl, localizationManager, _layerService, CameraController.Self);
+        _wireframeEditControl.ZoomChanged += HandleControlZoomChange;
+
+        Wireframe.WireframeObjectManager.Self.Initialize(_wireframeControl, 
+            localizationManager, _layerService, CameraController.Self);
         _wireframeControl.Initialize(_wireframeEditControl, gumEditorPanel, HotkeyManager.Self, _selectionManager);
 
         // _layerService must be created after _wireframeControl so that the SystemManagers.Default are assigned
@@ -503,6 +506,11 @@ internal class MainEditorTabPlugin : InternalPlugin
         _wireframeControl.DesiredFramesPerSecond = frameRate;
 
         UpdateWireframeControlSizes();
+    }
+
+    private void HandleControlZoomChange(object sender, EventArgs e)
+    {
+        Renderer.Self.Camera.Zoom = _wireframeEditControl.PercentageValue / 100.0f;
     }
 
     internal void HandleFileDragDrop(object sender, DragEventArgs e)

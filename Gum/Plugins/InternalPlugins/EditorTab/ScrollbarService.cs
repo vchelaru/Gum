@@ -18,14 +18,12 @@ public class ScrollbarService
     public void HandleElementSelected(ElementSave obj)
     {
 
-        var ipso = GumState.Self.SelectedState.SelectedIpso;
-        //////////////////Early Out////////////////////
-        if(obj == null || ipso == null)
-        {
-            return;
-        }
+        GraphicalUiElement? ipso = null;
 
-        ///////////////End Early Out///////////////////
+        if(obj != null)
+        {
+            ipso = WireframeObjectManager.Self.GetRepresentation(obj);
+        }
 
         float minX = 0;
         float maxX = ProjectManager.Self.GumProjectSave.DefaultCanvasWidth;
@@ -33,22 +31,26 @@ public class ScrollbarService
         float minY = 0;
         float maxY = ProjectManager.Self.GumProjectSave.DefaultCanvasHeight;
 
-        var asGue = ipso as GraphicalUiElement;
 
-        List<IRenderableIpso> toLoop = new List<IRenderableIpso>();
+        if(ipso != null)
+        {
+            var asGue = ipso;
 
-        if(GumState.Self.SelectedState.SelectedScreen != null)
-        {
-            toLoop.AddRange(asGue.ContainedElements);
-        }
-        else if(asGue.Children != null)
-        {
-            toLoop.AddRange(asGue.Children);
-        }
+            List<IRenderableIpso> toLoop = new List<IRenderableIpso>();
 
-        foreach(var item in toLoop)
-        {
-            UpdateMinMaxRecursively(item, ref minX, ref maxX, ref minY, ref maxY);
+            if(GumState.Self.SelectedState.SelectedScreen != null)
+            {
+                toLoop.AddRange(asGue.ContainedElements);
+            }
+            else if(asGue.Children != null)
+            {
+                toLoop.AddRange(asGue.Children);
+            }
+
+            foreach(var item in toLoop)
+            {
+                UpdateMinMaxRecursively(item, ref minX, ref maxX, ref minY, ref maxY);
+            }
         }
 
         scrollBarControlLogic.SetDisplayedArea((int)maxX, (int)maxY);

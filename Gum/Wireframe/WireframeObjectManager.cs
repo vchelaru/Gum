@@ -39,7 +39,6 @@ public partial class WireframeObjectManager
 
     static WireframeObjectManager mSelf;
 
-    WireframeEditControl mEditControl;
     public WireframeControl WireframeControl { get; private set; }
 
     Layer MainEditorLayer;
@@ -91,7 +90,7 @@ public partial class WireframeObjectManager
 
     #region Initialize
 
-    public void Initialize(WireframeEditControl editControl, 
+    public void Initialize(
         WireframeControl wireframeControl, 
         LocalizationManager localizationManager,
         LayerService layerService,
@@ -107,8 +106,7 @@ public partial class WireframeObjectManager
 
         WireframeControl.KeyDown += HandleKeyPress;
 
-        mEditControl = editControl;
-        mEditControl.ZoomChanged += HandleControlZoomChange;
+
 
         gueManager = new GraphicalUiElementManager();
         GraphicalUiElement.AreUpdatesAppliedWhenInvisible= true;
@@ -202,12 +200,6 @@ public partial class WireframeObjectManager
         BackgroundSprite.SourceRectangle = new Rectangle(0, 0, timesToRepeat * texture.Width, timesToRepeat * texture.Height);
 
         SpriteManager.Self.Add(BackgroundSprite);
-    }
-
-
-    void HandleControlZoomChange(object sender, EventArgs e)
-    {
-        Renderer.Self.Camera.Zoom = mEditControl.PercentageValue / 100.0f;
     }
 
     private void ClearAll()
