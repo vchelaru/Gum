@@ -21,6 +21,7 @@ using Gum.ToolStates;
 using Gum.Managers;
 using Gum.Services;
 using RenderingLibrary;
+using System.Numerics;
 
 namespace Gum.Plugins
 {
@@ -549,6 +550,36 @@ namespace Gum.Plugins
         public void IpsoSelected(IPositionedSizedObject? positionedSizedObject) =>
             CallMethodOnPlugin(plugin => plugin.CallIpsoSelected(positionedSizedObject));
 
+        public IEnumerable<IPositionedSizedObject>? GetSelectedIpsos()
+        {
+            IEnumerable<IPositionedSizedObject>? toReturn = null;
+            CallMethodOnPlugin(plugin =>
+            {
+                var innerResult = plugin.CallGetSelectedIpsos();
+                if (innerResult != null)
+                {
+                    toReturn = innerResult;
+                }
+            });
+            return toReturn;
+        }
+
+        public System.Numerics.Vector2? GetWorldCursorPosition(InputLibrary.Cursor cursor)
+        {
+            Vector2? toReturn = null;
+            CallMethodOnPlugin(plugin =>
+            {
+                var innerResult = plugin.CallGetWorldCursorPosition(cursor);
+
+                if(innerResult != null)
+                {
+                    toReturn = innerResult;
+                }
+            });
+
+            return toReturn;
+        }
+
         #endregion
 
 
@@ -732,7 +763,10 @@ namespace Gum.Plugins
             }
 
             //MessageBox.Show("Couldn't find assembly: " + args.Name + " for " + args.RequestingAssembly);
-            GumCommands.Self.GuiCommands.PrintOutput("Couldn't find assembly: " + args.Name + " for " + args.RequestingAssembly);
+            if(args.RequestingAssembly != null)
+            {
+                GumCommands.Self.GuiCommands.PrintOutput("Couldn't find assembly: " + args.Name + " for " + args.RequestingAssembly);
+            }
 
             return null;
         }

@@ -1,6 +1,7 @@
 ﻿using Gum.Commands;
 using Gum.Plugins.BaseClasses;
 using Gum.ToolStates;
+using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using System;
 using System.ComponentModel.Composition;
@@ -13,6 +14,12 @@ internal class ScreenshotService
 {
     string? nextScreenshotFileLocation = null;
     Microsoft.Xna.Framework.Graphics.RenderTarget2D renderTarget;
+    private readonly SelectionManager _selectionManager;
+
+    public ScreenshotService(SelectionManager selectionManager)
+    {
+        _selectionManager = selectionManager;
+    }
 
     public void InitializeMenuItem(ToolStripMenuItem item)
     {
@@ -46,6 +53,7 @@ internal class ScreenshotService
     bool wereRulersVisible;
     bool wasBackgroundVisible;
     bool wereHighlightsVisible;
+
     public void HandleBeforeRender()
     {
         if (nextScreenshotFileLocation != null)
@@ -65,7 +73,7 @@ internal class ScreenshotService
             GumCommands.Self.WireframeCommands.IsBackgroundGridVisible = false;
             GumCommands.Self.WireframeCommands.AreHighlightsVisible = false;
 
-            SelectedState.Self.SelectedIpso = null;
+            _selectionManager.SelectedGue = null;
 
             var graphicsDevice = Renderer.Self.GraphicsDevice;
 
@@ -74,7 +82,6 @@ internal class ScreenshotService
 
             renderTarget = new Microsoft.Xna.Framework.Graphics.RenderTarget2D(
                 graphicsDevice, width, height);
-
 
             graphicsDevice.SetRenderTarget(renderTarget);
 

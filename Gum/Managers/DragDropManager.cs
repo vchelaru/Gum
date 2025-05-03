@@ -19,6 +19,7 @@ using Gum.Logic;
 using Gum.Plugins.ImportPlugin.Manager;
 using Gum.DataTypes.Behaviors;
 using Gum.Undo;
+using Gum.Plugins;
 
 namespace Gum.Managers;
 
@@ -649,8 +650,12 @@ public class DragDropManager
                 var newInstance = HandleDroppedElementInElement(draggedAsElementSave, target, null, out handled);
 
                 float worldX, worldY;
-                Renderer.Self.Camera.ScreenToWorld(Cursor.X, Cursor.Y,
-                                                   out worldX, out worldY);
+
+                var position = PluginManager.Self.GetWorldCursorPosition(Cursor);
+
+                worldX = position?.X ?? 0;
+                worldY = position?.Y ?? 0;
+
                 if(newInstance != null)
                 {
 

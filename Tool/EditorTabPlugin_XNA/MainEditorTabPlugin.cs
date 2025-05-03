@@ -1,4 +1,5 @@
 ﻿using CommonFormsAndControls.Forms;
+using EditorTabPlugin_XNA.Services;
 using FlatRedBall.AnimationEditorForms.Controls;
 using Gum.Commands;
 using Gum.DataTypes;
@@ -23,6 +24,7 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
 using System.Management.Instrumentation;
+using System.Numerics;
 using System.Security.AccessControl;
 using System.Text;
 using System.Threading.Tasks;
@@ -92,6 +94,7 @@ internal class MainEditorTabPlugin : InternalPlugin
     private readonly ScreenshotService _screenshotService;
     private readonly SelectionManager _selectionManager;
     private readonly ElementCommands _elementCommands;
+    private readonly SinglePixelTextureService _singlePixelTextureService;
     WireframeControl _wireframeControl;
 
     private FlatRedBall.AnimationEditorForms.Controls.WireframeEditControl _wireframeEditControl;
@@ -109,15 +112,22 @@ internal class MainEditorTabPlugin : InternalPlugin
         _scrollbarService = new ScrollbarService();
         _guiCommands = Builder.Get<GuiCommands>();
         _localizationManager = Builder.Get<LocalizationManager>();
-        _screenshotService = new ScreenshotService();
         _editingManager = new EditingManager();
         _selectionManager = new SelectionManager(SelectedState.Self, _editingManager);
+        _screenshotService = new ScreenshotService(_selectionManager);
         _elementCommands = ElementCommands.Self;
-
+        _singlePixelTextureService = new SinglePixelTextureService();
     }
 
     public override void StartUp()
     {
+        GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
+        GraphicalUiElement.UpdateFontFromProperties = CustomSetPropertyOnRenderable.UpdateToFontValues;
+        GraphicalUiElement.ThrowExceptionsForMissingFiles = CustomSetPropertyOnRenderable.ThrowExceptionsForMissingFiles;
+        GraphicalUiElement.AddRenderableToManagers = CustomSetPropertyOnRenderable.AddRenderableToManagers;
+        GraphicalUiElement.RemoveRenderableFromManagers = CustomSetPropertyOnRenderable.RemoveRenderableFromManagers;
+
+
         AssignEvents();
 
         var menuItem = AddMenuItem("File", "Export as Image");
@@ -158,7 +168,10 @@ internal class MainEditorTabPlugin : InternalPlugin
         this.WireframeResized += _scrollbarService.HandleWireframeResized;
         this.WireframeRefreshed += HandleWireframeRefreshed;
         this.WireframePropertyChanged += HandleWireframePropertyChanged;
-        
+
+        this.GetWorldCursorPosition += HandleGetWorldCursorPosition;
+
+
         this.UiZoomValueChanged += HandleUiZoomValueChanged;
 
         this.GuidesChanged += HandleGuidesChanged;
@@ -169,8 +182,52 @@ internal class MainEditorTabPlugin : InternalPlugin
         this.ProjectLoad += HandleProjectLoad;
         this.ProjectPropertySet += HandleProjectPropertySet;
 
+        this.CreateRenderableForType += HandleCreateRenderableForType;
+        this.GetSelectedIpsos += HandleGetSelectedIpsos;
 
         this.AfterUndo += HandleAfterUndo;
+    }
+
+    private Vector2? HandleGetWorldCursorPosition(InputLibrary.Cursor cursor)
+    {
+        Renderer.Self.Camera.ScreenToWorld(cursor.X, cursor.Y,
+                                   out float worldX, out float worldY);
+
+        return new Vector2(worldX, worldY);
+    }
+
+    List<IPositionedSizedObject> ipsosToReturn = new List<IPositionedSizedObject>();
+    private IEnumerable<IPositionedSizedObject>? HandleGetSelectedIpsos()
+    {
+        ipsosToReturn.Clear();
+
+        if (SelectedState.Self.SelectedInstance != null)
+        {
+            foreach (var instance in SelectedState.Self.SelectedElement.Instances)
+            {
+                var representation = WireframeObjectManager.Self.GetRepresentation(instance);
+                if (representation != null)
+                {
+                    ipsosToReturn.Add(representation);
+                }
+            }
+        }
+        else if (SelectedState.Self.SelectedElement != null)
+        {
+            var representation = WireframeObjectManager.Self.GetRepresentation(SelectedState.Self.SelectedElement);
+            if (representation != null)
+            {
+                ipsosToReturn.Add(representation);
+            }
+        }
+
+        return ipsosToReturn;
+
+    }
+
+    private IRenderableIpso? HandleCreateRenderableForType(string type)
+    {
+        return RuntimeObjectCreator.TryHandleAsBaseType(type, SystemManagers.Default) as IRenderableIpso;
     }
 
     private void HandleGuidesChanged()
@@ -182,7 +239,34 @@ internal class MainEditorTabPlugin : InternalPlugin
     {
         var toReturn = elementSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
         toReturn.AddToManagers(SystemManagers.Default, _layerService.MainEditorLayer);
+        UpdateTextOutlines(toReturn);
         return toReturn;
+    }
+
+
+    private void UpdateTextOutlines(GraphicalUiElement rootGue)
+    {
+        if (rootGue.Component is Text text)
+        {
+            text.RenderBoundary = ProjectManager.Self.GeneralSettingsFile.ShowTextOutlines;
+        }
+        if (rootGue.Children != null)
+        {
+            foreach (var child in rootGue.Children)
+            {
+                if (child is GraphicalUiElement gue)
+                {
+                    UpdateTextOutlines(gue);
+                }
+            }
+        }
+        else
+        {
+            foreach (var child in rootGue.ContainedElements)
+            {
+                UpdateTextOutlines(child);
+            }
+        }
     }
 
     private bool HandleDelete()
@@ -283,6 +367,21 @@ internal class MainEditorTabPlugin : InternalPlugin
         if(propertyName == nameof(GumProjectSave.TextureFilter))
         {
             AdjustTextureFilter();
+        }
+        if (propertyName == nameof(GumProjectSave.RestrictToUnitValues))
+        {
+            _selectionManager.RestrictToUnitValues =
+                ProjectManager.Self.GumProjectSave.RestrictToUnitValues;
+        }
+        else if (propertyName == nameof(GumProjectSave.SinglePixelTextureFile) ||
+            propertyName == nameof(GumProjectSave.SinglePixelTextureTop) ||
+            propertyName == nameof(GumProjectSave.SinglePixelTextureLeft) ||
+            propertyName == nameof(GumProjectSave.SinglePixelTextureRight) ||
+            propertyName == nameof(GumProjectSave.SinglePixelTextureBottom))
+        {
+            _singlePixelTextureService.RefreshSinglePixelTexture();
+
+            WireframeObjectManager.Self.RefreshAll(forceLayout: true, forceReloadTextures: true);
         }
     }
 

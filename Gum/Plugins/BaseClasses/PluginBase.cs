@@ -13,6 +13,7 @@ using ToolsUtilities;
 using Gum.ToolStates;
 using ExCSS;
 using RenderingLibrary;
+using System.Numerics;
 
 namespace Gum.Plugins.BaseClasses
 {
@@ -159,7 +160,7 @@ namespace Gum.Plugins.BaseClasses
         public event Func<string, StateSave> GetDefaultStateForType;
 
 
-        public event Func<string, IRenderableIpso> CreateRenderableForType;
+        public event Func<string, IRenderableIpso?>? CreateRenderableForType;
 
         // Vic says - why did we make these events? It adds lots of overhead, and I dont' think it helps in any way
         // Oct 6, 2021 - If we have an event, we can have the null check inside the plugin base, which makes
@@ -186,10 +187,13 @@ namespace Gum.Plugins.BaseClasses
 
         public event Action<IPositionedSizedObject>? SetHighlightedIpso;
         public event Action<IPositionedSizedObject?>? IpsoSelected;
+        public event Func<IEnumerable<IPositionedSizedObject>?> GetSelectedIpsos;
 
         public event Func<ElementSave, GraphicalUiElement?>? CreateGraphicalUiElement;
 
         public event Func<bool>? TryHandleDelete;
+
+        public event Func<InputLibrary.Cursor, Vector2?>? GetWorldCursorPosition;
 
         #endregion
 
@@ -407,9 +411,10 @@ namespace Gum.Plugins.BaseClasses
         public void CallStateCategoryRename(StateSaveCategory category, string oldName) => CategoryRename?.Invoke(category, oldName);
 
         public void CallStateCategoryAdd(StateSaveCategory category) => CategoryAdd?.Invoke(category);
-        public void CallStateCategoryDelete(StateSaveCategory category) => CategoryDelete?.Invoke(category);
-        public void CallVariableRemovedFromCategory(string variableName, StateSaveCategory category) => VariableRemovedFromCategory?.Invoke(variableName, category);
 
+        public void CallStateCategoryDelete(StateSaveCategory category) => CategoryDelete?.Invoke(category);
+
+        public void CallVariableRemovedFromCategory(string variableName, StateSaveCategory category) => VariableRemovedFromCategory?.Invoke(variableName, category);
 
         public void CallInstanceRename(ElementSave parentElement, InstanceSave instanceSave, string oldName) => 
             InstanceRename?.Invoke(parentElement, instanceSave, oldName);
@@ -492,7 +497,7 @@ namespace Gum.Plugins.BaseClasses
 
         public StateSave CallGetDefaultStateFor(string type) => GetDefaultStateForType?.Invoke(type);
 
-        public IRenderableIpso CallCreateRenderableForType(string type) => CreateRenderableForType?.Invoke(type);
+        public IRenderableIpso? CallCreateRenderableForType(string type) => CreateRenderableForType?.Invoke(type);
 
         internal bool GetIfVariableIsExcluded(VariableSave defaultVariable, RecursiveVariableFinder rvf) =>
             VariableExcluded?.Invoke(defaultVariable, rvf) ?? false;
@@ -519,6 +524,12 @@ namespace Gum.Plugins.BaseClasses
 
         public GraphicalUiElement? CallCreateGraphicalUiElement(ElementSave elementSave) =>
             CreateGraphicalUiElement?.Invoke(elementSave);
+
+        public Vector2? CallGetWorldCursorPosition(InputLibrary.Cursor cursor) =>
+            GetWorldCursorPosition?.Invoke(cursor);
+
+        public IEnumerable<IPositionedSizedObject>? CallGetSelectedIpsos() =>
+            GetSelectedIpsos?.Invoke();
 
         #endregion
     }

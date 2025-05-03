@@ -14,7 +14,6 @@ using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
 using Matrix = System.Numerics.Matrix4x4;
 using GumRuntime;
-using RenderingLibrary.Math.Geometry;
 
 namespace Gum.Wireframe;
 
@@ -96,16 +95,11 @@ public partial class WireframeObjectManager
     private IRenderable HandleCreateGraphicalComponent(string type, ISystemManagers systemManagers)
     {
 
-        IRenderable containedObject = null;
-
-        containedObject = RuntimeObjectCreator.TryHandleAsBaseType(type, systemManagers as SystemManagers);
+        IRenderable? containedObject = null;
 
 #if GUM
-        if (containedObject == null)
-        {
-            containedObject =
-                Gum.Plugins.PluginManager.Self.CreateRenderableForType(type);
-        }
+        containedObject =
+            Gum.Plugins.PluginManager.Self.CreateRenderableForType(type);
 #endif
 
         return containedObject;
@@ -202,9 +196,6 @@ public partial class WireframeObjectManager
 
 
                     AddAllIpsos(RootGue);
-
-                    UpdateTextOutlines(RootGue);
-
                 }
                 catch(Exception e)
                 {
@@ -238,30 +229,6 @@ public partial class WireframeObjectManager
 
     }
 
-    private void UpdateTextOutlines(GraphicalUiElement rootGue)
-    {
-        if(rootGue.Component is Text text)
-        {
-            text.RenderBoundary = ProjectManager.Self.GeneralSettingsFile.ShowTextOutlines;
-        }
-        if(rootGue.Children != null)
-        {
-            foreach(var child in rootGue.Children)
-            {
-                if(child is GraphicalUiElement gue)
-                {
-                    UpdateTextOutlines(gue);
-                }
-            }
-        }
-        else
-        {
-            foreach(var child in rootGue.ContainedElements)
-            {
-                UpdateTextOutlines(child);
-            }
-        }
-    }
 
     private void AddAllIpsos(GraphicalUiElement gue)
     {
@@ -343,7 +310,7 @@ public partial class WireframeObjectManager
         if(shouldLocalize)
         {
             var stringId = forcedId;
-            if(string.IsNullOrWhiteSpace(stringId) && gue.RenderableComponent is Text asText)
+            if(string.IsNullOrWhiteSpace(stringId) && gue.RenderableComponent is IText asText)
             {
                 stringId = asText.RawText;
             }
@@ -355,7 +322,7 @@ public partial class WireframeObjectManager
 
     public IEnumerable<GraphicalUiElement> GetTextsRecurisve(GraphicalUiElement parent)
     {
-        if(parent.RenderableComponent is Text)
+        if(parent.RenderableComponent is IText)
         {
             yield return parent;
         }

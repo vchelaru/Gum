@@ -37,10 +37,16 @@
 		</None>
 	</ItemGroup>
 	<ItemGroup>
+		<EmbeddedResource Include="Content\Fonts\Font18Arial_o1_0.png">
+		  <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</EmbeddedResource>
 		<Content Include="Libraries\TargaImage.dll" />
 		<Content Include="Libraries\TargaImage.xml" />
 	</ItemGroup>
 	<ItemGroup>
+		<EmbeddedResource Include="Content\Fonts\Font18Arial_o1.fnt">
+		  <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</EmbeddedResource>
 		<EmbeddedResource Include="Libraries\bmfont.exe" />
 	</ItemGroup>
 	<ItemGroup>
@@ -60,11 +66,13 @@
 		<Compile Remove="Graphics\Fonts\BmfcSave.cs" />
 		<Compile Remove="Graphics\GradientType.cs" />
 		<Compile Remove="Graphics\HorizontalAlignment.cs" />
+		<Compile Remove="Graphics\IAnimatable.cs" />
 		<Compile Remove="Graphics\IAspectRatio.cs" />
 		<Compile Remove="Graphics\InvisibleRenderable.cs" />
 		<Compile Remove="Graphics\IRenderable.cs" />
 		<Compile Remove="Graphics\IRenderableIpso.cs" />
 		<Compile Remove="Graphics\IRenderer.cs" />
+		<Compile Remove="Graphics\ISetClipsChildren.cs" />
 		<Compile Remove="Graphics\IText.cs" />
 		<Compile Remove="Graphics\ITextureCoordinate.cs" />
 		<Compile Remove="Graphics\IVisible.cs" />
@@ -72,10 +80,24 @@
 		<Compile Remove="Graphics\LayerCameraSettings.cs" />
 		<Compile Remove="Graphics\NineSliceExtensions.cs" />
 		<Compile Remove="Graphics\RenderableCloneLogic.cs" />
+		<Compile Remove="Graphics\SortableLayer.cs" />
 		<Compile Remove="Graphics\TextOverflowMode.cs" />
 		<Compile Remove="Graphics\VerticalAlignment.cs" />
 		<Compile Remove="IPositionedSizedObject.cs" />
 		<Compile Remove="ISystemManagers.cs" />
 		<Compile Remove="Math\MathFunctions.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <None Remove="Content\Fonts\Font18Arial_o1.fnt" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Include="..\Gum\Graphics\Animation\Content\AnimationChainListSave.cs" Link="Animation\Content\AnimationChainListSave.cs" />
+	  <Compile Include="..\Gum\Graphics\Animation\Content\AnimationChainSave.cs" Link="Animation\Content\AnimationChainSave.cs" />
+	  <Compile Include="..\Gum\Graphics\Animation\Content\AnimationFrameSave.cs" Link="Animation\Content\AnimationFrameSave.cs" />
+	  <Compile Include="..\Gum\RenderingLibrary\BlendExtensions.cs" Link="Graphics\BlendExtensions.cs" />
+	  <Compile Include="..\Gum\Wireframe\CustomSetPropertyOnRenderable.cs" Link="CustomSetPropertyOnRenderable.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Animation\Content\" />
 	</ItemGroup>
 </Project>

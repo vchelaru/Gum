@@ -30,36 +30,36 @@ public class FontManager
         }
     }
 
-    public BitmapFont GetBitmapFontFor(string fontName, int fontSize, int outlineThickness, bool useFontSmoothing, bool isItalic = false, 
-        bool isBold = false)
-    {
-        string fileName = AbsoluteFontCacheFolder + 
-            FileManager.RemovePath(BmfcSave.GetFontCacheFileNameFor(fontSize, fontName, outlineThickness, useFontSmoothing, isItalic, isBold));
+    //public BitmapFont GetBitmapFontFor(string fontName, int fontSize, int outlineThickness, bool useFontSmoothing, bool isItalic = false, 
+    //    bool isBold = false)
+    //{
+    //    string fileName = AbsoluteFontCacheFolder + 
+    //        FileManager.RemovePath(BmfcSave.GetFontCacheFileNameFor(fontSize, fontName, outlineThickness, useFontSmoothing, isItalic, isBold));
 
-        if (FileManager.FileExists(fileName))
-        {
-            try
-            {
+    //    if (FileManager.FileExists(fileName))
+    //    {
+    //        try
+    //        {
 
-                BitmapFont bitmapFont = (BitmapFont)LoaderManager.Self.GetDisposable(fileName);
-                if (bitmapFont == null)
-                {
-                    bitmapFont = new BitmapFont(fileName, (SystemManagers)null);
-                    LoaderManager.Self.AddDisposable(fileName, bitmapFont);
-                }
+    //            BitmapFont bitmapFont = (BitmapFont)LoaderManager.Self.GetDisposable(fileName);
+    //            if (bitmapFont == null)
+    //            {
+    //                bitmapFont = new BitmapFont(fileName, (SystemManagers)null);
+    //                LoaderManager.Self.AddDisposable(fileName, bitmapFont);
+    //            }
 
-                return bitmapFont;
-            }
-            catch
-            {
-                return null;
-            }
-        }
-        else
-        {
-            return null;
-        }
-    }
+    //            return bitmapFont;
+    //        }
+    //        catch
+    //        {
+    //            return null;
+    //        }
+    //    }
+    //    else
+    //    {
+    //        return null;
+    //    }
+    //}
 
     public void DeleteFontCacheFolder()
     {

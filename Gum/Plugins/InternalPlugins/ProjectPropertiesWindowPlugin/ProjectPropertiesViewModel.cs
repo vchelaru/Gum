@@ -205,8 +205,7 @@ namespace Gum.Plugins.PropertiesWindowPlugin
                 CanvasHeight = this.gumProject.DefaultCanvasHeight;
                 CanvasWidth = this.gumProject.DefaultCanvasWidth;
                 RestrictFileNamesForAndroid = this.gumProject.RestrictFileNamesForAndroid;
-                RenderTextCharacterByCharacter = global::RenderingLibrary.Graphics.Text.TextRenderingMode ==
-                    global::RenderingLibrary.Graphics.TextRenderingMode.CharacterByCharacter;
+
 
                 CheckerboardColor1 = Color.FromArgb(255, generalSettings.CheckerColor1R, generalSettings.CheckerColor1G, generalSettings.CheckerColor1B);
                 CheckerboardColor2 = Color.FromArgb(255, generalSettings.CheckerColor2R, generalSettings.CheckerColor2G, generalSettings.CheckerColor2B);
@@ -245,16 +244,6 @@ namespace Gum.Plugins.PropertiesWindowPlugin
             this.gumProject.DefaultCanvasHeight = CanvasHeight;
             this.gumProject.DefaultCanvasWidth = CanvasWidth;
             this.gumProject.RestrictFileNamesForAndroid = RestrictFileNamesForAndroid;
-            if(RenderTextCharacterByCharacter)
-            {
-                global::RenderingLibrary.Graphics.Text.TextRenderingMode =
-                    global::RenderingLibrary.Graphics.TextRenderingMode.CharacterByCharacter;
-            }
-            else
-            {
-                global::RenderingLibrary.Graphics.Text.TextRenderingMode =
-                    global::RenderingLibrary.Graphics.TextRenderingMode.RenderTarget;
-            }
 
             generalSettings.CheckerColor1R = CheckerboardColor1.R;
             generalSettings.CheckerColor1G = CheckerboardColor1.G;

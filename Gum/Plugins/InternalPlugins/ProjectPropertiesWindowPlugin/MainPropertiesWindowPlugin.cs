@@ -200,11 +200,6 @@ class MainPropertiesWindowPlugin : InternalPlugin
                         GumState.Self.ProjectState.ProjectDirectory, preserveCase:true);
                     shouldSaveAndRefresh = false;
                 }
-                else
-                {
-                    RefreshSinglePixelTexture();
-                    WireframeObjectManager.Self.RefreshAll(forceLayout: true, forceReloadTextures: true);
-                }
 
                 break;
         }
@@ -219,41 +214,6 @@ class MainPropertiesWindowPlugin : InternalPlugin
         }
     }
 
-    private void RefreshSinglePixelTexture()
-    {
-        var hasCustomSinglePixelTexture =
-            viewModel.SinglePixelTextureFile != null &&
-            viewModel.SinglePixelTextureTop != null &&
-            viewModel.SinglePixelTextureLeft != null &&
-            viewModel.SinglePixelTextureRight != null &&
-            viewModel.SinglePixelTextureBottom != null;
-
-        var renderer = global::RenderingLibrary.Graphics.Renderer.Self;
-
-        if(hasCustomSinglePixelTexture)
-        {
-            var loaderManager =
-                global::RenderingLibrary.Content.LoaderManager.Self;
-
-            renderer.SinglePixelTexture = loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(viewModel.SinglePixelTextureFile);
-
-            renderer.SinglePixelSourceRectangle = new Rectangle(
-                viewModel.SinglePixelTextureLeft.Value,
-                viewModel.SinglePixelTextureTop.Value,
-                width: viewModel.SinglePixelTextureRight.Value - viewModel.SinglePixelTextureLeft.Value,
-                height: viewModel.SinglePixelTextureBottom.Value - viewModel.SinglePixelTextureTop.Value);
-        }
-        else
-        {
-            var texture = new Texture2D(renderer.GraphicsDevice, 1, 1, false, SurfaceFormat.Color);
-            Microsoft.Xna.Framework.Color[] pixels = new Microsoft.Xna.Framework.Color[1];
-            pixels[0] = Microsoft.Xna.Framework.Color.White;
-            texture.SetData(pixels);
-
-            renderer.SinglePixelTexture = texture;
-            renderer.SinglePixelSourceRectangle = null;
-        }
-    }
 
     private void HandleCloseClicked(object sender, EventArgs e)
     {

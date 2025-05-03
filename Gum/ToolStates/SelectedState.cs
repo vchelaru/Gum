@@ -318,23 +318,8 @@ public class SelectedState : ISelectedState
 
     public IPositionedSizedObject? SelectedIpso
     {
-        get => snapshot.SelectedIpso;
-        set
-        {
-            HandleSelectedIpso(value as GraphicalUiElement);
-        }
+        get => PluginManager.Self.GetSelectedIpsos()?.FirstOrDefault();
     }
-
-    private void HandleSelectedIpso(GraphicalUiElement? graphicalUiElement)
-    {
-        var before = SelectedIpso;
-        if (before != graphicalUiElement)
-        {
-            PluginManager.Self.IpsoSelected(graphicalUiElement);
-        }
-    }
-
-
 
     #endregion
 
@@ -850,9 +835,7 @@ class SelectedStateSnapshot
             }
         }
     }
-    public IPositionedSizedObject? SelectedIpso { get; set; }
-
-    public List<GraphicalUiElement> SelectedIpsos { get; set; }
+    public IPositionedSizedObject? SelectedIpso { get; }
 
     List<InstanceSave> selectedInstances = new List<InstanceSave>();
     public IEnumerable<InstanceSave> SelectedInstances
