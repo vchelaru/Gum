@@ -4,7 +4,7 @@ fileVersion=1
 # font settings
 fontName=FontNameVariable
 charSet=0
-fontSize=-FontSizeVariable
+fontSize=FontSizeVariable
 aa=1
 scaleH=100
 useSmoothing={UseSmoothing}

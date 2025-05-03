@@ -15,7 +15,6 @@ using Gum.DataTypes;
 using Gum.Services;
 using Gum.Undo;
 using Gum.Logic;
-using Gum.Plugins.InternalPlugins.EditorTab;
 using Gum.Plugins.InternalPlugins.MenuStripPlugin;
 using GumRuntime;
 
@@ -118,8 +117,11 @@ namespace Gum
             // ProjectManager.Initialize may load a project, and if it
             // does, then we need to make sure that the wireframe controls
             // are set up properly before that happens.
-            PluginManager.Self.XnaInitialized();
 
+            var localizationManager = Builder.Get<LocalizationManager>();
+            Wireframe.WireframeObjectManager.Self.Initialize(localizationManager);
+
+            PluginManager.Self.XnaInitialized();
 
             InitializeFileWatchTimer();
         }

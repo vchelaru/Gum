@@ -43,7 +43,6 @@ public class SelectionManager
 
     #region Fields
     
-    static SelectionManager mSelf;
     LayerService _layerService;
 
     public WireframeEditor WireframeEditor;
@@ -69,17 +68,6 @@ public class SelectionManager
         }
     }
 
-    public static SelectionManager Self
-    {
-        get
-        {
-            if (mSelf == null)
-            {
-                mSelf = new SelectionManager();
-            }
-            return mSelf;
-        }
-    }
 
     ISelectedState _selectedState;
     private readonly EditingManager _editingManager;
@@ -90,7 +78,7 @@ public class SelectionManager
         set;
     }
 
-    public GraphicalUiElement SelectedGue
+    public GraphicalUiElement? SelectedGue
     {
         get
         {
@@ -100,7 +88,7 @@ public class SelectionManager
             }
             else
             {
-                return mSelectedIpsos[0] as GraphicalUiElement;
+                return mSelectedIpsos[0];
             }
         }
         set
@@ -193,10 +181,10 @@ public class SelectionManager
 
     #region Methods
 
-    SelectionManager()
+    internal SelectionManager(ISelectedState selectedState, EditingManager editingManager)
     {
-        _selectedState = SelectedState.Self;
-        _editingManager = EditingManager.Self;
+        _selectedState = selectedState;
+        _editingManager = editingManager;
 
     }
 
@@ -615,7 +603,8 @@ public class SelectionManager
                 }
                 WireframeEditor = new PolygonWireframeEditor(
                     _layerService.OverlayLayer, 
-                    global::Gum.Managers.HotkeyManager.Self);
+                    global::Gum.Managers.HotkeyManager.Self,
+                    this);
             }
         }
         else if(SelectedGues.Count > 0 && SelectedGue?.Tag is ScreenSave == false)
@@ -637,7 +626,8 @@ public class SelectionManager
 
                 WireframeEditor = new StandardWireframeEditor(
                     _layerService.OverlayLayer, 
-                    lineColor, textColor, global::Gum.Managers.HotkeyManager.Self);
+                    lineColor, textColor, global::Gum.Managers.HotkeyManager.Self,
+                    this);
             }
         }
         else if(WireframeEditor != null)

@@ -11,6 +11,8 @@ using Gum.Responses;
 using Gum.Wireframe;
 using ToolsUtilities;
 using Gum.ToolStates;
+using ExCSS;
+using RenderingLibrary;
 
 namespace Gum.Plugins.BaseClasses
 {
@@ -81,6 +83,7 @@ namespace Gum.Plugins.BaseClasses
         /// </summary>
         public event Func<VariableSave, RecursiveVariableFinder, bool> VariableExcluded;
         public event Action WireframeRefreshed;
+        public event Action<string> WireframePropertyChanged;
 
         /// <summary>
         /// Event raised when an ElementSave's variable is set.
@@ -167,19 +170,26 @@ namespace Gum.Plugins.BaseClasses
         public Func<StateSave, IStateContainer, DeleteResponse> GetDeleteStateResponse;
         public Func<StateSaveCategory, IStateContainer, DeleteResponse> GetDeleteStateCategoryResponse;
 
-        public event Action CameraChanged;
-        public event Action XnaInitialized;
-        public event Action WireframeResized;
+        public event Action? CameraChanged;
+        public event Action? XnaInitialized;
+        public event Action? WireframeResized;
 
-        public event Action BeforeRender;
-        public event Action AfterRender;
+        public event Action? BeforeRender;
+        public event Action? AfterRender;
 
-        public event Action<FilePath> ReactToFileChanged;
+        public event Action<FilePath>? ReactToFileChanged;
 
         // Parameters are: extension, parentElement, instance, changedMember
-        public event Func<string, ElementSave, InstanceSave, string, bool> IsExtensionValid;
+        public event Func<string, ElementSave, InstanceSave, string, bool>? IsExtensionValid;
 
-        public event Action UiZoomValueChanged;
+        public event Action? UiZoomValueChanged;
+
+        public event Action<IPositionedSizedObject>? SetHighlightedIpso;
+        public event Action<IPositionedSizedObject?>? IpsoSelected;
+
+        public event Func<ElementSave, GraphicalUiElement?>? CreateGraphicalUiElement;
+
+        public event Func<bool>? TryHandleDelete;
 
         #endregion
 
@@ -355,6 +365,14 @@ namespace Gum.Plugins.BaseClasses
         public void CallExport(ElementSave elementSave) =>
             Export?.Invoke(elementSave);
 
+        public bool CallTryHandleDelete()
+        {
+            if (TryHandleDelete != null)
+            {
+                return TryHandleDelete();
+            }
+            return false;
+        }
 
         public void CallDeleteOptionsWindowShow(DeleteOptionsWindow optionsWindow, Array objectsToDelete) =>
                 DeleteOptionsWindowShow?.Invoke(optionsWindow, objectsToDelete);
@@ -469,6 +487,9 @@ namespace Gum.Plugins.BaseClasses
 
         public void CallWireframeRefreshed() => WireframeRefreshed?.Invoke();
 
+        public void CallWireframePropertyChanged(string propertyName) =>
+            WireframePropertyChanged?.Invoke(propertyName);
+
         public StateSave CallGetDefaultStateFor(string type) => GetDefaultStateForType?.Invoke(type);
 
         public IRenderableIpso CallCreateRenderableForType(string type) => CreateRenderableForType?.Invoke(type);
@@ -489,6 +510,15 @@ namespace Gum.Plugins.BaseClasses
             IsExtensionValid?.Invoke(extension, parentElement, instance, changedMember) ?? false;
 
         public void CallUiZoomValueChanged() => UiZoomValueChanged?.Invoke();
+
+        public void CallSetHighlightedIpso(IPositionedSizedObject element) =>
+            SetHighlightedIpso?.Invoke(element);
+
+        public void CallIpsoSelected(IPositionedSizedObject? ipso) =>
+            IpsoSelected?.Invoke(ipso);
+
+        public GraphicalUiElement? CallCreateGraphicalUiElement(ElementSave elementSave) =>
+            CreateGraphicalUiElement?.Invoke(elementSave);
 
         #endregion
     }

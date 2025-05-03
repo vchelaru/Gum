@@ -267,7 +267,7 @@ namespace Gum.Commands
         }
 
 
-        internal void ToggleToolVisibility()
+        public void ToggleToolVisibility()
         {
             //var areToolsVisible = mMainWindow.LeftAndEverythingContainer.Panel1Collapsed == false;
 

@@ -44,6 +44,7 @@ namespace Gum.Wireframe.Editors
 
         bool mHasGrabbed = false;
         private readonly ElementCommands _elementCommands;
+        private readonly SelectionManager _selectionManager;
 
         public InputLibrary.Cursor Cursor
         {
@@ -71,9 +72,14 @@ namespace Gum.Wireframe.Editors
 
         #endregion
 
-        public StandardWireframeEditor(Layer layer, Color lineColor, Color textColor, global::Gum.Managers.HotkeyManager hotkeyManager)
-            : base(hotkeyManager)
+        public StandardWireframeEditor(Layer layer, Color lineColor, Color textColor, 
+            global::Gum.Managers.HotkeyManager hotkeyManager,
+            SelectionManager selectionManager)
+            : base(hotkeyManager, selectionManager)
         {
+            _elementCommands = GumCommands.Self.ProjectCommands.ElementCommands;
+            _selectionManager = selectionManager;
+
             mResizeHandles = new ResizeHandles(layer, lineColor);
             mResizeHandles.ShowOrigin = true;
             mResizeHandles.Visible = false;
@@ -91,7 +97,6 @@ namespace Gum.Wireframe.Editors
             heightDimensionDisplay.AddToManagers(SystemManagers.Default, layer);
             heightDimensionDisplay.SetColor(lineColor, textColor);
 
-            _elementCommands = GumCommands.Self.ProjectCommands.ElementCommands;
         }
 
         public override void Destroy()
@@ -416,8 +421,8 @@ namespace Gum.Wireframe.Editors
             grabbedState.AccumulatedXOffset += cursorXChange;
             grabbedState.AccumulatedYOffset += cursorYChange;
 
-            var shouldSnapX = GumState.Self.SelectedState.SelectedIpsos.Any(item => item.WidthUnits.GetIsPixelBased());
-            var shouldSnapY = GumState.Self.SelectedState.SelectedIpsos.Any(item => item.HeightUnits.GetIsPixelBased());
+            var shouldSnapX = _selectionManager.SelectedGues.Any(item => item.WidthUnits.GetIsPixelBased());
+            var shouldSnapY = _selectionManager.SelectedGues.Any(item => item.HeightUnits.GetIsPixelBased());
 
             var effectiveXToMoveBy = cursorXChange;
             var effectiveYToMoveBy = cursorYChange;
@@ -446,7 +451,7 @@ namespace Gum.Wireframe.Editors
 
             bool hasChangeOccurred = false;
             var elementStack = SelectedState.Self.GetTopLevelElementStack();
-            if (SelectionManager.Self.HasSelection && SelectedState.Self.SelectedInstances.Count() == 0)
+            if (_selectionManager.HasSelection && SelectedState.Self.SelectedInstances.Count() == 0)
             {
                 // That means we have the entire component selected
                 hasChangeOccurred |= SideGrabbingActivityForInstanceSave(effectiveXToMoveBy, effectiveYToMoveBy, instanceSave: null, elementStack: elementStack);
@@ -486,7 +491,7 @@ namespace Gum.Wireframe.Editors
 
                 grabbedState.HandlePush();
 
-                mHasGrabbed = SelectionManager.Self.HasSelection;
+                mHasGrabbed = _selectionManager.HasSelection;
 
                 if (mHasGrabbed)
                 {
@@ -606,7 +611,7 @@ namespace Gum.Wireframe.Editors
         private void BodyGrabbingActivity()
         {
             var cursor = InputLibrary.Cursor.Self;
-            if (SelectionManager.Self.IsOverBody && cursor.PrimaryDown && mHasGrabbed &&
+            if (_selectionManager.IsOverBody && cursor.PrimaryDown && mHasGrabbed &&
                 grabbedState.HasMovedEnough)
             {
                 ApplyCursorMovement(cursor);
@@ -648,7 +653,7 @@ namespace Gum.Wireframe.Editors
             if (SelectedState.Self.SelectedInstances.Count() == 0 &&
                 (SelectedState.Self.SelectedComponent != null || SelectedState.Self.SelectedStandardElement != null))
             {
-                GraphicalUiElement gue = SelectionManager.Self.SelectedGue;
+                GraphicalUiElement gue = _selectionManager.SelectedGue;
 
 
                 float differenceToUnitX;
@@ -680,7 +685,7 @@ namespace Gum.Wireframe.Editors
             }
             else if (SelectedState.Self.SelectedInstances.Count() != 0)
             {
-                var gues = SelectionManager.Self.SelectedGues.ToArray();
+                var gues = _selectionManager.SelectedGues.ToArray();
                 foreach (var gue in gues)
                 {
                     var instanceSave = gue.Tag as InstanceSave;

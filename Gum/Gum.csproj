@@ -81,9 +81,6 @@
 		<Compile Include="..\MonoGameGum\Localization\ILocalizationService.cs">
 			<Link>Managers\ILocalizationService.cs</Link>
 		</Compile>
-		<Compile Update="Plugins\InternalPlugins\EditorTab\Views\WireframeEditControl.cs">
-			<SubType>UserControl</SubType>
-		</Compile>
 		<None Update="Content\Fonts\Font18Arial_o1.fnt">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
@@ -321,6 +318,7 @@
 	<ItemGroup>
 		<Folder Include="Converters\" />
 		<Folder Include="Libraries\Xna\" />
+		<Folder Include="Plugins\InternalPlugins\ScreenshotPlugin\" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="DynamicExpresso.Core">

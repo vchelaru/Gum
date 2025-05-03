@@ -875,7 +875,6 @@ namespace Gum.PropertyGridHelpers
                     Undo.UndoManager.Self.RecordUndo();
                     GumCommands.Self.GuiCommands.RefreshVariables(force: true);
                     WireframeObjectManager.Self.RefreshAll(true);
-                    SelectionManager.Self.Refresh();
 
                     PluginManager.Self.VariableSet(selectedElement, selectedInstance, variableName, oldValue);
 

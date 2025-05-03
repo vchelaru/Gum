@@ -2027,7 +2027,7 @@ namespace Gum.Managers
                 whatToHighlight = WireframeObjectManager.Self.GetRepresentation(instance, null);
             }
 
-            SelectionManager.Self.HighlightedIpso = whatToHighlight;
+            PluginManager.Self.SetHighlightedIpso(whatToHighlight);
         }
     }
 

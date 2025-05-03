@@ -1,16 +1,21 @@
-﻿using FlatRedBall.AnimationEditorForms.Controls;
+﻿using CommonFormsAndControls.Forms;
+using FlatRedBall.AnimationEditorForms.Controls;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using Gum.Plugins.InternalPlugins.EditorTab.Services;
+using Gum.Plugins.InternalPlugins.EditorTab.Views;
 using Gum.Plugins.ScrollBarPlugin;
+using Gum.PropertyGridHelpers;
 using Gum.Services;
+using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using GumRuntime;
 using Microsoft.Xna.Framework.Graphics;
+using Newtonsoft.Json.Linq;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
@@ -23,6 +28,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls.Primitives;
 using System.Windows.Forms;
+using ToolsUtilities;
 
 namespace Gum.Plugins.InternalPlugins.EditorTab;
 
@@ -83,6 +89,9 @@ internal class MainEditorTabPlugin : InternalPlugin
     readonly ScrollbarService _scrollbarService;
     private readonly GuiCommands _guiCommands;
     private readonly LocalizationManager _localizationManager;
+    private readonly ScreenshotService _screenshotService;
+    private readonly SelectionManager _selectionManager;
+    private readonly ElementCommands _elementCommands;
     WireframeControl _wireframeControl;
 
     private FlatRedBall.AnimationEditorForms.Controls.WireframeEditControl _wireframeEditControl;
@@ -100,39 +109,171 @@ internal class MainEditorTabPlugin : InternalPlugin
         _scrollbarService = new ScrollbarService();
         _guiCommands = Builder.Get<GuiCommands>();
         _localizationManager = Builder.Get<LocalizationManager>();
+        _screenshotService = new ScreenshotService();
+        _editingManager = new EditingManager();
+        _selectionManager = new SelectionManager(SelectedState.Self, _editingManager);
+        _elementCommands = ElementCommands.Self;
+
     }
 
     public override void StartUp()
     {
         AssignEvents();
 
+        var menuItem = AddMenuItem("File", "Export as Image");
+        _screenshotService.InitializeMenuItem(menuItem);
+        BeforeRender += _screenshotService.HandleBeforeRender;
+        AfterRender += _screenshotService.HandleAfterRender;
+
         HandleWireframeInitialized();
 
-        _editingManager = EditingManager.Self;
     }
 
     private void AssignEvents()
     {
+        this.CreateGraphicalUiElement += HandleCreateGraphicalUiElement;
+
         this.ReactToStateSaveSelected += HandleStateSelected;
+
         this.InstanceSelected += HandleInstanceSelected;
+        this.InstanceReordered += HandleInstanceReordered;
+        this.InstanceDelete += HandleInstanceDelete;
+
         this.ElementSelected += HandleElementSelected;
+        this.ElementSelected += _scrollbarService.HandleElementSelected;
         this.ElementDelete += HandleElementDeleted;
+
+        this.VariableSet += HandleVariableSet;
         this.VariableSetLate += HandleVariableSetLate;
 
+        this.CategoryDelete += HandleCategoryDelete;
+        this.TryHandleDelete += HandleDelete;
+
+        this.StateDelete += HandleStateDelete;
+
         this.CameraChanged += _scrollbarService.HandleCameraChanged;
+
         this.XnaInitialized += HandleXnaInitialized;
+        
         this.WireframeResized += _scrollbarService.HandleWireframeResized;
-        this.ElementSelected += _scrollbarService.HandleElementSelected;
+        this.WireframeRefreshed += HandleWireframeRefreshed;
+        this.WireframePropertyChanged += HandleWireframePropertyChanged;
+        
         this.UiZoomValueChanged += HandleUiZoomValueChanged;
+
+        this.GuidesChanged += HandleGuidesChanged;
+
+        this.IpsoSelected += HandleIpsoSelected;
+        this.SetHighlightedIpso += HandleSetHighlightedElement;
+
         this.ProjectLoad += HandleProjectLoad;
         this.ProjectPropertySet += HandleProjectPropertySet;
+
+
+        this.AfterUndo += HandleAfterUndo;
     }
 
+    private void HandleGuidesChanged()
+    {
+        _wireframeControl.RefreshGuides();
+    }
+
+    private GraphicalUiElement? HandleCreateGraphicalUiElement(ElementSave elementSave)
+    {
+        var toReturn = elementSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
+        toReturn.AddToManagers(SystemManagers.Default, _layerService.MainEditorLayer);
+        return toReturn;
+    }
+
+    private bool HandleDelete()
+    {
+        return _selectionManager.TryHandleDelete();
+    }
+
+    private void HandleWireframeRefreshed()
+    {
+        _wireframeControl.UpdateCanvasBoundsToProject();
+
+        _selectionManager.Refresh();
+    }
+
+    private void HandleAfterUndo()
+    {
+        _selectionManager.Refresh();
+    }
+
+    private void HandleIpsoSelected(IPositionedSizedObject ipso)
+    {
+        _selectionManager.SelectedGue = ipso as GraphicalUiElement;
+    }
+
+    private void HandleVariableSet(ElementSave save1, InstanceSave save2, string arg3, object arg4)
+    {
+        _selectionManager.Refresh();
+
+    }
+
+    private void HandleSetHighlightedElement(IPositionedSizedObject whatToHighlight)
+    {
+        _selectionManager.HighlightedIpso = whatToHighlight;
+    }
+
+    private void HandleStateDelete(StateSave save)
+    {
+        _selectionManager.Refresh();
+
+    }
+
+    private void HandleCategoryDelete(StateSaveCategory category)
+    {
+        _selectionManager.Refresh();
+    }
+
+    private void HandleInstanceDelete(ElementSave save1, InstanceSave save2)
+    {
+        _selectionManager.Refresh();
+    }
+
+    private void HandleInstanceReordered(InstanceSave save)
+    {
+        _selectionManager.Refresh();
+    }
+
+    private void HandleWireframePropertyChanged(string name)
+    {
+        if(name == nameof(WireframeCommands.AreHighlightsVisible))
+        {
+            _selectionManager.AreHighlightsVisible = 
+                GumCommands.Self.WireframeCommands.AreHighlightsVisible;
+        }
+        else if(name == nameof(WireframeCommands.IsBackgroundGridVisible))
+        {
+            _wireframeControl.BackgroundSprite.Visible = 
+                GumCommands.Self.WireframeCommands.IsBackgroundGridVisible;
+        }
+        else if(name == nameof(WireframeCommands.AreRulersVisible))
+        {
+            _wireframeControl.RulersVisible =
+                GumCommands.Self.WireframeCommands.AreRulersVisible;
+        }
+        else if(name == nameof(WireframeCommands.AreCanvasBoundsVisible))
+        {
+            _wireframeControl.CanvasBoundsVisible =
+                GumCommands.Self.WireframeCommands.AreCanvasBoundsVisible;
+        }
+    }
 
     private void HandleProjectLoad(GumProjectSave save)
     {
         GraphicalUiElement.CanvasWidth = save.DefaultCanvasWidth;
         GraphicalUiElement.CanvasHeight = save.DefaultCanvasHeight;
+
+
+        _wireframeControl.UpdateCanvasBoundsToProject();
+
+
+        _selectionManager.RestrictToUnitValues =
+            save.RestrictToUnitValues;
 
         AdjustTextureFilter();
     }
@@ -306,7 +447,7 @@ internal class MainEditorTabPlugin : InternalPlugin
             }
 
 
-            SelectionManager.Self.Refresh();
+            _selectionManager.Refresh();
         }
     }
 
@@ -315,29 +456,33 @@ internal class MainEditorTabPlugin : InternalPlugin
     private void HandleElementSelected(ElementSave save)
     {
         WireframeObjectManager.Self.RefreshAll(forceLayout: true);
+        _selectionManager.Refresh();
+
     }
 
     private void HandleInstanceSelected(ElementSave element, InstanceSave instance)
     {
         WireframeObjectManager.Self.RefreshAll(forceLayout: false);
         _editingManager.RefreshContextMenuStrip();
+        _selectionManager.WireframeEditor?.UpdateAspectRatioForGrabbedIpso();
+        _selectionManager.Refresh();
     }
 
     private void HandleXnaInitialized()
     {
         _scrollbarService.HandleWireframeInitialized(_wireframeControl, gumEditorPanel);
 
-        ToolCommands.GuiCommands_Old.Self.Initialize(_wireframeControl);
-
         _layerService = new Services.LayerService();
 
-        var localizationManager = Builder.Get<LocalizationManager>();
 
-        Wireframe.WireframeObjectManager.Self.Initialize(_wireframeEditControl, _wireframeControl, localizationManager, _layerService);
-        _wireframeControl.Initialize(_wireframeEditControl, gumEditorPanel, HotkeyManager.Self);
+        _wireframeEditControl.ZoomChanged += HandleControlZoomChange;
+
+        _wireframeControl.Initialize(_wireframeEditControl, gumEditorPanel, HotkeyManager.Self, _selectionManager);
 
         // _layerService must be created after _wireframeControl so that the SystemManagers.Default are assigned
         _layerService.Initialize();
+        _selectionManager.Initialize(_layerService);
+
         _wireframeControl.ShareLayerReferences(_layerService);
 
         _editingManager.Initialize(_wireframeContextMenuStrip);
@@ -357,7 +502,7 @@ internal class MainEditorTabPlugin : InternalPlugin
         this._wireframeControl.MouseDown += wireframeControl1_MouseDown;
 
 
-        this._wireframeControl.DragDrop += DragDropManager.Self.HandleFileDragDrop;
+        this._wireframeControl.DragDrop += HandleFileDragDrop;
         this._wireframeControl.DragEnter += DragDropManager.Self.HandleFileDragEnter;
         this._wireframeControl.DragOver += (sender, e) =>
         {
@@ -394,8 +539,218 @@ internal class MainEditorTabPlugin : InternalPlugin
         UpdateWireframeControlSizes();
     }
 
+    private void HandleControlZoomChange(object sender, EventArgs e)
+    {
+        Renderer.Self.Camera.Zoom = _wireframeEditControl.PercentageValue / 100.0f;
+    }
 
-    public void HandleWireframeInitialized()
+    internal void HandleFileDragDrop(object sender, DragEventArgs e)
+    {
+        if (!CanDrop())
+            return;
+
+        float worldX, worldY;
+        Renderer.Self.Camera.ScreenToWorld(InputLibrary.Cursor.Self.X, InputLibrary.Cursor.Self.Y, out worldX, out worldY);
+        string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+
+        if (files == null)
+        {
+            return;
+        }
+
+        var handled = false;
+        bool shouldUpdate = false;
+
+        // If only one file was dropped, see if we're over an instance that can take a file
+        if (files.Length == 1)
+        {
+            if (!DragDropManager.Self.IsValidExtensionForFileDrop(files[0]))
+            {
+                handled = true;
+            }
+        }
+
+        if (!handled)
+        {
+            TryHandleFileDropOnInstance(worldX, worldY, files, ref handled, ref shouldUpdate);
+        }
+
+        if (!handled)
+        {
+            TryHandleFileDropOnComponent(worldX, worldY, files, ref handled, ref shouldUpdate);
+        }
+
+
+        if (!handled)
+        {
+            foreach (string file in files)
+            {
+                if (!DragDropManager.Self.IsValidExtensionForFileDrop(file))
+                    continue;
+
+                string fileName = FileManager.MakeRelative(file, FileLocations.Self.ProjectFolder);
+                AddNewInstanceForDrop(fileName, worldX, worldY);
+                shouldUpdate = true;
+            }
+
+        }
+        if (shouldUpdate)
+        {
+            GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+            GumCommands.Self.GuiCommands.RefreshVariables();
+
+            WireframeObjectManager.Self.RefreshAll(true);
+        }
+    }
+
+    private void AddNewInstanceForDrop(string fileName, float worldX, float worldY)
+    {
+        string nameToAdd = FileManager.RemovePath(FileManager.RemoveExtension(fileName));
+
+        var element = SelectedState.Self.SelectedElement;
+
+        IEnumerable<string> existingNames = element.Instances.Select(i => i.Name);
+        nameToAdd = StringFunctions.MakeStringUnique(nameToAdd, existingNames);
+
+        InstanceSave instance =
+            _elementCommands.AddInstance(element, nameToAdd);
+        instance.BaseType = "Sprite";
+
+        DragDropManager.Self.SetInstanceToPosition(worldX, worldY, instance);
+
+        var variableName = instance.Name + ".SourceFile";
+
+        var oldValue = SelectedState.Self.SelectedStateSave.GetValueOrDefault<string>(variableName);
+
+        SelectedState.Self.SelectedStateSave.SetValue(variableName, fileName, instance);
+
+        SetVariableLogic.Self.ReactToPropertyValueChanged("SourceFile", oldValue, element, instance, SelectedState.Self.SelectedStateSave, refresh: false);
+
+    }
+
+    private void TryHandleFileDropOnComponent(float worldX, float worldY, string[] files, ref bool handled, ref bool shouldUpdate)
+    {
+        List<ElementWithState> elementStack = new List<ElementWithState>();
+        elementStack.Add(new ElementWithState(SelectedState.Self.SelectedElement) { StateName = SelectedState.Self.SelectedStateSave.Name });
+
+        // see if it's over the component:
+        IPositionedSizedObject ipsoOver = _selectionManager.GetRepresentationAt(worldX, worldY, false, elementStack);
+        if (ipsoOver?.Tag is ComponentSave component && (component.BaseType == "Sprite" || component.BaseType == "NineSlice"))
+        {
+            string fileName = FileManager.MakeRelative(files[0], FileLocations.Self.ProjectFolder);
+
+            MultiButtonMessageBox mbmb = new MultiButtonMessageBox();
+            mbmb.StartPosition = FormStartPosition.Manual;
+
+            mbmb.Location = new System.Drawing.Point(MainWindow.MousePosition.X - mbmb.Width / 2,
+                 MainWindow.MousePosition.Y - mbmb.Height / 2);
+
+            mbmb.MessageText = "What do you want to do with the file " + fileName;
+
+            mbmb.AddButton("Set source file on " + component.Name, DialogResult.OK);
+            mbmb.AddButton("Add new Sprite", DialogResult.Yes);
+            mbmb.AddButton("Nothing", DialogResult.Cancel);
+
+
+            var result = mbmb.ShowDialog();
+
+            if (result == DialogResult.OK)
+            {
+                var oldValue = SelectedState.Self.SelectedStateSave
+                    .GetValueOrDefault<string>("SourceFile");
+
+                SelectedState.Self.SelectedStateSave.SetValue("SourceFile", fileName);
+                ProjectState.Self.Selected.SelectedInstance = null;
+                SetVariableLogic.Self.PropertyValueChanged("SourceFile", oldValue, SelectedState.Self.SelectedInstance);
+
+                shouldUpdate = true;
+                handled = true;
+            }
+            else if (result == DialogResult.Cancel)
+            {
+                handled = true;
+
+            }
+
+        }
+    }
+
+    private bool CanDrop()
+    {
+        return SelectedState.Self.SelectedStandardElement == null &&    // Don't allow dropping on standard elements
+               SelectedState.Self.SelectedElement != null &&            // An element must be selected
+               SelectedState.Self.SelectedStateSave != null;            // A state must be selected
+    }
+
+    private void TryHandleFileDropOnInstance(float worldX, float worldY, string[] files, ref bool handled, ref bool shouldUpdate)
+    {
+        // This only supports drag+drop on an instance, but what if dropping on a component
+        // which inherits from Sprite, or perhaps an instance that has an exposed file variable?
+        // Not super high priority, but it's worth noting that this currently doesn't work...
+        InstanceSave instance = FindInstanceWithSourceFile(worldX, worldY);
+        if (instance != null)
+        {
+            string fileName = FileManager.MakeRelative(files[0], FileLocations.Self.ProjectFolder);
+
+            MultiButtonMessageBox mbmb = new MultiButtonMessageBox();
+            mbmb.StartPosition = FormStartPosition.Manual;
+
+            mbmb.Location = new System.Drawing.Point(MainWindow.MousePosition.X - mbmb.Width / 2,
+                 MainWindow.MousePosition.Y - mbmb.Height / 2);
+
+            mbmb.MessageText = "What do you want to do with the file " + fileName;
+
+            mbmb.AddButton("Set source file on " + instance.Name, DialogResult.OK);
+            mbmb.AddButton("Add new Sprite", DialogResult.Yes);
+            mbmb.AddButton("Nothing", DialogResult.Cancel);
+
+            var result = mbmb.ShowDialog();
+
+            if (result == DialogResult.OK)
+            {
+                var oldValue = SelectedState.Self.SelectedStateSave
+                    .GetValueOrDefault<string>(instance.Name + ".SourceFile");
+
+                SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".SourceFile", fileName, instance);
+                ProjectState.Self.Selected.SelectedInstance = instance;
+                SetVariableLogic.Self.PropertyValueChanged("SourceFile", oldValue, instance);
+
+                shouldUpdate = true;
+                handled = true;
+            }
+            else if (result == DialogResult.Cancel)
+            {
+                handled = true;
+
+            }
+            // continue for DialogResult.Yes
+        }
+    }
+
+
+    private InstanceSave FindInstanceWithSourceFile(float worldX, float worldY)
+    {
+        List<ElementWithState> elementStack = new List<ElementWithState>();
+        elementStack.Add(new ElementWithState(SelectedState.Self.SelectedElement) { StateName = SelectedState.Self.SelectedStateSave.Name });
+
+        IPositionedSizedObject ipsoOver = _selectionManager.GetRepresentationAt(worldX, worldY, false, elementStack);
+
+        if (ipsoOver != null && ipsoOver.Tag is InstanceSave)
+        {
+            var baseStandardElement = ObjectFinder.Self.GetRootStandardElementSave(ipsoOver.Tag as InstanceSave);
+
+            if (baseStandardElement.DefaultState.Variables.Any(v => v.Name == "SourceFile"))
+            {
+                return ipsoOver.Tag as InstanceSave;
+            }
+        }
+
+        return null;
+    }
+
+
+
+    void HandleWireframeInitialized()
     {
         ContextMenuStrip wireframeContextMenuStrip;
 
@@ -428,7 +783,7 @@ internal class MainEditorTabPlugin : InternalPlugin
 
     private void CreateWireframeControl(System.Windows.Forms.ContextMenuStrip WireframeContextMenuStrip)
     {
-        this._wireframeControl = new Gum.Wireframe.WireframeControl();
+        this._wireframeControl = new WireframeControl();
         this._wireframeControl.AllowDrop = true;
         this._wireframeControl.Dock = DockStyle.Fill;
         this._wireframeControl.ContextMenuStrip = WireframeContextMenuStrip;

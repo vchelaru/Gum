@@ -10,7 +10,7 @@ using Matrix = System.Numerics.Matrix4x4;
 
 namespace Gum.Wireframe
 {
-    class OriginDisplay
+    public class OriginDisplay
     {
         const float RadiusAtNoZoom = 5;
 
@@ -161,7 +161,7 @@ namespace Gum.Wireframe
             mOriginLine.RelativePoint.Y = selectedObjectY - mOriginLine.Y;
         }
 
-        internal void SetColor(Color color)
+        public void SetColor(Color color)
         {
             mXLine1.Color = color;
             mXLine2.Color = color;

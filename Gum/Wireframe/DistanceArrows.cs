@@ -10,7 +10,7 @@ using Microsoft.Xna.Framework;
 
 namespace Gum.Wireframe
 {
-    internal class DistanceArrows
+    public class DistanceArrows
     {
         private ToolLayerService _toolLayerService;
         Arrow Arrow1;

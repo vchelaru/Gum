@@ -25,6 +25,7 @@ internal class MainTreeViewPlugin : InternalPlugin
     private void AssignEvents()
     {
         this.InstanceSelected += MainTreeViewPlugin_InstanceSelected;
+        this.InstanceAdd += HandleInstanceAdd;
         this.ElementSelected += HandleElementSelected;
 
         this.BehaviorSelected += HandleBehaviorSelected;
@@ -38,6 +39,11 @@ internal class MainTreeViewPlugin : InternalPlugin
         this.ProjectLoad += HandleProjectLoad;
     }
 
+    private void HandleInstanceAdd(ElementSave save1, InstanceSave save2)
+    {
+        ElementTreeViewManager.Self.RefreshUi();
+    }
+
     private void HandleBehaviorDeleted(BehaviorSave save)
     {
         ElementTreeViewManager.Self.RefreshUi();
@@ -46,9 +52,6 @@ internal class MainTreeViewPlugin : InternalPlugin
     private void HandleProjectLoad(GumProjectSave save)
     {
         ElementTreeViewManager.Self.RefreshUi();
-
-        SelectionManager.Self.RestrictToUnitValues = 
-            save.RestrictToUnitValues;
     }
 
     private void HandleElementAdd(ElementSave save)
