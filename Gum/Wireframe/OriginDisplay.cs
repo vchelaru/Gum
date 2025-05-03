@@ -161,7 +161,7 @@ namespace Gum.Wireframe
             mOriginLine.RelativePoint.Y = selectedObjectY - mOriginLine.Y;
         }
 
-        internal void SetColor(Color color)
+        public void SetColor(Color color)
         {
             mXLine1.Color = color;
             mXLine2.Color = color;

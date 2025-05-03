@@ -670,7 +670,7 @@ public class DragDropManager
                SelectedState.Self.SelectedStateSave != null;            // A state must be selected
     }
 
-    internal void HandleFileDragEnter(object sender, DragEventArgs e)
+    public void HandleFileDragEnter(object sender, DragEventArgs e)
     {
         UpdateEffectsForDragging(e);
     }

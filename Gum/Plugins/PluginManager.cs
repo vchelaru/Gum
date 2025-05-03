@@ -316,7 +316,7 @@ namespace Gum.Plugins
         internal void VariableDelete(ElementSave elementSave, string variableName) =>
             CallMethodOnPlugin(plugin => plugin.CallVariableDelete(elementSave, variableName));
 
-        internal void VariableSet(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue)
+        public void VariableSet(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue)
         {
             CallMethodOnPlugin(plugin => plugin.CallVariableSet(parentElement, instance, changedMember, oldValue));
             CallMethodOnPlugin(plugin => plugin.CallVariableSetLate(parentElement, instance, changedMember, oldValue), "VariableSet (Late)");
@@ -525,16 +525,16 @@ namespace Gum.Plugins
         internal void XnaInitialized() =>
             CallMethodOnPlugin(plugin => plugin.CallXnaInitialized());
 
-        internal void HandleWireframeResized() =>
+        public void HandleWireframeResized() =>
             CallMethodOnPlugin(plugin => plugin.CallWireframeResized());
 
-        internal void CameraChanged() =>
+        public void CameraChanged() =>
             CallMethodOnPlugin(plugin => plugin.CallCameraChanged());
 
-        internal void BeforeRender() =>
+        public void BeforeRender() =>
             CallMethodOnPlugin(plugin => plugin.CallBeforeRender());
 
-        internal void AfterRender() =>
+        public void AfterRender() =>
             CallMethodOnPlugin(plugin => plugin.CallAfterRender());
 
         internal void ReactToFileChanged(FilePath filePath) =>

@@ -10,8 +10,20 @@
 		<ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
 		<Platforms>x86</Platforms>
 		<DefineConstants>GUM; MONOGAME</DefineConstants>
-
 	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+		<OutputPath>bin\Debug\</OutputPath>
+		<CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+		<LangVersion>12.0</LangVersion>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+		<OutputPath>bin\Release\</OutputPath>
+		<CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+		<LangVersion>12.0</LangVersion>
+	</PropertyGroup>
+
+
 	<ItemGroup>
 		<Compile Update="Views\WireframeControl.cs">
 			<SubType>Component</SubType>
@@ -33,13 +45,18 @@
 		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
 		<ProjectReference Include="..\..\Gum\Gum.csproj" />
 		<ProjectReference Include="..\..\XnaAndWinforms\XnaAndWinforms.csproj" />
+
 		<Reference Include="Microsoft.Xna.Framework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86">
 			<SpecificVersion>False</SpecificVersion>
-			<HintPath>Libraries\Xna\Microsoft.Xna.Framework.dll</HintPath>
+			<HintPath>..\..\Gum\Libraries\Xna\Microsoft.Xna.Framework.dll</HintPath>
 		</Reference>
 		<Reference Include="Microsoft.Xna.Framework.Graphics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86">
 			<SpecificVersion>False</SpecificVersion>
-			<HintPath>Libraries\Xna\Microsoft.Xna.Framework.Graphics.dll</HintPath>
+			<HintPath>..\..\Gum\Libraries\Xna\Microsoft.Xna.Framework.Graphics.dll</HintPath>
 		</Reference>
+		
 	</ItemGroup>
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+	  <Exec Command="&#xD;&#xA;echo Copying to &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)\&quot;&#xD;&#xA;&#xD;&#xA;IF NOT EXIST &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot; md &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)\&quot;&#xD;&#xA;copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;" />
+	</Target>
 </Project>
