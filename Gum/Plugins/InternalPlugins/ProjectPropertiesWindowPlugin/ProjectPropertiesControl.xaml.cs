@@ -4,7 +4,6 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using Gum.Plugins.PropertiesWindowPlugin;
-using Microsoft.Xna.Framework.Graphics;
 using WpfDataUi.Controls;
 using WpfDataUi.DataTypes;
 

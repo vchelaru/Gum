@@ -90,34 +90,7 @@ public class KeyCombination
 
     }
 
-    public bool IsPressed(InputLibrary.Keyboard keyboard)
-    {
-        if (IsShiftDown &&
-            !keyboard.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift) &&
-            !keyboard.KeyDown(Microsoft.Xna.Framework.Input.Keys.RightShift))
-        {
-            return false;
-        }
 
-        if (IsCtrlDown &&
-            !keyboard.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftControl) &&
-            !keyboard.KeyDown(Microsoft.Xna.Framework.Input.Keys.RightControl))
-        {
-            return false;
-        }
-
-        if (IsAltDown &&
-            !keyboard.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftAlt) &&
-            !keyboard.KeyDown(Microsoft.Xna.Framework.Input.Keys.RightAlt))
-        {
-            return false;
-        }
-
-        return Key == null ||
-            // Most keys are the same in XNA - is this enough?
-            keyboard.KeyDown((Microsoft.Xna.Framework.Input.Keys)Key);
-
-    }
 
     public override string ToString()
     {

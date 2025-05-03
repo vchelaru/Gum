@@ -18,6 +18,7 @@ using Matrix = System.Numerics.Matrix4x4;
 using System.Windows.Input;
 using System;
 using Gum.ToolCommands;
+using EditorTabPlugin_XNA.ExtensionMethods;
 
 namespace Gum.Wireframe.Editors
 {

@@ -986,7 +986,9 @@ namespace Gum.Managers
 
                                 InstanceMember instanceMember = new InstanceMember( $"{beforeRed}Color{afterRed}", null);
                                 instanceMember.PreferredDisplayer = typeof(Gum.Controls.DataUi.ColorDisplay);
-                                instanceMember.CustomGetTypeEvent += (arg) => typeof(Microsoft.Xna.Framework.Color);
+
+                                instanceMember.CustomGetTypeEvent += (arg) => typeof(System.Drawing.Color);
+
                                 instanceMember.CustomGetEvent += (notUsed) => GetCurrentColor(redVariableName, greenVariableName, blueVariableName);
                                 instanceMember.CustomSetPropertyEvent += (sender, args) => SetCurrentColor(args, redVariableName, greenVariableName, blueVariableName);
 
@@ -1006,7 +1008,7 @@ namespace Gum.Managers
             }
         }
 
-        object GetCurrentColor(string redVariableName, string greenVariableName, string blueVariableName)
+        System.Drawing.Color GetCurrentColor(string redVariableName, string greenVariableName, string blueVariableName)
         {
             var selectedState = SelectedState.Self.SelectedStateSave;
 
@@ -1034,15 +1036,15 @@ namespace Gum.Managers
                 }
             }
 
-            return new Microsoft.Xna.Framework.Color(red, green, blue);
+            return System.Drawing.Color.FromArgb(red, green, blue);
         }
 
         void SetCurrentColor(SetPropertyArgs args, string redVariableName, string greenVariableName, string blueVariableName)
         {
-            var valueBeforeSet = (Microsoft.Xna.Framework.Color)GetCurrentColor(redVariableName, greenVariableName, blueVariableName);
+            var valueBeforeSet = GetCurrentColor(redVariableName, greenVariableName, blueVariableName);
             var state = SelectedState.Self.SelectedStateSave;
 
-            var color = (Microsoft.Xna.Framework.Color)args.Value;
+            var color = (System.Drawing.Color) args.Value;
 
             state.SetValue(redVariableName, (int)color.R, "int");
 

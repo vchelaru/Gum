@@ -13,13 +13,13 @@ using Gum.Converters;
 using RenderingLibrary.Content;
 using CommonFormsAndControls.Forms;
 using ToolsUtilities;
-using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Graphics;
 using Gum.Logic;
 using GumRuntime;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Services;
 using Gum.Commands;
+using Gum.Graphics;
 
 namespace Gum.PropertyGridHelpers
 {
@@ -818,14 +818,16 @@ namespace Gum.PropertyGridHelpers
                             }
                             else
                             {
-                                var texture = LoaderManager.Self.LoadContent<Texture2D>(absolute);
+                                var size = ImageHeader.GetDimensions(absolute);
 
-                                if (texture != null && instance != null)
+                                if (size != null && instance != null)
                                 {
                                     parentElement.DefaultState.SetValue(instance.Name + ".TextureTop", 0);
                                     parentElement.DefaultState.SetValue(instance.Name + ".TextureLeft", 0);
-                                    parentElement.DefaultState.SetValue(instance.Name + ".TextureWidth", texture.Width);
-                                    parentElement.DefaultState.SetValue(instance.Name + ".TextureHeight", texture.Height);
+                                    parentElement.DefaultState.SetValue(instance.Name + ".TextureWidth", size.Value.Width);
+                                    parentElement.DefaultState.SetValue(instance.Name + ".TextureHeight", size.Value.Height);
+
+                                    GumCommands.Self.WireframeCommands.Refresh();
                                 }
                             }
                         }

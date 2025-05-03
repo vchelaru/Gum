@@ -32,11 +32,6 @@
 		</Reference>
 	</ItemGroup>
 	<ItemGroup>
-		<None Update="Content\BmfcTemplate.bmfc">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-	</ItemGroup>
-	<ItemGroup>
 		<EmbeddedResource Include="Content\Fonts\Font18Arial_o1_0.png">
 		  <CopyToOutputDirectory>Never</CopyToOutputDirectory>
 		</EmbeddedResource>

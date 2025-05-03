@@ -16,6 +16,7 @@ using System.Collections;
 using System;
 using Gum.PropertyGridHelpers;
 using System.Security.Policy;
+using EditorTabPlugin_XNA.ExtensionMethods;
 
 namespace Gum.Wireframe;
 
