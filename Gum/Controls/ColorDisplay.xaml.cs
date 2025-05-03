@@ -96,6 +96,7 @@ namespace Gum.Controls.DataUi
 
         public ApplyValueResult TrySetValueOnUi(object valueOnInstance)
         {
+#if XNA
             if (valueOnInstance is Microsoft.Xna.Framework.Color color)
             {
                 var windowsColor = new Color();
@@ -112,7 +113,9 @@ namespace Gum.Controls.DataUi
                  
                 return ApplyValueResult.Success;
             }
-            else if(valueOnInstance is System.Drawing.Color drawingColor)
+            else 
+#endif
+            if(valueOnInstance is System.Drawing.Color drawingColor)
             {
                 var windowsColor = new Color();
                 windowsColor.A = drawingColor.A;
@@ -136,6 +139,7 @@ namespace Gum.Controls.DataUi
             }
             else
             {
+#if XNA
                 if (mInstancePropertyType == typeof(Microsoft.Xna.Framework.Color))
                 {
                     Microsoft.Xna.Framework.Color colorToReturn = new Microsoft.Xna.Framework.Color(
@@ -148,7 +152,9 @@ namespace Gum.Controls.DataUi
 
                     value = colorToReturn;
                 }
-                else if(mInstancePropertyType == typeof(System.Drawing.Color))
+                else 
+#endif         
+                if(mInstancePropertyType == typeof(System.Drawing.Color))
                 {
                     var toReturn = System.Drawing.Color.FromArgb(
                         ColorPicker.SelectedColor.A,
@@ -187,13 +193,16 @@ namespace Gum.Controls.DataUi
 
             var isColorSame = false;
 
+#if XNA
             if (mInstancePropertyType == typeof(Microsoft.Xna.Framework.Color))
             {
                 var colorPack = (uint)(colorArgs.Color.R | (colorArgs.Color.G << 8) | (colorArgs.Color.B << 16) | (colorArgs.Color.A << 24));
                 var prevColor = (Microsoft.Xna.Framework.Color)InstanceMember.Value;
                 isColorSame = colorPack == prevColor.PackedValue;
             }
-            else if (mInstancePropertyType == typeof(System.Drawing.Color))
+            else 
+#endif     
+            if (mInstancePropertyType == typeof(System.Drawing.Color))
             {
                 var prevColor = (System.Drawing.Color)InstanceMember.Value;
                 var newColor = colorArgs.Color;

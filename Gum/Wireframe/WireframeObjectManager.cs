@@ -5,7 +5,6 @@ using Gum.DataTypes;
 using Gum.ToolStates;
 using Gum.Managers;
 using RenderingLibrary.Graphics;
-using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Content;
 using RenderingLibrary;
 using Gum.RenderingLibrary;

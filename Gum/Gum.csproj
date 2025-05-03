@@ -35,14 +35,6 @@
 		<ApplicationIcon>GumIcon.ico</ApplicationIcon>
 	</PropertyGroup>
 	<ItemGroup>
-		<Reference Include="Microsoft.Xna.Framework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86">
-			<SpecificVersion>False</SpecificVersion>
-			<HintPath>Libraries\Xna\Microsoft.Xna.Framework.dll</HintPath>
-		</Reference>
-		<Reference Include="Microsoft.Xna.Framework.Graphics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86">
-			<SpecificVersion>False</SpecificVersion>
-			<HintPath>Libraries\Xna\Microsoft.Xna.Framework.Graphics.dll</HintPath>
-		</Reference>
 		<Reference Include="System.Configuration" />
 		<Reference Include="System.Design" />
 		<Reference Include="TargaImage, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -235,6 +227,9 @@
 		<None Update="Content\Icons\WidthUnits\MaintainFileAspectRatioWidth.png">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
+		<EmbeddedResource Include="Content\BmfcTemplate.bmfc">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</EmbeddedResource>
 		<EmbeddedResource Include="Content\Cursors\AddCursor.cur" />
 		<EmbeddedResource Include="Libraries\bmfont.exe" />
 		<None Update="Content\Icons\HeightUnits\Ratio.png">
@@ -436,6 +431,7 @@
 		<Compile Remove="Wireframe\CustomSetPropertyOnRenderable.cs" />
 		<Compile Remove="Wireframe\ElementWithState.cs" />
 		<Compile Remove="Wireframe\RuntimeObjectCreator.cs" />
+		<None Remove="Content\BmfcTemplate.bmfc" />
 		<Page Remove="Plugins\InternalPlugins\AlignmentButtons\AlignmentControl.xaml" />
 	</ItemGroup>
 </Project>
