@@ -81,9 +81,6 @@
 		<Compile Include="..\MonoGameGum\Localization\ILocalizationService.cs">
 			<Link>Managers\ILocalizationService.cs</Link>
 		</Compile>
-		<Compile Update="Plugins\InternalPlugins\EditorTab\Views\WireframeEditControl.cs">
-			<SubType>UserControl</SubType>
-		</Compile>
 		<None Update="Content\Fonts\Font18Arial_o1.fnt">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>

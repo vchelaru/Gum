@@ -15,7 +15,6 @@ using Gum.DataTypes;
 using Gum.Services;
 using Gum.Undo;
 using Gum.Logic;
-using Gum.Plugins.InternalPlugins.EditorTab;
 using Gum.Plugins.InternalPlugins.MenuStripPlugin;
 using GumRuntime;
 

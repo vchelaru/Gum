@@ -1,0 +1,45 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net472</TargetFramework>
+		<OutputType>Library</OutputType>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<LangVersion>12.0</LangVersion>
+		<Nullable>enable</Nullable>
+		<UseWindowsForms>true</UseWindowsForms>
+		<UseWPF>true</UseWPF>
+		<ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
+		<Platforms>x86</Platforms>
+		<DefineConstants>GUM; MONOGAME</DefineConstants>
+
+	</PropertyGroup>
+	<ItemGroup>
+		<Compile Update="Views\WireframeControl.cs">
+			<SubType>Component</SubType>
+		</Compile>
+		<Compile Update="Views\WireframeEditControl.cs">
+			<SubType>UserControl</SubType>
+		</Compile>
+		<Compile Update="Views\WireframeEditControl.designer.cs">
+			<DependentUpon>WireframeEditControl.cs</DependentUpon>
+		</Compile>
+	</ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Update="Views\WireframeEditControl.resx">
+			<DependentUpon>WireframeEditControl.cs</DependentUpon>
+		</EmbeddedResource>
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+		<ProjectReference Include="..\..\Gum\Gum.csproj" />
+		<ProjectReference Include="..\..\XnaAndWinforms\XnaAndWinforms.csproj" />
+		<Reference Include="Microsoft.Xna.Framework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86">
+			<SpecificVersion>False</SpecificVersion>
+			<HintPath>Libraries\Xna\Microsoft.Xna.Framework.dll</HintPath>
+		</Reference>
+		<Reference Include="Microsoft.Xna.Framework.Graphics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86">
+			<SpecificVersion>False</SpecificVersion>
+			<HintPath>Libraries\Xna\Microsoft.Xna.Framework.Graphics.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+</Project>

@@ -9,15 +9,12 @@ using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Content;
 using RenderingLibrary;
 using Gum.RenderingLibrary;
-using FlatRedBall.AnimationEditorForms.Controls;
 using Gum.Plugins;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
 using Matrix = System.Numerics.Matrix4x4;
 using GumRuntime;
 using RenderingLibrary.Math.Geometry;
-using Gum.Plugins.InternalPlugins.EditorTab.Services;
-using Gum.Plugins.InternalPlugins.EditorTab.Views;
 
 namespace Gum.Wireframe;
 
