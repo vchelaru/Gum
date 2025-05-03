@@ -44,13 +44,8 @@ public partial class WireframeObjectManager
     Layer MainEditorLayer;
 
 
-    const int left = -4096;
-    const int width = 8192;
-
     GraphicalUiElementManager gueManager;
     private LocalizationManager _localizationManager;
-    private LayerService _layerService;
-    private CameraController _cameraController;
 
 
     #endregion
@@ -91,14 +86,10 @@ public partial class WireframeObjectManager
 
     public void Initialize(
         WireframeControl wireframeControl, 
-        LocalizationManager localizationManager,
-        LayerService layerService,
-        CameraController cameraController
+        LocalizationManager localizationManager
         )
     {
         _localizationManager = localizationManager;
-        _layerService = layerService;
-        _cameraController = cameraController;
 
         WireframeControl = wireframeControl;
 
@@ -217,8 +208,7 @@ public partial class WireframeObjectManager
 
                 try
                 {
-                    RootGue = elementSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
-                    RootGue.AddToManagers(SystemManagers.Default, _layerService.MainEditorLayer);
+                    RootGue = PluginManager.Self.CreateGraphicalUiElement(elementSave);
 
                     // Always set default first, then if the selected state is not the default, then apply that after:
                     RootGue.SetVariablesRecursively(elementSave, elementSave.DefaultState);

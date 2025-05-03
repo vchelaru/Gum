@@ -131,6 +131,8 @@ internal class MainEditorTabPlugin : InternalPlugin
 
     private void AssignEvents()
     {
+        this.CreateGraphicalUiElement += HandleCreateGraphicalUiElement;
+
         this.ReactToStateSaveSelected += HandleStateSelected;
 
         this.InstanceSelected += HandleInstanceSelected;
@@ -167,6 +169,13 @@ internal class MainEditorTabPlugin : InternalPlugin
 
 
         this.AfterUndo += HandleAfterUndo;
+    }
+
+    private GraphicalUiElement? HandleCreateGraphicalUiElement(ElementSave elementSave)
+    {
+        var toReturn = elementSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
+        toReturn.AddToManagers(SystemManagers.Default, _layerService.MainEditorLayer);
+        return toReturn;
     }
 
     private bool HandleDelete()
@@ -451,7 +460,7 @@ internal class MainEditorTabPlugin : InternalPlugin
         _wireframeEditControl.ZoomChanged += HandleControlZoomChange;
 
         Wireframe.WireframeObjectManager.Self.Initialize(_wireframeControl, 
-            localizationManager, _layerService, CameraController.Self);
+            localizationManager);
         _wireframeControl.Initialize(_wireframeEditControl, gumEditorPanel, HotkeyManager.Self, _selectionManager);
 
         // _layerService must be created after _wireframeControl so that the SystemManagers.Default are assigned

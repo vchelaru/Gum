@@ -187,6 +187,8 @@ namespace Gum.Plugins.BaseClasses
         public event Action<IPositionedSizedObject>? SetHighlightedIpso;
         public event Action<IPositionedSizedObject?>? IpsoSelected;
 
+        public event Func<ElementSave, GraphicalUiElement?>? CreateGraphicalUiElement;
+
         public event Func<bool>? TryHandleDelete;
 
         #endregion
@@ -514,6 +516,9 @@ namespace Gum.Plugins.BaseClasses
 
         public void CallIpsoSelected(IPositionedSizedObject? ipso) =>
             IpsoSelected?.Invoke(ipso);
+
+        public GraphicalUiElement? CallCreateGraphicalUiElement(ElementSave elementSave) =>
+            CreateGraphicalUiElement?.Invoke(elementSave);
 
         #endregion
     }

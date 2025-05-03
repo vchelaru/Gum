@@ -101,6 +101,26 @@ namespace Gum.Plugins
         [Export("LocalizationManager")]
         public LocalizationManager LocalizationManager => Builder.Get<LocalizationManager>();
 
+
+        internal static List<PluginContainer> AllPluginContainers
+        {
+            get
+            {
+                List<PluginContainer> returnList = new List<PluginContainer>();
+
+                foreach (PluginManager pluginManager in mInstances)
+                {
+                    returnList.AddRange(pluginManager.mPluginContainers.Values);
+                }
+
+                return returnList;
+            }
+        }
+
+        public Dictionary<IPlugin, PluginContainer> PluginContainers
+        {
+            get { return mPluginContainers; }
+        }
         #endregion
 
         #region Exported objects
@@ -123,451 +143,7 @@ namespace Gum.Plugins
 
         #endregion
 
-        internal static List<PluginContainer> AllPluginContainers
-        {
-            get
-            {
-                List<PluginContainer> returnList = new List<PluginContainer>();
-
-                foreach (PluginManager pluginManager in mInstances)
-                {
-                    returnList.AddRange(pluginManager.mPluginContainers.Values);
-                }
-
-                return returnList;
-            }
-        }
-
-        public Dictionary<IPlugin, PluginContainer> PluginContainers
-        {
-            get { return mPluginContainers; }
-        }
-
-        #region Methods
-
-
-        public void Initialize(MainWindow mainWindow)
-        {
-            LoadPluginSettings();
-            LoadPlugins(this, mainWindow);
-            mInstances.Add(this);
-        }
-        
-        private void LoadPluginSettings()
-        {
-            
-            if (System.IO.File.Exists(PluginSettingsSaveFileName))
-            {
-                mPluginSettingsSave = PluginSettingsSave.Load(PluginSettingsSaveFileName);
-            }
-            else
-            {
-                mPluginSettingsSave = new PluginSettingsSave();
-            }
-        }
-
-        public void SavePluginSettings()
-        {
-            FileManager.XmlSerialize(mPluginSettingsSave, PluginSettingsSaveFileName);
-        }
-
-        private void LoadReferenceLists()
-        {
-            // We use absolute paths for some of the .dlls and .exes
-            // because if we don't, then Glue looks for them in the Startup
-            // path, which could depend on whether Glue is launched from a shortcut
-            // or not - this is really common for released versions.
-            string executablePath = FileManager.GetDirectory(System.Windows.Forms.Application.ExecutablePath);
-
-            //Load Internal List
-            mReferenceListInternal.Add(executablePath + "Ionic.Zip.dll");
-            mReferenceListExternal.Add(executablePath + "CsvLibrary.dll");
-            mReferenceListExternal.Add(executablePath + "RenderingLibrary.dll");
-
-            mReferenceListExternal.Add(executablePath + "ToolsUtilities.dll");
-            mReferenceListExternal.Add(executablePath + "Gum.exe");
-
-            mReferenceListInternal.Add("Microsoft.CSharp.dll");
-            mReferenceListInternal.Add("System.dll");
-            mReferenceListInternal.Add("System.ComponentModel.Composition.dll");
-            mReferenceListInternal.Add("System.Core.dll");
-            mReferenceListInternal.Add("System.Data.dll");
-            mReferenceListInternal.Add("System.Data.DataSetExtensions.dll");
-            mReferenceListInternal.Add("System.Drawing.dll");
-            mReferenceListInternal.Add("System.Windows.Forms.dll");
-            mReferenceListInternal.Add("System.Xml.dll");
-            mReferenceListInternal.Add("System.Xml.Linq.dll");
-        }
-
-        private void LoadExternalReferenceList(string filePath)
-        {
-            string ReferenceFilePath = filePath + "\\" + ReferenceFileName;
-            mReferenceListExternal = new List<string>();
-
-            if (File.Exists(ReferenceFilePath))
-            {
-                using (StreamReader file = new StreamReader(ReferenceFilePath))
-                {
-                    string line;
-
-                    while ((line = file.ReadLine()) != null)
-                    {
-                        if (!String.IsNullOrEmpty(line) &&
-                           !String.IsNullOrEmpty(line.Trim()))
-                        {
-                            if (FileManager.FileExists(line.Trim()))
-                            {
-                                string absolute = FileManager.MakeAbsolute(line.Trim());
-
-                                if (!mReferenceListInternal.Contains(absolute))
-                                {
-                                    mReferenceListExternal.Add(absolute);
-                                    mExternalAssemblies.Add(Assembly.LoadFrom(absolute));
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-
-        private void LoadPlugins(PluginManager instance, MainWindow mainWindow)
-        {
-            if(mainWindow.MainMenuStrip == null)
-            {
-                throw new InvalidOperationException("MainMenuStrip must be set before loading plugins");
-            }
-            #region Get the Catalog
-
-
-            ResolveEventHandler reh = new ResolveEventHandler(instance.currentDomain_AssemblyResolve);
-
-            try
-            {
-                AppDomain currentDomain = AppDomain.CurrentDomain;
-                currentDomain.AssemblyResolve += reh;
-                AggregateCatalog catalog = instance.CreateCatalog();
-
-
-
-                var container = new CompositionContainer(catalog);
-                container.ComposeParts(instance);
-            }
-            catch (Exception e)
-            {
-                string error = "Error loading plugins\n";
-                if (e is ReflectionTypeLoadException)
-                {
-                    error += "Error is a reflection type load exception\n";
-                    var loaderExceptions = (e as ReflectionTypeLoadException).LoaderExceptions;
-
-                    foreach(var loaderException in loaderExceptions)
-                    {
-                        error += "\n" + loaderException.ToString();
-                    }
-                }
-                else
-                {
-                    error += "\n" + e.Message;
-
-                    if(e.InnerException != null)
-                    {
-                        error += "\n Inner Exception:\n" + e.InnerException.Message;
-                    }
-                }
-                MessageBox.Show(error);
-
-                instance.Plugins = new List<PluginBase>();
-
-                return;
-            }
-            finally
-            {
-                AppDomain.CurrentDomain.AssemblyResolve -= reh;
-            }
-
-            #endregion
-
-            #region Start all plugins
-            
-            foreach (PluginBase plugin in instance.Plugins)
-            {
-
-                // We used to do this all in an assign references method,
-                // but we now do it here so that the Startup function can have
-                // access to these references.
-                if (plugin is MainWindowPlugin)
-                {
-                    ((MainWindowPlugin)plugin).MainWindow = mainWindow;
-                }
-
-                plugin.MenuStrip = mainWindow.MainMenuStrip;
-
-                StartupPlugin(plugin, instance);
-            }
-            
-            #endregion
-        }
-
-
-
-        private Assembly currentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
-        {
-            foreach (Assembly item in mExternalAssemblies)
-            {
-                if (item.FullName == args.Name)
-                {
-                    return item;
-                }
-            }
-
-            //MessageBox.Show("Couldn't find assembly: " + args.Name + " for " + args.RequestingAssembly);
-            GumCommands.Self.GuiCommands.PrintOutput("Couldn't find assembly: " + args.Name + " for " + args.RequestingAssembly);
-
-            return null;
-        }
-
-        //internal static void Initialize()
-        //{
-        //    if (mGlobalInstance == null)
-        //    {
-        //        mGlobalInstance = new PluginManager(true);
-        //        LoadPlugins(mGlobalInstance);
-        //    }
-
-        //    if (mProjectInstance != null)
-        //    {
-        //        foreach (IPlugin plugin in mProjectInstance.mPluginContainers.Keys)
-        //        {
-        //            ShutDownPlugin(plugin, PluginShutDownReason.GlueShutDown);
-        //        }
-        //    }
-
-        //    mProjectInstance = new PluginManager(false);
-
-        //    mInstances.Clear();
-        //    mInstances.Add(mGlobalInstance);
-        //    mInstances.Add(mProjectInstance);
-
-
-        //    LoadPlugins(mProjectInstance);
-        //}
-
-        internal static void StartupPlugin(IPlugin plugin, PluginManager instance)
-        {
-
-            // See if the plugin already exists - it may implement multiple interfaces
-            if (!instance.mPluginContainers.ContainsKey(plugin))
-            {
-                PluginContainer pluginContainer = new PluginContainer(plugin);
-                instance.mPluginContainers.Add(plugin, pluginContainer);
-
-                try
-                {
-                    plugin.UniqueId = plugin.GetType().FullName;
-
-
-                    if (!mPluginSettingsSave.DisabledPlugins.Contains(plugin.UniqueId))
-                    {
-
-                        plugin.StartUp();
-                    }
-                    else
-                    {
-                        pluginContainer.IsEnabled = false;
-                    }
-                }
-                catch (Exception e)
-                {
-#if DEBUG
-                    MessageBox.Show("Plugin failed to start up:\n\n" + e.ToString());
-#endif
-                    pluginContainer.Fail(e, "Plugin failed in StartUp");
-                }
-            }
-        }
-
-        private AggregateCatalog CreateCatalog()
-        {
-            mExternalAssemblies.Clear();
-            LoadReferenceLists();
-
-            var returnValue = new AggregateCatalog();
-
-            var pluginDirectories = new List<string>();
-
-            pluginDirectories.Add(PluginFolder);
-
-            foreach (var directory in pluginDirectories)
-            {
-                List<string> dllFiles = FileManager.GetAllFilesInDirectory(directory, "dll");
-                string executablePath = FileManager.GetDirectory(System.Windows.Forms.Application.ExecutablePath);
-
-                dllFiles.Add(executablePath + "Gum.exe");
-                foreach (string dll in dllFiles)
-                {
-                    try
-                    {
-                        Assembly loadedAssembly = Assembly.LoadFrom(dll);
-
-                        returnValue.Catalogs.Add(new AssemblyCatalog(loadedAssembly));
-
-                    }
-                    catch
-                    {
-                        // todo - report the error
-                    }
-                }
-            }
-
-            if (mGlobal)
-            {
-                returnValue.Catalogs.Add(new AssemblyCatalog(System.Reflection.Assembly.GetExecutingAssembly()));
-            }
-
-            return returnValue;
-        }
-
-        // Eventually we may add support for this but not on the first pass
-        //private CompilerResults CompilePlugin(string filepath)
-        //{
-        //    using (new ZipFile()) { }
-
-        //    texture.ToString();// We do this to eliminate "is never used" warnings
-
-        //    if (IsCompatible(filepath))
-        //    {
-        //        LoadExternalReferenceList(filepath);
-
-        //        return PluginCompiler.Compiler.CompilePlugin(filepath, mReferenceListInternal, mReferenceListLoaded, mReferenceListExternal);
-        //    }
-
-        //    return null;
-        //}
-
-        private static bool IsCompatible(string filepath)
-        {
-            var compatibilityFilePath = filepath + @"\" + CompatibilityFileName;
-
-            //Check for compatibility file
-            if (File.Exists(compatibilityFilePath))
-            {
-                string value;
-
-                //Get compatibility timestamp
-                using (var file = new StreamReader(compatibilityFilePath))
-                {
-                    value = file.ReadToEnd();
-                }
-
-                DateTime compatibilityTime;
-
-                if (DateTime.TryParse(value, out compatibilityTime))
-                {
-                    //If compatibility timestamp is newer than current Glue's timestamp, then don't compile plugin
-                    if (new FileInfo(Assembly.GetExecutingAssembly().Location).LastWriteTime < compatibilityTime)
-                    {
-                        return false;
-                    }
-                }
-            }
-
-            return true;
-        }
-
-        private static void ExportFile(ElementSave elementSave)
-        {
-            PluginManager pluginManager = mGlobalInstance;
-
-            foreach (PluginBase plugin in pluginManager.Plugins)
-            {
-                PluginContainer container = pluginManager.mPluginContainers[plugin];
-
-                if (container.IsEnabled)
-                {
-                    try
-                    {
-                        plugin.CallExport(elementSave);
-                    }
-                    catch (Exception e)
-                    {
-                        container.Fail(e, "Failed in ReactToRightClick");
-                    }
-                }
-            }
-        }
-
-
-        private static bool ShouldProcessPluginManager(PluginCategories pluginCategories, PluginManager pluginManager)
-        {
-            return (pluginManager.mGlobal && (pluginCategories & PluginCategories.Global) == PluginCategories.Global) ||
-                                (!pluginManager.mGlobal && (pluginCategories & PluginCategories.ProjectSpecific) == PluginCategories.ProjectSpecific);
-        }
-
-        
-        public static bool ShutDownPlugin(IPlugin pluginToShutDown)
-        {
-            return ShutDownPlugin(pluginToShutDown, PluginShutDownReason.PluginInitiated);
-        }
-
-        internal static bool ShutDownPlugin(IPlugin pluginToShutDown,
-            PluginShutDownReason shutDownReason)
-        {
-            bool doesPluginWantToShutDown = true;
-            PluginContainer container;
-
-            if (mGlobalInstance.mPluginContainers.ContainsKey(pluginToShutDown))
-            {
-                container = mGlobalInstance.mPluginContainers[pluginToShutDown];
-            }
-            else
-            {
-                container = mProjectInstance.mPluginContainers[pluginToShutDown];
-            }
-
-            try
-            {
-                doesPluginWantToShutDown =
-                    container.Plugin.ShutDown(shutDownReason);
-            }
-            catch (Exception)
-            {
-                doesPluginWantToShutDown = true;
-            }
-
-
-            if (doesPluginWantToShutDown)
-            {
-                container.IsEnabled = false;
-            }
-
-            if (shutDownReason == PluginShutDownReason.UserDisabled)
-            {
-                if (!mPluginSettingsSave.DisabledPlugins.Contains(pluginToShutDown.UniqueId))
-                {
-                    mPluginSettingsSave.DisabledPlugins.Add(pluginToShutDown.UniqueId);
-                    mPluginSettingsSave.Save(PluginSettingsSaveFileName);
-                }
-            }
-
-            return doesPluginWantToShutDown;
-        }
-
-        internal static void ReenablePlugin(IPlugin pluginToReenable)
-        {
-            if (mPluginSettingsSave.DisabledPlugins.Remove(pluginToReenable.UniqueId))
-                mPluginSettingsSave.Save(PluginSettingsSaveFileName);
-        }
-
-        internal static void AddInternalPlugins()
-        {
-        }
-
-
-        #endregion
-
-        #region Methods called by Gum when certain events happen
+        #region >>>Methods called by Gum when certain events happen<<<
 
 
         void CallMethodOnPlugin(Action<PluginBase> methodToCall, [CallerMemberName]string methodName = null)
@@ -618,6 +194,21 @@ namespace Gum.Plugins
             CallMethodOnPlugin(plugin => plugin.CallProjectPropertySet(propertyName));
         internal void ProjectSave(GumProjectSave savedProject) =>
             CallMethodOnPlugin(plugin => plugin.CallProjectSave(savedProject));
+
+        internal GraphicalUiElement CreateGraphicalUiElement(ElementSave elementSave)
+        {
+            GraphicalUiElement toReturn = null;
+            CallMethodOnPlugin(plugin =>
+            {
+                var internalGue = plugin.CallCreateGraphicalUiElement(elementSave);
+
+                if(internalGue != null)
+                {
+                    toReturn = internalGue;
+                }
+            });
+            return toReturn;
+        }
 
         internal void ProjectLocationSet(FilePath filePath) =>
             CallMethodOnPlugin(plugin => plugin.CallProjectLocationSet(filePath));
@@ -957,6 +548,431 @@ namespace Gum.Plugins
 
         public void IpsoSelected(IPositionedSizedObject? positionedSizedObject) =>
             CallMethodOnPlugin(plugin => plugin.CallIpsoSelected(positionedSizedObject));
+
+        #endregion
+
+
+        #region Additional Methods
+
+
+        public void Initialize(MainWindow mainWindow)
+        {
+            LoadPluginSettings();
+            LoadPlugins(this, mainWindow);
+            mInstances.Add(this);
+        }
+
+        private void LoadPluginSettings()
+        {
+
+            if (System.IO.File.Exists(PluginSettingsSaveFileName))
+            {
+                mPluginSettingsSave = PluginSettingsSave.Load(PluginSettingsSaveFileName);
+            }
+            else
+            {
+                mPluginSettingsSave = new PluginSettingsSave();
+            }
+        }
+
+        public void SavePluginSettings()
+        {
+            FileManager.XmlSerialize(mPluginSettingsSave, PluginSettingsSaveFileName);
+        }
+
+        private void LoadReferenceLists()
+        {
+            // We use absolute paths for some of the .dlls and .exes
+            // because if we don't, then Glue looks for them in the Startup
+            // path, which could depend on whether Glue is launched from a shortcut
+            // or not - this is really common for released versions.
+            string executablePath = FileManager.GetDirectory(System.Windows.Forms.Application.ExecutablePath);
+
+            //Load Internal List
+            mReferenceListInternal.Add(executablePath + "Ionic.Zip.dll");
+            mReferenceListExternal.Add(executablePath + "CsvLibrary.dll");
+            mReferenceListExternal.Add(executablePath + "RenderingLibrary.dll");
+
+            mReferenceListExternal.Add(executablePath + "ToolsUtilities.dll");
+            mReferenceListExternal.Add(executablePath + "Gum.exe");
+
+            mReferenceListInternal.Add("Microsoft.CSharp.dll");
+            mReferenceListInternal.Add("System.dll");
+            mReferenceListInternal.Add("System.ComponentModel.Composition.dll");
+            mReferenceListInternal.Add("System.Core.dll");
+            mReferenceListInternal.Add("System.Data.dll");
+            mReferenceListInternal.Add("System.Data.DataSetExtensions.dll");
+            mReferenceListInternal.Add("System.Drawing.dll");
+            mReferenceListInternal.Add("System.Windows.Forms.dll");
+            mReferenceListInternal.Add("System.Xml.dll");
+            mReferenceListInternal.Add("System.Xml.Linq.dll");
+        }
+
+        private void LoadExternalReferenceList(string filePath)
+        {
+            string ReferenceFilePath = filePath + "\\" + ReferenceFileName;
+            mReferenceListExternal = new List<string>();
+
+            if (File.Exists(ReferenceFilePath))
+            {
+                using (StreamReader file = new StreamReader(ReferenceFilePath))
+                {
+                    string line;
+
+                    while ((line = file.ReadLine()) != null)
+                    {
+                        if (!String.IsNullOrEmpty(line) &&
+                           !String.IsNullOrEmpty(line.Trim()))
+                        {
+                            if (FileManager.FileExists(line.Trim()))
+                            {
+                                string absolute = FileManager.MakeAbsolute(line.Trim());
+
+                                if (!mReferenceListInternal.Contains(absolute))
+                                {
+                                    mReferenceListExternal.Add(absolute);
+                                    mExternalAssemblies.Add(Assembly.LoadFrom(absolute));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+        private void LoadPlugins(PluginManager instance, MainWindow mainWindow)
+        {
+            if (mainWindow.MainMenuStrip == null)
+            {
+                throw new InvalidOperationException("MainMenuStrip must be set before loading plugins");
+            }
+            #region Get the Catalog
+
+
+            ResolveEventHandler reh = new ResolveEventHandler(instance.currentDomain_AssemblyResolve);
+
+            try
+            {
+                AppDomain currentDomain = AppDomain.CurrentDomain;
+                currentDomain.AssemblyResolve += reh;
+                AggregateCatalog catalog = instance.CreateCatalog();
+
+
+
+                var container = new CompositionContainer(catalog);
+                container.ComposeParts(instance);
+            }
+            catch (Exception e)
+            {
+                string error = "Error loading plugins\n";
+                if (e is ReflectionTypeLoadException)
+                {
+                    error += "Error is a reflection type load exception\n";
+                    var loaderExceptions = (e as ReflectionTypeLoadException).LoaderExceptions;
+
+                    foreach (var loaderException in loaderExceptions)
+                    {
+                        error += "\n" + loaderException.ToString();
+                    }
+                }
+                else
+                {
+                    error += "\n" + e.Message;
+
+                    if (e.InnerException != null)
+                    {
+                        error += "\n Inner Exception:\n" + e.InnerException.Message;
+                    }
+                }
+                MessageBox.Show(error);
+
+                instance.Plugins = new List<PluginBase>();
+
+                return;
+            }
+            finally
+            {
+                AppDomain.CurrentDomain.AssemblyResolve -= reh;
+            }
+
+            #endregion
+
+            #region Start all plugins
+
+            foreach (PluginBase plugin in instance.Plugins)
+            {
+
+                // We used to do this all in an assign references method,
+                // but we now do it here so that the Startup function can have
+                // access to these references.
+                if (plugin is MainWindowPlugin)
+                {
+                    ((MainWindowPlugin)plugin).MainWindow = mainWindow;
+                }
+
+                plugin.MenuStrip = mainWindow.MainMenuStrip;
+
+                StartupPlugin(plugin, instance);
+            }
+
+            #endregion
+        }
+
+
+
+        private Assembly currentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+        {
+            foreach (Assembly item in mExternalAssemblies)
+            {
+                if (item.FullName == args.Name)
+                {
+                    return item;
+                }
+            }
+
+            //MessageBox.Show("Couldn't find assembly: " + args.Name + " for " + args.RequestingAssembly);
+            GumCommands.Self.GuiCommands.PrintOutput("Couldn't find assembly: " + args.Name + " for " + args.RequestingAssembly);
+
+            return null;
+        }
+
+        //internal static void Initialize()
+        //{
+        //    if (mGlobalInstance == null)
+        //    {
+        //        mGlobalInstance = new PluginManager(true);
+        //        LoadPlugins(mGlobalInstance);
+        //    }
+
+        //    if (mProjectInstance != null)
+        //    {
+        //        foreach (IPlugin plugin in mProjectInstance.mPluginContainers.Keys)
+        //        {
+        //            ShutDownPlugin(plugin, PluginShutDownReason.GlueShutDown);
+        //        }
+        //    }
+
+        //    mProjectInstance = new PluginManager(false);
+
+        //    mInstances.Clear();
+        //    mInstances.Add(mGlobalInstance);
+        //    mInstances.Add(mProjectInstance);
+
+
+        //    LoadPlugins(mProjectInstance);
+        //}
+
+        internal static void StartupPlugin(IPlugin plugin, PluginManager instance)
+        {
+
+            // See if the plugin already exists - it may implement multiple interfaces
+            if (!instance.mPluginContainers.ContainsKey(plugin))
+            {
+                PluginContainer pluginContainer = new PluginContainer(plugin);
+                instance.mPluginContainers.Add(plugin, pluginContainer);
+
+                try
+                {
+                    plugin.UniqueId = plugin.GetType().FullName;
+
+
+                    if (!mPluginSettingsSave.DisabledPlugins.Contains(plugin.UniqueId))
+                    {
+
+                        plugin.StartUp();
+                    }
+                    else
+                    {
+                        pluginContainer.IsEnabled = false;
+                    }
+                }
+                catch (Exception e)
+                {
+#if DEBUG
+                    MessageBox.Show("Plugin failed to start up:\n\n" + e.ToString());
+#endif
+                    pluginContainer.Fail(e, "Plugin failed in StartUp");
+                }
+            }
+        }
+
+        private AggregateCatalog CreateCatalog()
+        {
+            mExternalAssemblies.Clear();
+            LoadReferenceLists();
+
+            var returnValue = new AggregateCatalog();
+
+            var pluginDirectories = new List<string>();
+
+            pluginDirectories.Add(PluginFolder);
+
+            foreach (var directory in pluginDirectories)
+            {
+                List<string> dllFiles = FileManager.GetAllFilesInDirectory(directory, "dll");
+                string executablePath = FileManager.GetDirectory(System.Windows.Forms.Application.ExecutablePath);
+
+                dllFiles.Add(executablePath + "Gum.exe");
+                foreach (string dll in dllFiles)
+                {
+                    try
+                    {
+                        Assembly loadedAssembly = Assembly.LoadFrom(dll);
+
+                        returnValue.Catalogs.Add(new AssemblyCatalog(loadedAssembly));
+
+                    }
+                    catch
+                    {
+                        // todo - report the error
+                    }
+                }
+            }
+
+            if (mGlobal)
+            {
+                returnValue.Catalogs.Add(new AssemblyCatalog(System.Reflection.Assembly.GetExecutingAssembly()));
+            }
+
+            return returnValue;
+        }
+
+        // Eventually we may add support for this but not on the first pass
+        //private CompilerResults CompilePlugin(string filepath)
+        //{
+        //    using (new ZipFile()) { }
+
+        //    texture.ToString();// We do this to eliminate "is never used" warnings
+
+        //    if (IsCompatible(filepath))
+        //    {
+        //        LoadExternalReferenceList(filepath);
+
+        //        return PluginCompiler.Compiler.CompilePlugin(filepath, mReferenceListInternal, mReferenceListLoaded, mReferenceListExternal);
+        //    }
+
+        //    return null;
+        //}
+
+        private static bool IsCompatible(string filepath)
+        {
+            var compatibilityFilePath = filepath + @"\" + CompatibilityFileName;
+
+            //Check for compatibility file
+            if (File.Exists(compatibilityFilePath))
+            {
+                string value;
+
+                //Get compatibility timestamp
+                using (var file = new StreamReader(compatibilityFilePath))
+                {
+                    value = file.ReadToEnd();
+                }
+
+                DateTime compatibilityTime;
+
+                if (DateTime.TryParse(value, out compatibilityTime))
+                {
+                    //If compatibility timestamp is newer than current Glue's timestamp, then don't compile plugin
+                    if (new FileInfo(Assembly.GetExecutingAssembly().Location).LastWriteTime < compatibilityTime)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        private static void ExportFile(ElementSave elementSave)
+        {
+            PluginManager pluginManager = mGlobalInstance;
+
+            foreach (PluginBase plugin in pluginManager.Plugins)
+            {
+                PluginContainer container = pluginManager.mPluginContainers[plugin];
+
+                if (container.IsEnabled)
+                {
+                    try
+                    {
+                        plugin.CallExport(elementSave);
+                    }
+                    catch (Exception e)
+                    {
+                        container.Fail(e, "Failed in ReactToRightClick");
+                    }
+                }
+            }
+        }
+
+
+        private static bool ShouldProcessPluginManager(PluginCategories pluginCategories, PluginManager pluginManager)
+        {
+            return (pluginManager.mGlobal && (pluginCategories & PluginCategories.Global) == PluginCategories.Global) ||
+                                (!pluginManager.mGlobal && (pluginCategories & PluginCategories.ProjectSpecific) == PluginCategories.ProjectSpecific);
+        }
+
+
+        public static bool ShutDownPlugin(IPlugin pluginToShutDown)
+        {
+            return ShutDownPlugin(pluginToShutDown, PluginShutDownReason.PluginInitiated);
+        }
+
+        internal static bool ShutDownPlugin(IPlugin pluginToShutDown,
+            PluginShutDownReason shutDownReason)
+        {
+            bool doesPluginWantToShutDown = true;
+            PluginContainer container;
+
+            if (mGlobalInstance.mPluginContainers.ContainsKey(pluginToShutDown))
+            {
+                container = mGlobalInstance.mPluginContainers[pluginToShutDown];
+            }
+            else
+            {
+                container = mProjectInstance.mPluginContainers[pluginToShutDown];
+            }
+
+            try
+            {
+                doesPluginWantToShutDown =
+                    container.Plugin.ShutDown(shutDownReason);
+            }
+            catch (Exception)
+            {
+                doesPluginWantToShutDown = true;
+            }
+
+
+            if (doesPluginWantToShutDown)
+            {
+                container.IsEnabled = false;
+            }
+
+            if (shutDownReason == PluginShutDownReason.UserDisabled)
+            {
+                if (!mPluginSettingsSave.DisabledPlugins.Contains(pluginToShutDown.UniqueId))
+                {
+                    mPluginSettingsSave.DisabledPlugins.Add(pluginToShutDown.UniqueId);
+                    mPluginSettingsSave.Save(PluginSettingsSaveFileName);
+                }
+            }
+
+            return doesPluginWantToShutDown;
+        }
+
+        internal static void ReenablePlugin(IPlugin pluginToReenable)
+        {
+            if (mPluginSettingsSave.DisabledPlugins.Remove(pluginToReenable.UniqueId))
+                mPluginSettingsSave.Save(PluginSettingsSaveFileName);
+        }
+
+        internal static void AddInternalPlugins()
+        {
+        }
+
 
         #endregion
 
