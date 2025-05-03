@@ -161,6 +161,8 @@ internal class MainEditorTabPlugin : InternalPlugin
         
         this.UiZoomValueChanged += HandleUiZoomValueChanged;
 
+        this.GuidesChanged += HandleGuidesChanged;
+
         this.IpsoSelected += HandleIpsoSelected;
         this.SetHighlightedIpso += HandleSetHighlightedElement;
 
@@ -169,6 +171,11 @@ internal class MainEditorTabPlugin : InternalPlugin
 
 
         this.AfterUndo += HandleAfterUndo;
+    }
+
+    private void HandleGuidesChanged()
+    {
+        _wireframeControl.RefreshGuides();
     }
 
     private GraphicalUiElement? HandleCreateGraphicalUiElement(ElementSave elementSave)
@@ -185,6 +192,8 @@ internal class MainEditorTabPlugin : InternalPlugin
 
     private void HandleWireframeRefreshed()
     {
+        _wireframeControl.UpdateCanvasBoundsToProject();
+
         _selectionManager.Refresh();
     }
 
@@ -241,6 +250,16 @@ internal class MainEditorTabPlugin : InternalPlugin
         {
             _wireframeControl.BackgroundSprite.Visible = 
                 GumCommands.Self.WireframeCommands.IsBackgroundGridVisible;
+        }
+        else if(name == nameof(WireframeCommands.AreRulersVisible))
+        {
+            _wireframeControl.RulersVisible =
+                GumCommands.Self.WireframeCommands.AreRulersVisible;
+        }
+        else if(name == nameof(WireframeCommands.AreCanvasBoundsVisible))
+        {
+            _wireframeControl.CanvasBoundsVisible =
+                GumCommands.Self.WireframeCommands.AreCanvasBoundsVisible;
         }
     }
 
@@ -455,12 +474,11 @@ internal class MainEditorTabPlugin : InternalPlugin
 
         _layerService = new Services.LayerService();
 
-        var localizationManager = Builder.Get<LocalizationManager>();
 
         _wireframeEditControl.ZoomChanged += HandleControlZoomChange;
 
-        Wireframe.WireframeObjectManager.Self.Initialize(_wireframeControl, 
-            localizationManager);
+        var localizationManager = Builder.Get<LocalizationManager>();
+        Wireframe.WireframeObjectManager.Self.Initialize(localizationManager);
         _wireframeControl.Initialize(_wireframeEditControl, gumEditorPanel, HotkeyManager.Self, _selectionManager);
 
         // _layerService must be created after _wireframeControl so that the SystemManagers.Default are assigned

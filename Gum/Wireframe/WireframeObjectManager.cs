@@ -39,8 +39,6 @@ public partial class WireframeObjectManager
 
     static WireframeObjectManager mSelf;
 
-    public WireframeControl WireframeControl { get; private set; }
-
     Layer MainEditorLayer;
 
 
@@ -85,16 +83,10 @@ public partial class WireframeObjectManager
     #region Initialize
 
     public void Initialize(
-        WireframeControl wireframeControl, 
         LocalizationManager localizationManager
         )
     {
         _localizationManager = localizationManager;
-
-        WireframeControl = wireframeControl;
-
-
-
 
         gueManager = new GraphicalUiElementManager();
         GraphicalUiElement.AreUpdatesAppliedWhenInvisible= true;
@@ -160,14 +152,7 @@ public partial class WireframeObjectManager
 
         RefreshAll(forceLayout, forceReloadTextures, elementSave);
 
-        WireframeControl.UpdateCanvasBoundsToProject();
-
         PluginManager.Self.WireframeRefreshed();
-    }
-
-    public void RefreshGuides()
-    {
-        WireframeControl.RefreshGuides();
     }
 
     private void RefreshAll(bool forceLayout, bool forceReloadTextures, ElementSave elementSave)

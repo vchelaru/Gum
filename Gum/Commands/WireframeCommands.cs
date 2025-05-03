@@ -1,52 +1,61 @@
 ﻿using Gum.Plugins;
 using Gum.Wireframe;
 
-namespace Gum.Commands
+namespace Gum.Commands;
+
+public class WireframeCommands
 {
-    public class WireframeCommands
+    public void Refresh(bool forceLayout = true, bool forceReloadContent = false)
     {
-        public void Refresh(bool forceLayout = true, bool forceReloadContent = false)
-        {
-            WireframeObjectManager.Self.RefreshAll(forceLayout, forceReloadContent);
-        }
+        WireframeObjectManager.Self.RefreshAll(forceLayout, forceReloadContent);
+    }
 
-        public void RefreshGuides()
-        {
-            WireframeObjectManager.Self.RefreshGuides();
-        }
+    public void RefreshGuides()
+    {
+        PluginManager.Self.GuidesChanged();
+    }
 
-        public bool AreRulersVisible
+    bool areRulersVisible = true;
+    public bool AreRulersVisible
+    {
+        get => areRulersVisible;
+        set
         {
-            get => WireframeObjectManager.Self.WireframeControl.RulersVisible;
-            set => WireframeObjectManager.Self.WireframeControl.RulersVisible = value;
+            areRulersVisible = value;
+            PluginManager.Self.WireframePropertyChanged(nameof(AreRulersVisible));
         }
+    }
 
-        public bool AreCanvasBoundsVisible
+    bool areCanvasBoundsVisible = true;
+    public bool AreCanvasBoundsVisible
+    {
+        get => areCanvasBoundsVisible;
+        set
         {
-            get => WireframeObjectManager.Self.WireframeControl.CanvasBoundsVisible;
-            set => WireframeObjectManager.Self.WireframeControl.CanvasBoundsVisible = value;
+            areCanvasBoundsVisible = value;
+            PluginManager.Self.WireframePropertyChanged(nameof(AreCanvasBoundsVisible));
         }
+    }
 
-        bool isBackgroundGridVisible = true;
-        public bool IsBackgroundGridVisible
+    bool isBackgroundGridVisible = true;
+    public bool IsBackgroundGridVisible
+    {
+        get => isBackgroundGridVisible;
+        set
         {
-            get => isBackgroundGridVisible;
-            set
-            {
-                isBackgroundGridVisible = value;
-                PluginManager.Self.WireframePropertyChanged(nameof(IsBackgroundGridVisible));
-            }
+            isBackgroundGridVisible = value;
+            PluginManager.Self.WireframePropertyChanged(nameof(IsBackgroundGridVisible));
         }
+    }
 
-        bool areHighlightsVisible;
-        public bool AreHighlightsVisible
+    bool areHighlightsVisible;
+    public bool AreHighlightsVisible
+    {
+        get => areHighlightsVisible;
+        set
         {
-            get => areHighlightsVisible;
-            set
-            {
-                areHighlightsVisible = value;
-                PluginManager.Self.WireframePropertyChanged(nameof(AreHighlightsVisible));
-            }
+            areHighlightsVisible = value;
+            PluginManager.Self.WireframePropertyChanged(nameof(AreHighlightsVisible));
         }
     }
 }
