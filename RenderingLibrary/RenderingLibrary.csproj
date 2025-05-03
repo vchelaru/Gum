@@ -66,11 +66,13 @@
 		<Compile Remove="Graphics\Fonts\BmfcSave.cs" />
 		<Compile Remove="Graphics\GradientType.cs" />
 		<Compile Remove="Graphics\HorizontalAlignment.cs" />
+		<Compile Remove="Graphics\IAnimatable.cs" />
 		<Compile Remove="Graphics\IAspectRatio.cs" />
 		<Compile Remove="Graphics\InvisibleRenderable.cs" />
 		<Compile Remove="Graphics\IRenderable.cs" />
 		<Compile Remove="Graphics\IRenderableIpso.cs" />
 		<Compile Remove="Graphics\IRenderer.cs" />
+		<Compile Remove="Graphics\ISetClipsChildren.cs" />
 		<Compile Remove="Graphics\IText.cs" />
 		<Compile Remove="Graphics\ITextureCoordinate.cs" />
 		<Compile Remove="Graphics\IVisible.cs" />
@@ -78,6 +80,7 @@
 		<Compile Remove="Graphics\LayerCameraSettings.cs" />
 		<Compile Remove="Graphics\NineSliceExtensions.cs" />
 		<Compile Remove="Graphics\RenderableCloneLogic.cs" />
+		<Compile Remove="Graphics\SortableLayer.cs" />
 		<Compile Remove="Graphics\TextOverflowMode.cs" />
 		<Compile Remove="Graphics\VerticalAlignment.cs" />
 		<Compile Remove="IPositionedSizedObject.cs" />
