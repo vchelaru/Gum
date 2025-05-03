@@ -209,18 +209,20 @@ namespace XnaAndWinforms
                         {
                             ErrorOccurred?.Invoke(exception);
                             mRenderError.Message = exception.ToString();
+                            
                         }
                     }
-                    else if (!mRenderError.GraphicsDeviceResetFailed)
-                    {
-                        TryHandleDeviceReset(mRenderError);
+                    //else if (!mRenderError.GraphicsDeviceResetFailed)
+                    //{
+                    //    TryHandleDeviceReset(mRenderError);
 
-                    } else
+                    //} 
+                    else
                     {
                         // If BeginDraw failed, show an error message using System.Drawing.
                         PaintUsingSystemDrawing(e.Graphics, mRenderError.ProcessedMessage);
 
-                        DesiredFramesPerSecond = 1;
+                        DesiredFramesPerSecond = 0.5f;
                     }
                 }
             }

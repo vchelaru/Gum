@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
 using System.Management.Instrumentation;
+using System.Numerics;
 using System.Security.AccessControl;
 using System.Text;
 using System.Threading.Tasks;
@@ -111,9 +112,9 @@ internal class MainEditorTabPlugin : InternalPlugin
         _scrollbarService = new ScrollbarService();
         _guiCommands = Builder.Get<GuiCommands>();
         _localizationManager = Builder.Get<LocalizationManager>();
-        _screenshotService = new ScreenshotService();
         _editingManager = new EditingManager();
         _selectionManager = new SelectionManager(SelectedState.Self, _editingManager);
+        _screenshotService = new ScreenshotService(_selectionManager);
         _elementCommands = ElementCommands.Self;
         _singlePixelTextureService = new SinglePixelTextureService();
     }
@@ -167,7 +168,10 @@ internal class MainEditorTabPlugin : InternalPlugin
         this.WireframeResized += _scrollbarService.HandleWireframeResized;
         this.WireframeRefreshed += HandleWireframeRefreshed;
         this.WireframePropertyChanged += HandleWireframePropertyChanged;
-        
+
+        this.GetWorldCursorPosition += HandleGetWorldCursorPosition;
+
+
         this.UiZoomValueChanged += HandleUiZoomValueChanged;
 
         this.GuidesChanged += HandleGuidesChanged;
@@ -182,6 +186,14 @@ internal class MainEditorTabPlugin : InternalPlugin
         this.GetSelectedIpsos += HandleGetSelectedIpsos;
 
         this.AfterUndo += HandleAfterUndo;
+    }
+
+    private Vector2? HandleGetWorldCursorPosition(InputLibrary.Cursor cursor)
+    {
+        Renderer.Self.Camera.ScreenToWorld(cursor.X, cursor.Y,
+                                   out float worldX, out float worldY);
+
+        return new Vector2(worldX, worldY);
     }
 
     List<IPositionedSizedObject> ipsosToReturn = new List<IPositionedSizedObject>();
