@@ -123,6 +123,11 @@ public class PasswordBox : TextBoxBase
             {
                 // no enter supported on passwords, do we send an event?
             }
+            else if (caretIndex >= MaxLength)
+            {
+                // If they enter more than the allowed characters, SecrueString.InsertAt will thow an error, so prevent that
+                // throw new ArgumentOutOfRangeException(nameof(index), SR.ArgumentOutOfRange_IndexString);
+            }
             else
             {
                 InsertCharacterAtIndex(character, caretIndex);
@@ -130,8 +135,8 @@ public class PasswordBox : TextBoxBase
 
                 CallMethodsInResponseToPasswordChanged();
             }
-
         }
+
     }
 
     private void CallMethodsInResponseToPasswordChanged()
