@@ -416,6 +416,36 @@ public class GumProjectSave
         return Screens.FirstOrDefault(item => item.Name == screenName);
     }
 
+
+    /// <summary>
+    /// shortcu function to fetch a specific component from your gum project
+    ///
+    /// <code ang="csharp">
+    /// //same as :
+    /// components.Find(item => item.Name == "name");
+    /// </code>
+    /// </summary>
+    /// <param name="componentName"></param>
+    /// <returns></returns>
+    public ComponentSave? GetComponentSave(string componentName)
+    {
+        return Components.FirstOrDefault(item => item.Name == componentName);
+    }
+
+    /// <summary>
+    /// shortcut function to fetch a specific standard elements from your gum project.
+    ///
+    /// <code ang="csharp">
+    /// //same as :
+    /// standards.Find(item => item.Name == "name");
+    /// </code>
+    /// </summary>
+    /// <param name="standardElementName"></param>
+    /// <returns></returns>
+    public StandardElementSave? GetStandardElementSave(string standardElementName)
+    {
+        return StandardElements.FirstOrDefault(item => item.Name == standardElementName);
+    }
     private void PopulateElementSavesFromReferences(string projectRootDirectory, LinkLoadingPreference linkLoadingPreference, GumLoadResult result)
     {
         string errors = "";
