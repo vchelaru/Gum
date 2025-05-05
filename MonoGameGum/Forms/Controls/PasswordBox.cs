@@ -195,7 +195,7 @@ public class PasswordBox : TextBoxBase
 
     protected override void HandleDelete()
     {
-        if (caretIndex < (SecurePassword?.Length ?? 0))
+        if (caretIndex < (SecurePassword?.Length ?? 0) && selectionLength == 0)
         {
             SecurePassword.RemoveAt(caretIndex);
 
