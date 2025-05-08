@@ -23,6 +23,7 @@ using Microsoft.Xna.Framework.Input;
 using static FlatRedBall.Input.Xbox360GamePad;
 using FlatRedBall.Forms.GumExtensions;
 using FlatRedBall.Forms.Input;
+using FlatRedBall.Forms.Data;
 using FlatRedBall.Gui;
 using FlatRedBall.Input;
 using FlatRedBall.Instructions;
@@ -40,6 +41,7 @@ using Keys = Microsoft.Xna.Framework.Input.Keys;
 using GamePad = MonoGameGum.Input.GamePad;
 using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Input;
+using MonoGameGum.Forms.Data;
 namespace MonoGameGum.Forms.Controls;
 #endif
 
@@ -77,7 +79,7 @@ public struct KeyCombo
     public Keys? HeldKey;
 }
 
-public class FrameworkElement
+public class FrameworkElement : INotifyPropertyChanged
 {
     #region Fields/Properties
 
@@ -162,7 +164,10 @@ public class FrameworkElement
         }
     }
 
-    protected Dictionary<string, string> vmPropsToUiProps = new Dictionary<string, string>();
+    [Obsolete] 
+    protected Dictionary<string, string> vmPropsToUiProps = null!;
+
+    private readonly Dictionary<string, NpcBindingExpression> _bindingExpressions = new();
 
     public object BindingContext
     {
@@ -173,9 +178,10 @@ public class FrameworkElement
             {
                 Visual.BindingContext = value;
             }
-
         }
     }
+
+    public event EventHandler<BindingContextChangedEventArgs>? BindingContextChanged;
 
     /// <summary>
     /// The height in pixels. This is a calculated value considering HeightUnits and Height.
@@ -349,7 +355,7 @@ public class FrameworkElement
                 if (visual != null)
                 {
                     // unsubscribe:
-                    visual.BindingContextChanged -= HandleVisualBindingContextChanged;
+                    visual.BindingContextChanged -= OnVisualBindingContextChanged;
                     visual.EnabledChange -= HandleEnabledChanged;
                     ReactToVisualRemoved();
                 }
@@ -365,14 +371,19 @@ public class FrameworkElement
                         newVisualInteractiveGue.FormsControlAsObject = this;
                     }
                     ReactToVisualChanged();
-                    UpdateAllUiPropertiesToVm();
 
-                    visual.BindingContextChanged += HandleVisualBindingContextChanged;
+                    visual.BindingContextChanged += OnVisualBindingContextChanged;
                     visual.EnabledChange += HandleEnabledChanged;
                 }
             }
 
         }
+    }
+
+    private void OnVisualBindingContextChanged(object? sender, BindingContextChangedEventArgs args)
+    {
+        BindingContextChanged?.Invoke(sender, args);
+        OnBindingContextChanged(sender, args);
     }
 
     /// <summary>
@@ -468,7 +479,7 @@ public class FrameworkElement
 
     public FrameworkElement()
     {
-        var possibleVisual = GetGraphicalUiElementFor(this); 
+        var possibleVisual = GetGraphicalUiElementFor(this);
         if(possibleVisual != null)
         {
             Visual = possibleVisual;
@@ -767,7 +778,7 @@ public class FrameworkElement
     }
 
 
-    public GraphicalUiElement GetVisual(string name) => 
+    public GraphicalUiElement GetVisual(string name) =>
         Visual.GetGraphicalUiElementByName(name) as GraphicalUiElement;
 
 
@@ -789,152 +800,28 @@ public class FrameworkElement
 
     #region Binding/ViewModel
 
-    private void HandleViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+    public void SetBinding(string uiProperty, string vmProperty) => SetBinding(uiProperty, new Binding(vmProperty));
+
+    public void SetBinding(string uiProperty, Binding binding)
     {
-        var vmPropertyName = e.PropertyName;
-        var updated = UpdateUiToVmProperty(vmPropertyName);
-        // If we ever support skia do this:
-        //if (updated)
-        //{
-        //    this.EffectiveManagers?.InvalidateSurface();
-        //}
+        if (_bindingExpressions.TryGetValue(uiProperty, out NpcBindingExpression expression))
+        {
+            expression.Dispose();
+        }
+        NpcBindingExpression npcBinding = new(this, uiProperty, binding);
+        _bindingExpressions[uiProperty] = npcBinding;
+        npcBinding.Start();
     }
 
-    public void SetBinding(string uiProperty, string vmProperty)
-    {
-        if (vmPropsToUiProps.ContainsKey(vmProperty))
-        {
-            vmPropsToUiProps.Remove(vmProperty);
-        }
+    [Obsolete("Use OnBindingContextChanged")]
+    protected virtual void HandleVisualBindingContextChanged(object sender, BindingContextChangedEventArgs args) { }
 
-        // This prevents single UI properties from being bound to multiple VM properties
-        if (vmPropsToUiProps.Any(item => item.Value == uiProperty))
-        {
-            var toRemove = vmPropsToUiProps.Where(item => item.Value == uiProperty).ToArray();
-
-            foreach (var kvp in toRemove)
-            {
-                vmPropsToUiProps.Remove(kvp.Key);
-            }
-        }
-
-
-
-        vmPropsToUiProps.Add(vmProperty, uiProperty);
-
-        if (BindingContext != null)
-        {
-            UpdateUiToVmProperty(vmProperty);
-        }
-    }
-
-
-    protected virtual void HandleVisualBindingContextChanged(object sender, BindingContextChangedEventArgs args)
-    {
-        if (args.OldBindingContext is INotifyPropertyChanged oldAsPropertyChanged)
-        {
-            oldAsPropertyChanged.PropertyChanged -= HandleViewModelPropertyChanged;
-        }
-        if (BindingContext != null)
-        {
-            UpdateAllUiPropertiesToVm();
-            if (BindingContext is INotifyPropertyChanged newAsPropertyChanged)
-            {
-                newAsPropertyChanged.PropertyChanged += HandleViewModelPropertyChanged;
-            }
-
-        }
-    }
-
-
-    private void UpdateAllUiPropertiesToVm()
-    {
-        foreach (var vmProperty in vmPropsToUiProps.Keys)
-        {
-            UpdateUiToVmProperty(vmProperty);
-        }
-    }
-
-    private bool UpdateUiToVmProperty(string vmPropertyName)
-    {
-        var updated = false;
-        if (vmPropsToUiProps.ContainsKey(vmPropertyName))
-        {
-            var vmProperty = BindingContext.GetType().GetProperty(vmPropertyName);
-            if (vmProperty == null)
-            {
-                System.Diagnostics.Debug.WriteLine(
-                    $"Could not find property {vmPropertyName} in {BindingContext.GetType()}");
-            }
-            else
-            {
-                var vmValue = vmProperty.GetValue(BindingContext, null);
-
-                var uiProperty = this.GetType().GetProperty(vmPropsToUiProps[vmPropertyName]);
-
-                if (uiProperty == null)
-                {
-                    throw new Exception($"The {this.GetType()} with name {this.Name} is binding a missing UI property ({vmPropsToUiProps[vmPropertyName]}) " +
-                        $"to a ViewModel Property ({vmPropertyName})");
-                }
-
-                if (uiProperty.PropertyType == typeof(string))
-                {
-                    var stringToSet = vmValue?.ToString();
-                    uiProperty.SetValue(this, stringToSet, null);
-                }
-                else
-                {
-                    try
-                    {
-                        var convertedValue = BindableGue.ConvertValue(vmValue, uiProperty.PropertyType, null);
-
-                        uiProperty.SetValue(this, vmValue, null);
-                    }
-                    catch (ArgumentException ae)
-                    {
-                        var message = $"Could not bind the UI property {this.GetType().Name}.{uiProperty.Name} to the view model property {vmProperty} " +
-                            $"because the view model property is not of type {uiProperty.PropertyType}";
-                        throw new InvalidOperationException(message);
-                    }
-                }
-                updated = true;
-            }
-        }
-        return updated;
-    }
+    protected virtual void OnBindingContextChanged(object sender, BindingContextChangedEventArgs args) =>
+        HandleVisualBindingContextChanged(sender, args);
 
     protected void PushValueToViewModel([CallerMemberName] string uiPropertyName = null)
     {
-        var kvp = vmPropsToUiProps.FirstOrDefault(item => item.Value == uiPropertyName);
-
-        if (kvp.Value == uiPropertyName)
-        {
-            var vmPropName = kvp.Key;
-
-            var vmProperty = BindingContext?.GetType().GetProperty(vmPropName);
-
-            if (vmProperty?.CanWrite == true)
-            {
-                var uiProperty = this.GetType().GetProperty(uiPropertyName);
-                if (uiProperty != null)
-                {
-                    var uiValue = uiProperty.GetValue(this, null);
-
-                    try
-                    {
-                        var convertedValue = BindableGue.ConvertValue(uiValue, vmProperty.PropertyType, null);
-
-                        vmProperty.SetValue(BindingContext, convertedValue, null);
-                    }
-                    catch (System.ArgumentException argumentException)
-                    {
-                        throw new Exception($"Could not convert UI value {GetType().Name}.{uiPropertyName} of type {uiProperty.PropertyType} " +
-                            $"into ViewModel {BindingContext.GetType().Name}.{vmProperty.Name} of type {vmProperty.PropertyType}", argumentException);
-                    }
-                }
-            }
-        }
+        OnPropertyChanged(uiPropertyName);
     }
 
     #endregion
@@ -1279,7 +1166,7 @@ public class FrameworkElement
                     element.GamepadTabbingFocusBehavior == TabbingFocusBehavior.FocusableIfInputReceiver;
     }
 
-#endregion
+    #endregion
 
     #region Updating State (visual appearance)
 
@@ -1350,7 +1237,7 @@ public class FrameworkElement
         {
             if (isFocused)
             {
-                return DisabledFocusedState;    
+                return DisabledFocusedState;
             }
             else
             {
@@ -1437,10 +1324,22 @@ public class FrameworkElement
         }
     }
 
-#endregion
+    #endregion
 
     public override string ToString()
     {
         return $"{this.Visual?.Name} ({this.GetType().Name})";
+    }
+
+    public event PropertyChangedEventHandler PropertyChanged;
+
+    protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    public bool IsDataBound(string propertyName)
+    {
+        return _bindingExpressions.ContainsKey(propertyName);
     }
 }

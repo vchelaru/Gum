@@ -11,17 +11,22 @@
 
 		<NoWarn>1591</NoWarn>
 		<DefineConstants>MONOGAME</DefineConstants>
-
+		<LangVersion>11</LangVersion>
 
 
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<Configurations>Debug;Release;TEST</Configurations>
 
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 		<DefineConstants>$(DefineConstants);MONOGAME;USE_GUMCOMMON</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='TEST|AnyCPU'">
+	  <DefineConstants>$(DefineConstants);MONOGAME;USE_GUMCOMMON;TEST</DefineConstants>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">

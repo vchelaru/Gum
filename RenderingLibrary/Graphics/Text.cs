@@ -681,7 +681,7 @@ namespace RenderingLibrary.Graphics
 
             mRawText = text;
             mNeedsBitmapFontRefresh = true;
-            mBounds = new LinePrimitive(managers.Renderer.SinglePixelTexture);
+            mBounds = new LinePrimitive(managers.Renderer?.SinglePixelTexture);
             mBounds.Color = Color.LightGreen;
 
             mBounds.Add(0, 0);

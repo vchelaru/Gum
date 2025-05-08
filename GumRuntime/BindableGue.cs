@@ -34,6 +34,7 @@ namespace Gum.Wireframe;
 public class BindingContextChangedEventArgs : EventArgs
 {
     public object OldBindingContext { get; set; }
+    public object NewBindingContext { get; set; }
 }
 
 /// <summary>
