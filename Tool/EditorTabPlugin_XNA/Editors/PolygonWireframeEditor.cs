@@ -108,7 +108,7 @@ namespace Gum.Wireframe.Editors
             if(addPointTexture == null)
             {
                 var gumExePath = System.IO.Path.GetDirectoryName(
-                    System.Reflection.Assembly.GetExecutingAssembly().Location).ToLower().Replace("/", "\\") + "\\";
+                    System.Reflection.Assembly.GetEntryAssembly().Location).ToLower().Replace("/", "\\") + "\\";
 
                 ContentLoader loader = new ContentLoader();
                 var loaderManager = new LoaderManager();

@@ -16,6 +16,7 @@ using Color = System.Drawing.Color;
 using Matrix = System.Numerics.Matrix4x4;
 using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using System.Security.RightsManagement;
+using Gum.Managers;
 
 namespace Gum.Wireframe;
 
@@ -42,7 +43,7 @@ public class SelectionManager
     #endregion
 
     #region Fields
-    
+
     LayerService _layerService;
 
     public WireframeEditor WireframeEditor;
@@ -144,7 +145,7 @@ public class SelectionManager
     {
         get
         {
-            return  mSelectedIpsos.Any();
+            return mSelectedIpsos.Any();
         }
     }
 
@@ -163,7 +164,7 @@ public class SelectionManager
         set
         {
             restrictToUnitValues = value;
-            if(WireframeEditor != null)
+            if (WireframeEditor != null)
             {
                 WireframeEditor.RestrictToUnitValues = value;
             }
@@ -231,8 +232,8 @@ public class SelectionManager
             }
             //else if (!Cursor.IsInWindow)
             //{
-                // the element view window can also highlight, so we don't want to do this:
-                //HighlightedIpso = null;
+            // the element view window can also highlight, so we don't want to do this:
+            //HighlightedIpso = null;
             //}
         }
         catch (Exception e)
@@ -279,19 +280,19 @@ public class SelectionManager
             }
             else
             {
-                if(WireframeEditor != null)
+                if (WireframeEditor != null)
                 {
                     cursorToSet = WireframeEditor.GetWindowsCursorToShow(cursorToSet, worldXAt, worldYAt);
                 }
 
                 #region Selecting element activity
 
-                if(forceNoHighlight)
+                if (forceNoHighlight)
                 {
                     IsOverBody = false;
                 }
 
-                if(forceNoHighlight == false)
+                if (forceNoHighlight == false)
                 {
 
                     if (WireframeEditor?.HasCursorOver == true)
@@ -330,7 +331,7 @@ public class SelectionManager
             }
 
 
-            if(representationOver != null && representationOver is NineSlice)
+            if (representationOver != null && representationOver is NineSlice)
             {
                 // This function updates the sizes and texture coordinates of the 
                 // highlighted representation if it's a NineSlice.  This is needed before
@@ -341,7 +342,7 @@ public class SelectionManager
 
 
             // We used to not check this, but we have to now because the cursor might be 
-            if(Cursor.IsInWindow)
+            if (Cursor.IsInWindow)
             {
                 Cursor.SetWinformsCursor(cursorToSet);
 
@@ -359,7 +360,7 @@ public class SelectionManager
                 }
             }
         }
-        else if(InputLibrary.Cursor.Self.PrimaryDown && Cursor.IsInWindow)
+        else if (InputLibrary.Cursor.Self.PrimaryDown && Cursor.IsInWindow)
         {
             // We only want to hide it if the user is holding the cursor down over the wireframe window.
             HighlightedIpso = null;
@@ -369,7 +370,7 @@ public class SelectionManager
         {
             HighlightedIpso = null;
         }
-        
+
         highlightManager.UpdateHighlightObjects();
     }
 
@@ -392,12 +393,12 @@ public class SelectionManager
         {
             if ((selectedRepresentations?.FirstOrDefault()?.Tag is ScreenSave) == false)
             {
-                if(selectedRepresentations != null)
+                if (selectedRepresentations != null)
                 {
-                    foreach(var selectedRepresentation in selectedRepresentations)
+                    foreach (var selectedRepresentation in selectedRepresentations)
                     {
                         // If this is a container, and dotted lines are not drawn, then this has no renderable component:
-                        if(selectedRepresentation?.RenderableComponent != null)
+                        if (selectedRepresentation?.RenderableComponent != null)
                         {
                             var hasCursorOver = false;
 
@@ -475,7 +476,7 @@ public class SelectionManager
             {
                 ipsoOver = WireframeObjectManager.Self.GetRepresentation(instance, elementStack);
             }
-            else if(element != null) // both may be null if the user drag+dropped onto the wireframe window
+            else if (element != null) // both may be null if the user drag+dropped onto the wireframe window
             {
                 try
                 {
@@ -509,7 +510,7 @@ public class SelectionManager
         // Let's try to get visible ones first, then if we don't find anything, look at invisible ones
         for (int i = indexToStartAt; i > indexToEndAt; i--)
         {
-            
+
             GraphicalUiElement graphicalUiElement = WireframeObjectManager.Self.AllIpsos[i];
             bool skip = graphicalUiElement.Tag is ScreenSave;
             if (!skip)
@@ -521,7 +522,7 @@ public class SelectionManager
                 {
                     var hasCursorOver = false;
 
-                    if(graphicalUiElement.RenderableComponent is LinePolygon)
+                    if (graphicalUiElement.RenderableComponent is LinePolygon)
                     {
                         hasCursorOver = (graphicalUiElement.RenderableComponent as LinePolygon).IsPointInside(x, y);
                     }
@@ -552,28 +553,28 @@ public class SelectionManager
     private static bool IsIpsoVisible(IPositionedSizedObject ipso)
     {
         bool isVisible = true;
-        if(ipso is GraphicalUiElement)
+        if (ipso is GraphicalUiElement)
         {
-             if(ipso.Tag == null || ipso.Tag is ScreenSave == false)
-             {
+            if (ipso.Tag == null || ipso.Tag is ScreenSave == false)
+            {
                 // If this has no object, then just treat it as true:
                 try
                 {
-                    isVisible = ((IVisible)ipso).AbsoluteVisible;             
+                    isVisible = ((IVisible)ipso).AbsoluteVisible;
                 }
                 catch
                 {
                     isVisible = true;
                 }
-             }
-             else
-             {
-                 isVisible = false;
-             }
+            }
+            else
+            {
+                isVisible = false;
+            }
         }
-        else if(ipso is IVisible)
+        else if (ipso is IVisible)
         {
-            isVisible = ((IVisible)ipso).AbsoluteVisible;             
+            isVisible = ((IVisible)ipso).AbsoluteVisible;
         }
         else if (ipso is Sprite)
         {
@@ -590,47 +591,69 @@ public class SelectionManager
     List<GraphicalUiElement> emptyGraphicalUiElementList = new List<GraphicalUiElement>();
     private void UpdateEditorsToSelection()
     {
-        if(SelectedGues.Count == 1 &&
-            SelectedGue?.Tag is InstanceSave && 
+        if (SelectedGues.Count == 1 &&
+            SelectedGue?.Tag is InstanceSave &&
             ((InstanceSave)SelectedGue.Tag).BaseType == "Polygon")
         {
             // use the Polygon wireframe editor
-            if(WireframeEditor is PolygonWireframeEditor == false)
+            if (WireframeEditor is PolygonWireframeEditor == false)
             {
                 if (WireframeEditor != null)
                 {
                     WireframeEditor.Destroy();
                 }
                 WireframeEditor = new PolygonWireframeEditor(
-                    _layerService.OverlayLayer, 
+                    _layerService.OverlayLayer,
                     global::Gum.Managers.HotkeyManager.Self,
                     this);
             }
         }
-        else if(SelectedGues.Count > 0 && SelectedGue?.Tag is ScreenSave == false)
+        else if (SelectedGues.Count > 0 && SelectedGue?.Tag is ScreenSave == false)
         {
-            if(WireframeEditor is StandardWireframeEditor == false)
+            var tag = SelectedGue.Tag as ElementSave;
+
+            var isPolygon = false;
+            if (ObjectFinder.Self.GetRootStandardElementSave(tag)?.Name == "Polygon")
             {
-                if(WireframeEditor != null)
+                isPolygon = true;
+            }
+
+            if (isPolygon)
+            {
+                if (WireframeEditor != null)
                 {
                     WireframeEditor.Destroy();
                 }
-
-                var lineColor = Color.FromArgb(255, GumState.Self.ProjectState.GeneralSettings.GuideLineColorR,
-                    GumState.Self.ProjectState.GeneralSettings.GuideLineColorG,
-                    GumState.Self.ProjectState.GeneralSettings.GuideLineColorB);
-
-                var textColor = Color.FromArgb(255, GumState.Self.ProjectState.GeneralSettings.GuideTextColorR,
-                    GumState.Self.ProjectState.GeneralSettings.GuideTextColorG,
-                    GumState.Self.ProjectState.GeneralSettings.GuideTextColorB);
-
-                WireframeEditor = new StandardWireframeEditor(
-                    _layerService.OverlayLayer, 
-                    lineColor, textColor, global::Gum.Managers.HotkeyManager.Self,
+                WireframeEditor = new PolygonWireframeEditor(
+                    _layerService.OverlayLayer,
+                    global::Gum.Managers.HotkeyManager.Self,
                     this);
             }
+            else
+            {
+                if (WireframeEditor is StandardWireframeEditor == false)
+                {
+                    if (WireframeEditor != null)
+                    {
+                        WireframeEditor.Destroy();
+                    }
+
+                    var lineColor = Color.FromArgb(255, GumState.Self.ProjectState.GeneralSettings.GuideLineColorR,
+                        GumState.Self.ProjectState.GeneralSettings.GuideLineColorG,
+                        GumState.Self.ProjectState.GeneralSettings.GuideLineColorB);
+
+                    var textColor = Color.FromArgb(255, GumState.Self.ProjectState.GeneralSettings.GuideTextColorR,
+                        GumState.Self.ProjectState.GeneralSettings.GuideTextColorG,
+                        GumState.Self.ProjectState.GeneralSettings.GuideTextColorB);
+
+                    WireframeEditor = new StandardWireframeEditor(
+                        _layerService.OverlayLayer,
+                        lineColor, textColor, global::Gum.Managers.HotkeyManager.Self,
+                        this);
+                }
+            }
         }
-        else if(WireframeEditor != null)
+        else if (WireframeEditor != null)
         {
             if (WireframeEditor != null)
             {
@@ -639,9 +662,9 @@ public class SelectionManager
             WireframeEditor = null;
         }
 
-        if(WireframeEditor != null)
+        if (WireframeEditor != null)
         {
-            if(_selectedState.CustomCurrentStateSave != null)
+            if (_selectedState.CustomCurrentStateSave != null)
             {
                 WireframeEditor.UpdateToSelection(emptyGraphicalUiElementList);
             }
@@ -747,7 +770,7 @@ public class SelectionManager
                 {
                     _selectedState.SelectedInstance = null;
                 }
-                
+
                 if (hasChanged)
                 {
                     if (_selectedState.SelectedInstances.Count() > 1)
@@ -818,10 +841,10 @@ public class SelectionManager
         var elementStack = _selectedState.GetTopLevelElementStack();
         if (_selectedState.SelectedInstances.Count() != 0)
         {
-            
+
             foreach (var instance in _selectedState.SelectedInstances)
             {
-                GraphicalUiElement toAdd = 
+                GraphicalUiElement toAdd =
                     WireframeObjectManager.Self.GetRepresentation(instance, elementStack);
                 if (toAdd != null)
                 {
