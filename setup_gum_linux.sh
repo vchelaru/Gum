@@ -219,4 +219,6 @@ fi
 ### Finished
 ################################################################################
 echo "Gum setup on Linux using WINE is now complete. You can open the GUM Tool by using the command 'Gum'."
+echo "Pro Tip 1: Install dxvk with the command winetricks dxvk, if you can use Vulkan on your system! (It handles better than OpenGL)."
+echo "Pro Tip 2: Install allfonts with the command winetricks allfonts, it'll make text look better (you maybe able to get by with just arial, but just to be safe."
 echo "You may need to close and reopen the terminal if it doesn't work at first."
