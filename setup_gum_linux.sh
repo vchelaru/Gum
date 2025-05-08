@@ -7,6 +7,7 @@
 set -e
 
 echo "This is an experimental script."
+echo "Script last updated on the 8th of May 2025!"
 
 read -p "Do you wish to continue? (y/n): " choice
 case "$choice" in
@@ -78,6 +79,8 @@ if ! command -v wine &> /dev/null; then
 
         *)
             echo "Unsupported or unknown distribution: $DISTRO"
+  			echo "Please install wine manually!"
+			echo "https://duckduckgo.com/?t=h_&q=Insert+Your+Linux+Distro+Here+How+To+Install+Wine"
             exit 1
             ;;
     esac
@@ -117,7 +120,7 @@ echo "Winetricks is installed"
 echo "Installing .NET Framework 4.8 using winetricks"
 echo "Two installer dialogs will appear, follow the steps for both to install"
 echo "They may take a few minutes to install, please be patient"
-winetricks dotnet48 &> /dev/null
+WINEPREFIX=~/.wine_gum_prefix/ winetricks dotnet48 &> /dev/null
 
 ################################################################################
 ### Download the xna redistributable msi file from Microsoft
@@ -127,9 +130,11 @@ echo "At the end of the installation it may say it has an error launching Direct
 curl -O https://download.microsoft.com/download/A/C/2/AC2C903B-E6E8-42C2-9FD7-BEBAC362A930/xnafx40_redist.msi &> /dev/null
 
 ################################################################################
-### Execute the xna msi file using wine
+### Execute the XNA MSI file using WINE 
 ################################################################################
-wine msiexec /i xnafx40_redist.msi &> /dev/null
+WINEPREFIX=~/.wine_gum_prefix/ wine msiexec /i xnafx40_redist.msi &> /dev/null || true 
+## We must return true, so when you click cancel (if for example you must rerun the script it wont't close the script!
+
 
 ################################################################################
 ### Clean up the file we downloaded.
@@ -141,24 +146,31 @@ rm -f ./xnafx40_redist.msi &> /dev/null
 ### of the wine folder
 ################################################################################
 echo "Installing GUM Tool..."
-curl -o ~/.wine/drive_c/Program\ Files/Gum.zip https://files.flatredball.com/content/Tools/Gum/Gum.zip &> /dev/null
+curl -L -o ~/.wine_gum_prefix/drive_c/"Program Files"/Gum.zip "https://files.flatredball.com/content/Tools/Gum/Gum.zip" \
+    && echo "Download completed." || { echo "Download failed."; exit 1; }
 
 ################################################################################
 ### Unzip the gum.zip file into Program Files/Gum
 ################################################################################
-unzip ~/.wine/drive_c/Program\ Files/Gum.zip -d ~/.wine/drive_c/Program\ Files/Gum &> /dev/null
+echo "Extracting GUM Tool..."
+unzip -q ~/.wine_gum_prefix/drive_c/"Program Files"/Gum.zip -d ~/.wine_gum_prefix/drive_c/"Program Files"/Gum \
+    && echo "Extraction completed." || { echo "Extraction failed."; exit 1; }
 
 ################################################################################
 ### Clean up the zip file we downloaded
 ################################################################################
-rm -f ~/.wine/drive_c/Program\ Files/Gum.zip &> /dev/null
+echo "Cleaning up..."
+rm -f ~/.wine_gum_prefix/drive_c/"Program Files"/Gum.zip \
+    && echo "Cleanup completed." || { echo "Cleanup failed."; exit 1; }
+
+
+echo "Adding Gum to path"
 
 ################################################################################
 ### Define the script content
 ################################################################################
-echo "Adding Gum to path"
-SCRIPT_CONTENT="#!/bin/bash
-wine ~/.wine/drive_c/Program\\ Files/Gum/Data/Gum.exe"
+SCRIPT_CONTENT='#!/bin/bash
+WINEPREFIX=~/.wine_gum_prefix/ wine ~/.wine_gum_prefix/drive_c/Program\ Files/Gum/Data/Debug/Gum.exe'
 
 ################################################################################
 ### Create the ~/bin directory if it doesn't exist
@@ -168,31 +180,32 @@ mkdir -p ~/bin &> /dev/null
 ################################################################################
 ### Create the Gum script in the ~/bin directory
 ################################################################################
-echo "$SCRIPT_CONTENT" > ~/bin/Gum
+printf "%s\n" "$SCRIPT_CONTENT" > ~/bin/gum
 
 ################################################################################
 ### Make the Gum script executable
 ################################################################################
-chmod +x ~/bin/Gum &> /dev/null
+chmod +x ~/bin/gum &> /dev/null
 
 ################################################################################
 ### Check if the bin directory is in PATH based on the shell being used
-### If not, add it to PATh and reload the shell configuration.
+### If not, add it to PATH and reload the shell configuration.
 ################################################################################
 if [[ $SHELL == *"bash"* ]]; then
-    if ! grep -q 'export PATH="$HOME/bin:$PATH"' ~/.bash_profile 2>/dev/null; then
-        echo "Adding ~/bin to PATH in ~/.bash_profile, please wait..."
-        echo 'export PATH="$HOME/bin:$PATH"' >> ~/.bash_profile
+    if ! grep -q 'export PATH="$HOME/bin:$PATH"' ~/.bashrc 2>/dev/null; then
+        echo "Adding ~/bin to PATH in ~/.bashrc, please wait..."
+        echo 'export PATH="$HOME/bin:$PATH"' >> ~/.bashrc
+        echo source ~/.bashrc
     fi
-    echo "Reloading ~/.bash_profile, please wait..."
+    echo "Reloading ~/.bashrc, please wait..."
     source ~/.bash_profile &> /dev/null
 elif [[ $SHELL == *"zsh"* ]]; then
     if ! grep -q 'export PATH="$HOME/bin:$PATH"' ~/.zshrc 2>/dev/null; then
         echo "Adding ~/bin to PATH in ~/.zshrc, please wait..."
         echo 'export PATH="$HOME/bin:$PATH"' >> ~/.zshrc
     fi
-    echo "Reloading ~/.fish, please wait..."
-    source ~/.fish &> /dev/null
+    echo "Reloading ~/.zshrc, please wait..."
+    source ~/.zshrc &> /dev/null
 elif [[ $SHELL == *"fish"* ]]; then
     if ! grep -q 'set -x PATH $HOME/bin $PATH' ~/.config/fish/config.fish 2>/dev/null; then
         echo "Adding ~/bin to PATH in config.fish, please wait..."
