@@ -56,7 +56,21 @@ public class PasswordBox : TextBoxBase
 
     // Update Gum's default to include this first:
     //public char PasswordChar { get; set; } = '●';
-    public char PasswordChar { get; set; } = '*';
+    private char _passwordChar = '*';
+    public char PasswordChar {
+
+        get => _passwordChar;
+
+        set
+        {
+            if (_passwordChar == value)
+            { 
+                return;
+            }
+            _passwordChar = value;
+            UpdateDisplayedCharacters();
+        }
+    }
 
     public event EventHandler PasswordChanged;
 
