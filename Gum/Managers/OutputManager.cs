@@ -21,6 +21,8 @@ namespace Gum.Managers
 
         public void AddOutput(string whatToAdd)
         {
+            if (mRichTextBox == null) return;
+
             string text = mRichTextBox.Text;
             text += "\n[" + DateTime.Now.ToShortTimeString() + "] " + whatToAdd;
 

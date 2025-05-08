@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Xml.Serialization;
 
 //TODO: the AnimationChain namespace in the content assembly should probably be renamed to avoid this naming conflict
-using Gum.Graphics.Animation;
 
 namespace Gum.Content.AnimationChain
 {
@@ -78,118 +77,11 @@ namespace Gum.Content.AnimationChain
         //}
 
 
-        public Gum.Graphics.Animation.AnimationChain ToAnimationChain(string contentManagerName, TimeMeasurementUnit timeMeasurementUnit)
-        {
-            return ToAnimationChain(contentManagerName, timeMeasurementUnit, TextureCoordinateType.UV);
-        }
-
-        public Gum.Graphics.Animation.AnimationChain ToAnimationChain(string contentManagerName, TimeMeasurementUnit timeMeasurementUnit, TextureCoordinateType coordinateType)
-        {
-            if (!string.IsNullOrEmpty(ParentFile))
-            {
-                throw new NotImplementedException();
-            }
-            else
-            {
-                Gum.Graphics.Animation.AnimationChain animationChain =
-                    new Gum.Graphics.Animation.AnimationChain();
-
-                animationChain.Name = Name;
-
-                float divisor = 1;
-
-                if (timeMeasurementUnit == TimeMeasurementUnit.Millisecond)
-                    divisor = 1000;
-
-                foreach (AnimationFrameSave save in Frames)
-                {
-                    // process the AnimationFrame and add it to the newly-created AnimationChain
-                    AnimationFrame frame = null;
-
-                    bool loadTexture = true;
-                    frame = save.ToAnimationFrame(contentManagerName, loadTexture, coordinateType);
-
-                    frame.FrameLength /= divisor;
-                    animationChain.Add(frame);
-
-                }
-
-                return animationChain;
-            }
-        }
-
-        //        private Anim.AnimationChain ToAnimationChain(string contentManagerName, TextureAtlas textureAtlas,
-        //            TimeMeasurementUnit timeMeasurementUnit, TextureCoordinateType coordinateType)
-        //        {
-        //            if (!string.IsNullOrEmpty(ParentFile))
-        //            {
-
-        //            }
-        //            else
-        //            {
-        //                Anim.AnimationChain animationChain =
-        //                    new Anim.AnimationChain();
-
-        //                animationChain.Name = Name;
-
-        //                float divisor = 1;
-
-        //                if (timeMeasurementUnit == TimeMeasurementUnit.Millisecond)
-        //                    divisor = 1000;
-
-        //                foreach (AnimationFrameSave save in Frames)
-        //                {
-        //                    // process the AnimationFrame and add it to the newly-created AnimationChain
-        //                    AnimationFrame frame = null;
-        //                    if (textureAtlas == null)
-        //                    {
-        //                        bool loadTexture = true;
-        //                        frame = save.ToAnimationFrame(contentManagerName, loadTexture, coordinateType);
-        //                    }
-        //                    else
-        //                    {
-        //                        frame = save.ToAnimationFrame(textureAtlas);
-        //                    }
-        //                    frame.FrameLength /= divisor;
-        //                    animationChain.Add(frame);
-
-        //                }
-
-        //                return animationChain;
-        //            }
-        //        }
-
         public override string ToString()
         {
             return this.Name + " with " + this.Frames.Count + " frames";
         }
 
         #endregion
-
-
-        //internal static AnimationChainSave FromXElement(System.Xml.Linq.XElement element)
-        //{
-        //    AnimationChainSave toReturn = new AnimationChainSave();
-
-        //    foreach (var subElement in element.Elements())
-        //    {
-        //        switch (subElement.Name.LocalName)
-        //        {
-        //            case "Name":
-        //                toReturn.Name = subElement.Value;
-        //                break;
-        //            case "Frame":
-        //                toReturn.Frames.Add(AnimationFrameSave.FromXElement(subElement));
-        //                break;
-        //        }
-        //    }
-
-        //    return toReturn;
-        //}
-
-        //private static uint AsUint(System.Xml.Linq.XElement element)
-        //{
-        //    return uint.Parse(element.Value, CultureInfo.InvariantCulture);
-        //}
     }
 }

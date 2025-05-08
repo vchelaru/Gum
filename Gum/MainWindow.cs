@@ -15,8 +15,8 @@ using Gum.DataTypes;
 using Gum.Services;
 using Gum.Undo;
 using Gum.Logic;
-using Gum.Plugins.InternalPlugins.EditorTab;
 using Gum.Plugins.InternalPlugins.MenuStripPlugin;
+using GumRuntime;
 
 namespace Gum
 {
@@ -92,16 +92,13 @@ namespace Gum
 
             PluginManager.Self.Initialize(this);
 
-            GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
-            GraphicalUiElement.UpdateFontFromProperties = CustomSetPropertyOnRenderable.UpdateToFontValues;
-            GraphicalUiElement.ThrowExceptionsForMissingFiles = CustomSetPropertyOnRenderable.ThrowExceptionsForMissingFiles;
-
-            GraphicalUiElement.AddRenderableToManagers = CustomSetPropertyOnRenderable.AddRenderableToManagers;
-            GraphicalUiElement.RemoveRenderableFromManagers = CustomSetPropertyOnRenderable.RemoveRenderableFromManagers;
-
             StandardElementsManager.Self.Initialize();
             StandardElementsManager.Self.CustomGetDefaultState =
                 PluginManager.Self.GetDefaultStateFor;
+
+            ElementSaveExtensions.VariableChangedThroughReference +=
+                Gum.Plugins.PluginManager.Self.VariableSet;
+
 
             StandardElementsManagerGumTool.Self.Initialize();
 
@@ -113,8 +110,11 @@ namespace Gum
             // ProjectManager.Initialize may load a project, and if it
             // does, then we need to make sure that the wireframe controls
             // are set up properly before that happens.
-            PluginManager.Self.XnaInitialized();
 
+            var localizationManager = Builder.Get<LocalizationManager>();
+            Wireframe.WireframeObjectManager.Self.Initialize(localizationManager);
+
+            PluginManager.Self.XnaInitialized();
 
             InitializeFileWatchTimer();
         }
@@ -172,9 +172,9 @@ namespace Gum
             }
         }
 
-        private void MainWindow_Load(object sender, EventArgs e)
+        private async void MainWindow_Load(object sender, EventArgs e)
         {
-            ProjectManager.Self.Initialize();
+            await ProjectManager.Self.Initialize();
 
             if(CommandLine.CommandLineManager.Self.ShouldExitImmediately == false)
             {

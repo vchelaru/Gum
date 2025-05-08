@@ -5,7 +5,7 @@ namespace Gum.DataTypes
 {
     public class CustomPropertySave
     {
-        public string Name;
+        public string? Name;
 
         [XmlElement("ValueAsString", typeof(string))]
         [XmlElement("ValueAsFloat", typeof(float))]
@@ -16,7 +16,7 @@ namespace Gum.DataTypes
         [XmlElement("ValueAsObject", typeof(object))]
         // Can't do this because it's an abstract class
         //[XmlElement("ValueAsEnum", typeof(Enum))]
-        public object Value;
+        public object? Value;
     }
 
     public static class CustomPropertySaveListExtensions

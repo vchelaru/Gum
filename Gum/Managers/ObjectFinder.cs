@@ -1302,7 +1302,7 @@ namespace Gum.Managers
             }
         }
 
-        internal bool IsInstanceRecursivelyReferencingElement(InstanceSave instance, ElementSave element)
+        public bool IsInstanceRecursivelyReferencingElement(InstanceSave instance, ElementSave element)
         {
             if(instance == null)
             {

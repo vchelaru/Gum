@@ -1,5 +1,13 @@
 # Setup
 
+{% hint style="danger" %}
+This tutorial series represents the old way to add a .gumx project to your MonoGame project. This tutorial was  retired in April 2025, replaced by the new [Gum Project Forms Tutorial](../gum-project-forms-tutorial/).
+
+This tutorial is still syntactically valid but it is not recommended as of the April 2025 release:
+
+[https://github.com/vchelaru/Gum/releases/tag/Release\_April\_27\_2025](https://github.com/vchelaru/Gum/releases/tag/Release_April_27_2025)
+{% endhint %}
+
 ## Introduction
 
 This tutorial walks you through creating a brand new Gum project and adding it to an existing MonoGame project. The MonoGame project can be empty or it can be an existing game - the steps are the same either way.

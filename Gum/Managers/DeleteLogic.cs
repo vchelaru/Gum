@@ -31,7 +31,7 @@ namespace Gum.Managers
 
         public void HandleDeleteCommand()
         {
-            var handled = SelectionManager.Self.TryHandleDelete();
+            var handled = PluginManager.Self.TryHandleDelete();
             if (!handled)
             {
                 DoDeletingLogic();
@@ -325,9 +325,6 @@ namespace Gum.Managers
             ElementSave elementToReselect = selectedElement;
             BehaviorSave behaviorToReselect = behavior;
 
-            // Deselect before selecting the new
-            // selected element and before refreshing everything
-            SelectionManager.Self.Deselect();
 
             SelectedState.Self.SelectedInstance = null;
             if(selectedElement != null)
@@ -342,8 +339,6 @@ namespace Gum.Managers
             }
 
             WireframeObjectManager.Self.RefreshAll(true);
-
-            SelectionManager.Self.Refresh();
         }
 
         public void RemoveStateCategory(StateSaveCategory category, IStateContainer stateCategoryListContainer)
@@ -471,7 +466,6 @@ namespace Gum.Managers
                 GumCommands.Self.GuiCommands.RefreshStateTreeView();
                 GumCommands.Self.GuiCommands.RefreshVariables();
                 WireframeObjectManager.Self.RefreshAll(true);
-                SelectionManager.Self.Refresh();
 
                 PluginManager.Self.CategoryDelete(category);
             }
@@ -515,7 +509,6 @@ namespace Gum.Managers
                     GumCommands.Self.GuiCommands.RefreshStateTreeView();
                     GumCommands.Self.GuiCommands.RefreshVariables();
                     WireframeObjectManager.Self.RefreshAll(true);
-                    SelectionManager.Self.Refresh();
 
                     if (shouldSelectAfterRemoval)
                     {

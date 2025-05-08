@@ -3,6 +3,7 @@ using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Plugins.InternalPlugins.VariableGrid.ViewModels;
+using Gum.PropertyGridHelpers;
 using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Undo;
@@ -33,8 +34,10 @@ public class Builder
         builder.Services.AddSingleton(typeof(FileCommands), GumCommands.Self.FileCommands);
         builder.Services.AddSingleton(typeof(GuiCommands), GumCommands.Self.GuiCommands);
         builder.Services.AddSingleton(typeof(NameVerifier), NameVerifier.Self);
+        builder.Services.AddSingleton(typeof(SetVariableLogic), SetVariableLogic.Self);
         builder.Services.AddSingleton(typeof(RenameLogic));
         builder.Services.AddSingleton(typeof(LocalizationManager));
+        builder.Services.AddSingleton(typeof(FontManager));
         builder.Services.AddSingleton<IEditVariableService, EditVariableService>();
         builder.Services.AddSingleton<IExposeVariableService, ExposeVariableService>();
         builder.Services.AddSingleton<IDeleteVariableService, DeleteVariableService>();
@@ -43,5 +46,8 @@ public class Builder
         builder.Services.AddTransient<AddVariableViewModel>();
 
         App = builder.Build();
+
+        // This is needed until we unroll all the singletons...
+        SetVariableLogic.Self.Initialize();
     }
 }

@@ -25,6 +25,10 @@ using Rectangle = System.Drawing.Rectangle;
 using Matrix = System.Numerics.Matrix4x4;
 using GumRuntime;
 
+#if !FRB
+using Gum.StateAnimation.Runtime;
+#endif
+
 namespace Gum.Wireframe;
 
 #region Enums
@@ -66,10 +70,10 @@ public enum Dock
 /// The base object for all Gum runtime objects. It contains functionality for
 /// setting variables, states, and performing layout. The GraphicalUiElement can
 /// wrap an underlying rendering object.
+/// GraphicalUiElements are also considered "Visuals" for Forms objects such as Button and TextBox.
 /// </summary>
 public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyPropertyChanged
 {
-
     #region Enums/Internal Classes
 
     enum ChildType
@@ -113,6 +117,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         set => isFontDirty = value;
     }
 
+    /// <summary>
+    /// The total number of layout calls that have been performed since the application has started running.
+    /// This value can be used as a rough indication of the layout cost and to measure whether efforts to reduce
+    /// layout calls have been effective.
+    /// </summary>
     public static int UpdateLayoutCallCount;
     public static int ChildrenUpdatingParentLayoutCalls;
 
@@ -125,7 +134,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     protected IRenderableIpso mContainedObjectAsIpso;
     protected IVisible mContainedObjectAsIVisible;
 
-    GraphicalUiElement mWhatContainsThis;
+    GraphicalUiElement? mWhatContainsThis;
 
     /// <summary>
     /// A flat list of all GraphicalUiElements contained by this element. For example, if this GraphicalUiElement
@@ -671,7 +680,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     float stackSpacing;
     /// <summary>
-    /// The number of pixels spacing between each child if this is has a ChildrenLayout of 
+    /// The number of pixels spacing between each child if this has a ChildrenLayout of 
     /// TopToBottomStack or LeftToRightStack.
     /// </summary>
     public float StackSpacing
@@ -691,6 +700,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     }
 
     bool useFixedStackChildrenSize;
+    /// <summary>
+    /// Whether to use the same spacing for all children. If true then the size of the first element is used as the height for all other children. This option
+    /// is primraily used for performance reasons as it can make layouts for large collections of stacked children faster.
+    /// </summary>
     public bool UseFixedStackChildrenSize
     {
         get => useFixedStackChildrenSize;
@@ -1001,7 +1014,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// <summary>
     /// The ScreenSave or Component which contains this instance.
     /// </summary>
-    public GraphicalUiElement ElementGueContainingThis
+    public GraphicalUiElement? ElementGueContainingThis
     {
         get
         {
@@ -1026,7 +1039,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
-    public GraphicalUiElement EffectiveParentGue
+    public GraphicalUiElement? EffectiveParentGue
     {
         get
         {
@@ -1418,8 +1431,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
+#if !FRB
+    public List<AnimationRuntime>? Animations { get; set; }
+#endif
 
-    #endregion
+#endregion
 
     #region Events
 
@@ -1793,7 +1809,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             if (hasChildDependency && childrenUpdateDepth > 0)
             {
                 // This causes a double-update of children. For list boxes, this can be expensive.
-                // We can special-case this IF
+                // We can special-case this IF all are true:
                 // 1. This depends on children
                 // 2. This stacks in the same axis as the children
                 // 3. This is using FixedStackSpacing
@@ -1995,161 +2011,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     }
 
     #endregion
-
-    private void AdjustParentOriginOffsetsByUnits(float parentWidth, float parentHeight, bool isParentFlippedHorizontally,
-        ref float unitOffsetX, ref float unitOffsetY, ref bool wasHandledX, ref bool wasHandledY)
-    {
-
-        var shouldAdd = Parent is GraphicalUiElement parentGue &&
-            (parentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.AutoGridVertical || parentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.AutoGridHorizontal);
-
-        if (!wasHandledX)
-        {
-            var units = isParentFlippedHorizontally ? mXUnits.Flip() : mXUnits;
-
-            var value = 0f;
-            if (units == GeneralUnitType.PixelsFromLarge)
-            {
-                value = parentWidth;
-                wasHandledX = true;
-            }
-            else if (units == GeneralUnitType.PixelsFromMiddle)
-            {
-                value = parentWidth / 2.0f;
-                wasHandledX = true;
-            }
-            else if (units == GeneralUnitType.PixelsFromSmall)
-            {
-                // no need to do anything
-            }
-
-            if (shouldAdd)
-            {
-                unitOffsetX += value;
-            }
-            else if (mXUnits != GeneralUnitType.PixelsFromSmall)
-            {
-                unitOffsetX = value;
-            }
-        }
-
-        if (!wasHandledY)
-        {
-            var value = 0f;
-            if (mYUnits == GeneralUnitType.PixelsFromLarge)
-            {
-                value = parentHeight;
-                wasHandledY = true;
-            }
-            else if (mYUnits == GeneralUnitType.PixelsFromMiddle || mYUnits == GeneralUnitType.PixelsFromMiddleInverted)
-            {
-                value = parentHeight / 2.0f;
-                wasHandledY = true;
-            }
-            else if (mYUnits == GeneralUnitType.PixelsFromBaseline)
-            {
-                if (Parent is GraphicalUiElement gue && gue.RenderableComponent is IText text)
-                {
-                    // January 9, 2025 - breaking layout logic to address this:
-                    // https://github.com/vchelaru/Gum/issues/473
-                    //value = parentHeight - text.DescenderHeight;
-                    value = text.WrappedTextHeight - text.DescenderHeight;
-                }
-                else
-                {
-                    // use the bottom as baseline:
-                    value = parentHeight;
-                }
-                wasHandledY = true;
-            }
-
-            if (shouldAdd)
-            {
-                unitOffsetY += value;
-            }
-            else if (mYUnits != GeneralUnitType.PixelsFromSmall)
-            {
-                unitOffsetY = value;
-            }
-        }
-    }
-
-    private void AdjustOffsetsByUnits(float parentWidth, float parentHeight, bool isParentFlippedHorizontally, XOrY? xOrY, ref float unitOffsetX, ref float unitOffsetY)
-    {
-        bool doX = xOrY == null || xOrY == XOrY.X;
-        bool doY = xOrY == null || xOrY == XOrY.Y;
-
-        if (doX)
-        {
-            if (mXUnits == GeneralUnitType.Percentage)
-            {
-                unitOffsetX = parentWidth * mX / 100.0f;
-            }
-            else if (mXUnits == GeneralUnitType.PercentageOfFile)
-            {
-                bool wasSet = false;
-
-                if (mContainedObjectAsIpso is ITextureCoordinate asITextureCoordinate)
-                {
-                    if (asITextureCoordinate.TextureWidth != null)
-                    {
-                        unitOffsetX = asITextureCoordinate.TextureWidth.Value * mX / 100.0f;
-                    }
-                }
-
-                if (!wasSet)
-                {
-                    unitOffsetX = 64 * mX / 100.0f;
-                }
-            }
-            else
-            {
-                if (isParentFlippedHorizontally)
-                {
-                    unitOffsetX -= mX;
-                }
-                else
-                {
-                    unitOffsetX += mX;
-                }
-            }
-        }
-
-        if (doY)
-        {
-            if (mYUnits == GeneralUnitType.Percentage)
-            {
-                unitOffsetY = parentHeight * mY / 100.0f;
-            }
-            else if (mYUnits == GeneralUnitType.PercentageOfFile)
-            {
-
-                bool wasSet = false;
-
-
-                if (mContainedObjectAsIpso is ITextureCoordinate asITextureCoordinate)
-                {
-                    if (asITextureCoordinate.TextureHeight != null)
-                    {
-                        unitOffsetY = asITextureCoordinate.TextureHeight.Value * mY / 100.0f;
-                    }
-                }
-
-                if (!wasSet)
-                {
-                    unitOffsetY = 64 * mY / 100.0f;
-                }
-            }
-            else if (mYUnits == GeneralUnitType.PixelsFromMiddleInverted)
-            {
-                unitOffsetY += -mY;
-            }
-            else
-            {
-                unitOffsetY += mY;
-            }
-        }
-    }
 
     #region Width/Height
 
@@ -3189,6 +3050,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     #endregion
 
+    #region Get Child Layout Type
+
     ChildType GetChildLayoutType(GraphicalUiElement parent)
     {
         var doesParentWrapStack = parent.WrapsChildren && (parent.ChildrenLayout == ChildrenLayout.LeftToRightStack || parent.ChildrenLayout == ChildrenLayout.TopToBottomStack);
@@ -3257,6 +3120,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
+    #endregion
 
     private void UpdateChildren(int childrenUpdateDepth, ChildType childrenUpdateType, bool skipIgnoreByParentSize, HashSet<IRenderableIpso> alreadyUpdated = null, HashSet<IRenderableIpso> newlyUpdated = null)
     {
@@ -3440,6 +3304,236 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
+    #region Position/Offsets
+
+    private void AdjustParentOriginOffsetsByUnits(float parentWidth, float parentHeight, bool isParentFlippedHorizontally,
+        ref float unitOffsetX, ref float unitOffsetY, ref bool wasHandledX, ref bool wasHandledY)
+    {
+
+        var shouldAdd = Parent is GraphicalUiElement parentGue &&
+            (parentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.AutoGridVertical || parentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.AutoGridHorizontal);
+
+        if (!wasHandledX)
+        {
+            var units = isParentFlippedHorizontally ? mXUnits.Flip() : mXUnits;
+
+            // For information on why this force exists, see https://github.com/vchelaru/Gum/issues/695
+            bool forcePixelsFromSmall = false;
+
+            if (mXUnits == GeneralUnitType.PixelsFromMiddle || mXUnits == GeneralUnitType.PixelsFromMiddleInverted ||
+                mXUnits == GeneralUnitType.PixelsFromLarge)
+            {
+                if (this.EffectiveParentGue?.ChildrenLayout == ChildrenLayout.LeftToRightStack)
+                {
+                    System.Collections.IList siblings = null;
+
+                    if (this.Parent == null)
+                    {
+                        siblings = this.ElementGueContainingThis.mWhatThisContains;
+                    }
+                    else if (this.Parent is GraphicalUiElement)
+                    {
+                        siblings = ((GraphicalUiElement)Parent).Children as System.Collections.IList;
+                    }
+                    var thisIndex = siblings.IndexOf(this);
+                    if (thisIndex > 0)
+                    {
+                        forcePixelsFromSmall = true;
+
+
+                        if (mXUnits == GeneralUnitType.Percentage)
+                        {
+                            shouldAdd = true;
+                        }
+                    }
+                }
+            }
+
+
+            var value = 0f;
+            if (forcePixelsFromSmall)
+            {
+                wasHandledX = true;
+            }
+            if (units == GeneralUnitType.PixelsFromLarge)
+            {
+                value = parentWidth;
+                wasHandledX = true;
+            }
+            else if (units == GeneralUnitType.PixelsFromMiddle)
+            {
+                value = parentWidth / 2.0f;
+                wasHandledX = true;
+            }
+            else if (units == GeneralUnitType.PixelsFromSmall)
+            {
+                // no need to do anything
+            }
+
+            if (shouldAdd)
+            {
+                unitOffsetX += value;
+            }
+            else if (mXUnits != GeneralUnitType.PixelsFromSmall && !forcePixelsFromSmall)
+            {
+                unitOffsetX = value;
+            }
+        }
+
+        if (!wasHandledY)
+        {
+            var value = 0f;
+
+            // For information on why this force exists, see https://github.com/vchelaru/Gum/issues/695
+            bool forcePixelsFromSmall = false;
+
+            if(mYUnits == GeneralUnitType.PixelsFromMiddle || mYUnits == GeneralUnitType.PixelsFromMiddleInverted ||
+                mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromBaseline ||
+                mYUnits == GeneralUnitType.Percentage)
+            {
+                if (this.EffectiveParentGue?.ChildrenLayout == ChildrenLayout.TopToBottomStack)
+                {
+                    System.Collections.IList siblings = null;
+
+                    if (this.Parent == null)
+                    {
+                        siblings = this.ElementGueContainingThis.mWhatThisContains;
+                    }
+                    else if (this.Parent is GraphicalUiElement)
+                    {
+                        siblings = ((GraphicalUiElement)Parent).Children as System.Collections.IList;
+                    }
+                    var thisIndex = siblings.IndexOf(this);
+                    if(thisIndex > 0)
+                    {
+                        forcePixelsFromSmall = true;
+
+                        if(mYUnits == GeneralUnitType.Percentage)
+                        {
+                            shouldAdd = true;
+                        }
+                    }
+                }
+            }
+
+            if(forcePixelsFromSmall)
+            {
+                wasHandledY = true;
+            }
+            else if (mYUnits == GeneralUnitType.PixelsFromLarge)
+            {
+                value = parentHeight;
+                wasHandledY = true;
+            }
+            else if (mYUnits == GeneralUnitType.PixelsFromMiddle || mYUnits == GeneralUnitType.PixelsFromMiddleInverted)
+            {
+                value = parentHeight / 2.0f;
+                wasHandledY = true;
+            }
+            else if (mYUnits == GeneralUnitType.PixelsFromBaseline)
+            {
+                if (Parent is GraphicalUiElement gue && gue.RenderableComponent is IText text)
+                {
+                    // January 9, 2025 - breaking layout logic to address this:
+                    // https://github.com/vchelaru/Gum/issues/473
+                    //value = parentHeight - text.DescenderHeight;
+                    value = text.WrappedTextHeight - text.DescenderHeight;
+                }
+                else
+                {
+                    // use the bottom as baseline:
+                    value = parentHeight;
+                }
+                wasHandledY = true;
+            }
+
+            if (shouldAdd)
+            {
+                unitOffsetY += value;
+            }
+            else if (mYUnits != GeneralUnitType.PixelsFromSmall && !forcePixelsFromSmall)
+            {
+                unitOffsetY = value;
+            }
+        }
+    }
+
+    private void AdjustOffsetsByUnits(float parentWidth, float parentHeight, bool isParentFlippedHorizontally, XOrY? xOrY, ref float unitOffsetX, ref float unitOffsetY)
+    {
+        bool doX = xOrY == null || xOrY == XOrY.X;
+        bool doY = xOrY == null || xOrY == XOrY.Y;
+
+        if (doX)
+        {
+            if (mXUnits == GeneralUnitType.Percentage)
+            {
+                unitOffsetX = parentWidth * mX / 100.0f;
+            }
+            else if (mXUnits == GeneralUnitType.PercentageOfFile)
+            {
+                bool wasSet = false;
+
+                if (mContainedObjectAsIpso is ITextureCoordinate asITextureCoordinate)
+                {
+                    if (asITextureCoordinate.TextureWidth != null)
+                    {
+                        unitOffsetX = asITextureCoordinate.TextureWidth.Value * mX / 100.0f;
+                    }
+                }
+
+                if (!wasSet)
+                {
+                    unitOffsetX = 64 * mX / 100.0f;
+                }
+            }
+            else
+            {
+                if (isParentFlippedHorizontally)
+                {
+                    unitOffsetX -= mX;
+                }
+                else
+                {
+                    unitOffsetX += mX;
+                }
+            }
+        }
+
+        if (doY)
+        {
+            if (mYUnits == GeneralUnitType.Percentage)
+            {
+                unitOffsetY = parentHeight * mY / 100.0f;
+            }
+            else if (mYUnits == GeneralUnitType.PercentageOfFile)
+            {
+
+                bool wasSet = false;
+
+
+                if (mContainedObjectAsIpso is ITextureCoordinate asITextureCoordinate)
+                {
+                    if (asITextureCoordinate.TextureHeight != null)
+                    {
+                        unitOffsetY = asITextureCoordinate.TextureHeight.Value * mY / 100.0f;
+                    }
+                }
+
+                if (!wasSet)
+                {
+                    unitOffsetY = 64 * mY / 100.0f;
+                }
+            }
+            else if (mYUnits == GeneralUnitType.PixelsFromMiddleInverted)
+            {
+                unitOffsetY += -mY;
+            }
+            else
+            {
+                unitOffsetY += mY;
+            }
+        }
+    }
 
     private void UpdatePosition(float parentWidth, float parentHeight, XOrY? xOrY, float parentAbsoluteRotation, bool isParentFlippedHorizontally)
     {
@@ -3488,7 +3582,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         bool wasHandledX;
         bool wasHandledY;
 
-        bool canWrap = EffectiveParentGue != null && EffectiveParentGue.WrapsChildren;
+        bool canWrap = EffectiveParentGue?.WrapsChildren == true;
 
         GetParentOffsets(canWrap, shouldWrap, parentWidth, parentHeight, isParentFlippedHorizontally,
             out parentOriginOffsetX, out parentOriginOffsetY,
@@ -3602,6 +3696,135 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     }
 
+    private void AdjustOffsetsByOrigin(bool isParentFlippedHorizontally, ref float unitOffsetX, ref float unitOffsetY)
+    {
+#if DEBUG
+        if (float.IsPositiveInfinity(mRotation) || float.IsNegativeInfinity(mRotation))
+        {
+            throw new Exception("Rotation cannot be negative/positive infinity");
+        }
+#endif
+        float offsetX = 0;
+        float offsetY = 0;
+
+        HorizontalAlignment effectiveXorigin = isParentFlippedHorizontally ? mXOrigin.Flip() : mXOrigin;
+
+        if (!float.IsNaN(mContainedObjectAsIpso.Width))
+        {
+            if (effectiveXorigin == HorizontalAlignment.Center)
+            {
+                offsetX -= mContainedObjectAsIpso.Width / 2.0f;
+            }
+            else if (effectiveXorigin == HorizontalAlignment.Right)
+            {
+                offsetX -= mContainedObjectAsIpso.Width;
+            }
+        }
+        // no need to handle left
+
+
+        if (mYOrigin == VerticalAlignment.Center)
+        {
+            offsetY -= mContainedObjectAsIpso.Height / 2.0f;
+        }
+        else if (mYOrigin == VerticalAlignment.TextBaseline)
+        {
+            if (mContainedObjectAsIpso is IText text)
+            {
+                offsetY += -mContainedObjectAsIpso.Height + text.DescenderHeight * text.FontScale;
+            }
+            else
+            {
+                offsetY -= mContainedObjectAsIpso.Height;
+            }
+        }
+        else if (mYOrigin == VerticalAlignment.Bottom)
+        {
+            offsetY -= mContainedObjectAsIpso.Height;
+        }
+        // no need to handle top
+
+
+        // Adjust offsets by rotation
+        if (mRotation != 0)
+        {
+            var rotation = isParentFlippedHorizontally ? -mRotation : mRotation;
+
+            GetRightAndUpFromRotation(rotation, out Vector3 right, out Vector3 up);
+
+            var unrotatedX = offsetX;
+            var unrotatedY = offsetY;
+
+            offsetX = right.X * unrotatedX + up.X * unrotatedY;
+            offsetY = right.Y * unrotatedX + up.Y * unrotatedY;
+        }
+
+        unitOffsetX += offsetX;
+        unitOffsetY += offsetY;
+    }
+
+    private void TryAdjustOffsetsByParentLayoutType(bool canWrap, bool shouldWrap, ref float unitOffsetX, ref float unitOffsetY)
+    {
+
+
+        if (GetIfParentStacks())
+        {
+            float whatToStackAfterX;
+            float whatToStackAfterY;
+
+            var whatToStackAfter = GetWhatToStackAfter(canWrap, shouldWrap, out whatToStackAfterX, out whatToStackAfterY);
+
+
+
+            float xRelativeTo = 0;
+            float yRelativeTo = 0;
+
+            if (whatToStackAfter != null)
+            {
+                var effectiveParent = this.EffectiveParentGue;
+                switch (effectiveParent.ChildrenLayout)
+                {
+                    case Gum.Managers.ChildrenLayout.TopToBottomStack:
+
+                        if (canWrap)
+                        {
+                            xRelativeTo = whatToStackAfterX;
+                        }
+
+                        yRelativeTo = whatToStackAfterY;
+
+                        break;
+                    case Gum.Managers.ChildrenLayout.LeftToRightStack:
+
+                        xRelativeTo = whatToStackAfterX;
+
+                        if (canWrap)
+                        {
+                            yRelativeTo = whatToStackAfterY;
+                        }
+                        break;
+                    default:
+                        throw new NotImplementedException();
+                }
+            }
+
+            unitOffsetX += xRelativeTo;
+            unitOffsetY += yRelativeTo;
+        }
+        else if (GetIfParentIsAutoGrid())
+        {
+            var indexInSiblingList = this.GetIndexInVisibleSiblings();
+            int xIndex, yIndex;
+            float cellWidth, cellHeight;
+            GetCellDimensions(indexInSiblingList, out xIndex, out yIndex, out cellWidth, out cellHeight);
+
+            unitOffsetX += cellWidth * xIndex;
+            unitOffsetY += cellHeight * yIndex;
+        }
+    }
+
+    #endregion
+
     private void RefreshParentRowColumnDimensionForThis()
     {
         // If it stacks, then update this row/column's dimensions given the index of this
@@ -3666,66 +3889,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             }
         }
 
-    }
-
-    private void TryAdjustOffsetsByParentLayoutType(bool canWrap, bool shouldWrap, ref float unitOffsetX, ref float unitOffsetY)
-    {
-
-
-        if (GetIfParentStacks())
-        {
-            float whatToStackAfterX;
-            float whatToStackAfterY;
-
-            var whatToStackAfter = GetWhatToStackAfter(canWrap, shouldWrap, out whatToStackAfterX, out whatToStackAfterY);
-
-
-
-            float xRelativeTo = 0;
-            float yRelativeTo = 0;
-
-            if (whatToStackAfter != null)
-            {
-                var effectiveParent = this.EffectiveParentGue;
-                switch (effectiveParent.ChildrenLayout)
-                {
-                    case Gum.Managers.ChildrenLayout.TopToBottomStack:
-
-                        if (canWrap)
-                        {
-                            xRelativeTo = whatToStackAfterX;
-                        }
-
-                        yRelativeTo = whatToStackAfterY;
-
-                        break;
-                    case Gum.Managers.ChildrenLayout.LeftToRightStack:
-
-                        xRelativeTo = whatToStackAfterX;
-
-                        if (canWrap)
-                        {
-                            yRelativeTo = whatToStackAfterY;
-                        }
-                        break;
-                    default:
-                        throw new NotImplementedException();
-                }
-            }
-
-            unitOffsetX += xRelativeTo;
-            unitOffsetY += yRelativeTo;
-        }
-        else if (GetIfParentIsAutoGrid())
-        {
-            var indexInSiblingList = this.GetIndexInVisibleSiblings();
-            int xIndex, yIndex;
-            float cellWidth, cellHeight;
-            GetCellDimensions(indexInSiblingList, out xIndex, out yIndex, out cellWidth, out cellHeight);
-
-            unitOffsetX += cellWidth * xIndex;
-            unitOffsetY += cellHeight * yIndex;
-        }
     }
 
     private void GetCellDimensions(int indexInSiblingList, out int xIndex, out int yIndex, out float cellWidth, out float cellHeight)
@@ -4068,73 +4231,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
 
         return whatToStackAfter as GraphicalUiElement;
-    }
-
-    private void AdjustOffsetsByOrigin(bool isParentFlippedHorizontally, ref float unitOffsetX, ref float unitOffsetY)
-    {
-#if DEBUG
-        if (float.IsPositiveInfinity(mRotation) || float.IsNegativeInfinity(mRotation))
-        {
-            throw new Exception("Rotation cannot be negative/positive infinity");
-        }
-#endif
-        float offsetX = 0;
-        float offsetY = 0;
-
-        HorizontalAlignment effectiveXorigin = isParentFlippedHorizontally ? mXOrigin.Flip() : mXOrigin;
-
-        if (!float.IsNaN(mContainedObjectAsIpso.Width))
-        {
-            if (effectiveXorigin == HorizontalAlignment.Center)
-            {
-                offsetX -= mContainedObjectAsIpso.Width / 2.0f;
-            }
-            else if (effectiveXorigin == HorizontalAlignment.Right)
-            {
-                offsetX -= mContainedObjectAsIpso.Width;
-            }
-        }
-        // no need to handle left
-
-
-        if (mYOrigin == VerticalAlignment.Center)
-        {
-            offsetY -= mContainedObjectAsIpso.Height / 2.0f;
-        }
-        else if (mYOrigin == VerticalAlignment.TextBaseline)
-        {
-            if (mContainedObjectAsIpso is IText text)
-            {
-                offsetY += -mContainedObjectAsIpso.Height + text.DescenderHeight * text.FontScale;
-            }
-            else
-            {
-                offsetY -= mContainedObjectAsIpso.Height;
-            }
-        }
-        else if (mYOrigin == VerticalAlignment.Bottom)
-        {
-            offsetY -= mContainedObjectAsIpso.Height;
-        }
-        // no need to handle top
-
-
-        // Adjust offsets by rotation
-        if (mRotation != 0)
-        {
-            var rotation = isParentFlippedHorizontally ? -mRotation : mRotation;
-
-            GetRightAndUpFromRotation(rotation, out Vector3 right, out Vector3 up);
-
-            var unrotatedX = offsetX;
-            var unrotatedY = offsetY;
-
-            offsetX = right.X * unrotatedX + up.X * unrotatedY;
-            offsetY = right.Y * unrotatedX + up.Y * unrotatedY;
-        }
-
-        unitOffsetX += offsetX;
-        unitOffsetY += offsetY;
     }
 
     #endregion
@@ -5699,6 +5795,17 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     }
 
     bool useCustomFont;
+    /// <summary>
+    /// Whether to use the CustomFontFile to determine the font value. 
+    /// If false, then the font is determiend by looking for an existing
+    /// font based on:
+    /// * Font
+    /// * FontSize
+    /// * IsItalic
+    /// * IsBold
+    /// * UseFontSmoothing
+    /// * OutlineThickness
+    /// </summary>
     public bool UseCustomFont
     {
         get { return useCustomFont; }

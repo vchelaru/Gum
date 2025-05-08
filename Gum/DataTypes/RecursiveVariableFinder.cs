@@ -327,7 +327,7 @@ public class RecursiveVariableFinder : IVariableFinder
     /// <summary>
     /// Returns the value of the variable from the bottom of the stack by climbing back up to find the most derived assignment
     /// </summary>
-    internal object GetValueByBottomName(string variableName, int? currentStackIndex = null)
+    public object GetValueByBottomName(string variableName, int? currentStackIndex = null)
     {
         int stackIndex = currentStackIndex ?? this.ElementStack.Count - 1;
 

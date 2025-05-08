@@ -2,20 +2,18 @@
 using Gum.Wireframe;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
-#if !NO_XNA
-#endif
 using System;
 using System.Collections.Generic;
 using System.Linq;
-#if GUM
-using DynamicExpresso;
-using Gum.PropertyGridHelpers;
-using Xceed.Wpf.Toolkit.PropertyGrid.Converters;
-#endif
+
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using System.ComponentModel;
 using System.Text;
+
+#if !FRB
+using Gum.StateAnimation.Runtime;
+#endif
 
 namespace GumRuntime
 {
@@ -253,6 +251,9 @@ namespace GumRuntime
             }
         }
 
+        // void VariableSet(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue)
+        public static Action<ElementSave, InstanceSave, string, object> VariableChangedThroughReference;
+
         public static void ApplyVariableReferences(this ElementSave element, StateSave stateSave)
         {
             foreach (var variableList in stateSave.VariableLists)
@@ -270,7 +271,6 @@ namespace GumRuntime
                     {
                         // this applies the variable and returns info about the application:
                         var result = ApplyVariableReferencesOnSpecificOwner(instance, referenceString, stateSave);
-#if GUM
                         // In the gum tool, we need to check if the applicatoin actually changed the value
                         // If so, we notify plugins that the variable was changed in case any additional changes
                         // need to happen
@@ -281,14 +281,12 @@ namespace GumRuntime
                             {
                                 unqualified = unqualified.Substring(unqualified.IndexOf(".") + 1);
                             }
-
                             if (!ValueEquality(result.OldValue, result.NewValue))
                             {
-                                Gum.Plugins.PluginManager.Self.VariableSet(element, null, unqualified, result.OldValue);
+                                VariableChangedThroughReference?.Invoke(
+                                    element, null, unqualified, result.OldValue);
                             }
-
                         }
-#endif
                     }
                 }
             }
@@ -395,85 +393,6 @@ namespace GumRuntime
             }
         }
 
-#if GUM
-        private static object ApplyVariablesUsingInterpreter(string[] split, string left, InstanceSave instanceLeft, object value)
-        {
-            var currentScreenOrComponent = ObjectFinder.Self.GetElementContainerOf(instanceLeft);
-            // We used to use an interpreter. The problem with the interpreter is it doesn't
-            // understand the recursive variable finder, so it only applies explicitly set variales
-            var interpreter = new Interpreter(InterpreterOptions.PrimitiveTypes | InterpreterOptions.SystemKeywords);
-            AddAllVariablesToInterpreter(currentScreenOrComponent, interpreter);
-
-
-            // The interpreter has to treat each fully qualified variable as a separate value
-            // The variable "MyObject.X" cannot be seen as a qualifying object with its variable.
-            // Instead it has to be a standard C#
-            // variable. Therefore, we replace all periods and slashes with \u1234.
-            // Why \u1234? Not sure, need to ask arcnor, but I suspect it's a variable
-            // that is valid for variables, but will not be used by users when writing scripts.
-            // Also, there is some ambiguity in variable references. Currently the character '/' is used
-            // to separate folders in an object, and the period is used to separate objects from their variables.
-            // However, in the future we may want to support math operations which include decimals and division.
-            // This would create ambiguity so we'd need to create a standard way to identify what is math vs. what
-            // is gum variable references...
-            // For now, no math operations are supported in variable references.
-            string expression = split[1].Replace('.', '\u1234').Replace('/', '\u1234');
-            try
-            {
-                var parsedExpression = interpreter.Parse(expression);
-                value = parsedExpression.Invoke();
-
-                var variableLeft = currentScreenOrComponent.DefaultState.GetVariableRecursive(instanceLeft.Name + "." + left);
-                var variableLeftType = variableLeft.GetRuntimeType();
-
-                value = Convert.ChangeType(value, variableLeftType);
-            }
-            catch (Exception)
-            {
-                // TODO: Show error
-            }
-
-            return value;
-        }
-#endif
-
-#if GUM
-        private static void AddAllVariablesToInterpreter(ElementSave currentScreenOrComponent, Interpreter interpreter)
-        {
-            foreach (var screen in ObjectFinder.Self.GumProjectSave.Screens)
-            {
-                AddVariablesToInterpreter(screen, "Screens");
-            }
-
-            foreach (var component in ObjectFinder.Self.GumProjectSave.Components)
-            {
-                AddVariablesToInterpreter(component, "Components");
-            }
-
-            void AddVariablesToInterpreter(ElementSave element, string screensOrComponents)
-            {
-                var allVariables = element.DefaultState.Variables;
-                var prefix = $"{screensOrComponents}/" + element.Name + "/";
-                AddVaraiblesWithPrefix(prefix, allVariables);
-                // Also add unqualified versions:
-                if (element == currentScreenOrComponent)
-                {
-                    AddVaraiblesWithPrefix("", allVariables);
-                }
-            }
-
-            void AddVaraiblesWithPrefix(string prefix, List<VariableSave> allVariables)
-            {
-                foreach (var variable in allVariables)
-                {
-                    var vValue = variable.Value;
-                    var name = variable.Name; // this would be something like ColoredRectangleInstance.X
-                    var fullVariableName = (prefix + name).Replace('.', '\u1234').Replace('/', '\u1234');
-                    interpreter.SetVariable(fullVariableName, vValue);
-                }
-            }
-        }
-#endif
         struct VariableReferenceAssignmentResult
         {
             public string VariableName;
@@ -644,12 +563,27 @@ namespace GumRuntime
 
             toReturn.CreateChildrenRecursively(elementSave, systemManagers);
 
+
             toReturn.Tag = elementSave;
             toReturn.ElementSave = elementSave;
 
             toReturn.SetInitialState();
 
-            toReturn.AfterFullCreation();
+#if !FRB
+            if (ObjectFinder.Self.GumProjectSave?.ElementAnimations.Count > 0)
+            {
+                var elementAnimationsSave = ObjectFinder.Self.GumProjectSave.ElementAnimations.FirstOrDefault(item =>
+                    item.ElementName == elementSave.Name);
+                if (elementAnimationsSave != null)
+                {
+                    var animationRuntime = elementAnimationsSave.ToRuntime();
+                    toReturn.Animations = animationRuntime;
+                }
+            }
+#endif
+
+
+                toReturn.AfterFullCreation();
         }
 
         public static void CreateChildrenRecursively(GraphicalUiElement graphicalUiElement, ElementSave elementSave, ISystemManagers systemManagers)

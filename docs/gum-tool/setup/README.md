@@ -21,11 +21,11 @@ You can click **More info,** then **Run anyway**. Alternatively, you can right-c
 
 <figure><img src="../../.gitbook/assets/image (78).png" alt=""><figcaption><p>Unblocking the .zip file removes the "Windows protected your PC" popup</p></figcaption></figure>
 
-### Mac/Linux
+### MacOS
 
 #### Prerequisites
 
-Before proceeding, ensure that you have the following prerequisites installed on your macOS:
+Before proceeding, ensure that you have the following prerequisites installed on your system:
 
 1. Homebrew
 2. WINE
@@ -44,7 +44,7 @@ brew install --cask --no-quarantine wine-stable
 brew install winetricks
 ```
 
-#### Automated Setup
+#### Automated Setup MacOS
 
 The following goes through the steps do download and run the `setup_gum_mac.sh` automation script. This script goes through the steps for you with minimal interaction to setup your environment on macOS to run the GUM tool using WINE. If you would prefer to do this setup manually, please see the Manual Setup Steps section below.
 
@@ -61,6 +61,100 @@ chmod +x ./setup_gum_mac.sh
 
 ```sh
 ./setup_gum.mac.sh
+```
+
+### Linux
+
+#### Prerequisites
+
+Before proceeding, ensure that you have the following prerequisites installed on your system:
+
+1. WINE
+2. Winetricks
+
+**Install WINE and Winetricks**
+
+You can install WINE and Winetricks using Homebrew. Open a terminal and run the following commands:
+
+If your distro is not listed bellow please use your prefered search engine to find out how to install\
+wine and winetricks properly on your system.
+
+Ubuntu 22.04
+
+```sh
+sudo dpkg --add-architecture i386 
+sudo mkdir -pm755 /etc/apt/keyrings
+wget -O - https://dl.winehq.org/wine-builds/winehq.key | sudo gpg --dearmor -o /etc/apt/keyrings/winehq-archive.key -
+sudo wget -NP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/ubuntu/dists/jammy/winehq-jammy.sources
+sudo apt update && sudo apt install --install-recommends winehq-stable
+sudo apt-get -y install winetricks
+```
+
+Ubuntu 24.04
+
+```sh
+sudo dpkg --add-architecture i386 
+sudo mkdir -pm755 /etc/apt/keyrings
+wget -O - https://dl.winehq.org/wine-builds/winehq.key | sudo gpg --dearmor -o /etc/apt/keyrings/winehq-archive.key -
+sudo wget -NP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/ubuntu/dists/noble/winehq-noble.sources
+sudo apt update && sudo apt install --install-recommends winehq-stable
+sudo apt-get -y install winetricks
+```
+
+Fedora & Nobara (All Versions)
+
+```sh
+sudo dnf install wine
+sudo dnf install winetricks
+```
+
+Linux Mint 20
+
+```sh
+sudo apt install dirmngr ca-certificates software-properties-common apt-transport-https curl -y
+sudo dpkg --add-architecture i386
+curl -s https://dl.winehq.org/wine-builds/winehq.key | sudo gpg --dearmor | sudo tee /usr/share/keyrings/winehq.gpg > /dev/null
+echo deb [signed-by=/usr/share/keyrings/winehq.gpg] http://dl.winehq.org/wine-builds/ubuntu/ focal main | sudo tee /etc/apt/sources.list.d/winehq.list
+sudo apt-get install winetricks
+```
+
+Linux Mint 21
+
+```sh
+sudo apt install dirmngr ca-certificates software-properties-common apt-transport-https curl -y
+sudo dpkg --add-architecture i386
+curl -s https://dl.winehq.org/wine-builds/winehq.key | sudo gpg --dearmor | sudo tee /usr/share/keyrings/winehq.gpg > /dev/null
+echo deb [signed-by=/usr/share/keyrings/winehq.gpg] http://dl.winehq.org/wine-builds/ubuntu/ jammy main | sudo tee /etc/apt/sources.list.d/winehq.list
+sudo apt-get install winetricks
+```
+
+Linux Mint 22
+
+```sh
+sudo apt install dirmngr ca-certificates software-properties-common apt-transport-https curl -y
+sudo dpkg --add-architecture i386
+curl -s https://dl.winehq.org/wine-builds/winehq.key | sudo gpg --dearmor | sudo tee /usr/share/keyrings/winehq.gpg > /dev/null
+echo deb [signed-by=/usr/share/keyrings/winehq.gpg] http://dl.winehq.org/wine-builds/ubuntu/ noble main | sudo tee /etc/apt/sources.list.d/winehq.list
+sudo apt-get install winetricks
+```
+
+#### Automated Setup Linux
+
+The following goes through the steps do download and run the `setup_gum_linux.sh` automation script. This script goes through the steps for you with minimal interaction to setup your Linux environment to run the GUM tool using WINE. If you would prefer to do this setup manually, please see the Manual Setup Steps section below.
+
+1. Download the setup\_gum.linux.sh script\
+   [https://raw.githubusercontent.com/vchelaru/Gum/master/setup\_gum\_linux.sh](https://raw.githubusercontent.com/vchelaru/Gum/master/setup_gum_linux.sh)
+2. Open a terminal and `cd` to the directory that the script was downloaded to
+3. Make the script executable
+
+```sh
+chmod +x ./setup_gum_linux.sh
+```
+
+4. Execute the script
+
+```sh
+./setup_gum_linux.sh
 ```
 
 #### Manual Setup Steps

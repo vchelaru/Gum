@@ -20,6 +20,8 @@ using Gum.Wireframe;
 using Gum.ToolStates;
 using Gum.Managers;
 using Gum.Services;
+using RenderingLibrary;
+using System.Numerics;
 
 namespace Gum.Plugins
 {
@@ -100,6 +102,26 @@ namespace Gum.Plugins
         [Export("LocalizationManager")]
         public LocalizationManager LocalizationManager => Builder.Get<LocalizationManager>();
 
+
+        internal static List<PluginContainer> AllPluginContainers
+        {
+            get
+            {
+                List<PluginContainer> returnList = new List<PluginContainer>();
+
+                foreach (PluginManager pluginManager in mInstances)
+                {
+                    returnList.AddRange(pluginManager.mPluginContainers.Values);
+                }
+
+                return returnList;
+            }
+        }
+
+        public Dictionary<IPlugin, PluginContainer> PluginContainers
+        {
+            get { return mPluginContainers; }
+        }
         #endregion
 
         #region Exported objects
@@ -122,27 +144,446 @@ namespace Gum.Plugins
 
         #endregion
 
-        internal static List<PluginContainer> AllPluginContainers
+        #region >>>Methods called by Gum when certain events happen<<<
+
+
+        void CallMethodOnPlugin(Action<PluginBase> methodToCall, [CallerMemberName]string methodName = null)
         {
-            get
+            if(this.Plugins == null)
             {
-                List<PluginContainer> returnList = new List<PluginContainer>();
-
-                foreach (PluginManager pluginManager in mInstances)
-                {
-                    returnList.AddRange(pluginManager.mPluginContainers.Values);
-                }
-
-                return returnList;
+                throw new InvalidOperationException("Plugins haven't yet been initialized");
             }
+#if !TEST
+            // let internal plugins handle changes first before external plugins.
+            var sortedPlugins = this.Plugins.OrderBy(item => !(item is InternalPlugin)).ToArray();
+            foreach (var plugin in sortedPlugins)
+            {
+                PluginContainer container = this.PluginContainers[plugin];
+
+                if (container.IsEnabled)
+                {
+                    try
+                    {
+                        methodToCall(plugin);
+                    }
+                    catch (Exception e)
+                    {
+#if DEBUG
+                        MessageBox.Show("Error in plugin " + plugin.FriendlyName + ":\n\n" + e.ToString());
+#endif
+                        container.Fail(e, "Failed in " + methodName);
+                    }
+                }
+            }      
+
+#endif
         }
 
-        public Dictionary<IPlugin, PluginContainer> PluginContainers
+        internal void BeforeElementSave(ElementSave savedElement) => 
+            CallMethodOnPlugin(plugin => plugin.CallBeforeElementSave(savedElement));
+
+        internal void AfterElementSave(ElementSave savedElement) =>
+            CallMethodOnPlugin(plugin => plugin.CallAfterElementSave(savedElement));
+
+        internal void BeforeProjectSave(GumProjectSave savedProject) =>
+            CallMethodOnPlugin(plugin => plugin.CallBeforeProjectSave(savedProject));
+
+        internal void ProjectLoad(GumProjectSave newlyLoadedProject) =>
+            CallMethodOnPlugin(plugin => plugin.CallProjectLoad(newlyLoadedProject));
+
+        internal void ProjectPropertySet(string propertyName) =>
+            CallMethodOnPlugin(plugin => plugin.CallProjectPropertySet(propertyName));
+        internal void ProjectSave(GumProjectSave savedProject) =>
+            CallMethodOnPlugin(plugin => plugin.CallProjectSave(savedProject));
+
+        internal GraphicalUiElement CreateGraphicalUiElement(ElementSave elementSave)
         {
-            get { return mPluginContainers; }
+            GraphicalUiElement toReturn = null;
+            CallMethodOnPlugin(plugin =>
+            {
+                var internalGue = plugin.CallCreateGraphicalUiElement(elementSave);
+
+                if(internalGue != null)
+                {
+                    toReturn = internalGue;
+                }
+            });
+            return toReturn;
         }
 
-        #region Methods
+        internal void ProjectLocationSet(FilePath filePath) =>
+            CallMethodOnPlugin(plugin => plugin.CallProjectLocationSet(filePath));
+
+        internal void Export(ElementSave elementToExport) =>
+            CallMethodOnPlugin(plugin => plugin.CallExport(elementToExport));
+
+        internal void ModifyDefaultStandardState(string type, StateSave stateSave) =>
+            CallMethodOnPlugin(plugin => plugin.CallAddAndRemoveVariablesForType(type, stateSave));
+
+        internal bool TryHandleDelete()
+        {
+            bool toReturn = false;
+
+#if !TEST
+            // let internal plugins handle changes first before external plugins.
+            var sortedPlugins = this.Plugins.OrderBy(item => !(item is InternalPlugin)).ToArray();
+            foreach (var plugin in sortedPlugins)
+            {
+                PluginContainer container = this.PluginContainers[plugin];
+
+                if (container.IsEnabled)
+                {
+                    try
+                    {
+                        if(plugin.CallTryHandleDelete())
+                        {
+                            toReturn = true;
+                            break;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+#if DEBUG
+                        MessageBox.Show("Error in plugin " + plugin.FriendlyName + ":\n\n" + e.ToString());
+#endif
+                        container.Fail(e, "Failed in " + TryHandleDelete);
+                    }
+                }
+            }
+#endif
+            return toReturn;
+        }
+
+        /// <summary>
+        /// Allows all plugins to adjust the DeleteOptionsWindow whenever any object is deleted, including
+        /// elements, instances, and behaviors.
+        /// </summary>
+        /// <param name="window">The window to modify.</param>
+        /// <param name="objectsToDelete">An array of objects that may be deleted, which could be any Gum type.</param>
+        internal void ShowDeleteDialog(DeleteOptionsWindow window, Array objectsToDelete) =>
+            CallMethodOnPlugin(plugin => plugin.CallDeleteOptionsWindowShow(window, objectsToDelete));
+
+        internal void DeleteConfirm(DeleteOptionsWindow window, Array objectsToDelete) => 
+            CallMethodOnPlugin(plugin => plugin.CallDeleteConfirm(window, objectsToDelete));
+
+        internal void ElementRename(ElementSave elementSave, string oldName) =>
+            CallMethodOnPlugin(plugin => plugin.CallElementRename(elementSave, oldName));
+
+        internal void ElementAdd(ElementSave element) =>
+            CallMethodOnPlugin(plugin => plugin.CallElementAdd(element));
+
+        internal void ElementDelete(ElementSave element) =>
+            CallMethodOnPlugin(plugin => plugin.CallElementDelete(element));
+
+        internal void ElementDuplicate(ElementSave oldElement, ElementSave newElement) =>
+            CallMethodOnPlugin(plugin => plugin.CallElementDuplicate(oldElement, newElement));
+
+        internal void StateRename(StateSave stateSave, string oldName) => 
+            CallMethodOnPlugin(plugin => plugin.CallStateRename(stateSave, oldName));
+
+        internal void StateAdd(StateSave stateSave) =>
+            CallMethodOnPlugin((plugin) => plugin.CallStateAdd(stateSave));
+
+        internal void StateMovedToCategory(StateSave stateSave, StateSaveCategory newCategory, StateSaveCategory oldCategory) =>
+            CallMethodOnPlugin(plugin => plugin.CallStateMovedToCategory(stateSave, newCategory, oldCategory));
+
+        internal void StateDelete(StateSave stateSave) =>
+            CallMethodOnPlugin((plugin) => plugin.CallStateDelete(stateSave));
+
+        internal void ReactToStateSaveSelected(StateSave stateSave) =>
+            CallMethodOnPlugin((plugin) => plugin.CallReactToStateSaveSelected(stateSave));
+
+        internal void ReactToCustomStateSaveSelected(StateSave stateSave) =>
+            CallMethodOnPlugin((plugin) => plugin.CallReactToCustomStateSaveSelected(stateSave));
+
+        internal void RefreshStateTreeView() =>
+            CallMethodOnPlugin((plugin) => plugin.CallRefreshStateTreeView());
+
+        internal void CategoryRename(StateSaveCategory category, string oldName) =>
+            CallMethodOnPlugin((plugin) => plugin.CallStateCategoryRename(category, oldName));
+
+        internal void CategoryAdd(StateSaveCategory category) =>
+            CallMethodOnPlugin((plugin) => plugin.CallStateCategoryAdd(category));
+
+        internal void CategoryDelete(StateSaveCategory category) =>
+            CallMethodOnPlugin((plugin) => plugin.CallStateCategoryDelete(category));
+
+        internal void ReactToStateSaveCategorySelected(StateSaveCategory category) =>
+            CallMethodOnPlugin((plugin) => plugin.CallReactToStateSaveCategorySelected(category));
+
+        internal void VariableAdd(ElementSave elementSave, string variableName) =>
+            CallMethodOnPlugin((plugin) => plugin.CallVariableAdd(elementSave, variableName));
+
+        internal void VariableDelete(ElementSave elementSave, string variableName) =>
+            CallMethodOnPlugin(plugin => plugin.CallVariableDelete(elementSave, variableName));
+
+        public void VariableSet(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue)
+        {
+            CallMethodOnPlugin(plugin => plugin.CallVariableSet(parentElement, instance, changedMember, oldValue));
+            CallMethodOnPlugin(plugin => plugin.CallVariableSetLate(parentElement, instance, changedMember, oldValue), "VariableSet (Late)");
+        }
+
+        internal void VariableSelected(IStateContainer container, VariableSave variable) =>
+            CallMethodOnPlugin(plugin => plugin.CallVariableSelected(container, variable));
+
+        internal void VariableRemovedFromCategory(string variableName, StateSaveCategory category) =>
+            CallMethodOnPlugin(plugin => plugin.CallVariableRemovedFromCategory(variableName, category));
+
+        internal void InstanceRename(ElementSave element, InstanceSave instanceSave, string oldName) =>
+            CallMethodOnPlugin(plugin => plugin.CallInstanceRename(element, instanceSave, oldName));
+                
+        internal void AfterUndo() =>
+            CallMethodOnPlugin(plugin => plugin.CallAfterUndo());
+
+        internal void GuidesChanged() => 
+            CallMethodOnPlugin(plugin => plugin.CallGuidesChanged());
+
+        internal List<Attribute> GetAttributesFor(VariableSave variableSave)
+        {
+            var listToFill = new List<Attribute>();
+            CallMethodOnPlugin(plugin => plugin.CallFillVariableAttributes(variableSave, listToFill));
+            return listToFill;
+        }
+
+
+        internal void ElementSelected(ElementSave elementSave) =>
+            CallMethodOnPlugin(plugin => plugin.CallElementSelected(elementSave));
+
+        internal void TreeNodeSelected(TreeNode treeNode) =>
+            CallMethodOnPlugin(plugin => plugin.CallTreeNodeSelected(treeNode));
+
+        internal void StateWindowTreeNodeSelected(TreeNode treeNode) =>
+            CallMethodOnPlugin(plugin => plugin.CallStateWindowTreeNodeSelected(treeNode));
+
+        internal void BehaviorSelected(BehaviorSave behaviorSave) =>
+            CallMethodOnPlugin(plugin => plugin.CallBehaviorSelected(behaviorSave));
+
+        internal void BehaviorReferenceSelected(ElementBehaviorReference behaviorReference, ElementSave elementSave) =>
+            CallMethodOnPlugin(plugin => plugin.CallBehaviorReferenceSelected(behaviorReference, elementSave));
+
+        internal void BehaviorVariableSelected(VariableSave variable) =>
+            CallMethodOnPlugin(plugin => plugin.CallBehaviorVariableSelected(variable));
+        internal void BehaviorCreated(BehaviorSave behavior) =>
+            CallMethodOnPlugin(plugin => plugin.CallBehaviorCreated(behavior));
+
+        internal void BehaviorDeleted(BehaviorSave behavior) =>
+            CallMethodOnPlugin(plugin => plugin.CallBehaviorDeleted(behavior));
+
+        internal void InstanceSelected(ElementSave elementSave, InstanceSave instance) =>
+            CallMethodOnPlugin(plugin => plugin.CallInstanceSelected(elementSave, instance));
+
+        internal void InstanceAdd(ElementSave elementSave, InstanceSave instance) =>
+            CallMethodOnPlugin(plugin => plugin.CallInstanceAdd(elementSave, instance));
+
+
+        internal void InstanceDelete(ElementSave elementSave, InstanceSave instance) =>
+            CallMethodOnPlugin(plugin => plugin.CallInstanceDelete(elementSave, instance));
+
+        internal void InstancesDelete(ElementSave elementSave, InstanceSave[] instances) =>
+            CallMethodOnPlugin(plugin => plugin.CallInstancesDelete(elementSave, instances));
+
+        internal StateSave? GetDefaultStateFor(string type)
+        {
+            StateSave? toReturn = null;
+            CallMethodOnPlugin(plugin => toReturn = plugin.CallGetDefaultStateFor(type) ?? toReturn);
+            return toReturn;
+        }
+
+        internal void InstanceReordered(InstanceSave instance) =>
+            CallMethodOnPlugin(plugin => plugin.CallInstanceReordered(instance));
+        
+
+        internal bool GetIfExtensionIsValid(string extension, ElementSave parentElement, InstanceSave instance, string changedMember)
+        {
+            bool toReturn = false;
+            CallMethodOnPlugin(plugin =>
+            {
+                var result = plugin.CallIsExtensionValid(extension, parentElement, instance, changedMember);
+                if(result)
+                {
+                    toReturn = true;
+                }
+            });
+
+            return toReturn;
+        }
+
+        internal void RefreshBehaviorView(ElementSave elementSave) =>
+            CallMethodOnPlugin(plugin => plugin.CallRefreshBehaviorUi());
+
+        internal void RefreshVariableView(bool force) =>
+            CallMethodOnPlugin(plugin => plugin.CallRefreshVariableView(force));
+
+        internal void BehaviorReferencesChanged(ElementSave elementSave) => 
+            CallMethodOnPlugin(plugin => plugin.CallBehaviorReferencesChanged(elementSave));
+
+        internal void WireframeRefreshed() =>
+            CallMethodOnPlugin(
+                plugin => plugin.CallWireframeRefreshed());
+
+        internal void WireframePropertyChanged(string propertyName) =>
+            CallMethodOnPlugin(plugin => plugin.CallWireframePropertyChanged(propertyName));
+
+        internal IRenderableIpso CreateRenderableForType(string type)
+        {
+            IRenderableIpso toReturn = null;
+
+
+            CallMethodOnPlugin(
+                plugin =>
+                {
+                    var innerToReturn = plugin.CallCreateRenderableForType(type);
+
+                    if (innerToReturn != null)
+                    {
+                        toReturn = innerToReturn;
+                    }
+
+                },
+                nameof(CreateRenderableForType));
+
+            return toReturn;
+        }
+
+        internal DeleteResponse GetDeleteStateResponse(StateSave stateSave, IStateContainer element)
+        {
+            DeleteResponse response = new DeleteResponse();
+            response.ShouldDelete = true;
+            response.ShouldShowMessage = false;
+
+#if !TEST
+            // let internal plugins handle changes first before external plugins.
+            var sortedPlugins = this.Plugins.OrderBy(item => !(item is InternalPlugin)).ToArray();
+            foreach (var plugin in sortedPlugins)
+            {
+                PluginContainer container = this.PluginContainers[plugin];
+
+                if (container.IsEnabled && plugin.GetDeleteStateResponse != null)
+                {
+                    try
+                    {
+                        var responseInternal = plugin.GetDeleteStateResponse(stateSave, element);
+
+                        if(responseInternal.ShouldDelete == false)
+                        {
+                            response = responseInternal;
+                            break;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+#if DEBUG
+                        MessageBox.Show("Error in plugin " + plugin.FriendlyName + ":\n\n" + e.ToString());
+#endif
+                        container.Fail(e, $"Failed in {nameof(GetDeleteStateResponse)}");
+                    }
+                }
+            }
+
+#endif
+            return response;
+        }
+
+        internal DeleteResponse GetDeleteStateCategoryResponse(StateSaveCategory stateSaveCategory, IStateContainer element)
+        {
+            DeleteResponse response = new DeleteResponse();
+            response.ShouldDelete = true;
+            response.ShouldShowMessage = false;
+
+#if !TEST
+            // let internal plugins handle changes first before external plugins.
+            var sortedPlugins = this.Plugins.OrderBy(item => !(item is InternalPlugin)).ToArray();
+            foreach (var plugin in sortedPlugins)
+            {
+                PluginContainer container = this.PluginContainers[plugin];
+
+                if (container.IsEnabled && plugin.GetDeleteStateCategoryResponse != null)
+                {
+                    try
+                    {
+                        var responseInternal = plugin.GetDeleteStateCategoryResponse(stateSaveCategory, element);
+
+                        if (responseInternal.ShouldDelete == false)
+                        {
+                            response = responseInternal;
+                            break;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+#if DEBUG
+                        MessageBox.Show("Error in plugin " + plugin.FriendlyName + ":\n\n" + e.ToString());
+#endif
+                        container.Fail(e, $"Failed in {nameof(GetDeleteStateCategoryResponse)}");
+                    }
+                }
+            }
+
+#endif
+            return response;
+        }
+
+        internal void XnaInitialized() =>
+            CallMethodOnPlugin(plugin => plugin.CallXnaInitialized());
+
+        public void HandleWireframeResized() =>
+            CallMethodOnPlugin(plugin => plugin.CallWireframeResized());
+
+        public void CameraChanged() =>
+            CallMethodOnPlugin(plugin => plugin.CallCameraChanged());
+
+        public void BeforeRender() =>
+            CallMethodOnPlugin(plugin => plugin.CallBeforeRender());
+
+        public void AfterRender() =>
+            CallMethodOnPlugin(plugin => plugin.CallAfterRender());
+
+        internal void ReactToFileChanged(FilePath filePath) =>
+            CallMethodOnPlugin(plugin => plugin.CallReactToFileChanged(filePath));
+
+        internal void HandleUiZoomValueChanged() =>
+            CallMethodOnPlugin(plugin => plugin.CallUiZoomValueChanged());
+
+        public void SetHighlightedIpso(IPositionedSizedObject positionedSizedObject) =>
+            CallMethodOnPlugin(plugin => plugin.CallSetHighlightedIpso(positionedSizedObject));
+
+        public void IpsoSelected(IPositionedSizedObject? positionedSizedObject) =>
+            CallMethodOnPlugin(plugin => plugin.CallIpsoSelected(positionedSizedObject));
+
+        public IEnumerable<IPositionedSizedObject>? GetSelectedIpsos()
+        {
+            IEnumerable<IPositionedSizedObject>? toReturn = null;
+            CallMethodOnPlugin(plugin =>
+            {
+                var innerResult = plugin.CallGetSelectedIpsos();
+                if (innerResult != null)
+                {
+                    toReturn = innerResult;
+                }
+            });
+            return toReturn;
+        }
+
+        public System.Numerics.Vector2? GetWorldCursorPosition(InputLibrary.Cursor cursor)
+        {
+            Vector2? toReturn = null;
+            CallMethodOnPlugin(plugin =>
+            {
+                var innerResult = plugin.CallGetWorldCursorPosition(cursor);
+
+                if(innerResult != null)
+                {
+                    toReturn = innerResult;
+                }
+            });
+
+            return toReturn;
+        }
+
+        #endregion
+
+
+        #region Additional Methods
 
 
         public void Initialize(MainWindow mainWindow)
@@ -151,10 +592,10 @@ namespace Gum.Plugins
             LoadPlugins(this, mainWindow);
             mInstances.Add(this);
         }
-        
+
         private void LoadPluginSettings()
         {
-            
+
             if (System.IO.File.Exists(PluginSettingsSaveFileName))
             {
                 mPluginSettingsSave = PluginSettingsSave.Load(PluginSettingsSaveFileName);
@@ -233,7 +674,7 @@ namespace Gum.Plugins
 
         private void LoadPlugins(PluginManager instance, MainWindow mainWindow)
         {
-            if(mainWindow.MainMenuStrip == null)
+            if (mainWindow.MainMenuStrip == null)
             {
                 throw new InvalidOperationException("MainMenuStrip must be set before loading plugins");
             }
@@ -261,7 +702,7 @@ namespace Gum.Plugins
                     error += "Error is a reflection type load exception\n";
                     var loaderExceptions = (e as ReflectionTypeLoadException).LoaderExceptions;
 
-                    foreach(var loaderException in loaderExceptions)
+                    foreach (var loaderException in loaderExceptions)
                     {
                         error += "\n" + loaderException.ToString();
                     }
@@ -270,7 +711,7 @@ namespace Gum.Plugins
                 {
                     error += "\n" + e.Message;
 
-                    if(e.InnerException != null)
+                    if (e.InnerException != null)
                     {
                         error += "\n Inner Exception:\n" + e.InnerException.Message;
                     }
@@ -289,7 +730,7 @@ namespace Gum.Plugins
             #endregion
 
             #region Start all plugins
-            
+
             foreach (PluginBase plugin in instance.Plugins)
             {
 
@@ -305,7 +746,7 @@ namespace Gum.Plugins
 
                 StartupPlugin(plugin, instance);
             }
-            
+
             #endregion
         }
 
@@ -322,7 +763,10 @@ namespace Gum.Plugins
             }
 
             //MessageBox.Show("Couldn't find assembly: " + args.Name + " for " + args.RequestingAssembly);
-            GumCommands.Self.GuiCommands.PrintOutput("Couldn't find assembly: " + args.Name + " for " + args.RequestingAssembly);
+            if(args.RequestingAssembly != null)
+            {
+                GumCommands.Self.GuiCommands.PrintOutput("Couldn't find assembly: " + args.Name + " for " + args.RequestingAssembly);
+            }
 
             return null;
         }
@@ -504,7 +948,7 @@ namespace Gum.Plugins
                                 (!pluginManager.mGlobal && (pluginCategories & PluginCategories.ProjectSpecific) == PluginCategories.ProjectSpecific);
         }
 
-        
+
         public static bool ShutDownPlugin(IPlugin pluginToShutDown)
         {
             return ShutDownPlugin(pluginToShutDown, PluginShutDownReason.PluginInitiated);
@@ -562,359 +1006,6 @@ namespace Gum.Plugins
         internal static void AddInternalPlugins()
         {
         }
-
-
-        #endregion
-
-        #region Methods called by Gum when certain events happen
-
-
-        void CallMethodOnPlugin(Action<PluginBase> methodToCall, [CallerMemberName]string methodName = null)
-        {
-            if(this.Plugins == null)
-            {
-                throw new InvalidOperationException("Plugins haven't yet been initialized");
-            }
-#if !TEST
-            // let internal plugins handle changes first before external plugins.
-            var sortedPlugins = this.Plugins.OrderBy(item => !(item is InternalPlugin)).ToArray();
-            foreach (var plugin in sortedPlugins)
-            {
-                PluginContainer container = this.PluginContainers[plugin];
-
-                if (container.IsEnabled)
-                {
-                    try
-                    {
-                        methodToCall(plugin);
-                    }
-                    catch (Exception e)
-                    {
-#if DEBUG
-                        MessageBox.Show("Error in plugin " + plugin.FriendlyName + ":\n\n" + e.ToString());
-#endif
-                        container.Fail(e, "Failed in " + methodName);
-                    }
-                }
-            }      
-
-#endif
-        }
-
-        internal void BeforeElementSave(ElementSave savedElement) => 
-            CallMethodOnPlugin(plugin => plugin.CallBeforeElementSave(savedElement));
-
-        internal void AfterElementSave(ElementSave savedElement) =>
-            CallMethodOnPlugin(plugin => plugin.CallAfterElementSave(savedElement));
-
-        internal void BeforeProjectSave(GumProjectSave savedProject) =>
-            CallMethodOnPlugin(plugin => plugin.CallBeforeProjectSave(savedProject));
-
-        internal void ProjectLoad(GumProjectSave newlyLoadedProject) =>
-            CallMethodOnPlugin(plugin => plugin.CallProjectLoad(newlyLoadedProject));
-
-        internal void ProjectPropertySet(string propertyName) =>
-            CallMethodOnPlugin(plugin => plugin.CallProjectPropertySet(propertyName));
-        internal void ProjectSave(GumProjectSave savedProject) =>
-            CallMethodOnPlugin(plugin => plugin.CallProjectSave(savedProject));
-
-        internal void ProjectLocationSet(FilePath filePath) =>
-            CallMethodOnPlugin(plugin => plugin.CallProjectLocationSet(filePath));
-
-        internal void Export(ElementSave elementToExport) =>
-            CallMethodOnPlugin(plugin => plugin.CallExport(elementToExport));
-
-        internal void ModifyDefaultStandardState(string type, StateSave stateSave) =>
-            CallMethodOnPlugin(plugin => plugin.CallAddAndRemoveVariablesForType(type, stateSave));
-
-        /// <summary>
-        /// Allows all plugins to adjust the DeleteOptionsWindow whenever any object is deleted, including
-        /// elements, instances, and behaviors.
-        /// </summary>
-        /// <param name="window">The window to modify.</param>
-        /// <param name="objectsToDelete">An array of objects that may be deleted, which could be any Gum type.</param>
-        internal void ShowDeleteDialog(DeleteOptionsWindow window, Array objectsToDelete) =>
-            CallMethodOnPlugin(plugin => plugin.CallDeleteOptionsWindowShow(window, objectsToDelete));
-
-        internal void DeleteConfirm(DeleteOptionsWindow window, Array objectsToDelete) => 
-            CallMethodOnPlugin(plugin => plugin.CallDeleteConfirm(window, objectsToDelete));
-
-        internal void ElementRename(ElementSave elementSave, string oldName) =>
-            CallMethodOnPlugin(plugin => plugin.CallElementRename(elementSave, oldName));
-
-        internal void ElementAdd(ElementSave element) =>
-            CallMethodOnPlugin(plugin => plugin.CallElementAdd(element));
-
-        internal void ElementDelete(ElementSave element) =>
-            CallMethodOnPlugin(plugin => plugin.CallElementDelete(element));
-
-        internal void ElementDuplicate(ElementSave oldElement, ElementSave newElement) =>
-            CallMethodOnPlugin(plugin => plugin.CallElementDuplicate(oldElement, newElement));
-
-        internal void StateRename(StateSave stateSave, string oldName) => 
-            CallMethodOnPlugin(plugin => plugin.CallStateRename(stateSave, oldName));
-
-        internal void StateAdd(StateSave stateSave) =>
-            CallMethodOnPlugin((plugin) => plugin.CallStateAdd(stateSave));
-
-        internal void StateMovedToCategory(StateSave stateSave, StateSaveCategory newCategory, StateSaveCategory oldCategory) =>
-            CallMethodOnPlugin(plugin => plugin.CallStateMovedToCategory(stateSave, newCategory, oldCategory));
-
-        internal void StateDelete(StateSave stateSave) =>
-            CallMethodOnPlugin((plugin) => plugin.CallStateDelete(stateSave));
-
-        internal void ReactToStateSaveSelected(StateSave stateSave) =>
-            CallMethodOnPlugin((plugin) => plugin.CallReactToStateSaveSelected(stateSave));
-
-        internal void ReactToCustomStateSaveSelected(StateSave stateSave) =>
-            CallMethodOnPlugin((plugin) => plugin.CallReactToCustomStateSaveSelected(stateSave));
-
-        internal void RefreshStateTreeView() =>
-            CallMethodOnPlugin((plugin) => plugin.CallRefreshStateTreeView());
-
-        internal void CategoryRename(StateSaveCategory category, string oldName) =>
-            CallMethodOnPlugin((plugin) => plugin.CallStateCategoryRename(category, oldName));
-
-        internal void CategoryAdd(StateSaveCategory category) =>
-            CallMethodOnPlugin((plugin) => plugin.CallStateCategoryAdd(category));
-
-        internal void CategoryDelete(StateSaveCategory category) =>
-            CallMethodOnPlugin((plugin) => plugin.CallStateCategoryDelete(category));
-
-        internal void ReactToStateSaveCategorySelected(StateSaveCategory category) =>
-            CallMethodOnPlugin((plugin) => plugin.CallReactToStateSaveCategorySelected(category));
-
-        internal void VariableAdd(ElementSave elementSave, string variableName) =>
-            CallMethodOnPlugin((plugin) => plugin.CallVariableAdd(elementSave, variableName));
-
-        internal void VariableDelete(ElementSave elementSave, string variableName) =>
-            CallMethodOnPlugin(plugin => plugin.CallVariableDelete(elementSave, variableName));
-
-        internal void VariableSet(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue)
-        {
-            CallMethodOnPlugin(plugin => plugin.CallVariableSet(parentElement, instance, changedMember, oldValue));
-            CallMethodOnPlugin(plugin => plugin.CallVariableSetLate(parentElement, instance, changedMember, oldValue), "VariableSet (Late)");
-        }
-
-        internal void VariableSelected(IStateContainer container, VariableSave variable) =>
-            CallMethodOnPlugin(plugin => plugin.CallVariableSelected(container, variable));
-
-        internal void VariableRemovedFromCategory(string variableName, StateSaveCategory category) =>
-            CallMethodOnPlugin(plugin => plugin.CallVariableRemovedFromCategory(variableName, category));
-
-        internal void InstanceRename(ElementSave element, InstanceSave instanceSave, string oldName) =>
-            CallMethodOnPlugin(plugin => plugin.CallInstanceRename(element, instanceSave, oldName));
-                
-        internal void AfterUndo() =>
-            CallMethodOnPlugin(plugin => plugin.CallAfterUndo());
-
-        internal void GuidesChanged() => 
-            CallMethodOnPlugin(plugin => plugin.CallGuidesChanged());
-
-        internal List<Attribute> GetAttributesFor(VariableSave variableSave)
-        {
-            var listToFill = new List<Attribute>();
-            CallMethodOnPlugin(plugin => plugin.CallFillVariableAttributes(variableSave, listToFill));
-            return listToFill;
-        }
-
-
-        internal void ElementSelected(ElementSave elementSave) =>
-            CallMethodOnPlugin(plugin => plugin.CallElementSelected(elementSave));
-
-        internal void TreeNodeSelected(TreeNode treeNode) =>
-            CallMethodOnPlugin(plugin => plugin.CallTreeNodeSelected(treeNode));
-
-        internal void StateWindowTreeNodeSelected(TreeNode treeNode) =>
-            CallMethodOnPlugin(plugin => plugin.CallStateWindowTreeNodeSelected(treeNode));
-
-        internal void BehaviorSelected(BehaviorSave behaviorSave) =>
-            CallMethodOnPlugin(plugin => plugin.CallBehaviorSelected(behaviorSave));
-
-        internal void BehaviorReferenceSelected(ElementBehaviorReference behaviorReference, ElementSave elementSave) =>
-            CallMethodOnPlugin(plugin => plugin.CallBehaviorReferenceSelected(behaviorReference, elementSave));
-
-        internal void BehaviorVariableSelected(VariableSave variable) =>
-            CallMethodOnPlugin(plugin => plugin.CallBehaviorVariableSelected(variable));
-        internal void BehaviorCreated(BehaviorSave behavior) =>
-            CallMethodOnPlugin(plugin => plugin.CallBehaviorCreated(behavior));
-
-        internal void BehaviorDeleted(BehaviorSave behavior) =>
-            CallMethodOnPlugin(plugin => plugin.CallBehaviorDeleted(behavior));
-
-        internal void InstanceSelected(ElementSave elementSave, InstanceSave instance) =>
-            CallMethodOnPlugin(plugin => plugin.CallInstanceSelected(elementSave, instance));
-
-        internal void InstanceAdd(ElementSave elementSave, InstanceSave instance) =>
-            CallMethodOnPlugin(plugin => plugin.CallInstanceAdd(elementSave, instance));
-
-
-        internal void InstanceDelete(ElementSave elementSave, InstanceSave instance) =>
-            CallMethodOnPlugin(plugin => plugin.CallInstanceDelete(elementSave, instance));
-
-        internal void InstancesDelete(ElementSave elementSave, InstanceSave[] instances) =>
-            CallMethodOnPlugin(plugin => plugin.CallInstancesDelete(elementSave, instances));
-
-        internal StateSave GetDefaultStateFor(string type)
-        {
-            StateSave toReturn = null;
-            CallMethodOnPlugin(plugin => toReturn = plugin.CallGetDefaultStateFor(type) ?? toReturn);
-            return toReturn;
-        }
-
-        internal void InstanceReordered(InstanceSave instance) =>
-            CallMethodOnPlugin(plugin => plugin.CallInstanceReordered(instance));
-        
-
-        internal bool GetIfExtensionIsValid(string extension, ElementSave parentElement, InstanceSave instance, string changedMember)
-        {
-            bool toReturn = false;
-            CallMethodOnPlugin(plugin =>
-            {
-                var result = plugin.CallIsExtensionValid(extension, parentElement, instance, changedMember);
-                if(result)
-                {
-                    toReturn = true;
-                }
-            });
-
-            return toReturn;
-        }
-
-        internal void RefreshBehaviorView(ElementSave elementSave) =>
-            CallMethodOnPlugin(plugin => plugin.CallRefreshBehaviorUi());
-
-        internal void RefreshVariableView(bool force) =>
-            CallMethodOnPlugin(plugin => plugin.CallRefreshVariableView(force));
-
-        internal void BehaviorReferencesChanged(ElementSave elementSave) => 
-            CallMethodOnPlugin(plugin => plugin.CallBehaviorReferencesChanged(elementSave));
-
-        internal void WireframeRefreshed()
-        {
-            CallMethodOnPlugin(
-                plugin => plugin.CallWireframeRefreshed());
-        }
-
-        internal IRenderableIpso CreateRenderableForType(string type)
-        {
-            IRenderableIpso toReturn = null;
-
-
-            CallMethodOnPlugin(
-                plugin =>
-                {
-                    var innerToReturn = plugin.CallCreateRenderableForType(type);
-
-                    if (innerToReturn != null)
-                    {
-                        toReturn = innerToReturn;
-                    }
-
-                },
-                nameof(CreateRenderableForType));
-
-            return toReturn;
-        }
-
-        internal DeleteResponse GetDeleteStateResponse(StateSave stateSave, IStateContainer element)
-        {
-            DeleteResponse response = new DeleteResponse();
-            response.ShouldDelete = true;
-            response.ShouldShowMessage = false;
-
-#if !TEST
-            // let internal plugins handle changes first before external plugins.
-            var sortedPlugins = this.Plugins.OrderBy(item => !(item is InternalPlugin)).ToArray();
-            foreach (var plugin in sortedPlugins)
-            {
-                PluginContainer container = this.PluginContainers[plugin];
-
-                if (container.IsEnabled && plugin.GetDeleteStateResponse != null)
-                {
-                    try
-                    {
-                        var responseInternal = plugin.GetDeleteStateResponse(stateSave, element);
-
-                        if(responseInternal.ShouldDelete == false)
-                        {
-                            response = responseInternal;
-                            break;
-                        }
-                    }
-                    catch (Exception e)
-                    {
-#if DEBUG
-                        MessageBox.Show("Error in plugin " + plugin.FriendlyName + ":\n\n" + e.ToString());
-#endif
-                        container.Fail(e, $"Failed in {nameof(GetDeleteStateResponse)}");
-                    }
-                }
-            }
-
-#endif
-            return response;
-        }
-
-        internal DeleteResponse GetDeleteStateCategoryResponse(StateSaveCategory stateSaveCategory, IStateContainer element)
-        {
-            DeleteResponse response = new DeleteResponse();
-            response.ShouldDelete = true;
-            response.ShouldShowMessage = false;
-
-#if !TEST
-            // let internal plugins handle changes first before external plugins.
-            var sortedPlugins = this.Plugins.OrderBy(item => !(item is InternalPlugin)).ToArray();
-            foreach (var plugin in sortedPlugins)
-            {
-                PluginContainer container = this.PluginContainers[plugin];
-
-                if (container.IsEnabled && plugin.GetDeleteStateCategoryResponse != null)
-                {
-                    try
-                    {
-                        var responseInternal = plugin.GetDeleteStateCategoryResponse(stateSaveCategory, element);
-
-                        if (responseInternal.ShouldDelete == false)
-                        {
-                            response = responseInternal;
-                            break;
-                        }
-                    }
-                    catch (Exception e)
-                    {
-#if DEBUG
-                        MessageBox.Show("Error in plugin " + plugin.FriendlyName + ":\n\n" + e.ToString());
-#endif
-                        container.Fail(e, $"Failed in {nameof(GetDeleteStateCategoryResponse)}");
-                    }
-                }
-            }
-
-#endif
-            return response;
-        }
-
-        internal void XnaInitialized() =>
-            CallMethodOnPlugin(plugin => plugin.CallXnaInitialized());
-
-        internal void HandleWireframeResized() =>
-            CallMethodOnPlugin(plugin => plugin.CallWireframeResized());
-
-        internal void CameraChanged() =>
-            CallMethodOnPlugin(plugin => plugin.CallCameraChanged());
-
-        internal void BeforeRender() =>
-            CallMethodOnPlugin(plugin => plugin.CallBeforeRender());
-
-        internal void AfterRender() =>
-            CallMethodOnPlugin(plugin => plugin.CallAfterRender());
-
-        internal void ReactToFileChanged(FilePath filePath) =>
-            CallMethodOnPlugin(plugin => plugin.CallReactToFileChanged(filePath));
-
-        internal void HandleUiZoomValueChanged() =>
-            CallMethodOnPlugin(plugin => plugin.CallUiZoomValueChanged());
 
 
         #endregion

@@ -170,6 +170,7 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
                 selectionLength = System.Math.Min(maxSelectionLengthAllowed, value);
                 UpdateToSelection();
                 UpdateCaretVisibility();
+                RaiseSelectionChanged();
             }
         }
     }
@@ -235,6 +236,8 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
     public event Action<object, TextCompositionEventArgs> PreviewTextInput;
     public event EventHandler CaretIndexChanged;
     protected void RaiseCaretIndexChanged() => CaretIndexChanged?.Invoke(this, EventArgs.Empty);
+    public event EventHandler SelectionChanged;
+    protected void RaiseSelectionChanged() => SelectionChanged?.Invoke(this, EventArgs.Empty);
     protected TextCompositionEventArgs RaisePreviewTextInput(string newText)
     {
         var args = new TextCompositionEventArgs(newText);

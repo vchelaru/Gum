@@ -52,4 +52,37 @@ public static class GraphicalUiElementFormsExtensions
         }
         return frameworkElement;
     }
+
+    public static FrameworkElementType TryGetFrameworkElementByName<FrameworkElementType>(this GraphicalUiElement graphicalUiElement, string name) where FrameworkElementType : FrameworkElement
+    {
+        var frameworkVisual = graphicalUiElement.GetGraphicalUiElementByName(name);
+
+        if (frameworkVisual == null)
+        {
+            return default(FrameworkElementType);
+        }
+
+        var frameworkVisualAsInteractiveGue = frameworkVisual as InteractiveGue;
+
+        if (frameworkVisualAsInteractiveGue == null)
+        {
+            return default(FrameworkElementType);
+        }
+
+        var formsControlAsObject = frameworkVisualAsInteractiveGue?.FormsControlAsObject;
+
+        if (formsControlAsObject == null)
+        {
+            return default(FrameworkElementType);
+        }
+
+        var frameworkElement = formsControlAsObject as FrameworkElementType;
+        if (frameworkElement == null)
+        {
+            return default(FrameworkElementType);
+
+        }
+        return frameworkElement;
+    }
+
 }

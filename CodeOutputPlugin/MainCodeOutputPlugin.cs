@@ -2,6 +2,7 @@
 using CodeOutputPlugin.Models;
 using CodeOutputPlugin.Views;
 using Gum;
+using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
@@ -40,6 +41,7 @@ public class MainCodeOutputPlugin : PluginBase
     private readonly ISelectedState _selectedState;
     private readonly RenameService _renameService;
     private readonly LocalizationManager _localizationManager;
+    private readonly GuiCommands _guiCommands;
     PluginTab pluginTab;
 
     // Not sure why this is null..., so getting it from the builder instead
@@ -58,14 +60,17 @@ public class MainCodeOutputPlugin : PluginBase
     {
         _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService();
 
-        _codeGenerationService = new CodeGenerationService();
 
-        _selectedState = SelectedState.Self;
 
-        _renameService = new RenameService();
 
+        _selectedState = Builder.Get<ISelectedState>();
         _localizationManager = Builder.Get<LocalizationManager>();
+        _guiCommands = Builder.Get<GuiCommands>();
+        _codeGenerationService = new CodeGenerationService(_guiCommands);
+        _renameService = new RenameService(_codeGenerationService);
 
+        // The methos in CodeGenerator need to be changed to not be static then we can get rid
+        // of this:
         CodeGenerator.LocalizationManager = _localizationManager;
     }
 
@@ -356,7 +361,7 @@ public class MainCodeOutputPlugin : PluginBase
 
         control.DataContext = viewModel;
 
-        pluginTab = GumCommands.Self.GuiCommands.AddControl(control, "Code", TabLocation.RightBottom);
+        pluginTab = _guiCommands.AddControl(control, "Code", TabLocation.RightBottom);
         pluginTab.GotFocus += () => RefreshCodeDisplay();
     }
 
@@ -407,7 +412,7 @@ public class MainCodeOutputPlugin : PluginBase
                     "Saving your Gum project relative to your .csproj is the recommended approach";
             }
 
-            GumCommands.Self.GuiCommands.ShowMessage(message);
+            _guiCommands.ShowMessage(message);
         }
         else if (SelectedState.Self.SelectedElement != null)
         {
@@ -429,7 +434,7 @@ public class MainCodeOutputPlugin : PluginBase
                     }
                 }
 
-                GumCommands.Self.GuiCommands.ShowMessage($"Generated code for {numberOfElements} element(s)");
+                _guiCommands.ShowMessage($"Generated code for {numberOfElements} element(s)");
             }
             else
             {
@@ -452,7 +457,7 @@ public class MainCodeOutputPlugin : PluginBase
             _codeGenerationService.GenerateCodeForElement(component, componentOutputSettings, codeOutputProjectSettings, showPopups: false);
         }
 
-        GumCommands.Self.GuiCommands.ShowMessage($"Generated code\nScreens: {gumProject.Screens.Count}\nComponents: {gumProject.Components.Count}");
+        _guiCommands.ShowMessage($"Generated code\nScreens: {gumProject.Screens.Count}\nComponents: {gumProject.Components.Count}");
     }
 
     private void GenerateCodeForSelectedElement(bool showPopups)

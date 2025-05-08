@@ -22,6 +22,13 @@ using System.Net;
 using System.IO;
 using MonoGameGum.Localization;
 using System.Security.Policy;
+using Gum.Managers;
+
+#if GUM
+using Gum.Services;
+
+#endif
+
 
 
 
@@ -34,6 +41,17 @@ namespace Gum.Wireframe;
 public class CustomSetPropertyOnRenderable
 {
     public static ILocalizationService LocalizationService { get; set; }
+#if GUM
+    private static readonly FontManager _fontManager;
+#endif
+
+    static CustomSetPropertyOnRenderable()
+    {
+#if GUM
+        _fontManager = Builder.Get<FontManager>();
+#endif
+    }
+
     public static void SetPropertyOnRenderable(IRenderableIpso renderableIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
         bool handled = false;
@@ -914,7 +932,7 @@ public class CustomSetPropertyOnRenderable
                 else
                 {
 #if GUM
-                    fileName = Managers.FontManager.Self.AbsoluteFontCacheFolder +
+                    fileName = _fontManager.AbsoluteFontCacheFolder +
                         ToolsUtilities.FileManager.RemovePath(fontFileName);
 #endif
                 }
@@ -1010,6 +1028,13 @@ public class CustomSetPropertyOnRenderable
         // todo: This could make things faster, but it will require
         // extra calls in generated code, or an "UpdateAll" method
         //if (!mIsLayoutSuspended && !IsAllLayoutSuspended)
+
+        // Residual properties could exist on a Text instnace, so we need to
+        // tolerate a missing item and not crash. 
+        if(text == null)
+        {
+            return;
+        }
 
         BitmapFont font = null;
 

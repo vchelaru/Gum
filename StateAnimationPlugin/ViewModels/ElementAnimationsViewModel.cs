@@ -1,7 +1,7 @@
 ﻿using Gum.DataTypes;
 using Gum.ToolStates;
 using StateAnimationPlugin.Managers;
-using StateAnimationPlugin.SaveClasses;
+using Gum.StateAnimation.SaveClasses;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -22,510 +22,509 @@ using System.Globalization;
 using Gum.Mvvm;
 using Gum.Wireframe;
 
-namespace StateAnimationPlugin.ViewModels
+namespace StateAnimationPlugin.ViewModels;
+
+public class ElementAnimationsViewModel : ViewModel
 {
-    public class ElementAnimationsViewModel : ViewModel
+    #region Fields
+
+    ObservableCollection<AnimationViewModel> mAnimations;
+
+    // 50 isn't smooth enough, we want more fps!
+    //const int mTimerFrequencyInMs = 50;
+    const int mTimerFrequencyInMs = 20;
+
+    System.Windows.Threading.DispatcherTimer mPlayTimer;
+
+    BitmapFrame mPlayBitmap;
+    BitmapFrame mStopBitmap;
+
+
+
+    #endregion
+
+    #region Properties
+
+    public ObservableCollection<AnimationViewModel> Animations
     {
-        #region Fields
-
-        ObservableCollection<AnimationViewModel> mAnimations;
-
-        // 50 isn't smooth enough, we want more fps!
-        //const int mTimerFrequencyInMs = 50;
-        const int mTimerFrequencyInMs = 20;
-
-        System.Windows.Threading.DispatcherTimer mPlayTimer;
-
-        BitmapFrame mPlayBitmap;
-        BitmapFrame mStopBitmap;
-
-
-
-        #endregion
-
-        #region Properties
-
-        public ObservableCollection<AnimationViewModel> Animations
+        get { return mAnimations; }
+        set
         {
-            get { return mAnimations; }
-            set
+            if(mAnimations != null)
             {
-                if(mAnimations != null)
-                {
-                    mAnimations.CollectionChanged -= HandleListChanged;
-                }
-                mAnimations = value;
+                mAnimations.CollectionChanged -= HandleListChanged;
+            }
+            mAnimations = value;
 
-                if (mAnimations != null)
-                {
-                    mAnimations.CollectionChanged += HandleListChanged;
-                }
+            if (mAnimations != null)
+            {
+                mAnimations.CollectionChanged += HandleListChanged;
             }
         }
+    }
 
-        public ObservableCollection<MenuItem> AnimationRightClickItems
+    public ObservableCollection<MenuItem> AnimationRightClickItems
+    {
+        get;
+        private set;
+    } = new ObservableCollection<MenuItem>();
+
+    public ObservableCollection<MenuItem> AnimationStateRightClickItems
+    {
+        get;
+        private set;
+    } = new ObservableCollection<MenuItem>();
+
+    [DependsOn(nameof(SelectedAnimation))]
+    public Visibility PlayButtonVisibility => 
+        (SelectedAnimation != null).ToVisibility();
+
+    public AnimationViewModel SelectedAnimation
+    {
+        get => Get<AnimationViewModel>();
+        set
         {
-            get;
-            private set;
-        } = new ObservableCollection<MenuItem>();
-
-        public ObservableCollection<MenuItem> AnimationStateRightClickItems
-        {
-            get;
-            private set;
-        } = new ObservableCollection<MenuItem>();
-
-        [DependsOn(nameof(SelectedAnimation))]
-        public Visibility PlayButtonVisibility => 
-            (SelectedAnimation != null).ToVisibility();
-
-        public AnimationViewModel SelectedAnimation
-        {
-            get => Get<AnimationViewModel>();
-            set
+            if (Set(value))
             {
-                if (Set(value))
-                {
-                    if (SelectedAnimation != null)
-                    {
-                        var selectedElement = SelectedState.Self.SelectedElement;
-                        if(selectedElement == null)
-                        {
-                            return;
-                        }
-                        SelectedAnimation.RefreshCombinedStates(selectedElement);
-
-                        if(SelectedAnimation.SelectedKeyframe != null)
-                        {
-                            SelectedAnimation.TrySelectKeyframeReferencedStateSave();
-                        }
-                    }
-
-                    RefreshAnimationsRightClickMenuItems();
-
-                }
-            }
-        }
-
-        public double DisplayedAnimationTime
-        {
-            get => Get<double>();
-            set
-            {
-                var valueToSet = value;
                 if (SelectedAnimation != null)
                 {
-                    valueToSet = Math.Min(value, SelectedAnimation.Length);
-                }
-
-
-
-                Set(valueToSet);
-
-            }
-        }
-
-        [DependsOn(nameof(SelectedAnimation))]
-        public string OverLengthTime
-        {
-            get
-            {
-                if(SelectedAnimation == null || SelectedAnimation.Keyframes.Count == 0)
-                {
-                    return null;
-                }
-                else
-                {
-                    var maxLength = SelectedAnimation.Keyframes.Max(item => item.Time);
-                    return "/" + maxLength;
-
-                }
-            }
-        }
-
-        public BitmapFrame ButtonBitmapFrame
-        {
-            get
-            {
-                if(mPlayTimer.IsEnabled)
-                {
-                    return mStopBitmap;
-                }
-                else
-                {
-                    return mPlayBitmap;
-                }
-            }
-        }
-
-        public ElementSave Element
-        {
-            get;
-            set;
-        }
-
-        public ElementAnimationsSave BackingData { get; private set; }
-
-        public List<string> GameSpeedList { get; set; } =
-            new List<string>
-            {
-                "4000%",
-                "2000%",
-                "1000%",
-                "500%",
-                "200%",
-                "100%",
-                "50%",
-                "25%",
-                "10%",
-                "5%"
-            };
-
-        public string CurrentGameSpeed
-        {
-            get => Get<string>();
-            set
-            {
-                if (Set(value))
-                {
-                    AnimationSpeedMultiplier = 
-                        int.Parse(CurrentGameSpeed.Substring(0, CurrentGameSpeed.Length - 1)) / 100.0;
-
-                }
-            }
-        }
-
-        double AnimationSpeedMultiplier = 1.0;
-
-        #endregion
-
-        #region Events
-
-
-        public event PropertyChangedEventHandler AnyChange;
-
-        //public event EventHandler SelectedItemPropertyChanged;
-
-        #endregion
-
-        #region Methods
-
-        public ElementAnimationsViewModel()
-        {
-            CurrentGameSpeed = "100%";
-
-            Animations = new ObservableCollection<AnimationViewModel>();
-
-            this.PropertyChanged += (sender, args) => OnPropertyChanged(args.PropertyName);
-
-            mPlayTimer = new DispatcherTimer();
-            mPlayTimer.Interval = new TimeSpan(0, 0, 0, 0, mTimerFrequencyInMs);
-            mPlayTimer.Tick += HandlePlayTimerTick;
-
-            mPlayBitmap = BitmapLoader.Self.LoadImage("PlayIcon.png");
-
-            mStopBitmap = BitmapLoader.Self.LoadImage("StopIcon.png");
-        }
-
-        public static ElementAnimationsViewModel FromSave(ElementAnimationsSave save, Gum.DataTypes.ElementSave element)
-        {
-            
-            ElementAnimationsViewModel toReturn = new ElementAnimationsViewModel();
-
-            toReturn.BackingData = save;
-
-            foreach (var animation in save.Animations)
-            {
-                var vm = AnimationViewModel.FromSave(animation, element);
-                toReturn.Animations.Add(vm);
-            }
-
-            return toReturn;
-        }
-
-        public ElementAnimationsSave ToSave()
-        {
-            ElementAnimationsSave toReturn = new ElementAnimationsSave();
-
-            foreach(var animation in this.Animations)
-            {
-                toReturn.Animations.Add(animation.ToSave());
-            }
-
-            
-            return toReturn;
-        }
-
-        private void OnPropertyChanged(string propertyName)
-        {
-            OnAnyChange(this, propertyName);
-        }
-
-        private void RefreshAnimationsRightClickMenuItems()
-        {
-            AnimationRightClickItems.Clear();
-
-            if(SelectedAnimation != null)
-            {
-                var menuItem = new MenuItem();
-                menuItem.Header = "Rename Animation";
-                menuItem.Click += HandleRenameAnimation;
-                AnimationRightClickItems.Add(menuItem);
-
-                var squashStretch = new MenuItem();
-                squashStretch.Header = "Squash/Stretch Frame Times";
-                squashStretch.Click += HandleSquashStretchTimes;
-                AnimationRightClickItems.Add(squashStretch);
-
-                var deleteAnimation = new MenuItem();
-                deleteAnimation.Header = "Delete Animation";
-                deleteAnimation.Click += HandleDeleteAnimation;
-                AnimationRightClickItems.Add(deleteAnimation);
-            }
-        }
-
-        private void RefreshAnimationStatesRightClickMenuitems()
-        {
-            AnimationStateRightClickItems.Clear();
-
-            if(this.SelectedAnimation?.SelectedKeyframe != null)
-            {
-                var deleteState = new MenuItem();
-                deleteState.Header = "Delete Keyframe";
-                deleteState.Click += HandleDeleteKeyframe;
-                AnimationStateRightClickItems.Add(deleteState);
-            }
-        }
-
-        private void HandleDeleteKeyframe(object sender, RoutedEventArgs e)
-        {
-            if(SelectedAnimation != null && SelectedAnimation.SelectedKeyframe != null)
-            {
-                SelectedAnimation.Keyframes.Remove(SelectedAnimation.SelectedKeyframe);
-            }
-        }
-
-        private void HandleRenameAnimation(object sender, RoutedEventArgs e)
-        {
-            TextInputWindow tiw = new TextInputWindow();
-            tiw.Message = "Enter new animation name:";
-            tiw.Result = SelectedAnimation.Name;
-
-            var dialogResult = tiw.ShowDialog();
-
-            if (dialogResult == System.Windows.Forms.DialogResult.OK)
-            {
-                string whyInvalid;
-                if (!NameValidator.IsAnimationNameValid(tiw.Result, Animations, out whyInvalid))
-                {
-                    MessageBox.Show(whyInvalid);
-                }
-                else
-                {
-                    var oldAnimationName = SelectedAnimation.Name;
-                    SelectedAnimation.Name = tiw.Result;
-
-                    StateAnimationPlugin.Managers.RenameManager.Self.HandleRename(
-                        SelectedAnimation, 
-                        oldAnimationName, Animations, Element);   
-                }
-            }
-        }
-
-        private void HandleSquashStretchTimes(object sender, RoutedEventArgs e)
-        {
-            TextInputWindow tiw = new TextInputWindow();
-            tiw.Message = "Set desired animation length (in seconds):";
-            tiw.Result = SelectedAnimation.Length.ToString(CultureInfo.InvariantCulture);
-
-            var dialogResult = tiw.ShowDialog();
-
-            if (dialogResult == System.Windows.Forms.DialogResult.OK)
-            {
-                float value = 0;
-
-                var didParse = float.TryParse(tiw.Result, out value);
-
-                string errorMessage = null;
-
-                if(!didParse)
-                {
-                    errorMessage = "Please enter a valid number";
-                }
-                if(errorMessage == null && value < 0)
-                {
-                    errorMessage = "Value must be greater than 0";
-                }
-
-                if(errorMessage != null)
-                {
-                    MessageBox.Show(errorMessage);
-                }
-                else if(SelectedAnimation.Length != 0)
-                {
-                    var multiplier = value / SelectedAnimation.Length;
-
-                    foreach(var frame in this.SelectedAnimation.Keyframes.ToArray())
+                    var selectedElement = SelectedState.Self.SelectedElement;
+                    if(selectedElement == null)
                     {
-                        frame.Time *= multiplier;
+                        return;
+                    }
+                    SelectedAnimation.RefreshCumulativeStates(selectedElement);
+
+                    if(SelectedAnimation.SelectedKeyframe != null)
+                    {
+                        SelectedAnimation.TrySelectKeyframeReferencedStateSave();
                     }
                 }
 
+                RefreshAnimationsRightClickMenuItems();
+
             }
         }
+    }
 
-        private void HandleDeleteAnimation(object sender, RoutedEventArgs e)
+    public double DisplayedAnimationTime
+    {
+        get => Get<double>();
+        set
         {
-            var result = MessageBox.Show("Delete animation " + SelectedAnimation.Name + "?", "Delete?", MessageBoxButton.YesNo);
-
-            if(result == MessageBoxResult.Yes)
-            {
-                Animations.Remove(SelectedAnimation);
-            }
-        } 
-
-        private void OnAnyChange(object sender, string propertyName)
-        {
-            AnyChange?.Invoke(sender, new PropertyChangedEventArgs(propertyName));
-        }
-
-
-        private void HandleListChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs eventArgs)
-        {
-            if(eventArgs.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add)
-            {
-                foreach(AnimationViewModel item in eventArgs.NewItems)
-                {
-                    if(item != null)
-                    {
-                        item.PropertyChanged += HandleAnimationItemChange;
-                        item.FramePropertyChanged += HandleFrameItemChanged;
-                    }
-                }
-            }
-            NotifyPropertyChanged(nameof(OverLengthTime));
-
-            OnAnyChange(this, "Animations");
-        }
-
-        private void HandleFrameItemChanged(object sender, PropertyChangedEventArgs e)
-        {
-            OnAnyChange(sender, e.PropertyName);
-        }
-
-        private void HandleAnimationItemChange(object sender, PropertyChangedEventArgs e)
-        {
-            var shouldNotifyOfTimeChange = false;
-
-            // todo - depending on the sender, raise the event here
-
-            if(shouldNotifyOfTimeChange)
-            {
-                NotifyPropertyChanged(nameof(OverLengthTime));
-            }
-
-            if(e.PropertyName == nameof(AnimationViewModel.SelectedKeyframe))
-            {
-                RefreshAnimationStatesRightClickMenuitems();
-            }
-
-            OnAnyChange(sender, e.PropertyName);
-
-        }
-
-        double? lastPlayTimerTickTime;
-        private void HandlePlayTimerTick(object sender, EventArgs e)
-        {
-            var currentTime = Gum.Wireframe.TimeManager.Self.CurrentTime;
-
-
-            var increaseInValue = AnimationSpeedMultiplier * (mTimerFrequencyInMs /1000.0);
-
-            if(lastPlayTimerTickTime != null)
-            {
-                increaseInValue = AnimationSpeedMultiplier * (currentTime - lastPlayTimerTickTime.Value);
-            }
-
-            lastPlayTimerTickTime = currentTime;
-
-            var newValue = DisplayedAnimationTime + increaseInValue;
-
+            var valueToSet = value;
             if (SelectedAnimation != null)
             {
-                bool reachedTheEnd = newValue > this.SelectedAnimation.Length;
-                if(reachedTheEnd)
+                valueToSet = Math.Min(value, SelectedAnimation.Length);
+            }
+
+
+
+            Set(valueToSet);
+
+        }
+    }
+
+    [DependsOn(nameof(SelectedAnimation))]
+    public string OverLengthTime
+    {
+        get
+        {
+            if(SelectedAnimation == null || SelectedAnimation.Keyframes.Count == 0)
+            {
+                return null;
+            }
+            else
+            {
+                var maxLength = SelectedAnimation.Keyframes.Max(item => item.Time);
+                return "/" + maxLength;
+
+            }
+        }
+    }
+
+    public BitmapFrame ButtonBitmapFrame
+    {
+        get
+        {
+            if(mPlayTimer.IsEnabled)
+            {
+                return mStopBitmap;
+            }
+            else
+            {
+                return mPlayBitmap;
+            }
+        }
+    }
+
+    public ElementSave Element
+    {
+        get;
+        set;
+    }
+
+    public ElementAnimationsSave BackingData { get; private set; }
+
+    public List<string> GameSpeedList { get; set; } =
+        new List<string>
+        {
+            "4000%",
+            "2000%",
+            "1000%",
+            "500%",
+            "200%",
+            "100%",
+            "50%",
+            "25%",
+            "10%",
+            "5%"
+        };
+
+    public string CurrentGameSpeed
+    {
+        get => Get<string>();
+        set
+        {
+            if (Set(value))
+            {
+                AnimationSpeedMultiplier = 
+                    int.Parse(CurrentGameSpeed.Substring(0, CurrentGameSpeed.Length - 1)) / 100.0;
+
+            }
+        }
+    }
+
+    double AnimationSpeedMultiplier = 1.0;
+
+    #endregion
+
+    #region Events
+
+
+    public event PropertyChangedEventHandler AnyChange;
+
+    //public event EventHandler SelectedItemPropertyChanged;
+
+    #endregion
+
+    #region Methods
+
+    public ElementAnimationsViewModel()
+    {
+        CurrentGameSpeed = "100%";
+
+        Animations = new ObservableCollection<AnimationViewModel>();
+
+        this.PropertyChanged += (sender, args) => OnPropertyChanged(args.PropertyName);
+
+        mPlayTimer = new DispatcherTimer();
+        mPlayTimer.Interval = new TimeSpan(0, 0, 0, 0, mTimerFrequencyInMs);
+        mPlayTimer.Tick += HandlePlayTimerTick;
+
+        mPlayBitmap = BitmapLoader.Self.LoadImage("PlayIcon.png");
+
+        mStopBitmap = BitmapLoader.Self.LoadImage("StopIcon.png");
+    }
+
+    public static ElementAnimationsViewModel FromSave(ElementAnimationsSave save, Gum.DataTypes.ElementSave element)
+    {
+        
+        ElementAnimationsViewModel toReturn = new ElementAnimationsViewModel();
+
+        toReturn.BackingData = save;
+
+        foreach (var animation in save.Animations)
+        {
+            var vm = AnimationViewModel.FromSave(animation, element);
+            toReturn.Animations.Add(vm);
+        }
+
+        return toReturn;
+    }
+
+    public ElementAnimationsSave ToSave()
+    {
+        ElementAnimationsSave toReturn = new ElementAnimationsSave();
+
+        foreach(var animation in this.Animations)
+        {
+            toReturn.Animations.Add(animation.ToSave());
+        }
+
+        
+        return toReturn;
+    }
+
+    private void OnPropertyChanged(string propertyName)
+    {
+        OnAnyChange(this, propertyName);
+    }
+
+    private void RefreshAnimationsRightClickMenuItems()
+    {
+        AnimationRightClickItems.Clear();
+
+        if(SelectedAnimation != null)
+        {
+            var menuItem = new MenuItem();
+            menuItem.Header = "Rename Animation";
+            menuItem.Click += HandleRenameAnimation;
+            AnimationRightClickItems.Add(menuItem);
+
+            var squashStretch = new MenuItem();
+            squashStretch.Header = "Squash/Stretch Frame Times";
+            squashStretch.Click += HandleSquashStretchTimes;
+            AnimationRightClickItems.Add(squashStretch);
+
+            var deleteAnimation = new MenuItem();
+            deleteAnimation.Header = "Delete Animation";
+            deleteAnimation.Click += HandleDeleteAnimation;
+            AnimationRightClickItems.Add(deleteAnimation);
+        }
+    }
+
+    private void RefreshAnimationStatesRightClickMenuitems()
+    {
+        AnimationStateRightClickItems.Clear();
+
+        if(this.SelectedAnimation?.SelectedKeyframe != null)
+        {
+            var deleteState = new MenuItem();
+            deleteState.Header = "Delete Keyframe";
+            deleteState.Click += HandleDeleteKeyframe;
+            AnimationStateRightClickItems.Add(deleteState);
+        }
+    }
+
+    private void HandleDeleteKeyframe(object sender, System.Windows.RoutedEventArgs e)
+    {
+        if(SelectedAnimation != null && SelectedAnimation.SelectedKeyframe != null)
+        {
+            SelectedAnimation.Keyframes.Remove(SelectedAnimation.SelectedKeyframe);
+        }
+    }
+
+    private void HandleRenameAnimation(object sender, System.Windows.RoutedEventArgs e)
+    {
+        TextInputWindow tiw = new TextInputWindow();
+        tiw.Message = "Enter new animation name:";
+        tiw.Result = SelectedAnimation.Name;
+
+        var dialogResult = tiw.ShowDialog();
+
+        if (dialogResult == System.Windows.Forms.DialogResult.OK)
+        {
+            string whyInvalid;
+            if (!NameValidator.IsAnimationNameValid(tiw.Result, Animations, out whyInvalid))
+            {
+                MessageBox.Show(whyInvalid);
+            }
+            else
+            {
+                var oldAnimationName = SelectedAnimation.Name;
+                SelectedAnimation.Name = tiw.Result;
+
+                StateAnimationPlugin.Managers.RenameManager.Self.HandleRename(
+                    SelectedAnimation, 
+                    oldAnimationName, Animations, Element);   
+            }
+        }
+    }
+
+    private void HandleSquashStretchTimes(object sender, System.Windows.RoutedEventArgs e)
+    {
+        TextInputWindow tiw = new TextInputWindow();
+        tiw.Message = "Set desired animation length (in seconds):";
+        tiw.Result = SelectedAnimation.Length.ToString(CultureInfo.InvariantCulture);
+
+        var dialogResult = tiw.ShowDialog();
+
+        if (dialogResult == System.Windows.Forms.DialogResult.OK)
+        {
+            float value = 0;
+
+            var didParse = float.TryParse(tiw.Result, out value);
+
+            string errorMessage = null;
+
+            if(!didParse)
+            {
+                errorMessage = "Please enter a valid number";
+            }
+            if(errorMessage == null && value < 0)
+            {
+                errorMessage = "Value must be greater than 0";
+            }
+
+            if(errorMessage != null)
+            {
+                MessageBox.Show(errorMessage);
+            }
+            else if(SelectedAnimation.Length != 0)
+            {
+                var multiplier = value / SelectedAnimation.Length;
+
+                foreach(var frame in this.SelectedAnimation.Keyframes.ToArray())
                 {
-                    if (this.SelectedAnimation.Loops)
-                    {
-                        newValue = 0;
-                    }
-                    else
-                    {
-                        TogglePlayStop();
-                    }
+                    frame.Time *= multiplier;
                 }
             }
 
-            DisplayedAnimationTime = newValue;
         }
+    }
 
+    private void HandleDeleteAnimation(object sender, System.Windows.RoutedEventArgs e)
+    {
+        var result = MessageBox.Show("Delete animation " + SelectedAnimation.Name + "?", "Delete?", MessageBoxButton.YesNo);
 
-
-        internal void TogglePlayStop()
+        if(result == MessageBoxResult.Yes)
         {
-            lastPlayTimerTickTime = null;
-            mPlayTimer.IsEnabled = !mPlayTimer.IsEnabled;
-
-            if(mPlayTimer.IsEnabled)
-            {
-                DisplayedAnimationTime = 0;
-            }
-
-            NotifyPropertyChanged(nameof(ButtonBitmapFrame));
+            Animations.Remove(SelectedAnimation);
         }
+    } 
 
-        public void Stop()
+    private void OnAnyChange(object sender, string propertyName)
+    {
+        AnyChange?.Invoke(sender, new PropertyChangedEventArgs(propertyName));
+    }
+
+
+    private void HandleListChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs eventArgs)
+    {
+        if(eventArgs.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add)
         {
-            if (mPlayTimer.IsEnabled)
+            foreach(AnimationViewModel item in eventArgs.NewItems)
             {
-                lastPlayTimerTickTime = null;
-
-                mPlayTimer.Stop();
-                NotifyPropertyChanged(nameof(ButtonBitmapFrame));
-
-            }
-        }
-
-        internal void DecreaseGameSpeed()
-        {
-            var index = GameSpeedList.IndexOf(CurrentGameSpeed);
-            if (index < GameSpeedList.Count - 1)
-            {
-                CurrentGameSpeed = GameSpeedList[index + 1];
+                if(item != null)
+                {
+                    item.PropertyChanged += HandleAnimationItemChange;
+                    item.FramePropertyChanged += HandleFrameItemChanged;
+                }
             }
         }
+        NotifyPropertyChanged(nameof(OverLengthTime));
 
-        internal void IncreaseGameSpeed()
+        OnAnyChange(this, "Animations");
+    }
+
+    private void HandleFrameItemChanged(object sender, PropertyChangedEventArgs e)
+    {
+        OnAnyChange(sender, e.PropertyName);
+    }
+
+    private void HandleAnimationItemChange(object sender, PropertyChangedEventArgs e)
+    {
+        var shouldNotifyOfTimeChange = false;
+
+        // todo - depending on the sender, raise the event here
+
+        if(shouldNotifyOfTimeChange)
         {
-            var index = GameSpeedList.IndexOf(CurrentGameSpeed);
-            if (index > 0)
-            {
-                CurrentGameSpeed = GameSpeedList[index - 1];
-            }
+            NotifyPropertyChanged(nameof(OverLengthTime));
         }
 
-        public string GetWhyAddingAnimationIsInvalid()
+        if(e.PropertyName == nameof(AnimationViewModel.SelectedKeyframe))
         {
-            string whyIsntValid = null;
-            if (SelectedState.Self.SelectedScreen == null && SelectedState.Self.SelectedComponent == null)
-            {
-                whyIsntValid = "You must first select a Screen or Component";
-            }
-
-            return whyIsntValid;
+            RefreshAnimationStatesRightClickMenuitems();
         }
 
-        #endregion
+        OnAnyChange(sender, e.PropertyName);
 
     }
+
+    double? lastPlayTimerTickTime;
+    private void HandlePlayTimerTick(object sender, EventArgs e)
+    {
+        var currentTime = Gum.Wireframe.TimeManager.Self.CurrentTime;
+
+
+        var increaseInValue = AnimationSpeedMultiplier * (mTimerFrequencyInMs /1000.0);
+
+        if(lastPlayTimerTickTime != null)
+        {
+            increaseInValue = AnimationSpeedMultiplier * (currentTime - lastPlayTimerTickTime.Value);
+        }
+
+        lastPlayTimerTickTime = currentTime;
+
+        var newValue = DisplayedAnimationTime + increaseInValue;
+
+        if (SelectedAnimation != null)
+        {
+            bool reachedTheEnd = newValue > this.SelectedAnimation.Length;
+            if(reachedTheEnd)
+            {
+                if (this.SelectedAnimation.Loops)
+                {
+                    newValue = 0;
+                }
+                else
+                {
+                    TogglePlayStop();
+                }
+            }
+        }
+
+        DisplayedAnimationTime = newValue;
+    }
+
+
+
+    internal void TogglePlayStop()
+    {
+        lastPlayTimerTickTime = null;
+        mPlayTimer.IsEnabled = !mPlayTimer.IsEnabled;
+
+        if(mPlayTimer.IsEnabled)
+        {
+            DisplayedAnimationTime = 0;
+        }
+
+        NotifyPropertyChanged(nameof(ButtonBitmapFrame));
+    }
+
+    public void Stop()
+    {
+        if (mPlayTimer.IsEnabled)
+        {
+            lastPlayTimerTickTime = null;
+
+            mPlayTimer.Stop();
+            NotifyPropertyChanged(nameof(ButtonBitmapFrame));
+
+        }
+    }
+
+    internal void DecreaseGameSpeed()
+    {
+        var index = GameSpeedList.IndexOf(CurrentGameSpeed);
+        if (index < GameSpeedList.Count - 1)
+        {
+            CurrentGameSpeed = GameSpeedList[index + 1];
+        }
+    }
+
+    internal void IncreaseGameSpeed()
+    {
+        var index = GameSpeedList.IndexOf(CurrentGameSpeed);
+        if (index > 0)
+        {
+            CurrentGameSpeed = GameSpeedList[index - 1];
+        }
+    }
+
+    public string GetWhyAddingAnimationIsInvalid()
+    {
+        string whyIsntValid = null;
+        if (SelectedState.Self.SelectedScreen == null && SelectedState.Self.SelectedComponent == null)
+        {
+            whyIsntValid = "You must first select a Screen or Component";
+        }
+
+        return whyIsntValid;
+    }
+
+    #endregion
+
 }

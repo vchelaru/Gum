@@ -1,16 +1,14 @@
-# Gum Project (.gumx) Tutorial
+# \[Deprecated] Gum Project (.gumx) Tutorial
+
+{% hint style="danger" %}
+This tutorial series represents the old way to add a .gumx project to your MonoGame project. This tutorial was  retired in April 2025, replaced by the new [Gum Project Forms Tutorial](../gum-project-forms-tutorial/).
+
+This tutorial is still syntactically valid but it is not recommended as of the April 2025 release:
+
+[https://github.com/vchelaru/Gum/releases/tag/Release\_April\_27\_2025](https://github.com/vchelaru/Gum/releases/tag/Release_April_27_2025)
+{% endhint %}
 
 ### Introduction
-
-{% hint style="warning" %}
-This tutorial series represents the current way to add a .gumx project to your MonoGame project. This tutorial will be retired sometime in April 2025, to be replaced by the new [Gum Project Forms Tutorial](../gum-project-forms-tutorial/).
-
-If you would like to try the new tutorial, you need to download the preview build of Gum:\
-\
-[https://github.com/vchelaru/Gum/releases/tag/PreRelease\_April\_10\_2025](https://github.com/vchelaru/Gum/releases/tag/PreRelease_April_10_2025)
-
-If you would like to stay on the stable build, please continue following these tutorials.
-{% endhint %}
 
 
 
