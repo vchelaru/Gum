@@ -178,18 +178,54 @@ public class RadioButton : ToggleButton
 
     #region UpdateTo Methods
 
+    public override bool? IsChecked
+    {
+        get
+        {
+            return base.IsChecked;
+        }
+        set
+        {
+            // Don't do anything if it's already the correct value.
+            if (base.IsChecked == value)
+            {
+                return;
+            }
+
+            if (value != null && (bool)value)
+            {
+                SetThisAsOnlyCheckedInGroup();
+            }
+            else
+            {
+                base.IsChecked = value;
+            }
+        }
+    }
+
+    // This is to allow us to set the base of ANOTHER RadioButton from this RadioButton.
+    private void SetIsCheckedBase(bool? value)
+    {
+        base.IsChecked = value;
+    }
+
     private void SetThisAsOnlyCheckedInGroup()
     {
         var parent = GetParent();
-        foreach (var radio in RadioButtonDictionary[parent][GroupName])
+
+        // Don't set all RadioButtons to FALSE just because they don't have a parent yet!
+        if (parent != FakeRoot)
         {
-            if (radio != this)
+            foreach (var radio in RadioButtonDictionary[parent][GroupName])
             {
-                radio.IsChecked = false;
+                if (radio != this)
+                {
+                    radio.SetIsCheckedBase(false);
+                }
             }
         }
 
-        IsChecked = true;
+        base.IsChecked = true;
     }
 
     public override void UpdateState()
