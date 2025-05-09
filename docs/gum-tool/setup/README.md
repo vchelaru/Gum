@@ -67,14 +67,36 @@ chmod +x ./setup_gum_mac.sh
 
 #### Prerequisites
 
-Before proceeding, ensure that you have the following prerequisites installed on your system:
+You will need these following prerequisites installed on your system, you can run the automated install script
+or installing it yourself if you run into issues:
 
 1. WINE
 2. Winetricks
 
-**Install WINE and Winetricks**
+#### Automated Setup Linux
 
-You can install WINE and Winetricks using Homebrew. Open a terminal and run the following commands:
+The following goes through the steps do download and run the `setup_gum_linux.sh` automation script. This script goes through the steps for you with minimal interaction to setup your Linux environment to run the GUM tool using WINE. If you would prefer to do this setup manually, please see the Manual Setup Steps section below.
+
+1. Download the setup\_gum.linux.sh script\
+   [https://raw.githubusercontent.com/vchelaru/Gum/master/setup\_gum\_linux.sh](https://raw.githubusercontent.com/vchelaru/Gum/master/setup_gum_linux.sh)
+2. Open a terminal and `cd` to the directory that the script was downloaded to
+3. Make the script executable
+
+```sh
+chmod +x ./setup_gum_linux.sh
+```
+
+4. Execute the script
+
+```sh
+./setup_gum_linux.sh
+```
+
+**Install WINE and Winetricks Manually**
+
+If the auto script fails to install the prerequisites try this.
+
+You can install WINE and Winetricks using your package manager. Open a terminal and run the following commands:
 
 If your distro is not listed bellow please use your prefered search engine to find out how to install\
 wine and winetricks properly on your system.
@@ -138,28 +160,9 @@ echo deb [signed-by=/usr/share/keyrings/winehq.gpg] http://dl.winehq.org/wine-bu
 sudo apt-get install winetricks
 ```
 
-#### Automated Setup Linux
-
-The following goes through the steps do download and run the `setup_gum_linux.sh` automation script. This script goes through the steps for you with minimal interaction to setup your Linux environment to run the GUM tool using WINE. If you would prefer to do this setup manually, please see the Manual Setup Steps section below.
-
-1. Download the setup\_gum.linux.sh script\
-   [https://raw.githubusercontent.com/vchelaru/Gum/master/setup\_gum\_linux.sh](https://raw.githubusercontent.com/vchelaru/Gum/master/setup_gum_linux.sh)
-2. Open a terminal and `cd` to the directory that the script was downloaded to
-3. Make the script executable
-
-```sh
-chmod +x ./setup_gum_linux.sh
-```
-
-4. Execute the script
-
-```sh
-./setup_gum_linux.sh
-```
-
 #### Manual Setup Steps
 
-The following goes through the steps setup your environment on macOS to run the GUM tool using WINE.
+The following goes through the steps setup your environment on macOS or Linux to run the GUM tool using WINE.
 
 1. Open a new terminal
 2. Install .NET Framework 4.8 using `winetricks` with the following command:
