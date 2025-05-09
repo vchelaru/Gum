@@ -67,15 +67,14 @@ chmod +x ./setup_gum_mac.sh
 
 #### Prerequisites
 
-You will need these following prerequisites installed on your system, you can run the automated install script
-or installing it yourself if you run into issues:
+You will need these following prerequisites installed on your system, you can run the automated install script to have them installed automatically or you can install them yourself manually if you run into issues (see Manual Setup Steps section):
 
 1. WINE
 2. Winetricks
 
 #### Automated Setup Linux
 
-The following goes through the steps do download and run the `setup_gum_linux.sh` automation script. This script goes through the steps for you with minimal interaction to setup your Linux environment to run the GUM tool using WINE. If you would prefer to do this setup manually, please see the Manual Setup Steps section below.
+These following commands will go through the steps of downloading and running the `setup_gum_linux.sh` script. This script goes through the steps for you with minimal interaction required to setup your Linux environment to run the GUM tool using WINE. If you would prefer to do this setup manually, please refer to the Manual Setup Steps section below.
 
 1. Download the setup\_gum.linux.sh script\
    [https://raw.githubusercontent.com/vchelaru/Gum/master/setup\_gum\_linux.sh](https://raw.githubusercontent.com/vchelaru/Gum/master/setup_gum_linux.sh)
@@ -162,7 +161,7 @@ sudo apt-get install winetricks
 
 #### Manual Setup Steps
 
-The following goes through the steps setup your environment on macOS or Linux to run the GUM tool using WINE.
+These following commands will go through the steps setting up your macOS or Linux environment to run the GUM tool using WINE.
 
 1. Open a new terminal
 2. Install .NET Framework 4.8 using `winetricks` with the following command:
@@ -215,10 +214,10 @@ wine ~/.wine/drive_c/Program\\ Files/Gum/Data/Gum.exe' > ~/bin/Gum
 9. Make the script executable by running:
 
 ```sh
-chmod +x ~/bin/Gum
+chmod +x ~/bin/gum
 ```
 
-10. To ensure you can run the Gum Tool from any directory, add the script directory to your PATH.
+10. To ensure you can run the Gum Tool from any directory, add the script directory to your PATH. Most Linux and macOS users using macOS 10.14 or lower, will be using the BASH shell. While for most macOS user using macOS 10.15 or higher, you'll be using the ZSH shell.
 
 **For Bash SHELL**
 
@@ -254,8 +253,8 @@ source ~/.zshrc
 
 Congratulations! You have now successfully set up the Gum Tool on macOS using WINE. You can open the Gum Tool by simply typing the following command in the terminal:
 
-```sh
-Gum
+```
+gum
 ```
 
 If the command doesn't work immediately, try closing and reopening the terminal.
