@@ -19,7 +19,7 @@ public class ToggleButton : ButtonBase
 
     private bool? isChecked = false;
 
-    public virtual bool? IsChecked
+    public bool? IsChecked
     {
         get
         {
