@@ -112,6 +112,10 @@ namespace Gum.Managers
         TreeNode mComponentsTreeNode;
         TreeNode mStandardElementsTreeNode;
         TreeNode mBehaviorsTreeNode;
+        TreeNode mLastHoveredNode;
+        private DateTime hoverStartTime;
+
+
 
         FlatSearchListBox FlatList;
         System.Windows.Forms.Integration.WindowsFormsHost TreeViewHost;
@@ -483,8 +487,6 @@ namespace Gum.Managers
             Grid.SetRow(FlatList, 2);
             grid.Children.Add(FlatList);
 
-
-
             //GumCommands.Self.GuiCommands.AddControl(panel, "Project", TabLocation.Left);
         }
 
@@ -552,10 +554,7 @@ namespace Gum.Managers
 
             };
 
-            ObjectTreeView.DragOver += (sender, e) =>
-            {
-                e.Effect = DragDropEffects.Move;
-            };
+            ObjectTreeView.DragOver += HandleDragOverEvent;
 
 
             ObjectTreeView.GiveFeedback += (sender, e) =>
@@ -651,9 +650,87 @@ namespace Gum.Managers
             DragDropManager.Self.HandleKeyPress(e);
         }
 
+        private void HandleDragOverEvent(object sender, DragEventArgs e)
+        {
+            var treeview = (MultiSelectTreeView)sender;
+            Point pointWithinTreeview = treeview.PointToClient(new Point(e.X, e.Y));
+            const int scrollBufferZone = 20;
+
+            if (pointWithinTreeview.Y < scrollBufferZone)
+            {
+                if (treeview.TopNode?.PrevVisibleNode != null)
+                {
+                    treeview.TopNode = treeview.TopNode.PrevVisibleNode;
+                }
+            }
+            else if (pointWithinTreeview.Y > treeview.ClientSize.Height - scrollBufferZone)
+            {
+                if (treeview.TopNode?.NextVisibleNode != null)
+                {
+                    treeview.TopNode = treeview.TopNode.NextVisibleNode;
+                }
+            }
+            else
+            {
+                var hoveredNode = treeview.GetNodeAt(pointWithinTreeview);
+                if (hoveredNode != null)
+                {
+                    // Can't do this, it seems to interfere with the Undo History
+                    //treeview.SelectedNode = hoveredNode;
+
+                    // So...lets fake it with backcolor/forecolor instead?
+                    if (mLastHoveredNode != hoveredNode)
+                    {
+                        hoverStartTime = DateTime.Now;
+
+                        // restore previous colors
+                        if (mLastHoveredNode != null)
+                        {
+                            mLastHoveredNode.BackColor = treeview.BackColor;
+                            mLastHoveredNode.ForeColor = treeview.ForeColor;
+                        }
+
+                        // apply highlight colors
+                        mLastHoveredNode = hoveredNode;
+                        if (mLastHoveredNode != null)
+                        {
+                            mLastHoveredNode.BackColor = SystemColors.Highlight;
+                            mLastHoveredNode.ForeColor = SystemColors.HighlightText;
+                        }
+
+                        // If partially off the screen, make it visible
+                        if (!hoveredNode.IsVisible)
+                            hoveredNode.EnsureVisible();
+                    }
+                    else
+                    {
+                        // Make it so that we can EXPAND folders or nodes/items if we hover for half a second
+                        if (hoveredNode.Nodes.Count > 0 && !hoveredNode.IsExpanded)
+                        {
+                            TimeSpan duration = DateTime.Now - hoverStartTime;
+                            int hoverDelayMiliseconds = 500;
+                            if (duration.TotalMilliseconds > hoverDelayMiliseconds)
+                            {
+                                hoveredNode.Expand();
+                            }
+                        }
+                    }
+                }
+            }
+
+            e.Effect = DragDropEffects.Move;
+        }
+
         private void HandleDragDropEvent(object sender, DragEventArgs e)
         {
-            if(e.Data != null)
+            // Make sure that we reset the Hovered items colors at the end of the drag
+            if (mLastHoveredNode != null)
+            {
+                mLastHoveredNode.BackColor = ObjectTreeView.BackColor;
+                mLastHoveredNode.ForeColor = ObjectTreeView.ForeColor;
+            }
+
+            if (e.Data != null)
             {
                 DragDropManager.Self.HandleDragDropEvent(sender, e);
             }
