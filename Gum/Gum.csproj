@@ -10,19 +10,17 @@
 		<ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
 		<DefineConstants>GUM; MONOGAME</DefineConstants>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-		<PlatformTarget>x86</PlatformTarget>
-		<Platforms>x86</Platforms>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
-	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
 		<OutputPath>bin\Debug\</OutputPath>
 		<DefineConstants>TRACE;DEBUG;GUM; MONOGAME</DefineConstants>
 	</PropertyGroup>
-	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
 		<OutputPath>bin\Release\</OutputPath>
 		<DefineConstants>TRACE;GUM</DefineConstants>
 	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'UnitTest|x86'">
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'UnitTest|AnyCPU'">
 		<DebugSymbols>true</DebugSymbols>
 		<OutputPath>bin\UnitTest\</OutputPath>
 		<DefineConstants>TRACE;DEBUG;GUM</DefineConstants>
@@ -352,6 +350,11 @@
 		<PackageReference Include="System.ComponentModel.Composition" Version="9.0.3" />
 		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
 		<PackageReference Include="System.Management" Version="9.0.3" />
+
+		<PackageReference Include="nkast.Xna.Framework" Version="4.1.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.1.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.1.9001" />
+		<PackageReference Include="nkast.Kni.Platform.WinForms.DX11" Version="4.1.9001" />
 	</ItemGroup>
 	<ItemGroup>
 		<Compile Remove="DataTypes\BehaviorSaveExtensionMethods.cs" />

@@ -63,11 +63,12 @@ public class WireframeControl : GraphicsDeviceControl
         }
     }
 
+    public SystemManagers SystemManagers => SystemManagers.Default;
+
     #endregion
 
     #region Properties
 
-    public Sprite BackgroundSprite { get; private set; }
 
     public LineRectangle ScreenBounds
     {
@@ -220,23 +221,6 @@ public class WireframeControl : GraphicsDeviceControl
             }
         }
 
-        Texture2D texture = imageData.ToTexture2D(false);
-        texture.Name = "Background Checkerboard";
-        BackgroundSprite = new Sprite(texture);
-        BackgroundSprite.Name = "Background checkerboard Sprite";
-        BackgroundSprite.Wrap = true;
-        BackgroundSprite.X = -4096;
-        BackgroundSprite.Y = -4096;
-        BackgroundSprite.Width = 8192;
-        BackgroundSprite.Height = 8192;
-        BackgroundSprite.Color = System.Drawing.Color.FromArgb(255, 150, 150, 150);
-
-        BackgroundSprite.Wrap = true;
-        int timesToRepeat = 256;
-        BackgroundSprite.SourceRectangle = 
-            new System.Drawing.Rectangle(0, 0, timesToRepeat * texture.Width, timesToRepeat * texture.Height);
-
-        SpriteManager.Self.Add(BackgroundSprite);
     }
 
     public void ShareLayerReferences(LayerService layerService)
@@ -326,16 +310,6 @@ public class WireframeControl : GraphicsDeviceControl
                     _selectionManager.LateActivity();
                 }
                 DragDropManager.Self.Activity();
-
-                if (ProjectManager.Self.GeneralSettingsFile != null)
-                {
-                    BackgroundSprite.Color = System.Drawing.Color.FromArgb(255,
-                        ProjectManager.Self.GeneralSettingsFile.CheckerColor2R,
-                        ProjectManager.Self.GeneralSettingsFile.CheckerColor2G,
-                        ProjectManager.Self.GeneralSettingsFile.CheckerColor2B
-                    );
-
-                }
 
                 InputLibrary.Cursor.Self.EndCursorSettingFrameStart();
             }

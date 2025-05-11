@@ -10,6 +10,8 @@
 #region Using Statements
 using System;
 using System.Drawing;
+using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Microsoft.Xna.Framework.Graphics;
 #endregion
@@ -43,6 +45,10 @@ namespace XnaAndWinforms
 
         RenderingError mRenderError = new RenderingError();
 
+        private RenderTarget2D renderTarget;
+        byte[] rawImage;
+        Bitmap bitmap;
+
         #endregion
 
         #region Properties
@@ -74,6 +80,12 @@ namespace XnaAndWinforms
         }
 
 
+        public RenderTarget2D DefaultRenderTarget
+        {
+            get { return renderTarget; }
+        }
+
+
 
         /// <summary>
         /// Gets an IServiceProvider containing our IGraphicsDeviceService.
@@ -93,6 +105,10 @@ namespace XnaAndWinforms
 
         public GraphicsDeviceControl()
         {
+            this.DoubleBuffered = true;
+            this.SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer, true);
+            this.UpdateStyles();
+
             // Don't initialize the graphics device if we are running in the designer.
             if (!DesignMode)
             {
@@ -204,6 +220,8 @@ namespace XnaAndWinforms
                             }
                             Draw();
                             EndDraw();
+
+                            PaintRendertarget(e.Graphics);
                         }
                         catch (Exception exception)
                         {
@@ -251,6 +269,7 @@ namespace XnaAndWinforms
             }
             if (!error.HasErrors)
             {
+                GraphicsDevice.SetRenderTarget(renderTarget);
 
                 // Many GraphicsDeviceControl instances can be sharing the same
                 // GraphicsDevice. The device backbuffer will be resized to fit the
@@ -283,10 +302,11 @@ namespace XnaAndWinforms
         {
             try
             {
-                Rectangle sourceRectangle = new Rectangle(0, 0, ClientSize.Width,
-                                                                ClientSize.Height);
+                // resolve RenderTarget
+                this.GraphicsDevice.SetRenderTarget(null);
 
-                GraphicsDevice.Present(sourceRectangle, null, this.Handle);
+                renderTarget.GetData(rawImage);
+
             }
             catch
             {
@@ -355,6 +375,42 @@ namespace XnaAndWinforms
                     error.Message = "Graphics device reset failed\n\n" + e;
                 }
             }
+
+            int w = Math.Max(1, ClientSize.Width);
+            int h = Math.Max(1, ClientSize.Height);
+
+            // check whether _swapChainRenderTarget is big enough.
+            if (renderTarget != null)
+            {
+                if (w != renderTarget.Width || h != renderTarget.Height)
+                {
+                    renderTarget.Dispose();
+                    renderTarget = null;
+                    bitmap.Dispose();
+                    bitmap = null;
+                }
+            }
+
+            // recreate RenderTarget
+            if (renderTarget == null)
+            {
+                var surfaceFormat = Microsoft.Xna.Framework.Graphics.SurfaceFormat.Color;
+                var PreferredMultiSampleCount = 1;
+
+                renderTarget = new RenderTarget2D(
+                    this.GraphicsDevice, w, h,
+                    false, surfaceFormat, DepthFormat.Depth24Stencil8, PreferredMultiSampleCount,
+                    RenderTargetUsage.DiscardContents);
+
+                bitmap = new Bitmap(w, h, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            }
+            int rawImageLen = w * h * 4;
+
+            if (rawImage == null || rawImage.Length != rawImageLen)
+            {
+                rawImage = new byte[rawImageLen];
+            }
+
         }
 
 
@@ -379,6 +435,42 @@ namespace XnaAndWinforms
             }
         }
 
+        private void PaintRendertarget(Graphics graphics)
+        {
+            int w = Math.Max(1, ClientSize.Width);
+            int h = Math.Max(1, ClientSize.Height);
+
+            var rect = new System.Drawing.Rectangle(0, 0, w, h);
+            BitmapData bmpData = bitmap.LockBits(rect, System.Drawing.Imaging.ImageLockMode.WriteOnly, bitmap.PixelFormat);
+
+            int stride = bmpData.Stride;
+            byte[] argbData = new byte[stride * h];
+
+            for (int y = 0; y < h; y++)
+            {
+                int srcOffset = y * w * 4;
+                int dstOffset = y * stride;
+
+                for (int x = 0; x < w; x++)
+                {
+                    int i = x * 4;
+
+                    byte r = rawImage[srcOffset + i + 0];
+                    byte g = rawImage[srcOffset + i + 1];
+                    byte b = rawImage[srcOffset + i + 2];
+                    byte a = 255;// rawImage[srcOffset + i + 3];
+
+                    argbData[dstOffset + i + 0] = b;
+                    argbData[dstOffset + i + 1] = g;
+                    argbData[dstOffset + i + 2] = r;
+                    argbData[dstOffset + i + 3] = a;
+                }
+            }
+            Marshal.Copy(argbData, 0, bmpData.Scan0, argbData.Length);
+            bitmap.UnlockBits(bmpData);
+
+            graphics.DrawImage(bitmap, 0, 0, w, h);
+        }
 
         /// <summary>
         /// Ignores WinForms paint-background messages. The default implementation

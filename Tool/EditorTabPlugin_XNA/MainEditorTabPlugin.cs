@@ -95,6 +95,7 @@ internal class MainEditorTabPlugin : InternalPlugin
     private readonly SelectionManager _selectionManager;
     private readonly ElementCommands _elementCommands;
     private readonly SinglePixelTextureService _singlePixelTextureService;
+    private BackgroundSpriteService _backgroundSpriteService;
     WireframeControl _wireframeControl;
 
     private FlatRedBall.AnimationEditorForms.Controls.WireframeEditControl _wireframeEditControl;
@@ -117,6 +118,7 @@ internal class MainEditorTabPlugin : InternalPlugin
         _screenshotService = new ScreenshotService(_selectionManager);
         _elementCommands = ElementCommands.Self;
         _singlePixelTextureService = new SinglePixelTextureService();
+        _backgroundSpriteService = new BackgroundSpriteService();
     }
 
     public override void StartUp()
@@ -329,11 +331,6 @@ internal class MainEditorTabPlugin : InternalPlugin
         {
             _selectionManager.AreHighlightsVisible = 
                 GumCommands.Self.WireframeCommands.AreHighlightsVisible;
-        }
-        else if(name == nameof(WireframeCommands.IsBackgroundGridVisible))
-        {
-            _wireframeControl.BackgroundSprite.Visible = 
-                GumCommands.Self.WireframeCommands.IsBackgroundGridVisible;
         }
         else if(name == nameof(WireframeCommands.AreRulersVisible))
         {
@@ -586,7 +583,7 @@ internal class MainEditorTabPlugin : InternalPlugin
 
         _editingManager.Initialize(_wireframeContextMenuStrip);
 
-
+        _backgroundSpriteService.Initialize(_wireframeControl.SystemManagers);
 
         _scrollbarService.HandleXnaInitialized();
 
@@ -874,6 +871,7 @@ internal class MainEditorTabPlugin : InternalPlugin
 
         _wireframeControl.XnaUpdate += () =>
         {
+            _backgroundSpriteService.Activity();
             Wireframe.WireframeObjectManager.Self.Activity();
             ToolLayerService.Self.Activity();
         };

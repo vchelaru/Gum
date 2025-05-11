@@ -4,28 +4,21 @@
 		<OutputType>Library</OutputType>
 		<LangVersion>12.0</LangVersion>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<Platforms>x86</Platforms>
 		<LangVersion>12.0</LangVersion>
 	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
-		<DefineConstants>TRACE;DEBUG;MONOGAME; DIRECTX_RENDERING; HAS_SYSTEM_DRAWING_IMAGE</DefineConstants>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+		<DefineConstants>TRACE;DEBUG;MONOGAME; HAS_SYSTEM_DRAWING_IMAGE</DefineConstants>
 		<CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
 		<CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
 	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
-		<DefineConstants>TRACE;MONOGAME; DIRECTX_RENDERING</DefineConstants>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+		<DefineConstants>TRACE;MONOGAME</DefineConstants>
 		<CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
 		<CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
 	</PropertyGroup>
 	<ItemGroup>
-		<Reference Include="Microsoft.Xna.Framework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86">
-			<SpecificVersion>False</SpecificVersion>
-			<HintPath>..\Gum\Libraries\Xna\Microsoft.Xna.Framework.dll</HintPath>
-		</Reference>
-		<Reference Include="Microsoft.Xna.Framework.Graphics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86">
-			<SpecificVersion>False</SpecificVersion>
-			<HintPath>..\Gum\Libraries\Xna\Microsoft.Xna.Framework.Graphics.dll</HintPath>
-		</Reference>
+		<PackageReference Include="nkast.Xna.Framework" Version="4.1.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.1.9001" />
 		<Reference Include="TargaImage, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
 			<SpecificVersion>False</SpecificVersion>
 			<HintPath>Libraries\TargaImage.dll</HintPath>
