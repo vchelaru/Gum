@@ -203,7 +203,7 @@ internal class MainEditorTabPlugin : InternalPlugin
 
         if (SelectedState.Self.SelectedInstance != null)
         {
-            foreach (var instance in SelectedState.Self.SelectedElement.Instances)
+            foreach (var instance in SelectedState.Self.SelectedInstances)
             {
                 var representation = WireframeObjectManager.Self.GetRepresentation(instance);
                 if (representation != null)
