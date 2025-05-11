@@ -442,31 +442,31 @@ namespace XnaAndWinforms
 
             var rect = new System.Drawing.Rectangle(0, 0, w, h);
             BitmapData bmpData = bitmap.LockBits(rect, System.Drawing.Imaging.ImageLockMode.WriteOnly, bitmap.PixelFormat);
-
-            int stride = bmpData.Stride;
-            byte[] argbData = new byte[stride * h];
-
-            for (int y = 0; y < h; y++)
+            unsafe
             {
-                int srcOffset = y * w * 4;
-                int dstOffset = y * stride;
+                byte* dst = (byte*)bmpData.Scan0;
 
-                for (int x = 0; x < w; x++)
+                for (int y = 0; y < h; y++)
                 {
-                    int i = x * 4;
+                    int srcOffset = y * w * 4;
+                    int dstOffset = y * bmpData.Stride;
 
-                    byte r = rawImage[srcOffset + i + 0];
-                    byte g = rawImage[srcOffset + i + 1];
-                    byte b = rawImage[srcOffset + i + 2];
-                    byte a = 255;// rawImage[srcOffset + i + 3];
+                    for (int x = 0; x < w; x++)
+                    {
+                        int i = x * 4;
 
-                    argbData[dstOffset + i + 0] = b;
-                    argbData[dstOffset + i + 1] = g;
-                    argbData[dstOffset + i + 2] = r;
-                    argbData[dstOffset + i + 3] = a;
+                        byte r = rawImage[srcOffset + i + 0];
+                        byte g = rawImage[srcOffset + i + 1];
+                        byte b = rawImage[srcOffset + i + 2];
+                        byte a = rawImage[srcOffset + i + 3];
+
+                        dst[dstOffset + i + 0] = b;
+                        dst[dstOffset + i + 1] = g;
+                        dst[dstOffset + i + 2] = r;
+                        dst[dstOffset + i + 3] = a;
+                    }
                 }
             }
-            Marshal.Copy(argbData, 0, bmpData.Scan0, argbData.Length);
             bitmap.UnlockBits(bmpData);
 
             graphics.DrawImage(bitmap, 0, 0, w, h);
