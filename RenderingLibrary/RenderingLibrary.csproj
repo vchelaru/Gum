@@ -4,15 +4,14 @@
 		<OutputType>Library</OutputType>
 		<LangVersion>12.0</LangVersion>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<Platforms>x86</Platforms>
 		<LangVersion>12.0</LangVersion>
 	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
 		<DefineConstants>TRACE;DEBUG;MONOGAME; DIRECTX_RENDERING; HAS_SYSTEM_DRAWING_IMAGE</DefineConstants>
 		<CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
 		<CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
 	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
 		<DefineConstants>TRACE;MONOGAME; DIRECTX_RENDERING</DefineConstants>
 		<CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
 		<CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
