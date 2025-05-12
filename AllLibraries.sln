@@ -21,8 +21,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkiaGum", "SkiaGum\SkiaGum.
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGameGum.Forms.Tests", "MonoGameGum.Forms.Tests\MonoGameGum.Forms.Tests.csproj", "{FC1149AE-712F-F2AD-6C5E-A858E89C7677}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGameGum.Tests", "MonoGameGum.Tests\MonoGameGum.Tests.csproj", "{2DE63E97-9A29-456F-DE64-4A6ECD619252}"
 EndProject
 Global
@@ -97,14 +95,6 @@ Global
 		{309DE2DB-648A-4769-B875-E5808F6CF92E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{309DE2DB-648A-4769-B875-E5808F6CF92E}.Release|x86.ActiveCfg = Release|Any CPU
 		{309DE2DB-648A-4769-B875-E5808F6CF92E}.Release|x86.Build.0 = Release|Any CPU
-		{FC1149AE-712F-F2AD-6C5E-A858E89C7677}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FC1149AE-712F-F2AD-6C5E-A858E89C7677}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FC1149AE-712F-F2AD-6C5E-A858E89C7677}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{FC1149AE-712F-F2AD-6C5E-A858E89C7677}.Debug|x86.Build.0 = Debug|Any CPU
-		{FC1149AE-712F-F2AD-6C5E-A858E89C7677}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FC1149AE-712F-F2AD-6C5E-A858E89C7677}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FC1149AE-712F-F2AD-6C5E-A858E89C7677}.Release|x86.ActiveCfg = Release|Any CPU
-		{FC1149AE-712F-F2AD-6C5E-A858E89C7677}.Release|x86.Build.0 = Release|Any CPU
 		{2DE63E97-9A29-456F-DE64-4A6ECD619252}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2DE63E97-9A29-456F-DE64-4A6ECD619252}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2DE63E97-9A29-456F-DE64-4A6ECD619252}.Debug|x86.ActiveCfg = Debug|Any CPU
@@ -118,7 +108,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{FC1149AE-712F-F2AD-6C5E-A858E89C7677} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{2DE63E97-9A29-456F-DE64-4A6ECD619252} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
