@@ -130,8 +130,9 @@
   * [Setting Up Post Build Events](gum-tool/plugins/setting-up-post-build-events.md)
 * [Variables](gum-tool/variables/README.md)
   * [Add Variable](gum-tool/variables/add-variable.md)
-* [Breaking Changes](gum-tool/breaking-changes/README.md)
-  * [Removal of Variable Spaces](gum-tool/breaking-changes/removal-of-variable-spaces.md)
+* [Upgrading](gum-tool/upgrading/README.md)
+  * [Breaking Changes](gum-tool/upgrading/breaking-changes/README.md)
+    * [Removal of Variable Spaces](gum-tool/upgrading/breaking-changes/removal-of-variable-spaces.md)
 
 ## Code
 

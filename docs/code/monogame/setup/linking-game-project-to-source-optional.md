@@ -6,7 +6,7 @@ The easiest way to use Gum is to add the NuGet packages to your game project. Al
 
 This document assumes you already have a game project with the Gum NuGet packages linked.
 
-### Linking Soruce
+### Linking Source
 
 If you have followed the Setup steps, then you should have a game which references the Gum NuGet package.
 
