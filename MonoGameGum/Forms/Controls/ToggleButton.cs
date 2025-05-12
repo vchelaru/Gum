@@ -105,7 +105,7 @@ public class ToggleButton : ButtonBase
 
         if (IsEnabled == false)
         {
-            SetPropertyConsideringOn("Disabled");
+            SetPropertyConsideringOn(DisabledStateName);
         }
         //else if (HasFocus)
         //{
@@ -114,20 +114,20 @@ public class ToggleButton : ButtonBase
         {
             if (cursor.WindowPushed == Visual && cursor.PrimaryDown)
             {
-                SetPropertyConsideringOn("Pushed");
+                SetPropertyConsideringOn(PushedStateName);
             }
             else if (cursor.LastInputDevice != InputDevice.TouchScreen)
             {
-                SetPropertyConsideringOn("Highlighted");
+                SetPropertyConsideringOn(HighlightedStateName);
             }
             else
             {
-                SetPropertyConsideringOn("Enabled");
+                SetPropertyConsideringOn(EnabledStateName);
             }
         }
         else
         {
-            SetPropertyConsideringOn("Enabled");
+            SetPropertyConsideringOn(EnabledStateName);
         }
     }
 

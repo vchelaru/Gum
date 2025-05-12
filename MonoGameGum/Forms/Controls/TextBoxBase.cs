@@ -996,7 +996,7 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
 
         if (IsEnabled == false)
         {
-            Visual.SetProperty(CategoryName, "Disabled");
+            Visual.SetProperty(CategoryName, DisabledStateName);
         }
         else if (IsFocused)
         {
@@ -1006,13 +1006,16 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
             // state exists and setting the proper state...
             Visual.SetProperty(CategoryName, "Selected");
         }
-        else if (cursor.LastInputDevice != InputDevice.TouchScreen && Visual.EffectiveManagers != null && Visual.HasCursorOver(cursor))
+        else if (cursor.LastInputDevice != InputDevice.TouchScreen && Visual.EffectiveManagers != null 
+            //&& Visual.HasCursorOver(cursor)
+            && cursor.WindowOver == Visual
+            )
         {
-            Visual.SetProperty(CategoryName, "Highlighted");
+            Visual.SetProperty(CategoryName, HighlightedStateName);
         }
         else
         {
-            Visual.SetProperty(CategoryName, "Enabled");
+            Visual.SetProperty(CategoryName, EnabledStateName);
         }
     }
 

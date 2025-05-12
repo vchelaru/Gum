@@ -204,7 +204,7 @@ public class ListBoxItem : FrameworkElement
 
         if (IsFocused)
         {
-            Visual.SetProperty(category, "Focused");
+            Visual.SetProperty(category, FocusedStateName);
         }
         else if (IsSelected)
         {
@@ -218,13 +218,13 @@ public class ListBoxItem : FrameworkElement
             // Vic says - I'm not sure if this is the solution that I like, but let's start with it...
             if (cursor.XChange != 0 || cursor.YChange != 0)
             {
-                Visual.SetProperty(category, "Highlighted");
+                Visual.SetProperty(category, HighlightedStateName);
             }
             // otherwise - do nothing?
         }
         else
         {
-            Visual.SetProperty(category, "Enabled");
+            Visual.SetProperty(category, EnabledStateName);
         }
     }
 

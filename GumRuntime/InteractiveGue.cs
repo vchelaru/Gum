@@ -29,6 +29,7 @@ using System.Reflection.Emit;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
+using System.Diagnostics;
 
 namespace Gum.Wireframe
 {
@@ -873,8 +874,16 @@ namespace Gum.Wireframe
 
             if(windowOverBefore != cursor.WindowOver)
             {
-                if(windowOverBefore is InteractiveGue interactiveBefore)
+                string GetInfoFor(InteractiveGue interactive)
                 {
+                    return interactive?.Name + " " + interactive?.GetType();
+                }
+                Debug.WriteLine($"Before: {GetInfoFor(windowOverBefore)} After");
+
+                if (windowOverBefore is InteractiveGue interactiveBefore)
+                {
+                    Debug.WriteLine($"WindowOverBefore is InteractiveGue, calling TryCallRollOff");
+
                     interactiveBefore.TryCallRollOff();
                 }
             }
