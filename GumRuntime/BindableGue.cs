@@ -196,7 +196,7 @@ public class BindableGue : GraphicalUiElement
 
         var args = new BindingContextChangedEventArgs();
         args.OldBindingContext = oldBindingContext;
-
+        args.NewBindingContext = EffectiveBindingContext;
 
         if (this.Children != null)
         {
