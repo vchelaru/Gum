@@ -20,6 +20,7 @@ namespace GumFormsSample
         private readonly InputService _inputService = new();
         private readonly RenderService _renderService = new();
         private readonly IGumFormsSampleLogger _logger = new DebugLogger();
+        private BindableGue _currentScreen; // Track active screen
 
         public GumFormsSampleGame()
         {
@@ -39,12 +40,12 @@ namespace GumFormsSample
                 GumService.Default.Initialize(this, "FormsGumProject/GumProject.gumx");
                 FormsUtilities.Cursor.TransformMatrix = Matrix.CreateScale(1 / _config.Scale);
 
-                BindableGue screen = _screenFactory.CreateScreen(1);
-                if (screen is IGumFormsSampleScreen demoScreen)
+                _currentScreen = _screenFactory.CreateScreen(1);
+                if (_currentScreen is IGumFormsSampleScreen demoScreen)
                 {
-                    demoScreen.Initialize();   
+                    demoScreen.Initialize();
                 }
-                screen.AddToRoot();
+                _currentScreen.AddToRoot();
             }
             catch (Exception ex)
             {
@@ -59,7 +60,24 @@ namespace GumFormsSample
         {
             try
             {
-                _inputService.Update();
+                int keyResult = _inputService.Update();
+                if (keyResult >= 0 && keyResult <= 5)
+                {
+                    // Remove current screen
+                    if (_currentScreen != null)
+                    {
+                        GumService.Default.Root.Children.Remove(_currentScreen);
+                    }
+
+                    // Create and show new screen
+                    _currentScreen = _screenFactory.CreateScreen(keyResult);
+                    if (_currentScreen is IGumFormsSampleScreen demoScreen)
+                    {
+                        demoScreen.Initialize();
+                    }
+                    _currentScreen.AddToRoot();
+                }
+
                 GumService.Default.Update(this, gameTime);
 
                 foreach (var item in GumService.Default.Root.Children)
