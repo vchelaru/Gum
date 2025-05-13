@@ -35,6 +35,26 @@ public class BindingTests
     }
 
     [Test]
+    public async Task SetBinding_ShouldPullBindingContextFromParent()
+    {
+
+        StackPanel stackPanel = new ();
+
+        TestViewModel vm = new() { Text = "Test 1243" };
+        stackPanel.BindingContext = vm;
+
+        var textBox = new TextBox();
+        textBox.SetBinding(nameof(TextBox.Text), nameof(TestViewModel.Text));
+        stackPanel.AddChild(textBox);
+
+        await Assert.That(textBox.Text).IsEqualTo("Test 1243");
+
+        vm.Text = "Test 5678";
+        await Assert.That(textBox.Text).IsEqualTo("Test 5678");
+
+    }
+
+    [Test]
     public async Task ComplexPaths()
     {
         TestViewModel vm = new()

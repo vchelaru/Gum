@@ -13,8 +13,8 @@
   </ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\..\..\..\..\dev\Gum\MonoGameGum\MonoGameGum.csproj" />
 		<ProjectReference Include="..\GumCommon\GumCommon.csproj" />
+		<ProjectReference Include="..\MonoGameGum\MonoGameGum.csproj" />
 		<ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
 	</ItemGroup>
 
