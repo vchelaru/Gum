@@ -789,6 +789,10 @@ public class FrameworkElement
 
     #region Binding/ViewModel
 
+
+    public object? BindingContextBindingPropertyOwner => Visual?.BindingContextBindingPropertyOwner;
+    public string? BindingContextBinding => Visual?.BindingContextBinding;
+
     private void HandleViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
     {
         var vmPropertyName = e.PropertyName;
@@ -802,29 +806,36 @@ public class FrameworkElement
 
     public void SetBinding(string uiProperty, string vmProperty)
     {
-        if (vmPropsToUiProps.ContainsKey(vmProperty))
+        if (uiProperty == nameof(BindingContext))
         {
-            vmPropsToUiProps.Remove(vmProperty);
+            Visual.SetBinding(uiProperty, vmProperty);
         }
-
-        // This prevents single UI properties from being bound to multiple VM properties
-        if (vmPropsToUiProps.Any(item => item.Value == uiProperty))
+        else
         {
-            var toRemove = vmPropsToUiProps.Where(item => item.Value == uiProperty).ToArray();
-
-            foreach (var kvp in toRemove)
+            if (vmPropsToUiProps.ContainsKey(vmProperty))
             {
-                vmPropsToUiProps.Remove(kvp.Key);
+                vmPropsToUiProps.Remove(vmProperty);
             }
-        }
+
+            // This prevents single UI properties from being bound to multiple VM properties
+            if (vmPropsToUiProps.Any(item => item.Value == uiProperty))
+            {
+                var toRemove = vmPropsToUiProps.Where(item => item.Value == uiProperty).ToArray();
+
+                foreach (var kvp in toRemove)
+                {
+                    vmPropsToUiProps.Remove(kvp.Key);
+                }
+            }
 
 
 
-        vmPropsToUiProps.Add(vmProperty, uiProperty);
+            vmPropsToUiProps.Add(vmProperty, uiProperty);
 
-        if (BindingContext != null)
-        {
-            UpdateUiToVmProperty(vmProperty);
+            if (BindingContext != null)
+            {
+                UpdateUiToVmProperty(vmProperty);
+            }
         }
     }
 
@@ -858,9 +869,20 @@ public class FrameworkElement
     private bool UpdateUiToVmProperty(string vmPropertyName)
     {
         var updated = false;
-        if (vmPropsToUiProps.ContainsKey(vmPropertyName))
+
+        var isBoundToVmProperty = vmPropsToUiProps.ContainsKey(vmPropertyName) ||
+            BindingContextBinding == vmPropertyName;
+
+        if (isBoundToVmProperty)
         {
-            var vmProperty = BindingContext.GetType().GetProperty(vmPropertyName);
+
+            var bindingContextObjectToUse = BindingContextBinding == vmPropertyName ?
+                BindingContextBindingPropertyOwner : BindingContext;
+
+            var bindingContextObjectType = bindingContextObjectToUse?.GetType();
+
+            var vmProperty = bindingContextObjectType?.GetProperty(vmPropertyName);
+
             if (vmProperty == null)
             {
                 System.Diagnostics.Debug.WriteLine(
@@ -868,36 +890,46 @@ public class FrameworkElement
             }
             else
             {
-                var vmValue = vmProperty.GetValue(BindingContext, null);
+                object? vmValue = vmProperty.GetValue(bindingContextObjectToUse, null);
 
-                var uiProperty = this.GetType().GetProperty(vmPropsToUiProps[vmPropertyName]);
+                // Special case - if this binding is on the BindingContext
 
-                if (uiProperty == null)
+                if (vmPropertyName == BindingContextBinding)
                 {
-                    throw new Exception($"The {this.GetType()} with name {this.Name} is binding a missing UI property ({vmPropsToUiProps[vmPropertyName]}) " +
-                        $"to a ViewModel Property ({vmPropertyName})");
-                }
-
-                if (uiProperty.PropertyType == typeof(string))
-                {
-                    var stringToSet = vmValue?.ToString();
-                    uiProperty.SetValue(this, stringToSet, null);
+                    BindingContext = vmValue;
                 }
                 else
                 {
-                    try
-                    {
-                        var convertedValue = BindableGue.ConvertValue(vmValue, uiProperty.PropertyType, null);
+                    var uiProperty = this.GetType().GetProperty(vmPropsToUiProps[vmPropertyName]);
 
-                        uiProperty.SetValue(this, vmValue, null);
-                    }
-                    catch (ArgumentException ae)
+                    if (uiProperty == null)
                     {
-                        var message = $"Could not bind the UI property {this.GetType().Name}.{uiProperty.Name} to the view model property {vmProperty} " +
-                            $"because the view model property is not of type {uiProperty.PropertyType}";
-                        throw new InvalidOperationException(message);
+                        throw new Exception($"The {this.GetType()} with name {this.Name} is binding a missing UI property ({vmPropsToUiProps[vmPropertyName]}) " +
+                            $"to a ViewModel Property ({vmPropertyName})");
+                    }
+
+                    if (uiProperty.PropertyType == typeof(string))
+                    {
+                        var stringToSet = vmValue?.ToString();
+                        uiProperty.SetValue(this, stringToSet, null);
+                    }
+                    else
+                    {
+                        try
+                        {
+                            var convertedValue = BindableGue.ConvertValue(vmValue, uiProperty.PropertyType, null);
+
+                            uiProperty.SetValue(this, vmValue, null);
+                        }
+                        catch (ArgumentException ae)
+                        {
+                            var message = $"Could not bind the UI property {this.GetType().Name}.{uiProperty.Name} to the view model property {vmProperty} " +
+                                $"because the view model property is not of type {uiProperty.PropertyType}";
+                            throw new InvalidOperationException(message);
+                        }
                     }
                 }
+
                 updated = true;
             }
         }
