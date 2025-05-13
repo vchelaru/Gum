@@ -51,8 +51,29 @@ public class BindingTests
 
         vm.Text = "Test 5678";
         await Assert.That(textBox.Text).IsEqualTo("Test 5678");
-
     }
+
+    [Test]
+    public async Task SetBindignToBindingContext_ShouldProperlyBindToChild()
+    {
+
+        StackPanel stackPanel = new();
+
+        TestViewModel vm = new() { Text = "Test 1243" };
+        TestViewModel child = new () {  Text = "Child 1243" };
+        vm.Child = child;
+
+        stackPanel.BindingContext = vm;
+
+        var textBox = new TextBox();
+        textBox.SetBinding(nameof(TextBox.BindingContext), nameof(TestViewModel.Child));
+        textBox.SetBinding(nameof(TextBox.Text), nameof(TestViewModel.Text));
+        stackPanel.AddChild(textBox);
+
+        await Assert.That(textBox.Text).IsEqualTo("Child 1243");
+    }
+
+
 
     [Test]
     public async Task ComplexPaths()
