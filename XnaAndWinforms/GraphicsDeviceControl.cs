@@ -458,12 +458,12 @@ namespace XnaAndWinforms
                         byte r = rawImage[srcOffset + i + 0];
                         byte g = rawImage[srcOffset + i + 1];
                         byte b = rawImage[srcOffset + i + 2];
-                        byte a = rawImage[srcOffset + i + 3];
+                        //byte a = rawImage[srcOffset + i + 3];
 
                         dst[dstOffset + i + 0] = b;
                         dst[dstOffset + i + 1] = g;
                         dst[dstOffset + i + 2] = r;
-                        dst[dstOffset + i + 3] = a;
+                        dst[dstOffset + i + 3] = 255;
                     }
                 }
             }

@@ -80,6 +80,11 @@ public class ScrollViewer : FrameworkElement
         set => verticalScrollBar.LargeChange = value;
     }
 
+    /// <summary>
+    /// The vertical scroll bar value. Assigning this automatically scrolls
+    /// the ScrollViewer to the desired location. Percentage-based scrolling
+    /// can be perofrmed by using VerticalScrollBarMaximum. 
+    /// </summary>
     public double VerticalScrollBarValue
     {
         get => verticalScrollBar.Value;
@@ -90,6 +95,10 @@ public class ScrollViewer : FrameworkElement
         }
     }
 
+    /// <summary>
+    /// Gets the maximum amount the scroll bar can be scrolled to. This value is automatically
+    /// assigned by the ScrollViewer in response to children being added.
+    /// </summary>
     public double VerticalScrollBarMaximum
     {
         get => verticalScrollBar.Maximum;
