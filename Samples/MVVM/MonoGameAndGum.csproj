@@ -26,10 +26,10 @@
     <Folder Include="Content\GumProject\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\GitHub\Gum\GumCommon\GumCommon.csproj" />
-    <ProjectReference Include="..\..\..\..\GitHub\Gum\GumDataTypes\GumDataTypesNet6.csproj" />
-    <ProjectReference Include="..\..\..\..\GitHub\Gum\MonoGameGum\MonoGameGum.csproj" />
-    <ProjectReference Include="..\..\..\..\GitHub\Gum\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
+    <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+    <ProjectReference Include="..\..\GumDataTypes\GumDataTypesNet6.csproj" />
+    <ProjectReference Include="..\..\MonoGameGum\MonoGameGum.csproj" />
+    <ProjectReference Include="..\..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="Content\GumProject\**\*.*">
