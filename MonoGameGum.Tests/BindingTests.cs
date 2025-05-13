@@ -4,6 +4,7 @@ using MonoGameGum.Forms;
 using MonoGameGum.Forms.Controls;
 using MonoGameGum.Forms.Data;
 using RenderingLibrary;
+using System.Collections.ObjectModel;
 using TUnit.Assertions.AssertConditions.Throws;
 using TUnit.Assertions.AssertionBuilders;
 
@@ -73,9 +74,31 @@ public class BindingTests
         await Assert.That(textBox.Text).IsEqualTo("Child 1243");
     }
 
-
-
     [Test]
+    public async Task ListBoxItemBinding_ShouldSetBindingContextOnListBoxItems()
+    {
+        var listBox = new ListBox();
+        var vm = new ListBoxViewModel
+        {
+            Items = new ObservableCollection<ListBoxItemViewModel>
+            {
+                new ListBoxItemViewModel { Text = "Item 1" },
+                new ListBoxItemViewModel { Text = "Item 2" }
+            }
+        };
+
+        listBox.BindingContext = vm;
+        listBox.SetBinding(nameof(ListBox.Items), nameof(ListBoxViewModel.Items));
+
+        await Assert.That(listBox.ListBoxItems.Count).IsEqualTo(2);
+        await Assert.That(listBox.ListBoxItems[0].BindingContext).IsEqualTo(vm.Items[0]);
+        await Assert.That(listBox.ListBoxItems[1].BindingContext).IsEqualTo(vm.Items[1]);
+    }
+
+
+
+
+        [Test]
     public async Task ComplexPaths()
     {
         TestViewModel vm = new()
@@ -300,5 +323,25 @@ public class BindingTests
                 _ => GumProperty.UnsetValue
             };
         }
+    }
+
+    public class ListBoxViewModel : ViewModel
+    {
+        public ObservableCollection<ListBoxItemViewModel> Items
+        {
+            get => Get<ObservableCollection<ListBoxItemViewModel>>();
+            set => Set(value);
+        }
+    }
+
+    public class ListBoxItemViewModel : ViewModel
+    {
+        public string Text
+        {
+            get => Get<string>();
+            set => Set(value);
+        }
+
+        public override string ToString() => Text;
     }
 }
