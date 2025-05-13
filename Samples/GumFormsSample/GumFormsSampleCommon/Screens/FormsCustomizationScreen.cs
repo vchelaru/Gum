@@ -12,7 +12,7 @@ using ToolsUtilities;
 
 namespace GumFormsSample.Screens;
 
-internal class FormsCustomizationScreen : ContainerRuntime
+internal class FormsCustomizationScreen : ContainerRuntime, IGumFormsSampleScreen
 {
     public void Initialize()
     {

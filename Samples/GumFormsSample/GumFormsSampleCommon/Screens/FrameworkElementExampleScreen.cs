@@ -17,7 +17,7 @@ using ToolsUtilities;
 
 namespace GumFormsSample.Screens
 {
-    internal class FrameworkElementExampleScreen : ContainerRuntime, IUpdateScreen
+    internal class FrameworkElementExampleScreen : ContainerRuntime, IUpdateScreen, IGumFormsSampleScreen
     {
         MenuItem FileMenuItem;
         MenuItem EditMenuItem;

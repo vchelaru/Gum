@@ -17,7 +17,7 @@ using ToolsUtilities;
 
 namespace GumFormsSample.Screens;
 
-partial class DemoScreenGumRuntime
+partial class DemoScreenGumRuntime : IGumFormsSampleScreen
 {
 
     MenuItem FileMenuItem;

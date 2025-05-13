@@ -17,7 +17,7 @@ using ToolsUtilities;
 
 namespace GumFormsSample.Screens;
 
-internal class ComplexListBoxItemScreen : ContainerRuntime
+internal class ComplexListBoxItemScreen : ContainerRuntime, IGumFormsSampleScreen
 {
     public ComplexListBoxItemScreen()
     {
