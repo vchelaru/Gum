@@ -35,7 +35,10 @@ jobs:
     - name: Build
       run: |
         Get-ChildItem -Path Samples -Recurse -Include *.sln | ForEach-Object { 
+          Write-Host "Building solution: $_.FullName"
           dotnet restore $_.FullName -v q
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           dotnet build $_.FullName --configuration Release --no-restore -nologo -v q --property WarningLevel=0 -clp:ErrorsOnly
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
         }
       continue-on-error: false
