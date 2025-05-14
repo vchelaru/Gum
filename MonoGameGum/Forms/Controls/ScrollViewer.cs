@@ -80,6 +80,11 @@ public class ScrollViewer : FrameworkElement
         set => verticalScrollBar.LargeChange = value;
     }
 
+    /// <summary>
+    /// The vertical scroll bar value. Assigning this automatically scrolls
+    /// the ScrollViewer to the desired location. Percentage-based scrolling
+    /// can be perofrmed by using VerticalScrollBarMaximum. 
+    /// </summary>
     public double VerticalScrollBarValue
     {
         get => verticalScrollBar.Value;
@@ -88,6 +93,15 @@ public class ScrollViewer : FrameworkElement
             verticalScrollBar.Value = value;
             PushValueToViewModel();
         }
+    }
+
+    /// <summary>
+    /// Gets the maximum amount the scroll bar can be scrolled to. This value is automatically
+    /// assigned by the ScrollViewer in response to children being added.
+    /// </summary>
+    public double VerticalScrollBarMaximum
+    {
+        get => verticalScrollBar.Maximum;
     }
 
     #endregion
@@ -140,7 +154,14 @@ public class ScrollViewer : FrameworkElement
             // the user may want to swap out controls and doing so might reset this
             // value causing confusion? If so, we'd need to store off a temp value.
             verticalScrollBar.SmallChange = 10;
-            verticalScrollBar.LargeChange = verticalScrollBar.ViewportSize;
+            if(verticalScrollBar.ViewportSize > 0)
+            {
+                // May 14, 2025 - The ViewportSize can be negative or 0 if the
+                // visual for the ScrollViewer hasn't yet been given a height value.
+                // This may be given a valid height value after the visual is assigned,
+                // but in the meantime the large change should not be set to a negative value.
+                verticalScrollBar.LargeChange = verticalScrollBar.ViewportSize;
+            }
 
 
             // Depending on the height and width units, the scroll bar may get its update

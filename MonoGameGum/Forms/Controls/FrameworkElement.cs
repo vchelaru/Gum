@@ -1,4 +1,4 @@
-﻿using Gum.Wireframe;
+using Gum.Wireframe;
 
 
 using RenderingLibrary.Graphics;

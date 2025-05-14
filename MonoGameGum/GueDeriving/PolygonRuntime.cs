@@ -96,11 +96,11 @@ namespace MonoGameGum.GueDeriving
         }
         public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 
-        public PolygonRuntime(bool fullInstantiation = true)
+        public PolygonRuntime(bool fullInstantiation = true, SystemManagers systemManagers = null)
         {
             if (fullInstantiation)
             {
-                var polygon = new RenderingLibrary.Math.Geometry.LinePolygon();
+                var polygon = new RenderingLibrary.Math.Geometry.LinePolygon(systemManagers);
                 SetContainedObject(polygon);
                 containedPolygon = polygon;
 

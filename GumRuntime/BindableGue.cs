@@ -1,4 +1,4 @@
-﻿using Gum.Converters;
+using Gum.Converters;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
@@ -223,7 +223,7 @@ public class BindableGue : GraphicalUiElement
         }
     }
 
-    public object BindingContextBindingPropertyOwner { get; private set; }
+    public object? BindingContextBindingPropertyOwner { get; private set; }
     public string? BindingContextBinding { get; private set; }
 
     public event Action<object, BindingContextChangedEventArgs> BindingContextChanged;
@@ -242,6 +242,10 @@ public class BindableGue : GraphicalUiElement
         if (uiProperty == nameof(BindingContext))
         {
             BindingContextBinding = vmProperty;
+
+            BindingContextBindingPropertyOwner = (this.Parent as BindableGue)?.BindingContext;
+
+            UpdateToVmProperty(vmProperty);
         }
         else
         {

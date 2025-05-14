@@ -35,8 +35,16 @@ public class FormsUtilities
     /// <remarks>
     /// Projects can make further customization to Forms such as by modifying the FrameworkElement.Root or the DefaultFormsComponents.
     /// </remarks>
-    public static void InitializeDefaults(Game? game = null)
+    public static void InitializeDefaults(Game? game = null, SystemManagers? systemManagers = null)
     {
+        systemManagers = systemManagers ?? SystemManagers.Default;
+
+        if (systemManagers == null)
+        {
+            throw new InvalidOperationException("" +
+                "You must call this method after initializing SystemManagers.Default, or you must explicitly specify a SystemsManager instance");
+        }
+
         TryAdd(typeof(Button), typeof(DefaultButtonRuntime));
         TryAdd(typeof(CheckBox), typeof(DefaultCheckboxRuntime));
         TryAdd(typeof(ComboBox), typeof(DefaultComboBoxRuntime));
@@ -74,16 +82,12 @@ public class FormsUtilities
 
         FrameworkElement.MainCursor = cursor;   
 
-        if (SystemManagers.Default == null)
-        {
-            throw new InvalidOperationException("You must call this method after initializing SystemManagers.Default");
-        }
 
-        FrameworkElement.PopupRoot = CreateFullscreenContainer(nameof(FrameworkElement.PopupRoot));
-        FrameworkElement.ModalRoot = CreateFullscreenContainer(nameof(FrameworkElement.ModalRoot));
+        FrameworkElement.PopupRoot = CreateFullscreenContainer(nameof(FrameworkElement.PopupRoot), systemManagers);
+        FrameworkElement.ModalRoot = CreateFullscreenContainer(nameof(FrameworkElement.ModalRoot), systemManagers);
     }
 
-    static ContainerRuntime CreateFullscreenContainer(string name)
+    static ContainerRuntime CreateFullscreenContainer(string name, SystemManagers systemManagers)
     {
         var container = new ContainerRuntime();
 
@@ -93,7 +97,7 @@ public class FormsUtilities
         container.Height = GraphicalUiElement.CanvasHeight;
         container.Name = name;
 
-        container.AddToManagers();
+        container.AddToManagers(systemManagers);
 
         return container;
     }

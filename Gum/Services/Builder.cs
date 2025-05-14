@@ -35,6 +35,7 @@ public class Builder
         builder.Services.AddSingleton(typeof(GuiCommands), GumCommands.Self.GuiCommands);
         builder.Services.AddSingleton(typeof(NameVerifier), NameVerifier.Self);
         builder.Services.AddSingleton(typeof(SetVariableLogic), SetVariableLogic.Self);
+        builder.Services.AddSingleton(typeof(HotkeyManager), HotkeyManager.Self);
         builder.Services.AddSingleton(typeof(RenameLogic));
         builder.Services.AddSingleton(typeof(LocalizationManager));
         builder.Services.AddSingleton(typeof(FontManager));

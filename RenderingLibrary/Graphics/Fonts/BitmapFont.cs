@@ -96,7 +96,12 @@ public class BitmapFont : IDisposable
 
     #region Methods
 
-    public BitmapFont(string fontFile, SystemManagers managers)
+    [Obsolete("Use the version that does not take SystemManagers")]
+    public BitmapFont(string fontFile, SystemManagers managers) : this(fontFile)
+    {
+    }
+
+    public BitmapFont(string fontFile)
     {
         string fontContents = FileManager.FromFileText(fontFile);
         mFontFile = FileManager.Standardize(fontFile, preserveCase:true);

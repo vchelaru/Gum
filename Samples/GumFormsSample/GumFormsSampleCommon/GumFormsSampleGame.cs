@@ -1,164 +1,95 @@
-﻿using Gum.DataTypes;
-using Gum.Wireframe;
+﻿using Gum.Wireframe;
+using GumFormsSample.Logging;
 using GumFormsSample.Screens;
-using GumRuntime;
+using GumFormsSample.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using MonoGameGum;
 using MonoGameGum.Forms;
-using MonoGameGum.GueDeriving;
-using RenderingLibrary;
-using RenderingLibrary.Graphics;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 
-namespace GumFormsSample;
-
-public class GumFormsSampleGame : Game
+namespace GumFormsSample
 {
-    private GraphicsDeviceManager _graphics;
-    private SpriteBatch _spriteBatch;
-
-    RenderTarget2D renderTarget;
-
-    float scale = 1f;
-
-    public GumFormsSampleGame()
+    public class GumFormsSampleGame : Game
     {
-        _graphics = new GraphicsDeviceManager(this);
-        Content.RootDirectory = "Content";
-        IsMouseVisible = true;
+        private readonly GraphicsDeviceManager _graphics;
+        private readonly GumFormsSampleConfig _config = new();
+        private SpriteBatch _spriteBatch;
+        private RenderTarget2D _renderTarget;
+        private readonly GumFormsSampleScreenFactory _screenFactory = new();
+        private readonly InputService _inputService = new();
+        private readonly RenderService _renderService = new();
+        private readonly IGumFormsSampleLogger _logger = new DebugLogger();
+        private BindableGue _currentScreen; // Track active screen
+        GumService Gum => GumService.Default;
 
-        // This sets the initial size:
-        _graphics.PreferredBackBufferWidth = (int)(1024*scale);
-        _graphics.PreferredBackBufferHeight = (int)(768 * scale);
-
-        _graphics.SupportedOrientations = DisplayOrientation.LandscapeLeft | DisplayOrientation.LandscapeRight;
-#if (ANDROID || iOS)
-    graphics.IsFullScreen = true;
-#endif
-    }
-
-
-    protected override void Initialize()
-    {
-        renderTarget = new RenderTarget2D(GraphicsDevice, 1024, 768);
-        _spriteBatch = new SpriteBatch(GraphicsDevice);
-
-        GumService.Default.Initialize(this, "FormsGumProject/GumProject.gumx");
-        FormsUtilities.Cursor.TransformMatrix = Matrix.CreateScale(1/scale);
-
-        const int screenNumber = 0;
-
-        switch (screenNumber)
+        public GumFormsSampleGame()
         {
-            case 0:
-                InitializeFromFileDemoScreen();
-                break;
-            case 1:
-                InitializeFrameworkElementExampleScreen();
-                break;
-            case 2:
-                InitializeFormsCustomizationScreen();
-                break;
-            case 3:
-                InitializeComplexListBoxItemScreen();
-                break;
-            case 4:
-                {
-                    var screen = new ListBoxBindingScreen();
-                    screen.AddToRoot();
-                }
-                break;
-            case 5:
-                {
-                    var screen = new TestScreenRuntime();
-                    screen.AddToRoot();
-                }
-                break;
+            _graphics = new GraphicsDeviceManager(this);
+            Content.RootDirectory = "Content";
+            IsMouseVisible = true;
+            _config.Apply(_graphics);
         }
 
-        base.Initialize();
-    }
-
-
-    private void InitializeFromFileDemoScreen()
-    {
-        var screen = new DemoScreenGumRuntime();
-        screen.AddToRoot();
-        screen.Initialize();
-    }
-
-    private void InitializeFormsCustomizationScreen()
-    {
-        var screen = new FormsCustomizationScreen();
-        screen.Initialize();
-        screen.AddToRoot();
-    }
-
-    private void InitializeFrameworkElementExampleScreen()
-    {
-        var screen = new FrameworkElementExampleScreen();
-        screen.AddToRoot();
-        screen.Initialize();
-    }
-
-
-    private void InitializeComplexListBoxItemScreen()
-    {
-        var screen = new ComplexListBoxItemScreen();
-        screen.AddToRoot();
-        screen.Initialize();
-    }
-
-    protected override void Update(GameTime gameTime)
-    {
-        var cursor = FormsUtilities.Cursor;
-        if(cursor.PrimaryPush)
+        protected override void Initialize()
         {
-            int m = 3;
-        }
-        GumService.Default.Update(this, gameTime);
-        System.Diagnostics.Debug.WriteLine(cursor.WindowOver);
-
-        foreach(var item in GumService.Default.Root.Children)
-        {
-            (item as IUpdateScreen)?.Update(gameTime);
-
-        }
-
-        // Set this to true to see WindowOver information in the output window
-        bool printWindowOver = false;
-        if (printWindowOver)
-        {
-            string windowOver = "<null>";
-            if (cursor.WindowOver != null)
+            try
             {
-                windowOver = $"{cursor.WindowOver.GetType().Name}";
+                _renderTarget = new RenderTarget2D(GraphicsDevice, _config.Width, _config.Height);
+                _spriteBatch = new SpriteBatch(GraphicsDevice);
+
+                Gum.Initialize(this, "FormsGumProject/GumProject.gumx");
+                Gum.Cursor.TransformMatrix = Matrix.CreateScale(1 / _config.Scale);
+
+                _currentScreen = _screenFactory.CreateScreen(1);
+                _currentScreen.AddToRoot();
             }
-            Debug.WriteLine($"Window over: {windowOver} @ x:{cursor.WindowOver?.X}");
+            catch (Exception ex)
+            {
+                _logger.LogError($"Initialization failed: {ex.Message}");
+                Exit();
+            }
+
+            base.Initialize();
         }
 
+        protected override void Update(GameTime gameTime)
+        {
+            try
+            {
+                Gum.Update(gameTime);
+                int keyResult = _inputService.Update();
+                if (keyResult >= 0 && keyResult <= 5)
+                {
+                    // Remove current screen
+                    if (_currentScreen != null)
+                    {
+                        GumService.Default.Root.Children.Remove(_currentScreen);
+                    }
 
-        base.Update(gameTime);
-    }
+                    // Create and show new screen
+                    _currentScreen = _screenFactory.CreateScreen(keyResult);
+                    _currentScreen.AddToRoot();
+                }
 
-    protected override void Draw(GameTime gameTime)
-    {
-        GraphicsDevice.SetRenderTarget(renderTarget);
 
-        GraphicsDevice.Clear(Color.CornflowerBlue);
+                foreach (var item in GumService.Default.Root.Children)
+                {
+                    (item as IUpdateScreen)?.Update(gameTime);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Update failed: {ex.Message}");
+            }
 
-        SystemManagers.Default.Draw();
+            base.Update(gameTime);
+        }
 
-        GraphicsDevice.SetRenderTarget(null);
-
-        _spriteBatch.Begin();
-        _spriteBatch.Draw(renderTarget, new Rectangle(0, 0, (int)(1024*scale), (int)(768*scale)), Color.White);
-        _spriteBatch.End();
-
-        base.Draw(gameTime);
+        protected override void Draw(GameTime gameTime)
+        {
+            _renderService.Draw(GraphicsDevice, _renderTarget, _spriteBatch, _config);
+            base.Draw(gameTime);
+        }
     }
 }

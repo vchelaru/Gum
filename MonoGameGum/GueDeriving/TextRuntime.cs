@@ -201,11 +201,11 @@ public class TextRuntime : InteractiveGue
 
     #endregion
 
-    public TextRuntime(bool fullInstantiation = true)
+    public TextRuntime(bool fullInstantiation = true, SystemManagers? systemManagers = null)
     {
         if(fullInstantiation)
         {
-            var textRenderable = new Text(SystemManagers.Default);
+            var textRenderable = new Text(systemManagers ?? SystemManagers.Default);
             textRenderable.RenderBoundary = false;
             mContainedText = textRenderable;
             

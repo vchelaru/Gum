@@ -151,7 +151,7 @@ namespace Gum.Wireframe
         public event EventHandler Click;
 
         /// <summary>
-        /// Event shich is raised whenever this is pushed by a cursor. A push occurs
+        /// Event which is raised whenever this is pushed by a cursor. A push occurs
         /// when the cursor is over this and the left mouse button is pushed (not down last frame,
         /// down this frame).
         /// </summary>
@@ -878,12 +878,8 @@ namespace Gum.Wireframe
                 {
                     return interactive?.Name + " " + interactive?.GetType();
                 }
-                Debug.WriteLine($"Before: {GetInfoFor(windowOverBefore)} After");
-
                 if (windowOverBefore is InteractiveGue interactiveBefore)
                 {
-                    Debug.WriteLine($"WindowOverBefore is InteractiveGue, calling TryCallRollOff");
-
                     interactiveBefore.TryCallRollOff();
                 }
             }

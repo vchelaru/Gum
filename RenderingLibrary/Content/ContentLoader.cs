@@ -46,7 +46,7 @@ namespace RenderingLibrary.Content
             //}
             else
             {
-                throw new NotImplementedException();
+                throw new NotImplementedException($"Error attempting to load {contentName} of type {typeof(T).AssemblyQualifiedName}");
             }
         }
 
@@ -84,7 +84,7 @@ namespace RenderingLibrary.Content
 
             if(!knownType)
             {
-                throw new NotImplementedException();
+                throw new NotImplementedException($"Could not load {contentName} of type {typeof(T).AssemblyQualifiedName}");
             }
             else
             {

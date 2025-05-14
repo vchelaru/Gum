@@ -47,6 +47,7 @@ public class ScrollBar : RangeBase
     float MinThumbPosition => 0;
     float MaxThumbPosition => Track.GetAbsoluteHeight() - thumb.ActualHeight;
 
+    public override Orientation Orientation => Orientation.Vertical;
 
     #endregion
 
@@ -76,7 +77,7 @@ public class ScrollBar : RangeBase
 
 
 
-        var visibleTrackSpace = Track.Height - upButton.ActualHeight - downButton.ActualHeight;
+        var visibleTrackSpace = Track.GetAbsoluteHeight() - upButton.ActualHeight - downButton.ActualHeight;
 
         if (visibleTrackSpace != 0)
         {
@@ -150,6 +151,7 @@ public class ScrollBar : RangeBase
 
     private void HandleTrackPush(object sender, EventArgs args)
     {
+        System.Diagnostics.Debug.WriteLine("Thumb pushed");
         if (MainCursor.YRespectingGumZoomAndBounds() < thumb.AbsoluteTop)
         {
             Value -= LargeChange;

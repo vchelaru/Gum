@@ -306,11 +306,11 @@ namespace RenderingLibrary
 
             ElementSaveExtensions.RegisterGueInstantiation(
                 "Polygon",
-                () => new PolygonRuntime());
+                () => new PolygonRuntime(systemManagers: this));
 
             ElementSaveExtensions.RegisterGueInstantiation(
                 "Rectangle",
-                () => new RectangleRuntime());
+                () => new RectangleRuntime(systemManagers:this));
 
             ElementSaveExtensions.RegisterGueInstantiation(
                 "Sprite",
@@ -318,7 +318,7 @@ namespace RenderingLibrary
 
             ElementSaveExtensions.RegisterGueInstantiation(
                 "Text",
-                () => new TextRuntime());
+                () => new TextRuntime(systemManagers: this));
         }
 #endif
 

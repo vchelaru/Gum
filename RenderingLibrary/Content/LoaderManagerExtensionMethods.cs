@@ -23,7 +23,7 @@ public static class LoaderManagerExtensionMethods
 
         if (defaultFontLocation.EndsWith(".fnt"))
         {
-            Text.DefaultBitmapFont = new BitmapFont(defaultFontLocation, managers);
+            Text.DefaultBitmapFont = new BitmapFont(defaultFontLocation);
         }
     }
 

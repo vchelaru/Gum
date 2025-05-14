@@ -1,6 +1,10 @@
 ﻿using Gum.Wireframe;
 using System;
 using RenderingLibrary;
+using System.Diagnostics;
+using Gum.Converters;
+
+
 
 
 
@@ -157,6 +161,11 @@ public abstract class RangeBase : FrameworkElement
     /// according to the LargeChange value.
     /// </summary>
     public bool IsMoveToPointEnabled { get; set; }
+
+    // this is used for clicking on the thumb. Eventually this may be
+    // assignable in the future, but for now we're just adding a get so
+    // that ScrollBar can overwrite it.
+    public virtual Orientation Orientation => Orientation.Horizontal;
 
     #endregion
 
@@ -358,7 +367,8 @@ public abstract class RangeBase : FrameworkElement
         double newValue;
         int currentSignRelativeToThumb = GetCurrentSignRelativeToValue();
 
-        if(IsMoveToPointEnabled)
+
+        if (IsMoveToPointEnabled)
         {
             var left = Track.GetAbsoluteX();
             var right = Track.GetAbsoluteX() + Track.GetAbsoluteWidth();
@@ -401,7 +411,6 @@ public abstract class RangeBase : FrameworkElement
 
     protected int GetCurrentSignRelativeToValue()
     {
-        var cursorX = MainCursor.XRespectingGumZoomAndBounds();
 
         //var currentSignRelativeToThumb = cursorX < thumb.AbsoluteLeft
         //    ? -1
@@ -409,10 +418,20 @@ public abstract class RangeBase : FrameworkElement
         //return currentSignRelativeToThumb;
 
         var currentPercentageOver = (Value - Minimum) / (Maximum - Minimum);
-        var trackAbsoluteLeft = Track.AbsoluteLeft;
-        var trackAbsoluteRight = Track.AbsoluteRight;
-        var trackWidth = Track.GetAbsoluteWidth();
-        var clickedPercentageOver = (cursorX - AbsoluteLeft) / trackWidth;
+        float clickedPercentageOver;
+
+        if(Orientation == Orientation.Horizontal)
+        {
+            var trackWidth = Track.GetAbsoluteWidth();
+            var cursorX = MainCursor.XRespectingGumZoomAndBounds();
+            clickedPercentageOver = (cursorX - Track.AbsoluteLeft) / trackWidth;
+        }
+        else
+        {
+            var trackHeight = Track.GetAbsoluteHeight();
+            var cursorY = MainCursor.YRespectingGumZoomAndBounds();
+            clickedPercentageOver = (cursorY - Track.AbsoluteTop) / trackHeight;
+        }
 
         if(clickedPercentageOver < currentPercentageOver)
         {
