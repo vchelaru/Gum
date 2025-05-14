@@ -7,11 +7,27 @@ on:
     branches: [ master ]
 
 jobs:
+  list-solutions:
+    runs-on: windows-latest
+    outputs:
+      solutions: ${{ steps.set-solutions.outputs.solutions }}
+    steps:
+    - uses: actions/checkout@v4
+      continue-on-error: false
+
+    - name: List Solutions
+      id: set-solutions
+      run: |
+        $solutions = (Get-ChildItem -Path Samples -Recurse -Include *.sln | ForEach-Object { $_.FullName } | ConvertTo-Json -Compress)
+        echo "solutions=$solutions" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
   build:
+    needs: list-solutions
     runs-on: windows-latest
     strategy:
       matrix:
         dotnet-version: [ '6.0.x', '8.0.x' ]
+        solution: ${{ fromJson(needs.list-solutions.outputs.solutions) }}
       fail-fast: false
 
     steps:
@@ -32,17 +48,9 @@ jobs:
       run: dotnet nuget locals all --clear
       continue-on-error: false
 
-    - name: Build
+    - name: Build Solution
       run: |
-        Get-ChildItem -Path Samples -Recurse -Include *.sln | ForEach-Object { 
-          Write-Host "Building solution: $_.FullName"
-          try {
-            dotnet restore $_.FullName -v q
-            dotnet build $_.FullName --configuration Release --no-restore -nologo -v q --property WarningLevel=0 -clp:ErrorsOnly
-          }
-          catch {
-            Write-Error $_.Exception.Message
-            throw
-          }
-        }
+        Write-Host "Building solution: ${{ matrix.solution }}"
+        dotnet restore "${{ matrix.solution }}" -v q
+        dotnet build "${{ matrix.solution }}" --configuration Release --no-restore -nologo -v q --property WarningLevel=0 -clp:ErrorsOnly
       continue-on-error: false
