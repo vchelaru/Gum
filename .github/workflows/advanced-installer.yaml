@@ -28,7 +28,8 @@ jobs:
 
     - name: Build AIP to MSI
       run: |
-        "C:\Program Files (x86)\Caphyon\Advanced Installer 21.5\bin\x86\AdvancedInstaller.com" /build "Gum\GumInstaller.aip"
+        dir
+        "C:\Program Files (x86)\Caphyon\Advanced Installer 21.5\bin\x86\AdvancedInstaller.com" /build "GumInstaller.aip"
       shell: cmd
 
     - name: Upload MSI artifact
