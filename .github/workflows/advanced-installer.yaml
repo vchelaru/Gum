@@ -18,7 +18,7 @@ jobs:
 
     - name: Build .NET Project
       run: |
-        msbuild Gum\Gum\Gum.csproj /p:Configuration=Release /p:Platform=AnyCPU
+        dotnet build Gum\Gum\Gum.csproj -c Release
       shell: cmd
 
     - name: Build AIP to MSI
