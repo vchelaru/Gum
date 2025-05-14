@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ADVANCEDINSTALLER version="21.5" projectType="professional">
+  <PRODUCT>
+    <NAME>Gum Application</NAME>
+    <VERSION>1.0.0</VERSION>
+    <PRODUCTCODE>{D7A5F3E2-8B9C-4C1A-A7F2-3E9B8C4F2D5A}</PRODUCTCODE>
+    <UPGRADECODE>{E4B2C9A1-7F3D-4D2B-9C8E-1A2B3C4D5E6F}</UPGRADECODE>
+    <LANGUAGE>en</LANGUAGE>
+    <INSTALLFOLDER>[ProgramFilesFolder]Gum</INSTALLFOLDER>
+  </PRODUCT>
+  <FILES>
+    <FOLDER name="Application Files" destination="[APPFOLDER]">
+      <!-- Main executable and DLLs from bin\Release -->
+      <FILE source="bin\Release\Gum.exe" destination="[APPFOLDER]\Gum.exe" />
+      <FILE source="bin\Release\*.dll" destination="[APPFOLDER]\" />
+      <!-- Content files -->
+      <FILE source="Content\Fonts\Font18Arial_o1.fnt" destination="[APPFOLDER]\Content\Fonts\Font18Arial_o1.fnt" />
+      <FILE source="Content\Fonts\Font18Arial_o1_0.png" destination="[APPFOLDER]\Content\Fonts\Font18Arial_o1_0.png" />
+      <FILE source="Content\TestFont.fnt" destination="[APPFOLDER]\Content\TestFont.fnt" />
+      <FILE source="Content\TestFont_0.png" destination="[APPFOLDER]\Content\TestFont_0.png" />
+      <FILE source="Content\ExampleSpriteFrame.png" destination="[APPFOLDER]\Content\ExampleSpriteFrame.png" />
+      <FILE source="Content\InvalidTexture.png" destination="[APPFOLDER]\Content\InvalidTexture.png" />
+      <FILE source="Content\BmfcTemplate.bmfc" destination="[APPFOLDER]\Content\BmfcTemplate.bmfc" />
+      <FILE source="Content\Cursors\AddCursor.cur" destination="[APPFOLDER]\Content\Cursors\AddCursor.cur" />
+      <FILE source="Libraries\bmfont.exe" destination="[APPFOLDER]\Libraries\bmfont.exe" />
+      <FILE source="GumIcon.ico" destination="[APPFOLDER]\GumIcon.ico" />
+      <!-- Content\Icons and subfolders -->
+      <FOLDER name="Icons" source="Content\Icons" destination="[APPFOLDER]\Content\Icons">
+        <FILE source="Content\Icons\Sizing\*.png" destination="[APPFOLDER]\Content\Icons\Sizing\" />
+        <FILE source="Content\Icons\AnchorPlugin\*.png" destination="[APPFOLDER]\Content\Icons\AnchorPlugin\" />
+        <FILE source="Content\Icons\Alignment\*.png" destination="[APPFOLDER]\Content\Icons\Alignment\" />
+        <FILE source="Content\Icons\Units\*.png" destination="[APPFOLDER]\Content\Icons\Units\" />
+        <FILE source="Content\Icons\Origins\*.png" destination="[APPFOLDER]\Content\Icons\Origins\" />
+        <FILE source="Content\Icons\WidthUnits\*.png" destination="[APPFOLDER]\Content\Icons\WidthUnits\" />
+        <FILE source="Content\Icons\HeightUnits\*.png" destination="[APPFOLDER]\Content\Icons\HeightUnits\" />
+        <FILE source="Content\Icons\ChildrenLayout\*.png" destination="[APPFOLDER]\Content\Icons\ChildrenLayout\" />
+        <FILE source="Content\Icons\TextOverflow\*.png" destination="[APPFOLDER]\Content\Icons\TextOverflow\" />
+        <FILE source="Content\Icons\folder.png" destination="[APPFOLDER]\Content\Icons\folder.png" />
+        <FILE source="Content\Icons\RecentFiles\*.png" destination="[APPFOLDER]\Content\Icons\RecentFiles\" />
+      </FOLDER>
+      <!-- Plugins -->
+      <FILE source="Plugins\readme.txt" destination="[APPFOLDER]\Plugins\readme.txt" />
+    </FOLDER>
+  </FILES>
+  <SHORTCUTS>
+    <SHORTCUT name="Gum" target="[APPFOLDER]\Gum.exe" location="DesktopFolder" icon="[APPFOLDER]\GumIcon.ico" />
+    <SHORTCUT name="Gum" target="[APPFOLDER]\Gum.exe" location="ProgramsMenuFolder" icon="[APPFOLDER]\GumIcon.ico" />
+  </SHORTCUTS>
+  <REGISTRY>
+    <!-- Uninstall registry entry -->
+    <KEY path="Software\Microsoft\Windows\CurrentVersion\Uninstall\[PRODUCTCODE]">
+      <VALUE name="DisplayName" value="Gum Application" />
+      <VALUE name="Publisher" value="Your Company" />
+      <VALUE name="DisplayVersion" value="1.0.0" />
+      <VALUE name="UninstallString" value="[SystemFolder]msiexec.exe /x [PRODUCTCODE]" />
+    </KEY>
+  </REGISTRY>
+  <PREREQUISITES>
+    <!-- Ensure .NET Framework 4.7.2 is installed -->
+    <PREREQ name=".NET Framework 4.7.2" condition="installed" />
+  </PREREQUISITES>
+  <BUILD>
+    <OUTPUT path="bin\Installer" name="GumInstaller.msi" type="msi" />
+  </BUILD>
+</ADVANCEDINSTALLER>
