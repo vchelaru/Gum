@@ -12,7 +12,6 @@ jobs:
     strategy:
       matrix:
         dotnet-version: [ '6.0.x', '8.0.x' ]
-      fail-fast: false
 
     steps:
     - uses: actions/checkout@v4
@@ -35,10 +34,8 @@ jobs:
     - name: Build
       run: |
         Get-ChildItem -Path Samples -Recurse -Include *.sln | ForEach-Object { 
-          Write-Host "Building solution: $_.FullName"
+          Write-Host "Building solution: $_"
           dotnet restore $_.FullName -v q
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           dotnet build $_.FullName --configuration Release --no-restore -nologo -v q --property WarningLevel=0 -clp:ErrorsOnly
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
         }
       continue-on-error: false
