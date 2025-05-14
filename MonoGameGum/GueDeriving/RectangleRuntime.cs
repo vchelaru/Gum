@@ -116,11 +116,11 @@ namespace MonoGameGum.GueDeriving
 
         public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 
-        public RectangleRuntime(bool fullInstantiation = true)
+        public RectangleRuntime(bool fullInstantiation = true, SystemManagers systemManagers = null)
         {
             if (fullInstantiation)
             {
-                var rectangle = new RenderingLibrary.Math.Geometry.LineRectangle();
+                var rectangle = new RenderingLibrary.Math.Geometry.LineRectangle(systemManagers);
                 SetContainedObject(rectangle);
                 containedLineRectangle = rectangle;
 

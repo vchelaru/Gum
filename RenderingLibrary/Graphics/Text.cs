@@ -710,7 +710,7 @@ namespace RenderingLibrary.Graphics
         private void UpdateWrappedText()
         {
             ///////////EARLY OUT/////////////
-            if (this.BitmapFont == null)
+            if (this.BitmapFont == null && DefaultBitmapFont == null)
             {
                 return;
             }
@@ -1118,7 +1118,7 @@ namespace RenderingLibrary.Graphics
         public void Render(ISystemManagers managers)
         {
 
-            if (AbsoluteVisible)
+            if (AbsoluteVisible && !string.IsNullOrEmpty(RawText))
             {
                 var systemManagers = (SystemManagers)managers;
                 var spriteRenderer = systemManagers.Renderer.SpriteRenderer;
