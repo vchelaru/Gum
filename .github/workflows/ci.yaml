@@ -24,6 +24,7 @@ jobs:
   build:
     needs: list-solutions
     runs-on: windows-latest
+    name: build (${{ matrix.solution }}, ${{ matrix.dotnet-version }})
     strategy:
       matrix:
         dotnet-version: [ '6.0.x', '8.0.x' ]
