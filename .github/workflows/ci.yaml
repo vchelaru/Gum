@@ -22,7 +22,7 @@ jobs:
         echo "solutions=$solutions" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
   build:
-    needs: list-solutions
+    needs: enumerate-solutions
     runs-on: windows-latest
     strategy:
       matrix:
