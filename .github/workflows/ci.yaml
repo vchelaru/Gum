@@ -1,4 +1,4 @@
-name: Build All Samples
+name: Build All
 
 on:
   push:
@@ -13,7 +13,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Initialize submodules
+    - name: Initialize Submodules
       run: git submodule update --init --recursive
 
     - name: Setup .NET
@@ -21,10 +21,10 @@ jobs:
       with:
         dotnet-version: '6.0.x'
 
-    - name: Find and Restore Samples Dependencies
+    - name: Find and Restore Dependencies
       run: |
-        Get-ChildItem -Recurse -Include *.sln | ForEach-Object { dotnet restore $_.FullName }
+        Get-ChildItem -Path Samples -Recurse -Include *.sln | ForEach-Object { dotnet restore $_.FullName -v q }
 
-    - name: Build Samples
+    - name: Build All
       run: |
-        Get-ChildItem -Recurse -Include *.sln | ForEach-Object { dotnet build $_.FullName --configuration Release --no-restore -nologo -v q }
+        Get-ChildItem -Path Samples -Recurse -Include *.sln | ForEach-Object { dotnet build $_.FullName --configuration Release --no-restore --nologo -v q --property WarningLevel=0 /clp:ErrorsOnly }
