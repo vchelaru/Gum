@@ -23,8 +23,8 @@ jobs:
 
     - name: Find and Restore Samples Dependencies
       run: |
-        Get-ChildItem -Path Samples -Recurse -Include *.sln | ForEach-Object { dotnet restore $_.FullName }
+        Get-ChildItem -Recurse -Include *.sln | ForEach-Object { dotnet restore $_.FullName }
 
     - name: Build Samples
       run: |
-        Get-ChildItem -Path Samples -Recurse -Include *.sln | ForEach-Object { dotnet build $_.FullName --configuration Release --no-restore -v q }
+        Get-ChildItem -Recurse -Include *.sln | ForEach-Object { dotnet build $_.FullName --configuration Release --no-restore -nologo -v q }
