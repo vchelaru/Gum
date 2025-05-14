@@ -31,6 +31,7 @@
 	</PropertyGroup>
 	<PropertyGroup>
 		<ApplicationIcon>GumIcon.ico</ApplicationIcon>
+		<BaseOutputPath></BaseOutputPath>
 	</PropertyGroup>
 	<ItemGroup>
 		<Reference Include="System.Configuration" />
