@@ -2,9 +2,9 @@ name: CI Build
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main, develop ]
   pull_request:
-    branches: [ master ]
+    branches: [ main, develop ]
 
 jobs:
   build:
@@ -21,8 +21,9 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
 
-    - name: Build
-      run: dotnet build --configuration Release --no-restore
+    - name: Build Samples
+      run: |
+        dotnet build Samples/GumFormsSample/MonoGameGumFormsSample.sln --configuration Release --no-restore
 
     - name: Run tests
       run: dotnet test --no-build --verbosity normal
