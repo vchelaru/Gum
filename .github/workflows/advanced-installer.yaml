@@ -18,21 +18,21 @@ jobs:
 
     - name: Restore NuGet Packages
       run: |
-        dotnet restore Gum\Gum\Gum.csproj
+        dotnet restore Gum\Gum.csproj
       shell: cmd
 
     - name: Build .NET Project
       run: |
-        dotnet build Gum\Gum\Gum.csproj -c Release
+        dotnet build Gum\Gum.csproj -c Release
       shell: cmd
 
     - name: Build AIP to MSI
       run: |
-        "C:\Program Files (x86)\Caphyon\Advanced Installer 21.5\bin\x86\AdvancedInstaller.com" /build "Gum\Gum\GumInstaller.aip"
+        "C:\Program Files (x86)\Caphyon\Advanced Installer 21.5\bin\x86\AdvancedInstaller.com" /build "Gum\GumInstaller.aip"
       shell: cmd
 
     - name: Upload MSI artifact
       uses: actions/upload-artifact@v4
       with:
         name: installer
-        path: Gum\Gum\bin\Installer\GumInstaller.msi
+        path: Gum\bin\Installer\GumInstaller.msi
