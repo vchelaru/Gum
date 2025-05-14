@@ -27,4 +27,4 @@ jobs:
 
     - name: Build All
       run: |
-        Get-ChildItem -Path Samples -Recurse -Include *.sln | ForEach-Object { dotnet build $_.FullName --configuration Release --no-restore --no-logo -v q --property WarningLevel=0 /clp:ErrorsOnly }
+        Get-ChildItem -Path Samples -Recurse -Include *.sln | ForEach-Object { dotnet build $_.FullName --configuration Release --no-restore -nologo -v q --property WarningLevel=0 -clp:ErrorsOnly --framework net8.0 }
