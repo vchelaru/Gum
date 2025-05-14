@@ -1,4 +1,4 @@
-name: CI Build
+name: Build All Samples
 
 on:
   push:
@@ -18,12 +18,10 @@ jobs:
       with:
         dotnet-version: '6.0.x'
 
-    - name: Restore dependencies
-      run: dotnet restore Samples/GumFormsSample/MonoGameGumFormsSample.sln
+    - name: Find and Restore Samples Dependencies
+      run: |
+        Get-ChildItem -Path Samples -Recurse -Include *.sln | ForEach-Object { dotnet restore $_.FullName }
 
     - name: Build Samples
       run: |
-        dotnet build Samples/GumFormsSample/MonoGameGumFormsSample.sln --configuration Release --no-restore
-
-    # - name: Run tests
-    #   run: dotnet test --no-build --verbosity normal
+        Get-ChildItem -Path Samples -Recurse -Include *.sln | ForEach-Object { dotnet build $_.FullName --configuration Release --no-restore }
