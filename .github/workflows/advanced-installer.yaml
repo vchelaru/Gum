@@ -13,7 +13,7 @@ jobs:
 
     - name: Install Advanced Installer
       run: |
-        choco install advanced-installer -y
+        choco install advanced-installer -y -q
       shell: powershell
 
     - name: Restore NuGet Packages
@@ -23,7 +23,7 @@ jobs:
 
     - name: Build .NET Project
       run: |
-        dotnet build Gum\Gum.csproj -c Release
+        dotnet build Gum\Gum.csproj -c Release --no-restore -nologo -v q --property WarningLevel=0 -clp:ErrorsOnly
       shell: cmd
 
     - name: Build AIP to MSI
