@@ -36,7 +36,7 @@ jobs:
       run: |
         Get-ChildItem -Path Samples -Recurse -Include *.csproj | ForEach-Object { 
           $framework = Select-String -Path $_.FullName -Pattern '<TargetFramework>(.*)</TargetFramework>' | % { $_.Matches.Groups[1].Value }
-          if ($framework -notmatch '^net(6.0|8.0)$') { 
+          if ($framework -notmatch '^net(6.0|8.0)(-.*)?$') { 
             Write-Error "Incompatible framework $framework in $_"
             exit 1 
           }
