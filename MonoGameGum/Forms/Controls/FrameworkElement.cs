@@ -174,7 +174,7 @@ public class FrameworkElement : INotifyPropertyChanged
         get => Visual?.BindingContext;
         set
         {
-            if (value != BindingContext && Visual != null)
+            if (Visual != null)
             {
                 Visual.BindingContext = value;
             }
@@ -182,6 +182,7 @@ public class FrameworkElement : INotifyPropertyChanged
     }
 
     public event EventHandler<BindingContextChangedEventArgs>? BindingContextChanged;
+    internal event EventHandler<BindingContextChangedEventArgs>? InheritedBindingContextChanged;
 
     /// <summary>
     /// The height in pixels. This is a calculated value considering HeightUnits and Height.
@@ -350,12 +351,14 @@ public class FrameworkElement : INotifyPropertyChanged
                 throw new ArgumentNullException("Visual cannot be assigned to null");
             }
 #endif
+            InteractiveGue oldVisual = visual;
             if (visual != value)
             {
                 if (visual != null)
                 {
                     // unsubscribe:
                     visual.BindingContextChanged -= OnVisualBindingContextChanged;
+                    visual.InheritedBindingContextChanged -= OnVisualInheritedBindingContextChanged;
                     visual.EnabledChange -= HandleEnabledChanged;
                     ReactToVisualRemoved();
                 }
@@ -370,11 +373,23 @@ public class FrameworkElement : INotifyPropertyChanged
                     {
                         newVisualInteractiveGue.FormsControlAsObject = this;
                     }
-                    ReactToVisualChanged();
+                    
 
                     visual.BindingContextChanged += OnVisualBindingContextChanged;
+                    visual.InheritedBindingContextChanged += OnVisualInheritedBindingContextChanged;
                     visual.EnabledChange += HandleEnabledChanged;
                 }
+
+                if (oldVisual?.BindingContext != value?.BindingContext)
+                {
+                    OnVisualBindingContextChanged(this, new()
+                    {
+                        OldBindingContext = oldVisual?.BindingContext,
+                        NewBindingContext = value?.BindingContext
+                    });
+                }
+
+                ReactToVisualChanged();
             }
 
         }
@@ -383,8 +398,12 @@ public class FrameworkElement : INotifyPropertyChanged
     private void OnVisualBindingContextChanged(object? sender, BindingContextChangedEventArgs args)
     {
         BindingContextChanged?.Invoke(sender, args);
+        OnPropertyChanged(nameof(BindingContext));
         OnBindingContextChanged(sender, args);
     }
+
+    internal void OnVisualInheritedBindingContextChanged(object? sender, BindingContextChangedEventArgs args) =>
+        InheritedBindingContextChanged?.Invoke(sender, args);
 
     /// <summary>
     /// Contains the default association between Forms Controls and Gum Runtime Types. 

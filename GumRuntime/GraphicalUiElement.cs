@@ -977,6 +977,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 #endif
             if (mParent != value)
             {
+                var oldParent = mParent;
                 if (mParent != null && mParent.Children != null)
                 {
                     mParent.Children.Remove(this);
@@ -996,8 +997,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 mContainedObjectAsIpso?.SetParentDirect(value);
 
                 UpdateLayout();
-
-                ParentChanged?.Invoke(this, null);
+                ParentChanged?.Invoke(this, new ParentChangedEventArgs()
+                {
+                    OldValue = oldParent,
+                    NewValue = value
+                });
             }
         }
     }
@@ -1451,7 +1455,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// </summary>
     public event EventHandler SizeChanged;
     public event EventHandler PositionChanged;
-    public event EventHandler ParentChanged;
+    public event EventHandler<ParentChangedEventArgs> ParentChanged;
+
+    public class ParentChangedEventArgs
+    {
+        public IRenderableIpso? OldValue { get; set; }
+        public IRenderableIpso? NewValue { get; set; }
+    };
 
     public event PropertyChangedEventHandler PropertyChanged;
     protected virtual void NotifyPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string propertyName = null)

@@ -38,9 +38,7 @@ public class BindingTests
     [Test]
     public async Task SetBinding_ShouldPullBindingContextFromParent()
     {
-
         StackPanel stackPanel = new ();
-
         TestViewModel vm = new() { Text = "Test 1243" };
         stackPanel.BindingContext = vm;
 
@@ -55,41 +53,71 @@ public class BindingTests
     }
 
     [Test]
-    public async Task SetBindignToBindingContext_ShouldProperlyBindToChild()
+    public async Task SetBinding_ToBindingContext_SwapBranchNode()
     {
-
         StackPanel stackPanel = new();
-
-        TestViewModel vm = new() { Text = "Test 1243" };
-        TestViewModel child = new () {  Text = "Child 1243" };
-        vm.Child = child;
-
-        stackPanel.BindingContext = vm;
-
+        TestViewModel root = new() { Text = "Root" };
+        TestViewModel child = new () {  Text = "Child" };
+        TestViewModel swapped = new() { Text = "SwappedChild" };
+        
+        stackPanel.BindingContext = root;
+        root.Child = child;
         var textBox = new TextBox();
         textBox.SetBinding(nameof(TextBox.BindingContext), nameof(TestViewModel.Child));
         textBox.SetBinding(nameof(TextBox.Text), nameof(TestViewModel.Text));
+
         stackPanel.AddChild(textBox);
 
-        await Assert.That(textBox.Text).IsEqualTo("Child 1243");
+        await Assert.That(textBox.BindingContext).IsEqualTo(child);
+        await Assert.That(textBox.Text).IsEqualTo("Child");
+
+        root.Child = swapped;
+        await Assert.That(textBox.BindingContext).IsEqualTo(swapped);
+        await Assert.That(textBox.Text).IsEqualTo("SwappedChild");
     }
+
+    [Test]
+    public async Task SetBinding_ToBindingContext_SwapRoot()
+    {
+        StackPanel stackPanel = new();
+        TestViewModel foo = new() { Text = "FooParent", Child = new() { Text = "Foo" } };
+        TestViewModel bar = new() { Text = "BarParent", Child = new() { Text = "Bar" } };
+
+        stackPanel.BindingContext = foo;
+        TextBox textBox = new();
+        textBox.SetBinding(nameof(TextBox.BindingContext), nameof(TestViewModel.Child));
+        textBox.SetBinding(nameof(TextBox.Text), nameof(TestViewModel.Text));
+
+        stackPanel.AddChild(textBox);
+        await Assert.That(textBox.BindingContext).IsEqualTo(foo.Child);
+        await Assert.That(textBox.Text).IsEqualTo("Foo");
+
+        stackPanel.BindingContext = bar;
+        await Assert.That(textBox.BindingContext).IsEqualTo(bar.Child);
+        await Assert.That(textBox.Text).IsEqualTo("Bar");
+    }
+
 
     [Test]
     public async Task ListBoxItemBinding_ShouldSetBindingContextOnListBoxItems()
     {
-        var listBox = new ListBox();
-        var vm = new ListBoxViewModel
+        // Arrange
+        ListBox listBox = new();
+        ListBoxViewModel vm = new()
         {
-            Items = new ObservableCollection<ListBoxItemViewModel>
-            {
-                new ListBoxItemViewModel { Text = "Item 1" },
-                new ListBoxItemViewModel { Text = "Item 2" }
-            }
+            Items =
+            [
+                new() { Text = "Item 1" },
+                new() { Text = "Item 2" }
+            ]
         };
 
         listBox.BindingContext = vm;
+
+        // Act
         listBox.SetBinding(nameof(ListBox.Items), nameof(ListBoxViewModel.Items));
 
+        // Assert
         await Assert.That(listBox.ListBoxItems.Count).IsEqualTo(2);
         await Assert.That(listBox.ListBoxItems[0].BindingContext).IsEqualTo(vm.Items[0]);
         await Assert.That(listBox.ListBoxItems[1].BindingContext).IsEqualTo(vm.Items[1]);

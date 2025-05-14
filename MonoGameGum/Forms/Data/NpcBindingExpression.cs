@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Reflection;
+using Gum.Wireframe;
 
 #if FRB
 using FlatRedBall.Forms.Controls;
@@ -31,6 +32,19 @@ internal class NpcBindingExpression : UntypedBindingExpression
         if (binding.Mode is BindingMode.TwoWay or BindingMode.OneWayToSource)
         {
             HookUpdateSource(binding.UpdateSourceTrigger);
+        }
+
+        if (targetPropertyName == nameof(FrameworkElement.BindingContext))
+        {
+            _targetElement.InheritedBindingContextChanged += OnInheritedBindingContextChanged;
+        }
+    }
+
+    private void OnInheritedBindingContextChanged(object? sender, BindingContextChangedEventArgs e)
+    {
+        if (CurrentRoot != null)
+        {
+            AttachToSource(e.NewBindingContext);
         }
     }
 
@@ -72,7 +86,11 @@ internal class NpcBindingExpression : UntypedBindingExpression
             return;
         }
 
-        object? value = GetSourceValue();
+        object? value = _targetProperty.Name switch
+        {
+            nameof(FrameworkElement.BindingContext) => GetRootSourceValue(),
+            _ => GetSourceValue()
+        };
 
         if (value == GumProperty.UnsetValue)
         {
@@ -106,7 +124,9 @@ internal class NpcBindingExpression : UntypedBindingExpression
             value = null;
         }
 
+        _suppressAttach = true;
         _targetProperty.SetValue(_targetElement, value);
+        _suppressAttach = false;
     }
 
     public override void UpdateSource()

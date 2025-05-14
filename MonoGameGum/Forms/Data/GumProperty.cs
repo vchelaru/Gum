@@ -1,4 +1,6 @@
-﻿#if FRB
+﻿using System.Diagnostics;
+
+#if FRB
 namespace FlatRedBall.Forms.Data;
 #else
 namespace MonoGameGum.Forms.Data;
@@ -6,5 +8,6 @@ namespace MonoGameGum.Forms.Data;
 
 public class GumProperty
 {
+    [DebuggerDisplay("UnsetValue")]
     public static readonly object UnsetValue = new();
 }

@@ -20,9 +20,11 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
     protected readonly FrameworkElement _targetElement;
     protected readonly Type _targetType;
     protected Type? LeafType => _pathObserver.LeafType;
+    protected object? CurrentRoot => _pathObserver.CurrentRoot;
 
     private Func<object, object?>? _sourceGetter;
     private Action<object, object?>? _sourceSetter;
+    protected Func<object, object?>? SourceGetter => _sourceGetter;
 
     private readonly PropertyPathObserver _pathObserver;
 
@@ -40,24 +42,35 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
 
     public void Start() => AttachToSource(_targetElement.BindingContext);
 
-    private void OnTargetBindingContextChanged(object? sender, BindingContextChangedEventArgs e) =>
-        AttachToSource(e.NewBindingContext);
-
-    private void AttachToSource(object? newSource)
+    protected void OnTargetBindingContextChanged(object? sender, BindingContextChangedEventArgs e)
     {
-        _pathObserver.Attach(newSource);
+        AttachToSource(e.NewBindingContext);
+    }
 
-        if (newSource?.GetType() is not { } sourceType)
+    protected bool _suppressAttach;
+
+    protected void AttachToSource(object? newSource)
+    {
+        if (_suppressAttach)
         {
             return;
         }
 
+        _pathObserver.Detach();
+
+        if (newSource is null)
+        {
+            return;
+        }
+
+        _pathObserver.Attach(newSource);
+
         try
         {
-            _sourceGetter = BinderHelpers.BuildGetter(sourceType, _binding.Path);
-            _sourceSetter = BinderHelpers.BuildSetter(sourceType, _binding.Path);
+            _sourceGetter = BinderHelpers.BuildGetter(newSource.GetType(), _binding.Path);
+            _sourceSetter = BinderHelpers.BuildSetter(newSource.GetType(), _binding.Path);
         }
-        catch (ArgumentException aex)
+        catch (Exception aex)
         {
             // binding error: broken path when trying to build the getter/setter
         }
@@ -74,6 +87,17 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
         }
         return _sourceGetter(_targetElement.BindingContext);
     }
+
+    protected object? GetRootSourceValue()
+    {
+        if (_sourceGetter is null || !_pathObserver.HasResolution)
+        {
+            // binding error: broken path
+            return GumProperty.UnsetValue;
+        }
+        return _sourceGetter(CurrentRoot);
+    }
+
 
     protected void SetSourceValue(object? value)
     {

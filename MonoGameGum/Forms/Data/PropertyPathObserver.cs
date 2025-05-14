@@ -18,6 +18,7 @@ internal class PropertyPathObserver : IDisposable
     private readonly string[] _segments;
     private readonly List<WeakListener> _listeners = new();
     private object? _currentRoot;
+    public object? CurrentRoot => _currentRoot;
     public Type? LeafType { get; private set; }
     public bool HasResolution => LeafType is not null;
 
@@ -29,14 +30,20 @@ internal class PropertyPathObserver : IDisposable
         _segments = path.Split('.', StringSplitOptions.RemoveEmptyEntries);
     }
 
+    public void Detach()
+    {
+        DetachAll();
+        _currentRoot = null;
+        LeafType = null;
+    }
+
     /// <summary>
     /// Start observing on a new root object (detaches from the old).
     /// </summary>
-    public void Attach(object? newRoot)
+    public void Attach(object newRoot)
     {
-        DetachAll();
         _currentRoot = newRoot;
-        LeafType = newRoot?.GetType();
+        LeafType = newRoot.GetType();
 
         if (newRoot is not INotifyPropertyChanged)
         {
@@ -72,12 +79,6 @@ internal class PropertyPathObserver : IDisposable
         // only react if the changed property matches the segment
         if (_segments[level] != propName) return;
 
-        if (level == _segments.Length)
-        {
-            OnValueChanged();
-            return;
-        }
-
         // detach all listeners below this level
         for (int i = _listeners.Count - 1; i > level; i--)
             _listeners[i].Detach();
@@ -86,7 +87,7 @@ internal class PropertyPathObserver : IDisposable
 
         // re-walk from here forward
         object? cursor = WalkTo(level);
-        for (int next = level + 1; next < _segments.Length; next++)
+        for (int next = level+1; next < _segments.Length; next++)
         {
             if (cursor is INotifyPropertyChanged inpc)
             {
@@ -156,6 +157,7 @@ internal class PropertyPathObserver : IDisposable
 
         private void OnChanged(object? _, PropertyChangedEventArgs e)
         {
+           
             if (_weakObs.TryGetTarget(out var obs))
                 obs.OnSegmentChanged(_level, e.PropertyName!);
             else
