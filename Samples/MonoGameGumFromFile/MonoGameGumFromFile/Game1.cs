@@ -69,11 +69,13 @@ namespace MonoGameGumFromFile
         protected override void Initialize()
         {
             synchronizationContext = new SingleThreadSynchronizationContext();
+
             GumService.Default.Initialize(this, "GumProject.gumx");
 
 
             // This allows you to resize:
             Window.AllowUserResizing = true;
+
             // This event is raised whenever a resize occurs, allowing
             // us to perform custom logic on a resize
             Window.ClientSizeChanged += HandleClientSizeChanged;
@@ -89,6 +91,7 @@ namespace MonoGameGumFromFile
         }
 
         bool performZoom = true;
+
         int originalHeight;
 
         private void HandleClientSizeChanged(object sender, EventArgs e)
@@ -98,10 +101,11 @@ namespace MonoGameGumFromFile
             {
                 zoom = _graphics.GraphicsDevice.Viewport.Height / (float)originalHeight;
             }
+
             SystemManagers.Default.Renderer.Camera.Zoom = zoom;
 
-
             GraphicalUiElement.CanvasWidth = _graphics.GraphicsDevice.Viewport.Width/zoom;
+            
             GraphicalUiElement.CanvasHeight = _graphics.GraphicsDevice.Viewport.Height/zoom;
 
             // Grab the rootmost object and tell it to resize:
