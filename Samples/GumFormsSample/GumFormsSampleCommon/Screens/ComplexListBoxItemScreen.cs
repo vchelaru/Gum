@@ -17,7 +17,7 @@ using ToolsUtilities;
 
 namespace GumFormsSample.Screens;
 
-internal class ComplexListBoxItemScreen : ContainerRuntime, IGumFormsSampleScreen
+internal class ComplexListBoxItemScreen : ContainerRuntime
 {
     public ComplexListBoxItemScreen()
     {
@@ -25,10 +25,8 @@ internal class ComplexListBoxItemScreen : ContainerRuntime, IGumFormsSampleScree
         this.WidthUnits = DimensionUnitType.RelativeToParent;
         this.Height = 0;
         this.HeightUnits = DimensionUnitType.RelativeToParent;
-    }
 
-    public void Initialize()
-    {
+
         var listBox = new ListBox();
         this.Children.Add(listBox.Visual);
         listBox.X = 30;

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework.Input;
+using MonoGameGum;
 using MonoGameGum.Forms;
 using System;
 using System.Collections.Generic;
@@ -10,41 +11,16 @@ namespace GumFormsSample.Services
 {
     public class InputService
     {
-        private KeyboardState _previousState;
-
         public int Update()
         {
-            var keyboardState = Keyboard.GetState();
+            var keyboard = GumService.Default.Keyboard;
+            if (keyboard.KeyPushed(Keys.D0)) return 0;
+            if (keyboard.KeyPushed(Keys.D1)) return 1;
+            if (keyboard.KeyPushed(Keys.D2)) return 2;
+            if (keyboard.KeyPushed(Keys.D3)) return 3;
+            if (keyboard.KeyPushed(Keys.D4)) return 4;
+            if (keyboard.KeyPushed(Keys.D5)) return 5;
 
-            for (int i = 0; i <= 5; i++)
-            {
-                var key = (Keys)((int)Keys.D0 + i);
-                if (keyboardState.IsKeyDown(key) && _previousState.IsKeyUp(key))
-                {
-                    switch (key)
-                    {
-                        case Keys.D0: return 0;
-                        case Keys.D1: return 1;
-                        case Keys.D2: return 2;
-                        case Keys.D3: return 3;
-                        case Keys.D4: return 4;
-                        case Keys.D5: return 5;
-                    }
-                }
-            }
-
-            var cursor = FormsUtilities.Cursor;
-            if (cursor.PrimaryPush)
-            {
-                // Handle mouse input
-            }
-
-            if (cursor.WindowOver != null)
-            {
-                // Optional: Log cursor info
-            }
-
-            _previousState = keyboardState;
             return -1;
         }
     }

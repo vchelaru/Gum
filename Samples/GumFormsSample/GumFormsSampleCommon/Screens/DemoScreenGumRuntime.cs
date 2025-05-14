@@ -17,13 +17,13 @@ using ToolsUtilities;
 
 namespace GumFormsSample.Screens;
 
-partial class DemoScreenGumRuntime : IGumFormsSampleScreen
+partial class DemoScreenGumRuntime
 {
 
     MenuItem FileMenuItem;
 
     
-    public void Initialize()
+    partial void CustomInitialize()
     {
         var viewModel = new GumFormsSample.ViewModels.DemoScreenViewModel();
         this.BindingContext = viewModel;

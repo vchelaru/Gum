@@ -17,13 +17,13 @@ using ToolsUtilities;
 
 namespace GumFormsSample.Screens
 {
-    internal class FrameworkElementExampleScreen : ContainerRuntime, IUpdateScreen, IGumFormsSampleScreen
+    internal class FrameworkElementExampleScreen : ContainerRuntime, IUpdateScreen
     {
         MenuItem FileMenuItem;
         MenuItem EditMenuItem;
         MenuItem CustomMenuItem;
 
-        public void Initialize()
+        public FrameworkElementExampleScreen()
         {
             //FileManager.RelativeDirectory = "Content/";
             var root = this;

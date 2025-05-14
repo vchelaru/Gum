@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MonoGameGum;
 using RenderingLibrary;
 using System;
 using System.Collections.Generic;
@@ -15,7 +16,7 @@ namespace GumFormsSample.Services
         {
             graphicsDevice.SetRenderTarget(renderTarget);
             graphicsDevice.Clear(Color.CornflowerBlue);
-            SystemManagers.Default.Draw();
+            GumService.Default.Draw();
             graphicsDevice.SetRenderTarget(null);
 
             spriteBatch.Begin();

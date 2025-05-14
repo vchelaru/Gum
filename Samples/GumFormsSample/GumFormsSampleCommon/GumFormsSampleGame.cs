@@ -21,6 +21,7 @@ namespace GumFormsSample
         private readonly RenderService _renderService = new();
         private readonly IGumFormsSampleLogger _logger = new DebugLogger();
         private BindableGue _currentScreen; // Track active screen
+        GumService Gum => GumService.Default;
 
         public GumFormsSampleGame()
         {
@@ -37,14 +38,10 @@ namespace GumFormsSample
                 _renderTarget = new RenderTarget2D(GraphicsDevice, _config.Width, _config.Height);
                 _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-                GumService.Default.Initialize(this, "FormsGumProject/GumProject.gumx");
-                FormsUtilities.Cursor.TransformMatrix = Matrix.CreateScale(1 / _config.Scale);
+                Gum.Initialize(this, "FormsGumProject/GumProject.gumx");
+                Gum.Cursor.TransformMatrix = Matrix.CreateScale(1 / _config.Scale);
 
                 _currentScreen = _screenFactory.CreateScreen(1);
-                if (_currentScreen is IGumFormsSampleScreen demoScreen)
-                {
-                    demoScreen.Initialize();
-                }
                 _currentScreen.AddToRoot();
             }
             catch (Exception ex)
@@ -60,6 +57,7 @@ namespace GumFormsSample
         {
             try
             {
+                Gum.Update(gameTime);
                 int keyResult = _inputService.Update();
                 if (keyResult >= 0 && keyResult <= 5)
                 {
@@ -71,14 +69,9 @@ namespace GumFormsSample
 
                     // Create and show new screen
                     _currentScreen = _screenFactory.CreateScreen(keyResult);
-                    if (_currentScreen is IGumFormsSampleScreen demoScreen)
-                    {
-                        demoScreen.Initialize();
-                    }
                     _currentScreen.AddToRoot();
                 }
 
-                GumService.Default.Update(this, gameTime);
 
                 foreach (var item in GumService.Default.Root.Children)
                 {
