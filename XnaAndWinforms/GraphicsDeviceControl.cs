@@ -287,6 +287,7 @@ namespace XnaAndWinforms
             if (!error.HasErrors)
             {
                 GraphicsDevice.SetRenderTarget(renderTarget);
+                GraphicsDevice.Clear(Microsoft.Xna.Framework.Color.Transparent);
 
                 // Many GraphicsDeviceControl instances can be sharing the same
                 // GraphicsDevice. The device backbuffer will be resized to fit the
