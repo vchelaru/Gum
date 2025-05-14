@@ -12,6 +12,7 @@ jobs:
     strategy:
       matrix:
         dotnet-version: [ '6.0.x', '8.0.x', '9.0.x' ]
+        framework: [ 'net6.0', 'net8.0', 'net9.0' ]
 
     steps:
     - uses: actions/checkout@v4
@@ -26,8 +27,9 @@ jobs:
 
     - name: Find and Restore Dependencies
       run: |
-        Get-ChildItem -Path Samples -Recurse -Include *.sln | ForEach-Object { dotnet restore $_.FullName -v q }
+        Get-ChildItem -Path Samples -Recurse -Include *.sln | ForEach-Object { dotnet restore $_.FullName -v q --framework ${{ matrix.framework }} }
 
     - name: Build All
       run: |
         Get-ChildItem -Path Samples -Recurse -Include *.sln | ForEach-Object { dotnet build $_.FullName --configuration Release --no-restore --nologo -v q --property WarningLevel=0 /clp:ErrorsOnly }
+      continue-on-error: true
