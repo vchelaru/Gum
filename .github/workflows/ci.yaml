@@ -27,4 +27,4 @@ jobs:
 
     - name: Build Samples
       run: |
-        Get-ChildItem -Path Samples -Recurse -Include *.sln | ForEach-Object { dotnet build $_.FullName --configuration Release --no-restore --no-logo -v q }
+        Get-ChildItem -Path Samples -Recurse -Include *.sln | ForEach-Object { dotnet build $_.FullName --configuration Release --no-restore -v q }
