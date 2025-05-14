@@ -18,7 +18,7 @@ jobs:
     - name: List Solutions
       id: set-solutions
       run: |
-        $solutions = (Get-ChildItem -Path Samples -Recurse -Include *.sln | ForEach-Object { $_.FullName } | ConvertTo-Json -Compress)
+        $solutions = (Get-ChildItem -Path Samples -Recurse -Include *.sln | ForEach-Object { $_.BaseName } | ConvertTo-Json -Compress)
         echo "solutions=$solutions" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
   build:
@@ -48,9 +48,10 @@ jobs:
       run: dotnet nuget locals all --clear
       continue-on-error: false
 
-    - name: Build Solution
+    - name: Build Solution (${{ matrix.solution }})
       run: |
-        Write-Host "Building solution: ${{ matrix.solution }}"
-        dotnet restore "${{ matrix.solution }}" -v q
-        dotnet build "${{ matrix.solution }}" --configuration Release --no-restore -nologo -v q --property WarningLevel=0 -clp:ErrorsOnly
+        $solutionFile = (Get-ChildItem -Path Samples -Recurse -Include "${{ matrix.solution }}.sln").FullName
+        Write-Host "Building solution: $solutionFile"
+        dotnet restore "$solutionFile" -v q
+        dotnet build "$solutionFile" --configuration Release --no-restore -nologo -v q --property WarningLevel=0 -clp:ErrorsOnly
       continue-on-error: false
