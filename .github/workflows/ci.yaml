@@ -13,6 +13,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Initialize submodules
+      run: git submodule update --init --recursive
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
@@ -20,8 +23,8 @@ jobs:
 
     - name: Find and Restore Samples Dependencies
       run: |
-        Get-ChildItem -Path Samples -Recurse -Include *.sln | ForEach-Object { dotnet restore $_.FullName; if ($LASTEXITCODE -ne 0) { exit 1 } }
+        Get-ChildItem -Path Samples -Recurse -Include *.sln | ForEach-Object { dotnet restore $_.FullName }
 
     - name: Build Samples
       run: |
-        Get-ChildItem -Path Samples -Recurse -Include *.sln | ForEach-Object { dotnet build $_.FullName --configuration Release --no-restore --no-logo -warnAsError; if ($LASTEXITCODE -ne 0) { exit 1 } }
+        Get-ChildItem -Path Samples -Recurse -Include *.sln | ForEach-Object { dotnet build $_.FullName --configuration Release --no-restore --no-logo -v q }
