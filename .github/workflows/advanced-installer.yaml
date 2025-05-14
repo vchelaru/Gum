@@ -18,12 +18,12 @@ jobs:
 
     - name: Restore NuGet Packages
       run: |
-        dotnet restore Gum\Gum.csproj
+        dotnet restore Gum.sln
       shell: cmd
 
     - name: Build .NET Project
       run: |
-        dotnet build Gum\Gum.csproj -c Release --no-restore -nologo -v q --property WarningLevel=0 -clp:ErrorsOnly
+        dotnet build Gum.sln -c Release --no-restore -nologo -v q --property WarningLevel=0 -clp:ErrorsOnly
       shell: cmd
 
     - name: Build AIP to MSI
