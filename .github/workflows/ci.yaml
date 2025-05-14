@@ -18,7 +18,7 @@ jobs:
     - name: List Solutions
       id: set-solutions
       run: |
-        $solutions = (Get-ChildItem -Path Samples -Recurse -Include *.sln | ForEach-Object { $_.BaseName } | ConvertTo-Json -Compress)
+        $solutions = (Get-ChildItem -Path Samples -Recurse -Include *.sln | ForEach-Object { $_.BaseName } | Sort-Object | ConvertTo-Json -Compress)
         echo "solutions=$solutions" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
   build:
