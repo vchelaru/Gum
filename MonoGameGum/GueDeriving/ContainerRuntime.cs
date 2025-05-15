@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 #if MONOGAME || FNA || KNI
-using BlendState = Microsoft.Xna.Framework.Graphics.BendState;
+using BlendState = Microsoft.Xna.Framework.Graphics.BlendState;
 #endif
 
 #if RAYLIB
@@ -75,7 +75,11 @@ namespace MonoGameGum.GueDeriving
             }
             set
             {
+#if MONOGAME || FNA || KNI
                 BlendState = value.ToBlendState().ToXNA();
+#else
+                BlendState = value.ToBlendState();
+#endif
 
                 // NotifyPropertyChanged handled by BlendState:
             }

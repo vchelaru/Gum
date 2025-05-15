@@ -15,6 +15,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\..\Gum\RenderingLibrary\BlendExtensions.cs" Link="RenderingLibrary\BlendExtensions.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\Controls\FrameworkElement.cs" Link="Forms\Controls\FrameworkElement.cs" />
     <Compile Include="..\..\MonoGameGum\Forms\VisualTemplate.cs" Link="Forms\VisualTemplate.cs" />
     <Compile Include="..\..\MonoGameGum\GueDeriving\ContainerRuntime.cs" Link="GueDeriving\ContainerRuntime.cs" />

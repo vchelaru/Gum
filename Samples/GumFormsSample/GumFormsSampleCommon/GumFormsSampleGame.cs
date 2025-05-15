@@ -5,12 +5,11 @@ using GumFormsSample.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGameGum;
-using MonoGameGum.Forms;
 using System;
 
 namespace GumFormsSample
 {
-    public class GumFormsSampleGame : Game
+    public class GumFormsSampleGame : Game, IDisposable
     {
         private readonly GraphicsDeviceManager _graphics;
         private readonly GumFormsSampleConfig _config = new();
@@ -20,7 +19,8 @@ namespace GumFormsSample
         private readonly InputService _inputService = new();
         private readonly RenderService _renderService = new();
         private readonly IGumFormsSampleLogger _logger = new DebugLogger();
-        private BindableGue _currentScreen; // Track active screen
+        private BindableGue _currentScreen;
+        private bool _disposed;
         GumService Gum => GumService.Default;
 
         public GumFormsSampleGame()
@@ -41,7 +41,7 @@ namespace GumFormsSample
                 Gum.Initialize(this, "FormsGumProject/GumProject.gumx");
                 Gum.Cursor.TransformMatrix = Matrix.CreateScale(1 / _config.Scale);
 
-                _currentScreen = _screenFactory.CreateScreen(1);
+                _currentScreen = _screenFactory.DefaultScreen;
                 _currentScreen.AddToRoot();
             }
             catch (Exception ex)
@@ -61,19 +61,16 @@ namespace GumFormsSample
                 int keyResult = _inputService.Update();
                 if (keyResult >= 0 && keyResult <= 5)
                 {
-                    // Remove current screen
                     if (_currentScreen != null)
                     {
-                        GumService.Default.Root.Children.Remove(_currentScreen);
+                        Gum.Root.Children.Remove(_currentScreen);
                     }
 
-                    // Create and show new screen
                     _currentScreen = _screenFactory.CreateScreen(keyResult);
                     _currentScreen.AddToRoot();
                 }
 
-
-                foreach (var item in GumService.Default.Root.Children)
+                foreach (var item in Gum.Root.Children)
                 {
                     (item as IUpdateScreen)?.Update(gameTime);
                 }
@@ -90,6 +87,25 @@ namespace GumFormsSample
         {
             _renderService.Draw(GraphicsDevice, _renderTarget, _spriteBatch, _config);
             base.Draw(gameTime);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (_disposed)
+                return;
+
+            if (disposing)
+            {
+                _spriteBatch?.Dispose();
+                _renderTarget?.Dispose();
+                _graphics?.Dispose();
+            }
+
+            _spriteBatch = null;
+            _renderTarget = null;
+            _disposed = true;
+
+            base.Dispose(disposing);
         }
     }
 }

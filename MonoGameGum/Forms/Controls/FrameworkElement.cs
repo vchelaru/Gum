@@ -36,6 +36,7 @@ using RaylibGum;
 using RaylibGum.Input;
 namespace RaylibGum.Forms.Controls;
 using Keys = Raylib_cs.KeyboardKey;
+namespace RaylibGum.Forms.Controls;
 
 #else
 using Keys = Microsoft.Xna.Framework.Input.Keys;
@@ -93,8 +94,9 @@ public class FrameworkElement : INotifyPropertyChanged
 
     public static List<GamePad> GamePadsForUiControl { get; private set; } = new List<GamePad>();
 
+#if MONOGAME
     public static List<IInputReceiverKeyboardMonoGame> KeyboardsForUiControl { get; private set; } = new List<IInputReceiverKeyboardMonoGame>();
-
+#endif
 
 #endif
 

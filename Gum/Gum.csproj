@@ -11,6 +11,7 @@
 		<DefineConstants>GUM; MONOGAME</DefineConstants>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 		<Nullable>enable</Nullable>
+		<GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
 		<OutputPath>bin\Debug\</OutputPath>
@@ -356,6 +357,7 @@
 		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.1.9001" />
 		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.1.9001" />
 		<PackageReference Include="nkast.Kni.Platform.WinForms.DX11" Version="4.1.9001" />
+		<PackageReference Include="System.Resources.Extensions" Version="9.0.5" />
 	</ItemGroup>
 	<ItemGroup>
 		<Compile Remove="DataTypes\BehaviorSaveExtensionMethods.cs" />
