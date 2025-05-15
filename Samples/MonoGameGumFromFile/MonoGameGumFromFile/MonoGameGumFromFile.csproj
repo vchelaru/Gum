@@ -20,7 +20,7 @@
 		<None Remove="Icon.bmp" />
 	</ItemGroup>
 	<ItemGroup>
-	  <Content Include=".config\dotnet-tools.json">
+	  <Content Include="C:\Users\tony\Downloads\dotnet-tools.json" Link="dotnet-tools.json">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
 	</ItemGroup>
@@ -44,6 +44,7 @@
 		</None>
 	</ItemGroup>
 	<ItemGroup>
+	  <Folder Include=".config\" />
 	  <Folder Include="ScreenRuntimes\" />
 	</ItemGroup>
 	<Target Name="RestoreDotnetTools" BeforeTargets="Restore">
