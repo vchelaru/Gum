@@ -50,12 +50,8 @@ jobs:
         dotnet-version: ${{ matrix.dotnet-version }}
       continue-on-error: false
 
-    - name: Clear NuGet Cache
-      run: dotnet nuget locals all --clear
-      continue-on-error: false
-
-    - name: Install dotnet-mgcb
-      run: dotnet tool install -g dotnet-mgcb
+    - name: Restore .NET Tools
+      run: dotnet tool restore
       continue-on-error: false
 
     - name: Build Solution (${{ matrix.solution }})
