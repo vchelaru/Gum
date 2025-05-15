@@ -1,31 +1,3 @@
-name: Build All
-
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
-
-jobs:
-  list-solutions:
-    runs-on: windows-latest
-    outputs:
-      solutions: ${{ steps.set-solutions.outputs.solutions }}
-    steps:
-    - uses: actions/checkout@v4
-      continue-on-error: false
-
-    - name: List Solutions
-      id: set-solutions
-      run: |
-        $exclude = @("GumTest") # Define exclusion list here
-        $solutions = Get-ChildItem -Path Samples -Recurse -Include *.sln | 
-                     ForEach-Object { $_.BaseName } | 
-                     Where-Object { $exclude -notcontains $_ } | 
-                     Sort-Object | 
-                     ConvertTo-Json -Compress
-        echo "solutions=$solutions" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-
   build:
     needs: list-solutions
     runs-on: windows-latest
@@ -50,13 +22,12 @@ jobs:
         dotnet-version: ${{ matrix.dotnet-version }}
       continue-on-error: false
 
-    - name: Restore .NET Tools
-      run: dotnet tool restore
-      continue-on-error: false
-
     - name: Build Solution (${{ matrix.solution }})
       run: |
         $solutionFile = (Get-ChildItem -Path Samples -Recurse -Include "${{ matrix.solution }}.sln").FullName
+        $solutionDir = Split-Path -Path $solutionFile -Parent
+        Write-Host "Changing to solution directory: $solutionDir"
+        Set-Location -Path $solutionDir
         Write-Host "Building solution: $solutionFile"
         dotnet restore "$solutionFile" -v q
         dotnet build "$solutionFile" --configuration Release --no-restore -nologo -v q --property WarningLevel=0 -clp:ErrorsOnly
