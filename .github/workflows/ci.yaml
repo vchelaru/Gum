@@ -18,7 +18,7 @@ jobs:
     - name: List Solutions
       id: set-solutions
       run: |
-        $exclude = @("GumTest") # Define exclusion list here
+        $exclude = @("GumTest","MonoGameGumFromFile") # Define exclusion list here
         $solutions = Get-ChildItem -Path Samples -Recurse -Include *.sln | 
                      ForEach-Object { $_.BaseName } | 
                      Where-Object { $exclude -notcontains $_ } | 
