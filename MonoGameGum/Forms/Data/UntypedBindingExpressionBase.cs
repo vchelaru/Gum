@@ -24,7 +24,6 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
 
     private Func<object, object?>? _sourceGetter;
     private Action<object, object?>? _sourceSetter;
-    protected Func<object, object?>? SourceGetter => _sourceGetter;
 
     private readonly PropertyPathObserver _pathObserver;
 
@@ -90,7 +89,7 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
 
     protected object? GetRootSourceValue()
     {
-        if (_sourceGetter is null || !_pathObserver.HasResolution)
+        if (_sourceGetter is null || !_pathObserver.HasResolution || CurrentRoot is null)
         {
             // binding error: broken path
             return GumProperty.UnsetValue;
@@ -136,6 +135,7 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
     public override void Dispose()
     {
         _targetElement.BindingContextChanged -= OnTargetBindingContextChanged;
+        _pathObserver.ValueChanged -= UpdateTarget;
         _pathObserver.Dispose();
         base.Dispose();
     }

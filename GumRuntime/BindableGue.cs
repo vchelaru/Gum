@@ -91,8 +91,8 @@ public class BindableGue : GraphicalUiElement
         }
 
         InheritedBindingContext = newParent?.BindingContext;
-
     }
+
     void ParentBindingContextChanged(object? s, BindingContextChangedEventArgs e)
     {
         InheritedBindingContext = (EffectiveParentGue as BindableGue)?.BindingContext;
@@ -105,6 +105,10 @@ public class BindableGue : GraphicalUiElement
         base.RemoveFromManagers();
 
         BindingContext = null;
+        foreach (var descendant in GetAllBindableDescendants().ToList())
+        {
+            descendant.BindingContext = null;
+        }
     }
 
     #region Binding
@@ -169,10 +173,7 @@ public class BindableGue : GraphicalUiElement
 
     private void HandleBindingContextChangedInternal(object? oldContext, object? newContext)
     {
-        if (oldContext == newContext)
-        {
 
-        }
         if (oldContext is INotifyPropertyChanged oldViewModel)
         {
             UnsubscribeEventsOnOldViewModel(oldViewModel);
@@ -465,7 +466,7 @@ public class BindableGue : GraphicalUiElement
 
     private void TryPushBindingContextChangeToChildren(string vmPropertyName)
     {
-        foreach (BindableGue descendant in GetAllBindableDescendents())
+        foreach (BindableGue descendant in GetAllBindableDescendants())
         {
             if (descendant.BindingContextBinding == vmPropertyName && descendant.BindingContextBindingPropertyOwner == BindingContext)
             {
@@ -489,18 +490,18 @@ public class BindableGue : GraphicalUiElement
 
     #endregion
 
-    public IEnumerable<BindableGue> GetAllBindableChildren() =>
+    private IEnumerable<BindableGue> GetAllBindableChildren() =>
     [
         ..Children?.OfType<BindableGue>() ?? [], ..ContainedElements.OfType<BindableGue>()
     ];
 
-    public IEnumerable<BindableGue> GetAllBindableDescendents()
+    private IEnumerable<BindableGue> GetAllBindableDescendants()
     {
         foreach (BindableGue child in GetAllBindableChildren())
         {
             yield return child;
 
-            foreach (BindableGue subChild in child.GetAllBindableDescendents())
+            foreach (BindableGue subChild in child.GetAllBindableDescendants())
             {
                 yield return subChild;
             }

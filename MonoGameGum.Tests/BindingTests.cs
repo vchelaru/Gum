@@ -102,17 +102,14 @@ public class BindingTests
     {
         var checkBox = new CheckBox();
 
-        var vm = new CheckBoxViewModel();
+        var vm = new TestViewModel();
 
         checkBox.BindingContext = vm;
 
-        checkBox.SetBinding(nameof(CheckBox.IsChecked), nameof(CheckBoxViewModel.IsChecked));
+        checkBox.SetBinding(nameof(CheckBox.IsChecked), nameof(TestViewModel.IsChecked));
 
         int timesCalled = 0;
-        vm.PropertyChanged += (sender, args) =>
-        {
-            timesCalled++;
-        };
+        vm.PropertyChanged += (_, _) => timesCalled++;
 
         await Assert.That(timesCalled).IsEqualTo(0);
         checkBox.IsChecked = true;
@@ -125,19 +122,16 @@ public class BindingTests
     {
         var checkBox = new CheckBox();
 
-        var vm = new CheckBoxViewModel();
+        var vm = new TestViewModel();
 
         var stackPanel = new StackPanel();
         stackPanel.AddChild(checkBox);
         stackPanel.BindingContext = vm;
 
-        checkBox.SetBinding(nameof(CheckBox.IsChecked), nameof(CheckBoxViewModel.IsChecked));
+        checkBox.SetBinding(nameof(CheckBox.IsChecked), nameof(TestViewModel.IsChecked));
 
         int timesCalled = 0;
-        vm.PropertyChanged += (sender, args) =>
-        {
-            timesCalled++;
-        };
+        vm.PropertyChanged += (_, _) => timesCalled++;
 
         await Assert.That(timesCalled).IsEqualTo(0);
         checkBox.IsChecked = true;
@@ -149,19 +143,15 @@ public class BindingTests
     public async Task SetBinding_ShouldEstablishTwoWayBinding_OnThreeDeepChild()
     {
         int timesCalled = 0;
-        var vm = new CheckBoxViewModel();
-        vm.PropertyChanged += (not, used) =>
-        {
-            timesCalled++;
-        };
+        var vm = new TestViewModel();
+        vm.PropertyChanged += (_, _) => timesCalled++;
 
         await Assert.That(timesCalled).IsEqualTo(0);
-
 
         var stack = new StackPanel();
         var innerStack = new StackPanel();
         var checkBox = new CheckBox();
-        checkBox.SetBinding(nameof(checkBox.IsChecked), nameof(CheckBoxViewModel.IsChecked));
+        checkBox.SetBinding(nameof(checkBox.IsChecked), nameof(TestViewModel.IsChecked));
         stack.AddChild(innerStack);
         innerStack.AddChild(checkBox);
 
@@ -172,7 +162,6 @@ public class BindingTests
         checkBox.IsChecked = true;
 
         await Assert.That(timesCalled).IsEqualTo(1);
-
     }
 
     [Test]
@@ -180,7 +169,7 @@ public class BindingTests
     {
         // Arrange
         ListBox listBox = new();
-        ListBoxViewModel vm = new()
+        TestViewModel vm = new()
         {
             Items =
             [
@@ -192,7 +181,7 @@ public class BindingTests
         listBox.BindingContext = vm;
 
         // Act
-        listBox.SetBinding(nameof(ListBox.Items), nameof(ListBoxViewModel.Items));
+        listBox.SetBinding(nameof(ListBox.Items), nameof(TestViewModel.Items));
 
         // Assert
         await Assert.That(listBox.ListBoxItems.Count).IsEqualTo(2);
@@ -303,7 +292,7 @@ public class BindingTests
         // Arrange
         TestViewModel vm = new();
         TextBox element = new() { BindingContext = vm };
-        Binding binding = new Binding(nameof(TestViewModel.BoolValue))
+        Binding binding = new Binding(nameof(TestViewModel.IsChecked))
         {
             Converter = new TestStringBoolConverter(),
         };
@@ -313,7 +302,7 @@ public class BindingTests
         element.Text = targetValue;
 
         // Assert
-        await Assert.That(vm.BoolValue).IsEqualTo(expectedSourceValue);
+        await Assert.That(vm.IsChecked).IsEqualTo(expectedSourceValue);
     }
 
     [Test]
@@ -322,9 +311,9 @@ public class BindingTests
     public async Task Binding_Converter_FromSource(bool sourceValue, string expectedTargetValue)
     {
         // Arrange
-        TestViewModel vm = new() { BoolValue = sourceValue };
+        TestViewModel vm = new() { IsChecked = sourceValue };
         TextBox element = new() { BindingContext = vm };
-        Binding binding = new Binding(nameof(TestViewModel.BoolValue))
+        Binding binding = new Binding(nameof(TestViewModel.IsChecked))
         {
             Converter = new TestStringBoolConverter(),
         };
@@ -378,11 +367,58 @@ public class BindingTests
         await Assert.That(() => element.SetBinding(nameof(TextBox.Text), binding)).ThrowsNothing();
     }
 
+    [Test]
+    public async Task SetBinding_BindingContext_SetThenAdd()
+    {
+        // Arrange
+        StackPanel panel = new();
+        TextBox element = new();
+        TestViewModel vm = new();
+        TestViewModel child = new();
+
+        vm.Child = child;
+        panel.BindingContext = vm;
+
+        // Act
+        element.SetBinding(nameof(TextBox.BindingContext), nameof(TestViewModel.Child));
+        panel.AddChild(element);
+
+        // Assert
+        await Assert.That(element.BindingContext).IsEqualTo(child);
+    }
+
+    [Test]
+    public async Task SetBinding_BindingContext_AddThenSet()
+    {
+        // Arrange
+        StackPanel panel = new();
+        TestViewModel vm = new();
+        TestViewModel child = new();
+
+        vm.Child = child;
+        panel.BindingContext = vm;
+
+        TextBox element = new();
+
+        // Act
+        panel.AddChild(element);
+        element.SetBinding(nameof(TextBox.BindingContext), nameof(TestViewModel.Child));
+
+        // Assert
+        await Assert.That(element.BindingContext).IsEqualTo(child);
+    }
+
     private class TestViewModel : ViewModel
     {
         public TestViewModel? Child
         {
             get => Get<TestViewModel?>();
+            set => Set(value);
+        }
+
+        public ObservableCollection<TestViewModel> Items
+        {
+            get => Get<ObservableCollection<TestViewModel>>();
             set => Set(value);
         }
 
@@ -392,25 +428,18 @@ public class BindingTests
             set => Set(value);
         }
 
-        public float FloatValue
-        {
-            get => Get<float>(); set => Set(value);
-        }
-
-        public bool BoolValue
-        {
-            get => Get<bool>(); set => Set(value);
-        }
-
-    }
-
-    public class CheckBoxViewModel : ViewModel
-    {
         public bool IsChecked
         {
             get => Get<bool>();
             set => Set(value);
         }
+
+        public float FloatValue
+        {
+            get => Get<float>(); set => Set(value);
+        }
+
+        public override string ToString() => Text;
     }
 
     private class TestStringBoolConverter : IValueConverter
@@ -434,25 +463,5 @@ public class BindingTests
                 _ => GumProperty.UnsetValue
             };
         }
-    }
-
-    public class ListBoxViewModel : ViewModel
-    {
-        public ObservableCollection<ListBoxItemViewModel> Items
-        {
-            get => Get<ObservableCollection<ListBoxItemViewModel>>();
-            set => Set(value);
-        }
-    }
-
-    public class ListBoxItemViewModel : ViewModel
-    {
-        public string Text
-        {
-            get => Get<string>();
-            set => Set(value);
-        }
-
-        public override string ToString() => Text;
     }
 }

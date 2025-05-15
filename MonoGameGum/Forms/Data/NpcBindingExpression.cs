@@ -173,6 +173,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
             npc.PropertyChanged -= OnTargetPropertyChanged;
         }
         _targetElement.LostFocus -= OnLostFocus;
+        _targetElement.InheritedBindingContextChanged -= OnInheritedBindingContextChanged;
         base.Dispose();
     }
 
