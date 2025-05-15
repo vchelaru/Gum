@@ -38,7 +38,7 @@ public class BindingTests
     [Test]
     public async Task SetBinding_ShouldPullBindingContextFromParent()
     {
-        StackPanel stackPanel = new ();
+        StackPanel stackPanel = new();
         TestViewModel vm = new() { Text = "Test 1243" };
         stackPanel.BindingContext = vm;
 
@@ -57,9 +57,9 @@ public class BindingTests
     {
         StackPanel stackPanel = new();
         TestViewModel root = new() { Text = "Root" };
-        TestViewModel child = new () {  Text = "Child" };
+        TestViewModel child = new() { Text = "Child" };
         TestViewModel swapped = new() { Text = "SwappedChild" };
-        
+
         stackPanel.BindingContext = root;
         root.Child = child;
         var textBox = new TextBox();
@@ -97,6 +97,53 @@ public class BindingTests
         await Assert.That(textBox.Text).IsEqualTo("Bar");
     }
 
+    [Test]
+    public async Task SetBinding_ShouldEstablishTwoWayBinding()
+    {
+        var checkBox = new CheckBox();
+
+        var vm = new CheckBoxViewModel();
+
+        checkBox.BindingContext = vm;
+
+        checkBox.SetBinding(nameof(CheckBox.IsChecked), nameof(CheckBoxViewModel.IsChecked));
+
+        int timesCalled = 0;
+        vm.PropertyChanged += (sender, args) =>
+        {
+            timesCalled++;
+        };
+
+        await Assert.That(timesCalled).IsEqualTo(0);
+        checkBox.IsChecked = true;
+        await Assert.That(vm.IsChecked).IsTrue();
+        await Assert.That(timesCalled).IsEqualTo(1);
+    }
+
+    [Test]
+    public async Task SetBinding_ShouldEstablishTwoWayBinding_OnChild()
+    {
+        var checkBox = new CheckBox();
+
+        var vm = new CheckBoxViewModel();
+
+        var stackPanel = new StackPanel();
+        stackPanel.AddChild(checkBox);
+        stackPanel.BindingContext = vm;
+
+        checkBox.SetBinding(nameof(CheckBox.IsChecked), nameof(CheckBoxViewModel.IsChecked));
+
+        int timesCalled = 0;
+        vm.PropertyChanged += (sender, args) =>
+        {
+            timesCalled++;
+        };
+
+        await Assert.That(timesCalled).IsEqualTo(0);
+        checkBox.IsChecked = true;
+        await Assert.That(vm.IsChecked).IsTrue();
+        await Assert.That(timesCalled).IsEqualTo(1);
+    }
 
     [Test]
     public async Task ListBoxItemBinding_ShouldSetBindingContextOnListBoxItems()
@@ -123,10 +170,7 @@ public class BindingTests
         await Assert.That(listBox.ListBoxItems[1].BindingContext).IsEqualTo(vm.Items[1]);
     }
 
-
-
-
-        [Test]
+    [Test]
     public async Task ComplexPaths()
     {
         TestViewModel vm = new()
@@ -328,6 +372,15 @@ public class BindingTests
             get => Get<bool>(); set => Set(value);
         }
 
+    }
+
+    public class CheckBoxViewModel : ViewModel
+    {
+        public bool IsChecked
+        {
+            get => Get<bool>();
+            set => Set(value);
+        }
     }
 
     private class TestStringBoolConverter : IValueConverter

@@ -92,10 +92,10 @@ public class BindableGue : GraphicalUiElement
 
         InheritedBindingContext = newParent?.BindingContext;
 
-        void ParentBindingContextChanged(object? s, BindingContextChangedEventArgs e)
-        {
-            InheritedBindingContext = (EffectiveParentGue as BindableGue)?.BindingContext;
-        }
+    }
+    void ParentBindingContextChanged(object? s, BindingContextChangedEventArgs e)
+    {
+        InheritedBindingContext = (EffectiveParentGue as BindableGue)?.BindingContext;
     }
 
     public event EventHandler<BindingContextChangedEventArgs>? InheritedBindingContextChanged;
