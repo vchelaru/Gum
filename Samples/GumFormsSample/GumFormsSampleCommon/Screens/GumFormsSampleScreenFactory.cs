@@ -9,6 +9,8 @@ namespace GumFormsSample.Screens
 {
     internal class GumFormsSampleScreenFactory
     {
+        public BindableGue DefaultScreen => CreateScreen(1);
+
         private readonly Dictionary<int, Func<BindableGue>> _screenCreators = new()
         {
             { 0, () => new DemoScreenGumRuntime() },
@@ -25,5 +27,6 @@ namespace GumFormsSample.Screens
                 return creator();
             throw new ArgumentException($"Invalid screen number: {screenNumber}");
         }
+
     }
 }
