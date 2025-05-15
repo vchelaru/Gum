@@ -20,9 +20,7 @@
 		<None Remove="Icon.bmp" />
 	</ItemGroup>
 	<ItemGroup>
-	  <Content Include="C:\Users\tony\Downloads\dotnet-tools.json" Link="dotnet-tools.json">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
+	  
 	</ItemGroup>
 	<ItemGroup>
 		<EmbeddedResource Include="Icon.ico" />

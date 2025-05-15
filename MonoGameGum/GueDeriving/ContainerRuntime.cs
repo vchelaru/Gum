@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 #if MONOGAME || FNA || KNI
-using BlendState = Microsoft.Xna.Framework.Graphics.BendState;
+using BlendState = Microsoft.Xna.Framework.Graphics.BlendState;
 #endif
 
 #if RAYLIB
