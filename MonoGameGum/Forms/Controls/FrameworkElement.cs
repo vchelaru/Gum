@@ -34,6 +34,7 @@ namespace FlatRedBall.Forms.Controls;
 #elif RAYLIB
 using RaylibGum;
 using RaylibGum.Input;
+namespace RaylibGum.Forms.Controls;
 using Keys = Raylib_cs.KeyboardKey;
 
 #else
