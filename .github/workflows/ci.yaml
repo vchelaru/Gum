@@ -51,8 +51,10 @@ jobs:
       continue-on-error: false
 
     - name: Build Solution (${{ matrix.solution }})
+      env:
+        IsCIBuild: true
+        DOTNET_TOOLS_ALLOW_MANIFEST_IN_ROOT: true
       run: |
-        $env:DOTNET_TOOLS_ALLOW_MANIFEST_IN_ROOT = 1
         $solutionFile = (Get-ChildItem -Path Samples -Recurse -Include "${{ matrix.solution }}.sln").FullName
         Write-Host "Building solution: $solutionFile"
         dotnet restore "$solutionFile" -v q
