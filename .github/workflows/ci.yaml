@@ -18,7 +18,7 @@ jobs:
     - name: List Solutions
       id: set-solutions
       run: |
-        $exclude = @("GumTest","MonoGameGumFromFile") # Define exclusion list here
+        $exclude = @("GumTest") # Define exclusion list here
         $solutions = Get-ChildItem -Path Samples -Recurse -Include *.sln | 
                      ForEach-Object { $_.BaseName } | 
                      Where-Object { $exclude -notcontains $_ } | 
@@ -52,10 +52,8 @@ jobs:
 
     - name: Build Solution (${{ matrix.solution }})
       run: |
+        $env:DOTNET_TOOLS_ALLOW_MANIFEST_IN_ROOT = "true"
         $solutionFile = (Get-ChildItem -Path Samples -Recurse -Include "${{ matrix.solution }}.sln").FullName
-        $solutionDir = Split-Path -Path $solutionFile -Parent
-        Write-Host "Changing to solution directory: $solutionDir"
-        Set-Location -Path $solutionDir
         Write-Host "Building solution: $solutionFile"
         dotnet restore "$solutionFile" -v q
         dotnet build "$solutionFile" --configuration Release --no-restore -nologo -v q --property WarningLevel=0 -clp:ErrorsOnly
