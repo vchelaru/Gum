@@ -34,9 +34,6 @@ public partial class WireframeObjectManager
 
     static WireframeObjectManager mSelf;
 
-    Layer MainEditorLayer;
-
-
     GraphicalUiElementManager gueManager;
     private LocalizationManager _localizationManager;
 

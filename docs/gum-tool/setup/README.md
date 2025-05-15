@@ -13,6 +13,12 @@ Currently the Gum tool requires XNA runtimes. Download and install the runtime p
 
 {% embed url="https://www.microsoft.com/en-us/download/details.aspx?id=20914" %}
 
+{% hint style="success" %}
+The current preview build of Gum no longer requires XNA. You can use this preview version instead of installing XNA. See the latest releases page for more info:
+
+[https://github.com/vchelaru/Gum/releases](https://github.com/vchelaru/Gum/releases)
+{% endhint %}
+
 Since Gum is a prebuilt file in a .zip, Windows _blocks_ the file which results in the "Windows protected your PC" popup:
 
 <figure><img src="../../.gitbook/assets/image (77).png" alt=""><figcaption><p>Windows protected your PC popup</p></figcaption></figure>
