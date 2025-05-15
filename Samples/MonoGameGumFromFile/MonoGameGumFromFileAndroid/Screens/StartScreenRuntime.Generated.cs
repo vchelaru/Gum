@@ -8,13 +8,11 @@ using Gum.Wireframe;
 
 using RenderingLibrary.Graphics;
 
-using SkiaGum;
-using SkiaGum.GueDeriving;
-using SkiaGum.Renderables;
+using MonoGameGum.GueDeriving;
 
 namespace MonoGameGumFromFileAndroid.Screens
 {
-    public partial class StartScreenRuntime:SkiaGum.GueDeriving.ContainerRuntime
+    public partial class StartScreenRuntime:ContainerRuntime
     {
         [System.Runtime.CompilerServices.ModuleInitializer]
         public static void RegisterRuntimeType()
