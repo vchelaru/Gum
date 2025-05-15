@@ -41,7 +41,7 @@ jobs:
       continue-on-error: false
 
     - name: Initialize Submodules
-      run: git submodule update --init -- baldwin: true
+      run: git submodule update --init --recursive
       continue-on-error: false
 
     - name: Setup .NET
