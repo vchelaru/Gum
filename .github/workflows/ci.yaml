@@ -18,7 +18,12 @@ jobs:
     - name: List Solutions
       id: set-solutions
       run: |
-        $solutions = (Get-ChildItem -Path Samples -Recurse -Include *.sln | ForEach-Object { $_.BaseName } | Sort-Object | ConvertTo-Json -Compress)
+        $exclude = @("GumTest") # Define exclusion list here
+        $solutions = Get-ChildItem -Path Samples -Recurse -Include *.sln | 
+                     ForEach-Object { $_.BaseName } | 
+                     Where-Object { $exclude -notcontains $_ } | 
+                     Sort-Object | 
+                     ConvertTo-Json -Compress
         echo "solutions=$solutions" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
   build:
@@ -36,7 +41,7 @@ jobs:
       continue-on-error: false
 
     - name: Initialize Submodules
-      run: git submodule update --init --recursive
+      run: git submodule update --init -- baldwin: true
       continue-on-error: false
 
     - name: Setup .NET
