@@ -50,10 +50,6 @@ jobs:
         dotnet-version: ${{ matrix.dotnet-version }}
       continue-on-error: false
 
-    - name: Restore .NET Tools
-      run: dotnet tool restore
-      continue-on-error: false
-
     - name: Build Solution (${{ matrix.solution }})
       run: |
         $solutionFile = (Get-ChildItem -Path Samples -Recurse -Include "${{ matrix.solution }}.sln").FullName
