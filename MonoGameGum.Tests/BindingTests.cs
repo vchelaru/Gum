@@ -146,6 +146,36 @@ public class BindingTests
     }
 
     [Test]
+    public async Task SetBinding_ShouldEstablishTwoWayBinding_OnThreeDeepChild()
+    {
+        int timesCalled = 0;
+        var vm = new CheckBoxViewModel();
+        vm.PropertyChanged += (not, used) =>
+        {
+            timesCalled++;
+        };
+
+        await Assert.That(timesCalled).IsEqualTo(0);
+
+
+        var stack = new StackPanel();
+        var innerStack = new StackPanel();
+        var checkBox = new CheckBox();
+        checkBox.SetBinding(nameof(checkBox.IsChecked), nameof(CheckBoxViewModel.IsChecked));
+        stack.AddChild(innerStack);
+        innerStack.AddChild(checkBox);
+
+        stack.BindingContext = vm;
+
+        await Assert.That(timesCalled).IsEqualTo(0);
+
+        checkBox.IsChecked = true;
+
+        await Assert.That(timesCalled).IsEqualTo(1);
+
+    }
+
+    [Test]
     public async Task ListBoxItemBinding_ShouldSetBindingContextOnListBoxItems()
     {
         // Arrange
