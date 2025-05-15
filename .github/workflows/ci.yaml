@@ -1,31 +1,3 @@
-name: Build All
-
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
-
-jobs:
-  list-solutions:
-    runs-on: windows-latest
-    outputs:
-      solutions: ${{ steps.set-solutions.outputs.solutions }}
-    steps:
-    - uses: actions/checkout@v4
-      continue-on-error: false
-
-    - name: List Solutions
-      id: set-solutions
-      run: |
-        $exclude = @("GumTest") # Define exclusion list here
-        $solutions = Get-ChildItem -Path Samples -Recurse -Include *.sln | 
-                     ForEach-Object { $_.BaseName } | 
-                     Where-Object { $exclude -notcontains $_ } | 
-                     Sort-Object | 
-                     ConvertTo-Json -Compress
-        echo "solutions=$solutions" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-
   build:
     needs: list-solutions
     runs-on: windows-latest
@@ -52,6 +24,10 @@ jobs:
 
     - name: Clear NuGet Cache
       run: dotnet nuget locals all --clear
+      continue-on-error: false
+
+    - name: Install dotnet-mgcb
+      run: dotnet tool install -g dotnet-mgcb
       continue-on-error: false
 
     - name: Build Solution (${{ matrix.solution }})
