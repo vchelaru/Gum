@@ -5745,6 +5745,19 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         return null;
     }
 
+    public IPositionedSizedObject GetChildByType(Type type)
+    {
+        for (int i = 0; i < Children.Count; i++)
+        {
+            var child = Children[i];
+            if (child.GetType().Equals(type))
+            {
+                return child;
+            }
+        }
+        return null;
+    }
+
     public IRenderableIpso GetChildByNameRecursively(string name)
     {
         return GetChildByName(Children, name);
