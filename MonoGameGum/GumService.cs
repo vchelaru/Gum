@@ -9,6 +9,7 @@ using MonoGameGum.Forms;
 using MonoGameGum.Forms.Controls;
 using MonoGameGum.GueDeriving;
 using MonoGameGum.Input;
+using MonoGameGum.Interfaces;
 using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
@@ -23,7 +24,7 @@ using ToolsUtilities;
 
 namespace MonoGameGum;
 
-public class GumService
+public class GumService : IGumService
 {
     #region Default
     static GumService _default;
@@ -31,7 +32,7 @@ public class GumService
     {
         get
         {
-            if(_default == null)
+            if (_default == null)
             {
                 _default = new GumService();
             }
@@ -106,7 +107,7 @@ public class GumService
         {
             var animation = TryLoadAnimation(element);
 
-            if(animation != null)
+            if (animation != null)
             {
                 project.ElementAnimations.Add(animation);
             }
@@ -121,7 +122,7 @@ public class GumService
 
         var fileName = prefix + element.Name + "Animations.ganx";
 
-        if(FileManager.FileExists(fileName))
+        if (FileManager.FileExists(fileName))
         {
             var animation = FileManager.XmlDeserialize<ElementAnimationsSave>(fileName);
             animation.ElementName = element.Name;
@@ -140,7 +141,7 @@ public class GumService
     bool hasBeenInitialized = false;
     GumProjectSave? InitializeInternal(Game game, GraphicsDevice graphicsDevice, string? gumProjectFile = null, SystemManagers? systemManagers = null)
     {
-        if(hasBeenInitialized)
+        if (hasBeenInitialized)
         {
             throw new InvalidOperationException("Initialize has already been called once. It cannot be called again");
         }
@@ -197,7 +198,7 @@ public class GumService
         current = gumProject.StandardElements.Find(item => item.Name == "NineSlice");
         NineSliceRuntime.DefaultSourceFile = GetString("SourceFile");
 
-        float GetFloat (string variableName) => current.DefaultState.GetValueOrDefault<float>(variableName);
+        float GetFloat(string variableName) => current.DefaultState.GetValueOrDefault<float>(variableName);
         string GetString(string varialbeName) => current.DefaultState.GetValueOrDefault<string>(varialbeName);
     }
 
@@ -214,7 +215,7 @@ public class GumService
         // Get all types in the assembly
         var types = executingAssembly?.GetTypes();
 
-        if(types != null)
+        if (types != null)
         {
             foreach (Type type in types)
             {
@@ -260,7 +261,7 @@ public class GumService
         GameTime = gameTime;
         FormsUtilities.Update(game, gameTime, roots);
         this.SystemManagers.Activity(gameTime.TotalGameTime.TotalSeconds);
-        foreach(var item in roots)
+        foreach (var item in roots)
         {
             item.AnimateSelf(gameTime.ElapsedGameTime.TotalSeconds);
         }

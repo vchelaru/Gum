@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using MonoGameGum;
+using MonoGameGum.Interfaces;
 using System;
 using System.Threading.Tasks;
 
@@ -63,7 +64,7 @@ namespace MonoGameAndGum
         {
             // Register core services
             services.AddSingleton<Game1>();
-            services.AddSingleton<GumService>();
+            services.AddSingleton<IGumService, GumService>();
         }
     }
 }
