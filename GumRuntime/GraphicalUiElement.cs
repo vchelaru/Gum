@@ -5745,7 +5745,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         return null;
     }
 
-    public IPositionedSizedObject GetChildByType(Type type)
+    public IPositionedSizedObject? GetChildByType(Type type)
     {
         for (int i = 0; i < Children.Count; i++)
         {
@@ -5788,12 +5788,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         return null;
     }
 
-    public IRenderableIpso GetChildByTypeRecursively(Type type)
+    public IRenderableIpso? GetChildByTypeRecursively(Type type)
     {
         return GetChildByType(Children, type);
     }
 
-    private IRenderableIpso GetChildByType(ObservableCollection<IRenderableIpso> children, Type type)
+    private IRenderableIpso? GetChildByType(ObservableCollection<IRenderableIpso> children, Type type)
     {
         // This is a recursive call, but we want to find the most-shallow child
         // first before going deeper. This is important for controls like ListBox
@@ -5818,12 +5818,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         return null;
     }
 
-    public IRenderableIpso GetParentByNameRecursively(string name)
+    public IRenderableIpso? GetParentByNameRecursively(string name)
     {
         return GetParentByName(this, name);
     }
 
-    private IRenderableIpso GetParentByName(IRenderableIpso element, string name)
+    private IRenderableIpso? GetParentByName(IRenderableIpso element, string name)
     {
         if (element.Parent != null)
         {
@@ -5842,12 +5842,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
-    public IRenderableIpso GetParentByTypeRecursively(Type type)
+    public IRenderableIpso? GetParentByTypeRecursively(Type type)
     {
         return GetParentByType(this, type);
     }
 
-    private IRenderableIpso GetParentByType(IRenderableIpso element, Type type)
+    private IRenderableIpso? GetParentByType(IRenderableIpso element, Type type)
     {
         if (element.Parent != null)
         {
