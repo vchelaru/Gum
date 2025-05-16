@@ -1,4 +1,5 @@
-﻿using RenderingLibrary;
+﻿using Gum;
+using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
@@ -40,7 +41,11 @@ public class Renderer : IRenderer
     Camera _camera = new Camera();
     public Camera Camera => _camera;
 
-
+    public static BlendState NormalBlendState
+    {
+        get;
+        set;
+    } = BlendState.NonPremultiplied;
 
     List<Layer> _layers;
     ReadOnlyCollection<Layer> _layersReadOnly;

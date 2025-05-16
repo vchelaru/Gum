@@ -325,7 +325,7 @@ namespace MonoGameGumFromFile
                 else
                 {
                     var newScreenElement = ObjectFinder.Self.GumProjectSave.Screens.FirstOrDefault(item => item.Name == screenName);
-                    newScreen = newScreenElement.ToGraphicalUiElement();
+                    newScreen = newScreenElement.ToGraphicalUiElement(SystemManagers.Default);
                     newScreen.AddToRoot();
 
                     var textRuntime = (newScreen.GetGraphicalUiElementByName("TextRuntime") as TextRuntime);
