@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGameGum;
+using MonoGameGum.Interfaces;
 using System;
 
 namespace MonoGameAndGum
@@ -11,7 +12,7 @@ namespace MonoGameAndGum
     /// </summary>
     public class Game1 : Game, IDisposable
     {
-        private readonly GumService _gumService;
+        private readonly IGumService _gumService;
         private readonly GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
         private bool _disposed;
@@ -22,7 +23,7 @@ namespace MonoGameAndGum
         /// </summary>
         /// <param name="gumService">The Gum service for UI management.</param>
         /// <exception cref="ArgumentNullException">Thrown if gumService is null.</exception>
-        public Game1(GumService gumService)
+        public Game1(IGumService gumService)
         {
             _gumService = gumService ?? throw new ArgumentNullException(nameof(gumService));
             _graphics = new GraphicsDeviceManager(this);
