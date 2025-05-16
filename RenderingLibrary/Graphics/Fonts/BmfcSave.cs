@@ -210,6 +210,7 @@ public class BmfcSave
     /// <param name="cancellationToken">A cancellation token. If invoked, the task will return 
     /// immediately as canceled.</param>
     /// <returns>A Task representing waiting for the process to end.</returns>
+    [Obsolete("This is only used when creating bitmap fonts with bitmap font generator's .exe, which is getting moved out of this class")]
     static async Task<int> WaitForExitAsync(Process process, CancellationToken cancellationToken = default)
     {
         var tcs = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -327,6 +328,7 @@ public class BmfcSave
     }
 
     // todo - this needs to move to Gum Tool and not GumCommon!!
+    [Obsolete("This should be moved to the Gum Tool, not the common library. Do not call this, it will go away in future versions of Guml")]
     public async Task<bool> CreateBitmapFontFilesIfNecessaryAsync(string fileName, Assembly assemblyContainingBitmapFontGenerator,
         bool force = false, 
         bool forceMonoSpacedNumber = false)
@@ -377,6 +379,7 @@ public class BmfcSave
             //info.RedirectStandardInput = true;
             //info.RedirectStandardOutput = true;
             //info.CreateNoWindow = true;
+
 
             Process process = Process.Start(info);
             await WaitForExitAsync(process);

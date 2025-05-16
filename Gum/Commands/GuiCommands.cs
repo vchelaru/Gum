@@ -502,6 +502,7 @@ namespace Gum.Commands
 
         #endregion
 
+
         public Spinner ShowSpinner()
         {
             var spinner = new Gum.Controls.Spinner();

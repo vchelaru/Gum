@@ -1,4 +1,5 @@
 ﻿using RenderingLibrary;
+using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
@@ -30,8 +31,16 @@ namespace Gum.Managers
             var directory = Path.GetDirectoryName(executingPath);
 
             var fntFilePath = Path.Combine(directory, "Content/Fonts/Font18Arial_o1.fnt");
-            var font = new BitmapFont(fntFilePath, SystemManagers.Default);
+            var font = new BitmapFont(fntFilePath);
 
+            // Remove the loaded contnet from the loaderManager so it is never accidentally disposed
+            // when we clear cache
+            LoaderManager.Self.RemoveWithoutDisposing(font);
+
+            foreach (var texture in font.Textures)
+            {
+                LoaderManager.Self.RemoveWithoutDisposing(texture);
+            }
             _toolFont = font;
         }
     }

@@ -122,5 +122,14 @@ namespace RenderingLibrary.Content
             }
         }
 
+        public void RemoveWithoutDisposing(IDisposable disposable)
+        {
+            var kvp = mCachedDisposables.FirstOrDefault(item => item.Value == disposable);
+
+            if(kvp.Value == disposable)
+            {
+                mCachedDisposables.Remove(kvp.Key);
+            }
+        }
     }
 }
