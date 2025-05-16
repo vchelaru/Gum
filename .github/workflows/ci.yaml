@@ -25,6 +25,12 @@ jobs:
                      Sort-Object | 
                      ConvertTo-Json -Compress
         echo "solutions=$solutions" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+      shell: pwsh
+      continue-on-error: false
+
+    - name: Check for Failure
+      if: failure()
+      run: echo "Failed to list solutions" >&2
 
   build:
     needs: list-solutions
@@ -56,7 +62,11 @@ jobs:
         DOTNET_TOOLS_ALLOW_MANIFEST_IN_ROOT: true
       run: |
         $solutionFile = (Get-ChildItem -Path Samples -Recurse -Include "${{ matrix.solution }}.sln").FullName
-        Write-Host "Building solution: $solutionFile"
         dotnet restore "$solutionFile" -v q
         dotnet build "$solutionFile" --configuration Release --no-restore -nologo -v q --property WarningLevel=0 -clp:ErrorsOnly
+      shell: pwsh
       continue-on-error: false
+
+    - name: Check for Failure
+      if: failure()
+      run: echo "Failed to build ${{ matrix.solution }} with .NET ${{ matrix.dotnet-version }}" >&2
