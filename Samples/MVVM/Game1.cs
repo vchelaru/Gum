@@ -1,35 +1,31 @@
-﻿using Gum.Managers;
-using Gum.Wireframe;
-using GumRuntime;
+﻿using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
-using MonoGameGum.GueDeriving;
-using RenderingLibrary;
-using System.Linq;
+using MonoGameGum;
+using System;
 
 namespace MonoGameAndGum
 {
-    public class Game1 : Game
+    public class Game1 : Game, IDisposable
     {
-        private GraphicsDeviceManager _graphics;
+        private readonly GumService _gumService;
+        private readonly GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
+        private bool _disposed;
 
-        GraphicalUiElement Root;
+        private GraphicalUiElement Root;
 
-        public Game1()
+        public Game1(GumService gumService)
         {
+            _gumService = gumService ?? throw new ArgumentNullException(nameof(gumService));
             _graphics = new GraphicsDeviceManager(this);
-            Content.RootDirectory = "Content";
+            Content.RootDirectory = Configuration.ContentRoot; // Use configuration
             IsMouseVisible = true;
         }
 
         protected override void Initialize()
         {
-            MonoGameGum.GumService.Default.Initialize(this, "GumProject/GumProject.gumx");
-
-            //var screen = ObjectFinder.Self.GumProjectSave.Screens.First();
-            //Root = screen.ToGraphicalUiElement(SystemManagers.Default, addToManagers:true);
+            _gumService.Initialize(this, Configuration.GumProjectPath); // Use configuration
             var screen = new MainMenuRuntime();
             screen.AddToManagers();
             Root = screen;
@@ -40,24 +36,39 @@ namespace MonoGameAndGum
         protected override void LoadContent()
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
-
-            // TODO: use this.Content to load your game content here
         }
 
         protected override void Update(GameTime gameTime)
         {
-            MonoGameGum.GumService.Default.Update(this, gameTime, Root);
-
+            _gumService.Update(this, gameTime, Root);
             base.Update(gameTime);
         }
 
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
-
-            MonoGameGum.GumService.Default.Draw();
-
+            _gumService.Draw();
             base.Draw(gameTime);
         }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+
+            if (disposing)
+            {
+                _spriteBatch?.Dispose();
+            }
+
+            _disposed = true;
+            base.Dispose(disposing);
+        }
+    }
+
+    // Example configuration class (to be implemented)
+    public static class Configuration
+    {
+        public static string ContentRoot => "Content";
+        public static string GumProjectPath => "GumProject/GumProject.gumx";
     }
 }

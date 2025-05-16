@@ -18,7 +18,6 @@ internal class FormsScreen : FrameworkElement
         Visual.Height = 0;
         Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
 
-
         var stackPanel = new StackPanel();
         stackPanel.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
         stackPanel.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
