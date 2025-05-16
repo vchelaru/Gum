@@ -5732,7 +5732,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         return null;
     }
 
-    public IPositionedSizedObject GetChildByName(string name)
+    public IPositionedSizedObject? GetChildByName(string name)
     {
         for (int i = 0; i < Children.Count; i++)
         {
@@ -5758,12 +5758,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         return null;
     }
 
-    public IRenderableIpso GetChildByNameRecursively(string name)
+    public IRenderableIpso? GetChildByNameRecursively(string name)
     {
         return GetChildByName(Children, name);
     }
 
-    private IRenderableIpso GetChildByName(ObservableCollection<IRenderableIpso> children, string name)
+    private IRenderableIpso? GetChildByName(ObservableCollection<IRenderableIpso> children, string name)
     {
         // This is a recursive call, but we want to find the most-shallow child
         // first before going deeper. This is important for controls like ListBox
