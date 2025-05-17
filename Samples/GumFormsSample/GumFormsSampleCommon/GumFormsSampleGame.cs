@@ -91,21 +91,12 @@ namespace GumFormsSample
 
         protected override void Dispose(bool disposing)
         {
-            if (_disposed)
-                return;
-
             if (disposing)
             {
                 _spriteBatch?.Dispose();
                 _renderTarget?.Dispose();
                 _graphics?.Dispose();
             }
-
-            _spriteBatch = null;
-            _renderTarget = null;
-            _disposed = true;
-
-            base.Dispose(disposing);
         }
     }
 }
