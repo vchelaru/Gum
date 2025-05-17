@@ -526,7 +526,7 @@ internal class MainEditorTabPlugin : InternalPlugin
 
                     gue.SetProperty(unqualifiedMember, value);
 
-                    WireframeObjectManager.Self.RootGue?.ApplyVariableReferences(SelectedState.Self.SelectedStateSave);
+                    WireframeObjectManager.Self.RootGue?.ApplyVariableReferences(state);
                     //gue.ApplyVariableReferences(SelectedState.Self.SelectedStateSave);
 
                     handledByDirectSet = !disposedFile;
