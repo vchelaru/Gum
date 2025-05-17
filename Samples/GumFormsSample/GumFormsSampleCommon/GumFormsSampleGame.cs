@@ -47,7 +47,6 @@ namespace GumFormsSample
             catch (Exception ex)
             {
                 _logger.LogError($"Initialization failed: {ex.Message}");
-                Exit();
             }
 
             base.Initialize();
