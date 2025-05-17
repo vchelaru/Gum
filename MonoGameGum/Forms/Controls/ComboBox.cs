@@ -412,8 +412,7 @@ public class ComboBox : FrameworkElement, IInputReceiver
     private void HandleSelectionChanged(object sender, SelectionChangedEventArgs args)
     {
         // If we bind the Text, then don't set this here, the binding will take care of it
-        var isTextBound = vmPropsToUiProps?.Values.Any(item => item == nameof(Text)) == true;
-        if (isTextBound == false)
+        if (!IsDataBound(nameof(Text)))
         {
             UpdateToObject(listBox.SelectedObject);
         }

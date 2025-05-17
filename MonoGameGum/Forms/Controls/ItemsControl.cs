@@ -416,18 +416,13 @@ public class ItemsControl : ScrollViewer
     #region Update To
 
 #if FRB
-    protected override void HandleVisualBindingContextChanged(object sender, BindingContextChangedEventArgs args)
+    protected override void OnBindingContextChanged(object sender, BindingContextChangedEventArgs args)
     {
-        if(args.OldBindingContext != null && BindingContext == null)
+        if (IsDataBound(nameof(Items)) && 
+            args is { OldBindingContext: not null, NewBindingContext: null })
         {
-            // user removed the binding context, usually this happens when the object is removed
-            if(vmPropsToUiProps.ContainsValue(nameof(Items)))
-            {
-                // null out the items!
-                this.Items = null;
-            }
+            this.Items = null;
         }
-        base.HandleVisualBindingContextChanged(sender, args);
     }
 #endif
     #endregion
