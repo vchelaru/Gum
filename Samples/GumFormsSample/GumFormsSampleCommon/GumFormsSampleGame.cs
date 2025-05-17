@@ -47,7 +47,6 @@ namespace GumFormsSample
             catch (Exception ex)
             {
                 _logger.LogError($"Initialization failed: {ex.Message}");
-                Exit();
             }
 
             base.Initialize();
@@ -91,21 +90,12 @@ namespace GumFormsSample
 
         protected override void Dispose(bool disposing)
         {
-            if (_disposed)
-                return;
-
             if (disposing)
             {
                 _spriteBatch?.Dispose();
                 _renderTarget?.Dispose();
                 _graphics?.Dispose();
             }
-
-            _spriteBatch = null;
-            _renderTarget = null;
-            _disposed = true;
-
-            base.Dispose(disposing);
         }
     }
 }
