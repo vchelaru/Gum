@@ -169,7 +169,7 @@ public class FontManager
 
             System.Diagnostics.Debug.WriteLine($"Starting {item.Key}");
 
-            tasks.Add(TryCreateFontFor(item.Value, forceRecreate, showSpinner:false));
+            tasks.Add(TryCreateFontFor(item.Value, forceRecreate, showSpinner:false, createTask:true));
 
         }
 
@@ -206,7 +206,7 @@ public class FontManager
             var assembly = GetType().Assembly;
             TrySaveBmFontExe(assembly);
 
-            await TryCreateFontFor(bmfcSave, forceRecreate, showSpinner:true);
+            TryCreateFontFor(bmfcSave, forceRecreate, showSpinner:true, createTask:false);
         }
     }
 
@@ -245,14 +245,14 @@ public class FontManager
         return bmfcSave;
     }
 
-    private async Task<bool> TryCreateFontFor(BmfcSave bmfcSave, bool force, bool showSpinner)
+    private async Task<bool> TryCreateFontFor(BmfcSave bmfcSave, bool force, bool showSpinner, bool createTask)
     {
         EstimateNeededDimensions(bmfcSave);
-        var didCreate = await CreateBitmapFontFilesIfNecessaryAsync(bmfcSave, force, false, showSpinner);
+        var didCreate = await CreateBitmapFontFilesIfNecessaryAsync(bmfcSave, force, false, showSpinner, createTask);
         return didCreate;
     }
 
-    async Task<bool> CreateBitmapFontFilesIfNecessaryAsync(BmfcSave bmfcSave, bool force, bool forceMonoSpacedNumber, bool showSpinner)
+    async Task<bool> CreateBitmapFontFilesIfNecessaryAsync(BmfcSave bmfcSave, bool force, bool forceMonoSpacedNumber, bool showSpinner, bool createTask)
     {
 
         var fileName = bmfcSave.FontCacheFileName;
@@ -295,7 +295,14 @@ public class FontManager
             System.Diagnostics.Debug.WriteLine($"Running: {info.FileName} {info.Arguments}");
 
             Process process = Process.Start(info);
-            await WaitForExitAsync(process);
+            if(createTask)
+            {
+                await WaitForExitAsync(process);
+            }
+            else
+            {
+                process.WaitForExit();
+            }
             didCreate = true;
 
             if(spinner != null)
