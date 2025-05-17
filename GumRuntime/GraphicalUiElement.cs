@@ -5732,7 +5732,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         return null;
     }
 
-    public IPositionedSizedObject GetChildByName(string name)
+    public IPositionedSizedObject? GetChildByName(string name)
     {
         for (int i = 0; i < Children.Count; i++)
         {
@@ -5745,12 +5745,25 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         return null;
     }
 
-    public IRenderableIpso GetChildByNameRecursively(string name)
+    public IPositionedSizedObject? GetChildByType(Type type)
+    {
+        for (int i = 0; i < Children.Count; i++)
+        {
+            var child = Children[i];
+            if (child.GetType().Equals(type))
+            {
+                return child;
+            }
+        }
+        return null;
+    }
+
+    public IRenderableIpso? GetChildByNameRecursively(string name)
     {
         return GetChildByName(Children, name);
     }
 
-    private IRenderableIpso GetChildByName(ObservableCollection<IRenderableIpso> children, string name)
+    private IRenderableIpso? GetChildByName(ObservableCollection<IRenderableIpso> children, string name)
     {
         // This is a recursive call, but we want to find the most-shallow child
         // first before going deeper. This is important for controls like ListBox
@@ -5773,6 +5786,84 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             }
         }
         return null;
+    }
+
+    public IRenderableIpso? GetChildByTypeRecursively(Type type)
+    {
+        return GetChildByType(Children, type);
+    }
+
+    private IRenderableIpso? GetChildByType(ObservableCollection<IRenderableIpso> children, Type type)
+    {
+        // This is a recursive call, but we want to find the most-shallow child
+        // first before going deeper. This is important for controls like ListBox
+        // which may have a FocusedIndicator at the top level, and each individual
+        // ListBoxItem has a FocusedIndicator too.
+        foreach (var child in children)
+        {
+            if (child.GetType().Equals(type))
+            {
+                return child;
+            }
+        }
+
+        foreach (var child in children)
+        {
+            var subChild = GetChildByType(child.Children, type);
+            if (subChild != null)
+            {
+                return subChild;
+            }
+        }
+        return null;
+    }
+
+    public IRenderableIpso? GetParentByNameRecursively(string name)
+    {
+        return GetParentByName(this, name);
+    }
+
+    private IRenderableIpso? GetParentByName(IRenderableIpso element, string name)
+    {
+        if (element.Parent != null)
+        {
+            if (element.Parent.Name == name)
+            {
+                return element.Parent;
+            }
+            else
+            {
+                return GetParentByName(element.Parent, name);
+            }
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    public IRenderableIpso? GetParentByTypeRecursively(Type type)
+    {
+        return GetParentByType(this, type);
+    }
+
+    private IRenderableIpso? GetParentByType(IRenderableIpso element, Type type)
+    {
+        if (element.Parent != null)
+        {
+            if (element.Parent.GetType().Equals(type))
+            {
+                return element.Parent;
+            }
+            else
+            {
+                return GetParentByType(element.Parent, type);
+            }
+        }
+        else
+        {
+            return null;
+        }
     }
 
     #endregion
