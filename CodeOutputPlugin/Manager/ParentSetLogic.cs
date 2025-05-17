@@ -16,14 +16,14 @@ namespace CodeOutputPlugin.Manager
     {
         public static void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue, CodeOutputProjectSettings codeOutputProjectSettings)
         {
+            var currentState = SelectedState.Self.SelectedStateSave;
             ///////////////////////Early Out//////////////////
-            if(variableName != "Parent" || instance == null)
+            if(variableName != "Parent" || instance == null || currentState == null)
             {
                 return;
             }
             /////////////////////End Early Out////////////////
 
-            var currentState = SelectedState.Self.SelectedStateSave;
             var rfv = new RecursiveVariableFinder(currentState);
 
             var newParentName = rfv.GetValue<string>($"{instance.Name}.Parent");
