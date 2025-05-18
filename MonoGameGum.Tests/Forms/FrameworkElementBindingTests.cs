@@ -9,7 +9,7 @@ using TUnit.Assertions.AssertConditions.Throws;
 
 namespace MonoGameGum.Tests.Forms;
 
-public class BindingTests
+public class FrameworkElementBindingTests
 {
     [Before(Class)]
     public static void SetUp()

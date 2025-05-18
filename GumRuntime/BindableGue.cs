@@ -528,11 +528,17 @@ public class BindableGue : GraphicalUiElement
 
     protected void PushValueToViewModel([CallerMemberName] string? uiPropertyName = null)
     {
-        if (uiPropertyName != null && 
-            vmPropsToUiProps.TryGetValue(uiPropertyName, out VmToUiProperty kvp) && 
-            kvp.UiProperty == uiPropertyName &&
-            BindingContext?.GetType().GetProperty(kvp.VmProperty) is {} vmp &&
-            GetType().GetProperty(kvp.UiProperty) is {} uip)
+        if(uiPropertyName == null)
+        {
+            return;
+        }
+
+        var kvp = vmPropsToUiProps.FirstOrDefault(item => item.Value.UiProperty == uiPropertyName);
+
+        if (
+            kvp.Value.UiProperty == uiPropertyName &&
+            BindingContext?.GetType().GetProperty(kvp.Value.VmProperty) is {} vmp &&
+            GetType().GetProperty(kvp.Value.UiProperty) is {} uip)
         {
             object? uiValue = uip.GetValue(this, null);
             vmp.SetValue(BindingContext, uiValue, null);
