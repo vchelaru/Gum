@@ -1,33 +1,11 @@
-using Gum.Converters;
-using Gum.DataTypes;
-using Gum.DataTypes.Variables;
-using Gum.Managers;
-using Gum.RenderingLibrary;
-using GumDataTypes.Variables;
-
-using RenderingLibrary;
 using RenderingLibrary.Graphics;
-using RenderingLibrary.Math;
-
-
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.Linq;
 using System.ComponentModel;
-using ToolsUtilitiesStandard.Helpers;
-using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
-using Vector2 = System.Numerics.Vector2;
-using Vector3 = System.Numerics.Vector3;
-using Color = System.Drawing.Color;
-using Rectangle = System.Drawing.Rectangle;
-using Matrix = System.Numerics.Matrix4x4;
-using GumRuntime;
-using System.Collections;
-using System.Reflection.Emit;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+
+
+
+
 
 namespace Gum.Wireframe;
 
@@ -37,12 +15,16 @@ public class BindingContextChangedEventArgs : EventArgs
     public object? NewBindingContext { get; set; }
 }
 
+#if FRB
+public partial class GraphicalUiElement : FlatRedBall.Gui.Controls.IControl, FlatRedBall.Graphics.Animation.IAnimatable
+#else
 /// <summary>
 /// The base object for all Gum runtime objects. It contains functionality for
 /// setting variables, states, and performing layout. The GraphicalUiElement can
 /// wrap an underlying rendering object.
 /// </summary>
 public class BindableGue : GraphicalUiElement
+#endif
 {
     struct VmToUiProperty
     {
@@ -61,6 +43,12 @@ public class BindableGue : GraphicalUiElement
         public static VmToUiProperty Unassigned => new VmToUiProperty();
     }
 
+#if FRB
+    partial void OnConstructor()
+    {
+        InitializeBindableGue();
+    }
+#else
     public BindableGue()
     {
         InitializeBindableGue();
@@ -70,6 +58,7 @@ public class BindableGue : GraphicalUiElement
     {
         InitializeBindableGue();
     }
+#endif
 
     private void InitializeBindableGue()
     {
@@ -100,18 +89,37 @@ public class BindableGue : GraphicalUiElement
 
     public event EventHandler<BindingContextChangedEventArgs>? InheritedBindingContextChanged;
 
+#if !FRB
     public override void RemoveFromManagers()
     {
         base.RemoveFromManagers();
 
-        BindingContext = null;
-        foreach (var descendant in GetAllBindableDescendants().ToList())
+        RemoveBindingContextRecursively();
+    }
+#endif
+
+    private void RemoveBindingContextRecursively()
+    {
+        this.BindingContext = null;
+        if (this.Children != null)
         {
-            descendant.BindingContext = null;
+            foreach (var child in this.Children)
+            {
+                if (child is BindableGue gue)
+                {
+                    gue.RemoveBindingContextRecursively();
+                }
+            }
+        }
+        else
+        {
+            foreach (var gue in this.WhatThisContains)
+            {
+                (gue as BindableGue)?.RemoveBindingContextRecursively();
+            }
         }
     }
 
-    #region Binding
     // Apr 19 2020:
     // Vic says I could
     // put this in GraphicalUiElement
@@ -130,7 +138,6 @@ public class BindableGue : GraphicalUiElement
         get => mInheritedBindingContext;
         set
         {
-            
             var oldInherited = mInheritedBindingContext;
             
             if (oldInherited != value)
@@ -149,8 +156,6 @@ public class BindableGue : GraphicalUiElement
                     HandleBindingContextChangedInternal(oldContext, BindingContext);
                 }
             }
-
-
         }
     }
 
@@ -167,13 +172,11 @@ public class BindableGue : GraphicalUiElement
             {
                 HandleBindingContextChangedInternal(oldEffectiveBindingContext, BindingContext);
             }
-
         }
     }
 
     private void HandleBindingContextChangedInternal(object? oldContext, object? newContext)
     {
-
         if (oldContext is INotifyPropertyChanged oldViewModel)
         {
             UnsubscribeEventsOnOldViewModel(oldViewModel);
@@ -228,6 +231,8 @@ public class BindableGue : GraphicalUiElement
     public string? BindingContextBinding { get; private set; }
 
     public event Action<object, BindingContextChangedEventArgs> BindingContextChanged;
+
+    object EffectiveBindingContext => mBindingContext ?? InheritedBindingContext;
 
     private void HandleViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
@@ -390,6 +395,7 @@ public class BindableGue : GraphicalUiElement
                 else if (value is decimal asDecimal) convertedValue = asDecimal.ToString(format);
                 else if (value is float asFloat) convertedValue = asFloat.ToString(format);
                 else if (value is long asLong) convertedValue = asLong.ToString(format);
+                else if (value is byte asByte) convertedValue = asByte.ToString(format);
             }
             else
             {
@@ -425,6 +431,10 @@ public class BindableGue : GraphicalUiElement
             {
                 convertedValue = (double)asFloat;
             }
+            else if (value is string asString && double.TryParse(asString, out double doubleResult))
+            {
+                convertedValue = doubleResult;
+            }
         }
         else if (desiredType == typeof(decimal))
         {
@@ -439,6 +449,10 @@ public class BindableGue : GraphicalUiElement
             else if (value is float asFloat)
             {
                 convertedValue = (decimal)asFloat;
+            }
+            else if (value is string asString && decimal.TryParse(asString, out decimal asDecimal))
+            {
+                convertedValue = asDecimal;
             }
         }
         else if (desiredType == typeof(float))
@@ -460,6 +474,43 @@ public class BindableGue : GraphicalUiElement
                 convertedValue = float.TryParse(asString, out float result) ? result : 0;
             }
         }
+        else if (desiredType == typeof(byte))
+        {
+            decimal numeric = 0;
+            bool isNumeric = false;
+            if (value is int asInt)
+            {
+                numeric = (decimal)asInt;
+                isNumeric = true;
+            }
+            else if (value is double asDouble)
+            {
+                numeric = (decimal)asDouble;
+                isNumeric = true;
+            }
+            else if (value is decimal asDecimal)
+            {
+                numeric = asDecimal;
+                isNumeric = true;
+            }
+            else if (value is float asFloat)
+            {
+                numeric = (decimal)asFloat;
+                isNumeric = true;
+            }
+            else if (value is string asString && byte.TryParse(asString, out byte asByte))
+            {
+                numeric = (decimal)asByte;
+                isNumeric = true;
+            }
+
+            if (isNumeric)
+            {
+                var clamped = Math.Min(numeric, 255);
+                clamped = Math.Max(clamped, 0);
+                convertedValue = (byte)Math.Round(clamped);
+            }
+        }
         return convertedValue;
     }
 
@@ -475,7 +526,7 @@ public class BindableGue : GraphicalUiElement
         }
     }
 
-    protected void PushValueToViewModel([CallerMemberName] string uiPropertyName = null)
+    protected void PushValueToViewModel([CallerMemberName] string? uiPropertyName = null)
     {
         if (uiPropertyName != null && 
             vmPropsToUiProps.TryGetValue(uiPropertyName, out VmToUiProperty kvp) && 
@@ -488,12 +539,15 @@ public class BindableGue : GraphicalUiElement
         }
     }
 
-    #endregion
+    private IEnumerable<BindableGue> GetAllBindableChildren()
+    //[
+    //    ..Children?.OfType<BindableGue>() ?? [], ..ContainedElements.OfType<BindableGue>()
+    //];
+    {
+        if(Children != null) return Children.OfType<BindableGue>();
+        else return ContainedElements.OfType<BindableGue>();
+    }
 
-    private IEnumerable<BindableGue> GetAllBindableChildren() =>
-    [
-        ..Children?.OfType<BindableGue>() ?? [], ..ContainedElements.OfType<BindableGue>()
-    ];
 
     private IEnumerable<BindableGue> GetAllBindableDescendants()
     {
