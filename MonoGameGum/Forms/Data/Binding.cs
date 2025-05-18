@@ -8,6 +8,8 @@ using Gum.Wireframe;
 
 #if FRB
 namespace FlatRedBall.Forms.Data;
+#elif RAYLIB
+namespace RaylibGum.Forms.Data;
 #else
 namespace MonoGameGum.Forms.Data;
 #endif

@@ -4,12 +4,16 @@ using System.Reflection;
 
 #if FRB
 using FlatRedBall.Forms.Controls;
+#elif RAYLIB
+using RaylibGum.Forms.Controls;
 #else
 using MonoGameGum.Forms.Controls;
 #endif
 
 #if FRB
 namespace FlatRedBall.Forms.Data;
+#elif RAYLIB
+using RaylibGum.Forms.Data;
 #else
 namespace MonoGameGum.Forms.Data;
 #endif

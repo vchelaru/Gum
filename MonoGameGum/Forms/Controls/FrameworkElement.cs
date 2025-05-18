@@ -34,9 +34,9 @@ namespace FlatRedBall.Forms.Controls;
 #elif RAYLIB
 using RaylibGum;
 using RaylibGum.Input;
+using RaylibGum.Forms.Data;
 namespace RaylibGum.Forms.Controls;
 using Keys = Raylib_cs.KeyboardKey;
-namespace RaylibGum.Forms.Controls;
 
 #else
 using Keys = Microsoft.Xna.Framework.Input.Keys;
@@ -1259,22 +1259,22 @@ public class FrameworkElement : INotifyPropertyChanged
         {
             if (isFocused)
             {
-                return DisabledFocusedState;
+                return DisabledFocusedStateName;
             }
             else
             {
-                return DisabledState;
+                return DisabledStateName;
             }
         }
         else if (IsFocused)
         {
             if (cursor.WindowPushed == visual && primaryDown)
             {
-                return PushedState;
+                return PushedStateName;
             }
             else if(pushedByInput)
             {
-                return PushedState;
+                return PushedStateName;
             }
             // Even if the cursor is reported as being over the button, if the
             // cursor got its input from a touch screen then the cursor really isn't
@@ -1283,18 +1283,18 @@ public class FrameworkElement : INotifyPropertyChanged
             else if (GetIfIsOnThisOrChildVisual(cursor) &&
                 !isTouchScreen)
             {
-                return HighlightedFocusedState;
+                return HighlightedFocusedStateName;
             }
             else
             {
-                return FocusedState;
+                return FocusedStateName;
             }
         }
         else if (GetIfIsOnThisOrChildVisual(cursor))
         {
             if (cursor.WindowPushed == visual && primaryDown)
             {
-                return PushedState;
+                return PushedStateName;
             }
             // Even if the cursor is reported as being over the button, if the
             // cursor got its input from a touch screen then the cursor really isn't
@@ -1302,16 +1302,16 @@ public class FrameworkElement : INotifyPropertyChanged
             // is a physical on-screen cursor
             else if (!isTouchScreen)
             {
-                return HighlightedState;
+                return HighlightedStateName;
             }
             else
             {
-                return EnabledState;
+                return EnabledStateName;
             }
         }
         else
         {
-            return EnabledState;
+            return EnabledStateName;
         }
     }
 
