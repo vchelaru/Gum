@@ -32,7 +32,7 @@ public class WireframeControl : GraphicsDeviceControl
 
     WireframeEditControl mWireframeEditControl;
     private SelectionManager _selectionManager;
-
+    private DragDropManager _dragDropManager;
     LineRectangle mCanvasBounds;
 
     public Color ScreenBoundsColor = Color.LightBlue;
@@ -125,9 +125,11 @@ public class WireframeControl : GraphicsDeviceControl
         WireframeEditControl wireframeEditControl, 
         Panel wireframeParentPanel,
         HotkeyManager hotkeyManager,
-        SelectionManager selectionManager)
+        SelectionManager selectionManager,
+        DragDropManager dragDropManager)
     {
         _selectionManager = selectionManager;
+        _dragDropManager = dragDropManager;
         try
         {
             LoaderManager.Self.ContentLoader = new ContentLoader();
@@ -309,7 +311,7 @@ public class WireframeControl : GraphicsDeviceControl
 
                     _selectionManager.LateActivity();
                 }
-                DragDropManager.Self.Activity();
+                _dragDropManager.Activity();
 
                 InputLibrary.Cursor.Self.EndCursorSettingFrameStart();
             }

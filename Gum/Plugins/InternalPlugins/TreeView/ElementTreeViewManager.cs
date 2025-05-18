@@ -19,6 +19,7 @@ using Gum.Plugins.InternalPlugins.TreeView.ViewModels;
 using Gum.Logic;
 using System.Drawing;
 using WpfInput = System.Windows.Input;
+using Gum.Services;
 
 namespace Gum.Managers
 {
@@ -218,6 +219,7 @@ namespace Gum.Managers
 
         public TreeNode RootBehaviorsTreeNode => mBehaviorsTreeNode;
 
+        private DragDropManager _dragDropManager;
         private CopyPasteLogic _copyPasteLogic;
 
         public bool HasMouseOver
@@ -439,6 +441,7 @@ namespace Gum.Managers
         public void Initialize(IContainer components, ImageList ElementTreeImages,
             CopyPasteLogic copyPasteLogic)
         {
+            _dragDropManager = Builder.Get<DragDropManager>();
             _copyPasteLogic = copyPasteLogic;
 
             CreateObjectTreeView(ElementTreeImages);
@@ -542,7 +545,7 @@ namespace Gum.Managers
 
             ObjectTreeView.ItemDrag += (sender, e) =>
             {
-                DragDropManager.Self.OnItemDrag(e.Item);
+                _dragDropManager.OnItemDrag(e.Item);
                 System.Diagnostics.Debug.WriteLine("ItemDrag");
 
                 ObjectTreeView.DoDragDrop(e.Item, DragDropEffects.Move | DragDropEffects.Copy);
@@ -647,7 +650,7 @@ namespace Gum.Managers
 
         private void ObjectTreeView_KeyPress(object sender, KeyPressEventArgs e)
         {
-            DragDropManager.Self.HandleKeyPress(e);
+            _dragDropManager.HandleKeyPress(e);
         }
 
         private void HandleDragOverEvent(object sender, DragEventArgs e)
@@ -749,9 +752,9 @@ namespace Gum.Managers
 
             if (e.Data != null)
             {
-                DragDropManager.Self.HandleDragDropEvent(sender, e);
+                _dragDropManager.HandleDragDropEvent(sender, e);
             }
-            DragDropManager.Self.ClearDraggedItem();
+            _dragDropManager.ClearDraggedItem();
         }
 
         private void AddAndRemoveFolderNodes()
@@ -1834,7 +1837,7 @@ namespace Gum.Managers
         private void ObjectTreeView_KeyDown(object sender, KeyEventArgs e)
         {
             ElementTreeViewManager.Self.HandleKeyDown(e);
-            DragDropManager.Self.HandleKeyDown(e);
+            _dragDropManager.HandleKeyDown(e);
         }
 
 

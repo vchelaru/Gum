@@ -17,6 +17,7 @@ using System;
 using Gum.PropertyGridHelpers;
 using System.Security.Policy;
 using EditorTabPlugin_XNA.ExtensionMethods;
+using Gum.Services;
 
 namespace Gum.Wireframe;
 
@@ -25,6 +26,7 @@ public abstract class WireframeEditor
     protected HotkeyManager _hotkeyManager { get; private set; }
 
     private readonly SelectionManager _selectionManager;
+    private readonly SetVariableLogic _setVariableLogic;
     protected GrabbedState grabbedState = new GrabbedState();
 
     protected bool mHasChangedAnythingSinceLastPush = false;
@@ -44,6 +46,7 @@ public abstract class WireframeEditor
     {
         _hotkeyManager = hotkeyManager;
         _selectionManager = selectionManager;
+        _setVariableLogic = Builder.Get<SetVariableLogic>();
     }
 
     public abstract void UpdateToSelection(ICollection<GraphicalUiElement> selectedObjects);
@@ -285,7 +288,7 @@ public abstract class WireframeEditor
                 var instance = element.GetInstance(possiblyChangedVariable.SourceObject);
 
                 // should this be:
-                SetVariableLogic.Self.PropertyValueChanged(possiblyChangedVariable.GetRootName(),
+                _setVariableLogic.PropertyValueChanged(possiblyChangedVariable.GetRootName(),
                    oldValue,
                    instance,
                    element.DefaultState,

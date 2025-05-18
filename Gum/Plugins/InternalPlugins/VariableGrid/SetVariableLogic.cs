@@ -26,14 +26,16 @@ namespace Gum.PropertyGridHelpers
     public class SetVariableLogic : Singleton<SetVariableLogic>
     {
         private VariableReferenceLogic _variableReferenceLogic;
+        private CircularReferenceManager _circularReferenceManager;
         private FontManager _fontManager;
 
         // this is needed as we unroll all the other singletons...
-        public void Initialize()
+        public void Initialize(CircularReferenceManager circularReferenceManager)
         {
 
             _variableReferenceLogic = new VariableReferenceLogic(
                 Builder.Get<GuiCommands>());
+            _circularReferenceManager = circularReferenceManager;
 
             _fontManager = Builder.Get<FontManager>();
         }
@@ -228,14 +230,13 @@ namespace Gum.PropertyGridHelpers
                 if (instance != null)
                 {
                     var parentElement = instanceContainer as ElementSave;
-                    if (parentElement != null &&  ObjectFinder.Self.IsInstanceRecursivelyReferencingElement(instance, parentElement))
+
+                    if(_circularReferenceManager.CanTypeBeAddedToElement(parentElement, instance.BaseType) == false)
                     {
                         MessageBox.Show("This assignment would create a circular reference, which is not allowed.");
                         //stateSave.SetValue("BaseType", oldValue, instance);
                         instance.BaseType = (string)oldValue;
-
                         GumCommands.Self.GuiCommands.PrintOutput($"BaseType assignment on {instance.Name} is not allowed - reverting to previous value");
-
                         GumCommands.Self.GuiCommands.RefreshVariables(force: true);
                     }
 
