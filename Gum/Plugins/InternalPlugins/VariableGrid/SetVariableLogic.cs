@@ -26,14 +26,16 @@ namespace Gum.PropertyGridHelpers
     public class SetVariableLogic : Singleton<SetVariableLogic>
     {
         private VariableReferenceLogic _variableReferenceLogic;
+        private CircularReferenceManager _circularReferenceManager;
         private FontManager _fontManager;
 
         // this is needed as we unroll all the other singletons...
-        public void Initialize()
+        public void Initialize(CircularReferenceManager circularReferenceManager)
         {
 
             _variableReferenceLogic = new VariableReferenceLogic(
                 Builder.Get<GuiCommands>());
+            _circularReferenceManager = circularReferenceManager;
 
             _fontManager = Builder.Get<FontManager>();
         }
@@ -43,25 +45,23 @@ namespace Gum.PropertyGridHelpers
 
 
         // added instance property so we can change values even if a tree view is selected
-        public GeneralResponse PropertyValueChanged(string unqualifiedMemberName, object oldValue, InstanceSave instance, bool refresh = true, bool recordUndo = true,
+        public GeneralResponse PropertyValueChanged(string unqualifiedMemberName, object oldValue, InstanceSave instance, StateSave stateContainingVariable, bool refresh = true, bool recordUndo = true,
             bool trySave = true)
         {
-            var selectedStateSave = SelectedState.Self.SelectedStateSave;
-
             IInstanceContainer instanceContainer = null;
 
-            if (selectedStateSave != null)
+            if (stateContainingVariable != null)
             {
-                instanceContainer = selectedStateSave.ParentContainer;
+                instanceContainer = stateContainingVariable.ParentContainer;
 
 
                 if (instance != null)
                 {
-                    SelectedState.Self.SelectedVariableSave = SelectedState.Self.SelectedStateSave.GetVariableSave(instance.Name + "." + unqualifiedMemberName);
+                    SelectedState.Self.SelectedVariableSave = stateContainingVariable.GetVariableSave(instance.Name + "." + unqualifiedMemberName);
                 }
                 else
                 {
-                    SelectedState.Self.SelectedVariableSave = SelectedState.Self.SelectedStateSave.GetVariableSave(unqualifiedMemberName);
+                    SelectedState.Self.SelectedVariableSave = stateContainingVariable.GetVariableSave(unqualifiedMemberName);
                 }
             }
 
@@ -76,12 +76,12 @@ namespace Gum.PropertyGridHelpers
                     (IInstanceContainer)ObjectFinder.Self.GetElementContainerOf(instance) ?? 
                     ObjectFinder.Self.GetBehaviorContainerOf(instance);
             }
-            if(selectedStateSave == null && instanceContainer is ElementSave containerElement)
+            if(stateContainingVariable == null && instanceContainer is ElementSave containerElement)
             {
-                selectedStateSave = containerElement.DefaultState;
+                stateContainingVariable = containerElement.DefaultState;
             }
 
-            var response = ReactToPropertyValueChanged(unqualifiedMemberName, oldValue, instanceContainer, instance, selectedStateSave, refresh, recordUndo: recordUndo, trySave: trySave);
+            var response = ReactToPropertyValueChanged(unqualifiedMemberName, oldValue, instanceContainer, instance, stateContainingVariable, refresh, recordUndo: recordUndo, trySave: trySave);
             return response;
         }
 
@@ -230,14 +230,13 @@ namespace Gum.PropertyGridHelpers
                 if (instance != null)
                 {
                     var parentElement = instanceContainer as ElementSave;
-                    if (parentElement != null &&  ObjectFinder.Self.IsInstanceRecursivelyReferencingElement(instance, parentElement))
+
+                    if(_circularReferenceManager.CanTypeBeAddedToElement(parentElement, instance.BaseType) == false)
                     {
                         MessageBox.Show("This assignment would create a circular reference, which is not allowed.");
                         //stateSave.SetValue("BaseType", oldValue, instance);
                         instance.BaseType = (string)oldValue;
-
                         GumCommands.Self.GuiCommands.PrintOutput($"BaseType assignment on {instance.Name} is not allowed - reverting to previous value");
-
                         GumCommands.Self.GuiCommands.RefreshVariables(force: true);
                     }
 

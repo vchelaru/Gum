@@ -17,6 +17,7 @@ using System;
 using Gum.PropertyGridHelpers;
 using System.Security.Policy;
 using EditorTabPlugin_XNA.ExtensionMethods;
+using Gum.Services;
 
 namespace Gum.Wireframe;
 
@@ -25,6 +26,7 @@ public abstract class WireframeEditor
     protected HotkeyManager _hotkeyManager { get; private set; }
 
     private readonly SelectionManager _selectionManager;
+    private readonly SetVariableLogic _setVariableLogic;
     protected GrabbedState grabbedState = new GrabbedState();
 
     protected bool mHasChangedAnythingSinceLastPush = false;
@@ -44,6 +46,7 @@ public abstract class WireframeEditor
     {
         _hotkeyManager = hotkeyManager;
         _selectionManager = selectionManager;
+        _setVariableLogic = Builder.Get<SetVariableLogic>();
     }
 
     public abstract void UpdateToSelection(ICollection<GraphicalUiElement> selectedObjects);
@@ -82,7 +85,7 @@ public abstract class WireframeEditor
 
     protected void ApplyCursorMovement(InputLibrary.Cursor cursor)
     {
-        float xToMoveBy = IsXMovementEnabled 
+        float xToMoveBy = IsXMovementEnabled
             ? cursor.XChange / Renderer.Self.Camera.Zoom
             : 0;
         float yToMoveBy = IsYMovementEnabled
@@ -91,10 +94,10 @@ public abstract class WireframeEditor
 
         var vector2 = new Vector2(xToMoveBy, yToMoveBy);
         var selectedObject = WireframeObjectManager.Self.GetSelectedRepresentation();
-        if(selectedObject?.Parent != null)
+        if (selectedObject?.Parent != null)
         {
             var parentRotationDegrees = selectedObject.Parent.GetAbsoluteRotation();
-            if(parentRotationDegrees != 0)
+            if (parentRotationDegrees != 0)
             {
                 var parentRotation = MathHelper.ToRadians(parentRotationDegrees);
 
@@ -114,21 +117,21 @@ public abstract class WireframeEditor
         var effectiveXToMoveBy = xToMoveBy;
         var effectiveYToMoveBy = yToMoveBy;
 
-        if(shouldSnapX)
+        if (shouldSnapX)
         {
             var accumulatedXAsInt = (int)grabbedState.AccumulatedXOffset;
             effectiveXToMoveBy = 0;
-            if(accumulatedXAsInt != 0)
+            if (accumulatedXAsInt != 0)
             {
                 effectiveXToMoveBy = accumulatedXAsInt;
                 grabbedState.AccumulatedXOffset -= accumulatedXAsInt;
             }
         }
-        if(shouldSnapY)
+        if (shouldSnapY)
         {
             var accumulatedYAsInt = (int)grabbedState.AccumulatedYOffset;
             effectiveYToMoveBy = 0;
-            if(accumulatedYAsInt != 0)
+            if (accumulatedYAsInt != 0)
             {
                 effectiveYToMoveBy = accumulatedYAsInt;
                 grabbedState.AccumulatedYOffset -= accumulatedYAsInt;
@@ -154,7 +157,7 @@ public abstract class WireframeEditor
 
                     gue.Y = grabbedState.ComponentPosition.Y;
                 }
-                else if(xOrY == XOrY.Y)
+                else if (xOrY == XOrY.Y)
                 {
 
                     var gue = WireframeObjectManager.Self.GetRepresentation(SelectedState.Self.SelectedElement);
@@ -180,7 +183,7 @@ public abstract class WireframeEditor
 
                         gue.Y = grabbedState.InstancePositions[instance].AbsoluteY;
                     }
-                    else if(xOrY == XOrY.Y)
+                    else if (xOrY == XOrY.Y)
                     {
 
                         var gue = WireframeObjectManager.Self.GetRepresentation(instance);
@@ -194,7 +197,7 @@ public abstract class WireframeEditor
 
         if (didMove)
         {
-            if(isLockedToAxis)
+            if (isLockedToAxis)
             {
                 // December 3, 2024 
                 // Currently when the
@@ -240,7 +243,7 @@ public abstract class WireframeEditor
                 }
             }
         }
-        else if(axis == XOrY.Y)
+        else if (axis == XOrY.Y)
         {
             // If the Y axis is the furthest-moved, set the X values back to what they were.
             if (isElementSelected)
@@ -263,7 +266,7 @@ public abstract class WireframeEditor
     {
         var selectedElement = SelectedState.Self.SelectedElement;
         var stateSave = SelectedState.Self.SelectedStateSave;
-        if(stateSave == null)
+        if (stateSave == null)
         {
             throw new System.InvalidOperationException("The SelectedStateSave is null, this should not happen");
         }
@@ -285,8 +288,10 @@ public abstract class WireframeEditor
                 var instance = element.GetInstance(possiblyChangedVariable.SourceObject);
 
                 // should this be:
-                SetVariableLogic.Self.PropertyValueChanged(possiblyChangedVariable.GetRootName(), oldValue, 
-                   instance, 
+                _setVariableLogic.PropertyValueChanged(possiblyChangedVariable.GetRootName(),
+                   oldValue,
+                   instance,
+                   element.DefaultState,
                    refresh: true,
                    recordUndo: false,
                    trySave: false);
@@ -350,7 +355,7 @@ public abstract class WireframeEditor
             {
                 return (Vector2)oldValue != (Vector2)newValue;
             }
-            else if(oldValue is IList oldList)
+            else if (oldValue is IList oldList)
             {
                 return AreListsSame(oldList, (IList)newValue);
             }
@@ -363,7 +368,7 @@ public abstract class WireframeEditor
 
     private bool AreListsSame(IList oldList, IList newList)
     {
-        if(oldList == null && newList == null)
+        if (oldList == null && newList == null)
         {
             return true;
         }
@@ -372,7 +377,7 @@ public abstract class WireframeEditor
             return false;
         }
 
-        for(int i = 0; i < oldList.Count; i++)
+        for (int i = 0; i < oldList.Count; i++)
         {
             if (oldList[i].Equals(newList[i]) == false)
             {

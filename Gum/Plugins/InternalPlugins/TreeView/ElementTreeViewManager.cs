@@ -19,6 +19,7 @@ using Gum.Plugins.InternalPlugins.TreeView.ViewModels;
 using Gum.Logic;
 using System.Drawing;
 using WpfInput = System.Windows.Input;
+using Gum.Services;
 
 namespace Gum.Managers
 {
@@ -112,8 +113,8 @@ namespace Gum.Managers
         TreeNode mComponentsTreeNode;
         TreeNode mStandardElementsTreeNode;
         TreeNode mBehaviorsTreeNode;
-        TreeNode mLastHoveredNode;
-        private DateTime hoverStartTime;
+        TreeNode? mLastHoveredNode;
+        private DateTime? hoverStartTime;
 
 
 
@@ -218,6 +219,7 @@ namespace Gum.Managers
 
         public TreeNode RootBehaviorsTreeNode => mBehaviorsTreeNode;
 
+        private DragDropManager _dragDropManager;
         private CopyPasteLogic _copyPasteLogic;
 
         public bool HasMouseOver
@@ -439,6 +441,7 @@ namespace Gum.Managers
         public void Initialize(IContainer components, ImageList ElementTreeImages,
             CopyPasteLogic copyPasteLogic)
         {
+            _dragDropManager = Builder.Get<DragDropManager>();
             _copyPasteLogic = copyPasteLogic;
 
             CreateObjectTreeView(ElementTreeImages);
@@ -542,7 +545,7 @@ namespace Gum.Managers
 
             ObjectTreeView.ItemDrag += (sender, e) =>
             {
-                DragDropManager.Self.OnItemDrag(e.Item);
+                _dragDropManager.OnItemDrag(e.Item);
                 System.Diagnostics.Debug.WriteLine("ItemDrag");
 
                 ObjectTreeView.DoDragDrop(e.Item, DragDropEffects.Move | DragDropEffects.Copy);
@@ -647,7 +650,7 @@ namespace Gum.Managers
 
         private void ObjectTreeView_KeyPress(object sender, KeyPressEventArgs e)
         {
-            DragDropManager.Self.HandleKeyPress(e);
+            _dragDropManager.HandleKeyPress(e);
         }
 
         private void HandleDragOverEvent(object sender, DragEventArgs e)
@@ -678,6 +681,16 @@ namespace Gum.Managers
                     // Can't do this, it seems to interfere with the Undo History
                     //treeview.SelectedNode = hoveredNode;
 
+                    // Don't do highlighting or folder expanding if we are on the selected nodes!
+                    // Alternative, we COULD "invert" the colors when hovering over a selected node.
+                    foreach (var node in treeview.SelectedNodes)
+                    {
+                        if (node == hoveredNode)
+                        {
+                            return;
+                        }
+                    }
+
                     // So...lets fake it with backcolor/forecolor instead?
                     if (mLastHoveredNode != hoveredNode)
                     {
@@ -707,7 +720,12 @@ namespace Gum.Managers
                         // Make it so that we can EXPAND folders or nodes/items if we hover for half a second
                         if (hoveredNode.Nodes.Count > 0 && !hoveredNode.IsExpanded)
                         {
-                            TimeSpan duration = DateTime.Now - hoverStartTime;
+                            if (hoverStartTime == null)
+                            {
+                                hoverStartTime = DateTime.Now;
+                            }
+
+                            TimeSpan duration = (TimeSpan)(DateTime.Now - hoverStartTime);
                             int hoverDelayMiliseconds = 500;
                             if (duration.TotalMilliseconds > hoverDelayMiliseconds)
                             {
@@ -728,13 +746,15 @@ namespace Gum.Managers
             {
                 mLastHoveredNode.BackColor = ObjectTreeView.BackColor;
                 mLastHoveredNode.ForeColor = ObjectTreeView.ForeColor;
+                mLastHoveredNode = null;
+                hoverStartTime = null;
             }
 
             if (e.Data != null)
             {
-                DragDropManager.Self.HandleDragDropEvent(sender, e);
+                _dragDropManager.HandleDragDropEvent(sender, e);
             }
-            DragDropManager.Self.ClearDraggedItem();
+            _dragDropManager.ClearDraggedItem();
         }
 
         private void AddAndRemoveFolderNodes()
@@ -1817,7 +1837,7 @@ namespace Gum.Managers
         private void ObjectTreeView_KeyDown(object sender, KeyEventArgs e)
         {
             ElementTreeViewManager.Self.HandleKeyDown(e);
-            DragDropManager.Self.HandleKeyDown(e);
+            _dragDropManager.HandleKeyDown(e);
         }
 
 
