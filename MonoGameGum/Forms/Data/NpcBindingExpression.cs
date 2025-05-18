@@ -118,7 +118,9 @@ internal class NpcBindingExpression : UntypedBindingExpression
 
         if (value != GumProperty.UnsetValue)
         {
-            if (_binding.StringFormat is not null && value is not null)
+            if (_targetProperty.PropertyType == typeof(string) && 
+                _binding.StringFormat is not null && 
+                value is not null)
             {
                 value = string.Format(_binding.StringFormat, value);
             }
