@@ -116,9 +116,16 @@ internal class NpcBindingExpression : UntypedBindingExpression
             return;
         }
 
-        if (value != GumProperty.UnsetValue && !IsValidForType(value, _targetType))
+        if (value != GumProperty.UnsetValue)
         {
-            value = TryConvert(value, _targetType);
+            if (_binding.StringFormat is not null && value is not null)
+            {
+                value = string.Format(_binding.StringFormat, value);
+            }
+            else if (!IsValidForType(value, _targetType))
+            {
+                value = TryConvert(value, _targetType);
+            }
         }
 
         if (value == GumProperty.UnsetValue)
