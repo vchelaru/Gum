@@ -12,6 +12,7 @@ namespace Gum.Logic.FileWatch
         #region Fields/Properties
 
         Dictionary<FilePath, int> changesToIgnore = new Dictionary<FilePath, int>();
+        Dictionary<FilePath, DateTime> timedChangesToIgnore = new Dictionary<FilePath, DateTime>();
 
         public List<FilePath> ChangedFilesWaitingForFlush { get; private set; } = new List<FilePath>();
         List<FilePath> filesCurrentlyFlushing = new List<FilePath>();
@@ -143,16 +144,29 @@ namespace Gum.Logic.FileWatch
 
         bool TryGetIgnoreFileChange(FilePath fileName)
         {
-            int timesToIgnore = 0;
+
 
             if (changesToIgnore.ContainsKey(fileName))
             {
+                int timesToIgnore = 0;
                 timesToIgnore = changesToIgnore[fileName];
 
                 changesToIgnore[fileName] = System.Math.Max(0, timesToIgnore - 1);
+                if( timesToIgnore > 0)
+                {
+                    return true;
+                }
+            }
+            if(timedChangesToIgnore.ContainsKey(fileName))
+            {
+                DateTime timeToIgnoreUntil = timedChangesToIgnore[fileName];
+                if (timeToIgnoreUntil > DateTime.Now)
+                {
+                    return true;
+                }
             }
 
-            return timesToIgnore > 0;
+            return false;
         }
 
         public void IgnoreNextChangeOn(string fileName)
@@ -171,6 +185,24 @@ namespace Gum.Logic.FileWatch
                 else
                 {
                     changesToIgnore[standardized] = 1;
+                }
+            }
+        }
+
+        public void IgnoreNextChangeUntil(FilePath filePath, DateTime time)
+        {
+            lock (LockObject)
+            {
+                if (timedChangesToIgnore.ContainsKey(filePath))
+                {
+                    if (time > timedChangesToIgnore[filePath])
+                    {
+                        timedChangesToIgnore[filePath] = time;
+                    }
+                }
+                else
+                {
+                    timedChangesToIgnore.Add(filePath, time);
                 }
             }
         }
