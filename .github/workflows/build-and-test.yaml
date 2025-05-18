@@ -32,8 +32,9 @@ jobs:
           dotnet build "AllLibraries.sln" --configuration Release --no-restore --verbosity minimal -p:WarningLevel=0
 
       - name: Run Tests
-        run: echo "no tests to run"
-        continue-on-error: true
+        run: |
+          dotnet test "MonoGameGum.Tests" --configuration Release --no-build --verbosity minimal -p:WarningLevel=0
+          dotnet test "Tool/Tests/GumToolUnitTests" --configuration Release --no-build --verbosity minimal -p:WarningLevel=0
 
   Build-Samples:
     runs-on: windows-latest
