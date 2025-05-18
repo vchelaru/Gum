@@ -493,13 +493,14 @@ public class DragDropManager
             // set the Parent variable on that instead of the SelectedState.Self.SelectedStateSave
             var stateToAssignOn = targetElementSave.DefaultState;
 
+            // todo - this needs to request the lock for the particular element
             using var undoLock = UndoManager.Self.RequestLock();
 
             var oldValue = stateToAssignOn.GetValue(variableName) as string;
             stateToAssignOn.SetValue(variableName, parentName, "string");
             
 
-            SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue, dragDroppedInstance);
+            SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue, dragDroppedInstance, targetElementSave?.DefaultState);
             targetTreeNode?.Expand();
         }
     }

@@ -757,7 +757,11 @@ internal class MainEditorTabPlugin : InternalPlugin
 
                 SelectedState.Self.SelectedStateSave.SetValue("SourceFile", fileName);
                 ProjectState.Self.Selected.SelectedInstance = null;
-                SetVariableLogic.Self.PropertyValueChanged("SourceFile", oldValue, SelectedState.Self.SelectedInstance);
+                SetVariableLogic.Self.PropertyValueChanged(
+                    "SourceFile", 
+                    oldValue, 
+                    SelectedState.Self.SelectedInstance,
+                    SelectedState.Self.SelectedStateSave);
 
                 shouldUpdate = true;
                 handled = true;
@@ -809,7 +813,11 @@ internal class MainEditorTabPlugin : InternalPlugin
 
                 SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".SourceFile", fileName, instance);
                 ProjectState.Self.Selected.SelectedInstance = instance;
-                SetVariableLogic.Self.PropertyValueChanged("SourceFile", oldValue, instance);
+
+                SetVariableLogic.Self.PropertyValueChanged(
+                    "SourceFile", 
+                    oldValue, instance,
+                    SelectedState.Self.SelectedStateSave);
 
                 shouldUpdate = true;
                 handled = true;

@@ -1054,20 +1054,23 @@ namespace Gum.Managers
             var instance = SelectedState.Self.SelectedInstance;
             // These functions take unqualified:
 
-            if(instance == null && redVariableName.Contains("."))
+            var element = SelectedState.Self.SelectedElement;
+            var defaultState = element.DefaultState;
+
+            if (instance == null && redVariableName.Contains("."))
             {
                 // This is an exposed:
-                var foundDefaultRedVariable = SelectedState.Self.SelectedElement.DefaultState.GetVariableSave(redVariableName);
+                var foundDefaultRedVariable = defaultState.GetVariableSave(redVariableName);
                 if(!string.IsNullOrEmpty(foundDefaultRedVariable.ExposedAsName) && foundDefaultRedVariable != null)
                 {
                     state.GetVariableSave(redVariableName).ExposedAsName = foundDefaultRedVariable.ExposedAsName;        
                 }
-                var foundDefaultGreenVariable = SelectedState.Self.SelectedElement.DefaultState.GetVariableSave(greenVariableName);
+                var foundDefaultGreenVariable = defaultState.GetVariableSave(greenVariableName);
                 if (!string.IsNullOrEmpty(foundDefaultGreenVariable.ExposedAsName) && foundDefaultGreenVariable != null)
                 {
                     state.GetVariableSave(greenVariableName).ExposedAsName = foundDefaultGreenVariable.ExposedAsName;
                 }
-                var foundDefaultBlueVariable = SelectedState.Self.SelectedElement.DefaultState.GetVariableSave(blueVariableName);
+                var foundDefaultBlueVariable = defaultState.GetVariableSave(blueVariableName);
                 if (!string.IsNullOrEmpty(foundDefaultBlueVariable.ExposedAsName) && foundDefaultBlueVariable != null)
                 {
                     state.GetVariableSave(blueVariableName).ExposedAsName = foundDefaultBlueVariable.ExposedAsName;
@@ -1086,9 +1089,9 @@ namespace Gum.Managers
 
             var shouldSave = args.CommitType == SetPropertyCommitType.Full;
 
-            SetVariableLogic.Self.PropertyValueChanged(unqualifiedRed, (int)valueBeforeSet.R, instance, refresh:true, recordUndo:shouldSave, trySave:shouldSave);
-            SetVariableLogic.Self.PropertyValueChanged(unqualifiedGreen, (int)valueBeforeSet.G, instance, refresh: true, recordUndo: shouldSave, trySave: shouldSave);
-            SetVariableLogic.Self.PropertyValueChanged(unqualifiedBlue, (int)valueBeforeSet.B, instance, refresh: true, recordUndo: shouldSave, trySave: shouldSave);
+            SetVariableLogic.Self.PropertyValueChanged(unqualifiedRed, (int)valueBeforeSet.R, instance, defaultState, refresh:true, recordUndo:shouldSave, trySave:shouldSave);
+            SetVariableLogic.Self.PropertyValueChanged(unqualifiedGreen, (int)valueBeforeSet.G, instance, defaultState, refresh: true, recordUndo: shouldSave, trySave: shouldSave);
+            SetVariableLogic.Self.PropertyValueChanged(unqualifiedBlue, (int)valueBeforeSet.B, instance, defaultState, refresh: true, recordUndo: shouldSave, trySave: shouldSave);
 
             if(args.CommitType == SetPropertyCommitType.Full)
             {

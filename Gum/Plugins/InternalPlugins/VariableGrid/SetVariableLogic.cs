@@ -43,25 +43,23 @@ namespace Gum.PropertyGridHelpers
 
 
         // added instance property so we can change values even if a tree view is selected
-        public GeneralResponse PropertyValueChanged(string unqualifiedMemberName, object oldValue, InstanceSave instance, bool refresh = true, bool recordUndo = true,
+        public GeneralResponse PropertyValueChanged(string unqualifiedMemberName, object oldValue, InstanceSave instance, StateSave stateContainingVariable, bool refresh = true, bool recordUndo = true,
             bool trySave = true)
         {
-            var selectedStateSave = SelectedState.Self.SelectedStateSave;
-
             IInstanceContainer instanceContainer = null;
 
-            if (selectedStateSave != null)
+            if (stateContainingVariable != null)
             {
-                instanceContainer = selectedStateSave.ParentContainer;
+                instanceContainer = stateContainingVariable.ParentContainer;
 
 
                 if (instance != null)
                 {
-                    SelectedState.Self.SelectedVariableSave = SelectedState.Self.SelectedStateSave.GetVariableSave(instance.Name + "." + unqualifiedMemberName);
+                    SelectedState.Self.SelectedVariableSave = stateContainingVariable.GetVariableSave(instance.Name + "." + unqualifiedMemberName);
                 }
                 else
                 {
-                    SelectedState.Self.SelectedVariableSave = SelectedState.Self.SelectedStateSave.GetVariableSave(unqualifiedMemberName);
+                    SelectedState.Self.SelectedVariableSave = stateContainingVariable.GetVariableSave(unqualifiedMemberName);
                 }
             }
 
@@ -76,12 +74,12 @@ namespace Gum.PropertyGridHelpers
                     (IInstanceContainer)ObjectFinder.Self.GetElementContainerOf(instance) ?? 
                     ObjectFinder.Self.GetBehaviorContainerOf(instance);
             }
-            if(selectedStateSave == null && instanceContainer is ElementSave containerElement)
+            if(stateContainingVariable == null && instanceContainer is ElementSave containerElement)
             {
-                selectedStateSave = containerElement.DefaultState;
+                stateContainingVariable = containerElement.DefaultState;
             }
 
-            var response = ReactToPropertyValueChanged(unqualifiedMemberName, oldValue, instanceContainer, instance, selectedStateSave, refresh, recordUndo: recordUndo, trySave: trySave);
+            var response = ReactToPropertyValueChanged(unqualifiedMemberName, oldValue, instanceContainer, instance, stateContainingVariable, refresh, recordUndo: recordUndo, trySave: trySave);
             return response;
         }
 

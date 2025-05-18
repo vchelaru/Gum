@@ -934,7 +934,14 @@ namespace Gum.PropertyGridHelpers
 
             if (!handledByExposedVariable)
             {
-                response = SetVariableLogic.Self.PropertyValueChanged(name, LastOldFullCommitValue, gumElementOrInstanceSaveAsObject as InstanceSave, refresh: effectiveRefresh,
+                var element = gumElementOrInstanceSaveAsObject as ElementSave ??
+                    (gumElementOrInstanceSaveAsObject as InstanceSave).ParentContainer;
+                response = SetVariableLogic.Self.PropertyValueChanged(
+                    name, 
+                    LastOldFullCommitValue, 
+                    gumElementOrInstanceSaveAsObject as InstanceSave, 
+                    element?.DefaultState,
+                    refresh: effectiveRefresh,
                     recordUndo: effectiveRecordUndo,
                     trySave: trySave);
             }
