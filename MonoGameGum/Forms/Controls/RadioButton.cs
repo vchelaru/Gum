@@ -213,7 +213,7 @@ public class RadioButton : ToggleButton
 
     #region Event Handlers
 
-    private void HandleParentChanged(object sender, EventArgs e)
+    private void HandleParentChanged(object sender, GraphicalUiElement.ParentChangedEventArgs e)
     {
         // setting GroupName refreshes grouping
         GroupName = GroupName;

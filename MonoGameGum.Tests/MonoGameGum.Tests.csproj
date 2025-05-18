@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="TUnit" Version="0.19.112" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.3" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\GumCommon\GumCommon.csproj" />
+		<ProjectReference Include="..\MonoGameGum\MonoGameGum.csproj" />
+		<ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
+	</ItemGroup>
+
+</Project>
