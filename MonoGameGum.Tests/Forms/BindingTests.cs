@@ -6,9 +6,8 @@ using MonoGameGum.Forms.Data;
 using RenderingLibrary;
 using System.Collections.ObjectModel;
 using TUnit.Assertions.AssertConditions.Throws;
-using TUnit.Assertions.AssertionBuilders;
 
-namespace MonoGameGum.Tests;
+namespace MonoGameGum.Tests.Forms;
 
 public class BindingTests
 {
@@ -31,30 +30,34 @@ public class BindingTests
         element.SetBinding(nameof(TextBox.Text), nameof(TestViewModel.Text));
 
         // Assert
-        await Assert.That(element.IsDataBound(nameof(element.Text))).IsTrue();
+        await Assert.That(element.IsDataBound(nameof(TextBox.Text))).IsTrue();
         await Assert.That(element.Text).IsEqualTo(vm.Text);
     }
 
     [Test]
-    public async Task SetBinding_ShouldPullBindingContextFromParent()
+    public async Task SetBinding_WithoutExplicitContext_PullsFromParent()
     {
+        // Arrange
         StackPanel stackPanel = new();
-        TestViewModel vm = new() { Text = "Test 1243" };
+        TestViewModel vm = new(){ Text = "1234"};
         stackPanel.BindingContext = vm;
 
-        var textBox = new TextBox();
-        textBox.SetBinding(nameof(TextBox.Text), nameof(TestViewModel.Text));
+        TextBox textBox = new();
         stackPanel.AddChild(textBox);
 
-        await Assert.That(textBox.Text).IsEqualTo("Test 1243");
+        // Act
+        textBox.SetBinding(nameof(TextBox.Text), nameof(TestViewModel.Text));
 
-        vm.Text = "Test 5678";
-        await Assert.That(textBox.Text).IsEqualTo("Test 5678");
+        // Assert
+        await Assert.That(textBox.BindingContext).IsEqualTo(vm);
+        await Assert.That(textBox.Text).IsEqualTo("1234");
+
     }
 
     [Test]
     public async Task SetBinding_ToBindingContext_SwapBranchNode()
     {
+        // Arrange
         StackPanel stackPanel = new();
         TestViewModel root = new() { Text = "Root" };
         TestViewModel child = new() { Text = "Child" };
@@ -62,16 +65,17 @@ public class BindingTests
 
         stackPanel.BindingContext = root;
         root.Child = child;
-        var textBox = new TextBox();
+
+        TextBox textBox = new();
         textBox.SetBinding(nameof(TextBox.BindingContext), nameof(TestViewModel.Child));
         textBox.SetBinding(nameof(TextBox.Text), nameof(TestViewModel.Text));
 
         stackPanel.AddChild(textBox);
 
-        await Assert.That(textBox.BindingContext).IsEqualTo(child);
-        await Assert.That(textBox.Text).IsEqualTo("Child");
-
+        // Act
         root.Child = swapped;
+
+        // Assert
         await Assert.That(textBox.BindingContext).IsEqualTo(swapped);
         await Assert.That(textBox.Text).IsEqualTo("SwappedChild");
     }
@@ -79,89 +83,123 @@ public class BindingTests
     [Test]
     public async Task SetBinding_ToBindingContext_SwapRoot()
     {
-        StackPanel stackPanel = new();
+        // Arrange
+        StackPanel root = new();
         TestViewModel foo = new() { Text = "FooParent", Child = new() { Text = "Foo" } };
         TestViewModel bar = new() { Text = "BarParent", Child = new() { Text = "Bar" } };
 
-        stackPanel.BindingContext = foo;
+        root.BindingContext = foo;
         TextBox textBox = new();
         textBox.SetBinding(nameof(TextBox.BindingContext), nameof(TestViewModel.Child));
         textBox.SetBinding(nameof(TextBox.Text), nameof(TestViewModel.Text));
 
-        stackPanel.AddChild(textBox);
-        await Assert.That(textBox.BindingContext).IsEqualTo(foo.Child);
-        await Assert.That(textBox.Text).IsEqualTo("Foo");
+        root.AddChild(textBox);
 
-        stackPanel.BindingContext = bar;
+        // Act
+        root.BindingContext = bar;
+
+        // Assert
         await Assert.That(textBox.BindingContext).IsEqualTo(bar.Child);
         await Assert.That(textBox.Text).IsEqualTo("Bar");
     }
 
     [Test]
-    public async Task SetBinding_ShouldEstablishTwoWayBinding()
+    public async Task Mode_TwoWay_ByDefault()
     {
-        var checkBox = new CheckBox();
+        // Arrange
+        CheckBox checkBox = new();
+        TestViewModel vm = new();
+        checkBox.BindingContext = vm;
+        checkBox.SetBinding(nameof(CheckBox.IsChecked), nameof(TestViewModel.IsChecked));
 
-        var vm = new TestViewModel();
+        // Act / Assert
+        checkBox.IsChecked = true;
+        await Assert.That(vm.IsChecked).IsTrue();
 
+        vm.IsChecked = false;
+        await Assert.That(checkBox.IsChecked).IsFalse();
+    }
+
+    [Test]
+    public async Task Mode_OneWay_OnlyUpdatesTarget()
+    {
+        // Arrange
+        CheckBox checkBox = new();
+        TestViewModel vm = new();
         checkBox.BindingContext = vm;
 
-        checkBox.SetBinding(nameof(CheckBox.IsChecked), nameof(TestViewModel.IsChecked));
+        Binding binding = new(nameof(TestViewModel.IsChecked))
+        {
+            Mode = BindingMode.OneWay
+        };
+        checkBox.SetBinding(nameof(CheckBox.IsChecked), binding);
 
-        int timesCalled = 0;
-        vm.PropertyChanged += (_, _) => timesCalled++;
-
-        await Assert.That(timesCalled).IsEqualTo(0);
+        // Act / Assert
         checkBox.IsChecked = true;
-        await Assert.That(vm.IsChecked).IsTrue();
-        await Assert.That(timesCalled).IsEqualTo(1);
+        await Assert.That(vm.IsChecked).IsFalse();
+
+        checkBox.IsChecked = false;
+        vm.IsChecked = true;
+        await Assert.That(checkBox.IsChecked).IsTrue();
     }
 
     [Test]
-    public async Task SetBinding_ShouldEstablishTwoWayBinding_OnChild()
+    public async Task Mode_OneWayToSource_OnlyUpdatesSource()
     {
-        var checkBox = new CheckBox();
+        // Arrange
+        CheckBox checkBox = new();
+        TestViewModel vm = new();
+        checkBox.BindingContext = vm;
 
-        var vm = new TestViewModel();
+        Binding binding = new(nameof(TestViewModel.IsChecked))
+        {
+            Mode = BindingMode.OneWayToSource
+        };
+        checkBox.SetBinding(nameof(CheckBox.IsChecked), binding);
 
-        var stackPanel = new StackPanel();
-        stackPanel.AddChild(checkBox);
-        stackPanel.BindingContext = vm;
+        // Act / Assert
+        vm.IsChecked = true;
+        await Assert.That(checkBox.IsChecked).IsFalse();
 
-        checkBox.SetBinding(nameof(CheckBox.IsChecked), nameof(TestViewModel.IsChecked));
-
-        int timesCalled = 0;
-        vm.PropertyChanged += (_, _) => timesCalled++;
-
-        await Assert.That(timesCalled).IsEqualTo(0);
+        vm.IsChecked = false;
         checkBox.IsChecked = true;
         await Assert.That(vm.IsChecked).IsTrue();
-        await Assert.That(timesCalled).IsEqualTo(1);
     }
 
     [Test]
-    public async Task SetBinding_ShouldEstablishTwoWayBinding_OnThreeDeepChild()
+    [Arguments(1)]
+    [Arguments(2)]
+    [Arguments(3)]
+    [Arguments(4)]
+    public async Task SetBinding_DeepInheritance(int depth)
     {
-        int timesCalled = 0;
-        var vm = new TestViewModel();
-        vm.PropertyChanged += (_, _) => timesCalled++;
+        // Arrange
+        TestViewModel vm = new();
+        StackPanel root = new();
+        StackPanel last = new();
+        root.AddChild(last);
 
-        await Assert.That(timesCalled).IsEqualTo(0);
+        for (int d = 0; d <= depth; d++)
+        {
+            StackPanel next = new();
+            last.AddChild(next);
+            (last, _) = (next, last);
+        }
 
-        var stack = new StackPanel();
-        var innerStack = new StackPanel();
-        var checkBox = new CheckBox();
-        checkBox.SetBinding(nameof(checkBox.IsChecked), nameof(TestViewModel.IsChecked));
-        stack.AddChild(innerStack);
-        innerStack.AddChild(checkBox);
+        root.BindingContext = vm;
 
-        stack.BindingContext = vm;
+        CheckBox checkBox = new();
+        last.AddChild(checkBox);
 
-        await Assert.That(timesCalled).IsEqualTo(0);
+        checkBox.SetBinding(nameof(CheckBox.IsChecked), nameof(TestViewModel.IsChecked));
+        checkBox.SetBinding(nameof(CheckBox.Text), nameof(TestViewModel.Text));
 
+        // Act / Assert
         checkBox.IsChecked = true;
+        await Assert.That(vm.IsChecked).IsTrue();
 
-        await Assert.That(timesCalled).IsEqualTo(1);
+        vm.Text = "foo";
+        await Assert.That(checkBox.Text).IsEqualTo("foo");
     }
 
     [Test]
@@ -184,9 +222,8 @@ public class BindingTests
         listBox.SetBinding(nameof(ListBox.Items), nameof(TestViewModel.Items));
 
         // Assert
-        await Assert.That(listBox.ListBoxItems.Count).IsEqualTo(2);
-        await Assert.That(listBox.ListBoxItems[0].BindingContext).IsEqualTo(vm.Items[0]);
-        await Assert.That(listBox.ListBoxItems[1].BindingContext).IsEqualTo(vm.Items[1]);
+        await Assert.That(listBox.ListBoxItems).HasCount(2);
+        await Assert.That(listBox.ListBoxItems.Select(i => i.BindingContext)).IsEquivalentTo(vm.Items);
     }
 
     [Test]
@@ -208,7 +245,7 @@ public class BindingTests
 
         TextBox element = new() { BindingContext = vm };
 
-        Binding binding = new Binding("Child.Child.Child.Text");
+        Binding binding = new ("Child.Child.Child.Text");
 
         // Initial target update from source binding
         element.SetBinding(nameof(TextBox.Text), binding);
@@ -243,7 +280,7 @@ public class BindingTests
         };
 
         TextBox element = new() { BindingContext = vm };
-        Binding binding = new Binding("Child.Child.Text")
+        Binding binding = new("Child.Child.Text")
         {
             FallbackValue = "Fallback"
         };
@@ -265,7 +302,7 @@ public class BindingTests
 
         TextBox element = new() { BindingContext = vm };
 
-        Binding binding = new Binding(nameof(TestViewModel.Text))
+        Binding binding = new(nameof(TestViewModel.Text))
         {
             UpdateSourceTrigger = UpdateSourceTrigger.LostFocus
         };
@@ -274,14 +311,10 @@ public class BindingTests
         element.IsFocused = true;
         element.Text = "FromUI";
 
-        // Act
-        string valueBeforeFocusLost = vm.Text;
+        // Act / Assert
+        await Assert.That(vm.Text).IsEqualTo("Initial");
         element.IsFocused = false;
-        string valueAfterFocusLost = vm.Text;
-
-        // Assert
-        await Assert.That(valueBeforeFocusLost).IsEqualTo("Initial");
-        await Assert.That(valueAfterFocusLost).IsEqualTo("FromUI");
+        await Assert.That(vm.Text).IsEqualTo("FromUI");
     }
 
     [Test]
@@ -292,7 +325,7 @@ public class BindingTests
         // Arrange
         TestViewModel vm = new();
         TextBox element = new() { BindingContext = vm };
-        Binding binding = new Binding(nameof(TestViewModel.IsChecked))
+        Binding binding = new(nameof(TestViewModel.IsChecked))
         {
             Converter = new TestStringBoolConverter(),
         };
@@ -313,7 +346,7 @@ public class BindingTests
         // Arrange
         TestViewModel vm = new() { IsChecked = sourceValue };
         TextBox element = new() { BindingContext = vm };
-        Binding binding = new Binding(nameof(TestViewModel.IsChecked))
+        Binding binding = new(nameof(TestViewModel.IsChecked))
         {
             Converter = new TestStringBoolConverter(),
         };
@@ -332,7 +365,7 @@ public class BindingTests
         const float expectedValue = 12.34f;
         TestViewModel vm = new() { FloatValue = expectedValue };
         TextBox element = new() { BindingContext = vm };
-        Binding binding = new Binding(nameof(TestViewModel.FloatValue));
+        Binding binding = new(nameof(TestViewModel.FloatValue));
         element.SetBinding(nameof(TextBox.Text), binding);
 
         // Act
@@ -348,7 +381,7 @@ public class BindingTests
         // Arrange
         TestViewModel vm = new() { };
         Slider element = new() { BindingContext = vm, TicksFrequency = 1234 };
-        Binding binding = new Binding(nameof(TestViewModel.Text));
+        Binding binding = new(nameof(TestViewModel.Text));
         element.SetBinding(nameof(Slider.TicksFrequency), binding);
 
         // Act
@@ -363,7 +396,7 @@ public class BindingTests
     {
         TestViewModel vm = new();
         TextBox element = new() { BindingContext = vm };
-        Binding binding = new Binding("Invalid.Path");
+        Binding binding = new("Invalid.Path");
         await Assert.That(() => element.SetBinding(nameof(TextBox.Text), binding)).ThrowsNothing();
     }
 
@@ -407,6 +440,48 @@ public class BindingTests
         // Assert
         await Assert.That(element.BindingContext).IsEqualTo(child);
     }
+
+    [Test]
+    public async Task OnUpdateTarget_CallsPropertyChangedOnce()
+    {
+        // Arrange
+        TestViewModel vm = new();
+        CheckBox checkBox = new() { BindingContext = vm };
+        checkBox.SetBinding(nameof(CheckBox.IsChecked), nameof(TestViewModel.IsChecked));
+
+        int propertyChangedCount = 0;
+        vm.PropertyChanged += (_, _) =>
+        {
+            propertyChangedCount++;
+        };
+
+        // Act
+        vm.IsChecked = true;
+
+        // Assert
+        await Assert.That(propertyChangedCount).IsEqualTo(1);
+    }
+
+    [Test]
+    public async Task OnUpdateSource_CallsPropertyChangedOnce()
+    {
+        // Arrange
+        TestViewModel vm = new();
+        CheckBox checkBox = new() { BindingContext = vm };
+        checkBox.SetBinding(nameof(CheckBox.IsChecked), nameof(TestViewModel.IsChecked));
+        int propertyChangedCount = 0;
+        vm.PropertyChanged += (_, _) =>
+        {
+            propertyChangedCount++;
+        };
+
+        // Act
+        checkBox.IsChecked = true;
+
+        // Assert
+        await Assert.That(propertyChangedCount).IsEqualTo(1);
+    }
+
 
     private class TestViewModel : ViewModel
     {
