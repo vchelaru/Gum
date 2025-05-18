@@ -33,51 +33,37 @@ namespace GumFormsSample
 
         protected override void Initialize()
         {
-            try
-            {
-                _renderTarget = new RenderTarget2D(GraphicsDevice, _config.Width, _config.Height);
-                _spriteBatch = new SpriteBatch(GraphicsDevice);
+            _renderTarget = new RenderTarget2D(GraphicsDevice, _config.Width, _config.Height);
+            _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-                Gum.Initialize(this, "FormsGumProject/GumProject.gumx");
-                Gum.Cursor.TransformMatrix = Matrix.CreateScale(1 / _config.Scale);
+            Gum.Initialize(this, "FormsGumProject/GumProject.gumx");
+            Gum.Cursor.TransformMatrix = Matrix.CreateScale(1 / _config.Scale);
 
-                _currentScreen = _screenFactory.DefaultScreen;
-                _currentScreen.AddToRoot();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Initialization failed: {ex.Message}");
-                Exit();
-            }
+            _currentScreen = _screenFactory.DefaultScreen;
+            _currentScreen.AddToRoot();
+
 
             base.Initialize();
         }
 
         protected override void Update(GameTime gameTime)
         {
-            try
+            Gum.Update(gameTime);
+            int keyResult = _inputService.Update();
+            if (keyResult >= 0 && keyResult <= 5)
             {
-                Gum.Update(gameTime);
-                int keyResult = _inputService.Update();
-                if (keyResult >= 0 && keyResult <= 5)
+                if (_currentScreen != null)
                 {
-                    if (_currentScreen != null)
-                    {
-                        Gum.Root.Children.Remove(_currentScreen);
-                    }
-
-                    _currentScreen = _screenFactory.CreateScreen(keyResult);
-                    _currentScreen.AddToRoot();
+                    Gum.Root.Children.Remove(_currentScreen);
                 }
 
-                foreach (var item in Gum.Root.Children)
-                {
-                    (item as IUpdateScreen)?.Update(gameTime);
-                }
+                _currentScreen = _screenFactory.CreateScreen(keyResult);
+                _currentScreen.AddToRoot();
             }
-            catch (Exception ex)
+
+            foreach (var item in Gum.Root.Children)
             {
-                _logger.LogError($"Update failed: {ex.Message}");
+                (item as IUpdateScreen)?.Update(gameTime);
             }
 
             base.Update(gameTime);
