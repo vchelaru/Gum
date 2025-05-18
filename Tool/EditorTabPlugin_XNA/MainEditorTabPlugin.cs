@@ -96,6 +96,7 @@ internal class MainEditorTabPlugin : InternalPlugin
     private readonly ElementCommands _elementCommands;
     private readonly SinglePixelTextureService _singlePixelTextureService;
     private BackgroundSpriteService _backgroundSpriteService;
+    private DragDropManager _dragDropManager;
     WireframeControl _wireframeControl;
 
     private FlatRedBall.AnimationEditorForms.Controls.WireframeEditControl _wireframeEditControl;
@@ -119,6 +120,7 @@ internal class MainEditorTabPlugin : InternalPlugin
         _elementCommands = ElementCommands.Self;
         _singlePixelTextureService = new SinglePixelTextureService();
         _backgroundSpriteService = new BackgroundSpriteService();
+        _dragDropManager = Builder.Get<DragDropManager>();
     }
 
     public override void StartUp()
@@ -573,7 +575,12 @@ internal class MainEditorTabPlugin : InternalPlugin
 
         _wireframeEditControl.ZoomChanged += HandleControlZoomChange;
 
-        _wireframeControl.Initialize(_wireframeEditControl, gumEditorPanel, HotkeyManager.Self, _selectionManager);
+        _wireframeControl.Initialize(
+            _wireframeEditControl, 
+            gumEditorPanel, 
+            HotkeyManager.Self, 
+            _selectionManager, 
+            _dragDropManager);
 
         // _layerService must be created after _wireframeControl so that the SystemManagers.Default are assigned
         _layerService.Initialize();
@@ -599,7 +606,7 @@ internal class MainEditorTabPlugin : InternalPlugin
 
 
         this._wireframeControl.DragDrop += HandleFileDragDrop;
-        this._wireframeControl.DragEnter += DragDropManager.Self.HandleFileDragEnter;
+        this._wireframeControl.DragEnter += _dragDropManager.HandleFileDragEnter;
         this._wireframeControl.DragOver += (sender, e) =>
         {
             //this.DoDragDrop(e.Data, DragDropEffects.Move | DragDropEffects.Copy);
@@ -660,7 +667,7 @@ internal class MainEditorTabPlugin : InternalPlugin
         // If only one file was dropped, see if we're over an instance that can take a file
         if (files.Length == 1)
         {
-            if (!DragDropManager.Self.IsValidExtensionForFileDrop(files[0]))
+            if (!_dragDropManager.IsValidExtensionForFileDrop(files[0]))
             {
                 handled = true;
             }
@@ -681,7 +688,7 @@ internal class MainEditorTabPlugin : InternalPlugin
         {
             foreach (string file in files)
             {
-                if (!DragDropManager.Self.IsValidExtensionForFileDrop(file))
+                if (!_dragDropManager.IsValidExtensionForFileDrop(file))
                     continue;
 
                 string fileName = FileManager.MakeRelative(file, FileLocations.Self.ProjectFolder);
@@ -712,7 +719,7 @@ internal class MainEditorTabPlugin : InternalPlugin
             _elementCommands.AddInstance(element, nameToAdd);
         instance.BaseType = "Sprite";
 
-        DragDropManager.Self.SetInstanceToPosition(worldX, worldY, instance);
+        _dragDropManager.SetInstanceToPosition(worldX, worldY, instance);
 
         var variableName = instance.Name + ".SourceFile";
 

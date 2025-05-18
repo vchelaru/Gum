@@ -20,6 +20,7 @@ using Gum.Plugins.ImportPlugin.Manager;
 using Gum.DataTypes.Behaviors;
 using Gum.Undo;
 using Gum.Plugins;
+using Gum.Services;
 
 namespace Gum.Managers;
 
@@ -30,6 +31,7 @@ public class DragDropManager
     static DragDropManager mSelf;
 
     object mDraggedItem;
+    private readonly CircularReferenceManager _circularReferenceManager;
     private readonly ISelectedState _selectedState;
     private readonly ElementCommands _elementCommands;
 
@@ -42,22 +44,12 @@ public class DragDropManager
         get { return InputLibrary.Cursor.Self; }
     }
 
-    public static DragDropManager Self
-    {
-        get
-        {
-            if (mSelf == null)
-            {
-                mSelf = new DragDropManager();
-            }
-            return mSelf;
-        }
-    }
 
     #endregion
 
-    public DragDropManager()
+    public DragDropManager(CircularReferenceManager circularReferenceManager)
     {
+        _circularReferenceManager = circularReferenceManager;
         _selectedState = SelectedState.Self;
         _elementCommands = ElementCommands.Self;
     }
@@ -281,7 +273,7 @@ public class DragDropManager
         return newInstance;
     }
 
-    private string GetDropElementErrorMessage(ElementSave draggedAsElementSave, ElementSave target, string errorMessage)
+    private string? GetDropElementErrorMessage(ElementSave draggedAsElementSave, ElementSave target, string errorMessage)
     {
         if (target == null)
         {
@@ -301,20 +293,14 @@ public class DragDropManager
 
         if (errorMessage == null)
         {
-
-            if (draggedAsElementSave is ComponentSave && target is ComponentSave)
+            if(!_circularReferenceManager.CanTypeBeAddedToElement(target!, draggedAsElementSave.Name))
             {
-                ComponentSave targetAsComponentSave = target as ComponentSave;
-
-                if (!targetAsComponentSave.CanContainInstanceOfType(draggedAsElementSave.Name))
-                {
-                    errorMessage = "Can't add instance of " + draggedAsElementSave.Name + " in " + targetAsComponentSave.Name;
-                }
+                errorMessage = $"Cannot add {draggedAsElementSave.Name} to {target!.Name} because it would create a circular reference";
             }
         }
 
 
-        if (errorMessage == null && target.IsSourceFileMissing)
+        if (errorMessage == null && target!.IsSourceFileMissing)
         {
             errorMessage = "The source file for " + target.Name + " is missing, so it cannot be edited";
         }
@@ -425,7 +411,21 @@ public class DragDropManager
 
         if (targetElementSave != null)
         {
-            if (isSameElement)
+            var canBeAdded = true;
+
+            if(draggedAsInstanceSave != null)
+            {
+                canBeAdded = _circularReferenceManager.CanTypeBeAddedToElement(targetElementSave, draggedAsInstanceSave.BaseType);
+            }
+
+            if (!canBeAdded)
+            {
+                GumCommands.Self.GuiCommands.ShowMessage($"Cannot add {draggedAsInstanceSave.Name} " +
+                    $"to {targetElementSave.Name} because it would create a circular reference");
+                return;
+            }
+
+            else if (isSameElement)
             {
                 HandleDroppingInstanceOnTarget(targetObject, draggedAsInstanceSave, targetElementSave, targetTreeNode);
 
@@ -765,6 +765,4 @@ public class DragDropManager
     }
 
     #endregion
-
-
 }
