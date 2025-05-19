@@ -179,6 +179,7 @@ namespace SkiaGum.Renderables
 #endif
         public BlendState BlendState => BlendState.AlphaBlend;
 
+        public int Alpha => 255;
 
         public bool ClipsChildren { get; set; }
 

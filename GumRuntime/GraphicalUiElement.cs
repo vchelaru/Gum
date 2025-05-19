@@ -523,6 +523,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     #endregion
 
     public bool IsRenderTarget => mContainedObjectAsIpso?.IsRenderTarget == true;
+    public int Alpha => mContainedObjectAsIpso?.Alpha ?? 255;
 
     public GeneralUnitType XUnits
     {
@@ -1439,7 +1440,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     public List<AnimationRuntime>? Animations { get; set; }
 #endif
 
-#endregion
+    #endregion
 
     #region Events
 

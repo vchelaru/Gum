@@ -200,7 +200,7 @@ namespace RenderingLibrary.Math.Geometry
             set;
         }
 
-        public float Alpha => Color.A;
+        public int Alpha => Color.A;
 
 
 

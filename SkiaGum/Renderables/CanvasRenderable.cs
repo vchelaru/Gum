@@ -110,6 +110,7 @@ namespace SkiaGum.Renderables
             Width = 100;
             Height = 100;
         }
+        public int Alpha => 255;
 
 
         public void PreRender() { }
