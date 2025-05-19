@@ -30,6 +30,7 @@ public class Builder
         builder.Services.AddSingleton(typeof(CircularReferenceManager));
         builder.Services.AddSingleton(typeof(ElementCommands), ElementCommands.Self);
         builder.Services.AddSingleton(typeof(Commands.GuiCommands), GumCommands.Self.GuiCommands);
+        builder.Services.AddSingleton(typeof(FileCommands), GumCommands.Self.FileCommands);
         builder.Services.AddSingleton(typeof(UndoManager), UndoManager.Self);
         builder.Services.AddSingleton(typeof(FileCommands), GumCommands.Self.FileCommands);
         builder.Services.AddSingleton(typeof(GuiCommands), GumCommands.Self.GuiCommands);
@@ -53,6 +54,6 @@ public class Builder
         App = builder.Build();
 
         // This is needed until we unroll all the singletons...
-        SetVariableLogic.Self.Initialize(Get<CircularReferenceManager>());
+        SetVariableLogic.Self.Initialize(Get<CircularReferenceManager>(), Get<FileCommands>());
     }
 }

@@ -28,9 +28,10 @@ namespace Gum.PropertyGridHelpers
         private VariableReferenceLogic _variableReferenceLogic;
         private CircularReferenceManager _circularReferenceManager;
         private FontManager _fontManager;
+        private FileCommands _fileCommands;
 
         // this is needed as we unroll all the other singletons...
-        public void Initialize(CircularReferenceManager circularReferenceManager)
+        public void Initialize(CircularReferenceManager circularReferenceManager, FileCommands fileCommands)
         {
 
             _variableReferenceLogic = new VariableReferenceLogic(
@@ -38,6 +39,7 @@ namespace Gum.PropertyGridHelpers
             _circularReferenceManager = circularReferenceManager;
 
             _fontManager = Builder.Get<FontManager>();
+            _fileCommands = fileCommands;
         }
 
         public bool AttemptToPersistPositionsOnUnitChanges { get; set; } = true;
@@ -146,7 +148,7 @@ namespace Gum.PropertyGridHelpers
                         // the full commit it doesn't save, so we need to save if this is true. 
                         if (trySave)
                         {
-                            GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
+                            _fileCommands.TryAutoSaveElement(parentElement);
                         }
                     }
                 }
@@ -242,7 +244,7 @@ namespace Gum.PropertyGridHelpers
 
                     if(instanceContainer != null)
                     {
-                        GumCommands.Self.FileCommands.TryAutoSaveObject(instanceContainer);
+                        _fileCommands.TryAutoSaveObject(instanceContainer);
                     }
                 }
             }
