@@ -44,4 +44,5 @@ public record Binding(string Path)
     public object? TargetNullValue { get; init; }
     public IValueConverter? Converter { get; init; }
     public object? ConverterParameter { get; init; }
+    public string? StringFormat { get; set; }
 }
