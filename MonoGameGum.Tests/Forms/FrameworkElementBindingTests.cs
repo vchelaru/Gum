@@ -4,22 +4,19 @@ using MonoGameGum.Forms;
 using MonoGameGum.Forms.Controls;
 using MonoGameGum.Forms.Data;
 using RenderingLibrary;
+using Shouldly;
 using System.Collections.ObjectModel;
-using TUnit.Assertions.AssertConditions.Throws;
+using Xunit;
 
 namespace MonoGameGum.Tests.Forms;
 
 public class FrameworkElementBindingTests
 {
-    [Before(Class)]
-    public static void SetUp()
+    public FrameworkElementBindingTests()
     {
-        SystemManagers.Default = new();
-        GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
-        FormsUtilities.InitializeDefaults();
     }
 
-    [Test]
+    [Fact]
     public async Task LegacySetBinding_UsingStringParameter()
     {
         // Arrange
@@ -30,11 +27,11 @@ public class FrameworkElementBindingTests
         element.SetBinding(nameof(TextBox.Text), nameof(TestViewModel.Text));
 
         // Assert
-        await Assert.That(element.IsDataBound(nameof(TextBox.Text))).IsTrue();
-        await Assert.That(element.Text).IsEqualTo(vm.Text);
+        element.IsDataBound(nameof(TextBox.Text)).ShouldBe(true);
+        element.Text.ShouldBe(vm.Text);
     }
 
-    [Test]
+    [Fact]
     public async Task SetBinding_WithoutExplicitContext_PullsFromParent()
     {
         // Arrange
@@ -49,12 +46,12 @@ public class FrameworkElementBindingTests
         textBox.SetBinding(nameof(TextBox.Text), nameof(TestViewModel.Text));
 
         // Assert
-        await Assert.That(textBox.BindingContext).IsEqualTo(vm);
-        await Assert.That(textBox.Text).IsEqualTo("1234");
+        textBox.BindingContext.ShouldBe(vm);
+        textBox.Text.ShouldBe("1234");
 
     }
 
-    [Test]
+    [Fact]
     public async Task SetBinding_ToBindingContext_SwapBranchNode()
     {
         // Arrange
@@ -76,11 +73,11 @@ public class FrameworkElementBindingTests
         root.Child = swapped;
 
         // Assert
-        await Assert.That(textBox.BindingContext).IsEqualTo(swapped);
-        await Assert.That(textBox.Text).IsEqualTo("SwappedChild");
+        textBox.BindingContext.ShouldBe(swapped);
+        textBox.Text.ShouldBe("SwappedChild");
     }
 
-    [Test]
+    [Fact]
     public async Task SetBinding_ToBindingContext_SwapRoot()
     {
         // Arrange
@@ -99,11 +96,11 @@ public class FrameworkElementBindingTests
         root.BindingContext = bar;
 
         // Assert
-        await Assert.That(textBox.BindingContext).IsEqualTo(bar.Child);
-        await Assert.That(textBox.Text).IsEqualTo("Bar");
+        textBox.BindingContext.ShouldBe(bar.Child);
+        textBox.Text.ShouldBe("Bar");
     }
 
-    [Test]
+    [Fact]
     public async Task Mode_TwoWay_ByDefault()
     {
         // Arrange
@@ -114,13 +111,13 @@ public class FrameworkElementBindingTests
 
         // Act / Assert
         checkBox.IsChecked = true;
-        await Assert.That(vm.IsChecked).IsTrue();
+        vm.IsChecked.ShouldBe(true);
 
         vm.IsChecked = false;
-        await Assert.That(checkBox.IsChecked).IsFalse();
+        checkBox.IsChecked.ShouldBe(false);
     }
 
-    [Test]
+    [Fact]
     public async Task Mode_OneWay_OnlyUpdatesTarget()
     {
         // Arrange
@@ -136,14 +133,14 @@ public class FrameworkElementBindingTests
 
         // Act / Assert
         checkBox.IsChecked = true;
-        await Assert.That(vm.IsChecked).IsFalse();
+        vm.IsChecked.ShouldBe(false);
 
         checkBox.IsChecked = false;
         vm.IsChecked = true;
-        await Assert.That(checkBox.IsChecked).IsTrue();
+        checkBox.IsChecked.ShouldBe(true);
     }
 
-    [Test]
+    [Fact]
     public async Task Mode_OneWayToSource_OnlyUpdatesSource()
     {
         // Arrange
@@ -159,18 +156,18 @@ public class FrameworkElementBindingTests
 
         // Act / Assert
         vm.IsChecked = true;
-        await Assert.That(checkBox.IsChecked).IsFalse();
+        checkBox.IsChecked.ShouldBe(false);
 
         vm.IsChecked = false;
         checkBox.IsChecked = true;
-        await Assert.That(vm.IsChecked).IsTrue();
+        vm.IsChecked.ShouldBe(true);
     }
 
-    [Test]
-    [Arguments(1)]
-    [Arguments(2)]
-    [Arguments(3)]
-    [Arguments(4)]
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    [InlineData(4)]
     public async Task SetBinding_DeepInheritance(int depth)
     {
         // Arrange
@@ -196,13 +193,13 @@ public class FrameworkElementBindingTests
 
         // Act / Assert
         checkBox.IsChecked = true;
-        await Assert.That(vm.IsChecked).IsTrue();
+        vm.IsChecked.ShouldBe(true);
 
         vm.Text = "foo";
-        await Assert.That(checkBox.Text).IsEqualTo("foo");
+        checkBox.Text.ShouldBe("foo");
     }
 
-    [Test]
+    [Fact]
     public async Task ListBoxItemBinding_ShouldSetBindingContextOnListBoxItems()
     {
         // Arrange
@@ -222,11 +219,11 @@ public class FrameworkElementBindingTests
         listBox.SetBinding(nameof(ListBox.Items), nameof(TestViewModel.Items));
 
         // Assert
-        await Assert.That(listBox.ListBoxItems).HasCount(2);
-        await Assert.That(listBox.ListBoxItems.Select(i => i.BindingContext)).IsEquivalentTo(vm.Items);
+        listBox.ListBoxItems.Count.ShouldBe(2);
+        listBox.ListBoxItems.Select(i => i.BindingContext).ShouldBe(vm.Items);
     }
 
-    [Test]
+    [Fact]
     public async Task ComplexPaths()
     {
         TestViewModel vm = new()
@@ -249,22 +246,22 @@ public class FrameworkElementBindingTests
 
         // Initial target update from source binding
         element.SetBinding(nameof(TextBox.Text), binding);
-        await Assert.That(element.Text).IsEqualTo("Hello World!");
+        element.Text.ShouldBe("Hello World!");
 
         // Update source from target
         element.Text = "FromUI";
-        await Assert.That(vm.Child.Child.Child.Text).IsEqualTo("FromUI");
+        vm.Child.Child.Child.Text.ShouldBe("FromUI");
 
         // Update target from source
         vm.Child.Child.Child.Text = "FromVM";
-        await Assert.That(element.Text).IsEqualTo("FromVM");
+        element.Text.ShouldBe("FromVM");
 
         // Replace a middle node in the source path
         vm.Child.Child = new TestViewModel { Child = new TestViewModel { Text = "SwappedNestedPath" } };
-        await Assert.That(element.Text).IsEqualTo("SwappedNestedPath");
+        element.Text.ShouldBe("SwappedNestedPath");
     }
 
-    [Test]
+    [Fact]
     public async Task SourcePathResolutionFailure_UsesFallback()
     {
         // Arrange
@@ -291,10 +288,10 @@ public class FrameworkElementBindingTests
         vm.Child.Child = null;
 
         // Assert
-        await Assert.That(element.Text).IsEqualTo("Fallback");
+        element.Text.ShouldBe("Fallback");
     }
 
-    [Test]
+    [Fact]
     public async Task UpdateSourceTrigger_LostFocus()
     {
         // Arrange
@@ -312,14 +309,14 @@ public class FrameworkElementBindingTests
         element.Text = "FromUI";
 
         // Act / Assert
-        await Assert.That(vm.Text).IsEqualTo("Initial");
+        vm.Text.ShouldBe("Initial");
         element.IsFocused = false;
-        await Assert.That(vm.Text).IsEqualTo("FromUI");
+        vm.Text.ShouldBe("FromUI");
     }
 
-    [Test]
-    [Arguments("Yes", true)]
-    [Arguments("No", false)]
+    [Theory]
+    [InlineData("Yes", true)]
+    [InlineData("No", false)]
     public async Task Binding_Converter_ToSource(string targetValue, bool expectedSourceValue)
     {
         // Arrange
@@ -335,12 +332,12 @@ public class FrameworkElementBindingTests
         element.Text = targetValue;
 
         // Assert
-        await Assert.That(vm.IsChecked).IsEqualTo(expectedSourceValue);
+        vm.IsChecked.ShouldBe(expectedSourceValue);
     }
 
-    [Test]
-    [Arguments(true, "Yes")]
-    [Arguments(false, "No")]
+    [Theory]
+    [InlineData(true, "Yes")]
+    [InlineData(false, "No")]
     public async Task Binding_Converter_FromSource(bool sourceValue, string expectedTargetValue)
     {
         // Arrange
@@ -355,10 +352,10 @@ public class FrameworkElementBindingTests
         element.SetBinding(nameof(TextBox.Text), binding);
 
         // Assert
-        await Assert.That(element.Text).IsEqualTo(expectedTargetValue);
+        element.Text.ShouldBe(expectedTargetValue);
     }
 
-    [Test]
+    [Fact]
     public async Task Binding_TargetToSource_InvalidCast_LeavesSourceUnchanged()
     {
         // Arrange
@@ -372,10 +369,10 @@ public class FrameworkElementBindingTests
         element.Text = "not a number";
 
         // Assert
-        await Assert.That(vm.FloatValue).IsEqualTo(expectedValue);
+        vm.FloatValue.ShouldBe(expectedValue);
     }
 
-    [Test]
+    [Fact]
     public async Task Binding_SourceToTarget_InvalidCast_UnsetsTargetValue()
     {
         // Arrange
@@ -388,19 +385,20 @@ public class FrameworkElementBindingTests
         vm.Text = "not a number";
 
         // Assert
-        await Assert.That(element.TicksFrequency).IsEqualTo(0);
+        element.TicksFrequency.ShouldBe(0);
     }
 
-    [Test]
+    [Fact]
     public async Task InvalidPath_DoesNoHarm()
     {
         TestViewModel vm = new();
         TextBox element = new() { BindingContext = vm };
         Binding binding = new("Invalid.Path");
-        await Assert.That(() => element.SetBinding(nameof(TextBox.Text), binding)).ThrowsNothing();
+
+        element.SetBinding(nameof(TextBox.Text), binding);
     }
 
-    [Test]
+    [Fact]
     public async Task SetBinding_BindingContext_SetThenAdd()
     {
         // Arrange
@@ -417,10 +415,10 @@ public class FrameworkElementBindingTests
         panel.AddChild(element);
 
         // Assert
-        await Assert.That(element.BindingContext).IsEqualTo(child);
+        element.BindingContext.ShouldBe(child);
     }
 
-    [Test]
+    [Fact]
     public async Task SetBinding_BindingContext_AddThenSet()
     {
         // Arrange
@@ -438,10 +436,10 @@ public class FrameworkElementBindingTests
         element.SetBinding(nameof(TextBox.BindingContext), nameof(TestViewModel.Child));
 
         // Assert
-        await Assert.That(element.BindingContext).IsEqualTo(child);
+        element.BindingContext.ShouldBe(child);
     }
 
-    [Test]
+    [Fact]
     public async Task OnUpdateTarget_CallsPropertyChangedOnce()
     {
         // Arrange
@@ -459,10 +457,10 @@ public class FrameworkElementBindingTests
         vm.IsChecked = true;
 
         // Assert
-        await Assert.That(propertyChangedCount).IsEqualTo(1);
+        propertyChangedCount.ShouldBe(1);
     }
 
-    [Test]
+    [Fact]
     public async Task OnUpdateSource_CallsPropertyChangedOnce()
     {
         // Arrange
@@ -479,10 +477,10 @@ public class FrameworkElementBindingTests
         checkBox.IsChecked = true;
 
         // Assert
-        await Assert.That(propertyChangedCount).IsEqualTo(1);
+        propertyChangedCount.ShouldBe(1);
     }
 
-    [Test]
+    [Fact]
     public async Task StringFormat_FormatsNewTargetValue()
     {
         TestViewModel vm = new() { FloatValue = 0.1234f };
@@ -493,13 +491,13 @@ public class FrameworkElementBindingTests
         };
 
         label.SetBinding(nameof(Label.Text), binding);
-        await Assert.That(label.Text).IsEqualTo("Value: 12.34%");
+        label.Text.ShouldBe("Value: 12.34%");
 
         label.Text = "Value: 55.55%";
 
         //string format technically only works on a one-way binding, but we
         //want to make sure we don't fall over or muck with the source value
-        await Assert.That(vm.FloatValue).IsEqualTo(0.1234f);
+        vm.FloatValue.ShouldBe(0.1234f);
     }
 
 

@@ -2,24 +2,22 @@
 using Gum.Wireframe;
 using MonoGameGum.Forms;
 using RenderingLibrary;
+using Shouldly;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Xunit;
 
 namespace MonoGameGum.Tests.Runtimes;
 public class BindableGueTests
 {
-    [Before(Class)]
-    public static void SetUp()
+    public BindableGueTests()
     {
-        SystemManagers.Default = new();
-        GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
-        FormsUtilities.InitializeDefaults();
     }
 
-    [Test]
+    [Fact]
     public async Task PushToViewModel_ShouldPushToViewModel()
     {
         BindableGueDerived sut = new();
@@ -27,10 +25,10 @@ public class BindableGueTests
         sut.BindingContext = testViewModel;
         sut.SetBinding(nameof(sut.IntPropertyOnGue), nameof(testViewModel.IntPropertyOnVm));
 
-        await Assert.That(testViewModel.IntPropertyOnVm).IsEqualTo(0);
+        testViewModel.IntPropertyOnVm.ShouldBe(0);
 
         sut.IntPropertyOnGue = 5;
-        await Assert.That(testViewModel.IntPropertyOnVm).IsEqualTo(5);
+        testViewModel.IntPropertyOnVm.ShouldBe(5);
     }
 
     class TestViewModel : ViewModel
