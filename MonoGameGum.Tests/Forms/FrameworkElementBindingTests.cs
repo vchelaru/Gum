@@ -482,6 +482,26 @@ public class FrameworkElementBindingTests
         await Assert.That(propertyChangedCount).IsEqualTo(1);
     }
 
+    [Test]
+    public async Task StringFormat_FormatsNewTargetValue()
+    {
+        TestViewModel vm = new() { FloatValue = 0.1234f };
+        Label label = new() { BindingContext = vm };
+        Binding binding = new(nameof(TestViewModel.FloatValue))
+        {
+            StringFormat = "Value: {0:P}"
+        };
+
+        label.SetBinding(nameof(Label.Text), binding);
+        await Assert.That(label.Text).IsEqualTo("Value: 12.34%");
+
+        label.Text = "Value: 55.55%";
+
+        //string format technically only works on a one-way binding, but we
+        //want to make sure we don't fall over or muck with the source value
+        await Assert.That(vm.FloatValue).IsEqualTo(0.1234f);
+    }
+
 
     private class TestViewModel : ViewModel
     {
