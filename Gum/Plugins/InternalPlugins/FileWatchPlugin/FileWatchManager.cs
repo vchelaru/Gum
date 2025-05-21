@@ -57,7 +57,9 @@ namespace Gum.Logic.FileWatch
 
             char gumProjectDrive = gumProjectFilePath.Standardized[0];
 
-            var rootmostDirectory = directories.OrderBy(item => item.FullPath.Length).FirstOrDefault();
+            var rootmostDirectory = directories
+                .Where(item =>  FileManager.IsUrl(item.Original) == false)
+                .OrderBy(item => item.FullPath.Length).FirstOrDefault();
 
             foreach (var path in directories)
             {
