@@ -170,6 +170,7 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
                 selectionLength = System.Math.Min(maxSelectionLengthAllowed, value);
                 UpdateToSelection();
                 UpdateCaretVisibility();
+                RaiseSelectionChanged();
             }
         }
     }
@@ -235,6 +236,8 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
     public event Action<object, TextCompositionEventArgs> PreviewTextInput;
     public event EventHandler CaretIndexChanged;
     protected void RaiseCaretIndexChanged() => CaretIndexChanged?.Invoke(this, EventArgs.Empty);
+    public event EventHandler SelectionChanged;
+    protected void RaiseSelectionChanged() => SelectionChanged?.Invoke(this, EventArgs.Empty);
     protected TextCompositionEventArgs RaisePreviewTextInput(string newText)
     {
         var args = new TextCompositionEventArgs(newText);
@@ -993,7 +996,7 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
 
         if (IsEnabled == false)
         {
-            Visual.SetProperty(CategoryName, "Disabled");
+            Visual.SetProperty(CategoryName, DisabledStateName);
         }
         else if (IsFocused)
         {
@@ -1003,13 +1006,16 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
             // state exists and setting the proper state...
             Visual.SetProperty(CategoryName, "Selected");
         }
-        else if (cursor.LastInputDevice != InputDevice.TouchScreen && Visual.EffectiveManagers != null && Visual.HasCursorOver(cursor))
+        else if (cursor.LastInputDevice != InputDevice.TouchScreen && Visual.EffectiveManagers != null 
+            //&& Visual.HasCursorOver(cursor)
+            && cursor.WindowOver == Visual
+            )
         {
-            Visual.SetProperty(CategoryName, "Highlighted");
+            Visual.SetProperty(CategoryName, HighlightedStateName);
         }
         else
         {
-            Visual.SetProperty(CategoryName, "Enabled");
+            Visual.SetProperty(CategoryName, EnabledStateName);
         }
     }
 

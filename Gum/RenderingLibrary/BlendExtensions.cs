@@ -34,7 +34,7 @@ namespace Gum.RenderingLibrary
         }
 #endif
 
-#if MONOGAME || KNI || SKIA || FNA
+#if MONOGAME || KNI || SKIA || FNA || RAYLIB
 
         public static Blend ToBlend(this BlendState blendState)
         {

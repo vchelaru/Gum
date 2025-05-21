@@ -875,7 +875,6 @@ namespace Gum.PropertyGridHelpers
                     Undo.UndoManager.Self.RecordUndo();
                     GumCommands.Self.GuiCommands.RefreshVariables(force: true);
                     WireframeObjectManager.Self.RefreshAll(true);
-                    SelectionManager.Self.Refresh();
 
                     PluginManager.Self.VariableSet(selectedElement, selectedInstance, variableName, oldValue);
 
@@ -935,7 +934,14 @@ namespace Gum.PropertyGridHelpers
 
             if (!handledByExposedVariable)
             {
-                response = SetVariableLogic.Self.PropertyValueChanged(name, LastOldFullCommitValue, gumElementOrInstanceSaveAsObject as InstanceSave, refresh: effectiveRefresh,
+                var element = gumElementOrInstanceSaveAsObject as ElementSave ??
+                    (gumElementOrInstanceSaveAsObject as InstanceSave).ParentContainer;
+                response = SetVariableLogic.Self.PropertyValueChanged(
+                    name, 
+                    LastOldFullCommitValue, 
+                    gumElementOrInstanceSaveAsObject as InstanceSave, 
+                    element?.DefaultState,
+                    refresh: effectiveRefresh,
                     recordUndo: effectiveRecordUndo,
                     trySave: trySave);
             }

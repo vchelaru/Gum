@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.1;net6.0</TargetFrameworks>
+		<TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<LangVersion>11.0</LangVersion>
@@ -9,7 +9,7 @@
 		<Title>GumCommon</Title>
 		<Description>Flexible layout tool for graphics in any .NET environment</Description>
 		<PackageId>FlatRedBall.GumCommon</PackageId>
-		<Version>2025.4.23.1</Version>
+		<Version>2025.5.13.1</Version>
 
 
 
@@ -25,10 +25,14 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Compile Include="..\GumRuntime\BbCodeParser.cs" Link="Runtime\BbCodeParser.cs" />
 		<Compile Include="..\GumRuntime\BindableGue.cs" Link="BindableGue.cs" />
 		<Compile Include="..\GumRuntime\ElementSaveExtensions.GumRuntime.cs" Link="Wireframe\ElementSaveExtensions.GumRuntime.cs" />
 		<Compile Include="..\GumRuntime\InstanceSaveExtensionMethods.GumRuntime.cs" Link="Wireframe\InstanceSaveExtensionMethods.GumRuntime.cs" />
 		<Compile Include="..\GumRuntime\InteractiveGue.cs" Link="InteractiveGue.cs" />
+		<Compile Include="..\Gum\Graphics\Animation\Content\AnimationChainListSave.cs" Link="Animation\AnimationChainListSave.cs" />
+		<Compile Include="..\Gum\Graphics\Animation\Content\AnimationChainSave.cs" Link="Animation\AnimationChainSave.cs" />
+		<Compile Include="..\Gum\Graphics\Animation\Content\AnimationFrameSave.cs" Link="Animation\AnimationFrameSave.cs" />
 		<Compile Include="..\Gum\Managers\ObjectFinder.cs" Link="Managers\ObjectFinder.cs" />
 		<Compile Include="..\Gum\Mvvm\ViewModel.cs" Link="Mvvm\ViewModel.cs" />
 		<Compile Include="..\RenderingLibrary\Content\IContentLoader.cs" Link="Content\IContentLoader.cs" />
@@ -50,6 +54,7 @@
 		<Folder Include="Content\" />
 		<Folder Include="Managers\" />
 		<Folder Include="Mvvm\" />
+		<Folder Include="Animation\" />
 		<Folder Include="RenderingLibrary\" />
 	</ItemGroup>
 

@@ -90,34 +90,7 @@ public class KeyCombination
 
     }
 
-    public bool IsPressed(InputLibrary.Keyboard keyboard)
-    {
-        if (IsShiftDown &&
-            !keyboard.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift) &&
-            !keyboard.KeyDown(Microsoft.Xna.Framework.Input.Keys.RightShift))
-        {
-            return false;
-        }
 
-        if (IsCtrlDown &&
-            !keyboard.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftControl) &&
-            !keyboard.KeyDown(Microsoft.Xna.Framework.Input.Keys.RightControl))
-        {
-            return false;
-        }
-
-        if (IsAltDown &&
-            !keyboard.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftAlt) &&
-            !keyboard.KeyDown(Microsoft.Xna.Framework.Input.Keys.RightAlt))
-        {
-            return false;
-        }
-
-        return Key == null ||
-            // Most keys are the same in XNA - is this enough?
-            keyboard.KeyDown((Microsoft.Xna.Framework.Input.Keys)Key);
-
-    }
 
     public override string ToString()
     {
@@ -317,15 +290,14 @@ public class HotkeyManager : Singleton<HotkeyManager>
         {
             if(_selectedState.SelectedInstance != null)
             {
-                // todo - and then close this: https://github.com/vchelaru/Gum/issues/680
-                //_guiCommands.ShowRenameInstanceWidow(_selectedState.SelectedInstance);
+                _guiCommands.ShowRenameInstanceWidow(_selectedState.SelectedInstance);
+                e.Handled = true;
             }
             else if(_selectedState.SelectedElement != null &&
                 _selectedState.SelectedElement is not StandardElementSave)
             {
                 _guiCommands.ShowRenameElementWindow(_selectedState.SelectedElement);
                 e.Handled = true;
-
             }
         }
     }

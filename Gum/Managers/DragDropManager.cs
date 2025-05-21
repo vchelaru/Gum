@@ -19,6 +19,8 @@ using Gum.Logic;
 using Gum.Plugins.ImportPlugin.Manager;
 using Gum.DataTypes.Behaviors;
 using Gum.Undo;
+using Gum.Plugins;
+using Gum.Services;
 
 namespace Gum.Managers;
 
@@ -29,6 +31,7 @@ public class DragDropManager
     static DragDropManager mSelf;
 
     object mDraggedItem;
+    private readonly CircularReferenceManager _circularReferenceManager;
     private readonly ISelectedState _selectedState;
     private readonly ElementCommands _elementCommands;
 
@@ -41,223 +44,41 @@ public class DragDropManager
         get { return InputLibrary.Cursor.Self; }
     }
 
-    public static DragDropManager Self
-    {
-        get
-        {
-            if (mSelf == null)
-            {
-                mSelf = new DragDropManager();
-            }
-            return mSelf;
-        }
-    }
 
     #endregion
 
-    public DragDropManager()
+    public DragDropManager(CircularReferenceManager circularReferenceManager)
     {
+        _circularReferenceManager = circularReferenceManager;
         _selectedState = SelectedState.Self;
         _elementCommands = ElementCommands.Self;
     }
 
     #region Drag+drop File (from windows explorer)
 
-    internal void HandleFileDragDrop(object sender, DragEventArgs e)
+
+
+
+
+
+
+    public IEnumerable<string> ValidTextureExtensions
     {
-        if (!CanDrop())
-            return;
-
-        float worldX, worldY;
-        Renderer.Self.Camera.ScreenToWorld(Cursor.X, Cursor.Y, out worldX, out worldY);
-        string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-
-        if(files == null)
+        get
         {
-            return;
-        }
-
-        var handled = false;
-        bool shouldUpdate = false;
-
-        // If only one file was dropped, see if we're over an instance that can take a file
-        if (files.Length == 1)
-        {
-            if (!IsValidExtensionForFileDrop(files[0]))
-            {
-                handled = true;
-            }
-        }
-
-        if(!handled)
-        {
-            TryHandleFileDropOnInstance(worldX, worldY, files, ref handled, ref shouldUpdate);
-        }
-
-        if(!handled)
-        {
-            TryHandleFileDropOnComponent(worldX, worldY, files, ref handled, ref shouldUpdate);
-        }
-
-
-        if (!handled)
-        {
-            foreach (string file in files)
-            {
-                if (!IsValidExtensionForFileDrop(file))
-                    continue;
-
-                string fileName = FileManager.MakeRelative(file, FileLocations.Self.ProjectFolder);
-                AddNewInstanceForDrop(fileName, worldX, worldY);
-                shouldUpdate = true;
-            }
-
-        }
-        if (shouldUpdate)
-            SaveAndRefresh();
-    }
-
-    private void AddNewInstanceForDrop(string fileName, float worldX, float worldY)
-    {
-        string nameToAdd = FileManager.RemovePath(FileManager.RemoveExtension(fileName));
-
-        var element = SelectedState.Self.SelectedElement;
-
-        IEnumerable<string> existingNames = element.Instances.Select(i => i.Name);
-        nameToAdd = StringFunctions.MakeStringUnique(nameToAdd, existingNames);
-
-        InstanceSave instance =
-            _elementCommands.AddInstance(element, nameToAdd);
-        instance.BaseType = "Sprite";
-
-        SetInstanceToPosition(worldX, worldY, instance);
-
-        var variableName = instance.Name + ".SourceFile";
-
-        var oldValue = SelectedState.Self.SelectedStateSave.GetValueOrDefault<string>(variableName);
-
-        SelectedState.Self.SelectedStateSave.SetValue(variableName, fileName, instance);
-
-        SetVariableLogic.Self.ReactToPropertyValueChanged("SourceFile", oldValue, element, instance, SelectedState.Self.SelectedStateSave, refresh: false);
-
-    }
-
-    private void TryHandleFileDropOnInstance(float worldX, float worldY, string[] files, ref bool handled, ref bool shouldUpdate)
-    {
-        // This only supports drag+drop on an instance, but what if dropping on a component
-        // which inherits from Sprite, or perhaps an instance that has an exposed file variable?
-        // Not super high priority, but it's worth noting that this currently doesn't work...
-        InstanceSave instance = FindInstanceWithSourceFile(worldX, worldY);
-        if (instance != null)
-        {
-            string fileName = FileManager.MakeRelative(files[0], FileLocations.Self.ProjectFolder);
-
-            MultiButtonMessageBox mbmb = new MultiButtonMessageBox();
-            mbmb.StartPosition = FormStartPosition.Manual;
-
-            mbmb.Location = new Point(MainWindow.MousePosition.X - mbmb.Width / 2,
-                 MainWindow.MousePosition.Y - mbmb.Height / 2);
-
-            mbmb.MessageText = "What do you want to do with the file " + fileName;
-
-            mbmb.AddButton("Set source file on " + instance.Name, DialogResult.OK);
-            mbmb.AddButton("Add new Sprite", DialogResult.Yes);
-            mbmb.AddButton("Nothing", DialogResult.Cancel);
-
-            var result = mbmb.ShowDialog();
-
-            if (result == DialogResult.OK)
-            {
-                var oldValue = SelectedState.Self.SelectedStateSave
-                    .GetValueOrDefault<string>(instance.Name + ".SourceFile");
-
-                SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".SourceFile", fileName, instance);
-                ProjectState.Self.Selected.SelectedInstance = instance;
-                SetVariableLogic.Self.PropertyValueChanged("SourceFile", oldValue, instance);
-
-                shouldUpdate = true;
-                handled = true;
-            }
-            else if (result == DialogResult.Cancel)
-            {
-                handled = true;
-
-            }
-            // continue for DialogResult.Yes
+            yield return "png";
+            yield return "jpg";
+            yield return "tga";
+            yield return "gif";
+            yield return "svg";
+            yield return "bmp";
         }
     }
 
-    private void TryHandleFileDropOnComponent(float worldX, float worldY, string[] files, ref bool handled, ref bool shouldUpdate)
-    {
-        List<ElementWithState> elementStack = new List<ElementWithState>();
-        elementStack.Add(new ElementWithState(SelectedState.Self.SelectedElement) { StateName = SelectedState.Self.SelectedStateSave.Name });
-
-        // see if it's over the component:
-        IPositionedSizedObject ipsoOver = SelectionManager.Self.GetRepresentationAt(worldX, worldY, false, elementStack);
-        if(ipsoOver?.Tag is ComponentSave component && (component.BaseType == "Sprite" || component.BaseType == "NineSlice"))
-        {
-            string fileName = FileManager.MakeRelative(files[0], FileLocations.Self.ProjectFolder);
-
-            MultiButtonMessageBox mbmb = new MultiButtonMessageBox();
-            mbmb.StartPosition = FormStartPosition.Manual;
-
-            mbmb.Location = new Point(MainWindow.MousePosition.X - mbmb.Width / 2,
-                 MainWindow.MousePosition.Y - mbmb.Height / 2);
-
-            mbmb.MessageText = "What do you want to do with the file " + fileName;
-
-            mbmb.AddButton("Set source file on " + component.Name, DialogResult.OK);
-            mbmb.AddButton("Add new Sprite", DialogResult.Yes);
-            mbmb.AddButton("Nothing", DialogResult.Cancel);
-
-
-            var result = mbmb.ShowDialog();
-
-            if (result == DialogResult.OK)
-            {
-                var oldValue = SelectedState.Self.SelectedStateSave
-                    .GetValueOrDefault<string>("SourceFile");
-
-                SelectedState.Self.SelectedStateSave.SetValue("SourceFile", fileName);
-                ProjectState.Self.Selected.SelectedInstance = null;
-                SetVariableLogic.Self.PropertyValueChanged("SourceFile", oldValue, SelectedState.Self.SelectedInstance);
-
-                shouldUpdate = true;
-                handled = true;
-            }
-            else if (result == DialogResult.Cancel)
-            {
-                handled = true;
-
-            }
-
-        }
-    }
-
-    private InstanceSave FindInstanceWithSourceFile(float worldX, float worldY)
-    {
-        List<ElementWithState> elementStack = new List<ElementWithState>();
-        elementStack.Add(new ElementWithState(SelectedState.Self.SelectedElement) { StateName = SelectedState.Self.SelectedStateSave.Name });
-
-        IPositionedSizedObject ipsoOver = SelectionManager.Self.GetRepresentationAt(worldX, worldY, false, elementStack);
-
-        if (ipsoOver != null && ipsoOver.Tag is InstanceSave)
-        {
-            var baseStandardElement = ObjectFinder.Self.GetRootStandardElementSave(ipsoOver.Tag as InstanceSave);
-
-            if (baseStandardElement.DefaultState.Variables.Any(v => v.Name == "SourceFile"))
-            {
-                return ipsoOver.Tag as InstanceSave;
-            }
-        }
-
-        return null;
-    }
-
-    private bool IsValidExtensionForFileDrop(string file)
+    public bool IsValidExtensionForFileDrop(string file)
     {
         string extension = FileManager.GetExtension(file);
-        return LoaderManager.Self.ValidTextureExtensions.Contains(extension);
+        return ValidTextureExtensions.Contains(extension);
     }
 
     #endregion
@@ -452,7 +273,7 @@ public class DragDropManager
         return newInstance;
     }
 
-    private string GetDropElementErrorMessage(ElementSave draggedAsElementSave, ElementSave target, string errorMessage)
+    private string? GetDropElementErrorMessage(ElementSave draggedAsElementSave, ElementSave target, string errorMessage)
     {
         if (target == null)
         {
@@ -472,20 +293,14 @@ public class DragDropManager
 
         if (errorMessage == null)
         {
-
-            if (draggedAsElementSave is ComponentSave && target is ComponentSave)
+            if(!_circularReferenceManager.CanTypeBeAddedToElement(target!, draggedAsElementSave.Name))
             {
-                ComponentSave targetAsComponentSave = target as ComponentSave;
-
-                if (!targetAsComponentSave.CanContainInstanceOfType(draggedAsElementSave.Name))
-                {
-                    errorMessage = "Can't add instance of " + draggedAsElementSave.Name + " in " + targetAsComponentSave.Name;
-                }
+                errorMessage = $"Cannot add {draggedAsElementSave.Name} to {target!.Name} because it would create a circular reference";
             }
         }
 
 
-        if (errorMessage == null && target.IsSourceFileMissing)
+        if (errorMessage == null && target!.IsSourceFileMissing)
         {
             errorMessage = "The source file for " + target.Name + " is missing, so it cannot be edited";
         }
@@ -596,7 +411,21 @@ public class DragDropManager
 
         if (targetElementSave != null)
         {
-            if (isSameElement)
+            var canBeAdded = true;
+
+            if(draggedAsInstanceSave != null)
+            {
+                canBeAdded = _circularReferenceManager.CanTypeBeAddedToElement(targetElementSave, draggedAsInstanceSave.BaseType);
+            }
+
+            if (!canBeAdded)
+            {
+                GumCommands.Self.GuiCommands.ShowMessage($"Cannot add {draggedAsInstanceSave.Name} " +
+                    $"to {targetElementSave.Name} because it would create a circular reference");
+                return;
+            }
+
+            else if (isSameElement)
             {
                 HandleDroppingInstanceOnTarget(targetObject, draggedAsInstanceSave, targetElementSave, targetTreeNode);
 
@@ -664,13 +493,14 @@ public class DragDropManager
             // set the Parent variable on that instead of the SelectedState.Self.SelectedStateSave
             var stateToAssignOn = targetElementSave.DefaultState;
 
+            // todo - this needs to request the lock for the particular element
             using var undoLock = UndoManager.Self.RequestLock();
 
             var oldValue = stateToAssignOn.GetValue(variableName) as string;
             stateToAssignOn.SetValue(variableName, parentName, "string");
             
 
-            SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue, dragDroppedInstance);
+            SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue, dragDroppedInstance, targetElementSave?.DefaultState);
             targetTreeNode?.Expand();
         }
     }
@@ -821,8 +651,12 @@ public class DragDropManager
                 var newInstance = HandleDroppedElementInElement(draggedAsElementSave, target, null, out handled);
 
                 float worldX, worldY;
-                Renderer.Self.Camera.ScreenToWorld(Cursor.X, Cursor.Y,
-                                                   out worldX, out worldY);
+
+                var position = PluginManager.Self.GetWorldCursorPosition(Cursor);
+
+                worldX = position?.X ?? 0;
+                worldY = position?.Y ?? 0;
+
                 if(newInstance != null)
                 {
 
@@ -842,7 +676,7 @@ public class DragDropManager
                SelectedState.Self.SelectedStateSave != null;            // A state must be selected
     }
 
-    internal void HandleFileDragEnter(object sender, DragEventArgs e)
+    public void HandleFileDragEnter(object sender, DragEventArgs e)
     {
         UpdateEffectsForDragging(e);
     }
@@ -884,7 +718,7 @@ public class DragDropManager
         }
     }
 
-    private void SetInstanceToPosition(float worldX, float worldY, InstanceSave instance)
+    public void SetInstanceToPosition(float worldX, float worldY, InstanceSave instance)
     {
         var component = SelectedState.Self.SelectedComponent;
 
@@ -931,6 +765,4 @@ public class DragDropManager
     }
 
     #endregion
-
-
 }

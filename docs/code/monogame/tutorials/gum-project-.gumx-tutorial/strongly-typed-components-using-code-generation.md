@@ -1,5 +1,13 @@
 # Strongly Typed Components Using Code Generation
 
+{% hint style="danger" %}
+This tutorial series represents the old way to add a .gumx project to your MonoGame project. This tutorial was  retired in April 2025, replaced by the new [Gum Project Forms Tutorial](../gum-project-forms-tutorial/).
+
+This tutorial is still syntactically valid but it is not recommended as of the April 2025 release:
+
+[https://github.com/vchelaru/Gum/releases/tag/Release\_April\_27\_2025](https://github.com/vchelaru/Gum/releases/tag/Release_April_27_2025)
+{% endhint %}
+
 ## Introduction
 
 The types used in the previous tutorials fall into two categories:
@@ -208,7 +216,7 @@ As mentioned above, if you do not need any customization for your control, you c
 
 Gum generates using statements in the generated code file. These using statements can be modified in the Code tab. Initially Gum includes a best-guess of the type of using statements needed in your project.
 
-<figure><img src="../../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Using statements in Gum result in generated code using statements</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>Using statements in Gum result in generated code using statements</p></figcaption></figure>
 
 At times your generated code may include types which are not handled by using statements. If necessary you may need to add additional project-wide using statments as your Screens or Components grow.
 

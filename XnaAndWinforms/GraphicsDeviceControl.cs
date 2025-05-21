@@ -10,6 +10,9 @@
 #region Using Statements
 using System;
 using System.Drawing;
+using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Xna.Framework.Graphics;
 #endregion
@@ -31,6 +34,10 @@ namespace XnaAndWinforms
     {
         #region Fields
 
+        const PixelFormat BmpFormat = PixelFormat.Format32bppPArgb;
+        const SurfaceFormat RtFormat = SurfaceFormat.Bgra32;
+        const int PreferredMultiSampleCount = 1;
+
         // However many GraphicsDeviceControl instances you have, they all share
         // the same underlying GraphicsDevice, managed by this helper service.
         GraphicsDeviceService graphicsDeviceService;
@@ -42,6 +49,10 @@ namespace XnaAndWinforms
         float mDesiredFramesPerSecond = 30;
 
         RenderingError mRenderError = new RenderingError();
+
+        private RenderTarget2D renderTarget;
+        byte[] rawImage;
+        Bitmap bitmap;
 
         #endregion
 
@@ -74,6 +85,12 @@ namespace XnaAndWinforms
         }
 
 
+        public RenderTarget2D DefaultRenderTarget
+        {
+            get { return renderTarget; }
+        }
+
+
 
         /// <summary>
         /// Gets an IServiceProvider containing our IGraphicsDeviceService.
@@ -93,6 +110,10 @@ namespace XnaAndWinforms
 
         public GraphicsDeviceControl()
         {
+            this.DoubleBuffered = true;
+            this.SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer, true);
+            this.UpdateStyles();
+
             // Don't initialize the graphics device if we are running in the designer.
             if (!DesignMode)
             {
@@ -126,11 +147,23 @@ namespace XnaAndWinforms
         /// </summary>
         protected override void Dispose(bool disposing)
         {
+            if (bitmap != null)
+            {
+                bitmap.Dispose();
+                bitmap = null;
+            }
+            if (renderTarget != null)
+            {
+                renderTarget.Dispose();
+                renderTarget = null;
+            }
             if (graphicsDeviceService != null)
             {
                 graphicsDeviceService.Release(disposing);
                 graphicsDeviceService = null;
             }
+
+            rawImage = null;
 
             base.Dispose(disposing);
         }
@@ -204,23 +237,27 @@ namespace XnaAndWinforms
                             }
                             Draw();
                             EndDraw();
+
+                            PaintRendertarget(e.Graphics);
                         }
                         catch (Exception exception)
                         {
                             ErrorOccurred?.Invoke(exception);
                             mRenderError.Message = exception.ToString();
+                            
                         }
                     }
-                    else if (!mRenderError.GraphicsDeviceResetFailed)
-                    {
-                        TryHandleDeviceReset(mRenderError);
+                    //else if (!mRenderError.GraphicsDeviceResetFailed)
+                    //{
+                    //    TryHandleDeviceReset(mRenderError);
 
-                    } else
+                    //} 
+                    else
                     {
                         // If BeginDraw failed, show an error message using System.Drawing.
                         PaintUsingSystemDrawing(e.Graphics, mRenderError.ProcessedMessage);
 
-                        DesiredFramesPerSecond = 1;
+                        DesiredFramesPerSecond = 0.5f;
                     }
                 }
             }
@@ -249,6 +286,8 @@ namespace XnaAndWinforms
             }
             if (!error.HasErrors)
             {
+                GraphicsDevice.SetRenderTarget(renderTarget);
+                GraphicsDevice.Clear(Microsoft.Xna.Framework.Color.Transparent);
 
                 // Many GraphicsDeviceControl instances can be sharing the same
                 // GraphicsDevice. The device backbuffer will be resized to fit the
@@ -281,10 +320,11 @@ namespace XnaAndWinforms
         {
             try
             {
-                Rectangle sourceRectangle = new Rectangle(0, 0, ClientSize.Width,
-                                                                ClientSize.Height);
+                // resolve RenderTarget
+                this.GraphicsDevice.SetRenderTarget(null);
 
-                GraphicsDevice.Present(sourceRectangle, null, this.Handle);
+                renderTarget.GetData(rawImage);
+
             }
             catch
             {
@@ -353,8 +393,42 @@ namespace XnaAndWinforms
                     error.Message = "Graphics device reset failed\n\n" + e;
                 }
             }
-        }
 
+            int w = Math.Max(1, ClientSize.Width);
+            int h = Math.Max(1, ClientSize.Height);
+
+            // check whether _swapChainRenderTarget is big enough.
+            if (renderTarget != null)
+            {
+                if (w != renderTarget.Width || h != renderTarget.Height)
+                {
+                    renderTarget.Dispose();
+                    renderTarget = null;
+                    bitmap.Dispose();
+                    bitmap = null;
+                }
+            }
+
+            // recreate RenderTarget
+            if (renderTarget == null)
+            {
+                renderTarget = new RenderTarget2D(
+                    this.GraphicsDevice, w, h,
+                    false, RtFormat, DepthFormat.Depth24Stencil8, PreferredMultiSampleCount,
+                    // needed for rendering IsRenderTarget containers
+                    RenderTargetUsage.PreserveContents
+                    );
+
+                bitmap = new Bitmap(w, h, BmpFormat);
+            }
+            int rawImageLen = w * h * 4;
+
+            if (rawImage == null || rawImage.Length != rawImageLen)
+            {
+                rawImage = new byte[rawImageLen];
+            }
+
+        }
 
         /// <summary>
         /// If we do not have a valid graphics device (for instance if the device
@@ -377,6 +451,68 @@ namespace XnaAndWinforms
             }
         }
 
+        private void PaintRendertarget(Graphics graphics)
+        {
+            int w = Math.Max(1, ClientSize.Width);
+            int h = Math.Max(1, ClientSize.Height);
+
+            var rect = new System.Drawing.Rectangle(0, 0, w, h);
+            BitmapData bmpData = bitmap.LockBits(rect, ImageLockMode.WriteOnly, bitmap.PixelFormat);
+            if (renderTarget.Format == SurfaceFormat.Color && (bitmap.PixelFormat == PixelFormat.Format32bppArgb || bitmap.PixelFormat == PixelFormat.Format32bppPArgb))
+            {
+                CopyAndConvertRGBATOBGRA(w, h, rawImage, bmpData.Scan0, bmpData.Stride);
+            }
+            else if (renderTarget.Format == SurfaceFormat.Bgra32 && (bitmap.PixelFormat == PixelFormat.Format32bppArgb || bitmap.PixelFormat == PixelFormat.Format32bppPArgb))
+            {
+                int rowSize = w * 4;
+                int rowStride = bmpData.Stride;
+
+                Parallel.For(0, h, (y) =>
+                {
+                    int srcOffset = y * rowSize;
+                    int dstOffset = y * rowStride;
+                    Marshal.Copy(rawImage, srcOffset, bmpData.Scan0 + dstOffset, rowSize);
+                });
+            }
+            else
+            {
+                throw new NotSupportedException();
+            }
+            bitmap.UnlockBits(bmpData);
+            var cm = graphics.CompositingMode;
+            var im = graphics.InterpolationMode;
+            graphics.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
+            graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
+            graphics.DrawImageUnscaled(bitmap, 0, 0);
+            graphics.CompositingMode = cm;
+            graphics.InterpolationMode = im;
+        }
+
+        private unsafe void CopyAndConvertRGBATOBGRA(int w, int h, byte[] data, IntPtr buffer, int rowStride)
+        {
+            int rowSize = w * 4;
+
+            fixed (void* pData = &data[0])
+            {
+                byte* src = (byte*)pData;
+                byte* dst = (byte*)buffer;
+
+                Parallel.For(0, h, (y) =>
+                {
+                    int srcOffset = y * rowSize;
+                    int dstOffset = y * rowStride;
+
+                    for (int x = 0; x < w; x++)
+                    {
+                        int i = x * 4;
+                        dst[dstOffset + i + 0] = src[srcOffset + i + 2];
+                        dst[dstOffset + i + 1] = src[srcOffset + i + 1];
+                        dst[dstOffset + i + 2] = src[srcOffset + i + 0];
+                        dst[dstOffset + i + 3] = src[srcOffset + i + 3];
+                    }
+                });
+            }
+        }
 
         /// <summary>
         /// Ignores WinForms paint-background messages. The default implementation

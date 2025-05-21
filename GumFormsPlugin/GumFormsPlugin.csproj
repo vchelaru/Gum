@@ -7,9 +7,8 @@
 		<LangVersion>12.0</LangVersion>
 		<AnalysisLevel>none</AnalysisLevel>
 		<UseWPF>true</UseWPF>
-		<Platforms>x86</Platforms>
 	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 	  <DebugSymbols>true</DebugSymbols>
 	  <DebugType>full</DebugType>
 	  <Optimize>false</Optimize>
@@ -18,7 +17,7 @@
 	  <ErrorReport>prompt</ErrorReport>
 	  <WarningLevel>4</WarningLevel>
 	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 	  <DebugType>pdbonly</DebugType>
 	  <Optimize>true</Optimize>
 	  <OutputPath>bin\Release\</OutputPath>
@@ -78,9 +77,7 @@
 			<Project>{8c80ba7b-1cba-4579-9382-d9dc6c365070}</Project>
 			<Name>FlatRedBall.SpecializedXnaControls</Name>
 		</ProjectReference>
-		<ProjectReference Include="..\GumDataTypes\GumDataTypes.csproj">
-			<Project>{5971a187-f6b2-4d65-a277-5613ded1f50f}</Project>
-			<Name>GumDataTypes</Name>
+		<ProjectReference Include="..\GumDataTypes\GumDataTypesNet6.csproj">
 		</ProjectReference>
 		<ProjectReference Include="..\Gum\Gum.csproj">
 			<Project>{121ac5a5-8f6a-42b2-8863-debc45b052bc}</Project>

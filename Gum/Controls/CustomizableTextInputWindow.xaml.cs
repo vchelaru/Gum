@@ -64,12 +64,25 @@ public partial class CustomizableTextInputWindow : Window
         GumCommands.Self.GuiCommands.MoveToCursor(this);
 
         ValidationLabel.Visibility = Visibility.Hidden;
+        this.Loaded += HandleLoaded;
+    }
+
+    bool shouldSelectAllOnLoaded;
+    private void HandleLoaded(object sender, RoutedEventArgs e)
+    {
+        if(shouldSelectAllOnLoaded)
+        {
+            TextBox.SelectAll();
+        }
     }
 
     public void HighlightText()
     {
         TextBox.SelectAll();
+        shouldSelectAllOnLoaded = true;
     }
+
+
 
     public void AddControl(FrameworkElement control, ControlLocation controlLocation = ControlLocation.Below)
     {
@@ -81,7 +94,7 @@ public partial class CustomizableTextInputWindow : Window
         {
             BelowTextBoxStackPanel.Children.Add(control);
         }
-        else if(controlLocation == ControlLocation.LeftOfTextBox)
+        else if (controlLocation == ControlLocation.LeftOfTextBox)
         {
             LeftOfTextBoxStackPanel.Children.Add(control);
         }
@@ -130,6 +143,6 @@ public partial class CustomizableTextInputWindow : Window
 
     private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
     {
-                TextEntered?.Invoke(this, null);
+        TextEntered?.Invoke(this, null);
     }
 }

@@ -177,15 +177,19 @@ public class RadioButton : ToggleButton
     #endregion
 
     #region UpdateTo Methods
-
     private void SetThisAsOnlyCheckedInGroup()
     {
         var parent = GetParent();
-        foreach (var radio in RadioButtonDictionary[parent][GroupName])
+
+        // Don't set all RadioButtons to FALSE just because they don't have a parent yet!
+        if (parent != FakeRoot)
         {
-            if (radio != this)
+            foreach (var radio in RadioButtonDictionary[parent][GroupName])
             {
-                radio.IsChecked = false;
+                if (radio != this)
+                {
+                    radio.IsChecked = false;
+                }
             }
         }
 
@@ -209,7 +213,7 @@ public class RadioButton : ToggleButton
 
     #region Event Handlers
 
-    private void HandleParentChanged(object sender, EventArgs e)
+    private void HandleParentChanged(object sender, GraphicalUiElement.ParentChangedEventArgs e)
     {
         // setting GroupName refreshes grouping
         GroupName = GroupName;

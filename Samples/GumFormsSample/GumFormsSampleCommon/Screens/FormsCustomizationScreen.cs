@@ -14,7 +14,8 @@ namespace GumFormsSample.Screens;
 
 internal class FormsCustomizationScreen : ContainerRuntime
 {
-    public void Initialize()
+
+    public FormsCustomizationScreen()
     {
         var button = new Button();
 

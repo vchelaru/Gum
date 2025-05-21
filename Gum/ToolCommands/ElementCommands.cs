@@ -273,7 +273,11 @@ namespace Gum.ToolCommands
             // knows, maybe other parts of the code
             // in the future), so we should make sure
             // that something is really selected.
-            if (SelectionManager.Self.HasSelection)
+            var hasSelection = SelectedState.Self.SelectedComponent != null ||
+                SelectedState.Self.SelectedStandardElement != null ||
+                SelectedState.Self.SelectedInstance != null;
+
+            if (hasSelection)
             {
                 var isMovingElement = SelectedState.Self.SelectedInstances.Count() == 0 &&
                     (SelectedState.Self.SelectedComponent != null || SelectedState.Self.SelectedStandardElement != null);

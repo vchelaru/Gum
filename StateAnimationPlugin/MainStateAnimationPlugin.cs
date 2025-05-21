@@ -19,7 +19,7 @@ using Gum;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using Gum.Responses;
-using StateAnimationPlugin.SaveClasses;
+using Gum.StateAnimation.SaveClasses;
 
 using Gum.Plugins;
 using System.Windows.Forms;
@@ -300,7 +300,8 @@ namespace StateAnimationPlugin
                     mCurrentViewModel.SelectedAnimation.Keyframes.BubbleSort();
 
                     mCurrentViewModel.SelectedAnimation.Keyframes.Add(newVm);
-                    // Call this *before* setting SelectedKeyframe so the available states are assigned. Otherwise
+                    // Call this *before* setting SelectedKeyframe so the available
+                    // states are assigned. Otherwise
                     // StateName will be nulled out.
                     HandleAnimationKeyrameAdded(newVm);
                     mCurrentViewModel.SelectedAnimation.SelectedKeyframe = newVm;
@@ -587,7 +588,7 @@ namespace StateAnimationPlugin
             List<AnimationSave> animatedStatesReferencingState = new List<AnimationSave>();
             if (element != null)
             {
-                SaveClasses.ElementAnimationsSave model;
+                global::Gum.StateAnimation.SaveClasses.ElementAnimationsSave model;
                 if (element == mCurrentViewModel?.Element)
                 {
                     model = mCurrentViewModel.BackingData;

@@ -29,6 +29,7 @@ using System.Reflection.Emit;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
+using System.Diagnostics;
 
 namespace Gum.Wireframe
 {
@@ -150,7 +151,7 @@ namespace Gum.Wireframe
         public event EventHandler Click;
 
         /// <summary>
-        /// Event shich is raised whenever this is pushed by a cursor. A push occurs
+        /// Event which is raised whenever this is pushed by a cursor. A push occurs
         /// when the cursor is over this and the left mouse button is pushed (not down last frame,
         /// down this frame).
         /// </summary>
@@ -873,7 +874,11 @@ namespace Gum.Wireframe
 
             if(windowOverBefore != cursor.WindowOver)
             {
-                if(windowOverBefore is InteractiveGue interactiveBefore)
+                string GetInfoFor(InteractiveGue interactive)
+                {
+                    return interactive?.Name + " " + interactive?.GetType();
+                }
+                if (windowOverBefore is InteractiveGue interactiveBefore)
                 {
                     interactiveBefore.TryCallRollOff();
                 }

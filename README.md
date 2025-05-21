@@ -28,6 +28,9 @@ https://docs.flatredball.com/gum/
 ### Star Velocity
 [![Sparkline](https://stars.medv.io/vchelaru/Gum.svg)](https://stars.medv.io/vchelaru/Gum)
 
+### Build Staus
+[![Build All](https://github.com/vchelaru/Gum/actions/workflows/ci.yaml/badge.svg)](https://github.com/vchelaru/Gum/actions/workflows/ci.yaml)
+
 ## Need Help?
 
 The fastest way to get help is to ask in our Discord: https://discord.gg/uQSam6w36d
@@ -38,7 +41,7 @@ You can also check the docs: https://docs.flatredball.com/gum/
 
 ## Platforms
 
-Gum produces genera-purpose XML so it is technically possible to use Gum in any environment. That said, a number of runtimes exist to make integration into your project much easier.
+Gum produces general-purpose XML so it is technically possible to use Gum in any environment. That said, a number of runtimes exist to make integration into your project much easier.
 
 Gum integrations exist for the following environments:
 
@@ -47,7 +50,9 @@ Gum integrations exist for the following environments:
 * Meadow
 * SkiaSharp
 * Silk.NET
+* raylib
 * WPF
-* Xamarin.Forms/Maui
+* Maui
+* Avalonia
 
 For details on integrating Gum with these runtimes, or for using GumCore to integrate with your own runtime, see the main documentation: https://docs.flatredball.com/gum/

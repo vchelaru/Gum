@@ -1,15 +1,11 @@
+using Gum.Content.AnimationChain;
 using System;
 using System.Collections.Generic;
+using ToolsUtilities;
 using Texture2D = Microsoft.Xna.Framework.Graphics.Texture2D;
 
 namespace Gum.Graphics.Animation
 {
-    public enum TimeMeasurementUnit
-    {
-        Undefined,
-        Millisecond,
-        Second
-    }
 
     /// <summary>
     /// A list of AnimationChains.
@@ -28,7 +24,7 @@ namespace Gum.Graphics.Animation
 
         bool mFileRelativeTextures;
 
-        TimeMeasurementUnit mTimeMeasurementUnit = Gum.Graphics.Animation.TimeMeasurementUnit.Second;
+        TimeMeasurementUnit mTimeMeasurementUnit = TimeMeasurementUnit.Second;
 
         #endregion
 
@@ -183,5 +179,68 @@ namespace Gum.Graphics.Animation
         }
 
         #endregion
+    }
+
+    public static class AnimationChainListSaveExtensionMethods
+    {
+        public static AnimationChainList ToAnimationChainList(this AnimationChainListSave animationChainListSave, string contentManagerName)
+        {
+
+            return animationChainListSave.ToAnimationChainList(contentManagerName, true);
+        }
+
+
+        public static AnimationChainList ToAnimationChainList(this AnimationChainListSave animationChainListSave, string contentManagerName, bool throwError)
+        {
+            animationChainListSave.ToRuntimeErrors.Clear();
+
+            AnimationChainList list = new AnimationChainList();
+
+            list.FileRelativeTextures = animationChainListSave.FileRelativeTextures;
+            list.TimeMeasurementUnit = animationChainListSave.TimeMeasurementUnit;
+            list.Name = animationChainListSave.FileName;
+
+            string oldRelativeDirectory = FileManager.RelativeDirectory;
+
+            try
+            {
+                if (animationChainListSave.FileRelativeTextures)
+                {
+                    FileManager.RelativeDirectory = FileManager.GetDirectory(animationChainListSave.FileName);
+                }
+
+                foreach (AnimationChainSave animationChain in animationChainListSave.AnimationChains)
+                {
+                    try
+                    {
+                        Gum.Graphics.Animation.AnimationChain newChain = null;
+
+                        newChain = animationChain.ToAnimationChain(contentManagerName, animationChainListSave.TimeMeasurementUnit, animationChainListSave.CoordinateType);
+
+                        newChain.IndexInLoadedAchx = list.Count;
+
+                        newChain.ParentAchxFileName = animationChainListSave.FileName;
+
+                        list.Add(newChain);
+
+                    }
+                    catch (Exception e)
+                    {
+                        animationChainListSave.ToRuntimeErrors.Add(e.ToString());
+                        if (throwError)
+                        {
+                            throw new Exception("Error loading AnimationChain", e);
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                FileManager.RelativeDirectory = oldRelativeDirectory;
+            }
+
+            return list;
+        }
+
     }
 }

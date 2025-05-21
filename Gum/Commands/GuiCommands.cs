@@ -42,6 +42,11 @@ namespace Gum.Commands
 
         #endregion
 
+        public GuiCommands()
+        {
+
+        }
+
         internal void Initialize(MainWindow mainWindow, MainPanelControl mainPanelControl)
         {
             this.MainWindow = mainWindow;
@@ -241,7 +246,7 @@ namespace Gum.Commands
 
         public void PrintOutput(string output)
         {
-            OutputManager.Self.AddOutput(output);
+            DoOnUiThread(() => OutputManager.Self.AddOutput(output));
         }
 
         #region Show/Hide Tools
@@ -262,7 +267,7 @@ namespace Gum.Commands
         }
 
 
-        internal void ToggleToolVisibility()
+        public void ToggleToolVisibility()
         {
             //var areToolsVisible = mMainWindow.LeftAndEverythingContainer.Panel1Collapsed == false;
 
@@ -312,6 +317,7 @@ namespace Gum.Commands
 
         #endregion
 
+        #region Show Add XXX Widows
         public void ShowAddVariableWindow()
         {
             var canShow = SelectedState.Self.SelectedBehavior != null || SelectedState.Self.SelectedElement != null;
@@ -494,6 +500,17 @@ namespace Gum.Commands
             }
         }
 
+        #endregion
+
+
+        public Spinner ShowSpinner()
+        {
+            var spinner = new Gum.Controls.Spinner();
+            spinner.Show();
+
+            return spinner;
+        }
+
         public void ShowRenameFolderWindow(TreeNode node)
         {
             var tiw = new TextInputWindow();
@@ -625,7 +642,36 @@ namespace Gum.Commands
             if(dialogResult == true)
             {
                 element.Name = folder + window.Result;
-                SetVariableLogic.Self.PropertyValueChanged("Name", oldName, null, refresh: true,
+                SetVariableLogic.Self.PropertyValueChanged("Name", 
+                    oldName, 
+                    null,
+                    element.DefaultState,
+                    refresh: true,
+                    recordUndo: true,
+                    trySave: true);
+            }
+        }
+
+        public void ShowRenameInstanceWidow(InstanceSave instance)
+        {
+            var oldName = instance.Name;
+
+            var window = new CustomizableTextInputWindow();
+            window.Title = "Enter new name:";
+            window.Message = string.Empty;
+            window.HighlightText();
+
+            window.Result = oldName;
+
+            var dialogResult = window.ShowDialog();
+
+            if (dialogResult == true)
+            {
+                instance.Name = window.Result;
+                SetVariableLogic.Self.PropertyValueChanged("Name", oldName, 
+                    instance,
+                    instance.ParentContainer?.DefaultState,
+                    refresh: true,
                     recordUndo: true,
                     trySave: true);
             }

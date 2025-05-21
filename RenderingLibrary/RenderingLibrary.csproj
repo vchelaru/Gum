@@ -1,193 +1,91 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{A86EE399-7C93-42E1-80ED-CA4CBF4CA573}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>RenderingLibrary</RootNamespace>
-    <AssemblyName>RenderingLibrary</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <LangVersion>12.0</LangVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;MONOGAME; DIRECTX_RENDERING; HAS_SYSTEM_DRAWING_IMAGE</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
-    <CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;MONOGAME; DIRECTX_RENDERING</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
-    <CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'UnitTest|x86'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\UnitTest\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;TEST</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'AutomatedBuild|x86'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\AutomatedBuild\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug2|x86'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x86\Debug2\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;MONOGAME</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="Microsoft.Xna.Framework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Gum\Libraries\Xna\Microsoft.Xna.Framework.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Xna.Framework.Graphics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Gum\Libraries\Xna\Microsoft.Xna.Framework.Graphics.dll</HintPath>
-    </Reference>
-    <Reference Include="mscorlib" />
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Drawing.Primitives, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Drawing.Primitives.4.3.0\lib\net45\System.Drawing.Primitives.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Numerics" />
-    <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\..\FlatRedBall\FRBDK\AnimationEditor\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
-    <Reference Include="TargaImage, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>Libraries\TargaImage.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Camera.cs" />
-    <Compile Include="Content\ContentLoader.cs" />
-    <Compile Include="Content\IContentLoader.cs" />
-    <Compile Include="Content\LoaderManager.cs" />
-    <Compile Include="Graphics\AnimationFrame.cs" />
-    <Compile Include="Graphics\Animation\AnimationChain.cs" />
-    <Compile Include="Graphics\Animation\AnimationChainList.cs" />
-    <Compile Include="Graphics\Animation\AnimationFrame.cs" />
-    <Compile Include="Graphics\Atlas.cs" />
-    <Compile Include="Graphics\AtlasedTexture.cs" />
-    <Compile Include="Graphics\BitmapCharacterInfo.cs" />
-    <Compile Include="Graphics\Fonts\BitmapFont.cs" />
-    <Compile Include="Graphics\Fonts\BmfcSave.cs" />
-    <Compile Include="Graphics\GradientType.cs" />
-    <Compile Include="Graphics\HorizontalAlignment.cs" />
-    <Compile Include="Graphics\IAnimatable.cs" />
-    <Compile Include="Graphics\IAnimation.cs" />
-    <Compile Include="Graphics\IAspectRatio.cs" />
-    <Compile Include="Graphics\ImageData.cs" />
-    <Compile Include="Graphics\InvisibleRenderable.cs" />
-    <Compile Include="Graphics\IRenderable.cs" />
-    <Compile Include="Graphics\IRenderableIpso.cs" />
-    <Compile Include="Graphics\IRenderer.cs" />
-    <Compile Include="Graphics\ISetClipsChildren.cs" />
-    <Compile Include="Graphics\IText.cs" />
-    <Compile Include="Graphics\ITexturable.cs" />
-    <Compile Include="Graphics\ITextureCoordinate.cs" />
-    <Compile Include="Graphics\IVisible.cs" />
-    <Compile Include="Graphics\Layer.cs" />
-    <Compile Include="Graphics\LayerCameraSettings.cs" />
-    <Compile Include="Graphics\NineSlice.cs" />
-    <Compile Include="Graphics\NineSliceExtensions.cs" />
-    <Compile Include="Graphics\Renderer.cs" />
-    <Compile Include="Graphics\RendererSettings.cs" />
-    <Compile Include="Graphics\SortableLayer.cs" />
-    <Compile Include="Graphics\SpriteBatchStack.cs" />
-    <Compile Include="Graphics\SpriteRenderer.cs" />
-    <Compile Include="Graphics\TextOverflowMode.cs" />
-    <Compile Include="Graphics\TimedSpriteSheetAnimation.cs" />
-    <Compile Include="Graphics\VerticalAlignment.cs" />
-    <Compile Include="Graphics\XNAExtensions.cs" />
-    <Compile Include="ISystemManagers.cs" />
-    <Compile Include="Math\FloatRectangle.cs" />
-    <Compile Include="Math\Geometry\Line.cs" />
-    <Compile Include="Math\Geometry\LineGrid.cs" />
-    <Compile Include="Math\Geometry\LinePolygon.cs" />
-    <Compile Include="Math\Geometry\SolidRectangle.cs" />
-    <Compile Include="Graphics\Sprite.cs" />
-    <Compile Include="Graphics\SpriteManager.cs" />
-    <Compile Include="Graphics\Text.cs" />
-    <Compile Include="Graphics\TextManager.cs" />
-    <Compile Include="Graphics\TextureFlipAnimation.cs" />
-    <Compile Include="IPositionedSizedObject.cs" />
-    <Compile Include="Math\Geometry\LineCircle.cs" />
-    <Compile Include="Math\Geometry\LinePrimitive.cs" />
-    <Compile Include="Math\Geometry\LineRectangle.cs" />
-    <Compile Include="Math\Geometry\ShapeManager.cs" />
-    <Compile Include="Math\MathFunctions.cs" />
-    <Compile Include="Packing\RectangleNode.cs" />
-    <Compile Include="Packing\RectangleTree.cs" />
-    <Compile Include="Packing\TextureAtlas.cs" />
-    <Compile Include="Packing\TextureCombiner.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SystemManagers.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config" />
-    <None Include="Content\BmfcTemplate.bmfc">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Libraries\TargaImage.dll" />
-    <Content Include="Libraries\TargaImage.xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Libraries\bmfont.exe" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj">
-      <Project>{cae35f4b-8a10-4a85-b2fb-7f4a8d7c7138}</Project>
-      <Name>ToolsUtilitiesStandard</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net472</TargetFramework>
+		<OutputType>Library</OutputType>
+		<LangVersion>12.0</LangVersion>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<LangVersion>12.0</LangVersion>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+		<DefineConstants>TRACE;DEBUG;MONOGAME; HAS_SYSTEM_DRAWING_IMAGE</DefineConstants>
+		<CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
+		<CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+		<DefineConstants>TRACE;MONOGAME</DefineConstants>
+		<CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
+		<CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="nkast.Xna.Framework" Version="4.1.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.1.9001" />
+		<Reference Include="TargaImage, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+			<SpecificVersion>False</SpecificVersion>
+			<HintPath>Libraries\TargaImage.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="Content\Fonts\Font18Arial_o1_0.png">
+		  <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</EmbeddedResource>
+		<Content Include="Libraries\TargaImage.dll" />
+		<Content Include="Libraries\TargaImage.xml" />
+	</ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="Content\Fonts\Font18Arial_o1.fnt">
+		  <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</EmbeddedResource>
+		<EmbeddedResource Include="Libraries\bmfont.exe" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\GumCommon\GumCommon.csproj" />
+		<ProjectReference Include="..\ToolsUtilities\ToolsUtilitiesStandard.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+		<PackageReference Include="System.Drawing.Primitives" Version="4.3.0" />
+		<PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
+	</ItemGroup>
+	<ItemGroup>
+		<Compile Remove="Camera.cs" />
+		<Compile Remove="Content\IContentLoader.cs" />
+		<Compile Remove="Content\LoaderManager.cs" />
+		<Compile Remove="Graphics\Fonts\BmfcSave.cs" />
+		<Compile Remove="Graphics\GradientType.cs" />
+		<Compile Remove="Graphics\HorizontalAlignment.cs" />
+		<Compile Remove="Graphics\IAnimatable.cs" />
+		<Compile Remove="Graphics\IAspectRatio.cs" />
+		<Compile Remove="Graphics\InvisibleRenderable.cs" />
+		<Compile Remove="Graphics\IRenderable.cs" />
+		<Compile Remove="Graphics\IRenderableIpso.cs" />
+		<Compile Remove="Graphics\IRenderer.cs" />
+		<Compile Remove="Graphics\ISetClipsChildren.cs" />
+		<Compile Remove="Graphics\IText.cs" />
+		<Compile Remove="Graphics\ITextureCoordinate.cs" />
+		<Compile Remove="Graphics\IVisible.cs" />
+		<Compile Remove="Graphics\Layer.cs" />
+		<Compile Remove="Graphics\LayerCameraSettings.cs" />
+		<Compile Remove="Graphics\NineSliceExtensions.cs" />
+		<Compile Remove="Graphics\RenderableCloneLogic.cs" />
+		<Compile Remove="Graphics\SortableLayer.cs" />
+		<Compile Remove="Graphics\TextOverflowMode.cs" />
+		<Compile Remove="Graphics\VerticalAlignment.cs" />
+		<Compile Remove="IPositionedSizedObject.cs" />
+		<Compile Remove="ISystemManagers.cs" />
+		<Compile Remove="Math\MathFunctions.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <None Remove="Content\Fonts\Font18Arial_o1.fnt" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Include="..\Gum\Graphics\Animation\Content\AnimationChainListSave.cs" Link="Animation\Content\AnimationChainListSave.cs" />
+	  <Compile Include="..\Gum\Graphics\Animation\Content\AnimationChainSave.cs" Link="Animation\Content\AnimationChainSave.cs" />
+	  <Compile Include="..\Gum\Graphics\Animation\Content\AnimationFrameSave.cs" Link="Animation\Content\AnimationFrameSave.cs" />
+	  <Compile Include="..\Gum\RenderingLibrary\BlendExtensions.cs" Link="Graphics\BlendExtensions.cs" />
+	  <Compile Include="..\Gum\Wireframe\CustomSetPropertyOnRenderable.cs" Link="CustomSetPropertyOnRenderable.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Animation\Content\" />
+	</ItemGroup>
 </Project>

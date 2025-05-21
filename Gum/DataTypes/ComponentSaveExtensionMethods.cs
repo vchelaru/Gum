@@ -5,17 +5,6 @@ namespace Gum.DataTypes
 {
     public static class ComponentSaveExtensionMethods
     {
-        public static bool CanContainInstanceOfType(this ComponentSave componentSave, string typeToCheck)
-        {
-            var componentOfTypeToCheck = ObjectFinder.Self.GetComponent(typeToCheck);
-
-            if(componentOfTypeToCheck != null && componentOfTypeToCheck.IsOfType(componentSave.Name))
-            {
-                return false;
-            }
-            return true;
-        }
-
         public static bool IsOfType(this ComponentSave componentSave, string typeToCheck)
         {
             if (componentSave.Name == typeToCheck || componentSave.BaseType == typeToCheck)

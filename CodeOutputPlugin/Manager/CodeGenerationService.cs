@@ -8,16 +8,19 @@ using System.Text;
 using System.Threading.Tasks;
 using ToolsUtilities;
 using Gum.Managers;
+using Gum.Commands;
 
 namespace CodeOutputPlugin.Manager;
 
 internal class CodeGenerationService
 {
     private readonly CodeGenerationFileLocationsService _codeGenerationFileLocationsService;
+    private readonly GuiCommands _guiCommands;
 
-    public CodeGenerationService()
+    public CodeGenerationService(GuiCommands guiCommands)
     {
         _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService();
+        _guiCommands = guiCommands;
     }
 
 
@@ -41,7 +44,7 @@ internal class CodeGenerationService
         {
             if(showPopups)
             {
-                GumCommands.Self.GuiCommands.ShowMessage(errorMessage);
+                _guiCommands.ShowMessage(errorMessage);
             }
             return;
         }
@@ -93,13 +96,13 @@ internal class CodeGenerationService
                         "an existing UI framework and would like to \"bait-and-switch\" these components.";
 
 
-                    shouldGenerateMissingFiles = 
-                        GumCommands.Self.GuiCommands.ShowYesNoMessageBox(missingFileMessage, "Generate missing files?") == System.Windows.MessageBoxResult.Yes;
+                    shouldGenerateMissingFiles =
+                        _guiCommands.ShowYesNoMessageBox(missingFileMessage, "Generate missing files?") == System.Windows.MessageBoxResult.Yes;
                 }
                 else
                 {
                     shouldGenerateMissingFiles = true;
-                    GumCommands.Self.GuiCommands.PrintOutput(missingFileMessage);
+                    _guiCommands.PrintOutput(missingFileMessage);
                 }
 
             }
@@ -135,7 +138,7 @@ internal class CodeGenerationService
             }
             catch (Exception e)
             {
-                GumCommands.Self.GuiCommands.PrintOutput($"Error creating directory {codeDirectory}:\n{e.Message}");
+                _guiCommands.PrintOutput($"Error creating directory {codeDirectory}:\n{e.Message}");
             }
         }
 
@@ -172,11 +175,11 @@ internal class CodeGenerationService
 
             if (showPopups)
             {
-                GumCommands.Self.GuiCommands.ShowMessage(message);
+                _guiCommands.ShowMessage(message);
             }
             else
             {
-                GumCommands.Self.GuiCommands.PrintOutput(message);
+                _guiCommands.PrintOutput(message);
             }
         }
 

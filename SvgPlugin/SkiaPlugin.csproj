@@ -5,33 +5,26 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <UseWindowsForms>true</UseWindowsForms>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
-	  <Platforms>x86</Platforms>
 
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <OutputPath>bin\x86\Debug\</OutputPath>
     <DefineConstants>TRACE;DEBUG;INCLUDE_SVG; GUM</DefineConstants>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
     <OutputPath>bin\x86\Release\</OutputPath>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Xna.Framework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Gum\Libraries\Xna\Microsoft.Xna.Framework.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Xna.Framework.Graphics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Gum\Libraries\Xna\Microsoft.Xna.Framework.Graphics.dll</HintPath>
-    </Reference>
+	  <PackageReference Include="nkast.Xna.Framework" Version="4.1.9001" />
+	  <PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.1.9001" />
     <Reference Include="System.Drawing.Primitives">
       <HintPath>C:\Windows\Microsoft.NET\Framework64\v4.0.30319\System.Drawing.Primitives.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\GumDataTypes\GumDataTypes.csproj" />
+    <ProjectReference Include="..\GumDataTypes\GumDataTypesNet6.csproj" />
     <ProjectReference Include="..\Gum\Gum.csproj" />
     <ProjectReference Include="..\InputLibrary\InputLibrary.csproj" />
     <ProjectReference Include="..\RenderingLibrary\RenderingLibrary.csproj" />

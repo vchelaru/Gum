@@ -6,22 +6,27 @@
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.MonoGame</PackageId>
-		<Version>2025.4.23.1</Version>
+		<Version>2025.5.13.1</Version>
 
 
 		<NoWarn>1591</NoWarn>
 		<DefineConstants>MONOGAME</DefineConstants>
-
+		<LangVersion>11</LangVersion>
 
 
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<Configurations>Debug;Release;TEST</Configurations>
 
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 		<DefineConstants>$(DefineConstants);MONOGAME;USE_GUMCOMMON</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='TEST|AnyCPU'">
+	  <DefineConstants>$(DefineConstants);MONOGAME;USE_GUMCOMMON;TEST</DefineConstants>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -43,10 +48,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Compile Include="..\GumRuntime\BbCodeParser.cs" Link="Renderables\BbCodeParser.cs" />
-		<Compile Include="..\Gum\Graphics\Animation\Content\AnimationChainListSave.cs" Link="Animation\Content\AnimationChainListSave.cs" />
-		<Compile Include="..\Gum\Graphics\Animation\Content\AnimationChainSave.cs" Link="Animation\Content\AnimationChainSave.cs" />
-		<Compile Include="..\Gum\Graphics\Animation\Content\AnimationFrameSave.cs" Link="Animation\Content\AnimationFrameSave.cs" />
 		<Compile Include="..\Gum\RenderingLibrary\BlendExtensions.cs" Link="RenderingLibrary\BlendExtensions.cs" />
 		<Compile Include="..\Gum\Wireframe\CustomSetPropertyOnRenderable.cs" Link="Utilities\CustomSetPropertyOnRenderable.cs" />
 		<Compile Include="..\Gum\Wireframe\RuntimeObjectCreator.cs" Link="GueDeriving\RuntimeObjectCreator.cs" />

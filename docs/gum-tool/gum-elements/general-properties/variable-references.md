@@ -66,7 +66,7 @@ X Units = Components/OtherComponent.X Units
 {% hint style="info" %}
 Previous versions of Gum included spaces in some variable names. The public release of Gum in February 2025 has removed all spaces to simplify the syntax.
 
-For more information, see the [Removal of Variable Spaces](../../breaking-changes/removal-of-variable-spaces.md) page.
+For more information, see the [Removal of Variable Spaces](../../upgrading/breaking-changes/removal-of-variable-spaces.md) page.
 {% endhint %}
 
 Lines can be commented out to disable the reference. If Gum encounters a scripting error, it will automatically comment out lines as well so that you can make corrections:
@@ -153,10 +153,12 @@ Gum treats the prefixes `Components/`, `Screens/`, and `Standards/` as special p
 For example, the following two lines of code show the difference between a simple variable reference assignment and a division operation:
 
 ```csharp
-// This is a direct assignment:
+// This is a direct assignment setting X to 
+// the X value on Components/OtherComponent:
 X = Components/OtherComponent.X
-// This is a division operation:
-X = CustomVariable/OtherComponent/X
+// This is a division operation setting X to
+// the result of dividing the CustomVariable by OtherComponent.X
+X = CustomVariable/OtherComponent.X
 ```
 {% endhint %}
 

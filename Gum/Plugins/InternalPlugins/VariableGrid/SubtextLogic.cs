@@ -11,6 +11,15 @@ using System.Threading.Tasks;
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
 public class SubtextLogic
 {
+    /// <summary>
+    /// Sets the property's subtext according to the initial subtext passed to the method plus any additional
+    /// subtext as determined by the method.
+    /// </summary>
+    /// <param name="defaultVariable"></param>
+    /// <param name="subtext"></param>
+    /// <param name="property"></param>
+    /// <param name="elementSave">The element if no instance is specified, or the base type of the argument instance</param>
+    /// <param name="instanceSave"></param>
     public void GetDefaultSubtext(VariableSave defaultVariable, string subtext, 
         InstanceSavePropertyDescriptor property, 
         ElementSave elementSave, 
@@ -20,6 +29,49 @@ public class SubtextLogic
         if (!string.IsNullOrEmpty(defaultVariable?.DetailText))
         {
             property.Subtext += "\n" + defaultVariable.DetailText;
+        }
+
+        string? categoryString = null;
+        var variableOwner = instanceSave == null ? elementSave : instanceSave.ParentContainer;
+
+        var topLevelVariableName = instanceSave == null ? defaultVariable.Name
+            : $"{instanceSave.Name}.{defaultVariable.Name}";
+
+
+        if(variableOwner != null)
+        {
+            foreach(var category in variableOwner.Categories)
+            {
+                if(category.States.Count > 0)
+                {
+                    var firstState = category.States[0];
+
+                    foreach(var variable in firstState.Variables)
+                    {
+                        if(variable.Name == topLevelVariableName)
+                        {
+                            if(categoryString == null)
+                            {
+                                categoryString = $"Set by {category.Name}";
+                            }
+                            else
+                            {
+                                categoryString += $", {category.Name}";
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        if(categoryString != null)
+        {
+            if(!string.IsNullOrEmpty(property.Subtext))
+            {
+                property.Subtext += "\n";
+            }
+            property.Subtext += categoryString;
         }
 
         if (defaultVariable.Name == "HasEvents")

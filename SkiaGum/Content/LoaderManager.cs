@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace RenderingLibrary.Content
 {
@@ -103,6 +104,16 @@ namespace RenderingLibrary.Content
             mCachedDisposables.Add(name, disposable);
         }
 
+        public void DisposeAndClear()
+        {
+            foreach (var item in mCachedDisposables.Values)
+            {
+                item.Dispose();
+            }
+
+            mCachedDisposables.Clear();
+        }
+
         public void Dispose(string name)
         {
             if (mCachedDisposables.ContainsKey(name))
@@ -112,5 +123,14 @@ namespace RenderingLibrary.Content
             }
         }
 
+        public void RemoveWithoutDisposing(IDisposable disposable)
+        {
+            var kvp = mCachedDisposables.FirstOrDefault(item => item.Value == disposable);
+
+            if(kvp.Value == disposable)
+            {
+                mCachedDisposables.Remove(kvp.Key);
+            }
+        }
     }
 }

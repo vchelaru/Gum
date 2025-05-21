@@ -96,7 +96,12 @@ public class BitmapFont : IDisposable
 
     #region Methods
 
-    public BitmapFont(string fontFile, SystemManagers managers)
+    [Obsolete("Use the version that does not take SystemManagers")]
+    public BitmapFont(string fontFile, SystemManagers managers) : this(fontFile)
+    {
+    }
+
+    public BitmapFont(string fontFile)
     {
         string fontContents = FileManager.FromFileText(fontFile);
         mFontFile = FileManager.Standardize(fontFile, preserveCase:true);
@@ -377,9 +382,13 @@ public class BitmapFont : IDisposable
 
                 var fontSize = 18;
 
-                if(parsedData.Info?.Size > 0)
+                var absFontSize = System.Math.Abs(parsedData.Info.Size);
+                if (absFontSize > 0)
                 {
-                    fontSize = parsedData.Info.Size;
+                    // bmfc uses negative values for fonts
+                    // that "match char height":
+                    fontSize = absFontSize;
+
                 }
 
                 // Arial 32 has 9 spacing for 32, so let's try 3
@@ -1389,7 +1398,7 @@ public class BitmapFont : IDisposable
             }
             if(line.NumericAttributes.ContainsKey("size"))
             {
-                Size = line.NumericAttributes["size"];
+                Size = System.Math.Abs( line.NumericAttributes["size"] );
             }
         }
     }

@@ -1,17 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
 	<PropertyGroup>
+		<TargetFrameworks>netstandard2.0</TargetFrameworks>
+		<Nullable>enable</Nullable>
+		<LangVersion>11.0</LangVersion>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<Platforms>AnyCPU; x86</Platforms>
 		<NoWarn>1591</NoWarn>
-	</PropertyGroup>
-
-	<PropertyGroup>
-		<TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>FlatRedBall.ToolsUtilities.NetStandard</PackageId>
-		<Version>2025.4.23.1</Version>
+		<Version>2025.5.13.1</Version>
 
+		<Platforms>AnyCPU;x86</Platforms>
 
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<IncludeSymbols>true</IncludeSymbols>

@@ -22,6 +22,13 @@ using System.Net;
 using System.IO;
 using MonoGameGum.Localization;
 using System.Security.Policy;
+using Gum.Managers;
+
+#if GUM
+using Gum.Services;
+
+#endif
+
 
 
 
@@ -34,6 +41,17 @@ namespace Gum.Wireframe;
 public class CustomSetPropertyOnRenderable
 {
     public static ILocalizationService LocalizationService { get; set; }
+#if GUM
+    private static readonly FontManager _fontManager;
+#endif
+
+    static CustomSetPropertyOnRenderable()
+    {
+#if GUM
+        _fontManager = Builder.Get<FontManager>();
+#endif
+    }
+
     public static void SetPropertyOnRenderable(IRenderableIpso renderableIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
         bool handled = false;
@@ -914,7 +932,7 @@ public class CustomSetPropertyOnRenderable
                 else
                 {
 #if GUM
-                    fileName = Managers.FontManager.Self.AbsoluteFontCacheFolder +
+                    fileName = _fontManager.AbsoluteFontCacheFolder +
                         ToolsUtilities.FileManager.RemovePath(fontFileName);
 #endif
                 }
@@ -948,7 +966,7 @@ public class CustomSetPropertyOnRenderable
 
                 if (ToolsUtilities.FileManager.FileExists(fileName))
                 {
-                    font = new BitmapFont(fileName, (SystemManagers)null);
+                    font = new BitmapFont(fileName);
                 }
                 else
                 {
@@ -1011,6 +1029,13 @@ public class CustomSetPropertyOnRenderable
         // extra calls in generated code, or an "UpdateAll" method
         //if (!mIsLayoutSuspended && !IsAllLayoutSuspended)
 
+        // Residual properties could exist on a Text instnace, so we need to
+        // tolerate a missing item and not crash. 
+        if(text == null)
+        {
+            return;
+        }
+
         BitmapFont font = null;
 
         var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
@@ -1028,7 +1053,7 @@ public class CustomSetPropertyOnRenderable
                         try
                         {
                             // this could be running in browser where we don't have File.Exists, so JUST DO IT
-                            font = new BitmapFont(graphicalUiElement.CustomFontFile, SystemManagers.Default);
+                            font = new BitmapFont(graphicalUiElement.CustomFontFile);
                             loaderManager.AddDisposable(graphicalUiElement.CustomFontFile, font);
                         }
                         catch
@@ -1040,7 +1065,7 @@ public class CustomSetPropertyOnRenderable
                     // use the content loader for BitmapFont, we're going to protect this with a file.exists.
                     if (ToolsUtilities.FileManager.FileExists(graphicalUiElement.CustomFontFile))
                     {
-                        font = new BitmapFont(graphicalUiElement.CustomFontFile, SystemManagers.Default);
+                        font = new BitmapFont(graphicalUiElement.CustomFontFile);
                         loaderManager.AddDisposable(graphicalUiElement.CustomFontFile, font);
                     }
 #endif
@@ -1079,7 +1104,7 @@ public class CustomSetPropertyOnRenderable
                         try
                         {
                             // this could be running in browser where we don't have File.Exists, so JUST DO IT
-                            font = new BitmapFont(fullFileName, SystemManagers.Default);
+                            font = new BitmapFont(fullFileName);
 
                             loaderManager.AddDisposable(fullFileName, font);
                         }
@@ -1092,7 +1117,7 @@ public class CustomSetPropertyOnRenderable
                     // use the content loader for BitmapFont, we're going to protect this with a file.exists.
                     if (ToolsUtilities.FileManager.FileExists(fullFileName))
                     {
-                        font = new BitmapFont(fullFileName, SystemManagers.Default);
+                        font = new BitmapFont(fullFileName);
 
 
                         loaderManager.AddDisposable(fullFileName, font);

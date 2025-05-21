@@ -11,6 +11,7 @@ using System.Reflection.Emit;
 using Microsoft.Xna.Framework;
 using System.Linq;
 using RenderingLibrary.Math.Geometry;
+using Gum.Wireframe;
 
 namespace RenderingLibrary.Graphics;
 
@@ -597,19 +598,10 @@ public class Renderer : IRenderer
 
             if (renderable.IsRenderTarget && !forceRenderHierarchy)
             {
-                var renderableAlpha = 255;
+                var renderableAlpha = (int)renderable.Alpha;
+                renderableAlpha = System.Math.Min(255, (int)renderableAlpha);
+                renderableAlpha = System.Math.Max(0, renderableAlpha);
 
-                // I suppose we could have a single interface?
-                if(renderable is InvisibleRenderable invisibleRenderable)
-                {
-                    renderableAlpha = System.Math.Min(255, (int)invisibleRenderable.Alpha);
-                    renderableAlpha = System.Math.Max(0, renderableAlpha);
-                }
-                else if(renderable is LineRectangle lineRectangle)
-                {
-                    renderableAlpha = System.Math.Min(255, (int)lineRectangle.Alpha);
-                    renderableAlpha = System.Math.Max(0, renderableAlpha);
-                }
                 var color = System.Drawing.Color.FromArgb(
                     renderableAlpha, Color.White
                     );

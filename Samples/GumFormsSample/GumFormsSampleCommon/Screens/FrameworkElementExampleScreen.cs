@@ -23,7 +23,7 @@ namespace GumFormsSample.Screens
         MenuItem EditMenuItem;
         MenuItem CustomMenuItem;
 
-        public void Initialize()
+        public FrameworkElementExampleScreen()
         {
             //FileManager.RelativeDirectory = "Content/";
             var root = this;

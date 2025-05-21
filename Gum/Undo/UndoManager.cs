@@ -461,9 +461,6 @@ public class UndoManager
         // reset everything. This is slow, but is easy
         WireframeObjectManager.Self.RefreshAll(true);
 
-        SelectionManager.Self.Refresh();
-
-
         if (shouldRefreshStateTreeView)
         {
             GumCommands.Self.GuiCommands.RefreshStateTreeView();

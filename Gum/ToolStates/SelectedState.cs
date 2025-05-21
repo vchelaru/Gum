@@ -169,9 +169,6 @@ public class SelectedState : ISelectedState
             // If the state changed (element changed) then no need to force the UI again
             GumCommands.Self.GuiCommands.RefreshVariables();
         }
-
-        SelectionManager.Self.Refresh();
-
     }
 
     #endregion
@@ -319,28 +316,10 @@ public class SelectedState : ISelectedState
         }
     }
 
-    public IPositionedSizedObject SelectedIpso
+    public IPositionedSizedObject? SelectedIpso
     {
-        get
-        {
-            return SelectionManager.Self.SelectedGue;
-        }
-        set
-        {
-            SelectionManager.Self.SelectedGue = value as GraphicalUiElement;
-        }
+        get => PluginManager.Self.GetSelectedIpsos()?.FirstOrDefault();
     }
-
-    public List<GraphicalUiElement> SelectedIpsos
-    {
-        get
-        {
-            return SelectionManager.Self.SelectedGues;
-        }
-
-    }
-
-
 
     #endregion
 
@@ -523,9 +502,6 @@ public class SelectedState : ISelectedState
         {
             WireframeObjectManager.Self.RefreshAll(false);
         }
-
-        SelectionManager.Self.Refresh();
-
 
         // This is needed for the wireframe manager, but this should be moved to a plugin
         GumEvents.Self.CallInstanceSelected();
@@ -859,9 +835,7 @@ class SelectedStateSnapshot
             }
         }
     }
-    public IPositionedSizedObject SelectedIpso { get; set; }
-
-    public List<GraphicalUiElement> SelectedIpsos { get; set; }
+    public IPositionedSizedObject? SelectedIpso { get; }
 
     List<InstanceSave> selectedInstances = new List<InstanceSave>();
     public IEnumerable<InstanceSave> SelectedInstances

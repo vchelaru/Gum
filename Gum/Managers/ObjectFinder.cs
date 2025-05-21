@@ -57,7 +57,15 @@ namespace Gum.Managers
 
     #endregion
 
-    public class ObjectFinder
+    public interface IObjectFinder
+    {
+        GumProjectSave GumProjectSave { get; }
+        ElementSave? GetElementSave(InstanceSave instance);
+        ElementSave? GetElementSave(string elementName);
+        List<ElementSave> GetBaseElements(ElementSave elementSave);
+    }
+
+    public class ObjectFinder : IObjectFinder
     {
         #region Fields/Properties
 
@@ -264,7 +272,7 @@ namespace Gum.Managers
         /// </summary>
         /// <param name="instance">The instance to find the matching element for</param>
         /// <returns>The matching ElementSave, or null if none is found</returns>
-        public ElementSave GetElementSave(InstanceSave instance)
+        public ElementSave? GetElementSave(InstanceSave instance)
         {
             return GetElementSave(instance.BaseType);
         }
@@ -285,24 +293,23 @@ namespace Gum.Managers
             }
             else
             {
-                ScreenSave screenSave = GetScreen(elementName);
+                var screenSave = GetScreen(elementName);
                 if (screenSave != null)
                 {
                     return screenSave;
                 }
 
-                ComponentSave componentSave = GetComponent(elementName);
+                var componentSave = GetComponent(elementName);
                 if (componentSave != null)
                 {
                     return componentSave;
                 }
 
-                StandardElementSave standardElementSave = GetStandardElement(elementName);
+                var standardElementSave = GetStandardElement(elementName);
                 if (standardElementSave != null)
                 {
                     return standardElementSave;
                 }
-
             }
 
             // If we got here there's nothing by the argument name
@@ -669,9 +676,6 @@ namespace Gum.Managers
             
         }
 
-        #endregion
-
-
         /// <summary>
         /// Returns a list of ElementSaves inheriting from the argument elementSave, with the most derived first in the list, and the most base last in the list
         /// </summary>
@@ -685,6 +689,8 @@ namespace Gum.Managers
 
             return toReturn;
         }
+
+        #endregion
 
         #region Get Files
 
@@ -1302,7 +1308,7 @@ namespace Gum.Managers
             }
         }
 
-        internal bool IsInstanceRecursivelyReferencingElement(InstanceSave instance, ElementSave element)
+        public bool IsInstanceRecursivelyReferencingElement(InstanceSave instance, ElementSave element)
         {
             if(instance == null)
             {

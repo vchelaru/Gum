@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <EnableDefaultItems>false</EnableDefaultItems>
+    <EnableDefaultItems>true</EnableDefaultItems>
     <TargetFramework>net8.0</TargetFramework>
     <ProjectGuid>{7060DCA3-70DD-4799-9B67-63AB69D536BC}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -18,10 +18,6 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
   </PropertyGroup>
 	
-  <ItemGroup>
-    <Compile Include="FullyCustomizedButton.cs" />
-    <Compile Include="GumFormsSampleGame.cs" />
-  </ItemGroup>
 	
   <ItemGroup>
 	  <PackageReference Include="nkast.Xna.Framework" Version="3.12.9001" />

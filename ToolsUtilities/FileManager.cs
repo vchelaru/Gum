@@ -752,6 +752,10 @@ namespace ToolsUtilities
                 }
                 else
                 {
+                    if(IsRelative(fileName))
+                    {
+                        fileName = FileManager.MakeAbsolute(fileName);
+                    }
                     return System.IO.File.OpenRead(fileName);
                 }
 #endif

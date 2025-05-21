@@ -465,7 +465,7 @@ public class MenuItem : ItemsControl
 
         if (IsFocused)
         {
-            Visual.SetProperty(category, "Focused");
+            Visual.SetProperty(category, FocusedStateName);
         }
         else if (IsSelected)
         {
@@ -479,13 +479,13 @@ public class MenuItem : ItemsControl
             // Vic says - I'm not sure if this is the solution that I like, but let's start with it...
             if (cursor.XChange != 0 || cursor.YChange != 0 || force)
             {
-                Visual.SetProperty(category, "Highlighted");
+                Visual.SetProperty(category, HighlightedStateName);
             }
             // otherwise - do nothing?
         }
         else
         {
-            Visual.SetProperty(category, "Enabled");
+            Visual.SetProperty(category, EnabledStateName);
         }
     }
 

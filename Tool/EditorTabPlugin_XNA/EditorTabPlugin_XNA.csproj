@@ -1,0 +1,59 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net472</TargetFramework>
+		<OutputType>Library</OutputType>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<LangVersion>12.0</LangVersion>
+		<Nullable>enable</Nullable>
+		<UseWindowsForms>true</UseWindowsForms>
+		<UseWPF>true</UseWPF>
+		<ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
+		<DefineConstants>GUM; MONOGAME</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+		<OutputPath>bin\Debug\</OutputPath>
+		<CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+		<LangVersion>12.0</LangVersion>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+		<OutputPath>bin\Release\</OutputPath>
+		<CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+		<LangVersion>12.0</LangVersion>
+	</PropertyGroup>
+	<ItemGroup>
+	  <Compile Include="..\..\Gum\Wireframe\RuntimeObjectCreator.cs" Link="Services\RuntimeObjectCreator.cs" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+		<Compile Update="Views\WireframeControl.cs">
+			<SubType>Component</SubType>
+		</Compile>
+		<Compile Update="Views\WireframeEditControl.cs">
+			<SubType>UserControl</SubType>
+		</Compile>
+		<Compile Update="Views\WireframeEditControl.designer.cs">
+			<DependentUpon>WireframeEditControl.cs</DependentUpon>
+		</Compile>
+	</ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Update="Views\WireframeEditControl.resx">
+			<DependentUpon>WireframeEditControl.cs</DependentUpon>
+		</EmbeddedResource>
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+		<ProjectReference Include="..\..\Gum\Gum.csproj" />
+		<ProjectReference Include="..\..\RenderingLibrary\RenderingLibrary.csproj" />
+		<ProjectReference Include="..\..\XnaAndWinforms\XnaAndWinforms.csproj" />
+
+		<PackageReference Include="nkast.Xna.Framework" Version="4.1.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.1.9001" />
+		
+	</ItemGroup>
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+	  <Exec Command="&#xD;&#xA;echo Copying to &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)\&quot;&#xD;&#xA;&#xD;&#xA;IF NOT EXIST &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot; md &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)\&quot;&#xD;&#xA;copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)XnaAndWinforms.dll&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)RenderingLibrary.dll&quot; &quot;$(SolutionDir)Gum\bin\$(ConfigurationName)\Plugins\$(TargetName)&quot;" />
+	</Target>
+</Project>
