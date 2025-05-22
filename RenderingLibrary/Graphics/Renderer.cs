@@ -523,54 +523,57 @@ public class Renderer : IRenderer
 
             GraphicsDevice.Clear(Microsoft.Xna.Framework.Color.Transparent);
 
-            var oldX = renderable.X;
-            var oldY = renderable.Y;
+            var oldX = renderable.GetAbsoluteLeft();
+            var oldY = renderable.GetAbsoluteTop();
             var oldWidth = renderable.Width;
             var oldHeight = renderable.Height;
 
             var cameraLeft = Camera.AbsoluteLeft;
             var cameraRight = Camera.AbsoluteRight;
+            var cameraTop = Camera.AbsoluteTop;
+            var cameraBottom = Camera.AbsoluteBottom;
+            var oldCameraZoom = Camera.Zoom;
 
             float extraToAddX = 0;
+            float extraToAddY = 0;
             float extraToSubtractWidth = 0;
+            float extraToSubtractHeight = 0;
+
+            var renderableOrCameraLeft = System.Math.Max(Camera.AbsoluteLeft, renderable.X);
+            var renderableOrCameraTop = System.Math.Max(Camera.AbsoluteTop, renderable.Y);
 
             if(cameraLeft > renderable.X)
             {
                 extraToAddX = cameraLeft - renderable.X;
             }
+            if(cameraTop > renderable.Y)
+            {
+                extraToAddY = cameraTop - renderable.Y;
+            }
+
             if(cameraRight < oldX + oldWidth)
             {
                 extraToSubtractWidth = oldX + oldWidth - cameraRight;
             }
+            if(cameraBottom < oldY + oldHeight)
+            {
+                extraToSubtractHeight = oldY + oldHeight - cameraBottom;
+            }
 
                 //renderable.X -= extraToAddX;
             renderable.Width += extraToAddX;
-            var renderableOrCameraLeft = System.Math.Max(Camera.AbsoluteLeft, renderable.X);
-            var renderableOrCameraTop = System.Math.Max(Camera.AbsoluteTop, renderable.Y);
+            renderable.Height += extraToAddY;
 
             Camera.ClientWidth = (int)renderTarget.Width;
             Camera.ClientHeight = (int)renderTarget.Height;
 
-
-            if(Camera.CameraCenterOnScreen == CameraCenterOnScreen.TopLeft)
+            Camera.X = (int)oldX + extraToAddX;
+            Camera.Y = (int)oldY + extraToAddY;
+            if(Camera.CameraCenterOnScreen == CameraCenterOnScreen.Center)
             {
-                Camera.X = (int)oldX;
-                Camera.Y = (int)renderable.GetAbsoluteTop();
+                Camera.X += (renderTarget.Width / 2.0f)/Camera.Zoom;
+                Camera.Y += (renderTarget.Height / 2.0f) / Camera.Zoom;
             }
-            else
-            {
-                // February 7, 2025
-                // I'm not sure why, but
-                // if I don't add 1 to the
-                // camera position, then everything
-                // is rendered offset by 1 pixel in the 
-                // Gum tool. Need to test this in DeskopGL
-                // projects, and possibly apply Camera.PixelPerfectOffsetX
-                // and Camera.PixelPerfectOffsetY
-                Camera.X = (oldX + renderable.Width/2f);
-                Camera.Y = (renderable.GetAbsoluteTop() + renderable.Height/2f);
-            }
-
 
             gumBatch = gumBatch ?? new GumBatch();
 
@@ -586,8 +589,10 @@ public class Renderer : IRenderer
             //systemManagers.Renderer.Draw(renderable);
             Draw(systemManagers, _layers[0], renderable, forceRenderHierarchy:true);
 
-            renderable.X = oldX;
+            //renderable.X = oldX;
+            //renderable.Y = oldY;
             renderable.Width = oldWidth;
+            renderable.Height = oldHeight;
 
             gumBatch.End();
 
@@ -599,6 +604,7 @@ public class Renderer : IRenderer
             Camera.ClientHeight = oldCameraHeight;
             Camera.X = oldCameraX;
             Camera.Y = oldCameraY;
+
             GraphicsDevice.Viewport = oldViewport;
 
             // Uncomment this to test saving...
@@ -622,6 +628,8 @@ public class Renderer : IRenderer
         }
     }
 
+
+    Sprite renderTargetRenderableSprite = new Sprite((Texture2D)null);
 
     private void Draw(SystemManagers managers, Layer layer, IRenderableIpso renderable, bool forceRenderHierarchy = false)
     {
@@ -649,15 +657,19 @@ public class Renderer : IRenderer
                     var oldHeight = renderable.Height;
 
                     var oldX = renderable.X;
+                    var oldY = renderable.Y;
 
-                    renderable.X = System.Math.Max(renderable.X, Camera.AbsoluteLeft);
+                    renderTargetRenderableSprite.X = System.Math.Max(renderable.X, Camera.AbsoluteLeft);
+                    renderTargetRenderableSprite.Y = System.Math.Max(renderable.Y, Camera.AbsoluteTop);
+                    renderTargetRenderableSprite.Width = renderTarget.Width / Camera.Zoom;
+                    renderTargetRenderableSprite.Height = renderTarget.Height / Camera.Zoom;
 
-                    renderable.Width = renderTarget.Width;
+                    Sprite.Render(managers, spriteRenderer, renderTargetRenderableSprite, renderTarget, color, rotationInDegrees:renderable.Rotation, objectCausingRendering: renderable);
 
-                    Sprite.Render(managers, spriteRenderer, renderable, renderTarget, color, rotationInDegrees:renderable.Rotation);
-
-                    renderable.X = oldX;
-                    renderable.Width = oldWidth;
+                    //renderable.X = oldX;
+                    //renderable.Y = oldY;
+                    //renderable.Width = oldWidth;
+                    //renderable.Height = oldHeight;
                 }
             }
             else
