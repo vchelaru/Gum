@@ -55,7 +55,7 @@ rm -f ./xnafx40_redist.msi &> /dev/null
 ### of the wine folder
 ################################################################################
 echo "Installing GUM Tool..."
-curl -o ~/.wine/drive_c/Program\ Files/Gum.zip https://files.flatredball.com/content/Tools/Gum/Gum.zip &> /dev/null
+curl --output ~/.wine/drive_c/Program\ Files/Gum.zip --location https://github.com/vchelaru/Gum/releases/download/PreRelease_May_13_2025/Gum.zip &> /dev/null
 
 ################################################################################
 ### Unzip the gum.zip file into Program Files/Gum
