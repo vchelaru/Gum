@@ -540,8 +540,8 @@ public class Renderer : IRenderer
             // Gum tool. Need to test this in DeskopGL
             // projects, and possibly apply Camera.PixelPerfectOffsetX
             // and Camera.PixelPerfectOffsetY
-            Camera.X = (int)(renderable.GetAbsoluteLeft() + renderable.Width/2f) + 1/Camera.Zoom;
-            Camera.Y = (int)(renderable.GetAbsoluteTop() + renderable.Height/2f) + 1/Camera.Zoom;
+            Camera.X = (renderable.GetAbsoluteLeft() + renderable.Width/2f);
+            Camera.Y = (renderable.GetAbsoluteTop() + renderable.Height/2f);
         }
 
 
