@@ -517,64 +517,99 @@ public class Renderer : IRenderer
 
         var renderTarget = renderTargetService.GetRenderTargetFor(GraphicsDevice, renderable, Camera);
 
-        GraphicsDevice.SetRenderTarget(renderTarget);
-
-
-
-        GraphicsDevice.Clear(Microsoft.Xna.Framework.Color.Transparent);
-
-        Camera.ClientWidth = (int)renderTarget.Width;
-        Camera.ClientHeight = (int)renderTarget.Height;
-        if(Camera.CameraCenterOnScreen == CameraCenterOnScreen.TopLeft)
+        if(renderTarget != null)
         {
-            Camera.X = (int)renderable.GetAbsoluteLeft();
-            Camera.Y = (int)renderable.GetAbsoluteTop();
+            GraphicsDevice.SetRenderTarget(renderTarget);
+
+            GraphicsDevice.Clear(Microsoft.Xna.Framework.Color.Transparent);
+
+            var oldX = renderable.X;
+            var oldY = renderable.Y;
+            var oldWidth = renderable.Width;
+            var oldHeight = renderable.Height;
+
+            var cameraLeft = Camera.AbsoluteLeft;
+            var cameraRight = Camera.AbsoluteRight;
+
+            float extraToAddX = 0;
+            float extraToSubtractWidth = 0;
+
+            if(cameraLeft > renderable.X)
+            {
+                extraToAddX = cameraLeft - renderable.X;
+            }
+            if(cameraRight < oldX + oldWidth)
+            {
+                extraToSubtractWidth = oldX + oldWidth - cameraRight;
+            }
+
+                //renderable.X -= extraToAddX;
+            renderable.Width += extraToAddX;
+            var renderableOrCameraLeft = System.Math.Max(Camera.AbsoluteLeft, renderable.X);
+            var renderableOrCameraTop = System.Math.Max(Camera.AbsoluteTop, renderable.Y);
+
+            Camera.ClientWidth = (int)renderTarget.Width;
+            Camera.ClientHeight = (int)renderTarget.Height;
+
+
+            if(Camera.CameraCenterOnScreen == CameraCenterOnScreen.TopLeft)
+            {
+                Camera.X = (int)oldX;
+                Camera.Y = (int)renderable.GetAbsoluteTop();
+            }
+            else
+            {
+                // February 7, 2025
+                // I'm not sure why, but
+                // if I don't add 1 to the
+                // camera position, then everything
+                // is rendered offset by 1 pixel in the 
+                // Gum tool. Need to test this in DeskopGL
+                // projects, and possibly apply Camera.PixelPerfectOffsetX
+                // and Camera.PixelPerfectOffsetY
+                Camera.X = (oldX + renderable.Width/2f);
+                Camera.Y = (renderable.GetAbsoluteTop() + renderable.Height/2f);
+            }
+
+
+            gumBatch = gumBatch ?? new GumBatch();
+
+
+            // todo  - rotations don't currently work:
+            //var rotationRadians = MathHelper.ToRadians(renderable.Rotation);
+            //var matrix = Matrix.CreateRotationZ(rotationRadians);
+            //gumBatch.Begin(matrix);
+            gumBatch.Begin();
+
+
+            //gumBatch.Draw(renderable);
+            //systemManagers.Renderer.Draw(renderable);
+            Draw(systemManagers, _layers[0], renderable, forceRenderHierarchy:true);
+
+            renderable.X = oldX;
+            renderable.Width = oldWidth;
+
+            gumBatch.End();
+
+            GraphicsDevice.SetRenderTarget(oldRenderTarget as RenderTarget2D);
+
+
+
+            Camera.ClientWidth = oldCameraWidth;
+            Camera.ClientHeight = oldCameraHeight;
+            Camera.X = oldCameraX;
+            Camera.Y = oldCameraY;
+            GraphicsDevice.Viewport = oldViewport;
+
+            // Uncomment this to test saving...
+            if (!System.IO.File.Exists("Output.png"))
+            {
+                using var stream = System.IO.File.OpenWrite("Output.png");
+                renderTarget.SaveAsPng(stream, renderTarget.Width, renderTarget.Height);
+            }
+
         }
-        else
-        {
-            // February 7, 2025
-            // I'm not sure why, but
-            // if I don't add 1 to the
-            // camera position, then everything
-            // is rendered offset by 1 pixel in the 
-            // Gum tool. Need to test this in DeskopGL
-            // projects, and possibly apply Camera.PixelPerfectOffsetX
-            // and Camera.PixelPerfectOffsetY
-            Camera.X = (renderable.GetAbsoluteLeft() + renderable.Width/2f);
-            Camera.Y = (renderable.GetAbsoluteTop() + renderable.Height/2f);
-        }
 
-
-        gumBatch = gumBatch ?? new GumBatch();
-
-
-        // todo  - rotations don't currently work:
-        //var rotationRadians = MathHelper.ToRadians(renderable.Rotation);
-        //var matrix = Matrix.CreateRotationZ(rotationRadians);
-        //gumBatch.Begin(matrix);
-        gumBatch.Begin();
-
-        //gumBatch.Draw(renderable);
-        //systemManagers.Renderer.Draw(renderable);
-        Draw(systemManagers, _layers[0], renderable, forceRenderHierarchy:true);
-
-
-        gumBatch.End();
-
-        GraphicsDevice.SetRenderTarget(oldRenderTarget as RenderTarget2D);
-
-        Camera.ClientWidth = oldCameraWidth;
-        Camera.ClientHeight = oldCameraHeight;
-        Camera.X = oldCameraX;
-        Camera.Y = oldCameraY;
-        GraphicsDevice.Viewport = oldViewport;
-
-        // Uncomment this to test saving...
-        //if(!System.IO.File.Exists("Output.png"))
-        //{
-        //    using var stream = System.IO.File.OpenWrite("Output.png");
-        //    renderTarget.SaveAsPng(stream, renderTarget.Width, renderTarget.Height);
-        //}
     }
 
     private void Render(IList<IRenderableIpso> whatToRender, SystemManagers managers, Layer layer)
@@ -598,17 +633,32 @@ public class Renderer : IRenderer
 
             if (renderable.IsRenderTarget && !forceRenderHierarchy)
             {
-                var renderableAlpha = (int)renderable.Alpha;
-                renderableAlpha = System.Math.Min(255, (int)renderableAlpha);
-                renderableAlpha = System.Math.Max(0, renderableAlpha);
-
-                var color = System.Drawing.Color.FromArgb(
-                    renderableAlpha, Color.White
-                    );
-
                 var renderTarget = renderTargetService.GetRenderTargetFor(GraphicsDevice, renderable, Camera);
 
-                Sprite.Render(managers, spriteRenderer, renderable, renderTarget, color, rotationInDegrees:renderable.Rotation);                  
+                if(renderTarget != null)
+                {
+                    var renderableAlpha = (int)renderable.Alpha;
+                    renderableAlpha = System.Math.Min(255, (int)renderableAlpha);
+                    renderableAlpha = System.Math.Max(0, renderableAlpha);
+
+                    var color = System.Drawing.Color.FromArgb(
+                        renderableAlpha, Color.White
+                        );
+
+                    var oldWidth = renderable.Width;
+                    var oldHeight = renderable.Height;
+
+                    var oldX = renderable.X;
+
+                    renderable.X = System.Math.Max(renderable.X, Camera.AbsoluteLeft);
+
+                    renderable.Width = renderTarget.Width;
+
+                    Sprite.Render(managers, spriteRenderer, renderable, renderTarget, color, rotationInDegrees:renderable.Rotation);
+
+                    renderable.X = oldX;
+                    renderable.Width = oldWidth;
+                }
             }
             else
             {
@@ -837,35 +887,57 @@ class RenderTargetService
         itemsUsingRenderTargetsThisFrame.Clear();
     }
 
-    public RenderTarget2D GetRenderTargetFor(GraphicsDevice graphicsDevice, IRenderableIpso renderable, Camera camera)
+    public RenderTarget2D? GetRenderTargetFor(GraphicsDevice graphicsDevice, IRenderableIpso renderable, Camera camera)
     {
         itemsUsingRenderTargetsThisFrame.Add(renderable);
 
-        var width = (int)(renderable.Width * camera.Zoom);
-        var height = (int)(renderable.Height * camera.Zoom);
+        var left = renderable.GetAbsoluteLeft();
+        var right = renderable.GetAbsoluteRight();
+        var top = renderable.GetAbsoluteTop();
+        var bottom = renderable.GetAbsoluteBottom();
 
+        left = System.Math.Max(camera.AbsoluteLeft, left);
+        right = System.Math.Min(camera.AbsoluteRight, right);
+        top = System.Math.Max(camera.AbsoluteTop, top);
+        bottom = System.Math.Min(camera.AbsoluteBottom, bottom);
 
-        if (RenderTargets.ContainsKey(renderable))
+        System.Diagnostics.Debug.WriteLine($"L:{left} R:{right} T:{top} B:{bottom}");
+
+        var clientWidth = camera.ClientWidth;
+        var clientHeight = camera.ClientHeight;
+
+        var width =(int)((right - left)* camera.Zoom);
+        var height = (int)((bottom - top)* camera.Zoom);
+
+        if(width <= 0 || height <= 0)
         {
-            var existingRenderTarget = RenderTargets[renderable];
-            if (existingRenderTarget.Width != width || existingRenderTarget.Height != height)
+            return null;
+        }
+        else
+        {
+            if (RenderTargets.ContainsKey(renderable))
             {
-                existingRenderTarget.Dispose();
-                RenderTargets.Remove(renderable);
+                var existingRenderTarget = RenderTargets[renderable];
+                if (existingRenderTarget.Width != width || existingRenderTarget.Height != height)
+                {
+                    existingRenderTarget.Dispose();
+                    RenderTargets.Remove(renderable);
+                }
             }
+
+
+            if (RenderTargets.ContainsKey(renderable) == false)
+            {
+                //var width = GraphicsDevice.Viewport.Width;
+                //var height = GraphicsDevice.Viewport.Height;
+                RenderTargets[renderable] = new RenderTarget2D(graphicsDevice, (int)width, (int)height);
+
+            }
+            var renderTarget = RenderTargets[renderable];
+
+            return renderTarget;
+
         }
-
-
-        if (RenderTargets.ContainsKey(renderable) == false)
-        {
-            //var width = GraphicsDevice.Viewport.Width;
-            //var height = GraphicsDevice.Viewport.Height;
-            RenderTargets[renderable] = new RenderTarget2D(graphicsDevice, (int)width, (int)height);
-
-        }
-        var renderTarget = RenderTargets[renderable];
-
-        return renderTarget;
     }
 }
 
