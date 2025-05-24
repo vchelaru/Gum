@@ -111,7 +111,7 @@ internal static class BinderHelpers
         }
 
         // now 'current' owns the final member
-        string lastName = segments[^1];
+        string lastName = segments[segments.Length - 1];
         MemberExpression memberExpr = Expression.PropertyOrField(current, lastName);
 
         // figure out the member’s declared type
