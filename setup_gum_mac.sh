@@ -72,7 +72,7 @@ rm -f ~/.wine/drive_c/Program\ Files/Gum.zip &> /dev/null
 ################################################################################
 echo "Adding Gum to path"
 SCRIPT_CONTENT="#!/bin/bash
-wine ~/.wine/drive_c/Program\\ Files/Gum/Data/Gum.exe"
+wine ~/.wine/drive_c/Program\\ Files/Gum/Data/Debug/Gum.exe"
 
 ################################################################################
 ### Create the ~/bin directory if it doesn't exist
