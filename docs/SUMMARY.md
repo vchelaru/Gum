@@ -130,6 +130,7 @@
   * [Setting Up Post Build Events](gum-tool/plugins/setting-up-post-build-events.md)
 * [Variables](gum-tool/variables/README.md)
   * [Add Variable](gum-tool/variables/add-variable.md)
+* [Bitmap font generator (.fnt)](gum-tool/bitmap-font-generator-.fnt.md)
 * [Upgrading](gum-tool/upgrading/README.md)
   * [Migrating 2025 April 27 to Preview](gum-tool/upgrading/migrating-2025-april-27-to-preview.md)
   * [Breaking Changes](gum-tool/upgrading/breaking-changes/README.md)

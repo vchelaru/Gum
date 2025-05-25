@@ -19,6 +19,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FNA.Core", "fna\FNA.Core.cs
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkiaGum", "SkiaGum\SkiaGum.csproj", "{309DE2DB-648A-4769-B875-E5808F6CF92E}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGameGum.Tests", "MonoGameGum.Tests\MonoGameGum.Tests.csproj", "{2DE63E97-9A29-456F-DE64-4A6ECD619252}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -91,9 +95,20 @@ Global
 		{309DE2DB-648A-4769-B875-E5808F6CF92E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{309DE2DB-648A-4769-B875-E5808F6CF92E}.Release|x86.ActiveCfg = Release|Any CPU
 		{309DE2DB-648A-4769-B875-E5808F6CF92E}.Release|x86.Build.0 = Release|Any CPU
+		{2DE63E97-9A29-456F-DE64-4A6ECD619252}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2DE63E97-9A29-456F-DE64-4A6ECD619252}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2DE63E97-9A29-456F-DE64-4A6ECD619252}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{2DE63E97-9A29-456F-DE64-4A6ECD619252}.Debug|x86.Build.0 = Debug|Any CPU
+		{2DE63E97-9A29-456F-DE64-4A6ECD619252}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2DE63E97-9A29-456F-DE64-4A6ECD619252}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2DE63E97-9A29-456F-DE64-4A6ECD619252}.Release|x86.ActiveCfg = Release|Any CPU
+		{2DE63E97-9A29-456F-DE64-4A6ECD619252}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{2DE63E97-9A29-456F-DE64-4A6ECD619252} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {01002AE6-0158-417E-9B83-D4234361EC1B}

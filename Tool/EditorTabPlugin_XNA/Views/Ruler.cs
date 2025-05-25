@@ -253,14 +253,13 @@ namespace Gum.Plugins.InternalPlugins.EditorTab.Views
 
 
 
-        public Ruler(GraphicsDeviceControl control, SystemManagers managers, Cursor cursor, Keyboard keyboard,
+        public Ruler(GraphicsDeviceControl control, SystemManagers managers, Cursor cursor, 
             ToolFontService toolFontService, ToolLayerService toolLayerService, LayerService layerService)
         {
             _toolFontService = toolFontService;
             _toolLayerService = toolLayerService;
 
             mControl = control;
-            mKeyboard = keyboard;
             mManagers = managers;
             mCursor = cursor;
 

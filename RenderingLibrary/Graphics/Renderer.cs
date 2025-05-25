@@ -11,6 +11,7 @@ using System.Reflection.Emit;
 using Microsoft.Xna.Framework;
 using System.Linq;
 using RenderingLibrary.Math.Geometry;
+using Gum.Wireframe;
 
 namespace RenderingLibrary.Graphics;
 
@@ -516,64 +517,105 @@ public class Renderer : IRenderer
 
         var renderTarget = renderTargetService.GetRenderTargetFor(GraphicsDevice, renderable, Camera);
 
-        GraphicsDevice.SetRenderTarget(renderTarget);
-
-
-
-        GraphicsDevice.Clear(Microsoft.Xna.Framework.Color.Transparent);
-
-        Camera.ClientWidth = (int)renderTarget.Width;
-        Camera.ClientHeight = (int)renderTarget.Height;
-        if(Camera.CameraCenterOnScreen == CameraCenterOnScreen.TopLeft)
+        if(renderTarget != null)
         {
-            Camera.X = (int)renderable.GetAbsoluteLeft();
-            Camera.Y = (int)renderable.GetAbsoluteTop();
+            GraphicsDevice.SetRenderTarget(renderTarget);
+
+            GraphicsDevice.Clear(Microsoft.Xna.Framework.Color.Transparent);
+
+            var oldX = renderable.GetAbsoluteLeft();
+            var oldY = renderable.GetAbsoluteTop();
+            var oldWidth = renderable.Width;
+            var oldHeight = renderable.Height;
+
+            var cameraLeft = Camera.AbsoluteLeft;
+            var cameraRight = Camera.AbsoluteRight;
+            var cameraTop = Camera.AbsoluteTop;
+            var cameraBottom = Camera.AbsoluteBottom;
+            var oldCameraZoom = Camera.Zoom;
+
+            float extraToAddX = 0;
+            float extraToAddY = 0;
+            float extraToSubtractWidth = 0;
+            float extraToSubtractHeight = 0;
+
+            var renderableOrCameraLeft = System.Math.Max(Camera.AbsoluteLeft, renderable.X);
+            var renderableOrCameraTop = System.Math.Max(Camera.AbsoluteTop, renderable.Y);
+
+            if(cameraLeft > renderable.X)
+            {
+                extraToAddX = cameraLeft - renderable.X;
+            }
+            if(cameraTop > renderable.Y)
+            {
+                extraToAddY = cameraTop - renderable.Y;
+            }
+
+            if(cameraRight < oldX + oldWidth)
+            {
+                extraToSubtractWidth = oldX + oldWidth - cameraRight;
+            }
+            if(cameraBottom < oldY + oldHeight)
+            {
+                extraToSubtractHeight = oldY + oldHeight - cameraBottom;
+            }
+
+                //renderable.X -= extraToAddX;
+            renderable.Width += extraToAddX;
+            renderable.Height += extraToAddY;
+
+            Camera.ClientWidth = (int)renderTarget.Width;
+            Camera.ClientHeight = (int)renderTarget.Height;
+
+            Camera.X = oldX + extraToAddX;
+            Camera.Y = oldY + extraToAddY;
+            if(Camera.CameraCenterOnScreen == CameraCenterOnScreen.Center)
+            {
+                Camera.X += (renderTarget.Width / 2.0f)/Camera.Zoom;
+                Camera.Y += (renderTarget.Height / 2.0f) / Camera.Zoom;
+            }
+
+            gumBatch = gumBatch ?? new GumBatch();
+
+
+            // todo  - rotations don't currently work:
+            //var rotationRadians = MathHelper.ToRadians(renderable.Rotation);
+            //var matrix = Matrix.CreateRotationZ(rotationRadians);
+            //gumBatch.Begin(matrix);
+            gumBatch.Begin();
+
+
+            //gumBatch.Draw(renderable);
+            //systemManagers.Renderer.Draw(renderable);
+            Draw(systemManagers, _layers[0], renderable, forceRenderHierarchy:true);
+
+            //renderable.X = oldX;
+            //renderable.Y = oldY;
+            renderable.Width = oldWidth;
+            renderable.Height = oldHeight;
+
+            gumBatch.End();
+
+            GraphicsDevice.SetRenderTarget(oldRenderTarget as RenderTarget2D);
+
+
+
+            Camera.ClientWidth = oldCameraWidth;
+            Camera.ClientHeight = oldCameraHeight;
+            Camera.X = oldCameraX;
+            Camera.Y = oldCameraY;
+
+            GraphicsDevice.Viewport = oldViewport;
+
+            // Uncomment this to test saving...
+            if (!System.IO.File.Exists("Output.png"))
+            {
+                using var stream = System.IO.File.OpenWrite("Output.png");
+                renderTarget.SaveAsPng(stream, renderTarget.Width, renderTarget.Height);
+            }
+
         }
-        else
-        {
-            // February 7, 2025
-            // I'm not sure why, but
-            // if I don't add 1 to the
-            // camera position, then everything
-            // is rendered offset by 1 pixel in the 
-            // Gum tool. Need to test this in DeskopGL
-            // projects, and possibly apply Camera.PixelPerfectOffsetX
-            // and Camera.PixelPerfectOffsetY
-            Camera.X = (int)(renderable.GetAbsoluteLeft() + renderable.Width/2f) + 1/Camera.Zoom;
-            Camera.Y = (int)(renderable.GetAbsoluteTop() + renderable.Height/2f) + 1/Camera.Zoom;
-        }
 
-
-        gumBatch = gumBatch ?? new GumBatch();
-
-
-        // todo  - rotations don't currently work:
-        //var rotationRadians = MathHelper.ToRadians(renderable.Rotation);
-        //var matrix = Matrix.CreateRotationZ(rotationRadians);
-        //gumBatch.Begin(matrix);
-        gumBatch.Begin();
-
-        //gumBatch.Draw(renderable);
-        //systemManagers.Renderer.Draw(renderable);
-        Draw(systemManagers, _layers[0], renderable, forceRenderHierarchy:true);
-
-
-        gumBatch.End();
-
-        GraphicsDevice.SetRenderTarget(oldRenderTarget as RenderTarget2D);
-
-        Camera.ClientWidth = oldCameraWidth;
-        Camera.ClientHeight = oldCameraHeight;
-        Camera.X = oldCameraX;
-        Camera.Y = oldCameraY;
-        GraphicsDevice.Viewport = oldViewport;
-
-        // Uncomment this to test saving...
-        //if(!System.IO.File.Exists("Output.png"))
-        //{
-        //    using var stream = System.IO.File.OpenWrite("Output.png");
-        //    renderTarget.SaveAsPng(stream, renderTarget.Width, renderTarget.Height);
-        //}
     }
 
     private void Render(IList<IRenderableIpso> whatToRender, SystemManagers managers, Layer layer)
@@ -587,6 +629,8 @@ public class Renderer : IRenderer
     }
 
 
+    Sprite renderTargetRenderableSprite = new Sprite((Texture2D)null);
+
     private void Draw(SystemManagers managers, Layer layer, IRenderableIpso renderable, bool forceRenderHierarchy = false)
     {
         if (renderable.Visible)
@@ -597,26 +641,36 @@ public class Renderer : IRenderer
 
             if (renderable.IsRenderTarget && !forceRenderHierarchy)
             {
-                var renderableAlpha = 255;
-
-                // I suppose we could have a single interface?
-                if(renderable is InvisibleRenderable invisibleRenderable)
-                {
-                    renderableAlpha = System.Math.Min(255, (int)invisibleRenderable.Alpha);
-                    renderableAlpha = System.Math.Max(0, renderableAlpha);
-                }
-                else if(renderable is LineRectangle lineRectangle)
-                {
-                    renderableAlpha = System.Math.Min(255, (int)lineRectangle.Alpha);
-                    renderableAlpha = System.Math.Max(0, renderableAlpha);
-                }
-                var color = System.Drawing.Color.FromArgb(
-                    renderableAlpha, Color.White
-                    );
-
                 var renderTarget = renderTargetService.GetRenderTargetFor(GraphicsDevice, renderable, Camera);
 
-                Sprite.Render(managers, spriteRenderer, renderable, renderTarget, color, rotationInDegrees:renderable.Rotation);                  
+                if(renderTarget != null)
+                {
+                    var renderableAlpha = (int)renderable.Alpha;
+                    renderableAlpha = System.Math.Min(255, (int)renderableAlpha);
+                    renderableAlpha = System.Math.Max(0, renderableAlpha);
+
+                    var color = System.Drawing.Color.FromArgb(
+                        renderableAlpha, Color.White
+                        );
+
+                    var oldWidth = renderable.Width;
+                    var oldHeight = renderable.Height;
+
+                    var oldX = renderable.X;
+                    var oldY = renderable.Y;
+
+                    renderTargetRenderableSprite.X = System.Math.Max(renderable.X, Camera.AbsoluteLeft);
+                    renderTargetRenderableSprite.Y = System.Math.Max(renderable.Y, Camera.AbsoluteTop);
+                    renderTargetRenderableSprite.Width = renderTarget.Width / Camera.Zoom;
+                    renderTargetRenderableSprite.Height = renderTarget.Height / Camera.Zoom;
+
+                    Sprite.Render(managers, spriteRenderer, renderTargetRenderableSprite, renderTarget, color, rotationInDegrees:renderable.Rotation, objectCausingRendering: renderable);
+
+                    //renderable.X = oldX;
+                    //renderable.Y = oldY;
+                    //renderable.Width = oldWidth;
+                    //renderable.Height = oldHeight;
+                }
             }
             else
             {
@@ -845,35 +899,57 @@ class RenderTargetService
         itemsUsingRenderTargetsThisFrame.Clear();
     }
 
-    public RenderTarget2D GetRenderTargetFor(GraphicsDevice graphicsDevice, IRenderableIpso renderable, Camera camera)
+    public RenderTarget2D? GetRenderTargetFor(GraphicsDevice graphicsDevice, IRenderableIpso renderable, Camera camera)
     {
         itemsUsingRenderTargetsThisFrame.Add(renderable);
 
-        var width = (int)(renderable.Width * camera.Zoom);
-        var height = (int)(renderable.Height * camera.Zoom);
+        var left = renderable.GetAbsoluteLeft();
+        var right = renderable.GetAbsoluteRight();
+        var top = renderable.GetAbsoluteTop();
+        var bottom = renderable.GetAbsoluteBottom();
 
+        left = System.Math.Max(camera.AbsoluteLeft, left);
+        right = System.Math.Min(camera.AbsoluteRight, right);
+        top = System.Math.Max(camera.AbsoluteTop, top);
+        bottom = System.Math.Min(camera.AbsoluteBottom, bottom);
 
-        if (RenderTargets.ContainsKey(renderable))
+        System.Diagnostics.Debug.WriteLine($"L:{left} R:{right} T:{top} B:{bottom}");
+
+        var clientWidth = camera.ClientWidth;
+        var clientHeight = camera.ClientHeight;
+
+        var width =(int)((right - left)* camera.Zoom);
+        var height = (int)((bottom - top)* camera.Zoom);
+
+        if(width <= 0 || height <= 0)
         {
-            var existingRenderTarget = RenderTargets[renderable];
-            if (existingRenderTarget.Width != width || existingRenderTarget.Height != height)
+            return null;
+        }
+        else
+        {
+            if (RenderTargets.ContainsKey(renderable))
             {
-                existingRenderTarget.Dispose();
-                RenderTargets.Remove(renderable);
+                var existingRenderTarget = RenderTargets[renderable];
+                if (existingRenderTarget.Width != width || existingRenderTarget.Height != height)
+                {
+                    existingRenderTarget.Dispose();
+                    RenderTargets.Remove(renderable);
+                }
             }
+
+
+            if (RenderTargets.ContainsKey(renderable) == false)
+            {
+                //var width = GraphicsDevice.Viewport.Width;
+                //var height = GraphicsDevice.Viewport.Height;
+                RenderTargets[renderable] = new RenderTarget2D(graphicsDevice, (int)width, (int)height);
+
+            }
+            var renderTarget = RenderTargets[renderable];
+
+            return renderTarget;
+
         }
-
-
-        if (RenderTargets.ContainsKey(renderable) == false)
-        {
-            //var width = GraphicsDevice.Viewport.Width;
-            //var height = GraphicsDevice.Viewport.Height;
-            RenderTargets[renderable] = new RenderTarget2D(graphicsDevice, (int)width, (int)height);
-
-        }
-        var renderTarget = RenderTargets[renderable];
-
-        return renderTarget;
     }
 }
 

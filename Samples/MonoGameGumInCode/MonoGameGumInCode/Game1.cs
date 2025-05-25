@@ -37,7 +37,8 @@ namespace MonoGameGumInCode
             //Renderer.TextureFilter = TextureFilter.Linear;
 
             // uncomment one of these to create a layout. Only have one uncommented or else UI overlaps
-            CreateFormsScreen();
+            //CreateFormsScreen();
+            CreateStandardsScreen();
             //CreateMixedLayout();
             //CreateTextLayout();
             //CreateInvisibleLayout();
@@ -49,6 +50,12 @@ namespace MonoGameGumInCode
         {
             var formsScreen = new FormsScreen();
             formsScreen.AddToRoot();
+        }
+
+        private void CreateStandardsScreen()
+        {
+            var standardsScreen = new StandardsScreen();
+            standardsScreen.AddToRoot();
         }
 
         private void CreateInvisibleLayout()

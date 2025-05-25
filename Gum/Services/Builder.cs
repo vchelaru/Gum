@@ -27,9 +27,10 @@ public class Builder
     {
         var builder = Host.CreateApplicationBuilder();
 
+        builder.Services.AddSingleton(typeof(CircularReferenceManager));
         builder.Services.AddSingleton(typeof(ElementCommands), ElementCommands.Self);
-        builder.Services.AddSingleton(typeof(ISelectedState), SelectedState.Self);
         builder.Services.AddSingleton(typeof(Commands.GuiCommands), GumCommands.Self.GuiCommands);
+        builder.Services.AddSingleton(typeof(FileCommands), GumCommands.Self.FileCommands);
         builder.Services.AddSingleton(typeof(UndoManager), UndoManager.Self);
         builder.Services.AddSingleton(typeof(FileCommands), GumCommands.Self.FileCommands);
         builder.Services.AddSingleton(typeof(GuiCommands), GumCommands.Self.GuiCommands);
@@ -39,6 +40,10 @@ public class Builder
         builder.Services.AddSingleton(typeof(RenameLogic));
         builder.Services.AddSingleton(typeof(LocalizationManager));
         builder.Services.AddSingleton(typeof(FontManager));
+        builder.Services.AddSingleton(typeof(DragDropManager));
+        builder.Services.AddSingleton<ISelectedState>(SelectedState.Self);
+        builder.Services.AddSingleton<IObjectFinder>(ObjectFinder.Self);
+
         builder.Services.AddSingleton<IEditVariableService, EditVariableService>();
         builder.Services.AddSingleton<IExposeVariableService, ExposeVariableService>();
         builder.Services.AddSingleton<IDeleteVariableService, DeleteVariableService>();
@@ -49,6 +54,6 @@ public class Builder
         App = builder.Build();
 
         // This is needed until we unroll all the singletons...
-        SetVariableLogic.Self.Initialize();
+        SetVariableLogic.Self.Initialize(Get<CircularReferenceManager>(), Get<FileCommands>());
     }
 }

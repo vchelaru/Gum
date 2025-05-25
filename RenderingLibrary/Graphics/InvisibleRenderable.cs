@@ -1,6 +1,7 @@
 ﻿using Gum;
 using System;
 using System.Collections.ObjectModel;
+using System.Drawing;
 using BlendState = Gum.BlendState;
 
 namespace RenderingLibrary.Graphics
@@ -89,6 +90,8 @@ namespace RenderingLibrary.Graphics
         public bool FlipHorizontal { get; set; }
 
         public float Alpha { get; set; } = 255;
+
+        int IRenderableIpso.Alpha => (int)this.Alpha;
 
         IVisible IVisible.Parent { get { return Parent as IVisible; } }
 
