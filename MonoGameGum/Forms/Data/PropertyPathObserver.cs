@@ -29,7 +29,7 @@ internal class PropertyPathObserver : IDisposable
 
     public PropertyPathObserver(string path)
     {
-        _segments = path.Split(["."], StringSplitOptions.RemoveEmptyEntries);
+        _segments = path.Split('.', StringSplitOptions.RemoveEmptyEntries);
     }
 
     public void Detach()
