@@ -27,6 +27,7 @@ public abstract class WireframeEditor
 
     private readonly SelectionManager _selectionManager;
     private readonly SetVariableLogic _setVariableLogic;
+    private readonly ISelectedState _selectedState;
     protected GrabbedState grabbedState = new GrabbedState();
 
     protected bool mHasChangedAnythingSinceLastPush = false;
@@ -41,12 +42,15 @@ public abstract class WireframeEditor
 
     public bool RestrictToUnitValues { get; set; }
 
-    public WireframeEditor(global::Gum.Managers.HotkeyManager hotkeyManager,
-        SelectionManager selectionManager)
+    public WireframeEditor(
+        global::Gum.Managers.HotkeyManager hotkeyManager,
+        SelectionManager selectionManager,
+        ISelectedState selectedState)
     {
         _hotkeyManager = hotkeyManager;
         _selectionManager = selectionManager;
         _setVariableLogic = Builder.Get<SetVariableLogic>();
+        _selectedState = selectedState;
     }
 
     public abstract void UpdateToSelection(ICollection<GraphicalUiElement> selectedObjects);
@@ -55,11 +59,11 @@ public abstract class WireframeEditor
 
     public void UpdateAspectRatioForGrabbedIpso()
     {
-        if (SelectedState.Self.SelectedInstance != null &&
-            SelectedState.Self.SelectedIpso != null
+        if (_selectedState.SelectedInstance != null &&
+            _selectedState.SelectedIpso != null
             )
         {
-            IPositionedSizedObject ipso = SelectedState.Self.SelectedIpso;
+            IPositionedSizedObject ipso = _selectedState.SelectedIpso;
 
             float width = ipso.Width;
             float height = ipso.Height;
@@ -141,11 +145,11 @@ public abstract class WireframeEditor
         var editingCommands = GumCommands.Self.ProjectCommands.ElementCommands;
         var didMove = editingCommands.MoveSelectedObjectsBy(effectiveXToMoveBy, effectiveYToMoveBy);
 
-        bool isLockedToAxis = _hotkeyManager.LockMovementToAxis.IsPressed(InputLibrary.Keyboard.Self);
+        bool isLockedToAxis = _hotkeyManager.LockMovementToAxis.IsPressedInControl();
 
 
-        if (SelectedState.Self.SelectedInstances.Count() == 0 &&
-            (SelectedState.Self.SelectedComponent != null || SelectedState.Self.SelectedStandardElement != null))
+        if (_selectedState.SelectedInstances.Count() == 0 &&
+            (_selectedState.SelectedComponent != null || _selectedState.SelectedStandardElement != null))
         {
             if (isLockedToAxis)
             {
@@ -153,14 +157,14 @@ public abstract class WireframeEditor
 
                 if (xOrY == XOrY.X)
                 {
-                    var gue = WireframeObjectManager.Self.GetRepresentation(SelectedState.Self.SelectedElement);
+                    var gue = WireframeObjectManager.Self.GetRepresentation(_selectedState.SelectedElement);
 
                     gue.Y = grabbedState.ComponentPosition.Y;
                 }
                 else if (xOrY == XOrY.Y)
                 {
 
-                    var gue = WireframeObjectManager.Self.GetRepresentation(SelectedState.Self.SelectedElement);
+                    var gue = WireframeObjectManager.Self.GetRepresentation(_selectedState.SelectedElement);
 
                     gue.X = grabbedState.ComponentPosition.X;
                 }
@@ -170,7 +174,7 @@ public abstract class WireframeEditor
         {
             if (isLockedToAxis)
             {
-                var selectedInstances = SelectedState.Self.SelectedInstances;
+                var selectedInstances = _selectedState.SelectedInstances;
 
                 foreach (InstanceSave instance in selectedInstances)
                 {
@@ -223,9 +227,9 @@ public abstract class WireframeEditor
     {
         var axis = grabbedState.AxisMovedFurthestAlong;
 
-        bool isElementSelected = SelectedState.Self.SelectedInstances.Count() == 0 &&
+        bool isElementSelected = _selectedState.SelectedInstances.Count() == 0 &&
                  // check specifically for components or standard elements, since Screens can't be moved
-                 (SelectedState.Self.SelectedComponent != null || SelectedState.Self.SelectedStandardElement != null);
+                 (_selectedState.SelectedComponent != null || _selectedState.SelectedStandardElement != null);
 
 
         if (axis == XOrY.X)
@@ -233,13 +237,13 @@ public abstract class WireframeEditor
             // If the X axis is the furthest-moved, set the Y values back to what they were.
             if (isElementSelected)
             {
-                SelectedState.Self.SelectedStateSave.SetValue("Y", grabbedState.ComponentPosition.Y, "float");
+                _selectedState.SelectedStateSave.SetValue("Y", grabbedState.ComponentPosition.Y, "float");
             }
             else
             {
-                foreach (var instance in SelectedState.Self.SelectedInstances)
+                foreach (var instance in _selectedState.SelectedInstances)
                 {
-                    SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".Y", grabbedState.InstancePositions[instance].StateY, "float");
+                    _selectedState.SelectedStateSave.SetValue(instance.Name + ".Y", grabbedState.InstancePositions[instance].StateY, "float");
                 }
             }
         }
@@ -248,13 +252,13 @@ public abstract class WireframeEditor
             // If the Y axis is the furthest-moved, set the X values back to what they were.
             if (isElementSelected)
             {
-                SelectedState.Self.SelectedStateSave.SetValue("X", grabbedState.ComponentPosition.X, "float");
+                _selectedState.SelectedStateSave.SetValue("X", grabbedState.ComponentPosition.X, "float");
             }
             else
             {
-                foreach (var instance in SelectedState.Self.SelectedInstances)
+                foreach (var instance in _selectedState.SelectedInstances)
                 {
-                    SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".X", grabbedState.InstancePositions[instance].StateX, "float");
+                    _selectedState.SelectedStateSave.SetValue(instance.Name + ".X", grabbedState.InstancePositions[instance].StateX, "float");
                 }
             }
         }
@@ -264,8 +268,8 @@ public abstract class WireframeEditor
 
     protected void DoEndOfSettingValuesLogic()
     {
-        var selectedElement = SelectedState.Self.SelectedElement;
-        var stateSave = SelectedState.Self.SelectedStateSave;
+        var selectedElement = _selectedState.SelectedElement;
+        var stateSave = _selectedState.SelectedStateSave;
         if (stateSave == null)
         {
             throw new System.InvalidOperationException("The SelectedStateSave is null, this should not happen");
@@ -277,7 +281,7 @@ public abstract class WireframeEditor
 
         GumCommands.Self.GuiCommands.RefreshVariableValues();
 
-        var element = SelectedState.Self.SelectedElement;
+        var element = _selectedState.SelectedElement;
 
         foreach (var possiblyChangedVariable in stateSave.Variables.ToList())
         {

@@ -154,7 +154,6 @@ public class WireframeControl : GraphicsDeviceControl
             CameraController.Self.CameraChanged += () => CameraChanged?.Invoke();
 
             InputLibrary.Cursor.Self.Initialize(this);
-            InputLibrary.Keyboard.Self.Initialize(this);
 
             mCanvasBounds = new LineRectangle();
             mCanvasBounds.IsDotted = true;
@@ -233,13 +232,11 @@ public class WireframeControl : GraphicsDeviceControl
 
         mTopRuler = new Ruler(this, SystemManagers.Default,
             InputLibrary.Cursor.Self,
-            InputLibrary.Keyboard.Self,
             ToolFontService.Self,
             ToolLayerService.Self,
             layerService);
         mLeftRuler = new Ruler(this, SystemManagers.Default,
             InputLibrary.Cursor.Self,
-            InputLibrary.Keyboard.Self,
             ToolFontService.Self,
             ToolLayerService.Self,
             layerService);
@@ -277,7 +274,6 @@ public class WireframeControl : GraphicsDeviceControl
 
 
                 InputLibrary.Cursor.Self.Activity(TimeManager.Self.CurrentTime);
-                InputLibrary.Keyboard.Self.Activity();
 
                 // This doesn't work, I think it might be because the Window isn't reading keys unless
                 // it is focused...
@@ -285,7 +281,6 @@ public class WireframeControl : GraphicsDeviceControl
                 //{
 
                 //}
-
                 bool isOver = mTopRuler.HandleXnaUpdate(InputLibrary.Cursor.Self.IsInWindow) ||
                     mLeftRuler.HandleXnaUpdate(InputLibrary.Cursor.Self.IsInWindow);
 
