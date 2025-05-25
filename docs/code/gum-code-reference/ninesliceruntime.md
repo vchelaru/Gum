@@ -56,14 +56,26 @@ secondNineSlice.SourceFile = firstNineSlice.SourceFile;
 
 ### TextureAddressMode and Texture Coordinates
 
-By default a NineSlice uses it entire texture. This can be customized using texture coordinate and TextureAddress properies as shown in the following code:
+By default a NineSlice uses it entire texture. This can be customized using texture coordinate and TextureAddress properties.
+
+For example, consider drawing a portion of the following texture:
+
+<figure><img src="../../.gitbook/assets/FrameSheet.png" alt=""><figcaption><p>Kenney sprite sheet</p></figcaption></figure>
+
+We can obtain a portion of this texture by assigning the coordinate values. Before doing so, find the coordinates of the area you would like to draw. For example, we can use Paint.NET to find the coordinates of a frame in the image.
+
+<figure><img src="../../.gitbook/assets/25_09 26 44.png" alt=""><figcaption></figcaption></figure>
+
+Using these values we can set the NineSlice values as shown in the following code:
 
 ```csharp
-nineSlice.TextureLeft = 0;
-nineSlice.TextureTop = 16;
-nineSlice.TextureWidth = 32;
-nineSlice.TextureHeight = 32;
 nineSlice.TextureAddress = Gum.Managers.TextureAddress.Custom;
+nineSlice.TextureLeft = 438;
+nineSlice.TextureTop = 231;
+nineSlice.TextureWidth = 41;
+nineSlice.TextureHeight = 42;
 ```
+
+<figure><img src="../../.gitbook/assets/25_09 28 13.png" alt=""><figcaption><p>Portion of texture drawn by a NineSlice</p></figcaption></figure>
 
 Note that if TextureAddress isn't set to Custom, then the four coordinate values are ignored and the entire texture is used.
