@@ -66,7 +66,7 @@ We can obtain a portion of this texture by assigning the coordinate values. Befo
 
 <figure><img src="../../.gitbook/assets/25_09 26 44.png" alt=""><figcaption></figcaption></figure>
 
-Using these values we can set the NineSlice values as shown in the following code:
+We can use these values to set `TextureLeft`, `TextureTop`, `TextureWidth`, and `TextureHeight` values as shown in the following code:
 
 ```csharp
 nineSlice.TextureAddress = Gum.Managers.TextureAddress.Custom;
