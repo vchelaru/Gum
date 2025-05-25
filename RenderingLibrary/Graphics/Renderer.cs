@@ -567,8 +567,8 @@ public class Renderer : IRenderer
             Camera.ClientWidth = (int)renderTarget.Width;
             Camera.ClientHeight = (int)renderTarget.Height;
 
-            Camera.X = (int)oldX + extraToAddX;
-            Camera.Y = (int)oldY + extraToAddY;
+            Camera.X = oldX + extraToAddX;
+            Camera.Y = oldY + extraToAddY;
             if(Camera.CameraCenterOnScreen == CameraCenterOnScreen.Center)
             {
                 Camera.X += (renderTarget.Width / 2.0f)/Camera.Zoom;
