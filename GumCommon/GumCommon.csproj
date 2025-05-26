@@ -4,7 +4,7 @@
 		<TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<LangVersion>11.0</LangVersion>
+		<LangVersion>12.0</LangVersion>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<Title>GumCommon</Title>
 		<Description>Flexible layout tool for graphics in any .NET environment</Description>
