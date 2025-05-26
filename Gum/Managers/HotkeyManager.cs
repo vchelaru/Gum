@@ -90,7 +90,14 @@ public class KeyCombination
 
     }
 
+    public bool IsPressedInControl()
+    {
+        if (IsCtrlDown && (Control.ModifierKeys & Keys.Control) != Keys.Control) return false;
+        if (IsShiftDown && (Control.ModifierKeys & Keys.Shift) != Keys.Shift) return false;
+        if (IsAltDown && (Control.ModifierKeys & Keys.Alt) != Keys.Alt) return false;
 
+        return Key == null || (Control.ModifierKeys & Keys.KeyCode) == Key;
+    }
 
     public override string ToString()
     {

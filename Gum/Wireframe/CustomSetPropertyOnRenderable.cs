@@ -966,7 +966,7 @@ public class CustomSetPropertyOnRenderable
 
                 if (ToolsUtilities.FileManager.FileExists(fileName))
                 {
-                    font = new BitmapFont(fileName, (SystemManagers)null);
+                    font = new BitmapFont(fileName);
                 }
                 else
                 {
@@ -1053,7 +1053,7 @@ public class CustomSetPropertyOnRenderable
                         try
                         {
                             // this could be running in browser where we don't have File.Exists, so JUST DO IT
-                            font = new BitmapFont(graphicalUiElement.CustomFontFile, SystemManagers.Default);
+                            font = new BitmapFont(graphicalUiElement.CustomFontFile);
                             loaderManager.AddDisposable(graphicalUiElement.CustomFontFile, font);
                         }
                         catch
@@ -1065,7 +1065,7 @@ public class CustomSetPropertyOnRenderable
                     // use the content loader for BitmapFont, we're going to protect this with a file.exists.
                     if (ToolsUtilities.FileManager.FileExists(graphicalUiElement.CustomFontFile))
                     {
-                        font = new BitmapFont(graphicalUiElement.CustomFontFile, SystemManagers.Default);
+                        font = new BitmapFont(graphicalUiElement.CustomFontFile);
                         loaderManager.AddDisposable(graphicalUiElement.CustomFontFile, font);
                     }
 #endif
@@ -1104,7 +1104,7 @@ public class CustomSetPropertyOnRenderable
                         try
                         {
                             // this could be running in browser where we don't have File.Exists, so JUST DO IT
-                            font = new BitmapFont(fullFileName, SystemManagers.Default);
+                            font = new BitmapFont(fullFileName);
 
                             loaderManager.AddDisposable(fullFileName, font);
                         }
@@ -1117,7 +1117,7 @@ public class CustomSetPropertyOnRenderable
                     // use the content loader for BitmapFont, we're going to protect this with a file.exists.
                     if (ToolsUtilities.FileManager.FileExists(fullFileName))
                     {
-                        font = new BitmapFont(fullFileName, SystemManagers.Default);
+                        font = new BitmapFont(fullFileName);
 
 
                         loaderManager.AddDisposable(fullFileName, font);

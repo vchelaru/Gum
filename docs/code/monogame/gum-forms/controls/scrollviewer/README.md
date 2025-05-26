@@ -30,7 +30,7 @@ for (int i = 0; i < 30; i++)
 }
 ```
 
-<figure><img src="../../../../.gitbook/assets/09_19 09 46.gif" alt=""><figcaption><p>Children in a ScrollViewer</p></figcaption></figure>
+<figure><img src="../../../../../.gitbook/assets/09_19 09 46.gif" alt=""><figcaption><p>Children in a ScrollViewer</p></figcaption></figure>
 
 ### Code Example: Creating a ScrollViewer With Non-Forms Children
 
@@ -58,7 +58,7 @@ for (int i = 0; i < 30; i++)
 }
 ```
 
-<figure><img src="../../../../.gitbook/assets/24_07 07 19.gif" alt=""><figcaption><p>ScrollViewer displaying multiple ColoredRectangles</p></figcaption></figure>
+<figure><img src="../../../../../.gitbook/assets/24_07 07 19.gif" alt=""><figcaption><p>ScrollViewer displaying multiple ColoredRectangles</p></figcaption></figure>
 
 ### VerticalScrollBarVisibility
 
@@ -70,4 +70,4 @@ VerticalScrollBarVisibility controls the visibility of the vertical scroll bar, 
 
 The default is Auto which means that the scroll bar only displays if necessary.
 
-<figure><img src="../../../../.gitbook/assets/30_12 14 23.gif" alt=""><figcaption><p>VerticalScrollBarVisibilty set to Auto only shows the ScrollBar if enough items are added to the ScrollView</p></figcaption></figure>
+<figure><img src="../../../../../.gitbook/assets/30_12 14 23.gif" alt=""><figcaption><p>VerticalScrollBarVisibilty set to Auto only shows the ScrollBar if enough items are added to the ScrollView</p></figcaption></figure>

@@ -21,7 +21,7 @@ for (int i = 0; i < 10; i++)
 mainPanel.AddChild(listBox);
 ```
 
-<figure><img src="../../../../.gitbook/assets/image (1).png" alt=""><figcaption><p>ListBox displaying integers</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/image (1) (1).png" alt=""><figcaption><p>ListBox displaying integers</p></figcaption></figure>
 
 {% tabs %}
 {% tab title="Full Code" %}

@@ -605,7 +605,8 @@ public class SelectionManager
                 WireframeEditor = new PolygonWireframeEditor(
                     _layerService.OverlayLayer,
                     global::Gum.Managers.HotkeyManager.Self,
-                    this);
+                    this,
+                    _selectedState);
             }
         }
         else if (SelectedGues.Count > 0 && SelectedGue?.Tag is ScreenSave == false)
@@ -627,7 +628,8 @@ public class SelectionManager
                 WireframeEditor = new PolygonWireframeEditor(
                     _layerService.OverlayLayer,
                     global::Gum.Managers.HotkeyManager.Self,
-                    this);
+                    this,
+                    _selectedState);
             }
             else
             {
@@ -648,8 +650,10 @@ public class SelectionManager
 
                     WireframeEditor = new StandardWireframeEditor(
                         _layerService.OverlayLayer,
-                        lineColor, textColor, global::Gum.Managers.HotkeyManager.Self,
-                        this);
+                        lineColor, textColor, 
+                        global::Gum.Managers.HotkeyManager.Self,
+                        this,
+                        _selectedState);
                 }
             }
         }

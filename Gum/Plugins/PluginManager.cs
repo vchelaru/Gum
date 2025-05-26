@@ -158,6 +158,11 @@ namespace Gum.Plugins
             var sortedPlugins = this.Plugins.OrderBy(item => !(item is InternalPlugin)).ToArray();
             foreach (var plugin in sortedPlugins)
             {
+                if (this.PluginContainers.ContainsKey(plugin) == false)
+                {
+                    throw new KeyNotFoundException("Could not find a plugin container for the plugin " + plugin);
+                }
+
                 PluginContainer container = this.PluginContainers[plugin];
 
                 if (container.IsEnabled)

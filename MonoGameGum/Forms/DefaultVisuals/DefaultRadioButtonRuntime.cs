@@ -30,7 +30,8 @@ public class DefaultRadioButtonRuntime : InteractiveGue
             radioButtonBackground.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
             radioButtonBackground.Height = 100;
             radioButtonBackground.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
-            radioButtonBackground.Texture = SystemManagers.Default.Renderer.InternalShapesTexture;
+            // tolerate a missing Renderer becuse this could be run in a unit test:
+            radioButtonBackground.Texture = SystemManagers.Default.Renderer?.InternalShapesTexture;
             radioButtonBackground.TextureAddress = Gum.Managers.TextureAddress.Custom;
             radioButtonBackground.TextureLeft = 0;
             radioButtonBackground.TextureTop = 160;
@@ -49,7 +50,8 @@ public class DefaultRadioButtonRuntime : InteractiveGue
             innerCheck.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
             innerCheck.Height = 100;
             innerCheck.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
-            innerCheck.Texture = SystemManagers.Default.Renderer.InternalShapesTexture;
+            // tolerate a missing Renderer becuse this could be run in a unit test:
+            innerCheck.Texture = SystemManagers.Default.Renderer?.InternalShapesTexture;
             innerCheck.TextureAddress = Gum.Managers.TextureAddress.Custom;
             innerCheck.TextureLeft = 32;
             innerCheck.TextureTop = 160;

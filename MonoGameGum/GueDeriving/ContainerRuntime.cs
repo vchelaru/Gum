@@ -8,8 +8,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#if MONOGAME || FNA || KNI
+using BlendState = Microsoft.Xna.Framework.Graphics.BlendState;
+#endif
+
 #if RAYLIB
-using RenderingLibrary;
+using BlendState = Gum.BlendState;
 #endif
 
 namespace MonoGameGum.GueDeriving
@@ -41,14 +45,22 @@ namespace MonoGameGum.GueDeriving
         }
 
 
-        public Microsoft.Xna.Framework.Graphics.BlendState BlendState
+        public BlendState BlendState
         {
+#if MONOGAME || FNA || KNI
             get => RenderableComponent.BlendState.ToXNA();
+#else
+            get => RenderableComponent.BlendState;
+#endif
             set
             {
                 if (RenderableComponent is InvisibleRenderable invisibleRenderable)
                 {
+#if MONOGAME || FNA || KNI
                     invisibleRenderable.BlendState = value.ToGum();
+#else
+                    invisibleRenderable.BlendState = value;
+#endif
                     NotifyPropertyChanged();
                     NotifyPropertyChanged(nameof(Blend));
                 }
@@ -63,7 +75,11 @@ namespace MonoGameGum.GueDeriving
             }
             set
             {
+#if MONOGAME || FNA || KNI
                 BlendState = value.ToBlendState().ToXNA();
+#else
+                BlendState = value.ToBlendState();
+#endif
 
                 // NotifyPropertyChanged handled by BlendState:
             }

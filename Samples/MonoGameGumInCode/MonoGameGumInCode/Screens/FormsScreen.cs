@@ -13,11 +13,8 @@ internal class FormsScreen : FrameworkElement
     {
         const int gap = 8;
 
-        Visual.Width = 0;
-        Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-        Visual.Height = 0;
-        Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
-
+        Dock(Gum.Wireframe.Dock.Fill);
+        
 
         var stackPanel = new StackPanel();
         stackPanel.Visual.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;

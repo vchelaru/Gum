@@ -697,8 +697,8 @@ public partial class ElementTreeViewManager
         stateToAssignOn.SetValue(variableName, oldParentValue, "string");
         stateToAssignOn.SetValue(existingInstanceVar, newInstance.Name, "string");
 
-        SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue, newInstance);
-        SetVariableLogic.Self.PropertyValueChanged("Parent", oldParentValue, existingInstance);
+        SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue, newInstance, targetElement.DefaultState);
+        SetVariableLogic.Self.PropertyValueChanged("Parent", oldParentValue, existingInstance, targetElement.DefaultState);
     }
 
     private static void SetInstanceParent(ElementSave targetElement, InstanceSave child, InstanceSave parent)
@@ -718,6 +718,6 @@ public partial class ElementTreeViewManager
         }
 
         stateToAssignOn.SetValue(variableName, newParent, "string");
-        SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue, child);
+        SetVariableLogic.Self.PropertyValueChanged("Parent", oldValue, child, targetElement.DefaultState);
     }
 }

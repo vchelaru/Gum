@@ -23,7 +23,15 @@ public static class LoaderManagerExtensionMethods
 
         if (defaultFontLocation.EndsWith(".fnt"))
         {
-            Text.DefaultBitmapFont = new BitmapFont(defaultFontLocation, managers);
+            Text.DefaultBitmapFont = new BitmapFont(defaultFontLocation);
+            // Remove the loaded contnet from the loaderManager so it is never accidentally disposed
+            // when we clear cache
+            LoaderManager.Self.RemoveWithoutDisposing(Text.DefaultBitmapFont);
+            foreach(var texture in Text.DefaultBitmapFont.Textures)
+            {
+                LoaderManager.Self.RemoveWithoutDisposing(texture);
+            }
+
         }
     }
 
@@ -34,6 +42,9 @@ public static class LoaderManagerExtensionMethods
         {
 
             Sprite.InvalidTexture = loaderManager.LoadContent<Texture2D>(invalidTextureLocation);
+            // Remove the loaded contnet from the loaderManager so it is never accidentally disposed
+            // when we clear cache
+            loaderManager.RemoveWithoutDisposing(Sprite.InvalidTexture);
         }
         else
         {

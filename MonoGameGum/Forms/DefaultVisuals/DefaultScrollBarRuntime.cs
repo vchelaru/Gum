@@ -21,6 +21,9 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 this.Width = 24;
                 this.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
 
+                this.Height = 128;
+                this.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+
                 var UpButtonInstance = new DefaultButtonRuntime();
                 UpButtonInstance.Name = "UpButtonInstance";
                 var DownButtonInstance = new DefaultButtonRuntime();

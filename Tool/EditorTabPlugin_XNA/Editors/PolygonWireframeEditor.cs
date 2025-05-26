@@ -103,7 +103,14 @@ namespace Gum.Wireframe.Editors
 
         #region Constructor/Update To
 
-        public PolygonWireframeEditor(Layer layer, HotkeyManager hotkeyManager, SelectionManager selectionManager) : base(hotkeyManager, selectionManager)
+        public PolygonWireframeEditor(
+            Layer layer, HotkeyManager hotkeyManager, 
+            SelectionManager selectionManager,
+            ISelectedState selectedState) 
+            : base(
+                  hotkeyManager, 
+                  selectionManager,
+                  selectedState)
         {
             if(addPointTexture == null)
             {

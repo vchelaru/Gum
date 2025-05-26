@@ -49,7 +49,9 @@ public class GumService
 
     public GamePad[] Gamepads => FormsUtilities.Gamepads;
 
-    public Renderer Renderer => SystemManagers.Default.Renderer;
+    public Renderer Renderer => this.SystemManagers.Renderer;
+
+    public SystemManagers SystemManagers { get; private set; }
 
     public float CanvasWidth
     {
@@ -79,7 +81,20 @@ public class GumService
     /// <returns>The loaded project, or null if no project is loaded</returns>
     public GumProjectSave? Initialize(Game game, string? gumProjectFile = null)
     {
+        if (game.GraphicsDevice == null)
+        {
+            throw new InvalidOperationException(
+                "game.GraphicsDevice cannot be null. " +
+                "Be sure to call Initialize in the Game's Initialize method or later " +
+                "so that the Game has a valid GrahicsDevice");
+        }
+
         return InitializeInternal(game, game.GraphicsDevice, gumProjectFile);
+    }
+
+    public void Initialize(Game game, SystemManagers systemManagers)
+    {
+        InitializeInternal(game, game.GraphicsDevice, systemManagers: systemManagers);
     }
 
     [Obsolete("Experimental - this API may change in future versions")]
@@ -123,7 +138,7 @@ public class GumService
     }
 
     bool hasBeenInitialized = false;
-    GumProjectSave? InitializeInternal(Game game, GraphicsDevice graphicsDevice, string? gumProjectFile = null)
+    GumProjectSave? InitializeInternal(Game game, GraphicsDevice graphicsDevice, string? gumProjectFile = null, SystemManagers? systemManagers = null)
     {
         if(hasBeenInitialized)
         {
@@ -133,12 +148,16 @@ public class GumService
 
         _game = game;
         RegisterRuntimeTypesThroughReflection();
-        SystemManagers.Default = new SystemManagers();
+        this.SystemManagers = systemManagers ?? new SystemManagers();
+        if (systemManagers == null)
+        {
+            SystemManagers.Default = this.SystemManagers;
 #if NET6_0_OR_GREATER
-        ISystemManagers.Default = SystemManagers.Default;
+            ISystemManagers.Default = this.SystemManagers;
 #endif
-        SystemManagers.Default.Initialize(graphicsDevice, fullInstantiation: true);
-        FormsUtilities.InitializeDefaults();
+        }
+        this.SystemManagers.Initialize(graphicsDevice, fullInstantiation: true);
+        FormsUtilities.InitializeDefaults(systemManagers: this.SystemManagers);
 
         Root.Width = 0;
         Root.WidthUnits = DimensionUnitType.RelativeToParent;
@@ -147,7 +166,7 @@ public class GumService
         Root.Name = "Main Root";
         Root.HasEvents = false;
 
-        Root.AddToManagers();
+        Root.AddToManagers(SystemManagers);
 
         GumProjectSave? gumProject = null;
 
@@ -232,7 +251,7 @@ public class GumService
     {
         GameTime = gameTime;
         FormsUtilities.Update(game, gameTime, root);
-        SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
+        this.SystemManagers.Activity(gameTime.TotalGameTime.TotalSeconds);
         root.AnimateSelf(gameTime.ElapsedGameTime.TotalSeconds);
     }
 
@@ -240,7 +259,7 @@ public class GumService
     {
         GameTime = gameTime;
         FormsUtilities.Update(game, gameTime, roots);
-        SystemManagers.Default.Activity(gameTime.TotalGameTime.TotalSeconds);
+        this.SystemManagers.Activity(gameTime.TotalGameTime.TotalSeconds);
         foreach(var item in roots)
         {
             item.AnimateSelf(gameTime.ElapsedGameTime.TotalSeconds);
@@ -279,9 +298,9 @@ public static class GraphicalUiElementExtensionMethods
 
 public static class ElementSaveExtensionMethods
 {
-    public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave)
+    public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave, SystemManagers? systemManagers)
     {
-        return elementSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: false);
+        return elementSave.ToGraphicalUiElement(systemManagers ?? SystemManagers.Default, addToManagers: false);
     }
 }
 

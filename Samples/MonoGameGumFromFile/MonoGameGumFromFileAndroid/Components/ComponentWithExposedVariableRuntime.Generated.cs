@@ -7,9 +7,7 @@ using Gum.Wireframe;
 
 using RenderingLibrary.Graphics;
 
-using SkiaGum;
-using SkiaGum.GueDeriving;
-using SkiaGum.Renderables;
+using MonoGameGum.GueDeriving;
 
 namespace MonoGameGumFromFileAndroid.Components
 {

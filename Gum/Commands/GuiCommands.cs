@@ -502,6 +502,7 @@ namespace Gum.Commands
 
         #endregion
 
+
         public Spinner ShowSpinner()
         {
             var spinner = new Gum.Controls.Spinner();
@@ -641,7 +642,11 @@ namespace Gum.Commands
             if(dialogResult == true)
             {
                 element.Name = folder + window.Result;
-                SetVariableLogic.Self.PropertyValueChanged("Name", oldName, null, refresh: true,
+                SetVariableLogic.Self.PropertyValueChanged("Name", 
+                    oldName, 
+                    null,
+                    element.DefaultState,
+                    refresh: true,
                     recordUndo: true,
                     trySave: true);
             }
@@ -663,7 +668,10 @@ namespace Gum.Commands
             if (dialogResult == true)
             {
                 instance.Name = window.Result;
-                SetVariableLogic.Self.PropertyValueChanged("Name", oldName, instance, refresh: true,
+                SetVariableLogic.Self.PropertyValueChanged("Name", oldName, 
+                    instance,
+                    instance.ParentContainer?.DefaultState,
+                    refresh: true,
                     recordUndo: true,
                     trySave: true);
             }

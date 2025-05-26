@@ -1,47 +1,30 @@
-﻿using Gum.Converters;
-using Gum.DataTypes;
-using Gum.DataTypes.Variables;
-using Gum.Managers;
-using Gum.RenderingLibrary;
-using GumDataTypes.Variables;
-
-using RenderingLibrary;
 using RenderingLibrary.Graphics;
-using RenderingLibrary.Math;
-
-
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.Linq;
 using System.ComponentModel;
-using ToolsUtilitiesStandard.Helpers;
-using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
-using Vector2 = System.Numerics.Vector2;
-using Vector3 = System.Numerics.Vector3;
-using Color = System.Drawing.Color;
-using Rectangle = System.Drawing.Rectangle;
-using Matrix = System.Numerics.Matrix4x4;
-using GumRuntime;
-using System.Collections;
-using System.Reflection.Emit;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+
+
+
+
 
 namespace Gum.Wireframe;
 
 public class BindingContextChangedEventArgs : EventArgs
 {
-    public object OldBindingContext { get; set; }
+    public object? OldBindingContext { get; set; }
+    public object? NewBindingContext { get; set; }
 }
 
+#if FRB
+public partial class GraphicalUiElement : FlatRedBall.Gui.Controls.IControl, FlatRedBall.Graphics.Animation.IAnimatable
+#else
 /// <summary>
 /// The base object for all Gum runtime objects. It contains functionality for
 /// setting variables, states, and performing layout. The GraphicalUiElement can
 /// wrap an underlying rendering object.
 /// </summary>
 public class BindableGue : GraphicalUiElement
+#endif
 {
     struct VmToUiProperty
     {
@@ -60,6 +43,12 @@ public class BindableGue : GraphicalUiElement
         public static VmToUiProperty Unassigned => new VmToUiProperty();
     }
 
+#if FRB
+    partial void OnConstructor()
+    {
+        InitializeBindableGue();
+    }
+#else
     public BindableGue()
     {
         InitializeBindableGue();
@@ -69,30 +58,45 @@ public class BindableGue : GraphicalUiElement
     {
         InitializeBindableGue();
     }
+#endif
 
     private void InitializeBindableGue()
     {
         this.ParentChanged += HandleParentChanged;
     }
 
-    private void HandleParentChanged(object sender, EventArgs e)
+    private void HandleParentChanged(object? sender, ParentChangedEventArgs args)
     {
-        var parent = this.EffectiveParentGue as BindableGue;
-
-        var newInherited = parent?.BindingContext;
-
-        if (mBindingContext == null && mInheritedBindingContext != newInherited)
+        if (args.OldValue is BindableGue old)
         {
-            InheritedBindingContext = newInherited;
+            old.BindingContextChanged -= ParentBindingContextChanged;
         }
+
+        BindableGue? newParent = args.NewValue as BindableGue;
+
+        if (newParent is not null)
+        {
+            newParent.BindingContextChanged += ParentBindingContextChanged;
+        }
+
+        InheritedBindingContext = newParent?.BindingContext;
     }
 
+    void ParentBindingContextChanged(object? s, BindingContextChangedEventArgs e)
+    {
+        InheritedBindingContext = (EffectiveParentGue as BindableGue)?.BindingContext;
+    }
+
+    public event EventHandler<BindingContextChangedEventArgs>? InheritedBindingContextChanged;
+
+#if !FRB
     public override void RemoveFromManagers()
     {
         base.RemoveFromManagers();
 
         RemoveBindingContextRecursively();
     }
+#endif
 
     private void RemoveBindingContextRecursively()
     {
@@ -111,15 +115,11 @@ public class BindableGue : GraphicalUiElement
         {
             foreach (var gue in this.WhatThisContains)
             {
-                if(gue is BindableGue bindableGue)
-                {
-                    bindableGue.RemoveBindingContextRecursively();
-                }
+                (gue as BindableGue)?.RemoveBindingContextRecursively();
             }
         }
     }
 
-    #region Binding
     // Apr 19 2020:
     // Vic says I could
     // put this in GraphicalUiElement
@@ -132,107 +132,85 @@ public class BindableGue : GraphicalUiElement
     Dictionary<string, VmToUiProperty> vmPropsToUiProps = new Dictionary<string, VmToUiProperty>();
     Dictionary<string, VmToUiProperty> vmEventsToUiMethods = new Dictionary<string, VmToUiProperty>();
 
-    object mInheritedBindingContext;
-    internal object InheritedBindingContext
+    object? mInheritedBindingContext;
+    internal object? InheritedBindingContext
     {
         get => mInheritedBindingContext;
         set
         {
-            if (value != mInheritedBindingContext)
+            var oldInherited = mInheritedBindingContext;
+            
+            if (oldInherited != value)
             {
-                var oldEffectiveBindingContext = EffectiveBindingContext;
+                var oldContext = BindingContext;
                 mInheritedBindingContext = value;
-                HandleBindingContextChangedInternal(oldEffectiveBindingContext);
 
+                InheritedBindingContextChanged?.Invoke(this, new BindingContextChangedEventArgs
+                {
+                    OldBindingContext = oldInherited,
+                    NewBindingContext = mInheritedBindingContext
+                });
+
+                if (oldContext != BindingContext)
+                {
+                    HandleBindingContextChangedInternal(oldContext, BindingContext);
+                }
             }
         }
     }
 
-    object mBindingContext;
-    public object BindingContext
+    object? mBindingContext;
+    public object? BindingContext
     {
-        get => EffectiveBindingContext;
+        get => mBindingContext ?? mInheritedBindingContext;
         set
         {
-            if (value != EffectiveBindingContext)
-            {
-                var oldEffectiveBindingContext = EffectiveBindingContext;
-                mBindingContext = value;
-                HandleBindingContextChangedInternal(oldEffectiveBindingContext);
-            }
+            var oldEffectiveBindingContext = BindingContext;
+            mBindingContext = value;
 
+            if (oldEffectiveBindingContext != BindingContext)
+            {
+                HandleBindingContextChangedInternal(oldEffectiveBindingContext, BindingContext);
+            }
         }
     }
 
-    private void HandleBindingContextChangedInternal(object oldBindingContext)
+    private void HandleBindingContextChangedInternal(object? oldContext, object? newContext)
     {
-        // early out - this isn't technically necessary as 
-        // the subscription code below can be called multiple
-        // times, but it does make debugging easier.
-        if (oldBindingContext == EffectiveBindingContext)
-        {
-            return;
-        }
-
-        if (oldBindingContext is INotifyPropertyChanged oldViewModel)
+        if (oldContext is INotifyPropertyChanged oldViewModel)
         {
             UnsubscribeEventsOnOldViewModel(oldViewModel);
         }
-        if (EffectiveBindingContext is INotifyPropertyChanged viewModel)
+        if (newContext is INotifyPropertyChanged viewModel)
         {
             viewModel.PropertyChanged += HandleViewModelPropertyChanged;
-
         }
-        if (EffectiveBindingContext != null)
+
+        if (newContext != null)
         {
             foreach (var vmProperty in vmPropsToUiProps.Keys)
             {
                 UpdateToVmProperty(vmProperty);
             }
-
-
         }
 
-        var args = new BindingContextChangedEventArgs();
-        args.OldBindingContext = oldBindingContext;
-
-
-        if (this.Children != null)
+        foreach (BindableGue child in GetAllBindableChildren())
         {
-            // do the default first...
-            UpdateChildrenInheritedBindingContext(this.Children, EffectiveBindingContext);
-            // ... then overwrite it
-            foreach (var child in this.Children)
-            {
-                if (child is BindableGue gue)
-                {
-                    if (gue.BindingContextBinding != null)
-                    {
-                        gue.BindingContextBindingPropertyOwner = EffectiveBindingContext;
+            child.InheritedBindingContext = newContext;
 
-                        gue.UpdateToVmProperty(gue.BindingContextBinding);
-                    }
-                }
+            if (child.BindingContextBinding != null)
+            {
+                child.BindingContextBindingPropertyOwner = newContext;
+
+                child.UpdateToVmProperty(child.BindingContextBinding);
             }
         }
-        else
+
+        BindingContextChanged?.Invoke(this, new()
         {
-            // Do the default functionality first...
-            UpdateChildrenInheritedBindingContext(this.ContainedElements, EffectiveBindingContext);
-            // ... then overwrite it
-            foreach (var gue in this.ContainedElements)
-            {
-                var bindableGue = gue as BindableGue;
-
-                if (bindableGue?.BindingContextBinding != null)
-                {
-                    bindableGue.BindingContextBindingPropertyOwner = EffectiveBindingContext;
-
-                    bindableGue.UpdateToVmProperty(bindableGue.BindingContextBinding);
-                }
-            }
-        }
-        BindingContextChanged?.Invoke(this, args);
+            OldBindingContext = oldContext,
+            NewBindingContext = newContext
+        });
     }
 
     private void UnsubscribeEventsOnOldViewModel(INotifyPropertyChanged oldViewModel)
@@ -249,44 +227,20 @@ public class BindableGue : GraphicalUiElement
         }
     }
 
-    public object BindingContextBindingPropertyOwner { get; private set; }
-    public string BindingContextBinding { get; private set; }
+    public object? BindingContextBindingPropertyOwner { get; private set; }
+    public string? BindingContextBinding { get; private set; }
 
     public event Action<object, BindingContextChangedEventArgs> BindingContextChanged;
 
     object EffectiveBindingContext => mBindingContext ?? InheritedBindingContext;
 
-    private static void UpdateChildrenInheritedBindingContext(IEnumerable<IRenderableIpso> children, object effectiveBindingContext)
+    private void HandleViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        foreach (var child in children)
+        if (e.PropertyName is null)
         {
-            if (child is BindableGue gue)
-            {
-                if (gue.InheritedBindingContext != effectiveBindingContext)
-                {
-                    var effectiveBeforeChange = gue.EffectiveBindingContext;
-                    gue.InheritedBindingContext = effectiveBindingContext;
-                    if (effectiveBindingContext != gue.EffectiveBindingContext)
-                    {
-                        // This saves us some processing. If the parent's effective didn't change, then no need
-                        // to notify the children
-                        UpdateChildrenInheritedBindingContext(child.Children, gue.EffectiveBindingContext);
-                    }
-                }
-            }
+            return;
         }
-    }
-
-
-    private void HandleViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
-    {
-        var vmPropertyName = e.PropertyName;
-        var updated = UpdateToVmProperty(vmPropertyName);
-
-        //if (updated)
-        //{
-        //    this.EffectiveManagers?.InvalidateSurface();
-        //}
+        UpdateToVmProperty(e.PropertyName);
     }
 
     public void SetBinding(string uiProperty, string vmProperty, string toStringFormat = null)
@@ -294,6 +248,10 @@ public class BindableGue : GraphicalUiElement
         if (uiProperty == nameof(BindingContext))
         {
             BindingContextBinding = vmProperty;
+
+            BindingContextBindingPropertyOwner = (this.Parent as BindableGue)?.BindingContext;
+
+            UpdateToVmProperty(vmProperty);
         }
         else
         {
@@ -319,7 +277,7 @@ public class BindableGue : GraphicalUiElement
 
             vmPropsToUiProps.Add(vmProperty, newBinding);
 
-            if (EffectiveBindingContext != null)
+            if (BindingContext != null)
             {
                 UpdateToVmProperty(vmProperty);
             }
@@ -337,7 +295,7 @@ public class BindableGue : GraphicalUiElement
         {
 
             var bindingContextObjectToUse = BindingContextBinding == vmPropertyName ?
-                BindingContextBindingPropertyOwner : EffectiveBindingContext;
+                BindingContextBindingPropertyOwner : BindingContext;
 
             var bindingContextObjectType = bindingContextObjectToUse?.GetType();
 
@@ -373,7 +331,7 @@ public class BindableGue : GraphicalUiElement
                 else
                 {
                     var binding = vmPropsToUiProps[vmPropertyName];
-                    PropertyInfo uiProperty = this.GetType().GetProperty(binding.UiProperty);
+                    PropertyInfo? uiProperty = this.GetType().GetProperty(binding.UiProperty);
 
                     if (uiProperty == null)
                     {
@@ -437,6 +395,7 @@ public class BindableGue : GraphicalUiElement
                 else if (value is decimal asDecimal) convertedValue = asDecimal.ToString(format);
                 else if (value is float asFloat) convertedValue = asFloat.ToString(format);
                 else if (value is long asLong) convertedValue = asLong.ToString(format);
+                else if (value is byte asByte) convertedValue = asByte.ToString(format);
             }
             else
             {
@@ -472,6 +431,10 @@ public class BindableGue : GraphicalUiElement
             {
                 convertedValue = (double)asFloat;
             }
+            else if (value is string asString && double.TryParse(asString, out double doubleResult))
+            {
+                convertedValue = doubleResult;
+            }
         }
         else if (desiredType == typeof(decimal))
         {
@@ -486,6 +449,10 @@ public class BindableGue : GraphicalUiElement
             else if (value is float asFloat)
             {
                 convertedValue = (decimal)asFloat;
+            }
+            else if (value is string asString && decimal.TryParse(asString, out decimal asDecimal))
+            {
+                convertedValue = asDecimal;
             }
         }
         else if (desiredType == typeof(float))
@@ -507,70 +474,97 @@ public class BindableGue : GraphicalUiElement
                 convertedValue = float.TryParse(asString, out float result) ? result : 0;
             }
         }
+        else if (desiredType == typeof(byte))
+        {
+            decimal numeric = 0;
+            bool isNumeric = false;
+            if (value is int asInt)
+            {
+                numeric = (decimal)asInt;
+                isNumeric = true;
+            }
+            else if (value is double asDouble)
+            {
+                numeric = (decimal)asDouble;
+                isNumeric = true;
+            }
+            else if (value is decimal asDecimal)
+            {
+                numeric = asDecimal;
+                isNumeric = true;
+            }
+            else if (value is float asFloat)
+            {
+                numeric = (decimal)asFloat;
+                isNumeric = true;
+            }
+            else if (value is string asString && byte.TryParse(asString, out byte asByte))
+            {
+                numeric = (decimal)asByte;
+                isNumeric = true;
+            }
+
+            if (isNumeric)
+            {
+                var clamped = Math.Min(numeric, 255);
+                clamped = Math.Max(clamped, 0);
+                convertedValue = (byte)Math.Round(clamped);
+            }
+        }
         return convertedValue;
     }
 
 
     private void TryPushBindingContextChangeToChildren(string vmPropertyName)
     {
-        if (this.Children != null)
+        foreach (BindableGue descendant in GetAllBindableDescendants())
         {
-            for (int i = 0; i < Children.Count; i++)
+            if (descendant.BindingContextBinding == vmPropertyName && descendant.BindingContextBindingPropertyOwner == BindingContext)
             {
-                IRenderableIpso child = Children[i];
-                if (child is BindableGue gue)
-                {
-                    if (gue.BindingContextBinding == vmPropertyName && gue.BindingContextBindingPropertyOwner == EffectiveBindingContext)
-                    {
-                        gue.UpdateToVmProperty(vmPropertyName);
-                    }
-                    gue.TryPushBindingContextChangeToChildren(vmPropertyName);
-                }
-            }
-        }
-        else
-        {
-            for (int i = 0; i < WhatThisContains.Count; i++)
-            {
-                var gue = WhatThisContains[i] as BindableGue;
-                if (gue != null )
-                {
-                    if( gue.BindingContextBinding == vmPropertyName && 
-                        gue.BindingContextBindingPropertyOwner == EffectiveBindingContext)
-                    {
-
-                        gue.UpdateToVmProperty(vmPropertyName);
-                    }
-                    gue.TryPushBindingContextChangeToChildren(vmPropertyName);
-                }
+                descendant.UpdateToVmProperty(vmPropertyName);
             }
         }
     }
 
-    protected void PushValueToViewModel([CallerMemberName] string uiPropertyName = null)
+    protected void PushValueToViewModel([CallerMemberName] string? uiPropertyName = null)
     {
+        if(uiPropertyName == null)
+        {
+            return;
+        }
 
         var kvp = vmPropsToUiProps.FirstOrDefault(item => item.Value.UiProperty == uiPropertyName);
 
-        if (kvp.Value.UiProperty == uiPropertyName)
+        if (
+            kvp.Value.UiProperty == uiPropertyName &&
+            BindingContext?.GetType().GetProperty(kvp.Value.VmProperty) is {} vmp &&
+            GetType().GetProperty(kvp.Value.UiProperty) is {} uip)
         {
-            var vmPropName = kvp.Key;
-
-            var vmProperty = EffectiveBindingContext?.GetType().GetProperty(vmPropName);
-
-            if (vmProperty != null)
-            {
-                var uiProperty = this.GetType().GetProperty(uiPropertyName);
-                if (uiProperty != null)
-                {
-                    var uiValue = uiProperty.GetValue(this, null);
-
-                    vmProperty.SetValue(EffectiveBindingContext, uiValue, null);
-                }
-            }
+            object? uiValue = uip.GetValue(this, null);
+            vmp.SetValue(BindingContext, uiValue, null);
         }
     }
 
-    #endregion
+    private IEnumerable<BindableGue> GetAllBindableChildren()
+    //[
+    //    ..Children?.OfType<BindableGue>() ?? [], ..ContainedElements.OfType<BindableGue>()
+    //];
+    {
+        if(Children != null) return Children.OfType<BindableGue>();
+        else return ContainedElements.OfType<BindableGue>();
+    }
 
+
+    private IEnumerable<BindableGue> GetAllBindableDescendants()
+    {
+        foreach (BindableGue child in GetAllBindableChildren())
+        {
+            yield return child;
+
+            foreach (BindableGue subChild in child.GetAllBindableDescendants())
+            {
+                yield return subChild;
+            }
+        }
+    }
 }

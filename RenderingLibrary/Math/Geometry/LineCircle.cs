@@ -89,6 +89,7 @@ namespace RenderingLibrary.Math.Geometry
                 mLinePrimitive.Color = value;
             }
         }
+        int IRenderableIpso.Alpha => Color.A;
 
         public BlendState BlendState
         {

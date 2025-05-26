@@ -76,6 +76,7 @@ namespace RenderingLibrary.Math.Geometry
             }
         }
 
+        int IRenderableIpso.Alpha => Color.A;
         public float Z
         {
             get;

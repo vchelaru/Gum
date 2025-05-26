@@ -3,50 +3,73 @@ using Gum.Managers;
 using GumRuntime;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using MonoGameGum;
-using MonoGameGumCodeGeneration.Components;
 using MonoGameGumCodeGeneration.Screens;
 using RenderingLibrary;
-using System.Linq;
-using ToolsUtilities;
 
 namespace MonoGameGumCodeGeneration
 {
     public class Game1 : Game
     {
-        private GraphicsDeviceManager _graphics;
+        private readonly GraphicsDeviceManager _graphics;
+        private MainMenuFullGenerationRuntime _mainMenu;
+        private bool _disposed;
+        GumService Gum => GumService.Default;
 
         public Game1()
         {
-            _graphics = new GraphicsDeviceManager(this);
+            _graphics = new GraphicsDeviceManager(this)
+            {
+                PreferredBackBufferWidth = 1280,
+                PreferredBackBufferHeight = 720
+            };
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
         }
 
         protected override void Initialize()
         {
-            var gumProject = GumService.Default.Initialize(this, "GumProject/GumProject.gumx");
-
-            var screenGue = new MainMenuFullGenerationRuntime();
-            screenGue.AddToManagers();
-            screenGue.Name = "MainMenu Screen";
-
+            Gum.Initialize(this, "GumProject/GumProject.gumx");
+            _mainMenu = new MainMenuFullGenerationRuntime
+            {
+                Name = "MainMenu"
+            };
+            _mainMenu.AddToManagers();
             base.Initialize();
         }
 
-
         protected override void Update(GameTime gameTime)
         {
-            GumService.Default.Update(this, gameTime);
+            Gum.Update(this, gameTime);
             base.Update(gameTime);
         }
 
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
-            GumService.Default.Draw();
+            Gum.Draw();
             base.Draw(gameTime);
+        }
+
+        protected override void UnloadContent()
+        {
+            _mainMenu?.RemoveFromManagers();
+            base.UnloadContent();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+
+            if (disposing)
+            {
+                _mainMenu?.RemoveFromManagers();
+                _mainMenu = null;
+                _graphics?.Dispose();
+            }
+
+            _disposed = true;
+            base.Dispose(disposing);
         }
     }
 }
