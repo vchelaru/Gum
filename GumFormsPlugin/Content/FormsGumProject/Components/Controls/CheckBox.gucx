@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ComponentSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>Controls/CheckBox</Name>
   <BaseType>Container</BaseType>
   <State>
@@ -366,7 +366,7 @@
       <Variable>
         <Type>IconCategory</Type>
         <Name>Check.IconCategoryState</Name>
-        <Value xsi:type="xsd:string">Wrench</Value>
+        <Value xsi:type="xsd:string">Dash</Value>
         <SetsValue>true</SetsValue>
       </Variable>
       <Variable>
@@ -483,7 +483,7 @@
       <Variable>
         <Type>IconCategory</Type>
         <Name>Check.IconCategoryState</Name>
-        <Value xsi:type="xsd:string">Check</Value>
+        <Value xsi:type="xsd:string">Dash</Value>
         <SetsValue>true</SetsValue>
       </Variable>
       <Variable>
@@ -600,7 +600,7 @@
       <Variable>
         <Type>IconCategory</Type>
         <Name>Check.IconCategoryState</Name>
-        <Value xsi:type="xsd:string">Check</Value>
+        <Value xsi:type="xsd:string">Dash</Value>
         <SetsValue>true</SetsValue>
       </Variable>
       <Variable>
@@ -717,7 +717,7 @@
       <Variable>
         <Type>IconCategory</Type>
         <Name>Check.IconCategoryState</Name>
-        <Value xsi:type="xsd:string">Check</Value>
+        <Value xsi:type="xsd:string">Dash</Value>
         <SetsValue>true</SetsValue>
       </Variable>
       <Variable>
@@ -834,7 +834,7 @@
       <Variable>
         <Type>IconCategory</Type>
         <Name>Check.IconCategoryState</Name>
-        <Value xsi:type="xsd:string">Check</Value>
+        <Value xsi:type="xsd:string">Dash</Value>
         <SetsValue>true</SetsValue>
       </Variable>
       <Variable>
@@ -951,7 +951,7 @@
       <Variable>
         <Type>IconCategory</Type>
         <Name>Check.IconCategoryState</Name>
-        <Value xsi:type="xsd:string">Check</Value>
+        <Value xsi:type="xsd:string">Dash</Value>
         <SetsValue>true</SetsValue>
       </Variable>
       <Variable>
@@ -1068,7 +1068,7 @@
       <Variable>
         <Type>IconCategory</Type>
         <Name>Check.IconCategoryState</Name>
-        <Value xsi:type="xsd:string">Check</Value>
+        <Value xsi:type="xsd:string">Dash</Value>
         <SetsValue>true</SetsValue>
       </Variable>
       <Variable>

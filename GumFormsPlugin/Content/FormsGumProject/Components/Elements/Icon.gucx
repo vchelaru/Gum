@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ComponentSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>Elements/Icon</Name>
   <BaseType>Container</BaseType>
   <State>
@@ -655,6 +655,39 @@
         <Type>int</Type>
         <Name>IconSprite.TextureTop</Name>
         <Value xsi:type="xsd:int">32</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>int</Type>
+        <Name>IconSprite.TextureWidth</Name>
+        <Value xsi:type="xsd:int">32</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>bool</Type>
+        <Name>IconSprite.Visible</Name>
+        <Value xsi:type="xsd:boolean">true</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+    </State>
+    <State>
+      <Name>Dash</Name>
+      <Variable>
+        <Type>int</Type>
+        <Name>IconSprite.TextureHeight</Name>
+        <Value xsi:type="xsd:int">20</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>int</Type>
+        <Name>IconSprite.TextureLeft</Name>
+        <Value xsi:type="xsd:int">352</Value>
+        <SetsValue>true</SetsValue>
+      </Variable>
+      <Variable>
+        <Type>int</Type>
+        <Name>IconSprite.TextureTop</Name>
+        <Value xsi:type="xsd:int">204</Value>
         <SetsValue>true</SetsValue>
       </Variable>
       <Variable>
@@ -2470,39 +2503,6 @@
         <Type>int</Type>
         <Name>IconSprite.TextureTop</Name>
         <Value xsi:type="xsd:int">96</Value>
-        <SetsValue>true</SetsValue>
-      </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>IconSprite.TextureWidth</Name>
-        <Value xsi:type="xsd:int">32</Value>
-        <SetsValue>true</SetsValue>
-      </Variable>
-      <Variable>
-        <Type>bool</Type>
-        <Name>IconSprite.Visible</Name>
-        <Value xsi:type="xsd:boolean">true</Value>
-        <SetsValue>true</SetsValue>
-      </Variable>
-    </State>
-    <State>
-      <Name>Dash</Name>
-      <Variable>
-        <Type>int</Type>
-        <Name>IconSprite.TextureHeight</Name>
-        <Value xsi:type="xsd:int">32</Value>
-        <SetsValue>true</SetsValue>
-      </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>IconSprite.TextureLeft</Name>
-        <Value xsi:type="xsd:int">352</Value>
-        <SetsValue>true</SetsValue>
-      </Variable>
-      <Variable>
-        <Type>int</Type>
-        <Name>IconSprite.TextureTop</Name>
-        <Value xsi:type="xsd:int">192</Value>
         <SetsValue>true</SetsValue>
       </Variable>
       <Variable>
