@@ -575,6 +575,15 @@ public class Renderer : IRenderer
                 Camera.Y += (renderTarget.Height / 2.0f) / Camera.Zoom;
             }
 
+            // Internally the sprite rendering system snaps to the pixel, so we need to do the same thing:
+
+            var effectivePixelOffsetX = Camera.PixelPerfectOffsetX;
+            var effectivePixelOffsetY = Camera.PixelPerfectOffsetY;
+
+            Camera.X = Math.MathFunctions.RoundToInt(Camera.X * CurrentZoom) / CurrentZoom + effectivePixelOffsetX / CurrentZoom;
+            Camera.Y = Math.MathFunctions.RoundToInt(Camera.Y * CurrentZoom) / CurrentZoom + effectivePixelOffsetY / CurrentZoom;
+
+
             gumBatch = gumBatch ?? new GumBatch();
 
 
@@ -918,8 +927,8 @@ class RenderTargetService
         var clientWidth = camera.ClientWidth;
         var clientHeight = camera.ClientHeight;
 
-        var width =(int)((right - left)* camera.Zoom);
-        var height = (int)((bottom - top)* camera.Zoom);
+        var width = Math.MathFunctions.RoundToInt((right - left)* camera.Zoom);
+        var height = Math.MathFunctions.RoundToInt((bottom - top)* camera.Zoom);
 
         if(width <= 0 || height <= 0)
         {
