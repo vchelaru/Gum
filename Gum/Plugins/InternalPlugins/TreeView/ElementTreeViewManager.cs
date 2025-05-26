@@ -681,16 +681,6 @@ namespace Gum.Managers
                     // Can't do this, it seems to interfere with the Undo History
                     //treeview.SelectedNode = hoveredNode;
 
-                    // Don't do highlighting or folder expanding if we are on the selected nodes!
-                    // Alternative, we COULD "invert" the colors when hovering over a selected node.
-                    foreach (var node in treeview.SelectedNodes)
-                    {
-                        if (node == hoveredNode)
-                        {
-                            return;
-                        }
-                    }
-
                     // So...lets fake it with backcolor/forecolor instead?
                     if (mLastHoveredNode != hoveredNode)
                     {
@@ -731,6 +721,22 @@ namespace Gum.Managers
                             {
                                 hoveredNode.Expand();
                             }
+                        }
+                    }
+
+                    // for selected nodes, we need to make sure we reset them 
+                    // back to show they are highlighted once we are off them
+                    foreach (var node in treeview.SelectedNodes)
+                    {
+                        if (node == hoveredNode)
+                        {
+                            node.BackColor = Color.DarkBlue;
+                            node.ForeColor = treeview.BackColor;
+                        }
+                        else
+                        {
+                            node.BackColor = SystemColors.Highlight;
+                            node.ForeColor = SystemColors.HighlightText;
                         }
                     }
                 }
