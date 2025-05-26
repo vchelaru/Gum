@@ -163,6 +163,8 @@ internal class NpcBindingExpression : UntypedBindingExpression
             value = _binding.FallbackValue;
         }
 
+        value ??= _binding.TargetNullValue;
+
         if (!IsValidForType(value, sourceType))
         {
             value = TryConvert(value, sourceType);
@@ -204,7 +206,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
         if (value is null)
         {
             return !targetType.IsValueType ||
-                   Nullable.GetUnderlyingType(targetType) is null;
+                   Nullable.GetUnderlyingType(targetType) is not null;
         }
 
         return value.GetType() == targetType ||

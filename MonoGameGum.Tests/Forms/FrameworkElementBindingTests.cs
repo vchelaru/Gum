@@ -17,7 +17,7 @@ public class FrameworkElementBindingTests
     }
 
     [Fact]
-    public async Task LegacySetBinding_UsingStringParameter()
+    public void LegacySetBinding_UsingStringParameter()
     {
         // Arrange
         TestViewModel vm = new() { Text = "Hello World!" };
@@ -32,7 +32,7 @@ public class FrameworkElementBindingTests
     }
 
     [Fact]
-    public async Task SetBinding_WithoutExplicitContext_PullsFromParent()
+    public void SetBinding_WithoutExplicitContext_PullsFromParent()
     {
         // Arrange
         StackPanel stackPanel = new();
@@ -52,7 +52,7 @@ public class FrameworkElementBindingTests
     }
 
     [Fact]
-    public async Task SetBinding_ToBindingContext_SwapBranchNode()
+    public void SetBinding_ToBindingContext_SwapBranchNode()
     {
         // Arrange
         StackPanel stackPanel = new();
@@ -78,7 +78,7 @@ public class FrameworkElementBindingTests
     }
 
     [Fact]
-    public async Task SetBinding_ToBindingContext_SwapRoot()
+    public void SetBinding_ToBindingContext_SwapRoot()
     {
         // Arrange
         StackPanel root = new();
@@ -101,7 +101,7 @@ public class FrameworkElementBindingTests
     }
 
     [Fact]
-    public async Task Mode_TwoWay_ByDefault()
+    public void Mode_TwoWay_ByDefault()
     {
         // Arrange
         CheckBox checkBox = new();
@@ -118,7 +118,7 @@ public class FrameworkElementBindingTests
     }
 
     [Fact]
-    public async Task Mode_OneWay_OnlyUpdatesTarget()
+    public void Mode_OneWay_OnlyUpdatesTarget()
     {
         // Arrange
         CheckBox checkBox = new();
@@ -141,7 +141,7 @@ public class FrameworkElementBindingTests
     }
 
     [Fact]
-    public async Task Mode_OneWayToSource_OnlyUpdatesSource()
+    public void Mode_OneWayToSource_OnlyUpdatesSource()
     {
         // Arrange
         CheckBox checkBox = new();
@@ -168,7 +168,7 @@ public class FrameworkElementBindingTests
     [InlineData(2)]
     [InlineData(3)]
     [InlineData(4)]
-    public async Task SetBinding_DeepInheritance(int depth)
+    public void SetBinding_DeepInheritance(int depth)
     {
         // Arrange
         TestViewModel vm = new();
@@ -200,7 +200,7 @@ public class FrameworkElementBindingTests
     }
 
     [Fact]
-    public async Task ListBoxItemBinding_ShouldSetBindingContextOnListBoxItems()
+    public void ListBoxItemBinding_ShouldSetBindingContextOnListBoxItems()
     {
         // Arrange
         ListBox listBox = new();
@@ -224,7 +224,7 @@ public class FrameworkElementBindingTests
     }
 
     [Fact]
-    public async Task ComplexPaths()
+    public void ComplexPaths()
     {
         TestViewModel vm = new()
         {
@@ -262,7 +262,7 @@ public class FrameworkElementBindingTests
     }
 
     [Fact]
-    public async Task SourcePathResolutionFailure_UsesFallback()
+    public void SourcePathResolutionFailure_UsesFallback()
     {
         // Arrange
         TestViewModel vm = new()
@@ -292,7 +292,7 @@ public class FrameworkElementBindingTests
     }
 
     [Fact]
-    public async Task UpdateSourceTrigger_LostFocus()
+    public void UpdateSourceTrigger_LostFocus()
     {
         // Arrange
         TestViewModel vm = new() { Text = "Initial" };
@@ -317,7 +317,7 @@ public class FrameworkElementBindingTests
     [Theory]
     [InlineData("Yes", true)]
     [InlineData("No", false)]
-    public async Task Binding_Converter_ToSource(string targetValue, bool expectedSourceValue)
+    public void Binding_Converter_ToSource(string targetValue, bool expectedSourceValue)
     {
         // Arrange
         TestViewModel vm = new();
@@ -338,7 +338,7 @@ public class FrameworkElementBindingTests
     [Theory]
     [InlineData(true, "Yes")]
     [InlineData(false, "No")]
-    public async Task Binding_Converter_FromSource(bool sourceValue, string expectedTargetValue)
+    public void Binding_Converter_FromSource(bool sourceValue, string expectedTargetValue)
     {
         // Arrange
         TestViewModel vm = new() { IsChecked = sourceValue };
@@ -356,7 +356,7 @@ public class FrameworkElementBindingTests
     }
 
     [Fact]
-    public async Task Binding_TargetToSource_InvalidCast_LeavesSourceUnchanged()
+    public void Binding_TargetToSource_InvalidCast_LeavesSourceUnchanged()
     {
         // Arrange
         const float expectedValue = 12.34f;
@@ -373,7 +373,7 @@ public class FrameworkElementBindingTests
     }
 
     [Fact]
-    public async Task Binding_SourceToTarget_InvalidCast_UnsetsTargetValue()
+    public void Binding_SourceToTarget_InvalidCast_UnsetsTargetValue()
     {
         // Arrange
         TestViewModel vm = new() { };
@@ -389,7 +389,7 @@ public class FrameworkElementBindingTests
     }
 
     [Fact]
-    public async Task InvalidPath_DoesNoHarm()
+    public void InvalidPath_DoesNoHarm()
     {
         TestViewModel vm = new();
         TextBox element = new() { BindingContext = vm };
@@ -399,7 +399,7 @@ public class FrameworkElementBindingTests
     }
 
     [Fact]
-    public async Task SetBinding_BindingContext_SetThenAdd()
+    public void SetBinding_BindingContext_SetThenAdd()
     {
         // Arrange
         StackPanel panel = new();
@@ -419,7 +419,7 @@ public class FrameworkElementBindingTests
     }
 
     [Fact]
-    public async Task SetBinding_BindingContext_AddThenSet()
+    public void SetBinding_BindingContext_AddThenSet()
     {
         // Arrange
         StackPanel panel = new();
@@ -440,7 +440,7 @@ public class FrameworkElementBindingTests
     }
 
     [Fact]
-    public async Task OnUpdateTarget_CallsPropertyChangedOnce()
+    public void OnUpdateTarget_CallsPropertyChangedOnce()
     {
         // Arrange
         TestViewModel vm = new();
@@ -461,7 +461,7 @@ public class FrameworkElementBindingTests
     }
 
     [Fact]
-    public async Task OnUpdateSource_CallsPropertyChangedOnce()
+    public void OnUpdateSource_CallsPropertyChangedOnce()
     {
         // Arrange
         TestViewModel vm = new();
@@ -481,7 +481,7 @@ public class FrameworkElementBindingTests
     }
 
     [Fact]
-    public async Task StringFormat_FormatsNewTargetValue()
+    public void StringFormat_FormatsNewTargetValue()
     {
         TestViewModel vm = new() { FloatValue = 0.1234f };
         Label label = new() { BindingContext = vm };
@@ -500,6 +500,86 @@ public class FrameworkElementBindingTests
         vm.FloatValue.ShouldBe(0.1234f);
     }
 
+    [Fact]
+    public void SetTargetNull_WhenSourceIsNullable_SourceBecomesNull()
+    {
+        // Arrange
+        TestViewModel vm = new() { NullableFloatValue = 42 };
+        Label label = new() { BindingContext = vm };
+        label.SetBinding(nameof(Label.Text), nameof(TestViewModel.NullableFloatValue));
+
+        // Act
+        label.Text = null!;
+
+        // Assert
+        vm.NullableFloatValue.ShouldBe(null);
+    }
+
+    [Fact]
+    public void SetTargetNull_WhenSourceIsNotNullable_SourceUnchanged()
+    {
+        // Arrange
+        TestViewModel vm = new() { FloatValue = 42 };
+        Label label = new() { BindingContext = vm };
+        label.SetBinding(nameof(Label.Text), nameof(TestViewModel.FloatValue));
+
+        // Act
+        label.Text = null!;
+
+        // Assert
+        vm.FloatValue.ShouldBe(42f);
+    }
+
+    [Fact]
+    public void SetSourceNull_WhenTargetIsNullable_TargetBecomesNull()
+    {
+        // Arrange
+        TestViewModel viewModel = new() { Text = "not null" };
+        Label label = new() { BindingContext  = viewModel };
+
+        label.SetBinding(nameof(Label.Text), nameof(TestViewModel.Text));
+
+        // Act
+        viewModel.Text = null;
+
+        // Assert
+        label.Text.ShouldBe(null);
+    }
+
+    [Fact]
+    public void SetSourceNull_WhenTargetNonNullable_TargetUnchanged()
+    {
+        // Arrange
+        TestViewModel viewModel = new() { FloatValue = 42f };
+        Label label = new() { BindingContext = viewModel };
+        label.SetBinding(nameof(Label.Text), nameof(TestViewModel.FloatValue));
+
+        // Act
+        viewModel.NullableFloatValue = null;
+
+        // Assert
+        label.Text.ShouldBe("42");
+    }
+
+    [Fact]
+    public void SetTargetNull_WhenTargetNullValueDefined_UsesValue()
+    {
+        // Arrange
+        const string targetNullValue = "Target is null";
+        TestViewModel vm = new() { Text = "Initial" };
+        Label label = new() { BindingContext = vm };
+        Binding binding = new(nameof(TestViewModel.Text))
+        {
+            TargetNullValue = targetNullValue
+        };
+        label.SetBinding(nameof(Label.Text), binding);
+
+        // Act
+        label.Text = null!;
+
+        // Assert
+        label.Text.ShouldBe(targetNullValue);
+    }
 
     private class TestViewModel : ViewModel
     {
@@ -530,6 +610,12 @@ public class FrameworkElementBindingTests
         public float FloatValue
         {
             get => Get<float>(); set => Set(value);
+        }
+
+        public float? NullableFloatValue
+        {
+            get => Get<float?>();
+            set => Set(value);
         }
 
         public override string ToString() => Text;
