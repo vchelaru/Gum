@@ -501,7 +501,7 @@ public class FrameworkElementBindingTests
     }
 
     [Fact]
-    public void SetTargetNull_WhenSourceIsNullable_SourceBecomesNull()
+    public void SetTargetNull_WhenSourceIsNullableValueType_SourceBecomesNull()
     {
         // Arrange
         TestViewModel vm = new() { NullableFloatValue = 42 };
@@ -513,6 +513,19 @@ public class FrameworkElementBindingTests
 
         // Assert
         vm.NullableFloatValue.ShouldBe(null);
+    }
+
+    [Fact]
+    public void SetTargetNull_WhenSourceIsReferenceType_SourceBecomesNull()
+    {
+        // Arrange
+        TestViewModel vm = new() { Text = "Initial" };
+        Label label = new() { BindingContext = vm };
+        label.SetBinding(nameof(Label.Text), nameof(TestViewModel.Text));
+        // Act
+        label.Text = null!;
+        // Assert
+        vm.Text.ShouldBe(null);
     }
 
     [Fact]
