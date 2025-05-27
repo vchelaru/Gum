@@ -121,6 +121,8 @@ The steps to do this are:
 
 Now that we have a Gum project added to the .csproj, we can load the Gum project. We need to add code to Initialize, Update, and Draw. A simplified Game class with these calls would look like the following code:
 
+{% tabs %}
+{% tab title="Full Code" %}
 ```csharp
 using MonoGameGum;
 
@@ -159,6 +161,49 @@ public class Game1 : Game
     }
 }
 ```
+{% endtab %}
+
+{% tab title="Diff" %}
+```diff
+using MonoGameGum;
+
+public class Game1 : Game
+{
+    private GraphicsDeviceManager _graphics;
++    GumService Gum => GumService.Default;
+    
+    public Game1()
+    {
+        _graphics = new GraphicsDeviceManager(this);
+        Content.RootDirectory = "Content";
+        IsMouseVisible = true;
+    }
+
+    protected override void Initialize()
+    {
++        var gumProject = Gum.Initialize(this,
++            // This is relative to Content:
++            "GumProject/GumProject.gumx");
+
+        base.Initialize();
+    }
+
+    protected override void Update(GameTime gameTime)
+    {
++        Gum.Update(gameTime);
+        base.Update(gameTime);
+    }
+
+    protected override void Draw(GameTime gameTime)
+    {
+        GraphicsDevice.Clear(Color.CornflowerBlue);
++        Gum.Draw();
+        base.Draw(gameTime);
+    }
+}
+```
+{% endtab %}
+{% endtabs %}
 
 The code above has the following three calls on Gum:
 
