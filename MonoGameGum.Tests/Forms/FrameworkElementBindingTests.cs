@@ -101,6 +101,25 @@ public class FrameworkElementBindingTests
     }
 
     [Fact]
+    public void SetBinding_ShouldFunction_WhenBindingContextChanges()
+    {
+        TextBox textBox = new();
+
+        TestViewModel vm1 = new ();
+        textBox.BindingContext = vm1;
+        textBox.SetBinding(nameof(textBox.Text), nameof(TestViewModel.Text));
+
+        vm1.Text = "Set through VM1";
+        textBox.Text.ShouldBe("Set through VM1");
+
+        AuxTestViewModel vm2 = new();
+        textBox.BindingContext = vm2;
+        vm2.Text = "Set through VM2";
+        textBox.Text.ShouldBe("Set through VM2");
+        
+    }
+
+    [Fact]
     public void Mode_TwoWay_ByDefault()
     {
         // Arrange

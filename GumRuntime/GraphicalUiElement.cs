@@ -3398,7 +3398,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             // For information on why this force exists, see https://github.com/vchelaru/Gum/issues/695
             bool forcePixelsFromSmall = false;
 
-            if(mYUnits == GeneralUnitType.PixelsFromMiddle || mYUnits == GeneralUnitType.PixelsFromMiddleInverted ||
+            if (mYUnits == GeneralUnitType.PixelsFromMiddle || mYUnits == GeneralUnitType.PixelsFromMiddleInverted ||
                 mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromBaseline ||
                 mYUnits == GeneralUnitType.Percentage)
             {
@@ -3415,11 +3415,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                         siblings = ((GraphicalUiElement)Parent).Children as System.Collections.IList;
                     }
                     var thisIndex = siblings.IndexOf(this);
-                    if(thisIndex > 0)
+                    if (thisIndex > 0)
                     {
                         forcePixelsFromSmall = true;
 
-                        if(mYUnits == GeneralUnitType.Percentage)
+                        if (mYUnits == GeneralUnitType.Percentage)
                         {
                             shouldAdd = true;
                         }
@@ -3427,7 +3427,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 }
             }
 
-            if(forcePixelsFromSmall)
+            if (forcePixelsFromSmall)
             {
                 wasHandledY = true;
             }
@@ -4377,6 +4377,121 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
+    public Dock? GetDock()
+    {
+
+        if (this.XOrigin == HorizontalAlignment.Left &&
+        this.XUnits == GeneralUnitType.PixelsFromSmall &&
+        this.X == 0 &&
+
+        this.YOrigin == VerticalAlignment.Center &&
+        this.YUnits == GeneralUnitType.PixelsFromMiddle &&
+        this.Y == 0 &&
+
+        this.Height == 0 &&
+        this.HeightUnits == DimensionUnitType.RelativeToParent)
+            return Wireframe.Dock.Left;
+
+
+
+        if (this.XOrigin == HorizontalAlignment.Right &&
+        this.XUnits == GeneralUnitType.PixelsFromLarge &&
+        this.X == 0 &&
+
+        this.YOrigin == VerticalAlignment.Center &&
+        this.YUnits == GeneralUnitType.PixelsFromMiddle &&
+        this.Y == 0 &&
+
+        this.Height == 0 &&
+        this.HeightUnits == DimensionUnitType.RelativeToParent)
+            return Wireframe.Dock.Right;
+
+
+        if (this.XOrigin == HorizontalAlignment.Center &&
+        this.XUnits == GeneralUnitType.PixelsFromMiddle &&
+        this.X == 0 &&
+
+        this.YOrigin == VerticalAlignment.Top &&
+        this.YUnits == GeneralUnitType.PixelsFromSmall &&
+        this.Y == 0 &&
+
+        this.Width == 0 &&
+        this.WidthUnits == DimensionUnitType.RelativeToParent)
+            return Wireframe.Dock.Top;
+
+
+
+        if (this.XOrigin == HorizontalAlignment.Center &&
+        this.XUnits == GeneralUnitType.PixelsFromMiddle &&
+        this.X == 0 &&
+
+        this.YOrigin == VerticalAlignment.Bottom &&
+        this.YUnits == GeneralUnitType.PixelsFromLarge &&
+        this.Y == 0 &&
+
+        this.Width == 0 &&
+        this.WidthUnits == DimensionUnitType.RelativeToParent)
+            return Wireframe.Dock.Bottom;
+
+
+
+
+        if (this.XOrigin == HorizontalAlignment.Center &&
+        this.XUnits == GeneralUnitType.PixelsFromMiddle &&
+        this.X == 0 &&
+
+        this.YOrigin == VerticalAlignment.Center &&
+        this.YUnits == GeneralUnitType.PixelsFromMiddle &&
+        this.Y == 0 &&
+
+        this.Width == 0 &&
+        this.WidthUnits == DimensionUnitType.RelativeToParent &&
+
+        this.Height == 0 &&
+        this.HeightUnits == DimensionUnitType.RelativeToParent)
+
+            return Wireframe.Dock.Fill;
+
+
+
+
+        if (this.XOrigin == HorizontalAlignment.Center &&
+        this.XUnits == GeneralUnitType.PixelsFromMiddle &&
+        this.X == 0 &&
+
+        this.Width == 0 &&
+        this.WidthUnits == DimensionUnitType.RelativeToParent)
+            return Wireframe.Dock.FillHorizontally;
+
+
+
+
+        if (this.YOrigin == VerticalAlignment.Center &&
+        this.YUnits == GeneralUnitType.PixelsFromMiddle &&
+        this.Y == 0 &&
+        this.Height == 0 &&
+        this.HeightUnits == DimensionUnitType.RelativeToParent)
+            return Wireframe.Dock.FillVertically;
+
+
+
+
+        if (this.Width == 0 &&
+        this.WidthUnits == DimensionUnitType.RelativeToChildren &&
+
+        this.Height == 0 &&
+        this.HeightUnits == DimensionUnitType.RelativeToChildren)
+            return Wireframe.Dock.SizeToChildren;
+
+        return null;
+
+
+
+
+
+
+    }
+
     public void Anchor(Anchor anchor)
     {
         switch (anchor)
@@ -4502,6 +4617,89 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             default:
                 throw new NotImplementedException();
         }
+    }
+
+    public Anchor? GetAnchor()
+    {
+        if (this.XOrigin == HorizontalAlignment.Left &&
+        this.XUnits == GeneralUnitType.PixelsFromSmall &&
+        this.X == 0 &&
+        this.YOrigin == VerticalAlignment.Top &&
+        this.YUnits == GeneralUnitType.PixelsFromSmall &&
+        this.Y == 0)
+            return Wireframe.Anchor.TopLeft;
+
+
+        if (this.XOrigin == HorizontalAlignment.Center &&
+        this.XUnits == GeneralUnitType.PixelsFromMiddle &&
+        this.X == 0 &&
+        this.YOrigin == VerticalAlignment.Top &&
+        this.YUnits == GeneralUnitType.PixelsFromSmall &&
+        this.Y == 0)
+            return Wireframe.Anchor.Top;
+
+        if (this.XOrigin == HorizontalAlignment.Right &&
+        this.XUnits == GeneralUnitType.PixelsFromLarge &&
+        this.X == 0 &&
+        this.YOrigin == VerticalAlignment.Top &&
+        this.YUnits == GeneralUnitType.PixelsFromSmall &&
+        this.Y == 0)
+            return Wireframe.Anchor.TopRight;
+
+
+        if (this.XOrigin == HorizontalAlignment.Left &&
+        this.XUnits == GeneralUnitType.PixelsFromSmall &&
+        this.X == 0 &&
+        this.YOrigin == VerticalAlignment.Center &&
+        this.YUnits == GeneralUnitType.PixelsFromMiddle &&
+        this.Y == 0)
+            return Wireframe.Anchor.Left;
+
+
+
+        if (this.XOrigin == HorizontalAlignment.Center &&
+        this.XUnits == GeneralUnitType.PixelsFromMiddle &&
+        this.X == 0 &&
+        this.YOrigin == VerticalAlignment.Center &&
+        this.YUnits == GeneralUnitType.PixelsFromMiddle &&
+        this.Y == 0)
+            return Wireframe.Anchor.Center;
+
+
+
+        if (this.XOrigin == HorizontalAlignment.Right &&
+        this.XUnits == GeneralUnitType.PixelsFromLarge &&
+        this.X == 0 &&
+        this.YOrigin == VerticalAlignment.Center &&
+        this.YUnits == GeneralUnitType.PixelsFromMiddle &&
+        this.Y == 0)
+            return Wireframe.Anchor.Right;
+
+        if (this.XOrigin == HorizontalAlignment.Left &&
+        this.XUnits == GeneralUnitType.PixelsFromSmall &&
+        this.X == 0 &&
+        this.YOrigin == VerticalAlignment.Bottom &&
+        this.YUnits == GeneralUnitType.PixelsFromLarge &&
+        this.Y == 0)
+            return Wireframe.Anchor.BottomLeft;
+
+        if (this.XOrigin == HorizontalAlignment.Center &&
+        this.XUnits == GeneralUnitType.PixelsFromMiddle &&
+        this.X == 0 &&
+        this.YOrigin == VerticalAlignment.Bottom &&
+        this.YUnits == GeneralUnitType.PixelsFromLarge &&
+        this.Y == 0)
+            return Wireframe.Anchor.Bottom;
+
+        if (this.XOrigin == HorizontalAlignment.Right &&
+        this.XUnits == GeneralUnitType.PixelsFromLarge &&
+        this.X == 0 &&
+        this.YOrigin == VerticalAlignment.Bottom &&
+        this.YUnits == GeneralUnitType.PixelsFromLarge &&
+        this.Y == 0)
+            return Wireframe.Anchor.BottomRight;
+
+        return null;
     }
 
     #endregion
