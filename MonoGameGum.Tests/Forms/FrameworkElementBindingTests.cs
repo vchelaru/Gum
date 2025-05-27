@@ -594,6 +594,27 @@ public class FrameworkElementBindingTests
         label.Text.ShouldBe(targetNullValue);
     }
 
+    [Fact]
+    public void ReplaceBindingContext_UnrelatedTypes()
+    {
+        // Arrange
+        const string expectedText = nameof(AuxTestViewModel);
+
+        TextBox textBox = new();
+        TestViewModel vm1 = new() {Text = nameof(TestViewModel)};
+        textBox.BindingContext = vm1;
+        textBox.SetBinding(nameof(textBox.Text), nameof(TestViewModel.Text));
+
+        AuxTestViewModel vm2 = new() { Text = expectedText };
+
+        // Act
+        Exception? exception = Record.Exception(() => textBox.BindingContext = vm2);
+
+        // Assert
+        Assert.Null(exception);
+        Assert.Equal(expectedText, textBox.Text);
+    }
+
     private class TestViewModel : ViewModel
     {
         public TestViewModel? Child
@@ -632,6 +653,15 @@ public class FrameworkElementBindingTests
         }
 
         public override string ToString() => Text;
+    }
+
+    public class AuxTestViewModel : ViewModel
+    {
+        public string? Text
+        {
+            get=> Get<string?>();
+            set => Set(value);
+        }
     }
 
     private class TestStringBoolConverter : IValueConverter

@@ -71,9 +71,6 @@ internal class PropertyPathObserver : IDisposable
             }
             cursor = pi?.GetValue(cursor);
         }
-
-        // initial fire
-        OnValueChanged();
     }
 
     private void OnSegmentChanged(int level, string propName)
