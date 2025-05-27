@@ -1572,7 +1572,7 @@ namespace Gum.Managers
                 var siblingInstances = instance.GetSiblingsIncludingThis();
                 var desiredIndex = siblingInstances.IndexOf(instance);
 
-                var container = instance.ParentContainer;
+                var container = instance.ParentContainer ?? ObjectFinder.Self.GetElementContainerOf(instance);
                 var defaultState = container.DefaultState;
                 //var thisParentValue = defaultState.GetValueOrDefault<string>($"{instance.Name}.Parent");
                 var thisParentValue = defaultState.GetValueRecursive($"{instance.Name}.Parent") as string;
@@ -1709,7 +1709,7 @@ namespace Gum.Managers
             }
             else
             {
-                ElementSave element = instance.ParentContainer;
+                ElementSave element = instance.ParentContainer ?? ObjectFinder.Self.GetElementContainerOf(instance);
 
                 string name = instance.Name + ".Parent";
                 VariableSave variable = element.DefaultState.Variables.FirstOrDefault(v => v.Name == name);
