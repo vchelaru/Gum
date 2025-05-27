@@ -405,25 +405,8 @@ namespace RenderingLibrary.Graphics
 
             if(radiansFromPerfectRotation < errorToTolerate && isIntegerScale && offsetPixel)
             {
-
-                // Adjust offsets according to zoom
-                //float x = ((int)(position.X * CurrentZoom) + Camera.PixelPerfectOffsetX)/CurrentZoom;
-                //float y = ((int)(position.Y * CurrentZoom) + Camera.PixelPerfectOffsetY)/CurrentZoom;
-
-                float cameraOffsetX = 0;
-                float cameraOffsetY = 0;
-
                 var effectivePixelOffsetX = Camera.PixelPerfectOffsetX;
                 var effectivePixelOffsetY = Camera.PixelPerfectOffsetY;
-
-                if (renderer != null)
-                {
-                    cameraOffsetX = renderer.Camera.X * CurrentZoom;
-                    cameraOffsetY = renderer.Camera.Y * CurrentZoom;
-                    // todo - continue working here. This doesn't seem to solve the problem:
-                    //effectivePixelOffsetX -= ( (int)cameraOffsetX - cameraOffsetX);
-                    //effectivePixelOffsetY -= ( (int)cameraOffsetY - cameraOffsetY);
-                }
 
                 float x = MathFunctions.RoundToInt(position.X * CurrentZoom) / CurrentZoom + effectivePixelOffsetX / CurrentZoom;
                 float y = MathFunctions.RoundToInt(position.Y * CurrentZoom) / CurrentZoom + effectivePixelOffsetY / CurrentZoom;
@@ -474,6 +457,7 @@ namespace RenderingLibrary.Graphics
 
             mSpriteBatch.Draw(textureToUse, position, sourceRectangle, color, rotation, origin, scale, effects, depth, objectRequestingChange);
         }
+
 
         internal void ClearPerformanceRecordingVariables()
         {

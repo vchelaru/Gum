@@ -1117,6 +1117,12 @@ public class CustomSetPropertyOnRenderable
                     // use the content loader for BitmapFont, we're going to protect this with a file.exists.
                     if (ToolsUtilities.FileManager.FileExists(fullFileName))
                     {
+                        // kill the old font:
+                        if(font?.Texture?.IsDisposed == true)
+                        {
+                            loaderManager.Dispose(fullFileName);
+                        }
+
                         font = new BitmapFont(fullFileName);
 
 

@@ -3,66 +3,94 @@ using System.ComponentModel.Composition;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using System;
+using Gum.ToolStates;
+using Gum.Services;
 
-namespace Gum.Undo
+namespace Gum.Undo;
+
+[Export(typeof(Gum.Plugins.BaseClasses.PluginBase))]
+public class UndoPlugin : InternalPlugin
 {
-    [Export(typeof(Gum.Plugins.BaseClasses.PluginBase))]
-    public class UndoPlugin : InternalPlugin
+    ISelectedState _selectedState;
+    UndoManager _undoManager;
+    public UndoPlugin() 
     {
-        public override void StartUp()
-        {
-            this.ElementSelected += HandleElementSelected;
-            this.InstanceSelected += HandleInstanceSelected;
-            this.ProjectLoad += HandleProjectLoad;
-            this.InstanceAdd += HandleInstanceAdd;
-            this.InstanceDelete += HandleInstanceDelete;
-            this.InstancesDelete += HandleInstancesDelete;
-            this.ReactToStateSaveSelected += HandleStateSelected;
+        _selectedState = Builder.Get<ISelectedState>();
+        _undoManager = UndoManager.Self;
+    }
 
-            this.BehaviorReferencesChanged += HandleBehaviorReferencesChanged;
-        }
+    public override void StartUp()
+    {
+        this.ElementSelected += HandleElementSelected;
+        this.InstanceSelected += HandleInstanceSelected;
+        this.ProjectLoad += HandleProjectLoad;
+        this.InstanceAdd += HandleInstanceAdd;
+        this.InstanceDelete += HandleInstanceDelete;
+        this.InstancesDelete += HandleInstancesDelete;
+        this.ReactToStateSaveSelected += HandleStateSelected;
 
-        private void HandleStateSelected(StateSave save)
-        {
-            UndoManager.Self.RecordState();
-        }
+        this.BehaviorReferencesChanged += HandleBehaviorReferencesChanged;
+    }
 
-        private void HandleBehaviorReferencesChanged(ElementSave obj)
-        {
-            UndoManager.Self.RecordUndo();
-        }
+    ElementSave? lastSelectedElement;
 
-        void HandleInstancesDelete(ElementSave arg1, InstanceSave[] arg2)
-        {
-            UndoManager.Self.RecordUndo();
-        }
+    private void HandleStateSelected(StateSave save)
+    {
+        _undoManager.RecordState();
+        OptionallyBroadcastUndosChanged();
+    }
 
-        void HandleInstanceDelete(ElementSave arg1, InstanceSave arg2)
-        {
-            UndoManager.Self.RecordUndo();
-        }
+    private void HandleBehaviorReferencesChanged(ElementSave obj)
+    {
+        _undoManager.RecordUndo();
+        OptionallyBroadcastUndosChanged();
+    }
 
-        void HandleInstanceAdd(ElementSave arg1, InstanceSave arg2)
-        {
-            UndoManager.Self.RecordUndo();
-        }
+    void HandleInstancesDelete(ElementSave arg1, InstanceSave[] arg2)
+    {
+        _undoManager.RecordUndo();
+        OptionallyBroadcastUndosChanged();
+    }
 
-        void HandleProjectLoad(DataTypes.GumProjectSave obj)
-        {
-            UndoManager.Self.ClearAll();
-        }
+    void HandleInstanceDelete(ElementSave arg1, InstanceSave arg2)
+    {
+        _undoManager.RecordUndo();
+        OptionallyBroadcastUndosChanged();
+    }
 
-        void HandleElementSelected(DataTypes.ElementSave obj)
-        {
-            UndoManager.Self.RecordState();
-            UndoManager.Self.BroadcastUndosChanged();
-        }
+    void HandleInstanceAdd(ElementSave arg1, InstanceSave arg2)
+    {
+        _undoManager.RecordUndo();
+        OptionallyBroadcastUndosChanged();
+    }
 
-        void HandleInstanceSelected(DataTypes.ElementSave elementSave, InstanceSave instanceSave)
+    void HandleProjectLoad(DataTypes.GumProjectSave obj)
+    {
+        _undoManager.ClearAll();
+        OptionallyBroadcastUndosChanged();
+    }
+
+    void HandleElementSelected(DataTypes.ElementSave obj)
+    {
+        _undoManager.RecordState();
+        OptionallyBroadcastUndosChanged();
+    }
+
+    void HandleInstanceSelected(DataTypes.ElementSave elementSave, InstanceSave instanceSave)
+    {
+
+        _undoManager.RecordState();
+        // the instance could have changed the element, so broadcast anyway
+
+        OptionallyBroadcastUndosChanged();
+    }
+
+    private void OptionallyBroadcastUndosChanged()
+    {
+        if (_selectedState.SelectedElement != lastSelectedElement)
         {
-            UndoManager.Self.RecordState();
-            // the instance could have changed the element, so broadcast anyway
-            UndoManager.Self.BroadcastUndosChanged();
+            _undoManager.BroadcastUndosChanged();
+            lastSelectedElement = _selectedState.SelectedElement;
         }
     }
 }

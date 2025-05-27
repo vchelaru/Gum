@@ -2,9 +2,9 @@ name: Build and Test
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   Build-and-Test:
@@ -31,10 +31,21 @@ jobs:
           dotnet restore "AllLibraries.sln"
           dotnet build "AllLibraries.sln" --configuration Release --no-restore --verbosity minimal -p:WarningLevel=0
 
-      - name: Run Tests
-        run: |
-          dotnet test "MonoGameGum.Tests" --configuration Release --no-build --verbosity minimal -p:WarningLevel=0
-          dotnet test "Tool/Tests/GumToolUnitTests" --configuration Release --no-build --verbosity minimal -p:WarningLevel=0
+      - name: MonoGameGum.Tests
+        run: dotnet test "MonoGameGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+        continue-on-error: true
+
+      - name: GumToolUnitTests
+        run: dotnet test "Tool/Tests/GumToolUnitTests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+        continue-on-error: true
+
+      - name: Publish Test Results
+        uses: dorny/test-reporter@v2
+        with:
+          name: Tests
+          path: "TestResults/*.trx"
+          reporter: dotnet-trx
+          fail-on-error: true
 
   Build-Samples:
     runs-on: windows-latest

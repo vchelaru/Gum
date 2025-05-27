@@ -545,11 +545,11 @@ namespace Gum.Managers
             return null;
         }
 
-        [Obsolete("GetElementContainerOf to clearly indicate that the method does return behaviors. ")]
-        public ElementSave GetContainerOf(InstanceSave instance) =>
+        [Obsolete("GetElementContainerOf to clearly indicate that the method does not return behaviors. ")]
+        public ElementSave? GetContainerOf(InstanceSave instance) =>
             GetElementContainerOf(instance);
 
-        public ElementSave GetContainerOf(VariableSave variable)
+        public ElementSave? GetContainerOf(VariableSave variable)
         {
             foreach(var element in GumProjectSave.AllElements)
             {
