@@ -13,10 +13,6 @@ using Xunit;
 namespace MonoGameGum.Tests.Runtimes;
 public class BindableGueTests
 {
-    public BindableGueTests()
-    {
-    }
-
     [Fact]
     public async Task PushToViewModel_ShouldPushToViewModel()
     {
