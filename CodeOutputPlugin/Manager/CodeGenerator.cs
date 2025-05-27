@@ -1281,7 +1281,7 @@ public class CodeGenerator
         // In MAUI it seems like we need to -1 the WidthRequest if we are going to depend on the container and use margins:
         if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Maui)
         {
-            if (widthUnits == DimensionUnitType.RelativeToContainer)
+            if (widthUnits == DimensionUnitType.RelativeToParent)
             {
                 stringBuilder.AppendLine($"{codePrefix}.WidthRequest = -1;");
             }
@@ -1317,14 +1317,14 @@ public class CodeGenerator
 
         if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Maui)
         {
-            if (heightUnits == DimensionUnitType.RelativeToContainer)
+            if (heightUnits == DimensionUnitType.RelativeToParent)
             {
                 stringBuilder.AppendLine($"{codePrefix}.HeightRequest = -1;");
             }
         }
 
         // If it's in a stack layout and it uses a height request of RelativeToParent, generate a compile error. This is not allowed!
-        if (heightUnits == DimensionUnitType.RelativeToContainer && isContainedInStackLayout)
+        if (heightUnits == DimensionUnitType.RelativeToParent && isContainedInStackLayout)
         {
             stringBuilder.AppendLine(context.Tabs +
                 $"Intentional compile error - the object {context.Instance?.Name ?? context.Element.Name} has a parent which is not an absolute layout, but its height is RelativeToContainer. This is not allowed in Xamarin Forms. The parent should be an Absolute layout in this case.");
@@ -1339,14 +1339,14 @@ public class CodeGenerator
         {
             leftMargin = x;
         }
-        if (xUnits == PositionUnitType.PixelsFromLeft && widthUnits == DimensionUnitType.RelativeToContainer)
+        if (xUnits == PositionUnitType.PixelsFromLeft && widthUnits == DimensionUnitType.RelativeToParent)
         {
             rightMargin = -width - x;
         }
         if (xUnits == PositionUnitType.PixelsFromCenterX &&
             xOrigin == HorizontalAlignment.Center)
         {
-            if (widthUnits == DimensionUnitType.RelativeToContainer)
+            if (widthUnits == DimensionUnitType.RelativeToParent)
             {
                 leftMargin = x - width / 2.0f;
                 rightMargin = -x - width / 2.0f;
@@ -1367,7 +1367,7 @@ public class CodeGenerator
         else if (xUnits == PositionUnitType.PixelsFromRight && xOrigin == HorizontalAlignment.Right)
         {
             rightMargin = -x;
-            if (widthUnits == DimensionUnitType.RelativeToContainer)
+            if (widthUnits == DimensionUnitType.RelativeToParent)
             {
                 leftMargin = -width;
             }
@@ -1432,7 +1432,7 @@ public class CodeGenerator
         if (yUnits == PositionUnitType.PixelsFromCenterY &&
             yOrigin == VerticalAlignment.Center)
         {
-            if (heightUnits == DimensionUnitType.RelativeToContainer)
+            if (heightUnits == DimensionUnitType.RelativeToParent)
             {
                 topMargin = y - height / 2.0f;
                 bottomMargin = -y - height / 2.0f;
@@ -1503,8 +1503,8 @@ public class CodeGenerator
                 }
             }
         }
-        else if (widthUnits == DimensionUnitType.RelativeToContainer ||
-            widthUnits == DimensionUnitType.Percentage)
+        else if (widthUnits == DimensionUnitType.RelativeToParent    ||
+            widthUnits == DimensionUnitType.PercentageOfParent)
         {
             stringBuilder.AppendLine(
                 $"{codePrefix}.HorizontalOptions = LayoutOptions.Fill;");
@@ -1527,8 +1527,8 @@ public class CodeGenerator
                     $"{codePrefix}.VerticalOptions = LayoutOptions.Start;");
             }
         }
-        else if (heightUnits == DimensionUnitType.RelativeToContainer ||
-            heightUnits == DimensionUnitType.Percentage)
+        else if (heightUnits == DimensionUnitType.RelativeToParent ||
+            heightUnits == DimensionUnitType.PercentageOfParent)
         {
             stringBuilder.AppendLine(
                 $"{codePrefix}.VerticalOptions = LayoutOptions.Fill;");
@@ -1656,12 +1656,12 @@ public class CodeGenerator
 
         #region Apply WidthUnits
 
-        if (widthUnits == DimensionUnitType.Percentage)
+        if (widthUnits == DimensionUnitType.PercentageOfParent)
         {
             width /= 100.0f;
             proportionalFlags.Add(WidthProportionalFlag);
         }
-        else if (widthUnits == DimensionUnitType.RelativeToContainer)
+        else if (widthUnits == DimensionUnitType.RelativeToParent)
         {
             if (xOrigin == HorizontalAlignment.Center)
             {
@@ -1692,12 +1692,12 @@ public class CodeGenerator
 
         #region Apply HeightUnits
 
-        if (heightUnits == DimensionUnitType.Percentage)
+        if (heightUnits == DimensionUnitType.PercentageOfParent)
         {
             height /= 100.0f;
             proportionalFlags.Add(HeightProportionalFlag);
         }
-        else if (heightUnits == DimensionUnitType.RelativeToContainer)
+        else if (heightUnits == DimensionUnitType.RelativeToParent)
         {
             // just like width units, achieve this with margins:
             if (yOrigin == VerticalAlignment.Center)
@@ -1773,7 +1773,7 @@ public class CodeGenerator
         {
             x /= 100.0f;
 
-            if (widthUnits == DimensionUnitType.Percentage)
+            if (widthUnits == DimensionUnitType.PercentageOfParent)
             {
                 var adjustedCanvasWidth = 1 - width;
                 if (adjustedCanvasWidth > 0)
@@ -1785,7 +1785,7 @@ public class CodeGenerator
         }
         else if (xUnits == PositionUnitType.PixelsFromLeft)
         {
-            if (widthUnits == DimensionUnitType.RelativeToContainer)
+            if (widthUnits == DimensionUnitType.RelativeToParent)
             {
                 leftMargin = MathFunctions.RoundToInt(x);
                 x = 0;
@@ -1840,7 +1840,7 @@ public class CodeGenerator
 
         if (yUnits == PositionUnitType.PixelsFromTop)
         {
-            if (heightUnits == DimensionUnitType.RelativeToContainer)
+            if (heightUnits == DimensionUnitType.RelativeToParent)
             {
                 topMargin = MathFunctions.RoundToInt(y);
                 y = 0;
@@ -1867,7 +1867,7 @@ public class CodeGenerator
             if (yOrigin == VerticalAlignment.Center)
             {
                 // If relative to container, it's already handled up above
-                if (heightUnits != DimensionUnitType.RelativeToContainer)
+                if (heightUnits != DimensionUnitType.RelativeToParent)
                 {
                     topMargin = MathFunctions.RoundToInt(y);
                     bottomMargin = MathFunctions.RoundToInt(-y);
@@ -1965,8 +1965,8 @@ public class CodeGenerator
                 }
             }
         }
-        else if (widthUnits == DimensionUnitType.RelativeToContainer ||
-            widthUnits == DimensionUnitType.Percentage)
+        else if (widthUnits == DimensionUnitType.RelativeToParent ||
+            widthUnits == DimensionUnitType.PercentageOfParent)
         {
             stringBuilder.AppendLine(
                 $"{codePrefix}.HorizontalOptions = LayoutOptions.Fill;");
@@ -1994,8 +1994,8 @@ public class CodeGenerator
                     $"{codePrefix}.VerticalOptions = LayoutOptions.Start;");
             }
         }
-        else if (heightUnits == DimensionUnitType.RelativeToContainer ||
-            heightUnits == DimensionUnitType.Percentage)
+        else if (heightUnits == DimensionUnitType.RelativeToParent ||
+            heightUnits == DimensionUnitType.PercentageOfParent)
         {
             stringBuilder.AppendLine(
                 $"{codePrefix}.VerticalOptions = LayoutOptions.Fill;");
@@ -2028,7 +2028,7 @@ public class CodeGenerator
             }
             // Vic asks - do we still want to do this? Isn't this handled by the margins above:
             //else
-            else if (widthUnits != DimensionUnitType.RelativeToContainer)
+            else if (widthUnits != DimensionUnitType.RelativeToParent)
             {
                 widthString = $"({widthString} + {rightMargin})";
             }
@@ -2109,7 +2109,7 @@ public class CodeGenerator
         }
 
         // not sure why these apply even though we're using values on the AbsoluteLayout
-        if (!proportionalFlags.Contains(WidthProportionalFlag) && (widthUnits == DimensionUnitType.RelativeToContainer || widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale))
+        if (!proportionalFlags.Contains(WidthProportionalFlag) && (widthUnits == DimensionUnitType.RelativeToParent || widthUnits == DimensionUnitType.Absolute || widthUnits == DimensionUnitType.AbsoluteMultipliedByFontScale))
         {
             string rightSide;
 
@@ -2130,7 +2130,7 @@ public class CodeGenerator
             stringBuilder.AppendLine($"{context.CodePrefix}.WidthRequest = {rightSide};");
 
         }
-        if (!proportionalFlags.Contains(HeightProportionalFlag) && (heightUnits == DimensionUnitType.RelativeToContainer || heightUnits == DimensionUnitType.Absolute || heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale))
+        if (!proportionalFlags.Contains(HeightProportionalFlag) && (heightUnits == DimensionUnitType.RelativeToParent || heightUnits == DimensionUnitType.Absolute || heightUnits == DimensionUnitType.AbsoluteMultipliedByFontScale))
         {
             string rightSide;
 
@@ -2198,11 +2198,11 @@ public class CodeGenerator
         // In MAUI it seems like we need to -1 the WidthRequest if we are going to depend on the container and use margins:
         if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Maui)
         {
-            if (widthUnits == DimensionUnitType.RelativeToContainer)
+            if (widthUnits == DimensionUnitType.RelativeToParent)
             {
                 stringBuilder.AppendLine($"{codePrefix}.WidthRequest = -1;");
             }
-            if (heightUnits == DimensionUnitType.RelativeToContainer)
+            if (heightUnits == DimensionUnitType.RelativeToParent)
             {
                 stringBuilder.AppendLine($"{codePrefix}.HeightRequest = -1;");
             }
@@ -2270,7 +2270,7 @@ public class CodeGenerator
         {
             toReturn = width;
         }
-        else if (widthUnits == DimensionUnitType.RelativeToContainer)
+        else if (widthUnits == DimensionUnitType.RelativeToParent)
         {
             if (parent == null)
             {
@@ -2313,7 +2313,7 @@ public class CodeGenerator
         {
             toReturn = height;
         }
-        else if (heightUnits == DimensionUnitType.RelativeToContainer)
+        else if (heightUnits == DimensionUnitType.RelativeToParent)
         {
             if (parent == null)
             {
@@ -2763,7 +2763,7 @@ public class CodeGenerator
 
     #region Top Level Methods
 
-    public static string GetGeneratedCodeForElement(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
+    public string GetGeneratedCodeForElement(ElementSave element, CodeOutputElementSettings elementSettings, CodeOutputProjectSettings projectSettings)
     {
         #region Initial Values
 
@@ -3648,6 +3648,25 @@ public class CodeGenerator
             {
                 var converted = UnitConverter.ConvertToGeneralUnit(value);
                 return $"global::Gum.Converters.GeneralUnitType.{converted}";
+            }
+            else if(type == typeof(DimensionUnitType))
+            {
+                var valueAsString = value;
+                // handle the deprecated type:
+#pragma warning disable CS0618 // Type or member is obsolete
+                if (value is DimensionUnitType dimensionUnitType)
+                {
+                    if (dimensionUnitType == DimensionUnitType.RelativeToParent)
+                    {
+                        valueAsString = nameof(DimensionUnitType.RelativeToParent);
+                    }
+                    else if(dimensionUnitType == DimensionUnitType.PercentageOfParent)
+                    {
+                        valueAsString = nameof(DimensionUnitType.PercentageOfParent);
+                    }
+                }
+#pragma warning restore CS0618 // Type or member is obsolete
+                return $"global::{value.GetType().FullName}.{valueAsString}";
             }
             else
             {

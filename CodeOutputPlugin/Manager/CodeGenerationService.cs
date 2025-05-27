@@ -14,11 +14,13 @@ namespace CodeOutputPlugin.Manager;
 
 internal class CodeGenerationService
 {
+    private readonly CodeGenerator _codeGenerator;
     private readonly CodeGenerationFileLocationsService _codeGenerationFileLocationsService;
     private readonly GuiCommands _guiCommands;
 
-    public CodeGenerationService(GuiCommands guiCommands)
+    public CodeGenerationService(GuiCommands guiCommands, CodeGenerator codeGenerator)
     {
+        _codeGenerator = codeGenerator;
         _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService();
         _guiCommands = guiCommands;
     }
@@ -118,7 +120,7 @@ internal class CodeGenerationService
 
 
 
-        string contents = CodeGenerator.GetGeneratedCodeForElement(selectedElement, elementSettings, codeOutputProjectSettings);
+        string contents = _codeGenerator.GetGeneratedCodeForElement(selectedElement, elementSettings, codeOutputProjectSettings);
         contents = $"//Code for {selectedElement.ToString()}\r\n{contents}";
 
         string message = string.Empty;

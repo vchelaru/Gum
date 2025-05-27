@@ -143,7 +143,7 @@ namespace Gum.Wireframe.Editors
                     case DataTypes.DimensionUnitType.MaintainFileAspectRatio:
                         suffix = " File Aspect Ratio";
                         break;
-                    case DataTypes.DimensionUnitType.Percentage:
+                    case DataTypes.DimensionUnitType.PercentageOfParent:
                         suffix = "% Parent";
                         break;
                     case DataTypes.DimensionUnitType.PercentageOfOtherDimension:
@@ -158,7 +158,7 @@ namespace Gum.Wireframe.Editors
                     case DataTypes.DimensionUnitType.RelativeToChildren:
                         suffix = " Relative to Children";
                         break;
-                    case DataTypes.DimensionUnitType.RelativeToContainer:
+                    case DataTypes.DimensionUnitType.RelativeToParent:
                         suffix = " Relative to Parent";
                         break;
                 }
@@ -204,7 +204,7 @@ namespace Gum.Wireframe.Editors
                     case DataTypes.DimensionUnitType.MaintainFileAspectRatio:
                         suffix = " File Aspect Ratio";
                         break;
-                    case DataTypes.DimensionUnitType.Percentage:
+                    case DataTypes.DimensionUnitType.PercentageOfParent:
                         suffix = "% Parent";
                         break;
                     case DataTypes.DimensionUnitType.PercentageOfOtherDimension:
@@ -219,7 +219,7 @@ namespace Gum.Wireframe.Editors
                     case DataTypes.DimensionUnitType.RelativeToChildren:
                         suffix = " Relative to Children";
                         break;
-                    case DataTypes.DimensionUnitType.RelativeToContainer:
+                    case DataTypes.DimensionUnitType.RelativeToParent:
                         suffix = " Relative to Parent";
                         break;
                 }

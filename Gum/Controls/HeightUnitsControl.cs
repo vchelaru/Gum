@@ -93,13 +93,13 @@ namespace Gum.Controls
                     new Option
                     {
                         Name = "Relative to Parent",
-                        Value = DimensionUnitType.RelativeToContainer,
+                        Value = DimensionUnitType.RelativeToParent,
                         Image = relativeToParentBitmap
                     },
                     new Option
                     {
                         Name = "Percentage of Parent",
-                        Value = DimensionUnitType.Percentage,
+                        Value = DimensionUnitType.PercentageOfParent,
                         Image = percentOfParentBitmap
                     },
                     new Option
