@@ -59,7 +59,10 @@ namespace Gum.DataTypes.Variables
 
             foreach (VariableSave variable in otherStateSave.Variables)
             {
-                stateSave.Variables.Add(FileManager.CloneSaveObject(variable));
+                // This causes a lot of XML serialize/deserialize which can be slow
+                // Attempting to speed this up like this:
+                //stateSave.Variables.Add(FileManager.CloneSaveObject(variable));
+                stateSave.Variables.Add(variable.Clone());
             }
 
             foreach (VariableListSave variableList in otherStateSave.VariableLists)
