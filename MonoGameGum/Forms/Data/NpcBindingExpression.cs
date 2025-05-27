@@ -170,7 +170,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
             value = TryConvert(value, sourceType);
         }
 
-        if (value == GumProperty.UnsetValue || value == null)
+        if (value == GumProperty.UnsetValue)
         {
             // conversion failed: don't update source if we don't know what to set
             return;
