@@ -112,7 +112,7 @@ public class FrameworkElementBindingTests
         vm1.Text = "Set through VM1";
         textBox.Text.ShouldBe("Set through VM1");
 
-        MatchingTestViewModel vm2 = new();
+        AuxTestViewModel vm2 = new();
         textBox.BindingContext = vm2;
         vm2.Text = "Set through VM2";
         textBox.Text.ShouldBe("Set through VM2");
