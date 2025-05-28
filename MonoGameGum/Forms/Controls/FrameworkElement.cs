@@ -94,7 +94,7 @@ public class FrameworkElement : INotifyPropertyChanged
 
     public static List<GamePad> GamePadsForUiControl { get; private set; } = new List<GamePad>();
 
-#if MONOGAME
+#if MONOGAME || KNI
     public static List<IInputReceiverKeyboardMonoGame> KeyboardsForUiControl { get; private set; } = new List<IInputReceiverKeyboardMonoGame>();
 #endif
 
@@ -923,7 +923,7 @@ public class FrameworkElement : INotifyPropertyChanged
 
     public virtual bool IsTabNavigationEnabled => true;
 
-#if !FRB && MONOGAME
+#if !FRB && (MONOGAME || KNI)
 
     public static List<KeyCombo> TabKeyCombos = new List<KeyCombo>
     {
@@ -1245,11 +1245,10 @@ public class FrameworkElement : INotifyPropertyChanged
             pushedByInput = pushedByInput || (GamePadsForUiControl[i].ButtonDown(Buttons.A));
         }
 
-#if MONOGAME && !FRB
+#if (MONOGAME || KNI) && !FRB
         for(int i = 0; i < KeyboardsForUiControl.Count; i++)
         {
-            var keyboard = KeyboardsForUiControl[i] as MonoGameGum.Input.Keyboard;
-            pushedByInput = pushedByInput || keyboard.KeyDown(Keys.Enter);
+            pushedByInput = pushedByInput || KeyboardsForUiControl[i].KeyDown(Keys.Enter);
         }
 #endif
 #endif

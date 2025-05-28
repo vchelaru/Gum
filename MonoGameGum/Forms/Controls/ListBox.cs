@@ -895,23 +895,22 @@ public class ListBox : ItemsControl, IInputReceiver
         }
 #endif
 
-#if MONOGAME && !FRB
+#if (MONOGAME || KNI) && !FRB
 
         foreach (var keyboard in KeyboardsForUiControl)
         {
-            var mgKeyboard = keyboard as MonoGameGum.Input.Keyboard;
             var pressedButton = false;
-            if (mgKeyboard?.KeyPushed(Keys.Enter) == true)
+            if (keyboard?.KeyPushed(Keys.Enter) == true)
             {
                 pressedButton = true;
             }
             RepositionDirections? direction = null;
 
-            if (mgKeyboard?.KeyPushed(Keys.Up) == true)
+            if (keyboard?.KeyPushed(Keys.Up) == true)
             {
                 direction = RepositionDirections.Up;
             }
-            if (mgKeyboard?.KeyPushed(Keys.Down) == true)
+            if (keyboard?.KeyPushed(Keys.Down) == true)
             {
                 direction = RepositionDirections.Down;
             }
