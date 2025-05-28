@@ -121,18 +121,20 @@ public class FrameworkElementBindingTests
     [Fact]
     public void SetBinding_ShouldFallBackProperly()
     {
-        FrameworkElementWithChild parent = new ();
+        ParentStackPanel stackPanel = new ();
         ParentVm vm = new ParentVm ();
-        parent.BindingContext = vm;
+        stackPanel.BindingContext = vm;
 
-        parent.Child.SetBinding(nameof(parent.Child.BindingContext), nameof(ParentVm.ChildVm));
-        parent.Child.SetBinding(nameof(parent.Child.Text), nameof(ParentVm.ChildVm.Text));
+        var textBox = stackPanel.TextBox;
+
+        textBox.SetBinding(nameof(textBox.BindingContext), nameof(ParentVm.ChildVm));
+        textBox.SetBinding(nameof(textBox.Text), nameof(ParentVm.ChildVm.Text));
 
         vm.ChildVm.Text = "Set on vm";
 
-        parent.Child.Text.ShouldBe("Set on vm");
+        stackPanel.TextBox.Text.ShouldBe("Set on vm");
         vm.ChildVm = null;
-        parent.BindingContext = null;
+        stackPanel.BindingContext = null;
 
     }
 
@@ -749,14 +751,14 @@ public class FrameworkElementBindingTests
         }
     }
 
-    private class FrameworkElementWithChild : StackPanel
+    private class ParentStackPanel : StackPanel
     {
-        public TextBox Child { get; init; }
+        public TextBox TextBox { get; init; }
 
-        public FrameworkElementWithChild()
+        public ParentStackPanel()
         {
-            Child = new TextBox();
-            this.AddChild(Child);
+            TextBox = new TextBox();
+            this.AddChild(TextBox);
         }
     }
 
