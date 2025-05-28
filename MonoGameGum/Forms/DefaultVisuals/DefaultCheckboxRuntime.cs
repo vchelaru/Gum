@@ -124,7 +124,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                     AddState(state + "Indeterminate");
                     AddVariable("InnerCheck.Visible", true);
                     AddVariable("InnerCheck.Color", checkColor);
-                    AddVariable("InnerCheck.Height", 6f);
+                    AddVariable("InnerCheck.Height", 4f);
                     AddVariable("CheckBoxBackground.Color", checkboxBackgroundColor);
                     AddVariable("FocusedIndicator.Visible", isFocused);
                     AddVariable("TextInstance.Color", textColor);
