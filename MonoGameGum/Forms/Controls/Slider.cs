@@ -461,17 +461,15 @@ public class Slider : RangeBase, IInputReceiver
         }
 #endif
 
-#if MONOGAME && !FRB
+#if (MONOGAME || KNI) && !FRB
 
         foreach (var keyboard in KeyboardsForUiControl)
         {
-            var mgKeyboard = keyboard as MonoGameGum.Input.Keyboard;
-
-            if(mgKeyboard?.KeyTyped(Keys.Right) == true)
+            if(keyboard.KeyTyped(Keys.Right) == true)
             {
                 this.Value += SmallChange;
             }
-            if(mgKeyboard?.KeyTyped(Keys.Left) == true)
+            if(keyboard.KeyTyped(Keys.Left) == true)
             {
                 this.Value -= SmallChange;
             }

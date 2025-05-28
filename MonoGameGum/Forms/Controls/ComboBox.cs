@@ -627,12 +627,11 @@ public class ComboBox : FrameworkElement, IInputReceiver
             }
         }
 #endif
-#if MONOGAME && !FRB
+#if (MONOGAME || KNI) && !FRB
 
         foreach (var keyboard in KeyboardsForUiControl)
         {
-            var mgKeyboard = keyboard as MonoGameGum.Input.Keyboard;
-            if (mgKeyboard?.KeyPushed(Keys.Enter) == true)
+            if (keyboard?.KeyPushed(Keys.Enter) == true)
             {
                 this.HandleClick(this, new InputEventArgs() { InputDevice = keyboard });
 
@@ -640,7 +639,7 @@ public class ComboBox : FrameworkElement, IInputReceiver
                 UpdateState();
             }
 
-            if (mgKeyboard?.KeyReleased(Keys.Enter) == true)
+            if (keyboard?.KeyReleased(Keys.Enter) == true)
             {
                 UpdateState();
             }
@@ -679,7 +678,7 @@ public class ComboBox : FrameworkElement, IInputReceiver
 #if !FRB
     public void DoKeyboardAction(IInputReceiverKeyboard keyboard)
     {
-        var asKeyboard = keyboard as MonoGameGum.Input.Keyboard;
+        var asKeyboard = keyboard as IInputReceiverKeyboardMonoGame;
         if (asKeyboard != null)
         {
             foreach (var key in asKeyboard.KeysTyped)

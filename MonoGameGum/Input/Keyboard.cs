@@ -17,6 +17,9 @@ public interface IInputReceiverKeyboardMonoGame : IInputReceiverKeyboard
 {
     IReadOnlyCollection<Microsoft.Xna.Framework.Input.Keys> KeysTyped { get; }
     bool KeyDown(Keys key);
+    bool KeyPushed(Keys key);
+    bool KeyReleased(Keys key);
+    bool KeyTyped(Keys key);
 }
 
 #endregion
