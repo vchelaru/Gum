@@ -922,7 +922,7 @@ class RenderTargetService
         top = System.Math.Max(camera.AbsoluteTop, top);
         bottom = System.Math.Min(camera.AbsoluteBottom, bottom);
 
-        System.Diagnostics.Debug.WriteLine($"L:{left} R:{right} T:{top} B:{bottom}");
+        //System.Diagnostics.Debug.WriteLine($"L:{left} R:{right} T:{top} B:{bottom}");
 
         var clientWidth = camera.ClientWidth;
         var clientHeight = camera.ClientHeight;
