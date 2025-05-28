@@ -42,6 +42,7 @@ public class MainCodeOutputPlugin : PluginBase
     private readonly RenameService _renameService;
     private readonly LocalizationManager _localizationManager;
     private readonly GuiCommands _guiCommands;
+    private readonly CodeGenerator _codeGenerator;
     PluginTab pluginTab;
 
     // Not sure why this is null..., so getting it from the builder instead
@@ -62,11 +63,11 @@ public class MainCodeOutputPlugin : PluginBase
 
 
 
-
+        _codeGenerator = new CodeGenerator();
         _selectedState = Builder.Get<ISelectedState>();
         _localizationManager = Builder.Get<LocalizationManager>();
         _guiCommands = Builder.Get<GuiCommands>();
-        _codeGenerationService = new CodeGenerationService(_guiCommands);
+        _codeGenerationService = new CodeGenerationService(_guiCommands, _codeGenerator);
         _renameService = new RenameService(_codeGenerationService);
 
         // The methos in CodeGenerator need to be changed to not be static then we can get rid
@@ -322,7 +323,7 @@ public class MainCodeOutputPlugin : PluginBase
                     else if(selectedElement != null && selectedElement is not StandardElementSave)
                     {
 
-                        string gumCode = CodeGenerator.GetGeneratedCodeForElement(selectedElement, settings, codeOutputProjectSettings);
+                        string gumCode = _codeGenerator.GetGeneratedCodeForElement(selectedElement, settings, codeOutputProjectSettings);
                         viewModel.Code = $"//Code for {selectedElement.ToString()}\r\n{gumCode}";
                     }
                     break;

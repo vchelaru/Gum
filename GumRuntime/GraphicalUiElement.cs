@@ -2196,7 +2196,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
         #region Percentage (of parent)
 
-        else if (mHeightUnit == DimensionUnitType.Percentage)
+        else if (mHeightUnit == DimensionUnitType.PercentageOfParent)
         {
             pixelHeightToSet = parentHeight * mHeight / 100.0f;
         }
@@ -2329,7 +2329,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                                     var childAbsoluteWidth = parentHeight - gue.Height;
                                     heightToSplit -= childAbsoluteWidth;
                                 }
-                                else if (gue.HeightUnits == DimensionUnitType.Percentage)
+                                else if (gue.HeightUnits == DimensionUnitType.PercentageOfParent)
                                 {
                                     var childAbsoluteWidth = parentHeight * gue.Height;
                                     heightToSplit -= childAbsoluteWidth;
@@ -2552,7 +2552,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
         #region Percentage (of parent)
 
-        else if (mWidthUnit == DimensionUnitType.Percentage)
+        else if (mWidthUnit == DimensionUnitType.PercentageOfParent)
         {
             pixelWidthToSet = parentWidth * mWidth / 100.0f;
         }
@@ -2681,7 +2681,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                                     var childAbsoluteWidth = parentWidth - gue.Width;
                                     widthToSplit -= childAbsoluteWidth;
                                 }
-                                else if (gue.WidthUnits == DimensionUnitType.Percentage)
+                                else if (gue.WidthUnits == DimensionUnitType.PercentageOfParent)
                                 {
                                     var childAbsoluteWidth = parentWidth * gue.Width;
                                     widthToSplit -= childAbsoluteWidth;
