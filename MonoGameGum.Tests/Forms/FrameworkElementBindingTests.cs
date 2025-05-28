@@ -116,7 +116,24 @@ public class FrameworkElementBindingTests
         textBox.BindingContext = vm2;
         vm2.Text = "Set through VM2";
         textBox.Text.ShouldBe("Set through VM2");
-        
+    }
+
+    [Fact]
+    public void SetBinding_ShouldFallBackProperly()
+    {
+        FrameworkElementWithChild parent = new ();
+        ParentVm vm = new ParentVm ();
+        parent.BindingContext = vm;
+
+        parent.Child.SetBinding(nameof(parent.Child.BindingContext), nameof(ParentVm.ChildVm));
+        parent.Child.SetBinding(nameof(parent.Child.Text), nameof(ParentVm.ChildVm.Text));
+
+        vm.ChildVm.Text = "Set on vm";
+
+        parent.Child.Text.ShouldBe("Set on vm");
+        vm.ChildVm = null;
+        parent.BindingContext = null;
+
     }
 
     [Fact]
@@ -683,6 +700,9 @@ public class FrameworkElementBindingTests
         }
     }
 
+
+
+
     private class TestStringBoolConverter : IValueConverter
     {
         public object? Convert(object? value, Type targetType, object? parameter)
@@ -705,4 +725,40 @@ public class FrameworkElementBindingTests
             };
         }
     }
+
+    private class ParentVm : ViewModel
+    {
+        public ChildVm ChildVm
+        {
+            get => Get<ChildVm>();
+            set => Set(value);
+        }
+
+        public ParentVm() 
+        {
+            ChildVm = new ChildVm();
+        }
+    }
+
+    private class ChildVm : ViewModel
+    {
+        public string Text
+        {
+            get => Get<string>();
+            set => Set(value);
+        }
+    }
+
+    private class FrameworkElementWithChild : StackPanel
+    {
+        public TextBox Child { get; init; }
+
+        public FrameworkElementWithChild()
+        {
+            Child = new TextBox();
+            this.AddChild(Child);
+        }
+    }
+
+
 }
