@@ -163,6 +163,7 @@ public class StateTreeViewModel : ViewModel
             if (stateContainer.UncategorizedStates.Contains(stateViewModel.Data) == false)
             {
                 States.RemoveAt(i);
+                i--;
             }
         }
     }
