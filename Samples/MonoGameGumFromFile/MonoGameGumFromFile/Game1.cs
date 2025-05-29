@@ -137,7 +137,7 @@ namespace MonoGameGumFromFile
             var componentSave = ObjectFinder.Self.GumProjectSave.Components
                 .First(item => item.Name == "ColoredRectangleComponent");
 
-            var componentRuntime = componentSave.ToGraphicalUiElement(SystemManagers.Default, addToManagers: true);
+            var componentRuntime = componentSave.ToGraphicalUiElement();
 
             componentRuntime.XUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
             componentRuntime.XOrigin = RenderingLibrary.Graphics.HorizontalAlignment.Right;

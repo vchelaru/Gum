@@ -298,7 +298,7 @@ public static class GraphicalUiElementExtensionMethods
 
 public static class ElementSaveExtensionMethods
 {
-    public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave, SystemManagers? systemManagers)
+    public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave, SystemManagers? systemManagers = null)
     {
         return elementSave.ToGraphicalUiElement(systemManagers ?? SystemManagers.Default, addToManagers: false);
     }
