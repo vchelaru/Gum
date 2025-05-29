@@ -9,15 +9,7 @@ Gum Source Code: [https://www.github.com/vchelaru/Gum](https://www.github.com/vc
 
 ### Windows
 
-Currently the Gum tool requires XNA runtimes. Download and install the runtime prior to running Gum:
-
-{% embed url="https://www.microsoft.com/en-us/download/details.aspx?id=20914" %}
-
-{% hint style="success" %}
-The current preview build of Gum no longer requires XNA. You can use this preview version instead of installing XNA. See the latest releases page for more info:
-
-[https://github.com/vchelaru/Gum/releases](https://github.com/vchelaru/Gum/releases)
-{% endhint %}
+Download and unzip the .zip file and run the Gum.exe file which is located in Data/Debug/.
 
 Since Gum is a prebuilt file in a .zip, Windows _blocks_ the file which results in the "Windows protected your PC" popup:
 
