@@ -118,24 +118,32 @@ public class FrameworkElementBindingTests
         textBox.Text.ShouldBe("Set through VM2");
     }
 
+
+    /// <summary>
+    /// Bug: binding to the BindingContext was calling an update to source because it detected
+    /// a target property change (BindingContext). A BindingContext binding is unique in that it
+    /// should almost never be two-way, and only update the target element. This was made apparent
+    /// because the source-setter was still built up for the original BindingContext, and when
+    /// inappropriately called with incompatible types we would get an invalid cast exception.
+    /// </summary>
     [Fact]
-    public void SetBinding_ShouldFallBackProperly()
+    public void SetBinding_BindingContext_ShouldNotUpdateSource()
     {
-        ParentStackPanel stackPanel = new ();
-        ParentVm vm = new ParentVm ();
-        stackPanel.BindingContext = vm;
+        StackPanel stackPanel = new();
+        TestViewModel rootVm = new() { AuxVm = new() };
+        stackPanel.BindingContext = rootVm;
 
-        var textBox = stackPanel.TextBox;
+        TextBox textBox = new();
+        stackPanel.AddChild(textBox);
 
-        textBox.SetBinding(nameof(textBox.BindingContext), nameof(ParentVm.ChildVm));
-        textBox.SetBinding(nameof(textBox.Text), nameof(ParentVm.ChildVm.Text));
+        // Act
+        textBox.SetBinding(nameof(textBox.BindingContext), nameof(TestViewModel.AuxVm)); // this went boom: invalid cast in setter 'AuxTestViewModel' to 'TestViewModel'.
+        textBox.SetBinding(nameof(textBox.Text), nameof(TestViewModel.AuxVm.Text));
+        rootVm.AuxVm.Text = "aux vm";
 
-        vm.ChildVm.Text = "Set on vm";
-
-        stackPanel.TextBox.Text.ShouldBe("Set on vm");
-        vm.ChildVm = null;
-        stackPanel.BindingContext = null;
-
+        // Assert
+        textBox.BindingContext.ShouldBe(rootVm.AuxVm);
+        textBox.Text.ShouldBe("aux vm");
     }
 
     [Fact]
@@ -661,6 +669,12 @@ public class FrameworkElementBindingTests
             set => Set(value);
         }
 
+        public AuxTestViewModel? AuxVm
+        {
+            get => Get<AuxTestViewModel?>();
+            set => Set(value);
+        }
+
         public ObservableCollection<TestViewModel> Items
         {
             get => Get<ObservableCollection<TestViewModel>>();
@@ -702,9 +716,6 @@ public class FrameworkElementBindingTests
         }
     }
 
-
-
-
     private class TestStringBoolConverter : IValueConverter
     {
         public object? Convert(object? value, Type targetType, object? parameter)
@@ -727,40 +738,4 @@ public class FrameworkElementBindingTests
             };
         }
     }
-
-    private class ParentVm : ViewModel
-    {
-        public ChildVm ChildVm
-        {
-            get => Get<ChildVm>();
-            set => Set(value);
-        }
-
-        public ParentVm() 
-        {
-            ChildVm = new ChildVm();
-        }
-    }
-
-    private class ChildVm : ViewModel
-    {
-        public string Text
-        {
-            get => Get<string>();
-            set => Set(value);
-        }
-    }
-
-    private class ParentStackPanel : StackPanel
-    {
-        public TextBox TextBox { get; init; }
-
-        public ParentStackPanel()
-        {
-            TextBox = new TextBox();
-            this.AddChild(TextBox);
-        }
-    }
-
-
 }
