@@ -132,7 +132,7 @@
   * [Add Variable](gum-tool/variables/add-variable.md)
 * [Bitmap font generator (.fnt)](gum-tool/bitmap-font-generator-.fnt.md)
 * [Upgrading](gum-tool/upgrading/README.md)
-  * [Migrating 2025 April 27 to Preview](gum-tool/upgrading/migrating-2025-april-27-to-preview.md)
+  * [Migrating 2025 April 27 to May 28](gum-tool/upgrading/migrating-2025-april-27-to-may-28.md)
   * [Breaking Changes](gum-tool/upgrading/breaking-changes/README.md)
     * [Removal of Variable Spaces](gum-tool/upgrading/breaking-changes/removal-of-variable-spaces.md)
 

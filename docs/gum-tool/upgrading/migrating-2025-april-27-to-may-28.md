@@ -1,4 +1,25 @@
-# Migrating 2025 April 27 to Preview
+# Migrating 2025 April 27 to May 28
+
+## Upgrading Gum Tool
+
+To upgrade the Gum tool:
+
+1. Download Gum.zip from the release on Github: [https://github.com/vchelaru/Gum/releases/tag/Release\_May\_28\_2025](https://github.com/vchelaru/Gum/releases/tag/Release_May_28_2025)
+2. Delete the old tool from your machine
+3. Unzip the gum tool to the same location as to not break any file associations
+
+## Upgrading Runtime
+
+Upgrade your Gum NuGet packages to version 2025.5.28.1. For more information, see the NuGet packages for your particular platform:
+
+* MonoGame - [https://www.nuget.org/packages/Gum.MonoGame/](https://www.nuget.org/packages/Gum.MonoGame/)
+* KNI - [https://www.nuget.org/packages/Gum.KNI/](https://www.nuget.org/packages/Gum.KNI/)
+* FNA - [https://www.nuget.org/packages/Gum.FNA/](https://www.nuget.org/packages/Gum.FNA/)
+* SkiaSharp - [https://www.nuget.org/packages/Gum.SkiaSharp/](https://www.nuget.org/packages/Gum.SkiaSharp/)
+
+For other platforms you need to build Gum from source
+
+See below for breaking changes and updates.
 
 ## TextRuntime Default WidthUnits and HeightUnits
 
