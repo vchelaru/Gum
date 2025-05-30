@@ -33,11 +33,15 @@ internal class StandardsScreen : FrameworkElement
         partialFrame.TextureTop = 231;
         partialFrame.TextureWidth = 42;
         partialFrame.TextureHeight = 42;
-
-        partialFrame.X = 100;
-        partialFrame.Y = 100;
-
         innerContainer.AddChild(partialFrame);
+
+
+        var textRuntime = new TextRuntime();
+        textRuntime.Text = "Hello world";
+        innerContainer.AddChild(textRuntime);
+
+
+
 
     }
 }
