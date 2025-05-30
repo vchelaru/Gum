@@ -48,7 +48,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
     {
         if (CurrentRoot != null)
         {
-            AttachToSource(e.NewBindingContext);
+            AttachToSource(_targetElement.BindingContext);
         }
     }
 
@@ -144,7 +144,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
 
     public override void UpdateSource()
     {
-        if (_binding.Mode is BindingMode.OneWay || LeafType is not {} sourceType)
+        if (_binding.Mode is BindingMode.OneWay || LeafType is not {} sourceType || _targetProperty.Name == nameof(FrameworkElement.BindingContext))
         {
             return;
         }

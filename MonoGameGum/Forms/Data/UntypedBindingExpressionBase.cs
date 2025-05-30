@@ -105,12 +105,12 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
 
     protected void SetSourceValue(object? value)
     {
-        if (_sourceSetter is null || !_pathObserver.HasResolution)
+        if (_sourceSetter is null || !_pathObserver.HasResolution || CurrentRoot is null)
         {
             // binding error: broken path
             return;
         }
-        _sourceSetter(_targetElement.BindingContext, value);
+        _sourceSetter(CurrentRoot, value);
     }
 
     protected object? Convert(IValueConverter converter, object? value, Type targetType)
