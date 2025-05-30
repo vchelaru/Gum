@@ -62,8 +62,8 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
         }
 
         _pathObserver.Detach();
-        //_sourceGetter = null;
-        //_sourceSetter = null;
+        _sourceGetter = null;
+        _sourceSetter = null;
 
         if (newSource is null)
         {
