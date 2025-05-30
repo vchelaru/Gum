@@ -10,7 +10,6 @@ namespace MonoGameGum.Forms.Data;
 
 public abstract class BindingExpressionBase : IDisposable
 {
-    public BindingMode Mode { get; protected set; }
     public virtual void UpdateSource() { }
     public virtual void UpdateTarget() { }
 
