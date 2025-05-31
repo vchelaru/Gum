@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using Gum.Wireframe;
 
 
@@ -61,6 +62,8 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
         }
 
         _pathObserver.Detach();
+        _sourceGetter = null;
+        _sourceSetter = null;
 
         if (newSource is null)
         {
@@ -71,12 +74,24 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
 
         try
         {
-            _sourceGetter = BinderHelpers.BuildGetter(newSource.GetType(), _binding.Path);
+            // Since simple inpc properties can't define default binding modes,
+            // we always default to two-way and just make an attempt to build a setter
             _sourceSetter = BinderHelpers.BuildSetter(newSource.GetType(), _binding.Path);
         }
         catch (Exception aex)
         {
-            // binding error: broken path when trying to build the getter/setter
+            // The property might not have a setter
+            // -or- we have other binding errors
+        }
+
+        try
+        {
+            _sourceGetter = BinderHelpers.BuildGetter(newSource.GetType(), _binding.Path);
+        }
+        catch (Exception aex)
+        {
+            // If we have binding errors in the source-getter we have nothing to update the target with.
+            return;
         }
 
         UpdateTarget();

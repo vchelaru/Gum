@@ -661,6 +661,25 @@ public class FrameworkElementBindingTests
         Assert.Equal(expectedText, textBox.Text);
     }
 
+    [Fact]
+    public void ModeTwoWay_ReadonlySourceProperty_StillUpdatesTarget()
+    {
+        // Arrange
+        TextBox textBox = new()
+        {
+            BindingContext = new TestViewModel
+            {
+                Text = "text"
+            }
+        };
+
+        // Act
+        textBox.SetBinding(nameof(TextBox.Text), nameof(TestViewModel.ReadonlyText));
+
+        // Assert
+        textBox.Text.ShouldBe("text");
+    }
+
     private class TestViewModel : ViewModel
     {
         public TestViewModel? Child
@@ -674,6 +693,9 @@ public class FrameworkElementBindingTests
             get => Get<AuxTestViewModel?>();
             set => Set(value);
         }
+
+        [DependsOn(nameof(Text))]
+        public string? ReadonlyText => Text;
 
         public ObservableCollection<TestViewModel> Items
         {
@@ -707,11 +729,17 @@ public class FrameworkElementBindingTests
         public override string ToString() => Text;
     }
 
-    public class AuxTestViewModel : ViewModel
+    private class AuxTestViewModel : ViewModel
     {
         public string? Text
         {
             get=> Get<string?>();
+            set => Set(value);
+        }
+
+        public TestViewModel? TestVm
+        {
+            get => Get<TestViewModel?>();
             set => Set(value);
         }
     }
