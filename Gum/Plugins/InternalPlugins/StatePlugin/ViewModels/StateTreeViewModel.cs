@@ -66,7 +66,8 @@ public class StateTreeViewModel : ViewModel
             if (sender is StateViewModel stateVm && stateVm.IsSelected == true)
             {
                 GumState.Self.SelectedState.SelectedStateSave = stateVm.Data;
-                _stateTreeViewRightClickService.PopulateMenuStrip();
+                // No need to do this, we have events that do this for us:
+                //_stateTreeViewRightClickService.PopulateMenuStrip();
             }
             else if(sender is CategoryViewModel categoryVm && categoryVm.IsSelected)
             {
@@ -77,7 +78,8 @@ public class StateTreeViewModel : ViewModel
                     GumState.Self.SelectedState.SelectedStateCategorySave = null;
                 }
                 GumState.Self.SelectedState.SelectedStateCategorySave = categoryVm.Data;
-                _stateTreeViewRightClickService.PopulateMenuStrip();
+                // I don't think we need to do this anymore because we can rely on the plugin to respond to events
+                //_stateTreeViewRightClickService.PopulateMenuStrip();
             }
         }
         

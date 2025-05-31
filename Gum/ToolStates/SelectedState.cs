@@ -532,6 +532,7 @@ public class SelectedState : ISelectedState
         if(value != null)
         {
             snapshot.SelectedStateSave = null;
+            PluginManager.Self.ReactToStateSaveSelected(null);
         }
         UpdateToSetSelectedStateSaveCategory(value);
 
@@ -752,12 +753,12 @@ public class SelectedState : ISelectedState
 /// </remarks>
 class SelectedStateSnapshot
 {
-    public ScreenSave SelectedScreen
+    public ScreenSave? SelectedScreen
     {
         get => SelectedElement as ScreenSave;
         set => SelectedElement = value;
     }
-    public ElementSave SelectedElement
+    public ElementSave? SelectedElement
     {
         get => selectedElements.FirstOrDefault();
         set
@@ -805,13 +806,13 @@ class SelectedStateSnapshot
         }
     }
 
-    public BehaviorSave SelectedBehavior { get; set; }
-    public ElementBehaviorReference SelectedBehaviorReference { get; set; }
+    public BehaviorSave? SelectedBehavior { get; set; }
+    public ElementBehaviorReference? SelectedBehaviorReference { get; set; }
 
-    public StateSave CustomCurrentStateSave { get; set; }
-    public StateSave SelectedStateSave { get; set; }
+    public StateSave? CustomCurrentStateSave { get; set; }
+    public StateSave? SelectedStateSave { get; set; }
 
-    public StateSave SelectedStateSaveOrDefault { get; set; }
+    public StateSave? SelectedStateSaveOrDefault { get; set; }
 
     public StateSaveCategory SelectedStateCategorySave { get; set; }
     public ComponentSave SelectedComponent

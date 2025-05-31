@@ -295,7 +295,7 @@ namespace Gum.Plugins
         internal void StateDelete(StateSave stateSave) =>
             CallMethodOnPlugin((plugin) => plugin.CallStateDelete(stateSave));
 
-        internal void ReactToStateSaveSelected(StateSave stateSave) =>
+        internal void ReactToStateSaveSelected(StateSave? stateSave) =>
             CallMethodOnPlugin((plugin) => plugin.CallReactToStateSaveSelected(stateSave));
 
         internal void ReactToCustomStateSaveSelected(StateSave stateSave) =>

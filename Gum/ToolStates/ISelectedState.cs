@@ -17,7 +17,7 @@ namespace Gum.ToolStates
         BehaviorSave SelectedBehavior { get; set; }
         ElementBehaviorReference SelectedBehaviorReference { get; set; }
         StateSave CustomCurrentStateSave{ get; set; }
-        StateSave SelectedStateSave { get; set; }
+        StateSave? SelectedStateSave { get; set; }
         StateSave SelectedStateSaveOrDefault { get;}
 
         StateSaveCategory SelectedStateCategorySave { get; set; }

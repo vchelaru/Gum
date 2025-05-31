@@ -64,24 +64,31 @@ public class MainStatePlugin : InternalPlugin
     private void AssignEvents()
     {
         this.StateWindowTreeNodeSelected += HandleStateSelected;
+        
         this.TreeNodeSelected += HandleTreeNodeSelected;
+        
         this.RefreshStateTreeView += HandleRefreshStateTreeView;
+        
         this.ReactToStateSaveSelected += HandleStateSelected;
         this.ReactToStateSaveCategorySelected += HandleStateSaveCategorySelected;
+        
         this.StateRename += HandleStateRename;
+        this.StateDelete += HandleStateDelete;
+        this.StateMovedToCategory += HandleStateMovedToCategory;
+
         this.CategoryRename += HandleCategoryRename;
         this.BehaviorSelected += HandleBehaviorSelected;
         this.BehaviorReferenceSelected += HandleBehaviorReferenceSelected;
         this.InstanceSelected += HandleInstanceSelected;
         this.ElementSelected += HandleElementSelected;
         this.ElementDelete += HandleElementDeleted;
-        this.StateMovedToCategory += HandleStateMovedToCategory;
         this.VariableSet += HandleVariableSet;
     }
 
+
     private void HandleElementDeleted(ElementSave save)
     {
-        RefreshUI(SelectedState.Self.SelectedStateContainer);
+        RefreshUI(_selectedState.SelectedStateContainer);
     }
 
     private void CreateNewStateTab()
@@ -99,7 +106,7 @@ public class MainStatePlugin : InternalPlugin
     private void HandleStateMovedToCategory(StateSave stateSave, StateSaveCategory newCategory, StateSaveCategory oldCategory)
     {
         _stateTreeViewRightClickService.PopulateMenuStrip();
-        stateTreeViewModel.RefreshTo(GumState.Self.SelectedState.SelectedStateContainer, _selectedState, _objectFinder);
+        stateTreeViewModel.RefreshTo(_selectedState.SelectedStateContainer, _selectedState, _objectFinder);
     }
 
     private void HandleElementSelected(ElementSave save)
@@ -111,7 +118,7 @@ public class MainStatePlugin : InternalPlugin
 
     private void HandleInstanceSelected(ElementSave save1, InstanceSave save2)
     {
-        RefreshUI(SelectedState.Self.SelectedStateContainer);
+        RefreshUI(_selectedState.SelectedStateContainer);
 
         // A user could directly select an instance in
         // a different container such as going from a component
@@ -141,21 +148,28 @@ public class MainStatePlugin : InternalPlugin
         stateTreeViewModel.HandleRename(save);
     }
 
+
+    private void HandleStateDelete(StateSave save)
+    {
+        _stateTreeViewRightClickService.PopulateMenuStrip();
+        stateTreeViewModel.RefreshTo(_selectedState.SelectedStateContainer, _selectedState, _objectFinder);
+    }
+
     private void HandleStateSelected(StateSave state)
     {
+        _stateTreeViewRightClickService.PopulateMenuStrip();
         stateTreeViewModel.SetSelectedState(state);
     }
 
     private void HandleStateSaveCategorySelected(StateSaveCategory stateSaveCategory)
     {
         _stateTreeViewRightClickService.PopulateMenuStrip();
-
         stateTreeViewModel.SetSelectedStateSaveCategory(stateSaveCategory);
     }
 
     private void HandleRefreshStateTreeView()
     {
-        RefreshUI(SelectedState.Self.SelectedStateContainer);
+        RefreshUI(_selectedState.SelectedStateContainer);
     }
 
     private void HandleTreeNodeSelected(TreeNode node)
@@ -188,8 +202,8 @@ public class MainStatePlugin : InternalPlugin
 
     private void HandleStateSelected(TreeNode stateTreeNode)
     {
-        var currentCategory = SelectedState.Self.SelectedStateCategorySave;
-        var currentState = SelectedState.Self.SelectedStateSave;
+        var currentCategory = _selectedState.SelectedStateCategorySave;
+        var currentState = _selectedState.SelectedStateSave;
 
         if (currentCategory != null && currentState != null)
         {
@@ -217,8 +231,8 @@ public class MainStatePlugin : InternalPlugin
     {
         foreach (var variable in currentState.Variables)
         {
-            VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(variable.Name, 
-                GumState.Self.SelectedState.SelectedElement, GumState.Self.SelectedState.SelectedStateCategorySave);
+            VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(variable.Name,
+                _selectedState.SelectedElement, _selectedState.SelectedStateCategorySave);
         }
     }
 

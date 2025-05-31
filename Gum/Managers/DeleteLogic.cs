@@ -54,7 +54,7 @@ namespace Gum.Managers
 
                 if (_selectedState.SelectedInstances.Count() > 1)
                 {
-                    AskToDeleteInstances(SelectedState.Self.SelectedInstances);
+                    AskToDeleteInstances(_selectedState.SelectedInstances);
                 }
                 else if (selectedInstance != null)
                 {
@@ -167,7 +167,7 @@ namespace Gum.Managers
                     {
                         objectsDeleted = array;
                         // We need to remove the reference
-                        var behavior = SelectedState.Self.SelectedBehavior;
+                        var behavior = _selectedState.SelectedBehavior;
                         GumCommands.Self.ProjectCommands.RemoveBehavior(behavior);
                     }
                 }
@@ -242,7 +242,7 @@ namespace Gum.Managers
             return result;
         }
 
-        private static void AskToDeleteInstances(IEnumerable<InstanceSave> instances)
+        private void AskToDeleteInstances(IEnumerable<InstanceSave> instances)
         {
 
             var deletableInstances = instances.Where(item => item.DefinedByBase == false).ToArray();
@@ -268,7 +268,7 @@ namespace Gum.Managers
 
                 if (result == DialogResult.Yes)
                 {
-                    ElementSave selectedElement = SelectedState.Self.SelectedElement;
+                    ElementSave selectedElement = _selectedState.SelectedElement;
                     foreach (var instance in deletableInstances)
                     {
                         Gum.ToolCommands.ElementCommands.Self.RemoveInstance(instance,
@@ -298,7 +298,7 @@ namespace Gum.Managers
 
                 if (result == DialogResult.Yes)
                 {
-                    ElementSave selectedElement = SelectedState.Self.SelectedElement;
+                    ElementSave selectedElement = _selectedState.SelectedElement;
 
                     // Just in case the argument is a reference to the selected instances:
                     var instancesToRemove = instances.ToList();
@@ -311,7 +311,7 @@ namespace Gum.Managers
             }
         }
 
-        private static void RefreshAndSaveAfterInstanceRemoval(ElementSave selectedElement, BehaviorSave behavior)
+        private void RefreshAndSaveAfterInstanceRemoval(ElementSave selectedElement, BehaviorSave behavior)
         {
             if(selectedElement != null)
             {
@@ -326,15 +326,15 @@ namespace Gum.Managers
             BehaviorSave behaviorToReselect = behavior;
 
 
-            SelectedState.Self.SelectedInstance = null;
+            _selectedState.SelectedInstance = null;
             if(selectedElement != null)
             {
-                SelectedState.Self.SelectedElement = elementToReselect;
+                _selectedState.SelectedElement = elementToReselect;
                 GumCommands.Self.GuiCommands.RefreshElementTreeView(selectedElement);
             }
             else if(behavior != null)
             {
-                SelectedState.Self.SelectedBehavior = behaviorToReselect;
+                _selectedState.SelectedBehavior = behaviorToReselect;
                 GumCommands.Self.GuiCommands.RefreshElementTreeView(behavior);
             }
 
@@ -397,15 +397,15 @@ namespace Gum.Managers
             {
 
                 var stateCategoryListContainer =
-                    SelectedState.Self.SelectedStateContainer;
+                    _selectedState.SelectedStateContainer;
 
-                var isRemovingSelectedCategory = SelectedState.Self.SelectedStateCategorySave == category;
+                var isRemovingSelectedCategory = _selectedState.SelectedStateCategorySave == category;
 
                 stateCategoryListContainer.Categories.Remove(category);
 
-                if (SelectedState.Self.SelectedElement != null)
+                if (_selectedState.SelectedElement != null)
                 {
-                    var element = SelectedState.Self.SelectedElement;
+                    var element = _selectedState.SelectedElement;
 
                     foreach (var state in element.AllStates)
                     {
@@ -455,9 +455,9 @@ namespace Gum.Managers
 
                 if(isRemovingSelectedCategory)
                 {
-                    if(SelectedState.Self.SelectedElement != null)
+                    if(_selectedState.SelectedElement != null)
                     {
-                        SelectedState.Self.SelectedStateSave = SelectedState.Self.SelectedElement.DefaultState;
+                        _selectedState.SelectedStateSave = _selectedState.SelectedElement.DefaultState;
                     }
                 }
 
@@ -495,18 +495,18 @@ namespace Gum.Managers
 
         public void Remove(StateSave stateSave)
         {
-            bool shouldProgress = TryAskForRemovalConfirmation(stateSave, SelectedState.Self.SelectedElement);
+            bool shouldProgress = TryAskForRemovalConfirmation(stateSave, _selectedState.SelectedElement);
             if (shouldProgress)
             {
                 using (UndoManager.Self.RequestLock())
                 {
-                    var stateCategory = SelectedState.Self.SelectedStateCategorySave;
-                    var shouldSelectAfterRemoval = stateSave == SelectedState.Self.SelectedStateSave;
+                    var stateCategory = _selectedState.SelectedStateCategorySave;
+                    var shouldSelectAfterRemoval = stateSave == _selectedState.SelectedStateSave;
                     int index = stateCategory?.States.IndexOf(stateSave) ?? -1;
 
-                    ElementCommands.Self.RemoveState(stateSave, SelectedState.Self.SelectedStateContainer);
+                    ElementCommands.Self.RemoveState(stateSave, _selectedState.SelectedStateContainer);
                     PluginManager.Self.StateDelete(stateSave);
-                    GumCommands.Self.GuiCommands.RefreshStateTreeView();
+
                     GumCommands.Self.GuiCommands.RefreshVariables();
                     WireframeObjectManager.Self.RefreshAll(true);
 
@@ -527,19 +527,20 @@ namespace Gum.Managers
 
                         if(newIndex == null && stateCategory != null)
                         {
-                            SelectedState.Self.SelectedStateCategorySave = stateCategory;
+                            _selectedState.SelectedStateCategorySave = stateCategory;
+                            _selectedState.SelectedStateSave = null;
                         }
                         else if(newIndex != null)
                         {
-                            SelectedState.Self.SelectedStateSave = stateCategory.States[newIndex.Value];
+                            _selectedState.SelectedStateSave = stateCategory.States[newIndex.Value];
                         }
-                        else if(SelectedState.Self.SelectedElement != null)
+                        else if(_selectedState.SelectedElement != null)
                         {
-                            SelectedState.Self.SelectedStateSave = SelectedState.Self.SelectedElement.DefaultState;
+                            _selectedState.SelectedStateSave = _selectedState.SelectedElement.DefaultState;
                         }
                         else
                         {
-                            SelectedState.Self.SelectedStateSave = null;
+                            _selectedState.SelectedStateSave = null;
                         }
                     }
                 }
