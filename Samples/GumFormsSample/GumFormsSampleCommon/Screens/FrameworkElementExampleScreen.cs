@@ -1,6 +1,7 @@
 ﻿using Gum.Wireframe;
 using GumFormsSample.CustomRuntimes;
 using Microsoft.Xna.Framework;
+using MonoGameGum;
 using MonoGameGum.Forms;
 using MonoGameGum.Forms.Controls;
 using MonoGameGum.Forms.DefaultVisuals;
@@ -26,26 +27,23 @@ namespace GumFormsSample.Screens
         public FrameworkElementExampleScreen()
         {
             //FileManager.RelativeDirectory = "Content/";
-            var root = this;
-            root.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            root.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            root.Width = 0;
-            root.Height = 0;
-            FrameworkElement.DefaultFormsComponents[typeof(Button)] =
-                typeof(FullyCustomizedButton);
+            this.Dock(Gum.Wireframe.Dock.Fill);
 
-            CreateMenu(root);
+            FrameworkElement.DefaultFormsTemplates[typeof(Button)] =
+                new VisualTemplate(typeof(FullyCustomizedButton));
 
-            CreateColumn1Ui(root);
+            CreateMenu();
 
-            CreateColumn2Ui(root);
+            CreateColumn1Ui();
+
+            CreateColumn2Ui();
 
             // This requires custom roots which adds a lot of complexity so removing this for now
             //CreateLayeredUi();
 
         }
 
-        private void CreateMenu(GraphicalUiElement root)
+        private void CreateMenu()
         {
             var menu = new Menu();
 
@@ -114,30 +112,37 @@ namespace GumFormsSample.Screens
 
             menu.Items.Add("Help");
 
-            root.Children.Add(menu.Visual);
+            this.AddChild(menu);
 
         }
 
-        private void CreateColumn1Ui(GraphicalUiElement root)
+        private void CreateColumn1Ui()
         {
-            var currentY = 40;
-            
+            var stackPanel = new StackPanel();
+            stackPanel.Spacing = 4;
+            this.AddChild(stackPanel);
+            stackPanel.Y = 40;
+
+            var normalLabel = new Label();
+            normalLabel.Text = "This is a normal label";
+            stackPanel.AddChild(normalLabel);
+
+            var labelWithBbCode = new Label();
+            labelWithBbCode.Text = "This is [IsBold=true]bold text[/IsBold] and [IsItalic=true]italic text[/IsItalic]";
+            stackPanel.AddChild(labelWithBbCode);
+
             var scrollBar = new ScrollBar();
-            root.Children.Add(scrollBar.Visual);
             scrollBar.Width = 24;
             scrollBar.Height = 200;
             scrollBar.X = 200;
-            scrollBar.Y = currentY;
 
             scrollBar.Minimum = 0;
             scrollBar.Maximum = 150;
             scrollBar.ViewportSize = 50;
+            stackPanel.AddChild(scrollBar);
 
 
             var button = new Button();
-            root.Children.Add(button.Visual);
-            button.X = 0;
-            button.Y = currentY;
             button.Width = 100;
             button.Height = 50;
             button.Text = "Hello MonoGame!";
@@ -151,35 +156,23 @@ namespace GumFormsSample.Screens
                 clickCount++;
                 button.Text = $"Clicked {clickCount} times";
             };
-
-            currentY += 50;
+            stackPanel.AddChild(button);
 
             var checkbox = new CheckBox();
-            root.Children.Add(checkbox.Visual);
-            checkbox.X = 0;
-            checkbox.Y = currentY;
             checkbox.Text = "Checkbox";
-
-            currentY += 50;
+            stackPanel.AddChild(checkbox);
 
             var comboBox = new ComboBox();
-            root.Children.Add(comboBox.Visual);
             comboBox.Name = "Hello";
             comboBox.Width = 140;
-            comboBox.X = 0;
-            comboBox.Y = currentY;
             for (int i = 0; i < 20; i++)
             {
                 comboBox.Items.Add($"Item {i}");
             }
+            stackPanel.AddChild(comboBox);
 
-            currentY += 120;
-
-            // We can also create buttons through the creation of the default controls:
+            // We can also create buttons through their visual type:
             var buttonRuntime = new DefaultButtonRuntime();
-            root.Children.Add(buttonRuntime);
-            buttonRuntime.X = 0;
-            buttonRuntime.Y = currentY;
             buttonRuntime.Width = 100;
             buttonRuntime.Height = 50;
             buttonRuntime.TextInstance.Text = "Other Button!";
@@ -189,12 +182,9 @@ namespace GumFormsSample.Screens
                 clickCount++;
                 formsButton.Text = $"Clicked {clickCount} times";
             };
+            stackPanel.AddChild(buttonRuntime);
 
-            currentY += 50;
             var listBox = new ListBox();
-            root.Children.Add(listBox.Visual);
-            listBox.X = 0;
-            listBox.Y = currentY;
             listBox.Width = 200;
             listBox.Height = 200;
 
@@ -202,27 +192,26 @@ namespace GumFormsSample.Screens
             {
                 listBox.Items.Add($"Item {i}");
             }
-
-
+            stackPanel.AddChild(listBox);
 
         }
 
-        private void CreateColumn2Ui(GraphicalUiElement root)
+        private void CreateColumn2Ui()
         {
-            var currentY = 40f;
+            var stackPanel = new StackPanel();
+            stackPanel.Y = 40;
+            stackPanel.X = 260;
+            stackPanel.Spacing = 4;
+            this.AddChild(stackPanel);
+
 
             var scrollViewer = new ScrollViewer();
-            root.Children.Add(scrollViewer.Visual);
             scrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
-
-            scrollViewer.X = 260;
-            scrollViewer.Y = currentY;
             scrollViewer.Width = 200;
             scrollViewer.Height = 200;
             scrollViewer.InnerPanel.StackSpacing = 2;
+            stackPanel.AddChild(scrollViewer);
 
-
-            currentY += 200;
             Button addButton = new Button();
             addButton.Text = "Add Items";
             addButton.Click += (_, _) =>
@@ -236,57 +225,37 @@ namespace GumFormsSample.Screens
                 scrollViewer.InnerPanel.Children.Add(child);
 
             };
-            addButton.X = 260;
-            addButton.Y = currentY;
-            root.Children.Add(addButton.Visual);
+            stackPanel.AddChild(addButton);
 
-            currentY += 40;
 
             var textBox = new TextBox();
-            root.Children.Add(textBox.Visual);
-            textBox.X = 260;
-            textBox.Y = currentY;
             textBox.Width = 200;
             textBox.Height = 34;
             textBox.Placeholder = "Placeholder Text...";
-
-            currentY += 40;
+            stackPanel.AddChild(textBox);
 
             var wrappedTextBox = new TextBox();
-            root.Children.Add(wrappedTextBox.Visual);
-            wrappedTextBox.X = 260;
-            wrappedTextBox.Y = currentY;
             wrappedTextBox.Width = 200;
             wrappedTextBox.TextWrapping = MonoGameGum.Forms.TextWrapping.Wrap;
             wrappedTextBox.Height = 140;
             wrappedTextBox.Placeholder = "Placeholder Text...";
-
-            currentY += wrappedTextBox.Height + 40;
+            stackPanel.AddChild(wrappedTextBox);
 
             var passwordBox = new PasswordBox();
-            root.Children.Add(passwordBox.Visual);
-            passwordBox.X = 260;
-            passwordBox.Y = currentY;
             passwordBox.Width = 200;
             passwordBox.Height = 34;
             passwordBox.Placeholder = "Enter Password";
-
-            currentY += 40;
+            stackPanel.AddChild(passwordBox);
 
             var slider = new Slider();
-            root.Children.Add(slider.Visual);
-            slider.X = 260;
-            slider.Y = currentY;
             slider.Minimum = 0;
             slider.Maximum = 10;
             slider.TicksFrequency = 1;
             slider.IsSnapToTickEnabled = true;
             slider.Width = 200;
-
-            currentY += 40;
+            stackPanel.AddChild(slider);
 
             var showPopupButton = new Button();
-            root.Children.Add(showPopupButton.Visual);
 
             showPopupButton.Visual.RollOn += (_, _) =>
             {
@@ -297,9 +266,6 @@ namespace GumFormsSample.Screens
             {
                 Debug.WriteLine($"Roll off at {DateTime.Now}");
             };
-
-            showPopupButton.X = 260;
-            showPopupButton.Y = currentY;
             showPopupButton.Width = 200;
 
             showPopupButton.Text = "Show Non-Modal Popup";
@@ -308,25 +274,17 @@ namespace GumFormsSample.Screens
                 ShowPopup("This is a non-modal popup", isModal: false);
                 // create a popup here
             };
-            currentY += 40;
-
+            stackPanel.AddChild(showPopupButton);
 
             var showModalPopupButton = new Button();
-            root.Children.Add(showModalPopupButton.Visual);
-
-            showModalPopupButton.X = 260;
-            showModalPopupButton.Y = currentY;
             showModalPopupButton.Width = 200;
 
             showModalPopupButton.Text = "Show Modal Popup";
             showModalPopupButton.Click += (_,_) =>
             {
                 ShowPopup("This is a modal popup", isModal:true);
-                // create a popup here
             };
-            currentY += 40;
-
-
+            stackPanel.AddChild(showModalPopupButton);
         }
 
         void CreateLayeredUi()
@@ -347,7 +305,7 @@ namespace GumFormsSample.Screens
             layeredContainer.XUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
             layeredContainer.XOrigin = HorizontalAlignment.Right;
             layeredContainer.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-            this.Children.Add(layeredContainer);
+            this.AddChild(layeredContainer);
 
             var zoomInButton = new Button();
             zoomInButton.Text = "Zoom layer in";
@@ -358,7 +316,7 @@ namespace GumFormsSample.Screens
             {
                 layerCameraSettings.Zoom += 0.1f;
             };
-            layeredContainer.Children.Add(zoomInButton.Visual);
+            layeredContainer.AddChild(zoomInButton);
 
 
             var zoomOutButton = new Button();
@@ -370,7 +328,7 @@ namespace GumFormsSample.Screens
             {
                 layerCameraSettings.Zoom -= 0.1f;
             };
-            layeredContainer.Children.Add(zoomOutButton.Visual);
+            layeredContainer.AddChild(zoomOutButton);
             //button.Visual.AddToManagers(SystemManagers.Default, null);
         }
 

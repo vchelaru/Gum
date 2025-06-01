@@ -1172,7 +1172,7 @@ public class CustomSetPropertyOnRenderable
         }
     }
 
-    private static BitmapFont GetFontDisposable(string fontName)
+    private static BitmapFont? GetFontDisposable(string fontName)
     {
 #if KNI
         string prefix = "KniGum";
