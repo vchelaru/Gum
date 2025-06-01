@@ -45,6 +45,12 @@
 	<ItemGroup>
 		<None Remove="Content\Font18Arial.fnt" />
 		<None Remove="Content\Font18Arial_0.png" />
+		<None Remove="Content\Font18Arial_Bold.fnt" />
+		<None Remove="Content\Font18Arial_Bold_0.png" />
+		<None Remove="Content\Font18Arial_Italic.fnt" />
+		<None Remove="Content\Font18Arial_Italic_0.png" />
+		<None Remove="Content\Font18Arial_Italic_Bold.fnt" />
+		<None Remove="Content\Font18Arial_Italic_Bold_0.png" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -87,6 +93,12 @@
 	<ItemGroup>
 		<EmbeddedResource Include="Content\Font18Arial.fnt" />
 		<EmbeddedResource Include="Content\Font18Arial_0.png" />
+		<EmbeddedResource Include="Content\Font18Arial_Bold.fnt" />
+		<EmbeddedResource Include="Content\Font18Arial_Bold_0.png" />
+		<EmbeddedResource Include="Content\Font18Arial_Italic.fnt" />
+		<EmbeddedResource Include="Content\Font18Arial_Italic_0.png" />
+		<EmbeddedResource Include="Content\Font18Arial_Italic_Bold.fnt" />
+		<EmbeddedResource Include="Content\Font18Arial_Italic_Bold_0.png" />
 	</ItemGroup>
 
 	<ItemGroup>

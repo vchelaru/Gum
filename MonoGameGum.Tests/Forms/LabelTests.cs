@@ -1,0 +1,28 @@
+﻿using MonoGameGum.Forms.Controls;
+using RenderingLibrary.Graphics;
+using Shouldly;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Xunit;
+
+namespace MonoGameGum.Tests.Forms;
+public class LabelTests
+{
+    [Fact]
+    public void Text_ShouldParseBbCodeTags()
+    {
+        // Arrange
+        var label = new Label();
+        label.Text = "This is [IsBold=true]bold[/IsBold] and [IsItalic=true]italic[/IsItalic] text.";
+        // Act
+        var parsedText = label.Text;
+        // Assert
+
+        var rawText = (Text)label.TextComponent.RenderableComponent;
+        rawText.InlineVariables.Count.ShouldBe(4, "because the font starts default and changes 4 times with tags: bold, not bold, italic, not italic");
+        rawText.RawText.ShouldBe("This is bold and italic text.");
+    }
+}
