@@ -197,6 +197,17 @@ wrappedTextBox.Height = 140;
 
 <figure><img src="../../../../.gitbook/assets/16_11 39 19.gif" alt=""><figcaption><p><code>TextWrapping.Wrap</code> causes text to wrap</p></figcaption></figure>
 
+`AcceptsReturn` can be set to true to add newlines when the return (enter) key is pressed.
+
+```csharp
+wrappedTextBox.TextWrapping = TextWrapping.Wrap;
+// If you have set up your TextBox in code, you may need to make it taller:
+wrappedTextBox.Height = 140;
+wrappedTextBox.AcceptsReturn = true;
+```
+
+<figure><img src="../../../../.gitbook/assets/01_10 27 47.gif" alt=""><figcaption><p>Manually adding newlines by pressing the return (enter) key</p></figcaption></figure>
+
 ## Extended Character Sets and Keyboards
 
 The TextBox supports entering characters respecting the current keyboard language settings. This includes typing characters with accents, pasting text, and entering alt codes ([https://www.alt-codes.net/](https://www.alt-codes.net/) ).
