@@ -919,6 +919,11 @@ public class CustomSetPropertyOnRenderable
 
             var font = global::RenderingLibrary.Content.LoaderManager.Self.GetDisposable(fontFileName) as BitmapFont;
 
+            if (font == null)
+            {
+                font = GetFontDisposable(fontFileName);
+            }
+
             // no cache, does it need to be created?
             if (font == null)
             {
@@ -1098,6 +1103,14 @@ public class CustomSetPropertyOnRenderable
                 string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, preserveCase: true, makeAbsolute: true);
 
                 font = loaderManager.GetDisposable(fullFileName) as BitmapFont;
+
+                // Attempt to load from Embedded Resource
+
+                if (fontName != null && font == null)
+                {
+                    font = GetFontDisposable(fontName);
+                }
+
                 if (font == null || font.Texture?.IsDisposed == true)
                 {
 #if KNI
@@ -1157,6 +1170,21 @@ public class CustomSetPropertyOnRenderable
                 graphicalUiElement.UpdateLayout();
             }
         }
+    }
+
+    private static BitmapFont GetFontDisposable(string fontName)
+    {
+#if KNI
+        string prefix = "KniGum";
+#elif FNA
+        string prefix = "FnaGum";
+#else
+        string prefix = "MonoGameGum.Content";
+#endif
+        
+        string fontFilenameOnly = Path.GetFileName(fontName);
+        string embeddedFontName = $"EmbeddedResource.{prefix}.{fontFilenameOnly}";
+        return global::RenderingLibrary.Content.LoaderManager.Self.GetDisposable(embeddedFontName) as BitmapFont;
     }
 
     #endregion

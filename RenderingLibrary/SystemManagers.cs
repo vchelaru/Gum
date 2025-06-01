@@ -245,19 +245,14 @@ namespace RenderingLibrary
 #if USE_GUMCOMMON
                 LoaderManager.Self.ContentLoader = new ContentLoader();
 
-                var assembly = typeof(SystemManagers).Assembly;
-#if KNI
-                string prefix = "KniGum";
-#elif FNA
-                string prefix = "FnaGum";
-#else
-                string prefix = "MonoGameGum.Content";
-#endif
-                var bitmapPattern = ToolsUtilities.FileManager.GetStringFromEmbeddedResource(assembly, $"{prefix}.Font18Arial.fnt");
-                using var stream = ToolsUtilities.FileManager.GetStreamFromEmbeddedResource(assembly, $"{prefix}.Font18Arial_0.png");
-                var defaultFontTexture = Texture2D.FromStream(graphicsDevice, stream);
-                Text.DefaultBitmapFont = new BitmapFont(defaultFontTexture, bitmapPattern);
-                Renderer.InternalShapesTexture = defaultFontTexture;
+                // Load the default font, and then the bold, italic, and italic_bold options for bbcode
+                var loadedFont = LoadEmbeddedFont(graphicsDevice, "Font18Arial");
+                Text.DefaultBitmapFont = loadedFont;
+                Renderer.InternalShapesTexture = loadedFont.Texture;
+
+                LoadEmbeddedFont(graphicsDevice, "Font18Arial_Bold");
+                LoadEmbeddedFont(graphicsDevice, "Font18Arial_Italic");
+                LoadEmbeddedFont(graphicsDevice, "Font18Arial_Italic_Bold");
 
                 GraphicalUiElement.CanvasWidth = graphicsDevice.Viewport.Width;
                 GraphicalUiElement.CanvasHeight = graphicsDevice.Viewport.Height;
@@ -286,6 +281,26 @@ namespace RenderingLibrary
 
 #endif
             }
+        }
+
+        private BitmapFont LoadEmbeddedFont(GraphicsDevice graphicsDevice, string fontName)
+        {
+            var assembly = typeof(SystemManagers).Assembly;
+#if KNI
+            string prefix = "KniGum";
+#elif FNA
+            string prefix = "FnaGum";
+#else
+            string prefix = "MonoGameGum.Content";
+#endif
+            var bitmapPattern = ToolsUtilities.FileManager.GetStringFromEmbeddedResource(assembly, $"{prefix}.{fontName}.fnt");
+            using var stream = ToolsUtilities.FileManager.GetStreamFromEmbeddedResource(assembly, $"{prefix}.{fontName}_0.png");
+            var defaultFontTexture = Texture2D.FromStream(graphicsDevice, stream);
+            var bitmapFont = new BitmapFont(defaultFontTexture, bitmapPattern);
+
+            LoaderManager.Self.AddDisposable($"EmbeddedResource.{prefix}.{fontName}.fnt", bitmapFont);
+
+            return bitmapFont;
         }
 
 #if USE_GUMCOMMON
