@@ -128,7 +128,7 @@ namespace GumFormsSample.Screens
             stackPanel.AddChild(normalLabel);
 
             var labelWithBbCode = new Label();
-            labelWithBbCode.Text = "This is [IsBold=true]bold text[/IsBold] and [IsItalic=true]italic text[/IsItalic]";
+            labelWithBbCode.Text = "This is [IsBold=true]bold text[/IsBold] and\n[IsItalic=true]italic text[/IsItalic] on this label";
             stackPanel.AddChild(labelWithBbCode);
 
             var scrollBar = new ScrollBar();
