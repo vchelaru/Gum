@@ -6075,6 +6075,33 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
+    List<IRenderableIpso> _tempChildrenList;
+
+    /// <summary>
+    /// Populates a list with all the children of the argument type. Performs the search in a recursive fashion.
+    /// </summary>
+    /// <param name="type">Type to search for.</param>
+    /// <param name="listToPopulate">List to pupulate. The user has the responsability of instantiating and clearing this list.</param>
+    /// <returns></returns>
+    public void FillListWithChildrenByTypeRecursively(Type type, List<IRenderableIpso> listToPopulate)
+    {
+        _tempChildrenList = listToPopulate;
+        GetChildrenByType(Children, type);
+    }
+
+    private void GetChildrenByType(ObservableCollection<IRenderableIpso> children, Type type)
+    {
+        foreach (var child in children)
+        {
+            if (child.GetType().Equals(type))
+            {
+                _tempChildrenList.Add(child);
+            }
+
+            GetChildrenByType(child.Children, type);
+        }
+    }
+
     #endregion
 
     #region Font/Text
