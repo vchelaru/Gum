@@ -6086,10 +6086,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     public void FillListWithChildrenByTypeRecursively(Type type, List<IRenderableIpso> listToPopulate)
     {
         _tempChildrenList = listToPopulate;
-        GetChildrenByType(Children, type);
+        FillListWithChildrenByType(Children, type);
     }
 
-    private void GetChildrenByType(ObservableCollection<IRenderableIpso> children, Type type)
+    private void FillListWithChildrenByType(ObservableCollection<IRenderableIpso> children, Type type)
     {
         foreach (var child in children)
         {
@@ -6098,7 +6098,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 _tempChildrenList.Add(child);
             }
 
-            GetChildrenByType(child.Children, type);
+            FillListWithChildrenByType(child.Children, type);
         }
     }
 
