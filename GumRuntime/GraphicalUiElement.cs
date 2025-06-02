@@ -6081,10 +6081,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// Populates a list with all the children matching the argument type. Performs the search in a recursive fashion.
     /// </summary>
     /// <param name="type">Type to search for.</param>
-    /// <param name="listToPopulate">List to populate. The user has the responsability of instantiating and clearing this list.</param>
-    public void FillListWithChildrenByTypeRecursively(Type type, List<IRenderableIpso> listToPopulate)
+    /// <param name="listToFill">List to populate. The user has the responsability of instantiating and clearing this list.</param>
+    public void FillListWithChildrenByTypeRecursively(Type type, List<IRenderableIpso> listToFill)
     {
-        _tempChildrenList = listToPopulate;
+        _tempChildrenList = listToFill;
         FillListWithChildrenByType(Children, type);
     }
 
