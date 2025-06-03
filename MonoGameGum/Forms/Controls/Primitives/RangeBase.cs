@@ -228,7 +228,7 @@ public abstract class RangeBase : FrameworkElement
 #if FRB
         if(thumb != null)
         {
-            thumb.Visual.DragOver += HandleThumbRollOverFrb;
+            thumb.Visual.DragOver += HandleThumbDragFrb;
         }
         Visual.RollOver += HandleThisRollOverFrb;
         Track.Push += HandleTrackPushFrb;
