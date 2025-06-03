@@ -25,6 +25,8 @@ public class Cursor : ICursor
         {
             _customCursor = value;
 
+
+#if MONOGAME || KNI
             switch(value)
             {
                 case Cursors.Arrow:
@@ -49,6 +51,7 @@ public class Cursor : ICursor
 
                     break;
             }
+#endif
         }
     }
 
