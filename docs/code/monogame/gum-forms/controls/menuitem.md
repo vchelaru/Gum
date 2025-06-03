@@ -6,7 +6,7 @@ MenuItem is a control which is added to Menu instances, or as a child of other M
 
 <figure><img src="../../../../.gitbook/assets/20_15 41 52.gif" alt=""><figcaption><p>MenuItems in a Menu</p></figcaption></figure>
 
-## Code Example - Creating MenuItems
+## Code Example: Creating MenuItems
 
 The following code shows how to create menu items. Notice that MenuItems can be added to a Menu, or as children of other MenuItems.
 

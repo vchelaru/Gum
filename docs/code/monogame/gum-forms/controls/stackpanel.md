@@ -4,7 +4,7 @@
 
 StackPanel is a container used to for controls which should stack vertically or horizontally, and which supports wrapping. StackPanels do not include any visual so they are always invisible.
 
-## Code Example - Adding Buttons to a StackPanel
+## Code Example: Adding Buttons to a StackPanel
 
 The following code shows how to add Button instances to a StackPanel. Notice that each button is automatically stacked vertically.
 
