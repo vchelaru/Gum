@@ -1,7 +1,11 @@
 ﻿using Gum.Wireframe;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Input.Touch;
+using RenderingLibrary;
+using RenderingLibrary.Content;
+using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,9 +15,43 @@ using System.Threading.Tasks;
 namespace MonoGameGum.Input;
 
 
-
 public class Cursor : ICursor
 {
+    Cursors? _customCursor;
+    public Cursors? CustomCursor 
+    {
+        get => _customCursor;
+        set
+        {
+            _customCursor = value;
+
+            switch(value)
+            {
+                case Cursors.Arrow:
+                case null:
+                    Microsoft.Xna.Framework.Input.Mouse.SetCursor(MouseCursor.Arrow);
+                    break;
+                case Cursors.SizeNS:
+                    Microsoft.Xna.Framework.Input.Mouse.SetCursor(MouseCursor.SizeNS);
+
+                    break;
+                case Cursors.SizeWE:
+                    Microsoft.Xna.Framework.Input.Mouse.SetCursor(MouseCursor.SizeWE);
+
+                    break;
+
+                case Cursors.SizeNWSE:
+                    Microsoft.Xna.Framework.Input.Mouse.SetCursor(MouseCursor.SizeNWSE);
+
+                    break;
+                case Cursors.SizeNESW:
+                    Microsoft.Xna.Framework.Input.Mouse.SetCursor(MouseCursor.SizeNESW);
+
+                    break;
+            }
+        }
+    }
+
     public Matrix TransformMatrix { get; set; } = Matrix.Identity;
 
     public InputDevice LastInputDevice
@@ -111,7 +149,6 @@ public class Cursor : ICursor
     public bool PrimaryDoubleClick { get; private set; }
     public bool PrimaryDoublePush { get; private set; }
 
-    // for now just return true, but we'll need to keep track of actual push/clicks eventually:
     public bool PrimaryClickNoSlide => PrimaryClick;
 
     public bool SecondaryPush
@@ -214,6 +251,11 @@ public class Cursor : ICursor
     public double LastPrimaryPushTime => mLastPrimaryPushTime;
     double mLastSecondaryClickTime = -999;
     double mLastMiddleClickTime = -999;
+
+    public Cursor()
+    {
+        // empty for now, but maybe we'll need something here in the future?
+    }
 
     public void ClearInputValues()
     {

@@ -237,7 +237,7 @@ public abstract class RangeBase : FrameworkElement
 #else
         if (thumb != null)
         {
-            thumb.Visual.Dragging += HandleThumbRollOver;
+            thumb.Visual.Dragging += HandleDragOver;
         }
         Visual.RollOver += HandleThisRollOver;
         Track.Push += HandleTrackPush;
@@ -296,7 +296,7 @@ public abstract class RangeBase : FrameworkElement
 
 #if FRB
     // these wrappers exist at class level rather than lambdas so they can be unsubscribed
-    void HandleThumbRollOverFrb(IWindow _) => HandleThumbRollOver(this, EventArgs.Empty);
+    void HandleThumbDragFrb(IWindow _) => HandleDragOver(this, EventArgs.Empty);
     void HandleThisRollOverFrb(IWindow _) => HandleThisRollOver(this, EventArgs.Empty);
     void HandleTrackPushFrb(IWindow _) => HandleTrackPush(this, EventArgs.Empty);
     void HandleTrackHoverFrb(IWindow _) => HandleTrackHover(this, EventArgs.Empty);
@@ -310,13 +310,13 @@ public abstract class RangeBase : FrameworkElement
 
         thumb.Push -= HandleThumbPush;
 #if FRB
-        thumb.Visual.DragOver -= HandleThumbRollOverFrb;
+        thumb.Visual.DragOver -= HandleThumbDragFrb;
         Visual.RollOver -= HandleThisRollOverFrb;
         Track.Push -= HandleTrackPushFrb;
         Track.RollOver -= HandleTrackHoverFrb;
 
 #else
-        thumb.Visual.Dragging -= HandleThumbRollOver;
+        thumb.Visual.Dragging -= HandleDragOver;
         Visual.RollOver -= HandleThisRollOver;
         Track.Push -= HandleTrackPush;
         Track.HoverOver -= HandleTrackHover;
@@ -453,7 +453,7 @@ public abstract class RangeBase : FrameworkElement
 
     protected abstract void HandleThumbPush(object sender, EventArgs e);
 
-    private void HandleThumbRollOver(object sender, EventArgs args)
+    private void HandleDragOver(object sender, EventArgs args)
     {
         var cursor = MainCursor;
 

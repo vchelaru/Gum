@@ -92,6 +92,10 @@ public class FrameworkElement : INotifyPropertyChanged
 #else
     public static ICursor MainCursor { get; set; }
 
+#if !FRB
+    public Cursors? CustomCursor { get; set; }
+#endif
+
     public static List<GamePad> GamePadsForUiControl { get; private set; } = new List<GamePad>();
 
 #if MONOGAME || KNI
