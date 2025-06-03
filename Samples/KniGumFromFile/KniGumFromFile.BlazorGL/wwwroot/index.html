@@ -30,6 +30,7 @@
         <script src="_framework/blazor.webassembly.js" autostart="false"></script>
         <script type="module">
             import { BrotliDecode } from './js/decode.min.js';
+            window.BrotliDecode = BrotliDecode;
             // Set this to enable Brotli (.br) decompression on static webServers
             // that don't support content compression and http://.
             var enableBrotliDecompression = false;
@@ -99,7 +100,7 @@
                 // Prevent Mousewheel scrolling the outer page
                 // when running inside an iframe. e.g: itch.io embedding.
                 event.preventDefault();
-            };
+            }, { passive: false };
         </script>
 </body>
 
