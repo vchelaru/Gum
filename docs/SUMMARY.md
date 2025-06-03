@@ -256,6 +256,7 @@
       * [StackPanel](code/monogame/gum-forms/controls/stackpanel.md)
       * [Slider](code/monogame/gum-forms/controls/slider.md)
       * [TextBox](code/monogame/gum-forms/controls/textbox.md)
+      * [Window](code/monogame/gum-forms/controls/window.md)
     * [Control Customization In Code](code/monogame/gum-forms/control-customization/README.md)
       * [MenuItem](code/monogame/gum-forms/control-customization/menuitem.md)
     * [Control Customization in Gum Tool](code/monogame/gum-forms/control-customization-in-gum-tool.md)

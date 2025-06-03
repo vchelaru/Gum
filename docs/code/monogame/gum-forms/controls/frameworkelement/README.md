@@ -1,6 +1,6 @@
 # FrameworkElement
 
-### Introduction
+## Introduction
 
 FrameworkElement is the base class for all Gum Forms controls. Gum Forms controls are a collection of controls which often are used to build up UI such as [Button](../button.md), [ListBox](../listbox.md), [Label](../label.md), and [TextBox](../textbox.md). FrameworkElement provides much of the common functionality across all controls.
 

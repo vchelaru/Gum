@@ -1,12 +1,12 @@
 # ListBoxItem
 
-### Introduction
+## Introduction
 
 The ListBoxItem class is used by the ListBox control for each instance added to the ListBox.Items property.
 
 Gum Forms includes a default ListBoxItem implementation which includes a single label.
 
-### Code Example - Adding ListBoxItems
+## Code Example: Adding ListBoxItems
 
 ListBoxItems can be implicitly instantiated by adding any type of object to a ListBox. The following code creates 20 ListBoxItems, each displaying an integer.
 
@@ -26,7 +26,7 @@ for(int i = 0; i < 20; i++)
 
 <figure><img src="../../../../.gitbook/assets/09_09 13 40.gif" alt=""><figcaption><p>ListBoxItems created by adding ints to an Items</p></figcaption></figure>
 
-### ListBoxItems use ToString
+## ListBoxItems use ToString
 
 By default each item in a ListBox creates a new ListBoxItem. The ListBoxItem calls ToString on the item. Some types, such as `int` have ToString methods which display expressive values.
 

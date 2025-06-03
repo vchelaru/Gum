@@ -1,10 +1,10 @@
 # Slider
 
-### Introduction
+## Introduction
 
 The Slider control provides a way for the user to change a value by dragging the slider _thumb_.
 
-### Code Example: Creating a Slider
+## Code Example: Creating a Slider
 
 The following code creates a Slider which allows the user to select a value between 0 and 30, inclusive.  The `IsSnapToTickEnabled` property results in the value being snapped to the `TickFrequency` value. In this case, the value is used to force whole numbers.
 
