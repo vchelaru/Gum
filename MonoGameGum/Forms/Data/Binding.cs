@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using Gum.Wireframe;
@@ -34,15 +35,19 @@ public interface IValueConverter
     object? ConvertBack(object? value, Type sourceType, object? parameter);
 }
 
-public record Binding(string Path)
+public class Binding(string path)
 {
     public static object DoNothing { get; } = new();
-
+    public Binding(LambdaExpression propertyExpression) : this(BinderHelpers.ExtractPath(propertyExpression)) { }
+    public string Path { get; } = path;
     public BindingMode Mode { get; init; } = BindingMode.TwoWay;
     public UpdateSourceTrigger UpdateSourceTrigger { get; init; } = UpdateSourceTrigger.Default;
     public object? FallbackValue { get; init; }
     public object? TargetNullValue { get; init; }
     public IValueConverter? Converter { get; init; }
     public object? ConverterParameter { get; init; }
-    public string? StringFormat { get; set; }
+    public string? StringFormat { get; init; }
 }
+
+public class Binding<T>(Expression<Func<T, object?>> propertyExpression)
+    : Binding(BinderHelpers.ExtractPath(propertyExpression));

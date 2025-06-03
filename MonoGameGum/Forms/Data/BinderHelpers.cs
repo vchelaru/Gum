@@ -157,4 +157,30 @@ internal static class BinderHelpers
             .Lambda<Action<object, object?>>(ifAssign, instanceParam, valueParam)
             .Compile();
     }
+    
+    public static string ExtractPath(LambdaExpression expression)
+    {
+        Expression? body = expression.Body;
+        
+        if (body is UnaryExpression { NodeType: ExpressionType.Convert } unary)
+            body = unary.Operand;
+
+        Stack<string> segments = new();
+
+        while (body is MemberExpression member)
+        {
+            segments.Push(member.Member.Name);
+            body = member.Expression;
+        }
+
+        return body switch
+        {
+            ParameterExpression => string.Join(".", segments),
+            ConstantExpression when segments.Count > 1 => string.Join(".", segments.Skip(1)), // skip closure root
+            _ => throw new InvalidOperationException("Unsupported expression. Only property/field access is supported.")
+        };
+    }
+
+    public static string ExtractPath<T>(Expression<Func<T, object?>> expression) =>
+        ExtractPath((LambdaExpression)expression);
 }
