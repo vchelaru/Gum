@@ -1,7 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using Gum.Mvvm;
 
-namespace MonoGameGum.Tests;
+namespace MonoGameGum.Tests.Forms;
 
 public class TestViewModel : ViewModel
 {

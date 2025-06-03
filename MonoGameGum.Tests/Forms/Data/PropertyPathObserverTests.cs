@@ -2,7 +2,7 @@
 using MonoGameGum.Forms.Data;
 using Xunit;
 
-namespace MonoGameGum.Tests.Forms;
+namespace MonoGameGum.Tests.Forms.Data;
 
 public class PropertyPathObserverTests
 {

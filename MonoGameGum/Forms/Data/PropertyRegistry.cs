@@ -1,7 +1,16 @@
 ﻿using System.Reflection;
-using MonoGameGum.Forms.Controls;
 
+
+#if FRB
+namespace FlatRedBall.Forms.Data;
+#elif RAYLIB
+using RaylibGum.Forms.Data;
+using RaylibGum.Forms.Controls;
+
+#else
+using MonoGameGum.Forms.Controls;
 namespace MonoGameGum.Forms.Data;
+#endif
 
 internal class PropertyRegistry
 {
