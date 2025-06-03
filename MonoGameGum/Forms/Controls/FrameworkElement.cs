@@ -170,7 +170,7 @@ public class FrameworkElement : INotifyPropertyChanged
     [Obsolete] 
     protected Dictionary<string, string> vmPropsToUiProps = null!;
 
-    private readonly Dictionary<string, NpcBindingExpression> _bindingExpressions = new();
+    internal PropertyRegistry PropertyRegistry { get; }
 
     public object BindingContext
     {
@@ -501,6 +501,7 @@ public class FrameworkElement : INotifyPropertyChanged
 
     public FrameworkElement()
     {
+        PropertyRegistry = new(this);
         var possibleVisual = GetGraphicalUiElementFor(this);
         if(possibleVisual != null)
         {
@@ -511,6 +512,7 @@ public class FrameworkElement : INotifyPropertyChanged
 
     public FrameworkElement(InteractiveGue visual)
     {
+        PropertyRegistry = new(this);
         if (visual != null)
         {
             this.Visual = visual;
@@ -826,15 +828,10 @@ public class FrameworkElement : INotifyPropertyChanged
 
     public void SetBinding(string uiProperty, Binding binding)
     {
-        if (_bindingExpressions.TryGetValue(uiProperty, out NpcBindingExpression expression))
-        {
-            expression.Dispose();
-        }
-        NpcBindingExpression npcBinding = new(this, uiProperty, binding);
-        _bindingExpressions[uiProperty] = npcBinding;
-        npcBinding.Start();
+        PropertyRegistry.SetBinding(uiProperty, binding);
     }
-
+    
+    
     [Obsolete("Use OnBindingContextChanged")]
     protected virtual void HandleVisualBindingContextChanged(object sender, BindingContextChangedEventArgs args) { }
 
@@ -1359,8 +1356,5 @@ public class FrameworkElement : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 
-    public bool IsDataBound(string propertyName)
-    {
-        return _bindingExpressions.ContainsKey(propertyName);
-    }
+    public bool IsDataBound(string propertyName) => PropertyRegistry.GetBindingExpression(propertyName) != null;
 }

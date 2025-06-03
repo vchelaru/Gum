@@ -22,7 +22,8 @@ namespace MonoGameGum.Forms.Data;
 internal class NpcBindingExpression : UntypedBindingExpression
 {
     private readonly PropertyInfo _targetProperty;
-
+    internal PropertyInfo GetTargetProperty() => _targetProperty;
+    
     public NpcBindingExpression(
         FrameworkElement target,
         string targetPropertyName,
@@ -178,8 +179,6 @@ internal class NpcBindingExpression : UntypedBindingExpression
 
         SetSourceValue(value);
     }
-
-
 
     public override void Dispose()
     {

@@ -1,11 +1,6 @@
-﻿using Gum.Mvvm;
-using Gum.Wireframe;
-using MonoGameGum.Forms;
-using MonoGameGum.Forms.Controls;
+﻿using MonoGameGum.Forms.Controls;
 using MonoGameGum.Forms.Data;
-using RenderingLibrary;
 using Shouldly;
-using System.Collections.ObjectModel;
 using Xunit;
 
 namespace MonoGameGum.Tests.Forms;
@@ -680,70 +675,43 @@ public class FrameworkElementBindingTests
         textBox.Text.ShouldBe("text");
     }
 
-    private class TestViewModel : ViewModel
+    [Fact]
+    public void SetBindingExt_UsingParameterlessLambda()
     {
-        public TestViewModel? Child
+        // Arrange
+        TextBox textbox = new();
+        TestViewModel vm = new()
         {
-            get => Get<TestViewModel?>();
-            set => Set(value);
-        }
-
-        public AuxTestViewModel? AuxVm
-        {
-            get => Get<AuxTestViewModel?>();
-            set => Set(value);
-        }
-
-        [DependsOn(nameof(Text))]
-        public string? ReadonlyText => Text;
-
-        public ObservableCollection<TestViewModel> Items
-        {
-            get => Get<ObservableCollection<TestViewModel>>();
-            set => Set(value);
-        }
-
-        public string? Text
-        {
-            get => Get<string?>();
-            set => Set(value);
-        }
-
-        public bool IsChecked
-        {
-            get => Get<bool>();
-            set => Set(value);
-        }
-
-        public float FloatValue
-        {
-            get => Get<float>(); set => Set(value);
-        }
-
-        public float? NullableFloatValue
-        {
-            get => Get<float?>();
-            set => Set(value);
-        }
-
-        public override string ToString() => Text;
+            Child = new() { Text = "child text" }
+        };
+        textbox.BindingContext = vm;
+        
+        // Act
+        textbox.SetBinding(nameof(TextBox.Text), () => vm.Child.Text);
+        
+        // Assert
+        textbox.Text.ShouldBe("child text");
     }
-
-    private class AuxTestViewModel : ViewModel
+    
+    [Fact]
+    public void SetBindingExt_UsingTypedExpression()
     {
-        public string? Text
+        // Arrange
+        TextBox textbox = new()
         {
-            get=> Get<string?>();
-            set => Set(value);
-        }
-
-        public TestViewModel? TestVm
-        {
-            get => Get<TestViewModel?>();
-            set => Set(value);
-        }
+            BindingContext = new TestViewModel
+            {
+                Child = new() { Text = "child text" }
+            }
+        };
+        
+        // Act
+        textbox.SetBinding<TestViewModel>(nameof(TextBox.Text), vm => vm.Child!.Text);
+        
+        // Assert
+        textbox.Text.ShouldBe("child text");
     }
-
+    
     private class TestStringBoolConverter : IValueConverter
     {
         public object? Convert(object? value, Type targetType, object? parameter)
