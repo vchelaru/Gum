@@ -245,6 +245,7 @@
         * [IsFocused](code/monogame/gum-forms/controls/frameworkelement/isfocused.md)
         * [ModalRoot and PopupRoot](code/monogame/gum-forms/controls/frameworkelement/modalroot-and-popuproot.md)
         * [SetBinding](code/monogame/gum-forms/controls/frameworkelement/setbinding.md)
+      * [Label](code/monogame/gum-forms/controls/label.md)
       * [ListBox](code/monogame/gum-forms/controls/listbox.md)
       * [ListBoxItem](code/monogame/gum-forms/controls/listboxitem.md)
       * [MenuItem](code/monogame/gum-forms/controls/menuitem.md)
