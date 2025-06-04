@@ -1,10 +1,10 @@
 # CheckBox
 
-### Introduction
+## Introduction
 
 The CheckBox control provides the ability to display a true/false state and allows the user to toggle the state through clicking.
 
-### Code Example: Adding a CheckBox
+## Code Example: Adding a CheckBox
 
 ```csharp
 var checkBox = new CheckBox();

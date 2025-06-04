@@ -1,10 +1,10 @@
 # ListBox
 
-### Introduction
+## Introduction
 
 The ListBox control provides a scrollable list of ListBoxItems for displaying and selecting from a list.
 
-### Code Example: Adding a ListBox
+## Code Example: Adding a ListBox
 
 The following code adds items to a ListBox when a button is clicked. When an item is added, `ScrollIntoView` is called so the item is shown.
 
@@ -33,7 +33,7 @@ button.Click += (s, e) =>
 
 <figure><img src="../../../../.gitbook/assets/24_06 50 24.gif" alt=""><figcaption><p>Addign items to a ListBox by clicking a button</p></figcaption></figure>
 
-### Selection
+## Selection
 
 ListBox items can be selected. The ListBox class provides a number of ways to work with the selection.
 
@@ -58,7 +58,7 @@ listBox.SelectionChanged += (sender, args) =>
 };
 ```
 
-### Customizing with VisualTemplate
+## Customizing with VisualTemplate
 
 The VisualTemplate lets you customize the type of ListBoxItem created for the ListBox. The following code shows how to assign a VisualTemplate to a runtime object named CustomListBoxItemRuntime:
 
@@ -98,7 +98,7 @@ Note that the code above uses the item to decide which type of list box item to 
 In other words, you are free to use the item for your game's needs; however, keep in mind that UpdateToObject will be called after your ListBoxItem is constructed. For more information on how to customize UpdateToObject, see the section below.
 {% endhint %}
 
-### Customizing Displayed Property with ListBoxItemFormsType
+## Customizing Displayed Property with ListBoxItemFormsType
 
 By default the ListBox calls ToString on each item. This is usually okay if you are dealing with primitive types. For example, the following code adds sequential integers to a ListBox:
 

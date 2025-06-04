@@ -335,58 +335,35 @@ namespace GumFormsSample.Screens
 
         private void ShowPopup(string text, bool isModal)
         {
-            var container = new ContainerRuntime();
-            container.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-            container.XOrigin = RenderingLibrary.Graphics.HorizontalAlignment.Center;
-            container.X = 0;
-            container.YUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-            container.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Center;
-            container.Y = 0;
+            var window = new Window();
+            window.Anchor(Gum.Wireframe.Anchor.Center);
 
             if(isModal)
             {
-                FrameworkElement.ModalRoot.Children.Add(container);
+                FrameworkElement.ModalRoot.AddChild(window);
             }
             else
             {
-                FrameworkElement.PopupRoot.Children.Add(container);
+                FrameworkElement.PopupRoot.AddChild(window);
             }
+            window.Width = 300;
+            window.Height = 200;
 
-            container.Width = 300;
-            container.Height = 200;
+            var textInstance = new Label();
+            textInstance.Dock(Gum.Wireframe.Dock.Top);
+            textInstance.Y = 24;
 
-            var background = new ColoredRectangleRuntime();
-            background.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            background.Width = 0;
-            background.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            background.Height = 0;
-            background.Color = Color.DarkGray;
-            container.Children.Add(background);
-
-            var textInstance = new TextRuntime();
-            textInstance.X = 4;
-            textInstance.Y = 4;
             textInstance.Text = text;
-            textInstance.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            textInstance.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToContainer;
-            textInstance.Width = -8;
-            textInstance.Height = -8;
-            container.Children.Add(textInstance);
+            window.AddChild(textInstance);
 
             var button = new Button();
+            button.Anchor(Gum.Wireframe.Anchor.Bottom);
+            button.Y = -10;
             button.Text = "Close";
-            var buttonVisual = button.Visual;
-            buttonVisual.Y = -10;
-            buttonVisual.YOrigin = RenderingLibrary.Graphics.VerticalAlignment.Bottom;
-            buttonVisual.YUnits = Gum.Converters.GeneralUnitType.PixelsFromLarge;
-            buttonVisual.X = 0;
-            buttonVisual.XUnits = Gum.Converters.GeneralUnitType.PixelsFromMiddle;
-            buttonVisual.XOrigin = RenderingLibrary.Graphics.HorizontalAlignment.Center;
-            container.Children.Add(button.Visual);
+            window.AddChild(button.Visual);
             button.Click += (_, _) =>
             {
-                container.RemoveFromManagers();
-                container.Parent = null;
+                window.RemoveFromRoot();
             };
         }
 
