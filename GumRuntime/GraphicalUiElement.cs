@@ -6075,29 +6075,38 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
-    List<IRenderableIpso> _tempChildrenList;
-
     /// <summary>
     /// Populates a list with all the children matching the argument type. Performs the search in a recursive fashion.
     /// </summary>
-    /// <param name="type">Type to search for.</param>
-    /// <param name="listToFill">List to populate. The user has the responsability of instantiating and clearing this list.</param>
-    public void FillListWithChildrenByTypeRecursively(Type type, List<IRenderableIpso> listToFill)
+    /// <param name="listToFill">List to populate. The type to search for is inferred from the element type and must be an <see cref="IRenderableIpso"/>.
+    /// The user has the responsability of instantiating and clearing this list.</param>
+    public void FillListWithChildrenByTypeRecursively<T>(List<T> listToFill) where T : IRenderableIpso
     {
-        _tempChildrenList = listToFill;
-        FillListWithChildrenByType(Children, type);
+        FillListWithChildrenByType(Children, listToFill);
     }
 
-    private void FillListWithChildrenByType(ObservableCollection<IRenderableIpso> children, Type type)
+    /// <summary>
+    /// Returns a list with all the children matching the argument type. Performs the search in a recursive fashion.
+    /// </summary>
+    /// <typeparam name="T">Type to search for. Must be an <see cref="IRenderableIpso"/>.</typeparam>
+    /// <returns></returns>
+    public List<T> FillListWithChildrenByTypeRecursively<T>() where T : IRenderableIpso
+    {
+        var list = new List<T>();
+        FillListWithChildrenByTypeRecursively(list);
+        return list;
+    }
+
+    private void FillListWithChildrenByType<T>(ObservableCollection<IRenderableIpso> children, List<T> listToFill) where T : IRenderableIpso
     {
         foreach (var child in children)
         {
-            if (child.GetType().Equals(type))
+            if (child.GetType().Equals(typeof(T)))
             {
-                _tempChildrenList.Add(child);
+                listToFill.Add((T)child);
             }
 
-            FillListWithChildrenByType(child.Children, type);
+            FillListWithChildrenByType(child.Children, listToFill);
         }
     }
 
