@@ -1,4 +1,12 @@
 *.xnb
 
+*.gumx
+*.gusx
+*.gucx
+*.gutx
+*.behx
+*.bmfc
+*.codsj
+*.ganx
 *.png
 *.fnt
