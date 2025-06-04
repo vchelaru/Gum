@@ -197,6 +197,12 @@ public class Cursor : ICursor
     /// </summary>
     public InteractiveGue WindowOver { get; set; }
 
+    // todo - need to have this actually change the cursor. For now doing this to satisfy the interface:
+    Cursors? ICursor.CustomCursor
+    { 
+        get; set;
+    }
+
     internal void Activity(float gameTime)
     {
         mLastFrameMouseState = _mouseState;
