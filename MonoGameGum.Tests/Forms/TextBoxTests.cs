@@ -12,6 +12,18 @@ using Xunit;
 namespace MonoGameGum.Tests.Forms;
 public class TextBoxTests
 {
+
+    [Fact]
+    public void IsFocused_ShouldRaiseLostFocus_IfIsFocusedSetToFalse()
+    {
+        TextBox textBox = new();
+        bool lostFocusRaised = false;
+        textBox.LostFocus += (s, e) => lostFocusRaised = true;
+        textBox.IsFocused = true;
+        textBox.IsFocused = false;
+        lostFocusRaised.ShouldBeTrue();
+    }
+
     [Fact]
     public void HandleCharEntered_ShouldUpdateBindingSource_OnEnterNoAcceptsReturn()
     {
@@ -52,15 +64,17 @@ public class TextBoxTests
 
         textBox.SetBinding(nameof(textBox.Text), binding);
 
-        textBox.AcceptsReturn = false;
+        textBox.IsFocused = true;
+        textBox.AcceptsReturn = true;
         textBox.Text = "Test text";
+        textBox.CaretIndex = 0;
         textBox.HandleCharEntered('\n'); // Simulate Enter key press
 
         vm.Text.ShouldBe(null);
 
         textBox.IsFocused = false;
 
-        vm.Text.ShouldBe("Test text\n");
+        vm.Text.ShouldBe("\nTest text");
     }
 
 
