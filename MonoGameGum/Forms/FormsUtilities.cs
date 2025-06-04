@@ -59,6 +59,7 @@ public class FormsUtilities
         TryAdd(typeof(TextBox), typeof(DefaultTextBoxRuntime));
         TryAdd(typeof(PasswordBox), typeof(DefaultPasswordBoxRuntime));
         TryAdd(typeof(Slider), typeof(DefaultSliderRuntime));
+        TryAdd(typeof(Window), typeof(DefaultWindowRuntime));
 
         void TryAdd(Type formsType, Type runtimeType)
         {
@@ -208,9 +209,15 @@ public class FormsUtilities
             }
         }
 
-
         //FrameworkElement.Root.DoUiActivityRecursively(cursor, keyboard, gameTime.TotalGameTime.TotalSeconds);
-          GueInteractiveExtensionMethods.DoUiActivityRecursively(innerList, cursor, keyboard, gameTime.TotalGameTime.TotalSeconds);
+        GueInteractiveExtensionMethods.DoUiActivityRecursively(innerList, cursor, keyboard, gameTime.TotalGameTime.TotalSeconds);
+
+
+        var frameworkElementOver =
+            cursor.WindowPushed?.FormsControlAsObject as FrameworkElement ??
+            cursor.WindowOver?.FormsControlAsObject as FrameworkElement;
+
+        cursor.CustomCursor = frameworkElementOver?.CustomCursor ?? Cursors.Arrow;
     }
 
     private static void UpdateGamepads(double time)
