@@ -22,61 +22,57 @@ namespace MonoGameGum.Forms.Data;
 
 internal abstract class UntypedBindingExpression : BindingExpressionBase
 {
-    protected readonly Binding _binding;
-    protected readonly FrameworkElement _targetElement;
-    protected readonly Type _targetType;
-    protected Type? LeafType => _pathObserver.LeafType;
-    protected object? CurrentRoot => _pathObserver.CurrentRoot;
+    protected Binding Binding { get; }
+    protected FrameworkElement TargetElement { get; }
+    protected Type? LeafType => PathObserver.LeafType;
+    protected object? CurrentRoot => PathObserver.CurrentRoot;
+    private Func<object, object?>? SourceGetter { get; set; }
+    private Action<object, object?>? SourceSetter { get; set; }
+    private PropertyPathObserver PathObserver { get; }
 
-    private Func<object, object?>? _sourceGetter;
-    private Action<object, object?>? _sourceSetter;
-
-    private readonly PropertyPathObserver _pathObserver;
-
-    protected UntypedBindingExpression(FrameworkElement targetElement, Binding binding, Type targetType)
+    protected UntypedBindingExpression(FrameworkElement targetElement, Binding binding)
     {
-        _targetElement = targetElement;
-        _targetElement.BindingContextChanged += OnTargetBindingContextChanged;
+        TargetElement = targetElement;
+        TargetElement.BindingContextChanged += OnTargetBindingContextChanged;
 
-        _binding = binding;
+        Binding = binding;
 
-        _pathObserver = new PropertyPathObserver(binding.Path);
-        _pathObserver.ValueChanged += UpdateTarget;
-        _targetType = targetType;
+        PathObserver = new PropertyPathObserver(binding.Path);
+        PathObserver.ValueChanged += UpdateTarget;
     }
 
-    public void Start() => AttachToSource(_targetElement.BindingContext);
+    public void Start() => AttachToSource(TargetElement.BindingContext);
 
-    protected void OnTargetBindingContextChanged(object? sender, BindingContextChangedEventArgs e)
+    private void OnTargetBindingContextChanged(object? sender, BindingContextChangedEventArgs e)
     {
         AttachToSource(e.NewBindingContext);
     }
 
-    protected bool _suppressAttach;
+    protected bool SuppressAttach { get; set; }
 
     protected void AttachToSource(object? newSource)
     {
-        if (_suppressAttach)
+        if (SuppressAttach)
         {
             return;
         }
 
-        _pathObserver.Detach();
-        _sourceGetter = null;
-        _sourceSetter = null;
+        PathObserver.Detach();
+        SourceGetter = null;
+        SourceSetter = null;
 
         if (newSource is null)
         {
             return;
         }
 
-        _pathObserver.Attach(newSource);
+        PathObserver.Attach(newSource);
 
         try
         {
             // Since simple inpc properties can't define default binding modes,
             // we always default to two-way and just make an attempt to build a setter
-            _sourceSetter = BinderHelpers.BuildSetter(newSource.GetType(), _binding.Path);
+            SourceSetter = BinderHelpers.BuildSetter(newSource.GetType(), Binding.Path);
         }
         catch (Exception aex)
         {
@@ -86,7 +82,7 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
 
         try
         {
-            _sourceGetter = BinderHelpers.BuildGetter(newSource.GetType(), _binding.Path);
+            SourceGetter = BinderHelpers.BuildGetter(newSource.GetType(), Binding.Path);
         }
         catch (Exception aex)
         {
@@ -99,40 +95,40 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
 
     protected object? GetSourceValue()
     {
-        if (_sourceGetter is null || !_pathObserver.HasResolution)
+        if (SourceGetter is null || !PathObserver.HasResolution)
         {
             // binding error: broken path
             return GumProperty.UnsetValue;
         }
-        return _sourceGetter(_targetElement.BindingContext);
+        return SourceGetter(TargetElement.BindingContext);
     }
 
     protected object? GetRootSourceValue()
     {
-        if (_sourceGetter is null || !_pathObserver.HasResolution || CurrentRoot is null)
+        if (SourceGetter is null || !PathObserver.HasResolution || CurrentRoot is null)
         {
             // binding error: broken path
             return GumProperty.UnsetValue;
         }
-        return _sourceGetter(CurrentRoot);
+        return SourceGetter(CurrentRoot);
     }
 
 
     protected void SetSourceValue(object? value)
     {
-        if (_sourceSetter is null || !_pathObserver.HasResolution || CurrentRoot is null)
+        if (SourceSetter is null || !PathObserver.HasResolution || CurrentRoot is null)
         {
             // binding error: broken path
             return;
         }
-        _sourceSetter(CurrentRoot, value);
+        SourceSetter(CurrentRoot, value);
     }
 
     protected object? Convert(IValueConverter converter, object? value, Type targetType)
     {
         try
         {
-            return converter.Convert(value, targetType, _binding.ConverterParameter);
+            return converter.Convert(value, targetType, Binding.ConverterParameter);
         }
         catch (Exception ex)
         {
@@ -144,7 +140,7 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
     {
         try
         {
-            return converter.ConvertBack(value, targetType, _binding.ConverterParameter);
+            return converter.ConvertBack(value, targetType, Binding.ConverterParameter);
         }
         catch (Exception ex)
         {
@@ -154,9 +150,9 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
 
     public override void Dispose()
     {
-        _targetElement.BindingContextChanged -= OnTargetBindingContextChanged;
-        _pathObserver.ValueChanged -= UpdateTarget;
-        _pathObserver.Dispose();
+        TargetElement.BindingContextChanged -= OnTargetBindingContextChanged;
+        PathObserver.ValueChanged -= UpdateTarget;
+        PathObserver.Dispose();
         base.Dispose();
     }
 }

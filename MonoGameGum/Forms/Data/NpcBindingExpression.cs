@@ -21,18 +21,23 @@ namespace MonoGameGum.Forms.Data;
 
 internal class NpcBindingExpression : UntypedBindingExpression
 {
-    private readonly PropertyInfo _targetProperty;
-    internal PropertyInfo GetTargetProperty() => _targetProperty;
+    private PropertyInfo TargetProperty { get; }
+    internal PropertyInfo GetTargetProperty() => TargetProperty;
+    private object? DefaultTargetValue { get; }
     
     public NpcBindingExpression(
         FrameworkElement target,
         string targetPropertyName,
-        Binding binding) : base(target, binding, GetPropertyType(target, targetPropertyName))
+        Binding binding) : base(target, binding)
     {
-        _targetProperty = target.GetType()
+        TargetProperty = target.GetType()
             .GetProperty(targetPropertyName)
             ?? throw new InvalidOperationException(
                 $"Property '{targetPropertyName}' not found on {target.GetType().Name}");
+
+        DefaultTargetValue = TargetProperty.PropertyType.IsValueType
+            ? Activator.CreateInstance(TargetProperty.PropertyType)
+            : null;
 
         if (binding.Mode is BindingMode.TwoWay or BindingMode.OneWayToSource)
         {
@@ -41,7 +46,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
 
         if (targetPropertyName == nameof(FrameworkElement.BindingContext))
         {
-            _targetElement.InheritedBindingContextChanged += OnInheritedBindingContextChanged;
+            TargetElement.InheritedBindingContextChanged += OnInheritedBindingContextChanged;
         }
     }
 
@@ -49,7 +54,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
     {
         if (CurrentRoot != null)
         {
-            AttachToSource(_targetElement.BindingContext);
+            AttachToSource(TargetElement.BindingContext);
         }
     }
 
@@ -61,14 +66,14 @@ internal class NpcBindingExpression : UntypedBindingExpression
                 // A more robust property system could have a default trigger defined on the property metadata
                 // for now we just default to PropertyChanged
             case UpdateSourceTrigger.PropertyChanged:
-                if (_targetElement is INotifyPropertyChanged npc)
+                if (TargetElement is INotifyPropertyChanged npc)
                 {
                     npc.PropertyChanged += OnTargetPropertyChanged;
                 }
                 break;
 
             case UpdateSourceTrigger.LostFocus:
-                _targetElement.LostFocus += OnLostFocus;
+                TargetElement.LostFocus += OnLostFocus;
                 break;
         }
     }
@@ -78,7 +83,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
     private void OnTargetPropertyChanged(
         object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == _targetProperty.Name)
+        if (e.PropertyName == TargetProperty.Name)
         {
             UpdateSource();
         }
@@ -86,12 +91,12 @@ internal class NpcBindingExpression : UntypedBindingExpression
 
     public override void UpdateTarget()
     {
-        if (_binding.Mode is BindingMode.OneWayToSource)
+        if (Binding.Mode is BindingMode.OneWayToSource)
         {
             return;
         }
 
-        object? value = _targetProperty.Name switch
+        object? value = TargetProperty.Name switch
         {
             nameof(FrameworkElement.BindingContext) => GetRootSourceValue(),
             _ => GetSourceValue()
@@ -103,13 +108,13 @@ internal class NpcBindingExpression : UntypedBindingExpression
             value = null;
         }
 
-        if (value is null && _binding.FallbackValue is not null)
+        if (value is null && Binding.FallbackValue is not null)
         {
-            value = _binding.FallbackValue;
+            value = Binding.FallbackValue;
         }
-        else if (_binding.Converter is not null && value != Binding.DoNothing) // we don't run fallbacks through the converter
+        else if (Binding.Converter is not null && value != Binding.DoNothing) // we don't run fallbacks through the converter
         {
-            value = Convert(_binding.Converter, value, _targetType);
+            value = Convert(Binding.Converter, value, TargetProperty.PropertyType);
         }
 
         if (value == Binding.DoNothing)
@@ -119,40 +124,42 @@ internal class NpcBindingExpression : UntypedBindingExpression
 
         if (value != GumProperty.UnsetValue)
         {
-            if (_targetProperty.PropertyType == typeof(string) && 
-                _binding.StringFormat is not null && 
+            if (TargetProperty.PropertyType == typeof(string) && 
+                Binding.StringFormat is not null && 
                 value is not null)
             {
-                value = string.Format(_binding.StringFormat, value);
+                value = string.Format(Binding.StringFormat, value);
             }
-            else if (!IsValidForType(value, _targetType))
+            else if (!IsValidForType(value, TargetProperty.PropertyType))
             {
-                value = TryConvert(value, _targetType);
+                value = TryConvert(value, TargetProperty.PropertyType);
             }
         }
 
         if (value == GumProperty.UnsetValue)
         {
             // this will result in default(T), which is the best we can get
-            // without more robust property metadata that would define a default
-            value = null;
+            // without more robust property metadata that could define its own default
+            value = DefaultTargetValue;
         }
-
-        _suppressAttach = true;
-        _targetProperty.SetValue(_targetElement, value);
-        _suppressAttach = false;
+        
+        SuppressAttach = true;
+        TargetProperty.SetValue(TargetElement, value);
+        SuppressAttach = false;
     }
 
     public override void UpdateSource()
     {
-        if (_binding.Mode is BindingMode.OneWay || LeafType is not {} sourceType || _targetProperty.Name == nameof(FrameworkElement.BindingContext))
+        if (Binding.Mode is BindingMode.OneWay || 
+            LeafType is not {} sourceType || 
+            TargetProperty.Name == nameof(FrameworkElement.BindingContext))
         {
             return;
         }
 
-        object? value = _targetProperty.GetValue(_targetElement);
+        object? value = TargetProperty.GetValue(TargetElement);
 
-        if (_binding.Converter is { } converter)
+        if (Binding.Converter is { } converter)
         {
             value = ConvertBack(converter, value, sourceType);
         }
@@ -161,10 +168,10 @@ internal class NpcBindingExpression : UntypedBindingExpression
 
         if (value == GumProperty.UnsetValue)
         {
-            value = _binding.FallbackValue;
+            value = Binding.FallbackValue;
         }
 
-        value ??= _binding.TargetNullValue;
+        value ??= Binding.TargetNullValue;
 
         if (!IsValidForType(value, sourceType))
         {
@@ -182,22 +189,13 @@ internal class NpcBindingExpression : UntypedBindingExpression
 
     public override void Dispose()
     {
-        if (_targetElement is INotifyPropertyChanged npc)
+        if (TargetElement is INotifyPropertyChanged npc)
         {
             npc.PropertyChanged -= OnTargetPropertyChanged;
         }
-        _targetElement.LostFocus -= OnLostFocus;
-        _targetElement.InheritedBindingContextChanged -= OnInheritedBindingContextChanged;
+        TargetElement.LostFocus -= OnLostFocus;
+        TargetElement.InheritedBindingContextChanged -= OnInheritedBindingContextChanged;
         base.Dispose();
-    }
-
-    static Type GetPropertyType(object target, string propertyName)
-    {
-        if (target.GetType().GetProperty(propertyName) is not { } pi)
-        {
-            throw new InvalidOperationException($"Property '{propertyName}' not found on {target.GetType().Name}");
-        }
-        return pi.PropertyType;
     }
 
     static bool IsValidForType(object? value, Type targetType)
