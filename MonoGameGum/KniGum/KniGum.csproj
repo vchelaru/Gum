@@ -1,12 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFramework>net8.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.KNI</PackageId>
-		<Version>2025.6.3.1</Version>
+		<Version>2025.6.4.1</Version>
 
 
 
@@ -30,12 +30,12 @@
 	<ItemGroup>
 		<None Remove="..\Content\Font18Arial.fnt" />
 		<None Remove="..\Content\Font18Arial_0.png" />
-    <None Remove="..\Content\Font18Arial_Bold.fnt" />
-    <None Remove="..\Content\Font18Arial_Bold_0.png" />
-    <None Remove="..\Content\Font18Arial_Italic.fnt" />
-    <None Remove="..\Content\Font18Arial_Italic_0.png" />
-    <None Remove="..\Content\Font18Arial_Italic_Bold.fnt" />
-    <None Remove="..\Content\Font18Arial_Italic_Bold_0.png" />
+		<None Remove="..\Content\Font18Arial_Bold.fnt" />
+		<None Remove="..\Content\Font18Arial_Bold_0.png" />
+		<None Remove="..\Content\Font18Arial_Italic.fnt" />
+		<None Remove="..\Content\Font18Arial_Italic_0.png" />
+		<None Remove="..\Content\Font18Arial_Italic_Bold.fnt" />
+		<None Remove="..\Content\Font18Arial_Italic_Bold_0.png" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -126,13 +126,16 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="nkast.Xna.Framework" Version="3.12.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Content" Version="3.12.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="3.12.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Input" Version="3.12.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Game" Version="3.12.9001" />
-		<!--<PackageReference Include="nkast.Xna.Framework.Audio" Version="3.12.9001" />-->
-		<!--<PackageReference Include="nkast.Xna.Framework.Media" Version="3.12.9001" />-->
+		<PackageReference Include="nkast.Xna.Framework" Version="4.1.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Content" Version="4.1.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.1.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Audio" Version="4.1.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Media" Version="4.1.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.1.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Game" Version="4.1.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Devices" Version="4.1.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Storage" Version="4.1.9001" />
+		<PackageReference Include="nkast.Xna.Framework.XR" Version="4.1.9001" />
 
 		<PackageReference Include="TextCopy" Version="6.2.1" />
 	</ItemGroup>

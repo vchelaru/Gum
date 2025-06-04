@@ -1,0 +1,681 @@
+
+#----------------------------- Global Properties ----------------------------#
+
+/outputDir:bin/$(Platform)
+/intermediateDir:obj/$(Platform)
+/platform:DesktopGL
+/config:
+/profile:Reach
+/compress:False
+
+#-------------------------------- References --------------------------------#
+
+
+#---------------------------------- Content ---------------------------------#
+
+#begin button_square_gradient.png
+/copy:button_square_gradient.png
+
+#begin FormsGumProject/Behaviors/ButtonBehavior.behx
+/copy:FormsGumProject/Behaviors/ButtonBehavior.behx
+
+#begin FormsGumProject/Behaviors/CheckBoxBehavior.behx
+/copy:FormsGumProject/Behaviors/CheckBoxBehavior.behx
+
+#begin FormsGumProject/Behaviors/ComboBoxBehavior.behx
+/copy:FormsGumProject/Behaviors/ComboBoxBehavior.behx
+
+#begin FormsGumProject/Behaviors/DialogBoxBehavior.behx
+/copy:FormsGumProject/Behaviors/DialogBoxBehavior.behx
+
+#begin FormsGumProject/Behaviors/InputDeviceSelectionItemBehavior.behx
+/copy:FormsGumProject/Behaviors/InputDeviceSelectionItemBehavior.behx
+
+#begin FormsGumProject/Behaviors/InputDeviceSelectorBehavior.behx
+/copy:FormsGumProject/Behaviors/InputDeviceSelectorBehavior.behx
+
+#begin FormsGumProject/Behaviors/LabelBehavior.behx
+/copy:FormsGumProject/Behaviors/LabelBehavior.behx
+
+#begin FormsGumProject/Behaviors/ListBoxBehavior.behx
+/copy:FormsGumProject/Behaviors/ListBoxBehavior.behx
+
+#begin FormsGumProject/Behaviors/ListBoxItemBehavior.behx
+/copy:FormsGumProject/Behaviors/ListBoxItemBehavior.behx
+
+#begin FormsGumProject/Behaviors/MenuBehavior.behx
+/copy:FormsGumProject/Behaviors/MenuBehavior.behx
+
+#begin FormsGumProject/Behaviors/MenuItemBehavior.behx
+/copy:FormsGumProject/Behaviors/MenuItemBehavior.behx
+
+#begin FormsGumProject/Behaviors/OnScreenKeyboardBehavior.behx
+/copy:FormsGumProject/Behaviors/OnScreenKeyboardBehavior.behx
+
+#begin FormsGumProject/Behaviors/PasswordBoxBehavior.behx
+/copy:FormsGumProject/Behaviors/PasswordBoxBehavior.behx
+
+#begin FormsGumProject/Behaviors/PlayerJoinViewBehavior.behx
+/copy:FormsGumProject/Behaviors/PlayerJoinViewBehavior.behx
+
+#begin FormsGumProject/Behaviors/PlayerJoinViewItemBehavior.behx
+/copy:FormsGumProject/Behaviors/PlayerJoinViewItemBehavior.behx
+
+#begin FormsGumProject/Behaviors/RadioButtonBehavior.behx
+/copy:FormsGumProject/Behaviors/RadioButtonBehavior.behx
+
+#begin FormsGumProject/Behaviors/ScrollBarBehavior.behx
+/copy:FormsGumProject/Behaviors/ScrollBarBehavior.behx
+
+#begin FormsGumProject/Behaviors/ScrollViewerBehavior.behx
+/copy:FormsGumProject/Behaviors/ScrollViewerBehavior.behx
+
+#begin FormsGumProject/Behaviors/SettingsViewBehavior.behx
+/copy:FormsGumProject/Behaviors/SettingsViewBehavior.behx
+
+#begin FormsGumProject/Behaviors/SliderBehavior.behx
+/copy:FormsGumProject/Behaviors/SliderBehavior.behx
+
+#begin FormsGumProject/Behaviors/TextBoxBehavior.behx
+/copy:FormsGumProject/Behaviors/TextBoxBehavior.behx
+
+#begin FormsGumProject/Behaviors/ToastBehavior.behx
+/copy:FormsGumProject/Behaviors/ToastBehavior.behx
+
+#begin FormsGumProject/Behaviors/ToggleBehavior.behx
+/copy:FormsGumProject/Behaviors/ToggleBehavior.behx
+
+#begin FormsGumProject/Behaviors/TreeViewBehavior.behx
+/copy:FormsGumProject/Behaviors/TreeViewBehavior.behx
+
+#begin FormsGumProject/Behaviors/TreeViewItemBehavior.behx
+/copy:FormsGumProject/Behaviors/TreeViewItemBehavior.behx
+
+#begin FormsGumProject/Behaviors/UserControlBehavior.behx
+/copy:FormsGumProject/Behaviors/UserControlBehavior.behx
+
+#begin FormsGumProject/Components/Controls/ButtonClose.gucx
+/copy:FormsGumProject/Components/Controls/ButtonClose.gucx
+
+#begin FormsGumProject/Components/Controls/ButtonConfirm.gucx
+/copy:FormsGumProject/Components/Controls/ButtonConfirm.gucx
+
+#begin FormsGumProject/Components/Controls/ButtonDeny.gucx
+/copy:FormsGumProject/Components/Controls/ButtonDeny.gucx
+
+#begin FormsGumProject/Components/Controls/ButtonIcon.gucx
+/copy:FormsGumProject/Components/Controls/ButtonIcon.gucx
+
+#begin FormsGumProject/Components/Controls/ButtonStandard.codsj
+/copy:FormsGumProject/Components/Controls/ButtonStandard.codsj
+
+#begin FormsGumProject/Components/Controls/ButtonStandard.gucx
+/copy:FormsGumProject/Components/Controls/ButtonStandard.gucx
+
+#begin FormsGumProject/Components/Controls/ButtonStandardIcon.gucx
+/copy:FormsGumProject/Components/Controls/ButtonStandardIcon.gucx
+
+#begin FormsGumProject/Components/Controls/ButtonTab.gucx
+/copy:FormsGumProject/Components/Controls/ButtonTab.gucx
+
+#begin FormsGumProject/Components/Controls/CheckBox.codsj
+/copy:FormsGumProject/Components/Controls/CheckBox.codsj
+
+#begin FormsGumProject/Components/Controls/CheckBox.gucx
+/copy:FormsGumProject/Components/Controls/CheckBox.gucx
+
+#begin FormsGumProject/Components/Controls/ComboBox.gucx
+/copy:FormsGumProject/Components/Controls/ComboBox.gucx
+
+#begin FormsGumProject/Components/Controls/DialogBox.gucx
+/copy:FormsGumProject/Components/Controls/DialogBox.gucx
+
+#begin FormsGumProject/Components/Controls/FancyListBoxItem.gucx
+/copy:FormsGumProject/Components/Controls/FancyListBoxItem.gucx
+
+#begin FormsGumProject/Components/Controls/FancyListBoxItemAnimations.ganx
+/copy:FormsGumProject/Components/Controls/FancyListBoxItemAnimations.ganx
+
+#begin FormsGumProject/Components/Controls/InputDeviceSelectionItem.gucx
+/copy:FormsGumProject/Components/Controls/InputDeviceSelectionItem.gucx
+
+#begin FormsGumProject/Components/Controls/InputDeviceSelector.gucx
+/copy:FormsGumProject/Components/Controls/InputDeviceSelector.gucx
+
+#begin FormsGumProject/Components/Controls/Keyboard.gucx
+/copy:FormsGumProject/Components/Controls/Keyboard.gucx
+
+#begin FormsGumProject/Components/Controls/KeyboardAnimations.ganx
+/copy:FormsGumProject/Components/Controls/KeyboardAnimations.ganx
+
+#begin FormsGumProject/Components/Controls/KeyboardKey.gucx
+/copy:FormsGumProject/Components/Controls/KeyboardKey.gucx
+
+#begin FormsGumProject/Components/Controls/KeyboardKeyAnimations.ganx
+/copy:FormsGumProject/Components/Controls/KeyboardKeyAnimations.ganx
+
+#begin FormsGumProject/Components/Controls/ListBox.gucx
+/copy:FormsGumProject/Components/Controls/ListBox.gucx
+
+#begin FormsGumProject/Components/Controls/ListBoxItem.codsj
+/copy:FormsGumProject/Components/Controls/ListBoxItem.codsj
+
+#begin FormsGumProject/Components/Controls/ListBoxItem.gucx
+/copy:FormsGumProject/Components/Controls/ListBoxItem.gucx
+
+#begin FormsGumProject/Components/Controls/Menu.gucx
+/copy:FormsGumProject/Components/Controls/Menu.gucx
+
+#begin FormsGumProject/Components/Controls/MenuItem.gucx
+/copy:FormsGumProject/Components/Controls/MenuItem.gucx
+
+#begin FormsGumProject/Components/Controls/MessageBox.gucx
+/copy:FormsGumProject/Components/Controls/MessageBox.gucx
+
+#begin FormsGumProject/Components/Controls/PasswordBox.gucx
+/copy:FormsGumProject/Components/Controls/PasswordBox.gucx
+
+#begin FormsGumProject/Components/Controls/PlayerJoinView.gucx
+/copy:FormsGumProject/Components/Controls/PlayerJoinView.gucx
+
+#begin FormsGumProject/Components/Controls/PlayerJoinViewItem.gucx
+/copy:FormsGumProject/Components/Controls/PlayerJoinViewItem.gucx
+
+#begin FormsGumProject/Components/Controls/RadioButton.gucx
+/copy:FormsGumProject/Components/Controls/RadioButton.gucx
+
+#begin FormsGumProject/Components/Controls/ScrollBar.gucx
+/copy:FormsGumProject/Components/Controls/ScrollBar.gucx
+
+#begin FormsGumProject/Components/Controls/ScrollViewer.gucx
+/copy:FormsGumProject/Components/Controls/ScrollViewer.gucx
+
+#begin FormsGumProject/Components/Controls/SettingsView.gucx
+/copy:FormsGumProject/Components/Controls/SettingsView.gucx
+
+#begin FormsGumProject/Components/Controls/Slider.gucx
+/copy:FormsGumProject/Components/Controls/Slider.gucx
+
+#begin FormsGumProject/Components/Controls/TextBox.gucx
+/copy:FormsGumProject/Components/Controls/TextBox.gucx
+
+#begin FormsGumProject/Components/Controls/TextBoxAnimations.ganx
+/copy:FormsGumProject/Components/Controls/TextBoxAnimations.ganx
+
+#begin FormsGumProject/Components/Controls/Toast.gucx
+/copy:FormsGumProject/Components/Controls/Toast.gucx
+
+#begin FormsGumProject/Components/Controls/TreeView.gucx
+/copy:FormsGumProject/Components/Controls/TreeView.gucx
+
+#begin FormsGumProject/Components/Controls/TreeViewItem.gucx
+/copy:FormsGumProject/Components/Controls/TreeViewItem.gucx
+
+#begin FormsGumProject/Components/Controls/TreeViewToggle.gucx
+/copy:FormsGumProject/Components/Controls/TreeViewToggle.gucx
+
+#begin FormsGumProject/Components/Controls/TreeViewToggleAnimations.ganx
+/copy:FormsGumProject/Components/Controls/TreeViewToggleAnimations.ganx
+
+#begin FormsGumProject/Components/Controls/UserControl.gucx
+/copy:FormsGumProject/Components/Controls/UserControl.gucx
+
+#begin FormsGumProject/Components/Controls/WeaponListBoxItem.codsj
+/copy:FormsGumProject/Components/Controls/WeaponListBoxItem.codsj
+
+#begin FormsGumProject/Components/Controls/WeaponListBoxItem.gucx
+/copy:FormsGumProject/Components/Controls/WeaponListBoxItem.gucx
+
+#begin FormsGumProject/Components/Controls/WeaponListBoxItemAnimations.ganx
+/copy:FormsGumProject/Components/Controls/WeaponListBoxItemAnimations.ganx
+
+#begin FormsGumProject/Components/Elements/CautionLines.gucx
+/copy:FormsGumProject/Components/Elements/CautionLines.gucx
+
+#begin FormsGumProject/Components/Elements/Divider.gucx
+/copy:FormsGumProject/Components/Elements/Divider.gucx
+
+#begin FormsGumProject/Components/Elements/DividerHorizontal.gucx
+/copy:FormsGumProject/Components/Elements/DividerHorizontal.gucx
+
+#begin FormsGumProject/Components/Elements/DividerHorizontalAnimations.ganx
+/copy:FormsGumProject/Components/Elements/DividerHorizontalAnimations.ganx
+
+#begin FormsGumProject/Components/Elements/DividerVertical.gucx
+/copy:FormsGumProject/Components/Elements/DividerVertical.gucx
+
+#begin FormsGumProject/Components/Elements/DividerVerticalAnimations.ganx
+/copy:FormsGumProject/Components/Elements/DividerVerticalAnimations.ganx
+
+#begin FormsGumProject/Components/Elements/Icon.gucx
+/copy:FormsGumProject/Components/Elements/Icon.gucx
+
+#begin FormsGumProject/Components/Elements/IconAnimations.ganx
+/copy:FormsGumProject/Components/Elements/IconAnimations.ganx
+
+#begin FormsGumProject/Components/Elements/Label.gucx
+/copy:FormsGumProject/Components/Elements/Label.gucx
+
+#begin FormsGumProject/Components/Elements/PercentBar.gucx
+/copy:FormsGumProject/Components/Elements/PercentBar.gucx
+
+#begin FormsGumProject/Components/Elements/PercentBarIcon.gucx
+/copy:FormsGumProject/Components/Elements/PercentBarIcon.gucx
+
+#begin FormsGumProject/Components/Elements/VerticalLines.gucx
+/copy:FormsGumProject/Components/Elements/VerticalLines.gucx
+
+#begin FormsGumProject/FontCache/Font10Arial.bmfc
+/copy:FormsGumProject/FontCache/Font10Arial.bmfc
+
+#begin FormsGumProject/FontCache/Font10Arial.fnt
+/copy:FormsGumProject/FontCache/Font10Arial.fnt
+
+#begin FormsGumProject/FontCache/Font10Arial_0.png
+/copy:FormsGumProject/FontCache/Font10Arial_0.png
+
+#begin FormsGumProject/FontCache/Font10Titillium_Web.bmfc
+/copy:FormsGumProject/FontCache/Font10Titillium_Web.bmfc
+
+#begin FormsGumProject/FontCache/Font10Titillium_Web.fnt
+/copy:FormsGumProject/FontCache/Font10Titillium_Web.fnt
+
+#begin FormsGumProject/FontCache/Font10Titillium_Web_0.png
+/copy:FormsGumProject/FontCache/Font10Titillium_Web_0.png
+
+#begin FormsGumProject/FontCache/Font12Arial.bmfc
+/copy:FormsGumProject/FontCache/Font12Arial.bmfc
+
+#begin FormsGumProject/FontCache/Font12Arial.fnt
+/copy:FormsGumProject/FontCache/Font12Arial.fnt
+
+#begin FormsGumProject/FontCache/Font12Arial_0.png
+/copy:FormsGumProject/FontCache/Font12Arial_0.png
+
+#begin FormsGumProject/FontCache/Font12Titillium_Web.bmfc
+/copy:FormsGumProject/FontCache/Font12Titillium_Web.bmfc
+
+#begin FormsGumProject/FontCache/Font12Titillium_Web.fnt
+/copy:FormsGumProject/FontCache/Font12Titillium_Web.fnt
+
+#begin FormsGumProject/FontCache/Font12Titillium_Web_0.png
+/copy:FormsGumProject/FontCache/Font12Titillium_Web_0.png
+
+#begin FormsGumProject/FontCache/Font12Titillium_Web_Bold.bmfc
+/copy:FormsGumProject/FontCache/Font12Titillium_Web_Bold.bmfc
+
+#begin FormsGumProject/FontCache/Font12Titillium_Web_Bold.fnt
+/copy:FormsGumProject/FontCache/Font12Titillium_Web_Bold.fnt
+
+#begin FormsGumProject/FontCache/Font12Titillium_Web_Bold_0.png
+/copy:FormsGumProject/FontCache/Font12Titillium_Web_Bold_0.png
+
+#begin FormsGumProject/FontCache/Font12Titillium_Web_Italic.bmfc
+/copy:FormsGumProject/FontCache/Font12Titillium_Web_Italic.bmfc
+
+#begin FormsGumProject/FontCache/Font12Titillium_Web_Italic.fnt
+/copy:FormsGumProject/FontCache/Font12Titillium_Web_Italic.fnt
+
+#begin FormsGumProject/FontCache/Font12Titillium_Web_Italic_0.png
+/copy:FormsGumProject/FontCache/Font12Titillium_Web_Italic_0.png
+
+#begin FormsGumProject/FontCache/Font12Titillium_Web_noSmooth.bmfc
+/copy:FormsGumProject/FontCache/Font12Titillium_Web_noSmooth.bmfc
+
+#begin FormsGumProject/FontCache/Font12Titillium_Web_noSmooth.fnt
+/copy:FormsGumProject/FontCache/Font12Titillium_Web_noSmooth.fnt
+
+#begin FormsGumProject/FontCache/Font12Titillium_Web_noSmooth_0.png
+/copy:FormsGumProject/FontCache/Font12Titillium_Web_noSmooth_0.png
+
+#begin FormsGumProject/FontCache/Font12Wasco_Sans.bmfc
+/copy:FormsGumProject/FontCache/Font12Wasco_Sans.bmfc
+
+#begin FormsGumProject/FontCache/Font12Wasco_Sans.fnt
+/copy:FormsGumProject/FontCache/Font12Wasco_Sans.fnt
+
+#begin FormsGumProject/FontCache/Font12Wasco_Sans_0.png
+/copy:FormsGumProject/FontCache/Font12Wasco_Sans_0.png
+
+#begin FormsGumProject/FontCache/Font14Arial.bmfc
+/copy:FormsGumProject/FontCache/Font14Arial.bmfc
+
+#begin FormsGumProject/FontCache/Font14Arial.fnt
+/copy:FormsGumProject/FontCache/Font14Arial.fnt
+
+#begin FormsGumProject/FontCache/Font14Arial_0.png
+/copy:FormsGumProject/FontCache/Font14Arial_0.png
+
+#begin FormsGumProject/FontCache/Font14Arial_Bold.bmfc
+/copy:FormsGumProject/FontCache/Font14Arial_Bold.bmfc
+
+#begin FormsGumProject/FontCache/Font14Arial_Bold.fnt
+/copy:FormsGumProject/FontCache/Font14Arial_Bold.fnt
+
+#begin FormsGumProject/FontCache/Font14Arial_Bold_0.png
+/copy:FormsGumProject/FontCache/Font14Arial_Bold_0.png
+
+#begin FormsGumProject/FontCache/Font14Arial_Italic.bmfc
+/copy:FormsGumProject/FontCache/Font14Arial_Italic.bmfc
+
+#begin FormsGumProject/FontCache/Font14Arial_Italic.fnt
+/copy:FormsGumProject/FontCache/Font14Arial_Italic.fnt
+
+#begin FormsGumProject/FontCache/Font14Arial_Italic_0.png
+/copy:FormsGumProject/FontCache/Font14Arial_Italic_0.png
+
+#begin FormsGumProject/FontCache/Font14Bahnschrift.bmfc
+/copy:FormsGumProject/FontCache/Font14Bahnschrift.bmfc
+
+#begin FormsGumProject/FontCache/Font14Bahnschrift.fnt
+/copy:FormsGumProject/FontCache/Font14Bahnschrift.fnt
+
+#begin FormsGumProject/FontCache/Font14Bahnschrift_0.png
+/copy:FormsGumProject/FontCache/Font14Bahnschrift_0.png
+
+#begin FormsGumProject/FontCache/Font14Elephant.bmfc
+/copy:FormsGumProject/FontCache/Font14Elephant.bmfc
+
+#begin FormsGumProject/FontCache/Font14Elephant.fnt
+/copy:FormsGumProject/FontCache/Font14Elephant.fnt
+
+#begin FormsGumProject/FontCache/Font14Elephant_0.png
+/copy:FormsGumProject/FontCache/Font14Elephant_0.png
+
+#begin FormsGumProject/FontCache/Font14Titillium_Web.bmfc
+/copy:FormsGumProject/FontCache/Font14Titillium_Web.bmfc
+
+#begin FormsGumProject/FontCache/Font14Titillium_Web.fnt
+/copy:FormsGumProject/FontCache/Font14Titillium_Web.fnt
+
+#begin FormsGumProject/FontCache/Font14Titillium_Web_0.png
+/copy:FormsGumProject/FontCache/Font14Titillium_Web_0.png
+
+#begin FormsGumProject/FontCache/Font14Titillium_Web_Bold.bmfc
+/copy:FormsGumProject/FontCache/Font14Titillium_Web_Bold.bmfc
+
+#begin FormsGumProject/FontCache/Font14Titillium_Web_Bold.fnt
+/copy:FormsGumProject/FontCache/Font14Titillium_Web_Bold.fnt
+
+#begin FormsGumProject/FontCache/Font14Titillium_Web_Bold_0.png
+/copy:FormsGumProject/FontCache/Font14Titillium_Web_Bold_0.png
+
+#begin FormsGumProject/FontCache/Font14Titillium_Web_Italic.bmfc
+/copy:FormsGumProject/FontCache/Font14Titillium_Web_Italic.bmfc
+
+#begin FormsGumProject/FontCache/Font14Titillium_Web_Italic.fnt
+/copy:FormsGumProject/FontCache/Font14Titillium_Web_Italic.fnt
+
+#begin FormsGumProject/FontCache/Font14Titillium_Web_Italic_0.png
+/copy:FormsGumProject/FontCache/Font14Titillium_Web_Italic_0.png
+
+#begin FormsGumProject/FontCache/Font14Titillium_Web_noSmooth.bmfc
+/copy:FormsGumProject/FontCache/Font14Titillium_Web_noSmooth.bmfc
+
+#begin FormsGumProject/FontCache/Font14Titillium_Web_noSmooth.fnt
+/copy:FormsGumProject/FontCache/Font14Titillium_Web_noSmooth.fnt
+
+#begin FormsGumProject/FontCache/Font14Titillium_Web_noSmooth_0.png
+/copy:FormsGumProject/FontCache/Font14Titillium_Web_noSmooth_0.png
+
+#begin FormsGumProject/FontCache/Font14Wasco_Sans.bmfc
+/copy:FormsGumProject/FontCache/Font14Wasco_Sans.bmfc
+
+#begin FormsGumProject/FontCache/Font14Wasco_Sans.fnt
+/copy:FormsGumProject/FontCache/Font14Wasco_Sans.fnt
+
+#begin FormsGumProject/FontCache/Font14Wasco_Sans_0.png
+/copy:FormsGumProject/FontCache/Font14Wasco_Sans_0.png
+
+#begin FormsGumProject/FontCache/Font14Wasco_Sans_noSmooth.bmfc
+/copy:FormsGumProject/FontCache/Font14Wasco_Sans_noSmooth.bmfc
+
+#begin FormsGumProject/FontCache/Font14Wasco_Sans_noSmooth.fnt
+/copy:FormsGumProject/FontCache/Font14Wasco_Sans_noSmooth.fnt
+
+#begin FormsGumProject/FontCache/Font14Wasco_Sans_noSmooth_0.png
+/copy:FormsGumProject/FontCache/Font14Wasco_Sans_noSmooth_0.png
+
+#begin FormsGumProject/FontCache/Font16Arial_Bold.bmfc
+/copy:FormsGumProject/FontCache/Font16Arial_Bold.bmfc
+
+#begin FormsGumProject/FontCache/Font16Arial_Bold.fnt
+/copy:FormsGumProject/FontCache/Font16Arial_Bold.fnt
+
+#begin FormsGumProject/FontCache/Font16Arial_Bold_0.png
+/copy:FormsGumProject/FontCache/Font16Arial_Bold_0.png
+
+#begin FormsGumProject/FontCache/Font16Titillium_Web.bmfc
+/copy:FormsGumProject/FontCache/Font16Titillium_Web.bmfc
+
+#begin FormsGumProject/FontCache/Font16Titillium_Web.fnt
+/copy:FormsGumProject/FontCache/Font16Titillium_Web.fnt
+
+#begin FormsGumProject/FontCache/Font16Titillium_Web_0.png
+/copy:FormsGumProject/FontCache/Font16Titillium_Web_0.png
+
+#begin FormsGumProject/FontCache/Font16Titillium_Web_Bold.bmfc
+/copy:FormsGumProject/FontCache/Font16Titillium_Web_Bold.bmfc
+
+#begin FormsGumProject/FontCache/Font16Titillium_Web_Bold.fnt
+/copy:FormsGumProject/FontCache/Font16Titillium_Web_Bold.fnt
+
+#begin FormsGumProject/FontCache/Font16Titillium_Web_Bold_0.png
+/copy:FormsGumProject/FontCache/Font16Titillium_Web_Bold_0.png
+
+#begin FormsGumProject/FontCache/Font18Arial.fnt
+/copy:FormsGumProject/FontCache/Font18Arial.fnt
+
+#begin FormsGumProject/FontCache/Font18Arial_0.png
+/copy:FormsGumProject/FontCache/Font18Arial_0.png
+
+#begin FormsGumProject/FontCache/Font18Arial_Bold.bmfc
+/copy:FormsGumProject/FontCache/Font18Arial_Bold.bmfc
+
+#begin FormsGumProject/FontCache/Font18Arial_Bold.fnt
+/copy:FormsGumProject/FontCache/Font18Arial_Bold.fnt
+
+#begin FormsGumProject/FontCache/Font18Arial_Bold_0.png
+/copy:FormsGumProject/FontCache/Font18Arial_Bold_0.png
+
+#begin FormsGumProject/FontCache/Font18Elephant.bmfc
+/copy:FormsGumProject/FontCache/Font18Elephant.bmfc
+
+#begin FormsGumProject/FontCache/Font18Elephant.fnt
+/copy:FormsGumProject/FontCache/Font18Elephant.fnt
+
+#begin FormsGumProject/FontCache/Font18Elephant_0.png
+/copy:FormsGumProject/FontCache/Font18Elephant_0.png
+
+#begin FormsGumProject/FontCache/Font18Titillium_Web.bmfc
+/copy:FormsGumProject/FontCache/Font18Titillium_Web.bmfc
+
+#begin FormsGumProject/FontCache/Font18Titillium_Web.fnt
+/copy:FormsGumProject/FontCache/Font18Titillium_Web.fnt
+
+#begin FormsGumProject/FontCache/Font18Titillium_Web_0.png
+/copy:FormsGumProject/FontCache/Font18Titillium_Web_0.png
+
+#begin FormsGumProject/FontCache/Font18Titillium_Web_Bold.bmfc
+/copy:FormsGumProject/FontCache/Font18Titillium_Web_Bold.bmfc
+
+#begin FormsGumProject/FontCache/Font18Titillium_Web_Bold.fnt
+/copy:FormsGumProject/FontCache/Font18Titillium_Web_Bold.fnt
+
+#begin FormsGumProject/FontCache/Font18Titillium_Web_Bold_0.png
+/copy:FormsGumProject/FontCache/Font18Titillium_Web_Bold_0.png
+
+#begin FormsGumProject/FontCache/Font18Wasco_Sans.bmfc
+/copy:FormsGumProject/FontCache/Font18Wasco_Sans.bmfc
+
+#begin FormsGumProject/FontCache/Font18Wasco_Sans.fnt
+/copy:FormsGumProject/FontCache/Font18Wasco_Sans.fnt
+
+#begin FormsGumProject/FontCache/Font18Wasco_Sans_0.png
+/copy:FormsGumProject/FontCache/Font18Wasco_Sans_0.png
+
+#begin FormsGumProject/FontCache/Font22Arial_Bold.bmfc
+/copy:FormsGumProject/FontCache/Font22Arial_Bold.bmfc
+
+#begin FormsGumProject/FontCache/Font22Arial_Bold.fnt
+/copy:FormsGumProject/FontCache/Font22Arial_Bold.fnt
+
+#begin FormsGumProject/FontCache/Font22Arial_Bold_0.png
+/copy:FormsGumProject/FontCache/Font22Arial_Bold_0.png
+
+#begin FormsGumProject/FontCache/Font22Titillium_Web_Bold.bmfc
+/copy:FormsGumProject/FontCache/Font22Titillium_Web_Bold.bmfc
+
+#begin FormsGumProject/FontCache/Font22Titillium_Web_Bold.fnt
+/copy:FormsGumProject/FontCache/Font22Titillium_Web_Bold.fnt
+
+#begin FormsGumProject/FontCache/Font22Titillium_Web_Bold_0.png
+/copy:FormsGumProject/FontCache/Font22Titillium_Web_Bold_0.png
+
+#begin FormsGumProject/FontCache/Font24Arial.bmfc
+/copy:FormsGumProject/FontCache/Font24Arial.bmfc
+
+#begin FormsGumProject/FontCache/Font24Arial.fnt
+/copy:FormsGumProject/FontCache/Font24Arial.fnt
+
+#begin FormsGumProject/FontCache/Font24Arial_0.png
+/copy:FormsGumProject/FontCache/Font24Arial_0.png
+
+#begin FormsGumProject/FontCache/Font24Titillium_Web.bmfc
+/copy:FormsGumProject/FontCache/Font24Titillium_Web.bmfc
+
+#begin FormsGumProject/FontCache/Font24Titillium_Web.fnt
+/copy:FormsGumProject/FontCache/Font24Titillium_Web.fnt
+
+#begin FormsGumProject/FontCache/Font24Titillium_Web_0.png
+/copy:FormsGumProject/FontCache/Font24Titillium_Web_0.png
+
+#begin FormsGumProject/FontCache/Font24Titillium_Web_Bold.bmfc
+/copy:FormsGumProject/FontCache/Font24Titillium_Web_Bold.bmfc
+
+#begin FormsGumProject/FontCache/Font24Titillium_Web_Bold.fnt
+/copy:FormsGumProject/FontCache/Font24Titillium_Web_Bold.fnt
+
+#begin FormsGumProject/FontCache/Font24Titillium_Web_Bold_0.png
+/copy:FormsGumProject/FontCache/Font24Titillium_Web_Bold_0.png
+
+#begin FormsGumProject/FontCache/Font28Arial_Bold.bmfc
+/copy:FormsGumProject/FontCache/Font28Arial_Bold.bmfc
+
+#begin FormsGumProject/FontCache/Font28Arial_Bold.fnt
+/copy:FormsGumProject/FontCache/Font28Arial_Bold.fnt
+
+#begin FormsGumProject/FontCache/Font28Arial_Bold_0.png
+/copy:FormsGumProject/FontCache/Font28Arial_Bold_0.png
+
+#begin FormsGumProject/FontCache/Font28Titillium_Web_Bold.bmfc
+/copy:FormsGumProject/FontCache/Font28Titillium_Web_Bold.bmfc
+
+#begin FormsGumProject/FontCache/Font28Titillium_Web_Bold.fnt
+/copy:FormsGumProject/FontCache/Font28Titillium_Web_Bold.fnt
+
+#begin FormsGumProject/FontCache/Font28Titillium_Web_Bold_0.png
+/copy:FormsGumProject/FontCache/Font28Titillium_Web_Bold_0.png
+
+#begin FormsGumProject/FontCache/Font8Titillium_Web.bmfc
+/copy:FormsGumProject/FontCache/Font8Titillium_Web.bmfc
+
+#begin FormsGumProject/FontCache/Font8Titillium_Web.fnt
+/copy:FormsGumProject/FontCache/Font8Titillium_Web.fnt
+
+#begin FormsGumProject/FontCache/Font8Titillium_Web_0.png
+/copy:FormsGumProject/FontCache/Font8Titillium_Web_0.png
+
+#begin FormsGumProject/Screens/DemoScreen.gusx
+/copy:FormsGumProject/Screens/DemoScreen.gusx
+
+#begin FormsGumProject/Screens/DemoScreenGum.codsj
+/copy:FormsGumProject/Screens/DemoScreenGum.codsj
+
+#begin FormsGumProject/Screens/DemoScreenGum.gusx
+/copy:FormsGumProject/Screens/DemoScreenGum.gusx
+
+#begin FormsGumProject/Screens/DemoScreenGumAnimations.ganx
+/copy:FormsGumProject/Screens/DemoScreenGumAnimations.ganx
+
+#begin FormsGumProject/Screens/KeyboardScreenGum.gusx
+/copy:FormsGumProject/Screens/KeyboardScreenGum.gusx
+
+#begin FormsGumProject/Screens/NewScreen1Gum.gusx
+/copy:FormsGumProject/Screens/NewScreen1Gum.gusx
+
+#begin FormsGumProject/Screens/PolygonScreenGum.gusx
+/copy:FormsGumProject/Screens/PolygonScreenGum.gusx
+
+#begin FormsGumProject/Screens/StylesScreen.gusx
+/copy:FormsGumProject/Screens/StylesScreen.gusx
+
+#begin FormsGumProject/Screens/TestScreen.gusx
+/copy:FormsGumProject/Screens/TestScreen.gusx
+
+#begin FormsGumProject/Screens/UserControlPageGum.gusx
+/copy:FormsGumProject/Screens/UserControlPageGum.gusx
+
+#begin FormsGumProject/Standards/StandardGraphics/Red_BottomCenter.png
+/copy:FormsGumProject/Standards/StandardGraphics/Red_BottomCenter.png
+
+#begin FormsGumProject/Standards/StandardGraphics/Red_BottomLeft.png
+/copy:FormsGumProject/Standards/StandardGraphics/Red_BottomLeft.png
+
+#begin FormsGumProject/Standards/StandardGraphics/Red_BottomRight.png
+/copy:FormsGumProject/Standards/StandardGraphics/Red_BottomRight.png
+
+#begin FormsGumProject/Standards/StandardGraphics/Red_Center.png
+/copy:FormsGumProject/Standards/StandardGraphics/Red_Center.png
+
+#begin FormsGumProject/Standards/StandardGraphics/Red_Left.png
+/copy:FormsGumProject/Standards/StandardGraphics/Red_Left.png
+
+#begin FormsGumProject/Standards/StandardGraphics/Red_Right.png
+/copy:FormsGumProject/Standards/StandardGraphics/Red_Right.png
+
+#begin FormsGumProject/Standards/StandardGraphics/Red_TopCenter.png
+/copy:FormsGumProject/Standards/StandardGraphics/Red_TopCenter.png
+
+#begin FormsGumProject/Standards/StandardGraphics/Red_TopLeft.png
+/copy:FormsGumProject/Standards/StandardGraphics/Red_TopLeft.png
+
+#begin FormsGumProject/Standards/StandardGraphics/Red_TopRight.png
+/copy:FormsGumProject/Standards/StandardGraphics/Red_TopRight.png
+
+#begin FormsGumProject/Standards/Circle.gutx
+/copy:FormsGumProject/Standards/Circle.gutx
+
+#begin FormsGumProject/Standards/ColoredRectangle.gutx
+/copy:FormsGumProject/Standards/ColoredRectangle.gutx
+
+#begin FormsGumProject/Standards/Component.gutx
+/copy:FormsGumProject/Standards/Component.gutx
+
+#begin FormsGumProject/Standards/Container.gutx
+/copy:FormsGumProject/Standards/Container.gutx
+
+#begin FormsGumProject/Standards/NineSlice.gutx
+/copy:FormsGumProject/Standards/NineSlice.gutx
+
+#begin FormsGumProject/Standards/Polygon.gutx
+/copy:FormsGumProject/Standards/Polygon.gutx
+
+#begin FormsGumProject/Standards/Rectangle.gutx
+/copy:FormsGumProject/Standards/Rectangle.gutx
+
+#begin FormsGumProject/Standards/Sprite.gutx
+/copy:FormsGumProject/Standards/Sprite.gutx
+
+#begin FormsGumProject/Standards/Text.gutx
+/copy:FormsGumProject/Standards/Text.gutx
+
+#begin FormsGumProject/GumProject.gumx
+/copy:FormsGumProject/GumProject.gumx
+
+#begin FormsGumProject/ProjectCodeSettings.codsj
+/copy:FormsGumProject/ProjectCodeSettings.codsj
+
+#begin FormsGumProject/UISpriteSheet.png
+/copy:FormsGumProject/UISpriteSheet.png
+
