@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ScreenSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<ScreenSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Name>DemoScreenGum</Name>
   <State>
     <Name>Default</Name>
@@ -101,24 +101,6 @@
     </Variable>
     <Variable>
       <Type>string</Type>
-      <Name>ButtonCloseInstance.Parent</Name>
-      <Value xsi:type="xsd:string">MenuTitle</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>HorizontalAlignment</Type>
-      <Name>ButtonCloseInstance.XOrigin</Name>
-      <Value xsi:type="xsd:int">2</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>PositionUnitType</Type>
-      <Name>ButtonCloseInstance.XUnits</Name>
-      <Value xsi:type="xsd:int">4</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
-      <Type>string</Type>
       <Name>ButtonCloseInstance1.Parent</Name>
       <Value xsi:type="xsd:string">MenuTitle1</Value>
       <SetsValue>true</SetsValue>
@@ -169,6 +151,48 @@
       <Type>PositionUnitType</Type>
       <Name>ButtonConfirmInstance.XUnits</Name>
       <Value xsi:type="xsd:int">4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>WindowOkButton.Parent</Name>
+      <Value xsi:type="xsd:string">WindowStandardInstance</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>WindowOkButton.X</Name>
+      <Value xsi:type="xsd:float">-8</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HorizontalAlignment</Type>
+      <Name>WindowOkButton.XOrigin</Name>
+      <Value xsi:type="xsd:int">2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>PositionUnitType</Type>
+      <Name>WindowOkButton.XUnits</Name>
+      <Value xsi:type="xsd:int">4</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>WindowOkButton.Y</Name>
+      <Value xsi:type="xsd:float">-8</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>VerticalAlignment</Type>
+      <Name>WindowOkButton.YOrigin</Name>
+      <Value xsi:type="xsd:int">2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>PositionUnitType</Type>
+      <Name>WindowOkButton.YUnits</Name>
+      <Value xsi:type="xsd:int">5</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -932,6 +956,72 @@
       <Type>float</Type>
       <Name>LabelInstance.Y</Name>
       <Value xsi:type="xsd:float">8</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>LabelInstance1.LabelText</Name>
+      <Value xsi:type="xsd:string">I am a label. I will line wrap if you resize this window. You can also grab the top part of the window to move it around. Try it!</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>string</Type>
+      <Name>LabelInstance1.Parent</Name>
+      <Value xsi:type="xsd:string">WindowStandardInstance</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>StyleCategory</Type>
+      <Name>LabelInstance1.Style</Name>
+      <Value xsi:type="xsd:string">Normal</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>LabelInstance1.Width</Name>
+      <Value xsi:type="xsd:float">-16</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>DimensionUnitType</Type>
+      <Name>LabelInstance1.WidthUnits</Name>
+      <Value xsi:type="xsd:int">2</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>LabelInstance1.X</Name>
+      <Value xsi:type="xsd:float">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>HorizontalAlignment</Type>
+      <Name>LabelInstance1.XOrigin</Name>
+      <Value xsi:type="xsd:int">1</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>PositionUnitType</Type>
+      <Name>LabelInstance1.XUnits</Name>
+      <Value xsi:type="xsd:int">6</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>LabelInstance1.Y</Name>
+      <Value xsi:type="xsd:float">22</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>VerticalAlignment</Type>
+      <Name>LabelInstance1.YOrigin</Name>
+      <Value xsi:type="xsd:int">0</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>PositionUnitType</Type>
+      <Name>LabelInstance1.YUnits</Name>
+      <Value xsi:type="xsd:int">1</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
@@ -1856,6 +1946,30 @@
       <Value xsi:type="xsd:float">50</Value>
       <SetsValue>true</SetsValue>
     </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>WindowStandardInstance.Height</Name>
+      <Value xsi:type="xsd:float">163</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>WindowStandardInstance.Width</Name>
+      <Value xsi:type="xsd:float">313</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>WindowStandardInstance.X</Name>
+      <Value xsi:type="xsd:float">15</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>WindowStandardInstance.Y</Name>
+      <Value xsi:type="xsd:float">575</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
   </State>
   <Instance>
     <Name>DemoSettingsMenu</Name>
@@ -1890,11 +2004,6 @@
   <Instance>
     <Name>TitleText1</Name>
     <BaseType>Text</BaseType>
-    <DefinedByBase>false</DefinedByBase>
-  </Instance>
-  <Instance>
-    <Name>ButtonCloseInstance</Name>
-    <BaseType>Controls/ButtonClose</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>
@@ -2023,6 +2132,11 @@
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Instance>
+    <Name>WindowOkButton</Name>
+    <BaseType>Controls/ButtonConfirm</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
     <Name>ButtonDenyInstance</Name>
     <BaseType>Controls/ButtonDeny</BaseType>
     <DefinedByBase>false</DefinedByBase>
@@ -2140,6 +2254,16 @@
   <Instance>
     <Name>DialogBoxInstance</Name>
     <BaseType>Controls/DialogBox</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>WindowStandardInstance</Name>
+    <BaseType>Controls/WindowStandard</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Instance>
+    <Name>LabelInstance1</Name>
+    <BaseType>Controls/Label</BaseType>
     <DefinedByBase>false</DefinedByBase>
   </Instance>
   <Behaviors />
