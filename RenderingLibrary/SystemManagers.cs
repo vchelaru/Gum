@@ -283,22 +283,29 @@ namespace RenderingLibrary
             }
         }
 
+        public string AssemblyPrefix =>
+#if KNI
+            "KniGum";
+#elif FNA
+            "FnaGum";
+#else
+            "MonoGameGum.Content";
+#endif
+
         private BitmapFont LoadEmbeddedFont(GraphicsDevice graphicsDevice, string fontName)
         {
             var assembly = typeof(SystemManagers).Assembly;
-#if KNI
-            string prefix = "KniGum";
-#elif FNA
-            string prefix = "FnaGum";
-#else
-            string prefix = "MonoGameGum.Content";
-#endif
+
+            var prefix = AssemblyPrefix;
+
             var bitmapPattern = ToolsUtilities.FileManager.GetStringFromEmbeddedResource(assembly, $"{prefix}.{fontName}.fnt");
             using var stream = ToolsUtilities.FileManager.GetStreamFromEmbeddedResource(assembly, $"{prefix}.{fontName}_0.png");
             var defaultFontTexture = Texture2D.FromStream(graphicsDevice, stream);
             var bitmapFont = new BitmapFont(defaultFontTexture, bitmapPattern);
 
-            LoaderManager.Self.AddDisposable($"EmbeddedResource.{prefix}.{fontName}.fnt", bitmapFont);
+            var resourceName =
+                $"EmbeddedResource.{prefix}.{fontName}.fnt";
+            LoaderManager.Self.AddDisposable(resourceName, bitmapFont);
 
             return bitmapFont;
         }

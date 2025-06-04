@@ -1503,6 +1503,14 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     public GraphicalUiElement(IRenderable containedObject, GraphicalUiElement whatContainsThis = null)
     {
+#if DEBUG
+        if(containedObject is GraphicalUiElement)
+        {
+            throw new InvalidOperationException("GraphicalUiElements cannot contain other GraphicalUiElements as their renderable. " +
+                $"The contained object should be a renderable, such as a (platform specific) Sprite or Text. " +
+                $"It cannot be {containedObject.GetType()}");
+        }
+#endif
         SetContainedObject(containedObject);
 
         mWhatContainsThis = whatContainsThis;
