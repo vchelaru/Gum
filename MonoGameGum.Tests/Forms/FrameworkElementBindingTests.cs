@@ -355,31 +355,14 @@ public class FrameworkElementBindingTests
         vm.Text.ShouldBe("FromUI");
     }
 
-    class ChangeDetectingViewModel
-    {
-        public bool DidChangeText { get; set; }
-
-        string _text;
-
-        public string Text
-        {
-            get => _text;
-            set
-            {
-                DidChangeText = true;
-                _text = value;
-            }
-        }
-    }
-
     [Fact]
-    public void UpdateSourceTrigger_ShouldNotUpdateViewModel_OnLostFocusWithSameValue()
+    public void UpdateSourceTrigger_ShouldNotUpdateSource_OnLostFocus_WhenSameTargetValue()
     {
-        ChangeDetectingViewModel vm = new();
+        SetTrackingViewModel vm = new() { Text = "Initial" };
 
         TextBox element = new() { BindingContext = vm };
 
-        Binding binding = new(nameof(TestViewModel.Text))
+        Binding binding = new(nameof(SetTrackingViewModel.Text))
         {
             UpdateSourceTrigger = UpdateSourceTrigger.LostFocus
         };
@@ -387,9 +370,13 @@ public class FrameworkElementBindingTests
         element.SetBinding(nameof(TextBox.Text), binding);
 
         element.IsFocused = true;
+        element.Text = "Changed";
+        element.Text = "Initial";
         element.IsFocused = false;
 
-        vm.DidChangeText.ShouldBeFalse("because the TextBox's value never changed, so setting IsFocused to false should not update the source value");
+        vm.TimesCalled.ShouldBe(1, 
+            "only once from the initializer, because the TextBox's value never changed, " +
+            "so setting IsFocused to false should not update the source value");
     }
 
     [Theory]
@@ -769,6 +756,23 @@ public class FrameworkElementBindingTests
                 string s when s.Equals("no", StringComparison.InvariantCultureIgnoreCase) => false,
                 _ => GumProperty.UnsetValue
             };
+        }
+    }
+    
+    private class SetTrackingViewModel
+    {
+        public int TimesCalled { get; private set; }
+
+        private string? _text;
+
+        public string? Text
+        {
+            get => _text;
+            set
+            {
+                TimesCalled++;
+                _text = value;
+            }
         }
     }
 }

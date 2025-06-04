@@ -24,6 +24,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
     private PropertyInfo TargetProperty { get; }
     internal PropertyInfo GetTargetProperty() => TargetProperty;
     private object? DefaultTargetValue { get; }
+    private object? LastTargetValue { get; set; }
     
     public NpcBindingExpression(
         FrameworkElement target,
@@ -39,6 +40,8 @@ internal class NpcBindingExpression : UntypedBindingExpression
             ? Activator.CreateInstance(TargetProperty.PropertyType)
             : null;
 
+        LastTargetValue = TargetProperty.GetValue(target);
+
         if (binding.Mode is BindingMode.TwoWay or BindingMode.OneWayToSource)
         {
             HookUpdateSource(binding.UpdateSourceTrigger);
@@ -46,9 +49,13 @@ internal class NpcBindingExpression : UntypedBindingExpression
 
         if (targetPropertyName == nameof(FrameworkElement.BindingContext))
         {
-            TargetElement.InheritedBindingContextChanged += OnInheritedBindingContextChanged;
+            target.InheritedBindingContextChanged += OnInheritedBindingContextChanged;
         }
     }
+    
+    private bool ShouldUpdateSource =>
+        Binding.Mode is not BindingMode.OneWay &&
+        TargetProperty.Name is not nameof(FrameworkElement.BindingContext);
 
     private void OnInheritedBindingContextChanged(object? sender, BindingContextChangedEventArgs e)
     {
@@ -72,13 +79,20 @@ internal class NpcBindingExpression : UntypedBindingExpression
                 }
                 break;
 
-            case UpdateSourceTrigger.LostFocus:
+            case UpdateSourceTrigger.LostFocus when ShouldUpdateSource:
                 TargetElement.LostFocus += OnLostFocus;
                 break;
         }
     }
 
-    private void OnLostFocus(object? s, EventArgs e) => UpdateSource();
+    private void OnLostFocus(object? s, EventArgs e)
+    {
+        object? targetValue = TargetProperty.GetValue(TargetElement);
+        if (targetValue != LastTargetValue)
+        {
+            SetValueToSource(targetValue);
+        }
+    }
 
     private void OnTargetPropertyChanged(
         object? sender, PropertyChangedEventArgs e)
@@ -146,19 +160,26 @@ internal class NpcBindingExpression : UntypedBindingExpression
         SuppressAttach = true;
         TargetProperty.SetValue(TargetElement, value);
         SuppressAttach = false;
+        LastTargetValue = value;
     }
 
     public override void UpdateSource()
     {
-        if (Binding.Mode is BindingMode.OneWay || 
-            LeafType is not {} sourceType || 
-            TargetProperty.Name == nameof(FrameworkElement.BindingContext))
+        if (!ShouldUpdateSource)
         {
             return;
         }
+        object? targetValue = TargetProperty.GetValue(TargetElement);
+        SetValueToSource(targetValue);
+    }
 
-        object? value = TargetProperty.GetValue(TargetElement);
-
+    private void SetValueToSource(object? value)
+    {        
+        if (LeafType is not { } sourceType)
+        {
+            return;
+        }
+        
         if (Binding.Converter is { } converter)
         {
             value = ConvertBack(converter, value, sourceType);
