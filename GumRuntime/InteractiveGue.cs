@@ -202,7 +202,8 @@ namespace Gum.Wireframe
 
         /// <summary>
         /// Event raised when the cursor pushes on an object and moves. This is similar to RollOver, but is raised even
-        /// if outside of the bounds of the object.
+        /// if outside of the bounds of the object. This can be used if an object is to be moved by dragging since it will
+        /// be raised even if the user moves the cursor quickly outside of its bounds.
         /// </summary>
         public event EventHandler Dragging;
 
@@ -229,6 +230,7 @@ namespace Gum.Wireframe
 
         /// <summary>
         /// Event raised when this Window is pushed, then is no longer the pushed window due to a cursor releasing the primary button.
+        /// This can be used to detect the end of a drag operation, or to reset the state of a button.
         /// </summary>
         public event EventHandler RemovedAsPushed;
 
@@ -744,8 +746,19 @@ namespace Gum.Wireframe
         Mouse = 2
     }
 
+    public enum Cursors
+    {
+        Arrow,
+        SizeNESW,
+        SizeNS,
+        SizeNWSE,
+        SizeWE,
+        // more may be added in the future
+    }
+
     public interface ICursor
     {
+        public Cursors? CustomCursor { get; set; }
         InputDevice LastInputDevice { get; }
         int X { get; }
         int Y { get; }

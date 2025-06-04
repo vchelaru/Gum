@@ -136,6 +136,8 @@ public class PasswordBox : TextBoxBase
             else if (character == '\r' || character == '\n')
             {
                 // no enter supported on passwords, do we send an event?
+                var passwordBinding = PropertyRegistry.GetBindingExpression(nameof(Password));
+                passwordBinding?.UpdateSource();
             }
             else if (caretIndex >= MaxLength)
             {

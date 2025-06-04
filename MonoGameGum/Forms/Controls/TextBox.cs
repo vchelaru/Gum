@@ -40,6 +40,9 @@ public class TextBox : TextBoxBase
 
     protected override string CategoryName => "TextBoxCategoryState";
 
+    /// <summary>
+    /// Whether pressing the return key adds a newline to the text box. If false, the return key does not add a newline.
+    /// </summary>
     public bool AcceptsReturn
     {
         get; set;
@@ -108,6 +111,11 @@ public class TextBox : TextBoxBase
                     newlyAddedText = "\n";
                     textAfterAdd = textAfterAdd.Insert(caretIndex, newlyAddedText);
                     addedCharacter = true;
+                }
+                else
+                {
+                    var textBinding = PropertyRegistry.GetBindingExpression(nameof(Text));
+                    textBinding?.UpdateSource();
                 }
             }
             else
