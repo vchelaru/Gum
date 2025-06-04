@@ -265,7 +265,7 @@ public class FrameworkElementBindingTests
     }
 
     [Fact]
-    public void ComplexPaths()
+    public void SetBinding_ShouldUpdateUiValue_WithComplexPaths()
     {
         TestViewModel vm = new()
         {
@@ -333,7 +333,7 @@ public class FrameworkElementBindingTests
     }
 
     [Fact]
-    public void UpdateSourceTrigger_LostFocus()
+    public void UpdateSourceTrigger_ShouldUpdateViewModel_OnLostFocus()
     {
         // Arrange
         TestViewModel vm = new() { Text = "Initial" };
@@ -353,6 +353,43 @@ public class FrameworkElementBindingTests
         vm.Text.ShouldBe("Initial");
         element.IsFocused = false;
         vm.Text.ShouldBe("FromUI");
+    }
+
+    class ChangeDetectingViewModel
+    {
+        public bool DidChangeText { get; set; }
+
+        string _text;
+
+        public string Text
+        {
+            get => _text;
+            set
+            {
+                DidChangeText = true;
+                _text = value;
+            }
+        }
+    }
+
+    [Fact]
+    public void UpdateSourceTrigger_ShouldNotUpdateViewModel_OnLostFocusWithSameValue()
+    {
+        ChangeDetectingViewModel vm = new();
+
+        TextBox element = new() { BindingContext = vm };
+
+        Binding binding = new(nameof(TestViewModel.Text))
+        {
+            UpdateSourceTrigger = UpdateSourceTrigger.LostFocus
+        };
+
+        element.SetBinding(nameof(TextBox.Text), binding);
+
+        element.IsFocused = true;
+        element.IsFocused = false;
+
+        vm.DidChangeText.ShouldBeFalse("because the TextBox's value never changed, so setting IsFocused to false should not update the source value");
     }
 
     [Theory]
