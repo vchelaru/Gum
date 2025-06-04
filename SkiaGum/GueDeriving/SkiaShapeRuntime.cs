@@ -1,12 +1,13 @@
 ﻿using Gum.Converters;
 using Gum.DataTypes;
+using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using SkiaGum.Renderables;
 using SkiaSharp;
 
 namespace SkiaGum.GueDeriving
 {
-    public abstract class SkiaShapeRuntime : BindableGraphicalUiElement
+    public abstract class SkiaShapeRuntime : BindableGue
     {
         protected abstract RenderableBase ContainedRenderable { get; }
 
