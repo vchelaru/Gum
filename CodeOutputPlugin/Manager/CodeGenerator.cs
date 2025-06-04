@@ -246,10 +246,12 @@ public class CodeGenerator
 
         if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
         {
+            context.StringBuilder.AppendLine("using MonoGameGum;");
             context.StringBuilder.AppendLine("using MonoGameGum.GueDeriving;");
         }
         if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
         {
+            context.StringBuilder.AppendLine("using MonoGameGum;");
             context.StringBuilder.AppendLine("using MonoGameGum.GueDeriving;");
         }
 
@@ -275,7 +277,8 @@ public class CodeGenerator
         // https://github.com/vchelaru/Gum/issues/242
         if (!string.IsNullOrWhiteSpace(context.CodeOutputProjectSettings?.CommonUsingStatements))
         {
-            string originalString = context.CodeOutputProjectSettings.CommonUsingStatements;
+            var originalString = context.CodeOutputProjectSettings?.CommonUsingStatements;
+
             string result = Regex.Replace(originalString, @"(?<!\r)\n", "\r\n");
 
             context.StringBuilder.AppendLine(result);
@@ -283,9 +286,8 @@ public class CodeGenerator
 
         if (!string.IsNullOrEmpty(elementSettings?.UsingStatements))
         {
-            string originalString = elementSettings.UsingStatements;
+            string originalString = elementSettings!.UsingStatements;
             string result = Regex.Replace(originalString, @"(?<!\r)\n", "\r\n");
-
 
             context.StringBuilder.AppendLine(result);
         }
@@ -3601,7 +3603,7 @@ public class CodeGenerator
         return VariableValueToGumCode(value, rootName, isState, null, null, codeOutputProjectSettings);
     }
 
-    private static string VariableValueToGumCode(object value, string rootName, bool isState, ElementSave categoryContainer, StateSaveCategory category, CodeOutputProjectSettings settings)
+    private static string? VariableValueToGumCode(object value, string rootName, bool isState, ElementSave categoryContainer, StateSaveCategory category, CodeOutputProjectSettings settings)
     {
         if (value is float asFloat)
         {
@@ -3617,15 +3619,24 @@ public class CodeGenerator
             {
                 if (categoryContainer != null && category != null)
                 {
-                    string containerClassName = "VariableState";
-                    if (categoryContainer != null)
+                    if(categoryContainer is StandardElementSave)
                     {
-                        var context = new CodeGenerationContext();
-                        context.CodeOutputProjectSettings = settings;
-
-                        containerClassName = GetClassNameForType(categoryContainer.Name, VisualApi.Gum, context);
+                        // If it's a standard element save, this won't have the category generated as an enum, so we have to rely
+                        // on the state itself having been set on the element...
+                        return $"ObjectFinder.Self.GetStandardElement(\"{categoryContainer.Name}\").GetStateSaveRecursively(\"{asString}\")";
                     }
-                    return $"{containerClassName}.{category.Name}.{asString}";
+                    else
+                    {
+                        string containerClassName = "VariableState";
+                        if (categoryContainer != null)
+                        {
+                            var context = new CodeGenerationContext();
+                            context.CodeOutputProjectSettings = settings;
+
+                            containerClassName = GetClassNameForType(categoryContainer.Name, VisualApi.Gum, context);
+                        }
+                        return $"{containerClassName}.{category.Name}.{asString}";
+                    }
                 }
                 else
                 {
@@ -4287,7 +4298,9 @@ public class CodeGenerator
                 return " ";
             }
         }
-        else if (variable.IsState(context.Element) && context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame && instance != null)
+        else if (variable.IsState(context.Element) && 
+            (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame || context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms) 
+            && instance != null)
         {
             var rootVariable = ObjectFinder.Self.GetRootVariable(variable.GetRootName(), instance);
             var isVariableDefinedByStandardElement = false;
