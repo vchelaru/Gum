@@ -1,4 +1,5 @@
 ﻿using SkiaGum.GueDeriving;
+using SkiaGum.Maui;
 using SkiaSharp;
 
 namespace MauiSkiaGum
@@ -12,16 +13,7 @@ namespace MauiSkiaGum
             InitializeComponent();
 
 
-            for(int i = 0; i < 1; i++)
-            {
-                var circle = new ColoredCircleRuntime();
-                circle.Color = SKColors.Red;
-                circle.X = 100;
-                circle.Y = 50;
-
-                SkiaGumCanvasView.AddChild(circle);
-            }
-
+            SkiaGumCanvasView.InvalidateSurface();
         }
 
         private void OnCounterClicked(object sender, EventArgs e)
@@ -32,6 +24,16 @@ namespace MauiSkiaGum
                 CounterBtn.Text = $"Clicked {count} time";
             else
                 CounterBtn.Text = $"Clicked {count} times";
+
+            var circle = new ColoredCircleRuntime();
+            circle.Color = SKColors.Red;
+            circle.Width = 30;
+            circle.Height = 30;
+            circle.X = 36*count;
+            circle.Y = 50;
+
+            SkiaGumCanvasView.AddChild(circle);
+            SkiaGumCanvasView.InvalidateSurface();
 
             SemanticScreenReader.Announce(CounterBtn.Text);
         }

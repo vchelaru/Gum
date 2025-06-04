@@ -28,11 +28,11 @@
 
             <Button
                 x:Name="CounterBtn"
-                Text="Click me" 
+                Text="Click me to add Skia circles" 
                 SemanticProperties.Hint="Counts the number of times you click"
                 Clicked="OnCounterClicked"
                 HorizontalOptions="Fill" />
-            <SkiaGum:SkiaGumCanvasView WidthRequest="100" HeightRequest="100" x:Name="SkiaGumCanvasView"/>
+            <SkiaGum:SkiaGumCanvasView WidthRequest="200" HeightRequest="100" Background="Pink" BackgroundColor="Orange" x:Name="SkiaGumCanvasView"/>
 
         </VerticalStackLayout>
     </ScrollView>
