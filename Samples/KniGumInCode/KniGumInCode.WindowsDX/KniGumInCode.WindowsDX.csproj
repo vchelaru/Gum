@@ -29,15 +29,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="nkast.Xna.Framework" Version="3.12.9001" />
-    <PackageReference Include="nkast.Xna.Framework.Content" Version="3.12.9001" />
-    <PackageReference Include="nkast.Xna.Framework.Graphics" Version="3.12.9001" />
-    <PackageReference Include="nkast.Xna.Framework.Audio" Version="3.12.9001" />
-    <PackageReference Include="nkast.Xna.Framework.Media" Version="3.12.9001" />
-    <PackageReference Include="nkast.Xna.Framework.Input" Version="3.12.9001" />
-    <PackageReference Include="nkast.Xna.Framework.Game" Version="3.12.9001" />
-    <PackageReference Include="MonoGame.Framework.WindowsDX.9000" Version="3.12.9001" />
-    <PackageReference Include="nkast.Xna.Framework.Content.Pipeline.Builder" Version="3.12.9001" />
+    <PackageReference Include="nkast.Xna.Framework" Version="4.1.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Content" Version="4.1.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.1.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Audio" Version="4.1.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Media" Version="4.1.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Input" Version="4.1.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Game" Version="4.1.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Devices" Version="4.1.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Storage" Version="4.1.9001" />
+    <PackageReference Include="nkast.Xna.Framework.XR" Version="4.1.9001" />
+    <PackageReference Include="nkast.Kni.Platform.WinForms.DX11" Version="4.1.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Content.Pipeline.Builder" Version="4.1.9001" />
   </ItemGroup>
 	
   <ItemGroup>
