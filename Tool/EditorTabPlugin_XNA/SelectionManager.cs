@@ -267,7 +267,7 @@ public class SelectionManager
             // wireframe window and the cursor will
             // change.
 
-            Cursor cursorToSet = Cursors.Arrow;
+            var cursorToSet = System.Windows.Forms.Cursors.Arrow;
 
             float worldXAt = Cursor.GetWorldX();
             float worldYAt = Cursor.GetWorldY();
@@ -304,7 +304,7 @@ public class SelectionManager
                     {
                         if (IsOverBody && Cursor.PrimaryDown)
                         {
-                            cursorToSet = Cursors.SizeAll;
+                            cursorToSet = System.Windows.Forms.Cursors.SizeAll;
                             representationOver = WireframeObjectManager.Self.GetSelectedRepresentation();
                         }
                         else
@@ -317,7 +317,7 @@ public class SelectionManager
 
                             if (representationOver != null)
                             {
-                                cursorToSet = Cursors.SizeAll;
+                                cursorToSet = System.Windows.Forms.Cursors.SizeAll;
                                 IsOverBody = true;
                             }
                             else

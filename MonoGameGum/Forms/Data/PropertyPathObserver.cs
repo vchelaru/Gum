@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+[assembly: InternalsVisibleTo("MonoGameGum.Tests")]
 
 #if FRB
 namespace FlatRedBall.Forms.Data;
@@ -46,12 +48,6 @@ internal class PropertyPathObserver : IDisposable
     {
         _currentRoot = newRoot;
         LeafType = newRoot.GetType();
-
-        if (newRoot is not INotifyPropertyChanged)
-        {
-            // we still want to be able to GetValue below, but no listeners if it’s not INPC.
-            return;
-        }
 
         // walk each segment, hooking listeners on each INotifyPropertyChanged along the way
         object? cursor = newRoot;

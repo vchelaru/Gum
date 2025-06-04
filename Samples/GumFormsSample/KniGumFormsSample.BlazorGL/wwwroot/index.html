@@ -30,6 +30,7 @@
     <script src="_framework/blazor.webassembly.js" autostart="false"></script>
     <script type="module">
         import { BrotliDecode } from './js/decode.min.js';
+        window.BrotliDecode = BrotliDecode;
         // Set this to enable Brotli (.br) decompression on static webServers
         // that don't support content compression and http://.
         var enableBrotliDecompression = false;
@@ -58,14 +59,17 @@
         });
     </script>
 
-    <script src="_content/nkast.Wasm.Dom/js/JSObject.8.0.0.js"></script>
-    <script src="_content/nkast.Wasm.Dom/js/Window.8.0.0.js"></script>
-    <script src="_content/nkast.Wasm.Dom/js/Document.8.0.0.js"></script>
-    <script src="_content/nkast.Wasm.Dom/js/Media.8.0.0.js"></script>
-    <script src="_content/nkast.Wasm.XHR/js/XHR.8.0.0.js"></script>
-    <script src="_content/nkast.Wasm.Canvas/js/Canvas.8.0.0.js"></script>
-    <script src="_content/nkast.Wasm.Canvas/js/CanvasGLContext.8.0.0.js"></script>
-    <script src="_content/nkast.Wasm.Audio/js/Audio.8.0.0.js"></script>
+    <script src="_content/nkast.Wasm.Dom/js/JSObject.8.0.5.js"></script>
+    <script src="_content/nkast.Wasm.Dom/js/Window.8.0.5.js"></script>
+    <script src="_content/nkast.Wasm.Dom/js/Document.8.0.5.js"></script>
+    <script src="_content/nkast.Wasm.Dom/js/Navigator.8.0.5.js"></script>
+    <script src="_content/nkast.Wasm.Dom/js/Gamepad.8.0.5.js"></script>
+    <script src="_content/nkast.Wasm.Dom/js/Media.8.0.5.js"></script>
+    <script src="_content/nkast.Wasm.XHR/js/XHR.8.0.5.js"></script>
+    <script src="_content/nkast.Wasm.Canvas/js/Canvas.8.0.5.js"></script>
+    <script src="_content/nkast.Wasm.Canvas/js/CanvasGLContext.8.0.5.js"></script>
+    <script src="_content/nkast.Wasm.Audio/js/Audio.8.0.5.js"></script>
+    <script src="_content/nkast.Wasm.XR/js/XR.8.0.5.js"></script>
 
     <script>
         function tickJS()
@@ -102,7 +106,7 @@
             // Prevent Mousewheel scrolling the outer page
             // when running inside an iframe. e.g: itch.io embedding.
             event.preventDefault();
-        };
+        }, { passive: false };
     </script>
 </body>
 
