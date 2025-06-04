@@ -265,7 +265,7 @@ public class FrameworkElementBindingTests
     }
 
     [Fact]
-    public void ComplexPaths()
+    public void SetBinding_ShouldUpdateUiValue_WithComplexPaths()
     {
         TestViewModel vm = new()
         {
@@ -333,7 +333,7 @@ public class FrameworkElementBindingTests
     }
 
     [Fact]
-    public void UpdateSourceTrigger_LostFocus()
+    public void UpdateSourceTrigger_ShouldUpdateViewModel_OnLostFocus()
     {
         // Arrange
         TestViewModel vm = new() { Text = "Initial" };
@@ -353,6 +353,30 @@ public class FrameworkElementBindingTests
         vm.Text.ShouldBe("Initial");
         element.IsFocused = false;
         vm.Text.ShouldBe("FromUI");
+    }
+
+    [Fact]
+    public void UpdateSourceTrigger_ShouldNotUpdateSource_OnLostFocus_WhenSameTargetValue()
+    {
+        SetTrackingViewModel vm = new() { Text = "Initial" };
+
+        TextBox element = new() { BindingContext = vm };
+
+        Binding binding = new(nameof(SetTrackingViewModel.Text))
+        {
+            UpdateSourceTrigger = UpdateSourceTrigger.LostFocus
+        };
+
+        element.SetBinding(nameof(TextBox.Text), binding);
+
+        element.IsFocused = true;
+        element.Text = "Changed";
+        element.Text = "Initial";
+        element.IsFocused = false;
+
+        vm.TimesCalled.ShouldBe(1, 
+            "only once from the initializer, because the TextBox's value never changed, " +
+            "so setting IsFocused to false should not update the source value");
     }
 
     [Theory]
@@ -732,6 +756,23 @@ public class FrameworkElementBindingTests
                 string s when s.Equals("no", StringComparison.InvariantCultureIgnoreCase) => false,
                 _ => GumProperty.UnsetValue
             };
+        }
+    }
+    
+    private class SetTrackingViewModel
+    {
+        public int TimesCalled { get; private set; }
+
+        private string? _text;
+
+        public string? Text
+        {
+            get => _text;
+            set
+            {
+                TimesCalled++;
+                _text = value;
+            }
         }
     }
 }
