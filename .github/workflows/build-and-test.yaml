@@ -61,5 +61,8 @@ jobs:
         with:
           dotnet-version: 9.0.x
 
+      - name: Install .NET MAUI Workload
+        run: dotnet workload install maui
+
       - name: Build Samples
         run: pwsh ./.github/scripts/build-all.ps1 -Path Samples
