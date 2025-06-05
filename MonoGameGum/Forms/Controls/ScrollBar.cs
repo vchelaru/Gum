@@ -107,34 +107,40 @@ public class ScrollBar : RangeBase
     {
         var upButtonVisual = this.Visual.GetGraphicalUiElementByName("UpButtonInstance") as InteractiveGue;
 #if DEBUG
-        if (upButtonVisual == null)
-        {
-            throw new Exception("The ScrollBar Gum object must have a button called UpButtonInstance");
-        }
+        //if (upButtonVisual == null)
+        //{
+        //    throw new Exception("The ScrollBar Gum object must have a button called UpButtonInstance");
+        //}
 #endif
-        if (upButtonVisual.FormsControlAsObject == null)
+        if(upButtonVisual != null)
         {
-            upButton = new Button(upButtonVisual);
-        }
-        else
-        {
-            upButton = upButtonVisual.FormsControlAsObject as Button;
+            if (upButtonVisual.FormsControlAsObject == null)
+            {
+                upButton = new Button(upButtonVisual);
+            }
+            else
+            {
+                upButton = upButtonVisual.FormsControlAsObject as Button;
+            }
         }
 
         var downButtonVisual = this.Visual.GetGraphicalUiElementByName("DownButtonInstance") as InteractiveGue;
 #if DEBUG
-        if (downButtonVisual == null)
-        {
-            throw new Exception("The ScrollBar Gum object must have a button called DownButtonInstance");
-        }
+        //if (downButtonVisual == null)
+        //{
+        //    throw new Exception("The ScrollBar Gum object must have a button called DownButtonInstance");
+        //}
 #endif
-        if (downButtonVisual.FormsControlAsObject == null)
+        if(downButtonVisual != null)
         {
-            downButton = new Button(downButtonVisual);
-        }
-        else
-        {
-            downButton = downButtonVisual.FormsControlAsObject as Button;
+            if (downButtonVisual.FormsControlAsObject == null)
+            {
+                downButton = new Button(downButtonVisual);
+            }
+            else
+            {
+                downButton = downButtonVisual.FormsControlAsObject as Button;
+            }
         }
     }
 

@@ -240,8 +240,11 @@ public abstract class RangeBase : FrameworkElement
             thumb.Visual.Dragging += HandleDragOver;
         }
         Visual.RollOver += HandleThisRollOver;
-        Track.Push += HandleTrackPush;
-        Track.HoverOver += HandleTrackHover;
+        if(Track != null)
+        {
+            Track.Push += HandleTrackPush;
+            Track.HoverOver += HandleTrackHover;
+        }
 #endif
 
         // The attachments may not yet be set up, so set the explicitTrack's RaiseChildrenEventsOutsideOfBounds
