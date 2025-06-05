@@ -1118,14 +1118,18 @@ public class CodeGenerator
     {
         formsType = null;
         behavior = null;
-        var behaviors = element.Behaviors;
-        foreach (var possibleBehavior in behaviors)
+        var behaviors = element?.Behaviors;
+
+        if(behaviors != null)
         {
-            if (BehaviorGumFormsTypes.ContainsKey(possibleBehavior.BehaviorName))
+            foreach (var possibleBehavior in behaviors)
             {
-                formsType = BehaviorGumFormsTypes[possibleBehavior.BehaviorName];
-                behavior = possibleBehavior;
-                break;
+                if (BehaviorGumFormsTypes.ContainsKey(possibleBehavior.BehaviorName))
+                {
+                    formsType = BehaviorGumFormsTypes[possibleBehavior.BehaviorName];
+                    behavior = possibleBehavior;
+                    break;
+                }
             }
         }
     }
@@ -1148,6 +1152,7 @@ public class CodeGenerator
         { "SliderBehavior", "MonoGameGum.Forms.Controls.Slider" },
         { "StackPanelBehavior", "MonoGameGum.Forms.Controls.StackPanel" },
         { "TextBoxBehavior", "MonoGameGum.Forms.Controls.TextBox" },
+        { "WindowBehavior", "MonoGameGum.Forms.Window" },
     };
 
     static void AddGumFormsMembers(CodeGenerationContext context)

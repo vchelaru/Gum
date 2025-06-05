@@ -4,4 +4,5 @@
   <RequiredVariables />
   <RequiredInstances />
   <RequiredAnimations />
+  <DefaultImplementation>Controls/WindowStandard</DefaultImplementation>
 </BehaviorSave>
