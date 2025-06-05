@@ -1,8 +1,9 @@
-﻿using SkiaGum.Renderables;
+﻿using Gum.Wireframe;
+using SkiaGum.Renderables;
 
 namespace SkiaGum.GueDeriving
 {
-    public class ContainerRuntime : BindableGraphicalUiElement
+    public class ContainerRuntime : BindableGue
     {
         public ContainerRuntime(bool fullInstantiation = true)
         {

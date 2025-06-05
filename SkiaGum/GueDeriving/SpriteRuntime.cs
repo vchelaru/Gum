@@ -1,11 +1,12 @@
 ﻿using Gum.DataTypes;
+using Gum.Wireframe;
 using SkiaGum.Renderables;
 using SkiaSharp;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace SkiaGum.GueDeriving
 {
-    public class SpriteRuntime : BindableGraphicalUiElement
+    public class SpriteRuntime : BindableGue
     {
         Sprite mContainedSprite;
         Sprite ContainedSprite
