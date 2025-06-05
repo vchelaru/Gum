@@ -1,9 +1,10 @@
-﻿using SkiaGum.Renderables;
+﻿using Gum.Wireframe;
+using SkiaGum.Renderables;
 using SkiaSharp;
 
 namespace SkiaGum.GueDeriving
 {
-    public class SolidRectangleRuntime : BindableGraphicalUiElement
+    public class SolidRectangleRuntime : BindableGue
     {
         SolidRectangle mContainedRectangle;
         SolidRectangle ContainedRectangle
