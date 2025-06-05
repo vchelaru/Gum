@@ -25,6 +25,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGameGum.Tests", "MonoGa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaylibGum", "raylib\RaylibGum\RaylibGum.csproj", "{906F65C0-4E97-45CD-A935-1E9832686820}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ExternalLibraries", "ExternalLibraries", "{8A971C48-D5E3-433D-B669-E805D6C7F319}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkiaGum.Maui", "Runtimes\SkiaGum.Maui\SkiaGum.Maui.csproj", "{451E6BB0-1DE2-AB36-9951-A335EA552C11}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -113,11 +117,20 @@ Global
 		{906F65C0-4E97-45CD-A935-1E9832686820}.Release|Any CPU.Build.0 = Release|Any CPU
 		{906F65C0-4E97-45CD-A935-1E9832686820}.Release|x86.ActiveCfg = Release|Any CPU
 		{906F65C0-4E97-45CD-A935-1E9832686820}.Release|x86.Build.0 = Release|Any CPU
+		{451E6BB0-1DE2-AB36-9951-A335EA552C11}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{451E6BB0-1DE2-AB36-9951-A335EA552C11}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{451E6BB0-1DE2-AB36-9951-A335EA552C11}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{451E6BB0-1DE2-AB36-9951-A335EA552C11}.Debug|x86.Build.0 = Debug|Any CPU
+		{451E6BB0-1DE2-AB36-9951-A335EA552C11}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{451E6BB0-1DE2-AB36-9951-A335EA552C11}.Release|Any CPU.Build.0 = Release|Any CPU
+		{451E6BB0-1DE2-AB36-9951-A335EA552C11}.Release|x86.ActiveCfg = Release|Any CPU
+		{451E6BB0-1DE2-AB36-9951-A335EA552C11}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{435D0AF1-6956-42A4-AF24-E2BF0E9748D8} = {8A971C48-D5E3-433D-B669-E805D6C7F319}
 		{2DE63E97-9A29-456F-DE64-4A6ECD619252} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
