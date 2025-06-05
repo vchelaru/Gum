@@ -4729,7 +4729,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// </remarks>
     public virtual void SetInitialState()
     {
-        var elementSave = this.Tag as ElementSave;
+        var elementSave = this.Tag as ElementSave ?? this.ElementSave;
         this.SetVariablesRecursively(elementSave, elementSave.DefaultState);
     }
 

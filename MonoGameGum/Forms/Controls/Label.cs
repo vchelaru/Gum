@@ -64,10 +64,11 @@ public class Label : FrameworkElement
         }
 
 #if DEBUG
-        ReportMissingTextInstance();
+        // If we do this, we prevent Label controls from instantiating and later setting their visuals...
+        //ReportMissingTextInstance();
 #endif
 
-        coreTextObject = (RenderingLibrary.Graphics.Text)textComponent!.RenderableComponent;
+        coreTextObject = (RenderingLibrary.Graphics.Text)textComponent?.RenderableComponent;
     }
 
 #if DEBUG
