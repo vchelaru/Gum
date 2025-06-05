@@ -27,6 +27,7 @@ using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using ToolsUtilities;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrayNotify;
 
 namespace CodeOutputPlugin.Manager;
 
@@ -937,6 +938,21 @@ public class CodeGenerator
         var tabs = context.Tabs;
 
         context.StringBuilder.AppendLine($"{tabs}{instanceName} = new {GetClassNameForType(instance.BaseType, visualApi, context)}();");
+
+        if(context.CodeOutputProjectSettings.ObjectInstantiationType == ObjectInstantiationType.FullyInCode)
+        {
+            var instanceElement = ObjectFinder.Self.GetElementSave(instance);
+            if(instanceElement is StandardElementSave)
+            {
+                // We could do some kind of caching to speed this up? Fortunately there aren't a lot of ElementSaves in a typical project
+                context.StringBuilder.AppendLine($"{tabs}{instanceName}.ElementSave = ObjectFinder.Self.GetStandardElement(\"{instanceElement.Name}\");");
+                // Background.AddStatesAndCategoriesRecursivelyToGue(Background.ElementSave);
+                context.StringBuilder.AppendLine($"{tabs}{instanceName}.AddStatesAndCategoriesRecursivelyToGue({instanceName}.ElementSave);");
+
+
+                context.StringBuilder.AppendLine($"{tabs}{instanceName}.SetInitialState();");
+            }
+        }
 
         var shouldSetBinding =
             visualApi == VisualApi.XamarinForms && context.Element.DefaultState.Variables.Any(item => !string.IsNullOrEmpty(item.ExposedAsName) && item.SourceObject == instance.Name);
