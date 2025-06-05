@@ -6083,6 +6083,41 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
+    /// <summary>
+    /// Populates a list with all the children matching the argument type. Performs the search in a recursive fashion.
+    /// </summary>
+    /// <param name="listToFill">List to populate. The type to search for is inferred from the element type and must be an <see cref="IRenderableIpso"/>.
+    /// The user has the responsability of instantiating and clearing this list.</param>
+    public void FillListWithChildrenByTypeRecursively<T>(List<T> listToFill) where T : IRenderableIpso
+    {
+        FillListWithChildrenByType(Children, listToFill);
+    }
+
+    /// <summary>
+    /// Returns a list with all the children matching the argument type. Performs the search in a recursive fashion.
+    /// </summary>
+    /// <typeparam name="T">Type to search for. Must be an <see cref="IRenderableIpso"/>.</typeparam>
+    /// <returns></returns>
+    public List<T> FillListWithChildrenByTypeRecursively<T>() where T : IRenderableIpso
+    {
+        var list = new List<T>();
+        FillListWithChildrenByTypeRecursively(list);
+        return list;
+    }
+
+    private void FillListWithChildrenByType<T>(ObservableCollection<IRenderableIpso> children, List<T> listToFill) where T : IRenderableIpso
+    {
+        foreach (var child in children)
+        {
+            if (child.GetType().Equals(typeof(T)))
+            {
+                listToFill.Add((T)child);
+            }
+
+            FillListWithChildrenByType(child.Children, listToFill);
+        }
+    }
+
     #endregion
 
     #region Font/Text

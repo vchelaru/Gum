@@ -277,13 +277,13 @@ public class FormsUtilities
         {
             var categoryNames = component.Categories.Select(item => item.Name).ToList();
             var behaviorNames = component.Behaviors.Select(item => item.BehaviorName).ToList();
-            if (categoryNames.Contains("ButtonCategory"))
+            if (behaviorNames.Contains("ButtonBehavior"))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileButtonRuntime), overwriteIfAlreadyExists:false);
             }
-            else if (categoryNames.Contains("CheckBoxCategory"))
+            else if (behaviorNames.Contains("CheckBoxBehavior"))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
@@ -301,13 +301,13 @@ public class FormsUtilities
                     component.Name,
                     typeof(DefaultFromFileLabelRuntime), overwriteIfAlreadyExists: false);
             }
-            else if (categoryNames.Contains("ListBoxCategory"))
+            else if (behaviorNames.Contains("ListBoxBehavior"))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileListBoxRuntime), overwriteIfAlreadyExists: false);
             }
-            else if (categoryNames.Contains("ListBoxItemCategory"))
+            else if (behaviorNames.Contains("ListBoxItemBehavior"))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
@@ -331,25 +331,25 @@ public class FormsUtilities
                     component.Name,
                     typeof(DefaultFromFilePanelRuntime), overwriteIfAlreadyExists: false);
             }
-            else if (categoryNames.Contains("PasswordBoxCategory"))
+            else if (behaviorNames.Contains("PasswordBoxBehavior"))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFilePasswordBoxRuntime), overwriteIfAlreadyExists: false);
             }
-            else if (categoryNames.Contains("RadioButtonCategory"))
+            else if (behaviorNames.Contains("RadioButtonBehavior"))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileRadioButtonRuntime), overwriteIfAlreadyExists: false);
             }
-            else if (categoryNames.Contains("ScrollBarCategory"))
+            else if (behaviorNames.Contains("ScrollBarBehavior"))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileScrollBarRuntime), overwriteIfAlreadyExists: false);
             }
-            else if (categoryNames.Contains("SliderCategory"))
+            else if (behaviorNames.Contains("SliderBehavior"))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
@@ -361,17 +361,23 @@ public class FormsUtilities
                     component.Name,
                     typeof(DefaultFromFileScrollViewerRuntime), overwriteIfAlreadyExists: false);
             }
-            else if(behaviorNames.Contains("StackPanel"))
+            else if(behaviorNames.Contains("StackPanelBehavior"))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileStackPanelRuntime), overwriteIfAlreadyExists: false);
             }
-            else if (categoryNames.Contains("TextBoxCategory"))
+            else if (behaviorNames.Contains("TextBoxBehavior"))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(
                     component.Name,
                     typeof(DefaultFromFileTextBoxRuntime), overwriteIfAlreadyExists: false);
+            }
+            else if(behaviorNames.Contains("WindowBehavior"))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileWindowRuntime), overwriteIfAlreadyExists: false);
             }
         }
     }

@@ -680,8 +680,7 @@ namespace SkiaGum.Renderables
                             DropshadowOffsetY,
                             DropshadowBlurX / 3.0f,
                             DropshadowBlurY / 3.0f,
-                            DropshadowColor,
-                            SKDropShadowImageFilterShadowMode.DrawShadowAndForeground);
+                            DropshadowColor);
             }
 
             if (UseGradient)

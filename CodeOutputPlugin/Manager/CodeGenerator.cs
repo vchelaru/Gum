@@ -3945,12 +3945,12 @@ public class CodeGenerator
                 // Glue has base types like Container for all components, and that's not what we want.
                 // Actually we should go one above the inheritance:
 
-                var instanceElement = ObjectFinder.Self.GetElementSave(parentInstance?.BaseType);
+                var instanceElement = ObjectFinder.Self.GetElementSave(parentInstance.BaseType);
 
                 if (instanceElement != null)
                 {
                     var baseElements = ObjectFinder.Self.GetBaseElements(instanceElement);
-                    string componentType = null;
+                    string? componentType = null;
                     if (baseElements.Count > 1)
                     {
                         // don't do the "Last" because that will be container, so take all but the last:
@@ -3966,6 +3966,8 @@ public class CodeGenerator
                     {
                         // All XamForms objects are components, so all must inherit from something. This should never happen...
                     }
+
+                    
                     hasContent = DoesTypeHaveContent(componentType);
                 }
 
@@ -3974,43 +3976,50 @@ public class CodeGenerator
                 // handle standard XamarinForms controls, but for now we'll hardcode some
                 // checks:
 
-                if (IsTabControl(parentInstance))
+                var contextInstance = context.Instance;
+
+                if(contextInstance != null)
                 {
-                    var stringBuilder = new StringBuilder();
-                    var tabs = "";
-                    stringBuilder.AppendLine($"{tabs}{{");
-                    tabs += new String(' ', 4);
 
-                    var tabViewType = "Xamarin.CommunityToolkit.UI.Views.TabViewItem";
-                    var textProperty = "Text";
-                    var tabItemsProperty = "TabItems";
-
-                    if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Maui)
+                    if (IsTabControl(parentInstance))
                     {
-                        // There's no community toolkit tabview, so we'll assume it is using a TabViewItem, maybe from DevExpress:
-                        tabViewType = "TabViewItem";
-                        textProperty = "HeaderText";
-                        tabItemsProperty = "Items";
+                        var stringBuilder = new StringBuilder();
+                        var tabs = "";
+                        stringBuilder.AppendLine($"{tabs}{{");
+                        tabs += new String(' ', 4);
+
+                        var tabViewType = "Xamarin.CommunityToolkit.UI.Views.TabViewItem";
+                        var textProperty = "Text";
+                        var tabItemsProperty = "TabItems";
+
+                        if (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Maui)
+                        {
+                            // There's no community toolkit tabview, so we'll assume it is using a TabViewItem, maybe from DevExpress:
+                            tabViewType = "TabViewItem";
+                            textProperty = "HeaderText";
+                            tabItemsProperty = "Items";
+                        }
+
+
+
+                        stringBuilder.AppendLine($"{tabs}var tabItem = new {tabViewType}();");
+                        stringBuilder.AppendLine($"{tabs}tabItem.{textProperty} = \"Tab Text\";");
+                        stringBuilder.AppendLine($"{tabs}tabItem.Content = {context.InstanceNameInCode(contextInstance)};");
+                        stringBuilder.AppendLine($"{tabs}{context.InstanceNameInCode(parentInstance)}.{tabItemsProperty}.Add(tabItem);");
+                        tabs = tabs.Substring(4);
+                        stringBuilder.AppendLine($"{tabs}}}");
+                        return stringBuilder.ToString();
                     }
-
-
-
-                    stringBuilder.AppendLine($"{tabs}var tabItem = new {tabViewType}();");
-                    stringBuilder.AppendLine($"{tabs}tabItem.{textProperty} = \"Tab Text\";");
-                    stringBuilder.AppendLine($"{tabs}tabItem.Content = {context.InstanceNameInCode(context.Instance)};");
-                    stringBuilder.AppendLine($"{tabs}{context.InstanceNameInCode(parentInstance)}.{tabItemsProperty}.Add(tabItem);");
-                    tabs = tabs.Substring(4);
-                    stringBuilder.AppendLine($"{tabs}}}");
-                    return stringBuilder.ToString();
+                    else if (hasContent)
+                    {
+                        return $"{parentName}.Content = {context.InstanceNameInCode(contextInstance)};";
+                    }
+                    else
+                    {
+                        return $"{parentName}.Children.Add({context.InstanceNameInCode(contextInstance)});";
+                    }
                 }
-                else if (hasContent)
-                {
-                    return $"{parentName}.Content = {context.InstanceNameInCode(context.Instance)};";
-                }
-                else
-                {
-                    return $"{parentName}.Children.Add({context.InstanceNameInCode(context.Instance)});";
-                }
+
             }
             // parent instance is null, so attach to "this" top level object
             else
@@ -4328,7 +4337,7 @@ public class CodeGenerator
     }
 
 
-    public static bool DoesTypeHaveContent(string type)
+    public static bool DoesTypeHaveContent(string? type)
     {
         return type?.EndsWith("/ScrollView") == true ||
                 type?.EndsWith("/StickyScrollView") == true ||
@@ -4734,7 +4743,7 @@ public class CodeGenerator
         if (considerDefaultContainer)
         {
             var instanceElement = ObjectFinder.Self.GetElementSave(instance);
-            var defaultParent = instanceElement.DefaultState.GetValueOrDefault<string>("DefaultChildContainer");
+            var defaultParent = instanceElement?.DefaultState.GetValueOrDefault<string>("DefaultChildContainer");
 
             if (!string.IsNullOrEmpty(defaultParent))
             {

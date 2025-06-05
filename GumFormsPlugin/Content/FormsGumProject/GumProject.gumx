@@ -220,6 +220,11 @@
     <LinkType>ReferenceOriginal</LinkType>
   </ComponentReference>
   <ComponentReference>
+    <Name>Controls/WindowStandard</Name>
+    <ElementType>Component</ElementType>
+    <LinkType>ReferenceOriginal</LinkType>
+  </ComponentReference>
+  <ComponentReference>
     <Name>Elements/CautionLines</Name>
     <ElementType>Component</ElementType>
     <LinkType>ReferenceOriginal</LinkType>
@@ -387,6 +392,9 @@
   </BehaviorReference>
   <BehaviorReference>
     <Name>UserControlBehavior</Name>
+  </BehaviorReference>
+  <BehaviorReference>
+    <Name>WindowBehavior</Name>
   </BehaviorReference>
   <SinglePixelTextureTop xsi:nil="true" />
   <SinglePixelTextureLeft xsi:nil="true" />
