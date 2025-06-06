@@ -275,4 +275,5 @@
   * [Setup](code/skiagum/setup/README.md)
     * [WPF](code/skiagum/setup/wpf.md)
 * [.NET MAUI](code/.net-maui/README.md)
-  * [Setup](code/.net-maui/setup.md)
+  * [Setup](code/.net-maui/setup/README.md)
+    * [SkiaGumCanvasView](code/.net-maui/setup/skiagumcanvasview.md)
