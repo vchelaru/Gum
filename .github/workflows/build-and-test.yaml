@@ -8,7 +8,10 @@ on:
 
 jobs:
   Build-and-Test:
-    runs-on: windows-latest
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
 
@@ -42,7 +45,7 @@ jobs:
       - name: Publish Test Results
         uses: dorny/test-reporter@v2
         with:
-          name: Tests
+          name: Tests ${{ matrix.os }}
           path: "TestResults/*.trx"
           reporter: dotnet-trx
           fail-on-error: true
