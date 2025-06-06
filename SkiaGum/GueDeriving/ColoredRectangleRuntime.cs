@@ -1,9 +1,10 @@
-﻿using SkiaGum.Renderables;
+﻿using Gum.Wireframe;
+using SkiaGum.Renderables;
 using SkiaSharp;
 
 namespace SkiaGum.GueDeriving
 {
-    public class ColoredRectangleRuntime :  BindableGraphicalUiElement
+    public class ColoredRectangleRuntime : BindableGue
     {
         RoundedRectangle mContainedRoundedRectangle;
         RoundedRectangle ContainedRoundedRectangle
