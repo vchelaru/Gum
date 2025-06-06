@@ -24,7 +24,8 @@ jobs:
         with:
           dotnet-version: 9.0.x
 
-      - name: Build Gum
+      - name: Build Gum (Windows Only)
+        if: runner.os == 'Windows'
         run: |
           dotnet restore "Gum.sln"
           dotnet build "Gum.sln" --configuration Release --no-restore --verbosity minimal -p:WarningLevel=0
@@ -38,7 +39,8 @@ jobs:
         run: dotnet test "MonoGameGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
         continue-on-error: true
 
-      - name: GumToolUnitTests
+      - name: GumToolUnitTests (Windows Only)
+        if: runner.os == 'Windows'
         run: dotnet test "Tool/Tests/GumToolUnitTests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
         continue-on-error: true
 
