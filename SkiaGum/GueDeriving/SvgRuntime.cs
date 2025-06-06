@@ -1,10 +1,11 @@
 ﻿using Gum.DataTypes;
+using Gum.Wireframe;
 using SkiaSharp;
 using Svg.Skia;
 
 namespace SkiaGum.GueDeriving
 {
-    public class SvgRuntime : BindableGraphicalUiElement
+    public class SvgRuntime : BindableGue
     {
         VectorSprite mContainedSprite;
         VectorSprite ContainedSprite

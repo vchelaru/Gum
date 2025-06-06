@@ -472,7 +472,14 @@ public class MainCodeOutputPlugin : PluginBase
         if (element != null && element is not StandardElementSave)
         {
             settings = settings ?? control.CodeOutputElementSettings;
-            _codeGenerationService.GenerateCodeForElement(element, settings, codeOutputProjectSettings, showPopups);
+
+            // If user is using automatic generation, generate everything
+            // If it's manual, don't check for missing files
+
+            var checkForMissing = settings.GenerationBehavior == GenerationBehavior.GenerateAutomaticallyOnPropertyChange;
+
+
+            _codeGenerationService.GenerateCodeForElement(element, settings, codeOutputProjectSettings, showPopups, checkForMissing: checkForMissing);
         }
     }
 

@@ -1,10 +1,11 @@
-﻿using SkiaGum.Renderables;
+﻿using Gum.Wireframe;
+using SkiaGum.Renderables;
 using SkiaSharp.Skottie;
 using System;
 
 namespace SkiaGum.GueDeriving
 {
-    public class LottieAnimationRuntime : BindableGraphicalUiElement
+    public class LottieAnimationRuntime : BindableGue
     {
         //protected override RenderableBase ContainedRenderable => ContainedLottieAnimation;
 

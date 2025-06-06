@@ -1,10 +1,11 @@
 ﻿using Gum.DataTypes;
+using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using SkiaSharp;
 
 namespace SkiaGum.GueDeriving
 {
-    public class TextRuntime : BindableGraphicalUiElement
+    public class TextRuntime : BindableGue
     {
         public static int DefaultRed { get; set; } = 69;
         public static int DefaultGreen { get; set; } = 90;

@@ -460,7 +460,7 @@ public class CodeGenerator
             }
             else
             {
-                inheritance = "BindableGraphicalUiElement";
+                inheritance = "SkiaGum.GueDeriving.ContainerRuntime";
             }
         }
         else
@@ -947,10 +947,10 @@ public class CodeGenerator
                 // We could do some kind of caching to speed this up? Fortunately there aren't a lot of ElementSaves in a typical project
                 context.StringBuilder.AppendLine($"{tabs}{instanceName}.ElementSave = ObjectFinder.Self.GetStandardElement(\"{instanceElement.Name}\");");
                 // Background.AddStatesAndCategoriesRecursivelyToGue(Background.ElementSave);
-                context.StringBuilder.AppendLine($"{tabs}{instanceName}.AddStatesAndCategoriesRecursivelyToGue({instanceName}.ElementSave);");
+                context.StringBuilder.AppendLine($"{tabs}if ({instanceName}.ElementSave != null) {instanceName}.AddStatesAndCategoriesRecursivelyToGue({instanceName}.ElementSave);");
 
 
-                context.StringBuilder.AppendLine($"{tabs}{instanceName}.SetInitialState();");
+                context.StringBuilder.AppendLine($"{tabs}if ({instanceName}.ElementSave != null) {instanceName}.SetInitialState();");
             }
         }
 
@@ -2734,7 +2734,7 @@ public class CodeGenerator
                 stringBuilder.AppendLine(context.Tabs + "AssignParents();");
             }
 
-            if(context.CodeOutputProjectSettings.OutputLibrary != OutputLibrary.MonoGameForms)
+            if(context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame)
             {
                 stringBuilder.AppendLine(context.Tabs + "if(tryCreateFormsObject)");
                 stringBuilder.AppendLine(context.Tabs + "{");
@@ -4390,7 +4390,7 @@ public class CodeGenerator
             }
         }
         else if (variable.IsState(context.Element) &&
-            (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame || context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+            (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame || context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms || context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Skia)
             && instance != null)
         {
             var rootVariable = ObjectFinder.Self.GetRootVariable(variable.GetRootName(), instance);
