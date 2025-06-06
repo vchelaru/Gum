@@ -4801,7 +4801,14 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     public override string ToString()
     {
-        return Name;
+        if (string.IsNullOrEmpty(Name))
+        {
+            return GetType().Name;
+        }
+        else
+        {
+            return Name;
+        }
     }
 
     public void SetGueValues(IVariableFinder rvf)

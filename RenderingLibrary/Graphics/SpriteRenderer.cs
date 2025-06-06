@@ -32,6 +32,7 @@ namespace RenderingLibrary.Graphics
             }
         }
 
+
         #endregion
 
         #region Properties
@@ -59,7 +60,7 @@ namespace RenderingLibrary.Graphics
 
         }
 
-        public void BeginSpriteBatch(RenderStateVariables renderStates, Layer layer, BeginType beginType, Camera camera)
+        public void BeginSpriteBatch(RenderStateVariables renderStates, Layer layer, BeginType beginType, Camera camera, object objectStartingSpriteBatch)
         {
             var spriteBatchTransformMatrix =  Renderer.UsingEffect 
                 ? GetZoomMatrixFromLayerCameraSettings()
@@ -211,7 +212,7 @@ namespace RenderingLibrary.Graphics
             // Why use Immediate instead of Deferred if it's slower?
             // I'll change it and let's see if it breaks anything.
             // Victor April 27, 2024
-            // This seems to work fine in all cases, so no need to branch on beginType
+            // This seems to work fine in all cases
             if (beginType == BeginType.Begin)
             {
                 mSpriteBatch.ReplaceRenderStates(SpriteSortMode.Deferred,
@@ -221,7 +222,10 @@ namespace RenderingLibrary.Graphics
                     rasterizerState,
                     effectiveEffect,
                     ForcedMatrix ?? spriteBatchTransformMatrix,
-                    scissorRectangle);
+                    scissorRectangle,
+                    objectStartingSpriteBatch
+                    );
+
             }
             else
             {
@@ -232,7 +236,8 @@ namespace RenderingLibrary.Graphics
                     rasterizerState,
                     effectiveEffect,
                     ForcedMatrix ?? spriteBatchTransformMatrix,
-                    scissorRectangle);
+                    scissorRectangle,
+                    objectStartingSpriteBatch);
             }
         }
 
