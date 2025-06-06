@@ -361,6 +361,17 @@ public class FrameworkElement : INotifyPropertyChanged
             InteractiveGue oldVisual = visual;
             if (visual != value)
             {
+#if DEBUG
+                if(value?.FormsControlAsObject != null)
+                {
+                    var message =
+                        $"Cannot set the {this.GetType().Name}'s Visual to {visual.Name} because the assigned Visual is already the Visual for another framework element of type {value.FormsControlAsObject}";
+                    throw new InvalidOperationException(message);
+                }
+
+#endif
+
+
                 if (visual != null)
                 {
                     // unsubscribe:
