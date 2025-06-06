@@ -1,4 +1,5 @@
-﻿using RenderingLibrary.Graphics;
+﻿using Gum.Wireframe;
+using RenderingLibrary.Graphics;
 using SkiaGum.GueDeriving;
 using SkiaGum.Renderables;
 using SkiaSharp;
@@ -22,7 +23,7 @@ namespace RenderingLibrary.Graphics
                 var bottom = top + renderableIpso.Height;
                 return new SKRect(left, top, right, bottom);
             }
-            else if (renderableIpso is BindableGraphicalUiElement gue && gue.ClipsChildren)
+            else if (renderableIpso is BindableGue gue && gue.ClipsChildren)
             {
                 var left = renderableIpso.GetAbsoluteX();
                 var top = renderableIpso.GetAbsoluteY();

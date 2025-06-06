@@ -8,10 +8,20 @@ namespace MauiSkiaGum
     {
         int count = 0;
 
+        ContainerRuntime MainStack;
+
         public MainPage()
         {
             InitializeComponent();
 
+            MainStack = new ContainerRuntime();
+            MainStack.Dock(Gum.Wireframe.Dock.Fill);
+            MainStack.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+            SkiaGumCanvasView.AddChild(MainStack);
+
+            var text = new TextRuntime();
+            text.Text = "Click the button to add circles below:";
+            MainStack.AddChild(text);
 
             SkiaGumCanvasView.InvalidateSurface();
         }
@@ -25,14 +35,13 @@ namespace MauiSkiaGum
             else
                 CounterBtn.Text = $"Clicked {count} times";
 
+
             var circle = new ColoredCircleRuntime();
             circle.Color = SKColors.Red;
             circle.Width = 30;
             circle.Height = 30;
-            circle.X = 36*count;
-            circle.Y = 50;
 
-            SkiaGumCanvasView.AddChild(circle);
+            MainStack.AddChild(circle);
             SkiaGumCanvasView.InvalidateSurface();
 
             SemanticScreenReader.Announce(CounterBtn.Text);
