@@ -22,4 +22,18 @@ public class FileManagerTests
 
         text.ShouldBe("Test content A");
     }
+
+    [Fact]
+    public void FromFileText_ShouldLoad_WhenPathHasBackSlashes()
+    {
+
+        System.IO.Directory.CreateDirectory("DirectoryA2");
+        System.IO.Directory.CreateDirectory("DirectoryB2");
+
+        System.IO.File.WriteAllText("DirectoryA2/test.txt", "Test content A");
+
+        var text = FileManager.FromFileText("DirectoryB2\\DirectoryA2\\test.txt");
+
+        text.ShouldBe("Test content A");
+    }
 }
