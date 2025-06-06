@@ -460,7 +460,7 @@ public class CodeGenerator
             }
             else
             {
-                inheritance = "BindableGue";
+                inheritance = "SkiaGum.GueDeriving.ContainerRuntime";
             }
         }
         else
