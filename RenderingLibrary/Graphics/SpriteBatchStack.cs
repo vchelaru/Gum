@@ -10,6 +10,7 @@ using Matrix = System.Numerics.Matrix4x4;
 
 namespace RenderingLibrary.Graphics
 {
+
     public struct StateChangeInfo
     {
         public Texture2D Texture;
@@ -42,7 +43,13 @@ namespace RenderingLibrary.Graphics
         public Microsoft.Xna.Framework.Matrix TransformMatrix { get; set; }
         public Rectangle ScissorRectangle { get; set; }
 
+        public object ObjectChangingState { get; set; }
 
+        /// <summary>
+        /// A list of changes that happened with these same parameters which required changing either the Texture or SpriteFont.
+        /// If this list is empty, no items were drawn with a Texture/SpriteFont. If any items were drawn, at least one item is
+        /// present in this list.
+        /// </summary>
         public StateChangeInfoList ChangeRecord
         {
             get; set;
@@ -57,7 +64,21 @@ namespace RenderingLibrary.Graphics
 
         public override string ToString()
         {
-            return $"{ChangeRecord.Count} calls";
+            if(ObjectChangingState != null)
+            {
+                if(ChangeRecord.Count == 0)
+                {
+                    return $"By {ObjectChangingState}";
+                }
+                else
+                {
+                    return $"By {ObjectChangingState} w/ {ChangeRecord.Count} Textures set(s)";
+                }
+            }
+            else
+            {
+                return $"Begin w/ {ChangeRecord.Count} Textures set(s)";
+            }
         }
     }
 
@@ -82,7 +103,7 @@ namespace RenderingLibrary.Graphics
 
         List<BeginParameters?> mStateStack = new List<BeginParameters?>();
         BeginParameters? currentParameters;
-
+        public BeginParameters? CurrentParameters => currentParameters;
         #endregion
 
         #region Properties
@@ -153,9 +174,11 @@ namespace RenderingLibrary.Graphics
             SpriteBatch.Begin();
         }
 
-        public void PushRenderStates(SpriteSortMode sortMode, BlendState blendState, SamplerState samplerState,
+        public void PushRenderStates(SpriteSortMode sortMode, 
+            BlendState blendState, SamplerState samplerState,
             DepthStencilState depthStencilState, RasterizerState rasterizerState, Effect effect,
-            Microsoft.Xna.Framework.Matrix transformMatrix, Rectangle scissorRectangle)
+            Microsoft.Xna.Framework.Matrix transformMatrix, Rectangle scissorRectangle,
+            object? objectChangingState)
         {
 
 
@@ -163,12 +186,16 @@ namespace RenderingLibrary.Graphics
 
             // begin will end 
             ReplaceRenderStates(
-                sortMode, blendState, samplerState, depthStencilState, rasterizerState, effect, transformMatrix, scissorRectangle);
+                sortMode, blendState, samplerState, depthStencilState, rasterizerState, effect, transformMatrix, scissorRectangle, objectChangingState);
         }
 
-        public void ReplaceRenderStates(SpriteSortMode sortMode, BlendState blendState, SamplerState samplerState,
-            DepthStencilState depthStencilState, RasterizerState rasterizerState, Effect effect, Microsoft.Xna.Framework.Matrix transformMatrix,
-            Rectangle scissorRectangle)
+        public void ReplaceRenderStates(SpriteSortMode sortMode, 
+            BlendState blendState, 
+            SamplerState samplerState,
+            DepthStencilState depthStencilState, RasterizerState rasterizerState, 
+            Effect effect, Microsoft.Xna.Framework.Matrix transformMatrix,
+            Rectangle scissorRectangle,
+            object? objectChangingState)
         {
             bool isNewRender = currentParameters.HasValue == false;
 
@@ -183,6 +210,7 @@ namespace RenderingLibrary.Graphics
             newParameters.RasterizerState = rasterizerState;
             newParameters.Effect = effect;
             newParameters.TransformMatrix = transformMatrix;
+            newParameters.ObjectChangingState = objectChangingState;
 
             try
             {
@@ -320,7 +348,7 @@ namespace RenderingLibrary.Graphics
                 ReplaceRenderStates(parameters.Value.SortMode, parameters.Value.BlendState,
                     parameters.Value.SamplerState, parameters.Value.DepthStencilState,
                     parameters.Value.RasterizerState, parameters.Value.Effect,
-                    parameters.Value.TransformMatrix, parameters.Value.ScissorRectangle);
+                    parameters.Value.TransformMatrix, parameters.Value.ScissorRectangle, null);
             }
             else
             {

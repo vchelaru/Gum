@@ -432,7 +432,7 @@ public class Renderer : IRenderer
 
         SpriteBatchStack.PerformStartOfLayerRenderingLogic();
 
-        spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Push, mCamera);
+        spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Push, mCamera, null);
 
         layer.SortRenderables();
 
@@ -447,7 +447,7 @@ public class Renderer : IRenderer
     {
         SpriteBatchStack.PerformStartOfLayerRenderingLogic();
         spriteRenderer.ForcedMatrix = spriteBatchMatrix;
-        spriteRenderer.BeginSpriteBatch(mRenderStateVariables, _layers[0], BeginType.Push, mCamera);
+        spriteRenderer.BeginSpriteBatch(mRenderStateVariables, _layers[0], BeginType.Push, mCamera, null);
     }
 
 
@@ -695,7 +695,7 @@ public class Renderer : IRenderer
             if (didClipChange)
             {
                 mRenderStateVariables.ClipRectangle = oldClip;
-                spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera);
+                spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera, $"Un-set {renderable} Clip");
             }
         }
     }
@@ -823,7 +823,7 @@ public class Renderer : IRenderer
 
         if (shouldResetStates)
         {
-            spriteRenderer.BeginSpriteBatch(renderState, layer, BeginType.Begin, mCamera);
+            spriteRenderer.BeginSpriteBatch(renderState, layer, BeginType.Begin, mCamera, renderable);
         }
     }
 
