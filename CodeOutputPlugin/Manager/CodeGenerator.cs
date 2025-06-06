@@ -4390,7 +4390,7 @@ public class CodeGenerator
             }
         }
         else if (variable.IsState(context.Element) &&
-            (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame || context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms)
+            (context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGame || context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms || context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.Skia)
             && instance != null)
         {
             var rootVariable = ObjectFinder.Self.GetRootVariable(variable.GetRootName(), instance);
