@@ -25,11 +25,11 @@ public class GumCommands
         WireframeCommands wireframeCommands,
         ToolCommands.ProjectCommands projectCommands)
     {
-        Self = Self switch
+        if (Self != null)
         {
-            { } => throw new InvalidOperationException(),
-            _ => this
-        };
+            throw new InvalidOperationException("GumCommands should only be created once.");
+        }
+        Self = this;
         GuiCommands = guiCommands;
         FileCommands = fileCommands;
         Edit = editCommands;

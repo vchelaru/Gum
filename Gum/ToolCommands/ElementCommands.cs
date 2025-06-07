@@ -26,17 +26,18 @@ namespace Gum.ToolCommands
 
         #region Properties
 
+        [Obsolete]
         public static ElementCommands Self { get; private set; }
 
         #endregion
 
         public ElementCommands()
         {
-            Self = Self switch
+            if (Self != null)
             {
-                { } => throw new InvalidOperationException(),
-                _ => this
-            };
+                throw new InvalidOperationException("ElementCommands should only be created once");
+            }
+            Self = this;
         }
 
         #region Instance

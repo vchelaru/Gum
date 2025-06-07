@@ -241,6 +241,7 @@ public class SelectedState : ISelectedState
 
     #region Properties
 
+    [Obsolete]
     public static ISelectedState Self { get; private set; }
 
     public IStateContainer SelectedStateContainer
@@ -704,11 +705,11 @@ public class SelectedState : ISelectedState
 
     public SelectedState()
     {
-        Self = Self switch
+        if(Self != null)
         {
-            { } => throw new InvalidOperationException(),
-            _ => this
-        };
+            throw new InvalidOperationException("SelectedState should only be instantiated once.");
+        }
+        Self = this;
     }
 
     public List<ElementWithState> GetTopLevelElementStack()
