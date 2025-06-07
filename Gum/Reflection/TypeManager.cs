@@ -10,15 +10,16 @@ namespace Gum.Reflection
     {
         List<Type> mTypes;
 
+        [Obsolete]
         public static TypeManager Self { get; private set; }
 
         public TypeManager()
         {
-            Self = Self switch
+            if (Self != null)
             {
-                { } => throw new InvalidOperationException(),
-                _ => this
-            };
+                throw new InvalidOperationException("TypeManager is a singleton and cannot be instantiated multiple times.");
+            }
+            Self = this;
         }
 
         public void AddType(Type type)

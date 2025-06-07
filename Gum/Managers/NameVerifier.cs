@@ -56,6 +56,7 @@ namespace Gum.Managers
         
         private readonly StandardElementsManager _standardElementsManager;
 
+        [Obsolete]
         public static NameVerifier Self { get; private set; }
 
         #endregion
@@ -75,11 +76,11 @@ namespace Gum.Managers
 
         public NameVerifier(StandardElementsManager standardElementsManager)
         {
-            Self = Self switch
+            if (Self != null)
             {
-                { } => throw new InvalidOperationException(),
-                _ => this
-            };
+                throw new InvalidOperationException("NameVerifier is a singleton and cannot be instantiated more than once.");
+            }
+            Self = this;
             _standardElementsManager = standardElementsManager;
         }
 

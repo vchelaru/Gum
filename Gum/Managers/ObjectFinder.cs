@@ -80,11 +80,11 @@ namespace Gum.Managers
 
         public ObjectFinder()
         {
-            Self = Self switch
+            if(Self != null)
             {
-                { } => throw new InvalidOperationException(),
-                _ => this
-            };
+                throw new InvalidOperationException("ObjectFinder is a singleton and cannot be instantiated more than once.");
+            }
+            Self = this;
         }
 
         public GumProjectSave GumProjectSave

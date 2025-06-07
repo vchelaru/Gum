@@ -57,6 +57,7 @@ namespace Gum.Managers
 
         #region Properties
 
+        [Obsolete]
         public static PropertyGridManager Self { get; private set; }
 
 
@@ -76,11 +77,11 @@ namespace Gum.Managers
 
         public PropertyGridManager(LocalizationManager localizationManager)
         {
-            Self = Self switch
+            if(Self != null)
             {
-                { } => throw new NotImplementedException(),
-                _ => this
-            };
+                throw new InvalidOperationException("PropertyGridManager should only be created once");
+            }
+            Self = this;
             _localizationManager = localizationManager;
         }
 

@@ -134,6 +134,7 @@ namespace Gum.Managers
 
         #region Properties
         private ISelectedState SelectedState { get; }
+        [Obsolete]
         public static ElementTreeViewManager Self { get; private set; }
 
         public TreeNode SelectedNode
@@ -428,11 +429,12 @@ namespace Gum.Managers
 
         public ElementTreeViewManager(CopyPasteLogic copyPasteLogic, ISelectedState selectedState)
         {
-            Self = Self switch
+            if (Self != null)
             {
-                { } => throw new NotImplementedException(),
-                _ => this
-            };
+                throw new InvalidOperationException("ElementTreeViewManager is a singleton and cannot be instantiated more than once.");
+            }
+            Self = this;
+
             SelectedState = selectedState;
             _copyPasteLogic = copyPasteLogic;
         }

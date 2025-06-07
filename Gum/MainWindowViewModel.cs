@@ -59,7 +59,7 @@ public class MainWindowViewModel
 
     }
 
-    public void Initialize(MainWindow mainWindow, MainPanelControl mainPanelControl, IContainer components, ImageList imageList)
+    public void Initialize(MainWindow mainWindow, MainPanelControl mainPanelControl, IContainer container, ImageList imageList)
     {
         // Initialize before the StateView is created...
         GumCommands.Initialize(mainWindow, mainPanelControl);
@@ -79,7 +79,7 @@ public class MainWindowViewModel
         // beyond the generation of code which isn't working when
         // I move it to custom code. Oh well, maybe one day I'll move
         // to a wpf window and can get rid of this
-        ElementTreeViewManager.Initialize(components, imageList);
+        ElementTreeViewManager.Initialize(container, imageList);
         
         PropertyGridManager.InitializeEarly();
         MainMenuStripPlugin.InitializeMenuStrip();
@@ -92,7 +92,7 @@ public class MainWindowViewModel
         VariableSaveExtensionMethods.CustomFixEnumerations = VariableSaveExtensionMethodsGumTool.FixEnumerationsWithReflection;
         
         PluginManager.Self.XnaInitialized();
-        InitializeFileWatcher();
+        InitializeFileWatcher(container);
         
         Cursor LoadAddCursor()
         {
@@ -109,9 +109,9 @@ public class MainWindowViewModel
         }
     }
 
-    private void InitializeFileWatcher()
+    private void InitializeFileWatcher(IContainer container)
     {
-        Timer timer = new();
+        Timer timer = new(container);
         timer.Enabled = true;
         timer.Interval = 1000;
         timer.Tick += Handle;

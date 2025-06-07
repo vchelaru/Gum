@@ -140,6 +140,7 @@ public class KeyCombination
 
 public class HotkeyManager
 {
+    [Obsolete]
     public static HotkeyManager Self { get; private set; }
     public KeyCombination Delete { get; private set; } = KeyCombination.Pressed(Keys.Delete);
     public KeyCombination Copy { get; private set; } = KeyCombination.Ctrl(Keys.C);
@@ -186,11 +187,11 @@ public class HotkeyManager
 
     public HotkeyManager(CopyPasteLogic copyPasteLogic, GuiCommands guiCommands, SelectedState selectedState)
     {
-        Self = Self switch
-        {
-            { } => throw new InvalidOperationException(),
-            _ => this
-        };
+        if(Self  != null) {
+            throw new InvalidOperationException("HotkeyManager is a singleton and cannot be instantiated more than once.");
+        }
+        Self = this;
+
         _copyPasteLogic = copyPasteLogic;
         _guiCommands = guiCommands;
         _selectedState = selectedState;

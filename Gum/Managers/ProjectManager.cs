@@ -35,6 +35,7 @@ namespace Gum
 
         #region Properties
 
+        [Obsolete]
         public static ProjectManager Self { get; private set; }
 
         public GumProjectSave GumProjectSave
@@ -62,11 +63,11 @@ namespace Gum
         
         public ProjectManager()
         {
-            Self = Self switch
+            if (Self != null)
             {
-                { } => throw new InvalidOperationException(),
-                _ => this
-            };
+                throw new InvalidOperationException("ProjectManager should only be created once");
+            }
+            Self = this;
         }
 
         #region Methods
