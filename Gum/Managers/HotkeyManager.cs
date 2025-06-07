@@ -138,8 +138,10 @@ public class KeyCombination
 }
 #endregion
 
-public class HotkeyManager : Singleton<HotkeyManager>
+public class HotkeyManager
 {
+    [Obsolete]
+    public static HotkeyManager Self { get; private set; }
     public KeyCombination Delete { get; private set; } = KeyCombination.Pressed(Keys.Delete);
     public KeyCombination Copy { get; private set; } = KeyCombination.Ctrl(Keys.C);
     public KeyCombination Paste { get; private set; } = KeyCombination.Ctrl(Keys.V);
@@ -183,11 +185,16 @@ public class HotkeyManager : Singleton<HotkeyManager>
 
     // If adding any new keys here, modify HotkeyViewModel
 
-    public HotkeyManager()
+    public HotkeyManager(CopyPasteLogic copyPasteLogic, GuiCommands guiCommands, SelectedState selectedState)
     {
-        _copyPasteLogic = CopyPasteLogic.Self;
-        _guiCommands = GumCommands.Self.GuiCommands;
-        _selectedState = SelectedState.Self;
+        if(Self  != null) {
+            throw new InvalidOperationException("HotkeyManager is a singleton and cannot be instantiated more than once.");
+        }
+        Self = this;
+
+        _copyPasteLogic = copyPasteLogic;
+        _guiCommands = guiCommands;
+        _selectedState = selectedState;
     }
 
     #region App Wide Keys

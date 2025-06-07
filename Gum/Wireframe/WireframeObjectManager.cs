@@ -32,8 +32,6 @@ public partial class WireframeObjectManager
 
     ElementSave mElementShowing;
 
-    static WireframeObjectManager mSelf;
-
     GraphicalUiElementManager gueManager;
     private LocalizationManager _localizationManager;
 
@@ -50,17 +48,8 @@ public partial class WireframeObjectManager
         private set;
     }
 
-    public static WireframeObjectManager Self
-    {
-        get
-        {
-            if (mSelf == null)
-            {
-                mSelf = new WireframeObjectManager();
-            }
-            return mSelf;
-        }
-    }
+    [Obsolete]
+    public static WireframeObjectManager Self { get; private set; }
 
     public GraphicalUiElement RootGue
     {
@@ -74,10 +63,14 @@ public partial class WireframeObjectManager
 
     #region Initialize
 
-    public void Initialize(
-        LocalizationManager localizationManager
-        )
+    public WireframeObjectManager(LocalizationManager localizationManager)
     {
+        if (Self != null)
+        {
+            throw new InvalidOperationException("WireframeObjectManager is a singleton and cannot be instantiated more than once.");
+        }
+        Self = this;
+        
         _localizationManager = localizationManager;
 
         gueManager = new GraphicalUiElementManager();

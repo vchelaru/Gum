@@ -54,20 +54,10 @@ namespace Gum.Managers
         };
 
         
-        static NameVerifier mSelf;
         private readonly StandardElementsManager _standardElementsManager;
 
-        public static NameVerifier Self
-        {
-            get
-            {
-                if (mSelf == null)
-                {
-                    mSelf = new NameVerifier();
-                }
-                return mSelf;
-            }
-        }
+        [Obsolete]
+        public static NameVerifier Self { get; private set; }
 
         #endregion
 
@@ -84,9 +74,14 @@ namespace Gum.Managers
 
         #endregion
 
-        public NameVerifier()
+        public NameVerifier(StandardElementsManager standardElementsManager)
         {
-            _standardElementsManager = StandardElementsManager.Self;
+            if (Self != null)
+            {
+                throw new InvalidOperationException("NameVerifier is a singleton and cannot be instantiated more than once.");
+            }
+            Self = this;
+            _standardElementsManager = standardElementsManager;
         }
 
         public bool IsElementNameValid(string componentNameWithoutFolder, string folderName, ElementSave elementSave, out string whyNotValid)

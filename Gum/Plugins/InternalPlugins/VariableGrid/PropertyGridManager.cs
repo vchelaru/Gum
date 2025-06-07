@@ -57,17 +57,8 @@ namespace Gum.Managers
 
         #region Properties
 
-        public static PropertyGridManager Self
-        {
-            get
-            {
-                if (mPropertyGridManager == null)
-                {
-                    mPropertyGridManager = new PropertyGridManager();
-                }
-                return mPropertyGridManager;
-            }
-        }
+        [Obsolete]
+        public static PropertyGridManager Self { get; private set; }
 
 
         public VariableSave SelectedBehaviorVariable
@@ -84,14 +75,22 @@ namespace Gum.Managers
 
         #endregion
 
+        public PropertyGridManager(LocalizationManager localizationManager)
+        {
+            if(Self != null)
+            {
+                throw new InvalidOperationException("PropertyGridManager should only be created once");
+            }
+            Self = this;
+            _localizationManager = localizationManager;
+        }
+
         // Normally plugins will initialize through the PluginManager. This needs to happen earlier (see where it's called for info)
         // so some of it will happen here:
-        public void InitializeEarly(LocalizationManager localizationManager)
+        public void InitializeEarly()
         {
-
             mPropertyGridDisplayer = new ElementSaveDisplayer(new SubtextLogic());
-
-            _localizationManager = localizationManager;
+            
             mainControl = new Gum.MainPropertyGrid();
 
             GumCommands.Self.GuiCommands.AddControl(mainControl, "Variables", TabLocation.CenterBottom);
