@@ -84,8 +84,6 @@ public class UndoManager
 
     Dictionary<ElementSave, ElementHistory> mUndos = new Dictionary<ElementSave, ElementHistory>();
 
-    static UndoManager mSelf;
-
     UndoSnapshot recordedSnapshot;
     
     public UndoSnapshot RecordedSnapshot => recordedSnapshot;
@@ -108,7 +106,7 @@ public class UndoManager
     //StateSave mRecordedStateSave;
     //List<InstanceSave> mRecordedInstanceList;
 
-    public static UndoManager Self { get; private set; } = new UndoManager();
+    public static UndoManager Self { get; private set; }
     #endregion
 
     #region Events/Invokations
@@ -123,6 +121,12 @@ public class UndoManager
 
     public UndoManager()
     {
+        Self = Self switch
+        {
+            { } => throw new InvalidOperationException(),
+            _ => this
+        };
+        
         UndoLocks = new ObservableCollection<UndoLock>();
         UndoLocks.CollectionChanged += HandleUndoLockChanged;
     }

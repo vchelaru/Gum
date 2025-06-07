@@ -16,9 +16,14 @@ namespace Gum.Commands
     {
         private LocalizationManager _localizationManager;
         MainWindow mainWindow;
-        public void Initialize(MainWindow mainWindow, LocalizationManager localizationManager)
+
+        public FileCommands(LocalizationManager localizationManager)
         {
             _localizationManager = localizationManager;
+        }
+        
+        public void Initialize(MainWindow mainWindow)
+        {
             this.mainWindow = mainWindow;
         }
 
