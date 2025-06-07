@@ -14,6 +14,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Gum.Services;
 
 namespace Gum.Plugins.InternalPlugins.Hotkey.Views
 {
@@ -26,7 +27,7 @@ namespace Gum.Plugins.InternalPlugins.Hotkey.Views
         {
             InitializeComponent();
 
-            var viewModel = new HotkeyViewModel(HotkeyManager.Self);
+            var viewModel = new HotkeyViewModel(Locator.GetRequiredService<HotkeyManager>());
             this.DataContext = viewModel;
         }
     }

@@ -247,7 +247,7 @@ namespace Gum.PropertyGridHelpers
             _exposeVariableService = Gum.Services.Builder.Get<IExposeVariableService>();
             _objectFinder = ObjectFinder.Self;
             _hotkeyManager = HotkeyManager.Self;
-            _deleteVariableLogic = Gum.Services.Builder.App.Services.GetRequiredService<IDeleteVariableService>();
+            _deleteVariableLogic = Gum.Services.Builder.Get<IDeleteVariableService>();
             _undoManager = undoManager;
 
             StateSaveCategory = stateSaveCategory;

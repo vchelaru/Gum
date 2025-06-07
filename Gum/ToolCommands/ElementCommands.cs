@@ -13,6 +13,7 @@ using Gum.Wireframe;
 using GumRuntime;
 using Gum.Converters;
 using Gum.RenderingLibrary;
+using Gum.Services;
 using RenderingLibrary;
 
 namespace Gum.ToolCommands
@@ -21,25 +22,22 @@ namespace Gum.ToolCommands
     {
         #region Fields
 
-        static ElementCommands mSelf;
-
         #endregion
 
         #region Properties
 
-        public static ElementCommands Self
-        {
-            get
-            {
-                if (mSelf == null)
-                {
-                    mSelf = new ElementCommands();
-                }
-                return mSelf;
-            }
-        }
+        public static ElementCommands Self { get; private set; }
 
         #endregion
+
+        public ElementCommands()
+        {
+            Self = Self switch
+            {
+                { } => throw new InvalidOperationException(),
+                _ => this
+            };
+        }
 
         #region Instance
 

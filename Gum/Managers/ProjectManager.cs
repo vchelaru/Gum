@@ -29,25 +29,13 @@ namespace Gum
 
         GumProjectSave mGumProjectSave;
 
-        static ProjectManager mSelf;
-
         bool mHaveErrorsOccurredLoadingProject = false;
 
         #endregion
 
         #region Properties
 
-        public static ProjectManager Self
-        {
-            get
-            {
-                if (mSelf == null)
-                {
-                    mSelf = new ProjectManager();
-                }
-                return mSelf;
-            }
-        }
+        public static ProjectManager Self { get; private set; }
 
         public GumProjectSave GumProjectSave
         {
@@ -71,15 +59,18 @@ namespace Gum
             }
         }
         #endregion
-
-        #region Methods
-
-
-        private ProjectManager()
+        
+        public ProjectManager()
         {
-
+            Self = Self switch
+            {
+                { } => throw new InvalidOperationException(),
+                _ => this
+            };
         }
 
+        #region Methods
+        
         public void LoadSettings()
         {
             GeneralSettingsFile = GeneralSettingsFile.LoadOrCreateNew();

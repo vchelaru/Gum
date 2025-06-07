@@ -5,41 +5,36 @@ using Gum.Managers;
 
 namespace Gum;
 
-public class GumCommands : Singleton<GumCommands>
+public class GumCommands
 {
-    public GuiCommands GuiCommands
-    {
-        get;
-        private set;
-    }
+    public static GumCommands Self { get; private set; }
+    
+    public GuiCommands GuiCommands { get; }
 
-    public WireframeCommands WireframeCommands
-    {
-        get;
-        private set;
-    }
+    public WireframeCommands WireframeCommands { get; }
 
-    public FileCommands FileCommands
-    {
-        get;
-        private set;
-    }
+    public FileCommands FileCommands { get; }
 
-    public EditCommands Edit
-    {
-        get;
-        private set;
-    }
+    public EditCommands Edit { get; }
 
-    public ToolCommands.ProjectCommands ProjectCommands { get; private set; }
+    public ToolCommands.ProjectCommands ProjectCommands { get; }
 
-    public GumCommands()
+    public GumCommands(GuiCommands guiCommands, 
+        FileCommands fileCommands, 
+        EditCommands editCommands, 
+        WireframeCommands wireframeCommands,
+        ToolCommands.ProjectCommands projectCommands)
     {
-        GuiCommands = new GuiCommands();
-        FileCommands = new FileCommands();
-        Edit = new EditCommands();
-        WireframeCommands = new WireframeCommands();
-        ProjectCommands = Gum.ToolCommands.ProjectCommands.Self;
+        Self = Self switch
+        {
+            { } => throw new InvalidOperationException(),
+            _ => this
+        };
+        GuiCommands = guiCommands;
+        FileCommands = fileCommands;
+        Edit = editCommands;
+        WireframeCommands = wireframeCommands;
+        ProjectCommands = projectCommands;
     }
 
     /// <summary>
@@ -74,10 +69,10 @@ public class GumCommands : Singleton<GumCommands>
         }
     }
 
-    public void Initialize(MainWindow mainWindow, MainPanelControl mainPanelControl, LocalizationManager localizationManager)
+    public void Initialize(MainWindow mainWindow, MainPanelControl mainPanelControl)
     {
         GuiCommands.Initialize(mainWindow, mainPanelControl);
-        FileCommands.Initialize(mainWindow, localizationManager);
+        FileCommands.Initialize(mainWindow);
     }
 
 }

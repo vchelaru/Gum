@@ -23,22 +23,25 @@ using Gum.Graphics;
 
 namespace Gum.PropertyGridHelpers
 {
-    public class SetVariableLogic : Singleton<SetVariableLogic>
+    public class SetVariableLogic
     {
+        public static SetVariableLogic Self { get; set; }
         private VariableReferenceLogic _variableReferenceLogic;
         private CircularReferenceManager _circularReferenceManager;
         private FontManager _fontManager;
         private FileCommands _fileCommands;
 
         // this is needed as we unroll all the other singletons...
-        public void Initialize(CircularReferenceManager circularReferenceManager, FileCommands fileCommands)
+        public SetVariableLogic(CircularReferenceManager circularReferenceManager, FileCommands fileCommands, FontManager fontManager, GuiCommands guiCommands)
         {
-
-            _variableReferenceLogic = new VariableReferenceLogic(
-                Builder.Get<GuiCommands>());
+            Self = Self switch
+            {
+                { } => throw new InvalidOperationException(),
+                _ => this
+            };
+            _variableReferenceLogic = new VariableReferenceLogic(guiCommands);
             _circularReferenceManager = circularReferenceManager;
-
-            _fontManager = Builder.Get<FontManager>();
+            _fontManager = fontManager;
             _fileCommands = fileCommands;
         }
 

@@ -52,7 +52,6 @@ namespace Gum.Plugins
         private const String ReferenceFileName = "References.txt";
         private const String CompatibilityFileName = "Compatibility.txt";
         
-        static PluginManager mGlobalInstance;
         static PluginManager mProjectInstance;
         static List<PluginManager> mInstances = new List<PluginManager>();
         private bool mGlobal;
@@ -79,18 +78,13 @@ namespace Gum.Plugins
 
         #region Properties
 
-        public static PluginManager Self
-        {
-            get
-            {
-                if (mGlobalInstance == null)
-                {
-                    mGlobalInstance = new PluginManager();
-                }
-                return mGlobalInstance;
-            }
-        }
+        public static PluginManager Self { get; private set; }
 
+        public PluginManager()
+        {
+            Self ??= this;
+        }
+        
         static string PluginSettingsSaveFileName
         {
             get
@@ -126,10 +120,7 @@ namespace Gum.Plugins
 
         #region Exported objects
 
-        public static PluginManager GetGlobal()
-        {
-            return mGlobalInstance;
-        }
+        public static PluginManager GetGlobal() => Self;
 
         public static PluginManager GetProject()
         {
@@ -926,7 +917,7 @@ namespace Gum.Plugins
 
         private static void ExportFile(ElementSave elementSave)
         {
-            PluginManager pluginManager = mGlobalInstance;
+            PluginManager pluginManager = GetGlobal();
 
             foreach (PluginBase plugin in pluginManager.Plugins)
             {
@@ -965,9 +956,9 @@ namespace Gum.Plugins
             bool doesPluginWantToShutDown = true;
             PluginContainer container;
 
-            if (mGlobalInstance.mPluginContainers.ContainsKey(pluginToShutDown))
+            if (GetGlobal().mPluginContainers.ContainsKey(pluginToShutDown))
             {
-                container = mGlobalInstance.mPluginContainers[pluginToShutDown];
+                container = GetGlobal().mPluginContainers[pluginToShutDown];
             }
             else
             {

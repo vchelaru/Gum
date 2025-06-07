@@ -10,18 +10,15 @@ namespace Gum.Reflection
     {
         List<Type> mTypes;
 
-        static TypeManager mSelf;
+        public static TypeManager Self { get; private set; }
 
-        public static TypeManager Self
+        public TypeManager()
         {
-            get
+            Self = Self switch
             {
-                if (mSelf == null)
-                {
-                    mSelf = new TypeManager();
-                }
-                return mSelf;
-            }
+                { } => throw new InvalidOperationException(),
+                _ => this
+            };
         }
 
         public void AddType(Type type)
