@@ -28,11 +28,15 @@ public class FileManagerTests
     {
 
         System.IO.Directory.CreateDirectory("DirectoryA2");
+        System.IO.Directory.CreateDirectory("DirectoryB2");
 
         System.IO.File.WriteAllText("DirectoryA2/test.txt", "Test content A");
+        System.IO.File.WriteAllText("DirectoryA2/test2.txt", "Test content A2");
 
         var text = FileManager.FromFileText("DirectoryA2\\test.txt");
+        var text2 = FileManager.FromFileText("DirectoryB2\\..\\DirectoryA2\\test2.txt");
 
         text.ShouldBe("Test content A");
+        text2.ShouldBe("Test content A2");
     }
 }
