@@ -34,3 +34,45 @@ button.Click += (_, _) =>
 ```
 
 <figure><img src="../../../../.gitbook/assets/03_07 10 38.gif" alt=""><figcaption><p>Window responding to move and resize actions</p></figcaption></figure>
+
+## Preventing Sizing and Moving
+
+Window movement and resizing can be restricted by removing or modifying the IsEnabled property on the edges and corners of the window. By default each Window instance contains nine children which are used to resize and move the window. The items have the following names:
+
+* TitleBarInstance (moves the entire window)
+* BorderTopLeftInstance
+* BorderTopRightInstance
+* BorderBottomLeftInstance
+* BorderBottomRightInstance
+* BorderTopInstance
+* BorderBottomInstance
+* BorderLeftInstance
+* BorderRightInstance
+
+Any of these objects can be disabled to prevent the user from moving or resizing a window.
+
+## Code Example: Forced Docking
+
+The following code shows how to force dock a window to the right side of the screen. The user can still resize the window horizontally by grabbing the left edge of the window since the left side has not been disabled.
+
+```csharp
+Window window = new();
+window.AddToRoot();
+
+window.Dock(Dock.Right);
+
+// make it so the user cannot resize or move the window
+// except for horizontally:
+window.GetFrameworkElement("TitleBarInstance").IsEnabled = false;
+
+window.GetFrameworkElement("BorderTopLeftInstance").IsEnabled = false;
+window.GetFrameworkElement("BorderTopRightInstance").IsEnabled = false;
+window.GetFrameworkElement("BorderBottomLeftInstance").IsEnabled = false;
+window.GetFrameworkElement("BorderBottomRightInstance").IsEnabled = false;
+
+window.GetFrameworkElement("BorderTopInstance").IsEnabled = false;
+window.GetFrameworkElement("BorderBottomInstance").IsEnabled = false;
+window.GetFrameworkElement("BorderRightInstance").IsEnabled = false;
+```
+
+<figure><img src="../../../../.gitbook/assets/07_14 38 01.gif" alt=""><figcaption><p>Window resizing only from the left edge</p></figcaption></figure>
