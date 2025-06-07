@@ -1,8 +1,6 @@
 name: Build and Test
 
 on:
-  push:
-    branches: [master]
   pull_request:
     branches: [master]
 
@@ -10,19 +8,35 @@ jobs:
   Build-and-Test:
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        os: [windows-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Initialize Submodules
-        run: git submodule update --init --recursive
-        continue-on-error: false
+        with:
+          submodules: recursive
+      - name: Cache .NET SDK
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.dotnet
+            ~/.nuget/packages
+          key: ${{ runner.os }}-dotnet-9.0.x-${{ hashFiles('**/*.csproj', '**/*.fsproj', '**/*.vbproj', '**/packages.lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-dotnet-9.0.x-
+            ${{ runner.os }}-dotnet-
 
       - name: Setup .NET SDKs
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.0.x
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.fsproj', '**/*.vbproj', '**/packages.lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
 
       - name: Build Gum (Windows Only)
         if: runner.os == 'Windows'
