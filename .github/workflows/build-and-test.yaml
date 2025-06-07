@@ -20,13 +20,8 @@ jobs:
         with:
           dotnet-version: 9.0.x
 
-      - name: Cache NuGet packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.fsproj', '**/*.vbproj', '**/packages.lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-nuget-
+      # I tried caching both NuGet packages and also cache on the actions/setup-dotnet@v4
+      # In both cases the caching slowed down the total execution time.
 
       - name: Build Gum (Windows Only)
         if: runner.os == 'Windows'
