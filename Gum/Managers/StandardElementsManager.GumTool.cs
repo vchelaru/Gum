@@ -13,18 +13,8 @@ using WpfDataUi.Controls;
 
 namespace Gum.Managers
 {
-    public class StandardElementsManagerGumTool
+    public class StandardElementsManagerGumTool : Singleton<StandardElementsManagerGumTool>
     {
-        public static StandardElementsManagerGumTool Self { get; private set; }
-        public StandardElementsManagerGumTool()
-        {
-            Self = Self switch
-            {
-                { } => throw new NotImplementedException(),
-                _ => this
-            };
-        }
-        
         public void Initialize()
         {
             var defaultStates =

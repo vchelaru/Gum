@@ -43,7 +43,7 @@ namespace Gum
 
         #endregion
 
-        public MainWindow(MainWindowViewModel mainWindowViewModel)
+        public MainWindow()
         {
 #if DEBUG
         // This suppresses annoying, useless output from WPF, as explained here:
@@ -51,14 +51,86 @@ namespace Gum
             System.Diagnostics.PresentationTraceSources.DataBindingSource.Switch.Level =
                 System.Diagnostics.SourceLevels.Critical;
 #endif
-            
+            var builder = new Builder();
+            builder.Build();
+
             InitializeComponent();
-            
+
             CreateMainWpfPanel();
+
             this.KeyPreview = true;
             this.KeyDown += HandleKeyDown;
-            
-            mainWindowViewModel.Initialize(this, mainPanelControl, components, ElementTreeImages);
+
+
+            // Initialize before the StateView is created...
+            GumCommands.Self.Initialize(this, mainPanelControl, Builder.Get<LocalizationManager>());
+
+            TypeManager.Self.Initialize();
+
+            // This has to happen before plugins are loaded since they may depend on settings...
+            ProjectManager.Self.LoadSettings();
+
+            Cursor addCursor = LoadAddCursor();
+            GumCommands.Self.GuiCommands.AddCursor = addCursor;
+            // Vic says - I tried
+            // to instantiate the ElementTreeImages
+            // in the ElementTreeViewManager. I move 
+            // the code there and it works, but then at
+            // some point it stops working and it breaks. Not 
+            // sure why, Winforms editor must be doing something
+            // beyond the generation of code which isn't working when
+            // I move it to custom code. Oh well, maybe one day I'll move
+            // to a wpf window and can get rid of this
+            ElementTreeViewManager.Self.Initialize(this.components, ElementTreeImages, CopyPasteLogic.Self);
+
+            // ProperGridManager before MenuStripManager. Why does it need to be initialized before MainMenuStripPlugin?
+            // Is htere a way to move this to a plugin?
+            PropertyGridManager.Self.InitializeEarly(Builder.Get<LocalizationManager>());
+
+            // bah we have to do this before initializing all plugins because we need the menu strip to exist:
+            MainMenuStripPlugin.InitializeMenuStrip();
+
+            PluginManager.Self.Initialize(this);
+
+            StandardElementsManager.Self.Initialize();
+            StandardElementsManager.Self.CustomGetDefaultState =
+                PluginManager.Self.GetDefaultStateFor;
+
+            ElementSaveExtensions.VariableChangedThroughReference +=
+                Gum.Plugins.PluginManager.Self.VariableSet;
+
+
+            StandardElementsManagerGumTool.Self.Initialize();
+
+            VariableSaveExtensionMethods.CustomFixEnumerations = VariableSaveExtensionMethodsGumTool.FixEnumerationsWithReflection;
+
+
+            // ProjectManager.Initialize used to happen here, but I 
+            // moved it down to the Load event for MainWindow because
+            // ProjectManager.Initialize may load a project, and if it
+            // does, then we need to make sure that the wireframe controls
+            // are set up properly before that happens.
+
+            var localizationManager = Builder.Get<LocalizationManager>();
+            Wireframe.WireframeObjectManager.Self.Initialize(localizationManager);
+
+            PluginManager.Self.XnaInitialized();
+
+            InitializeFileWatchTimer();
+        }
+
+        private Cursor LoadAddCursor()
+        {
+            try
+            {
+                var cursor = new System.Windows.Forms.Cursor(this.GetType(), "Content.Cursors.AddCursor.cur");
+                return cursor;
+            }
+            catch
+            {
+                // Vic got this to crash on Sean's machine. Not sure why, but let's tolerate it since it's not breaking
+                return Cursor.Current;
+            }
         }
 
         private void CreateMainWpfPanel()
@@ -80,6 +152,23 @@ namespace Gum
                 GumCommands.Self.GuiCommands.FocusSearch();
                 args.Handled = true;
                 args.SuppressKeyPress = true;
+            }
+        }
+
+        private void InitializeFileWatchTimer()
+        {
+            this.FileWatchTimer = new Timer(this.components);
+            this.FileWatchTimer.Enabled = true;
+            this.FileWatchTimer.Interval = 1000;
+            this.FileWatchTimer.Tick += new System.EventHandler(HandleFileWatchTimer);
+        }
+
+        private void HandleFileWatchTimer(object sender, EventArgs e)
+        {
+            var gumProject = ProjectState.Self.GumProjectSave;
+            if (gumProject != null && !string.IsNullOrEmpty(gumProject.FullFileName))
+            {
+                FileWatchManager.Self.Flush();
             }
         }
 

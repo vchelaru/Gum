@@ -87,7 +87,8 @@ namespace Gum.Managers
         public const int StateImageIndex = 7;
         public const int BehaviorImageIndex = 8;
         public const int DerivedInstanceImageIndex = 9;
-        
+
+        static ElementTreeViewManager mSelf;
         ContextMenuStrip mMenuStrip;
         
 
@@ -133,9 +134,18 @@ namespace Gum.Managers
         #endregion
 
         #region Properties
-        private ISelectedState SelectedState { get; }
-        [Obsolete]
-        public static ElementTreeViewManager Self { get; private set; }
+
+        public static ElementTreeViewManager Self
+        {
+            get 
+            {
+                if (mSelf == null)
+                {
+                    mSelf = new ElementTreeViewManager();
+                }
+                return mSelf; 
+            }
+        }
 
         public TreeNode SelectedNode
         {
@@ -427,21 +437,12 @@ namespace Gum.Managers
 
         #endregion
 
-        public ElementTreeViewManager(CopyPasteLogic copyPasteLogic, ISelectedState selectedState)
-        {
-            if (Self != null)
-            {
-                throw new InvalidOperationException("ElementTreeViewManager is a singleton and cannot be instantiated more than once.");
-            }
-            Self = this;
 
-            SelectedState = selectedState;
-            _copyPasteLogic = copyPasteLogic;
-        }
-
-        public void Initialize(IContainer components, ImageList ElementTreeImages)
+        public void Initialize(IContainer components, ImageList ElementTreeImages,
+            CopyPasteLogic copyPasteLogic)
         {
             _dragDropManager = Builder.Get<DragDropManager>();
+            _copyPasteLogic = copyPasteLogic;
 
             CreateObjectTreeView(ElementTreeImages);
 
@@ -913,9 +914,9 @@ namespace Gum.Managers
             ////////////End Early Out////////////
 
             // Save off old selected stuff
-            InstanceSave selectedInstance = SelectedState.SelectedInstance;
-            ElementSave selectedElement = SelectedState.SelectedElement;
-            BehaviorSave selectedBehavior = SelectedState.SelectedBehavior;
+            InstanceSave selectedInstance = SelectedState.Self.SelectedInstance;
+            ElementSave selectedElement = SelectedState.Self.SelectedElement;
+            BehaviorSave selectedBehavior = SelectedState.Self.SelectedBehavior;
 
 
             #region Add nodes that haven't been added yet
@@ -1112,11 +1113,11 @@ namespace Gum.Managers
             {
                 if (selectedInstance != null)
                 {
-                    SelectedState.SelectedInstance = selectedInstance;
+                    SelectedState.Self.SelectedInstance = selectedInstance;
                 }
                 if(selectedBehavior != null)
                 {
-                    SelectedState.SelectedBehavior = selectedBehavior;
+                    SelectedState.Self.SelectedBehavior = selectedBehavior;
                 }
             }
             catch
@@ -1187,16 +1188,16 @@ namespace Gum.Managers
 
         public void RecordSelection()
         {
-            mRecordedSelectedObject = SelectedState.SelectedInstance;
+            mRecordedSelectedObject = SelectedState.Self.SelectedInstance;
 
             if (mRecordedSelectedObject == null)
             {
-                mRecordedSelectedObject = SelectedState.SelectedElement;
+                mRecordedSelectedObject = SelectedState.Self.SelectedElement;
             }
 
             if(mRecordedSelectedObject == null)
             {
-                mRecordedSelectedObject = SelectedState.SelectedBehavior;
+                mRecordedSelectedObject = SelectedState.Self.SelectedBehavior;
             }
         }
 
@@ -1208,15 +1209,15 @@ namespace Gum.Managers
                 {
                     if (mRecordedSelectedObject is InstanceSave)
                     {
-                        SelectedState.SelectedInstance = mRecordedSelectedObject as InstanceSave;
+                        SelectedState.Self.SelectedInstance = mRecordedSelectedObject as InstanceSave;
                     }
                     else if (mRecordedSelectedObject is ElementSave)
                     {
-                        SelectedState.SelectedElement = mRecordedSelectedObject as ElementSave;
+                        SelectedState.Self.SelectedElement = mRecordedSelectedObject as ElementSave;
                     }
                     else if(mRecordedSelectedObject is BehaviorSave)
                     {
-                        SelectedState.SelectedBehavior = mRecordedSelectedObject as BehaviorSave;
+                        SelectedState.Self.SelectedBehavior = mRecordedSelectedObject as BehaviorSave;
                     }
                 }
             }
@@ -1749,20 +1750,20 @@ namespace Gum.Managers
                 IsInUiInitiatedSelection = true;
                 if (selectedObject == null)
                 {
-                    SelectedState.SelectedElement = null;
-                    SelectedState.SelectedBehavior = null;
-                    SelectedState.SelectedInstance = null;
+                    SelectedState.Self.SelectedElement = null;
+                    SelectedState.Self.SelectedBehavior = null;
+                    SelectedState.Self.SelectedInstance = null;
 
                     // do nothing
                 }
                 else if(selectedObject is ElementSave elementSave)
                 {
-                    SelectedState.SelectedInstance = null;
+                    SelectedState.Self.SelectedInstance = null;
                     var elements = this.SelectedNodes
                         .Where(item => item.Tag is ElementSave)
                         .Select(item => item.Tag as ElementSave);
 
-                    SelectedState.SelectedElements = elements;
+                    SelectedState.Self.SelectedElements = elements;
                 }
                 else if (selectedObject is InstanceSave selectedInstance)
                 {
@@ -1770,12 +1771,12 @@ namespace Gum.Managers
                         .Where(item => item is InstanceSave)
                         .Select(item => item as InstanceSave);
 
-                    //SelectedState.SelectedInstance = selectedInstance;
-                    SelectedState.SelectedInstances = instances;
+                    //SelectedState.Self.SelectedInstance = selectedInstance;
+                    SelectedState.Self.SelectedInstances = instances;
                 }
                 else if(selectedObject is BehaviorSave behavior)
                 {
-                    SelectedState.SelectedBehavior = behavior;
+                    SelectedState.Self.SelectedBehavior = behavior;
                 }
 
                 PluginManager.Self.TreeNodeSelected(selectedTreeNode);

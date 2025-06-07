@@ -5,36 +5,41 @@ using Gum.Managers;
 
 namespace Gum;
 
-public class GumCommands
+public class GumCommands : Singleton<GumCommands>
 {
-    public static GumCommands Self { get; private set; }
-    
-    public GuiCommands GuiCommands { get; }
-
-    public WireframeCommands WireframeCommands { get; }
-
-    public FileCommands FileCommands { get; }
-
-    public EditCommands Edit { get; }
-
-    public ToolCommands.ProjectCommands ProjectCommands { get; }
-
-    public GumCommands(GuiCommands guiCommands, 
-        FileCommands fileCommands, 
-        EditCommands editCommands, 
-        WireframeCommands wireframeCommands,
-        ToolCommands.ProjectCommands projectCommands)
+    public GuiCommands GuiCommands
     {
-        if (Self != null)
-        {
-            throw new InvalidOperationException("GumCommands should only be created once.");
-        }
-        Self = this;
-        GuiCommands = guiCommands;
-        FileCommands = fileCommands;
-        Edit = editCommands;
-        WireframeCommands = wireframeCommands;
-        ProjectCommands = projectCommands;
+        get;
+        private set;
+    }
+
+    public WireframeCommands WireframeCommands
+    {
+        get;
+        private set;
+    }
+
+    public FileCommands FileCommands
+    {
+        get;
+        private set;
+    }
+
+    public EditCommands Edit
+    {
+        get;
+        private set;
+    }
+
+    public ToolCommands.ProjectCommands ProjectCommands { get; private set; }
+
+    public GumCommands()
+    {
+        GuiCommands = new GuiCommands();
+        FileCommands = new FileCommands();
+        Edit = new EditCommands();
+        WireframeCommands = new WireframeCommands();
+        ProjectCommands = Gum.ToolCommands.ProjectCommands.Self;
     }
 
     /// <summary>
@@ -69,10 +74,10 @@ public class GumCommands
         }
     }
 
-    public void Initialize(MainWindow mainWindow, MainPanelControl mainPanelControl)
+    public void Initialize(MainWindow mainWindow, MainPanelControl mainPanelControl, LocalizationManager localizationManager)
     {
         GuiCommands.Initialize(mainWindow, mainPanelControl);
-        FileCommands.Initialize(mainWindow);
+        FileCommands.Initialize(mainWindow, localizationManager);
     }
 
 }

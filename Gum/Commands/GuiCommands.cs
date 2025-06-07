@@ -328,7 +328,10 @@ namespace Gum.Commands
                 return;
             }
             //////////////End Early Out/////////////
-            var vm = Locator.GetRequiredService<AddVariableViewModel>();
+            var host = Builder.App;
+            var services = host.Services;
+
+            var vm = services.GetRequiredService<AddVariableViewModel>();
             vm.RenameType = RenameType.NormalName;
             vm.Element = SelectedState.Self.SelectedElement;
             vm.Variable = null;
