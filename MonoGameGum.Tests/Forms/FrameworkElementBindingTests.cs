@@ -556,7 +556,10 @@ public class FrameworkElementBindingTests
         };
 
         label.SetBinding(nameof(Label.Text), binding);
-        label.Text.ShouldBe("Value: 12.34%");
+
+
+        var expected = "Value: " + (0.1234f.ToString("{0:P}"));
+        label.Text.ShouldBe(string.Format("Value: {0:P}", .1234f));
 
         label.Text = "Value: 55.55%";
 

@@ -756,6 +756,10 @@ namespace ToolsUtilities
                     {
                         fileName = FileManager.MakeAbsolute(fileName);
                     }
+
+                    fileName = fileName.Replace('\\', Path.DirectorySeparatorChar)
+                        .Replace('/', Path.DirectorySeparatorChar);
+
                     return System.IO.File.OpenRead(fileName);
                 }
 #endif
