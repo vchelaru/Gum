@@ -84,6 +84,8 @@ public class UndoManager
 
     Dictionary<ElementSave, ElementHistory> mUndos = new Dictionary<ElementSave, ElementHistory>();
 
+    static UndoManager mSelf;
+
     UndoSnapshot recordedSnapshot;
     
     public UndoSnapshot RecordedSnapshot => recordedSnapshot;
@@ -106,7 +108,7 @@ public class UndoManager
     //StateSave mRecordedStateSave;
     //List<InstanceSave> mRecordedInstanceList;
 
-    public static UndoManager Self { get; private set; }
+    public static UndoManager Self { get; private set; } = new UndoManager();
     #endregion
 
     #region Events/Invokations
@@ -121,12 +123,6 @@ public class UndoManager
 
     public UndoManager()
     {
-        if (Self != null)
-        {
-            throw new InvalidOperationException("UndoManager is a singleton and cannot be instantiated more than once.");
-        }
-        Self = this;
-        
         UndoLocks = new ObservableCollection<UndoLock>();
         UndoLocks.CollectionChanged += HandleUndoLockChanged;
     }

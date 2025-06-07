@@ -28,9 +28,7 @@ public class CircularReferenceManagerTests
     {
         _fixture = new Fixture().Customize(new AutoMoqCustomization());
 
-        //_objectFinder = new ObjectFinder();
-        // Temporary until we move off the singleton pattern
-        _objectFinder = ObjectFinder.Self ?? new ObjectFinder();
+        _objectFinder = new ObjectFinder();
         _objectFinder.GumProjectSave = new GumProjectSave();
 
         _sut = new CircularReferenceManager(
