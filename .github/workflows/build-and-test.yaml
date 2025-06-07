@@ -8,7 +8,10 @@ on:
 
 jobs:
   Build-and-Test:
-    runs-on: windows-latest
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
 
@@ -21,7 +24,8 @@ jobs:
         with:
           dotnet-version: 9.0.x
 
-      - name: Build Gum
+      - name: Build Gum (Windows Only)
+        if: runner.os == 'Windows'
         run: |
           dotnet restore "Gum.sln"
           dotnet build "Gum.sln" --configuration Release --no-restore --verbosity minimal -p:WarningLevel=0
@@ -35,34 +39,15 @@ jobs:
         run: dotnet test "MonoGameGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
         continue-on-error: true
 
-      - name: GumToolUnitTests
+      - name: GumToolUnitTests (Windows Only)
+        if: runner.os == 'Windows'
         run: dotnet test "Tool/Tests/GumToolUnitTests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
         continue-on-error: true
 
       - name: Publish Test Results
         uses: dorny/test-reporter@v2
         with:
-          name: Tests
+          name: Tests ${{ matrix.os }}
           path: "TestResults/*.trx"
           reporter: dotnet-trx
           fail-on-error: true
-
-  Build-Samples:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Initialize Submodules
-        run: git submodule update --init --recursive
-        continue-on-error: false
-
-      - name: Setup .NET SDKs
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 9.0.x
-
-      - name: Install .NET MAUI Workload
-        run: dotnet workload install maui
-
-      - name: Build Samples
-        run: pwsh ./.github/scripts/build-all.ps1 -Path Samples
