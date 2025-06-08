@@ -305,7 +305,6 @@
 	<ItemGroup>
 		<Folder Include="Converters\" />
 		<Folder Include="Graphics\Animation\Content\" />
-		<Folder Include="Libraries\Xna\" />
 		<Folder Include="Plugins\InternalPlugins\ScreenshotPlugin\" />
 	</ItemGroup>
 	<ItemGroup>
