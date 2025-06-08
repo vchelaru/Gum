@@ -1,4 +1,6 @@
-﻿namespace Gum.Managers
+﻿using System;
+
+namespace Gum.Managers
 {
     public class Singleton<T> where T : new()
     {
@@ -15,5 +17,14 @@
                 return mSelf;
             }
         }
+    }
+    
+    public static class Singleton
+    {
+        public static T Guard<T>(T? current, T self) where T : class
+            => current is null
+                ? self
+                : throw new InvalidOperationException(
+                    $"{typeof(T).Name} is a singleton and cannot be instantiated more than once.");
     }
 }

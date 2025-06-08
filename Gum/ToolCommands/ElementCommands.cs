@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Gum.DataTypes;
@@ -33,11 +33,7 @@ namespace Gum.ToolCommands
 
         public ElementCommands()
         {
-            if (Self != null)
-            {
-                throw new InvalidOperationException("ElementCommands should only be created once");
-            }
-            Self = this;
+            Self = Singleton.Guard(Self, this);
         }
 
         #region Instance

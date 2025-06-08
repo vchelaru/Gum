@@ -12,6 +12,7 @@ using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
 using Microsoft.Extensions.DependencyInjection;
+using RenderingLibrary.Content;
 
 namespace Gum.Services;
 
@@ -24,7 +25,8 @@ public static class IoC
             .AddViewModels()
             .AddServices()
             .AddManagers()
-            .AddAndUnravelGumCommands();
+            .AddAndUnravelGumCommands()
+            .AddSharedServices();
     }
 
     private static IServiceCollection AddServices(this IServiceCollection services)
@@ -39,8 +41,6 @@ public static class IoC
         services.AddSingleton<SelectedState>();
         services.AddSingleton<ISelectedState>(isp => isp.GetRequiredService<SelectedState>());
         
-        services.AddSingleton<IObjectFinder, ObjectFinder>();
-
         services.AddSingleton<IEditVariableService, EditVariableService>();
         services.AddSingleton<IExposeVariableService, ExposeVariableService>();
         services.AddSingleton<IDeleteVariableService, DeleteVariableService>();
@@ -76,7 +76,7 @@ public static class IoC
         services.AddSingleton<WireframeCommands>();
         services.AddSingleton<ProjectCommands>();
 
-        // ...others?
+        // ...others
         services.AddSingleton<ElementCommands>();
         return services;
     }
@@ -96,9 +96,21 @@ public static class IoC
         services.AddSingleton<StandardElementsManagerGumTool>();
         services.AddSingleton<TypeManager>();
         services.AddSingleton<UndoManager>();
-        services.AddSingleton<StandardElementsManager>();
         services.AddSingleton<CircularReferenceManager>();
         
+        return services;
+    }
+    
+    /// <summary>
+    /// These services are shared between tools (e.g. also used by FRB in isolation).
+    /// As a result, their lazy instantiation patterns must remain intact.
+    /// Instead of letting the container construct them, we register the instance directly.
+    /// We do these here for clarity to make it apparent dependencies can't be injected.
+    /// </summary>
+    private static IServiceCollection AddSharedServices(this IServiceCollection services)
+    {
+        services.AddSingleton<IObjectFinder>(ObjectFinder.Self);
+        services.AddSingleton(StandardElementsManager.Self);
         return services;
     }
 }

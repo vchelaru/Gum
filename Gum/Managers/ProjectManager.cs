@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Gum.DataTypes;
 using Gum.Managers;
@@ -63,11 +63,7 @@ namespace Gum
         
         public ProjectManager()
         {
-            if (Self != null)
-            {
-                throw new InvalidOperationException("ProjectManager should only be created once");
-            }
-            Self = this;
+            Self = Singleton.Guard(Self, this);
         }
 
         #region Methods

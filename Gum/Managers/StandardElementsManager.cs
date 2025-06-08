@@ -67,7 +67,8 @@ namespace Gum.Managers
             }
         }
 
-        public static StandardElementsManager Self { get; private set; }
+        private static StandardElementsManager? _mSelf;
+        public static StandardElementsManager Self => _mSelf ??= new();
 
         public string DefaultType
         {
@@ -80,15 +81,6 @@ namespace Gum.Managers
         public Dictionary<string, StateSave> DefaultStates => mDefaults;
 
         #endregion
-        
-        public StandardElementsManager()
-        {
-            if(Self != null)
-            {
-                throw new InvalidOperationException("StandardElementsManager is a singleton and cannot be instantiated more than once.");
-            }
-            Self = this;
-        }
 
         public void Initialize()
         {

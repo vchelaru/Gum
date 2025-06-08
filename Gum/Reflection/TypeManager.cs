@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using RenderingLibrary.Graphics;
 using Gum.DataTypes;
+using Gum.Managers;
 
 namespace Gum.Reflection
 {
@@ -15,11 +16,7 @@ namespace Gum.Reflection
 
         public TypeManager()
         {
-            if (Self != null)
-            {
-                throw new InvalidOperationException("TypeManager is a singleton and cannot be instantiated multiple times.");
-            }
-            Self = this;
+            Self = Singleton.Guard(Self, this);
         }
 
         public void AddType(Type type)

@@ -1,4 +1,4 @@
-﻿using Gum.DataTypes;
+using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
@@ -76,11 +76,7 @@ namespace Gum.Managers
 
         public NameVerifier(StandardElementsManager standardElementsManager)
         {
-            if (Self != null)
-            {
-                throw new InvalidOperationException("NameVerifier is a singleton and cannot be instantiated more than once.");
-            }
-            Self = this;
+            Self = Singleton.Guard(Self, this);
             _standardElementsManager = standardElementsManager;
         }
 

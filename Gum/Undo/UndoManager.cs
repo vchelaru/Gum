@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Gum.DataTypes.Variables;
@@ -121,11 +121,7 @@ public class UndoManager
 
     public UndoManager()
     {
-        if (Self != null)
-        {
-            throw new InvalidOperationException("UndoManager is a singleton and cannot be instantiated more than once.");
-        }
-        Self = this;
+        Self = Singleton.Guard(Self, this);
         
         UndoLocks = new ObservableCollection<UndoLock>();
         UndoLocks.CollectionChanged += HandleUndoLockChanged;

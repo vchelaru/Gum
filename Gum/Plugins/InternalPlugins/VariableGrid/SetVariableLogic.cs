@@ -1,4 +1,4 @@
-﻿using Gum.DataTypes;
+using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins;
@@ -26,7 +26,7 @@ namespace Gum.PropertyGridHelpers
     public class SetVariableLogic
     {
         [Obsolete]
-        public static SetVariableLogic Self { get; set; }
+        public static SetVariableLogic Self { get; private set; }
         private VariableReferenceLogic _variableReferenceLogic;
         private CircularReferenceManager _circularReferenceManager;
         private FontManager _fontManager;
@@ -35,11 +35,7 @@ namespace Gum.PropertyGridHelpers
         // this is needed as we unroll all the other singletons...
         public SetVariableLogic(CircularReferenceManager circularReferenceManager, FileCommands fileCommands, FontManager fontManager, GuiCommands guiCommands)
         {
-            if (Self != null)
-            {
-                throw new InvalidOperationException("SetVariableLogic should only be created once");
-            }
-            Self = this;
+            Self = Singleton.Guard(Self, this);
             _variableReferenceLogic = new VariableReferenceLogic(guiCommands);
             _circularReferenceManager = circularReferenceManager;
             _fontManager = fontManager;

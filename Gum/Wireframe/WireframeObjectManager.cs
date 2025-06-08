@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Gum.DataTypes;
@@ -65,11 +65,7 @@ public partial class WireframeObjectManager
 
     public WireframeObjectManager(LocalizationManager localizationManager)
     {
-        if (Self != null)
-        {
-            throw new InvalidOperationException("WireframeObjectManager is a singleton and cannot be instantiated more than once.");
-        }
-        Self = this;
+        Self = Singleton.Guard(Self, this);
         
         _localizationManager = localizationManager;
 

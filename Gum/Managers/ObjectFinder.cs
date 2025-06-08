@@ -76,16 +76,8 @@ namespace Gum.Managers
         /// </summary>
         Dictionary<string, ElementSave>? cachedDictionary;
 
-        public static ObjectFinder Self { get; private set; }
-
-        public ObjectFinder()
-        {
-            if(Self != null)
-            {
-                throw new InvalidOperationException("ObjectFinder is a singleton and cannot be instantiated more than once.");
-            }
-            Self = this;
-        }
+        private static ObjectFinder? _mSelf;
+        public static ObjectFinder Self => _mSelf ??= new();
 
         public GumProjectSave GumProjectSave
         {

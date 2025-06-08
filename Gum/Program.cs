@@ -1,4 +1,4 @@
-﻿using Microsoft.AppCenter;
+using Microsoft.AppCenter;
 using Microsoft.AppCenter.Analytics;
 using Microsoft.AppCenter.Crashes;
 using System;
@@ -30,15 +30,8 @@ namespace Gum
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            IHost host = Host.CreateDefaultBuilder(args)
-                .ConfigureServices(services =>
-                {
-                    services.AddGum();
-                })
-                .Build();
-                
+            IHost host = CreateHostBuilder(args).Build();
             Locator.Register(host.Services);
-            
             await host.StartAsync().ConfigureAwait(true);
             
             MainWindow? mainWindow = null;
@@ -60,6 +53,13 @@ namespace Gum
             await host.StopAsync().ConfigureAwait(true);
             return RunResponseCodes.Success;
         }
+
+        private static IHostBuilder CreateHostBuilder(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .ConfigureServices(services =>
+                {
+                    services.AddGum();
+                });
     }
 
     static class RunResponseCodes

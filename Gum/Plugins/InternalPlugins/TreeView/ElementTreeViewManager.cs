@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using CommonFormsAndControls;
@@ -429,11 +429,7 @@ namespace Gum.Managers
 
         public ElementTreeViewManager(CopyPasteLogic copyPasteLogic, ISelectedState selectedState)
         {
-            if (Self != null)
-            {
-                throw new InvalidOperationException("ElementTreeViewManager is a singleton and cannot be instantiated more than once.");
-            }
-            Self = this;
+            Self = Singleton.Guard(Self, this);
 
             SelectedState = selectedState;
             _copyPasteLogic = copyPasteLogic;

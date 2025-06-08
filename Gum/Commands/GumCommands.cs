@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Gum.Commands;
 using Gum.Controls;
 using Gum.Managers;
@@ -25,11 +25,7 @@ public class GumCommands
         WireframeCommands wireframeCommands,
         ToolCommands.ProjectCommands projectCommands)
     {
-        if (Self != null)
-        {
-            throw new InvalidOperationException("GumCommands should only be created once.");
-        }
-        Self = this;
+        Self = Singleton.Guard(Self, this);
         GuiCommands = guiCommands;
         FileCommands = fileCommands;
         Edit = editCommands;
