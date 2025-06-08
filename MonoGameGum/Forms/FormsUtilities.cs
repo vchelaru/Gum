@@ -217,7 +217,14 @@ public class FormsUtilities
             cursor.WindowPushed?.FormsControlAsObject as FrameworkElement ??
             cursor.WindowOver?.FormsControlAsObject as FrameworkElement;
 
-        cursor.CustomCursor = frameworkElementOver?.CustomCursor ?? Cursors.Arrow;
+        if(frameworkElementOver?.IsEnabled == true )
+        {
+            cursor.CustomCursor = frameworkElementOver?.CustomCursor ?? Cursors.Arrow;
+        }
+        else
+        {
+            cursor.CustomCursor = Cursors.Arrow;
+        }
     }
 
     private static void UpdateGamepads(double time)
