@@ -65,9 +65,11 @@ namespace GumRuntime
             GraphicalUiElement toReturn = null;
 
             var elementName = elementSave.Name;
+            var attemptedGenericLookup = false;
             if (!string.IsNullOrEmpty(genericType))
             {
                 elementName = elementName + "<T>";
+                attemptedGenericLookup = true;
             }
 
             if (mElementToGueTypeFuncs.ContainsKey(elementName))
@@ -76,7 +78,7 @@ namespace GumRuntime
             }
             else if (mElementToGueTypes.ContainsKey(elementName))
             {
-                // This code allows sytems (like games that use Gum) to assign types
+                // This code allows systems (like games that use Gum) to assign types
                 // to their GraphicalUiElements so that users of the code can work with
                 // strongly-typed Gum objects.
                 var type = mElementToGueTypes[elementName];
@@ -96,13 +98,39 @@ namespace GumRuntime
                     toReturn = (GraphicalUiElement)Activator.CreateInstance(type);
                 }
             }
-            else if (TemplateFunc != null)
+            else if (attemptedGenericLookup)
             {
-                toReturn = TemplateFunc();
+                // fall back to non-generic lookup if the generic type was not registered
+                elementName = elementSave.Name;
+                if (mElementToGueTypeFuncs.ContainsKey(elementName))
+                {
+                    toReturn = mElementToGueTypeFuncs[elementName]();
+                }
+                else if (mElementToGueTypes.ContainsKey(elementName))
+                {
+                    var type = mElementToGueTypes[elementName];
+                    var constructorWithArgs = type.GetConstructor(new Type[] { typeof(bool), typeof(bool) });
+                    if (constructorWithArgs != null)
+                    {
+                        toReturn = constructorWithArgs.Invoke(new object[] { fullInstantiation, true }) as GraphicalUiElement;
+                    }
+                    else
+                    {
+                        toReturn = (GraphicalUiElement)Activator.CreateInstance(type);
+                    }
+                }
             }
-            else
+
+            if (toReturn == null)
             {
-                toReturn = new GraphicalUiElement();
+                if (TemplateFunc != null)
+                {
+                    toReturn = TemplateFunc();
+                }
+                else
+                {
+                    toReturn = new GraphicalUiElement();
+                }
             }
             toReturn.ElementSave = elementSave;
             return toReturn;
