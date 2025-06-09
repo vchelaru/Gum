@@ -31,907 +31,907 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
 using System.Diagnostics;
 
-namespace Gum.Wireframe
+namespace Gum.Wireframe;
+
+#region Event types
+public class RoutedEventArgs : EventArgs
 {
-    public class RoutedEventArgs : EventArgs
-    {
-        public bool Handled { get; set; }
-    }
+    public bool Handled { get; set; }
+}
 
-    public class InputEventArgs : RoutedEventArgs
-    {
-        /// <summary>
-        /// The input device which was responsible for this event, such as the Gamepad.
-        /// </summary>
-        public object? InputDevice { get; set; }
-    }
-
+public class InputEventArgs : RoutedEventArgs
+{
     /// <summary>
-    /// Contains information about objects which have been added to or removed from the current selection.
-    /// This is typically used by Gum Forms for elements which support selection such as ListBox.
+    /// The input device which was responsible for this event, such as the Gamepad.
     /// </summary>
-    public class SelectionChangedEventArgs
-    {
-        /// <summary>
-        /// The items which were just removed from selection.
-        /// </summary>
-        public IList RemovedItems { get; private set; } = new List<Object>();
-        /// <summary>
-        /// The items which were just added to selection.
-        /// </summary>
-        public IList AddedItems { get; private set; } = new List<Object>();
-    }
+    public object? InputDevice { get; set; }
+}
 
-
+/// <summary>
+/// Contains information about objects which have been added to or removed from the current selection.
+/// This is typically used by Gum Forms for elements which support selection such as ListBox.
+/// </summary>
+public class SelectionChangedEventArgs
+{
     /// <summary>
-    /// The base object for all Gum runtime objects. It contains functionality for
-    /// setting variables, states, and performing layout. The GraphicalUiElement can
-    /// wrap an underlying rendering object.
+    /// The items which were just removed from selection.
     /// </summary>
-    public partial class InteractiveGue : BindableGue
+    public IList RemovedItems { get; private set; } = new List<Object>();
+    /// <summary>
+    /// The items which were just added to selection.
+    /// </summary>
+    public IList AddedItems { get; private set; } = new List<Object>();
+}
+#endregion
+
+/// <summary>
+/// The base object for all Gum runtime objects. It contains functionality for
+/// setting variables, states, and performing layout. The GraphicalUiElement can
+/// wrap an underlying rendering object.
+/// </summary>
+public partial class InteractiveGue : BindableGue
+{
+    static List<Action> nextPushActions = new List<Action>();
+    static List<Action> nextClickActions = new List<Action>();
+    public static double CurrentGameTime { get; internal set; }
+
+    static IInputReceiver currentInputReceiver;
+
+    
+    public static IInputReceiver CurrentInputReceiver
     {
-        static List<Action> nextPushActions = new List<Action>();
-        static List<Action> nextClickActions = new List<Action>();
-        public static double CurrentGameTime { get; internal set; }
-
-        static IInputReceiver currentInputReceiver;
-
-        
-        public static IInputReceiver CurrentInputReceiver
+        get => currentInputReceiver;
+        set
         {
-            get => currentInputReceiver;
-            set
+            var differs = currentInputReceiver != value;
+            if (differs)
             {
-                var differs = currentInputReceiver != value;
-                if (differs)
-                {
-                    var old = currentInputReceiver;
-                    currentInputReceiver = value;
-
-                    if (old != null)
-                    {
-                        old.OnLoseFocus();
-                    }
-                }
+                var old = currentInputReceiver;
                 currentInputReceiver = value;
-                if (differs && currentInputReceiver != null)
+
+                if (old != null)
                 {
-                    currentInputReceiver.OnGainFocus();
-                }
-
-
-            }
-        }
-
-        /// <summary>
-        /// Whether this instance supports events and whether the Cursor considers this when
-        /// determining what it is over. Typically this is assigned once based 
-        /// on its type, usually when objects are created from a Gum project. Objects which 
-        /// should consume cursor events without raising them should keep this value set to true
-        /// but should set IsEnabled to false.
-        /// </summary>
-        public bool HasEvents { get; set; } = true;
-        public bool ExposeChildrenEvents { get; set; } = true;
-
-        /// <summary>
-        /// Whether to check each individual child for raising UI events even if the cursor
-        /// is outside of the bounds of this object. Setting this to false can have a slight
-        /// performance cost since each child is checked even if the cursor is not over this.
-        /// </summary>
-        public bool RaiseChildrenEventsOutsideOfBounds { get; set; } = false;
-        bool isEnabled = true;
-
-        /// <summary>
-        /// Whether this is enabled. If this is false, then this will not raise events.
-        /// </summary>
-        public bool IsEnabled
-        {
-            get => isEnabled;
-            set
-            {
-                if (isEnabled != value)
-                {
-                    isEnabled = value;
-                    EnabledChange?.Invoke(this, null);
+                    old.OnLoseFocus();
                 }
             }
-        }
-
-        /// <summary>
-        /// Provides an uncasted reference to the Gum Forms element which uses this as visual element.
-        /// </summary>
-        public virtual object FormsControlAsObject { get; set; }
-
-        #region Events
-
-        /// <summary>
-        /// Event which is raised whenever this is clicked by a cursor. A click occurs
-        /// when the cursor is over this and is first pushed, then released.
-        /// </summary>
-        public event EventHandler Click;
-
-        /// <summary>
-        /// Event which is raised whenever this is pushed by a cursor. A push occurs
-        /// when the cursor is over this and the left mouse button is pushed (not down last frame,
-        /// down this frame).
-        /// </summary>
-        public event EventHandler Push;
-
-        /// <summary>
-        /// Event which is raised whenever this loses a push. A push occurs when the
-        /// cursor is over this window and the left mouse button is pushed. A push is lost
-        /// if the left mouse button is released or if the user moves the cursor so that it
-        /// is no longer over this while the mouse button is pressed. 
-        /// </summary>
-        /// <remarks>
-        /// LosePush is often used to change the state of a button back to its regular state.
-        /// </remarks>
-        //public event EventHandler LosePush;
-        public event EventHandler LosePush
-        {
-            add
+            currentInputReceiver = value;
+            if (differs && currentInputReceiver != null)
             {
-                _losePush += value;
-                TrySubscribeToLosePushEvents();
+                currentInputReceiver.OnGainFocus();
             }
-            remove
+
+
+        }
+    }
+
+    /// <summary>
+    /// Whether this instance supports events and whether the Cursor considers this when
+    /// determining what it is over. Typically this is assigned once based 
+    /// on its type, usually when objects are created from a Gum project. Objects which 
+    /// should consume cursor events without raising them should keep this value set to true
+    /// but should set IsEnabled to false.
+    /// </summary>
+    public bool HasEvents { get; set; } = true;
+    public bool ExposeChildrenEvents { get; set; } = true;
+
+    /// <summary>
+    /// Whether to check each individual child for raising UI events even if the cursor
+    /// is outside of the bounds of this object. Setting this to false can have a slight
+    /// performance cost since each child is checked even if the cursor is not over this.
+    /// </summary>
+    public bool RaiseChildrenEventsOutsideOfBounds { get; set; } = false;
+    bool isEnabled = true;
+
+    /// <summary>
+    /// Whether this is enabled. If this is false, then this will not raise events.
+    /// </summary>
+    public bool IsEnabled
+    {
+        get => isEnabled;
+        set
+        {
+            if (isEnabled != value)
             {
-                _losePush -= value;
+                isEnabled = value;
+                EnabledChange?.Invoke(this, null);
             }
         }
-        private EventHandler _losePush;
+    }
 
+    /// <summary>
+    /// Provides an uncasted reference to the Gum Forms element which uses this as visual element.
+    /// </summary>
+    public virtual object FormsControlAsObject { get; set; }
 
-        /// <summary>
-        /// Event raised when the cursor first moves over this object.
-        /// </summary>
-        public event EventHandler RollOn;
-        /// <summary>
-        /// Event when the cursor first leaves this object.
-        /// </summary>
-        public event EventHandler RollOff;
-        /// <summary>
-        /// Event raised every frame the cursor is over this object and the Cursor has changed position.
-        /// </summary>
-        public event EventHandler RollOver;
+    #region Events 
 
-        /// <summary>
-        /// Event raised every frame the cursor is over this object whether the Cursor has changed positions or not.
-        /// </summary>
-        public event EventHandler HoverOver;
+    /// <summary>
+    /// Event which is raised whenever this is clicked by a cursor. A click occurs
+    /// when the cursor is over this and is first pushed, then released.
+    /// </summary>
+    public event EventHandler Click;
 
-        /// <summary>
-        /// Event raised when the cursor pushes on an object and moves. This is similar to RollOver, but is raised even
-        /// if outside of the bounds of the object. This can be used if an object is to be moved by dragging since it will
-        /// be raised even if the user moves the cursor quickly outside of its bounds.
-        /// </summary>
-        public event EventHandler Dragging;
+    /// <summary>
+    /// Event which is raised whenever this is pushed by a cursor. A push occurs
+    /// when the cursor is over this and the left mouse button is pushed (not down last frame,
+    /// down this frame).
+    /// </summary>
+    public event EventHandler Push;
 
-        /// <summary>
-        /// Event raised when the Enabled property changed.
-        /// </summary>
-        public event EventHandler EnabledChange;
-
-        /// <summary>
-        /// Eent raised when the mouse wheel has been scrolled while the cursor is over this instance.
-        /// This event is raised bottom-up, with the root object having the opportunity to handle the roll over.
-        /// If a control sets the argument RoutedEventArgs Handled to true, the children objects 
-        /// will not have this event raised.
-        /// </summary>
-        public event Action<object, RoutedEventArgs> MouseWheelScroll;
-
-        /// <summary>
-        /// Event raised when the mouse rolls over this instance. This event is raised top-down, with the
-        /// child object having the opportunity to handle the roll over first. If a control sets the argument 
-        /// RoutedEventArgs Handled to true,
-        /// then parent objects will not have this event raised.
-        /// </summary>
-        public event Action<object, RoutedEventArgs> RollOverBubbling;
-
-        /// <summary>
-        /// Event raised when this Window is pushed, then is no longer the pushed window due to a cursor releasing the primary button.
-        /// This can be used to detect the end of a drag operation, or to reset the state of a button.
-        /// </summary>
-        public event EventHandler RemovedAsPushed;
-
-        public void CallClick() => Click?.Invoke(this, EventArgs.Empty);
-
-        // RollOff is determined outside of the individual InteractiveGue so we need to have this callable externally..
-        public void TryCallRollOff()
+    /// <summary>
+    /// Event which is raised whenever this loses a push. A push occurs when the
+    /// cursor is over this window and the left mouse button is pushed. A push is lost
+    /// if the left mouse button is released or if the user moves the cursor so that it
+    /// is no longer over this while the mouse button is pressed. 
+    /// </summary>
+    /// <remarks>
+    /// LosePush is often used to change the state of a button back to its regular state.
+    /// </remarks>
+    //public event EventHandler LosePush;
+    public event EventHandler LosePush
+    {
+        add
         {
-            if (RollOff != null)
+            _losePush += value;
+            TrySubscribeToLosePushEvents();
+        }
+        remove
+        {
+            _losePush -= value;
+        }
+    }
+    private EventHandler _losePush;
+
+
+    /// <summary>
+    /// Event raised when the cursor first moves over this object.
+    /// </summary>
+    public event EventHandler RollOn;
+    /// <summary>
+    /// Event when the cursor first leaves this object.
+    /// </summary>
+    public event EventHandler RollOff;
+    /// <summary>
+    /// Event raised every frame the cursor is over this object and the Cursor has changed position.
+    /// </summary>
+    public event EventHandler RollOver;
+
+    /// <summary>
+    /// Event raised every frame the cursor is over this object whether the Cursor has changed positions or not.
+    /// </summary>
+    public event EventHandler HoverOver;
+
+    /// <summary>
+    /// Event raised when the cursor pushes on an object and moves. This is similar to RollOver, but is raised even
+    /// if outside of the bounds of the object. This can be used if an object is to be moved by dragging since it will
+    /// be raised even if the user moves the cursor quickly outside of its bounds.
+    /// </summary>
+    public event EventHandler Dragging;
+
+    /// <summary>
+    /// Event raised when the Enabled property changed.
+    /// </summary>
+    public event EventHandler EnabledChange;
+
+    /// <summary>
+    /// Eent raised when the mouse wheel has been scrolled while the cursor is over this instance.
+    /// This event is raised bottom-up, with the root object having the opportunity to handle the roll over.
+    /// If a control sets the argument RoutedEventArgs Handled to true, the children objects 
+    /// will not have this event raised.
+    /// </summary>
+    public event Action<object, RoutedEventArgs> MouseWheelScroll;
+
+    /// <summary>
+    /// Event raised when the mouse rolls over this instance. This event is raised top-down, with the
+    /// child object having the opportunity to handle the roll over first. If a control sets the argument 
+    /// RoutedEventArgs Handled to true,
+    /// then parent objects will not have this event raised.
+    /// </summary>
+    public event Action<object, RoutedEventArgs> RollOverBubbling;
+
+    /// <summary>
+    /// Event raised when this Window is pushed, then is no longer the pushed window due to a cursor releasing the primary button.
+    /// This can be used to detect the end of a drag operation, or to reset the state of a button.
+    /// </summary>
+    public event EventHandler RemovedAsPushed;
+
+    public void CallClick() => Click?.Invoke(this, EventArgs.Empty);
+
+    // RollOff is determined outside of the individual InteractiveGue so we need to have this callable externally..
+    public void TryCallRollOff()
+    {
+        if (RollOff != null)
+        {
+            RollOff(this, EventArgs.Empty);
+        }
+    }
+
+    public void TryCallDragging()
+    {
+        if(Dragging != null)
+        {
+            Dragging(this, EventArgs.Empty);
+        }
+    }
+
+    public void TryCallRemoveAsPushed()
+    {
+        RemovedAsPushed?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void TryCallRollOn() =>
+        RollOn?.Invoke(this, EventArgs.Empty);
+
+    public void TryCallRollOver() =>
+        RollOver?.Invoke(this, EventArgs.Empty);
+
+    public void TryCallHoverOver() =>
+        HoverOver?.Invoke(this, EventArgs.Empty);
+
+    #endregion
+
+    private bool DoUiActivityRecursively(ICursor cursor, Layer layer, HandledActions handledActions = null)
+    {
+        return DoUiActivityRecursively(cursor, handledActions, this, layer);
+
+    }
+
+    internal static bool DoUiActivityRecursively(ICursor cursor, HandledActions handledActions, GraphicalUiElement currentItem, Layer layer)
+    { 
+        handledActions = handledActions ?? new HandledActions();
+        bool handledByChild = false;
+        bool handledByThis = false;
+
+        bool isOver = HasCursorOver(cursor, currentItem, layer);
+        var asInteractive = currentItem as InteractiveGue;
+
+        // Even though the cursor is over "this", we need to check if the cursor is over any children in case "this" exposes its children events:
+        if (isOver && (asInteractive == null || asInteractive.ExposeChildrenEvents))
+        {
+            #region Try handling by children
+
+            if(currentItem.Children == null)
             {
-                RollOff(this, EventArgs.Empty);
-            }
-        }
-
-        public void TryCallDragging()
-        {
-            if(Dragging != null)
-            {
-                Dragging(this, EventArgs.Empty);
-            }
-        }
-
-        public void TryCallRemoveAsPushed()
-        {
-            RemovedAsPushed?.Invoke(this, EventArgs.Empty);
-        }
-
-        public void TryCallRollOn() =>
-            RollOn?.Invoke(this, EventArgs.Empty);
-
-        public void TryCallRollOver() =>
-            RollOver?.Invoke(this, EventArgs.Empty);
-
-        public void TryCallHoverOver() =>
-            HoverOver?.Invoke(this, EventArgs.Empty);
-
-        #endregion
-
-        private bool DoUiActivityRecursively(ICursor cursor, Layer layer, HandledActions handledActions = null)
-        {
-            return DoUiActivityRecursively(cursor, handledActions, this, layer);
-
-        }
-
-        internal static bool DoUiActivityRecursively(ICursor cursor, HandledActions handledActions, GraphicalUiElement currentItem, Layer layer)
-        { 
-            handledActions = handledActions ?? new HandledActions();
-            bool handledByChild = false;
-            bool handledByThis = false;
-
-            bool isOver = HasCursorOver(cursor, currentItem, layer);
-            var asInteractive = currentItem as InteractiveGue;
-
-            // Even though the cursor is over "this", we need to check if the cursor is over any children in case "this" exposes its children events:
-            if (isOver && (asInteractive == null || asInteractive.ExposeChildrenEvents))
-            {
-                #region Try handling by children
-
-                if(currentItem.Children == null)
+                for(int i = currentItem.ContainedElements.Count - 1; i > -1; i--)
                 {
-                    for(int i = currentItem.ContainedElements.Count - 1; i > -1; i--)
+                    var child = currentItem.ContainedElements[i] as GraphicalUiElement;
+
+                    if (child != null && HasCursorOver(cursor, child, layer))
                     {
-                        var child = currentItem.ContainedElements[i] as GraphicalUiElement;
+                        handledByChild = DoUiActivityRecursively(cursor, handledActions, child, layer);
 
-                        if (child != null && HasCursorOver(cursor, child, layer))
+                        if (handledByChild)
                         {
-                            handledByChild = DoUiActivityRecursively(cursor, handledActions, child, layer);
-
-                            if (handledByChild)
-                            {
-                                break;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    // Let's see if any children have the cursor over:
-                    for (int i = currentItem.Children.Count - 1; i > -1; i--)
-                    {
-                        var child = currentItem.Children[i] as GraphicalUiElement;
-                            // Children should always have the opportunity to handle activity,
-                            // even if they are not components, because they may contain components as their children
-
-
-                        // If the child either has events or exposes children events, then give it a chance to handle this activity.
-
-                        if (child != null &&  HasCursorOver(cursor, child, layer))
-                        {
-                            handledByChild = DoUiActivityRecursively(cursor, handledActions, child, layer);
-
-                            if (handledByChild)
-                            {
-                                break;
-                            }
-                        }
-                    }
-
-                }
-
-                #endregion
-            }
-
-            if (isOver)
-            {
-                if (IsComponentOrInstanceOfComponent(currentItem)
-                    ||
-                    asInteractive?.Push != null ||
-                    asInteractive?.Click != null ||
-                    asInteractive?.RollOn != null ||
-                    asInteractive?.RollOff != null ||
-                    asInteractive?.RollOver != null ||
-                    asInteractive?._losePush != null ||
-                    asInteractive?.HoverOver != null ||
-                    asInteractive?.Dragging != null ||
-                    asInteractive?.MouseWheelScroll != null
-                    )
-                {
-                    if (!handledByChild)
-                    {
-                        // Feb. 21, 2018
-                        // If not handled by
-                        // children, then this
-                        // can only handle if this
-                        // exposes events. Otherwise,
-                        // it shouldn't handle anything
-                        // and the parent should be given
-                        // the opportunity.
-                        // I'm not sure why this was outside
-                        // of the if(this.HasEvents)...seems intentional
-                        // but it causes problems when the rootmost object
-                        // exposes children events but doesn't handle its own
-                        // events...
-                        //handledByThis = true;
-
-                        if (asInteractive?.HasEvents == true)
-                        {
-                            // moved from above, see comments there...
-                            handledByThis = true;
-                            cursor.WindowOver = asInteractive;
-                            handledActions.SetWindowOver = true;
-
-                            if (cursor.PrimaryPush && asInteractive.IsEnabled)
-                            {
-
-                                cursor.WindowPushed = asInteractive;
-
-                                if (asInteractive.Push != null)
-                                    asInteractive.Push(asInteractive, EventArgs.Empty);
-
-
-                                //cursor.GrabWindow(this);
-
-                            }
-
-                            if (cursor.PrimaryClick && asInteractive.IsEnabled) // both pushing and clicking can occur in one frame because of buffered input
-                            {
-                                if (cursor.WindowPushed == asInteractive)
-                                {
-                                    if (asInteractive.Click != null)
-                                    {
-                                        // Should InputDevice be the cursor? Or the underlying hardware?
-                                        // I don't know if we have access to the underlying hardware here...
-                                        var args = new InputEventArgs() { InputDevice = cursor };
-                                        asInteractive.Click(asInteractive, args);
-                                    }
-                                    //if (cursor.PrimaryClickNoSlide && ClickNoSlide != null)
-                                    //{
-                                    //    ClickNoSlide(this);
-                                    //}
-
-                                    // if (cursor.PrimaryDoubleClick && DoubleClick != null)
-                                    //   DoubleClick(this);
-                                }
-                                else
-                                {
-                                    //if (SlideOnClick != null)
-                                    //{
-                                    //    SlideOnClick(this);
-                                    //}
-                                }
-                            }
-                           
-                        }
-                    }
-                    if (asInteractive?.HasEvents == true && asInteractive?.IsEnabled == true)
-                    {
-                        if (handledActions.HandledRollOver == false && (cursor.XChange != 0 || cursor.YChange != 0))
-                        {
-                            var args = new RoutedEventArgs();
-                            asInteractive.RollOverBubbling?.Invoke(asInteractive, args);
-                            handledActions.HandledRollOver = args.Handled;
-                        }
-
-                        if (cursor.ScrollWheelChange != 0 && handledActions.HandledMouseWheel == false)
-                        {
-                            var args = new RoutedEventArgs();
-                            asInteractive.MouseWheelScroll?.Invoke(asInteractive, args);
-                            handledActions.HandledMouseWheel = args.Handled;
-                        }
-                    }
-                }
-            }
-
-            return handledByThis || handledByChild;
-        }
-
-        /// <summary>
-        /// Returns whether the argument cursor is over this instance. If RaiseChildrenEventsOutsideOfBounds is set
-        /// to true, then each of the individual chilren are also checked if the cursor is not inside this object's bounds.
-        /// </summary>
-        /// <param name="cursor">The cursor to check whether it is over this.</param>
-        /// <returns>Whether the cursor is over this.</returns>
-        public bool HasCursorOver(ICursor cursor)
-        {
-            var layer = (this.GetTopParent() as GraphicalUiElement).Layer;
-            return HasCursorOver(cursor, this, layer);
-        }
-
-        private static bool HasCursorOver(ICursor cursor, GraphicalUiElement thisInstance, Layer layer)
-        { 
-            bool toReturn = false;
-
-            var asInteractive = thisInstance as InteractiveGue;
-
-            // If this is a touch screen, then the only way the cursor is over any
-            // UI element is if the cursor is being pressed.
-            // Even though the finger is technically not over any UI element when 
-            // the user lifts it, we still want to consider UI logic so that the click action
-            // can apply and events can be raised
-            // todo - implement it later
-            //var shouldConsiderBasedOnInput = cursor.LastInputDevice != InputDevice.TouchScreen ||
-            //    cursor.PrimaryDown ||
-            //    cursor.PrimaryClick;
-
-            bool shouldConsiderBasedOnInput = true;
-
-            var shouldProcess = shouldConsiderBasedOnInput &&
-                 (thisInstance as IVisible).AbsoluteVisible == true;
-
-            if (shouldProcess)
-            {
-                int cursorScreenX = cursor.X;
-                int cursorScreenY = cursor.Y;
-                float worldX;
-                float worldY;
-
-                var managers = thisInstance.EffectiveManagers as ISystemManagers;
-
-
-                // If there are no managers, we an still fall back to the default:
-                // Actually we can't here we don't have access to defaults...
-                //if (managers == null)
-                //{
-                //    managers = global::RenderingLibrary.SystemManagers.Default;
-                //}
-
-                if (managers != null)
-                {
-                    // Adjust by viewport values:
-                    // todo ...
-                    //cursorScreenX -= managers.Renderer.GraphicsDevice.Viewport.X;
-                    //cursorScreenY -= managers.Renderer.GraphicsDevice.Viewport.Y;
-
-                    var camera = managers.Renderer.Camera;
-
-                    if (layer != null)
-                    {
-                        layer.ScreenToWorld(
-                            camera,
-                            cursorScreenX, cursorScreenY,
-                            out worldX, out worldY);
-                    }
-                    else
-                    {
-                        camera.ScreenToWorld(
-                            cursorScreenX, cursorScreenY,
-                            out worldX, out worldY);
-                    }
-
-
-                    // for now we'll just rely on the bounds of the GUE itself
-
-                    toReturn = global::RenderingLibrary.IPositionedSizedObjectExtensionMethods.HasCursorOver(
-                        thisInstance, worldX, worldY);
-                }
-                else
-                {
-                    var thisInstanceName = thisInstance.Name ?? $"this {thisInstance.GetType()} instance (unnamed)";
-                    string message =
-                        $"Could not determine whether the cursor is over {thisInstanceName} because" +
-                        " it is not on any camera, nor is a default camera set up. Did you forget to add this (or its parent) to managers?";
-                    throw new Exception(message);
-                }
-            }
-
-            if (!toReturn && (asInteractive?.RaiseChildrenEventsOutsideOfBounds == true || thisInstance.Tag is ScreenSave  ))
-            {
-                if(thisInstance.Children == null)
-                {
-                    // It's a screen
-                    foreach(var child in thisInstance.ContainedElements)
-                    {
-                        if (HasCursorOver(cursor, child, layer))
-                        {
-                            toReturn = true;
                             break;
                         }
                     }
                 }
-                else
-                {
-                    for (int i = 0; i < thisInstance.Children.Count; i++)
-                    {
-                        var child = thisInstance.Children[i] as GraphicalUiElement;
-
-                        if (child != null && HasCursorOver(cursor, child, layer))
-                        {
-                            toReturn = true;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            return toReturn;
-        }
-
-        public bool IsInParentChain(InteractiveGue possibleParent)
-        {
-            if (Parent == possibleParent)
-            {
-                return true;
-            }
-            else if (Parent is InteractiveGue parentGue)
-            {
-                return parentGue.IsInParentChain(possibleParent);
             }
             else
             {
-                return false;
+                // Let's see if any children have the cursor over:
+                for (int i = currentItem.Children.Count - 1; i > -1; i--)
+                {
+                    var child = currentItem.Children[i] as GraphicalUiElement;
+                        // Children should always have the opportunity to handle activity,
+                        // even if they are not components, because they may contain components as their children
+
+
+                    // If the child either has events or exposes children events, then give it a chance to handle this activity.
+
+                    if (child != null &&  HasCursorOver(cursor, child, layer))
+                    {
+                        handledByChild = DoUiActivityRecursively(cursor, handledActions, child, layer);
+
+                        if (handledByChild)
+                        {
+                            break;
+                        }
+                    }
+                }
+
+            }
+
+            #endregion
+        }
+
+        if (isOver)
+        {
+            if (IsComponentOrInstanceOfComponent(currentItem)
+                ||
+                asInteractive?.Push != null ||
+                asInteractive?.Click != null ||
+                asInteractive?.RollOn != null ||
+                asInteractive?.RollOff != null ||
+                asInteractive?.RollOver != null ||
+                asInteractive?._losePush != null ||
+                asInteractive?.HoverOver != null ||
+                asInteractive?.Dragging != null ||
+                asInteractive?.MouseWheelScroll != null
+                )
+            {
+                if (!handledByChild)
+                {
+                    // Feb. 21, 2018
+                    // If not handled by
+                    // children, then this
+                    // can only handle if this
+                    // exposes events. Otherwise,
+                    // it shouldn't handle anything
+                    // and the parent should be given
+                    // the opportunity.
+                    // I'm not sure why this was outside
+                    // of the if(this.HasEvents)...seems intentional
+                    // but it causes problems when the rootmost object
+                    // exposes children events but doesn't handle its own
+                    // events...
+                    //handledByThis = true;
+
+                    if (asInteractive?.HasEvents == true)
+                    {
+                        // moved from above, see comments there...
+                        handledByThis = true;
+                        cursor.WindowOver = asInteractive;
+                        handledActions.SetWindowOver = true;
+
+                        if (cursor.PrimaryPush && asInteractive.IsEnabled)
+                        {
+
+                            cursor.WindowPushed = asInteractive;
+
+                            if (asInteractive.Push != null)
+                                asInteractive.Push(asInteractive, EventArgs.Empty);
+
+
+                            //cursor.GrabWindow(this);
+
+                        }
+
+                        if (cursor.PrimaryClick && asInteractive.IsEnabled) // both pushing and clicking can occur in one frame because of buffered input
+                        {
+                            if (cursor.WindowPushed == asInteractive)
+                            {
+                                if (asInteractive.Click != null)
+                                {
+                                    // Should InputDevice be the cursor? Or the underlying hardware?
+                                    // I don't know if we have access to the underlying hardware here...
+                                    var args = new InputEventArgs() { InputDevice = cursor };
+                                    asInteractive.Click(asInteractive, args);
+                                }
+                                //if (cursor.PrimaryClickNoSlide && ClickNoSlide != null)
+                                //{
+                                //    ClickNoSlide(this);
+                                //}
+
+                                // if (cursor.PrimaryDoubleClick && DoubleClick != null)
+                                //   DoubleClick(this);
+                            }
+                            else
+                            {
+                                //if (SlideOnClick != null)
+                                //{
+                                //    SlideOnClick(this);
+                                //}
+                            }
+                        }
+                       
+                    }
+                }
+                if (asInteractive?.HasEvents == true && asInteractive?.IsEnabled == true)
+                {
+                    if (handledActions.HandledRollOver == false && (cursor.XChange != 0 || cursor.YChange != 0))
+                    {
+                        var args = new RoutedEventArgs();
+                        asInteractive.RollOverBubbling?.Invoke(asInteractive, args);
+                        handledActions.HandledRollOver = args.Handled;
+                    }
+
+                    if (cursor.ScrollWheelChange != 0 && handledActions.HandledMouseWheel == false)
+                    {
+                        var args = new RoutedEventArgs();
+                        asInteractive.MouseWheelScroll?.Invoke(asInteractive, args);
+                        handledActions.HandledMouseWheel = args.Handled;
+                    }
+                }
             }
         }
 
-        static bool IsComponentOrInstanceOfComponent(GraphicalUiElement gue)
+        return handledByThis || handledByChild;
+    }
+
+    /// <summary>
+    /// Returns whether the argument cursor is over this instance. If RaiseChildrenEventsOutsideOfBounds is set
+    /// to true, then each of the individual chilren are also checked if the cursor is not inside this object's bounds.
+    /// </summary>
+    /// <param name="cursor">The cursor to check whether it is over this.</param>
+    /// <returns>Whether the cursor is over this.</returns>
+    public bool HasCursorOver(ICursor cursor)
+    {
+        var layer = (this.GetTopParent() as GraphicalUiElement).Layer;
+        return HasCursorOver(cursor, this, layer);
+    }
+
+    private static bool HasCursorOver(ICursor cursor, GraphicalUiElement thisInstance, Layer layer)
+    { 
+        bool toReturn = false;
+
+        var asInteractive = thisInstance as InteractiveGue;
+
+        // If this is a touch screen, then the only way the cursor is over any
+        // UI element is if the cursor is being pressed.
+        // Even though the finger is technically not over any UI element when 
+        // the user lifts it, we still want to consider UI logic so that the click action
+        // can apply and events can be raised
+        // todo - implement it later
+        //var shouldConsiderBasedOnInput = cursor.LastInputDevice != InputDevice.TouchScreen ||
+        //    cursor.PrimaryDown ||
+        //    cursor.PrimaryClick;
+
+        bool shouldConsiderBasedOnInput = true;
+
+        var shouldProcess = shouldConsiderBasedOnInput &&
+             (thisInstance as IVisible).AbsoluteVisible == true;
+
+        if (shouldProcess)
         {
-            if (gue.Tag is Gum.DataTypes.ComponentSave)
+            int cursorScreenX = cursor.X;
+            int cursorScreenY = cursor.Y;
+            float worldX;
+            float worldY;
+
+            var managers = thisInstance.EffectiveManagers as ISystemManagers;
+
+
+            // If there are no managers, we an still fall back to the default:
+            // Actually we can't here we don't have access to defaults...
+            //if (managers == null)
+            //{
+            //    managers = global::RenderingLibrary.SystemManagers.Default;
+            //}
+
+            if (managers != null)
             {
-                return true;
-            }
-            else if (gue.Tag is Gum.DataTypes.InstanceSave)
-            {
-                var instance = gue.Tag as Gum.DataTypes.InstanceSave;
+                // Adjust by viewport values:
+                // todo ...
+                //cursorScreenX -= managers.Renderer.GraphicsDevice.Viewport.X;
+                //cursorScreenY -= managers.Renderer.GraphicsDevice.Viewport.Y;
 
-                var baseType = instance.BaseType;
+                var camera = managers.Renderer.Camera;
 
-                if (
-                    baseType == "Arc" ||
-                    baseType == "Canvas" ||
-                    baseType == "Circle" ||
-                    baseType == "ColoredCircle" ||
-                    baseType == "ColoredRectangle" ||
-                    // Vic says - a user may want to click on a container like a track, 
-                    // so we prob should allow clicks?
-                    // Update - no - doing this seems to ruin all kinds of UI because containers
-                    // steal clicks from their children. We will check if the container has an explicit
-                    // event, otherwise, it will pass it along to its children.
-                    baseType == "Container" ||
-                    baseType == "LottieAnimation" ||
-
-                    baseType == "NineSlice" ||
-                    baseType == "Polygon" ||
-
-                    baseType == "Rectangle" ||
-                    baseType == "RoundedRectangle" ||
-                    baseType == "Sprite" ||
-                    baseType == "Svg" ||
-                    baseType == "Text")
+                if (layer != null)
                 {
-                    return false;
+                    layer.ScreenToWorld(
+                        camera,
+                        cursorScreenX, cursorScreenY,
+                        out worldX, out worldY);
                 }
                 else
                 {
-                    // If we got here, then it's a component
-                    return true;
+                    camera.ScreenToWorld(
+                        cursorScreenX, cursorScreenY,
+                        out worldX, out worldY);
+                }
+
+
+                // for now we'll just rely on the bounds of the GUE itself
+
+                toReturn = global::RenderingLibrary.IPositionedSizedObjectExtensionMethods.HasCursorOver(
+                    thisInstance, worldX, worldY);
+            }
+            else
+            {
+                var thisInstanceName = thisInstance.Name ?? $"this {thisInstance.GetType()} instance (unnamed)";
+                string message =
+                    $"Could not determine whether the cursor is over {thisInstanceName} because" +
+                    " it is not on any camera, nor is a default camera set up. Did you forget to add this (or its parent) to managers?";
+                throw new Exception(message);
+            }
+        }
+
+        if (!toReturn && (asInteractive?.RaiseChildrenEventsOutsideOfBounds == true || thisInstance.Tag is ScreenSave  ))
+        {
+            if(thisInstance.Children == null)
+            {
+                // It's a screen
+                foreach(var child in thisInstance.ContainedElements)
+                {
+                    if (HasCursorOver(cursor, child, layer))
+                    {
+                        toReturn = true;
+                        break;
+                    }
                 }
             }
+            else
+            {
+                for (int i = 0; i < thisInstance.Children.Count; i++)
+                {
+                    var child = thisInstance.Children[i] as GraphicalUiElement;
+
+                    if (child != null && HasCursorOver(cursor, child, layer))
+                    {
+                        toReturn = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        return toReturn;
+    }
+
+    public bool IsInParentChain(InteractiveGue possibleParent)
+    {
+        if (Parent == possibleParent)
+        {
+            return true;
+        }
+        else if (Parent is InteractiveGue parentGue)
+        {
+            return parentGue.IsInParentChain(possibleParent);
+        }
+        else
+        {
             return false;
         }
+    }
 
-        public InteractiveGue()
+    static bool IsComponentOrInstanceOfComponent(GraphicalUiElement gue)
+    {
+        if (gue.Tag is Gum.DataTypes.ComponentSave)
         {
+            return true;
         }
-
-        public InteractiveGue(IRenderable renderable) : base(renderable)
+        else if (gue.Tag is Gum.DataTypes.InstanceSave)
         {
-        }
+            var instance = gue.Tag as Gum.DataTypes.InstanceSave;
 
-        bool _hasSubscribedLosePusheEvents = false;
-        private void TrySubscribeToLosePushEvents()
-        {
-            if(!_hasSubscribedLosePusheEvents)
+            var baseType = instance.BaseType;
+
+            if (
+                baseType == "Arc" ||
+                baseType == "Canvas" ||
+                baseType == "Circle" ||
+                baseType == "ColoredCircle" ||
+                baseType == "ColoredRectangle" ||
+                // Vic says - a user may want to click on a container like a track, 
+                // so we prob should allow clicks?
+                // Update - no - doing this seems to ruin all kinds of UI because containers
+                // steal clicks from their children. We will check if the container has an explicit
+                // event, otherwise, it will pass it along to its children.
+                baseType == "Container" ||
+                baseType == "LottieAnimation" ||
+
+                baseType == "NineSlice" ||
+                baseType == "Polygon" ||
+
+                baseType == "Rectangle" ||
+                baseType == "RoundedRectangle" ||
+                baseType == "Sprite" ||
+                baseType == "Svg" ||
+                baseType == "Text")
             {
-                _hasSubscribedLosePusheEvents = true;
-                Click += (not, used) => _losePush?.Invoke(this, EventArgs.Empty);
-                RollOff += (not, used) => _losePush?.Invoke(this, EventArgs.Empty);
+                return false;
+            }
+            else
+            {
+                // If we got here, then it's a component
+                return true;
             }
         }
+        return false;
+    }
 
-        /// <summary>
-        /// Adds an action to be called the next time the Cursor performs a push action 
-        /// (the left button is not down the previous frame but is down this frame). The 
-        /// argument action is invoked one time.
-        /// </summary>
-        /// <param name="action">The action to invoke one time.</param>
-        /// <exception cref="ArgumentNullException">Thrown if the argument action is null.</exception>
-        public static void AddNextPushAction(Action action)
+    public InteractiveGue()
+    {
+    }
+
+    public InteractiveGue(IRenderable renderable) : base(renderable)
+    {
+    }
+
+    bool _hasSubscribedLosePusheEvents = false;
+    private void TrySubscribeToLosePushEvents()
+    {
+        if(!_hasSubscribedLosePusheEvents)
         {
+            _hasSubscribedLosePusheEvents = true;
+            Click += (not, used) => _losePush?.Invoke(this, EventArgs.Empty);
+            RollOff += (not, used) => _losePush?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    /// <summary>
+    /// Adds an action to be called the next time the Cursor performs a push action 
+    /// (the left button is not down the previous frame but is down this frame). The 
+    /// argument action is invoked one time.
+    /// </summary>
+    /// <param name="action">The action to invoke one time.</param>
+    /// <exception cref="ArgumentNullException">Thrown if the argument action is null.</exception>
+    public static void AddNextPushAction(Action action)
+    {
 #if DEBUG
-            if (action == null)
-            {
-                throw new ArgumentNullException(nameof(action));
-            }
-#endif
-            nextPushActions.Add(action);
-        }
-
-        /// <summary>
-        /// Adds an action to be called the next time the Cursor performs a click action
-        /// (the left button was down last frame and is released this frame). The argument
-        /// action is invoked one time.
-        /// </summary>
-        /// <param name="action">The action to invoke one time.</param>
-        /// <exception cref="ArgumentNullException">Thrown if the argument action is null.</exception>
-        public static void AddNextClickAction(Action action)
+        if (action == null)
         {
+            throw new ArgumentNullException(nameof(action));
+        }
+#endif
+        nextPushActions.Add(action);
+    }
+
+    /// <summary>
+    /// Adds an action to be called the next time the Cursor performs a click action
+    /// (the left button was down last frame and is released this frame). The argument
+    /// action is invoked one time.
+    /// </summary>
+    /// <param name="action">The action to invoke one time.</param>
+    /// <exception cref="ArgumentNullException">Thrown if the argument action is null.</exception>
+    public static void AddNextClickAction(Action action)
+    {
 #if DEBUG
-            if (action == null)
-            {
-                throw new ArgumentNullException(nameof(action));
-            }
+        if (action == null)
+        {
+            throw new ArgumentNullException(nameof(action));
+        }
 #endif
-            nextClickActions.Add(action);
-        }
+        nextClickActions.Add(action);
+    }
 
-        internal static void DoNextClickActions()
+    internal static void DoNextClickActions()
+    {
+
+        if (nextClickActions.Count > 0)
         {
-
-            if (nextClickActions.Count > 0)
+            var items = nextClickActions.ToList();
+            // clear first so that any actions can add more click actions that won't get run this frame:
+            nextClickActions.Clear();
+            foreach (var item in items)
             {
-                var items = nextClickActions.ToList();
-                // clear first so that any actions can add more click actions that won't get run this frame:
-                nextClickActions.Clear();
-                foreach (var item in items)
-                {
-                    item();
-                }
-
+                item();
             }
+
         }
+    }
 
-        internal static void DoNextPushActions()
+    internal static void DoNextPushActions()
+    {
+        if (nextPushActions.Count > 0)
         {
-            if (nextPushActions.Count > 0)
+            var items = nextPushActions.ToList();
+            nextPushActions.Clear();
+            foreach (var item in items)
             {
-                var items = nextPushActions.ToList();
-                nextPushActions.Clear();
-                foreach (var item in items)
-                {
-                    item();
-                }
-            }
-        }
-
-        public override void RemoveFromManagers()
-        {
-            base.RemoveFromManagers();
-
-            if(InteractiveGue.CurrentInputReceiver == this.FormsControlAsObject || InteractiveGue.CurrentInputReceiver == this)
-            {
-                InteractiveGue.CurrentInputReceiver = null;
+                item();
             }
         }
     }
 
-    public interface IInputReceiver
+    public override void RemoveFromManagers()
     {
-        /// <summary>
-        /// Called by the engine automatically when an IInputReceiver gains focus.
-        /// </summary>
-        /// <remarks>
-        /// The implementation of this method should raise the GainFocus event.
-        /// </remarks>
-        void OnGainFocus();
+        base.RemoveFromManagers();
 
-        /// <summary>
-        /// Called by the engine automatically when an IInputReceiver loses focus.
-        /// </summary>
-        void OnLoseFocus();
-
-        /// <summary>
-        /// Called every frame if this has focus. Allows general every-frame updates such as
-        /// handling gamepad input.
-        /// </summary>
-        void OnFocusUpdate();
-
-        void DoKeyboardAction(IInputReceiverKeyboard keyboard);
-    }
-
-    public enum InputDevice
-    {
-        TouchScreen = 1,
-        Mouse = 2
-    }
-
-    public enum Cursors
-    {
-        Arrow,
-        SizeNESW,
-        SizeNS,
-        SizeNWSE,
-        SizeWE,
-        // more may be added in the future
-    }
-
-    public interface ICursor
-    {
-        public Cursors? CustomCursor { get; set; }
-        InputDevice LastInputDevice { get; }
-        int X { get; }
-        int Y { get; }
-        float XRespectingGumZoomAndBounds();
-        float YRespectingGumZoomAndBounds();
-
-        double LastPrimaryPushTime { get; }
-        double LastPrimaryClickTime { get; }
-
-        int XChange { get; }
-        int YChange { get; }
-
-        int ScrollWheelChange { get; }
-
-        float ZVelocity { get; }
-
-        bool PrimaryPush { get; }
-        bool PrimaryDown { get; }
-        bool PrimaryClick { get; }
-        /// <summary>
-        /// Returns whether the cursor has been clicked without movement between the push and release.
-        /// Simple implementations can return PrimaryClick, but more complex implementations may want to
-        /// consider a movement threshold.
-        /// </summary>
-        bool PrimaryClickNoSlide { get; }
-        bool PrimaryDoubleClick { get; }
-        bool PrimaryDoublePush { get; }
-
-        bool SecondaryPush { get; }
-        bool SecondaryDown { get; }
-        bool SecondaryClick { get; }
-        bool SecondaryDoubleClick { get; }
-
-        bool MiddlePush { get; }
-        bool MiddleDown { get; }
-        bool MiddleClick { get; }
-        bool MiddleDoubleClick { get; }
-
-        InteractiveGue WindowPushed { get; set; }
-        InteractiveGue WindowOver { get; set; }
-    }
-
-    public interface IInputReceiverKeyboard
-    {
-        bool IsShiftDown { get; }
-        bool IsCtrlDown { get; }
-        bool IsAltDown { get; }
-
-        // FRB has this, but we don't have access to XNA-likes here, so we can't include it
-        //IReadOnlyCollection<Microsoft.Xna.Framework.Input.Keys> KeysTyped { get; }
-
-        string GetStringTyped();
-    }
-
-
-    class HandledActions
-    {
-        public bool HandledMouseWheel;
-        public bool HandledRollOver;
-        public bool SetWindowOver;
-    }
-    public static class GueInteractiveExtensionMethods
-    {
-
-        static List<GraphicalUiElement> internalList = new List<GraphicalUiElement>();
-        public static void DoUiActivityRecursively(this GraphicalUiElement gue, ICursor cursor, IInputReceiverKeyboard keyboard, double currentGameTimeInSeconds)
+        if(InteractiveGue.CurrentInputReceiver == this.FormsControlAsObject || InteractiveGue.CurrentInputReceiver == this)
         {
-            internalList.Clear();
-            internalList.Add(gue);
+            InteractiveGue.CurrentInputReceiver = null;
+        }
+    }
+}
 
-            DoUiActivityRecursively(internalList, cursor, keyboard, currentGameTimeInSeconds);
+public interface IInputReceiver
+{
+    /// <summary>
+    /// Called by the engine automatically when an IInputReceiver gains focus.
+    /// </summary>
+    /// <remarks>
+    /// The implementation of this method should raise the GainFocus event.
+    /// </remarks>
+    void OnGainFocus();
+
+    /// <summary>
+    /// Called by the engine automatically when an IInputReceiver loses focus.
+    /// </summary>
+    void OnLoseFocus();
+
+    /// <summary>
+    /// Called every frame if this has focus. Allows general every-frame updates such as
+    /// handling gamepad input.
+    /// </summary>
+    void OnFocusUpdate();
+
+    void DoKeyboardAction(IInputReceiverKeyboard keyboard);
+}
+
+public enum InputDevice
+{
+    TouchScreen = 1,
+    Mouse = 2
+}
+
+public enum Cursors
+{
+    Arrow,
+    SizeNESW,
+    SizeNS,
+    SizeNWSE,
+    SizeWE,
+    // more may be added in the future
+}
+
+public interface ICursor
+{
+    public Cursors? CustomCursor { get; set; }
+    InputDevice LastInputDevice { get; }
+    int X { get; }
+    int Y { get; }
+    float XRespectingGumZoomAndBounds();
+    float YRespectingGumZoomAndBounds();
+
+    double LastPrimaryPushTime { get; }
+    double LastPrimaryClickTime { get; }
+
+    int XChange { get; }
+    int YChange { get; }
+
+    int ScrollWheelChange { get; }
+
+    float ZVelocity { get; }
+
+    bool PrimaryPush { get; }
+    bool PrimaryDown { get; }
+    bool PrimaryClick { get; }
+    /// <summary>
+    /// Returns whether the cursor has been clicked without movement between the push and release.
+    /// Simple implementations can return PrimaryClick, but more complex implementations may want to
+    /// consider a movement threshold.
+    /// </summary>
+    bool PrimaryClickNoSlide { get; }
+    bool PrimaryDoubleClick { get; }
+    bool PrimaryDoublePush { get; }
+
+    bool SecondaryPush { get; }
+    bool SecondaryDown { get; }
+    bool SecondaryClick { get; }
+    bool SecondaryDoubleClick { get; }
+
+    bool MiddlePush { get; }
+    bool MiddleDown { get; }
+    bool MiddleClick { get; }
+    bool MiddleDoubleClick { get; }
+
+    InteractiveGue WindowPushed { get; set; }
+    InteractiveGue WindowOver { get; set; }
+}
+
+public interface IInputReceiverKeyboard
+{
+    bool IsShiftDown { get; }
+    bool IsCtrlDown { get; }
+    bool IsAltDown { get; }
+
+    // FRB has this, but we don't have access to XNA-likes here, so we can't include it
+    //IReadOnlyCollection<Microsoft.Xna.Framework.Input.Keys> KeysTyped { get; }
+
+    string GetStringTyped();
+}
+
+
+class HandledActions
+{
+    public bool HandledMouseWheel;
+    public bool HandledRollOver;
+    public bool SetWindowOver;
+}
+public static class GueInteractiveExtensionMethods
+{
+
+    static List<GraphicalUiElement> internalList = new List<GraphicalUiElement>();
+    public static void DoUiActivityRecursively(this GraphicalUiElement gue, ICursor cursor, IInputReceiverKeyboard keyboard, double currentGameTimeInSeconds)
+    {
+        internalList.Clear();
+        internalList.Add(gue);
+
+        DoUiActivityRecursively(internalList, cursor, keyboard, currentGameTimeInSeconds);
+    }
+
+    public static void DoUiActivityRecursively(IList<GraphicalUiElement> gues, ICursor cursor, IInputReceiverKeyboard keyboard, double currentGameTimeInSeconds)
+    { 
+        InteractiveGue.CurrentGameTime = currentGameTimeInSeconds;
+        var windowOverBefore = cursor.WindowOver;
+        var windowPushedBefore = cursor.WindowPushed;
+
+        var isInWindow = cursor.X >= 0 && cursor.X < GraphicalUiElement.CanvasWidth &&
+            cursor.Y >= 0 && cursor.Y < GraphicalUiElement.CanvasHeight;
+
+        HandledActions actions = new HandledActions();
+        var lastWindowOver = cursor.WindowOver;
+
+        cursor.WindowOver = null;
+        for(int i = gues.Count-1; i > -1; i--)
+        {
+            var gue = gues[i];
+
+            // This check allows the user to remove a GUE from managers and not null it out.
+            // Even though it might be proper to null it out, this removes "yet another thing to remember"
+            if(gue.EffectiveManagers != null)
+            {
+                InteractiveGue.DoUiActivityRecursively(cursor, actions, gue, gue.Layer);
+            }
+            if(cursor.WindowOver != null)
+            {
+                break;
+            }
         }
 
-        public static void DoUiActivityRecursively(IList<GraphicalUiElement> gues, ICursor cursor, IInputReceiverKeyboard keyboard, double currentGameTimeInSeconds)
-        { 
-            InteractiveGue.CurrentGameTime = currentGameTimeInSeconds;
-            var windowOverBefore = cursor.WindowOver;
-            var windowPushedBefore = cursor.WindowPushed;
+        var windowOverAsInteractive = cursor.WindowOver as InteractiveGue;
+        if (windowOverAsInteractive != null)
+        {
+            if (lastWindowOver != windowOverAsInteractive)
+            {
+                windowOverAsInteractive.TryCallRollOn();
+            }
 
-            var isInWindow = cursor.X >= 0 && cursor.X < GraphicalUiElement.CanvasWidth &&
-                cursor.Y >= 0 && cursor.Y < GraphicalUiElement.CanvasHeight;
+            windowOverAsInteractive.TryCallHoverOver();
+            if (cursor.XChange != 0 || cursor.YChange != 0)
+            {
+                windowOverAsInteractive.TryCallRollOver();
+            }
+        }
 
-            HandledActions actions = new HandledActions();
-            var lastWindowOver = cursor.WindowOver;
-
+        if (!actions.SetWindowOver)
+        {
             cursor.WindowOver = null;
-            for(int i = gues.Count-1; i > -1; i--)
-            {
-                var gue = gues[i];
+        }
+        else if(cursor.WindowOver == null)
+        {
+            cursor.WindowOver = windowOverBefore;
+        }
 
-                // This check allows the user to remove a GUE from managers and not null it out.
-                // Even though it might be proper to null it out, this removes "yet another thing to remember"
-                if(gue.EffectiveManagers != null)
-                {
-                    InteractiveGue.DoUiActivityRecursively(cursor, actions, gue, gue.Layer);
-                }
-                if(cursor.WindowOver != null)
-                {
-                    break;
-                }
+        if(windowOverBefore != cursor.WindowOver)
+        {
+            string GetInfoFor(InteractiveGue interactive)
+            {
+                return interactive?.Name + " " + interactive?.GetType();
             }
+            if (windowOverBefore is InteractiveGue interactiveBefore)
+            {
+                interactiveBefore.TryCallRollOff();
+            }
+        }
+        if(windowPushedBefore != cursor.WindowPushed || 
+            (windowPushedBefore != null && cursor.PrimaryDown == false))
+        {
+            if(windowPushedBefore is InteractiveGue interactiveBefore)
+            {
+                interactiveBefore.TryCallRemoveAsPushed();
+            }
+        }
+        if(cursor.PrimaryDown == false)
+        {
+            cursor.WindowPushed = null;
+        }
+        if(cursor.WindowPushed != null && cursor.PrimaryDown && (cursor.XChange != 0 || cursor.YChange != 0))
+        {
+            cursor.WindowPushed.TryCallDragging();
+        }
 
-            var windowOverAsInteractive = cursor.WindowOver as InteractiveGue;
-            if (windowOverAsInteractive != null)
-            {
-                if (lastWindowOver != windowOverAsInteractive)
-                {
-                    windowOverAsInteractive.TryCallRollOn();
-                }
+        // the click/push actions need to be after the UI activity
+        if (cursor.PrimaryClick && isInWindow)
+        {
+            InteractiveGue.DoNextClickActions();
 
-                windowOverAsInteractive.TryCallHoverOver();
-                if (cursor.XChange != 0 || cursor.YChange != 0)
-                {
-                    windowOverAsInteractive.TryCallRollOver();
-                }
-            }
+        }
 
-            if (!actions.SetWindowOver)
-            {
-                cursor.WindowOver = null;
-            }
-            else if(cursor.WindowOver == null)
-            {
-                cursor.WindowOver = windowOverBefore;
-            }
+        if (cursor.PrimaryPush && isInWindow)
+        {
+            InteractiveGue.DoNextPushActions();
+        }
 
-            if(windowOverBefore != cursor.WindowOver)
-            {
-                string GetInfoFor(InteractiveGue interactive)
-                {
-                    return interactive?.Name + " " + interactive?.GetType();
-                }
-                if (windowOverBefore is InteractiveGue interactiveBefore)
-                {
-                    interactiveBefore.TryCallRollOff();
-                }
-            }
-            if(windowPushedBefore != cursor.WindowPushed || 
-                (windowPushedBefore != null && cursor.PrimaryDown == false))
-            {
-                if(windowPushedBefore is InteractiveGue interactiveBefore)
-                {
-                    interactiveBefore.TryCallRemoveAsPushed();
-                }
-            }
-            if(cursor.PrimaryDown == false)
-            {
-                cursor.WindowPushed = null;
-            }
-            if(cursor.WindowPushed != null && cursor.PrimaryDown && (cursor.XChange != 0 || cursor.YChange != 0))
-            {
-                cursor.WindowPushed.TryCallDragging();
-            }
+        if(InteractiveGue.CurrentInputReceiver != null)
+        {
+            var receiver = InteractiveGue.CurrentInputReceiver;
 
-            // the click/push actions need to be after the UI activity
-            if (cursor.PrimaryClick && isInWindow)
-            {
-                InteractiveGue.DoNextClickActions();
-
-            }
-
-            if (cursor.PrimaryPush && isInWindow)
-            {
-                InteractiveGue.DoNextPushActions();
-            }
-
-            if(InteractiveGue.CurrentInputReceiver != null)
-            {
-                var receiver = InteractiveGue.CurrentInputReceiver;
-
-                receiver.DoKeyboardAction(keyboard);
-                receiver.OnFocusUpdate();
-            }
+            receiver.DoKeyboardAction(keyboard);
+            receiver.OnFocusUpdate();
         }
     }
 }
