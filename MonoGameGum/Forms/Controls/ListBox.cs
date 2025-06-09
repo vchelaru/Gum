@@ -42,6 +42,13 @@ public enum ScrollIntoViewStyle
 }
 #endregion
 
+
+public enum DragDropReorderMode
+{
+    NoReorder,
+    Immediate
+}
+
 #if !FRB
 
 #region RepositionDirections Enum
@@ -292,6 +299,16 @@ public class ListBox : ItemsControl, IInputReceiver
         }
     }
 
+    /// <summary>
+    /// Controls the ListBox's drag+drop behavior for reordering ListBoxItems. If true,
+    /// items can be reordered by pushing on an item and dragging it to the position of 
+    /// another item. By default this is set to NoReorder.
+    /// </summary>
+    public DragDropReorderMode DragDropReorderMode
+    {
+        get; set;
+    }
+
     #endregion
 
     #region Events
@@ -344,17 +361,22 @@ public class ListBox : ItemsControl, IInputReceiver
                     if(this.Items is not INotifyCollectionChanged )
                     {
                         ListBoxItemsInternal.Add(listBoxItem);
-                        listBoxItem.AssignListBoxEvents(HandleItemSelected, HandleItemFocused, HandleListBoxItemPushed, HandleListBoxItemClicked);
+                        listBoxItem.AssignListBoxEvents(
+                            HandleItemSelected, 
+                            HandleItemFocused, 
+                            HandleListBoxItemPushed, 
+                            HandleListBoxItemClicked,
+                            HandleListBoxItemDragging);
                     }
                 }
             }
         }
     }
 
+
     #endregion
 
     #region Item Creation
-
 
     protected override FrameworkElement CreateNewItemFrameworkElement(object o)
     {
@@ -395,7 +417,7 @@ public class ListBox : ItemsControl, IInputReceiver
             {
                 throw new InvalidOperationException($"Could not create an item of type {item.GetType()} because it must inherit from ListBoxItem.");
             }
-            return item as ListBoxItem;
+            return (ListBoxItem)item!;
         }
         else
         {
@@ -435,7 +457,11 @@ public class ListBox : ItemsControl, IInputReceiver
         }
     }
 
-    private void HandleItemSelected(object sender, EventArgs e)
+    #endregion
+
+    #region Item Event Handlers
+
+    private void HandleItemSelected(object? sender, EventArgs e)
     {
         var args = new SelectionChangedEventArgs();
 
@@ -469,28 +495,122 @@ public class ListBox : ItemsControl, IInputReceiver
         PushValueToViewModel(nameof(SelectedObject));
         PushValueToViewModel(nameof(SelectedIndex));
     }
-    private void HandleItemFocused(object sender, EventArgs e)
+
+    private void HandleItemFocused(object? sender, EventArgs e)
     {
         OnItemFocused(sender, EventArgs.Empty);
     }
 
-    private void HandleListBoxItemClicked(object sender, EventArgs e)
+    private void HandleListBoxItemClicked(object? sender, EventArgs e)
     {
         OnItemClicked(sender, EventArgs.Empty);
     }
-    private void HandleListBoxItemPushed(object sender, EventArgs e)
+
+    private void HandleListBoxItemPushed(object? sender, EventArgs e)
     {
         OnItemPushed(sender, EventArgs.Empty);
+    }
+
+    private void HandleListBoxItemDragging(object? sender, EventArgs e)
+    {
+        if (sender == null || DragDropReorderMode == DragDropReorderMode.NoReorder) return;
+
+        var visual = (InteractiveGue)sender;
+
+        var index = visual.Parent!.Children.IndexOf(visual);
+
+        var cursor = FrameworkElement.MainCursor;
+
+        // are we still over the same item?
+        var isOverSameItem = visual.HasCursorOver(cursor);
+
+        if(!isOverSameItem && this.Visual.HasCursorOver(cursor))
+        {
+            // see if we're over any of the other children. If so, we should drop the item there:
+            // we want to start at the current index and go "out" to increase the chances of finding it soon
+
+            var childrenCount = visual.Parent.Children.Count;
+
+            // The bounds check here is just for sanity's sake, but it should early-out sooner
+            for (int i = 1; i < childrenCount; i++)
+            {
+                var isAboveTop = index - i < 0;
+                var isBelowBottom = index + i >= childrenCount;
+
+                if(isAboveTop && isBelowBottom)
+                {
+                    break;
+                }
+                if(!isAboveTop)
+                {
+                    var itemAbove = visual.Parent.Children[index - i] as InteractiveGue;
+                    var isOver = itemAbove != null && itemAbove.HasCursorOver(cursor);
+                    if(isOver)
+                    {
+                        // swap the items:
+                        MoveItem(index, index - i);
+                        // do we also need to change Items and ListBoxItems?
+
+                        break;
+                    }
+                }
+
+                if(!isBelowBottom)
+                {
+                    var itemBelow = visual.Parent.Children[index + i] as InteractiveGue;
+                    var isOver = itemBelow != null && itemBelow.HasCursorOver(cursor);
+                    if (isOver)
+                    {
+                        // swap the items:
+                        MoveItem(index, index + i);
+
+                        break;
+                    }
+                }
+
+                void MoveItem(int oldIndex, int newIndex)
+                {
+                    var item = Items[oldIndex];
+
+                    _suppressCollectionChangedToBase = true;
+
+                    Items.RemoveAt(oldIndex);
+                    Items.Insert(newIndex, item);
+
+                    _suppressCollectionChangedToBase = false;
+
+                    var isBound = this.PropertyRegistry.GetBindingExpression(nameof(Items)) != null;
+                    if (Items is not INotifyCollectionChanged || !isBound)
+                    {
+                        // If we are bound, just move
+                        visual.Parent.Children.Move(oldIndex, newIndex);
+                        var itemToMove = ListBoxItemsInternal[oldIndex];
+
+                        var listBoxItemReplaced = ListBoxItemsInternal[newIndex];
+                        // This probably got highlighted by the cursor when dragging over it, so let's
+                        // unhighlight it so it doesn't flicker:
+                        listBoxItemReplaced.IsHighlighted = false;
+
+                        ListBoxItemsInternal.RemoveAt(oldIndex);
+                        ListBoxItemsInternal.Insert(newIndex, itemToMove);
+                    }
+
+                }
+            }
+        }
     }
 
     #endregion
 
     #region Collection Changed
 
+    bool _suppressCollectionChangedToBase = false;
     protected override void HandleItemsCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
     {
-        // todo - can this logic get moved to the individual methods below? I think it should...
-        base.HandleItemsCollectionChanged(sender, e);
+        if(_suppressCollectionChangedToBase == false)
+        {
+            base.HandleItemsCollectionChanged(sender, e);
+        }
 
         if (e.Action == NotifyCollectionChangedAction.Remove &&
             (e.OldStartingIndex == selectedIndex ||
@@ -529,7 +649,12 @@ public class ListBox : ItemsControl, IInputReceiver
         if (newItem is ListBoxItem listBoxItem)
         {
             ListBoxItemsInternal.Insert(newItemIndex, listBoxItem);
-            listBoxItem.AssignListBoxEvents(HandleItemSelected, HandleItemFocused, HandleListBoxItemPushed, HandleListBoxItemClicked);
+            listBoxItem.AssignListBoxEvents(
+                HandleItemSelected, 
+                HandleItemFocused, 
+                HandleListBoxItemPushed, 
+                HandleListBoxItemClicked,
+                HandleListBoxItemDragging);
         }
     }
 

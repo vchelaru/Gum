@@ -104,7 +104,12 @@ public class ListBoxItem : FrameworkElement
     #region Event Handlers
 
     bool hasHadListBoxEventsAssigned = false;
-    internal void AssignListBoxEvents(EventHandler handleItemSelected, EventHandler handleItemFocused, EventHandler handleListBoxItemPushed, EventHandler handleListBoxItemClicked)
+    internal void AssignListBoxEvents(
+        EventHandler handleItemSelected, 
+        EventHandler handleItemFocused, 
+        EventHandler handleListBoxItemPushed, 
+        EventHandler handleListBoxItemClicked,
+        EventHandler handleListBoxItemDragging)
     {
         if(!hasHadListBoxEventsAssigned)
         {
@@ -112,6 +117,7 @@ public class ListBoxItem : FrameworkElement
             GotFocus += handleItemFocused;
             Pushed += handleListBoxItemPushed;
             Clicked += handleListBoxItemClicked;
+            Visual.Dragging += handleListBoxItemDragging;
             hasHadListBoxEventsAssigned = true;
         }
     }
