@@ -31,7 +31,7 @@ button.Click += (s, e) =>
 };
 ```
 
-<figure><img src="../../../../.gitbook/assets/24_06 50 24.gif" alt=""><figcaption><p>Addign items to a ListBox by clicking a button</p></figcaption></figure>
+<figure><img src="../../../../.gitbook/assets/24_06 50 24.gif" alt=""><figcaption><p>Adding items to a ListBox by clicking a button</p></figcaption></figure>
 
 ## Selection
 
@@ -57,6 +57,26 @@ listBox.SelectionChanged += (sender, args) =>
     System.Diagnostics.Debug.WriteLine($"Selected item: {listBox.SelectedObject}");
 };
 ```
+
+## Reordering With Drag+Drop
+
+The `DragDropReorderMode` controls whether the user can automatically reorder `ListBoxItems` by pushing on an item and dragging it to a new location. By default this value is set to `NoReorder`, but it can be changed to enable reordering.
+
+The following code creates a ListBox which supports reordering:
+
+```csharp
+var listBox = new ListBox();
+listBox.AddToRoot();
+
+for(int i = 0; i < 10; i++)
+{
+    listBox.Items.Add("Item " + i);
+}
+
+listBox.DragDropReorderMode = DragDropReorderMode.Immediate;
+```
+
+<figure><img src="../../../../.gitbook/assets/09_04 59 13.gif" alt=""><figcaption><p>ListBoxItems reordering</p></figcaption></figure>
 
 ## Customizing with VisualTemplate
 
