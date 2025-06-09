@@ -6,8 +6,10 @@
              xmlns:colorpicker="clr-namespace:ColorPicker;assembly=ColorPicker"
              mc:Ignorable="d" 
              >
-    <Grid>
-        
+    <Grid x:Name="MainGrid">
+        <Grid.ContextMenu>
+            <ContextMenu></ContextMenu>
+        </Grid.ContextMenu>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"></ColumnDefinition>
             <ColumnDefinition Width="1*"></ColumnDefinition>
