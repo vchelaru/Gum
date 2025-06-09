@@ -305,7 +305,6 @@
 	<ItemGroup>
 		<Folder Include="Converters\" />
 		<Folder Include="Graphics\Animation\Content\" />
-		<Folder Include="Libraries\Xna\" />
 		<Folder Include="Plugins\InternalPlugins\ScreenshotPlugin\" />
 	</ItemGroup>
 	<ItemGroup>
@@ -354,9 +353,9 @@
 		<PackageReference Include="System.Management" Version="9.0.3" />
 
 		<PackageReference Include="nkast.Xna.Framework" Version="4.1.9001" />
-		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.1.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.1.9001.1" />
 		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.1.9001" />
-		<PackageReference Include="nkast.Kni.Platform.WinForms.DX11" Version="4.1.9001.1" />
+		<PackageReference Include="nkast.Kni.Platform.WinForms.DX11" Version="4.1.9001" />
 		<PackageReference Include="System.Resources.Extensions" Version="9.0.5" />
 	</ItemGroup>
 	<ItemGroup>

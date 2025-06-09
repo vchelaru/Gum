@@ -18,7 +18,7 @@
   </PropertyGroup>
   <ItemGroup>
 	  <PackageReference Include="nkast.Xna.Framework" Version="4.1.9001" />
-	  <PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.1.9001" />
+	  <PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.1.9001.1" />
     <Reference Include="System.Drawing.Primitives">
       <HintPath>C:\Windows\Microsoft.NET\Framework64\v4.0.30319\System.Drawing.Primitives.dll</HintPath>
     </Reference>
