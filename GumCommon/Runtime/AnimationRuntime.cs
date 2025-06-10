@@ -167,7 +167,7 @@ public class AnimationRuntime
         else if (keyframeBefore != null && keyframeAfter != null)
         {
             if (keyframeAfter.CachedCumulativeState == null ||
-                keyframeAfter.CachedCumulativeState == null)
+                keyframeBefore.CachedCumulativeState == null)
             {
                 if (element != null)
                 {
