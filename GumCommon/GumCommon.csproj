@@ -82,6 +82,8 @@
 		</Compile>
                 <Compile Include="..\GumRuntime\GraphicalUiElement.cs" Link="GraphicalUiElement.cs" />
                 <Compile Include="..\GumRuntime\StateAppliedEventArgs.cs" Link="StateAppliedEventArgs.cs" />
+                <Compile Include="..\Gum\Wireframe\TimeManager.cs" Link="TimeManager.cs" />
+                <Compile Include="Runtime\RunningStateAnimation.cs" />
 
 
 		<Compile Include="..\Gum\DataTypes\PluginSettingsSave.cs">
