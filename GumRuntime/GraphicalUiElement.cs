@@ -1438,6 +1438,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
 #if !FRB
     public List<AnimationRuntime>? Animations { get; set; }
+    /// <summary>
+    /// Mapping of state names to animation names automatically played when that state is applied.
+    /// </summary>
+    public Dictionary<string, string> StateAnimationMap { get; } = new Dictionary<string, string>();
+
+    List<Gum.StateAnimation.Runtime.RunningStateAnimation> mActiveStateAnimations = new List<Gum.StateAnimation.Runtime.RunningStateAnimation>();
 #endif
 
     #endregion
@@ -1457,6 +1463,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     public event EventHandler SizeChanged;
     public event EventHandler PositionChanged;
     public event EventHandler<ParentChangedEventArgs> ParentChanged;
+    public event EventHandler<StateAppliedEventArgs>? StateApplied;
 
     public class ParentChangedEventArgs
     {
@@ -5659,6 +5666,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
             }
         }
+        OnStateApplied(state);
     }
 
     private int GetOrderedIndexForParentVariable(VariableSave item)
@@ -5743,6 +5751,38 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         this.ApplyState(values);
         numberOfUsedInterpolationLists--;
     }
+
+#if !FRB
+    void UpdateRunningStateAnimations()
+    {
+        double current = TimeManager.Self.CurrentTime;
+        for (int i = mActiveStateAnimations.Count - 1; i >= 0; i--)
+        {
+            if (mActiveStateAnimations[i].Update(current))
+            {
+                mActiveStateAnimations.RemoveAt(i);
+            }
+        }
+    }
+
+    void OnStateApplied(StateSave state)
+    {
+        if (StateAnimationMap.TryGetValue(state.Name, out var animationName) && Animations != null)
+        {
+            var animation = Animations.FirstOrDefault(a => a.Name == animationName);
+            if (animation != null)
+            {
+                mActiveStateAnimations.Add(new Gum.StateAnimation.Runtime.RunningStateAnimation(animation, this, TimeManager.Self.CurrentTime));
+            }
+        }
+        StateApplied?.Invoke(this, new StateAppliedEventArgs(state));
+    }
+#else
+    void OnStateApplied(StateSave state)
+    {
+        StateApplied?.Invoke(this, new StateAppliedEventArgs(state));
+    }
+#endif
 
 
     public bool IsPointInside(float x, float y)
@@ -6278,6 +6318,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// </summary>
     public void AnimateSelf(double secondDifference)
     {
+#if !FRB
+        UpdateRunningStateAnimations();
+#endif
         var asSprite = mContainedObjectAsIpso as ITextureCoordinate;
         var asAnimatable = mContainedObjectAsIpso as IAnimatable;
         //////////////////Early Out/////////////////////
