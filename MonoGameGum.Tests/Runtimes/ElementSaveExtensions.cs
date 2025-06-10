@@ -15,10 +15,9 @@ using Xunit;
 namespace MonoGameGum.Tests.Runtimes;
 public class ElementSaveExtensionsTests : IDisposable
 {
-
-    public ElementSaveExtensionsTests()
+    public void Dispose()
     {
-        int m = 3;
+        ElementSaveExtensions.Reset();
     }
 
 
@@ -32,11 +31,25 @@ public class ElementSaveExtensionsTests : IDisposable
         gue.GetType().ShouldBe(typeof(GraphicalUiElement));
     }
 
-    public void Dispose()
+    [Fact]
+    public void CreateGueForElement_ShouldCreateGraphicalUiElement_IfGenericTypeIsSpecified()
     {
-        ElementSaveExtensions.Reset();
+        ElementSaveExtensions.RegisterGueInstantiation("GenericGueInstantiation", () =>
+        {
+            return new GraphicalUiElement(new InvisibleRenderable()) { Name = "Registered Gue Type for generic" };
+
+        });
+
+        var elementSave = new ComponentSave { Name = "GenericGueInstantiation" };
+
+
+        var runtime = ElementSaveExtensions.CreateGueForElement(elementSave, genericType: "Unused");
+
+        runtime.Name.ShouldBe("Registered Gue Type for generic");
     }
 
+
+    [Fact]
     public void RegisterGueInstantiation_ShouldCreateGue_ThroughDelegate()
     {
         ElementSaveExtensions.RegisterGueInstantiation("GueInstantiation", () =>
@@ -48,6 +61,7 @@ public class ElementSaveExtensionsTests : IDisposable
 
         var runtime = ElementSaveExtensions.CreateGueForElement(element);
         runtime.Name.ShouldBe("Registered Gue Type");
-
     }
+
+
 }
