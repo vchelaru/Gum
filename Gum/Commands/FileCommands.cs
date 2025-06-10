@@ -162,7 +162,7 @@ namespace Gum.Commands
                     }
                     else
                     {
-                        FileWatchLogic.Self.IgnoreNextChangeOn(fileName.FullPath);
+                        FileWatchManager.Self.IgnoreNextChangeUntil(fileName.FullPath, DateTime.Now.AddSeconds(5));
 
                         const int maxNumberOfTries = 5;
                         const int msBetweenSaves = 100;
