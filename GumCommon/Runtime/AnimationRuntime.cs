@@ -145,7 +145,10 @@ public class AnimationRuntime
             }
 
             // The custom state can be null if the animation window references states which don't exist:
-            stateToSet = keyframeAfter.CachedCumulativeState.Clone();
+            if(keyframeAfter.CachedCumulativeState != null)
+            {
+                stateToSet = keyframeAfter.CachedCumulativeState.Clone();
+            }
         }
         else if (keyframeBefore != null && keyframeAfter == null)
         {
@@ -156,13 +159,15 @@ public class AnimationRuntime
                     RefreshCumulativeStates(element);
                 }
             }
-
-            stateToSet = keyframeBefore.CachedCumulativeState.Clone();
+            if(keyframeBefore.CachedCumulativeState != null)
+            {
+                stateToSet = keyframeBefore.CachedCumulativeState.Clone();
+            }
         }
         else if (keyframeBefore != null && keyframeAfter != null)
         {
             if (keyframeAfter.CachedCumulativeState == null ||
-                keyframeAfter.CachedCumulativeState == null)
+                keyframeBefore.CachedCumulativeState == null)
             {
                 if (element != null)
                 {
