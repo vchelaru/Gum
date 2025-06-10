@@ -47,8 +47,8 @@ public class KeyframeRuntime
             }
         }
     }
-    public InterpolationType InterpolationType { get; internal set; }
-    public Easing Easing { get; internal set; }
+    public InterpolationType InterpolationType { get; set; }
+    public Easing Easing { get; set; }
 
     public override string ToString()
     {
