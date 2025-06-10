@@ -6338,6 +6338,18 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             return;
         }
         ////////////////End Early Out///////////////////
+        #if !FRB
+                if (currentAnimation != null)
+                {
+                    currentAnimationTime += secondDifference;
+                    currentAnimation.ApplyAtTimeTo(currentAnimationTime, this);
+
+                    if (!currentAnimation.Loops && currentAnimationTime >= currentAnimation.Length)
+                    {
+                        currentAnimation = null;
+                    }
+                }
+        #endif
 
 
         var didSpriteUpdate = asAnimatable?.AnimateSelf(secondDifference) ?? false;
