@@ -1442,7 +1442,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     AnimationRuntime? currentAnimation;
     double currentAnimationTime;
 
-    public void PlayAnimation(int index, double time)
+    public void UpdateAnimation(int index, double time)
     {
         if (Animations != null && index >= 0 && index < Animations.Count)
         {
@@ -1450,13 +1450,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
-    public void PlayAnimation(string name, double time)
+    public void UpdateAnimation(string name, double time)
     {
         var animation = Animations?.FirstOrDefault(item => item.Name == name);
         animation?.ApplyAtTimeTo(time, this);
     }
 
-    public void StartAnimation(int index)
+    public void PlayAnimation(int index)
     {
         if (Animations != null && index >= 0 && index < Animations.Count)
         {
@@ -1465,7 +1465,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
-    public void StartAnimation(string name)
+    public void PlayAnimation(string name)
     {
         var animation = Animations?.FirstOrDefault(item => item.Name == name);
         if (animation != null)
