@@ -632,5 +632,13 @@ namespace GumRuntime
                 }
             }
         }
+
+        public static void Reset()
+        {
+            mElementToGueTypes.Clear();
+            mElementToGueTypeFuncs.Clear();
+            TemplateFunc = null;
+
+        }
     }
 }
