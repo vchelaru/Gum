@@ -117,7 +117,11 @@ public class ListBoxItem : FrameworkElement
             GotFocus += handleItemFocused;
             Pushed += handleListBoxItemPushed;
             Clicked += handleListBoxItemClicked;
+#if FRB
+            Visual.DragOver += window => handleListBoxItemDragging(this, EventArgs.Empty);
+#else
             Visual.Dragging += handleListBoxItemDragging;
+#endif
             hasHadListBoxEventsAssigned = true;
         }
     }
@@ -185,7 +189,7 @@ public class ListBoxItem : FrameworkElement
         Clicked?.Invoke(this, null);
     }
 
-    #endregion
+#endregion
 
     #region Update To
 
