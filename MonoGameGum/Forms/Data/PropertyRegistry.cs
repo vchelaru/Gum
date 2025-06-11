@@ -38,7 +38,7 @@ internal class PropertyRegistry
         {
             existing.Dispose();
         }
-        NpcBindingExpressions.Add(uiPropertyName, npcExpression);
+        NpcBindingExpressions[uiPropertyName] = npcExpression;
         npcExpression.Start();
     }
 

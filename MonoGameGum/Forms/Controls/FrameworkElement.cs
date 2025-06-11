@@ -365,7 +365,7 @@ public class FrameworkElement : INotifyPropertyChanged
                 if(value?.FormsControlAsObject != null)
                 {
                     var message =
-                        $"Cannot set the {this.GetType().Name}'s Visual to {visual.Name} because the assigned Visual is already the Visual for another framework element of type {value.FormsControlAsObject}";
+                        $"Cannot set the {this.GetType().Name}'s Visual to {value.Name} because the assigned Visual is already the Visual for another framework element of type {value.FormsControlAsObject}";
                     throw new InvalidOperationException(message);
                 }
 
@@ -846,7 +846,11 @@ public class FrameworkElement : INotifyPropertyChanged
         PropertyRegistry.SetBinding(uiProperty, binding);
     }
     
-    
+    public void ClearBinding(string uiProperty)
+    {
+        PropertyRegistry.ClearBinding(uiProperty);
+    }
+
     [Obsolete("Use OnBindingContextChanged")]
     protected virtual void HandleVisualBindingContextChanged(object sender, BindingContextChangedEventArgs args) { }
 
