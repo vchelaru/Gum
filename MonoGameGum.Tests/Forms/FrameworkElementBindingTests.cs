@@ -113,6 +113,13 @@ public class FrameworkElementBindingTests
         textBox.Text.ShouldBe("Set through VM2");
     }
 
+    [Fact]
+    public void SetBinding_ShouldBeReAssignable()
+    {
+        TextBox textBox = new TextBox();
+        textBox.SetBinding(nameof(TextBox.Text), "Property1");
+        textBox.SetBinding(nameof(TextBox.Text), "Property2");
+    }
 
     /// <summary>
     /// Bug: binding to the BindingContext was calling an update to source because it detected
