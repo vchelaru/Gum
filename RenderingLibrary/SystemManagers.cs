@@ -305,7 +305,9 @@ namespace RenderingLibrary
 
             var resourceName =
                 $"EmbeddedResource.{prefix}.{fontName}.fnt";
-            LoaderManager.Self.AddDisposable(resourceName, bitmapFont);
+
+            // qualify for Android:
+            Content.LoaderManager.Self.AddDisposable(resourceName, bitmapFont);
 
             return bitmapFont;
         }
