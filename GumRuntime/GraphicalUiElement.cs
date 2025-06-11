@@ -1415,10 +1415,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// <param name="time">The elapsed time since the animation started, in seconds.</param>
     public void UpdateAnimation(int index, double time)
     {
-        if (Animations != null && index >= 0 && index < Animations.Count)
-        {
-            UpdateAnimation(Animations[index],time);
-        }
+        var animation = GetAnimation(index);
+        UpdateAnimation(animation, time);
     }
 
     /// <summary>
@@ -1428,7 +1426,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// <param name="time">The elapsed time since the animation started, in seconds.</param>
     public void UpdateAnimation(string name, double time)
     {
-        var animation = Animations?.FirstOrDefault(item => item.Name == name);
+        var animation = GetAnimation(name);
         UpdateAnimation(animation, time);
     }
 
@@ -1438,7 +1436,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// <param name="animation">the AnimationRuntime object</param>
     /// <param name="time">the elapesd time since the animation started, in seconds</param>
     /// <exception cref="InvalidOperationException"></exception>
-    public void UpdateAnimation(AnimationRuntime animation,double time)
+    public void UpdateAnimation(AnimationRuntime animation, double time)
     {
         if (animation != null)
         {
@@ -1456,10 +1454,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// <param name="index">The index of the animation to play.</param>
     public void PlayAnimation(int index)
     {
-        if (Animations != null && index >= 0 && index < Animations.Count)
-        {
-            PlayAnimation(Animations[index]);
-        }
+        var animation = GetAnimation(index);
+        PlayAnimation(animation);
     }
 
     /// <summary>
@@ -1468,10 +1464,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// <param name="name">The name of the animation to play.</param>
     public void PlayAnimation(string name)
     {
-        var animation = Animations?.FirstOrDefault(item => item.Name == name);
+        var animation = GetAnimation(name);
         PlayAnimation(animation);
     }
-    
+
     /// <summary>
     /// Starts playing the specified AnimationRuntime.
     /// </summary>
@@ -1483,10 +1479,36 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         {
             currentAnimation = animation;
             currentAnimationTime = 0;
-        }else
+        }
+        else
         {
             throw new InvalidOperationException("the AnimationRuntime cannot be null");
         }
+    }
+
+    /// <summary>
+    /// Gets the animation at the specified index.
+    /// </summary>
+    /// <param name="index">the index of the animation to get</param>
+    /// <returns></returns>
+    public AnimationRuntime GetAnimation(int index)
+    {
+        if (Animations != null && index >= 0 && index < Animations.Count)
+        {
+            return Animations[index];
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Get the animation at the specified name.
+    /// </summary>
+    /// <param name="animationName">the name of the animation to get</param>
+    /// <returns></returns>
+    public AnimationRuntime GetAnimation(string animationName)
+    {
+        return Animations?.FirstOrDefault(item => item.Name == animationName);
     }
 
     /// <summary>
