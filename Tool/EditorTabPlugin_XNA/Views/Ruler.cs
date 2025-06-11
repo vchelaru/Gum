@@ -35,6 +35,7 @@ namespace Gum.Plugins.InternalPlugins.EditorTab.Views
         #region Fields / Properties
         private ToolFontService _toolFontService;
         private ToolLayerService _toolLayerService;
+        private readonly HotkeyManager _hotkeyManager;
         GraphicsDeviceControl mControl;
         SystemManagers mManagers;
         Cursor mCursor;
@@ -253,11 +254,17 @@ namespace Gum.Plugins.InternalPlugins.EditorTab.Views
 
 
 
-        public Ruler(GraphicsDeviceControl control, SystemManagers managers, Cursor cursor, 
-            ToolFontService toolFontService, ToolLayerService toolLayerService, LayerService layerService)
+        public Ruler(GraphicsDeviceControl control, 
+            SystemManagers managers, 
+            Cursor cursor, 
+            ToolFontService toolFontService, 
+            ToolLayerService toolLayerService, 
+            LayerService layerService,
+            HotkeyManager hotkeyManager)
         {
             _toolFontService = toolFontService;
             _toolLayerService = toolLayerService;
+            _hotkeyManager = hotkeyManager;
 
             mControl = control;
             mManagers = managers;
@@ -468,11 +475,11 @@ namespace Gum.Plugins.InternalPlugins.EditorTab.Views
 
                 if (RulerSide == RulerSide.Left)
                 {
-                    if (mKeyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Up))
+                    if (_hotkeyManager.NudgeUp.IsPressedInControl())
                     {
                         nudgeYOffset--;
                     }
-                    else if (mKeyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Down))
+                    else if (_hotkeyManager.NudgeDown.IsPressedInControl())
                     {
                         nudgeYOffset++;
                     }
@@ -480,11 +487,11 @@ namespace Gum.Plugins.InternalPlugins.EditorTab.Views
                 }
                 else
                 {
-                    if (mKeyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Left))
+                    if (_hotkeyManager.NudgeLeft.IsPressedInControl())
                     {
                         nudgeXOffset--;
                     }
-                    else if (mKeyboard.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Right))
+                    else if (_hotkeyManager.NudgeRight.IsPressedInControl())
                     {
                         nudgeXOffset++;
                     }
