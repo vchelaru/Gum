@@ -133,10 +133,5 @@ namespace Gum.Logic.FileWatch
             fileWatchManager.Disable();
         }
 
-        public void IgnoreNextChangeOn(string fileName)
-        {
-            fileWatchManager.IgnoreNextChangeOn(fileName);
-        }
-
     }
 }

@@ -171,25 +171,6 @@ namespace Gum.Logic.FileWatch
             return false;
         }
 
-        public void IgnoreNextChangeOn(string fileName)
-        {
-            lock (LockObject)
-            {
-                if (FileManager.IsRelative(fileName))
-                {
-                    throw new Exception("File name should be absolute");
-                }
-                string standardized = FileManager.Standardize(fileName, preserveCase:false, makeAbsolute:true).ToLower();
-                if (changesToIgnore.ContainsKey(standardized))
-                {
-                    changesToIgnore[standardized] = 1 + changesToIgnore[standardized];
-                }
-                else
-                {
-                    changesToIgnore[standardized] = 1;
-                }
-            }
-        }
 
         public void IgnoreNextChangeUntil(FilePath filePath, DateTime time)
         {
