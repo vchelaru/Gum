@@ -11,12 +11,20 @@ using System.ComponentModel.Composition;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using GumCommon;
 
 namespace Gum.Plugins.InternalPlugins.TreeView;
 
 [Export(typeof(PluginBase))]
 internal class MainTreeViewPlugin : InternalPlugin
 {
+    private readonly ISelectedState _selectedState;
+    
+    public MainTreeViewPlugin()
+    {
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
+    }
+    
     public override void StartUp()
     {
         AssignEvents();
@@ -92,7 +100,7 @@ internal class MainTreeViewPlugin : InternalPlugin
             if(instance != null)
             {
 
-                ElementTreeViewManager.Self.Select(SelectedState.Self.SelectedInstances);
+                ElementTreeViewManager.Self.Select(_selectedState.SelectedInstances);
             }
 
             if(instance == null && element != null)

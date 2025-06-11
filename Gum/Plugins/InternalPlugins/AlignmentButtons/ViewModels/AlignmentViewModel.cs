@@ -9,12 +9,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using GumCommon;
 
 namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels;
 
 public class AlignmentViewModel : ViewModel
 {
     private readonly CommonControlLogic _commonControlLogic;
+    private readonly ISelectedState _selectedState;
 
     public float DockMargin
     {
@@ -25,6 +27,7 @@ public class AlignmentViewModel : ViewModel
     public AlignmentViewModel(CommonControlLogic commonControlLogic)
     {
         _commonControlLogic = commonControlLogic;
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
     }
 
     #region Anchor Actions
@@ -189,7 +192,7 @@ public class AlignmentViewModel : ViewModel
     {
         using (UndoManager.Self.RequestLock())
         {
-            var state = SelectedState.Self.SelectedStateSave;
+            var state = _selectedState.SelectedStateSave;
 
             _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
             _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Top, PositionUnitType.PixelsFromTop, DockMargin);
@@ -206,7 +209,7 @@ public class AlignmentViewModel : ViewModel
     {
         using (UndoManager.Self.RequestLock())
         {
-            var state = SelectedState.Self.SelectedStateSave;
+            var state = _selectedState.SelectedStateSave;
 
             _commonControlLogic.SetAndCallReact("Width", DockMargin * 2, "float");
             _commonControlLogic.SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToChildren, typeof(DimensionUnitType).Name);
@@ -220,7 +223,7 @@ public class AlignmentViewModel : ViewModel
     {
         using (UndoManager.Self.RequestLock())
         {
-            var state = SelectedState.Self.SelectedStateSave;
+            var state = _selectedState.SelectedStateSave;
 
             _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Left, PositionUnitType.PixelsFromLeft, DockMargin);
             _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
@@ -237,7 +240,7 @@ public class AlignmentViewModel : ViewModel
         using (UndoManager.Self.RequestLock())
         {
 
-            var state = SelectedState.Self.SelectedStateSave;
+            var state = _selectedState.SelectedStateSave;
 
             _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
             _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
@@ -257,7 +260,7 @@ public class AlignmentViewModel : ViewModel
         using (UndoManager.Self.RequestLock())
         {
 
-            var state = SelectedState.Self.SelectedStateSave;
+            var state = _selectedState.SelectedStateSave;
 
             _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Right, PositionUnitType.PixelsFromRight, -DockMargin);
             _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
@@ -273,7 +276,7 @@ public class AlignmentViewModel : ViewModel
     {
         using (UndoManager.Self.RequestLock())
         {
-            var state = SelectedState.Self.SelectedStateSave;
+            var state = _selectedState.SelectedStateSave;
 
             _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
             _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Bottom, PositionUnitType.PixelsFromBottom, -DockMargin);
@@ -290,7 +293,7 @@ public class AlignmentViewModel : ViewModel
         using (UndoManager.Self.RequestLock())
         {
 
-            var state = SelectedState.Self.SelectedStateSave;
+            var state = _selectedState.SelectedStateSave;
 
             _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
 
@@ -306,7 +309,7 @@ public class AlignmentViewModel : ViewModel
         using (UndoManager.Self.RequestLock())
         {
 
-            var state = SelectedState.Self.SelectedStateSave;
+            var state = _selectedState.SelectedStateSave;
 
             _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
 

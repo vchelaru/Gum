@@ -6,11 +6,14 @@ using Gum.ToolStates;
 using Gum.Wireframe;
 using System.Collections.Generic;
 using System.Linq;
+using GumCommon;
 
 namespace Gum.Logic
 {
     public static class VariableSaveLogic
     {
+        private static readonly ISelectedState _selectedState = Locator.GetRequiredService<ISelectedState>();
+        
         public static bool GetIfVariableIsActive(VariableSave defaultVariable, ElementSave container, InstanceSave currentInstance)
         {
             bool shouldInclude = GetIfShouldIncludeAccordingToDefaultState(defaultVariable, container, currentInstance);
@@ -112,7 +115,7 @@ namespace Gum.Logic
             }
             bool shouldInclude = true;
 
-            bool isDefault = SelectedState.Self.SelectedStateSave == SelectedState.Self.SelectedElement.DefaultState;
+            bool isDefault = _selectedState.SelectedStateSave == _selectedState.SelectedElement.DefaultState;
 
             if (currentInstance != null)
             {
@@ -131,7 +134,7 @@ namespace Gum.Logic
             bool toReturn = true;
             if (variableSave.Name == "Guide")
             {
-                if (currentInstance != null && SelectedState.Self.SelectedScreen == null)
+                if (currentInstance != null && _selectedState.SelectedScreen == null)
                 {
                     toReturn = false;
                 }
@@ -185,7 +188,7 @@ namespace Gum.Logic
             else
             {
 
-                shouldInclude = SelectedState.Self.SelectedInstance != null
+                shouldInclude = _selectedState.SelectedInstance != null
                     // VariableLists cannot be exposed (currently)
                     //|| !string.IsNullOrEmpty(variableList.ExposedAsName);
                     ;
@@ -261,7 +264,7 @@ namespace Gum.Logic
             else
             {
 
-                shouldInclude = SelectedState.Self.SelectedInstance != null || !string.IsNullOrEmpty(defaultVariable.ExposedAsName);
+                shouldInclude = _selectedState.SelectedInstance != null || !string.IsNullOrEmpty(defaultVariable.ExposedAsName);
             }
             return shouldInclude;
         }

@@ -9,6 +9,7 @@ using RenderingLibrary.Content;
 using RenderingLibrary;
 using Gum.RenderingLibrary;
 using Gum.Plugins;
+using GumCommon;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
 using Matrix = System.Numerics.Matrix4x4;
@@ -36,7 +37,6 @@ public partial class WireframeObjectManager
 
     GraphicalUiElementManager gueManager;
     private LocalizationManager _localizationManager;
-
 
     #endregion
 
@@ -71,7 +71,7 @@ public partial class WireframeObjectManager
     public System.Windows.Forms.Cursor AddCursor { get; private set; }
 
     #endregion
-
+    
     #region Initialize
 
     public void Initialize(
@@ -131,9 +131,9 @@ public partial class WireframeObjectManager
         ElementSave elementSave = null;
 
         // If mulitple elements are selected then we can't show them all, so act as if nothing is selected.
-        if(SelectedState.Self.SelectedElements.Count() == 1)
+        if(_selectedState.SelectedElements.Count() == 1)
         {
-            elementSave = SelectedState.Self.SelectedElement;
+            elementSave = _selectedState.SelectedElement;
         }
 
 
@@ -356,17 +356,17 @@ public partial class WireframeObjectManager
 
     public GraphicalUiElement GetSelectedRepresentation()
     {
-        if (SelectedState.Self.SelectedIpso == null)
+        if (_selectedState.SelectedIpso == null)
         {
             return null;
         }
-        else if (SelectedState.Self.SelectedInstance != null)
+        else if (_selectedState.SelectedInstance != null)
         {
-            return GetRepresentation(SelectedState.Self.SelectedInstance, SelectedState.Self.GetTopLevelElementStack());
+            return GetRepresentation(_selectedState.SelectedInstance, _selectedState.GetTopLevelElementStack());
         }
-        else if (SelectedState.Self.SelectedElement != null)
+        else if (_selectedState.SelectedElement != null)
         {
-            return GetRepresentation(SelectedState.Self.SelectedElement);
+            return GetRepresentation(_selectedState.SelectedElement);
         }
         else
         {
@@ -376,21 +376,21 @@ public partial class WireframeObjectManager
 
     public GraphicalUiElement[] GetSelectedRepresentations()
     {
-        if (SelectedState.Self.SelectedIpso == null)
+        if (_selectedState.SelectedIpso == null)
         {
             return null;
         }
-        else if(SelectedState.Self.SelectedInstances.Count() > 0)
+        else if(_selectedState.SelectedInstances.Count() > 0)
         {
-            return SelectedState.Self.SelectedInstances
-                .Select(item => GetRepresentation(item, SelectedState.Self.GetTopLevelElementStack()))
+            return _selectedState.SelectedInstances
+                .Select(item => GetRepresentation(item, _selectedState.GetTopLevelElementStack()))
                 .ToArray();
         }
-        else if (SelectedState.Self.SelectedElement != null)
+        else if (_selectedState.SelectedElement != null)
         {
             return new GraphicalUiElement[]
             {
-                GetRepresentation(SelectedState.Self.SelectedElement)
+                GetRepresentation(_selectedState.SelectedElement)
             };
         }
         else
@@ -452,7 +452,7 @@ public partial class WireframeObjectManager
     /// <returns>The InstanceSave or null if one isn't found.</returns>
     public InstanceSave GetInstance(IRenderableIpso representation, InstanceFetchType fetchType, List<ElementWithState> elementStack)
     {
-        ElementSave selectedElement = SelectedState.Self.SelectedElement;
+        ElementSave selectedElement = _selectedState.SelectedElement;
 
         string prefix = selectedElement.Name + ".";
         if (selectedElement is ScreenSave)
@@ -558,10 +558,10 @@ public partial class WireframeObjectManager
 
     public ElementSave GetElement(IPositionedSizedObject representation)
     {
-        if (SelectedState.Self.SelectedElement != null &&
-            SelectedState.Self.SelectedElement.Name == representation.Name)
+        if (_selectedState.SelectedElement != null &&
+            _selectedState.SelectedElement.Name == representation.Name)
         {
-            return SelectedState.Self.SelectedElement;
+            return _selectedState.SelectedElement;
         }
 
         return null;

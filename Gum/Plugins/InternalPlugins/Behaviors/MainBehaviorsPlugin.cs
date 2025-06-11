@@ -12,6 +12,7 @@ using Gum.DataTypes.Variables;
 using Gum.Managers;
 using System.Collections.Generic;
 using Gum.ToolCommands;
+using GumCommon;
 
 namespace Gum.Plugins.Behaviors;
 
@@ -26,7 +27,7 @@ public class MainBehaviorsPlugin : InternalPlugin
 
     public MainBehaviorsPlugin()
     {
-        _selectedState = SelectedState.Self;
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
     }
 
     public override void StartUp()
@@ -132,7 +133,7 @@ public class MainBehaviorsPlugin : InternalPlugin
     private void HandleApplyBehaviorChanges(object sender, EventArgs e)
     {
 
-        var component = SelectedState.Self.SelectedComponent;
+        var component = _selectedState.SelectedComponent;
         if (component == null) return;
 
         isApplyingChanges = true;

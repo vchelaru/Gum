@@ -30,6 +30,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls.Primitives;
 using System.Windows.Forms;
+using GumCommon;
 using ToolsUtilities;
 
 namespace Gum.Plugins.InternalPlugins.EditorTab;
@@ -96,6 +97,7 @@ internal class MainEditorTabPlugin : InternalPlugin
     private readonly ElementCommands _elementCommands;
     private readonly SinglePixelTextureService _singlePixelTextureService;
     private BackgroundSpriteService _backgroundSpriteService;
+    private readonly ISelectedState _selectedState;
     private DragDropManager _dragDropManager;
     WireframeControl _wireframeControl;
 
@@ -112,15 +114,16 @@ internal class MainEditorTabPlugin : InternalPlugin
     public MainEditorTabPlugin()
     {
         _scrollbarService = new ScrollbarService();
-        _guiCommands = Builder.Get<GuiCommands>();
-        _localizationManager = Builder.Get<LocalizationManager>();
+        _guiCommands = Locator.GetRequiredService<GuiCommands>();
+        _localizationManager = Locator.GetRequiredService<LocalizationManager>();
         _editingManager = new EditingManager();
         _selectionManager = new SelectionManager(SelectedState.Self, _editingManager);
         _screenshotService = new ScreenshotService(_selectionManager);
         _elementCommands = ElementCommands.Self;
         _singlePixelTextureService = new SinglePixelTextureService();
         _backgroundSpriteService = new BackgroundSpriteService();
-        _dragDropManager = Builder.Get<DragDropManager>();
+        _dragDropManager = Locator.GetRequiredService<DragDropManager>();
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
     }
 
     public override void StartUp()
@@ -205,9 +208,9 @@ internal class MainEditorTabPlugin : InternalPlugin
     {
         ipsosToReturn.Clear();
 
-        if (SelectedState.Self.SelectedInstance != null)
+        if (_selectedState.SelectedInstance != null)
         {
-            foreach (var instance in SelectedState.Self.SelectedInstances)
+            foreach (var instance in _selectedState.SelectedInstances)
             {
                 var representation = WireframeObjectManager.Self.GetRepresentation(instance);
                 if (representation != null)
@@ -216,9 +219,9 @@ internal class MainEditorTabPlugin : InternalPlugin
                 }
             }
         }
-        else if (SelectedState.Self.SelectedElement != null)
+        else if (_selectedState.SelectedElement != null)
         {
-            var representation = WireframeObjectManager.Self.GetRepresentation(SelectedState.Self.SelectedElement);
+            var representation = WireframeObjectManager.Self.GetRepresentation(_selectedState.SelectedElement);
             if (representation != null)
             {
                 ipsosToReturn.Add(representation);
@@ -431,7 +434,7 @@ internal class MainEditorTabPlugin : InternalPlugin
             qualifiedName = instance.Name + "." + qualifiedName;
         }
 
-        var state = SelectedState.Self.SelectedStateSave ?? element?.DefaultState;
+        var state = _selectedState.SelectedStateSave ?? element?.DefaultState;
         var value = state.GetValue(qualifiedName);
 
         var areSame = value == null && oldValue == null;
@@ -477,7 +480,7 @@ internal class MainEditorTabPlugin : InternalPlugin
             // for simplicity (for now?) we will just refresh all:
                 value != null &&
 
-                (instance != null || SelectedState.Self.SelectedComponent != null || SelectedState.Self.SelectedStandardElement != null))
+                (instance != null || _selectedState.SelectedComponent != null || _selectedState.SelectedStandardElement != null))
             {
                 // this assumes that the object having its variable set is the selected instance. If we're setting
                 // an exposed variable, this is not the case - the object having its variable set is actually the instance.
@@ -529,7 +532,7 @@ internal class MainEditorTabPlugin : InternalPlugin
                     gue.SetProperty(unqualifiedMember, value);
 
                     WireframeObjectManager.Self.RootGue?.ApplyVariableReferences(state);
-                    //gue.ApplyVariableReferences(SelectedState.Self.SelectedStateSave);
+                    //gue.ApplyVariableReferences(_selectedState.SelectedStateSave);
 
                     handledByDirectSet = !disposedFile;
                 }
@@ -710,7 +713,7 @@ internal class MainEditorTabPlugin : InternalPlugin
     {
         string nameToAdd = FileManager.RemovePath(FileManager.RemoveExtension(fileName));
 
-        var element = SelectedState.Self.SelectedElement;
+        var element = _selectedState.SelectedElement;
 
         IEnumerable<string> existingNames = element.Instances.Select(i => i.Name);
         nameToAdd = StringFunctions.MakeStringUnique(nameToAdd, existingNames);
@@ -723,18 +726,18 @@ internal class MainEditorTabPlugin : InternalPlugin
 
         var variableName = instance.Name + ".SourceFile";
 
-        var oldValue = SelectedState.Self.SelectedStateSave.GetValueOrDefault<string>(variableName);
+        var oldValue = _selectedState.SelectedStateSave.GetValueOrDefault<string>(variableName);
 
-        SelectedState.Self.SelectedStateSave.SetValue(variableName, fileName, instance);
+        _selectedState.SelectedStateSave.SetValue(variableName, fileName, instance);
 
-        SetVariableLogic.Self.ReactToPropertyValueChanged("SourceFile", oldValue, element, instance, SelectedState.Self.SelectedStateSave, refresh: false);
+        SetVariableLogic.Self.ReactToPropertyValueChanged("SourceFile", oldValue, element, instance, _selectedState.SelectedStateSave, refresh: false);
 
     }
 
     private void TryHandleFileDropOnComponent(float worldX, float worldY, string[] files, ref bool handled, ref bool shouldUpdate)
     {
         List<ElementWithState> elementStack = new List<ElementWithState>();
-        elementStack.Add(new ElementWithState(SelectedState.Self.SelectedElement) { StateName = SelectedState.Self.SelectedStateSave.Name });
+        elementStack.Add(new ElementWithState(_selectedState.SelectedElement) { StateName = _selectedState.SelectedStateSave.Name });
 
         // see if it's over the component:
         IPositionedSizedObject ipsoOver = _selectionManager.GetRepresentationAt(worldX, worldY, false, elementStack);
@@ -759,16 +762,16 @@ internal class MainEditorTabPlugin : InternalPlugin
 
             if (result == DialogResult.OK)
             {
-                var oldValue = SelectedState.Self.SelectedStateSave
+                var oldValue = _selectedState.SelectedStateSave
                     .GetValueOrDefault<string>("SourceFile");
 
-                SelectedState.Self.SelectedStateSave.SetValue("SourceFile", fileName);
+                _selectedState.SelectedStateSave.SetValue("SourceFile", fileName);
                 ProjectState.Self.Selected.SelectedInstance = null;
                 SetVariableLogic.Self.PropertyValueChanged(
                     "SourceFile", 
                     oldValue, 
-                    SelectedState.Self.SelectedInstance,
-                    SelectedState.Self.SelectedStateSave);
+                    _selectedState.SelectedInstance,
+                    _selectedState.SelectedStateSave);
 
                 shouldUpdate = true;
                 handled = true;
@@ -784,9 +787,9 @@ internal class MainEditorTabPlugin : InternalPlugin
 
     private bool CanDrop()
     {
-        return SelectedState.Self.SelectedStandardElement == null &&    // Don't allow dropping on standard elements
-               SelectedState.Self.SelectedElement != null &&            // An element must be selected
-               SelectedState.Self.SelectedStateSave != null;            // A state must be selected
+        return _selectedState.SelectedStandardElement == null &&    // Don't allow dropping on standard elements
+               _selectedState.SelectedElement != null &&            // An element must be selected
+               _selectedState.SelectedStateSave != null;            // A state must be selected
     }
 
     private void TryHandleFileDropOnInstance(float worldX, float worldY, string[] files, ref bool handled, ref bool shouldUpdate)
@@ -815,16 +818,16 @@ internal class MainEditorTabPlugin : InternalPlugin
 
             if (result == DialogResult.OK)
             {
-                var oldValue = SelectedState.Self.SelectedStateSave
+                var oldValue = _selectedState.SelectedStateSave
                     .GetValueOrDefault<string>(instance.Name + ".SourceFile");
 
-                SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".SourceFile", fileName, instance);
+                _selectedState.SelectedStateSave.SetValue(instance.Name + ".SourceFile", fileName, instance);
                 ProjectState.Self.Selected.SelectedInstance = instance;
 
                 SetVariableLogic.Self.PropertyValueChanged(
                     "SourceFile", 
                     oldValue, instance,
-                    SelectedState.Self.SelectedStateSave);
+                    _selectedState.SelectedStateSave);
 
                 shouldUpdate = true;
                 handled = true;
@@ -842,7 +845,7 @@ internal class MainEditorTabPlugin : InternalPlugin
     private InstanceSave FindInstanceWithSourceFile(float worldX, float worldY)
     {
         List<ElementWithState> elementStack = new List<ElementWithState>();
-        elementStack.Add(new ElementWithState(SelectedState.Self.SelectedElement) { StateName = SelectedState.Self.SelectedStateSave.Name });
+        elementStack.Add(new ElementWithState(_selectedState.SelectedElement) { StateName = _selectedState.SelectedStateSave.Name });
 
         IPositionedSizedObject ipsoOver = _selectionManager.GetRepresentationAt(worldX, worldY, false, elementStack);
 

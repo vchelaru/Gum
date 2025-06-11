@@ -4,12 +4,20 @@ using Gum.Plugins.BaseClasses;
 using Gum.ToolStates;
 using System.ComponentModel.Composition;
 using System.Linq;
+using GumCommon;
 
 namespace Gum.Plugins.ParentPlugin
 {
     [Export(typeof(PluginBase))]
     public class MainParentPlugin : InternalPlugin
     {
+        private readonly ISelectedState _selectedState;
+
+        public MainParentPlugin()
+        {
+            _selectedState = Locator.GetRequiredService<ISelectedState>();
+        }
+        
         public override void StartUp()
         {
             this.VariableSet += HandleVariableSet;
@@ -24,7 +32,7 @@ namespace Gum.Plugins.ParentPlugin
             }
             /////////////////////End Early Out////////////////
 
-            var currentState = SelectedState.Self.SelectedStateSave ?? 
+            var currentState = _selectedState.SelectedStateSave ?? 
                 // This can happen if the user drag+drops one item on another without anything selected:
                 container.DefaultState;
             var newParentName = currentState.GetValueOrDefault<string>($"{instance.Name}.Parent");

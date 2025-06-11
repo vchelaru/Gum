@@ -19,6 +19,7 @@ using System.Runtime;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using GumCommon;
 using ToolsUtilities;
 
 namespace CodeOutputPlugin;
@@ -64,9 +65,9 @@ public class MainCodeOutputPlugin : PluginBase
 
 
         _codeGenerator = new CodeGenerator();
-        _selectedState = Builder.Get<ISelectedState>();
-        _localizationManager = Builder.Get<LocalizationManager>();
-        _guiCommands = Builder.Get<GuiCommands>();
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _localizationManager = Locator.GetRequiredService<LocalizationManager>();
+        _guiCommands = Locator.GetRequiredService<GuiCommands>();
         _codeGenerationService = new CodeGenerationService(_guiCommands, _codeGenerator);
         _renameService = new RenameService(_codeGenerationService);
 
@@ -302,8 +303,8 @@ public class MainCodeOutputPlugin : PluginBase
         }
         /////////////////////end early out/////////////////
 
-        var instance = SelectedState.Self.SelectedInstance;
-        var selectedElement = SelectedState.Self.SelectedElement;
+        var instance = _selectedState.SelectedInstance;
+        var selectedElement = _selectedState.SelectedElement;
 
         viewModel.IsViewingStandardElement = selectedElement is StandardElementSave;
 
@@ -328,7 +329,7 @@ public class MainCodeOutputPlugin : PluginBase
                     }
                     break;
                 case ViewModels.WhatToView.SelectedState:
-                    var state = SelectedState.Self.SelectedStateSave;
+                    var state = _selectedState.SelectedStateSave;
 
                     if (state != null && selectedElement != null)
                     {
@@ -389,7 +390,7 @@ public class MainCodeOutputPlugin : PluginBase
 
     private void HandleCodeOutputPropertyChanged()
     {
-        var element = SelectedState.Self.SelectedElement;
+        var element = _selectedState.SelectedElement;
         if(element != null)
         {
             CodeOutputElementSettingsManager.WriteSettingsForElement(element, control.CodeOutputElementSettings);
@@ -415,7 +416,7 @@ public class MainCodeOutputPlugin : PluginBase
 
             _guiCommands.ShowMessage(message);
         }
-        else if (SelectedState.Self.SelectedElement != null)
+        else if (_selectedState.SelectedElement != null)
         {
             if(viewModel.IsAllInProjectGenerating)
             {
@@ -439,7 +440,7 @@ public class MainCodeOutputPlugin : PluginBase
             }
             else
             {
-                GenerateCodeForElement(showPopups:true, SelectedState.Self.SelectedElement);
+                GenerateCodeForElement(showPopups:true, _selectedState.SelectedElement);
             }
         }
     }
@@ -463,7 +464,7 @@ public class MainCodeOutputPlugin : PluginBase
 
     private void GenerateCodeForSelectedElement(bool showPopups)
     {
-        var selectedElement = SelectedState.Self.SelectedElement;
+        var selectedElement = _selectedState.SelectedElement;
         GenerateCodeForElement(showPopups, selectedElement);
     }
 

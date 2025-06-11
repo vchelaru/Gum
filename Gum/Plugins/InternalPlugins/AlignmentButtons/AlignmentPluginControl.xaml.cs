@@ -2,6 +2,7 @@
 using Gum.Services;
 using Gum.ToolStates;
 using System.Windows.Controls;
+using GumCommon;
 
 namespace Gum.Plugins.AlignmentButtons
 {
@@ -14,7 +15,7 @@ namespace Gum.Plugins.AlignmentButtons
         {
             InitializeComponent();
 
-            var selectedState = Builder.Get<ISelectedState>();
+            var selectedState = Locator.GetRequiredService<ISelectedState>();
 
             this.DataContext = new AlignmentViewModel(new CommonControlLogic(selectedState));
 

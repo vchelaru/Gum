@@ -96,7 +96,7 @@ public class StateTreeViewRightClickService
             // We used to show the category editing commands if a state was selected 
             // (if a state is selected, a category is implicitly selected too). Now we
             // check if a category is highlighted (not state)
-            //if(SelectedState.Self.SelectedStateCategorySave != null)
+            //if(_selectedState.SelectedStateCategorySave != null)
             if (_selectedState.SelectedStateCategorySave != null && _selectedState.SelectedStateSave == null)
             {
 
@@ -238,7 +238,7 @@ public class StateTreeViewRightClickService
             .Select(item => item.Name).ToList();
 
         // As of before 2024 we no longer allow uncategorized non-default states
-        //if(SelectedState.Self.SelectedStateCategorySave != null)
+        //if(_selectedState.SelectedStateCategorySave != null)
         //{
         //    categoryNames.Insert(0, mNoCategory);
         //}
@@ -333,21 +333,21 @@ public class StateTreeViewRightClickService
 
     public void RenameStateClick()
     {
-        _gumCommands.Edit.AskToRenameState(SelectedState.Self.SelectedStateSave,
-            SelectedState.Self.SelectedStateContainer);
+        _gumCommands.Edit.AskToRenameState(_selectedState.SelectedStateSave,
+            _selectedState.SelectedStateContainer);
     }
 
     public void RenameCategoryClick()
     {
         _gumCommands.Edit.AskToRenameStateCategory(
-            SelectedState.Self.SelectedStateCategorySave,
-            SelectedState.Self.SelectedElement);
+            _selectedState.SelectedStateCategorySave,
+            _selectedState.SelectedElement);
     }
 
     private void MoveToCategory(string categoryNameToMoveTo)
     {
-        var stateToMove = SelectedState.Self.SelectedStateSave;
-        var stateContainer = SelectedState.Self.SelectedStateContainer;
+        var stateToMove = _selectedState.SelectedStateSave;
+        var stateContainer = _selectedState.SelectedStateContainer;
         _gumCommands.Edit.MoveToCategory(categoryNameToMoveTo, stateToMove, stateContainer);
     }
 

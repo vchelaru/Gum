@@ -19,6 +19,7 @@ using Newtonsoft.Json.Linq;
 using Gum.Undo;
 using System.Security.Principal;
 using Gum.Plugins.InternalPlugins.VariableGrid;
+using GumCommon;
 
 namespace Gum.PropertyGridHelpers
 {
@@ -38,12 +39,14 @@ namespace Gum.PropertyGridHelpers
 
         static PropertyDescriptorHelper mHelper = new PropertyDescriptorHelper();
         private readonly SubtextLogic _subtextLogic;
+        private readonly ISelectedState _selectedState;
 
         #endregion
 
         public ElementSaveDisplayer(SubtextLogic subtextLogic)
         {
             _subtextLogic = subtextLogic;
+            _selectedState = Locator.GetRequiredService<ISelectedState>();
         }
 
         private List<InstanceSavePropertyDescriptor> GetProperties(ElementSave elementSave, InstanceSave instanceSave, StateSave stateSave)
@@ -71,8 +74,8 @@ namespace Gum.PropertyGridHelpers
         private void FillPropertyList(List<InstanceSavePropertyDescriptor> pdc, ElementSave elementSave,
             InstanceSave instanceSave, StateSave defaultState, AmountToDisplay amountToDisplay = AmountToDisplay.AllVariables)
         {
-            var currentState = SelectedState.Self.SelectedStateSave;
-            bool isDefault = currentState == SelectedState.Self.SelectedElement.DefaultState;
+            var currentState = _selectedState.SelectedStateSave;
+            bool isDefault = currentState == _selectedState.SelectedElement.DefaultState;
             if (instanceSave?.DefinedByBase == true)
             {
                 isDefault = false;

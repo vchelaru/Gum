@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Gum.DataTypes;
@@ -717,11 +717,6 @@ public class SelectedState : ISelectedState
     }
 
     #endregion
-
-    private SelectedState()
-    {
-
-    }
 
     public List<ElementWithState> GetTopLevelElementStack()
     {

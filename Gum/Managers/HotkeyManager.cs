@@ -8,6 +8,7 @@ using Gum.ToolStates;
 using Gum.Wireframe;
 using System;
 using System.Windows.Forms;
+using GumCommon;
 
 namespace Gum.Managers;
 
@@ -182,12 +183,12 @@ public class HotkeyManager : Singleton<HotkeyManager>
     private readonly ISelectedState _selectedState;
 
     // If adding any new keys here, modify HotkeyViewModel
-
+    
     public HotkeyManager()
     {
         _copyPasteLogic = CopyPasteLogic.Self;
         _guiCommands = GumCommands.Self.GuiCommands;
-        _selectedState = SelectedState.Self;
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
     }
 
     #region App Wide Keys
@@ -353,7 +354,7 @@ public class HotkeyManager : Singleton<HotkeyManager>
             {
                 elementToGoTo = ObjectFinder.Self.GetElementSave(_selectedState.SelectedInstance.BaseType);
             }
-            else if (!string.IsNullOrWhiteSpace(SelectedState.Self.SelectedElement?.BaseType))
+            else if (!string.IsNullOrWhiteSpace(_selectedState.SelectedElement?.BaseType))
             {
                 elementToGoTo = ObjectFinder.Self.GetElementSave(_selectedState.SelectedElement.BaseType);
             }

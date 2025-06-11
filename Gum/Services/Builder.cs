@@ -1,4 +1,4 @@
-﻿using Gum.Commands;
+using Gum.Commands;
 using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.VariableGrid;
@@ -14,15 +14,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using GumCommon;
 
 namespace Gum.Services;
 
 public class Builder
 {
-    public static IHost App { get; private set; }
-
-    public static T Get<T>() => App.Services.GetRequiredService<T>();
-
     public void Build()
     {
         var builder = Host.CreateApplicationBuilder();
@@ -41,7 +38,7 @@ public class Builder
         builder.Services.AddSingleton(typeof(LocalizationManager));
         builder.Services.AddSingleton(typeof(FontManager));
         builder.Services.AddSingleton(typeof(DragDropManager));
-        builder.Services.AddSingleton<ISelectedState>(SelectedState.Self);
+        builder.Services.AddSingleton<ISelectedState, SelectedState>();
         builder.Services.AddSingleton<IObjectFinder>(ObjectFinder.Self);
 
         builder.Services.AddSingleton<IEditVariableService, EditVariableService>();
@@ -51,9 +48,18 @@ public class Builder
 
         builder.Services.AddTransient<AddVariableViewModel>();
 
-        App = builder.Build();
-
+        IHost host = builder.Build();
+        Locator.Register(host.Services);
         // This is needed until we unroll all the singletons...
-        SetVariableLogic.Self.Initialize(Get<CircularReferenceManager>(), Get<FileCommands>());
+        Initialize(host.Services);
+        
+    }
+
+    private static void Initialize(IServiceProvider services)
+    {
+        CircularReferenceManager circularReferenceManager = services.GetRequiredService<CircularReferenceManager>();
+        FileCommands fileCommands = services.GetRequiredService<FileCommands>();
+        
+        SetVariableLogic.Self.Initialize(circularReferenceManager, fileCommands);
     }
 }

@@ -11,6 +11,7 @@ using Gum.PropertyGridHelpers.Converters;
 using GumRuntime;
 using Gum.Plugins;
 using Gum.Services;
+using GumCommon;
 
 namespace Gum.Wireframe;
 
@@ -51,18 +52,20 @@ public partial class WireframeObjectManager
     #endregion
 
     FontManager _fontManager;
+    private readonly ISelectedState _selectedState;
 
     public WireframeObjectManager()
     {
-        _fontManager = Builder.Get<FontManager>();
+        _fontManager = Locator.GetRequiredService<FontManager>();
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
     }
 
-    private static bool GetIfSelectedStateIsSetRecursively()
+    private bool GetIfSelectedStateIsSetRecursively()
     {
-        var category = SelectedState.Self.SelectedStateCategorySave;
+        var category = _selectedState.SelectedStateCategorySave;
         if(category != null)
         {
-            var selectedElement = SelectedState.Self.SelectedElement;
+            var selectedElement = _selectedState.SelectedElement;
             foreach(var behaviorReference in selectedElement.Behaviors)
             {
                 var behavior = ObjectFinder.Self.GetBehavior(behaviorReference);

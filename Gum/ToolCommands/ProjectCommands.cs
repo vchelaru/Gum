@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using Gum.DataTypes.Variables;
 using Gum.Plugins;
 using System.Linq;
+using GumCommon;
 
 namespace Gum.ToolCommands;
 
@@ -18,6 +19,7 @@ public class ProjectCommands
     #region Fields
 
     static ProjectCommands mSelf;
+    private readonly ISelectedState _selectedState;
 
     #endregion
 
@@ -39,6 +41,11 @@ public class ProjectCommands
 
     #endregion
 
+    public ProjectCommands()
+    {
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
+    }
+    
     #region Screens
     /// <summary>
     /// Creates a new Screen using the argument as the name. This saves the newly created screen to disk and saves the project.
@@ -144,7 +151,7 @@ public class ProjectCommands
             }
         }
 
-        SelectedState.Self.SelectedBehavior = null;
+        _selectedState.SelectedBehavior = null;
 
         PluginManager.Self.BehaviorDeleted(behavior);
 
@@ -237,7 +244,7 @@ public class ProjectCommands
         GumCommands.Self.FileCommands.TryAutoSaveElement(componentSave);
         Plugins.PluginManager.Self.ElementAdd(componentSave);
 
-        SelectedState.Self.SelectedComponent = componentSave;
+        _selectedState.SelectedComponent = componentSave;
     }
 
     private void PrepareNewComponentSave(ComponentSave componentSave, string componentName)

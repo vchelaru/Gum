@@ -14,6 +14,7 @@ using System.Windows.Media;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using RenderingLibrary.Graphics;
 using Gum.Services;
+using GumCommon;
 
 namespace Gum.Managers
 {
@@ -21,6 +22,8 @@ namespace Gum.Managers
     {
         #region Fields
 
+        private readonly ISelectedState _selectedState;
+        
         WpfDataUi.DataUiGrid mVariablesDataGrid;
         private LocalizationManager _localizationManager;
         MainPropertyGrid mainControl;
@@ -84,6 +87,11 @@ namespace Gum.Managers
 
         #endregion
 
+        public PropertyGridManager()
+        {
+            _selectedState = Locator.GetRequiredService<ISelectedState>();
+        }
+
         // Normally plugins will initialize through the PluginManager. This needs to happen earlier (see where it's called for info)
         // so some of it will happen here:
         public void InitializeEarly(LocalizationManager localizationManager)
@@ -98,8 +106,8 @@ namespace Gum.Managers
 
             mVariablesDataGrid = mainControl.DataGrid;
 
-            var deleteVariableLogic = Builder.Get<IDeleteVariableService>();
-            var editVariableService = Builder.Get<IEditVariableService>();
+            var deleteVariableLogic = Locator.GetRequiredService<IDeleteVariableService>();
+            var editVariableService = Locator.GetRequiredService<IEditVariableService>();
 
             VariableViewModel = new Plugins.VariableGrid.MainControlViewModel(deleteVariableLogic, editVariableService);
             VariableViewModel.AddVariableButtonVisibility = System.Windows.Visibility.Collapsed;
@@ -112,7 +120,7 @@ namespace Gum.Managers
 
         private void HandleBehaviorVariableSelected(object sender, EventArgs e)
         {
-            SelectedState.Self.SelectedBehaviorVariable = PropertyGridManager.Self.SelectedBehaviorVariable;
+            _selectedState.SelectedBehaviorVariable = PropertyGridManager.Self.SelectedBehaviorVariable;
         }
 
         private void HandleAddVariable(object sender, EventArgs e)
@@ -132,13 +140,13 @@ namespace Gum.Managers
             isInRefresh = true;
 
             bool showVariableGrid = 
-                (SelectedState.Self.SelectedElement != null ||
-                SelectedState.Self.SelectedInstance != null) && 
-                SelectedState.Self.CustomCurrentStateSave == null;
+                (_selectedState.SelectedElement != null ||
+                _selectedState.SelectedInstance != null) && 
+                _selectedState.CustomCurrentStateSave == null;
             VariableViewModel.ShowVariableGrid = showVariableGrid ?
                 System.Windows.Visibility.Visible : System.Windows.Visibility.Hidden;
 
-            //if (SelectedState.Self.SelectedInstances.GetCount() > 1)
+            //if (_selectedState.SelectedInstances.GetCount() > 1)
             //{
                 // I don't know if we want to eventually show these
                 // but for now we'll hide the PropertyGrid:
@@ -151,11 +159,11 @@ namespace Gum.Managers
                 //mPropertyGrid.SelectedObject = mPropertyGridDisplayer;
                 //mPropertyGrid.Refresh();
 
-                var element = SelectedState.Self.SelectedElement;
-                var state = SelectedState.Self.SelectedStateSave;
-                var instance = SelectedState.Self.SelectedInstances.ToList();
-                var behaviorSave = SelectedState.Self.SelectedBehavior;
-                var category = SelectedState.Self.SelectedStateCategorySave;
+                var element = _selectedState.SelectedElement;
+                var state = _selectedState.SelectedStateSave;
+                var instance = _selectedState.SelectedInstances.ToList();
+                var behaviorSave = _selectedState.SelectedBehavior;
+                var category = _selectedState.SelectedStateCategorySave;
 
                 RefreshDataGrid(element, state, category, instance, behaviorSave, force);
             }
@@ -208,7 +216,7 @@ namespace Gum.Managers
                 }
             }
 
-            var hasCustomState = SelectedState.Self.CustomCurrentStateSave != null;
+            var hasCustomState = _selectedState.CustomCurrentStateSave != null;
 
             if (hasCustomState)
             {
@@ -289,7 +297,7 @@ namespace Gum.Managers
                     }
                     records.Add("in");
 
-                    mVariablesDataGrid.Instance = (object)behaviorSave ?? SelectedState.Self.SelectedStateSave;
+                    mVariablesDataGrid.Instance = (object)behaviorSave ?? _selectedState.SelectedStateSave;
 
                     mVariablesDataGrid.Categories.Clear();
 
@@ -418,7 +426,7 @@ namespace Gum.Managers
             {
                 VariableViewModel.HasStateInformation = System.Windows.Visibility.Collapsed;
             }
-            else if(SelectedState.Self.CustomCurrentStateSave != null)
+            else if(_selectedState.CustomCurrentStateSave != null)
             {
                 VariableViewModel.HasStateInformation = System.Windows.Visibility.Visible;
                 VariableViewModel.StateInformation = $"Displaying custom (animated) state";
@@ -578,7 +586,7 @@ namespace Gum.Managers
             }
             mLastCategory = stateCategory;
 
-            var stateSave = SelectedState.Self.SelectedStateSave;
+            var stateSave = _selectedState.SelectedStateSave;
             if (stateSave != null)
             {
                 GetMemberCategoriesForState(element, instance, categories, stateSave, stateCategory);
@@ -1010,7 +1018,7 @@ namespace Gum.Managers
 
         System.Drawing.Color GetCurrentColor(string redVariableName, string greenVariableName, string blueVariableName)
         {
-            var selectedState = SelectedState.Self.SelectedStateSave;
+            var selectedState = _selectedState.SelectedStateSave;
 
             int red = 0;
             int green = 0;
@@ -1042,7 +1050,7 @@ namespace Gum.Managers
         void SetCurrentColor(SetPropertyArgs args, string redVariableName, string greenVariableName, string blueVariableName)
         {
             var valueBeforeSet = GetCurrentColor(redVariableName, greenVariableName, blueVariableName);
-            var state = SelectedState.Self.SelectedStateSave;
+            var state = _selectedState.SelectedStateSave;
 
             var color = (System.Drawing.Color) args.Value;
 
@@ -1051,10 +1059,10 @@ namespace Gum.Managers
             state.SetValue(greenVariableName, (int)color.G, "int");
             state.SetValue(blueVariableName, (int)color.B, "int");
 
-            var instance = SelectedState.Self.SelectedInstance;
+            var instance = _selectedState.SelectedInstance;
             // These functions take unqualified:
 
-            var element = SelectedState.Self.SelectedElement;
+            var element = _selectedState.SelectedElement;
             var defaultState = element.DefaultState;
 
             if (instance == null && redVariableName.Contains("."))
@@ -1084,7 +1092,7 @@ namespace Gum.Managers
             if(redVariableName.Contains(".") && instance == null)
             {
                 // This is an exposed:
-                instance = SelectedState.Self.SelectedElement.GetInstance(redVariableName.Substring(0, redVariableName.IndexOf('.')));
+                instance = _selectedState.SelectedElement.GetInstance(redVariableName.Substring(0, redVariableName.IndexOf('.')));
             }
 
             var shouldSave = args.CommitType == SetPropertyCommitType.Full;
@@ -1104,7 +1112,7 @@ namespace Gum.Managers
         //    const string sourceFileString = "SourceFile";
         //    if (changedMember == sourceFileString)
         //    {
-        //        StateSave stateSave = SelectedState.Self.SelectedStateSave;
+        //        StateSave stateSave = _selectedState.SelectedStateSave;
 
         //        string value = (string)stateSave.GetValueRecursive(sourceFileString);
 

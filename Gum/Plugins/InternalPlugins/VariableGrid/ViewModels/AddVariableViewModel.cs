@@ -227,7 +227,7 @@ public class AddVariableViewModel : ViewModel
         }
         else if (_selectedState.SelectedElement != null)
         {
-            DoEditsToVariableOnElement(variable, SelectedState.Self.SelectedElement, changes, type, newName);
+            DoEditsToVariableOnElement(variable, _selectedState.SelectedElement, changes, type, newName);
         }
         _guiCommands.RefreshVariables(force: true);
     }

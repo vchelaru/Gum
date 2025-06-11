@@ -3,12 +3,19 @@ using Gum.DataTypes.Behaviors;
 using Gum.Plugins;
 using Gum.ToolStates;
 using System.Linq;
+using GumCommon;
 using ToolsUtilities;
 
 namespace Gum.Managers
 {
     public class FileChangeReactionLogic : Singleton<FileChangeReactionLogic>
     {
+        private readonly ISelectedState _selectedState;
+        public FileChangeReactionLogic()
+        {
+            _selectedState = Locator.GetRequiredService<ISelectedState>();
+        }
+        
         public void ReactToFileChanged(FilePath file)
         {
             var extension = file.Extension;
@@ -91,7 +98,7 @@ namespace Gum.Managers
 
         private void ReactToImageFileChanged(FilePath file)
         {
-            var currentElement = SelectedState.Self.SelectedElement;
+            var currentElement = _selectedState.SelectedElement;
             string relativeDirectory = ProjectState.Self.ProjectDirectory;
 
             if (currentElement != null)
@@ -111,7 +118,7 @@ namespace Gum.Managers
 
         private void ReactToAnimationChainChanged(FilePath file)
         {
-            var currentElement = SelectedState.Self.SelectedElement;
+            var currentElement = _selectedState.SelectedElement;
             string relativeDirectory = ProjectState.Self.ProjectDirectory;
             if (currentElement != null)
             {
@@ -129,7 +136,7 @@ namespace Gum.Managers
 
         private void ReactToFontFileChanged(FilePath file)
         {
-            var currentElement = SelectedState.Self.SelectedElement;
+            var currentElement = _selectedState.SelectedElement;
             string relativeDirectory = ProjectState.Self.ProjectDirectory;
 
             if (currentElement != null)
@@ -152,7 +159,7 @@ namespace Gum.Managers
         {
             var element = ObjectFinder.Self.GetElementSave(file.StandardizedNoPathNoExtension);
 
-            var refreshingSelected = element == SelectedState.Self.SelectedElement;
+            var refreshingSelected = element == _selectedState.SelectedElement;
 
             if(element != null)
             {
@@ -177,7 +184,7 @@ namespace Gum.Managers
 
             bool shouldReloadWireframe = false;
 
-            var currentElement = SelectedState.Self.SelectedElement;
+            var currentElement = _selectedState.SelectedElement;
 
             if(currentElement != null)
             {
@@ -212,7 +219,7 @@ namespace Gum.Managers
             // It's somehow possible for behaviors with no name to make it in the project. let's tolerate it
                 item?.Name.ToLowerInvariant() == file.StandardizedNoPathNoExtension.ToLowerInvariant());
 
-            var refreshingSelected = behavior == SelectedState.Self.SelectedBehavior;
+            var refreshingSelected = behavior == _selectedState.SelectedBehavior;
 
             if (behavior != null)
             {

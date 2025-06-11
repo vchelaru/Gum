@@ -13,6 +13,7 @@ using HarfBuzzSharp;
 using System;
 using System.ComponentModel.Composition;
 using System.Windows.Forms;
+using GumCommon;
 using Microsoft.CodeAnalysis.CSharp;
 
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
@@ -26,8 +27,7 @@ public class MainVariableGridPlugin : InternalPlugin
     public MainVariableGridPlugin()
     {
         _propertyGridManager = PropertyGridManager.Self;
-        _variableReferenceLogic = new VariableReferenceLogic(
-            Builder.Get<GuiCommands>());
+        _variableReferenceLogic = new VariableReferenceLogic(Locator.GetRequiredService<GuiCommands>());
         ElementSaveExtensions.CustomEvaluateExpression = EvaluateExpression;
     }
 

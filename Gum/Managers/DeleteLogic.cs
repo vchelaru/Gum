@@ -14,6 +14,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using GumCommon;
 
 namespace Gum.Managers
 {
@@ -25,7 +26,7 @@ namespace Gum.Managers
         public DeleteLogic()
         {
             _projectCommands = ProjectCommands.Self;
-            _selectedState = SelectedState.Self;
+            _selectedState = Locator.GetRequiredService<ISelectedState>();
         }
 
 
