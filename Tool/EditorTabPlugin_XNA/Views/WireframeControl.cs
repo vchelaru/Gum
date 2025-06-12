@@ -230,16 +230,19 @@ public class WireframeControl : GraphicsDeviceControl
         ShapeManager.Self.Add(mCanvasBounds, layerService.OverlayLayer);
 
 
-        mTopRuler = new Ruler(this, SystemManagers.Default,
+        mTopRuler = new Ruler(this, 
+            SystemManagers.Default,
             InputLibrary.Cursor.Self,
             ToolFontService.Self,
             ToolLayerService.Self,
-            layerService);
+            layerService,
+            HotkeyManager.Self);
         mLeftRuler = new Ruler(this, SystemManagers.Default,
             InputLibrary.Cursor.Self,
             ToolFontService.Self,
             ToolLayerService.Self,
-            layerService);
+            layerService,
+            HotkeyManager.Self);
         mLeftRuler.RulerSide = RulerSide.Left;
 
     }
