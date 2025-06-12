@@ -124,16 +124,14 @@ namespace Gum.Commands
         }
 
 
-        [Obsolete("This should not be explicitly called. Rather, the plugin " +
-            "should respond to load events ")]
         public void RefreshElementTreeView()
         {
-            ElementTreeViewManager.Self.RefreshUi();
+            PluginManager.Self.RefreshElementTreeView();
         }
 
         public void RefreshElementTreeView(IInstanceContainer instanceContainer)
         {
-            ElementTreeViewManager.Self.RefreshUi(instanceContainer);
+            PluginManager.Self.RefreshElementTreeView(instanceContainer);
         }
 
         #endregion

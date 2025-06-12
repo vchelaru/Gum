@@ -303,7 +303,11 @@ namespace Gum.Plugins
             CallMethodOnPlugin((plugin) => plugin.CallReactToCustomStateSaveSelected(stateSave));
 
         internal void RefreshStateTreeView() =>
-            CallMethodOnPlugin((plugin) => plugin.CallRefreshStateTreeView());
+            CallMethodOnPlugin(plugin => plugin.CallRefreshStateTreeView());
+
+        public void RefreshElementTreeView(IInstanceContainer? instanceContainer = null) =>
+            CallMethodOnPlugin(plugin => plugin.CallRefreshElementTreeView(instanceContainer));
+
 
         internal void CategoryRename(StateSaveCategory category, string oldName) =>
             CallMethodOnPlugin((plugin) => plugin.CallStateCategoryRename(category, oldName));
@@ -583,6 +587,25 @@ namespace Gum.Plugins
                 }
             });
 
+            return toReturn;
+        }
+
+        /// <summary>
+        /// Returns whether any plugins are asking un-highlighting to be suppressed when moving over the editor.
+        /// If true, then the editor will not un-highlight the currently-highlighted object. This allows other plugins
+        /// to force a highlight such as the tree view on hover.
+        /// </summary>
+        /// <returns>Whether to suppress the unhighlighting.</returns>
+        public bool GetIfShouldSuppressRemoveEditorHighlight()
+        {
+            bool toReturn = false;
+            CallMethodOnPlugin(plugin =>
+            {
+                if (plugin.CallGetIfShouldSuppressRemoveEditorHighlight() == true)
+                {
+                    toReturn = true;
+                }
+            });
             return toReturn;
         }
 

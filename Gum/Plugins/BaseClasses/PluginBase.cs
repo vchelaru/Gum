@@ -64,6 +64,7 @@ namespace Gum.Plugins.BaseClasses
         public event Action<StateSave?>? ReactToCustomStateSaveSelected;
 
         public event Action RefreshStateTreeView;
+        public event Action<IInstanceContainer?> RefreshElementTreeView;
 
         public event Action AfterUndo;
 
@@ -85,6 +86,7 @@ namespace Gum.Plugins.BaseClasses
         public event Func<VariableSave, RecursiveVariableFinder, bool> VariableExcluded;
         public event Action WireframeRefreshed;
         public event Action<string> WireframePropertyChanged;
+        public event Func<bool>? GetIfShouldSuppressRemoveEditorHighlight;
 
         /// <summary>
         /// Event raised when an ElementSave's variable is set.
@@ -401,7 +403,7 @@ namespace Gum.Plugins.BaseClasses
         public void CallStateDelete(StateSave stateSave) => StateDelete?.Invoke(stateSave);
 
         public void CallRefreshStateTreeView() => RefreshStateTreeView?.Invoke();
-
+        public void CallRefreshElementTreeView(IInstanceContainer instanceContanier) => RefreshElementTreeView?.Invoke(instanceContanier);
         public void CallAfterUndo() => AfterUndo?.Invoke();
 
 
@@ -530,6 +532,15 @@ namespace Gum.Plugins.BaseClasses
 
         public IEnumerable<IPositionedSizedObject>? CallGetSelectedIpsos() =>
             GetSelectedIpsos?.Invoke();
+
+        public bool CallGetIfShouldSuppressRemoveEditorHighlight()
+        {
+            if (GetIfShouldSuppressRemoveEditorHighlight != null)
+            {
+                return GetIfShouldSuppressRemoveEditorHighlight();
+            }
+            return false;
+        }
 
         #endregion
     }

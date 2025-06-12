@@ -635,9 +635,6 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
             ProjectCommands.Self.AddComponent(toAdd as ComponentSave);
         }
 
-
-        GumCommands.Self.GuiCommands.RefreshElementTreeView();
-
         _selectedState.SelectedElement = toAdd;
 
         PluginManager.Self.ElementDuplicate(CopiedData.CopiedElement, toAdd);

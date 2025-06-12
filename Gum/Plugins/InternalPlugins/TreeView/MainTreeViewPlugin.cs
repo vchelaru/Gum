@@ -19,10 +19,12 @@ namespace Gum.Plugins.InternalPlugins.TreeView;
 internal class MainTreeViewPlugin : InternalPlugin
 {
     private readonly ISelectedState _selectedState;
+    private readonly ElementTreeViewManager _elementTreeViewManager;
     
     public MainTreeViewPlugin()
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _elementTreeViewManager = ElementTreeViewManager.Self;
     }
     
     public override void StartUp()
@@ -34,17 +36,46 @@ internal class MainTreeViewPlugin : InternalPlugin
     {
         this.InstanceSelected += MainTreeViewPlugin_InstanceSelected;
         this.InstanceAdd += HandleInstanceAdd;
-        this.ElementSelected += HandleElementSelected;
+
 
         this.BehaviorSelected += HandleBehaviorSelected;
         this.BehaviorDeleted += HandleBehaviorDeleted;
 
+        this.ElementSelected += HandleElementSelected;
         this.ElementDelete += HandleElementDeleted;
         this.ElementAdd += HandleElementAdd;
+        this.ElementDuplicate += HandleElementDuplicate;
+
+        this.RefreshElementTreeView += HandleRefreshElementTreeView;
 
         this.BehaviorCreated += HandleBehaviorCreated;
 
         this.ProjectLoad += HandleProjectLoad;
+
+        this.GetIfShouldSuppressRemoveEditorHighlight += HandleGetIfShouldSuppressRemoveEditorHighlight;
+    }
+
+    private void HandleRefreshElementTreeView(IInstanceContainer? instanceContainer = null)
+    {
+        if(instanceContainer != null)
+        {
+            ElementTreeViewManager.Self.RefreshUi(instanceContainer);
+        }
+        else
+        {
+            ElementTreeViewManager.Self.RefreshUi();
+        }
+    }
+
+    private void HandleElementDuplicate(ElementSave save1, ElementSave save2)
+    {
+        ElementTreeViewManager.Self.RefreshUi();
+    }
+
+    private bool HandleGetIfShouldSuppressRemoveEditorHighlight()
+    {
+        // If the mouse is over the element tree view, we don't want to force unhlighlights since they can highlight when over the tree view items
+        return ElementTreeViewManager.Self.HasMouseOver;
     }
 
     private void HandleInstanceAdd(ElementSave save1, InstanceSave save2)
