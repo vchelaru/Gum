@@ -377,13 +377,13 @@ namespace Gum.Wireframe.Editors
                 }
 
                 var variableName = "Points";
-                if(SelectedState.Self.SelectedInstance != null)
+                if(_selectedState.SelectedInstance != null)
                 {
-                    variableName = SelectedState.Self.SelectedInstance.Name + "." + variableName;
+                    variableName = _selectedState.SelectedInstance.Name + "." + variableName;
                 }
 
                 var pointsVariableList = 
-                    SelectedState.Self.SelectedStateSave.VariableLists.FirstOrDefault(item => item.Name == variableName);
+                    _selectedState.SelectedStateSave.VariableLists.FirstOrDefault(item => item.Name == variableName);
 
                 // This might be null if the points aren't set in this state, but are inherited from a base 
                 // state or object
@@ -392,7 +392,7 @@ namespace Gum.Wireframe.Editors
                     pointsVariableList = new VariableListSave<Vector2>();
                     pointsVariableList.Name = variableName;
                     pointsVariableList.Type = "Vector2";
-                    SelectedState.Self.SelectedStateSave.VariableLists.Add(pointsVariableList);
+                    _selectedState.SelectedStateSave.VariableLists.Add(pointsVariableList);
                 }
                 pointsVariableList.ValueAsIList = vectors;
             }

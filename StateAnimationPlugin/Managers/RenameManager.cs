@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using GumCommon;
 using ToolsUtilities;
 
 namespace StateAnimationPlugin.Managers
@@ -17,10 +18,12 @@ namespace StateAnimationPlugin.Managers
     class RenameManager : Singleton<RenameManager>
     {
         private readonly AnimationFilePathService _animationFilePathService;
+        private readonly ISelectedState _selectedState;
 
         public RenameManager()
         {
             _animationFilePathService = new AnimationFilePathService();
+            _selectedState = Locator.GetRequiredService<ISelectedState>();
         }
 
         public void HandleRename(ElementSave elementSave, string oldName, ElementAnimationsViewModel viewModel)
@@ -97,7 +100,7 @@ namespace StateAnimationPlugin.Managers
 
         public void HandleRename(StateSave stateSave, string oldName, ElementAnimationsViewModel viewModel)
         {
-            var parentCategory = SelectedState.Self.SelectedElement?.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
+            var parentCategory = _selectedState.SelectedElement?.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
 
             string prefix = "";
             if(parentCategory != null)

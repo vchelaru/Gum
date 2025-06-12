@@ -7,6 +7,7 @@ using Gum.ToolStates;
 using System;
 using System.ComponentModel.Composition;
 using System.Threading.Tasks;
+using GumCommon;
 
 namespace Gum.Plugins.Fonts;
 
@@ -19,8 +20,8 @@ public class MainFontPlugin : InternalPlugin
 
     public MainFontPlugin()
     {
-        _guiCommands = Builder.Get<GuiCommands>();
-        _fontManager = Builder.Get<FontManager>();
+        _guiCommands = Locator.GetRequiredService<GuiCommands>();
+        _fontManager = Locator.GetRequiredService<FontManager>();
     }
 
     public override void StartUp()

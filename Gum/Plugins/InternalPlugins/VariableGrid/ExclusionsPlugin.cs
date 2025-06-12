@@ -7,6 +7,7 @@ using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using GumCommon;
 
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
 
@@ -42,7 +43,7 @@ public class ExclusionsPlugin : InternalPlugin
 
     public ExclusionsPlugin()
     {
-        _selectedState = SelectedState.Self;
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
         _objectFinder = ObjectFinder.Self;
     }
 

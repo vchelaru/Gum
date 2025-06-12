@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Gum.DataTypes;
@@ -20,7 +20,6 @@ public class SelectedState : ISelectedState
 {
     #region Fields
 
-    static ISelectedState mSelf;
     SelectedStateSnapshot snapshot = new SelectedStateSnapshot();
 
     #endregion
@@ -241,24 +240,7 @@ public class SelectedState : ISelectedState
     #endregion
 
     #region Properties
-
-    public static ISelectedState Self
-    {
-        // We usually won't use this in the actual product, but useful for testing
-        set
-        {
-            mSelf = value;
-        }
-        get
-        {
-            if (mSelf == null)
-            {
-                mSelf = new SelectedState();
-            }
-            return mSelf;
-        }
-    }
-
+    
     public IStateContainer SelectedStateContainer
     {
         get
@@ -717,11 +699,6 @@ public class SelectedState : ISelectedState
     }
 
     #endregion
-
-    private SelectedState()
-    {
-
-    }
 
     public List<ElementWithState> GetTopLevelElementStack()
     {

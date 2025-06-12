@@ -3,6 +3,7 @@ using Gum.Managers;
 using Gum.ToolStates;
 using System.Collections.Generic;
 using System.Linq;
+using GumCommon;
 using static WpfDataUi.Controls.ToggleButtonOptionDisplay;
 
 namespace Gum.Controls
@@ -52,17 +53,19 @@ namespace Gum.Controls
 
         private static StandardElementSave GetRootElement()
         {
+            ISelectedState selectedState = Locator.GetRequiredService<ISelectedState>();
+            
             StandardElementSave rootElement = null;
 
-            if (SelectedState.Self.SelectedInstance != null)
+            if (selectedState.SelectedInstance != null)
             {
                 rootElement =
-                    ObjectFinder.Self.GetRootStandardElementSave(SelectedState.Self.SelectedInstance);
+                    ObjectFinder.Self.GetRootStandardElementSave(selectedState.SelectedInstance);
             }
-            else if (SelectedState.Self.SelectedElement != null)
+            else if (selectedState.SelectedElement != null)
             {
                 rootElement =
-                    ObjectFinder.Self.GetRootStandardElementSave(SelectedState.Self.SelectedElement);
+                    ObjectFinder.Self.GetRootStandardElementSave(selectedState.SelectedElement);
             }
 
             return rootElement;

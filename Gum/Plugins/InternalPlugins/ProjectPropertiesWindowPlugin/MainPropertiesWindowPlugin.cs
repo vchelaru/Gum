@@ -14,6 +14,7 @@ using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
 using Matrix = System.Numerics.Matrix4x4;
 using Gum.Services;
+using GumCommon;
 
 namespace Gum.Plugins.PropertiesWindowPlugin;
 
@@ -40,7 +41,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
 
     public MainPropertiesWindowPlugin()
     {
-        _fontManager = Builder.Get<FontManager>();
+        _fontManager = Locator.GetRequiredService<FontManager>();
     }
 
     public override void StartUp()

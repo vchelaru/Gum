@@ -18,6 +18,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using GumCommon;
 
 namespace TextureCoordinateSelectionPlugin;
 
@@ -46,7 +47,7 @@ public class MainTextureCoordinatePlugin : PluginBase
 
     public MainTextureCoordinatePlugin()
     {
-        _selectedState = SelectedState.Self;
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
     }
 
     public override bool ShutDown(PluginShutDownReason shutDownReason)
@@ -137,9 +138,9 @@ public class MainTextureCoordinatePlugin : PluginBase
 
 
 
-    private static Texture2D GetTextureToAssign(out bool isNineslice, out float? customFrameTextureCoordinateWidth)
+    private Texture2D GetTextureToAssign(out bool isNineslice, out float? customFrameTextureCoordinateWidth)
     {
-        var graphicalUiElement = SelectedState.Self.SelectedIpso as GraphicalUiElement;
+        var graphicalUiElement = _selectedState.SelectedIpso as GraphicalUiElement;
         isNineslice = false;
         customFrameTextureCoordinateWidth = null;
         Texture2D textureToAssign = null;

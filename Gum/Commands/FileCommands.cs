@@ -9,13 +9,22 @@ using Gum.Undo;
 using Gum.Plugins;
 using ToolsUtilities;
 using Gum.Logic.FileWatch;
+using GumCommon;
 
 namespace Gum.Commands
 {
     public class FileCommands
     {
         private LocalizationManager _localizationManager;
+        private readonly ISelectedState _selectedState;
+        
         MainWindow mainWindow;
+
+        public FileCommands()
+        {
+            _selectedState = Locator.GetRequiredService<ISelectedState>();
+        }
+        
         public void Initialize(MainWindow mainWindow, LocalizationManager localizationManager)
         {
             _localizationManager = localizationManager;
@@ -27,9 +36,9 @@ namespace Gum.Commands
         /// </summary>
         public void TryAutoSaveCurrentObject()
         {
-            if(SelectedState.Self.SelectedBehavior != null)
+            if(_selectedState.SelectedBehavior != null)
             {
-                TryAutoSaveBehavior(SelectedState.Self.SelectedBehavior);
+                TryAutoSaveBehavior(_selectedState.SelectedBehavior);
             }
             else
             {
@@ -39,7 +48,7 @@ namespace Gum.Commands
 
         public void TryAutoSaveCurrentElement()
         {
-            TryAutoSaveElement(SelectedState.Self.SelectedElement);
+            TryAutoSaveElement(_selectedState.SelectedElement);
         }
 
 
@@ -76,11 +85,11 @@ namespace Gum.Commands
 
         internal void NewProject()
         {
-            SelectedState.Self.SelectedElement = null;
-            SelectedState.Self.SelectedInstance = null;
-            SelectedState.Self.SelectedBehavior = null;
-            SelectedState.Self.SelectedStateCategorySave = null;
-            SelectedState.Self.SelectedStateSave = null;
+            _selectedState.SelectedElement = null;
+            _selectedState.SelectedInstance = null;
+            _selectedState.SelectedBehavior = null;
+            _selectedState.SelectedStateCategorySave = null;
+            _selectedState.SelectedStateSave = null;
 
             ProjectManager.Self.CreateNewProject();
 

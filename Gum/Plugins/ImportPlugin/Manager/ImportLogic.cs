@@ -8,12 +8,14 @@ using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using GumCommon;
 using ToolsUtilities;
 
 namespace Gum.Plugins.ImportPlugin.Manager;
 
 public static class ImportLogic
 {
+    private static readonly ISelectedState _selectedState = Locator.GetRequiredService<ISelectedState>();
     #region Screen
 
     internal static void ShowImportScreenUi()
@@ -88,7 +90,7 @@ public static class ImportLogic
             if(saveProject)
             {
                 GumCommands.Self.GuiCommands.RefreshElementTreeView();
-                SelectedState.Self.SelectedScreen = screenSave;
+                _selectedState.SelectedScreen = screenSave;
                 GumCommands.Self.FileCommands.TryAutoSaveProject();
             }
             GumCommands.Self.FileCommands.TryAutoSaveElement(screenSave);
@@ -156,7 +158,7 @@ public static class ImportLogic
         if (lastImportedComponent != null)
         {
             GumCommands.Self.GuiCommands.RefreshElementTreeView();
-            SelectedState.Self.SelectedComponent = lastImportedComponent;
+            _selectedState.SelectedComponent = lastImportedComponent;
             GumCommands.Self.FileCommands.TryAutoSaveProject();
         }
     }
@@ -217,7 +219,7 @@ public static class ImportLogic
             if(saveProject)
             {
                 GumCommands.Self.GuiCommands.RefreshElementTreeView();
-                SelectedState.Self.SelectedComponent = componentSave;
+                _selectedState.SelectedComponent = componentSave;
                 GumCommands.Self.FileCommands.TryAutoSaveProject();
             }
             GumCommands.Self.FileCommands.TryAutoSaveElement(componentSave);
@@ -286,7 +288,7 @@ public static class ImportLogic
         if (lastImportedBehavior != null)
         {
             GumCommands.Self.GuiCommands.RefreshElementTreeView();
-            SelectedState.Self.SelectedBehavior = lastImportedBehavior;
+            _selectedState.SelectedBehavior = lastImportedBehavior;
             GumCommands.Self.FileCommands.TryAutoSaveProject();
         }
     }
@@ -345,7 +347,7 @@ public static class ImportLogic
             if(saveProject)
             {
                 GumCommands.Self.GuiCommands.RefreshElementTreeView();
-                SelectedState.Self.SelectedBehavior = behaviorSave;
+                _selectedState.SelectedBehavior = behaviorSave;
                 GumCommands.Self.FileCommands.TryAutoSaveProject();
             }
 

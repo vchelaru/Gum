@@ -20,6 +20,7 @@ using System.ComponentModel;
 using System.Management.Instrumentation;
 using Gum.ToolCommands;
 using System.Threading.Tasks;
+using GumCommon;
 
 namespace Gum
 {
@@ -32,6 +33,8 @@ namespace Gum
         static ProjectManager mSelf;
 
         bool mHaveErrorsOccurredLoadingProject = false;
+        
+        private readonly ISelectedState _selectedState;
 
         #endregion
 
@@ -77,7 +80,7 @@ namespace Gum
 
         private ProjectManager()
         {
-
+            _selectedState = Locator.GetRequiredService<ISelectedState>();
         }
 
         public void LoadSettings()
@@ -100,7 +103,7 @@ namespace Gum
 
                     if (!string.IsNullOrEmpty(CommandLineManager.Self.ElementName))
                     {
-                        SelectedState.Self.SelectedElement = ObjectFinder.Self.GetElementSave(CommandLineManager.Self.ElementName);
+                        _selectedState.SelectedElement = ObjectFinder.Self.GetElementSave(CommandLineManager.Self.ElementName);
                     }
                 }
                 else if (!isShift && !string.IsNullOrEmpty(GeneralSettingsFile.LastProject))
@@ -139,8 +142,8 @@ namespace Gum
             {
                 string fileName = openFileDialog.FileName;
 
-                SelectedState.Self.SelectedInstance = null;
-                SelectedState.Self.SelectedElement = null;
+                _selectedState.SelectedInstance = null;
+                _selectedState.SelectedElement = null;
 
                 GumCommands.Self.FileCommands.LoadProject(fileName);
 
@@ -242,11 +245,11 @@ namespace Gum
             }
 
             // Deselect everything
-            SelectedState.Self.SelectedElement = null;
-            SelectedState.Self.SelectedInstance = null;
-            SelectedState.Self.SelectedBehavior = null;
-            SelectedState.Self.SelectedStateCategorySave = null;
-            SelectedState.Self.SelectedStateSave = null;
+            _selectedState.SelectedElement = null;
+            _selectedState.SelectedInstance = null;
+            _selectedState.SelectedBehavior = null;
+            _selectedState.SelectedStateCategorySave = null;
+            _selectedState.SelectedStateSave = null;
 
 
             if (mGumProjectSave != null)

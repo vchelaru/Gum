@@ -22,6 +22,7 @@ using Gum.Managers;
 using Gum.Services;
 using RenderingLibrary;
 using System.Numerics;
+using GumCommon;
 
 namespace Gum.Plugins
 {
@@ -100,7 +101,7 @@ namespace Gum.Plugins
         }
 
         [Export("LocalizationManager")]
-        public LocalizationManager LocalizationManager => Builder.Get<LocalizationManager>();
+        public LocalizationManager LocalizationManager => Locator.GetRequiredService<LocalizationManager>();
 
 
         internal static List<PluginContainer> AllPluginContainers

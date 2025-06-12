@@ -21,6 +21,7 @@ using Gum.DataTypes.Behaviors;
 using Gum.Undo;
 using Gum.Plugins;
 using Gum.Services;
+using GumCommon;
 
 namespace Gum.Managers;
 
@@ -50,7 +51,7 @@ public class DragDropManager
     public DragDropManager(CircularReferenceManager circularReferenceManager)
     {
         _circularReferenceManager = circularReferenceManager;
-        _selectedState = SelectedState.Self;
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
         _elementCommands = ElementCommands.Self;
     }
 
@@ -305,12 +306,12 @@ public class DragDropManager
             errorMessage = "The source file for " + target.Name + " is missing, so it cannot be edited";
         }
 
-        if(errorMessage == null && target == GumState.Self.SelectedState.SelectedElement)
+        if(errorMessage == null && target == _selectedState.SelectedElement)
         {
-            if(GumState.Self.SelectedState.SelectedStateSave != GumState.Self.SelectedState.SelectedElement.DefaultState)
+            if(_selectedState.SelectedStateSave != _selectedState.SelectedElement.DefaultState)
             {
                 errorMessage = $"Cannot add instances to " +
-                    $"{GumState.Self.SelectedState.SelectedElement} while the {GumState.Self.SelectedState.SelectedStateSave} " +
+                    $"{_selectedState.SelectedElement} while the {_selectedState.SelectedStateSave} " +
                     $"state is selected. Select the Default state first.";
             }
         }
@@ -382,7 +383,7 @@ public class DragDropManager
 
         _elementCommands.AddBehaviorTo(behavior, targetComponent);
 
-        if(targetComponent == SelectedState.Self.SelectedComponent)
+        if(targetComponent == _selectedState.SelectedComponent)
         {
             GumCommands.Self.GuiCommands.RefreshStateTreeView();
             GumCommands.Self.GuiCommands.BroadcastRefreshBehaviorView();
@@ -476,7 +477,7 @@ public class DragDropManager
             {
                 // setting the parent:
                 parentName = targetInstance.Name;
-                string defaultChild = ObjectFinder.Self.GetDefaultChildName(targetInstance, SelectedState.Self.SelectedStateSave);
+                string defaultChild = ObjectFinder.Self.GetDefaultChildName(targetInstance, _selectedState.SelectedStateSave);
 
                 if (!string.IsNullOrEmpty(defaultChild))
                 {
@@ -490,7 +491,7 @@ public class DragDropManager
                 parentName = null;
             }
             // Since the Parent property can only be set in the default state, we will
-            // set the Parent variable on that instead of the SelectedState.Self.SelectedStateSave
+            // set the Parent variable on that instead of the _selectedState.SelectedStateSave
             var stateToAssignOn = targetElementSave.DefaultState;
 
             // todo - this needs to request the lock for the particular element
@@ -604,9 +605,9 @@ public class DragDropManager
         // The selected nodes should contain the dragged item, but I don't know for 100% certain.
         // If not, then we'll just use the dragged item. If it does, then we'll also add all other
         // selected items:
-        if (SelectedState.Self.SelectedTreeNodes.Contains(mDraggedItem))
+        if (_selectedState.SelectedTreeNodes.Contains(mDraggedItem))
         {
-            var whatToAdd = SelectedState.Self.SelectedTreeNodes.Where(item => item != mDraggedItem && item != null && item.Tag != null);
+            var whatToAdd = _selectedState.SelectedTreeNodes.Where(item => item != mDraggedItem && item != null && item.Tag != null);
             treeNodesToDrop.AddRange(whatToAdd);
         }
 
@@ -671,9 +672,9 @@ public class DragDropManager
 
     private bool CanDrop()
     {
-        return SelectedState.Self.SelectedStandardElement == null &&    // Don't allow dropping on standard elements
-               SelectedState.Self.SelectedElement != null &&            // An element must be selected
-               SelectedState.Self.SelectedStateSave != null;            // A state must be selected
+        return _selectedState.SelectedStandardElement == null &&    // Don't allow dropping on standard elements
+               _selectedState.SelectedElement != null &&            // An element must be selected
+               _selectedState.SelectedStateSave != null;            // A state must be selected
     }
 
     public void HandleFileDragEnter(object sender, DragEventArgs e)
@@ -720,7 +721,7 @@ public class DragDropManager
 
     public void SetInstanceToPosition(float worldX, float worldY, InstanceSave instance)
     {
-        var component = SelectedState.Self.SelectedComponent;
+        var component = _selectedState.SelectedComponent;
 
         float xToSet = worldX;
         float yToSet = worldY;
@@ -750,18 +751,18 @@ public class DragDropManager
 
 
 
-        var instanceXUnits = (PositionUnitType)SelectedState.Self.SelectedStateSave.GetValueRecursive($"{instance.Name}.XUnits");
+        var instanceXUnits = (PositionUnitType)_selectedState.SelectedStateSave.GetValueRecursive($"{instance.Name}.XUnits");
         var asGeneralXUnitType = UnitConverter.ConvertToGeneralUnit(instanceXUnits);
         xToSet = UnitConverter.Self.ConvertXPosition(differenceX, GeneralUnitType.PixelsFromSmall, asGeneralXUnitType, containerWidth);
 
         var differenceY = worldY - containerTop;
-        var instanceYUnits = (PositionUnitType)SelectedState.Self.SelectedStateSave.GetValueRecursive($"{instance.Name}.YUnits");
+        var instanceYUnits = (PositionUnitType)_selectedState.SelectedStateSave.GetValueRecursive($"{instance.Name}.YUnits");
         var asGeneralYUnitType = UnitConverter.ConvertToGeneralUnit(instanceYUnits);
         yToSet = UnitConverter.Self.ConvertYPosition(differenceY, GeneralUnitType.PixelsFromSmall, asGeneralYUnitType, containerHeight);
 
 
-        SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".X", xToSet);
-        SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".Y", yToSet);
+        _selectedState.SelectedStateSave.SetValue(instance.Name + ".X", xToSet);
+        _selectedState.SelectedStateSave.SetValue(instance.Name + ".Y", yToSet);
     }
 
     #endregion

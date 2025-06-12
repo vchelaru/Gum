@@ -17,12 +17,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Controls;
 using System.Windows.Forms;
+using GumCommon;
 using ToolsUtilities;
 
 namespace Gum.Commands
 {
     public class EditCommands
     {
+        private ISelectedState _selectedState;
+
+        public EditCommands()
+        {
+            _selectedState = Locator.GetRequiredService<ISelectedState>();
+        }
         #region State
 
         public void AskToDeleteState(StateSave stateSave, IStateContainer stateContainer)
@@ -104,7 +111,7 @@ namespace Gum.Commands
                 TextInputWindow tiw = new TextInputWindow();
                 tiw.Message = "Enter new state name";
                 tiw.Title = "Rename state";
-                tiw.Result = SelectedState.Self.SelectedStateSave.Name;
+                tiw.Result = _selectedState.SelectedStateSave.Name;
                 var result = tiw.ShowDialog();
 
                 if (result == DialogResult.OK)
@@ -150,7 +157,7 @@ namespace Gum.Commands
             newCategory.States.Add(stateToMove);
 
             GumCommands.Self.GuiCommands.RefreshStateTreeView();
-            SelectedState.Self.SelectedStateSave = stateToMove;
+            _selectedState.SelectedStateSave = stateToMove;
 
             // make sure to propagate all variables in this new state and
             // also move all existing variables to the new state (use the first)
@@ -159,7 +166,7 @@ namespace Gum.Commands
                 foreach (var variable in stateToMove.Variables)
                 {
                     VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(variable.Name,
-                        element, GumState.Self.SelectedState.SelectedStateCategorySave);
+                        element, _selectedState.SelectedStateCategorySave);
                 }
 
 
@@ -169,7 +176,7 @@ namespace Gum.Commands
                     foreach (var variable in firstState.Variables)
                     {
                         VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(variable.Name,
-                            element, GumState.Self.SelectedState.SelectedStateCategorySave);
+                            element, _selectedState.SelectedStateCategorySave);
                     }
                 }
             }
@@ -216,7 +223,7 @@ namespace Gum.Commands
             if (element == null)
             {
                 // ... if we can't find it for some reason, assume it's the current element (is this bad?)
-                element = SelectedState.Self.SelectedElement;
+                element = _selectedState.SelectedElement;
             }
 
             var componentSave = element as ComponentSave;
@@ -296,7 +303,7 @@ namespace Gum.Commands
 
                     PluginManager.Self.BehaviorCreated(behavior);
 
-                    SelectedState.Self.SelectedBehavior = behavior;
+                    _selectedState.SelectedBehavior = behavior;
 
                     GumCommands.Self.FileCommands.TryAutoSaveProject();
                     GumCommands.Self.FileCommands.TryAutoSaveBehavior(behavior);
@@ -310,7 +317,7 @@ namespace Gum.Commands
 
         public void DuplicateSelectedElement()
         {
-            var element = SelectedState.Self.SelectedElement;
+            var element = _selectedState.SelectedElement;
 
             if (element == null)
             {
@@ -414,8 +421,8 @@ namespace Gum.Commands
 
         public void ShowCreateComponentFromInstancesDialog()
         {
-            var element = SelectedState.Self.SelectedElement;
-            var instances = SelectedState.Self.SelectedInstances.ToList();
+            var element = _selectedState.SelectedElement;
+            var instances = _selectedState.SelectedInstances.ToList();
             if (instances == null || instances.Count == 0 || element == null)
             {
                 MessageBox.Show("You must first save the project before adding a new component");
@@ -525,11 +532,11 @@ namespace Gum.Commands
 
                     if (selectedItem is InstanceSave instance)
                     {
-                        SelectedState.Self.SelectedInstance = instance;
+                        _selectedState.SelectedInstance = instance;
                     }
                     else if (selectedItem is ElementSave selectedElement)
                     {
-                        SelectedState.Self.SelectedElement = selectedElement;
+                        _selectedState.SelectedElement = selectedElement;
                     }
                     else if (selectedItem is VariableSave variable)
                     {
@@ -547,7 +554,7 @@ namespace Gum.Commands
 
                             if (instanceWithVariable != null)
                             {
-                                SelectedState.Self.SelectedInstance = instanceWithVariable;
+                                _selectedState.SelectedInstance = instanceWithVariable;
                             }
                         }
                     }
@@ -559,7 +566,7 @@ namespace Gum.Commands
                         {
                             if (string.IsNullOrEmpty(variableListSave.SourceObject))
                             {
-                                SelectedState.Self.SelectedElement = foundElement;
+                                _selectedState.SelectedElement = foundElement;
                             }
                             else
                             {
@@ -567,7 +574,7 @@ namespace Gum.Commands
 
                                 if (instanceWithVariable != null)
                                 {
-                                    SelectedState.Self.SelectedInstance = instanceWithVariable;
+                                    _selectedState.SelectedInstance = instanceWithVariable;
                                 }
                             }
                         }

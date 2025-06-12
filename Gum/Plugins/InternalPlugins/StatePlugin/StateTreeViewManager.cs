@@ -7,6 +7,7 @@ using Gum.DataTypes.Variables;
 using System.Windows.Forms;
 using Gum.ToolStates;
 using Gum.Plugins;
+using GumCommon;
 
 namespace Gum.Managers
 {
@@ -18,6 +19,7 @@ namespace Gum.Managers
 
         StateTreeViewRightClickService _stateTreeViewRightClickService;
         HotkeyManager _hotkeyManager;
+        private readonly ISelectedState _selectedState;
 
         #endregion
 
@@ -39,6 +41,11 @@ namespace Gum.Managers
 
         #endregion
 
+        public StateTreeViewManager()
+        {
+            _selectedState = Locator.GetRequiredService<ISelectedState>();
+        }
+
         public void Initialize(
             StateTreeViewRightClickService stateTreeViewRightClickService,
             HotkeyManager hotkeyManager)
@@ -51,30 +58,30 @@ namespace Gum.Managers
         {
             if(_hotkeyManager.Rename.IsPressed(e))
             {
-                if(SelectedState.Self.SelectedStateSave != null )
+                if(_selectedState.SelectedStateSave != null )
                 {
-                    if(SelectedState.Self.SelectedElement?.DefaultState != SelectedState.Self.SelectedStateSave)
+                    if(_selectedState.SelectedElement?.DefaultState != _selectedState.SelectedStateSave)
                     {
                         _stateTreeViewRightClickService.RenameStateClick();
 
                     }
                 }
-                else if(SelectedState.Self.SelectedStateCategorySave != null)
+                else if(_selectedState.SelectedStateCategorySave != null)
                 {
                     _stateTreeViewRightClickService.RenameCategoryClick();
                 }
             }
             else if(_hotkeyManager.Delete.IsPressed(e))
             {
-                if (SelectedState.Self.SelectedStateSave != null)
+                if (_selectedState.SelectedStateSave != null)
                 {
-                    if (SelectedState.Self.SelectedElement?.DefaultState != SelectedState.Self.SelectedStateSave)
+                    if (_selectedState.SelectedElement?.DefaultState != _selectedState.SelectedStateSave)
                     {
                         _stateTreeViewRightClickService.DeleteStateClick();
 
                     }
                 }
-                else if (SelectedState.Self.SelectedStateCategorySave != null)
+                else if (_selectedState.SelectedStateCategorySave != null)
                 {
                     _stateTreeViewRightClickService.DeleteCategoryClick();
                 }

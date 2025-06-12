@@ -6,6 +6,7 @@ using InputLibrary;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using GumCommon;
 using Vector2 = System.Numerics.Vector2;
 using Matrix = System.Numerics.Matrix4x4;
 
@@ -22,6 +23,7 @@ public struct StateAndAbsoluteVector2
 public class GrabbedState
 {
 
+    private readonly ISelectedState _selectedState;
     public StateSave StateSave { get; private set; }
 
     public XOrY? AxisMovedFurthestAlong
@@ -113,6 +115,11 @@ public class GrabbedState
         }
     }
 
+    public GrabbedState()
+    {
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
+    }
+
     public void HandlePush()
     {
         Cursor cursor = InputLibrary.Cursor.Self;
@@ -123,7 +130,7 @@ public class GrabbedState
         AccumulatedXOffset = 0;
         AccumulatedYOffset = 0;
 
-        if(SelectedState.Self.SelectedStateSave != null)
+        if(_selectedState.SelectedStateSave != null)
         {
             RecordInitialPositions();
         }
@@ -134,19 +141,19 @@ public class GrabbedState
         InstancePositions.Clear();
         InstanceSizes.Clear();
 
-        StateSave = SelectedState.Self.SelectedStateSave.Clone();
+        StateSave = _selectedState.SelectedStateSave.Clone();
 
-        if (SelectedState.Self.SelectedInstances.Count() == 0 && SelectedState.Self.SelectedElement != null)
+        if (_selectedState.SelectedInstances.Count() == 0 && _selectedState.SelectedElement != null)
         {
-            var graphicalUiElement = WireframeObjectManager.Self.GetRepresentation(SelectedState.Self.SelectedElement);
+            var graphicalUiElement = WireframeObjectManager.Self.GetRepresentation(_selectedState.SelectedElement);
 
             ComponentPosition = new Vector2(graphicalUiElement.X, graphicalUiElement.Y);
             ComponentSize = new Vector2(graphicalUiElement.Width, graphicalUiElement.Height);
         }
-        else if(SelectedState.Self.SelectedInstances.Count() != 0)
+        else if(_selectedState.SelectedInstances.Count() != 0)
         {
-            var stateSave = SelectedState.Self.SelectedStateSave;
-            foreach(var instance in SelectedState.Self.SelectedInstances)
+            var stateSave = _selectedState.SelectedStateSave;
+            foreach(var instance in _selectedState.SelectedInstances)
             {
                 var instanceGue = WireframeObjectManager.Self.GetRepresentation(instance);
 

@@ -4,17 +4,23 @@ using Gum.DataTypes.Variables;
 using Gum.ToolStates;
 using System.Collections.Generic;
 using System.ComponentModel;
+using GumCommon;
 using ToolsUtilities;
 
 namespace Gum.PropertyGridHelpers.Converters
 {
     internal class AvailableAnimationNamesConverter : TypeConverter
     {
+        private readonly ISelectedState _selectedState;
+        
         ElementSave container;
+        
         public AvailableAnimationNamesConverter(ElementSave container)
         {
             this.container = container;
+            _selectedState = Locator.GetRequiredService<ISelectedState>();
         }
+        
         public override bool GetStandardValuesSupported(ITypeDescriptorContext context)
         {
             return true;
@@ -27,8 +33,8 @@ namespace Gum.PropertyGridHelpers.Converters
 
         public override TypeConverter.StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
         {
-            var stateSave = SelectedState.Self.SelectedStateSave;
-            var instance = SelectedState.Self.SelectedInstance;
+            var stateSave = _selectedState.SelectedStateSave;
+            var instance = _selectedState.SelectedInstance;
             List<string> values = GetAvailableValues(container, instance, stateSave);
 
             return new StandardValuesCollection(values);

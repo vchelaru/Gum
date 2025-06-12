@@ -8,6 +8,7 @@ using Gum.Wireframe;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using GumCommon;
 using ToolsUtilities;
 
 namespace Gum.Logic;
@@ -46,6 +47,8 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
 {
     #region Fields/Properties
 
+    private readonly ISelectedState _selectedState;
+    
     public CopiedData CopiedData { get; private set; } = new CopiedData();
 
     CopyType mCopyType;
@@ -61,6 +64,11 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
     List<InstanceSave> LastPastedInstances = new List<InstanceSave>();
 
     #endregion
+
+    public CopyPasteLogic()
+    {
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
+    }
 
     #region Copy
     public void OnCopy(CopyType copyType)
@@ -78,11 +86,11 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
 
         if (copyType == CopyType.InstanceOrElement)
         {
-            if (ProjectState.Self.Selected.SelectedInstances.Count() != 0)
+            if (_selectedState.SelectedInstances.Count() != 0)
             {
                 StoreCopiedInstances();
             }
-            else if (ProjectState.Self.Selected.SelectedElement != null)
+            else if (_selectedState.SelectedElement != null)
             {
                 StoreCopiedElementSave();
             }
@@ -95,20 +103,20 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
 
     private void StoreCopiedState()
     {
-        if (SelectedState.Self.SelectedStateSave != null)
+        if (_selectedState.SelectedStateSave != null)
         {
             CopiedData.CopiedStates.Clear();
-            CopiedData.CopiedStates.Add(SelectedState.Self.SelectedStateSave.Clone());
+            CopiedData.CopiedStates.Add(_selectedState.SelectedStateSave.Clone());
         }
     }
 
     private void StoreCopiedInstances()
     {
-        if (SelectedState.Self.SelectedInstance != null)
+        if (_selectedState.SelectedInstance != null)
         {
-            var element = SelectedState.Self.SelectedElement;
+            var element = _selectedState.SelectedElement;
 
-            var state = SelectedState.Self.SelectedStateSave;
+            var state = _selectedState.SelectedStateSave;
 
             // a state may not be selected if the user selected a category.
             if(state == null)
@@ -130,7 +138,7 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
                 CopiedData.CopiedStates.Add(state.Clone());
             }
 
-            if(SelectedState.Self.SelectedStateCategorySave != null && SelectedState.Self.SelectedStateSave != null && element != null)
+            if(_selectedState.SelectedStateCategorySave != null && _selectedState.SelectedStateSave != null && element != null)
             {
                 // it's categorized, so add the default:
                 CopiedData.CopiedStates.Add(element.DefaultState.Clone());
@@ -139,10 +147,10 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
             List<InstanceSave> selected = new List<InstanceSave>();
             // When copying we want to grab all instances in the order that they are in their container.
             // That way when they're pasted they are pasted in the right order
-            selected.AddRange(SelectedState.Self.SelectedInstances);
+            selected.AddRange(_selectedState.SelectedInstances);
 
             CopiedData.CopiedInstancesSelected.Clear();
-            CopiedData.CopiedInstancesSelected.AddRange(SelectedState.Self.SelectedInstances);
+            CopiedData.CopiedInstancesSelected.AddRange(_selectedState.SelectedInstances);
 
             var parentContainer = selected.FirstOrDefault()?.ParentContainer;
             if(parentContainer != null)
@@ -189,15 +197,15 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
 
     private void StoreCopiedElementSave()
     {
-        if (SelectedState.Self.SelectedElement != null)
+        if (_selectedState.SelectedElement != null)
         {
-            if (SelectedState.Self.SelectedElement is ScreenSave)
+            if (_selectedState.SelectedElement is ScreenSave)
             {
-                CopiedData.CopiedElement = ((ScreenSave)SelectedState.Self.SelectedElement).Clone();
+                CopiedData.CopiedElement = ((ScreenSave)_selectedState.SelectedElement).Clone();
             }
-            else if (SelectedState.Self.SelectedElement is ComponentSave)
+            else if (_selectedState.SelectedElement is ComponentSave)
             {
-                CopiedData.CopiedElement = ((ComponentSave)SelectedState.Self.SelectedElement).Clone();
+                CopiedData.CopiedElement = ((ComponentSave)_selectedState.SelectedElement).Clone();
             }
         }
     }
@@ -208,7 +216,7 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
     {
         StoreCopiedObject(copyType);
 
-        ElementSave sourceElement = SelectedState.Self.SelectedElement;
+        ElementSave sourceElement = _selectedState.SelectedElement;
 
         if(CopiedData.CopiedInstancesRecursive.Any())
         {
@@ -264,7 +272,7 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
 
     private void PasteCopiedInstanceSaves(TopOrRecursive topOrRecursive)
     {
-        var element = SelectedState.Self.SelectedElement;
+        var element = _selectedState.SelectedElement;
 
         if(element == null)
         {
@@ -272,18 +280,18 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
         }
         else if(topOrRecursive == TopOrRecursive.Recursive)
         {
-            PasteInstanceSaves(CopiedData.CopiedInstancesRecursive, CopiedData.CopiedStates, SelectedState.Self.SelectedElement, SelectedState.Self.SelectedInstance);
+            PasteInstanceSaves(CopiedData.CopiedInstancesRecursive, CopiedData.CopiedStates, _selectedState.SelectedElement, _selectedState.SelectedInstance);
         }
         else
         {
-            PasteInstanceSaves(CopiedData.CopiedInstancesSelected, CopiedData.CopiedStates, SelectedState.Self.SelectedElement, SelectedState.Self.SelectedInstance);
+            PasteInstanceSaves(CopiedData.CopiedInstancesSelected, CopiedData.CopiedStates, _selectedState.SelectedElement, _selectedState.SelectedInstance);
         }
     }
 
     private void PastedCopiedState()
     {
-        ElementSave container = SelectedState.Self.SelectedElement;
-        var targetCategory = SelectedState.Self.SelectedStateCategorySave;
+        ElementSave container = _selectedState.SelectedElement;
+        var targetCategory = _selectedState.SelectedStateCategorySave;
 
         /////////////////////Early Out//////////////////
         if (container == null)
@@ -320,8 +328,8 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
 
 
 
-        //SelectedState.Self.SelectedInstance = targetInstance;
-        SelectedState.Self.SelectedStateSave = newStateSave;
+        //_selectedState.SelectedInstance = targetInstance;
+        _selectedState.SelectedStateSave = newStateSave;
 
         GumCommands.Self.FileCommands.TryAutoSaveElement(container);
     }
@@ -431,7 +439,7 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
 
             if(selectedInstance != null)
             {
-                var childName = ObjectFinder.Self.GetDefaultChildName(selectedInstance, SelectedState.Self.SelectedStateSave);
+                var childName = ObjectFinder.Self.GetDefaultChildName(selectedInstance, _selectedState.SelectedStateSave);
 
                 if(!string.IsNullOrEmpty(childName))
                 {
@@ -459,11 +467,11 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
                     }
                     else
                     {
-                        var selectedElement = SelectedState.Self.SelectedElement;
+                        var selectedElement = _selectedState.SelectedElement;
 
                         targetState = selectedElement.AllStates.FirstOrDefault(item => item.Name == stateSave.Name) ?? 
-                            SelectedState.Self.SelectedElement.DefaultState;
-                            //SelectedState.Self.SelectedStateSave ?? SelectedState.Self.SelectedElement.DefaultState;
+                            _selectedState.SelectedElement.DefaultState;
+                            //_selectedState.SelectedStateSave ?? _selectedState.SelectedElement.DefaultState;
 
                     }
 
@@ -567,7 +575,7 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
         WireframeObjectManager.Self.RefreshAll(true);
         GumCommands.Self.GuiCommands.RefreshElementTreeView(targetElement);
         GumCommands.Self.FileCommands.TryAutoSaveElement(targetElement);
-        SelectedState.Self.SelectedInstances = newInstances;
+        _selectedState.SelectedInstances = newInstances;
 
         LastPastedInstances.Clear();
         LastPastedInstances.AddRange(newInstances);
@@ -593,7 +601,7 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
 
         var strippedName = toAdd.StrippedName;
 
-        var selectedNode = SelectedState.Self.SelectedTreeNode;
+        var selectedNode = _selectedState.SelectedTreeNode;
 
         if(toAdd is ScreenSave && selectedNode.IsScreensFolderTreeNode())
         {
@@ -630,7 +638,7 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
 
         GumCommands.Self.GuiCommands.RefreshElementTreeView();
 
-        SelectedState.Self.SelectedElement = toAdd;
+        _selectedState.SelectedElement = toAdd;
 
         PluginManager.Self.ElementDuplicate(CopiedData.CopiedElement, toAdd);
 
