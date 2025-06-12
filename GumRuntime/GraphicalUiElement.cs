@@ -1442,39 +1442,112 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     AnimationRuntime? currentAnimation;
     double currentAnimationTime;
 
-    public void PlayAnimation(int index, double time)
+    /// <summary>
+    /// Updates the animation at the specified index based on the given time.
+    /// </summary>
+    /// <param name="index">The index of the animation to update.</param>
+    /// <param name="time">The elapsed time since the animation started, in seconds.</param>
+    public void UpdateAnimation(int index, double time)
     {
-        if (Animations != null && index >= 0 && index < Animations.Count)
+        var animation = GetAnimation(index);
+        UpdateAnimation(animation, time);
+    }
+
+    /// <summary>
+    /// Updates the animation with the specified name based on the given time.
+    /// </summary>
+    /// <param name="name">The name of the animation to update.</param>
+    /// <param name="time">The elapsed time since the animation started, in seconds.</param>
+    public void UpdateAnimation(string name, double time)
+    {
+        var animation = GetAnimation(name);
+        UpdateAnimation(animation, time);
+    }
+
+    /// <summary>
+    /// Updates the animation with the specified AnimationRuntime based on the given time.
+    /// </summary>
+    /// <param name="animation">the AnimationRuntime object</param>
+    /// <param name="time">the elapesd time since the animation started, in seconds</param>
+    /// <exception cref="InvalidOperationException"></exception>
+    public void UpdateAnimation(AnimationRuntime animation, double time)
+    {
+        if (animation != null)
         {
-            Animations[index].ApplyAtTimeTo(time, this);
+            animation.ApplyAtTimeTo(time, this);
+        }
+        else
+        {
+            throw new InvalidOperationException("the AnimationRuntime cannot be null");
         }
     }
 
-    public void PlayAnimation(string name, double time)
+    /// <summary>
+    /// Starts playing the animation at the specified index.
+    /// </summary>
+    /// <param name="index">The index of the animation to play.</param>
+    public void PlayAnimation(int index)
     {
-        var animation = Animations?.FirstOrDefault(item => item.Name == name);
-        animation?.ApplyAtTimeTo(time, this);
+        var animation = GetAnimation(index);
+        PlayAnimation(animation);
     }
 
-    public void StartAnimation(int index)
+    /// <summary>
+    /// Starts playing the animation with the specified name.
+    /// </summary>
+    /// <param name="name">The name of the animation to play.</param>
+    public void PlayAnimation(string name)
     {
-        if (Animations != null && index >= 0 && index < Animations.Count)
-        {
-            currentAnimation = Animations[index];
-            currentAnimationTime = 0;
-        }
+        var animation = GetAnimation(name);
+        PlayAnimation(animation);
     }
 
-    public void StartAnimation(string name)
+    /// <summary>
+    /// Starts playing the specified AnimationRuntime.
+    /// </summary>
+    /// <param name="animation">the AnimationRuntime object</param>
+    /// <exception cref="InvalidOperationException"></exception>
+    public void PlayAnimation(AnimationRuntime animation)
     {
-        var animation = Animations?.FirstOrDefault(item => item.Name == name);
         if (animation != null)
         {
             currentAnimation = animation;
             currentAnimationTime = 0;
         }
+        else
+        {
+            throw new InvalidOperationException("the AnimationRuntime cannot be null");
+        }
     }
 
+    /// <summary>
+    /// Gets the animation at the specified index.
+    /// </summary>
+    /// <param name="index">the index of the animation to get</param>
+    /// <returns></returns>
+    public AnimationRuntime GetAnimation(int index)
+    {
+        if (Animations != null && index >= 0 && index < Animations.Count)
+        {
+            return Animations[index];
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Get the animation at the specified name.
+    /// </summary>
+    /// <param name="animationName">the name of the animation to get</param>
+    /// <returns></returns>
+    public AnimationRuntime GetAnimation(string animationName)
+    {
+        return Animations?.FirstOrDefault(item => item.Name == animationName);
+    }
+
+    /// <summary>
+    /// Stops the currently playing animation.
+    /// </summary>
     public void StopAnimation()
     {
         currentAnimation = null;
@@ -6311,6 +6384,23 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     #region AnimationChain 
 
+    
+    /// <summary>
+    /// Updates the current animation state based on the elapsed time.
+    /// </summary>
+    /// <param name="secondDifference">The time elapsed since the last update, in seconds.</param>
+    private void RunAnimation(double secondDifference)
+    {
+        if (currentAnimation != null)
+        {
+            currentAnimationTime += secondDifference;
+            currentAnimation.ApplyAtTimeTo(currentAnimationTime, this);
+            if (!currentAnimation.Loops && currentAnimationTime >= currentAnimation.Length)
+            {
+                currentAnimation = null;
+            }
+        }
+    }
 
     /// <summary>
     /// Performs AnimationChain (.achx) animation on this and all children recurisvely.
@@ -6339,18 +6429,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
         ////////////////End Early Out///////////////////
         #if !FRB
-                if (currentAnimation != null)
-                {
-                    currentAnimationTime += secondDifference;
-                    currentAnimation.ApplyAtTimeTo(currentAnimationTime, this);
-
-                    if (!currentAnimation.Loops && currentAnimationTime >= currentAnimation.Length)
-                    {
-                        currentAnimation = null;
-                    }
-                }
+               RunAnimation(secondDifference);
         #endif
-
 
         var didSpriteUpdate = asAnimatable?.AnimateSelf(secondDifference) ?? false;
 
