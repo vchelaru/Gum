@@ -59,60 +59,60 @@ internal class MainTreeViewPlugin : InternalPlugin
     {
         if(instanceContainer != null)
         {
-            ElementTreeViewManager.Self.RefreshUi(instanceContainer);
+            _elementTreeViewManager.RefreshUi(instanceContainer);
         }
         else
         {
-            ElementTreeViewManager.Self.RefreshUi();
+            _elementTreeViewManager.RefreshUi();
         }
     }
 
     private void HandleElementDuplicate(ElementSave save1, ElementSave save2)
     {
-        ElementTreeViewManager.Self.RefreshUi();
+        _elementTreeViewManager.RefreshUi();
     }
 
     private bool HandleGetIfShouldSuppressRemoveEditorHighlight()
     {
         // If the mouse is over the element tree view, we don't want to force unhlighlights since they can highlight when over the tree view items
-        return ElementTreeViewManager.Self.HasMouseOver;
+        return _elementTreeViewManager.HasMouseOver;
     }
 
     private void HandleInstanceAdd(ElementSave save1, InstanceSave save2)
     {
-        ElementTreeViewManager.Self.RefreshUi();
+        _elementTreeViewManager.RefreshUi();
     }
 
     private void HandleBehaviorDeleted(BehaviorSave save)
     {
-        ElementTreeViewManager.Self.RefreshUi();
+        _elementTreeViewManager.RefreshUi();
     }
 
     private void HandleProjectLoad(GumProjectSave save)
     {
-        ElementTreeViewManager.Self.RefreshUi();
+        _elementTreeViewManager.RefreshUi();
     }
 
     private void HandleElementAdd(ElementSave save)
     {
-        ElementTreeViewManager.Self.RefreshUi();
+        _elementTreeViewManager.RefreshUi();
     }
 
     private void HandleBehaviorCreated(BehaviorSave save)
     {
-        ElementTreeViewManager.Self.RefreshUi();
+        _elementTreeViewManager.RefreshUi();
     }
 
     private void HandleElementDeleted(ElementSave save)
     {
-        ElementTreeViewManager.Self.RefreshUi();
+        _elementTreeViewManager.RefreshUi();
     }
 
     private void HandleBehaviorSelected(BehaviorSave save)
     {
         if(save != null)
         {
-            ElementTreeViewManager.Self.Select(save);
+            _elementTreeViewManager.Select(save);
         }
     }
 
@@ -120,7 +120,7 @@ internal class MainTreeViewPlugin : InternalPlugin
     {
         if(save != null)
         {
-            ElementTreeViewManager.Self.Select(save);
+            _elementTreeViewManager.Select(save);
         }
     }
 
@@ -131,12 +131,12 @@ internal class MainTreeViewPlugin : InternalPlugin
             if(instance != null)
             {
 
-                ElementTreeViewManager.Self.Select(_selectedState.SelectedInstances);
+                _elementTreeViewManager.Select(_selectedState.SelectedInstances);
             }
 
             if(instance == null && element != null)
             {
-                ElementTreeViewManager.Self.Select(element);
+                _elementTreeViewManager.Select(element);
             }
         }
 

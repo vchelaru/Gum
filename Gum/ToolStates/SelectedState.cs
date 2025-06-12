@@ -267,7 +267,7 @@ public class SelectedState : ISelectedState
     }
 
 
-    public TreeNode SelectedTreeNode
+    public ITreeNode SelectedTreeNode
     {
         get
         {
@@ -275,7 +275,7 @@ public class SelectedState : ISelectedState
         }
     }
 
-    public IEnumerable<TreeNode> SelectedTreeNodes
+    public IEnumerable<ITreeNode> SelectedTreeNodes
     {
         get
         {

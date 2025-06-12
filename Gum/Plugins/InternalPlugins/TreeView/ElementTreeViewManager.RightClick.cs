@@ -137,13 +137,17 @@ public partial class ElementTreeViewManager
 
     void AddFolderClick(object sender, EventArgs e)
     {
-        GumCommands.Self.GuiCommands.ShowAddFolderWindow(SelectedNode);
+        var node = (SelectedNode as TreeNodeWrapper)?.Node;
+        if(node != null)
+        {
+            GumCommands.Self.GuiCommands.ShowAddFolderWindow(node);
+        }
     }
 
 
     void HandleViewInExplorer(object sender, EventArgs e)
     {
-        TreeNode treeNode = _selectedState.SelectedTreeNode;
+        var treeNode = _selectedState.SelectedTreeNode;
 
         if (treeNode != null)
         {
@@ -194,7 +198,7 @@ public partial class ElementTreeViewManager
 
     void HandleDeleteFolder(object sender, EventArgs e)
     {
-        TreeNode treeNode = _selectedState.SelectedTreeNode;
+        var treeNode = _selectedState.SelectedTreeNode;
 
         if (treeNode != null)
         {
@@ -474,9 +478,11 @@ public partial class ElementTreeViewManager
 
     private void HandleRenameFolder(object sender, EventArgs e)
     {
-        var node = SelectedNode;
-
-        GumCommands.Self.GuiCommands.ShowRenameFolderWindow(node);
+        var node = (SelectedNode as TreeNodeWrapper)?.Node;
+        if (node != null)
+        {
+            GumCommands.Self.GuiCommands.ShowRenameFolderWindow(node);
+        }
     }
 
     private void HandleAddBehavior(object sender, EventArgs e)
@@ -513,7 +519,7 @@ public partial class ElementTreeViewManager
                 }
                 else
                 {
-                    TreeNode nodeToAddTo = ElementTreeViewManager.Self.SelectedNode;
+                    var nodeToAddTo = (ElementTreeViewManager.Self.SelectedNode as TreeNodeWrapper)?.Node;
 
                     while (nodeToAddTo != null && nodeToAddTo.Tag is ScreenSave && nodeToAddTo.Parent != null)
                     {

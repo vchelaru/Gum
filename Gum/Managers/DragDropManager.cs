@@ -25,13 +25,25 @@ using GumCommon;
 
 namespace Gum.Managers;
 
+
+public interface ITreeNode
+{
+    object Tag { get; }
+    FilePath GetFullFilePath();
+    ITreeNode? Parent { get; }
+    string Text { get; }
+    string FullPath { get; }
+
+
+}
+
 public class DragDropManager
 {
     #region Fields
 
     static DragDropManager mSelf;
 
-    object mDraggedItem;
+    ITreeNode? mDraggedItem;
     private readonly CircularReferenceManager _circularReferenceManager;
     private readonly ISelectedState _selectedState;
     private readonly ElementCommands _elementCommands;
@@ -522,7 +534,7 @@ public class DragDropManager
 
     internal void HandleDragDropEvent(object sender, DragEventArgs e)
     {
-        List<TreeNode> treeNodesToDrop = GetTreeNodesToDrop();
+        var treeNodesToDrop = GetTreeNodesToDrop();
         mDraggedItem = null;
         TreeNode targetTreeNode = ElementTreeViewManager.Self.GetTreeNodeOver();
         foreach(var draggedTreeNode in treeNodesToDrop )
@@ -550,7 +562,7 @@ public class DragDropManager
         }
     }
 
-    public void OnItemDrag(object item)
+    public void OnItemDrag(ITreeNode item)
     {
         mDraggedItem = item;
     }
@@ -576,7 +588,7 @@ public class DragDropManager
 
             if (!Cursor.PrimaryDownIgnoringIsInWindow)
             {
-                List<TreeNode> treeNodesToDrop = GetTreeNodesToDrop();
+                var treeNodesToDrop = GetTreeNodesToDrop();
 
                 foreach (var draggedTreeNode in treeNodesToDrop)
                 {
@@ -593,13 +605,13 @@ public class DragDropManager
         }
     }
 
-    private List<TreeNode> GetTreeNodesToDrop()
+    private List<ITreeNode> GetTreeNodesToDrop()
     {
-        List<TreeNode> treeNodesToDrop = new List<TreeNode>();
+        List<ITreeNode> treeNodesToDrop = new();
 
-        if(mDraggedItem != null && ((TreeNode)mDraggedItem).Tag != null)
+        if(mDraggedItem != null && ((ITreeNode)mDraggedItem).Tag != null)
         {
-            treeNodesToDrop.Add((TreeNode)mDraggedItem);
+            treeNodesToDrop.Add((ITreeNode)mDraggedItem);
         }
 
         // The selected nodes should contain the dragged item, but I don't know for 100% certain.

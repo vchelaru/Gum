@@ -284,7 +284,7 @@ public class HotkeyManager : Singleton<HotkeyManager>
         HandleReorder(e);
         if (e.KeyCode == Keys.Up || e.KeyCode == Keys.Down)
         {
-            ElementTreeViewManager.Self.OnSelect(ElementTreeViewManager.Self.SelectedNode);
+            ElementTreeViewManager.Self.OnSelect((ElementTreeViewManager.Self.SelectedNode as TreeNodeWrapper)?.Node);
         }
         TryHandleCtrlF(e);
         HandleGoToDefinition(e);

@@ -73,6 +73,26 @@ class ExpandedState
 }
 #endregion
 
+class TreeNodeWrapper : ITreeNode
+{
+    public TreeNode Node { get;  }
+    public object Tag => Node.Tag;
+    public string Text => Node.Text;
+
+    public ITreeNode? Parent => Node.Parent != null
+        ? new TreeNodeWrapper(Node.Parent)
+        : null;
+
+    public FilePath GetFullFilePath() => Node.GetFullFilePath();
+
+    public string FullPath => Node.FullPath;
+
+    public TreeNodeWrapper(TreeNode node)
+    {
+        Node = node;
+    }
+}
+
 public partial class ElementTreeViewManager
 {
     #region Fields
@@ -149,7 +169,7 @@ public partial class ElementTreeViewManager
         }
     }
 
-    public TreeNode SelectedNode
+    public ITreeNode SelectedNode
     {
         get
         {
@@ -160,20 +180,20 @@ public partial class ElementTreeViewManager
             }
             else
             {
-                return ObjectTreeView.SelectedNode;
+                return new TreeNodeWrapper( ObjectTreeView.SelectedNode);
             }
         }
         set
         {
-            ObjectTreeView.SelectedNode = value;
+            ObjectTreeView.SelectedNode = (value as TreeNodeWrapper)?.Node;
         }
     }
 
-    public List<TreeNode> SelectedNodes
+    public List<ITreeNode> SelectedNodes
     {
         get
         {
-            return ObjectTreeView.SelectedNodes;
+            return ObjectTreeView.SelectedNodes.Select(item => new TreeNodeWrapper(item)).ToList<ITreeNode>();
         }
     }
 
@@ -552,7 +572,9 @@ public partial class ElementTreeViewManager
 
         ObjectTreeView.ItemDrag += (sender, e) =>
         {
-            _dragDropManager.OnItemDrag(e.Item);
+            var treeNode = (TreeNode)e.Item;
+
+            _dragDropManager.OnItemDrag(new TreeNodeWrapper(treeNode));
             System.Diagnostics.Debug.WriteLine("ItemDrag");
 
             ObjectTreeView.DoDragDrop(e.Item, DragDropEffects.Move | DragDropEffects.Copy);
@@ -1828,28 +1850,28 @@ public partial class ElementTreeViewManager
         // Otherwise we can't drag drop
         if (ObjectTreeView.SelectedNode == null)
         {
-            ElementTreeViewManager.Self.OnSelect(ObjectTreeView.SelectedNode);
+            OnSelect(ObjectTreeView.SelectedNode);
         }
     }
 
     private void ObjectTreeView_AfterClickSelect(object sender, TreeViewEventArgs e)
     {
-        ElementTreeViewManager.Self.OnSelect(ObjectTreeView.SelectedNode);
+        OnSelect(ObjectTreeView.SelectedNode);
     }
 
     private void ObjectTreeView_MouseClick(object sender, MouseEventArgs e)
     {
         if (e.Button == MouseButtons.Right)
         {
-            ElementTreeViewManager.Self.OnSelect(ObjectTreeView.SelectedNode);
+            OnSelect(ObjectTreeView.SelectedNode);
 
-            ElementTreeViewManager.Self.PopulateMenuStrip();
+            PopulateMenuStrip();
         }
     }
 
     private void ObjectTreeView_KeyDown(object sender, KeyEventArgs e)
     {
-        ElementTreeViewManager.Self.HandleKeyDown(e);
+        HandleKeyDown(e);
         _dragDropManager.HandleKeyDown(e);
     }
 
@@ -2181,20 +2203,39 @@ public static class TreeNodeExtensionMethods
         return treeNode.Tag == null;
     }
 
+    public static bool IsTopScreenContainerTreeNode(this ITreeNode treeNode) =>
+        treeNode is TreeNodeWrapper wrapper
+        ? wrapper.Node.IsTopScreenContainerTreeNode()
+        : false;
+
     public static bool IsTopScreenContainerTreeNode(this TreeNode treeNode)
     {
         return treeNode.Parent == null && treeNode.Text == "Screens";
     }
+
+    public static bool IsTopBehaviorTreeNode(this ITreeNode treeNode) =>
+        treeNode is TreeNodeWrapper wrapper
+        ? wrapper.Node.IsTopBehaviorTreeNode()
+        : false;
 
     public static bool IsTopBehaviorTreeNode(this TreeNode treeNode)
     {
         return treeNode.Parent == null && treeNode.Text == "Behaviors";
     }
 
+    public static bool IsTopComponentContainerTreeNode(this ITreeNode treeNode) =>
+        treeNode is TreeNodeWrapper wrapper
+        ? wrapper.Node.IsTopComponentContainerTreeNode()
+        : false;
+
     public static bool IsTopComponentContainerTreeNode(this TreeNode treeNode)
     {
         return treeNode.Parent == null && treeNode.Text == "Components";
     }
+
+    public static bool IsTopStandardElementTreeNode(this ITreeNode treeNode) => treeNode is TreeNodeWrapper wrapper 
+        ? wrapper.Node.IsTopStandardElementTreeNode()
+        : false;
 
     public static bool IsTopStandardElementTreeNode(this TreeNode treeNode)
     {
@@ -2257,6 +2298,12 @@ public static class TreeNodeExtensionMethods
         }
     }
 
+
+    public static bool IsScreensFolderTreeNode(this ITreeNode treeNode) =>
+        treeNode is TreeNodeWrapper wrapper
+        ? wrapper.Node.IsScreensFolderTreeNode()
+        : false;
+
     public static bool IsScreensFolderTreeNode(this TreeNode treeNode)
     {
         return treeNode.Tag == null &&
@@ -2276,6 +2323,9 @@ public static class TreeNodeExtensionMethods
 
         return treeNode.Parent.IsPartOfScreensFolderStructure();
     }
+
+    public static bool IsPartOfComponentsFolderStructure(this ITreeNode treeNode) =>
+        (treeNode as TreeNodeWrapper)?.Node.IsPartOfComponentsFolderStructure() ?? false;
 
     public static bool IsPartOfComponentsFolderStructure(this TreeNode treeNode)
     {
@@ -2299,6 +2349,10 @@ public static class TreeNodeExtensionMethods
         return treeNode.Parent.IsPartOfStandardElementsFolderStructure();
     }
 
+    public static bool IsComponentsFolderTreeNode(this ITreeNode treeNode) =>
+        treeNode is TreeNodeWrapper wrapper
+        ? wrapper.Node.IsComponentsFolderTreeNode()
+        : false;
 
     public static bool IsComponentsFolderTreeNode(this TreeNode treeNode)
     {
