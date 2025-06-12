@@ -20,7 +20,6 @@ public class SelectedState : ISelectedState
 {
     #region Fields
 
-    static ISelectedState mSelf;
     SelectedStateSnapshot snapshot = new SelectedStateSnapshot();
 
     #endregion
