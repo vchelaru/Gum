@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Gum.Commands;
 using Gum.Undo;
+using GumCommon;
 using ToolsUtilities;
 
 namespace Gum.Services;
@@ -36,13 +37,13 @@ internal class ExposeVariableService : IExposeVariableService
     private readonly ISelectedState _selectedState;
 
     public ExposeVariableService(UndoManager undoManager, GuiCommands guiCommands, FileCommands fileCommands,
-        RenameLogic renameLogic, ISelectedState selectedState)
+        RenameLogic renameLogic)
     {
         _undoManager = undoManager;
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
         _renameLogic = renameLogic;
-        _selectedState = selectedState;
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
     }
 
     public void HandleExposeVariableClick(InstanceSave instanceSave, VariableSave variableSave, string rootVariableName)

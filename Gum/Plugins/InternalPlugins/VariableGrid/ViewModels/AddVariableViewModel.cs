@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using GumCommon;
 using ToolsUtilities;
 
 namespace Gum.Plugins.InternalPlugins.VariableGrid.ViewModels;
@@ -98,18 +99,17 @@ public class AddVariableViewModel : ViewModel
     #endregion
 
     public AddVariableViewModel(Commands.GuiCommands guiCommands,
-        ISelectedState selectedState,
         UndoManager undoManager,
         ElementCommands elementCommands,
         FileCommands fileCommands,
         NameVerifier nameVerifier)
     {
         _guiCommands = guiCommands;
-        _selectedState = selectedState;
         _undoManager = undoManager;
         _elementCommands = elementCommands;
         _fileCommands = fileCommands;
         _nameVerifier = nameVerifier;
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
 
         AvailableTypes = new List<string>();
         AvailableTypes.Add("float");
