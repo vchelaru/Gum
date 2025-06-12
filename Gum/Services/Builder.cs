@@ -53,6 +53,8 @@ file static class ServiceCollectionExtensions
     public static void AddCleanServices(this IServiceCollection services)
     {
         services.AddSingleton<ISelectedState, SelectedState>();
+        services.AddSingleton<RenameLogic>();
+        services.AddSingleton<LocalizationManager>();
     }
     
     // Register legacy services that may use Locator or have unresolved dependencies.
@@ -61,7 +63,6 @@ file static class ServiceCollectionExtensions
     // they can be moved to AddCleanServices.
     public static void AddLegacyServices(this IServiceCollection services)
     {
-        services.AddSingleton<CircularReferenceManager>();
         services.AddSingleton(ElementCommands.Self);
         services.AddSingleton(GumCommands.Self.GuiCommands);
         services.AddSingleton(GumCommands.Self.FileCommands);
@@ -69,14 +70,15 @@ file static class ServiceCollectionExtensions
         services.AddSingleton(NameVerifier.Self);
         services.AddSingleton(SetVariableLogic.Self);
         services.AddSingleton(HotkeyManager.Self);
-        services.AddSingleton<RenameLogic>();
-        services.AddSingleton<LocalizationManager>();
+        services.AddSingleton<IObjectFinder>(ObjectFinder.Self);
+        
+        services.AddSingleton<CircularReferenceManager>();
         services.AddSingleton<FontManager>();
         services.AddSingleton<DragDropManager>();
-        services.AddSingleton<IObjectFinder>(ObjectFinder.Self);
         services.AddSingleton<IEditVariableService, EditVariableService>();
         services.AddSingleton<IExposeVariableService, ExposeVariableService>();
         services.AddSingleton<IDeleteVariableService, DeleteVariableService>();
+        
         services.AddTransient<AddVariableViewModel>();
     }
 }

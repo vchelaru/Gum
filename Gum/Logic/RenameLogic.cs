@@ -67,9 +67,9 @@ public class RenameLogic
 
     private readonly ISelectedState _selectedState;
 
-    public RenameLogic()
+    public RenameLogic(ISelectedState selectedState)
     {
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _selectedState = selectedState;
     }
 
     #region StateSave
