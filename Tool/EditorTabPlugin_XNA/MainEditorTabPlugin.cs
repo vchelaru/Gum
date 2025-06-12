@@ -113,17 +113,18 @@ internal class MainEditorTabPlugin : InternalPlugin
 
     public MainEditorTabPlugin()
     {
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
+        
         _scrollbarService = new ScrollbarService();
         _guiCommands = Locator.GetRequiredService<GuiCommands>();
         _localizationManager = Locator.GetRequiredService<LocalizationManager>();
         _editingManager = new EditingManager();
-        _selectionManager = new SelectionManager(SelectedState.Self, _editingManager);
+        _selectionManager = new SelectionManager(_selectedState, _editingManager);
         _screenshotService = new ScreenshotService(_selectionManager);
         _elementCommands = ElementCommands.Self;
         _singlePixelTextureService = new SinglePixelTextureService();
         _backgroundSpriteService = new BackgroundSpriteService();
         _dragDropManager = Locator.GetRequiredService<DragDropManager>();
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
     }
 
     public override void StartUp()
@@ -766,7 +767,7 @@ internal class MainEditorTabPlugin : InternalPlugin
                     .GetValueOrDefault<string>("SourceFile");
 
                 _selectedState.SelectedStateSave.SetValue("SourceFile", fileName);
-                ProjectState.Self.Selected.SelectedInstance = null;
+                _selectedState.SelectedInstance = null;
                 SetVariableLogic.Self.PropertyValueChanged(
                     "SourceFile", 
                     oldValue, 
@@ -822,7 +823,7 @@ internal class MainEditorTabPlugin : InternalPlugin
                     .GetValueOrDefault<string>(instance.Name + ".SourceFile");
 
                 _selectedState.SelectedStateSave.SetValue(instance.Name + ".SourceFile", fileName, instance);
-                ProjectState.Self.Selected.SelectedInstance = instance;
+                _selectedState.SelectedInstance = instance;
 
                 SetVariableLogic.Self.PropertyValueChanged(
                     "SourceFile", 

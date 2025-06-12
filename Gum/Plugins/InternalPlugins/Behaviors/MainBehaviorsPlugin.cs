@@ -62,7 +62,7 @@ public class MainBehaviorsPlugin : InternalPlugin
 
     private void HandleRefreshBehaviorView()
     {
-        HandleElementSelected(GumState.Self.SelectedState.SelectedElement);
+        HandleElementSelected(_selectedState.SelectedElement);
     }
 
     private void HandleStateMovedToCategory(StateSave stateSave, StateSaveCategory newCategory, StateSaveCategory oldCategory)

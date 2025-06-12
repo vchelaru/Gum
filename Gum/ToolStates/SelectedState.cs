@@ -241,24 +241,7 @@ public class SelectedState : ISelectedState
     #endregion
 
     #region Properties
-
-    public static ISelectedState Self
-    {
-        // We usually won't use this in the actual product, but useful for testing
-        set
-        {
-            mSelf = value;
-        }
-        get
-        {
-            if (mSelf == null)
-            {
-                mSelf = new SelectedState();
-            }
-            return mSelf;
-        }
-    }
-
+    
     public IStateContainer SelectedStateContainer
     {
         get

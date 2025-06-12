@@ -76,7 +76,7 @@ namespace Gum.Logic
 
                     var elementWithState = new ElementWithState(container);
                     elementWithState.InstanceName = currentInstance?.Name;
-                    elementWithState.StateName = GumState.Self.SelectedState.SelectedStateSave?.Name;
+                    elementWithState.StateName = _selectedState.SelectedStateSave?.Name;
                     var stack = new List<ElementWithState>() { elementWithState };
 
                     // Pass in the current instance so that everything is relative to that and the checks don't have to prefix anything

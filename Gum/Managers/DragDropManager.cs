@@ -306,12 +306,12 @@ public class DragDropManager
             errorMessage = "The source file for " + target.Name + " is missing, so it cannot be edited";
         }
 
-        if(errorMessage == null && target == GumState.Self.SelectedState.SelectedElement)
+        if(errorMessage == null && target == _selectedState.SelectedElement)
         {
-            if(GumState.Self.SelectedState.SelectedStateSave != GumState.Self.SelectedState.SelectedElement.DefaultState)
+            if(_selectedState.SelectedStateSave != _selectedState.SelectedElement.DefaultState)
             {
                 errorMessage = $"Cannot add instances to " +
-                    $"{GumState.Self.SelectedState.SelectedElement} while the {GumState.Self.SelectedState.SelectedStateSave} " +
+                    $"{_selectedState.SelectedElement} while the {_selectedState.SelectedStateSave} " +
                     $"state is selected. Select the Default state first.";
             }
         }

@@ -2086,17 +2086,17 @@ namespace Gum.Managers
             if(backingObject != null)
             {
                 if (backingObject is ScreenSave asScreen)
-                    GumState.Self.SelectedState.SelectedElement = asScreen;
+                    _selectedState.SelectedElement = asScreen;
                 else if (backingObject is ComponentSave asComponent)
-                    GumState.Self.SelectedState.SelectedElement = asComponent;
+                    _selectedState.SelectedElement = asComponent;
                 else if (backingObject is StandardElementSave asStandard)
-                    GumState.Self.SelectedState.SelectedElement = asStandard;
+                    _selectedState.SelectedElement = asStandard;
                 else if (backingObject is InstanceSave asInstance)
-                    GumState.Self.SelectedState.SelectedInstance = asInstance;
+                    _selectedState.SelectedInstance = asInstance;
                 else if (backingObject is VariableSave asVariable)
-                    GumState.Self.SelectedState.SelectedBehaviorVariable = asVariable;
+                    _selectedState.SelectedBehaviorVariable = asVariable;
                 else if(backingObject is BehaviorSave asBehavior)
-                    GumState.Self.SelectedState.SelectedBehavior = asBehavior;
+                    _selectedState.SelectedBehavior = asBehavior;
 
                 searchTextBox.Text = null;
                 FilterText = null;

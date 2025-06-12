@@ -184,7 +184,7 @@ public partial class WireframeObjectManager
 
                     // Always set default first, then if the selected state is not the default, then apply that after:
                     RootGue.SetVariablesRecursively(elementSave, elementSave.DefaultState);
-                    var selectedState = GumState.Self.SelectedState.SelectedStateSave;
+                    var selectedState = _selectedState.SelectedStateSave;
                     if(selectedState != null && selectedState != elementSave.DefaultState)
                     {
                         RootGue.ApplyState(selectedState);
@@ -297,7 +297,7 @@ public partial class WireframeObjectManager
         var shouldLocalize = GumState.Self.ProjectState.GumProjectSave.ShowLocalizationInGum;
         //if(gue.Tag is InstanceSave instance)
         //{
-        //    var rfv = new RecursiveVariableFinder(GumState.Self.SelectedState.SelectedStateSave);
+        //    var rfv = new RecursiveVariableFinder(_selectedState.SelectedStateSave);
 
         //    var value = rfv.GetValue<bool>(instance.Name + ".Apply Localization");
         //    isLocalized = value;

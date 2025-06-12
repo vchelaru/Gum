@@ -421,7 +421,7 @@ namespace Gum.ToolCommands
                 WireframeObjectManager.Self.RootGue?.ApplyVariableReferences(_selectedState.SelectedStateSave);
 
                 VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(nameWithInstance,
-                    GumState.Self.SelectedState.SelectedElement, GumState.Self.SelectedState.SelectedStateCategorySave);
+                    _selectedState.SelectedElement, _selectedState.SelectedStateCategorySave);
 
 
                 return newValue;
@@ -454,7 +454,7 @@ namespace Gum.ToolCommands
 
             VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(baseVariableName,
                 elementSave,
-                GumState.Self.SelectedState.SelectedStateCategorySave);
+                _selectedState.SelectedStateCategorySave);
 
             return newValue;
         }

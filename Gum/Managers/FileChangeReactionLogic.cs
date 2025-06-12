@@ -80,7 +80,7 @@ namespace Gum.Managers
 
         private void ReactToProjectChanged(FilePath file)
         {
-            var currentElement = GumState.Self.SelectedState.SelectedElement;
+            var currentElement = _selectedState.SelectedElement;
             var elementName = currentElement?.Name;
 
             GumCommands.Self.FileCommands.LoadProject(file.Standardized);
@@ -91,7 +91,7 @@ namespace Gum.Managers
 
                 if(elementToSelect != null)
                 {
-                    GumState.Self.SelectedState.SelectedElement = elementToSelect;
+                    _selectedState.SelectedElement = elementToSelect;
                 }
             }
         }

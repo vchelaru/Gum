@@ -23,9 +23,11 @@ public class MainVariableGridPlugin : InternalPlugin
 {
     PropertyGridManager _propertyGridManager;
     private readonly VariableReferenceLogic _variableReferenceLogic;
+    private readonly ISelectedState _selectedState;
 
     public MainVariableGridPlugin()
     {
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
         _propertyGridManager = PropertyGridManager.Self;
         _variableReferenceLogic = new VariableReferenceLogic(Locator.GetRequiredService<GuiCommands>());
         ElementSaveExtensions.CustomEvaluateExpression = EvaluateExpression;
@@ -143,13 +145,13 @@ public class MainVariableGridPlugin : InternalPlugin
 
     private void HandleTreeNodeSelected(TreeNode node)
     {
-        var selectedState = GumState.Self.SelectedState;
+        var selectedState = _selectedState;
         var shouldShowButton = (selectedState.SelectedBehavior != null ||
             selectedState.SelectedComponent != null ||
             selectedState.SelectedScreen != null);
         if(shouldShowButton)
         {
-            shouldShowButton = GumState.Self.SelectedState.SelectedInstance == null;
+            shouldShowButton = _selectedState.SelectedInstance == null;
         }
         PropertyGridManager.Self.VariableViewModel.AddVariableButtonVisibility =
             shouldShowButton.ToVisibility();

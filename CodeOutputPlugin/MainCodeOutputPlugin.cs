@@ -161,7 +161,7 @@ public class MainCodeOutputPlugin : PluginBase
     {
         if (control != null)
         {
-            LoadCodeSettingsFile(GumState.Self.SelectedState.SelectedElement);
+            LoadCodeSettingsFile(_selectedState.SelectedElement);
 
             RefreshCodeDisplay();
         }
@@ -171,7 +171,7 @@ public class MainCodeOutputPlugin : PluginBase
     {
         if(control != null)
         {
-            LoadCodeSettingsFile(GumState.Self.SelectedState.SelectedElement);
+            LoadCodeSettingsFile(_selectedState.SelectedElement);
 
             RefreshCodeDisplay();
         }
@@ -270,7 +270,7 @@ public class MainCodeOutputPlugin : PluginBase
     {
         //GumCommands.Self.GuiCommands.ShowControl(control);
 
-        LoadCodeSettingsFile(GumState.Self.SelectedState.SelectedElement);
+        LoadCodeSettingsFile(_selectedState.SelectedElement);
 
         RefreshCodeDisplay();
 

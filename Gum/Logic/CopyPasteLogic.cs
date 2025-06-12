@@ -86,11 +86,11 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
 
         if (copyType == CopyType.InstanceOrElement)
         {
-            if (ProjectState.Self.Selected.SelectedInstances.Count() != 0)
+            if (_selectedState.SelectedInstances.Count() != 0)
             {
                 StoreCopiedInstances();
             }
-            else if (ProjectState.Self.Selected.SelectedElement != null)
+            else if (_selectedState.SelectedElement != null)
             {
                 StoreCopiedElementSave();
             }

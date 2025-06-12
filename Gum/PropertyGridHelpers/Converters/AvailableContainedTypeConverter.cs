@@ -4,11 +4,19 @@ using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using GumCommon;
 
 namespace Gum.PropertyGridHelpers.Converters
 {
     public class AvailableContainedTypeConverter : TypeConverter
     {
+        private readonly ISelectedState _selectedState;
+        
+        public AvailableContainedTypeConverter()
+        {
+            _selectedState = Locator.GetRequiredService<ISelectedState>();
+        }
+        
         public override bool GetStandardValuesSupported(ITypeDescriptorContext context)
         {
             return true;
@@ -36,11 +44,11 @@ namespace Gum.PropertyGridHelpers.Converters
                 }
             }
 
-            var instance = GumState.Self.SelectedState.SelectedInstance;
+            var instance = _selectedState.SelectedInstance;
             if(instance != null)
             {
                 var instanceName = instance.Name;
-                var currentElement = GumState.Self.SelectedState.SelectedElement;
+                var currentElement = _selectedState.SelectedElement;
 
                 foreach(var otherInstance in currentElement.Instances)
                 {

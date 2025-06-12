@@ -1,6 +1,7 @@
 ﻿using Gum.ToolStates;
 using System.Windows;
 using System.Windows.Controls;
+using GumCommon;
 
 namespace Gum.Plugins.Behaviors
 {
@@ -9,6 +10,7 @@ namespace Gum.Plugins.Behaviors
     /// </summary>
     public partial class BehaviorsControl : UserControl
     {
+        private readonly ISelectedState _selectedState;
         BehaviorsViewModel ViewModel
         {
             get
@@ -19,11 +21,12 @@ namespace Gum.Plugins.Behaviors
         public BehaviorsControl()
         {
             InitializeComponent();
+            _selectedState = Locator.GetRequiredService<ISelectedState>();
         }
 
         private void HandleEditClick(object sender, RoutedEventArgs e)
         {
-            var component = GumState.Self.SelectedState.SelectedComponent;
+            var component = _selectedState.SelectedComponent;
             if(component != null)
             {
                 ViewModel.UpdateTo(component);

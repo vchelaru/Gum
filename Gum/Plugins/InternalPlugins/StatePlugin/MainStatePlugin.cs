@@ -41,10 +41,10 @@ public class MainStatePlugin : InternalPlugin
 
     public MainStatePlugin()
     {
-        _gumCommands = GumCommands.Self;
-        _stateTreeViewRightClickService = new StateTreeViewRightClickService(GumState.Self.SelectedState, _gumCommands);
-        _hotkeyManager = HotkeyManager.Self;
         _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _gumCommands = GumCommands.Self;
+        _stateTreeViewRightClickService = new StateTreeViewRightClickService(_selectedState, _gumCommands);
+        _hotkeyManager = HotkeyManager.Self;
         _objectFinder = ObjectFinder.Self;
     }
 

@@ -287,7 +287,7 @@ public class StandardWireframeEditor : WireframeEditor
                 _selectedState.SelectedInstance, "float");
 
             VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(nameWithInstance,
-                GumState.Self.SelectedState.SelectedElement, GumState.Self.SelectedState.SelectedStateCategorySave);
+                _selectedState.SelectedElement, _selectedState.SelectedStateCategorySave);
 
             GumCommands.Self.GuiCommands.RefreshVariableValues();
 

@@ -166,7 +166,7 @@ namespace Gum.Commands
                 foreach (var variable in stateToMove.Variables)
                 {
                     VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(variable.Name,
-                        element, GumState.Self.SelectedState.SelectedStateCategorySave);
+                        element, _selectedState.SelectedStateCategorySave);
                 }
 
 
@@ -176,7 +176,7 @@ namespace Gum.Commands
                     foreach (var variable in firstState.Variables)
                     {
                         VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(variable.Name,
-                            element, GumState.Self.SelectedState.SelectedStateCategorySave);
+                            element, _selectedState.SelectedStateCategorySave);
                     }
                 }
             }

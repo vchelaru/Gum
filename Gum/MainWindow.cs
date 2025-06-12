@@ -52,8 +52,7 @@ namespace Gum
             System.Diagnostics.PresentationTraceSources.DataBindingSource.Switch.Level =
                 System.Diagnostics.SourceLevels.Critical;
 #endif
-            var builder = new Builder();
-            builder.Build();
+            _ = GumBuilder.BuildGum();
 
             InitializeComponent();
 
