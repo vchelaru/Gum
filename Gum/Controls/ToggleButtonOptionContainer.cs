@@ -6,6 +6,7 @@ using System.IO;
 using System.Reflection;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
+using GumCommon;
 using WpfDataUi;
 using WpfDataUi.Controls;
 using WpfDataUi.DataTypes;
@@ -108,17 +109,19 @@ namespace Gum.Controls
 
         protected static StandardElementSave GetRootElement()
         {
+            ISelectedState selectedState = Locator.GetRequiredService<ISelectedState>();
+            
             StandardElementSave rootElement = null;
 
-            if (SelectedState.Self.SelectedInstance != null)
+            if (selectedState.SelectedInstance != null)
             {
                 rootElement =
-                    ObjectFinder.Self.GetRootStandardElementSave(SelectedState.Self.SelectedInstance);
+                    ObjectFinder.Self.GetRootStandardElementSave(selectedState.SelectedInstance);
             }
-            else if (SelectedState.Self.SelectedElement != null)
+            else if (selectedState.SelectedElement != null)
             {
                 rootElement =
-                    ObjectFinder.Self.GetRootStandardElementSave(SelectedState.Self.SelectedElement);
+                    ObjectFinder.Self.GetRootStandardElementSave(selectedState.SelectedElement);
             }
 
             return rootElement;

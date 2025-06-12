@@ -20,6 +20,7 @@ using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Services;
 using Gum.Commands;
 using Gum.Graphics;
+using GumCommon;
 
 namespace Gum.PropertyGridHelpers
 {
@@ -29,16 +30,22 @@ namespace Gum.PropertyGridHelpers
         private CircularReferenceManager _circularReferenceManager;
         private FontManager _fontManager;
         private FileCommands _fileCommands;
+        private readonly ISelectedState _selectedState;
+
+        public SetVariableLogic()
+        {
+            _selectedState = Locator.GetRequiredService<ISelectedState>();
+        }
 
         // this is needed as we unroll all the other singletons...
         public void Initialize(CircularReferenceManager circularReferenceManager, FileCommands fileCommands)
         {
 
             _variableReferenceLogic = new VariableReferenceLogic(
-                Builder.Get<GuiCommands>());
+                Locator.GetRequiredService<GuiCommands>());
             _circularReferenceManager = circularReferenceManager;
 
-            _fontManager = Builder.Get<FontManager>();
+            _fontManager = Locator.GetRequiredService<FontManager>();
             _fileCommands = fileCommands;
         }
 
@@ -59,11 +66,11 @@ namespace Gum.PropertyGridHelpers
 
                 if (instance != null)
                 {
-                    SelectedState.Self.SelectedVariableSave = stateContainingVariable.GetVariableSave(instance.Name + "." + unqualifiedMemberName);
+                    _selectedState.SelectedVariableSave = stateContainingVariable.GetVariableSave(instance.Name + "." + unqualifiedMemberName);
                 }
                 else
                 {
-                    SelectedState.Self.SelectedVariableSave = stateContainingVariable.GetVariableSave(unqualifiedMemberName);
+                    _selectedState.SelectedVariableSave = stateContainingVariable.GetVariableSave(unqualifiedMemberName);
                 }
             }
 
@@ -131,7 +138,7 @@ namespace Gum.PropertyGridHelpers
                         // This code used to not specify the category, so it defaulted to the selected category.
                         // I'm maintaining this behavior but I'm not sure if it's what should happen - maybe we should
                         // serach for the owner category of the state?
-                        GumState.Self.SelectedState.SelectedStateCategorySave);
+                        _selectedState.SelectedStateCategorySave);
 
                     // Need to record undo before refreshing and reselecting the UI
                     if (recordUndo)
@@ -227,7 +234,7 @@ namespace Gum.PropertyGridHelpers
 
             if (rootVariableName == "BaseType")
             {
-                VariableSave variable = SelectedState.Self.SelectedVariableSave;
+                VariableSave variable = _selectedState.SelectedVariableSave;
 
                 if (instance != null)
                 {
@@ -252,7 +259,7 @@ namespace Gum.PropertyGridHelpers
 
         private void ReactIfChangedMemberIsDefaultChildContainer(ElementSave parentElement, InstanceSave instance, string rootVariableName, object oldValue)
         {
-            VariableSave variable = SelectedState.Self.SelectedVariableSave;
+            VariableSave variable = _selectedState.SelectedVariableSave;
 
             if (variable != null && rootVariableName == nameof(ComponentSave.DefaultChildContainer))
             {
@@ -326,12 +333,12 @@ namespace Gum.PropertyGridHelpers
                     TryAddForced("IsItalic");
                     TryAddForced("IsBold");
 
-                    StateSave stateSave = SelectedState.Self.SelectedStateSave;
+                    StateSave stateSave = _selectedState.SelectedStateSave;
 
                     // If the user has a category selected but no state in the category, then use the default:
-                    if (stateSave == null && SelectedState.Self.SelectedStateCategorySave != null)
+                    if (stateSave == null && _selectedState.SelectedStateCategorySave != null)
                     {
-                        stateSave = SelectedState.Self.SelectedElement.DefaultState;
+                        stateSave = _selectedState.SelectedElement.DefaultState;
                     }
 
 
@@ -351,7 +358,7 @@ namespace Gum.PropertyGridHelpers
         {
             bool wasAnythingSet = false;
             string variableToSet = null;
-            StateSave stateSave = SelectedState.Self.SelectedStateSave;
+            StateSave stateSave = _selectedState.SelectedStateSave;
             float valueToSet = 0;
 
             var wereUnitValuesChanged =
@@ -397,7 +404,7 @@ namespace Gum.PropertyGridHelpers
 
                     var editingCommands = GumCommands.Self.ProjectCommands.ElementCommands;
 
-                    object unitTypeAsObject = editingCommands.GetCurrentValueForVariable(changedMember, SelectedState.Self.SelectedInstance);
+                    object unitTypeAsObject = editingCommands.GetCurrentValueForVariable(changedMember, _selectedState.SelectedInstance);
                     GeneralUnitType unitType = UnitConverter.ConvertToGeneralUnit(unitTypeAsObject);
 
 
@@ -457,12 +464,12 @@ namespace Gum.PropertyGridHelpers
 
             if (wasAnythingSet && AttemptToPersistPositionsOnUnitChanges && !float.IsPositiveInfinity(valueToSet))
             {
-                InstanceSave instanceSave = SelectedState.Self.SelectedInstance;
+                InstanceSave instanceSave = _selectedState.SelectedInstance;
 
                 string unqualifiedVariableToSet = variableToSet;
-                if (SelectedState.Self.SelectedInstance != null)
+                if (_selectedState.SelectedInstance != null)
                 {
-                    variableToSet = SelectedState.Self.SelectedInstance.Name + "." + variableToSet;
+                    variableToSet = _selectedState.SelectedInstance.Name + "." + variableToSet;
                 }
 
                 stateSave.SetValue(variableToSet, valueToSet, instanceSave);
@@ -490,7 +497,7 @@ namespace Gum.PropertyGridHelpers
 
             variableFullName = $"{instancePrefix}{changedMember}";
 
-            VariableSave variable = SelectedState.Self.SelectedStateSave?.GetVariableSave(variableFullName);
+            VariableSave variable = _selectedState.SelectedStateSave?.GetVariableSave(variableFullName);
 
             bool isSourcefile = variable?.GetRootName() == "SourceFile";
 
@@ -514,7 +521,7 @@ namespace Gum.PropertyGridHelpers
                 string value;
 
                 value = variable.Value as string;
-                StateSave stateSave = SelectedState.Self.SelectedStateSave;
+                StateSave stateSave = _selectedState.SelectedStateSave;
 
                 if (!string.IsNullOrEmpty(value))
                 {
@@ -705,7 +712,7 @@ namespace Gum.PropertyGridHelpers
         {
             bool isValidAssignment = true;
 
-            VariableSave variable = SelectedState.Self.SelectedVariableSave;
+            VariableSave variable = _selectedState.SelectedVariableSave;
             // Eventually need to handle tunneled variables
             if (variable != null && changedMember == "Parent")
             {
@@ -783,10 +790,10 @@ namespace Gum.PropertyGridHelpers
             {
                 RecursiveVariableFinder rvf;
 
-                var instance = SelectedState.Self.SelectedInstance;
+                var instance = _selectedState.SelectedInstance;
                 if (instance != null)
                 {
-                    rvf = new RecursiveVariableFinder(SelectedState.Self.SelectedInstance, parentElement);
+                    rvf = new RecursiveVariableFinder(_selectedState.SelectedInstance, parentElement);
                 }
                 else
                 {
@@ -839,9 +846,9 @@ namespace Gum.PropertyGridHelpers
 
         string GetQualifiedName(string variableName)
         {
-            if (SelectedState.Self.SelectedInstance != null)
+            if (_selectedState.SelectedInstance != null)
             {
-                return SelectedState.Self.SelectedInstance.Name + "." + variableName;
+                return _selectedState.SelectedInstance.Name + "." + variableName;
             }
             else
             {

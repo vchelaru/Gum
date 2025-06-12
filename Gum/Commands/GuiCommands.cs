@@ -26,6 +26,7 @@ using Microsoft.Extensions.Hosting;
 using Gum.Services;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows.Media;
+using GumCommon;
 
 namespace Gum.Commands
 {
@@ -40,11 +41,13 @@ namespace Gum.Commands
 
         MainPanelControl mainPanelControl;
 
+        private readonly ISelectedState _selectedState;
+
         #endregion
 
         public GuiCommands()
         {
-
+            _selectedState = Locator.GetRequiredService<ISelectedState>();
         }
 
         internal void Initialize(MainWindow mainWindow, MainPanelControl mainPanelControl)
@@ -56,13 +59,13 @@ namespace Gum.Commands
         internal void BroadcastRefreshBehaviorView()
         {
             PluginManager.Self.RefreshBehaviorView(
-                SelectedState.Self.SelectedElement);
+                _selectedState.SelectedElement);
         }
 
         internal void BroadcastBehaviorReferencesChanged()
         {
             PluginManager.Self.BehaviorReferencesChanged(
-                SelectedState.Self.SelectedElement);
+                _selectedState.SelectedElement);
         }
 
         #region Refresh Commands
@@ -320,7 +323,7 @@ namespace Gum.Commands
         #region Show Add XXX Widows
         public void ShowAddVariableWindow()
         {
-            var canShow = SelectedState.Self.SelectedBehavior != null || SelectedState.Self.SelectedElement != null;
+            var canShow = _selectedState.SelectedBehavior != null || _selectedState.SelectedElement != null;
 
             /////////////// Early Out///////////////
             if (!canShow)
@@ -328,12 +331,9 @@ namespace Gum.Commands
                 return;
             }
             //////////////End Early Out/////////////
-            var host = Builder.App;
-            var services = host.Services;
-
-            var vm = services.GetRequiredService<AddVariableViewModel>();
+            var vm = Locator.GetRequiredService<AddVariableViewModel>();
             vm.RenameType = RenameType.NormalName;
-            vm.Element = SelectedState.Self.SelectedElement;
+            vm.Element = _selectedState.SelectedElement;
             vm.Variable = null;
 
             var window = new AddVariableWindow(vm);
@@ -349,7 +349,7 @@ namespace Gum.Commands
         public void ShowAddCategoryWindow()
         {
 
-            var target = SelectedState.Self.SelectedStateContainer;
+            var target = _selectedState.SelectedStateContainer;
             if (target == null)
             {
                 MessageBox.Show("You must first select an element or behavior to add a state category");
@@ -395,7 +395,7 @@ namespace Gum.Commands
                     StateSaveCategory category = ElementCommands.Self.AddCategory(
                         target, name);
 
-                    SelectedState.Self.SelectedStateCategorySave = category;
+                    _selectedState.SelectedStateCategorySave = category;
                 }
             }
 
@@ -403,7 +403,7 @@ namespace Gum.Commands
 
         public void ShowAddStateWindow()
         {
-            if (SelectedState.Self.SelectedStateCategorySave == null && SelectedState.Self.SelectedElement == null)
+            if (_selectedState.SelectedStateCategorySave == null && _selectedState.SelectedElement == null)
             {
                 MessageBox.Show("You must first select an element or a behavior category to add a state");
             }
@@ -417,7 +417,7 @@ namespace Gum.Commands
                 {
                     string name = tiw.Result;
 
-                    if (!NameVerifier.Self.IsStateNameValid(name, SelectedState.Self.SelectedStateCategorySave, null, out string whyNotValid))
+                    if (!NameVerifier.Self.IsStateNameValid(name, _selectedState.SelectedStateCategorySave, null, out string whyNotValid))
                     {
                         GumCommands.Self.GuiCommands.ShowMessage(whyNotValid);
                     }
@@ -426,10 +426,10 @@ namespace Gum.Commands
                         using (UndoManager.Self.RequestLock())
                         {
                             StateSave stateSave = ElementCommands.Self.AddState(
-                                SelectedState.Self.SelectedStateContainer, SelectedState.Self.SelectedStateCategorySave, name);
+                                _selectedState.SelectedStateContainer, _selectedState.SelectedStateCategorySave, name);
 
 
-                            SelectedState.Self.SelectedStateSave = stateSave;
+                            _selectedState.SelectedStateSave = stateSave;
 
                         }
                     }

@@ -8,15 +8,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using GumCommon;
 using ToolsUtilities;
 
 namespace CodeOutputPlugin.Manager
 {
     public static class ParentSetLogic
     {
+        private static readonly ISelectedState _selectedState = Locator.GetRequiredService<ISelectedState>();
+        
         public static void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue, CodeOutputProjectSettings codeOutputProjectSettings)
         {
-            var currentState = SelectedState.Self.SelectedStateSave;
+            var currentState = _selectedState.SelectedStateSave;
             ///////////////////////Early Out//////////////////
             if(variableName != "Parent" || instance == null || currentState == null)
             {

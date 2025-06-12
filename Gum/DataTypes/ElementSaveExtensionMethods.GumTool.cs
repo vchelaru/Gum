@@ -6,12 +6,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using GumCommon;
 using ToolsUtilities;
 
 namespace Gum.DataTypes
 {
     public static class ElementSaveExtensionMethodsGumTool
     {
+        private static readonly ISelectedState _selectedState = Locator.GetRequiredService<ISelectedState>();
         public static FilePath GetFullPathXmlFile(this ElementSave elementSave)
         {
             return elementSave?.GetFullPathXmlFile(elementSave.Name);
@@ -79,11 +81,11 @@ namespace Gum.DataTypes
         {
             StateSave stateToPullFrom = element.DefaultState;
 
-            if (element == SelectedState.Self.SelectedElement &&
-                SelectedState.Self.SelectedStateSave != null &&
+            if (element == _selectedState.SelectedElement &&
+                _selectedState.SelectedStateSave != null &&
                 !forceDefault)
             {
-                stateToPullFrom = SelectedState.Self.SelectedStateSave;
+                stateToPullFrom = _selectedState.SelectedStateSave;
             }
 
             return stateToPullFrom.GetVariableRecursive(variable);
@@ -93,11 +95,11 @@ namespace Gum.DataTypes
         {
             var stateToPullFrom = element.DefaultState;
 
-            if (element == SelectedState.Self.SelectedElement &&
-                SelectedState.Self.SelectedStateSave != null &&
+            if (element == _selectedState.SelectedElement &&
+                _selectedState.SelectedStateSave != null &&
                 !forceDefault)
             {
-                stateToPullFrom = SelectedState.Self.SelectedStateSave;
+                stateToPullFrom = _selectedState.SelectedStateSave;
             }
 
             return stateToPullFrom.GetVariableListRecursive(variable);
@@ -111,11 +113,11 @@ namespace Gum.DataTypes
         {
             StateSave stateToPullFrom = element.DefaultState;
 
-            if (element == SelectedState.Self.SelectedElement &&
-                SelectedState.Self.SelectedStateSave != null &&
+            if (element == _selectedState.SelectedElement &&
+                _selectedState.SelectedStateSave != null &&
                 !forceDefault)
             {
-                stateToPullFrom = SelectedState.Self.SelectedStateSave;
+                stateToPullFrom = _selectedState.SelectedStateSave;
             }
 
             VariableSave variableSave = stateToPullFrom.GetVariableRecursive(variable);

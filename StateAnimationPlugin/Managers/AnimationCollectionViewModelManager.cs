@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using GumCommon;
 using ToolsUtilities;
 
 namespace StateAnimationPlugin.Managers;
@@ -17,10 +18,12 @@ namespace StateAnimationPlugin.Managers;
 public class AnimationCollectionViewModelManager : Singleton<AnimationCollectionViewModelManager>
 {
     AnimationFilePathService _animationFilePathService;
+    private readonly ISelectedState _selectedState;
 
     public AnimationCollectionViewModelManager()
     {
         _animationFilePathService = new AnimationFilePathService();
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
     }
 
     public ElementAnimationsViewModel GetAnimationCollectionViewModel(ElementSave element)
@@ -75,7 +78,7 @@ public class AnimationCollectionViewModelManager : Singleton<AnimationCollection
 
     public void Save(ElementAnimationsViewModel viewModel)
     {
-        var currentElement = SelectedState.Self.SelectedElement;
+        var currentElement = _selectedState.SelectedElement;
 
         var fileName = _animationFilePathService.GetAbsoluteAnimationFileNameFor(currentElement);
 

@@ -13,6 +13,7 @@ using Gum.Logic;
 using Gum.DataTypes.Behaviors;
 using Gum.PropertyGridHelpers;
 using Gum.Controls;
+using GumCommon;
 
 namespace Gum.Managers;
 
@@ -39,9 +40,6 @@ public partial class ElementTreeViewManager
     ToolStripMenuItem mAddFolder;
 
     ToolStripMenuItem duplicateElement;
-
-
-
     #endregion
 
     #region Initialize and event handlers
@@ -106,8 +104,8 @@ public partial class ElementTreeViewManager
 
     void HandleDuplicateElementClick(object sender, EventArgs e)
     {
-        if (SelectedState.Self.SelectedScreen != null ||
-            SelectedState.Self.SelectedComponent != null)
+        if (_selectedState.SelectedScreen != null ||
+            _selectedState.SelectedComponent != null)
         {
             GumCommands.Self.Edit.DuplicateSelectedElement();
         }
@@ -115,18 +113,18 @@ public partial class ElementTreeViewManager
 
     void OnGoToDefinitionClick(object sender, EventArgs e)
     {
-        if (SelectedState.Self.SelectedInstance != null)
+        if (_selectedState.SelectedInstance != null)
         {
-            ElementSave element = ObjectFinder.Self.GetElementSave(SelectedState.Self.SelectedInstance.BaseType);
+            ElementSave element = ObjectFinder.Self.GetElementSave(_selectedState.SelectedInstance.BaseType);
 
-            SelectedState.Self.SelectedElement = element;
+            _selectedState.SelectedElement = element;
         }
     }
 
     void CreateComponentClick(object sender, EventArgs e)
     {
-        if (SelectedState.Self.SelectedScreen != null ||
-            SelectedState.Self.SelectedComponent != null)
+        if (_selectedState.SelectedScreen != null ||
+            _selectedState.SelectedComponent != null)
         {
             GumCommands.Self.Edit.ShowCreateComponentFromInstancesDialog();
         }
@@ -134,7 +132,7 @@ public partial class ElementTreeViewManager
 
     void ForceSaveObjectClick(object sender, EventArgs e)
     {
-        GumCommands.Self.FileCommands.ForceSaveElement(SelectedState.Self.SelectedElement);
+        GumCommands.Self.FileCommands.ForceSaveElement(_selectedState.SelectedElement);
     }
 
     void AddFolderClick(object sender, EventArgs e)
@@ -145,7 +143,7 @@ public partial class ElementTreeViewManager
 
     void HandleViewInExplorer(object sender, EventArgs e)
     {
-        TreeNode treeNode = SelectedState.Self.SelectedTreeNode;
+        TreeNode treeNode = _selectedState.SelectedTreeNode;
 
         if (treeNode != null)
         {
@@ -196,7 +194,7 @@ public partial class ElementTreeViewManager
 
     void HandleDeleteFolder(object sender, EventArgs e)
     {
-        TreeNode treeNode = SelectedState.Self.SelectedTreeNode;
+        TreeNode treeNode = _selectedState.SelectedTreeNode;
 
         if (treeNode != null)
         {
@@ -259,9 +257,9 @@ public partial class ElementTreeViewManager
         {
             #region InstanceSave 
             // InstanceSave selected
-            if (SelectedState.Self.SelectedInstance != null)
+            if (_selectedState.SelectedInstance != null)
             {
-                var containerElement = SelectedState.Self.SelectedElement;
+                var containerElement = _selectedState.SelectedElement;
                 mMenuStrip.Items.Add(mGoToDefinition);
 
                 if (containerElement != null)
@@ -273,9 +271,9 @@ public partial class ElementTreeViewManager
 
                 mMenuStrip.Items.Add("-");
 
-                var deleteText = SelectedState.Self.SelectedInstances.Count() > 1
-                    ? $"Delete {SelectedState.Self.SelectedInstances.Count()} instances"
-                    : $"Delete {SelectedState.Self.SelectedInstance.Name}";
+                var deleteText = _selectedState.SelectedInstances.Count() > 1
+                    ? $"Delete {_selectedState.SelectedInstances.Count()} instances"
+                    : $"Delete {_selectedState.SelectedInstance.Name}";
                 mMenuStrip.Items.Add(deleteText, null, (not, used) => GumCommands.Self.Edit.DeleteSelection());
 
 
@@ -284,9 +282,9 @@ public partial class ElementTreeViewManager
                 {
                     mMenuStrip.Items.Add("-");
 
-                    mAddInstance.Text = $"Add child object to '{SelectedState.Self.SelectedInstance.Name}'";
+                    mAddInstance.Text = $"Add child object to '{_selectedState.SelectedInstance.Name}'";
                     mMenuStrip.Items.Add(mAddInstance);
-                    mAddParentInstance.Text = $"Add parent object to '{SelectedState.Self.SelectedInstance.Name}'";
+                    mAddParentInstance.Text = $"Add parent object to '{_selectedState.SelectedInstance.Name}'";
                     mMenuStrip.Items.Add(mAddParentInstance);
 
                     if (!string.IsNullOrEmpty(containerElement?.BaseType))
@@ -295,9 +293,9 @@ public partial class ElementTreeViewManager
 
                         if (containerBase is ScreenSave || containerBase is ComponentSave)
                         {
-                            mMenuStrip.Items.Add($"Add {SelectedState.Self.SelectedInstance.Name} to base {containerBase}",
+                            mMenuStrip.Items.Add($"Add {_selectedState.SelectedInstance.Name} to base {containerBase}",
                                 null,
-                                (not, used) => HandleMoveToBase(SelectedState.Self.SelectedInstances, SelectedState.Self.SelectedElement, containerBase));
+                                (not, used) => HandleMoveToBase(_selectedState.SelectedInstances, _selectedState.SelectedElement, containerBase));
                         }
                     }
 
@@ -309,7 +307,7 @@ public partial class ElementTreeViewManager
 
             #region Screen or Component
             // ScreenSave or ComponentSave
-            else if (SelectedState.Self.SelectedScreen != null || SelectedState.Self.SelectedComponent != null)
+            else if (_selectedState.SelectedScreen != null || _selectedState.SelectedComponent != null)
             {
                 mMenuStrip.Items.Add("View in explorer", null, HandleViewInExplorer);
 
@@ -317,16 +315,16 @@ public partial class ElementTreeViewManager
 
                 mMenuStrip.Items.Add("-");
 
-                mAddInstance.Text = "Add object to " + SelectedState.Self.SelectedElement.Name;
+                mAddInstance.Text = "Add object to " + _selectedState.SelectedElement.Name;
                 mMenuStrip.Items.Add(mAddInstance);
                 mMenuStrip.Items.Add(mSaveObject);
-                if (SelectedState.Self.SelectedScreen != null)
+                if (_selectedState.SelectedScreen != null)
                 {
-                    duplicateElement.Text = $"Duplicate {SelectedState.Self.SelectedScreen.Name}";
+                    duplicateElement.Text = $"Duplicate {_selectedState.SelectedScreen.Name}";
                 }
                 else
                 {
-                    duplicateElement.Text = $"Duplicate {SelectedState.Self.SelectedComponent.Name}";
+                    duplicateElement.Text = $"Duplicate {_selectedState.SelectedComponent.Name}";
                 }
                 mMenuStrip.Items.Add(duplicateElement);
 
@@ -335,7 +333,7 @@ public partial class ElementTreeViewManager
                 mMenuStrip.Items.Add("-");
 
 
-                mDeleteObject.Text = "Delete " + SelectedState.Self.SelectedElement.ToString();
+                mDeleteObject.Text = "Delete " + _selectedState.SelectedElement.ToString();
                 mMenuStrip.Items.Add(mDeleteObject);
 
             }
@@ -343,11 +341,11 @@ public partial class ElementTreeViewManager
 
             #region Behavior
 
-            else if (SelectedState.Self.SelectedBehavior != null)
+            else if (_selectedState.SelectedBehavior != null)
             {
                 mMenuStrip.Items.Add("View in explorer", null, HandleViewInExplorer);
                 mMenuStrip.Items.Add("-");
-                mDeleteObject.Text = "Delete " + SelectedState.Self.SelectedBehavior.ToString();
+                mDeleteObject.Text = "Delete " + _selectedState.SelectedBehavior.ToString();
                 mMenuStrip.Items.Add(mDeleteObject);
             }
 
@@ -355,7 +353,7 @@ public partial class ElementTreeViewManager
 
             #region Standard Element
 
-            else if (SelectedState.Self.SelectedStandardElement != null)
+            else if (_selectedState.SelectedStandardElement != null)
             {
                 mMenuStrip.Items.Add("View in explorer", null, HandleViewInExplorer);
 
@@ -471,7 +469,7 @@ public partial class ElementTreeViewManager
 
     private void HandleViewReferences(object sender, EventArgs e)
     {
-        GumCommands.Self.Edit.DisplayReferencesTo(SelectedState.Self.SelectedElement);
+        GumCommands.Self.Edit.DisplayReferencesTo(_selectedState.SelectedElement);
     }
 
     private void HandleRenameFolder(object sender, EventArgs e)
@@ -537,7 +535,7 @@ public partial class ElementTreeViewManager
 
                     GumCommands.Self.GuiCommands.RefreshElementTreeView();
 
-                    SelectedState.Self.SelectedScreen = screenSave;
+                    _selectedState.SelectedScreen = screenSave;
 
                     GumCommands.Self.FileCommands.TryAutoSaveElement(screenSave);
                     GumCommands.Self.FileCommands.TryAutoSaveProject();
@@ -617,7 +615,7 @@ public partial class ElementTreeViewManager
         if (lastImportedComponent != null)
         {
             GumCommands.Self.GuiCommands.RefreshElementTreeView();
-            SelectedState.Self.SelectedComponent = lastImportedComponent;
+            _selectedState.SelectedComponent = lastImportedComponent;
             GumCommands.Self.FileCommands.TryAutoSaveProject();
         }
     }
@@ -635,7 +633,7 @@ public partial class ElementTreeViewManager
         {
             string whyNotValid;
 
-            if (!NameVerifier.Self.IsInstanceNameValid(name, null, SelectedState.Self.SelectedElement, out whyNotValid))
+            if (!NameVerifier.Self.IsInstanceNameValid(name, null, _selectedState.SelectedElement, out whyNotValid))
             {
                 MessageBox.Show(whyNotValid);
 
@@ -651,12 +649,12 @@ public partial class ElementTreeViewManager
     {
         if (!ShowNewObjectDialog(out var name)) return;
 
-        var focusedInstance = SelectedState.Self.SelectedInstance;
-        var newInstance = GumCommands.Self.ProjectCommands.ElementCommands.AddInstance(SelectedState.Self.SelectedElement, name, StandardElementsManager.Self.DefaultType);
+        var focusedInstance = _selectedState.SelectedInstance;
+        var newInstance = GumCommands.Self.ProjectCommands.ElementCommands.AddInstance(_selectedState.SelectedElement, name, StandardElementsManager.Self.DefaultType);
 
         if (focusedInstance != null)
         {
-            SetInstanceParent(SelectedState.Self.SelectedElement, newInstance, focusedInstance);
+            SetInstanceParent(_selectedState.SelectedElement, newInstance, focusedInstance);
         }
     }
 
@@ -664,12 +662,12 @@ public partial class ElementTreeViewManager
     {
         if (!ShowNewObjectDialog(out var name)) return;
 
-        var focusedInstance = SelectedState.Self.SelectedInstance;
-        var newInstance = GumCommands.Self.ProjectCommands.ElementCommands.AddInstance(SelectedState.Self.SelectedElement, name, StandardElementsManager.Self.DefaultType);
+        var focusedInstance = _selectedState.SelectedInstance;
+        var newInstance = GumCommands.Self.ProjectCommands.ElementCommands.AddInstance(_selectedState.SelectedElement, name, StandardElementsManager.Self.DefaultType);
 
         System.Diagnostics.Debug.Assert(focusedInstance != null);
 
-        SetInstanceParentWrapper(SelectedState.Self.SelectedElement, newInstance, focusedInstance);
+        SetInstanceParentWrapper(_selectedState.SelectedElement, newInstance, focusedInstance);
     }
 
     private static void SetInstanceParentWrapper(ElementSave targetElement, InstanceSave newInstance, InstanceSave existingInstance)
@@ -686,7 +684,7 @@ public partial class ElementTreeViewManager
 
         // From DragDropManager:
         // "Since the Parent property can only be set in the default state, we will
-        // set the Parent variable on that instead of the SelectedState.Self.SelectedStateSave"
+        // set the Parent variable on that instead of the _selectedState.SelectedStateSave"
         var stateToAssignOn = targetElement.DefaultState;
 
         var variableName = newInstance.Name + ".Parent";
@@ -705,7 +703,7 @@ public partial class ElementTreeViewManager
     {
         // From DragDropManager:
         // "Since the Parent property can only be set in the default state, we will
-        // set the Parent variable on that instead of the SelectedState.Self.SelectedStateSave"
+        // set the Parent variable on that instead of the _selectedState.SelectedStateSave"
         var stateToAssignOn = targetElement.DefaultState;
         var variableName = child.Name + ".Parent";
         var oldValue = stateToAssignOn.GetValue(variableName) as string;        // This will always be empty anyway...

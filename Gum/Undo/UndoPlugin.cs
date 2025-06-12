@@ -5,6 +5,7 @@ using Gum.DataTypes.Variables;
 using System;
 using Gum.ToolStates;
 using Gum.Services;
+using GumCommon;
 
 namespace Gum.Undo;
 
@@ -15,7 +16,7 @@ public class UndoPlugin : InternalPlugin
     UndoManager _undoManager;
     public UndoPlugin() 
     {
-        _selectedState = Builder.Get<ISelectedState>();
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
         _undoManager = UndoManager.Self;
     }
 

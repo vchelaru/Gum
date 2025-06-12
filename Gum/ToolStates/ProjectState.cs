@@ -17,14 +17,6 @@ public class ProjectState
         }
     }
 
-    public ISelectedState Selected
-    {
-        get
-        {
-            return SelectedState.Self;
-        }
-    }
-
     public GumProjectSave GumProjectSave => ProjectManager.Self.GumProjectSave;
     public GeneralSettingsFile GeneralSettings => ProjectManager.Self.GeneralSettingsFile;
 

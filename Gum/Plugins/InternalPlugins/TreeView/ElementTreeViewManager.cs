@@ -20,6 +20,7 @@ using Gum.Logic;
 using System.Drawing;
 using WpfInput = System.Windows.Input;
 using Gum.Services;
+using GumCommon;
 
 namespace Gum.Managers
 {
@@ -76,6 +77,7 @@ namespace Gum.Managers
     {
         #region Fields
 
+        private readonly ISelectedState _selectedState;
 
         public const int TransparentImageIndex = 0;
         public const int FolderImageIndex = 1;
@@ -233,6 +235,11 @@ namespace Gum.Managers
         }
 
         #endregion
+
+        public ElementTreeViewManager()
+        {
+            _selectedState = Locator.GetRequiredService<ISelectedState>();
+        }
 
         #region Methods
 
@@ -436,12 +443,12 @@ namespace Gum.Managers
         }
 
         #endregion
-
+        
 
         public void Initialize(IContainer components, ImageList ElementTreeImages,
             CopyPasteLogic copyPasteLogic)
         {
-            _dragDropManager = Builder.Get<DragDropManager>();
+            _dragDropManager = Locator.GetRequiredService<DragDropManager>();
             _copyPasteLogic = copyPasteLogic;
 
             CreateObjectTreeView(ElementTreeImages);
@@ -914,9 +921,9 @@ namespace Gum.Managers
             ////////////End Early Out////////////
 
             // Save off old selected stuff
-            InstanceSave selectedInstance = SelectedState.Self.SelectedInstance;
-            ElementSave selectedElement = SelectedState.Self.SelectedElement;
-            BehaviorSave selectedBehavior = SelectedState.Self.SelectedBehavior;
+            InstanceSave selectedInstance = _selectedState.SelectedInstance;
+            ElementSave selectedElement = _selectedState.SelectedElement;
+            BehaviorSave selectedBehavior = _selectedState.SelectedBehavior;
 
 
             #region Add nodes that haven't been added yet
@@ -1113,11 +1120,11 @@ namespace Gum.Managers
             {
                 if (selectedInstance != null)
                 {
-                    SelectedState.Self.SelectedInstance = selectedInstance;
+                    _selectedState.SelectedInstance = selectedInstance;
                 }
                 if(selectedBehavior != null)
                 {
-                    SelectedState.Self.SelectedBehavior = selectedBehavior;
+                    _selectedState.SelectedBehavior = selectedBehavior;
                 }
             }
             catch
@@ -1188,16 +1195,16 @@ namespace Gum.Managers
 
         public void RecordSelection()
         {
-            mRecordedSelectedObject = SelectedState.Self.SelectedInstance;
+            mRecordedSelectedObject = _selectedState.SelectedInstance;
 
             if (mRecordedSelectedObject == null)
             {
-                mRecordedSelectedObject = SelectedState.Self.SelectedElement;
+                mRecordedSelectedObject = _selectedState.SelectedElement;
             }
 
             if(mRecordedSelectedObject == null)
             {
-                mRecordedSelectedObject = SelectedState.Self.SelectedBehavior;
+                mRecordedSelectedObject = _selectedState.SelectedBehavior;
             }
         }
 
@@ -1209,15 +1216,15 @@ namespace Gum.Managers
                 {
                     if (mRecordedSelectedObject is InstanceSave)
                     {
-                        SelectedState.Self.SelectedInstance = mRecordedSelectedObject as InstanceSave;
+                        _selectedState.SelectedInstance = mRecordedSelectedObject as InstanceSave;
                     }
                     else if (mRecordedSelectedObject is ElementSave)
                     {
-                        SelectedState.Self.SelectedElement = mRecordedSelectedObject as ElementSave;
+                        _selectedState.SelectedElement = mRecordedSelectedObject as ElementSave;
                     }
                     else if(mRecordedSelectedObject is BehaviorSave)
                     {
-                        SelectedState.Self.SelectedBehavior = mRecordedSelectedObject as BehaviorSave;
+                        _selectedState.SelectedBehavior = mRecordedSelectedObject as BehaviorSave;
                     }
                 }
             }
@@ -1750,20 +1757,20 @@ namespace Gum.Managers
                 IsInUiInitiatedSelection = true;
                 if (selectedObject == null)
                 {
-                    SelectedState.Self.SelectedElement = null;
-                    SelectedState.Self.SelectedBehavior = null;
-                    SelectedState.Self.SelectedInstance = null;
+                    _selectedState.SelectedElement = null;
+                    _selectedState.SelectedBehavior = null;
+                    _selectedState.SelectedInstance = null;
 
                     // do nothing
                 }
                 else if(selectedObject is ElementSave elementSave)
                 {
-                    SelectedState.Self.SelectedInstance = null;
+                    _selectedState.SelectedInstance = null;
                     var elements = this.SelectedNodes
                         .Where(item => item.Tag is ElementSave)
                         .Select(item => item.Tag as ElementSave);
 
-                    SelectedState.Self.SelectedElements = elements;
+                    _selectedState.SelectedElements = elements;
                 }
                 else if (selectedObject is InstanceSave selectedInstance)
                 {
@@ -1771,12 +1778,12 @@ namespace Gum.Managers
                         .Where(item => item is InstanceSave)
                         .Select(item => item as InstanceSave);
 
-                    //SelectedState.Self.SelectedInstance = selectedInstance;
-                    SelectedState.Self.SelectedInstances = instances;
+                    //_selectedState.SelectedInstance = selectedInstance;
+                    _selectedState.SelectedInstances = instances;
                 }
                 else if(selectedObject is BehaviorSave behavior)
                 {
-                    SelectedState.Self.SelectedBehavior = behavior;
+                    _selectedState.SelectedBehavior = behavior;
                 }
 
                 PluginManager.Self.TreeNodeSelected(selectedTreeNode);
@@ -2079,17 +2086,17 @@ namespace Gum.Managers
             if(backingObject != null)
             {
                 if (backingObject is ScreenSave asScreen)
-                    GumState.Self.SelectedState.SelectedElement = asScreen;
+                    _selectedState.SelectedElement = asScreen;
                 else if (backingObject is ComponentSave asComponent)
-                    GumState.Self.SelectedState.SelectedElement = asComponent;
+                    _selectedState.SelectedElement = asComponent;
                 else if (backingObject is StandardElementSave asStandard)
-                    GumState.Self.SelectedState.SelectedElement = asStandard;
+                    _selectedState.SelectedElement = asStandard;
                 else if (backingObject is InstanceSave asInstance)
-                    GumState.Self.SelectedState.SelectedInstance = asInstance;
+                    _selectedState.SelectedInstance = asInstance;
                 else if (backingObject is VariableSave asVariable)
-                    GumState.Self.SelectedState.SelectedBehaviorVariable = asVariable;
+                    _selectedState.SelectedBehaviorVariable = asVariable;
                 else if(backingObject is BehaviorSave asBehavior)
-                    GumState.Self.SelectedState.SelectedBehavior = asBehavior;
+                    _selectedState.SelectedBehavior = asBehavior;
 
                 searchTextBox.Text = null;
                 FilterText = null;

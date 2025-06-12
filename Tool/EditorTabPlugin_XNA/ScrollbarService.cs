@@ -8,13 +8,20 @@ using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using GumCommon;
 
 namespace Gum.Plugins.ScrollBarPlugin;
 
 public class ScrollbarService
 {
     ScrollBarControlLogic scrollBarControlLogic;
+    private readonly ISelectedState _selectedState;
 
+    public ScrollbarService()
+    {
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
+    }
+    
     public void HandleElementSelected(ElementSave obj)
     {
 
@@ -38,7 +45,7 @@ public class ScrollbarService
 
             List<IRenderableIpso> toLoop = new List<IRenderableIpso>();
 
-            if(GumState.Self.SelectedState.SelectedScreen != null)
+            if(_selectedState.SelectedScreen != null)
             {
                 toLoop.AddRange(asGue.ContainedElements);
             }

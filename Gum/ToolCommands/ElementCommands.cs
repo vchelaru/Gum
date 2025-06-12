@@ -13,6 +13,7 @@ using Gum.Wireframe;
 using GumRuntime;
 using Gum.Converters;
 using Gum.RenderingLibrary;
+using GumCommon;
 using RenderingLibrary;
 
 namespace Gum.ToolCommands
@@ -21,6 +22,8 @@ namespace Gum.ToolCommands
     {
         #region Fields
 
+        private readonly ISelectedState _selectedState;
+        
         static ElementCommands mSelf;
 
         #endregion
@@ -40,6 +43,11 @@ namespace Gum.ToolCommands
         }
 
         #endregion
+
+        public ElementCommands()
+        {
+            _selectedState = Locator.GetRequiredService<ISelectedState>();
+        }
 
         #region Instance
 
@@ -65,7 +73,7 @@ namespace Gum.ToolCommands
             GumCommands.Self.GuiCommands.RefreshElementTreeView(elementToAddTo);
 
             Wireframe.WireframeObjectManager.Self.RefreshAll(true);
-            //SelectedState.Self.SelectedInstance = instanceSave;
+            //_selectedState.SelectedInstance = instanceSave;
 
             // Set the parent before adding the instance in case plugins want to reject the creation of the object...
             if (!string.IsNullOrEmpty(parentName))
@@ -90,7 +98,7 @@ namespace Gum.ToolCommands
             }
             else
             {
-                SelectedState.Self.SelectedInstance = instanceSave;
+                _selectedState.SelectedInstance = instanceSave;
             }
 
             GumCommands.Self.FileCommands.TryAutoSaveElement(elementToAddTo);
@@ -120,9 +128,9 @@ namespace Gum.ToolCommands
 
             PluginManager.Self.InstanceDelete(elementToRemoveFrom, instanceToRemove);
 
-            if (SelectedState.Self.SelectedInstance == instanceToRemove)
+            if (_selectedState.SelectedInstance == instanceToRemove)
             {
-                SelectedState.Self.SelectedInstance = null;
+                _selectedState.SelectedInstance = null;
             }
         }
 
@@ -138,9 +146,9 @@ namespace Gum.ToolCommands
 
             PluginManager.Self.InstancesDelete(elementToRemoveFrom, instances.ToArray());
 
-            var newSelection = SelectedState.Self.SelectedInstances.ToList()
+            var newSelection = _selectedState.SelectedInstances.ToList()
                 .Except(instances);
-            SelectedState.Self.SelectedInstances = newSelection;
+            _selectedState.SelectedInstances = newSelection;
         }
 
         #endregion
@@ -273,18 +281,18 @@ namespace Gum.ToolCommands
             // knows, maybe other parts of the code
             // in the future), so we should make sure
             // that something is really selected.
-            var hasSelection = SelectedState.Self.SelectedComponent != null ||
-                SelectedState.Self.SelectedStandardElement != null ||
-                SelectedState.Self.SelectedInstance != null;
+            var hasSelection = _selectedState.SelectedComponent != null ||
+                _selectedState.SelectedStandardElement != null ||
+                _selectedState.SelectedInstance != null;
 
             if (hasSelection)
             {
-                var isMovingElement = SelectedState.Self.SelectedInstances.Count() == 0 &&
-                    (SelectedState.Self.SelectedComponent != null || SelectedState.Self.SelectedStandardElement != null);
+                var isMovingElement = _selectedState.SelectedInstances.Count() == 0 &&
+                    (_selectedState.SelectedComponent != null || _selectedState.SelectedStandardElement != null);
 
                 if (isMovingElement)
                 {
-                    var element = SelectedState.Self.SelectedElement;
+                    var element = _selectedState.SelectedElement;
                     if (xToMoveBy != 0)
                     {
                         hasChangeOccurred = true;
@@ -298,7 +306,7 @@ namespace Gum.ToolCommands
                 }
                 else
                 {
-                    var selectedInstances = SelectedState.Self.SelectedInstances;
+                    var selectedInstances = _selectedState.SelectedInstances;
 
                     foreach (InstanceSave instance in selectedInstances)
                     {
@@ -332,11 +340,11 @@ namespace Gum.ToolCommands
 
         public bool ShouldSkipDraggingMovementOn(InstanceSave instanceSave)
         {
-            ElementWithState element = new ElementWithState(SelectedState.Self.SelectedElement);
+            ElementWithState element = new ElementWithState(_selectedState.SelectedElement);
 
             List<ElementWithState> stack = new List<ElementWithState>() { element };
 
-            var selectedInstances = SelectedState.Self.SelectedInstances;
+            var selectedInstances = _selectedState.SelectedInstances;
 
             bool shouldSkip = false;
             // Make sure this isn't attached to another instance
@@ -370,7 +378,7 @@ namespace Gum.ToolCommands
 
             bool shouldContinue = true;
 
-            if (SelectedState.Self.CustomCurrentStateSave != null || currentValueAsObject == null)
+            if (_selectedState.CustomCurrentStateSave != null || currentValueAsObject == null)
             {
                 // This is okay, we will do nothing here:
                 shouldContinue = false;
@@ -405,15 +413,15 @@ namespace Gum.ToolCommands
                 }
 
                 float newValue = currentValue + modificationAmount;
-                SelectedState.Self.SelectedStateSave.SetValue(nameWithInstance, newValue, instanceSave, "float");
-                ElementSaveExtensions.ApplyVariableReferences(SelectedState.Self.SelectedElement, SelectedState.Self.SelectedStateSave);
+                _selectedState.SelectedStateSave.SetValue(nameWithInstance, newValue, instanceSave, "float");
+                ElementSaveExtensions.ApplyVariableReferences(_selectedState.SelectedElement, _selectedState.SelectedStateSave);
 
                 graphicalUiElement.SetProperty(baseVariableName, newValue);
 
-                WireframeObjectManager.Self.RootGue?.ApplyVariableReferences(SelectedState.Self.SelectedStateSave);
+                WireframeObjectManager.Self.RootGue?.ApplyVariableReferences(_selectedState.SelectedStateSave);
 
                 VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(nameWithInstance,
-                    GumState.Self.SelectedState.SelectedElement, GumState.Self.SelectedState.SelectedStateCategorySave);
+                    _selectedState.SelectedElement, _selectedState.SelectedStateCategorySave);
 
 
                 return newValue;
@@ -438,7 +446,7 @@ namespace Gum.ToolCommands
             modificationAmount = ConvertAmountToPixelAccordingToUnitType(baseVariableName, modificationAmount, unitsVariableAsObject);
 
             float newValue = currentValue + modificationAmount;
-            SelectedState.Self.SelectedStateSave.SetValue(baseVariableName, newValue, null, "float");
+            _selectedState.SelectedStateSave.SetValue(baseVariableName, newValue, null, "float");
 
 
             var ipso = WireframeObjectManager.Self.GetRepresentation(elementSave);
@@ -446,7 +454,7 @@ namespace Gum.ToolCommands
 
             VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(baseVariableName,
                 elementSave,
-                GumState.Self.SelectedState.SelectedStateCategorySave);
+                _selectedState.SelectedStateCategorySave);
 
             return newValue;
         }
@@ -469,22 +477,22 @@ namespace Gum.ToolCommands
         /// <param name="nameWithInstance"></param>
         /// <param name="currentValue"></param>
         /// <returns></returns>
-        private static object GetCurrentValueForVariable(string baseVariableName, InstanceSave instanceSave, out string nameWithInstance, out object currentValue)
+        private object GetCurrentValueForVariable(string baseVariableName, InstanceSave instanceSave, out string nameWithInstance, out object currentValue)
         {
             nameWithInstance = baseVariableName;
 
             currentValue = null;
 
-            if (SelectedState.Self.SelectedStateSave != null)
+            if (_selectedState.SelectedStateSave != null)
             {
                 if (instanceSave != null)
                 {
                     nameWithInstance = instanceSave.Name + "." + baseVariableName;
-                    currentValue = SelectedState.Self.SelectedStateSave.GetValueRecursive(nameWithInstance);
+                    currentValue = _selectedState.SelectedStateSave.GetValueRecursive(nameWithInstance);
                 }
                 else
                 {
-                    currentValue = SelectedState.Self.SelectedStateSave.GetValueRecursive(nameWithInstance);
+                    currentValue = _selectedState.SelectedStateSave.GetValueRecursive(nameWithInstance);
                 }
             }
 
@@ -652,7 +660,7 @@ namespace Gum.ToolCommands
                 }
             }
 
-            ElementTreeViewManager.Self.RefreshUi(SelectedState.Self.SelectedStateContainer);
+            ElementTreeViewManager.Self.RefreshUi(_selectedState.SelectedStateContainer);
 
             GumCommands.Self.GuiCommands.RefreshStateTreeView();
 
@@ -684,7 +692,7 @@ namespace Gum.ToolCommands
             GumCommands.Self.GuiCommands.RefreshElementTreeView(behaviorToAddTo);
 
             Wireframe.WireframeObjectManager.Self.RefreshAll(true);
-            //SelectedState.Self.SelectedInstance = instanceSave;
+            //_selectedState.SelectedInstance = instanceSave;
 
             // Set the parent before adding the instance in case plugins want to reject the creation of the object...
             //if (!string.IsNullOrEmpty(parentName))
@@ -709,7 +717,7 @@ namespace Gum.ToolCommands
             //}
             //else
             {
-                SelectedState.Self.SelectedInstance = instanceSave;
+                _selectedState.SelectedInstance = instanceSave;
             }
 
             GumCommands.Self.FileCommands.TryAutoSaveBehavior(behaviorToAddTo);

@@ -4,15 +4,23 @@ using Gum.Plugins;
 using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
+using GumCommon;
 
 namespace Gum.Logic
 {
     public class ReorderLogic : Singleton<ReorderLogic>
     {
+        private ISelectedState _selectedState;
+
+        public ReorderLogic()
+        {
+            _selectedState = Locator.GetRequiredService<ISelectedState>();
+        }
+        
         public void MoveSelectedInstanceForward()
         {
-            var instance = SelectedState.Self.SelectedInstance;
-            var element = SelectedState.Self.SelectedElement;
+            var instance = _selectedState.SelectedInstance;
+            var element = _selectedState.SelectedElement;
 
             if (instance != null)
             {
@@ -41,8 +49,8 @@ namespace Gum.Logic
 
         public void MoveSelectedInstanceBackward()
         {
-            var instance = SelectedState.Self.SelectedInstance;
-            var element = SelectedState.Self.SelectedElement;
+            var instance = _selectedState.SelectedInstance;
+            var element = _selectedState.SelectedElement;
 
             if (instance != null)
             {
@@ -71,8 +79,8 @@ namespace Gum.Logic
 
         public void MoveSelectedInstanceToFront()
         {
-            InstanceSave instance = SelectedState.Self.SelectedInstance;
-            ElementSave element = SelectedState.Self.SelectedElement;
+            InstanceSave instance = _selectedState.SelectedInstance;
+            ElementSave element = _selectedState.SelectedElement;
 
             if (instance != null)
             {
@@ -90,8 +98,8 @@ namespace Gum.Logic
 
         public void MoveSelectedInstanceToBack()
         {
-            InstanceSave instance = SelectedState.Self.SelectedInstance;
-            ElementSave element = SelectedState.Self.SelectedElement;
+            InstanceSave instance = _selectedState.SelectedInstance;
+            ElementSave element = _selectedState.SelectedElement;
 
             if (instance != null)
             {
@@ -109,8 +117,8 @@ namespace Gum.Logic
 
         public void MoveSelectedInstanceInFrontOf(InstanceSave whatToMoveInFrontOf)
         {
-            var element = SelectedState.Self.SelectedElement;
-            var whatToInsert = SelectedState.Self.SelectedInstance;
+            var element = _selectedState.SelectedElement;
+            var whatToInsert = _selectedState.SelectedInstance;
             if (whatToInsert != null)
             {
                 using (UndoManager.Self.RequestLock())
@@ -128,7 +136,7 @@ namespace Gum.Logic
         }
         private void RefreshInResponseToReorder(InstanceSave instance)
         {
-            var element = SelectedState.Self.SelectedElement;
+            var element = _selectedState.SelectedElement;
 
             GumCommands.Self.GuiCommands.RefreshElementTreeView(element);
 

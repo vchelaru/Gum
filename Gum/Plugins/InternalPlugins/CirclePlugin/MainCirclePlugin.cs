@@ -2,12 +2,20 @@
 using Gum.Plugins.BaseClasses;
 using Gum.ToolStates;
 using System.ComponentModel.Composition;
+using GumCommon;
 
 namespace Gum.Plugins.CirclePlugin
 {
     [Export(typeof(PluginBase))]
     public class MainCirclePlugin : InternalPlugin
     {
+        private readonly ISelectedState _selectedState;
+
+        public MainCirclePlugin()
+        {
+            _selectedState = Locator.GetRequiredService<ISelectedState>();
+        }
+        
         public override void StartUp()
         {
             this.VariableSet += HandleVariableSet;
@@ -15,7 +23,7 @@ namespace Gum.Plugins.CirclePlugin
 
         private void HandleVariableSet(ElementSave element, InstanceSave instance, string variable, object oldValue)
         {
-            var state = SelectedState.Self.SelectedStateSave;
+            var state = _selectedState.SelectedStateSave;
 
             var shouldRefreshGrid = false;
 

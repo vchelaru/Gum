@@ -1,4 +1,4 @@
-﻿using Gum.Commands;
+using Gum.Commands;
 using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.VariableGrid;
@@ -14,46 +14,69 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using GumCommon;
 
 namespace Gum.Services;
 
-public class Builder
+internal static class GumBuilder
 {
-    public static IHost App { get; private set; }
-
-    public static T Get<T>() => App.Services.GetRequiredService<T>();
-
-    public void Build()
+    public static IHost BuildGum(string[]? args = null)
     {
-        var builder = Host.CreateApplicationBuilder();
+        // Build Host
+        IHost host = Host.CreateDefaultBuilder(args)
+            .ConfigureServices(services =>
+            {
+                services.AddCleanServices();
+            })
+            .Build();
+        
+        Locator.Register(host.Services);
 
-        builder.Services.AddSingleton(typeof(CircularReferenceManager));
-        builder.Services.AddSingleton(typeof(ElementCommands), ElementCommands.Self);
-        builder.Services.AddSingleton(typeof(Commands.GuiCommands), GumCommands.Self.GuiCommands);
-        builder.Services.AddSingleton(typeof(FileCommands), GumCommands.Self.FileCommands);
-        builder.Services.AddSingleton(typeof(UndoManager), UndoManager.Self);
-        builder.Services.AddSingleton(typeof(FileCommands), GumCommands.Self.FileCommands);
-        builder.Services.AddSingleton(typeof(GuiCommands), GumCommands.Self.GuiCommands);
-        builder.Services.AddSingleton(typeof(NameVerifier), NameVerifier.Self);
-        builder.Services.AddSingleton(typeof(SetVariableLogic), SetVariableLogic.Self);
-        builder.Services.AddSingleton(typeof(HotkeyManager), HotkeyManager.Self);
-        builder.Services.AddSingleton(typeof(RenameLogic));
-        builder.Services.AddSingleton(typeof(LocalizationManager));
-        builder.Services.AddSingleton(typeof(FontManager));
-        builder.Services.AddSingleton(typeof(DragDropManager));
-        builder.Services.AddSingleton<ISelectedState>(SelectedState.Self);
-        builder.Services.AddSingleton<IObjectFinder>(ObjectFinder.Self);
+        // Register legacy services
+        ServiceCollection legacyServices = new();
+        legacyServices.AddLegacyServices();
+        Locator.Register(legacyServices.BuildServiceProvider());
+        
+        // This is needed until we unroll all the static singletons...
+        CircularReferenceManager circularReferenceManager = Locator.GetRequiredService<CircularReferenceManager>();
+        FileCommands fileCommands = Locator.GetRequiredService<FileCommands>();
+        SetVariableLogic.Self.Initialize(circularReferenceManager, fileCommands);
+        
+        return host;
+    }
+}
 
-        builder.Services.AddSingleton<IEditVariableService, EditVariableService>();
-        builder.Services.AddSingleton<IExposeVariableService, ExposeVariableService>();
-        builder.Services.AddSingleton<IDeleteVariableService, DeleteVariableService>();
-
-
-        builder.Services.AddTransient<AddVariableViewModel>();
-
-        App = builder.Build();
-
-        // This is needed until we unroll all the singletons...
-        SetVariableLogic.Self.Initialize(Get<CircularReferenceManager>(), Get<FileCommands>());
+file static class ServiceCollectionExtensions
+{
+    // Register services that have no dependencies on legacy services.
+    // These must not use the Locator for resolving dependencies.
+    public static void AddCleanServices(this IServiceCollection services)
+    {
+        services.AddSingleton<ISelectedState, SelectedState>();
+    }
+    
+    // Register legacy services that may use Locator or have unresolved dependencies.
+    // These may depend on services within this container, but should avoid doing so
+    // to ease migration. Once all their dependencies are in the clean container,
+    // they can be moved to AddCleanServices.
+    public static void AddLegacyServices(this IServiceCollection services)
+    {
+        services.AddSingleton<CircularReferenceManager>();
+        services.AddSingleton(ElementCommands.Self);
+        services.AddSingleton(GumCommands.Self.GuiCommands);
+        services.AddSingleton(GumCommands.Self.FileCommands);
+        services.AddSingleton(UndoManager.Self);
+        services.AddSingleton(NameVerifier.Self);
+        services.AddSingleton(SetVariableLogic.Self);
+        services.AddSingleton(HotkeyManager.Self);
+        services.AddSingleton<RenameLogic>();
+        services.AddSingleton<LocalizationManager>();
+        services.AddSingleton<FontManager>();
+        services.AddSingleton<DragDropManager>();
+        services.AddSingleton<IObjectFinder>(ObjectFinder.Self);
+        services.AddSingleton<IEditVariableService, EditVariableService>();
+        services.AddSingleton<IExposeVariableService, ExposeVariableService>();
+        services.AddSingleton<IDeleteVariableService, DeleteVariableService>();
+        services.AddTransient<AddVariableViewModel>();
     }
 }

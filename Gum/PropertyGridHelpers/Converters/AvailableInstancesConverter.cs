@@ -4,11 +4,14 @@ using Gum.ToolStates;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using GumCommon;
 
 namespace Gum.PropertyGridHelpers.Converters
 {
     public class AvailableInstancesConverter : TypeConverter
     {
+        private readonly ISelectedState _selectedState;
+        
         public bool ExcludeCurrentInstance
         {
             get;
@@ -34,6 +37,7 @@ namespace Gum.PropertyGridHelpers.Converters
         public AvailableInstancesConverter()
         {
             ExcludeCurrentInstance = true;
+            _selectedState = Locator.GetRequiredService<ISelectedState>();
         }
 
 
@@ -42,7 +46,7 @@ namespace Gum.PropertyGridHelpers.Converters
         {
             List<string> values;
 
-            var element = SelectedState.Self.SelectedElement;
+            var element = _selectedState.SelectedElement;
 
             if (element == null)
             {
@@ -50,8 +54,8 @@ namespace Gum.PropertyGridHelpers.Converters
             }
             else
             {
-                values = SelectedState.Self.SelectedElement.Instances
-                    .Where(item=>item != SelectedState.Self.SelectedInstance)
+                values = _selectedState.SelectedElement.Instances
+                    .Where(item=>item != _selectedState.SelectedInstance)
                     .Select(item => item.Name)
                     .ToList<string>();
             }
@@ -59,7 +63,7 @@ namespace Gum.PropertyGridHelpers.Converters
             values.Insert(0, "<NONE>");
 
             // If the selected object is an instance which is part of a component, don't let the user attach that to screen bounds:
-            var isInstanceInComponent = element is ComponentSave && SelectedState.Self.SelectedInstance != null;
+            var isInstanceInComponent = element is ComponentSave && _selectedState.SelectedInstance != null;
             if (IncludeScreenBounds && !isInstanceInComponent)
             {
                 values.Insert(1, StandardElementsManager.ScreenBoundsName);

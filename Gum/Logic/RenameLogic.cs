@@ -12,6 +12,7 @@ using CommonFormsAndControls;
 using Gum.Controls;
 using System.Drawing;
 using System.Windows.Documents.DocumentStructures;
+using GumCommon;
 using ToolsUtilities;
 
 namespace Gum.Logic;
@@ -63,6 +64,13 @@ public class VariableChangeResponse
 public class RenameLogic
 {
     static bool isRenamingXmlFile;
+
+    private readonly ISelectedState _selectedState;
+
+    public RenameLogic()
+    {
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
+    }
 
     #region StateSave
 
@@ -382,6 +390,7 @@ public class RenameLogic
 
     private static void RenameAllReferencesTo(ElementSave elementSave, InstanceSave instance, string oldName)
     {
+        ISelectedState selectedState = Locator.GetRequiredService<ISelectedState>();
         var project = ProjectManager.Self.GumProjectSave;
         // Tell the GumProjectSave to react to the rename.
         // This changes the names of the ElementSave references.
@@ -464,14 +473,14 @@ public class RenameLogic
         {
             string newName = instance.Name;
 
-            if (SelectedState.Self.SelectedElement != null)
+            if (selectedState.SelectedElement != null)
             {
-                foreach (StateSave stateSave in SelectedState.Self.SelectedElement.AllStates)
+                foreach (StateSave stateSave in selectedState.SelectedElement.AllStates)
                 {
                     stateSave.ReactToInstanceNameChange(instance, oldName, newName);
                 }
 
-                foreach (var eventSave in SelectedState.Self.SelectedElement.Events)
+                foreach (var eventSave in selectedState.SelectedElement.Events)
                 {
                     if (eventSave.GetSourceObject() == oldName)
                     {
@@ -480,7 +489,7 @@ public class RenameLogic
                 }
 
                 var renamedDefaultChildContainer = false;
-                foreach (var state in SelectedState.Self.SelectedElement.AllStates)
+                foreach (var state in selectedState.SelectedElement.AllStates)
                 {
                     var variable = state.Variables.FirstOrDefault(item => item.Name == nameof(ComponentSave.DefaultChildContainer));
 
