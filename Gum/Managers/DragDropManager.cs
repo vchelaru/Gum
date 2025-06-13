@@ -60,11 +60,11 @@ public class DragDropManager
 
     #endregion
 
-    public DragDropManager(CircularReferenceManager circularReferenceManager)
+    public DragDropManager(CircularReferenceManager circularReferenceManager, ElementCommands elementCommands)
     {
         _circularReferenceManager = circularReferenceManager;
         _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _elementCommands = ElementCommands.Self;
+        _elementCommands = elementCommands;
     }
 
     #region Drag+drop File (from windows explorer)

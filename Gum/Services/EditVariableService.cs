@@ -50,10 +50,10 @@ public class EditVariableService : IEditVariableService
     private readonly ElementCommands _elementCommands;
     private readonly RenameLogic _renameLogic;
 
-    public EditVariableService(ElementCommands elementCommands, RenameLogic renameLogic)
+    public EditVariableService(ElementCommands elementCommands)
     {
         _elementCommands = elementCommands;
-        _renameLogic = renameLogic;
+        _renameLogic = Locator.GetRequiredService<RenameLogic>();
     }
 
     public void TryAddEditVariableOptions(InstanceMember instanceMember, VariableSave variableSave, IStateContainer stateListCategoryContainer)
