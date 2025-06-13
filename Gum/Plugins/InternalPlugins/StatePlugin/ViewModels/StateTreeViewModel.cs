@@ -39,16 +39,12 @@ public class StateTreeViewModel : ViewModel
 
 
     #endregion
-
-    public StateTreeViewModel()
-    {
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
-    }
-
+    
     #region Initialize
 
     public StateTreeViewModel(StateTreeViewRightClickService stateTreeViewRightClickService)
     {
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
         _stateTreeViewRightClickService = stateTreeViewRightClickService;
         Categories = new ObservableCollection<CategoryViewModel>();
         States = new ObservableCollection<StateViewModel>();
