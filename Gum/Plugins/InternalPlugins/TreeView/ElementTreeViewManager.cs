@@ -90,6 +90,10 @@ class TreeNodeWrapper : ITreeNode
 
     public TreeNodeWrapper(TreeNode node)
     {
+        if(node == null)
+        {
+            throw new ArgumentNullException();
+        }
         Node = node;
     }
 
@@ -179,7 +183,7 @@ public partial class ElementTreeViewManager
         get
         {
             // This could be called before the tree is created:
-            if (ObjectTreeView == null)
+            if (ObjectTreeView?.SelectedNode == null)
             {
                 return null;
             }
