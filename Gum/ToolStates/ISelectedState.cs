@@ -12,7 +12,7 @@ namespace Gum.ToolStates;
 public interface ISelectedState
 {
     ScreenSave SelectedScreen { get; set; }
-    ElementSave SelectedElement { get; set; }
+    ElementSave? SelectedElement { get; set; }
     IEnumerable<ElementSave> SelectedElements { get; set; }
     IStateContainer SelectedStateContainer { get; }
     BehaviorSave SelectedBehavior { get; set; }

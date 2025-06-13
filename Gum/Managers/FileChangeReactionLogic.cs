@@ -170,14 +170,14 @@ namespace Gum.Managers
 
                 if (refreshingSelected)
                 {
-                    ElementTreeViewManager.Self.Select((ElementSave)null);
+                    _selectedState.SelectedElement = null;
                 }
                 GumCommands.Self.GuiCommands.RefreshElementTreeView();
 
                 if(refreshingSelected)
                 {
                     element = ObjectFinder.Self.GetElementSave(file.StandardizedNoPathNoExtension);
-                    ElementTreeViewManager.Self.Select(element);
+                    _selectedState.SelectedElement = element;
                 }
 
             }
@@ -229,7 +229,7 @@ namespace Gum.Managers
 
                 if (refreshingSelected)
                 {
-                    ElementTreeViewManager.Self.Select((BehaviorSave)null);
+                    _selectedState.SelectedBehavior = null;
                 }
                 GumCommands.Self.GuiCommands.RefreshElementTreeView();
 
@@ -237,7 +237,7 @@ namespace Gum.Managers
                 {
                     behavior = ProjectState.Self.GumProjectSave.Behaviors.FirstOrDefault(item =>
                         item.Name.ToLowerInvariant() == file.StandardizedNoPathNoExtension.ToLowerInvariant());
-                    ElementTreeViewManager.Self.Select(behavior);
+                    _selectedState.SelectedBehavior = behavior;
 
                     GumCommands.Self.GuiCommands.RefreshVariables(force: true);
                 }

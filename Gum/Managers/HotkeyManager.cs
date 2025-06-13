@@ -282,10 +282,6 @@ public class HotkeyManager : Singleton<HotkeyManager>
         HandleCopyCutPaste(e);
         HandleDelete(e);
         HandleReorder(e);
-        if (e.KeyCode == Keys.Up || e.KeyCode == Keys.Down)
-        {
-            ElementTreeViewManager.Self.OnSelect((ElementTreeViewManager.Self.SelectedNode as TreeNodeWrapper)?.Node);
-        }
         TryHandleCtrlF(e);
         HandleGoToDefinition(e);
         HandleKeyDownAppWide(e);

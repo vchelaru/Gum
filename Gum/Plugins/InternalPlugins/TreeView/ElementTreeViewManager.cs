@@ -1847,6 +1847,12 @@ public partial class ElementTreeViewManager
     internal void HandleKeyDown(KeyEventArgs e)
     {
         var didTreeViewHaveFocus = ObjectTreeView.ContainsFocus;
+
+        if (e.KeyCode == Keys.Up || e.KeyCode == Keys.Down)
+        {
+            OnSelect((SelectedNode as TreeNodeWrapper)?.Node);
+        }
+
         HotkeyManager.Self.HandleKeyDownElementTreeView(e);
 
         if (didTreeViewHaveFocus)

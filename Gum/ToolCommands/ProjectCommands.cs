@@ -173,6 +173,7 @@ public class ProjectCommands
 
     #region Component
 
+    // todo - move this to GuiCommands 
     public void AskToAddComponent()
     {
         if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
@@ -188,7 +189,7 @@ public class ProjectCommands
             if (tiw.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 string name = tiw.Result;
-                var nodeToAddTo = ElementTreeViewManager.Self.SelectedNode;
+                var nodeToAddTo = _selectedState.SelectedTreeNode;
 
                 while (nodeToAddTo != null && nodeToAddTo.Tag is ComponentSave && nodeToAddTo.Parent != null)
                 {

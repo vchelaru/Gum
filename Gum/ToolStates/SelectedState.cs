@@ -72,7 +72,7 @@ public class SelectedState : ISelectedState
         }
     }
 
-    public ElementSave SelectedElement
+    public ElementSave? SelectedElement
     {
         get
         {
@@ -267,13 +267,7 @@ public class SelectedState : ISelectedState
     }
 
 
-    public ITreeNode SelectedTreeNode
-    {
-        get
-        {
-            return ElementTreeViewManager.Self.SelectedNode;
-        }
-    }
+    public ITreeNode SelectedTreeNode => SelectedTreeNodes.FirstOrDefault();
 
     public IEnumerable<ITreeNode> SelectedTreeNodes
     {
