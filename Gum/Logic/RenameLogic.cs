@@ -66,7 +66,13 @@ public class RenameLogic
     static bool isRenamingXmlFile;
 
     private readonly ISelectedState _selectedState;
+    private static readonly NameVerifier _nameVerifier;
 
+    static RenameLogic()
+    {
+        _nameVerifier = Locator.GetRequiredService<NameVerifier>();
+    }
+    
     public RenameLogic(ISelectedState selectedState)
     {
         _selectedState = selectedState;
@@ -76,7 +82,7 @@ public class RenameLogic
 
     public static void RenameState(StateSave stateSave, StateSaveCategory category, string newName)
     {
-        if (!NameVerifier.Self.IsStateNameValid(newName, category, stateSave, out string whyNotValid))
+        if (!_nameVerifier.IsStateNameValid(newName, category, stateSave, out string whyNotValid))
         {
             GumCommands.Self.GuiCommands.ShowMessage(whyNotValid);
         }
@@ -577,7 +583,7 @@ public class RenameLogic
         string whyNot;
         if (instance != null)
         {
-            if (NameVerifier.Self.IsInstanceNameValid(instance.Name, instance, instanceContainer, out whyNot) == false)
+            if (_nameVerifier.IsInstanceNameValid(instance.Name, instance, instanceContainer, out whyNot) == false)
             {
                 MessageBox.Show(whyNot);
                 shouldContinue = false;
@@ -595,7 +601,7 @@ public class RenameLogic
                 nameWithoutFolder = elementSave.Name.Substring(lastIndexOfSlash + 1);
             }
 
-            if (NameVerifier.Self.IsElementNameValid(nameWithoutFolder, folder, elementSave, out whyNot) == false)
+            if (_nameVerifier.IsElementNameValid(nameWithoutFolder, folder, elementSave, out whyNot) == false)
             {
                 MessageBox.Show(whyNot);
                 shouldContinue = false;

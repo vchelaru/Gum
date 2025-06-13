@@ -31,10 +31,12 @@ namespace Gum.PropertyGridHelpers
         private FontManager _fontManager;
         private FileCommands _fileCommands;
         private readonly ISelectedState _selectedState;
+        private readonly NameVerifier _nameVerifier;
 
         public SetVariableLogic()
         {
             _selectedState = Locator.GetRequiredService<ISelectedState>();
+            _nameVerifier = Locator.GetRequiredService<NameVerifier>();
         }
 
         // this is needed as we unroll all the other singletons...
@@ -614,7 +616,7 @@ namespace Gum.PropertyGridHelpers
                 {
                     var strippedName =
                         FileManager.RemovePath(FileManager.RemoveExtension(value));
-                    NameVerifier.Self.IsNameValidAndroidFile(strippedName, out whyInvalid);
+                    _nameVerifier.IsNameValidAndroidFile(strippedName, out whyInvalid);
                 }
             }
 

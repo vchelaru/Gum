@@ -101,14 +101,13 @@ public class AddVariableViewModel : ViewModel
     public AddVariableViewModel(Commands.GuiCommands guiCommands,
         UndoManager undoManager,
         ElementCommands elementCommands,
-        FileCommands fileCommands,
-        NameVerifier nameVerifier)
+        FileCommands fileCommands)
     {
         _guiCommands = guiCommands;
         _undoManager = undoManager;
         _elementCommands = elementCommands;
         _fileCommands = fileCommands;
-        _nameVerifier = nameVerifier;
+        _nameVerifier = Locator.GetRequiredService<NameVerifier>();
         _selectedState = Locator.GetRequiredService<ISelectedState>();
 
         AvailableTypes = new List<string>();
@@ -156,7 +155,7 @@ public class AddVariableViewModel : ViewModel
         var name = EnteredName;
 
         string whyNotValid;
-        bool isValid = NameVerifier.Self.IsVariableNameValid(
+        bool isValid = _nameVerifier.IsVariableNameValid(
             name, Element, Variable, out whyNotValid);
 
         if (!isValid)
@@ -201,7 +200,7 @@ public class AddVariableViewModel : ViewModel
         var newName = EnteredName;
 
         string whyNotValid;
-        bool isValid = NameVerifier.Self.IsVariableNameValid(
+        bool isValid = _nameVerifier.IsVariableNameValid(
             newName, Element, Variable, out whyNotValid);
 
         var behavior = _selectedState.SelectedBehavior;
