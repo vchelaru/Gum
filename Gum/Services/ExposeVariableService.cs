@@ -36,13 +36,12 @@ internal class ExposeVariableService : IExposeVariableService
     private readonly RenameLogic _renameLogic;
     private readonly ISelectedState _selectedState;
 
-    public ExposeVariableService(UndoManager undoManager, GuiCommands guiCommands, FileCommands fileCommands,
-        RenameLogic renameLogic)
+    public ExposeVariableService(UndoManager undoManager, GuiCommands guiCommands, FileCommands fileCommands)
     {
         _undoManager = undoManager;
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
-        _renameLogic = renameLogic;
+        _renameLogic = Locator.GetRequiredService<RenameLogic>();
         _selectedState = Locator.GetRequiredService<ISelectedState>();
     }
 
