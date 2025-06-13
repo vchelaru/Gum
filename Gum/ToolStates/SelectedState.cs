@@ -269,13 +269,8 @@ public class SelectedState : ISelectedState
 
     public ITreeNode SelectedTreeNode => SelectedTreeNodes.FirstOrDefault();
 
-    public IEnumerable<ITreeNode> SelectedTreeNodes
-    {
-        get
-        {
-            return ElementTreeViewManager.Self.SelectedNodes;
-        }
-    }
+    public IEnumerable<ITreeNode> SelectedTreeNodes =>
+        PluginManager.Self.GetSelectedNodes();
 
     public RecursiveVariableFinder SelectedRecursiveVariableFinder
     {

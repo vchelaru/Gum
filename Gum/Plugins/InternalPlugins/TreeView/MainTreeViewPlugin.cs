@@ -59,6 +59,13 @@ internal class MainTreeViewPlugin : InternalPlugin
         this.FocusSearch += HandleFocusSearch;
 
         this.GetTreeNodeOver += HandleGetTreeNodeOver;
+        this.GetSelectedNodes += HandleGetSelectedNodes;
+    }
+
+    private IEnumerable<ITreeNode> HandleGetSelectedNodes()
+    {
+        return _elementTreeViewManager.SelectedNodes;
+
     }
 
     private ITreeNode? HandleGetTreeNodeOver()

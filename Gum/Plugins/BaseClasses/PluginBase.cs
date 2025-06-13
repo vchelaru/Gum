@@ -127,6 +127,7 @@ namespace Gum.Plugins.BaseClasses
         public event Action<TreeNode> TreeNodeSelected;
         public event Action<TreeNode> StateWindowTreeNodeSelected;
         public event Func<ITreeNode?>? GetTreeNodeOver;
+        public event Func<IEnumerable<ITreeNode>>? GetSelectedNodes;
         public event Action? FocusSearch;
 
         public event Action<BehaviorSave> BehaviorSelected;
@@ -548,6 +549,11 @@ namespace Gum.Plugins.BaseClasses
         public void CallFocusSearch() => FocusSearch?.Invoke();
 
         public ITreeNode? CallGetTreeNodeOver() => GetTreeNodeOver?.Invoke();
+
+        public IEnumerable<ITreeNode>? CallGetSelectedNodes()
+        {
+            return GetSelectedNodes?.Invoke();
+        }
 
         #endregion
     }

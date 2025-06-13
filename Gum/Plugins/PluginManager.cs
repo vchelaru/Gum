@@ -381,6 +381,21 @@ namespace Gum.Plugins
 
             return treeNodeOver;
         }
+
+        internal IEnumerable<ITreeNode> GetSelectedNodes()
+        {
+            IEnumerable<ITreeNode>? toReturn = null;
+            CallMethodOnPlugin(plugin =>
+            {
+                var internalResult = plugin.CallGetSelectedNodes();
+                if (internalResult != null)
+                {
+                    toReturn = internalResult;
+                }
+            });
+            return toReturn ?? Enumerable.Empty<ITreeNode>();
+        }
+
         internal void BehaviorSelected(BehaviorSave behaviorSave) =>
             CallMethodOnPlugin(plugin => plugin.CallBehaviorSelected(behaviorSave));
 
