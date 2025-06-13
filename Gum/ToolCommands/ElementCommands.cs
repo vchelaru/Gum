@@ -660,8 +660,6 @@ namespace Gum.ToolCommands
                 }
             }
 
-            ElementTreeViewManager.Self.RefreshUi(_selectedState.SelectedStateContainer);
-
             GumCommands.Self.GuiCommands.RefreshStateTreeView();
 
             PluginManager.Self.CategoryAdd(category);

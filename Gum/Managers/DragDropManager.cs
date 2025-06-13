@@ -536,7 +536,7 @@ public class DragDropManager
     {
         var treeNodesToDrop = GetTreeNodesToDrop();
         mDraggedItem = null;
-        var targetTreeNode = ElementTreeViewManager.Self.GetTreeNodeOver();
+        var targetTreeNode = PluginManager.Self.GetTreeNodeOver();
         foreach(var draggedTreeNode in treeNodesToDrop )
         {
             object draggedObject = draggedTreeNode.Tag;

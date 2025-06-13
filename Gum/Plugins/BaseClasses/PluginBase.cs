@@ -14,6 +14,7 @@ using Gum.ToolStates;
 using ExCSS;
 using RenderingLibrary;
 using System.Numerics;
+using Gum.Managers;
 
 namespace Gum.Plugins.BaseClasses
 {
@@ -125,7 +126,8 @@ namespace Gum.Plugins.BaseClasses
         public event Action<ElementSave> ElementSelected;
         public event Action<TreeNode> TreeNodeSelected;
         public event Action<TreeNode> StateWindowTreeNodeSelected;
-        public event Action FocusSearch;
+        public event Func<ITreeNode?>? GetTreeNodeOver;
+        public event Action? FocusSearch;
 
         public event Action<BehaviorSave> BehaviorSelected;
         public event Action<BehaviorSave> BehaviorCreated;
@@ -544,6 +546,8 @@ namespace Gum.Plugins.BaseClasses
         }
 
         public void CallFocusSearch() => FocusSearch?.Invoke();
+
+        public ITreeNode? CallGetTreeNodeOver() => GetTreeNodeOver?.Invoke();
 
         #endregion
     }

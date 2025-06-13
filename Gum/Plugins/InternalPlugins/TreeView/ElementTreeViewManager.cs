@@ -481,11 +481,11 @@ public partial class ElementTreeViewManager
     #endregion
     
 
-    public void Initialize(IContainer components, ImageList ElementTreeImages,
-        CopyPasteLogic copyPasteLogic)
+    public void Initialize(IContainer components, 
+        ImageList ElementTreeImages)
     {
         _dragDropManager = Locator.GetRequiredService<DragDropManager>();
-        _copyPasteLogic = copyPasteLogic;
+        _copyPasteLogic = CopyPasteLogic.Self;
 
         CreateObjectTreeView(ElementTreeImages);
 
@@ -2364,7 +2364,7 @@ public static class TreeNodeExtensionMethods
 
     public static bool IsPartOfStandardElementsFolderStructure(this TreeNode treeNode)
     {
-        if (treeNode == ElementTreeViewManager.Self.RootStandardElementsTreeNode)
+        if (treeNode == ElementTreeViewManager.RootStandardElementsTreeNode)
             return true;
 
         if (treeNode.Parent == null)

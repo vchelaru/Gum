@@ -365,6 +365,22 @@ namespace Gum.Plugins
         internal void StateWindowTreeNodeSelected(TreeNode treeNode) =>
             CallMethodOnPlugin(plugin => plugin.CallStateWindowTreeNodeSelected(treeNode));
 
+        internal ITreeNode? GetTreeNodeOver()
+        {
+            ITreeNode? treeNodeOver = null;
+
+            CallMethodOnPlugin(plugin =>
+            {
+                var internalTreeNode = plugin.CallGetTreeNodeOver();
+
+                if (internalTreeNode != null)
+                {
+                    treeNodeOver = internalTreeNode;
+                }
+            });
+
+            return treeNodeOver;
+        }
         internal void BehaviorSelected(BehaviorSave behaviorSave) =>
             CallMethodOnPlugin(plugin => plugin.CallBehaviorSelected(behaviorSave));
 

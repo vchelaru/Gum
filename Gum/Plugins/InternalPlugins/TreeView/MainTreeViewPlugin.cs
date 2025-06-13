@@ -12,6 +12,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using GumCommon;
+using Gum.DataTypes.Variables;
 
 namespace Gum.Plugins.InternalPlugins.TreeView;
 
@@ -37,6 +38,7 @@ internal class MainTreeViewPlugin : InternalPlugin
         this.InstanceSelected += MainTreeViewPlugin_InstanceSelected;
         this.InstanceAdd += HandleInstanceAdd;
 
+        this.CategoryAdd += HandleCategoryAdd;
 
         this.BehaviorSelected += HandleBehaviorSelected;
         this.BehaviorDeleted += HandleBehaviorDeleted;
@@ -55,6 +57,18 @@ internal class MainTreeViewPlugin : InternalPlugin
         this.GetIfShouldSuppressRemoveEditorHighlight += HandleGetIfShouldSuppressRemoveEditorHighlight;
 
         this.FocusSearch += HandleFocusSearch;
+
+        this.GetTreeNodeOver += HandleGetTreeNodeOver;
+    }
+
+    private ITreeNode? HandleGetTreeNodeOver()
+    {
+        return _elementTreeViewManager.GetTreeNodeOver();
+    }
+
+    private void HandleCategoryAdd(StateSaveCategory category)
+    {
+        _elementTreeViewManager.RefreshUi(_selectedState.SelectedStateContainer);
     }
 
     private void HandleFocusSearch()
