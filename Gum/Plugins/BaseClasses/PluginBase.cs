@@ -125,6 +125,7 @@ namespace Gum.Plugins.BaseClasses
         public event Action<ElementSave> ElementSelected;
         public event Action<TreeNode> TreeNodeSelected;
         public event Action<TreeNode> StateWindowTreeNodeSelected;
+        public event Action FocusSearch;
 
         public event Action<BehaviorSave> BehaviorSelected;
         public event Action<BehaviorSave> BehaviorCreated;
@@ -541,6 +542,8 @@ namespace Gum.Plugins.BaseClasses
             }
             return false;
         }
+
+        public void CallFocusSearch() => FocusSearch?.Invoke();
 
         #endregion
     }

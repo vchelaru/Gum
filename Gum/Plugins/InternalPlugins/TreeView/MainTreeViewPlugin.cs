@@ -53,6 +53,13 @@ internal class MainTreeViewPlugin : InternalPlugin
         this.ProjectLoad += HandleProjectLoad;
 
         this.GetIfShouldSuppressRemoveEditorHighlight += HandleGetIfShouldSuppressRemoveEditorHighlight;
+
+        this.FocusSearch += HandleFocusSearch;
+    }
+
+    private void HandleFocusSearch()
+    {
+        _elementTreeViewManager.FocusSearch();
     }
 
     private void HandleRefreshElementTreeView(IInstanceContainer? instanceContainer = null)

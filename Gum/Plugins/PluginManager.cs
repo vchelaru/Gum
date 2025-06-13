@@ -609,6 +609,9 @@ namespace Gum.Plugins
             return toReturn;
         }
 
+        public void FocusSearch() =>
+            CallMethodOnPlugin(plugin => plugin.CallFocusSearch());
+
         #endregion
 
 

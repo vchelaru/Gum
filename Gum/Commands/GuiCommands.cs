@@ -287,7 +287,7 @@ namespace Gum.Commands
 
         internal void FocusSearch()
         {
-            ElementTreeViewManager.Self.FocusSearch();
+            PluginManager.Self.FocusSearch();
         }
 
         #region Show General Messages
