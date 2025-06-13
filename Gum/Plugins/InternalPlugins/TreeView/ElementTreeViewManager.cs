@@ -264,6 +264,8 @@ public partial class ElementTreeViewManager
     public ElementTreeViewManager()
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
+
+        TreeNodeExtensionMethods.ElementTreeViewManager = this;
     }
 
     #region Methods
@@ -2182,6 +2184,7 @@ public partial class ElementTreeViewManager
 
 public static class TreeNodeExtensionMethods
 {
+    public static ElementTreeViewManager ElementTreeViewManager { get; set; }
     public static bool IsScreenTreeNode(this TreeNode treeNode)
     {
         return treeNode.Tag is ScreenSave;
@@ -2330,7 +2333,7 @@ public static class TreeNodeExtensionMethods
 
     public static bool IsPartOfScreensFolderStructure(this TreeNode treeNode)
     {
-        if (treeNode == ElementTreeViewManager.Self.RootScreensTreeNode)
+        if (treeNode == ElementTreeViewManager.RootScreensTreeNode)
             return true;
 
         if (treeNode.Parent == null)
@@ -2344,7 +2347,7 @@ public static class TreeNodeExtensionMethods
 
     public static bool IsPartOfComponentsFolderStructure(this TreeNode treeNode)
     {
-        if (treeNode == ElementTreeViewManager.Self.RootComponentsTreeNode)
+        if (treeNode == ElementTreeViewManager.RootComponentsTreeNode)
             return true;
 
         if (treeNode.Parent == null)

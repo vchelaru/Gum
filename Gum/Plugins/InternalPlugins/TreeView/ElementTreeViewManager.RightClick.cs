@@ -48,7 +48,7 @@ public partial class ElementTreeViewManager
     {
         mAddScreen = new ToolStripMenuItem();
         mAddScreen.Text = "Add Screen";
-        mAddScreen.Click += AddScreenClick;
+        mAddScreen.Click += (_, _) => GumCommands.Self.GuiCommands.ShowAddScreenWindow();
 
         mImportScreen = new ToolStripMenuItem();
         mImportScreen.Text = "Import Screen";
@@ -495,60 +495,6 @@ public partial class ElementTreeViewManager
         Plugins.ImportPlugin.Manager.ImportLogic.ShowImportBehaviorUi();
     }
 
-    public void AddScreenClick(object sender, EventArgs e)
-    {
-        if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
-        {
-            MessageBox.Show("You must first save a project before adding Screens");
-        }
-        else
-        {
-            TextInputWindow tiw = new TextInputWindow();
-            tiw.Message = "Enter new Screen name:";
-            tiw.Title = "Add Screen";
-
-            if (tiw.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            {
-                string name = tiw.Result;
-
-                string whyNotValid;
-
-                if (!NameVerifier.Self.IsElementNameValid(name, null, null, out whyNotValid))
-                {
-                    MessageBox.Show(whyNotValid);
-                }
-                else
-                {
-                    var nodeToAddTo = (ElementTreeViewManager.Self.SelectedNode as TreeNodeWrapper)?.Node;
-
-                    while (nodeToAddTo != null && nodeToAddTo.Tag is ScreenSave && nodeToAddTo.Parent != null)
-                    {
-                        nodeToAddTo = nodeToAddTo.Parent;
-                    }
-
-                    if (nodeToAddTo == null || !nodeToAddTo.IsPartOfScreensFolderStructure())
-                    {
-                        nodeToAddTo = RootScreensTreeNode;
-                    }
-
-                    string path = nodeToAddTo.GetFullFilePath().FullPath;
-
-                    string relativeToScreens = FileManager.MakeRelative(path,
-                        FileLocations.Self.ScreensFolder);
-
-                    ScreenSave screenSave = GumCommands.Self.ProjectCommands.AddScreen(relativeToScreens + name);
-
-
-                    GumCommands.Self.GuiCommands.RefreshElementTreeView();
-
-                    _selectedState.SelectedScreen = screenSave;
-
-                    GumCommands.Self.FileCommands.TryAutoSaveElement(screenSave);
-                    GumCommands.Self.FileCommands.TryAutoSaveProject();
-                }
-            }
-        }
-    }
 
     public void AddComponentClick(object sender, EventArgs e)
     {
