@@ -25,13 +25,25 @@ using GumCommon;
 
 namespace Gum.Managers;
 
+
+public interface ITreeNode
+{
+    object Tag { get; }
+    FilePath GetFullFilePath();
+    ITreeNode? Parent { get; }
+    string Text { get; }
+    string FullPath { get; }
+
+    void Expand();
+}
+
 public class DragDropManager
 {
     #region Fields
 
     static DragDropManager mSelf;
 
-    object mDraggedItem;
+    ITreeNode? mDraggedItem;
     private readonly CircularReferenceManager _circularReferenceManager;
     private readonly ISelectedState _selectedState;
     private readonly ElementCommands _elementCommands;
@@ -86,7 +98,7 @@ public class DragDropManager
 
     #region Drop Element (like components) on TreeView
 
-    private void HandleDroppedElementSave(object draggedComponentOrElement, TreeNode treeNodeDroppedOn, object targetTag, TreeNode targetTreeNode)
+    private void HandleDroppedElementSave(object draggedComponentOrElement, ITreeNode treeNodeDroppedOn, object targetTag, ITreeNode targetTreeNode)
     {
         ElementSave draggedAsElementSave = draggedComponentOrElement as ElementSave;
 
@@ -152,7 +164,7 @@ public class DragDropManager
         }
     }
 
-    private void HandleDroppedElementOnFolder(ElementSave draggedAsElementSave, TreeNode treeNodeDroppedOn, out bool handled)
+    private void HandleDroppedElementOnFolder(ElementSave draggedAsElementSave, ITreeNode treeNodeDroppedOn, out bool handled)
     {
         if(draggedAsElementSave is StandardElementSave)
         {
@@ -229,7 +241,7 @@ public class DragDropManager
 
             // First we want to re-select the target so that it is highlighted in the tree view and not
             // the object we dragged off.  This is so that plugins can properly use the SelectedElement.
-            ElementTreeViewManager.Self.Select(behavior);
+            _selectedState.SelectedBehavior = behavior;
 
             newInstance = _elementCommands.AddInstance(behavior, name, draggedElement.Name);
             //handled = true;
@@ -265,7 +277,7 @@ public class DragDropManager
 
             // First we want to re-select the target so that it is highlighted in the tree view and not
             // the object we dragged off.  This is so that plugins can properly use the SelectedElement.
-            ElementTreeViewManager.Self.Select(target);
+            _selectedState.SelectedElement = target;
 
             newInstance = _elementCommands.AddInstance(target, name, draggedAsElementSave.Name, parentInstance?.Name);
             handled = true;
@@ -354,7 +366,7 @@ public class DragDropManager
 
     #region Drop BehaviorSave
 
-    private void HandleDroppedBehavior(BehaviorSave behavior, TreeNode treeNodeDroppedOn)
+    private void HandleDroppedBehavior(BehaviorSave behavior, ITreeNode treeNodeDroppedOn)
     {
         var targetTag = treeNodeDroppedOn.Tag;
 
@@ -394,7 +406,7 @@ public class DragDropManager
 
     #region Drop Instance on TreeNode
 
-    private void HandleDroppedInstance(object draggedObject, TreeNode targetTreeNode)
+    private void HandleDroppedInstance(object draggedObject, ITreeNode targetTreeNode)
     {
         object targetObject = targetTreeNode.Tag;
 
@@ -461,7 +473,7 @@ public class DragDropManager
 
     }
 
-    private void HandleDroppingInstanceOnTarget(object targetObject, InstanceSave dragDroppedInstance, ElementSave targetElementSave, TreeNode targetTreeNode)
+    private void HandleDroppingInstanceOnTarget(object targetObject, InstanceSave dragDroppedInstance, ElementSave targetElementSave, ITreeNode targetTreeNode)
     {
         var instanceDefinedByBase = dragDroppedInstance.DefinedByBase;
 
@@ -522,9 +534,9 @@ public class DragDropManager
 
     internal void HandleDragDropEvent(object sender, DragEventArgs e)
     {
-        List<TreeNode> treeNodesToDrop = GetTreeNodesToDrop();
+        var treeNodesToDrop = GetTreeNodesToDrop();
         mDraggedItem = null;
-        TreeNode targetTreeNode = ElementTreeViewManager.Self.GetTreeNodeOver();
+        var targetTreeNode = PluginManager.Self.GetTreeNodeOver();
         foreach(var draggedTreeNode in treeNodesToDrop )
         {
             object draggedObject = draggedTreeNode.Tag;
@@ -539,7 +551,7 @@ public class DragDropManager
 
         if(files != null)
         {
-            var isTargetRootScreenTreeNode = targetTreeNode == ElementTreeViewManager.Self.RootScreensTreeNode;
+            var isTargetRootScreenTreeNode = targetTreeNode.IsTopScreenContainerTreeNode();
             foreach(FilePath file in files)
             {
                 if(file.Extension == GumProjectSave.ScreenExtension && isTargetRootScreenTreeNode)
@@ -550,7 +562,7 @@ public class DragDropManager
         }
     }
 
-    public void OnItemDrag(object item)
+    public void OnItemDrag(ITreeNode item)
     {
         mDraggedItem = item;
     }
@@ -576,7 +588,7 @@ public class DragDropManager
 
             if (!Cursor.PrimaryDownIgnoringIsInWindow)
             {
-                List<TreeNode> treeNodesToDrop = GetTreeNodesToDrop();
+                var treeNodesToDrop = GetTreeNodesToDrop();
 
                 foreach (var draggedTreeNode in treeNodesToDrop)
                 {
@@ -593,13 +605,13 @@ public class DragDropManager
         }
     }
 
-    private List<TreeNode> GetTreeNodesToDrop()
+    private List<ITreeNode> GetTreeNodesToDrop()
     {
-        List<TreeNode> treeNodesToDrop = new List<TreeNode>();
+        List<ITreeNode> treeNodesToDrop = new();
 
-        if(mDraggedItem != null && ((TreeNode)mDraggedItem).Tag != null)
+        if(mDraggedItem != null && ((ITreeNode)mDraggedItem).Tag != null)
         {
-            treeNodesToDrop.Add((TreeNode)mDraggedItem);
+            treeNodesToDrop.Add((ITreeNode)mDraggedItem);
         }
 
         // The selected nodes should contain the dragged item, but I don't know for 100% certain.
@@ -614,7 +626,7 @@ public class DragDropManager
         return treeNodesToDrop;
     }
 
-    private void HandleDroppedItemOnTreeView(object draggedObject, TreeNode treeNodeDroppedOn)
+    private void HandleDroppedItemOnTreeView(object draggedObject, ITreeNode treeNodeDroppedOn)
     {
         Console.WriteLine($"Dropping{draggedObject} on {treeNodeDroppedOn}");
         if (treeNodeDroppedOn != null)

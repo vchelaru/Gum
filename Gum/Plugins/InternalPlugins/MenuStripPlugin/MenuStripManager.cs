@@ -117,10 +117,15 @@ namespace Gum.Managers
 
 
 
-            Add(addToolStripMenuItem, "Screen", () => ElementTreeViewManager.Self.AddScreenClick(this, null));
-            Add(addToolStripMenuItem, "Component", () => ElementTreeViewManager.Self.AddComponentClick(this, null));
-            Add(addToolStripMenuItem, "Instance", () => ElementTreeViewManager.Self.AddInstanceClick(this, null));
-            Add(addToolStripMenuItem, "State", () => GumCommands.Self.GuiCommands.ShowAddStateWindow());
+            Add(addToolStripMenuItem, "Screen", () => 
+                GumCommands.Self.GuiCommands.ShowAddScreenWindow()) ;
+
+            Add(addToolStripMenuItem, "Component", () => 
+                ProjectCommands.Self.AskToAddComponent());
+            Add(addToolStripMenuItem, "Instance", () =>
+                GumCommands.Self.GuiCommands.ShowAddInstanceWindow());
+            Add(addToolStripMenuItem, "State", () => 
+                GumCommands.Self.GuiCommands.ShowAddStateWindow());
 
             // 
             // RemoveElementMenuItem

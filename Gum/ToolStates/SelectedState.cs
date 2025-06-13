@@ -72,7 +72,7 @@ public class SelectedState : ISelectedState
         }
     }
 
-    public ElementSave SelectedElement
+    public ElementSave? SelectedElement
     {
         get
         {
@@ -267,21 +267,10 @@ public class SelectedState : ISelectedState
     }
 
 
-    public TreeNode SelectedTreeNode
-    {
-        get
-        {
-            return ElementTreeViewManager.Self.SelectedNode;
-        }
-    }
+    public ITreeNode SelectedTreeNode => SelectedTreeNodes.FirstOrDefault();
 
-    public IEnumerable<TreeNode> SelectedTreeNodes
-    {
-        get
-        {
-            return ElementTreeViewManager.Self.SelectedNodes;
-        }
-    }
+    public IEnumerable<ITreeNode> SelectedTreeNodes =>
+        PluginManager.Self.GetSelectedNodes();
 
     public RecursiveVariableFinder SelectedRecursiveVariableFinder
     {

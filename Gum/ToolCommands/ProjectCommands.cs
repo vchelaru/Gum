@@ -173,6 +173,7 @@ public class ProjectCommands
 
     #region Component
 
+    // todo - move this to GuiCommands 
     public void AskToAddComponent()
     {
         if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
@@ -188,24 +189,26 @@ public class ProjectCommands
             if (tiw.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 string name = tiw.Result;
-                TreeNode nodeToAddTo = ElementTreeViewManager.Self.SelectedNode;
+                var nodeToAddTo = _selectedState.SelectedTreeNode;
 
                 while (nodeToAddTo != null && nodeToAddTo.Tag is ComponentSave && nodeToAddTo.Parent != null)
                 {
                     nodeToAddTo = nodeToAddTo.Parent;
                 }
 
+                FilePath? path = nodeToAddTo?.GetFullFilePath();
                 if (nodeToAddTo == null || !nodeToAddTo.IsPartOfComponentsFolderStructure())
                 {
-                    nodeToAddTo = ElementTreeViewManager.Self.RootComponentsTreeNode;
+                    path = GumState.Self.ProjectState.ComponentFilePath;
                 }
 
-                FilePath path = nodeToAddTo.GetFullFilePath();
+                if(path != null)
+                {
+                    string relativeToComponents = FileManager.MakeRelative(path.StandardizedCaseSensitive,
+                        FileLocations.Self.ComponentsFolder, preserveCase:true);
 
-                string relativeToComponents = FileManager.MakeRelative(path.StandardizedCaseSensitive,
-                    FileLocations.Self.ComponentsFolder, preserveCase:true);
-
-                AddComponent(name, relativeToComponents);
+                    AddComponent(name, relativeToComponents);
+                }
             }
         }
     }
