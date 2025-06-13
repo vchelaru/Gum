@@ -73,6 +73,7 @@ class ExpandedState
 }
 #endregion
 
+#region TreeNodeWrapper Class
 class TreeNodeWrapper : ITreeNode
 {
     public TreeNode Node { get;  }
@@ -91,7 +92,11 @@ class TreeNodeWrapper : ITreeNode
     {
         Node = node;
     }
+
+    public void Expand() => Node.Expand();
 }
+
+#endregion
 
 public partial class ElementTreeViewManager
 {
@@ -455,11 +460,20 @@ public partial class ElementTreeViewManager
         return null;
     }
 
-    public TreeNode GetTreeNodeOver()
+    public ITreeNode? GetTreeNodeOver()
     {
         System.Drawing.Point point = ObjectTreeView.PointToClient(Cursor.Position);
 
-        return ObjectTreeView.GetNodeAt(point);
+        var nodeAtPoint = ObjectTreeView.GetNodeAt(point);
+
+        if(nodeAtPoint == null)
+        {
+            return null;
+        }
+        else
+        {
+            return new TreeNodeWrapper(nodeAtPoint);
+        }
     }
 
     #endregion
@@ -2311,7 +2325,8 @@ public static class TreeNodeExtensionMethods
             (treeNode.Parent.IsScreensFolderTreeNode() || treeNode.Parent.IsTopScreenContainerTreeNode());
     }
 
-
+    public static bool IsPartOfScreensFolderStructure(this ITreeNode treeNode) =>
+        (treeNode as TreeNodeWrapper)?.Node.IsPartOfScreensFolderStructure() ?? false;
 
     public static bool IsPartOfScreensFolderStructure(this TreeNode treeNode)
     {
