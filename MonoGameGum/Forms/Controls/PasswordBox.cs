@@ -163,7 +163,7 @@ public class PasswordBox : TextBoxBase
         UpdateDisplayedCharacters();
         UpdatePlaceholderVisibility();
         PasswordChanged?.Invoke(this, EventArgs.Empty);
-        PushValueToViewModel();
+        PushValueToViewModel(nameof(Password));
     }
 
     private void InsertCharacterAtIndex(char character, int caretIndex)

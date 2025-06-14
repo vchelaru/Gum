@@ -31,6 +31,26 @@ public class PasswordBoxTests
         vm.Password.ShouldBe("TestPassword");
     }
 
+    [Fact]
+    public void Password_ShouldUpdateBinding()
+    {
+        PasswordBox passwordBox = new();
+        TestViewModel vm = new()
+        {
+            Password = null
+        };
+
+        passwordBox.BindingContext = vm;
+
+
+        passwordBox.SetBinding(nameof(passwordBox.Password), nameof(vm.Password));
+
+        passwordBox.Password = "NewPassword";
+
+
+        vm.Password.ShouldBe("NewPassword");
+    }
+
 
     class TestViewModel : ViewModel
     {
