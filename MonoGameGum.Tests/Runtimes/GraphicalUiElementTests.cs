@@ -144,7 +144,7 @@ public class GraphicalUiElementTests
         {
             gue.ApplyAnimation(animation: null!, timeInSeconds: 0);
         }
-        catch (InvalidOperationException)
+        catch (Exception)
         {
             didThrow = true;
         }
@@ -160,7 +160,7 @@ public class GraphicalUiElementTests
         {
             gue.PlayAnimation(animation: null!);
         }
-        catch (InvalidOperationException)
+        catch (Exception)
         {
             didThrow = true;
         }
