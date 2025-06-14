@@ -438,9 +438,9 @@ customizedButton.AddToRoot();
 
 <figure><img src="../../../../.gitbook/assets/27_06 45 57.gif" alt=""><figcaption><p>Pink button using styling defined in StyledButtonRuntime</p></figcaption></figure>
 
-## Defining a ButtonRuntime Without Inheritance
+## Defining a Custom Element (Without Inheritance)
 
-The section above shows how to customize a button using inheritance. This approach is beneificial if you would like to modify the styling colors on the existing children of the button. Since Gum visuals are regular Gum objects, you can achieve even more customization by creating a new Button class which inherits from InteractiveGue and adding your own controls. In other words, you can add your own instances to the button (such as additional Text instances) or replace existing instances with your own (such as replacing the background ColoredRectangleRuntime with a NineSlice or Sprite).
+This section shows how to create an element without inheriting from the default control type. This approach provides ultimate styling flexibility. Since Gum visuals are regular Gum objects, you can achieve even more customization by creating a new class which inherits from InteractiveGue and adding your own visuals. For example, you can add your own instances to a Button (such as additional Text instances) or replace existing instances with your own (such as replacing the background ColoredRectangleRuntime with a NineSlice or Sprite).
 
 For example, we can create a NineSlice that uses the following image:
 
@@ -450,7 +450,7 @@ Download this file to your game's Content folder, and mark the file as Copy if N
 
 <figure><img src="../../../../.gitbook/assets/27_06 58 31.png" alt=""><figcaption><p>button_square_gradient.png in Visual Studio marked as Copy if newer</p></figcaption></figure>
 
-Now we can create a new Button which inherits from InteractiveGue rather than DefaultButtonRuntime to fully customize the appearance of our button. Note that the only requirement that Buttons have is that they contain a Text object named TextIntance, so we should copy this instance from the DefaultButtonRutime code into our own. Our new Button also has a NineSlice which references the button\_square\_gradient.png from above, and states for Enabled and Pressed.
+Now we can create a new Button which inherits from InteractiveGue rather than DefaultButtonRuntime to fully customize its appearance. Note that the only requirement that Buttons have is that they contain a Text object named TextIntance, so we should copy this instance from the DefaultButtonRutime code into our own. Our new Button also has a NineSlice which references the button\_square\_gradient.png from above, and states for Enabled and Pressed.
 
 In general when creating your own Forms control, it can be helpful to reference the existing Default implementation for the control you are creating.
 
