@@ -1443,66 +1443,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     double currentAnimationTime;
 
     /// <summary>
-    /// Updates the animation at the specified index based on the given time.
-    /// </summary>
-    /// <param name="index">The index of the animation to update.</param>
-    /// <param name="time">The elapsed time since the animation started, in seconds.</param>
-    public void UpdateAnimation(int index, double time)
-    {
-        var animation = GetAnimation(index);
-        UpdateAnimation(animation, time);
-    }
-
-    /// <summary>
-    /// Updates the animation with the specified name based on the given time.
-    /// </summary>
-    /// <param name="name">The name of the animation to update.</param>
-    /// <param name="time">The elapsed time since the animation started, in seconds.</param>
-    public void UpdateAnimation(string name, double time)
-    {
-        var animation = GetAnimation(name);
-        UpdateAnimation(animation, time);
-    }
-
-    /// <summary>
-    /// Updates the animation with the specified AnimationRuntime based on the given time.
-    /// </summary>
-    /// <param name="animation">the AnimationRuntime object</param>
-    /// <param name="time">the elapesd time since the animation started, in seconds</param>
-    /// <exception cref="InvalidOperationException"></exception>
-    public void UpdateAnimation(AnimationRuntime animation, double time)
-    {
-        if (animation != null)
-        {
-            animation.ApplyAtTimeTo(time, this);
-        }
-        else
-        {
-            throw new InvalidOperationException("the AnimationRuntime cannot be null");
-        }
-    }
-
-    /// <summary>
-    /// Starts playing the animation at the specified index.
-    /// </summary>
-    /// <param name="index">The index of the animation to play.</param>
-    public void PlayAnimation(int index)
-    {
-        var animation = GetAnimation(index);
-        PlayAnimation(animation);
-    }
-
-    /// <summary>
-    /// Starts playing the animation with the specified name.
-    /// </summary>
-    /// <param name="name">The name of the animation to play.</param>
-    public void PlayAnimation(string name)
-    {
-        var animation = GetAnimation(name);
-        PlayAnimation(animation);
-    }
-
-    /// <summary>
     /// Starts playing the specified AnimationRuntime.
     /// </summary>
     /// <param name="animation">the AnimationRuntime object</param>
@@ -1516,34 +1456,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
         else
         {
-            throw new InvalidOperationException("the AnimationRuntime cannot be null");
+            throw new ArgumentNullException(nameof(animation), "the animation cannot be null");
         }
     }
 
-    /// <summary>
-    /// Gets the animation at the specified index.
-    /// </summary>
-    /// <param name="index">the index of the animation to get</param>
-    /// <returns></returns>
-    public AnimationRuntime GetAnimation(int index)
-    {
-        if (Animations != null && index >= 0 && index < Animations.Count)
-        {
-            return Animations[index];
-        }
-
-        return null;
-    }
-
-    /// <summary>
-    /// Get the animation at the specified name.
-    /// </summary>
-    /// <param name="animationName">the name of the animation to get</param>
-    /// <returns></returns>
-    public AnimationRuntime GetAnimation(string animationName)
-    {
-        return Animations?.FirstOrDefault(item => item.Name == animationName);
-    }
 
     /// <summary>
     /// Stops the currently playing animation.
@@ -6496,6 +6412,124 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     #endregion
 }
+
+public static class GraphicalUiElementExtensions
+{
+#if !FRB
+
+    /// <summary>
+    /// Sets variables on the argument GraphicalUiElement from the animation at the specified index based on the given time.
+    /// </summary>
+    /// <param name="graphicalUiElement">The GraphicalUiElement on which to apply the animation.</param>
+    /// <param name="index">The index of the animation to apply.</param>
+    /// <param name="timeInSeconds">The elapsed time since the animation started, in seconds.</param>
+    public static void ApplyAnimation(this GraphicalUiElement graphicalUiElement, int index, double timeInSeconds)
+    {
+        var animation = graphicalUiElement.GetAnimation(index);
+        if(animation == null)
+        {
+            throw new ArgumentException(nameof(index), $"Could not find an animation at index {index}");
+        }
+        graphicalUiElement.ApplyAnimation(animation, timeInSeconds);
+    }
+
+    /// <summary>
+    /// Sets variables on the argument GraphicalUiElement from the animation with the specified name based on the given time.
+    /// </summary>
+    /// <param name="graphicalUiElement">The GraphicalUiElement on which to apply the animation.</param>
+    /// <param name="name">The name of the animation to apply.</param>
+    /// <param name="timeInSeconds">The elapsed time since the animation started, in seconds.</param>
+    public static void ApplyAnimation(this GraphicalUiElement graphicalUiElement, string name, double timeInSeconds)
+    {
+        var animation = graphicalUiElement.GetAnimation(name);
+        if(animation == null)
+        {
+            throw new ArgumentException(nameof(name), $"Could not find an animation with the name {name}");
+        }
+        graphicalUiElement.ApplyAnimation(animation, timeInSeconds);
+    }
+
+    /// <summary>
+    /// Sets variables on the argument GraphicalUiElement from the specified AnimationRuntime based on the given time.
+    /// </summary>
+    /// <param name="graphicalUiElement">The GraphicalUiElement on which to apply the animation</param>
+    /// <param name="animation">The AnimationRuntime object to apply</param>
+    /// <param name="timeInSeconds">The elapesd time since the animation started, in seconds.</param>
+    /// <exception cref="InvalidOperationException"></exception>
+    public static void ApplyAnimation(this GraphicalUiElement graphicalUiElement, AnimationRuntime animation, double timeInSeconds)
+    {
+        if (animation != null)
+        {
+            animation.ApplyAtTimeTo(timeInSeconds, graphicalUiElement);
+        }
+        else
+        {
+            throw new ArgumentNullException(nameof(animation), "the AnimationRuntime cannot be null");
+        }
+    }
+
+    /// <summary>
+    /// Starts playing the animation at the specified index.
+    /// </summary>
+    /// <param name="graphicalUiElement">The GraphicalUiElement on which to play the animation.</param>
+    /// <param name="index">The index of the animation to play.</param>
+    public static void PlayAnimation(GraphicalUiElement graphicalUiElement, int index)
+    {
+        var animation = graphicalUiElement.GetAnimation(index);
+        if(animation == null)
+        {
+            throw new ArgumentException(nameof(index), $"Could not find an animation at the index {index}");
+        }
+        graphicalUiElement.PlayAnimation(animation);
+    }
+
+    /// <summary>
+    /// Starts playing the animation with the specified name.
+    /// </summary>
+    /// <param name="graphicalUiElement">The GraphicalUiElement on which to play the animation.</param>
+    /// <param name="name">The name of the animation to play.</param>
+    public static void PlayAnimation(this GraphicalUiElement graphicalUiElement, string name)
+    {
+        var animation = graphicalUiElement.GetAnimation(name);
+        if(animation == null)
+        {
+            throw new ArgumentException(nameof(name), $"Could not find an animation with the name {name}");
+        }
+        graphicalUiElement.PlayAnimation(animation);
+    }
+
+
+    /// <summary>
+    /// Gets the animation at the specified index.
+    /// </summary>
+    /// <param name="graphicalUiElement">the GraphicalUiElement to get the animation from</param>
+    /// <param name="index">the index of the animation to get</param>
+    /// <returns>The animation if found, otherwise returns null.</returns>
+    public static AnimationRuntime? GetAnimation(this GraphicalUiElement graphicalUiElement, int index)
+    {
+        if (graphicalUiElement.Animations != null && index >= 0 && index < graphicalUiElement.Animations.Count)
+        {
+            return graphicalUiElement.Animations[index];
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Get the animation at the specified name.
+    /// </summary>
+    /// <param name="graphicalUiElement">The GraphicalUiElement to get the animation from</param>
+    /// <param name="animationName">The name of the animation to get</param>
+    /// <returns>The animation if found, otherwise returns null.</returns>
+    public static AnimationRuntime? GetAnimation(this GraphicalUiElement graphicalUiElement, string animationName)
+    {
+        return graphicalUiElement.Animations?.FirstOrDefault(item => item.Name == animationName);
+    }
+
+#endif
+}
+
+
 
 #region Interfaces
 

@@ -60,7 +60,7 @@ public class GraphicalUiElementTests
         var (element, animation) = CreateElementAndAnimation();
         var gue = new GraphicalUiElement(new InvisibleRenderable()) { ElementSave = element };
 
-        gue.UpdateAnimation(animation, 0.5);
+        gue.ApplyAnimation(animation, 0.5);
 
         gue.X.ShouldBe(50f);
     }
@@ -75,13 +75,13 @@ public class GraphicalUiElementTests
             Animations = new() { animation }
         };
 
-        gue.UpdateAnimation(0, 1.0);
+        gue.ApplyAnimation(0, 1.0);
 
         gue.X.ShouldBe(100f);
     }
 
     [Fact]
-    public void UpdateAnimation_ByName_ShouldApplyAnimation()
+    public void ApplyAnimation_ByName_ShouldApplyAnimation()
     {
         var (element, animation) = CreateElementAndAnimation();
         var gue = new GraphicalUiElement(new InvisibleRenderable())
@@ -90,13 +90,13 @@ public class GraphicalUiElementTests
             Animations = new() { animation }
         };
 
-        gue.UpdateAnimation("Anim1", 1.0);
+        gue.ApplyAnimation("Anim1", 1.0);
 
         gue.X.ShouldBe(100f);
     }
 
     [Fact]
-    public void GetAnimation_ShouldReturnNullIfIndexInvalid()
+    public void GetAnimation_ShouldReturnNull_IfIndexInvalid()
     {
         var gue = new GraphicalUiElement(new InvisibleRenderable())
         {
@@ -107,7 +107,7 @@ public class GraphicalUiElementTests
     }
 
     [Fact]
-    public void GetAnimation_ShouldReturnNullIfNameInvalid()
+    public void GetAnimation_ShouldReturnNull_IfNameInvalid()
     {
         var gue = new GraphicalUiElement(new InvisibleRenderable())
         {
@@ -136,13 +136,13 @@ public class GraphicalUiElementTests
     }
 
     [Fact]
-    public void UpdateAnimation_ShouldThrowIfNull()
+    public void ApplyAnimation_ShouldThrow_IfNull()
     {
         var gue = new GraphicalUiElement(new InvisibleRenderable());
         bool didThrow = false;
         try
         {
-            gue.UpdateAnimation(animation: null!, time: 0);
+            gue.ApplyAnimation(animation: null!, timeInSeconds: 0);
         }
         catch (InvalidOperationException)
         {
@@ -152,7 +152,7 @@ public class GraphicalUiElementTests
     }
 
     [Fact]
-    public void PlayAnimation_ShouldThrowIfNull()
+    public void PlayAnimation_ShouldThrow_IfNull()
     {
         var gue = new GraphicalUiElement(new InvisibleRenderable());
         bool didThrow = false;
