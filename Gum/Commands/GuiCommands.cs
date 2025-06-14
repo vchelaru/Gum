@@ -43,6 +43,7 @@ public class GuiCommands
 
     private readonly ISelectedState _selectedState;
     private readonly NameVerifier _nameVerifier;
+    private readonly RenameLogic _renameLogic;
 
     #endregion
 
@@ -50,6 +51,7 @@ public class GuiCommands
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _nameVerifier = Locator.GetRequiredService<NameVerifier>();
+        _renameLogic = Locator.GetRequiredService<RenameLogic>();
     }
 
     internal void Initialize(MainWindow mainWindow, MainPanelControl mainPanelControl)
@@ -737,7 +739,7 @@ public class GuiCommands
                         string newName = newPathRelativeToElementsRoot + screen.Name.Substring(oldPathRelativeToElementsRoot.Length);
 
                         screen.Name = newName;
-                        RenameLogic.HandleRename(screen, (InstanceSave)null, oldVaue, NameChangeAction.Move, askAboutRename: false);
+                        _renameLogic.HandleRename(screen, (InstanceSave)null, oldVaue, NameChangeAction.Move, askAboutRename: false);
                     }
                 }
             }
@@ -751,7 +753,7 @@ public class GuiCommands
                         string newName = newPathRelativeToElementsRoot + component.Name.Substring(oldPathRelativeToElementsRoot.Length);
                         component.Name = newName;
 
-                        RenameLogic.HandleRename(component, (InstanceSave)null, oldVaue, NameChangeAction.Move, askAboutRename: false);
+                        _renameLogic.HandleRename(component, (InstanceSave)null, oldVaue, NameChangeAction.Move, askAboutRename: false);
                     }
                 }
             }

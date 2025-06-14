@@ -32,11 +32,13 @@ namespace Gum.PropertyGridHelpers
         private FileCommands _fileCommands;
         private readonly ISelectedState _selectedState;
         private readonly NameVerifier _nameVerifier;
+        private readonly RenameLogic _renameLogic;
 
         public SetVariableLogic()
         {
             _selectedState = Locator.GetRequiredService<ISelectedState>();
             _nameVerifier = Locator.GetRequiredService<NameVerifier>();
+            _renameLogic = Locator.GetRequiredService<RenameLogic>();
         }
 
         // this is needed as we unroll all the other singletons...
@@ -273,13 +275,13 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        private static GeneralResponse ReactIfChangedMemberIsName(IInstanceContainer instanceContainer, InstanceSave instance, string changedMember, object oldValue)
+        private GeneralResponse ReactIfChangedMemberIsName(IInstanceContainer instanceContainer, InstanceSave instance, string changedMember, object oldValue)
         {
             var toReturn = OptionallyAttemptedGeneralResponse.SuccessfulWithoutAttempt;
 
             if (changedMember == "Name")
             {
-                var innerResponse = RenameLogic.HandleRename(instanceContainer, instance, (string)oldValue, NameChangeAction.Rename);
+                var innerResponse = _renameLogic.HandleRename(instanceContainer, instance, (string)oldValue, NameChangeAction.Rename);
                 toReturn.SetFrom(innerResponse);
             }
             return toReturn;

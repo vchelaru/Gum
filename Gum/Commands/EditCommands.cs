@@ -26,11 +26,13 @@ namespace Gum.Commands
     {
         private ISelectedState _selectedState;
         private NameVerifier _nameVerifier;
+        private RenameLogic _renameLogic;
 
         public EditCommands()
         {
             _selectedState = Locator.GetRequiredService<ISelectedState>();
             _nameVerifier = Locator.GetRequiredService<NameVerifier>();
+            _renameLogic = Locator.GetRequiredService<RenameLogic>();
         }
         #region State
 
@@ -119,7 +121,7 @@ namespace Gum.Commands
                 if (result == DialogResult.OK)
                 {
                     var category = stateContainer.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
-                    RenameLogic.RenameState(stateSave, category, tiw.Result);
+                    _renameLogic.RenameState(stateSave, category, tiw.Result);
                 }
             }
         }
@@ -209,7 +211,7 @@ namespace Gum.Commands
 
         internal void AskToRenameStateCategory(StateSaveCategory category, ElementSave elementSave)
         {
-            RenameLogic.AskToRenameStateCategory(category, elementSave);
+            _renameLogic.AskToRenameStateCategory(category, elementSave);
         }
 
 

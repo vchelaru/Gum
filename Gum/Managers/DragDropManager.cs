@@ -47,6 +47,7 @@ public class DragDropManager
     private readonly CircularReferenceManager _circularReferenceManager;
     private readonly ISelectedState _selectedState;
     private readonly ElementCommands _elementCommands;
+    private readonly RenameLogic _renameLogic;
 
     #endregion
 
@@ -65,6 +66,7 @@ public class DragDropManager
         _circularReferenceManager = circularReferenceManager;
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _elementCommands = elementCommands;
+        _renameLogic = Locator.GetRequiredService<RenameLogic>();
     }
 
     #region Drag+drop File (from windows explorer)
@@ -188,7 +190,7 @@ public class DragDropManager
 
                 string oldName = draggedAsElementSave.Name;
                 draggedAsElementSave.Name = nodeRelativeToProject + FileManager.RemovePath(draggedAsElementSave.Name);
-                RenameLogic.HandleRename(draggedAsElementSave, (InstanceSave)null,  oldName, NameChangeAction.Move);
+                _renameLogic.HandleRename(draggedAsElementSave, (InstanceSave)null,  oldName, NameChangeAction.Move);
 
                 handled = true;
             }
@@ -208,7 +210,7 @@ public class DragDropManager
         {
             // It's in a directory, we're going to move it out
             draggedAsElementSave.Name = FileManager.RemovePath(name);
-            RenameLogic.HandleRename(draggedAsElementSave, (InstanceSave)null, name, NameChangeAction.Move);
+            _renameLogic.HandleRename(draggedAsElementSave, (InstanceSave)null, name, NameChangeAction.Move);
 
             handled = true;
         }
