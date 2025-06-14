@@ -37,6 +37,8 @@ button.Click += (_, _) =>
 
 ## Preventing Sizing and Moving
 
+Resizing can be disabled by setting a Window's `ResizeMode` to `ResizeMode.NoResize`. By default this value is set to `ResizeMode.CanResize`. Note that the ResizeMode property does not affect whether a window can be moved by its title bar.
+
 Window movement and resizing can be restricted by removing or modifying the IsEnabled property on the edges and corners of the window. By default each Window instance contains nine children which are used to resize and move the window. The items have the following names:
 
 * TitleBarInstance (moves the entire window)
@@ -50,6 +52,18 @@ Window movement and resizing can be restricted by removing or modifying the IsEn
 * BorderRightInstance
 
 Any of these objects can be disabled to prevent the user from moving or resizing a window.
+
+Note that changing any of these values will not update the visual appearance of the Window. These values only control the behavior of the control. Any changes to apperance must be either performed through the Visual object, or by creating a custom Window implementation.
+
+## Code Example: Disabling Resizing with ResizeMode
+
+The following code disabled resizing by setting ResizeMode:
+
+```csharp
+Window window = new();
+window.AddToRoot();
+window.ResizeMode = ResizeMode.NoResize;
+```
 
 ## Code Example: Forced Docking
 
@@ -76,3 +90,9 @@ window.GetFrameworkElement("BorderRightInstance").IsEnabled = false;
 ```
 
 <figure><img src="../../../../.gitbook/assets/07_14 38 01.gif" alt=""><figcaption><p>Window resizing only from the left edge</p></figcaption></figure>
+
+Each individual border and title bar instance can be independently disabled to customize the resize/movement behavior. For example, the following line is specifically responsible for disabling the ability to move the window:
+
+```csharp
+window.GetFrameworkElement("TitleBarInstance").IsEnabled = false;
+```
