@@ -80,6 +80,7 @@ public class UndoManager
     #region Fields
 
     private readonly ISelectedState _selectedState;
+    private readonly RenameLogic _renameLogic;
     
     internal ObservableCollection<UndoLock> UndoLocks { get; private set; }
 
@@ -127,7 +128,7 @@ public class UndoManager
     public UndoManager()
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
-        
+        _renameLogic = Locator.GetRequiredService<RenameLogic>();
         UndoLocks = new ObservableCollection<UndoLock>();
         UndoLocks.CollectionChanged += HandleUndoLockChanged;
     }
@@ -620,7 +621,7 @@ public class UndoManager
             toApplyTo.Name = elementInUndoSnapshot.Name;
             if (propagateNameChanges)
             {
-                RenameLogic.HandleRename(toApplyTo, (InstanceSave)null, oldName, NameChangeAction.Rename, askAboutRename: false);
+                _renameLogic.HandleRename(toApplyTo, (InstanceSave)null, oldName, NameChangeAction.Rename, askAboutRename: false);
             }
         }
         if(elementInUndoSnapshot.BaseType != null)

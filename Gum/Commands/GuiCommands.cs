@@ -42,12 +42,16 @@ public class GuiCommands
     MainPanelControl mainPanelControl;
 
     private readonly ISelectedState _selectedState;
+    private readonly NameVerifier _nameVerifier;
+    private readonly RenameLogic _renameLogic;
 
     #endregion
 
     public GuiCommands()
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _nameVerifier = Locator.GetRequiredService<NameVerifier>();
+        _renameLogic = Locator.GetRequiredService<RenameLogic>();
     }
 
     internal void Initialize(MainWindow mainWindow, MainPanelControl mainPanelControl)
@@ -415,7 +419,7 @@ public class GuiCommands
             {
                 string name = tiw.Result;
 
-                if (!NameVerifier.Self.IsStateNameValid(name, _selectedState.SelectedStateCategorySave, null, out string whyNotValid))
+                if (!_nameVerifier.IsStateNameValid(name, _selectedState.SelectedStateCategorySave, null, out string whyNotValid))
                 {
                     GumCommands.Self.GuiCommands.ShowMessage(whyNotValid);
                 }
@@ -450,7 +454,7 @@ public class GuiCommands
             var text = tiw.Result;
 
             string whyNotValid;
-            if(!NameVerifier.Self.IsFolderNameValid(text, out whyNotValid))
+            if(!_nameVerifier.IsFolderNameValid(text, out whyNotValid))
             {
                 errorLabel.Foreground = System.Windows.Media.Brushes.Red;
                 errorLabel.Text = whyNotValid;
@@ -475,7 +479,7 @@ public class GuiCommands
 
             string whyNotValid;
 
-            if (!NameVerifier.Self.IsFolderNameValid(folderName, out whyNotValid))
+            if (!_nameVerifier.IsFolderNameValid(folderName, out whyNotValid))
             {
                 MessageBox.Show(whyNotValid);
             }
@@ -516,7 +520,7 @@ public class GuiCommands
 
                 string whyNotValid;
 
-                if (!NameVerifier.Self.IsElementNameValid(name, null, null, out whyNotValid))
+                if (!_nameVerifier.IsElementNameValid(name, null, null, out whyNotValid))
                 {
                     MessageBox.Show(whyNotValid);
                 }
@@ -568,7 +572,7 @@ public class GuiCommands
         {
             string whyNotValid;
 
-            if (!NameVerifier.Self.IsInstanceNameValid(name, null, _selectedState.SelectedElement, out whyNotValid))
+            if (!_nameVerifier.IsInstanceNameValid(name, null, _selectedState.SelectedElement, out whyNotValid))
             {
                 MessageBox.Show(whyNotValid);
 
@@ -684,7 +688,7 @@ public class GuiCommands
 
         bool isValid = true;
         string whyNotValid;
-        if (!NameVerifier.Self.IsFolderNameValid(tiw.Result, out whyNotValid))
+        if (!_nameVerifier.IsFolderNameValid(tiw.Result, out whyNotValid))
         {
             isValid = false;
         }
@@ -735,7 +739,7 @@ public class GuiCommands
                         string newName = newPathRelativeToElementsRoot + screen.Name.Substring(oldPathRelativeToElementsRoot.Length);
 
                         screen.Name = newName;
-                        RenameLogic.HandleRename(screen, (InstanceSave)null, oldVaue, NameChangeAction.Move, askAboutRename: false);
+                        _renameLogic.HandleRename(screen, (InstanceSave)null, oldVaue, NameChangeAction.Move, askAboutRename: false);
                     }
                 }
             }
@@ -749,7 +753,7 @@ public class GuiCommands
                         string newName = newPathRelativeToElementsRoot + component.Name.Substring(oldPathRelativeToElementsRoot.Length);
                         component.Name = newName;
 
-                        RenameLogic.HandleRename(component, (InstanceSave)null, oldVaue, NameChangeAction.Move, askAboutRename: false);
+                        _renameLogic.HandleRename(component, (InstanceSave)null, oldVaue, NameChangeAction.Move, askAboutRename: false);
                     }
                 }
             }
