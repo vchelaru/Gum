@@ -69,6 +69,16 @@ Some variables are assigned in states on default controls. We can identify which
 
 <figure><img src="../../../../.gitbook/assets/07_05 49 37.png" alt=""><figcaption><p>Default states in ButtonCategory</p></figcaption></figure>
 
+{% hint style="info" %}
+All state names are defined in FrameworkElement as `const` values. The full list is here:
+
+[https://github.com/vchelaru/Gum/blob/f30b38a4556b026fdaf292b85ace7d7a93ce4eb0/MonoGameGum/Forms/Controls/FrameworkElement.cs#L1236](https://github.com/vchelaru/Gum/blob/f30b38a4556b026fdaf292b85ace7d7a93ce4eb0/MonoGameGum/Forms/Controls/FrameworkElement.cs#L1236)
+
+Keep in mind that not all framework elements use all states. For example, ListBoxItem and MenuItem use `Selected`, but controls like Button and CheckBox do not use `Selected`.
+
+If in doubt, the best way to find out is to check the source for your particular control, or to look at the states with a debugger attached as shown above.
+{% endhint %}
+
 These states modify some of the existing variables which are listed if we expand the states in the watch window. For example, if we expand Enabled, we see that the state modifies:
 
 * ButtonBackground.Color
