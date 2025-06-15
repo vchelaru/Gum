@@ -20,6 +20,7 @@ public class ProjectCommands
 
     static ProjectCommands mSelf;
     private readonly ISelectedState _selectedState;
+    private readonly NameVerifier _nameVerifier;
 
     #endregion
 
@@ -44,6 +45,7 @@ public class ProjectCommands
     public ProjectCommands()
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _nameVerifier = Locator.GetRequiredService<NameVerifier>();
     }
     
     #region Screens
@@ -219,7 +221,7 @@ public class ProjectCommands
 
         folder = folder?.Replace('\\', '/');
 
-        if (!NameVerifier.Self.IsElementNameValid(componentName, folder, null, out whyNotValid))
+        if (!_nameVerifier.IsElementNameValid(componentName, folder, null, out whyNotValid))
         {
             MessageBox.Show(whyNotValid);
             return null;
