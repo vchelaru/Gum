@@ -19,6 +19,7 @@ using System.Windows.Input;
 using System;
 using Gum.ToolCommands;
 using EditorTabPlugin_XNA.ExtensionMethods;
+using GumCommon;
 
 namespace Gum.Wireframe.Editors;
 
@@ -84,7 +85,7 @@ public class StandardWireframeEditor : WireframeEditor
               selectionManager, 
               selectedState)
     {
-        _elementCommands = GumCommands.Self.ProjectCommands.ElementCommands;
+        _elementCommands = Locator.GetRequiredService<ElementCommands>();
         _selectionManager = selectionManager;
 
         mResizeHandles = new ResizeHandles(layer, lineColor);

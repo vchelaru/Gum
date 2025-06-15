@@ -48,6 +48,7 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
     #region Fields/Properties
 
     private readonly ISelectedState _selectedState;
+    private readonly ElementCommands _elementCommands;
     
     public CopiedData CopiedData { get; private set; } = new CopiedData();
 
@@ -68,6 +69,7 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
     public CopyPasteLogic()
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _elementCommands = Locator.GetRequiredService<ElementCommands>();
     }
 
     #region Copy
@@ -226,7 +228,7 @@ public class CopyPasteLogic : Singleton<CopyPasteLogic>
                 var originalForCopy = sourceElement.Instances.FirstOrDefault(item => item.Name == clone.Name);
                 if (sourceElement.Instances.Contains(originalForCopy))
                 {
-                    ElementCommands.Self.RemoveInstance(originalForCopy, sourceElement);
+                    _elementCommands.RemoveInstance(originalForCopy, sourceElement);
                 }
             }
 

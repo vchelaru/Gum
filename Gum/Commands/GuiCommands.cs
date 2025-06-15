@@ -1,4 +1,4 @@
-﻿using Gum.Managers;
+using Gum.Managers;
 using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
@@ -44,6 +44,7 @@ public class GuiCommands
     private readonly ISelectedState _selectedState;
     private readonly NameVerifier _nameVerifier;
     private readonly RenameLogic _renameLogic;
+    private readonly ElementCommands _elementCommands;
 
     #endregion
 
@@ -52,6 +53,7 @@ public class GuiCommands
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _nameVerifier = Locator.GetRequiredService<NameVerifier>();
         _renameLogic = Locator.GetRequiredService<RenameLogic>();
+        _elementCommands = Locator.GetRequiredService<ElementCommands>();
     }
 
     internal void Initialize(MainWindow mainWindow, MainPanelControl mainPanelControl)
@@ -394,7 +396,7 @@ public class GuiCommands
             if (canAdd)
             {
                 using var undoLock = UndoManager.Self.RequestLock();
-                StateSaveCategory category = ElementCommands.Self.AddCategory(
+                StateSaveCategory category = _elementCommands.AddCategory(
                     target, name);
 
                 _selectedState.SelectedStateCategorySave = category;
@@ -427,7 +429,7 @@ public class GuiCommands
                 {
                     using (UndoManager.Self.RequestLock())
                     {
-                        StateSave stateSave = ElementCommands.Self.AddState(
+                        StateSave stateSave = _elementCommands.AddState(
                             _selectedState.SelectedStateContainer, _selectedState.SelectedStateCategorySave, name);
 
 
@@ -589,7 +591,7 @@ public class GuiCommands
         if (!ShowNewObjectDialog(out var name)) return;
 
         var focusedInstance = _selectedState.SelectedInstance;
-        var newInstance = GumCommands.Self.ProjectCommands.ElementCommands.AddInstance(_selectedState.SelectedElement, name, StandardElementsManager.Self.DefaultType);
+        var newInstance = _elementCommands.AddInstance(_selectedState.SelectedElement, name, StandardElementsManager.Self.DefaultType);
 
         if (focusedInstance != null)
         {
@@ -602,7 +604,7 @@ public class GuiCommands
         if (!ShowNewObjectDialog(out var name)) return;
 
         var focusedInstance = _selectedState.SelectedInstance;
-        var newInstance = GumCommands.Self.ProjectCommands.ElementCommands.AddInstance(
+        var newInstance = _elementCommands.AddInstance(
             _selectedState.SelectedElement, name, StandardElementsManager.Self.DefaultType);
 
         System.Diagnostics.Debug.Assert(focusedInstance != null);

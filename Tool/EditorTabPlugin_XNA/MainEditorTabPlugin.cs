@@ -121,7 +121,7 @@ internal class MainEditorTabPlugin : InternalPlugin
         _editingManager = new EditingManager();
         _selectionManager = new SelectionManager(_selectedState, _editingManager);
         _screenshotService = new ScreenshotService(_selectionManager);
-        _elementCommands = ElementCommands.Self;
+        _elementCommands = Locator.GetRequiredService<ElementCommands>();
         _singlePixelTextureService = new SinglePixelTextureService();
         _backgroundSpriteService = new BackgroundSpriteService();
         _dragDropManager = Locator.GetRequiredService<DragDropManager>();

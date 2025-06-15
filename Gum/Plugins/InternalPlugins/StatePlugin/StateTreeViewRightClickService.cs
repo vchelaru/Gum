@@ -21,14 +21,16 @@ public class StateTreeViewRightClickService
 {
     const string mNoCategory = "<no category>";
     private readonly ISelectedState _selectedState;
+    private readonly ElementCommands _elementCommands;
 
     System.Windows.Controls.ContextMenu _menuStrip;
     GumCommands _gumCommands;
 
-    public StateTreeViewRightClickService(ISelectedState selectedState, GumCommands gumCommands)
+    public StateTreeViewRightClickService(ISelectedState selectedState, GumCommands gumCommands, ElementCommands elementCommands)
     {
         _selectedState = selectedState;
         _gumCommands = gumCommands;
+        _elementCommands = elementCommands;
     }
 
     public void SetMenuStrip(System.Windows.Controls.ContextMenu menuStrip, FrameworkElement contextMenuOwner)
@@ -322,7 +324,7 @@ public class StateTreeViewRightClickService
             newState.Name = StringFunctions.IncrementNumberAtEnd(newState.Name);
         }
 
-        ElementCommands.Self.AddState(_selectedState.SelectedStateContainer, _selectedState.SelectedStateCategorySave, newState, index + 1);
+        _elementCommands.AddState(_selectedState.SelectedStateContainer, _selectedState.SelectedStateCategorySave, newState, index + 1);
 
         _gumCommands.GuiCommands.RefreshStateTreeView();
 

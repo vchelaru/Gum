@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Gum.DataTypes;
@@ -61,11 +61,11 @@ public class DragDropManager
 
     #endregion
 
-    public DragDropManager(CircularReferenceManager circularReferenceManager, ElementCommands elementCommands)
+    public DragDropManager(CircularReferenceManager circularReferenceManager)
     {
         _circularReferenceManager = circularReferenceManager;
         _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _elementCommands = elementCommands;
+        _elementCommands = Locator.GetRequiredService<ElementCommands>();
         _renameLogic = Locator.GetRequiredService<RenameLogic>();
     }
 

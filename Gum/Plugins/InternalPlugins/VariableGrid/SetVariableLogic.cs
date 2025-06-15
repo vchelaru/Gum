@@ -1,4 +1,4 @@
-﻿using Gum.DataTypes;
+using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins;
@@ -20,6 +20,7 @@ using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Services;
 using Gum.Commands;
 using Gum.Graphics;
+using Gum.ToolCommands;
 using GumCommon;
 
 namespace Gum.PropertyGridHelpers
@@ -33,12 +34,14 @@ namespace Gum.PropertyGridHelpers
         private readonly ISelectedState _selectedState;
         private readonly NameVerifier _nameVerifier;
         private readonly RenameLogic _renameLogic;
+        private readonly ElementCommands _elementCommands;
 
         public SetVariableLogic()
         {
             _selectedState = Locator.GetRequiredService<ISelectedState>();
             _nameVerifier = Locator.GetRequiredService<NameVerifier>();
             _renameLogic = Locator.GetRequiredService<RenameLogic>();
+            _elementCommands = Locator.GetRequiredService<ElementCommands>();
         }
 
         // this is needed as we unroll all the other singletons...
@@ -405,10 +408,8 @@ namespace Gum.PropertyGridHelpers
                     float outY = 0;
 
                     bool isWidthOrHeight = false;
-
-                    var editingCommands = GumCommands.Self.ProjectCommands.ElementCommands;
-
-                    object unitTypeAsObject = editingCommands.GetCurrentValueForVariable(changedMember, _selectedState.SelectedInstance);
+                    
+                    object unitTypeAsObject = _elementCommands.GetCurrentValueForVariable(changedMember, _selectedState.SelectedInstance);
                     GeneralUnitType unitType = UnitConverter.ConvertToGeneralUnit(unitTypeAsObject);
 
 

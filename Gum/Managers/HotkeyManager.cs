@@ -181,6 +181,7 @@ public class HotkeyManager : Singleton<HotkeyManager>
     private readonly CopyPasteLogic _copyPasteLogic;
     private readonly Commands.GuiCommands _guiCommands;
     private readonly ISelectedState _selectedState;
+    private readonly ElementCommands _elementCommands;
 
     // If adding any new keys here, modify HotkeyViewModel
     
@@ -189,6 +190,7 @@ public class HotkeyManager : Singleton<HotkeyManager>
         _copyPasteLogic = CopyPasteLogic.Self;
         _guiCommands = GumCommands.Self.GuiCommands;
         _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _elementCommands = Locator.GetRequiredService<ElementCommands>();
     }
 
     #region App Wide Keys
@@ -443,10 +445,8 @@ public class HotkeyManager : Singleton<HotkeyManager>
                 oldX = (float)instance.GetValueFromThisOrBase(element, "X");
                 oldY = (float)instance.GetValueFromThisOrBase(element, "Y");
             }
-
-            var editingCommands = GumCommands.Self.ProjectCommands.ElementCommands;
-
-            editingCommands.MoveSelectedObjectsBy(nudgeX, nudgeY);
+            
+            _elementCommands.MoveSelectedObjectsBy(nudgeX, nudgeY);
             handled = true;
             if(nudgeX != 0)
             {
