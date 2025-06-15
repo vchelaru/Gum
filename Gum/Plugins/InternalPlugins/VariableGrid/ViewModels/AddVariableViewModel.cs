@@ -98,12 +98,10 @@ public class AddVariableViewModel : ViewModel
 
     #endregion
 
-    public AddVariableViewModel(Commands.GuiCommands guiCommands,
-        UndoManager undoManager,
-        FileCommands fileCommands)
+    public AddVariableViewModel(Commands.GuiCommands guiCommands, FileCommands fileCommands)
     {
         _guiCommands = guiCommands;
-        _undoManager = undoManager;
+        _undoManager = Locator.GetRequiredService<UndoManager>();
         _elementCommands = Locator.GetRequiredService<ElementCommands>();
         _fileCommands = fileCommands;
         _nameVerifier = Locator.GetRequiredService<NameVerifier>();

@@ -19,6 +19,7 @@ namespace Gum.Managers
 
         private readonly GuiCommands _guiCommands;
         private readonly ISelectedState _selectedState;
+        private readonly UndoManager _undoManager;
 
         private MenuStrip _menuStrip;
 
@@ -50,6 +51,7 @@ namespace Gum.Managers
         {
             _guiCommands = guiCommands;
             _selectedState = Locator.GetRequiredService<ISelectedState>();
+            _undoManager = Locator.GetRequiredService<UndoManager>();
         }
 
         public void Initialize()
@@ -94,10 +96,10 @@ namespace Gum.Managers
             this.editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
             this.editToolStripMenuItem.Text = "Edit";
 
-            var undoMenuItem = Add(editToolStripMenuItem, "Undo", UndoManager.Self.PerformUndo);
+            var undoMenuItem = Add(editToolStripMenuItem, "Undo", _undoManager.PerformUndo);
             undoMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Z)));
 
-            var redoMenuItem = Add(editToolStripMenuItem, "Redo", UndoManager.Self.PerformRedo);
+            var redoMenuItem = Add(editToolStripMenuItem, "Redo", _undoManager.PerformRedo);
             redoMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Y)));
 
             AddSeparator(editToolStripMenuItem);

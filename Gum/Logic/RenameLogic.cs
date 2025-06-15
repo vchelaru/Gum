@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Gum.DataTypes;
@@ -68,10 +68,13 @@ public class RenameLogic
     private readonly ISelectedState _selectedState;
     private readonly NameVerifier _nameVerifier;
     
-    public RenameLogic(ISelectedState selectedState, NameVerifier nameVerifier)
+    private readonly UndoManager _undoManager;
+
+    public RenameLogic(ISelectedState selectedState, NameVerifier nameVerifier, UndoManager undoManager)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
+        _undoManager = undoManager;
     }
 
     #region StateSave
@@ -84,7 +87,7 @@ public class RenameLogic
         }
         else
         {
-            using (UndoManager.Self.RequestLock())
+            using (_undoManager.RequestLock())
             {
                 string oldName = stateSave.Name;
 
@@ -160,7 +163,7 @@ public class RenameLogic
 
     private void RenameCategory(IStateContainer owner, StateSaveCategory category, string oldName, string newName, List<VariableChange> variableChanges)
     {
-        using (UndoManager.Self.RequestLock())
+        using (_undoManager.RequestLock())
         {
             category.Name = newName;
 

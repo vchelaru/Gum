@@ -26,9 +26,9 @@ public class DeleteVariableService : IDeleteVariableService
     private readonly GuiCommands _guiCommands;
     private readonly RenameLogic _renameLogic;
 
-    public DeleteVariableService(UndoManager undoManager, FileCommands fileCommands, GuiCommands guiCommands)
+    public DeleteVariableService(FileCommands fileCommands, GuiCommands guiCommands)
     {
-        _undoManager = undoManager;
+        _undoManager = Locator.GetRequiredService<UndoManager>();
         _fileCommands = fileCommands;
         _guiCommands = guiCommands;
         _renameLogic = Locator.GetRequiredService<RenameLogic>();

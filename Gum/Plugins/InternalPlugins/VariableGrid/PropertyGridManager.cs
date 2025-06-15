@@ -14,6 +14,7 @@ using System.Windows.Media;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using RenderingLibrary.Graphics;
 using Gum.Services;
+using Gum.Undo;
 using GumCommon;
 
 namespace Gum.Managers
@@ -23,6 +24,7 @@ namespace Gum.Managers
         #region Fields
 
         private readonly ISelectedState _selectedState;
+        private readonly UndoManager _undoManager;
         
         WpfDataUi.DataUiGrid mVariablesDataGrid;
         private LocalizationManager _localizationManager;
@@ -358,7 +360,7 @@ namespace Gum.Managers
                                 member.CustomSetPropertyEvent += (sender, args) =>
                                 {
                                     //do just one undo:
-                                    Undo.UndoManager.Self.RecordUndo();
+                                    _undoManager.RecordUndo();
 
                                     // and loop through all instances and refrehs:
                                     foreach(var item in member.InstanceMembers)
