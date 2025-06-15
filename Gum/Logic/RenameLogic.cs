@@ -66,17 +66,19 @@ public class RenameLogic
     static bool isRenamingXmlFile;
 
     private readonly ISelectedState _selectedState;
-
-    public RenameLogic(ISelectedState selectedState)
+    private readonly NameVerifier _nameVerifier;
+    
+    public RenameLogic(ISelectedState selectedState, NameVerifier nameVerifier)
     {
         _selectedState = selectedState;
+        _nameVerifier = nameVerifier;
     }
 
     #region StateSave
 
-    public static void RenameState(StateSave stateSave, StateSaveCategory category, string newName)
+    public void RenameState(StateSave stateSave, StateSaveCategory category, string newName)
     {
-        if (!NameVerifier.Self.IsStateNameValid(newName, category, stateSave, out string whyNotValid))
+        if (!_nameVerifier.IsStateNameValid(newName, category, stateSave, out string whyNotValid))
         {
             GumCommands.Self.GuiCommands.ShowMessage(whyNotValid);
         }
@@ -106,7 +108,7 @@ public class RenameLogic
 
     #region Category
 
-    public static void AskToRenameStateCategory(StateSaveCategory category, ElementSave elementSave)
+    public void AskToRenameStateCategory(StateSaveCategory category, ElementSave elementSave)
     {
         // This category can only be renamed if no behaviors require it
         var behaviorsNeedingCategory = DeleteLogic.Self.GetBehaviorsNeedingCategory(category, elementSave as ComponentSave);
@@ -151,12 +153,12 @@ public class RenameLogic
             if (tiw.ShowDialog() is true)
             {
                 string newName = tiw.Result;
-                RenameLogic.RenameCategory(elementSave, category, oldName, newName, changes);
+                RenameCategory(elementSave, category, oldName, newName, changes);
             }
         }
     }
 
-    public static void RenameCategory(IStateContainer owner, StateSaveCategory category, string oldName, string newName, List<VariableChange> variableChanges)
+    private void RenameCategory(IStateContainer owner, StateSaveCategory category, string oldName, string newName, List<VariableChange> variableChanges)
     {
         using (UndoManager.Self.RequestLock())
         {
@@ -208,7 +210,7 @@ public class RenameLogic
         }
     }
 
-    private static List<VariableChange> GetVariableChangesForCategoryRename(IStateContainer owner, StateSaveCategory category, string oldName)
+    private List<VariableChange> GetVariableChangesForCategoryRename(IStateContainer owner, StateSaveCategory category, string oldName)
     {
         List<VariableChange> toReturn = new List<VariableChange>();
 
@@ -293,7 +295,7 @@ public class RenameLogic
 
     #region Element
 
-    public static GeneralResponse HandleRename(IInstanceContainer instanceContainer, InstanceSave instance, string oldName, NameChangeAction action, bool askAboutRename = true)
+    public GeneralResponse HandleRename(IInstanceContainer instanceContainer, InstanceSave instance, string oldName, NameChangeAction action, bool askAboutRename = true)
     {
         GeneralResponse toReturn = new GeneralResponse();
         toReturn.Succeeded = false;
@@ -352,7 +354,7 @@ public class RenameLogic
         return toReturn;
     }
 
-    private static void RenameXml(ElementSave elementSave, string oldName)
+    private void RenameXml(ElementSave elementSave, string oldName)
     {
         // If we got here that means all went okay, so we should delete the old files
         var oldXml = elementSave.GetFullPathXmlFile(oldName);
@@ -388,9 +390,8 @@ public class RenameLogic
         }
     }
 
-    private static void RenameAllReferencesTo(ElementSave elementSave, InstanceSave instance, string oldName)
+    private void RenameAllReferencesTo(ElementSave elementSave, InstanceSave instance, string oldName)
     {
-        ISelectedState selectedState = Locator.GetRequiredService<ISelectedState>();
         var project = ProjectManager.Self.GumProjectSave;
         // Tell the GumProjectSave to react to the rename.
         // This changes the names of the ElementSave references.
@@ -473,14 +474,14 @@ public class RenameLogic
         {
             string newName = instance.Name;
 
-            if (selectedState.SelectedElement != null)
+            if (_selectedState.SelectedElement != null)
             {
-                foreach (StateSave stateSave in selectedState.SelectedElement.AllStates)
+                foreach (StateSave stateSave in _selectedState.SelectedElement.AllStates)
                 {
                     stateSave.ReactToInstanceNameChange(instance, oldName, newName);
                 }
 
-                foreach (var eventSave in selectedState.SelectedElement.Events)
+                foreach (var eventSave in _selectedState.SelectedElement.Events)
                 {
                     if (eventSave.GetSourceObject() == oldName)
                     {
@@ -489,7 +490,7 @@ public class RenameLogic
                 }
 
                 var renamedDefaultChildContainer = false;
-                foreach (var state in selectedState.SelectedElement.AllStates)
+                foreach (var state in _selectedState.SelectedElement.AllStates)
                 {
                     var variable = state.Variables.FirstOrDefault(item => item.Name == nameof(ComponentSave.DefaultChildContainer));
 
@@ -547,7 +548,7 @@ public class RenameLogic
         }
     }
 
-    private static bool AskIfToRenameElement(string oldName, bool askAboutRename, NameChangeAction action, bool shouldContinue)
+    private bool AskIfToRenameElement(string oldName, bool askAboutRename, NameChangeAction action, bool shouldContinue)
     {
         if (shouldContinue && isRenamingXmlFile && askAboutRename)
         {
@@ -572,12 +573,12 @@ public class RenameLogic
         return shouldContinue;
     }
 
-    private static bool ValidateWithPopup(IInstanceContainer instanceContainer, InstanceSave instance, bool shouldContinue)
+    private bool ValidateWithPopup(IInstanceContainer instanceContainer, InstanceSave instance, bool shouldContinue)
     {
         string whyNot;
         if (instance != null)
         {
-            if (NameVerifier.Self.IsInstanceNameValid(instance.Name, instance, instanceContainer, out whyNot) == false)
+            if (_nameVerifier.IsInstanceNameValid(instance.Name, instance, instanceContainer, out whyNot) == false)
             {
                 MessageBox.Show(whyNot);
                 shouldContinue = false;
@@ -595,7 +596,7 @@ public class RenameLogic
                 nameWithoutFolder = elementSave.Name.Substring(lastIndexOfSlash + 1);
             }
 
-            if (NameVerifier.Self.IsElementNameValid(nameWithoutFolder, folder, elementSave, out whyNot) == false)
+            if (_nameVerifier.IsElementNameValid(nameWithoutFolder, folder, elementSave, out whyNot) == false)
             {
                 MessageBox.Show(whyNot);
                 shouldContinue = false;
@@ -605,31 +606,31 @@ public class RenameLogic
         return shouldContinue;
     }
 
-    public static void HandleRename(ElementSave containerElement, EventSave eventSave, string oldName)
-    {
-        List<ElementSave> elements = new List<ElementSave>();
-        elements.AddRange(ProjectManager.Self.GumProjectSave.Screens);
-        elements.AddRange(ProjectManager.Self.GumProjectSave.Components);
-
-        foreach (var possibleElement in elements)
-        {
-            foreach (var instance in possibleElement.Instances.Where(item => item.IsOfType(containerElement.Name)))
-            {
-                foreach (var eventToRename in possibleElement.Events.Where(item => item.GetSourceObject() == instance.Name))
-                {
-                    if (eventToRename.GetRootName() == oldName)
-                    {
-                        eventToRename.Name = instance.Name + "." + eventSave.ExposedAsName;
-                    }
-                }
-
-            }
-
-        }
-
-
-
-    }
+    // public void HandleRename(ElementSave containerElement, EventSave eventSave, string oldName)
+    // {
+    //     List<ElementSave> elements = new List<ElementSave>();
+    //     elements.AddRange(ProjectManager.Self.GumProjectSave.Screens);
+    //     elements.AddRange(ProjectManager.Self.GumProjectSave.Components);
+    //
+    //     foreach (var possibleElement in elements)
+    //     {
+    //         foreach (var instance in possibleElement.Instances.Where(item => item.IsOfType(containerElement.Name)))
+    //         {
+    //             foreach (var eventToRename in possibleElement.Events.Where(item => item.GetSourceObject() == instance.Name))
+    //             {
+    //                 if (eventToRename.GetRootName() == oldName)
+    //                 {
+    //                     eventToRename.Name = instance.Name + "." + eventSave.ExposedAsName;
+    //                 }
+    //             }
+    //
+    //         }
+    //
+    //     }
+    //
+    //
+    //
+    // }
 
 
     #endregion

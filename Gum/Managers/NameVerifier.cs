@@ -52,22 +52,8 @@ namespace Gum.Managers
             "lpt8",
             "lpt9",
         };
-
         
-        static NameVerifier mSelf;
         private readonly StandardElementsManager _standardElementsManager;
-
-        public static NameVerifier Self
-        {
-            get
-            {
-                if (mSelf == null)
-                {
-                    mSelf = new NameVerifier();
-                }
-                return mSelf;
-            }
-        }
 
         #endregion
 

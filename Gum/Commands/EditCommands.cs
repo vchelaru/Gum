@@ -25,10 +25,14 @@ namespace Gum.Commands
     public class EditCommands
     {
         private ISelectedState _selectedState;
+        private NameVerifier _nameVerifier;
+        private RenameLogic _renameLogic;
 
         public EditCommands()
         {
             _selectedState = Locator.GetRequiredService<ISelectedState>();
+            _nameVerifier = Locator.GetRequiredService<NameVerifier>();
+            _renameLogic = Locator.GetRequiredService<RenameLogic>();
         }
         #region State
 
@@ -117,7 +121,7 @@ namespace Gum.Commands
                 if (result == DialogResult.OK)
                 {
                     var category = stateContainer.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
-                    RenameLogic.RenameState(stateSave, category, tiw.Result);
+                    _renameLogic.RenameState(stateSave, category, tiw.Result);
                 }
             }
         }
@@ -207,7 +211,7 @@ namespace Gum.Commands
 
         internal void AskToRenameStateCategory(StateSaveCategory category, ElementSave elementSave)
         {
-            RenameLogic.AskToRenameStateCategory(category, elementSave);
+            _renameLogic.AskToRenameStateCategory(category, elementSave);
         }
 
 
@@ -285,7 +289,7 @@ namespace Gum.Commands
 
                 string whyNotValid;
 
-                NameVerifier.Self.IsBehaviorNameValid(name, null, out whyNotValid);
+                _nameVerifier.IsBehaviorNameValid(name, null, out whyNotValid);
 
                 if (!string.IsNullOrEmpty(whyNotValid))
                 {
@@ -352,7 +356,7 @@ namespace Gum.Commands
                         prefix = tiw.Result.Substring(0, indexOfSlash + 1);
                     }
 
-                    NameVerifier.Self.IsElementNameValid(strippedName, null, null, out whyNotValid);
+                    _nameVerifier.IsElementNameValid(strippedName, null, null, out whyNotValid);
 
                     if (string.IsNullOrEmpty(whyNotValid))
                     {
@@ -393,7 +397,7 @@ namespace Gum.Commands
                     string name = tiw.Result;
 
                     string whyNotValid;
-                    NameVerifier.Self.IsElementNameValid(tiw.Result, folder, null, out whyNotValid);
+                    _nameVerifier.IsElementNameValid(tiw.Result, folder, null, out whyNotValid);
 
                     if (string.IsNullOrEmpty(whyNotValid))
                     {
@@ -445,7 +449,7 @@ namespace Gum.Commands
                     //bool replace = tiwcw.Checked
 
                     string whyNotValid;
-                    NameVerifier.Self.IsElementNameValid(createComponentWindow.Result, "", null, out whyNotValid);
+                    _nameVerifier.IsElementNameValid(createComponentWindow.Result, "", null, out whyNotValid);
 
                     if (string.IsNullOrEmpty(whyNotValid))
                     {

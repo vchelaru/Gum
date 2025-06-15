@@ -13,11 +13,13 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using GumCommon;
 
 namespace Gum.Gui.Windows
 {
     public partial class CreateComponentWindow : System.Windows.Window
     {
+        private readonly NameVerifier _nameVerifier;
         public string Result
         {
             get => componentName.Text;
@@ -27,6 +29,7 @@ namespace Gum.Gui.Windows
         public CreateComponentWindow()
         {
             InitializeComponent();
+            _nameVerifier = Locator.GetRequiredService<NameVerifier>();
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -41,7 +44,7 @@ namespace Gum.Gui.Windows
 
         private void componentName_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (NameVerifier.Self.IsComponentNameAlreadyUsed(componentName.Text))
+            if (_nameVerifier.IsComponentNameAlreadyUsed(componentName.Text))
             {
                 okButton.IsEnabled = false;
                 errorLabel.Visibility = Visibility.Visible;
