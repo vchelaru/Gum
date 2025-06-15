@@ -218,7 +218,7 @@ public class ListBoxItem : FrameworkElement
         }
         else if (IsSelected)
         {
-            Visual.SetProperty(category, "Selected");
+            Visual.SetProperty(category, SelectedStateName);
         }
         else if (IsHighlighted)
         {
