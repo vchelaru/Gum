@@ -171,6 +171,7 @@
     * [GetFrameworkElementByName](code/gum-code-reference/graphicaluielement/getframeworkelementbyname.md)
     * [IsAllLayoutSuspended](code/gum-code-reference/graphicaluielement/isalllayoutsuspended.md)
     * [Parent](code/gum-code-reference/graphicaluielement/parent.md)
+    * [ParentChanged](code/gum-code-reference/graphicaluielement/parentchanged.md)
     * [RemoveFromManagers](code/gum-code-reference/graphicaluielement/removefrommanagers.md)
     * [UpdateLayout](code/gum-code-reference/graphicaluielement/updatelayout.md)
   * [GumProjectSave](code/gum-code-reference/gumprojectsave.md)

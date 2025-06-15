@@ -315,7 +315,7 @@ namespace RenderingLibrary.Math.Geometry
             }
         }
 
-        void IRenderableIpso.SetParentDirect(IRenderableIpso newParent)
+        void IRenderableIpso.SetParentDirect(IRenderableIpso? newParent)
         {
             throw new NotImplementedException();
         }

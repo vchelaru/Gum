@@ -319,7 +319,7 @@ namespace RenderingLibrary.Math.Geometry
 
         #endregion
 
-        void IRenderableIpso.SetParentDirect(IRenderableIpso parent)
+        void IRenderableIpso.SetParentDirect(IRenderableIpso? parent)
         {
             mParent = parent;
         }
