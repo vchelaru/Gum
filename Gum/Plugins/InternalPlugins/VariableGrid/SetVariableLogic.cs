@@ -21,6 +21,7 @@ using Gum.Services;
 using Gum.Commands;
 using Gum.Graphics;
 using Gum.ToolCommands;
+using Gum.Undo;
 using GumCommon;
 
 namespace Gum.PropertyGridHelpers
@@ -35,6 +36,7 @@ namespace Gum.PropertyGridHelpers
         private readonly NameVerifier _nameVerifier;
         private readonly RenameLogic _renameLogic;
         private readonly ElementCommands _elementCommands;
+        private readonly UndoManager _undoManager;
 
         public SetVariableLogic()
         {
@@ -42,6 +44,7 @@ namespace Gum.PropertyGridHelpers
             _nameVerifier = Locator.GetRequiredService<NameVerifier>();
             _renameLogic = Locator.GetRequiredService<RenameLogic>();
             _elementCommands = Locator.GetRequiredService<ElementCommands>();
+            _undoManager = Locator.GetRequiredService<UndoManager>();
         }
 
         // this is needed as we unroll all the other singletons...
@@ -150,7 +153,7 @@ namespace Gum.PropertyGridHelpers
                     // Need to record undo before refreshing and reselecting the UI
                     if (recordUndo)
                     {
-                        Undo.UndoManager.Self.RecordUndo();
+                        _undoManager.RecordUndo();
                     }
 
                     if (refresh)

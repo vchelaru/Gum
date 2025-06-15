@@ -19,9 +19,16 @@ namespace Gum.Undo;
 #region UndoLock
 public class UndoLock : IDisposable
 {
+    private readonly UndoManager _undoManager;
+
+    public UndoLock(UndoManager manager)
+    {
+        _undoManager = manager;
+    }
+    
     public void Dispose()
     {
-        UndoManager.Self.UndoLocks.Remove(this);
+        _undoManager.UndoLocks.Remove(this);
     }
 }
 
@@ -111,8 +118,7 @@ public class UndoManager
 
     //StateSave mRecordedStateSave;
     //List<InstanceSave> mRecordedInstanceList;
-
-    public static UndoManager Self { get; private set; } = new UndoManager();
+    
     #endregion
 
     #region Events/Invokations
@@ -125,10 +131,10 @@ public class UndoManager
 
     #endregion
 
-    public UndoManager()
+    public UndoManager(ISelectedState selectedState, RenameLogic renameLogic)
     {
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _renameLogic = Locator.GetRequiredService<RenameLogic>();
+        _selectedState = selectedState;
+        _renameLogic = renameLogic;
         UndoLocks = new ObservableCollection<UndoLock>();
         UndoLocks.CollectionChanged += HandleUndoLockChanged;
     }
@@ -377,7 +383,7 @@ public class UndoManager
 
     public UndoLock RequestLock()
     {
-        var undoLock = new UndoLock();
+        var undoLock = new UndoLock(this);
 
         UndoLocks.Add(undoLock);
 

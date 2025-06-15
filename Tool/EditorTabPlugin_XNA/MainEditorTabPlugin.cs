@@ -30,6 +30,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls.Primitives;
 using System.Windows.Forms;
+using Gum.Undo;
 using GumCommon;
 using ToolsUtilities;
 
@@ -119,7 +120,8 @@ internal class MainEditorTabPlugin : InternalPlugin
         _guiCommands = Locator.GetRequiredService<GuiCommands>();
         _localizationManager = Locator.GetRequiredService<LocalizationManager>();
         _editingManager = new EditingManager();
-        _selectionManager = new SelectionManager(_selectedState, _editingManager);
+        UndoManager undoManager = Locator.GetRequiredService<UndoManager>();
+        _selectionManager = new SelectionManager(_selectedState, undoManager, _editingManager);
         _screenshotService = new ScreenshotService(_selectionManager);
         _elementCommands = Locator.GetRequiredService<ElementCommands>();
         _singlePixelTextureService = new SinglePixelTextureService();

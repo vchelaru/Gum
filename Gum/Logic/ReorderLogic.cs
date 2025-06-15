@@ -10,11 +10,13 @@ namespace Gum.Logic
 {
     public class ReorderLogic : Singleton<ReorderLogic>
     {
-        private ISelectedState _selectedState;
+        private readonly ISelectedState _selectedState;
+        private readonly UndoManager _undoManager;
 
         public ReorderLogic()
         {
             _selectedState = Locator.GetRequiredService<ISelectedState>();
+            _undoManager = Locator.GetRequiredService<UndoManager>();
         }
         
         public void MoveSelectedInstanceForward()
@@ -30,7 +32,7 @@ namespace Gum.Logic
 
                 if (!isLast)
                 {
-                    using (UndoManager.Self.RequestLock())
+                    using (_undoManager.RequestLock())
                     {
 
                         // remove it before getting the new index, or else the removal could impact the
@@ -62,7 +64,7 @@ namespace Gum.Logic
 
                 if (!isFirst)
                 {
-                    using (UndoManager.Self.RequestLock())
+                    using (_undoManager.RequestLock())
                     {
 
                         element.Instances.Remove(instance);
@@ -84,7 +86,7 @@ namespace Gum.Logic
 
             if (instance != null)
             {
-                using (UndoManager.Self.RequestLock())
+                using (_undoManager.RequestLock())
                 {
 
                     // to bring to back, we're going to remove, then add (at the end)
@@ -103,7 +105,7 @@ namespace Gum.Logic
 
             if (instance != null)
             {
-                using (UndoManager.Self.RequestLock())
+                using (_undoManager.RequestLock())
                 {
 
                     // to bring to back, we're going to remove, then insert at index 0
@@ -121,7 +123,7 @@ namespace Gum.Logic
             var whatToInsert = _selectedState.SelectedInstance;
             if (whatToInsert != null)
             {
-                using (UndoManager.Self.RequestLock())
+                using (_undoManager.RequestLock())
                 {
 
                     element.Instances.Remove(whatToInsert);

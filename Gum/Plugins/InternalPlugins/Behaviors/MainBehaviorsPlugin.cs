@@ -1,4 +1,4 @@
-﻿using Gum.Plugins.BaseClasses;
+using Gum.Plugins.BaseClasses;
 using System;
 using System.ComponentModel.Composition;
 using System.Linq;
@@ -22,6 +22,7 @@ public class MainBehaviorsPlugin : InternalPlugin
     BehaviorsControl control;
     private readonly ISelectedState _selectedState;
     private readonly ElementCommands _elementCommands;
+    private readonly UndoManager _undoManager;
     
     BehaviorsViewModel viewModel;
     DataUiGrid stateDataUiGrid;
@@ -31,6 +32,7 @@ public class MainBehaviorsPlugin : InternalPlugin
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _elementCommands = Locator.GetRequiredService<ElementCommands>();
+        _undoManager = Locator.GetRequiredService<UndoManager>();
     }
 
     public override void StartUp()
@@ -142,7 +144,7 @@ public class MainBehaviorsPlugin : InternalPlugin
 
         try
         {
-            using var undoLock = UndoManager.Self.RequestLock();
+            using var undoLock = _undoManager.RequestLock();
 
             var selectedBehaviorNames = viewModel.AllBehaviors
                 .Where(item => item.IsChecked)

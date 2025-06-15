@@ -1,4 +1,4 @@
-﻿using Gum.Converters;
+using Gum.Converters;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Plugins;
@@ -31,6 +31,7 @@ public abstract class WireframeEditor
     private readonly SetVariableLogic _setVariableLogic;
     protected readonly ISelectedState _selectedState;
     private readonly ElementCommands _elementCommands;
+    private readonly UndoManager _undoManager;
     protected GrabbedState grabbedState = new GrabbedState();
 
     protected bool mHasChangedAnythingSinceLastPush = false;
@@ -55,6 +56,7 @@ public abstract class WireframeEditor
         _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _elementCommands = Locator.GetRequiredService<ElementCommands>();
+        _undoManager = Locator.GetRequiredService<UndoManager>();
     }
 
     public abstract void UpdateToSelection(ICollection<GraphicalUiElement> selectedObjects);
@@ -280,7 +282,7 @@ public abstract class WireframeEditor
 
         GumCommands.Self.FileCommands.TryAutoSaveElement(selectedElement);
 
-        using var undoLock = UndoManager.Self.RequestLock();
+        using var undoLock = _undoManager.RequestLock();
 
         GumCommands.Self.GuiCommands.RefreshVariableValues();
 

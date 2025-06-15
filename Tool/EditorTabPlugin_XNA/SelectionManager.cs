@@ -70,8 +70,9 @@ public class SelectionManager
     }
 
 
-    ISelectedState _selectedState;
+    private readonly ISelectedState _selectedState;
     private readonly EditingManager _editingManager;
+    private readonly UndoManager _undoManager;
 
     public bool IsOverBody
     {
@@ -182,11 +183,11 @@ public class SelectionManager
 
     #region Methods
 
-    internal SelectionManager(ISelectedState selectedState, EditingManager editingManager)
+    internal SelectionManager(ISelectedState selectedState, UndoManager undoManager, EditingManager editingManager)
     {
         _selectedState = selectedState;
         _editingManager = editingManager;
-
+        _undoManager = undoManager;
     }
 
     public void Initialize(LayerService layerService)
@@ -767,7 +768,7 @@ public class SelectionManager
 
                         representation = WireframeObjectManager.Self.GetRepresentation(selectedElement);
                     }
-                    UndoManager.Self.RecordUndo();
+                    _undoManager.RecordUndo();
 
                 }
                 else

@@ -6,11 +6,17 @@ using Gum.ToolStates;
 using Gum.Undo;
 using System.Linq;
 using System.Windows.Forms;
+using GumCommon;
 
 namespace Gum.PropertyGridHelpers
 {
-    public class VariableInCategoryPropagationLogic : Singleton<VariableInCategoryPropagationLogic> 
+    public class VariableInCategoryPropagationLogic : Singleton<VariableInCategoryPropagationLogic>
     {
+        private readonly UndoManager _undoManager;
+        public VariableInCategoryPropagationLogic()
+        {
+            _undoManager = Locator.GetRequiredService<UndoManager>();
+        }
         public void PropagateVariablesInCategory(string memberName, ElementSave element, StateSaveCategory categoryToPropagate)
         {
             /////////////////////Early Out//////////////////////////
@@ -141,7 +147,7 @@ namespace Gum.PropertyGridHelpers
 
             if (result == DialogResult.Yes)
             {
-                using(UndoManager.Self.RequestLock())
+                using(_undoManager.RequestLock())
                 {
                     foreach (var state in stateCategory.States)
                     {

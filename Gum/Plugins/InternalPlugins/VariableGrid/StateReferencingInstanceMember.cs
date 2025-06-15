@@ -875,7 +875,7 @@ namespace Gum.PropertyGridHelpers
 
                 if (wasChangeMade)
                 {
-                    Undo.UndoManager.Self.RecordUndo();
+                    _undoManager.RecordUndo();
                     GumCommands.Self.GuiCommands.RefreshVariables(force: true);
                     WireframeObjectManager.Self.RefreshAll(true);
 

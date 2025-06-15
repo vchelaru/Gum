@@ -40,6 +40,7 @@ namespace Gum.PropertyGridHelpers
         static PropertyDescriptorHelper mHelper = new PropertyDescriptorHelper();
         private readonly SubtextLogic _subtextLogic;
         private readonly ISelectedState _selectedState;
+        private readonly UndoManager _undoManager;
 
         #endregion
 
@@ -47,6 +48,7 @@ namespace Gum.PropertyGridHelpers
         {
             _subtextLogic = subtextLogic;
             _selectedState = Locator.GetRequiredService<ISelectedState>();
+            _undoManager = Locator.GetRequiredService<UndoManager>();
         }
 
         private List<InstanceSavePropertyDescriptor> GetProperties(ElementSave elementSave, InstanceSave instanceSave, StateSave stateSave)
@@ -410,12 +412,12 @@ namespace Gum.PropertyGridHelpers
                     if (instance != null)
                     {
                         srim =
-                        new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, instance.Name + "." + propertyDescriptor.Name, instance, element, UndoManager.Self);
+                        new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, instance.Name + "." + propertyDescriptor.Name, instance, element, _undoManager);
                     }
                     else
                     {
                         srim =
-                            new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, propertyDescriptor.Name, instance, element, UndoManager.Self);
+                            new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, propertyDescriptor.Name, instance, element, _undoManager);
                     }
 
                     // moved to internal
@@ -461,7 +463,7 @@ namespace Gum.PropertyGridHelpers
                 variableName = propertyDescriptor.Name;
             }
 
-            srim = new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, variableName, instance, element, UndoManager.Self);
+            srim = new StateReferencingInstanceMember(propertyDescriptor, stateSave, stateSaveCategory, variableName, instance, element, _undoManager);
 
             // moved to internal
             //srim.SetToDefault += (memberName) => ResetVariableToDefault(srim);

@@ -1,4 +1,4 @@
-﻿using CommonFormsAndControls.Forms;
+using CommonFormsAndControls.Forms;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
@@ -23,11 +23,13 @@ namespace Gum.Managers
         private readonly ProjectCommands _projectCommands;
         private readonly ISelectedState _selectedState;
         private readonly ElementCommands _elementCommands;
+        private readonly UndoManager _undoManager;
 
         public DeleteLogic()
         {
             _projectCommands = ProjectCommands.Self;
             _selectedState = Locator.GetRequiredService<ISelectedState>();
+            _undoManager = Locator.GetRequiredService<UndoManager>();
         }
 
 
@@ -43,7 +45,7 @@ namespace Gum.Managers
 
         private void DoDeletingLogic()
         {
-            using (var undoLock = UndoManager.Self.RequestLock())
+            using (var undoLock = _undoManager.RequestLock())
             {
                 Array objectsDeleted = null;
                 DeleteOptionsWindow optionsWindow = null;
@@ -393,7 +395,7 @@ namespace Gum.Managers
 
         private void Remove(StateSaveCategory category)
         {
-            using (UndoManager.Self.RequestLock())
+            using (_undoManager.RequestLock())
             {
 
                 var stateCategoryListContainer =
@@ -498,7 +500,7 @@ namespace Gum.Managers
             bool shouldProgress = TryAskForRemovalConfirmation(stateSave, _selectedState.SelectedElement);
             if (shouldProgress)
             {
-                using (UndoManager.Self.RequestLock())
+                using (_undoManager.RequestLock())
                 {
                     var stateCategory = _selectedState.SelectedStateCategorySave;
                     var shouldSelectAfterRemoval = stateSave == _selectedState.SelectedStateSave;
