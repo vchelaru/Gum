@@ -96,7 +96,7 @@ namespace SkiaGum.Renderables
             set;
         }
 
-        void IRenderableIpso.SetParentDirect(IRenderableIpso parent) => mParent = parent;
+        void IRenderableIpso.SetParentDirect(IRenderableIpso? parent) => mParent = parent;
 
         public bool Wrap => false;
 

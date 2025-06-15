@@ -461,7 +461,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// <returns>The absolute height in pixels.</returns>
     public float GetAbsoluteHeight() => ((IPositionedSizedObject)this).Height;
 
-    void IRenderableIpso.SetParentDirect(IRenderableIpso parent)
+    void IRenderableIpso.SetParentDirect(IRenderableIpso? parent)
     {
         mContainedObjectAsIpso.SetParentDirect(parent);
     }
@@ -979,7 +979,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             if (mParent != value)
             {
                 var oldParent = mParent;
-                if (mParent != null && mParent.Children != null)
+                if (mParent != null && mParent.Children?.Contains(this) == true)
                 {
                     mParent.Children.Remove(this);
                     (mParent as GraphicalUiElement)?.UpdateLayout();
@@ -990,6 +990,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 if (mParent?.Children != null && mParent.Children.Contains(this) == false)
                 {
                     mParent.Children.Add(this);
+
                 }
 
                 // If layout is suppressed, the parent may not get set
