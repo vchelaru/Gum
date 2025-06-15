@@ -6300,7 +6300,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     #region AnimationChain 
 
-    
+#if !FRB
     /// <summary>
     /// Updates the current animation state based on the elapsed time.
     /// </summary>
@@ -6317,6 +6317,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             }
         }
     }
+#endif
 
     /// <summary>
     /// Performs AnimationChain (.achx) animation on this and all children recurisvely.
@@ -6344,9 +6345,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             return;
         }
         ////////////////End Early Out///////////////////
-        #if !FRB
+#if !FRB
                RunAnimation(secondDifference);
-        #endif
+#endif
 
         var didSpriteUpdate = asAnimatable?.AnimateSelf(secondDifference) ?? false;
 
@@ -6410,7 +6411,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
-    #endregion
+#endregion
 }
 
 public static class GraphicalUiElementExtensions
