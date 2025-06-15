@@ -22,6 +22,7 @@ namespace Gum.Managers
     {
         private readonly ProjectCommands _projectCommands;
         private readonly ISelectedState _selectedState;
+        private readonly ElementCommands _elementCommands;
 
         public DeleteLogic()
         {
@@ -272,8 +273,7 @@ namespace Gum.Managers
                     ElementSave selectedElement = _selectedState.SelectedElement;
                     foreach (var instance in deletableInstances)
                     {
-                        Gum.ToolCommands.ElementCommands.Self.RemoveInstance(instance,
-                            selectedElement);
+                        _elementCommands.RemoveInstance(instance, selectedElement);
                     }
 
                     RefreshAndSaveAfterInstanceRemoval(selectedElement, null);
@@ -304,8 +304,7 @@ namespace Gum.Managers
                     // Just in case the argument is a reference to the selected instances:
                     var instancesToRemove = instances.ToList();
 
-                    Gum.ToolCommands.ElementCommands.Self.RemoveInstances(instancesToRemove,
-                        selectedElement);
+                    _elementCommands.RemoveInstances(instancesToRemove, selectedElement);
 
                     RefreshAndSaveAfterInstanceRemoval(selectedElement, null);
                 }
@@ -505,7 +504,7 @@ namespace Gum.Managers
                     var shouldSelectAfterRemoval = stateSave == _selectedState.SelectedStateSave;
                     int index = stateCategory?.States.IndexOf(stateSave) ?? -1;
 
-                    ElementCommands.Self.RemoveState(stateSave, _selectedState.SelectedStateContainer);
+                    _elementCommands.RemoveState(stateSave, _selectedState.SelectedStateContainer);
                     PluginManager.Self.StateDelete(stateSave);
 
                     GumCommands.Self.GuiCommands.RefreshVariables();

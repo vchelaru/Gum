@@ -7,6 +7,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using System.Windows.Controls;
 using Gum.ToolCommands;
+using GumCommon;
 using ToolsUtilities;
 
 namespace Gum.Gui.Plugins;
@@ -23,7 +24,7 @@ public class DeleteObjectPlugin : InternalPlugin
 
     public DeleteObjectPlugin()
     {
-        _elementCommands = ElementCommands.Self;
+        _elementCommands = Locator.GetRequiredService<ElementCommands>();
     }
 
     public override void StartUp()

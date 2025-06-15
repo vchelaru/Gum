@@ -46,13 +46,10 @@ public enum VariableEditMode
 
 public class EditVariableService : IEditVariableService
 {
-
-    private readonly ElementCommands _elementCommands;
     private readonly RenameLogic _renameLogic;
 
-    public EditVariableService(ElementCommands elementCommands)
+    public EditVariableService()
     {
-        _elementCommands = elementCommands;
         _renameLogic = Locator.GetRequiredService<RenameLogic>();
     }
 

@@ -26,8 +26,6 @@ public class ProjectCommands
 
     #region Properties
 
-    public ElementCommands ElementCommands => ElementCommands.Self;
-
     public static ProjectCommands Self
     {
         get

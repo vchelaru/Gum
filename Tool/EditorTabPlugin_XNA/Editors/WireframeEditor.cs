@@ -18,6 +18,7 @@ using Gum.PropertyGridHelpers;
 using System.Security.Policy;
 using EditorTabPlugin_XNA.ExtensionMethods;
 using Gum.Services;
+using Gum.ToolCommands;
 using GumCommon;
 
 namespace Gum.Wireframe;
@@ -29,6 +30,7 @@ public abstract class WireframeEditor
     private readonly SelectionManager _selectionManager;
     private readonly SetVariableLogic _setVariableLogic;
     protected readonly ISelectedState _selectedState;
+    private readonly ElementCommands _elementCommands;
     protected GrabbedState grabbedState = new GrabbedState();
 
     protected bool mHasChangedAnythingSinceLastPush = false;
@@ -52,6 +54,7 @@ public abstract class WireframeEditor
         _selectionManager = selectionManager;
         _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
         _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _elementCommands = Locator.GetRequiredService<ElementCommands>();
     }
 
     public abstract void UpdateToSelection(ICollection<GraphicalUiElement> selectedObjects);
@@ -142,9 +145,8 @@ public abstract class WireframeEditor
                 grabbedState.AccumulatedYOffset -= accumulatedYAsInt;
             }
         }
-
-        var editingCommands = GumCommands.Self.ProjectCommands.ElementCommands;
-        var didMove = editingCommands.MoveSelectedObjectsBy(effectiveXToMoveBy, effectiveYToMoveBy);
+        
+        var didMove = _elementCommands.MoveSelectedObjectsBy(effectiveXToMoveBy, effectiveYToMoveBy);
 
         bool isLockedToAxis = _hotkeyManager.LockMovementToAxis.IsPressedInControl();
 

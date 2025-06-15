@@ -1,4 +1,4 @@
-﻿using Gum.Commands;
+using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
@@ -100,12 +100,11 @@ public class AddVariableViewModel : ViewModel
 
     public AddVariableViewModel(Commands.GuiCommands guiCommands,
         UndoManager undoManager,
-        ElementCommands elementCommands,
         FileCommands fileCommands)
     {
         _guiCommands = guiCommands;
         _undoManager = undoManager;
-        _elementCommands = elementCommands;
+        _elementCommands = Locator.GetRequiredService<ElementCommands>();
         _fileCommands = fileCommands;
         _nameVerifier = Locator.GetRequiredService<NameVerifier>();
         _selectedState = Locator.GetRequiredService<ISelectedState>();
