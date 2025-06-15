@@ -1241,6 +1241,8 @@ public class FrameworkElement : INotifyPropertyChanged
     public const string HighlightedFocusedStateName = "HighlightedFocused";
     public const string PushedStateName = "Pushed";
 
+    public const string SelectedStateName = "Selected";
+
 
 
     protected string GetDesiredState()

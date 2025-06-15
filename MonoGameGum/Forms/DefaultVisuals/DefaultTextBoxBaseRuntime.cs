@@ -157,7 +157,7 @@ namespace MonoGameGum.Forms.DefaultVisuals
                 // todo - this is using the wrong state name. It should be Focused,
                 // but the TextBoxBase expects Selected. This will change in future 
                 // versions of Gum...
-                AddState("Selected");
+                AddState(FrameworkElement.FocusedStateName);
                 AddVariable("TextInstance.Color", Styling.Colors.White);
                 AddVariable("Background.Color", Styling.Colors.DarkGray);
 
