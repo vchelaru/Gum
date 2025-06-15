@@ -284,7 +284,7 @@ namespace SkiaGum
 
         public void PreRender() { }
 
-        void IRenderableIpso.SetParentDirect(IRenderableIpso parent) => mParent = parent;
+        void IRenderableIpso.SetParentDirect(IRenderableIpso? parent) => mParent = parent;
 
         #region IVisible Implementation
 
