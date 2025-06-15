@@ -16,10 +16,18 @@ using MonoGameGum.Forms.Controls;
 namespace MonoGameGum.Forms;
 #endif
 
-
+/// <summary>
+/// Values for an element's resize behavior.
+/// </summary>
 public enum ResizeMode
 {
+    /// <summary>
+    /// Resizing using the cursor is not enabled
+    /// </summary>
     NoResize,
+    /// <summary>
+    /// Resizing is enabled according to the enabled border instances.
+    /// </summary>
     CanResize
 }
 
@@ -82,8 +90,6 @@ public class Window : FrameworkElement
 
         if (Visual != null)
         {
-            //Visual.Push += HandleVisualPush;
-            //Visual.Dragging += HandleVisualDragging;
             innerPanel = Visual.GetGraphicalUiElementByName("InnerPanelInstance");
 
             titleBar = Visual.GetGraphicalUiElementByName("TitleBarInstance") as InteractiveGue;
@@ -169,6 +175,7 @@ public class Window : FrameworkElement
     float? captionGrabbedInXOffset;
     float? captionGrabbedInYOffset;
 
+    #endregion
 
     private void HandleVisualDragging(object? sender, EventArgs e)
     {
@@ -342,6 +349,5 @@ public class Window : FrameworkElement
         this.InnerPanel.Children.Add(child);
     }
 
-    #endregion
 
 }

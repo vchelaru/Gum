@@ -25,6 +25,18 @@ public sealed class TestAssemblyInitialize : XunitTestFramework
         FormsUtilities.InitializeDefaults();
         CreateStubbedFonts();
 
+        InitializeGumService();
+
+    }
+
+    private void InitializeGumService()
+    {
+
+        GumService.Default.Root.Dock(Dock.Fill);
+        GumService.Default.Root.Name = "Main Root";
+        GumService.Default.Root.HasEvents = false;
+
+        GumService.Default.Root.AddToManagers(SystemManagers.Default);
     }
 
     private static void CreateStubbedFonts()
