@@ -20,7 +20,7 @@ At the time of this writing, the DefaultMenuItem contains three items:
 * TextInstance which is of type TextRuntime. Any property on TextInstance can be modified to customize the MenuItem's appearance
 * Background which is of type ColoredRectangleRuntime. This instance can be modified, but some properties are reserved for modification in response to state changes. At the time of this writing its Visible and Color properties are reserved for modification through states. If these properties are directly set they may be overwritten in response to state changes such as highlighting or selecting the menu item.
 
-## Customizing a MenuItem
+## Customizing MenuItem Text
 
 By default MenuItem instances use a Visual which inherits from `DefaultMenuItemRuntime`. Instances can access GraphialUiElements or States by name to modify the appearance of the MenuItem.
 

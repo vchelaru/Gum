@@ -259,6 +259,7 @@
       * [Window](code/monogame/gum-forms/controls/window.md)
     * [Control Customization In Code](code/monogame/gum-forms/control-customization/README.md)
       * [MenuItem](code/monogame/gum-forms/control-customization/menuitem.md)
+      * [TextBox](code/monogame/gum-forms/control-customization/textbox.md)
     * [Control Customization in Gum Tool](code/monogame/gum-forms/control-customization-in-gum-tool.md)
     * [Gamepad Support](code/monogame/gum-forms/gamepad-support.md)
     * [Keyboard Support](code/monogame/gum-forms/keyboard-support.md)
