@@ -7,6 +7,7 @@ using System;
 using System.ComponentModel.Composition;
 using System.Security.Cryptography;
 using System.Windows.Forms;
+using GumCommon;
 
 namespace Gum.Plugins.InternalPlugins.EditorTab.Services;
 
@@ -15,10 +16,12 @@ internal class ScreenshotService
     string? nextScreenshotFileLocation = null;
     Microsoft.Xna.Framework.Graphics.RenderTarget2D renderTarget;
     private readonly SelectionManager _selectionManager;
+    private readonly WireframeCommands _wireframeCommands;
 
     public ScreenshotService(SelectionManager selectionManager)
     {
         _selectionManager = selectionManager;
+        _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
     }
 
     public void InitializeMenuItem(ToolStripMenuItem item)
@@ -59,19 +62,19 @@ internal class ScreenshotService
         if (nextScreenshotFileLocation != null)
         {
             wereRulersVisible =
-                GumCommands.Self.WireframeCommands.AreRulersVisible;
+                _wireframeCommands.AreRulersVisible;
             wereCanvasBoundsVisible =
-                GumCommands.Self.WireframeCommands.AreCanvasBoundsVisible;
+                _wireframeCommands.AreCanvasBoundsVisible;
             wasBackgroundVisible =
-                GumCommands.Self.WireframeCommands.IsBackgroundGridVisible;
+                _wireframeCommands.IsBackgroundGridVisible;
             wereHighlightsVisible =
-                GumCommands.Self.WireframeCommands.AreHighlightsVisible;
+                _wireframeCommands.AreHighlightsVisible;
 
 
-            GumCommands.Self.WireframeCommands.AreRulersVisible = false;
-            GumCommands.Self.WireframeCommands.AreCanvasBoundsVisible = false;
-            GumCommands.Self.WireframeCommands.IsBackgroundGridVisible = false;
-            GumCommands.Self.WireframeCommands.AreHighlightsVisible = false;
+            _wireframeCommands.AreRulersVisible = false;
+            _wireframeCommands.AreCanvasBoundsVisible = false;
+            _wireframeCommands.IsBackgroundGridVisible = false;
+            _wireframeCommands.AreHighlightsVisible = false;
 
             _selectionManager.SelectedGue = null;
 
@@ -113,10 +116,10 @@ internal class ScreenshotService
             nextScreenshotFileLocation = null;
 
 
-            GumCommands.Self.WireframeCommands.AreRulersVisible = wereRulersVisible;
-            GumCommands.Self.WireframeCommands.AreCanvasBoundsVisible = wereCanvasBoundsVisible;
-            GumCommands.Self.WireframeCommands.IsBackgroundGridVisible = wasBackgroundVisible;
-            GumCommands.Self.WireframeCommands.AreHighlightsVisible = wereHighlightsVisible;
+            _wireframeCommands.AreRulersVisible = wereRulersVisible;
+            _wireframeCommands.AreCanvasBoundsVisible = wereCanvasBoundsVisible;
+            _wireframeCommands.IsBackgroundGridVisible = wasBackgroundVisible;
+            _wireframeCommands.AreHighlightsVisible = wereHighlightsVisible;
 
         }
     }

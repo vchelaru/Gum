@@ -29,7 +29,7 @@ public class MainVariableGridPlugin : InternalPlugin
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _propertyGridManager = PropertyGridManager.Self;
-        _variableReferenceLogic = new VariableReferenceLogic(Locator.GetRequiredService<GuiCommands>());
+        _variableReferenceLogic = Locator.GetRequiredService<VariableReferenceLogic>();
         ElementSaveExtensions.CustomEvaluateExpression = EvaluateExpression;
     }
 

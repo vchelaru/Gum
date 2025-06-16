@@ -2,6 +2,7 @@
 using Gum.Commands;
 using Gum.Controls;
 using Gum.Managers;
+using GumCommon;
 
 namespace Gum;
 
@@ -13,19 +14,7 @@ public class GumCommands : Singleton<GumCommands>
         private set;
     }
 
-    public WireframeCommands WireframeCommands
-    {
-        get;
-        private set;
-    }
-
     public FileCommands FileCommands
-    {
-        get;
-        private set;
-    }
-
-    public EditCommands Edit
     {
         get;
         private set;
@@ -37,8 +26,6 @@ public class GumCommands : Singleton<GumCommands>
     {
         GuiCommands = new GuiCommands();
         FileCommands = new FileCommands();
-        Edit = new EditCommands();
-        WireframeCommands = new WireframeCommands();
         ProjectCommands = Gum.ToolCommands.ProjectCommands.Self;
     }
 

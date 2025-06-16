@@ -20,6 +20,7 @@ namespace Gum.Managers
         private readonly GuiCommands _guiCommands;
         private readonly ISelectedState _selectedState;
         private readonly UndoManager _undoManager;
+        private readonly EditCommands _editCommands;
 
         private MenuStrip _menuStrip;
 
@@ -52,6 +53,7 @@ namespace Gum.Managers
             _guiCommands = guiCommands;
             _selectedState = Locator.GetRequiredService<ISelectedState>();
             _undoManager = Locator.GetRequiredService<UndoManager>();
+            _editCommands = Locator.GetRequiredService<EditCommands>();
         }
 
         public void Initialize()
@@ -358,7 +360,7 @@ namespace Gum.Managers
 
         private void HanldeRemoveBehaviorVariableClicked(object sender, EventArgs e)
         {
-            GumCommands.Self.Edit.RemoveBehaviorVariable(
+            _editCommands.RemoveBehaviorVariable(
                 _selectedState.SelectedBehavior,
                 _selectedState.SelectedBehaviorVariable);
         }
@@ -416,12 +418,12 @@ namespace Gum.Managers
         {
             if (_selectedState.SelectedStateSave != null)
             {
-                GumCommands.Self.Edit.AskToDeleteState(
+                _editCommands.AskToDeleteState(
                     _selectedState.SelectedStateSave, _selectedState.SelectedStateContainer);
             }
             else if (_selectedState.SelectedStateCategorySave != null)
             {
-                GumCommands.Self.Edit.RemoveStateCategory(
+                _editCommands.RemoveStateCategory(
                     _selectedState.SelectedStateCategorySave, _selectedState.SelectedStateContainer);
             }
         }

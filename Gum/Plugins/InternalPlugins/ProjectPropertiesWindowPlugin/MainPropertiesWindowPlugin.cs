@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.Composition;
+using Gum.Commands;
 using ToolsUtilities;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
@@ -37,11 +38,13 @@ class MainPropertiesWindowPlugin : InternalPlugin
     }
     #endregion
 
-    FontManager _fontManager;
+    private readonly FontManager _fontManager;
+    private readonly WireframeCommands _wireframeCommands;
 
     public MainPropertiesWindowPlugin()
     {
         _fontManager = Locator.GetRequiredService<FontManager>();
+        _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
     }
 
     public override void StartUp()
@@ -185,7 +188,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
                 }
                 break;
             case nameof(viewModel.GuideLineColor):
-                GumCommands.Self.WireframeCommands.RefreshGuides();
+                _wireframeCommands.RefreshGuides();
                 break;
             case nameof(viewModel.SinglePixelTextureFile):
             case nameof(viewModel.SinglePixelTextureTop):
@@ -208,7 +211,7 @@ class MainPropertiesWindowPlugin : InternalPlugin
 
         if (shouldSaveAndRefresh)
         {
-            GumCommands.Self.WireframeCommands.Refresh(forceLayout: true, forceReloadContent: shouldReloadContent);
+            _wireframeCommands.Refresh(forceLayout: true, forceReloadContent: shouldReloadContent);
 
             GumCommands.Self.FileCommands.TryAutoSaveProject();
         }

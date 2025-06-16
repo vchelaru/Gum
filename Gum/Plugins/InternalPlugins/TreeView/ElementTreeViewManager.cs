@@ -18,6 +18,7 @@ using Gum.Plugins.InternalPlugins.TreeView;
 using Gum.Plugins.InternalPlugins.TreeView.ViewModels;
 using Gum.Logic;
 using System.Drawing;
+using Gum.Commands;
 using WpfInput = System.Windows.Input;
 using Gum.Services;
 using GumCommon;
@@ -107,6 +108,7 @@ public partial class ElementTreeViewManager
     #region Fields
 
     private readonly ISelectedState _selectedState;
+    private readonly EditCommands _editCommands;
 
     public const int TransparentImageIndex = 0;
     public const int FolderImageIndex = 1;
@@ -268,7 +270,8 @@ public partial class ElementTreeViewManager
     public ElementTreeViewManager()
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
-
+        _editCommands = Locator.GetRequiredService<EditCommands>();
+        
         TreeNodeExtensionMethods.ElementTreeViewManager = this;
     }
 

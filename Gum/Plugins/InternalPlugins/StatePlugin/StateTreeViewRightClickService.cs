@@ -22,11 +22,12 @@ public class StateTreeViewRightClickService
     const string mNoCategory = "<no category>";
     private readonly ISelectedState _selectedState;
     private readonly ElementCommands _elementCommands;
+    private readonly EditCommands _editCommands;
 
     System.Windows.Controls.ContextMenu _menuStrip;
     GumCommands _gumCommands;
 
-    public StateTreeViewRightClickService(ISelectedState selectedState, GumCommands gumCommands, ElementCommands elementCommands)
+    public StateTreeViewRightClickService(ISelectedState selectedState, GumCommands gumCommands, ElementCommands elementCommands, EditCommands editCommands)
     {
         _selectedState = selectedState;
         _gumCommands = gumCommands;
@@ -220,14 +221,14 @@ public class StateTreeViewRightClickService
 
     public void DeleteCategoryClick()
     {
-        _gumCommands.Edit.RemoveStateCategory(
+        _editCommands.RemoveStateCategory(
             _selectedState.SelectedStateCategorySave,
             _selectedState.SelectedStateContainer);
     }
 
     public void DeleteStateClick()
     {
-        _gumCommands.Edit.AskToDeleteState(
+        _editCommands.AskToDeleteState(
             _selectedState.SelectedStateSave,
             _selectedState.SelectedStateContainer);
     }
@@ -335,13 +336,13 @@ public class StateTreeViewRightClickService
 
     public void RenameStateClick()
     {
-        _gumCommands.Edit.AskToRenameState(_selectedState.SelectedStateSave,
+        _editCommands.AskToRenameState(_selectedState.SelectedStateSave,
             _selectedState.SelectedStateContainer);
     }
 
     public void RenameCategoryClick()
     {
-        _gumCommands.Edit.AskToRenameStateCategory(
+        _editCommands.AskToRenameStateCategory(
             _selectedState.SelectedStateCategorySave,
             _selectedState.SelectedElement);
     }
@@ -350,7 +351,7 @@ public class StateTreeViewRightClickService
     {
         var stateToMove = _selectedState.SelectedStateSave;
         var stateContainer = _selectedState.SelectedStateContainer;
-        _gumCommands.Edit.MoveToCategory(categoryNameToMoveTo, stateToMove, stateContainer);
+        _editCommands.MoveToCategory(categoryNameToMoveTo, stateToMove, stateContainer);
     }
 
 }
