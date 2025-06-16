@@ -53,11 +53,19 @@ file static class ServiceCollectionExtensions
     public static void AddCleanServices(this IServiceCollection services)
     {
         services.AddSingleton<ISelectedState, SelectedState>();
-        services.AddSingleton<RenameLogic>();
         services.AddSingleton<LocalizationManager>();
         services.AddSingleton<NameVerifier>();
-        services.AddSingleton<ElementCommands>();
         services.AddSingleton<UndoManager>();
+        
+        //logic
+        services.AddSingleton<VariableReferenceLogic>();
+        services.AddSingleton<RenameLogic>();
+        
+        //commands
+        services.AddSingleton<WireframeCommands>();
+        services.AddSingleton<GuiCommands>();
+        services.AddSingleton<EditCommands>();
+        services.AddSingleton<ElementCommands>();
     }
     
     // Register legacy services that may use Locator or have unresolved dependencies.

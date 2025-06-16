@@ -28,7 +28,7 @@ namespace Gum.PropertyGridHelpers
 {
     public class SetVariableLogic : Singleton<SetVariableLogic>
     {
-        private VariableReferenceLogic _variableReferenceLogic;
+        private readonly VariableReferenceLogic _variableReferenceLogic;
         private CircularReferenceManager _circularReferenceManager;
         private FontManager _fontManager;
         private FileCommands _fileCommands;
@@ -37,6 +37,7 @@ namespace Gum.PropertyGridHelpers
         private readonly RenameLogic _renameLogic;
         private readonly ElementCommands _elementCommands;
         private readonly UndoManager _undoManager;
+        private readonly WireframeCommands _wireframeCommands;
 
         public SetVariableLogic()
         {
@@ -45,16 +46,16 @@ namespace Gum.PropertyGridHelpers
             _renameLogic = Locator.GetRequiredService<RenameLogic>();
             _elementCommands = Locator.GetRequiredService<ElementCommands>();
             _undoManager = Locator.GetRequiredService<UndoManager>();
+            _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
+            _variableReferenceLogic = Locator.GetRequiredService<VariableReferenceLogic>();
         }
 
         // this is needed as we unroll all the other singletons...
         public void Initialize(CircularReferenceManager circularReferenceManager, FileCommands fileCommands)
         {
-
-            _variableReferenceLogic = new VariableReferenceLogic(
-                Locator.GetRequiredService<GuiCommands>());
+            
             _circularReferenceManager = circularReferenceManager;
-
+            
             _fontManager = Locator.GetRequiredService<FontManager>();
             _fileCommands = fileCommands;
         }
@@ -843,7 +844,7 @@ namespace Gum.PropertyGridHelpers
                                     parentElement.DefaultState.SetValue(instance.Name + ".TextureWidth", size.Value.Width);
                                     parentElement.DefaultState.SetValue(instance.Name + ".TextureHeight", size.Value.Height);
 
-                                    GumCommands.Self.WireframeCommands.Refresh();
+                                    _wireframeCommands.Refresh();
                                 }
                             }
                         }

@@ -3,6 +3,7 @@ using Gum.DataTypes.Behaviors;
 using Gum.Plugins;
 using Gum.ToolStates;
 using System.Linq;
+using Gum.Commands;
 using GumCommon;
 using ToolsUtilities;
 
@@ -11,9 +12,11 @@ namespace Gum.Managers
     public class FileChangeReactionLogic : Singleton<FileChangeReactionLogic>
     {
         private readonly ISelectedState _selectedState;
+        private readonly WireframeCommands _wireframeCommands;
         public FileChangeReactionLogic()
         {
             _selectedState = Locator.GetRequiredService<ISelectedState>();
+            _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
         }
         
         public void ReactToFileChanged(FilePath file)
@@ -73,7 +76,7 @@ namespace Gum.Managers
                 if(localizationFile == file)
                 {
                     GumCommands.Self.FileCommands.LoadLocalizationFile();
-                    GumCommands.Self.WireframeCommands.Refresh();
+                    _wireframeCommands.Refresh();
                 }
             }
         }

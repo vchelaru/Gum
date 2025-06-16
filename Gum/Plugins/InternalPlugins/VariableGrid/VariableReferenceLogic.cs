@@ -18,6 +18,7 @@ using System.Security.AccessControl;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
+using GumCommon;
 using ToolsUtilities;
 
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
@@ -26,12 +27,14 @@ public class VariableReferenceLogic
     #region Fields/Properties
 
     private readonly GuiCommands _guiCommands;
+    private readonly WireframeCommands _wireframeCommands;
 
     #endregion
 
     public VariableReferenceLogic(GuiCommands guiCommands)
     {
         _guiCommands = guiCommands;
+        _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
     }
 
     public AssignmentExpressionSyntax GetAssignmentSyntax(string item)
@@ -379,7 +382,7 @@ public class VariableReferenceLogic
         // then we forcefully change the values here.
         if (didSetDeepReference)
         {
-            GumCommands.Self.WireframeCommands.Refresh(forceLayout: true);
+            _wireframeCommands.Refresh(forceLayout: true);
         }
     }
 

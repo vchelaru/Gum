@@ -6,6 +6,7 @@ using System.ComponentModel.Composition;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using System.Windows.Controls;
+using Gum.Commands;
 using Gum.ToolCommands;
 using GumCommon;
 using ToolsUtilities;
@@ -21,10 +22,12 @@ public class DeleteObjectPlugin : InternalPlugin
     private RadioButton deleteJustParent;
     private RadioButton deleteAllContainedObjects;
     private readonly ElementCommands _elementCommands;
+    private readonly WireframeCommands _wireframeCommands;
 
     public DeleteObjectPlugin()
     {
         _elementCommands = Locator.GetRequiredService<ElementCommands>();
+        _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
     }
 
     public override void StartUp()
@@ -113,7 +116,7 @@ public class DeleteObjectPlugin : InternalPlugin
 
             // refresh the property grid, refresh the wireframe, save
             GumCommands.Self.GuiCommands.RefreshElementTreeView(element);
-            GumCommands.Self.WireframeCommands.Refresh();
+            _wireframeCommands.Refresh();
             GumCommands.Self.FileCommands.TryAutoSaveElement(element);
         }
     }

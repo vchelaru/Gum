@@ -14,10 +14,8 @@ namespace Gum.Plugins.AlignmentButtons
         public AlignmentPluginControl()
         {
             InitializeComponent();
-
-            var selectedState = Locator.GetRequiredService<ISelectedState>();
-
-            this.DataContext = new AlignmentViewModel(new CommonControlLogic(selectedState));
+            
+            this.DataContext = new AlignmentViewModel(new CommonControlLogic());
 
         }
     }
