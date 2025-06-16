@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Gum.DataTypes;
@@ -67,7 +67,7 @@ public class RenameLogic
 
     private readonly ISelectedState _selectedState;
     private readonly NameVerifier _nameVerifier;
-    
+
     public RenameLogic(ISelectedState selectedState, NameVerifier nameVerifier)
     {
         _selectedState = selectedState;
@@ -84,23 +84,20 @@ public class RenameLogic
         }
         else
         {
-            using (UndoManager.Self.RequestLock())
-            {
-                string oldName = stateSave.Name;
+            string oldName = stateSave.Name;
 
-                stateSave.Name = newName;
-                GumCommands.Self.GuiCommands.RefreshStateTreeView();
-                // I don't think we need to save the project when renaming a state:
-                //GumCommands.Self.FileCommands.TryAutoSaveProject();
+            stateSave.Name = newName;
+            GumCommands.Self.GuiCommands.RefreshStateTreeView();
+            // I don't think we need to save the project when renaming a state:
+            //GumCommands.Self.FileCommands.TryAutoSaveProject();
 
-                // Renaming the state should refresh the property grid
-                // because it displays the state name at the top
-                GumCommands.Self.GuiCommands.RefreshVariables(force: true);
+            // Renaming the state should refresh the property grid
+            // because it displays the state name at the top
+            GumCommands.Self.GuiCommands.RefreshVariables(force: true);
 
-                PluginManager.Self.StateRename(stateSave, oldName);
+            PluginManager.Self.StateRename(stateSave, oldName);
 
-                GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
-            }
+            GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
         }
     }
 
@@ -160,53 +157,50 @@ public class RenameLogic
 
     private void RenameCategory(IStateContainer owner, StateSaveCategory category, string oldName, string newName, List<VariableChange> variableChanges)
     {
-        using (UndoManager.Self.RequestLock())
+        category.Name = newName;
+
+
+        HashSet<ElementSave> elementsWithChangedVariables = new HashSet<ElementSave>();
+
+        foreach (var change in variableChanges)
         {
-            category.Name = newName;
-
-
-            HashSet<ElementSave> elementsWithChangedVariables = new HashSet<ElementSave>();
-
-            foreach (var change in variableChanges)
+            var containerElement = change.Container as ElementSave;
+            if (containerElement != null)
             {
-                var containerElement = change.Container as ElementSave;
-                if (containerElement != null)
+                elementsWithChangedVariables.Add(change.Container as ElementSave);
+            }
+            change.Variable.Type = newName;
+            if (change.Variable.GetRootName() == $"{oldName}State")
+            {
+                if (string.IsNullOrEmpty(change.Variable.SourceObject))
                 {
-                    elementsWithChangedVariables.Add(change.Container as ElementSave);
+                    change.Variable.Name = $"{newName}State";
                 }
-                change.Variable.Type = newName;
-                if (change.Variable.GetRootName() == $"{oldName}State")
+                else
                 {
-                    if (string.IsNullOrEmpty(change.Variable.SourceObject))
-                    {
-                        change.Variable.Name = $"{newName}State";
-                    }
-                    else
-                    {
-                        change.Variable.Name = $"{change.Variable.SourceObject}.{newName}State";
-                    }
+                    change.Variable.Name = $"{change.Variable.SourceObject}.{newName}State";
                 }
             }
+        }
 
-            GumCommands.Self.GuiCommands.RefreshStateTreeView();
-            // I don't think we need to save the project when renaming a state:
-            //GumCommands.Self.FileCommands.TryAutoSaveProject();
+        GumCommands.Self.GuiCommands.RefreshStateTreeView();
+        // I don't think we need to save the project when renaming a state:
+        //GumCommands.Self.FileCommands.TryAutoSaveProject();
 
-            PluginManager.Self.CategoryRename(category, oldName);
+        PluginManager.Self.CategoryRename(category, oldName);
 
-            GumCommands.Self.FileCommands.TryAutoSaveCurrentObject();
+        GumCommands.Self.FileCommands.TryAutoSaveCurrentObject();
 
-            if (owner is ElementSave ownerAsElementSave)
-            {
-                StandardElementsManagerGumTool.Self.FixCustomTypeConverters(ownerAsElementSave);
-            }
+        if (owner is ElementSave ownerAsElementSave)
+        {
+            StandardElementsManagerGumTool.Self.FixCustomTypeConverters(ownerAsElementSave);
+        }
 
-            foreach (var item in elementsWithChangedVariables)
-            {
-                StandardElementsManagerGumTool.Self.FixCustomTypeConverters(item);
+        foreach (var item in elementsWithChangedVariables)
+        {
+            StandardElementsManagerGumTool.Self.FixCustomTypeConverters(item);
 
-                GumCommands.Self.FileCommands.TryAutoSaveElement(item);
-            }
+            GumCommands.Self.FileCommands.TryAutoSaveElement(item);
         }
     }
 
@@ -584,12 +578,12 @@ public class RenameLogic
                 shouldContinue = false;
             }
         }
-        else if(instanceContainer is ElementSave elementSave and not StandardElementSave)
+        else if (instanceContainer is ElementSave elementSave and not StandardElementSave)
         {
             var nameWithoutFolder = elementSave.Name;
             string? folder = null;
 
-            if(elementSave.Name.Contains('/'))
+            if (elementSave.Name.Contains('/'))
             {
                 var lastIndexOfSlash = elementSave.Name.LastIndexOf('/');
                 folder = elementSave.Name.Substring(0, lastIndexOfSlash);
@@ -702,9 +696,9 @@ public class RenameLogic
                         }
                     }
                 }
-                foreach(var variableList in state.VariableLists)
+                foreach (var variableList in state.VariableLists)
                 {
-                    if(variableList.GetRootName() == "VariableReferences")
+                    if (variableList.GetRootName() == "VariableReferences")
                     {
                         ElementSave rootLeftSideElement = null;
                         InstanceSave leftSideInstance = null;
@@ -728,20 +722,20 @@ public class RenameLogic
                         {
                             var line = variableList.ValueAsIList[i];
 
-                            if(line is not string asString || asString.StartsWith("//") || asString.Contains("=") == false || asString.Contains(oldStrippedOrExposedName) == false)
+                            if (line is not string asString || asString.StartsWith("//") || asString.Contains("=") == false || asString.Contains(oldStrippedOrExposedName) == false)
                             {
                                 continue;
                             }
 
                             var right = asString.Substring(asString.IndexOf("=") + 1).Trim();
-                            var leftSide = asString.Substring(0,asString.IndexOf("=")).Trim();
+                            var leftSide = asString.Substring(0, asString.IndexOf("=")).Trim();
 
 
                             var matchesLeft = false;
-                            if(leftSide == oldStrippedOrExposedName)
+                            if (leftSide == oldStrippedOrExposedName)
                             {
                                 string oldSourceObject = null;
-                                if(oldFullName.Contains("."))
+                                if (oldFullName.Contains("."))
                                 {
                                     oldSourceObject = oldFullName.Substring(0, oldFullName.IndexOf("."));
                                 }
@@ -754,7 +748,7 @@ public class RenameLogic
                             var stateContainingRightSideVariable = state;
                             GumRuntime.ElementSaveExtensions.GetRightSideAndState(ref right, ref stateContainingRightSideVariable);
                             var matchesRight = false;
-                            if(right == oldStrippedOrExposedName || right.EndsWith("." + oldStrippedOrExposedName))
+                            if (right == oldStrippedOrExposedName || right.EndsWith("." + oldStrippedOrExposedName))
                             {
                                 // see if the owner of the right side is this element or an inheriting element:
                                 // finish here....
@@ -764,7 +758,7 @@ public class RenameLogic
                             }
 
 
-                            if((matchesLeft || matchesRight) && changedVariableOwnerElement.AllStates.Contains(stateContainingRightSideVariable))
+                            if ((matchesLeft || matchesRight) && changedVariableOwnerElement.AllStates.Contains(stateContainingRightSideVariable))
                             {
                                 // we have a match!!
                                 var referenceChange = new VariableReferenceChange();

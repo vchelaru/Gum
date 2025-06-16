@@ -37,9 +37,9 @@ internal class ExposeVariableService : IExposeVariableService
     private readonly ISelectedState _selectedState;
     private readonly NameVerifier _nameVerifier;
 
-    public ExposeVariableService(UndoManager undoManager, GuiCommands guiCommands, FileCommands fileCommands)
+    public ExposeVariableService(GuiCommands guiCommands, FileCommands fileCommands)
     {
-        _undoManager = undoManager;
+        _undoManager = Locator.GetRequiredService<UndoManager>();
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
         _renameLogic = Locator.GetRequiredService<RenameLogic>();

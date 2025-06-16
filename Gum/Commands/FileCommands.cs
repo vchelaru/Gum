@@ -17,12 +17,14 @@ namespace Gum.Commands
     {
         private LocalizationManager _localizationManager;
         private readonly ISelectedState _selectedState;
+        private readonly UndoManager _undoManager;
         
         MainWindow mainWindow;
 
         public FileCommands()
         {
             _selectedState = Locator.GetRequiredService<ISelectedState>();
+            _undoManager = Locator.GetRequiredService<UndoManager>();
         }
         
         public void Initialize(MainWindow mainWindow, LocalizationManager localizationManager)
@@ -259,7 +261,7 @@ namespace Gum.Commands
             {
                 bool succeeded = true;
 
-                UndoManager.Self.RecordUndo();
+                _undoManager.RecordUndo();
 
                 bool doesProjectNeedToSave = false;
                 bool shouldSave = ProjectManager.Self.AskUserForProjectNameIfNecessary(out doesProjectNeedToSave);

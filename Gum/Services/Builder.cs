@@ -57,6 +57,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<LocalizationManager>();
         services.AddSingleton<NameVerifier>();
         services.AddSingleton<ElementCommands>();
+        services.AddSingleton<UndoManager>();
     }
     
     // Register legacy services that may use Locator or have unresolved dependencies.
@@ -67,7 +68,6 @@ file static class ServiceCollectionExtensions
     {
         services.AddSingleton(GumCommands.Self.GuiCommands);
         services.AddSingleton(GumCommands.Self.FileCommands);
-        services.AddSingleton(UndoManager.Self);
         services.AddSingleton(SetVariableLogic.Self);
         services.AddSingleton(HotkeyManager.Self);
         services.AddSingleton<IObjectFinder>(ObjectFinder.Self);

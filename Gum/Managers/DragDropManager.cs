@@ -48,6 +48,7 @@ public class DragDropManager
     private readonly ISelectedState _selectedState;
     private readonly ElementCommands _elementCommands;
     private readonly RenameLogic _renameLogic;
+    private readonly UndoManager _undoManager;
 
     #endregion
 
@@ -67,6 +68,7 @@ public class DragDropManager
         _selectedState = Locator.GetRequiredService<ISelectedState>();
         _elementCommands = Locator.GetRequiredService<ElementCommands>();
         _renameLogic = Locator.GetRequiredService<RenameLogic>();
+        _undoManager = Locator.GetRequiredService<UndoManager>();
     }
 
     #region Drag+drop File (from windows explorer)
@@ -392,7 +394,7 @@ public class DragDropManager
         // undos to record properly, so let's select it first:
         _selectedState.SelectedComponent = targetComponent;
         
-        using var undoLock = UndoManager.Self.RequestLock();
+        using var undoLock = _undoManager.RequestLock();
 
 
         _elementCommands.AddBehaviorTo(behavior, targetComponent);
@@ -509,7 +511,7 @@ public class DragDropManager
             var stateToAssignOn = targetElementSave.DefaultState;
 
             // todo - this needs to request the lock for the particular element
-            using var undoLock = UndoManager.Self.RequestLock();
+            using var undoLock = _undoManager.RequestLock();
 
             var oldValue = stateToAssignOn.GetValue(variableName) as string;
             stateToAssignOn.SetValue(variableName, parentName, "string");

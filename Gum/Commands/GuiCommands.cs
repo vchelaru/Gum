@@ -45,6 +45,7 @@ public class GuiCommands
     private readonly NameVerifier _nameVerifier;
     private readonly RenameLogic _renameLogic;
     private readonly ElementCommands _elementCommands;
+    private readonly UndoManager _undoManager;
 
     #endregion
 
@@ -54,6 +55,7 @@ public class GuiCommands
         _nameVerifier = Locator.GetRequiredService<NameVerifier>();
         _renameLogic = Locator.GetRequiredService<RenameLogic>();
         _elementCommands = Locator.GetRequiredService<ElementCommands>();
+        _undoManager = Locator.GetRequiredService<UndoManager>();
     }
 
     internal void Initialize(MainWindow mainWindow, MainPanelControl mainPanelControl)
@@ -395,7 +397,7 @@ public class GuiCommands
 
             if (canAdd)
             {
-                using var undoLock = UndoManager.Self.RequestLock();
+                using var undoLock = _undoManager.RequestLock();
                 StateSaveCategory category = _elementCommands.AddCategory(
                     target, name);
 
@@ -427,7 +429,7 @@ public class GuiCommands
                 }
                 else
                 {
-                    using (UndoManager.Self.RequestLock())
+                    using (_undoManager.RequestLock())
                     {
                         StateSave stateSave = _elementCommands.AddState(
                             _selectedState.SelectedStateContainer, _selectedState.SelectedStateCategorySave, name);
