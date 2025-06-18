@@ -32,6 +32,7 @@ public class StateTreeViewRightClickService
         _selectedState = selectedState;
         _gumCommands = gumCommands;
         _elementCommands = elementCommands;
+        _editCommands = editCommands;
     }
 
     public void SetMenuStrip(System.Windows.Controls.ContextMenu menuStrip, FrameworkElement contextMenuOwner)
