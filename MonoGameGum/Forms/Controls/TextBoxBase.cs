@@ -1004,7 +1004,14 @@ public abstract class TextBoxBase : FrameworkElement, IInputReceiver
             // Focused instead of Selected. Will need
             // to do a gradual migration by checking which
             // state exists and setting the proper state...
-            Visual.SetProperty(CategoryName, "Selected");
+            Visual.SetProperty(CategoryName, SelectedStateName);
+            // Update June 15, 2025:
+            // FocusedStateName is the
+            // proper state, but we need
+            // to respect old setups that 
+            // still use selected, so we'll
+            // set both.
+            Visual.SetProperty(CategoryName, FocusedStateName);
         }
         else if (cursor.LastInputDevice != InputDevice.TouchScreen && Visual.EffectiveManagers != null 
             //&& Visual.HasCursorOver(cursor)

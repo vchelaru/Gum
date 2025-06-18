@@ -16,7 +16,7 @@ The keyboard can be used to interact with controls. Keyboards can be used to:
 * To click controls by pressing enter
 * To perform control-specific actions such as changing the value of a slider
 
-To enable gamepad control, add the following code. This code only needs to run once, so add it to your game's Initialize orother code which runs at startup.
+To enable gamepad control, add the following code. This code only needs to run once, so add it to your game's Initialize or other code which runs at startup.
 
 ```csharp
 FrameworkElement.KeyboardsForUiControl.Add(Gum.Keyboard);
@@ -24,8 +24,10 @@ FrameworkElement.KeyboardsForUiControl.Add(Gum.Keyboard);
 
 Keep in mind that a control must first be explicitly to receive keyboard input.&#x20;
 
-For example, the following code enables gamepad control for a game assuming MyButton is a valid button:
+For example, the following code gives a Button focus assuming MyButton is a valid button:
 
 ```csharp
 MyButton.IsFocused = true;
 ```
+
+Note that TextBox and PasswordBox automatically have IsFocus set to true when clicked on.

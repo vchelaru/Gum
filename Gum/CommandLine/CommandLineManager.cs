@@ -4,6 +4,7 @@ using Gum.Services;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using GumCommon;
 using ToolsUtilities;
 
 namespace Gum.CommandLine
@@ -31,7 +32,7 @@ namespace Gum.CommandLine
 
         public CommandLineManager()
         {
-            _fontManager = Builder.Get<FontManager>();
+            _fontManager = Locator.GetRequiredService<FontManager>();
         }
 
         public async Task ReadCommandLine()

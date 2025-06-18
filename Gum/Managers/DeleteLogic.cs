@@ -1,4 +1,4 @@
-﻿using CommonFormsAndControls.Forms;
+using CommonFormsAndControls.Forms;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
@@ -14,6 +14,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using GumCommon;
 
 namespace Gum.Managers
 {
@@ -21,11 +22,14 @@ namespace Gum.Managers
     {
         private readonly ProjectCommands _projectCommands;
         private readonly ISelectedState _selectedState;
+        private readonly ElementCommands _elementCommands;
+        private readonly UndoManager _undoManager;
 
         public DeleteLogic()
         {
             _projectCommands = ProjectCommands.Self;
-            _selectedState = SelectedState.Self;
+            _selectedState = Locator.GetRequiredService<ISelectedState>();
+            _undoManager = Locator.GetRequiredService<UndoManager>();
         }
 
 
@@ -41,7 +45,7 @@ namespace Gum.Managers
 
         private void DoDeletingLogic()
         {
-            using (var undoLock = UndoManager.Self.RequestLock())
+            using (var undoLock = _undoManager.RequestLock())
             {
                 Array objectsDeleted = null;
                 DeleteOptionsWindow optionsWindow = null;
@@ -271,8 +275,7 @@ namespace Gum.Managers
                     ElementSave selectedElement = _selectedState.SelectedElement;
                     foreach (var instance in deletableInstances)
                     {
-                        Gum.ToolCommands.ElementCommands.Self.RemoveInstance(instance,
-                            selectedElement);
+                        _elementCommands.RemoveInstance(instance, selectedElement);
                     }
 
                     RefreshAndSaveAfterInstanceRemoval(selectedElement, null);
@@ -303,8 +306,7 @@ namespace Gum.Managers
                     // Just in case the argument is a reference to the selected instances:
                     var instancesToRemove = instances.ToList();
 
-                    Gum.ToolCommands.ElementCommands.Self.RemoveInstances(instancesToRemove,
-                        selectedElement);
+                    _elementCommands.RemoveInstances(instancesToRemove, selectedElement);
 
                     RefreshAndSaveAfterInstanceRemoval(selectedElement, null);
                 }
@@ -393,7 +395,7 @@ namespace Gum.Managers
 
         private void Remove(StateSaveCategory category)
         {
-            using (UndoManager.Self.RequestLock())
+            using (_undoManager.RequestLock())
             {
 
                 var stateCategoryListContainer =
@@ -498,13 +500,13 @@ namespace Gum.Managers
             bool shouldProgress = TryAskForRemovalConfirmation(stateSave, _selectedState.SelectedElement);
             if (shouldProgress)
             {
-                using (UndoManager.Self.RequestLock())
+                using (_undoManager.RequestLock())
                 {
                     var stateCategory = _selectedState.SelectedStateCategorySave;
                     var shouldSelectAfterRemoval = stateSave == _selectedState.SelectedStateSave;
                     int index = stateCategory?.States.IndexOf(stateSave) ?? -1;
 
-                    ElementCommands.Self.RemoveState(stateSave, _selectedState.SelectedStateContainer);
+                    _elementCommands.RemoveState(stateSave, _selectedState.SelectedStateContainer);
                     PluginManager.Self.StateDelete(stateSave);
 
                     GumCommands.Self.GuiCommands.RefreshVariables();

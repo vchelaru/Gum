@@ -8,6 +8,7 @@ using Gum.ToolStates;
 using Gum.Wireframe;
 using System;
 using System.Windows.Forms;
+using GumCommon;
 
 namespace Gum.Managers;
 
@@ -180,14 +181,16 @@ public class HotkeyManager : Singleton<HotkeyManager>
     private readonly CopyPasteLogic _copyPasteLogic;
     private readonly Commands.GuiCommands _guiCommands;
     private readonly ISelectedState _selectedState;
+    private readonly ElementCommands _elementCommands;
 
     // If adding any new keys here, modify HotkeyViewModel
-
+    
     public HotkeyManager()
     {
         _copyPasteLogic = CopyPasteLogic.Self;
         _guiCommands = GumCommands.Self.GuiCommands;
-        _selectedState = SelectedState.Self;
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _elementCommands = Locator.GetRequiredService<ElementCommands>();
     }
 
     #region App Wide Keys
@@ -281,10 +284,6 @@ public class HotkeyManager : Singleton<HotkeyManager>
         HandleCopyCutPaste(e);
         HandleDelete(e);
         HandleReorder(e);
-        if (e.KeyCode == Keys.Up || e.KeyCode == Keys.Down)
-        {
-            ElementTreeViewManager.Self.OnSelect(ElementTreeViewManager.Self.SelectedNode);
-        }
         TryHandleCtrlF(e);
         HandleGoToDefinition(e);
         HandleKeyDownAppWide(e);
@@ -353,7 +352,7 @@ public class HotkeyManager : Singleton<HotkeyManager>
             {
                 elementToGoTo = ObjectFinder.Self.GetElementSave(_selectedState.SelectedInstance.BaseType);
             }
-            else if (!string.IsNullOrWhiteSpace(SelectedState.Self.SelectedElement?.BaseType))
+            else if (!string.IsNullOrWhiteSpace(_selectedState.SelectedElement?.BaseType))
             {
                 elementToGoTo = ObjectFinder.Self.GetElementSave(_selectedState.SelectedElement.BaseType);
             }
@@ -446,10 +445,8 @@ public class HotkeyManager : Singleton<HotkeyManager>
                 oldX = (float)instance.GetValueFromThisOrBase(element, "X");
                 oldY = (float)instance.GetValueFromThisOrBase(element, "Y");
             }
-
-            var editingCommands = GumCommands.Self.ProjectCommands.ElementCommands;
-
-            editingCommands.MoveSelectedObjectsBy(nudgeX, nudgeY);
+            
+            _elementCommands.MoveSelectedObjectsBy(nudgeX, nudgeY);
             handled = true;
             if(nudgeX != 0)
             {

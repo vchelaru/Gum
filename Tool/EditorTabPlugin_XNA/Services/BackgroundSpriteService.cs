@@ -7,17 +7,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Gum.Commands;
+using GumCommon;
 
 namespace EditorTabPlugin_XNA.Services;
 internal class BackgroundSpriteService
 {
-
+    private readonly WireframeCommands _wireframeCommands;
     Sprite BackgroundSprite;
     SolidRectangle BackgroundSolidColor;
 
     public BackgroundSpriteService()
     {
-
+        _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
     }
 
     public void Initialize(SystemManagers systemManagers)
@@ -76,7 +78,7 @@ internal class BackgroundSpriteService
     public void Activity()
     {
         BackgroundSprite.Visible =
-                GumCommands.Self.WireframeCommands.IsBackgroundGridVisible;
+                _wireframeCommands.IsBackgroundGridVisible;
 
         if (ProjectManager.Self.GeneralSettingsFile != null)
         {

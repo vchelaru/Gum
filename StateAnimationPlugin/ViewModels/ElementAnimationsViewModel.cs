@@ -21,6 +21,7 @@ using ToolsUtilities;
 using System.Globalization;
 using Gum.Mvvm;
 using Gum.Wireframe;
+using GumCommon;
 
 namespace StateAnimationPlugin.ViewModels;
 
@@ -39,7 +40,7 @@ public class ElementAnimationsViewModel : ViewModel
     BitmapFrame mPlayBitmap;
     BitmapFrame mStopBitmap;
 
-
+    private readonly ISelectedState _selectedState;
 
     #endregion
 
@@ -88,7 +89,7 @@ public class ElementAnimationsViewModel : ViewModel
             {
                 if (SelectedAnimation != null)
                 {
-                    var selectedElement = SelectedState.Self.SelectedElement;
+                    var selectedElement = _selectedState.SelectedElement;
                     if(selectedElement == null)
                     {
                         return;
@@ -225,6 +226,8 @@ public class ElementAnimationsViewModel : ViewModel
         mPlayBitmap = BitmapLoader.Self.LoadImage("PlayIcon.png");
 
         mStopBitmap = BitmapLoader.Self.LoadImage("StopIcon.png");
+
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
     }
 
     public static ElementAnimationsViewModel FromSave(ElementAnimationsSave save, Gum.DataTypes.ElementSave element)
@@ -517,7 +520,7 @@ public class ElementAnimationsViewModel : ViewModel
     public string GetWhyAddingAnimationIsInvalid()
     {
         string whyIsntValid = null;
-        if (SelectedState.Self.SelectedScreen == null && SelectedState.Self.SelectedComponent == null)
+        if (_selectedState.SelectedScreen == null && _selectedState.SelectedComponent == null)
         {
             whyIsntValid = "You must first select a Screen or Component";
         }

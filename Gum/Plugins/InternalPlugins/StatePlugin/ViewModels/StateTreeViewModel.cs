@@ -10,6 +10,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using GumCommon;
 
 namespace Gum.Plugins.InternalPlugins.StatePlugin.ViewModels;
 
@@ -17,6 +18,8 @@ public class StateTreeViewModel : ViewModel
 {
     #region Fields/Properties
 
+    private readonly ISelectedState _selectedState;
+    
     [DependsOn(nameof(Categories))]
     [DependsOn(nameof(States))]
     public IEnumerable<StateTreeViewItem> Items => Categories.Concat<StateTreeViewItem>(States);
@@ -36,11 +39,12 @@ public class StateTreeViewModel : ViewModel
 
 
     #endregion
-
+    
     #region Initialize
 
     public StateTreeViewModel(StateTreeViewRightClickService stateTreeViewRightClickService)
     {
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
         _stateTreeViewRightClickService = stateTreeViewRightClickService;
         Categories = new ObservableCollection<CategoryViewModel>();
         States = new ObservableCollection<StateViewModel>();
@@ -65,19 +69,19 @@ public class StateTreeViewModel : ViewModel
 
             if (sender is StateViewModel stateVm && stateVm.IsSelected == true)
             {
-                GumState.Self.SelectedState.SelectedStateSave = stateVm.Data;
+                _selectedState.SelectedStateSave = stateVm.Data;
                 // No need to do this, we have events that do this for us:
                 //_stateTreeViewRightClickService.PopulateMenuStrip();
             }
             else if(sender is CategoryViewModel categoryVm && categoryVm.IsSelected)
             {
                 // If a state was selected, we need to deselect everything and forcefully select the state:
-                if(GumState.Self.SelectedState.SelectedStateSave != null)
+                if(_selectedState.SelectedStateSave != null)
                 {
-                    GumState.Self.SelectedState.SelectedStateSave = null;
-                    GumState.Self.SelectedState.SelectedStateCategorySave = null;
+                    _selectedState.SelectedStateSave = null;
+                    _selectedState.SelectedStateCategorySave = null;
                 }
-                GumState.Self.SelectedState.SelectedStateCategorySave = categoryVm.Data;
+                _selectedState.SelectedStateCategorySave = categoryVm.Data;
                 // I don't think we need to do this anymore because we can rely on the plugin to respond to events
                 //_stateTreeViewRightClickService.PopulateMenuStrip();
             }

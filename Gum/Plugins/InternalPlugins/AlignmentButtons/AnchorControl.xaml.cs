@@ -4,6 +4,7 @@ using Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels;
 using Gum.ToolStates;
 using Gum.Undo;
 using System.Windows.Controls;
+using GumCommon;
 
 namespace Gum.Plugins.AlignmentButtons
 {
@@ -12,19 +13,21 @@ namespace Gum.Plugins.AlignmentButtons
     /// </summary>
     public partial class AnchorControl : UserControl
     {
+        private readonly ISelectedState _selectedState;
+        
         AlignmentViewModel ViewModel => (AlignmentViewModel)DataContext;
 
         StateSave CurrentState
         {
             get
             {
-                if(SelectedState.Self.SelectedStateSave != null)
+                if(_selectedState.SelectedStateSave != null)
                 {
-                    return SelectedState.Self.SelectedStateSave;
+                    return _selectedState.SelectedStateSave;
                 }
                 else
                 {
-                    return SelectedState.Self.SelectedElement?.DefaultState;
+                    return _selectedState.SelectedElement?.DefaultState;
                 }
             }
         }
@@ -32,6 +35,7 @@ namespace Gum.Plugins.AlignmentButtons
         public AnchorControl()
         {
             InitializeComponent();
+            _selectedState = Locator.GetRequiredService<ISelectedState>();
         }
 
         private void TopLeftButton_Click(object sender, System.Windows.RoutedEventArgs e)

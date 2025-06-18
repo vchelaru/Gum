@@ -11,12 +11,18 @@ using Gum.Converters;
 using Gum.Events;
 using Gum.RenderingLibrary;
 using Gum.PropertyGridHelpers;
+using GumCommon;
 using GumRuntime;
 
 namespace Gum.Wireframe;
 
 public partial class EditingManager
 {
+    private readonly ISelectedState _selectedState;
+    public EditingManager()
+    {
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
+    }
     #region Methods
 
     public void Initialize(System.Windows.Forms.ContextMenuStrip contextMenuStrip)

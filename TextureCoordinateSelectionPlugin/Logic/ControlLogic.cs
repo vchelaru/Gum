@@ -13,6 +13,7 @@ using RenderingLibrary.Math;
 using RenderingLibrary.Math.Geometry;
 using System;
 using System.ComponentModel;
+using GumCommon;
 using TextureCoordinateSelectionPlugin.ViewModels;
 using TextureCoordinateSelectionPlugin.Views;
 using Color = System.Drawing.Color;
@@ -31,6 +32,9 @@ public enum RefreshType
 
 public class ControlLogic : Singleton<ControlLogic>
 {
+    private readonly ISelectedState _selectedState;
+    private readonly UndoManager _undoManager;
+    
     LineRectangle textureOutlineRectangle = null;
 
     MainControlViewModel ViewModel;
@@ -60,6 +64,12 @@ public class ControlLogic : Singleton<ControlLogic>
     {
         get => mainControl.InnerControl.CurrentTexture;
         set => mainControl.InnerControl.CurrentTexture = value;
+    }
+
+    public ControlLogic()
+    {
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _undoManager = Locator.GetRequiredService<UndoManager>();
     }
 
     public PluginTab CreateControl()
@@ -304,11 +314,11 @@ public class ControlLogic : Singleton<ControlLogic>
 
     public void HandleRegionDoubleClicked(ImageRegionSelectionControl control, ref LineRectangle textureOutlineRectangle)
     {
-        using var undoLock = UndoManager.Self.RequestLock();
+        using var undoLock = _undoManager.RequestLock();
 
-        var state = SelectedState.Self.SelectedStateSave;
-        var instancePrefix = SelectedState.Self.SelectedInstance?.Name;
-        var graphicalUiElement = SelectedState.Self.SelectedIpso as GraphicalUiElement;
+        var state = _selectedState.SelectedStateSave;
+        var instancePrefix = _selectedState.SelectedInstance?.Name;
+        var graphicalUiElement = _selectedState.SelectedIpso as GraphicalUiElement;
 
         if (!string.IsNullOrEmpty(instancePrefix))
         {
@@ -361,11 +371,11 @@ public class ControlLogic : Singleton<ControlLogic>
 
     private void HandleStartRegionChanged(object sender, EventArgs e)
     {
-        UndoManager.Self.RecordUndo();
+        _undoManager.RecordUndo();
 
-        var state = SelectedState.Self.SelectedStateSave;
+        var state = _selectedState.SelectedStateSave;
 
-        var instancePrefix = SelectedState.Self.SelectedInstance?.Name;
+        var instancePrefix = _selectedState.SelectedInstance?.Name;
 
         if (!string.IsNullOrEmpty(instancePrefix))
         {
@@ -382,7 +392,7 @@ public class ControlLogic : Singleton<ControlLogic>
     {
         var control = sender as ImageRegionSelectionControl;
 
-        var graphicalUiElement = SelectedState.Self.SelectedIpso as GraphicalUiElement;
+        var graphicalUiElement = _selectedState.SelectedIpso as GraphicalUiElement;
 
         if (graphicalUiElement != null)
         {
@@ -394,8 +404,8 @@ public class ControlLogic : Singleton<ControlLogic>
             graphicalUiElement.TextureWidth = MathFunctions.RoundToInt(selector.Width);
             graphicalUiElement.TextureHeight = MathFunctions.RoundToInt(selector.Height);
 
-            var state = SelectedState.Self.SelectedStateSave;
-            var instancePrefix = SelectedState.Self.SelectedInstance?.Name;
+            var state = _selectedState.SelectedStateSave;
+            var instancePrefix = _selectedState.SelectedInstance?.Name;
 
             if (!string.IsNullOrEmpty(instancePrefix))
             {
@@ -418,9 +428,9 @@ public class ControlLogic : Singleton<ControlLogic>
 
     private void HandleEndRegionChanged(object sender, EventArgs e)
     {
-        var element = SelectedState.Self.SelectedElement;
-        var instance = SelectedState.Self.SelectedInstance;
-        var state = SelectedState.Self.SelectedStateSave;
+        var element = _selectedState.SelectedElement;
+        var instance = _selectedState.SelectedInstance;
+        var state = _selectedState.SelectedStateSave;
 
         shouldRefreshAccordingToVariableSets = false;
         {
@@ -436,7 +446,7 @@ public class ControlLogic : Singleton<ControlLogic>
         }
         shouldRefreshAccordingToVariableSets = true;
 
-        UndoManager.Self.RecordUndo();
+        _undoManager.RecordUndo();
 
         GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
     }
@@ -488,7 +498,7 @@ public class ControlLogic : Singleton<ControlLogic>
             return;
         }
 
-        if (SelectedState.Self.SelectedElement == null)
+        if (_selectedState.SelectedElement == null)
         {
             // in case a behavior is selected:
             return;
@@ -497,12 +507,12 @@ public class ControlLogic : Singleton<ControlLogic>
         //////////////end early out///////////////////////////////
 
         var shouldClearOut = true;
-        if (SelectedState.Self.SelectedStateSave != null)
+        if (_selectedState.SelectedStateSave != null)
         {
 
-            var graphicalUiElement = SelectedState.Self.SelectedIpso as GraphicalUiElement;
-            var rfv = new RecursiveVariableFinder(SelectedState.Self.SelectedStateSave);
-            var instancePrefix = SelectedState.Self.SelectedInstance?.Name;
+            var graphicalUiElement = _selectedState.SelectedIpso as GraphicalUiElement;
+            var rfv = new RecursiveVariableFinder(_selectedState.SelectedStateSave);
+            var instancePrefix = _selectedState.SelectedInstance?.Name;
 
             if (!string.IsNullOrEmpty(instancePrefix))
             {

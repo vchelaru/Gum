@@ -136,16 +136,21 @@ public class AnimationRuntime
 
         if (keyframeBefore == null && keyframeAfter != null)
         {
+            // The custom state can be null if the animation window references states which don't exist:
             if (keyframeAfter.CachedCumulativeState == null)
             {
                 if (element != null)
                 {
                     RefreshCumulativeStates(element);
                 }
+                else
+                {
+                    throw new InvalidOperationException("The animation has not had its RefreshCumulativeStates called, " +
+                        "and GetStateToSetFromStateKeyframes is being called without a valid element. One or the other is required");
+                }
             }
 
-            // The custom state can be null if the animation window references states which don't exist:
-            stateToSet = keyframeAfter.CachedCumulativeState.Clone();
+            stateToSet = keyframeAfter.CachedCumulativeState!.Clone();
         }
         else if (keyframeBefore != null && keyframeAfter == null)
         {
@@ -155,9 +160,14 @@ public class AnimationRuntime
                 {
                     RefreshCumulativeStates(element);
                 }
+                else
+                {
+                    throw new InvalidOperationException("The animation has not had its RefreshCumulativeStates called, " +
+                        "and GetStateToSetFromStateKeyframes is being called without a valid element. One or the other is required");
+                }
             }
 
-            stateToSet = keyframeBefore.CachedCumulativeState.Clone();
+            stateToSet = keyframeBefore.CachedCumulativeState!.Clone();
         }
         else if (keyframeBefore != null && keyframeAfter != null)
         {
@@ -168,6 +178,12 @@ public class AnimationRuntime
                 {
                     RefreshCumulativeStates(element);
                 }
+                else
+                {
+                    throw new InvalidOperationException("The animation has not had its RefreshCumulativeStates called, " +
+                        "and GetStateToSetFromStateKeyframes is being called without a valid element. One or the other is required");
+                }
+
             }
             double linearRatio = GetLinearRatio(animationTime, keyframeBefore, keyframeAfter);
             var stateBefore = keyframeBefore.CachedCumulativeState;
@@ -180,11 +196,6 @@ public class AnimationRuntime
 
                 var combined = stateBefore.Clone();
                 combined.MergeIntoThis(stateAfter, (float)processedRatio);
-
-                // for performance we will only update wireframe:
-                //SelectedState.Self.UpdateToSelectedStateSave();
-                //WireframeObjectManager.Self.RefreshAll(true);
-
                 stateToSet = combined;
             }
         }
@@ -195,7 +206,6 @@ public class AnimationRuntime
         }
         else if (stateToSet == null)
         {
-
             stateToSet = new StateSave();
         }
         return stateToSet;

@@ -9,12 +9,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using GumCommon;
 
 namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels;
 
 public class AlignmentViewModel : ViewModel
 {
     private readonly CommonControlLogic _commonControlLogic;
+    private readonly ISelectedState _selectedState;
+    private readonly UndoManager _undoManager;
 
     public float DockMargin
     {
@@ -25,13 +28,15 @@ public class AlignmentViewModel : ViewModel
     public AlignmentViewModel(CommonControlLogic commonControlLogic)
     {
         _commonControlLogic = commonControlLogic;
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _undoManager = Locator.GetRequiredService<UndoManager>();
     }
 
     #region Anchor Actions
 
     public void TopLeftButton_Click()
     {
-        using (UndoManager.Self.RequestLock())
+        using (_undoManager.RequestLock())
         {
 
             _commonControlLogic.SetXValues(
@@ -48,7 +53,7 @@ public class AlignmentViewModel : ViewModel
 
     public void TopButton_Click()
     {
-        using (UndoManager.Self.RequestLock())
+        using (_undoManager.RequestLock())
         {
 
             _commonControlLogic.SetXValues(
@@ -65,7 +70,7 @@ public class AlignmentViewModel : ViewModel
 
     public void TopRightButton_Click()
     {
-        using (UndoManager.Self.RequestLock())
+        using (_undoManager.RequestLock())
         {
 
             _commonControlLogic.SetXValues(
@@ -82,7 +87,7 @@ public class AlignmentViewModel : ViewModel
 
     public void MiddleLeftButton_Click()
     {
-        using (UndoManager.Self.RequestLock())
+        using (_undoManager.RequestLock())
         {
 
             _commonControlLogic.SetXValues(
@@ -99,7 +104,7 @@ public class AlignmentViewModel : ViewModel
 
     public void MiddleMiddleButton_Click()
     {
-        using (UndoManager.Self.RequestLock())
+        using (_undoManager.RequestLock())
         {
             _commonControlLogic.SetXValues(
             global::RenderingLibrary.Graphics.HorizontalAlignment.Center,
@@ -115,7 +120,7 @@ public class AlignmentViewModel : ViewModel
 
     public void MiddleRightButton_Click()
     {
-        using (UndoManager.Self.RequestLock())
+        using (_undoManager.RequestLock())
         {
 
             _commonControlLogic.SetXValues(
@@ -132,7 +137,7 @@ public class AlignmentViewModel : ViewModel
 
     public void BottomLeftButton_Click()
     {
-        using (UndoManager.Self.RequestLock())
+        using (_undoManager.RequestLock())
         {
 
             _commonControlLogic.SetXValues(
@@ -149,7 +154,7 @@ public class AlignmentViewModel : ViewModel
 
     public void BottomMiddleButton_Click()
     {
-        using (UndoManager.Self.RequestLock())
+        using (_undoManager.RequestLock())
         {
 
             _commonControlLogic.SetXValues(
@@ -166,7 +171,7 @@ public class AlignmentViewModel : ViewModel
 
     public void BottomRightButton_Click()
     {
-        using (UndoManager.Self.RequestLock())
+        using (_undoManager.RequestLock())
         {
 
             _commonControlLogic.SetXValues(
@@ -187,9 +192,9 @@ public class AlignmentViewModel : ViewModel
 
     public void DockTopButton_Click()
     {
-        using (UndoManager.Self.RequestLock())
+        using (_undoManager.RequestLock())
         {
-            var state = SelectedState.Self.SelectedStateSave;
+            var state = _selectedState.SelectedStateSave;
 
             _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
             _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Top, PositionUnitType.PixelsFromTop, DockMargin);
@@ -204,9 +209,9 @@ public class AlignmentViewModel : ViewModel
 
     public void SizeToChildren_Click()
     {
-        using (UndoManager.Self.RequestLock())
+        using (_undoManager.RequestLock())
         {
-            var state = SelectedState.Self.SelectedStateSave;
+            var state = _selectedState.SelectedStateSave;
 
             _commonControlLogic.SetAndCallReact("Width", DockMargin * 2, "float");
             _commonControlLogic.SetAndCallReact("WidthUnits", DimensionUnitType.RelativeToChildren, typeof(DimensionUnitType).Name);
@@ -218,9 +223,9 @@ public class AlignmentViewModel : ViewModel
 
     public void DockLeftButton_Click()
     {
-        using (UndoManager.Self.RequestLock())
+        using (_undoManager.RequestLock())
         {
-            var state = SelectedState.Self.SelectedStateSave;
+            var state = _selectedState.SelectedStateSave;
 
             _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Left, PositionUnitType.PixelsFromLeft, DockMargin);
             _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
@@ -234,10 +239,10 @@ public class AlignmentViewModel : ViewModel
 
     public void DockFillButton_Click()
     {
-        using (UndoManager.Self.RequestLock())
+        using (_undoManager.RequestLock())
         {
 
-            var state = SelectedState.Self.SelectedStateSave;
+            var state = _selectedState.SelectedStateSave;
 
             _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
             _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
@@ -254,10 +259,10 @@ public class AlignmentViewModel : ViewModel
 
     public void DockRightButton_Click()
     {
-        using (UndoManager.Self.RequestLock())
+        using (_undoManager.RequestLock())
         {
 
-            var state = SelectedState.Self.SelectedStateSave;
+            var state = _selectedState.SelectedStateSave;
 
             _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Right, PositionUnitType.PixelsFromRight, -DockMargin);
             _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
@@ -271,9 +276,9 @@ public class AlignmentViewModel : ViewModel
 
     public void DockBottomButton_Click()
     {
-        using (UndoManager.Self.RequestLock())
+        using (_undoManager.RequestLock())
         {
-            var state = SelectedState.Self.SelectedStateSave;
+            var state = _selectedState.SelectedStateSave;
 
             _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
             _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Bottom, PositionUnitType.PixelsFromBottom, -DockMargin);
@@ -287,10 +292,10 @@ public class AlignmentViewModel : ViewModel
 
     public void DockFillVerticallyButton_Click()
     {
-        using (UndoManager.Self.RequestLock())
+        using (_undoManager.RequestLock())
         {
 
-            var state = SelectedState.Self.SelectedStateSave;
+            var state = _selectedState.SelectedStateSave;
 
             _commonControlLogic.SetYValues(global::RenderingLibrary.Graphics.VerticalAlignment.Center, PositionUnitType.PixelsFromCenterY);
 
@@ -303,10 +308,10 @@ public class AlignmentViewModel : ViewModel
 
     public void DockFillHorizontallyButton_Click()
     {
-        using (UndoManager.Self.RequestLock())
+        using (_undoManager.RequestLock())
         {
 
-            var state = SelectedState.Self.SelectedStateSave;
+            var state = _selectedState.SelectedStateSave;
 
             _commonControlLogic.SetXValues(global::RenderingLibrary.Graphics.HorizontalAlignment.Center, PositionUnitType.PixelsFromCenterX);
 

@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using GumCommon;
 using WpfDataUi.DataTypes;
 
 namespace Gum.Services;
@@ -45,14 +46,11 @@ public enum VariableEditMode
 
 public class EditVariableService : IEditVariableService
 {
-
-    private readonly ElementCommands _elementCommands;
     private readonly RenameLogic _renameLogic;
 
-    public EditVariableService(ElementCommands elementCommands, RenameLogic renameLogic)
+    public EditVariableService()
     {
-        _elementCommands = elementCommands;
-        _renameLogic = renameLogic;
+        _renameLogic = Locator.GetRequiredService<RenameLogic>();
     }
 
     public void TryAddEditVariableOptions(InstanceMember instanceMember, VariableSave variableSave, IStateContainer stateListCategoryContainer)
@@ -230,7 +228,7 @@ public class EditVariableService : IEditVariableService
         }
 
         // We can re-use the logic in the AddVariableViewModel:
-        var vm = Builder.Get<AddVariableViewModel>();
+        var vm = Locator.GetRequiredService<AddVariableViewModel>();
         vm.RenameType = RenameType.ExposedName;
         vm.ApplyVariableReferenceChanges(changeResponse, newName, oldName, changedElements);
 
@@ -244,7 +242,7 @@ public class EditVariableService : IEditVariableService
 
     private void ShowFullEditUi(VariableSave variable, IStateContainer container)
     {
-        var vm = Builder.Get<AddVariableViewModel>();
+        var vm = Locator.GetRequiredService<AddVariableViewModel>();
         vm.RenameType = RenameType.NormalName;
 
         vm.Variable = variable;

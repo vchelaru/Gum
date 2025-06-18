@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
+using GumCommon;
 using ToolsUtilities;
 using WpfDataUi.Controls;
 using WpfDataUi.DataTypes;
@@ -46,6 +47,7 @@ namespace Gum.PropertyGridHelpers
 
         private readonly IEditVariableService _editVariablesService;
         private readonly IExposeVariableService _exposeVariableService;
+        private readonly ISelectedState _selectedState;
         #endregion
 
         #region Properties
@@ -243,12 +245,13 @@ namespace Gum.PropertyGridHelpers
             UndoManager undoManager) :
             base(variableName, stateSave)
         {
-            _editVariablesService = Gum.Services.Builder.Get<IEditVariableService>();
-            _exposeVariableService = Gum.Services.Builder.Get<IExposeVariableService>();
+            _editVariablesService = Locator.GetRequiredService<IEditVariableService>();
+            _exposeVariableService = Locator.GetRequiredService<IExposeVariableService>();
             _objectFinder = ObjectFinder.Self;
             _hotkeyManager = HotkeyManager.Self;
-            _deleteVariableLogic = Gum.Services.Builder.App.Services.GetRequiredService<IDeleteVariableService>();
+            _deleteVariableLogic = Locator.GetRequiredService<IDeleteVariableService>();
             _undoManager = undoManager;
+            _selectedState = Locator.GetRequiredService<ISelectedState>();
 
             StateSaveCategory = stateSaveCategory;
             InstanceSave = instanceSave;
@@ -421,11 +424,11 @@ namespace Gum.PropertyGridHelpers
                         }
                         if (instance != null)
                         {
-                            SelectedState.Self.SelectedInstance = instance;
+                            _selectedState.SelectedInstance = instance;
                         }
                         else
                         {
-                            SelectedState.Self.SelectedElement = element;
+                            _selectedState.SelectedElement = element;
                         }
                     }
                 }
@@ -536,7 +539,7 @@ namespace Gum.PropertyGridHelpers
         private void HandleExposeVariableClick(object sender, System.Windows.RoutedEventArgs e)
         {
             var variableToExpose = this.VariableSave;
-            _exposeVariableService.HandleExposeVariableClick(SelectedState.Self.SelectedInstance,
+            _exposeVariableService.HandleExposeVariableClick(_selectedState.SelectedInstance,
                 variableToExpose, this.RootVariableName);
         }
 
@@ -589,7 +592,7 @@ namespace Gum.PropertyGridHelpers
             }
             /////////////////End Early Out////////////////////////
 
-            var stateSave = SelectedState.Self.SelectedStateSave;
+            var stateSave = _selectedState.SelectedStateSave;
             var instanceSave = gumElementOrInstanceSaveAsObject as InstanceSave;
             var elementSave = instanceSave?.ParentContainer ?? gumElementOrInstanceSaveAsObject as ElementSave;
 
@@ -687,15 +690,15 @@ namespace Gum.PropertyGridHelpers
                 // need to set the exposed name on the variable, but only if it is defined in this component or in
                 // a base component:
 
-                variableDefinedInThisOrBase = SelectedState.Self.SelectedStateSave.GetVariableSave(Name);
-                if (variableDefinedInThisOrBase == null && SelectedState.Self.SelectedStateSave != SelectedState.Self.SelectedElement.DefaultState)
+                variableDefinedInThisOrBase = _selectedState.SelectedStateSave.GetVariableSave(Name);
+                if (variableDefinedInThisOrBase == null && _selectedState.SelectedStateSave != _selectedState.SelectedElement.DefaultState)
                 {
-                    variableDefinedInThisOrBase = SelectedState.Self.SelectedElement.DefaultState.GetVariableSave(Name);
+                    variableDefinedInThisOrBase = _selectedState.SelectedElement.DefaultState.GetVariableSave(Name);
                 }
 
                 if (variableDefinedInThisOrBase == null)
                 {
-                    var allBase = _objectFinder.GetBaseElements(SelectedState.Self.SelectedElement);
+                    var allBase = _objectFinder.GetBaseElements(_selectedState.SelectedElement);
                     foreach (var baseElement in allBase)
                     {
                         variableDefinedInThisOrBase = baseElement.DefaultState.GetVariableSave(Name);
@@ -732,13 +735,13 @@ namespace Gum.PropertyGridHelpers
             bool shouldReset = false;
             bool affectsTreeView = false;
 
-            var selectedElement = SelectedState.Self.SelectedElement;
-            var selectedInstance = SelectedState.Self.SelectedInstance;
+            var selectedElement = _selectedState.SelectedElement;
+            var selectedInstance = _selectedState.SelectedInstance;
 
             if (selectedInstance != null)
             {
                 affectsTreeView = variableName == "Parent";
-                //variableName = SelectedState.Self.SelectedInstance.Name + "." + variableName;
+                //variableName = _selectedState.SelectedInstance.Name + "." + variableName;
 
                 shouldReset = true;
             }
@@ -748,7 +751,7 @@ namespace Gum.PropertyGridHelpers
                     // Don't let the user reset standard element variables, they have to have some actual value
                     (selectedElement is StandardElementSave) == false ||
                     // ... unless it's not the default
-                    SelectedState.Self.SelectedStateSave != SelectedState.Self.SelectedElement.DefaultState;
+                    _selectedState.SelectedStateSave != _selectedState.SelectedElement.DefaultState;
             }
 
             // now we reset, but we don't remove the variable:
@@ -765,7 +768,7 @@ namespace Gum.PropertyGridHelpers
             //    }
             //}
 
-            StateSave state = SelectedState.Self.SelectedStateSave;
+            StateSave state = _selectedState.SelectedStateSave;
             VariableSave variable = state?.GetVariableSave(variableName);
             var oldValue = variable?.Value;
             LastOldFullCommitValue = oldValue;
@@ -787,8 +790,8 @@ namespace Gum.PropertyGridHelpers
                     // necessarily need to have all
                     // of their variables, we can remove
                     // the variable now. In fact, we should
-                    //bool shouldRemove = SelectedState.Self.SelectedInstance != null ||
-                    //    SelectedState.Self.SelectedStateSave != SelectedState.Self.SelectedElement.DefaultState;
+                    //bool shouldRemove = _selectedState.SelectedInstance != null ||
+                    //    _selectedState.SelectedStateSave != _selectedState.SelectedElement.DefaultState;
                     // Also, don't remove it if it's an exposed variable, this un-exposes things
                     bool shouldRemove = string.IsNullOrEmpty(variable.ExposedAsName) && !isPartOfCategory && !variable.IsCustomVariable;
 
@@ -815,7 +818,7 @@ namespace Gum.PropertyGridHelpers
                     }
                     else if (isPartOfCategory)
                     {
-                        var variableInDefault = SelectedState.Self.SelectedElement.DefaultState.GetVariableSave(variable.Name);
+                        var variableInDefault = _selectedState.SelectedElement.DefaultState.GetVariableSave(variable.Name);
                         if (variableInDefault != null)
                         {
                             GumCommands.Self.GuiCommands.PrintOutput(
@@ -872,7 +875,7 @@ namespace Gum.PropertyGridHelpers
 
                 if (wasChangeMade)
                 {
-                    Undo.UndoManager.Self.RecordUndo();
+                    _undoManager.RecordUndo();
                     GumCommands.Self.GuiCommands.RefreshVariables(force: true);
                     WireframeObjectManager.Self.RefreshAll(true);
 
@@ -880,10 +883,10 @@ namespace Gum.PropertyGridHelpers
 
                     if (affectsTreeView)
                     {
-                        GumCommands.Self.GuiCommands.RefreshElementTreeView(SelectedState.Self.SelectedElement);
+                        GumCommands.Self.GuiCommands.RefreshElementTreeView(_selectedState.SelectedElement);
                     }
 
-                    GumCommands.Self.FileCommands.TryAutoSaveElement(SelectedState.Self.SelectedElement);
+                    GumCommands.Self.FileCommands.TryAutoSaveElement(_selectedState.SelectedElement);
                 }
             }
             else

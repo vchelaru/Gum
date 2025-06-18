@@ -1,4 +1,4 @@
-﻿using Gum.Converters;
+using Gum.Converters;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Plugins;
@@ -18,6 +18,8 @@ using Gum.PropertyGridHelpers;
 using System.Security.Policy;
 using EditorTabPlugin_XNA.ExtensionMethods;
 using Gum.Services;
+using Gum.ToolCommands;
+using GumCommon;
 
 namespace Gum.Wireframe;
 
@@ -27,7 +29,9 @@ public abstract class WireframeEditor
 
     private readonly SelectionManager _selectionManager;
     private readonly SetVariableLogic _setVariableLogic;
-    private readonly ISelectedState _selectedState;
+    protected readonly ISelectedState _selectedState;
+    private readonly ElementCommands _elementCommands;
+    private readonly UndoManager _undoManager;
     protected GrabbedState grabbedState = new GrabbedState();
 
     protected bool mHasChangedAnythingSinceLastPush = false;
@@ -49,8 +53,10 @@ public abstract class WireframeEditor
     {
         _hotkeyManager = hotkeyManager;
         _selectionManager = selectionManager;
-        _setVariableLogic = Builder.Get<SetVariableLogic>();
-        _selectedState = selectedState;
+        _setVariableLogic = Locator.GetRequiredService<SetVariableLogic>();
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _elementCommands = Locator.GetRequiredService<ElementCommands>();
+        _undoManager = Locator.GetRequiredService<UndoManager>();
     }
 
     public abstract void UpdateToSelection(ICollection<GraphicalUiElement> selectedObjects);
@@ -141,9 +147,8 @@ public abstract class WireframeEditor
                 grabbedState.AccumulatedYOffset -= accumulatedYAsInt;
             }
         }
-
-        var editingCommands = GumCommands.Self.ProjectCommands.ElementCommands;
-        var didMove = editingCommands.MoveSelectedObjectsBy(effectiveXToMoveBy, effectiveYToMoveBy);
+        
+        var didMove = _elementCommands.MoveSelectedObjectsBy(effectiveXToMoveBy, effectiveYToMoveBy);
 
         bool isLockedToAxis = _hotkeyManager.LockMovementToAxis.IsPressedInControl();
 
@@ -277,7 +282,7 @@ public abstract class WireframeEditor
 
         GumCommands.Self.FileCommands.TryAutoSaveElement(selectedElement);
 
-        using var undoLock = UndoManager.Self.RequestLock();
+        using var undoLock = _undoManager.RequestLock();
 
         GumCommands.Self.GuiCommands.RefreshVariableValues();
 

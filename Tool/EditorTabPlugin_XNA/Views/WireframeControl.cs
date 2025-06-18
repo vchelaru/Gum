@@ -230,16 +230,19 @@ public class WireframeControl : GraphicsDeviceControl
         ShapeManager.Self.Add(mCanvasBounds, layerService.OverlayLayer);
 
 
-        mTopRuler = new Ruler(this, SystemManagers.Default,
+        mTopRuler = new Ruler(this, 
+            SystemManagers.Default,
             InputLibrary.Cursor.Self,
             ToolFontService.Self,
             ToolLayerService.Self,
-            layerService);
+            layerService,
+            HotkeyManager.Self);
         mLeftRuler = new Ruler(this, SystemManagers.Default,
             InputLibrary.Cursor.Self,
             ToolFontService.Self,
             ToolLayerService.Self,
-            layerService);
+            layerService,
+            HotkeyManager.Self);
         mLeftRuler.RulerSide = RulerSide.Left;
 
     }
@@ -299,8 +302,8 @@ public class WireframeControl : GraphicsDeviceControl
                 if (mTopRuler.IsCursorOver == false && mLeftRuler.IsCursorOver == false)
                 {
                     var shouldForceNoHighlight = mouseHasEntered == false &&
-                        // If the mouse is over the element tree view, we don't want to force unhlighlights since they can highlight when over the tree view items
-                        ElementTreeViewManager.Self.HasMouseOver == false;
+                        PluginManager.Self.GetIfShouldSuppressRemoveEditorHighlight() == false;
+
 
                     _selectionManager.Activity(shouldForceNoHighlight);
 

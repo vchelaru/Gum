@@ -4,11 +4,14 @@ using System.Linq;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.ToolStates;
+using GumCommon;
 
 namespace Gum.PropertyGridHelpers.Converters
 {
     public class AvailableStatesConverter : TypeConverter
     {
+        private readonly ISelectedState _selectedState;
+        
         InstanceSave mOverridingInstanceSave;
         ElementSave mOverridingElementSave;
 
@@ -27,7 +30,7 @@ namespace Gum.PropertyGridHelpers.Converters
                 }
                 else
                 {
-                    return SelectedState.Self.SelectedInstance;
+                    return _selectedState.SelectedInstance;
                 }
             }
             set
@@ -46,7 +49,7 @@ namespace Gum.PropertyGridHelpers.Converters
                 }
                 else
                 {
-                    return SelectedState.Self.SelectedElement;
+                    return _selectedState.SelectedElement;
 
                 }
             }
@@ -60,7 +63,7 @@ namespace Gum.PropertyGridHelpers.Converters
         public AvailableStatesConverter(string category)
         {
             CategoryName = category;
-
+            _selectedState = Locator.GetRequiredService<ISelectedState>();
         }
 
 

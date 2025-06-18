@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using Gum.DataTypes.Variables;
 using Gum.Plugins;
 using System.Linq;
+using GumCommon;
 
 namespace Gum.ToolCommands;
 
@@ -18,12 +19,12 @@ public class ProjectCommands
     #region Fields
 
     static ProjectCommands mSelf;
+    private readonly ISelectedState _selectedState;
+    private readonly NameVerifier _nameVerifier;
 
     #endregion
 
     #region Properties
-
-    public ElementCommands ElementCommands => ElementCommands.Self;
 
     public static ProjectCommands Self
     {
@@ -39,6 +40,12 @@ public class ProjectCommands
 
     #endregion
 
+    public ProjectCommands()
+    {
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _nameVerifier = Locator.GetRequiredService<NameVerifier>();
+    }
+    
     #region Screens
     /// <summary>
     /// Creates a new Screen using the argument as the name. This saves the newly created screen to disk and saves the project.
@@ -144,7 +151,7 @@ public class ProjectCommands
             }
         }
 
-        SelectedState.Self.SelectedBehavior = null;
+        _selectedState.SelectedBehavior = null;
 
         PluginManager.Self.BehaviorDeleted(behavior);
 
@@ -166,6 +173,7 @@ public class ProjectCommands
 
     #region Component
 
+    // todo - move this to GuiCommands 
     public void AskToAddComponent()
     {
         if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(ProjectManager.Self.GumProjectSave.FullFileName))
@@ -181,24 +189,26 @@ public class ProjectCommands
             if (tiw.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 string name = tiw.Result;
-                TreeNode nodeToAddTo = ElementTreeViewManager.Self.SelectedNode;
+                var nodeToAddTo = _selectedState.SelectedTreeNode;
 
                 while (nodeToAddTo != null && nodeToAddTo.Tag is ComponentSave && nodeToAddTo.Parent != null)
                 {
                     nodeToAddTo = nodeToAddTo.Parent;
                 }
 
+                FilePath? path = nodeToAddTo?.GetFullFilePath();
                 if (nodeToAddTo == null || !nodeToAddTo.IsPartOfComponentsFolderStructure())
                 {
-                    nodeToAddTo = ElementTreeViewManager.Self.RootComponentsTreeNode;
+                    path = GumState.Self.ProjectState.ComponentFilePath;
                 }
 
-                FilePath path = nodeToAddTo.GetFullFilePath();
+                if(path != null)
+                {
+                    string relativeToComponents = FileManager.MakeRelative(path.StandardizedCaseSensitive,
+                        FileLocations.Self.ComponentsFolder, preserveCase:true);
 
-                string relativeToComponents = FileManager.MakeRelative(path.StandardizedCaseSensitive,
-                    FileLocations.Self.ComponentsFolder, preserveCase:true);
-
-                AddComponent(name, relativeToComponents);
+                    AddComponent(name, relativeToComponents);
+                }
             }
         }
     }
@@ -209,7 +219,7 @@ public class ProjectCommands
 
         folder = folder?.Replace('\\', '/');
 
-        if (!NameVerifier.Self.IsElementNameValid(componentName, folder, null, out whyNotValid))
+        if (!_nameVerifier.IsElementNameValid(componentName, folder, null, out whyNotValid))
         {
             MessageBox.Show(whyNotValid);
             return null;
@@ -237,7 +247,7 @@ public class ProjectCommands
         GumCommands.Self.FileCommands.TryAutoSaveElement(componentSave);
         Plugins.PluginManager.Self.ElementAdd(componentSave);
 
-        SelectedState.Self.SelectedComponent = componentSave;
+        _selectedState.SelectedComponent = componentSave;
     }
 
     private void PrepareNewComponentSave(ComponentSave componentSave, string componentName)

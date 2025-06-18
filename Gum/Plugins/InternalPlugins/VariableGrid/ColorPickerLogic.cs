@@ -1,19 +1,27 @@
-﻿using Gum.DataTypes.Variables;
-using Gum.DataTypes;
+﻿using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.PropertyGridHelpers;
+using Gum.ToolStates;
+using GumCommon;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using WpfDataUi.DataTypes;
-using Gum.PropertyGridHelpers;
-using Gum.ToolStates;
 using System.Windows;
+using WpfDataUi.DataTypes;
 
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
 public class ColorPickerLogic
 {
+
+    private readonly ISelectedState _selectedState;
+
+    public ColorPickerLogic()
+    {
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
+    }
 
     public void UpdateColorCategory(List<MemberCategory> categories, ElementSave element, InstanceSave instance)
     {
@@ -191,7 +199,7 @@ public class ColorPickerLogic
 
     System.Drawing.Color GetCurrentColor(string redVariableName, string greenVariableName, string blueVariableName)
     {
-        var selectedState = SelectedState.Self.SelectedStateSave;
+        var selectedState = _selectedState.SelectedStateSave;
 
         int red = 0;
         int green = 0;
@@ -223,7 +231,7 @@ public class ColorPickerLogic
     void SetCurrentColor(SetPropertyArgs args, string redVariableName, string greenVariableName, string blueVariableName)
     {
         var valueBeforeSet = GetCurrentColor(redVariableName, greenVariableName, blueVariableName);
-        var state = SelectedState.Self.SelectedStateSave;
+        var state = _selectedState.SelectedStateSave;
 
         var color = (System.Drawing.Color)args.Value;
 
@@ -232,10 +240,10 @@ public class ColorPickerLogic
         state.SetValue(greenVariableName, (int)color.G, "int");
         state.SetValue(blueVariableName, (int)color.B, "int");
 
-        var instance = SelectedState.Self.SelectedInstance;
+        var instance = _selectedState.SelectedInstance;
         // These functions take unqualified:
 
-        var element = SelectedState.Self.SelectedElement;
+        var element = _selectedState.SelectedElement;
         var defaultState = element.DefaultState;
 
         if (instance == null && redVariableName.Contains("."))
@@ -265,7 +273,7 @@ public class ColorPickerLogic
         if (redVariableName.Contains(".") && instance == null)
         {
             // This is an exposed:
-            instance = SelectedState.Self.SelectedElement.GetInstance(redVariableName.Substring(0, redVariableName.IndexOf('.')));
+            instance = _selectedState.SelectedElement.GetInstance(redVariableName.Substring(0, redVariableName.IndexOf('.')));
         }
 
         var shouldSave = args.CommitType == SetPropertyCommitType.Full;

@@ -312,7 +312,7 @@ namespace RenderingLibrary.Math.Geometry
             get { return mChildren; }
         }
 
-        void IRenderableIpso.SetParentDirect(IRenderableIpso parent)
+        void IRenderableIpso.SetParentDirect(IRenderableIpso? parent)
         {
             mParent = parent;
         }

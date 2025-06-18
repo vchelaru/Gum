@@ -9,7 +9,7 @@
 		<Title>GumCommon</Title>
 		<Description>Flexible layout tool for graphics in any .NET environment</Description>
 		<PackageId>FlatRedBall.GumCommon</PackageId>
-		<Version>2025.6.6.2</Version>
+		<Version>2025.6.14.1</Version>
 
 
 
@@ -156,5 +156,8 @@
 		<Compile Include="..\RenderingLibrary\Graphics\HorizontalAlignment.cs">
 			<Link>Graphics\HorizontalAlignment.cs</Link>
 		</Compile>
+	</ItemGroup>
+	<ItemGroup>
+	  <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.6" />
 	</ItemGroup>
 </Project>

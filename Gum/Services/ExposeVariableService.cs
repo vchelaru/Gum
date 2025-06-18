@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Gum.Commands;
 using Gum.Undo;
+using GumCommon;
 using ToolsUtilities;
 
 namespace Gum.Services;
@@ -33,14 +34,17 @@ internal class ExposeVariableService : IExposeVariableService
     private readonly GuiCommands _guiCommands;
     private readonly FileCommands _fileCommands;
     private readonly RenameLogic _renameLogic;
+    private readonly ISelectedState _selectedState;
+    private readonly NameVerifier _nameVerifier;
 
-    public ExposeVariableService(UndoManager undoManager, GuiCommands guiCommands, FileCommands fileCommands,
-        RenameLogic renameLogic)
+    public ExposeVariableService(GuiCommands guiCommands, FileCommands fileCommands)
     {
-        _undoManager = undoManager;
+        _undoManager = Locator.GetRequiredService<UndoManager>();
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
-        _renameLogic = renameLogic;
+        _renameLogic = Locator.GetRequiredService<RenameLogic>();
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _nameVerifier = Locator.GetRequiredService<NameVerifier>();
     }
 
     public void HandleExposeVariableClick(InstanceSave instanceSave, VariableSave variableSave, string rootVariableName)
@@ -73,16 +77,16 @@ internal class ExposeVariableService : IExposeVariableService
         if (result == DialogResult.OK)
         {
             string whyNot;
-            if (!NameVerifier.Self.IsVariableNameValid(tiw.Result, SelectedState.Self.SelectedElement, variableSave, out whyNot))
+            if (!_nameVerifier.IsVariableNameValid(tiw.Result, _selectedState.SelectedElement, variableSave, out whyNot))
             {
                 MessageBox.Show(whyNot);
             }
             else
             {
-                var elementSave = SelectedState.Self.SelectedElement;
+                var elementSave = _selectedState.SelectedElement;
                 // if there is an inactive variable,
                 // we should get rid of it:
-                var existingVariable = SelectedState.Self.SelectedElement.GetVariableFromThisOrBase(tiw.Result);
+                var existingVariable = _selectedState.SelectedElement.GetVariableFromThisOrBase(tiw.Result);
 
                 // there's a variable but we shouldn't consider it
                 // unless it's "Active" - inactive variables may be
@@ -106,7 +110,7 @@ internal class ExposeVariableService : IExposeVariableService
 
                 if(variableSave == null)
                 {
-                    StateSave stateToExposeOn = SelectedState.Self.SelectedElement.DefaultState;
+                    StateSave stateToExposeOn = _selectedState.SelectedElement.DefaultState;
 
                     var variableInDefault = ObjectFinder.Self.GetRootVariable(fullVariableName, instanceSave.ParentContainer);
 
@@ -148,8 +152,8 @@ internal class ExposeVariableService : IExposeVariableService
         // was selected; however, exposed
         // variables should be exposed on the
         // default state or else Gum breaks
-        //StateSave currentStateSave = SelectedState.Self.SelectedStateSave;
-        StateSave stateToExposeOn = SelectedState.Self.SelectedElement.DefaultState;
+        //StateSave currentStateSave = _selectedState.SelectedStateSave;
+        StateSave stateToExposeOn = _selectedState.SelectedElement.DefaultState;
 
         if (variableSave == null)
         {
@@ -178,7 +182,7 @@ internal class ExposeVariableService : IExposeVariableService
         // Actually yes, expose it
         // but make it read-only.
         // https://github.com/vchelaru/Gum/issues/521
-        //var selectedElement = SelectedState.Self.SelectedElement;
+        //var selectedElement = _selectedState.SelectedElement;
 
         //var fullVariableName = instanceSave.Name + "." + rootVariableName;
 

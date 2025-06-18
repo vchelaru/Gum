@@ -15,6 +15,8 @@ using System.ComponentModel.Composition;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Gum.Commands;
+using GumCommon;
 using ToolsUtilities;
 
 namespace SkiaPlugin
@@ -27,9 +29,17 @@ namespace SkiaPlugin
         public override string FriendlyName => "Skia Plugin";
 
         public override Version Version => new Version(1, 1);
+        
+        private readonly ISelectedState _selectedState;
+        private readonly WireframeCommands _wireframeCommands;
 
         #endregion
 
+        public MainSvgPlugin()
+        {
+            _selectedState = Locator.GetRequiredService<ISelectedState>();
+            _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
+        }
         public override bool ShutDown(PluginShutDownReason shutDownReason)
         {
             return true;
@@ -79,7 +89,7 @@ namespace SkiaPlugin
         private void HandleFileChanged(FilePath filePath)
         {
             var isSvg = filePath.Extension == "svg";
-            var currentElement = SelectedState.Self.SelectedElement;
+            var currentElement = _selectedState.SelectedElement;
 
             ///////////////////Early Out///////////////////////
             if(!isSvg || currentElement == null)
@@ -96,7 +106,7 @@ namespace SkiaPlugin
 
             if (referencedFiles.Contains(filePath))
             {
-                GumCommands.Self.WireframeCommands.Refresh(true, true);
+                _wireframeCommands.Refresh(true, true);
             }
         }
 

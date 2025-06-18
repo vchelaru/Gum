@@ -2,15 +2,20 @@
 using Gum.PropertyGridHelpers;
 using Gum.ToolStates;
 using System.Management.Instrumentation;
+using Gum.Commands;
+using GumCommon;
 
 namespace Gum.Plugins.AlignmentButtons;
 
 public class CommonControlLogic
 {
-    ISelectedState _selectedState;
-    public CommonControlLogic(ISelectedState selectedState)
+    private readonly ISelectedState _selectedState;
+    private readonly WireframeCommands _wireframeCommands;
+    
+    public CommonControlLogic()
     {
-        _selectedState = selectedState;
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
     }
 
     bool SelectionInheritsFromText()
@@ -96,7 +101,7 @@ public class CommonControlLogic
     public void RefreshAndSave()
     {
         GumCommands.Self.GuiCommands.RefreshVariables(force: true);
-        GumCommands.Self.WireframeCommands.Refresh();
+        _wireframeCommands.Refresh();
         GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
     }
 

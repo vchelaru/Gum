@@ -9,6 +9,7 @@ using System.Diagnostics;
 using ExCSS;
 using Gum.Commands;
 using Gum.ToolCommands;
+using GumCommon;
 
 namespace Gum.Managers
 {
@@ -17,6 +18,9 @@ namespace Gum.Managers
         #region Fields
 
         private readonly GuiCommands _guiCommands;
+        private readonly ISelectedState _selectedState;
+        private readonly UndoManager _undoManager;
+        private readonly EditCommands _editCommands;
 
         private MenuStrip _menuStrip;
 
@@ -47,6 +51,9 @@ namespace Gum.Managers
         public MenuStripManager(GuiCommands guiCommands)
         {
             _guiCommands = guiCommands;
+            _selectedState = Locator.GetRequiredService<ISelectedState>();
+            _undoManager = Locator.GetRequiredService<UndoManager>();
+            _editCommands = Locator.GetRequiredService<EditCommands>();
         }
 
         public void Initialize()
@@ -91,10 +98,10 @@ namespace Gum.Managers
             this.editToolStripMenuItem.Size = new System.Drawing.Size(39, 20);
             this.editToolStripMenuItem.Text = "Edit";
 
-            var undoMenuItem = Add(editToolStripMenuItem, "Undo", UndoManager.Self.PerformUndo);
+            var undoMenuItem = Add(editToolStripMenuItem, "Undo", _undoManager.PerformUndo);
             undoMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Z)));
 
-            var redoMenuItem = Add(editToolStripMenuItem, "Redo", UndoManager.Self.PerformRedo);
+            var redoMenuItem = Add(editToolStripMenuItem, "Redo", _undoManager.PerformRedo);
             redoMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Y)));
 
             AddSeparator(editToolStripMenuItem);
@@ -114,10 +121,15 @@ namespace Gum.Managers
 
 
 
-            Add(addToolStripMenuItem, "Screen", () => ElementTreeViewManager.Self.AddScreenClick(this, null));
-            Add(addToolStripMenuItem, "Component", () => ElementTreeViewManager.Self.AddComponentClick(this, null));
-            Add(addToolStripMenuItem, "Instance", () => ElementTreeViewManager.Self.AddInstanceClick(this, null));
-            Add(addToolStripMenuItem, "State", () => GumCommands.Self.GuiCommands.ShowAddStateWindow());
+            Add(addToolStripMenuItem, "Screen", () => 
+                GumCommands.Self.GuiCommands.ShowAddScreenWindow()) ;
+
+            Add(addToolStripMenuItem, "Component", () => 
+                ProjectCommands.Self.AskToAddComponent());
+            Add(addToolStripMenuItem, "Instance", () =>
+                GumCommands.Self.GuiCommands.ShowAddInstanceWindow());
+            Add(addToolStripMenuItem, "State", () => 
+                GumCommands.Self.GuiCommands.ShowAddStateWindow());
 
             // 
             // RemoveElementMenuItem
@@ -348,21 +360,21 @@ namespace Gum.Managers
 
         private void HanldeRemoveBehaviorVariableClicked(object sender, EventArgs e)
         {
-            GumCommands.Self.Edit.RemoveBehaviorVariable(
-                SelectedState.Self.SelectedBehavior,
-                SelectedState.Self.SelectedBehaviorVariable);
+            _editCommands.RemoveBehaviorVariable(
+                _selectedState.SelectedBehavior,
+                _selectedState.SelectedBehaviorVariable);
         }
 
         public void RefreshUI()
         {
-            if (SelectedState.Self.SelectedStateSave != null && SelectedState.Self.SelectedStateSave.Name != "Default")
+            if (_selectedState.SelectedStateSave != null && _selectedState.SelectedStateSave.Name != "Default")
             {
-                RemoveStateMenuItem.Text = "State " + SelectedState.Self.SelectedStateSave.Name;
+                RemoveStateMenuItem.Text = "State " + _selectedState.SelectedStateSave.Name;
                 RemoveStateMenuItem.Enabled = true;
             }
-            else if (SelectedState.Self.SelectedStateCategorySave != null)
+            else if (_selectedState.SelectedStateCategorySave != null)
             {
-                RemoveStateMenuItem.Text = "Category " + SelectedState.Self.SelectedStateCategorySave.Name;
+                RemoveStateMenuItem.Text = "Category " + _selectedState.SelectedStateCategorySave.Name;
                 RemoveStateMenuItem.Enabled = true;
             }
             else
@@ -371,9 +383,9 @@ namespace Gum.Managers
                 RemoveStateMenuItem.Enabled = false;
             }
 
-            if (SelectedState.Self.SelectedElement != null && !(SelectedState.Self.SelectedElement is StandardElementSave))
+            if (_selectedState.SelectedElement != null && !(_selectedState.SelectedElement is StandardElementSave))
             {
-                RemoveElementMenuItem.Text = SelectedState.Self.SelectedElement.Name;
+                RemoveElementMenuItem.Text = _selectedState.SelectedElement.Name;
                 RemoveElementMenuItem.Enabled = true;
             }
             else
@@ -382,9 +394,9 @@ namespace Gum.Managers
                 RemoveElementMenuItem.Enabled = false;
             }
 
-            if(SelectedState.Self.SelectedBehaviorVariable != null)
+            if(_selectedState.SelectedBehaviorVariable != null)
             {
-                RemoveVariableMenuItem.Text = SelectedState.Self.SelectedBehaviorVariable.ToString();
+                RemoveVariableMenuItem.Text = _selectedState.SelectedBehaviorVariable.ToString();
                 RemoveVariableMenuItem.Enabled = true;
             }
             else
@@ -398,21 +410,21 @@ namespace Gum.Managers
 
         private void RemoveElementClicked(object sender, EventArgs e)
         {
-            ProjectCommands.Self.RemoveElement(SelectedState.Self.SelectedElement);
-            SelectedState.Self.SelectedElement = null;
+            ProjectCommands.Self.RemoveElement(_selectedState.SelectedElement);
+            _selectedState.SelectedElement = null;
         }
 
         private void RemoveStateOrCategoryClicked(object sender, EventArgs e)
         {
-            if (SelectedState.Self.SelectedStateSave != null)
+            if (_selectedState.SelectedStateSave != null)
             {
-                GumCommands.Self.Edit.AskToDeleteState(
-                    SelectedState.Self.SelectedStateSave, SelectedState.Self.SelectedStateContainer);
+                _editCommands.AskToDeleteState(
+                    _selectedState.SelectedStateSave, _selectedState.SelectedStateContainer);
             }
-            else if (SelectedState.Self.SelectedStateCategorySave != null)
+            else if (_selectedState.SelectedStateCategorySave != null)
             {
-                GumCommands.Self.Edit.RemoveStateCategory(
-                    SelectedState.Self.SelectedStateCategorySave, SelectedState.Self.SelectedStateContainer);
+                _editCommands.RemoveStateCategory(
+                    _selectedState.SelectedStateCategorySave, _selectedState.SelectedStateContainer);
             }
         }
 

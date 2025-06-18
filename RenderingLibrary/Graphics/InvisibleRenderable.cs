@@ -105,7 +105,7 @@ namespace RenderingLibrary.Graphics
         }
 
 
-        void IRenderableIpso.SetParentDirect(IRenderableIpso parent)
+        void IRenderableIpso.SetParentDirect(IRenderableIpso? parent)
         {
             mParent = parent;
         }

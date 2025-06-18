@@ -16,6 +16,7 @@ using Gum.Services;
 using Gum.Undo;
 using Gum.Logic;
 using Gum.Plugins.InternalPlugins.MenuStripPlugin;
+using GumCommon;
 using GumRuntime;
 
 namespace Gum
@@ -51,8 +52,7 @@ namespace Gum
             System.Diagnostics.PresentationTraceSources.DataBindingSource.Switch.Level =
                 System.Diagnostics.SourceLevels.Critical;
 #endif
-            var builder = new Builder();
-            builder.Build();
+            _ = GumBuilder.BuildGum();
 
             InitializeComponent();
 
@@ -63,7 +63,7 @@ namespace Gum
 
 
             // Initialize before the StateView is created...
-            GumCommands.Self.Initialize(this, mainPanelControl, Builder.Get<LocalizationManager>());
+            GumCommands.Self.Initialize(this, mainPanelControl, Locator.GetRequiredService<LocalizationManager>());
 
             TypeManager.Self.Initialize();
 
@@ -81,11 +81,13 @@ namespace Gum
             // beyond the generation of code which isn't working when
             // I move it to custom code. Oh well, maybe one day I'll move
             // to a wpf window and can get rid of this
-            ElementTreeViewManager.Self.Initialize(this.components, ElementTreeImages, CopyPasteLogic.Self);
+            // For Vic K: This should die. We won't need it once we move to
+            // a WPF treeview. 
+            ElementTreeViewManager.Self.Initialize(this.components, ElementTreeImages);
 
             // ProperGridManager before MenuStripManager. Why does it need to be initialized before MainMenuStripPlugin?
             // Is htere a way to move this to a plugin?
-            PropertyGridManager.Self.InitializeEarly(Builder.Get<LocalizationManager>());
+            PropertyGridManager.Self.InitializeEarly(Locator.GetRequiredService<LocalizationManager>());
 
             // bah we have to do this before initializing all plugins because we need the menu strip to exist:
             MainMenuStripPlugin.InitializeMenuStrip();
@@ -111,7 +113,7 @@ namespace Gum
             // does, then we need to make sure that the wireframe controls
             // are set up properly before that happens.
 
-            var localizationManager = Builder.Get<LocalizationManager>();
+            var localizationManager = Locator.GetRequiredService<LocalizationManager>();
             Wireframe.WireframeObjectManager.Self.Initialize(localizationManager);
 
             PluginManager.Self.XnaInitialized();

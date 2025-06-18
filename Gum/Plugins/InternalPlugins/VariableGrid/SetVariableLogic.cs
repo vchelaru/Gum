@@ -1,4 +1,4 @@
-﻿using Gum.DataTypes;
+using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins;
@@ -20,25 +20,43 @@ using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Services;
 using Gum.Commands;
 using Gum.Graphics;
+using Gum.ToolCommands;
+using Gum.Undo;
+using GumCommon;
 
 namespace Gum.PropertyGridHelpers
 {
     public class SetVariableLogic : Singleton<SetVariableLogic>
     {
-        private VariableReferenceLogic _variableReferenceLogic;
+        private readonly VariableReferenceLogic _variableReferenceLogic;
         private CircularReferenceManager _circularReferenceManager;
         private FontManager _fontManager;
         private FileCommands _fileCommands;
+        private readonly ISelectedState _selectedState;
+        private readonly NameVerifier _nameVerifier;
+        private readonly RenameLogic _renameLogic;
+        private readonly ElementCommands _elementCommands;
+        private readonly UndoManager _undoManager;
+        private readonly WireframeCommands _wireframeCommands;
+
+        public SetVariableLogic()
+        {
+            _selectedState = Locator.GetRequiredService<ISelectedState>();
+            _nameVerifier = Locator.GetRequiredService<NameVerifier>();
+            _renameLogic = Locator.GetRequiredService<RenameLogic>();
+            _elementCommands = Locator.GetRequiredService<ElementCommands>();
+            _undoManager = Locator.GetRequiredService<UndoManager>();
+            _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
+            _variableReferenceLogic = Locator.GetRequiredService<VariableReferenceLogic>();
+        }
 
         // this is needed as we unroll all the other singletons...
         public void Initialize(CircularReferenceManager circularReferenceManager, FileCommands fileCommands)
         {
-
-            _variableReferenceLogic = new VariableReferenceLogic(
-                Builder.Get<GuiCommands>());
+            
             _circularReferenceManager = circularReferenceManager;
-
-            _fontManager = Builder.Get<FontManager>();
+            
+            _fontManager = Locator.GetRequiredService<FontManager>();
             _fileCommands = fileCommands;
         }
 
@@ -59,11 +77,11 @@ namespace Gum.PropertyGridHelpers
 
                 if (instance != null)
                 {
-                    SelectedState.Self.SelectedVariableSave = stateContainingVariable.GetVariableSave(instance.Name + "." + unqualifiedMemberName);
+                    _selectedState.SelectedVariableSave = stateContainingVariable.GetVariableSave(instance.Name + "." + unqualifiedMemberName);
                 }
                 else
                 {
-                    SelectedState.Self.SelectedVariableSave = stateContainingVariable.GetVariableSave(unqualifiedMemberName);
+                    _selectedState.SelectedVariableSave = stateContainingVariable.GetVariableSave(unqualifiedMemberName);
                 }
             }
 
@@ -131,12 +149,12 @@ namespace Gum.PropertyGridHelpers
                         // This code used to not specify the category, so it defaulted to the selected category.
                         // I'm maintaining this behavior but I'm not sure if it's what should happen - maybe we should
                         // serach for the owner category of the state?
-                        GumState.Self.SelectedState.SelectedStateCategorySave);
+                        _selectedState.SelectedStateCategorySave);
 
                     // Need to record undo before refreshing and reselecting the UI
                     if (recordUndo)
                     {
-                        Undo.UndoManager.Self.RecordUndo();
+                        _undoManager.RecordUndo();
                     }
 
                     if (refresh)
@@ -227,7 +245,7 @@ namespace Gum.PropertyGridHelpers
 
             if (rootVariableName == "BaseType")
             {
-                VariableSave variable = SelectedState.Self.SelectedVariableSave;
+                VariableSave variable = _selectedState.SelectedVariableSave;
 
                 if (instance != null)
                 {
@@ -252,7 +270,7 @@ namespace Gum.PropertyGridHelpers
 
         private void ReactIfChangedMemberIsDefaultChildContainer(ElementSave parentElement, InstanceSave instance, string rootVariableName, object oldValue)
         {
-            VariableSave variable = SelectedState.Self.SelectedVariableSave;
+            VariableSave variable = _selectedState.SelectedVariableSave;
 
             if (variable != null && rootVariableName == nameof(ComponentSave.DefaultChildContainer))
             {
@@ -264,13 +282,13 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        private static GeneralResponse ReactIfChangedMemberIsName(IInstanceContainer instanceContainer, InstanceSave instance, string changedMember, object oldValue)
+        private GeneralResponse ReactIfChangedMemberIsName(IInstanceContainer instanceContainer, InstanceSave instance, string changedMember, object oldValue)
         {
             var toReturn = OptionallyAttemptedGeneralResponse.SuccessfulWithoutAttempt;
 
             if (changedMember == "Name")
             {
-                var innerResponse = RenameLogic.HandleRename(instanceContainer, instance, (string)oldValue, NameChangeAction.Rename);
+                var innerResponse = _renameLogic.HandleRename(instanceContainer, instance, (string)oldValue, NameChangeAction.Rename);
                 toReturn.SetFrom(innerResponse);
             }
             return toReturn;
@@ -326,12 +344,12 @@ namespace Gum.PropertyGridHelpers
                     TryAddForced("IsItalic");
                     TryAddForced("IsBold");
 
-                    StateSave stateSave = SelectedState.Self.SelectedStateSave;
+                    StateSave stateSave = _selectedState.SelectedStateSave;
 
                     // If the user has a category selected but no state in the category, then use the default:
-                    if (stateSave == null && SelectedState.Self.SelectedStateCategorySave != null)
+                    if (stateSave == null && _selectedState.SelectedStateCategorySave != null)
                     {
-                        stateSave = SelectedState.Self.SelectedElement.DefaultState;
+                        stateSave = _selectedState.SelectedElement.DefaultState;
                     }
 
 
@@ -351,7 +369,7 @@ namespace Gum.PropertyGridHelpers
         {
             bool wasAnythingSet = false;
             string variableToSet = null;
-            StateSave stateSave = SelectedState.Self.SelectedStateSave;
+            StateSave stateSave = _selectedState.SelectedStateSave;
             float valueToSet = 0;
 
             var wereUnitValuesChanged =
@@ -394,10 +412,8 @@ namespace Gum.PropertyGridHelpers
                     float outY = 0;
 
                     bool isWidthOrHeight = false;
-
-                    var editingCommands = GumCommands.Self.ProjectCommands.ElementCommands;
-
-                    object unitTypeAsObject = editingCommands.GetCurrentValueForVariable(changedMember, SelectedState.Self.SelectedInstance);
+                    
+                    object unitTypeAsObject = _elementCommands.GetCurrentValueForVariable(changedMember, _selectedState.SelectedInstance);
                     GeneralUnitType unitType = UnitConverter.ConvertToGeneralUnit(unitTypeAsObject);
 
 
@@ -457,12 +473,12 @@ namespace Gum.PropertyGridHelpers
 
             if (wasAnythingSet && AttemptToPersistPositionsOnUnitChanges && !float.IsPositiveInfinity(valueToSet))
             {
-                InstanceSave instanceSave = SelectedState.Self.SelectedInstance;
+                InstanceSave instanceSave = _selectedState.SelectedInstance;
 
                 string unqualifiedVariableToSet = variableToSet;
-                if (SelectedState.Self.SelectedInstance != null)
+                if (_selectedState.SelectedInstance != null)
                 {
-                    variableToSet = SelectedState.Self.SelectedInstance.Name + "." + variableToSet;
+                    variableToSet = _selectedState.SelectedInstance.Name + "." + variableToSet;
                 }
 
                 stateSave.SetValue(variableToSet, valueToSet, instanceSave);
@@ -490,7 +506,7 @@ namespace Gum.PropertyGridHelpers
 
             variableFullName = $"{instancePrefix}{changedMember}";
 
-            VariableSave variable = SelectedState.Self.SelectedStateSave?.GetVariableSave(variableFullName);
+            VariableSave variable = _selectedState.SelectedStateSave?.GetVariableSave(variableFullName);
 
             bool isSourcefile = variable?.GetRootName() == "SourceFile";
 
@@ -514,7 +530,7 @@ namespace Gum.PropertyGridHelpers
                 string value;
 
                 value = variable.Value as string;
-                StateSave stateSave = SelectedState.Self.SelectedStateSave;
+                StateSave stateSave = _selectedState.SelectedStateSave;
 
                 if (!string.IsNullOrEmpty(value))
                 {
@@ -607,7 +623,7 @@ namespace Gum.PropertyGridHelpers
                 {
                     var strippedName =
                         FileManager.RemovePath(FileManager.RemoveExtension(value));
-                    NameVerifier.Self.IsNameValidAndroidFile(strippedName, out whyInvalid);
+                    _nameVerifier.IsNameValidAndroidFile(strippedName, out whyInvalid);
                 }
             }
 
@@ -705,7 +721,7 @@ namespace Gum.PropertyGridHelpers
         {
             bool isValidAssignment = true;
 
-            VariableSave variable = SelectedState.Self.SelectedVariableSave;
+            VariableSave variable = _selectedState.SelectedVariableSave;
             // Eventually need to handle tunneled variables
             if (variable != null && changedMember == "Parent")
             {
@@ -783,10 +799,10 @@ namespace Gum.PropertyGridHelpers
             {
                 RecursiveVariableFinder rvf;
 
-                var instance = SelectedState.Self.SelectedInstance;
+                var instance = _selectedState.SelectedInstance;
                 if (instance != null)
                 {
-                    rvf = new RecursiveVariableFinder(SelectedState.Self.SelectedInstance, parentElement);
+                    rvf = new RecursiveVariableFinder(_selectedState.SelectedInstance, parentElement);
                 }
                 else
                 {
@@ -828,7 +844,7 @@ namespace Gum.PropertyGridHelpers
                                     parentElement.DefaultState.SetValue(instance.Name + ".TextureWidth", size.Value.Width);
                                     parentElement.DefaultState.SetValue(instance.Name + ".TextureHeight", size.Value.Height);
 
-                                    GumCommands.Self.WireframeCommands.Refresh();
+                                    _wireframeCommands.Refresh();
                                 }
                             }
                         }
@@ -839,9 +855,9 @@ namespace Gum.PropertyGridHelpers
 
         string GetQualifiedName(string variableName)
         {
-            if (SelectedState.Self.SelectedInstance != null)
+            if (_selectedState.SelectedInstance != null)
             {
-                return SelectedState.Self.SelectedInstance.Name + "." + variableName;
+                return _selectedState.SelectedInstance.Name + "." + variableName;
             }
             else
             {

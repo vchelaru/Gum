@@ -5,42 +5,42 @@ using System.Windows.Forms;
 using RenderingLibrary;
 using Gum.Wireframe;
 using Gum.DataTypes.Behaviors;
+using Gum.Managers;
 
-namespace Gum.ToolStates
+namespace Gum.ToolStates;
+
+public interface ISelectedState
 {
-    public interface ISelectedState
-    {
-        ScreenSave SelectedScreen { get; set; }
-        ElementSave SelectedElement { get; set; }
-        IEnumerable<ElementSave> SelectedElements { get; set; }
-        IStateContainer SelectedStateContainer { get; }
-        BehaviorSave SelectedBehavior { get; set; }
-        ElementBehaviorReference SelectedBehaviorReference { get; set; }
-        StateSave CustomCurrentStateSave{ get; set; }
-        StateSave? SelectedStateSave { get; set; }
-        StateSave SelectedStateSaveOrDefault { get;}
+    ScreenSave SelectedScreen { get; set; }
+    ElementSave? SelectedElement { get; set; }
+    IEnumerable<ElementSave> SelectedElements { get; set; }
+    IStateContainer SelectedStateContainer { get; }
+    BehaviorSave SelectedBehavior { get; set; }
+    ElementBehaviorReference SelectedBehaviorReference { get; set; }
+    StateSave CustomCurrentStateSave{ get; set; }
+    StateSave? SelectedStateSave { get; set; }
+    StateSave SelectedStateSaveOrDefault { get;}
 
-        StateSaveCategory SelectedStateCategorySave { get; set; }
-        ComponentSave SelectedComponent { get; set; }
-        InstanceSave SelectedInstance { get; set; }
-        IPositionedSizedObject? SelectedIpso { get; }
+    StateSaveCategory SelectedStateCategorySave { get; set; }
+    ComponentSave SelectedComponent { get; set; }
+    InstanceSave SelectedInstance { get; set; }
+    IPositionedSizedObject? SelectedIpso { get; }
 
-        IEnumerable<InstanceSave> SelectedInstances { get; set;  }
-        string SelectedVariableName { get; }
-        StandardElementSave SelectedStandardElement { get; set; }
-        VariableSave SelectedVariableSave { get; set;  }
-        VariableSave SelectedBehaviorVariable { get; set; }
-        TreeNode SelectedTreeNode { get; }
-        IEnumerable<TreeNode> SelectedTreeNodes { get; }
-        RecursiveVariableFinder SelectedRecursiveVariableFinder { get; }
+    IEnumerable<InstanceSave> SelectedInstances { get; set;  }
+    string SelectedVariableName { get; }
+    StandardElementSave SelectedStandardElement { get; set; }
+    VariableSave SelectedVariableSave { get; set;  }
+    VariableSave SelectedBehaviorVariable { get; set; }
+    ITreeNode SelectedTreeNode { get; }
+    IEnumerable<ITreeNode> SelectedTreeNodes { get; }
+    RecursiveVariableFinder SelectedRecursiveVariableFinder { get; }
 
-        List<ElementWithState> GetTopLevelElementStack();
+    List<ElementWithState> GetTopLevelElementStack();
 
-        //void UpdateToSelectedStateSave();
-        //void UpdateToSelectedElement();
-        //void UpdateToSelectedInstanceSave();
-        //void UpdateToSelectedBehavior();
-        //void UpdateToSelectedBehaviorVariable();
+    //void UpdateToSelectedStateSave();
+    //void UpdateToSelectedElement();
+    //void UpdateToSelectedInstanceSave();
+    //void UpdateToSelectedBehavior();
+    //void UpdateToSelectedBehaviorVariable();
 
-    }
 }

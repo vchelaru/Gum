@@ -14,6 +14,9 @@ using System;
 using System.ComponentModel.Composition;
 using System.Linq;
 using System.Windows.Forms;
+using Gum.Commands;
+using Gum.ToolCommands;
+using GumCommon;
 
 namespace Gum.Plugins.StatePlugin;
 
@@ -35,15 +38,17 @@ public class MainStatePlugin : InternalPlugin
     private readonly ObjectFinder _objectFinder;
 
     #endregion
-
+    
     #region Initialize
 
     public MainStatePlugin()
     {
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
         _gumCommands = GumCommands.Self;
-        _stateTreeViewRightClickService = new StateTreeViewRightClickService(GumState.Self.SelectedState, _gumCommands);
+        var elementCommands = Locator.GetRequiredService<ElementCommands>();
+        var editCommands = Locator.GetRequiredService<EditCommands>();
+        _stateTreeViewRightClickService = new StateTreeViewRightClickService(_selectedState, _gumCommands, elementCommands, editCommands);
         _hotkeyManager = HotkeyManager.Self;
-        _selectedState = GumState.Self.SelectedState;
         _objectFinder = ObjectFinder.Self;
     }
 
@@ -175,10 +180,9 @@ public class MainStatePlugin : InternalPlugin
     private void HandleTreeNodeSelected(TreeNode node)
     {
         RefreshTabHeaders();
-
-        var selectedState = SelectedState.Self;
-        if (selectedState.SelectedBehavior == null &&
-            selectedState.SelectedElement == null)
+        
+        if (_selectedState.SelectedBehavior == null &&
+            _selectedState.SelectedElement == null)
         {
 
             _stateTreeViewRightClickService.PopulateMenuStrip();
@@ -186,10 +190,9 @@ public class MainStatePlugin : InternalPlugin
         }
     }
 
-    private ISelectedState RefreshTabHeaders()
+    private void RefreshTabHeaders()
     {
-        var selectedState = SelectedState.Self;
-        var element = selectedState.SelectedElement;
+        var element = _selectedState.SelectedElement;
         string desiredTitle = "States";
         if (element != null)
         {
@@ -197,7 +200,6 @@ public class MainStatePlugin : InternalPlugin
         }
 
         newPluginTab.Title = desiredTitle;
-        return selectedState;
     }
 
     private void HandleStateSelected(TreeNode stateTreeNode)

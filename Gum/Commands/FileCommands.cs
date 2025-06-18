@@ -9,13 +9,24 @@ using Gum.Undo;
 using Gum.Plugins;
 using ToolsUtilities;
 using Gum.Logic.FileWatch;
+using GumCommon;
 
 namespace Gum.Commands
 {
     public class FileCommands
     {
         private LocalizationManager _localizationManager;
+        private readonly ISelectedState _selectedState;
+        private readonly UndoManager _undoManager;
+        
         MainWindow mainWindow;
+
+        public FileCommands()
+        {
+            _selectedState = Locator.GetRequiredService<ISelectedState>();
+            _undoManager = Locator.GetRequiredService<UndoManager>();
+        }
+        
         public void Initialize(MainWindow mainWindow, LocalizationManager localizationManager)
         {
             _localizationManager = localizationManager;
@@ -27,9 +38,9 @@ namespace Gum.Commands
         /// </summary>
         public void TryAutoSaveCurrentObject()
         {
-            if(SelectedState.Self.SelectedBehavior != null)
+            if(_selectedState.SelectedBehavior != null)
             {
-                TryAutoSaveBehavior(SelectedState.Self.SelectedBehavior);
+                TryAutoSaveBehavior(_selectedState.SelectedBehavior);
             }
             else
             {
@@ -39,7 +50,7 @@ namespace Gum.Commands
 
         public void TryAutoSaveCurrentElement()
         {
-            TryAutoSaveElement(SelectedState.Self.SelectedElement);
+            TryAutoSaveElement(_selectedState.SelectedElement);
         }
 
 
@@ -76,11 +87,11 @@ namespace Gum.Commands
 
         internal void NewProject()
         {
-            SelectedState.Self.SelectedElement = null;
-            SelectedState.Self.SelectedInstance = null;
-            SelectedState.Self.SelectedBehavior = null;
-            SelectedState.Self.SelectedStateCategorySave = null;
-            SelectedState.Self.SelectedStateSave = null;
+            _selectedState.SelectedElement = null;
+            _selectedState.SelectedInstance = null;
+            _selectedState.SelectedBehavior = null;
+            _selectedState.SelectedStateCategorySave = null;
+            _selectedState.SelectedStateSave = null;
 
             ProjectManager.Self.CreateNewProject();
 
@@ -162,7 +173,7 @@ namespace Gum.Commands
                     }
                     else
                     {
-                        FileWatchLogic.Self.IgnoreNextChangeOn(fileName.FullPath);
+                        FileWatchManager.Self.IgnoreNextChangeUntil(fileName.FullPath, DateTime.Now.AddSeconds(1));
 
                         const int maxNumberOfTries = 5;
                         const int msBetweenSaves = 100;
@@ -250,7 +261,7 @@ namespace Gum.Commands
             {
                 bool succeeded = true;
 
-                UndoManager.Self.RecordUndo();
+                _undoManager.RecordUndo();
 
                 bool doesProjectNeedToSave = false;
                 bool shouldSave = ProjectManager.Self.AskUserForProjectNameIfNecessary(out doesProjectNeedToSave);
@@ -265,7 +276,7 @@ namespace Gum.Commands
                     //PluginManager.Self.BeforeBehaviorSave(behavior);
 
                     string fileName = GetFullPathXmlFile( behavior).FullPath;
-                    FileWatchLogic.Self.IgnoreNextChangeOn(fileName);
+                    FileWatchManager.Self.IgnoreNextChangeUntil(fileName, DateTime.Now.AddSeconds(1));
                     // if it's readonly, let's warn the user
                     bool isReadOnly = ProjectManager.IsFileReadOnly(fileName);
 

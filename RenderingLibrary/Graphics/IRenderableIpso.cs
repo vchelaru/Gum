@@ -17,7 +17,7 @@ namespace RenderingLibrary.Graphics
         ObservableCollection<IRenderableIpso> Children { get; }
         ColorOperation ColorOperation { get; }
 
-        void SetParentDirect(IRenderableIpso newParent);
+        void SetParentDirect(IRenderableIpso? newParent);
 
     }
 }

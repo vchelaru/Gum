@@ -22,16 +22,16 @@ namespace Gum.Managers
             // doesn't have this variable then the RVF will return the variable from the
             // base.  Instead, we want to set the value right on the instance if an instance
             // is selected.
-            //VariableSave variable = SelectedState.Self.SelectedRecursiveVariableFinder.GetVariable("SourceFile");
-            if (SelectedState.Self.SelectedInstance != null)
+            //VariableSave variable = _selectedState.SelectedRecursiveVariableFinder.GetVariable("SourceFile");
+            if (_selectedState.SelectedInstance != null)
             {
-                SelectedState.Self.SelectedStateSave.SetValue(
-                    SelectedState.Self.SelectedInstance.Name + ".SourceFile", text);
+                _selectedState.SelectedStateSave.SetValue(
+                    _selectedState.SelectedInstance.Name + ".SourceFile", text);
 
             }
             else
             {
-                SelectedState.Self.SelectedStateSave.SetValue(
+                _selectedState.SelectedStateSave.SetValue(
                     "SourceFile", text);
 
             }

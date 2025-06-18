@@ -98,7 +98,7 @@ public partial class EditingManager
         }
         ///////////End Early Out//////////////////
 
-        if (SelectedState.Self.SelectedInstance != null)
+        if (_selectedState.SelectedInstance != null)
         {
             mContextMenuStrip.Items.Add(mBringToFront);
             mContextMenuStrip.Items.Add(mMoveForward);
@@ -119,8 +119,8 @@ public partial class EditingManager
     {
         mMoveInFrontOf.DropDownItems.Clear();
 
-        var selectedInstance = SelectedState.Self.SelectedInstance;
-        var selectedElement = SelectedState.Self.SelectedElement;
+        var selectedInstance = _selectedState.SelectedInstance;
+        var selectedElement = _selectedState.SelectedElement;
 
         string selectedParent = null;
 

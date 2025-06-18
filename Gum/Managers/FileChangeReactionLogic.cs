@@ -3,12 +3,22 @@ using Gum.DataTypes.Behaviors;
 using Gum.Plugins;
 using Gum.ToolStates;
 using System.Linq;
+using Gum.Commands;
+using GumCommon;
 using ToolsUtilities;
 
 namespace Gum.Managers
 {
     public class FileChangeReactionLogic : Singleton<FileChangeReactionLogic>
     {
+        private readonly ISelectedState _selectedState;
+        private readonly WireframeCommands _wireframeCommands;
+        public FileChangeReactionLogic()
+        {
+            _selectedState = Locator.GetRequiredService<ISelectedState>();
+            _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
+        }
+        
         public void ReactToFileChanged(FilePath file)
         {
             var extension = file.Extension;
@@ -66,14 +76,14 @@ namespace Gum.Managers
                 if(localizationFile == file)
                 {
                     GumCommands.Self.FileCommands.LoadLocalizationFile();
-                    GumCommands.Self.WireframeCommands.Refresh();
+                    _wireframeCommands.Refresh();
                 }
             }
         }
 
         private void ReactToProjectChanged(FilePath file)
         {
-            var currentElement = GumState.Self.SelectedState.SelectedElement;
+            var currentElement = _selectedState.SelectedElement;
             var elementName = currentElement?.Name;
 
             GumCommands.Self.FileCommands.LoadProject(file.Standardized);
@@ -84,14 +94,14 @@ namespace Gum.Managers
 
                 if(elementToSelect != null)
                 {
-                    GumState.Self.SelectedState.SelectedElement = elementToSelect;
+                    _selectedState.SelectedElement = elementToSelect;
                 }
             }
         }
 
         private void ReactToImageFileChanged(FilePath file)
         {
-            var currentElement = SelectedState.Self.SelectedElement;
+            var currentElement = _selectedState.SelectedElement;
             string relativeDirectory = ProjectState.Self.ProjectDirectory;
 
             if (currentElement != null)
@@ -111,7 +121,7 @@ namespace Gum.Managers
 
         private void ReactToAnimationChainChanged(FilePath file)
         {
-            var currentElement = SelectedState.Self.SelectedElement;
+            var currentElement = _selectedState.SelectedElement;
             string relativeDirectory = ProjectState.Self.ProjectDirectory;
             if (currentElement != null)
             {
@@ -129,7 +139,7 @@ namespace Gum.Managers
 
         private void ReactToFontFileChanged(FilePath file)
         {
-            var currentElement = SelectedState.Self.SelectedElement;
+            var currentElement = _selectedState.SelectedElement;
             string relativeDirectory = ProjectState.Self.ProjectDirectory;
 
             if (currentElement != null)
@@ -152,7 +162,7 @@ namespace Gum.Managers
         {
             var element = ObjectFinder.Self.GetElementSave(file.StandardizedNoPathNoExtension);
 
-            var refreshingSelected = element == SelectedState.Self.SelectedElement;
+            var refreshingSelected = element == _selectedState.SelectedElement;
 
             if(element != null)
             {
@@ -163,21 +173,21 @@ namespace Gum.Managers
 
                 if (refreshingSelected)
                 {
-                    ElementTreeViewManager.Self.Select((ElementSave)null);
+                    _selectedState.SelectedElement = null;
                 }
                 GumCommands.Self.GuiCommands.RefreshElementTreeView();
 
                 if(refreshingSelected)
                 {
                     element = ObjectFinder.Self.GetElementSave(file.StandardizedNoPathNoExtension);
-                    ElementTreeViewManager.Self.Select(element);
+                    _selectedState.SelectedElement = element;
                 }
 
             }
 
             bool shouldReloadWireframe = false;
 
-            var currentElement = SelectedState.Self.SelectedElement;
+            var currentElement = _selectedState.SelectedElement;
 
             if(currentElement != null)
             {
@@ -212,7 +222,7 @@ namespace Gum.Managers
             // It's somehow possible for behaviors with no name to make it in the project. let's tolerate it
                 item?.Name.ToLowerInvariant() == file.StandardizedNoPathNoExtension.ToLowerInvariant());
 
-            var refreshingSelected = behavior == SelectedState.Self.SelectedBehavior;
+            var refreshingSelected = behavior == _selectedState.SelectedBehavior;
 
             if (behavior != null)
             {
@@ -222,7 +232,7 @@ namespace Gum.Managers
 
                 if (refreshingSelected)
                 {
-                    ElementTreeViewManager.Self.Select((BehaviorSave)null);
+                    _selectedState.SelectedBehavior = null;
                 }
                 GumCommands.Self.GuiCommands.RefreshElementTreeView();
 
@@ -230,7 +240,7 @@ namespace Gum.Managers
                 {
                     behavior = ProjectState.Self.GumProjectSave.Behaviors.FirstOrDefault(item =>
                         item.Name.ToLowerInvariant() == file.StandardizedNoPathNoExtension.ToLowerInvariant());
-                    ElementTreeViewManager.Self.Select(behavior);
+                    _selectedState.SelectedBehavior = behavior;
 
                     GumCommands.Self.GuiCommands.RefreshVariables(force: true);
                 }

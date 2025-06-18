@@ -9,12 +9,15 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using GumCommon;
 using ToolsUtilities;
 
 namespace Gum.Plugins.Undos
 {
     public class UndosViewModel : INotifyPropertyChanged
     {
+        private readonly ISelectedState _selectedState;
+        private readonly UndoManager _undoManager;
         //ObservableCollection<string> mUndos = new ObservableCollection<string>();
         //public ObservableCollection<string> Undos
         //{
@@ -35,7 +38,7 @@ namespace Gum.Plugins.Undos
 
         void RefreshHistoryItems()
         {
-            var elementHistory = UndoManager.Self.CurrentElementHistory;
+            var elementHistory = _undoManager.CurrentElementHistory;
 
             if (elementHistory == null || elementHistory.Actions.Count() == 0)
             {
@@ -70,7 +73,7 @@ namespace Gum.Plugins.Undos
 
         void AppendOneHistoryItem()
         {
-            var elementHistory = UndoManager.Self.CurrentElementHistory;
+            var elementHistory = _undoManager.CurrentElementHistory;
 
             if (elementHistory == null || elementHistory.Actions.Count() == 0)
             {
@@ -110,7 +113,7 @@ namespace Gum.Plugins.Undos
         {
             get
             {
-                var elementHistory = UndoManager.Self.CurrentElementHistory;
+                var elementHistory = _undoManager.CurrentElementHistory;
 
                 if (elementHistory == null)
                 {
@@ -130,7 +133,7 @@ namespace Gum.Plugins.Undos
 
             var elementToClone =
                 //elementHistory.InitialState;
-                GumState.Self.SelectedState.SelectedElement;
+                _selectedState.SelectedElement;
 
             if (this.UndoIndex < elementHistory.Actions.Count - 1)
             {
@@ -161,7 +164,7 @@ namespace Gum.Plugins.Undos
                     undoStringList.Insert(0, comparisonInformation.ToString());
                 }
 
-                UndoManager.Self.ApplyUndoSnapshotToElement(undo.UndoState, selectedElementClone, false);
+                _undoManager.ApplyUndoSnapshotToElement(undo.UndoState, selectedElementClone, false);
 
                 if (undoStringList.Count >= numberOfItemsFromEnd)
                 {
@@ -173,14 +176,14 @@ namespace Gum.Plugins.Undos
             return undoStringList;
         }
 
-        private static ElementSave GetSelectedElementClone()
+        private ElementSave GetSelectedElementClone()
         {
             ElementSave selectedElementClone = null;
 
 
-            if (GumState.Self.SelectedState.SelectedElement != null)
+            if (_selectedState.SelectedElement != null)
             {
-                return UndoManager.CloneWithFixedEnumerations(GumState.Self.SelectedState.SelectedElement);
+                return UndoManager.CloneWithFixedEnumerations(_selectedState.SelectedElement);
             }
 
             return null;
@@ -188,7 +191,9 @@ namespace Gum.Plugins.Undos
 
         public UndosViewModel()
         {
-            UndoManager.Self.UndosChanged += HandleUndosChanged;
+            _selectedState = Locator.GetRequiredService<ISelectedState>();
+            _undoManager = Locator.GetRequiredService<UndoManager>();
+            _undoManager.UndosChanged += HandleUndosChanged;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

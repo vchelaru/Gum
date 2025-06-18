@@ -3,15 +3,23 @@ using Gum.Plugins.BaseClasses;
 using Gum.ToolStates;
 using System.ComponentModel.Composition;
 using System.Windows.Forms;
+using GumCommon;
 
 namespace Gum.Plugins.AlignmentButtons
 {
     [Export(typeof(PluginBase))]
     public class AlignmentMainPlugin : InternalPlugin
     {
+        private readonly ISelectedState _selectedState;
+        
         AlignmentPluginControl control;
         bool isAdded = false;
 
+        public AlignmentMainPlugin()
+        {
+            _selectedState = Locator.GetRequiredService<ISelectedState>();
+        }
+        
         public override void StartUp()
         {
             AssignEvents();
@@ -61,15 +69,15 @@ namespace Gum.Plugins.AlignmentButtons
             }
         }
 
-        private static bool DetermineIfShouldShowTab()
+        private bool DetermineIfShouldShowTab()
         {
-            var shouldAdd = SelectedState.Self.SelectedElement != null &&
-                SelectedState.Self.SelectedStateSave != null;
+            var shouldAdd = _selectedState.SelectedElement != null &&
+                _selectedState.SelectedStateSave != null;
 
             if (shouldAdd)
             {
-                if (SelectedState.Self.SelectedScreen != null &&
-                    SelectedState.Self.SelectedInstance == null)
+                if (_selectedState.SelectedScreen != null &&
+                    _selectedState.SelectedInstance == null)
                 {
                     // screens as a whole can't be aligned
                     shouldAdd = false;
@@ -77,9 +85,9 @@ namespace Gum.Plugins.AlignmentButtons
 
             }
 
-            if(shouldAdd && SelectedState.Self.SelectedInstance != null)
+            if(shouldAdd && _selectedState.SelectedInstance != null)
             {
-                var elementSave = ObjectFinder.Self.GetRootStandardElementSave(SelectedState.Self.SelectedInstance);
+                var elementSave = ObjectFinder.Self.GetRootStandardElementSave(_selectedState.SelectedInstance);
 
                 if(elementSave?.Name == "Circle")
                 {

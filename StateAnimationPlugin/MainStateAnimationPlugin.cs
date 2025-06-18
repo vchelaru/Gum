@@ -23,6 +23,7 @@ using Gum.StateAnimation.SaveClasses;
 
 using Gum.Plugins;
 using System.Windows.Forms;
+using GumCommon;
 
 
 namespace StateAnimationPlugin;
@@ -64,7 +65,7 @@ public class MainStateAnimationPlugin : PluginBase
 
     public MainStateAnimationPlugin()
     {
-        _selectedState = SelectedState.Self;
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
         _duplicateService = new DuplicateService();
         _animationFilePathService = new AnimationFilePathService();
         _elementDeleteService = new ElementDeleteService(_animationFilePathService);
@@ -179,7 +180,7 @@ public class MainStateAnimationPlugin : PluginBase
             CreateViewModel();
         }
 
-        if (SelectedState.Self.SelectedElement != null)
+        if (_selectedState.SelectedElement != null)
         {
             RenameManager.Self.HandleRename(instanceSave, oldName, _viewModel);
         }
@@ -189,7 +190,7 @@ public class MainStateAnimationPlugin : PluginBase
     {
         RefreshViewModel();
 
-        if (SelectedState.Self.SelectedElement != null)
+        if (_selectedState.SelectedElement != null)
         {
             RenameManager.Self.HandleRename(stateSave, oldName, _viewModel);
         }
@@ -213,7 +214,7 @@ public class MainStateAnimationPlugin : PluginBase
         }
 
         // We only care about this if we have an element. Otherwise, it could be a behavior:
-        if(SelectedState.Self.SelectedElement != null)
+        if(_selectedState.SelectedElement != null)
         {
             RenameManager.Self.HandleRename(category, oldName, _viewModel);
         }
@@ -297,7 +298,7 @@ public class MainStateAnimationPlugin : PluginBase
             lbmb.Message = "Select a state";
             lbmb.Title = "Add a state";
 
-            var element = SelectedState.Self.SelectedElement;
+            var element = _selectedState.SelectedElement;
 
             foreach (var state in element.States)
             {
@@ -369,7 +370,7 @@ public class MainStateAnimationPlugin : PluginBase
             whyIsntValid = "You must first select an Animation";
         }
 
-        if (SelectedState.Self.SelectedScreen == null && SelectedState.Self.SelectedComponent == null)
+        if (_selectedState.SelectedScreen == null && _selectedState.SelectedComponent == null)
         {
             whyIsntValid = "You must first select a Screen or Component";
         }
@@ -406,7 +407,7 @@ public class MainStateAnimationPlugin : PluginBase
 
         var states = new List<string>();
 
-        var element = SelectedState.Self.SelectedElement;
+        var element = _selectedState.SelectedElement;
 
         if (element != null)
         {
@@ -430,7 +431,7 @@ public class MainStateAnimationPlugin : PluginBase
             currentlyReferencedElement = _viewModel.Element;
         }
 
-        var element = SelectedState.Self.SelectedElement;
+        var element = _selectedState.SelectedElement;
 
         if (currentlyReferencedElement != element)
         {
@@ -502,7 +503,7 @@ public class MainStateAnimationPlugin : PluginBase
         var animationTime = _viewModel.DisplayedAnimationTime;
 
         var animation = _viewModel.SelectedAnimation;
-        var element = SelectedState.Self.SelectedElement;
+        var element = _selectedState.SelectedElement;
 
         animation.SetStateAtTime(animationTime, element, defaultIfNull:true);
     }

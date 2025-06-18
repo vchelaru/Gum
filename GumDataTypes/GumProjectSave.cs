@@ -33,7 +33,7 @@ public class GumLoadResult
     /// Errors include situations like a malformed XML file - errors which tools like Gum cannot recover from. Missing files, while resulting
     /// in an incomplete load, do not put the project in an unusable state, so we do not consider them errors.
     /// </remarks>
-    public string ErrorMessage
+    public string? ErrorMessage
     {
         get;
         set;

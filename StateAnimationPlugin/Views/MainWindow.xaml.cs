@@ -26,6 +26,7 @@ using SkiaSharp;
 using System.ComponentModel;
 using SkiaSharp.Views.WPF;
 using Gum.Logic;
+using GumCommon;
 using ToolsUtilities;
 
 namespace StateAnimationPlugin.Views
@@ -54,6 +55,8 @@ namespace StateAnimationPlugin.Views
 
         #endregion
 
+        private readonly ISelectedState _selectedState;
+
         public event EventHandler AddStateKeyframeClicked;
         public event Action<AnimatedKeyframeViewModel> AnimationKeyframeAdded;
 
@@ -65,7 +68,8 @@ namespace StateAnimationPlugin.Views
 
             InitializeTimer();
 
-            DataContextChanged += HandleDataContext;            
+            DataContextChanged += HandleDataContext;
+            _selectedState = Locator.GetRequiredService<ISelectedState>();
         }
 
         private void HandleDataContext(object sender, DependencyPropertyChangedEventArgs e)
@@ -289,11 +293,11 @@ namespace StateAnimationPlugin.Views
             var AnimationContainers = new List<AnimationContainerViewModel>();
 
             var acvm = new AnimationContainerViewModel(
-                SelectedState.Self.SelectedElement, null
+                _selectedState.SelectedElement, null
                 );
             AnimationContainers.Add(acvm);
 
-            foreach (var instance in SelectedState.Self.SelectedElement.Instances)
+            foreach (var instance in _selectedState.SelectedElement.Instances)
             {
                 var instanceElement = ObjectFinder.Self.GetElementSave(instance);
                 if (instanceElement != null)
@@ -301,7 +305,7 @@ namespace StateAnimationPlugin.Views
                     var animationSave = AnimationCollectionViewModelManager.Self.GetElementAnimationsSave(instanceElement);
                     if (animationSave != null && animationSave.Animations.Count != 0)
                     {
-                        acvm = new AnimationContainerViewModel(SelectedState.Self.SelectedElement, instance);
+                        acvm = new AnimationContainerViewModel(_selectedState.SelectedElement, instance);
                         AnimationContainers.Add(acvm);
                     }
                 }
@@ -446,9 +450,9 @@ namespace StateAnimationPlugin.Views
 
         private void HandlePlayStopClicked(object sender, RoutedEventArgs e)
         {
-            if (this.ViewModel != null && SelectedState.Self.SelectedElement != null && this.ViewModel.SelectedAnimation != null)
+            if (this.ViewModel != null && _selectedState.SelectedElement != null && this.ViewModel.SelectedAnimation != null)
             {
-                this.ViewModel.SelectedAnimation.RefreshCumulativeStates(SelectedState.Self.SelectedElement);
+                this.ViewModel.SelectedAnimation.RefreshCumulativeStates(_selectedState.SelectedElement);
             }
 
             ViewModel.TogglePlayStop();

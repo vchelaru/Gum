@@ -19,6 +19,7 @@ using System.Windows.Input;
 using System;
 using Gum.ToolCommands;
 using EditorTabPlugin_XNA.ExtensionMethods;
+using GumCommon;
 
 namespace Gum.Wireframe.Editors;
 
@@ -84,7 +85,7 @@ public class StandardWireframeEditor : WireframeEditor
               selectionManager, 
               selectedState)
     {
-        _elementCommands = GumCommands.Self.ProjectCommands.ElementCommands;
+        _elementCommands = Locator.GetRequiredService<ElementCommands>();
         _selectionManager = selectionManager;
 
         mResizeHandles = new ResizeHandles(layer, lineColor);
@@ -120,7 +121,7 @@ public class StandardWireframeEditor : WireframeEditor
 
     public override void Activity(ICollection<GraphicalUiElement> selectedObjects)
     {
-        if (selectedObjects.Count != 0 && SelectedState.Self.SelectedStateSave != null && SelectedState.Self.CustomCurrentStateSave == null)
+        if (selectedObjects.Count != 0 && _selectedState.SelectedStateSave != null && _selectedState.CustomCurrentStateSave == null)
         {
             RefreshSideOver();
 
@@ -175,7 +176,7 @@ public class StandardWireframeEditor : WireframeEditor
         }
         if(tag is ElementSave element)
         {
-            rfv = new RecursiveVariableFinder(SelectedState.Self.SelectedStateSave);
+            rfv = new RecursiveVariableFinder(_selectedState.SelectedStateSave);
         }
             
         var variableReferences = rfv?.GetVariableList("VariableReferences");
@@ -277,17 +278,17 @@ public class StandardWireframeEditor : WireframeEditor
 
             string nameWithInstance = "Rotation";
 
-            if(SelectedState.Self.SelectedInstance != null)
+            if(_selectedState.SelectedInstance != null)
             {
-                nameWithInstance = SelectedState.Self.SelectedInstance.Name + 
+                nameWithInstance = _selectedState.SelectedInstance.Name + 
                     "." + nameWithInstance;
             }
 
-            SelectedState.Self.SelectedStateSave.SetValue(nameWithInstance, rotationValueDegrees - parentRotation, 
-                SelectedState.Self.SelectedInstance, "float");
+            _selectedState.SelectedStateSave.SetValue(nameWithInstance, rotationValueDegrees - parentRotation, 
+                _selectedState.SelectedInstance, "float");
 
             VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(nameWithInstance,
-                GumState.Self.SelectedState.SelectedElement, GumState.Self.SelectedState.SelectedStateCategorySave);
+                _selectedState.SelectedElement, _selectedState.SelectedStateCategorySave);
 
             GumCommands.Self.GuiCommands.RefreshVariableValues();
 
@@ -457,14 +458,14 @@ public class StandardWireframeEditor : WireframeEditor
         }
 
         bool hasChangeOccurred = false;
-        var elementStack = SelectedState.Self.GetTopLevelElementStack();
-        if (_selectionManager.HasSelection && SelectedState.Self.SelectedInstances.Count() == 0)
+        var elementStack = _selectedState.GetTopLevelElementStack();
+        if (_selectionManager.HasSelection && _selectedState.SelectedInstances.Count() == 0)
         {
             // That means we have the entire component selected
             hasChangeOccurred |= SideGrabbingActivityForInstanceSave(effectiveXToMoveBy, effectiveYToMoveBy, instanceSave: null, elementStack: elementStack);
         }
 
-        foreach (InstanceSave save in SelectedState.Self.SelectedInstances)
+        foreach (InstanceSave save in _selectedState.SelectedInstances)
         {
             hasChangeOccurred |= SideGrabbingActivityForInstanceSave(effectiveXToMoveBy, effectiveYToMoveBy, instanceSave: save, elementStack: elementStack);
         }
@@ -657,8 +658,8 @@ public class StandardWireframeEditor : WireframeEditor
         bool wasAnythingModified = false;
 
 
-        if (SelectedState.Self.SelectedInstances.Count() == 0 &&
-            (SelectedState.Self.SelectedComponent != null || SelectedState.Self.SelectedStandardElement != null))
+        if (_selectedState.SelectedInstances.Count() == 0 &&
+            (_selectedState.SelectedComponent != null || _selectedState.SelectedStandardElement != null))
         {
             GraphicalUiElement gue = _selectionManager.SelectedGue;
 
@@ -671,26 +672,26 @@ public class StandardWireframeEditor : WireframeEditor
 
             if (differenceToUnitX != 0)
             {
-                gue.X = _elementCommands.ModifyVariable("X", differenceToUnitX, SelectedState.Self.SelectedElement);
+                gue.X = _elementCommands.ModifyVariable("X", differenceToUnitX, _selectedState.SelectedElement);
                 wasAnythingModified = true;
             }
             if (differenceToUnitY != 0)
             {
-                gue.Y = _elementCommands.ModifyVariable("Y", differenceToUnitY, SelectedState.Self.SelectedElement);
+                gue.Y = _elementCommands.ModifyVariable("Y", differenceToUnitY, _selectedState.SelectedElement);
                 wasAnythingModified = true;
             }
             if (differenceToUnitWidth != 0)
             {
-                gue.Width = _elementCommands.ModifyVariable("Width", differenceToUnitWidth, SelectedState.Self.SelectedElement);
+                gue.Width = _elementCommands.ModifyVariable("Width", differenceToUnitWidth, _selectedState.SelectedElement);
                 wasAnythingModified = true;
             }
             if (differenceToUnitHeight != 0)
             {
-                gue.Height = _elementCommands.ModifyVariable("Height", differenceToUnitHeight, SelectedState.Self.SelectedElement);
+                gue.Height = _elementCommands.ModifyVariable("Height", differenceToUnitHeight, _selectedState.SelectedElement);
                 wasAnythingModified = true;
             }
         }
-        else if (SelectedState.Self.SelectedInstances.Count() != 0)
+        else if (_selectedState.SelectedInstances.Count() != 0)
         {
             var gues = _selectionManager.SelectedGues.ToArray();
             foreach (var gue in gues)
@@ -799,7 +800,7 @@ public class StandardWireframeEditor : WireframeEditor
         var ipso = WireframeObjectManager.Self.GetRepresentation(instanceSave, elementStack);
         if (ipso == null)
         {
-            ipso = WireframeObjectManager.Self.GetRepresentation(SelectedState.Self.SelectedElement);
+            ipso = WireframeObjectManager.Self.GetRepresentation(_selectedState.SelectedElement);
         }
 
         switch (this.SideGrabbed)

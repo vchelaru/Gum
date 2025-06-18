@@ -21,14 +21,17 @@ public class StateTreeViewRightClickService
 {
     const string mNoCategory = "<no category>";
     private readonly ISelectedState _selectedState;
+    private readonly ElementCommands _elementCommands;
+    private readonly EditCommands _editCommands;
 
     System.Windows.Controls.ContextMenu _menuStrip;
     GumCommands _gumCommands;
 
-    public StateTreeViewRightClickService(ISelectedState selectedState, GumCommands gumCommands)
+    public StateTreeViewRightClickService(ISelectedState selectedState, GumCommands gumCommands, ElementCommands elementCommands, EditCommands editCommands)
     {
         _selectedState = selectedState;
         _gumCommands = gumCommands;
+        _elementCommands = elementCommands;
     }
 
     public void SetMenuStrip(System.Windows.Controls.ContextMenu menuStrip, FrameworkElement contextMenuOwner)
@@ -96,7 +99,7 @@ public class StateTreeViewRightClickService
             // We used to show the category editing commands if a state was selected 
             // (if a state is selected, a category is implicitly selected too). Now we
             // check if a category is highlighted (not state)
-            //if(SelectedState.Self.SelectedStateCategorySave != null)
+            //if(_selectedState.SelectedStateCategorySave != null)
             if (_selectedState.SelectedStateCategorySave != null && _selectedState.SelectedStateSave == null)
             {
 
@@ -218,14 +221,14 @@ public class StateTreeViewRightClickService
 
     public void DeleteCategoryClick()
     {
-        _gumCommands.Edit.RemoveStateCategory(
+        _editCommands.RemoveStateCategory(
             _selectedState.SelectedStateCategorySave,
             _selectedState.SelectedStateContainer);
     }
 
     public void DeleteStateClick()
     {
-        _gumCommands.Edit.AskToDeleteState(
+        _editCommands.AskToDeleteState(
             _selectedState.SelectedStateSave,
             _selectedState.SelectedStateContainer);
     }
@@ -238,7 +241,7 @@ public class StateTreeViewRightClickService
             .Select(item => item.Name).ToList();
 
         // As of before 2024 we no longer allow uncategorized non-default states
-        //if(SelectedState.Self.SelectedStateCategorySave != null)
+        //if(_selectedState.SelectedStateCategorySave != null)
         //{
         //    categoryNames.Insert(0, mNoCategory);
         //}
@@ -322,7 +325,7 @@ public class StateTreeViewRightClickService
             newState.Name = StringFunctions.IncrementNumberAtEnd(newState.Name);
         }
 
-        ElementCommands.Self.AddState(_selectedState.SelectedStateContainer, _selectedState.SelectedStateCategorySave, newState, index + 1);
+        _elementCommands.AddState(_selectedState.SelectedStateContainer, _selectedState.SelectedStateCategorySave, newState, index + 1);
 
         _gumCommands.GuiCommands.RefreshStateTreeView();
 
@@ -333,22 +336,22 @@ public class StateTreeViewRightClickService
 
     public void RenameStateClick()
     {
-        _gumCommands.Edit.AskToRenameState(SelectedState.Self.SelectedStateSave,
-            SelectedState.Self.SelectedStateContainer);
+        _editCommands.AskToRenameState(_selectedState.SelectedStateSave,
+            _selectedState.SelectedStateContainer);
     }
 
     public void RenameCategoryClick()
     {
-        _gumCommands.Edit.AskToRenameStateCategory(
-            SelectedState.Self.SelectedStateCategorySave,
-            SelectedState.Self.SelectedElement);
+        _editCommands.AskToRenameStateCategory(
+            _selectedState.SelectedStateCategorySave,
+            _selectedState.SelectedElement);
     }
 
     private void MoveToCategory(string categoryNameToMoveTo)
     {
-        var stateToMove = SelectedState.Self.SelectedStateSave;
-        var stateContainer = SelectedState.Self.SelectedStateContainer;
-        _gumCommands.Edit.MoveToCategory(categoryNameToMoveTo, stateToMove, stateContainer);
+        var stateToMove = _selectedState.SelectedStateSave;
+        var stateContainer = _selectedState.SelectedStateContainer;
+        _editCommands.MoveToCategory(categoryNameToMoveTo, stateToMove, stateContainer);
     }
 
 }

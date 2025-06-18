@@ -103,8 +103,7 @@ public class DefaultMenuItemRuntime : InteractiveGue
 
             menuItemCategory.States.Add(new Gum.DataTypes.Variables.StateSave()
             {
-                // todo - need this to be a const in FrameworkElement
-                Name = "Selected",
+                Name = FrameworkElement.SelectedStateName,
                 Variables = new List<Gum.DataTypes.Variables.VariableSave>()
                 {
                     new Gum.DataTypes.Variables.VariableSave()

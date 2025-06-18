@@ -17,6 +17,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
+using GumCommon;
 
 namespace StateAnimationPlugin.ViewModels;
 
@@ -30,6 +31,8 @@ public class AnimationViewModel : ViewModel
     BitmapFrame mPlayOnceBitmap;
 
     bool mLoops = false;
+    
+    private readonly ISelectedState _selectedState;
 
     #endregion
 
@@ -102,16 +105,16 @@ public class AnimationViewModel : ViewModel
                 stateName = stateName.Substring(stateName.IndexOf("/") + 1);
             }
 
-            var element = SelectedState.Self.SelectedElement;
+            var element = _selectedState.SelectedElement;
             if (string.IsNullOrEmpty(categoryName))
             {
-                SelectedState.Self.SelectedStateSave = element.GetStateSaveRecursively(stateName);
+                _selectedState.SelectedStateSave = element.GetStateSaveRecursively(stateName);
             }
             else
             {
                 var category = element.GetStateSaveCategoryRecursively(categoryName);
 
-                SelectedState.Self.SelectedStateSave = category?.States.FirstOrDefault(item => item.Name == stateName);
+                _selectedState.SelectedStateSave = category?.States.FirstOrDefault(item => item.Name == stateName);
             }
         }
     }
@@ -134,6 +137,7 @@ public class AnimationViewModel : ViewModel
         mLoopBitmap = BitmapLoader.Self.LoadImage("LoopIcon.png");
 
         mPlayOnceBitmap = BitmapLoader.Self.LoadImage("PlayOnceIcon.png");
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
     }
 
     public AnimationViewModel Clone()
@@ -287,9 +291,9 @@ public class AnimationViewModel : ViewModel
         }
         else if (e.PropertyName == nameof(AnimatedKeyframeViewModel.StateName))
         {
-            if(SelectedState.Self.SelectedElement != null)
+            if(_selectedState.SelectedElement != null)
             {
-                RefreshCumulativeStates(SelectedState.Self.SelectedElement);
+                RefreshCumulativeStates(_selectedState.SelectedElement);
             }
         }
 
@@ -497,7 +501,7 @@ public class AnimationViewModel : ViewModel
             SetCustomState(stateVmAfter.CachedCumulativeState);
 
             // The custom state can be null if the animation window references states which don't exist:
-            stateToSet = Gum.ToolStates.SelectedState.Self.CustomCurrentStateSave?.Clone();
+            stateToSet = _selectedState.CustomCurrentStateSave?.Clone();
         }
         else if (stateVmBefore != null && stateVmAfter == null)
         {
@@ -510,7 +514,7 @@ public class AnimationViewModel : ViewModel
             }
             SetCustomState(stateVmBefore.CachedCumulativeState);
 
-            stateToSet = Gum.ToolStates.SelectedState.Self.CustomCurrentStateSave.Clone();
+            stateToSet = _selectedState.CustomCurrentStateSave.Clone();
         }
         else if (stateVmBefore != null && stateVmAfter != null)
         {
@@ -537,7 +541,7 @@ public class AnimationViewModel : ViewModel
                 SetCustomState(combined);
 
                 // for performance we will only update wireframe:
-                //SelectedState.Self.UpdateToSelectedStateSave();
+                //_selectedState.UpdateToSelectedStateSave();
                 //WireframeObjectManager.Self.RefreshAll(true);
 
                 stateToSet = combined;
@@ -558,9 +562,9 @@ public class AnimationViewModel : ViewModel
 
     private static void SetCustomState(StateSave combined)
     {
-
-        Gum.ToolStates.SelectedState.Self.CustomCurrentStateSave = combined;
-        Gum.ToolStates.SelectedState.Self.SelectedStateSave = null;
+        ISelectedState selectedState = Locator.GetRequiredService<ISelectedState>();
+        selectedState.CustomCurrentStateSave = combined;
+        selectedState.SelectedStateSave = null;
     }
 
     private double ProcessRatio(FlatRedBall.Glue.StateInterpolation.InterpolationType interpolationType, FlatRedBall.Glue.StateInterpolation.Easing easing, double linearRatio)

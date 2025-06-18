@@ -5,18 +5,19 @@ using Gum.DataTypes.Variables;
 using System;
 using Gum.ToolStates;
 using Gum.Services;
+using GumCommon;
 
 namespace Gum.Undo;
 
 [Export(typeof(Gum.Plugins.BaseClasses.PluginBase))]
 public class UndoPlugin : InternalPlugin
 {
-    ISelectedState _selectedState;
-    UndoManager _undoManager;
+    private readonly ISelectedState _selectedState;
+    private readonly UndoManager _undoManager;
     public UndoPlugin() 
     {
-        _selectedState = Builder.Get<ISelectedState>();
-        _undoManager = UndoManager.Self;
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _undoManager = Locator.GetRequiredService<UndoManager>();
     }
 
     public override void StartUp()

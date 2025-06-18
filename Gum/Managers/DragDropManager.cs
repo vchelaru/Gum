@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Gum.DataTypes;
@@ -21,8 +21,21 @@ using Gum.DataTypes.Behaviors;
 using Gum.Undo;
 using Gum.Plugins;
 using Gum.Services;
+using GumCommon;
 
 namespace Gum.Managers;
+
+
+public interface ITreeNode
+{
+    object Tag { get; }
+    FilePath GetFullFilePath();
+    ITreeNode? Parent { get; }
+    string Text { get; }
+    string FullPath { get; }
+
+    void Expand();
+}
 
 public class DragDropManager
 {
@@ -30,10 +43,12 @@ public class DragDropManager
 
     static DragDropManager mSelf;
 
-    object mDraggedItem;
+    ITreeNode? mDraggedItem;
     private readonly CircularReferenceManager _circularReferenceManager;
     private readonly ISelectedState _selectedState;
     private readonly ElementCommands _elementCommands;
+    private readonly RenameLogic _renameLogic;
+    private readonly UndoManager _undoManager;
 
     #endregion
 
@@ -50,8 +65,10 @@ public class DragDropManager
     public DragDropManager(CircularReferenceManager circularReferenceManager)
     {
         _circularReferenceManager = circularReferenceManager;
-        _selectedState = SelectedState.Self;
-        _elementCommands = ElementCommands.Self;
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _elementCommands = Locator.GetRequiredService<ElementCommands>();
+        _renameLogic = Locator.GetRequiredService<RenameLogic>();
+        _undoManager = Locator.GetRequiredService<UndoManager>();
     }
 
     #region Drag+drop File (from windows explorer)
@@ -85,7 +102,7 @@ public class DragDropManager
 
     #region Drop Element (like components) on TreeView
 
-    private void HandleDroppedElementSave(object draggedComponentOrElement, TreeNode treeNodeDroppedOn, object targetTag, TreeNode targetTreeNode)
+    private void HandleDroppedElementSave(object draggedComponentOrElement, ITreeNode treeNodeDroppedOn, object targetTag, ITreeNode targetTreeNode)
     {
         ElementSave draggedAsElementSave = draggedComponentOrElement as ElementSave;
 
@@ -151,7 +168,7 @@ public class DragDropManager
         }
     }
 
-    private void HandleDroppedElementOnFolder(ElementSave draggedAsElementSave, TreeNode treeNodeDroppedOn, out bool handled)
+    private void HandleDroppedElementOnFolder(ElementSave draggedAsElementSave, ITreeNode treeNodeDroppedOn, out bool handled)
     {
         if(draggedAsElementSave is StandardElementSave)
         {
@@ -175,7 +192,7 @@ public class DragDropManager
 
                 string oldName = draggedAsElementSave.Name;
                 draggedAsElementSave.Name = nodeRelativeToProject + FileManager.RemovePath(draggedAsElementSave.Name);
-                RenameLogic.HandleRename(draggedAsElementSave, (InstanceSave)null,  oldName, NameChangeAction.Move);
+                _renameLogic.HandleRename(draggedAsElementSave, (InstanceSave)null,  oldName, NameChangeAction.Move);
 
                 handled = true;
             }
@@ -195,7 +212,7 @@ public class DragDropManager
         {
             // It's in a directory, we're going to move it out
             draggedAsElementSave.Name = FileManager.RemovePath(name);
-            RenameLogic.HandleRename(draggedAsElementSave, (InstanceSave)null, name, NameChangeAction.Move);
+            _renameLogic.HandleRename(draggedAsElementSave, (InstanceSave)null, name, NameChangeAction.Move);
 
             handled = true;
         }
@@ -228,7 +245,7 @@ public class DragDropManager
 
             // First we want to re-select the target so that it is highlighted in the tree view and not
             // the object we dragged off.  This is so that plugins can properly use the SelectedElement.
-            ElementTreeViewManager.Self.Select(behavior);
+            _selectedState.SelectedBehavior = behavior;
 
             newInstance = _elementCommands.AddInstance(behavior, name, draggedElement.Name);
             //handled = true;
@@ -264,7 +281,7 @@ public class DragDropManager
 
             // First we want to re-select the target so that it is highlighted in the tree view and not
             // the object we dragged off.  This is so that plugins can properly use the SelectedElement.
-            ElementTreeViewManager.Self.Select(target);
+            _selectedState.SelectedElement = target;
 
             newInstance = _elementCommands.AddInstance(target, name, draggedAsElementSave.Name, parentInstance?.Name);
             handled = true;
@@ -305,12 +322,12 @@ public class DragDropManager
             errorMessage = "The source file for " + target.Name + " is missing, so it cannot be edited";
         }
 
-        if(errorMessage == null && target == GumState.Self.SelectedState.SelectedElement)
+        if(errorMessage == null && target == _selectedState.SelectedElement)
         {
-            if(GumState.Self.SelectedState.SelectedStateSave != GumState.Self.SelectedState.SelectedElement.DefaultState)
+            if(_selectedState.SelectedStateSave != _selectedState.SelectedElement.DefaultState)
             {
                 errorMessage = $"Cannot add instances to " +
-                    $"{GumState.Self.SelectedState.SelectedElement} while the {GumState.Self.SelectedState.SelectedStateSave} " +
+                    $"{_selectedState.SelectedElement} while the {_selectedState.SelectedStateSave} " +
                     $"state is selected. Select the Default state first.";
             }
         }
@@ -353,7 +370,7 @@ public class DragDropManager
 
     #region Drop BehaviorSave
 
-    private void HandleDroppedBehavior(BehaviorSave behavior, TreeNode treeNodeDroppedOn)
+    private void HandleDroppedBehavior(BehaviorSave behavior, ITreeNode treeNodeDroppedOn)
     {
         var targetTag = treeNodeDroppedOn.Tag;
 
@@ -377,12 +394,12 @@ public class DragDropManager
         // undos to record properly, so let's select it first:
         _selectedState.SelectedComponent = targetComponent;
         
-        using var undoLock = UndoManager.Self.RequestLock();
+        using var undoLock = _undoManager.RequestLock();
 
 
         _elementCommands.AddBehaviorTo(behavior, targetComponent);
 
-        if(targetComponent == SelectedState.Self.SelectedComponent)
+        if(targetComponent == _selectedState.SelectedComponent)
         {
             GumCommands.Self.GuiCommands.RefreshStateTreeView();
             GumCommands.Self.GuiCommands.BroadcastRefreshBehaviorView();
@@ -393,7 +410,7 @@ public class DragDropManager
 
     #region Drop Instance on TreeNode
 
-    private void HandleDroppedInstance(object draggedObject, TreeNode targetTreeNode)
+    private void HandleDroppedInstance(object draggedObject, ITreeNode targetTreeNode)
     {
         object targetObject = targetTreeNode.Tag;
 
@@ -460,7 +477,7 @@ public class DragDropManager
 
     }
 
-    private void HandleDroppingInstanceOnTarget(object targetObject, InstanceSave dragDroppedInstance, ElementSave targetElementSave, TreeNode targetTreeNode)
+    private void HandleDroppingInstanceOnTarget(object targetObject, InstanceSave dragDroppedInstance, ElementSave targetElementSave, ITreeNode targetTreeNode)
     {
         var instanceDefinedByBase = dragDroppedInstance.DefinedByBase;
 
@@ -476,7 +493,7 @@ public class DragDropManager
             {
                 // setting the parent:
                 parentName = targetInstance.Name;
-                string defaultChild = ObjectFinder.Self.GetDefaultChildName(targetInstance, SelectedState.Self.SelectedStateSave);
+                string defaultChild = ObjectFinder.Self.GetDefaultChildName(targetInstance, _selectedState.SelectedStateSave);
 
                 if (!string.IsNullOrEmpty(defaultChild))
                 {
@@ -490,11 +507,11 @@ public class DragDropManager
                 parentName = null;
             }
             // Since the Parent property can only be set in the default state, we will
-            // set the Parent variable on that instead of the SelectedState.Self.SelectedStateSave
+            // set the Parent variable on that instead of the _selectedState.SelectedStateSave
             var stateToAssignOn = targetElementSave.DefaultState;
 
             // todo - this needs to request the lock for the particular element
-            using var undoLock = UndoManager.Self.RequestLock();
+            using var undoLock = _undoManager.RequestLock();
 
             var oldValue = stateToAssignOn.GetValue(variableName) as string;
             stateToAssignOn.SetValue(variableName, parentName, "string");
@@ -521,9 +538,9 @@ public class DragDropManager
 
     internal void HandleDragDropEvent(object sender, DragEventArgs e)
     {
-        List<TreeNode> treeNodesToDrop = GetTreeNodesToDrop();
+        var treeNodesToDrop = GetTreeNodesToDrop();
         mDraggedItem = null;
-        TreeNode targetTreeNode = ElementTreeViewManager.Self.GetTreeNodeOver();
+        var targetTreeNode = PluginManager.Self.GetTreeNodeOver();
         foreach(var draggedTreeNode in treeNodesToDrop )
         {
             object draggedObject = draggedTreeNode.Tag;
@@ -538,7 +555,7 @@ public class DragDropManager
 
         if(files != null)
         {
-            var isTargetRootScreenTreeNode = targetTreeNode == ElementTreeViewManager.Self.RootScreensTreeNode;
+            var isTargetRootScreenTreeNode = targetTreeNode.IsTopScreenContainerTreeNode();
             foreach(FilePath file in files)
             {
                 if(file.Extension == GumProjectSave.ScreenExtension && isTargetRootScreenTreeNode)
@@ -549,7 +566,7 @@ public class DragDropManager
         }
     }
 
-    public void OnItemDrag(object item)
+    public void OnItemDrag(ITreeNode item)
     {
         mDraggedItem = item;
     }
@@ -575,7 +592,7 @@ public class DragDropManager
 
             if (!Cursor.PrimaryDownIgnoringIsInWindow)
             {
-                List<TreeNode> treeNodesToDrop = GetTreeNodesToDrop();
+                var treeNodesToDrop = GetTreeNodesToDrop();
 
                 foreach (var draggedTreeNode in treeNodesToDrop)
                 {
@@ -592,28 +609,28 @@ public class DragDropManager
         }
     }
 
-    private List<TreeNode> GetTreeNodesToDrop()
+    private List<ITreeNode> GetTreeNodesToDrop()
     {
-        List<TreeNode> treeNodesToDrop = new List<TreeNode>();
+        List<ITreeNode> treeNodesToDrop = new();
 
-        if(mDraggedItem != null && ((TreeNode)mDraggedItem).Tag != null)
+        if(mDraggedItem != null && ((ITreeNode)mDraggedItem).Tag != null)
         {
-            treeNodesToDrop.Add((TreeNode)mDraggedItem);
+            treeNodesToDrop.Add((ITreeNode)mDraggedItem);
         }
 
         // The selected nodes should contain the dragged item, but I don't know for 100% certain.
         // If not, then we'll just use the dragged item. If it does, then we'll also add all other
         // selected items:
-        if (SelectedState.Self.SelectedTreeNodes.Contains(mDraggedItem))
+        if (_selectedState.SelectedTreeNodes.Contains(mDraggedItem))
         {
-            var whatToAdd = SelectedState.Self.SelectedTreeNodes.Where(item => item != mDraggedItem && item != null && item.Tag != null);
+            var whatToAdd = _selectedState.SelectedTreeNodes.Where(item => item != mDraggedItem && item != null && item.Tag != null);
             treeNodesToDrop.AddRange(whatToAdd);
         }
 
         return treeNodesToDrop;
     }
 
-    private void HandleDroppedItemOnTreeView(object draggedObject, TreeNode treeNodeDroppedOn)
+    private void HandleDroppedItemOnTreeView(object draggedObject, ITreeNode treeNodeDroppedOn)
     {
         Console.WriteLine($"Dropping{draggedObject} on {treeNodeDroppedOn}");
         if (treeNodeDroppedOn != null)
@@ -671,9 +688,9 @@ public class DragDropManager
 
     private bool CanDrop()
     {
-        return SelectedState.Self.SelectedStandardElement == null &&    // Don't allow dropping on standard elements
-               SelectedState.Self.SelectedElement != null &&            // An element must be selected
-               SelectedState.Self.SelectedStateSave != null;            // A state must be selected
+        return _selectedState.SelectedStandardElement == null &&    // Don't allow dropping on standard elements
+               _selectedState.SelectedElement != null &&            // An element must be selected
+               _selectedState.SelectedStateSave != null;            // A state must be selected
     }
 
     public void HandleFileDragEnter(object sender, DragEventArgs e)
@@ -720,7 +737,7 @@ public class DragDropManager
 
     public void SetInstanceToPosition(float worldX, float worldY, InstanceSave instance)
     {
-        var component = SelectedState.Self.SelectedComponent;
+        var component = _selectedState.SelectedComponent;
 
         float xToSet = worldX;
         float yToSet = worldY;
@@ -750,18 +767,18 @@ public class DragDropManager
 
 
 
-        var instanceXUnits = (PositionUnitType)SelectedState.Self.SelectedStateSave.GetValueRecursive($"{instance.Name}.XUnits");
+        var instanceXUnits = (PositionUnitType)_selectedState.SelectedStateSave.GetValueRecursive($"{instance.Name}.XUnits");
         var asGeneralXUnitType = UnitConverter.ConvertToGeneralUnit(instanceXUnits);
         xToSet = UnitConverter.Self.ConvertXPosition(differenceX, GeneralUnitType.PixelsFromSmall, asGeneralXUnitType, containerWidth);
 
         var differenceY = worldY - containerTop;
-        var instanceYUnits = (PositionUnitType)SelectedState.Self.SelectedStateSave.GetValueRecursive($"{instance.Name}.YUnits");
+        var instanceYUnits = (PositionUnitType)_selectedState.SelectedStateSave.GetValueRecursive($"{instance.Name}.YUnits");
         var asGeneralYUnitType = UnitConverter.ConvertToGeneralUnit(instanceYUnits);
         yToSet = UnitConverter.Self.ConvertYPosition(differenceY, GeneralUnitType.PixelsFromSmall, asGeneralYUnitType, containerHeight);
 
 
-        SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".X", xToSet);
-        SelectedState.Self.SelectedStateSave.SetValue(instance.Name + ".Y", yToSet);
+        _selectedState.SelectedStateSave.SetValue(instance.Name + ".X", xToSet);
+        _selectedState.SelectedStateSave.SetValue(instance.Name + ".Y", yToSet);
     }
 
     #endregion
