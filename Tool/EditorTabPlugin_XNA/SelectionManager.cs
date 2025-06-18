@@ -17,6 +17,8 @@ using Matrix = System.Numerics.Matrix4x4;
 using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using System.Security.RightsManagement;
 using Gum.Managers;
+using Gum.Services;
+using Gum.Services.Dialogs;
 
 namespace Gum.Wireframe;
 
@@ -73,6 +75,7 @@ public class SelectionManager
     private readonly ISelectedState _selectedState;
     private readonly EditingManager _editingManager;
     private readonly UndoManager _undoManager;
+    private readonly IDialogService _dialogService;
 
     public bool IsOverBody
     {
@@ -183,11 +186,12 @@ public class SelectionManager
 
     #region Methods
 
-    internal SelectionManager(ISelectedState selectedState, UndoManager undoManager, EditingManager editingManager)
+    internal SelectionManager(ISelectedState selectedState, UndoManager undoManager, EditingManager editingManager, IDialogService dialogService)
     {
         _selectedState = selectedState;
         _editingManager = editingManager;
         _undoManager = undoManager;
+        _dialogService = dialogService;
     }
 
     public void Initialize(LayerService layerService)
@@ -239,7 +243,7 @@ public class SelectionManager
         }
         catch (Exception e)
         {
-            GumCommands.Self.GuiCommands.ShowMessage("Error in SelectionManager.Activity:\n\n" + e.ToString());
+            _dialogService.ShowMessage("Error in SelectionManager.Activity:\n\n" + e.ToString());
         }
     }
 

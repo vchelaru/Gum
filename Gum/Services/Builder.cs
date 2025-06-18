@@ -15,6 +15,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using GumCommon;
+using Gum.Services.Dialogs;
 
 namespace Gum.Services;
 
@@ -56,6 +57,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<LocalizationManager>();
         services.AddSingleton<NameVerifier>();
         services.AddSingleton<UndoManager>();
+        services.AddSingleton<IDialogService, DialogService>();
         
         //logic
         services.AddSingleton<VariableReferenceLogic>();

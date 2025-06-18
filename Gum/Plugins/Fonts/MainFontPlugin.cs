@@ -7,6 +7,7 @@ using Gum.ToolStates;
 using System;
 using System.ComponentModel.Composition;
 using System.Threading.Tasks;
+using Gum.Services.Dialogs;
 using GumCommon;
 
 namespace Gum.Plugins.Fonts;
@@ -15,13 +16,15 @@ namespace Gum.Plugins.Fonts;
 public class MainFontPlugin : InternalPlugin
 {
 
-    GuiCommands _guiCommands;
-    FontManager _fontManager;
+    private readonly GuiCommands _guiCommands;
+    private readonly FontManager _fontManager;
+    private readonly IDialogService _dialogService;
 
     public MainFontPlugin()
     {
         _guiCommands = Locator.GetRequiredService<GuiCommands>();
         _fontManager = Locator.GetRequiredService<FontManager>();
+        _dialogService = Locator.GetRequiredService<IDialogService>();
     }
 
     public override void StartUp()
@@ -86,7 +89,7 @@ public class MainFontPlugin : InternalPlugin
         var gumProjectSave = ProjectState.Self.GumProjectSave;
         if(gumProjectSave == null)
         {
-            _guiCommands.ShowMessage(
+            _dialogService.ShowMessage(
                 "A Gum project must first be loaded before recreating font files");
         }
         else

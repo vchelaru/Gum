@@ -21,6 +21,7 @@ using Gum.DataTypes.Behaviors;
 using Gum.Undo;
 using Gum.Plugins;
 using Gum.Services;
+using Gum.Services.Dialogs;
 using GumCommon;
 
 namespace Gum.Managers;
@@ -49,6 +50,7 @@ public class DragDropManager
     private readonly ElementCommands _elementCommands;
     private readonly RenameLogic _renameLogic;
     private readonly UndoManager _undoManager;
+    private readonly IDialogService _dialogService;
 
     #endregion
 
@@ -69,6 +71,7 @@ public class DragDropManager
         _elementCommands = Locator.GetRequiredService<ElementCommands>();
         _renameLogic = Locator.GetRequiredService<RenameLogic>();
         _undoManager = Locator.GetRequiredService<UndoManager>();
+        _dialogService = Locator.GetRequiredService<IDialogService>();
     }
 
     #region Drag+drop File (from windows explorer)
@@ -437,7 +440,7 @@ public class DragDropManager
 
             if (!canBeAdded)
             {
-                GumCommands.Self.GuiCommands.ShowMessage($"Cannot add {draggedAsInstanceSave.Name} " +
+                _dialogService.ShowMessage($"Cannot add {draggedAsInstanceSave.Name} " +
                     $"to {targetElementSave.Name} because it would create a circular reference");
                 return;
             }
@@ -483,7 +486,7 @@ public class DragDropManager
 
         if(instanceDefinedByBase)
         {
-            GumCommands.Self.GuiCommands.ShowMessage($"{dragDroppedInstance.Name} cannot be added as a child of {targetObject} because it is defined in a base element");
+            _dialogService.ShowMessage($"{dragDroppedInstance.Name} cannot be added as a child of {targetObject} because it is defined in a base element");
         }
         else
         {
