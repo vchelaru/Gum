@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Gum.DataTypes;
@@ -47,6 +47,8 @@ public class DragDropManager
     private readonly CircularReferenceManager _circularReferenceManager;
     private readonly ISelectedState _selectedState;
     private readonly ElementCommands _elementCommands;
+    private readonly RenameLogic _renameLogic;
+    private readonly UndoManager _undoManager;
 
     #endregion
 
@@ -60,11 +62,13 @@ public class DragDropManager
 
     #endregion
 
-    public DragDropManager(CircularReferenceManager circularReferenceManager, ElementCommands elementCommands)
+    public DragDropManager(CircularReferenceManager circularReferenceManager)
     {
         _circularReferenceManager = circularReferenceManager;
         _selectedState = Locator.GetRequiredService<ISelectedState>();
-        _elementCommands = elementCommands;
+        _elementCommands = Locator.GetRequiredService<ElementCommands>();
+        _renameLogic = Locator.GetRequiredService<RenameLogic>();
+        _undoManager = Locator.GetRequiredService<UndoManager>();
     }
 
     #region Drag+drop File (from windows explorer)
@@ -188,7 +192,7 @@ public class DragDropManager
 
                 string oldName = draggedAsElementSave.Name;
                 draggedAsElementSave.Name = nodeRelativeToProject + FileManager.RemovePath(draggedAsElementSave.Name);
-                RenameLogic.HandleRename(draggedAsElementSave, (InstanceSave)null,  oldName, NameChangeAction.Move);
+                _renameLogic.HandleRename(draggedAsElementSave, (InstanceSave)null,  oldName, NameChangeAction.Move);
 
                 handled = true;
             }
@@ -208,7 +212,7 @@ public class DragDropManager
         {
             // It's in a directory, we're going to move it out
             draggedAsElementSave.Name = FileManager.RemovePath(name);
-            RenameLogic.HandleRename(draggedAsElementSave, (InstanceSave)null, name, NameChangeAction.Move);
+            _renameLogic.HandleRename(draggedAsElementSave, (InstanceSave)null, name, NameChangeAction.Move);
 
             handled = true;
         }
@@ -390,7 +394,7 @@ public class DragDropManager
         // undos to record properly, so let's select it first:
         _selectedState.SelectedComponent = targetComponent;
         
-        using var undoLock = UndoManager.Self.RequestLock();
+        using var undoLock = _undoManager.RequestLock();
 
 
         _elementCommands.AddBehaviorTo(behavior, targetComponent);
@@ -507,7 +511,7 @@ public class DragDropManager
             var stateToAssignOn = targetElementSave.DefaultState;
 
             // todo - this needs to request the lock for the particular element
-            using var undoLock = UndoManager.Self.RequestLock();
+            using var undoLock = _undoManager.RequestLock();
 
             var oldValue = stateToAssignOn.GetValue(variableName) as string;
             stateToAssignOn.SetValue(variableName, parentName, "string");

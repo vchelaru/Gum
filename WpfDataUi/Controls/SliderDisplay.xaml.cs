@@ -207,7 +207,7 @@ namespace WpfDataUi.Controls
 
         public void SetToDefault()
         {
-
+            mTextBoxLogic.HasUserChangedAnything = false;
         }
 
         public ApplyValueResult TryGetValueOnUi(out object value)
@@ -382,7 +382,10 @@ namespace WpfDataUi.Controls
 
             mTextBoxLogic.ClampTextBoxValuesToMinMax();
 
-            mTextBoxLogic.TryApplyToInstance();
+            if(mTextBoxLogic.HasUserChangedAnything)
+            {
+                mTextBoxLogic.TryApplyToInstance();
+            }
         }
 
         private void Slider_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)

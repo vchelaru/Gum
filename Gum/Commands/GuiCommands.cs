@@ -1,4 +1,4 @@
-﻿using Gum.Managers;
+using Gum.Managers;
 using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
@@ -42,12 +42,20 @@ public class GuiCommands
     MainPanelControl mainPanelControl;
 
     private readonly ISelectedState _selectedState;
+    private readonly NameVerifier _nameVerifier;
+    private readonly RenameLogic _renameLogic;
+    private readonly ElementCommands _elementCommands;
+    private readonly UndoManager _undoManager;
 
     #endregion
 
     public GuiCommands()
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _nameVerifier = Locator.GetRequiredService<NameVerifier>();
+        _renameLogic = Locator.GetRequiredService<RenameLogic>();
+        _elementCommands = Locator.GetRequiredService<ElementCommands>();
+        _undoManager = Locator.GetRequiredService<UndoManager>();
     }
 
     internal void Initialize(MainWindow mainWindow, MainPanelControl mainPanelControl)
@@ -389,8 +397,8 @@ public class GuiCommands
 
             if (canAdd)
             {
-                using var undoLock = UndoManager.Self.RequestLock();
-                StateSaveCategory category = ElementCommands.Self.AddCategory(
+                using var undoLock = _undoManager.RequestLock();
+                StateSaveCategory category = _elementCommands.AddCategory(
                     target, name);
 
                 _selectedState.SelectedStateCategorySave = category;
@@ -415,15 +423,15 @@ public class GuiCommands
             {
                 string name = tiw.Result;
 
-                if (!NameVerifier.Self.IsStateNameValid(name, _selectedState.SelectedStateCategorySave, null, out string whyNotValid))
+                if (!_nameVerifier.IsStateNameValid(name, _selectedState.SelectedStateCategorySave, null, out string whyNotValid))
                 {
                     GumCommands.Self.GuiCommands.ShowMessage(whyNotValid);
                 }
                 else
                 {
-                    using (UndoManager.Self.RequestLock())
+                    using (_undoManager.RequestLock())
                     {
-                        StateSave stateSave = ElementCommands.Self.AddState(
+                        StateSave stateSave = _elementCommands.AddState(
                             _selectedState.SelectedStateContainer, _selectedState.SelectedStateCategorySave, name);
 
 
@@ -450,7 +458,7 @@ public class GuiCommands
             var text = tiw.Result;
 
             string whyNotValid;
-            if(!NameVerifier.Self.IsFolderNameValid(text, out whyNotValid))
+            if(!_nameVerifier.IsFolderNameValid(text, out whyNotValid))
             {
                 errorLabel.Foreground = System.Windows.Media.Brushes.Red;
                 errorLabel.Text = whyNotValid;
@@ -475,7 +483,7 @@ public class GuiCommands
 
             string whyNotValid;
 
-            if (!NameVerifier.Self.IsFolderNameValid(folderName, out whyNotValid))
+            if (!_nameVerifier.IsFolderNameValid(folderName, out whyNotValid))
             {
                 MessageBox.Show(whyNotValid);
             }
@@ -516,7 +524,7 @@ public class GuiCommands
 
                 string whyNotValid;
 
-                if (!NameVerifier.Self.IsElementNameValid(name, null, null, out whyNotValid))
+                if (!_nameVerifier.IsElementNameValid(name, null, null, out whyNotValid))
                 {
                     MessageBox.Show(whyNotValid);
                 }
@@ -568,7 +576,7 @@ public class GuiCommands
         {
             string whyNotValid;
 
-            if (!NameVerifier.Self.IsInstanceNameValid(name, null, _selectedState.SelectedElement, out whyNotValid))
+            if (!_nameVerifier.IsInstanceNameValid(name, null, _selectedState.SelectedElement, out whyNotValid))
             {
                 MessageBox.Show(whyNotValid);
 
@@ -585,7 +593,7 @@ public class GuiCommands
         if (!ShowNewObjectDialog(out var name)) return;
 
         var focusedInstance = _selectedState.SelectedInstance;
-        var newInstance = GumCommands.Self.ProjectCommands.ElementCommands.AddInstance(_selectedState.SelectedElement, name, StandardElementsManager.Self.DefaultType);
+        var newInstance = _elementCommands.AddInstance(_selectedState.SelectedElement, name, StandardElementsManager.Self.DefaultType);
 
         if (focusedInstance != null)
         {
@@ -598,7 +606,7 @@ public class GuiCommands
         if (!ShowNewObjectDialog(out var name)) return;
 
         var focusedInstance = _selectedState.SelectedInstance;
-        var newInstance = GumCommands.Self.ProjectCommands.ElementCommands.AddInstance(
+        var newInstance = _elementCommands.AddInstance(
             _selectedState.SelectedElement, name, StandardElementsManager.Self.DefaultType);
 
         System.Diagnostics.Debug.Assert(focusedInstance != null);
@@ -684,7 +692,7 @@ public class GuiCommands
 
         bool isValid = true;
         string whyNotValid;
-        if (!NameVerifier.Self.IsFolderNameValid(tiw.Result, out whyNotValid))
+        if (!_nameVerifier.IsFolderNameValid(tiw.Result, out whyNotValid))
         {
             isValid = false;
         }
@@ -735,7 +743,7 @@ public class GuiCommands
                         string newName = newPathRelativeToElementsRoot + screen.Name.Substring(oldPathRelativeToElementsRoot.Length);
 
                         screen.Name = newName;
-                        RenameLogic.HandleRename(screen, (InstanceSave)null, oldVaue, NameChangeAction.Move, askAboutRename: false);
+                        _renameLogic.HandleRename(screen, (InstanceSave)null, oldVaue, NameChangeAction.Move, askAboutRename: false);
                     }
                 }
             }
@@ -749,7 +757,7 @@ public class GuiCommands
                         string newName = newPathRelativeToElementsRoot + component.Name.Substring(oldPathRelativeToElementsRoot.Length);
                         component.Name = newName;
 
-                        RenameLogic.HandleRename(component, (InstanceSave)null, oldVaue, NameChangeAction.Move, askAboutRename: false);
+                        _renameLogic.HandleRename(component, (InstanceSave)null, oldVaue, NameChangeAction.Move, askAboutRename: false);
                     }
                 }
             }

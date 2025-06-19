@@ -167,7 +167,53 @@ public class GraphicalUiElementTests
         didThrow.ShouldBeTrue();
     }
     #endregion
-    
+
+    #region Parent and ParentChanged 
+
+    [Fact]
+    public void ParentChanged_ShouldRaiseWhenParentChanges()
+    {
+        ContainerRuntime child = new ();
+
+        int parentChangedCount = 0;
+        child.ParentChanged += (_, _) => parentChangedCount++;
+        child.Name = "Child";
+
+        child.Parent = new ContainerRuntime() { Name = "ParentA" };
+        parentChangedCount.ShouldBe(1);
+        child.Parent = null;
+        parentChangedCount.ShouldBeGreaterThan(1);
+
+        // parent changes can be called multiple times, we want to make sure it was called
+        // by checking the starting point
+        var startingPoint = parentChangedCount;
+        // Setting to the same parent should not raise the event:
+        var parent = new ContainerRuntime();
+        child.Parent = parent;
+        parentChangedCount.ShouldBeGreaterThan(startingPoint);
+
+        startingPoint = parentChangedCount;
+        child.Parent = parent;
+        parentChangedCount.ShouldBe(startingPoint);
+
+        startingPoint = parentChangedCount;
+        child.Parent = null;
+        parentChangedCount.ShouldBeGreaterThan(startingPoint);
+
+
+        var parent2 = new ContainerRuntime();
+        startingPoint = parentChangedCount;
+        parent.AddChild(child);
+        parentChangedCount.ShouldBeGreaterThan(startingPoint);
+
+        startingPoint = parentChangedCount;
+        parent.Children.Remove(child);
+        parentChangedCount.ShouldBeGreaterThan(startingPoint);
+
+    }
+
+    #endregion
+
     [Fact]
     public void FillListWithChildrenByType_ShouldFillRecursively()
     {

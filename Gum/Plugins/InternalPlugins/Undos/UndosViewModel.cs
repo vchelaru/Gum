@@ -17,6 +17,7 @@ namespace Gum.Plugins.Undos
     public class UndosViewModel : INotifyPropertyChanged
     {
         private readonly ISelectedState _selectedState;
+        private readonly UndoManager _undoManager;
         //ObservableCollection<string> mUndos = new ObservableCollection<string>();
         //public ObservableCollection<string> Undos
         //{
@@ -37,7 +38,7 @@ namespace Gum.Plugins.Undos
 
         void RefreshHistoryItems()
         {
-            var elementHistory = UndoManager.Self.CurrentElementHistory;
+            var elementHistory = _undoManager.CurrentElementHistory;
 
             if (elementHistory == null || elementHistory.Actions.Count() == 0)
             {
@@ -72,7 +73,7 @@ namespace Gum.Plugins.Undos
 
         void AppendOneHistoryItem()
         {
-            var elementHistory = UndoManager.Self.CurrentElementHistory;
+            var elementHistory = _undoManager.CurrentElementHistory;
 
             if (elementHistory == null || elementHistory.Actions.Count() == 0)
             {
@@ -112,7 +113,7 @@ namespace Gum.Plugins.Undos
         {
             get
             {
-                var elementHistory = UndoManager.Self.CurrentElementHistory;
+                var elementHistory = _undoManager.CurrentElementHistory;
 
                 if (elementHistory == null)
                 {
@@ -163,7 +164,7 @@ namespace Gum.Plugins.Undos
                     undoStringList.Insert(0, comparisonInformation.ToString());
                 }
 
-                UndoManager.Self.ApplyUndoSnapshotToElement(undo.UndoState, selectedElementClone, false);
+                _undoManager.ApplyUndoSnapshotToElement(undo.UndoState, selectedElementClone, false);
 
                 if (undoStringList.Count >= numberOfItemsFromEnd)
                 {
@@ -191,7 +192,8 @@ namespace Gum.Plugins.Undos
         public UndosViewModel()
         {
             _selectedState = Locator.GetRequiredService<ISelectedState>();
-            UndoManager.Self.UndosChanged += HandleUndosChanged;
+            _undoManager = Locator.GetRequiredService<UndoManager>();
+            _undoManager.UndosChanged += HandleUndosChanged;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

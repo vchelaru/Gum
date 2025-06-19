@@ -1,6 +1,7 @@
 ﻿using Gum.Mvvm;
 using MonoGameGum.Forms.Controls;
 using MonoGameGum.Forms.Data;
+using MonoGameGum.GueDeriving;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -77,6 +78,19 @@ public class TextBoxTests
         vm.Text.ShouldBe("\nTest text");
     }
 
+    [Fact]
+    public void TextBox_ShouldHaveSelectionInstance()
+    {
+        var textBox = new TextBox();
+        var selection = (ColoredRectangleRuntime)textBox
+            .Visual.GetChildByNameRecursively("SelectionInstance")!;
+
+        selection.Color = Microsoft.Xna.Framework.Color.Blue;
+
+        selection.ShouldNotBeNull();
+    }
+
+    #region ViewModels
 
     class TestViewModel : ViewModel
     {
@@ -86,4 +100,6 @@ public class TextBoxTests
             set => Set(value);
         }
     }
+
+    #endregion
 }

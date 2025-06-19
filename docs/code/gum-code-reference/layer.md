@@ -54,3 +54,11 @@ layerCameraSettings.IsInScreenSpace = true;
 layerCameraSettings.Position = new Vector2(0, 50);
 layer.LayerCameraSettings = layerCameraSettings;
 ```
+
+LayerCameraSettings can also adjust the zoom for all contained renderables. The following code shows how to create LayerCameraSettings where all objects are zoomed in:
+
+```csharp
+var layerCameraSettings = new LayerCameraSettings();
+layerCameraSettings.Zoom = 2; // objects on this layer are drawn at 2x zoom
+layer.LayerCameraSettings = layerCameraSettings;
+```

@@ -1,4 +1,4 @@
-﻿using Gum.DataTypes;
+using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins;
@@ -20,31 +20,42 @@ using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Services;
 using Gum.Commands;
 using Gum.Graphics;
+using Gum.ToolCommands;
+using Gum.Undo;
 using GumCommon;
 
 namespace Gum.PropertyGridHelpers
 {
     public class SetVariableLogic : Singleton<SetVariableLogic>
     {
-        private VariableReferenceLogic _variableReferenceLogic;
+        private readonly VariableReferenceLogic _variableReferenceLogic;
         private CircularReferenceManager _circularReferenceManager;
         private FontManager _fontManager;
         private FileCommands _fileCommands;
         private readonly ISelectedState _selectedState;
+        private readonly NameVerifier _nameVerifier;
+        private readonly RenameLogic _renameLogic;
+        private readonly ElementCommands _elementCommands;
+        private readonly UndoManager _undoManager;
+        private readonly WireframeCommands _wireframeCommands;
 
         public SetVariableLogic()
         {
             _selectedState = Locator.GetRequiredService<ISelectedState>();
+            _nameVerifier = Locator.GetRequiredService<NameVerifier>();
+            _renameLogic = Locator.GetRequiredService<RenameLogic>();
+            _elementCommands = Locator.GetRequiredService<ElementCommands>();
+            _undoManager = Locator.GetRequiredService<UndoManager>();
+            _wireframeCommands = Locator.GetRequiredService<WireframeCommands>();
+            _variableReferenceLogic = Locator.GetRequiredService<VariableReferenceLogic>();
         }
 
         // this is needed as we unroll all the other singletons...
         public void Initialize(CircularReferenceManager circularReferenceManager, FileCommands fileCommands)
         {
-
-            _variableReferenceLogic = new VariableReferenceLogic(
-                Locator.GetRequiredService<GuiCommands>());
+            
             _circularReferenceManager = circularReferenceManager;
-
+            
             _fontManager = Locator.GetRequiredService<FontManager>();
             _fileCommands = fileCommands;
         }
@@ -143,7 +154,7 @@ namespace Gum.PropertyGridHelpers
                     // Need to record undo before refreshing and reselecting the UI
                     if (recordUndo)
                     {
-                        Undo.UndoManager.Self.RecordUndo();
+                        _undoManager.RecordUndo();
                     }
 
                     if (refresh)
@@ -271,13 +282,13 @@ namespace Gum.PropertyGridHelpers
             }
         }
 
-        private static GeneralResponse ReactIfChangedMemberIsName(IInstanceContainer instanceContainer, InstanceSave instance, string changedMember, object oldValue)
+        private GeneralResponse ReactIfChangedMemberIsName(IInstanceContainer instanceContainer, InstanceSave instance, string changedMember, object oldValue)
         {
             var toReturn = OptionallyAttemptedGeneralResponse.SuccessfulWithoutAttempt;
 
             if (changedMember == "Name")
             {
-                var innerResponse = RenameLogic.HandleRename(instanceContainer, instance, (string)oldValue, NameChangeAction.Rename);
+                var innerResponse = _renameLogic.HandleRename(instanceContainer, instance, (string)oldValue, NameChangeAction.Rename);
                 toReturn.SetFrom(innerResponse);
             }
             return toReturn;
@@ -401,10 +412,8 @@ namespace Gum.PropertyGridHelpers
                     float outY = 0;
 
                     bool isWidthOrHeight = false;
-
-                    var editingCommands = GumCommands.Self.ProjectCommands.ElementCommands;
-
-                    object unitTypeAsObject = editingCommands.GetCurrentValueForVariable(changedMember, _selectedState.SelectedInstance);
+                    
+                    object unitTypeAsObject = _elementCommands.GetCurrentValueForVariable(changedMember, _selectedState.SelectedInstance);
                     GeneralUnitType unitType = UnitConverter.ConvertToGeneralUnit(unitTypeAsObject);
 
 
@@ -614,7 +623,7 @@ namespace Gum.PropertyGridHelpers
                 {
                     var strippedName =
                         FileManager.RemovePath(FileManager.RemoveExtension(value));
-                    NameVerifier.Self.IsNameValidAndroidFile(strippedName, out whyInvalid);
+                    _nameVerifier.IsNameValidAndroidFile(strippedName, out whyInvalid);
                 }
             }
 
@@ -835,7 +844,7 @@ namespace Gum.PropertyGridHelpers
                                     parentElement.DefaultState.SetValue(instance.Name + ".TextureWidth", size.Value.Width);
                                     parentElement.DefaultState.SetValue(instance.Name + ".TextureHeight", size.Value.Height);
 
-                                    GumCommands.Self.WireframeCommands.Refresh();
+                                    _wireframeCommands.Refresh();
                                 }
                             }
                         }

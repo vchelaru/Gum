@@ -23,24 +23,6 @@ namespace Gum.ToolCommands
         #region Fields
 
         private readonly ISelectedState _selectedState;
-        
-        static ElementCommands mSelf;
-
-        #endregion
-
-        #region Properties
-
-        public static ElementCommands Self
-        {
-            get
-            {
-                if (mSelf == null)
-                {
-                    mSelf = new ElementCommands();
-                }
-                return mSelf;
-            }
-        }
 
         #endregion
 
@@ -739,7 +721,7 @@ namespace Gum.ToolCommands
                 behaviorReference.BehaviorName = behaviorName;
                 componentSave.Behaviors.Add(behaviorReference);
 
-                GumCommands.Self.ProjectCommands.ElementCommands.AddCategoriesFromBehavior(behaviorSave, componentSave);
+                AddCategoriesFromBehavior(behaviorSave, componentSave);
 
                 PluginManager.Self.BehaviorReferencesChanged(componentSave);
 

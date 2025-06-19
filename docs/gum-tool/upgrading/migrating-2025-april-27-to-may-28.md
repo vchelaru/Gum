@@ -1,4 +1,8 @@
-# Migrating 2025 April 27 to May 28
+# Migrating to 2025 May 28
+
+## Introduction
+
+This page discusses breaking changes when migrating from `2025 April 27` to `2025 May 28`
 
 ## Upgrading Gum Tool
 

@@ -469,7 +469,7 @@ public class MenuItem : ItemsControl
         }
         else if (IsSelected)
         {
-            Visual.SetProperty(category, "Selected");
+            Visual.SetProperty(category, SelectedStateName);
         }
         else if (IsHighlighted)
         {

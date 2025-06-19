@@ -107,7 +107,7 @@ public partial class ElementTreeViewManager
         if (_selectedState.SelectedScreen != null ||
             _selectedState.SelectedComponent != null)
         {
-            GumCommands.Self.Edit.DuplicateSelectedElement();
+            _editCommands.DuplicateSelectedElement();
         }
     }
 
@@ -126,7 +126,7 @@ public partial class ElementTreeViewManager
         if (_selectedState.SelectedScreen != null ||
             _selectedState.SelectedComponent != null)
         {
-            GumCommands.Self.Edit.ShowCreateComponentFromInstancesDialog();
+            _editCommands.ShowCreateComponentFromInstancesDialog();
         }
     }
 
@@ -278,7 +278,7 @@ public partial class ElementTreeViewManager
                 var deleteText = _selectedState.SelectedInstances.Count() > 1
                     ? $"Delete {_selectedState.SelectedInstances.Count()} instances"
                     : $"Delete {_selectedState.SelectedInstance.Name}";
-                mMenuStrip.Items.Add(deleteText, null, (not, used) => GumCommands.Self.Edit.DeleteSelection());
+                mMenuStrip.Items.Add(deleteText, null, (not, used) => _editCommands.DeleteSelection());
 
 
 
@@ -475,7 +475,7 @@ public partial class ElementTreeViewManager
 
     private void HandleViewReferences(object sender, EventArgs e)
     {
-        GumCommands.Self.Edit.DisplayReferencesTo(_selectedState.SelectedElement);
+        _editCommands.DisplayReferencesTo(_selectedState.SelectedElement);
     }
 
     private void HandleRenameFolder(object sender, EventArgs e)
@@ -489,7 +489,7 @@ public partial class ElementTreeViewManager
 
     private void HandleAddBehavior(object sender, EventArgs e)
     {
-        GumCommands.Self.Edit.AddBehavior();
+        _editCommands.AddBehavior();
     }
 
     private void HandleImportBehavior(object sender, EventArgs args)

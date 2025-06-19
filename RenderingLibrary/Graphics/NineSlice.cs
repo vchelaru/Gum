@@ -856,7 +856,7 @@ public class NineSlice : IRenderableIpso, IVisible, ITextureCoordinate, IAnimata
             sourceRectangle, flipVertical, rotation, treat0AsFullDimensions:false);
     }
 
-    void IRenderableIpso.SetParentDirect(IRenderableIpso parent)
+    void IRenderableIpso.SetParentDirect(IRenderableIpso? parent)
     {
         mParent = parent;
     }

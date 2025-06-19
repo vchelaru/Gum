@@ -21,14 +21,18 @@ public class StateTreeViewRightClickService
 {
     const string mNoCategory = "<no category>";
     private readonly ISelectedState _selectedState;
+    private readonly ElementCommands _elementCommands;
+    private readonly EditCommands _editCommands;
 
     System.Windows.Controls.ContextMenu _menuStrip;
     GumCommands _gumCommands;
 
-    public StateTreeViewRightClickService(ISelectedState selectedState, GumCommands gumCommands)
+    public StateTreeViewRightClickService(ISelectedState selectedState, GumCommands gumCommands, ElementCommands elementCommands, EditCommands editCommands)
     {
         _selectedState = selectedState;
         _gumCommands = gumCommands;
+        _elementCommands = elementCommands;
+        _editCommands = editCommands;
     }
 
     public void SetMenuStrip(System.Windows.Controls.ContextMenu menuStrip, FrameworkElement contextMenuOwner)
@@ -218,14 +222,14 @@ public class StateTreeViewRightClickService
 
     public void DeleteCategoryClick()
     {
-        _gumCommands.Edit.RemoveStateCategory(
+        _editCommands.RemoveStateCategory(
             _selectedState.SelectedStateCategorySave,
             _selectedState.SelectedStateContainer);
     }
 
     public void DeleteStateClick()
     {
-        _gumCommands.Edit.AskToDeleteState(
+        _editCommands.AskToDeleteState(
             _selectedState.SelectedStateSave,
             _selectedState.SelectedStateContainer);
     }
@@ -322,7 +326,7 @@ public class StateTreeViewRightClickService
             newState.Name = StringFunctions.IncrementNumberAtEnd(newState.Name);
         }
 
-        ElementCommands.Self.AddState(_selectedState.SelectedStateContainer, _selectedState.SelectedStateCategorySave, newState, index + 1);
+        _elementCommands.AddState(_selectedState.SelectedStateContainer, _selectedState.SelectedStateCategorySave, newState, index + 1);
 
         _gumCommands.GuiCommands.RefreshStateTreeView();
 
@@ -333,13 +337,13 @@ public class StateTreeViewRightClickService
 
     public void RenameStateClick()
     {
-        _gumCommands.Edit.AskToRenameState(_selectedState.SelectedStateSave,
+        _editCommands.AskToRenameState(_selectedState.SelectedStateSave,
             _selectedState.SelectedStateContainer);
     }
 
     public void RenameCategoryClick()
     {
-        _gumCommands.Edit.AskToRenameStateCategory(
+        _editCommands.AskToRenameStateCategory(
             _selectedState.SelectedStateCategorySave,
             _selectedState.SelectedElement);
     }
@@ -348,7 +352,7 @@ public class StateTreeViewRightClickService
     {
         var stateToMove = _selectedState.SelectedStateSave;
         var stateContainer = _selectedState.SelectedStateContainer;
-        _gumCommands.Edit.MoveToCategory(categoryNameToMoveTo, stateToMove, stateContainer);
+        _editCommands.MoveToCategory(categoryNameToMoveTo, stateToMove, stateContainer);
     }
 
 }

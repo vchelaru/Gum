@@ -1,4 +1,4 @@
-﻿using Gum.Commands;
+using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
@@ -98,17 +98,13 @@ public class AddVariableViewModel : ViewModel
 
     #endregion
 
-    public AddVariableViewModel(Commands.GuiCommands guiCommands,
-        UndoManager undoManager,
-        ElementCommands elementCommands,
-        FileCommands fileCommands,
-        NameVerifier nameVerifier)
+    public AddVariableViewModel(Commands.GuiCommands guiCommands, FileCommands fileCommands)
     {
         _guiCommands = guiCommands;
-        _undoManager = undoManager;
-        _elementCommands = elementCommands;
+        _undoManager = Locator.GetRequiredService<UndoManager>();
+        _elementCommands = Locator.GetRequiredService<ElementCommands>();
         _fileCommands = fileCommands;
-        _nameVerifier = nameVerifier;
+        _nameVerifier = Locator.GetRequiredService<NameVerifier>();
         _selectedState = Locator.GetRequiredService<ISelectedState>();
 
         AvailableTypes = new List<string>();
@@ -156,7 +152,7 @@ public class AddVariableViewModel : ViewModel
         var name = EnteredName;
 
         string whyNotValid;
-        bool isValid = NameVerifier.Self.IsVariableNameValid(
+        bool isValid = _nameVerifier.IsVariableNameValid(
             name, Element, Variable, out whyNotValid);
 
         if (!isValid)
@@ -201,7 +197,7 @@ public class AddVariableViewModel : ViewModel
         var newName = EnteredName;
 
         string whyNotValid;
-        bool isValid = NameVerifier.Self.IsVariableNameValid(
+        bool isValid = _nameVerifier.IsVariableNameValid(
             newName, Element, Variable, out whyNotValid);
 
         var behavior = _selectedState.SelectedBehavior;

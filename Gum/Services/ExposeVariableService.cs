@@ -35,14 +35,16 @@ internal class ExposeVariableService : IExposeVariableService
     private readonly FileCommands _fileCommands;
     private readonly RenameLogic _renameLogic;
     private readonly ISelectedState _selectedState;
+    private readonly NameVerifier _nameVerifier;
 
-    public ExposeVariableService(UndoManager undoManager, GuiCommands guiCommands, FileCommands fileCommands)
+    public ExposeVariableService(GuiCommands guiCommands, FileCommands fileCommands)
     {
-        _undoManager = undoManager;
+        _undoManager = Locator.GetRequiredService<UndoManager>();
         _guiCommands = guiCommands;
         _fileCommands = fileCommands;
         _renameLogic = Locator.GetRequiredService<RenameLogic>();
         _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _nameVerifier = Locator.GetRequiredService<NameVerifier>();
     }
 
     public void HandleExposeVariableClick(InstanceSave instanceSave, VariableSave variableSave, string rootVariableName)
@@ -75,7 +77,7 @@ internal class ExposeVariableService : IExposeVariableService
         if (result == DialogResult.OK)
         {
             string whyNot;
-            if (!NameVerifier.Self.IsVariableNameValid(tiw.Result, _selectedState.SelectedElement, variableSave, out whyNot))
+            if (!_nameVerifier.IsVariableNameValid(tiw.Result, _selectedState.SelectedElement, variableSave, out whyNot))
             {
                 MessageBox.Show(whyNot);
             }

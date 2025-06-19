@@ -1,4 +1,4 @@
-﻿using Gum.Plugins.BaseClasses;
+using Gum.Plugins.BaseClasses;
 using System;
 using System.ComponentModel.Composition;
 using System.Linq;
@@ -21,6 +21,9 @@ public class MainBehaviorsPlugin : InternalPlugin
 {
     BehaviorsControl control;
     private readonly ISelectedState _selectedState;
+    private readonly ElementCommands _elementCommands;
+    private readonly UndoManager _undoManager;
+    
     BehaviorsViewModel viewModel;
     DataUiGrid stateDataUiGrid;
     PluginTab behaviorsTab;
@@ -28,6 +31,8 @@ public class MainBehaviorsPlugin : InternalPlugin
     public MainBehaviorsPlugin()
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _elementCommands = Locator.GetRequiredService<ElementCommands>();
+        _undoManager = Locator.GetRequiredService<UndoManager>();
     }
 
     public override void StartUp()
@@ -87,7 +92,7 @@ public class MainBehaviorsPlugin : InternalPlugin
         }
     }
 
-    private static void AddStateToElementsImplementingBehavior(StateSave stateSave, BehaviorSave behavior)
+    private void AddStateToElementsImplementingBehavior(StateSave stateSave, BehaviorSave behavior)
     {
         var category = behavior.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
 
@@ -110,8 +115,7 @@ public class MainBehaviorsPlugin : InternalPlugin
                 if (existingState == null)
                 {
                     // add a new state to this category
-                    ElementCommands.Self.AddState(
-                        element, categoryInElement, stateSave.Name);
+                    _elementCommands.AddState(element, categoryInElement, stateSave.Name);
 
                     elementsToSave.Add(element);
                 }
@@ -140,7 +144,7 @@ public class MainBehaviorsPlugin : InternalPlugin
 
         try
         {
-            using var undoLock = UndoManager.Self.RequestLock();
+            using var undoLock = _undoManager.RequestLock();
 
             var selectedBehaviorNames = viewModel.AllBehaviors
                 .Where(item => item.IsChecked)
@@ -165,7 +169,7 @@ public class MainBehaviorsPlugin : InternalPlugin
                 component.Behaviors.Clear();
                 foreach (var behavior in viewModel.AllBehaviors.Where(item => item.IsChecked))
                 {
-                    GumCommands.Self.ProjectCommands.ElementCommands.AddBehaviorTo(behavior.Name, component, performSave: false);
+                    _elementCommands.AddBehaviorTo(behavior.Name, component, performSave: false);
                 }
 
                 GumCommands.Self.GuiCommands.RefreshStateTreeView();

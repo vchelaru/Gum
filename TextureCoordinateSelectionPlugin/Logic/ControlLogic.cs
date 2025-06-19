@@ -33,6 +33,8 @@ public enum RefreshType
 public class ControlLogic : Singleton<ControlLogic>
 {
     private readonly ISelectedState _selectedState;
+    private readonly UndoManager _undoManager;
+    
     LineRectangle textureOutlineRectangle = null;
 
     MainControlViewModel ViewModel;
@@ -67,6 +69,7 @@ public class ControlLogic : Singleton<ControlLogic>
     public ControlLogic()
     {
         _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _undoManager = Locator.GetRequiredService<UndoManager>();
     }
 
     public PluginTab CreateControl()
@@ -311,7 +314,7 @@ public class ControlLogic : Singleton<ControlLogic>
 
     public void HandleRegionDoubleClicked(ImageRegionSelectionControl control, ref LineRectangle textureOutlineRectangle)
     {
-        using var undoLock = UndoManager.Self.RequestLock();
+        using var undoLock = _undoManager.RequestLock();
 
         var state = _selectedState.SelectedStateSave;
         var instancePrefix = _selectedState.SelectedInstance?.Name;
@@ -368,7 +371,7 @@ public class ControlLogic : Singleton<ControlLogic>
 
     private void HandleStartRegionChanged(object sender, EventArgs e)
     {
-        UndoManager.Self.RecordUndo();
+        _undoManager.RecordUndo();
 
         var state = _selectedState.SelectedStateSave;
 
@@ -443,7 +446,7 @@ public class ControlLogic : Singleton<ControlLogic>
         }
         shouldRefreshAccordingToVariableSets = true;
 
-        UndoManager.Self.RecordUndo();
+        _undoManager.RecordUndo();
 
         GumCommands.Self.FileCommands.TryAutoSaveCurrentElement();
     }

@@ -35,6 +35,7 @@ namespace Gum
         bool mHaveErrorsOccurredLoadingProject = false;
         
         private readonly ISelectedState _selectedState;
+        private readonly ElementCommands _elementCommands;
 
         #endregion
 
@@ -81,6 +82,7 @@ namespace Gum
         private ProjectManager()
         {
             _selectedState = Locator.GetRequiredService<ISelectedState>();
+            _elementCommands = Locator.GetRequiredService<ElementCommands>();
         }
 
         public void LoadSettings()
@@ -657,7 +659,7 @@ namespace Gum
                 {
                     PluginManager.Self.BeforeProjectSave(GumProjectSave);
 
-                    ElementCommands.Self.SortVariables();
+                    _elementCommands.SortVariables();
 
                     bool saveContainedElements = isNewProject || forceSaveContainedElements;
 

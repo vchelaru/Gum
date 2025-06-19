@@ -11,6 +11,10 @@ MonoGame Gum works on a variety of platforms including DesktopGL, DirectX, and m
 
     <figure><img src="../../../.gitbook/assets/NugetMonoGameGumSetup1.png" alt=""><figcaption><p>Add Gum.MonoGame NuGet Package to your project</p></figcaption></figure>
 
+{% hint style="info" %}
+The Gum.MonoGame NuGet package is referenced regardless of which platform your game targets.
+{% endhint %}
+
 ### Initializing Gum
 
 To initialize Gum, modify your Game project (such as Game1.cs) so that it includes the following calls:

@@ -378,6 +378,7 @@ public class FrameworkElement : INotifyPropertyChanged
                     visual.BindingContextChanged -= OnVisualBindingContextChanged;
                     visual.InheritedBindingContextChanged -= OnVisualInheritedBindingContextChanged;
                     visual.EnabledChange -= HandleEnabledChanged;
+                    visual.ParentChanged -= HandleParentChanged;
                     ReactToVisualRemoved();
                 }
 
@@ -396,6 +397,7 @@ public class FrameworkElement : INotifyPropertyChanged
                     visual.BindingContextChanged += OnVisualBindingContextChanged;
                     visual.InheritedBindingContextChanged += OnVisualInheritedBindingContextChanged;
                     visual.EnabledChange += HandleEnabledChanged;
+                    visual.ParentChanged += HandleParentChanged;
                 }
 
                 if (oldVisual?.BindingContext != value?.BindingContext)
@@ -412,6 +414,7 @@ public class FrameworkElement : INotifyPropertyChanged
 
         }
     }
+
 
     private void OnVisualBindingContextChanged(object? sender, BindingContextChangedEventArgs args)
     {
@@ -1238,6 +1241,8 @@ public class FrameworkElement : INotifyPropertyChanged
     public const string HighlightedFocusedStateName = "HighlightedFocused";
     public const string PushedStateName = "Pushed";
 
+    public const string SelectedStateName = "Selected";
+
 
 
     protected string GetDesiredState()
@@ -1348,6 +1353,29 @@ public class FrameworkElement : INotifyPropertyChanged
         }
     }
 
+
+    private void HandleParentChanged(object? sender, GraphicalUiElement.ParentChangedEventArgs e)
+    {
+        var parentGue = Visual?.Parent as GraphicalUiElement;
+        if (parentGue?.EffectiveManagers != null)
+        {
+            CallLoadedRecursively(Visual!);
+        }
+    }
+
+    private void CallLoadedRecursively(GraphicalUiElement gue)
+    {
+        var frameworkElement = (gue as InteractiveGue)?.FormsControlAsObject as FrameworkElement;
+        frameworkElement?.Loaded?.Invoke(this, EventArgs.Empty);
+
+        foreach(var child in gue.Children)
+        {
+            if(child is GraphicalUiElement childGue)
+            {
+                CallLoadedRecursively(childGue);
+            }
+        }
+    }
 
 #if FRB
     void HandleEnabledChanged(IWindow window)

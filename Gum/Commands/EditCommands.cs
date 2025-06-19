@@ -20,264 +20,332 @@ using System.Windows.Forms;
 using GumCommon;
 using ToolsUtilities;
 
-namespace Gum.Commands
+namespace Gum.Commands;
+
+public class EditCommands
 {
-    public class EditCommands
+    private ISelectedState _selectedState;
+    private NameVerifier _nameVerifier;
+    private RenameLogic _renameLogic;
+    private UndoManager _undoManager;
+
+    public EditCommands()
     {
-        private ISelectedState _selectedState;
+        _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _nameVerifier = Locator.GetRequiredService<NameVerifier>();
+        _renameLogic = Locator.GetRequiredService<RenameLogic>();
+        _undoManager = Locator.GetRequiredService<UndoManager>();
 
-        public EditCommands()
+    }
+    #region State
+
+    public void AskToDeleteState(StateSave stateSave, IStateContainer stateContainer)
+    {
+        var deleteResponse = new DeleteResponse();
+        deleteResponse.ShouldDelete = true;
+        deleteResponse.ShouldShowMessage = false;
+
+        var behaviorNeedingState = GetBehaviorsNeedingState(stateSave);
+
+        if (behaviorNeedingState.Any())
         {
-            _selectedState = Locator.GetRequiredService<ISelectedState>();
+            deleteResponse.ShouldDelete = false;
+            deleteResponse.ShouldShowMessage = true;
+            string message =
+                $"The state {stateSave.Name} cannot be removed because it is needed by the following behavior(s):";
+
+            foreach (var behavior in behaviorNeedingState)
+            {
+                message += "\n" + behavior.Name;
+            }
+
+            deleteResponse.Message = message;
+
         }
-        #region State
 
-        public void AskToDeleteState(StateSave stateSave, IStateContainer stateContainer)
+        if (deleteResponse.ShouldDelete && stateSave.ParentContainer?.DefaultState == stateSave)
         {
-            var deleteResponse = new DeleteResponse();
-            deleteResponse.ShouldDelete = true;
+            string message =
+                "This state cannot be removed because it is the default state.";
+
+            deleteResponse.ShouldDelete = false;
+            deleteResponse.Message = message;
             deleteResponse.ShouldShowMessage = false;
-
-            var behaviorNeedingState = GetBehaviorsNeedingState(stateSave);
-
-            if (behaviorNeedingState.Any())
-            {
-                deleteResponse.ShouldDelete = false;
-                deleteResponse.ShouldShowMessage = true;
-                string message =
-                    $"The state {stateSave.Name} cannot be removed because it is needed by the following behavior(s):";
-
-                foreach (var behavior in behaviorNeedingState)
-                {
-                    message += "\n" + behavior.Name;
-                }
-
-                deleteResponse.Message = message;
-
-            }
-
-            if (deleteResponse.ShouldDelete && stateSave.ParentContainer?.DefaultState == stateSave)
-            {
-                string message =
-                    "This state cannot be removed because it is the default state.";
-
-                deleteResponse.ShouldDelete = false;
-                deleteResponse.Message = message;
-                deleteResponse.ShouldShowMessage = false;
-            }
-
-            if (deleteResponse.ShouldDelete)
-            {
-                deleteResponse = PluginManager.Self.GetDeleteStateResponse(stateSave, stateContainer);
-            }
-
-
-            if (deleteResponse.ShouldDelete == false)
-            {
-                if (deleteResponse.ShouldShowMessage)
-                {
-                    GumCommands.Self.GuiCommands.ShowMessage(deleteResponse.Message);
-                }
-            }
-            else
-            {
-                var response = MessageBox.Show($"Are you sure you want to delete the state {stateSave.Name}?", "Delete state?", MessageBoxButtons.YesNo);
-
-                if (response == DialogResult.Yes)
-                {
-                    DeleteLogic.Self.Remove(stateSave);
-                }
-            }
         }
 
-        internal void AskToRenameState(StateSave stateSave, IStateContainer stateContainer)
+        if (deleteResponse.ShouldDelete)
         {
-            var behaviorNeedingState = GetBehaviorsNeedingState(stateSave);
-
-            if (behaviorNeedingState.Any())
-            {
-                string message =
-                    $"The state {stateSave.Name} cannot be renamed because it is needed by the following behavior(s):";
-
-                foreach (var behavior in behaviorNeedingState)
-                {
-                    message += "\n" + behavior.Name;
-                }
-
-                MessageBox.Show(message);
-            }
-            else
-            {
-                TextInputWindow tiw = new TextInputWindow();
-                tiw.Message = "Enter new state name";
-                tiw.Title = "Rename state";
-                tiw.Result = _selectedState.SelectedStateSave.Name;
-                var result = tiw.ShowDialog();
-
-                if (result == DialogResult.OK)
-                {
-                    var category = stateContainer.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
-                    RenameLogic.RenameState(stateSave, category, tiw.Result);
-                }
-            }
+            deleteResponse = PluginManager.Self.GetDeleteStateResponse(stateSave, stateContainer);
         }
 
-        public void MoveToCategory(string categoryNameToMoveTo, StateSave stateToMove, IStateContainer stateContainer)
+
+        if (deleteResponse.ShouldDelete == false)
         {
-            var newCategory = stateContainer.Categories
-                .FirstOrDefault(item => item.Name == categoryNameToMoveTo);
-
-            var oldCategory = stateContainer.Categories
-                .FirstOrDefault(item => item.States.Contains(stateToMove));
-            ////////////////////Early Out //////////////////////
-            if (stateToMove == null || categoryNameToMoveTo == null || oldCategory == null)
+            if (deleteResponse.ShouldShowMessage)
             {
-                return;
+                GumCommands.Self.GuiCommands.ShowMessage(deleteResponse.Message);
             }
-            var behaviorsNeedingState = GetBehaviorsNeedingState(stateToMove);
-            if (behaviorsNeedingState.Count > 0)
+        }
+        else
+        {
+            var response = MessageBox.Show($"Are you sure you want to delete the state {stateSave.Name}?", "Delete state?", MessageBoxButtons.YesNo);
+
+            if (response == DialogResult.Yes)
             {
-                string message =
-                    $"The state {stateToMove.Name} cannot be moved to a different category because it is needed by the following behavior(s):";
+                DeleteLogic.Self.Remove(stateSave);
+            }
+        }
+    }
 
-                foreach (var behaviorNeedingState in behaviorsNeedingState)
-                {
-                    message += "\n" + behaviorNeedingState.Name;
-                }
+    internal void AskToRenameState(StateSave stateSave, IStateContainer stateContainer)
+    {
+        var behaviorNeedingState = GetBehaviorsNeedingState(stateSave);
 
-                MessageBox.Show(message);
+        if (behaviorNeedingState.Any())
+        {
+            string message =
+                $"The state {stateSave.Name} cannot be renamed because it is needed by the following behavior(s):";
+
+            foreach (var behavior in behaviorNeedingState)
+            {
+                message += "\n" + behavior.Name;
             }
 
-            //////////////////End Early Out /////////////////////
+            MessageBox.Show(message);
+        }
+        else
+        {
+            TextInputWindow tiw = new TextInputWindow();
+            tiw.Message = "Enter new state name";
+            tiw.Title = "Rename state";
+            tiw.Result = _selectedState.SelectedStateSave.Name;
+            var result = tiw.ShowDialog();
 
-
-
-
-                oldCategory.States.Remove(stateToMove);
-            newCategory.States.Add(stateToMove);
-
-            GumCommands.Self.GuiCommands.RefreshStateTreeView();
-            _selectedState.SelectedStateSave = stateToMove;
-
-            // make sure to propagate all variables in this new state and
-            // also move all existing variables to the new state (use the first)
-            if (stateContainer is ElementSave element)
+            if (result == DialogResult.OK)
             {
-                foreach (var variable in stateToMove.Variables)
+                var category = stateContainer.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
+
+                using var undoLock = _undoManager.RequestLock();
+                _renameLogic.RenameState(stateSave, category, tiw.Result);
+            }
+        }
+    }
+
+    public void MoveToCategory(string categoryNameToMoveTo, StateSave stateToMove, IStateContainer stateContainer)
+    {
+        var newCategory = stateContainer.Categories
+            .FirstOrDefault(item => item.Name == categoryNameToMoveTo);
+
+        var oldCategory = stateContainer.Categories
+            .FirstOrDefault(item => item.States.Contains(stateToMove));
+        ////////////////////Early Out //////////////////////
+        if (stateToMove == null || categoryNameToMoveTo == null || oldCategory == null)
+        {
+            return;
+        }
+        var behaviorsNeedingState = GetBehaviorsNeedingState(stateToMove);
+        if (behaviorsNeedingState.Count > 0)
+        {
+            string message =
+                $"The state {stateToMove.Name} cannot be moved to a different category because it is needed by the following behavior(s):";
+
+            foreach (var behaviorNeedingState in behaviorsNeedingState)
+            {
+                message += "\n" + behaviorNeedingState.Name;
+            }
+
+            MessageBox.Show(message);
+        }
+
+        //////////////////End Early Out /////////////////////
+
+
+
+
+            oldCategory.States.Remove(stateToMove);
+        newCategory.States.Add(stateToMove);
+
+        GumCommands.Self.GuiCommands.RefreshStateTreeView();
+        _selectedState.SelectedStateSave = stateToMove;
+
+        // make sure to propagate all variables in this new state and
+        // also move all existing variables to the new state (use the first)
+        if (stateContainer is ElementSave element)
+        {
+            foreach (var variable in stateToMove.Variables)
+            {
+                VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(variable.Name,
+                    element, _selectedState.SelectedStateCategorySave);
+            }
+
+
+            var firstState = newCategory.States.FirstOrDefault();
+            if (firstState != stateToMove)
+            {
+                foreach (var variable in firstState.Variables)
                 {
                     VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(variable.Name,
                         element, _selectedState.SelectedStateCategorySave);
                 }
+            }
+        }
+
+        PluginManager.Self.StateMovedToCategory(stateToMove, newCategory, oldCategory);
+
+        if (stateContainer is BehaviorSave behavior)
+        {
+            GumCommands.Self.FileCommands.TryAutoSaveBehavior(behavior);
+
+        }
+        else if (stateContainer is ElementSave asElement)
+        {
+            GumCommands.Self.FileCommands.TryAutoSaveElement(asElement);
+        }
+    }
 
 
-                var firstState = newCategory.States.FirstOrDefault();
-                if (firstState != stateToMove)
+    #endregion
+
+    #region Category
+
+    public void RemoveStateCategory(StateSaveCategory category, IStateContainer stateCategoryListContainer)
+    {
+        DeleteLogic.Self.RemoveStateCategory(category, stateCategoryListContainer);
+    }
+
+
+    internal void AskToRenameStateCategory(StateSaveCategory category, ElementSave elementSave)
+    {
+        using var undoLock = _undoManager.RequestLock();
+        _renameLogic.AskToRenameStateCategory(category, elementSave);
+    }
+
+
+    #endregion
+
+    #region Behavior
+
+    private List<BehaviorSave> GetBehaviorsNeedingState(StateSave stateSave)
+    {
+        List<BehaviorSave> toReturn = new List<BehaviorSave>();
+        // Try to get the parent container from the state...
+        var element = stateSave.ParentContainer;
+        if (element == null)
+        {
+            // ... if we can't find it for some reason, assume it's the current element (is this bad?)
+            element = _selectedState.SelectedElement;
+        }
+
+        var componentSave = element as ComponentSave;
+
+        if (element != null)
+        {
+            // uncategorized states can't come from behaviors:
+            bool isUncategorized = element.States.Contains(stateSave);
+            StateSaveCategory elementCategory = null;
+
+            if (!isUncategorized)
+            {
+                elementCategory = element.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
+            }
+
+            if (elementCategory != null)
+            {
+                var allBehaviorsNeedingCategory = DeleteLogic.Self.GetBehaviorsNeedingCategory(elementCategory, componentSave);
+
+                foreach (var behavior in allBehaviorsNeedingCategory)
                 {
-                    foreach (var variable in firstState.Variables)
+                    var behaviorCategory = behavior.Categories.First(item => item.Name == elementCategory.Name);
+
+                    bool isStateReferencedInCategory = behaviorCategory.States.Any(item => item.Name == stateSave.Name);
+
+                    if (isStateReferencedInCategory)
                     {
-                        VariableInCategoryPropagationLogic.Self.PropagateVariablesInCategory(variable.Name,
-                            element, _selectedState.SelectedStateCategorySave);
+                        toReturn.Add(behavior);
                     }
                 }
             }
+        }
 
-            PluginManager.Self.StateMovedToCategory(stateToMove, newCategory, oldCategory);
+        return toReturn;
+    }
 
-            if (stateContainer is BehaviorSave behavior)
+    public void RemoveBehaviorVariable(BehaviorSave container, VariableSave variable)
+    {
+        container.RequiredVariables.Variables.Remove(variable);
+        GumCommands.Self.FileCommands.TryAutoSaveBehavior(container);
+        GumCommands.Self.GuiCommands.RefreshVariables();
+    }
+
+    public void AddBehavior()
+    {
+        if (GumState.Self.ProjectState.NeedsToSaveProject)
+        {
+            MessageBox.Show("You must first save the project before adding a new component");
+            return;
+        }
+
+        TextInputWindow tiw = new TextInputWindow();
+        tiw.Message = "Enter new behavior name:";
+        tiw.Title = "Add behavior";
+
+        if (tiw.ShowDialog() == DialogResult.OK)
+        {
+            string name = tiw.Result;
+
+            string whyNotValid;
+
+            _nameVerifier.IsBehaviorNameValid(name, null, out whyNotValid);
+
+            if (!string.IsNullOrEmpty(whyNotValid))
             {
+                MessageBox.Show(whyNotValid);
+            }
+            else
+            {
+                var behavior = new BehaviorSave();
+                behavior.Name = name;
+
+                ProjectManager.Self.GumProjectSave.BehaviorReferences.Add(new BehaviorReference { Name = name });
+                ProjectManager.Self.GumProjectSave.BehaviorReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
+                ProjectManager.Self.GumProjectSave.Behaviors.Add(behavior);
+                ProjectManager.Self.GumProjectSave.Behaviors.Sort((first, second) => first.Name.CompareTo(second.Name));
+
+                PluginManager.Self.BehaviorCreated(behavior);
+
+                _selectedState.SelectedBehavior = behavior;
+
+                GumCommands.Self.FileCommands.TryAutoSaveProject();
                 GumCommands.Self.FileCommands.TryAutoSaveBehavior(behavior);
-
-            }
-            else if (stateContainer is ElementSave asElement)
-            {
-                GumCommands.Self.FileCommands.TryAutoSaveElement(asElement);
             }
         }
+    }
 
+    #endregion
 
-        #endregion
+    #region Element
 
-        #region Category
+    public void DuplicateSelectedElement()
+    {
+        var element = _selectedState.SelectedElement;
 
-        public void RemoveStateCategory(StateSaveCategory category, IStateContainer stateCategoryListContainer)
+        if (element == null)
         {
-            DeleteLogic.Self.RemoveStateCategory(category, stateCategoryListContainer);
+            MessageBox.Show("You must first save the project before adding a new component");
         }
-
-
-        internal void AskToRenameStateCategory(StateSaveCategory category, ElementSave elementSave)
+        else if (element is StandardElementSave)
         {
-            RenameLogic.AskToRenameStateCategory(category, elementSave);
+            MessageBox.Show("Standard Elements cannot be duplicated");
         }
-
-
-        #endregion
-
-        #region Behavior
-
-        private List<BehaviorSave> GetBehaviorsNeedingState(StateSave stateSave)
+        else if (element is ScreenSave)
         {
-            List<BehaviorSave> toReturn = new List<BehaviorSave>();
-            // Try to get the parent container from the state...
-            var element = stateSave.ParentContainer;
-            if (element == null)
-            {
-                // ... if we can't find it for some reason, assume it's the current element (is this bad?)
-                element = _selectedState.SelectedElement;
-            }
-
-            var componentSave = element as ComponentSave;
-
-            if (element != null)
-            {
-                // uncategorized states can't come from behaviors:
-                bool isUncategorized = element.States.Contains(stateSave);
-                StateSaveCategory elementCategory = null;
-
-                if (!isUncategorized)
-                {
-                    elementCategory = element.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
-                }
-
-                if (elementCategory != null)
-                {
-                    var allBehaviorsNeedingCategory = DeleteLogic.Self.GetBehaviorsNeedingCategory(elementCategory, componentSave);
-
-                    foreach (var behavior in allBehaviorsNeedingCategory)
-                    {
-                        var behaviorCategory = behavior.Categories.First(item => item.Name == elementCategory.Name);
-
-                        bool isStateReferencedInCategory = behaviorCategory.States.Any(item => item.Name == stateSave.Name);
-
-                        if (isStateReferencedInCategory)
-                        {
-                            toReturn.Add(behavior);
-                        }
-                    }
-                }
-            }
-
-            return toReturn;
-        }
-
-        public void RemoveBehaviorVariable(BehaviorSave container, VariableSave variable)
-        {
-            container.RequiredVariables.Variables.Remove(variable);
-            GumCommands.Self.FileCommands.TryAutoSaveBehavior(container);
-            GumCommands.Self.GuiCommands.RefreshVariables();
-        }
-
-        public void AddBehavior()
-        {
-            if (GumState.Self.ProjectState.NeedsToSaveProject)
-            {
-                MessageBox.Show("You must first save the project before adding a new component");
-                return;
-            }
-
             TextInputWindow tiw = new TextInputWindow();
-            tiw.Message = "Enter new behavior name:";
-            tiw.Title = "Add behavior";
+            tiw.Message = "Enter new Screen name:";
+            tiw.Title = "Duplicate Screen";
+
+            // todo - handle folders... do we support folders?
+
+            tiw.Result = element.Name + "Copy";
 
             if (tiw.ShowDialog() == DialogResult.OK)
             {
@@ -285,272 +353,234 @@ namespace Gum.Commands
 
                 string whyNotValid;
 
-                NameVerifier.Self.IsBehaviorNameValid(name, null, out whyNotValid);
-
-                if (!string.IsNullOrEmpty(whyNotValid))
+                string strippedName = tiw.Result;
+                string prefix = null;
+                if (tiw.Result.Contains("/"))
                 {
-                    MessageBox.Show(whyNotValid);
+                    var indexOfSlash = tiw.Result.LastIndexOf("/");
+                    strippedName = tiw.Result.Substring(indexOfSlash + 1);
+                    prefix = tiw.Result.Substring(0, indexOfSlash + 1);
+                }
+
+                _nameVerifier.IsElementNameValid(strippedName, null, null, out whyNotValid);
+
+                if (string.IsNullOrEmpty(whyNotValid))
+                {
+                    var newScreen = (element as ScreenSave).Clone();
+                    newScreen.Name = prefix + strippedName;
+                    newScreen.Initialize(null);
+                    StandardElementsManagerGumTool.Self.FixCustomTypeConverters(newScreen);
+
+                    ProjectCommands.Self.AddScreen(newScreen);
+
+                    PluginManager.Self.ElementDuplicate(element, newScreen);
                 }
                 else
                 {
-                    var behavior = new BehaviorSave();
-                    behavior.Name = name;
+                    MessageBox.Show($"Invalid name for new screen: {whyNotValid}");
+                }
+            }
+        }
+        else if (element is ComponentSave)
+        {
+            TextInputWindow tiw = new TextInputWindow();
+            tiw.Message = "Enter new Component name:";
+            tiw.Title = "Duplicate Component";
 
-                    ProjectManager.Self.GumProjectSave.BehaviorReferences.Add(new BehaviorReference { Name = name });
-                    ProjectManager.Self.GumProjectSave.BehaviorReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
-                    ProjectManager.Self.GumProjectSave.Behaviors.Add(behavior);
-                    ProjectManager.Self.GumProjectSave.Behaviors.Sort((first, second) => first.Name.CompareTo(second.Name));
+            FilePath filePath = element.Name;
+            var nameWithoutPath = filePath.FileNameNoPath;
 
-                    PluginManager.Self.BehaviorCreated(behavior);
+            string folder = null;
+            if (element.Name.Contains("/"))
+            {
+                folder = element.Name.Substring(0, element.Name.LastIndexOf('/'));
+            }
 
-                    _selectedState.SelectedBehavior = behavior;
+            tiw.Result = nameWithoutPath + "Copy";
 
-                    GumCommands.Self.FileCommands.TryAutoSaveProject();
-                    GumCommands.Self.FileCommands.TryAutoSaveBehavior(behavior);
+            if (tiw.ShowDialog() == DialogResult.OK)
+            {
+                string name = tiw.Result;
+
+                string whyNotValid;
+                _nameVerifier.IsElementNameValid(tiw.Result, folder, null, out whyNotValid);
+
+                if (string.IsNullOrEmpty(whyNotValid))
+                {
+                    var newComponent = (element as ComponentSave).Clone();
+                    if (!string.IsNullOrEmpty(folder))
+                    {
+                        folder += "/";
+                    }
+                    newComponent.Name = folder + name;
+                    newComponent.Initialize(null);
+                    StandardElementsManagerGumTool.Self.FixCustomTypeConverters(newComponent);
+
+                    ProjectCommands.Self.AddComponent(newComponent);
+
+                    PluginManager.Self.ElementDuplicate(element, newComponent);
+                }
+                else
+                {
+                    MessageBox.Show($"Invalid name for new component: {whyNotValid}");
                 }
             }
         }
 
-        #endregion
+    }
 
-        #region Element
-
-        public void DuplicateSelectedElement()
+    public void ShowCreateComponentFromInstancesDialog()
+    {
+        var element = _selectedState.SelectedElement;
+        var instances = _selectedState.SelectedInstances.ToList();
+        if (instances == null || instances.Count == 0 || element == null)
         {
-            var element = _selectedState.SelectedElement;
-
-            if (element == null)
-            {
-                MessageBox.Show("You must first save the project before adding a new component");
-            }
-            else if (element is StandardElementSave)
-            {
-                MessageBox.Show("Standard Elements cannot be duplicated");
-            }
-            else if (element is ScreenSave)
-            {
-                TextInputWindow tiw = new TextInputWindow();
-                tiw.Message = "Enter new Screen name:";
-                tiw.Title = "Duplicate Screen";
-
-                // todo - handle folders... do we support folders?
-
-                tiw.Result = element.Name + "Copy";
-
-                if (tiw.ShowDialog() == DialogResult.OK)
-                {
-                    string name = tiw.Result;
-
-                    string whyNotValid;
-
-                    string strippedName = tiw.Result;
-                    string prefix = null;
-                    if (tiw.Result.Contains("/"))
-                    {
-                        var indexOfSlash = tiw.Result.LastIndexOf("/");
-                        strippedName = tiw.Result.Substring(indexOfSlash + 1);
-                        prefix = tiw.Result.Substring(0, indexOfSlash + 1);
-                    }
-
-                    NameVerifier.Self.IsElementNameValid(strippedName, null, null, out whyNotValid);
-
-                    if (string.IsNullOrEmpty(whyNotValid))
-                    {
-                        var newScreen = (element as ScreenSave).Clone();
-                        newScreen.Name = prefix + strippedName;
-                        newScreen.Initialize(null);
-                        StandardElementsManagerGumTool.Self.FixCustomTypeConverters(newScreen);
-
-                        ProjectCommands.Self.AddScreen(newScreen);
-
-                        PluginManager.Self.ElementDuplicate(element, newScreen);
-                    }
-                    else
-                    {
-                        MessageBox.Show($"Invalid name for new screen: {whyNotValid}");
-                    }
-                }
-            }
-            else if (element is ComponentSave)
-            {
-                TextInputWindow tiw = new TextInputWindow();
-                tiw.Message = "Enter new Component name:";
-                tiw.Title = "Duplicate Component";
-
-                FilePath filePath = element.Name;
-                var nameWithoutPath = filePath.FileNameNoPath;
-
-                string folder = null;
-                if (element.Name.Contains("/"))
-                {
-                    folder = element.Name.Substring(0, element.Name.LastIndexOf('/'));
-                }
-
-                tiw.Result = nameWithoutPath + "Copy";
-
-                if (tiw.ShowDialog() == DialogResult.OK)
-                {
-                    string name = tiw.Result;
-
-                    string whyNotValid;
-                    NameVerifier.Self.IsElementNameValid(tiw.Result, folder, null, out whyNotValid);
-
-                    if (string.IsNullOrEmpty(whyNotValid))
-                    {
-                        var newComponent = (element as ComponentSave).Clone();
-                        if (!string.IsNullOrEmpty(folder))
-                        {
-                            folder += "/";
-                        }
-                        newComponent.Name = folder + name;
-                        newComponent.Initialize(null);
-                        StandardElementsManagerGumTool.Self.FixCustomTypeConverters(newComponent);
-
-                        ProjectCommands.Self.AddComponent(newComponent);
-
-                        PluginManager.Self.ElementDuplicate(element, newComponent);
-                    }
-                    else
-                    {
-                        MessageBox.Show($"Invalid name for new component: {whyNotValid}");
-                    }
-                }
-            }
-
+            MessageBox.Show("You must first save the project before adding a new component");
         }
-
-        public void ShowCreateComponentFromInstancesDialog()
+        else if (instances is List<InstanceSave>)
         {
-            var element = _selectedState.SelectedElement;
-            var instances = _selectedState.SelectedInstances.ToList();
-            if (instances == null || instances.Count == 0 || element == null)
+            CreateComponentWindow createComponentWindow = new CreateComponentWindow();
+
+            FilePath filePath = element.Name;
+            var nameWithoutPath = filePath.FileNameNoPath;
+
+            createComponentWindow.Result = $"{nameWithoutPath}Component";
+            //tiwcw.Option = $"Replace {nameWithoutPath} and all children with an instance of the new component";
+
+            Nullable<bool> result = createComponentWindow.ShowDialog();
+
+            if (result == true)
             {
-                MessageBox.Show("You must first save the project before adding a new component");
-            }
-            else if (instances is List<InstanceSave>)
-            {
-                CreateComponentWindow createComponentWindow = new CreateComponentWindow();
+                string name = createComponentWindow.Result;
+                //bool replace = tiwcw.Checked
 
-                FilePath filePath = element.Name;
-                var nameWithoutPath = filePath.FileNameNoPath;
+                string whyNotValid;
+                _nameVerifier.IsElementNameValid(createComponentWindow.Result, "", null, out whyNotValid);
 
-                createComponentWindow.Result = $"{nameWithoutPath}Component";
-                //tiwcw.Option = $"Replace {nameWithoutPath} and all children with an instance of the new component";
-
-                Nullable<bool> result = createComponentWindow.ShowDialog();
-
-                if (result == true)
+                if (string.IsNullOrEmpty(whyNotValid))
                 {
-                    string name = createComponentWindow.Result;
-                    //bool replace = tiwcw.Checked
-
-                    string whyNotValid;
-                    NameVerifier.Self.IsElementNameValid(createComponentWindow.Result, "", null, out whyNotValid);
-
-                    if (string.IsNullOrEmpty(whyNotValid))
+                    ComponentSave componentSave = new ComponentSave();
+                    componentSave.BaseType = "Container";
+                    string folder = null;
+                    if (!string.IsNullOrEmpty(folder))
                     {
-                        ComponentSave componentSave = new ComponentSave();
-                        componentSave.BaseType = "Container";
-                        string folder = null;
-                        if (!string.IsNullOrEmpty(folder))
-                        {
-                            folder += "/";
-                        }
-                        componentSave.Name = folder + name;
-
-                        StateSave defaultState;
-
-                        // Clone instances
-                        foreach (var instance in instances)
-                        {
-                            // Clone will fail if we are cloning an InstanceSave
-                            // in a behavior because its type is BehaviorInstanceSave.
-                            // Therefore, we will just manually create a copy:
-                            //var instanceSave = instance.Clone();
-                            //var instanceSave = instance.Clone();
-                            var instanceSave = new InstanceSave();
-                            instanceSave.Name = instance.Name;
-                            instanceSave.BaseType = instance.BaseType;
-                            instanceSave.DefinedByBase = instance.DefinedByBase;
-                            instanceSave.Locked = instance.Locked;
-                            instanceSave.ParentContainer = componentSave;
-
-                            componentSave.Instances.Add(instanceSave);
-                        }
-
-                        // Clone states
-                        foreach (var state in element.States)
-                        {
-                            if (element.DefaultState == state)
-                            {
-                                defaultState = state.Clone();
-
-                                componentSave.Initialize(defaultState);
-                                continue;
-                            }
-                            componentSave.States.Add(state.Clone());
-                        }
-
-                        StandardElementsManagerGumTool.Self.FixCustomTypeConverters(componentSave);
-                        ProjectCommands.Self.AddComponent(componentSave);
-
+                        folder += "/";
                     }
-                    else
+                    componentSave.Name = folder + name;
+
+                    StateSave defaultState;
+
+                    // Clone instances
+                    foreach (var instance in instances)
                     {
-                        MessageBox.Show($"Invalid name for new component: {whyNotValid}");
-                        ShowCreateComponentFromInstancesDialog();
+                        // Clone will fail if we are cloning an InstanceSave
+                        // in a behavior because its type is BehaviorInstanceSave.
+                        // Therefore, we will just manually create a copy:
+                        //var instanceSave = instance.Clone();
+                        //var instanceSave = instance.Clone();
+                        var instanceSave = new InstanceSave();
+                        instanceSave.Name = instance.Name;
+                        instanceSave.BaseType = instance.BaseType;
+                        instanceSave.DefinedByBase = instance.DefinedByBase;
+                        instanceSave.Locked = instance.Locked;
+                        instanceSave.ParentContainer = componentSave;
+
+                        componentSave.Instances.Add(instanceSave);
                     }
+
+                    // Clone states
+                    foreach (var state in element.States)
+                    {
+                        if (element.DefaultState == state)
+                        {
+                            defaultState = state.Clone();
+
+                            componentSave.Initialize(defaultState);
+                            continue;
+                        }
+                        componentSave.States.Add(state.Clone());
+                    }
+
+                    StandardElementsManagerGumTool.Self.FixCustomTypeConverters(componentSave);
+                    ProjectCommands.Self.AddComponent(componentSave);
+
+                }
+                else
+                {
+                    MessageBox.Show($"Invalid name for new component: {whyNotValid}");
+                    ShowCreateComponentFromInstancesDialog();
                 }
             }
         }
+    }
 
-        public void DisplayReferencesTo(ElementSave element)
+    public void DisplayReferencesTo(ElementSave element)
+    {
+
+        var references = ObjectFinder.Self.GetElementReferencesToThis(element);
+
+        if (references.Count > 0)
         {
+            //var stringBuilder = new StringBuilder();
+            //stringBuilder.AppendLine($"The following objects reference {element}");
+            //foreach(var reference in references)
+            //{
+            //    stringBuilder.AppendLine(reference.ToString());
+            //}
 
-            var references = ObjectFinder.Self.GetElementReferencesToThis(element);
+            //GumCommands.Self.GuiCommands.ShowMessage(stringBuilder.ToString());
 
-            if (references.Count > 0)
+            ListBoxMessageBox lbmb = new ListBoxMessageBox();
+            lbmb.RequiresSelection = true;
+            lbmb.Message = $"The following objects reference {element}";
+            lbmb.Title = "References";
+            lbmb.ItemSelected += (not, used) =>
             {
-                //var stringBuilder = new StringBuilder();
-                //stringBuilder.AppendLine($"The following objects reference {element}");
-                //foreach(var reference in references)
-                //{
-                //    stringBuilder.AppendLine(reference.ToString());
-                //}
+                var reference = lbmb.SelectedItem as TypedElementReference;
 
-                //GumCommands.Self.GuiCommands.ShowMessage(stringBuilder.ToString());
+                var selectedItem = reference.ReferencingObject;
 
-                ListBoxMessageBox lbmb = new ListBoxMessageBox();
-                lbmb.RequiresSelection = true;
-                lbmb.Message = $"The following objects reference {element}";
-                lbmb.Title = "References";
-                lbmb.ItemSelected += (not, used) =>
+                if (selectedItem is InstanceSave instance)
                 {
-                    var reference = lbmb.SelectedItem as TypedElementReference;
-
-                    var selectedItem = reference.ReferencingObject;
-
-                    if (selectedItem is InstanceSave instance)
+                    _selectedState.SelectedInstance = instance;
+                }
+                else if (selectedItem is ElementSave selectedElement)
+                {
+                    _selectedState.SelectedElement = selectedElement;
+                }
+                else if (selectedItem is VariableSave variable)
+                {
+                    ElementSave foundElement = ObjectFinder.Self.GumProjectSave.Screens
+                        .FirstOrDefault(item => item.DefaultState.Variables.Contains(variable));
+                    if (foundElement == null)
                     {
-                        _selectedState.SelectedInstance = instance;
-                    }
-                    else if (selectedItem is ElementSave selectedElement)
-                    {
-                        _selectedState.SelectedElement = selectedElement;
-                    }
-                    else if (selectedItem is VariableSave variable)
-                    {
-                        ElementSave foundElement = ObjectFinder.Self.GumProjectSave.Screens
+                        foundElement = ObjectFinder.Self.GumProjectSave.Components
                             .FirstOrDefault(item => item.DefaultState.Variables.Contains(variable));
-                        if (foundElement == null)
+                    }
+                    if (foundElement != null)
+                    {
+                        // what's the instance?
+                        var instanceWithVariable = foundElement.GetInstance(variable.SourceObject);
+
+                        if (instanceWithVariable != null)
                         {
-                            foundElement = ObjectFinder.Self.GumProjectSave.Components
-                                .FirstOrDefault(item => item.DefaultState.Variables.Contains(variable));
+                            _selectedState.SelectedInstance = instanceWithVariable;
                         }
-                        if (foundElement != null)
+                    }
+                }
+                else if (selectedItem is VariableListSave variableListSave)
+                {
+                    var foundElement = reference.OwnerOfReferencingObject;
+
+                    if (foundElement != null)
+                    {
+                        if (string.IsNullOrEmpty(variableListSave.SourceObject))
                         {
-                            // what's the instance?
-                            var instanceWithVariable = foundElement.GetInstance(variable.SourceObject);
+                            _selectedState.SelectedElement = foundElement;
+                        }
+                        else
+                        {
+                            var instanceWithVariable = foundElement.GetInstance(variableListSave.SourceObject);
 
                             if (instanceWithVariable != null)
                             {
@@ -558,47 +588,26 @@ namespace Gum.Commands
                             }
                         }
                     }
-                    else if (selectedItem is VariableListSave variableListSave)
-                    {
-                        var foundElement = reference.OwnerOfReferencingObject;
-
-                        if (foundElement != null)
-                        {
-                            if (string.IsNullOrEmpty(variableListSave.SourceObject))
-                            {
-                                _selectedState.SelectedElement = foundElement;
-                            }
-                            else
-                            {
-                                var instanceWithVariable = foundElement.GetInstance(variableListSave.SourceObject);
-
-                                if (instanceWithVariable != null)
-                                {
-                                    _selectedState.SelectedInstance = instanceWithVariable;
-                                }
-                            }
-                        }
-                    }
-                };
-                foreach (var reference in references)
-                {
-                    lbmb.Items.Add(reference);
                 }
-                lbmb.HideCancelNoDialog();
-                lbmb.Show();
-
-            }
-            else
+            };
+            foreach (var reference in references)
             {
-                GumCommands.Self.GuiCommands.ShowMessage($"{element} is not referenced by any other Screen/Component");
+                lbmb.Items.Add(reference);
             }
+            lbmb.HideCancelNoDialog();
+            lbmb.Show();
+
         }
-
-        #endregion
-
-        public void DeleteSelection()
+        else
         {
-            DeleteLogic.Self.HandleDeleteCommand();
+            GumCommands.Self.GuiCommands.ShowMessage($"{element} is not referenced by any other Screen/Component");
         }
+    }
+
+    #endregion
+
+    public void DeleteSelection()
+    {
+        DeleteLogic.Self.HandleDeleteCommand();
     }
 }

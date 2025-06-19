@@ -821,7 +821,7 @@ public class Sprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoordinat
 
     #endregion
 
-    void IRenderableIpso.SetParentDirect(IRenderableIpso parent)
+    void IRenderableIpso.SetParentDirect(IRenderableIpso? parent)
     {
         mParent = parent;
     }

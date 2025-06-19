@@ -30,6 +30,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls.Primitives;
 using System.Windows.Forms;
+using Gum.Undo;
 using GumCommon;
 using ToolsUtilities;
 
@@ -98,6 +99,7 @@ internal class MainEditorTabPlugin : InternalPlugin
     private readonly SinglePixelTextureService _singlePixelTextureService;
     private BackgroundSpriteService _backgroundSpriteService;
     private readonly ISelectedState _selectedState;
+    private readonly WireframeCommands _wireframeCommands;
     private DragDropManager _dragDropManager;
     WireframeControl _wireframeControl;
 
@@ -119,9 +121,10 @@ internal class MainEditorTabPlugin : InternalPlugin
         _guiCommands = Locator.GetRequiredService<GuiCommands>();
         _localizationManager = Locator.GetRequiredService<LocalizationManager>();
         _editingManager = new EditingManager();
-        _selectionManager = new SelectionManager(_selectedState, _editingManager);
+        UndoManager undoManager = Locator.GetRequiredService<UndoManager>();
+        _selectionManager = new SelectionManager(_selectedState, undoManager, _editingManager);
         _screenshotService = new ScreenshotService(_selectionManager);
-        _elementCommands = ElementCommands.Self;
+        _elementCommands = Locator.GetRequiredService<ElementCommands>();
         _singlePixelTextureService = new SinglePixelTextureService();
         _backgroundSpriteService = new BackgroundSpriteService();
         _dragDropManager = Locator.GetRequiredService<DragDropManager>();
@@ -336,17 +339,17 @@ internal class MainEditorTabPlugin : InternalPlugin
         if(name == nameof(WireframeCommands.AreHighlightsVisible))
         {
             _selectionManager.AreHighlightsVisible = 
-                GumCommands.Self.WireframeCommands.AreHighlightsVisible;
+                _wireframeCommands.AreHighlightsVisible;
         }
         else if(name == nameof(WireframeCommands.AreRulersVisible))
         {
             _wireframeControl.RulersVisible =
-                GumCommands.Self.WireframeCommands.AreRulersVisible;
+                _wireframeCommands.AreRulersVisible;
         }
         else if(name == nameof(WireframeCommands.AreCanvasBoundsVisible))
         {
             _wireframeControl.CanvasBoundsVisible =
-                GumCommands.Self.WireframeCommands.AreCanvasBoundsVisible;
+                _wireframeCommands.AreCanvasBoundsVisible;
         }
     }
 

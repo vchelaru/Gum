@@ -483,7 +483,7 @@ public class Text : IRenderableIpso, IVisible, IText
         return style;
     }
 
-    void IRenderableIpso.SetParentDirect(IRenderableIpso parent)
+    void IRenderableIpso.SetParentDirect(IRenderableIpso? parent)
     {
         mParent = parent;
     }
