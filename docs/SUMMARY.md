@@ -265,6 +265,7 @@
     * [Control Customization in Gum Tool](code/monogame/gum-forms/control-customization-in-gum-tool.md)
     * [Gamepad Support](code/monogame/gum-forms/gamepad-support.md)
     * [Keyboard Support](code/monogame/gum-forms/keyboard-support.md)
+    * [Layered Forms](code/monogame/gum-forms/layered-forms.md)
     * [Troubleshooting](code/monogame/gum-forms/troubleshooting.md)
   * [File Loading](code/monogame/file-loading.md)
   * [Profiling](code/monogame/profiling.md)
