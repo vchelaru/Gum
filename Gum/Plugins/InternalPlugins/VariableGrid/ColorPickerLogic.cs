@@ -2,6 +2,7 @@
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.PropertyGridHelpers;
+using Gum.Services;
 using Gum.ToolStates;
 using GumCommon;
 using System;
@@ -15,12 +16,15 @@ using WpfDataUi.DataTypes;
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
 public class ColorPickerLogic
 {
-
     private readonly ISelectedState _selectedState;
+    private readonly IExposeVariableService _exposeVariableService;
 
     public ColorPickerLogic()
     {
-        _selectedState = Locator.GetRequiredService<ISelectedState>();
+        _selectedState =
+            Locator.GetRequiredService<ISelectedState>();
+        _exposeVariableService =
+            Locator.GetRequiredService<IExposeVariableService>();
     }
 
     public void UpdateColorCategory(List<MemberCategory> categories, ElementSave element, InstanceSave instance)
@@ -108,7 +112,7 @@ public class ColorPickerLogic
             instanceMember.CustomGetEvent += (notUsed) => GetCurrentColor(redVariableName, greenVariableName, blueVariableName);
             instanceMember.CustomSetPropertyEvent += (sender, args) => SetCurrentColor(args, redVariableName, greenVariableName, blueVariableName);
 
-            instanceMember.ContextMenuEvents.Add("Hi Jeremy!", HandleExampleColorEvent);
+            TryAddExposeColorVariableMenuItem(instance, instanceMember);
 
             // so color updates
             redVariable.PropertyChanged += (not, used) => instanceMember.SimulateValueChanged();
@@ -121,10 +125,42 @@ public class ColorPickerLogic
         }
     }
 
-    private void HandleExampleColorEvent(object sender, RoutedEventArgs e)
+    private void TryAddExposeColorVariableMenuItem(InstanceSave instance, InstanceMember instanceMember)
     {
-        GumCommands.Self.GuiCommands.ShowMessage("You did it! You clicked on a menu item");
+        if (instance != null)
+        {
+            var element = _selectedState.SelectedElement;
+            var defaultState = element?.DefaultState;
+
+            var redVariable = defaultState?.GetVariableSave($"{instance.Name}.Red");
+            var greenVariable = defaultState?.GetVariableSave($"{instance.Name}.Green");
+            var blueVariable = defaultState?.GetVariableSave($"{instance.Name}.Blue");
+
+            var isAlreadyExposed =
+                !string.IsNullOrEmpty(redVariable?.ExposedAsName) ||
+                !string.IsNullOrEmpty(greenVariable?.ExposedAsName) ||
+                !string.IsNullOrEmpty(blueVariable?.ExposedAsName);
+
+            if (!isAlreadyExposed)
+            {
+                instanceMember.ContextMenuEvents.Add("Expose Color (Red, Green, Blue)", HandleExposeColorEvent);
+            }
+        }
     }
+
+    private void HandleExposeColorEvent(object sender, RoutedEventArgs e)
+    {
+        // expose 3 variables: Red, Green, and Blue
+        var instance = _selectedState.SelectedInstance;
+
+        _exposeVariableService.HandleExposeVariableClick(
+            instance, "Red");
+        _exposeVariableService.HandleExposeVariableClick(
+            instance, "Green");
+        _exposeVariableService.HandleExposeVariableClick(
+            instance, "Blue");
+    }
+
 
     private static void TryGetGreenBlueVariables(ElementSave element, InstanceSave instance, MemberCategory category, InstanceMember? variable, out string beforeRed, out string afterRed, out InstanceMember greenVariable, out InstanceMember blueVariable)
     {
