@@ -183,6 +183,12 @@ namespace WpfDataUi.DataTypes
             }
         }
 
+        /// <summary>
+        /// Controls whether this InstanceMember automatically adds a 
+        /// "Make Default" menu item. This defaults to true. Set this to
+        /// false if you do not want "Make Default" added automatically to
+        /// the right-click menu.
+        /// </summary>
         public bool SupportsMakeDefault { get; set; } = true;
 
         public bool IsWriteOnly 

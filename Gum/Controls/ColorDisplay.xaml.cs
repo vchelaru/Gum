@@ -91,6 +91,11 @@ namespace Gum.Controls.DataUi
                 }
             }
             this.Label.Content = InstanceMember.DisplayName;
+
+            this.RefreshContextMenu(MainGrid.ContextMenu);
+
+            // todo - eventually we may want a HintTextBlock. If so, add it here:
+
             SuppressSettingProperty = false;
         }
 
