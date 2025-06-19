@@ -325,6 +325,7 @@ namespace StateAnimationPlugin.Views
 
         private void HandleAnimationListKeyPressed(object sender, KeyEventArgs e)
         {
+            // todo - this should use the hotkey manager
             var alt = e.KeyboardDevice.Modifiers.HasFlag(ModifierKeys.Alt);
 
             if (this.ViewModel.SelectedAnimation != null && alt)

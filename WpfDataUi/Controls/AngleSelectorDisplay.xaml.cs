@@ -417,7 +417,10 @@ namespace WpfDataUi.Controls
 
         private void TextBox_LostFocus_1(object sender, RoutedEventArgs e)
         {
-            ApplyTextBoxText();
+            if(mTextBoxLogic.HasUserChangedAnything)
+            {
+                ApplyTextBoxText();
+            }
         }
 
         private void Grid_DragOver_1(object sender, DragEventArgs e)
