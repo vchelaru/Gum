@@ -1,13 +1,16 @@
-﻿using Gum.DataTypes;
+﻿using Gum.Commands;
+using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.PropertyGridHelpers;
 using Gum.Services;
 using Gum.ToolStates;
+using Gum.Undo;
 using GumCommon;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Management.Instrumentation;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -18,13 +21,17 @@ public class ColorPickerLogic
 {
     private readonly ISelectedState _selectedState;
     private readonly IExposeVariableService _exposeVariableService;
-
+    private readonly UndoManager _undoManager;
+    private readonly GuiCommands _guiCommands;
     public ColorPickerLogic()
     {
         _selectedState =
             Locator.GetRequiredService<ISelectedState>();
         _exposeVariableService =
             Locator.GetRequiredService<IExposeVariableService>();
+        _undoManager =
+            Locator.GetRequiredService<UndoManager>();
+        _guiCommands = Locator.GetRequiredService<GuiCommands>();
     }
 
     public void UpdateColorCategory(List<MemberCategory> categories, ElementSave element, InstanceSave instance)
@@ -71,10 +78,10 @@ public class ColorPickerLogic
         //var greenVariable = category.Members.FirstOrDefault(item => item.Name == greenVariableName);
         //var blueVariable = category.Members.FirstOrDefault(item => item.Name == blueVariableName);
         var redVariable = variable;
-        string beforeRed, afterRed;
+        string colorPrefix, colorSuffix;
         InstanceMember greenVariable, blueVariable;
 
-        TryGetGreenBlueVariables(element, instance, category, variable, out beforeRed, out afterRed, out greenVariable, out blueVariable);
+        TryGetGreenBlueVariables(element, instance, category, variable, out colorPrefix, out colorSuffix, out greenVariable, out blueVariable);
 
         if (greenVariable != null && blueVariable != null)
         {
@@ -104,13 +111,16 @@ public class ColorPickerLogic
 
 
 
-            InstanceMember instanceMember = new InstanceMember($"{beforeRed}Color{afterRed}", null);
+            InstanceMember instanceMember = new InstanceMember($"{colorPrefix}Color{colorSuffix}", null);
             instanceMember.PreferredDisplayer = typeof(Gum.Controls.DataUi.ColorDisplay);
 
             instanceMember.CustomGetTypeEvent += (arg) => typeof(System.Drawing.Color);
 
             instanceMember.CustomGetEvent += (notUsed) => GetCurrentColor(redVariableName, greenVariableName, blueVariableName);
             instanceMember.CustomSetPropertyEvent += (sender, args) => SetCurrentColor(args, redVariableName, greenVariableName, blueVariableName);
+            instanceMember.SupportsMakeDefault = false;
+
+            instanceMember.ContextMenuEvents.Add("Make Default", (_,_) => HandleMakeColorDefault(redVariableName, greenVariableName, blueVariableName));
 
             TryAddExposeColorVariableMenuItem(instance, instanceMember);
 
@@ -122,6 +132,61 @@ public class ColorPickerLogic
             var indexToInsertAfter = Math.Max(category.Members.IndexOf(redVariable), Math.Max(category.Members.IndexOf(greenVariable), category.Members.IndexOf(blueVariable)));
             category.Members.Insert(indexToInsertAfter + 1, instanceMember);
 
+        }
+    }
+
+    private void HandleMakeColorDefault(string redVariableName, string greenVariableName, string blueVariableName)
+    {
+        var state = _selectedState.SelectedElement?.DefaultState;
+
+        //////////////////////////Early Out//////////////////////////
+        if(state == null)
+        {
+            return;
+        }
+        ////////////////////////End Early Out////////////////////////
+
+        using var undoLock = _undoManager.RequestLock();
+
+        MakeDefault(state.GetVariableSave(redVariableName));
+        MakeDefault(state.GetVariableSave(greenVariableName));
+        MakeDefault(state.GetVariableSave(blueVariableName));
+
+        _guiCommands.RefreshVariables();
+
+        void MakeDefault(VariableSave variableSave)
+        {
+            var shouldPushValueChanged = true;
+
+            object oldValue = variableSave?.Value;
+
+            if(variableSave == null)
+            {
+                // do nothing, doesn't exist anyway
+                shouldPushValueChanged = false;
+            }
+            else if(!string.IsNullOrEmpty(variableSave.ExposedAsName))
+            {
+                // we can't delete the variable because if we did, we'd lose
+                // the exposed variable too, so we just have to make it not set
+                // the value:
+                variableSave.SetsValue = false;
+            }
+            else
+            {
+                state.Variables.Remove(variableSave);
+            }
+
+            if(shouldPushValueChanged)
+            {
+                SetVariableLogic.Self.PropertyValueChanged(
+                    variableSave.GetRootName(),
+                    oldValue,
+                    _selectedState.SelectedInstance, 
+                    state,
+                    recordUndo:false);
+
+            }
         }
     }
 
@@ -261,7 +326,10 @@ public class ColorPickerLogic
             }
         }
 
-        return System.Drawing.Color.FromArgb(red, green, blue);
+        return System.Drawing.Color.FromArgb(
+            System.Math.Max(0, System.Math.Min(255, red)),
+            System.Math.Max(0, System.Math.Min(255, green)),
+            System.Math.Max(0, System.Math.Min(255, blue)));
     }
 
     void SetCurrentColor(SetPropertyArgs args, string redVariableName, string greenVariableName, string blueVariableName)
@@ -320,8 +388,9 @@ public class ColorPickerLogic
 
         if (args.CommitType == SetPropertyCommitType.Full)
         {
-            GumCommands.Self.GuiCommands.RefreshVariables();
+            _guiCommands.RefreshVariables();
         }
     }
-
 }
+
+
