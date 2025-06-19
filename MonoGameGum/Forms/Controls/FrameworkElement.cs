@@ -546,7 +546,7 @@ public class FrameworkElement : INotifyPropertyChanged
     {
         if (child.Visual == null)
         {
-            throw new InvalidOperationException("The child must have a Visual before being added to the parent");
+            throw new InvalidOperationException($"The child of type {child.GetType()} must have a Visual before being added to the parent");
         }
         if (this.Visual == null)
         {

@@ -14,6 +14,10 @@ namespace FlatRedBall.Forms.Controls;
 namespace MonoGameGum.Forms.Controls;
 #endif
 
+/// <summary>
+/// Base control which can contain multiple children. This is most commonly used
+/// when instantiating a StackPanel.
+/// </summary>
 public class Panel : FrameworkElement
 {
     List<FrameworkElement> _children = new List<FrameworkElement>();
@@ -31,6 +35,9 @@ public class Panel : FrameworkElement
         get => _children;
     }
 
+    /// <summary>
+    /// Creates a new Panel using default visuals.
+    /// </summary>
     public Panel() :
         base(new InteractiveGue(new InvisibleRenderable()))
     {
@@ -41,6 +48,10 @@ public class Panel : FrameworkElement
 
     }
 
+    /// <summary>
+    /// Creates a new Panel using the specified visual.
+    /// </summary>
+    /// <param name="visual">The visual to use.</param>
     public Panel(InteractiveGue visual) : base(visual) { }
 
 
