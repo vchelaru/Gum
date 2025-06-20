@@ -27,7 +27,7 @@ public class Splitter : FrameworkElement
     {
         get;
         set;
-    } 
+    }
 
     ResizeBehavior EffectiveResizeBehavior
     {
@@ -41,23 +41,23 @@ public class Splitter : FrameworkElement
             var parentAsPanel = Visual.Parent as GraphicalUiElement;
             if (parentAsPanel != null)
             {
-                if(parentAsPanel.ChildrenLayout == Gum.Managers.ChildrenLayout.LeftToRightStack)
+                if (parentAsPanel.ChildrenLayout == Gum.Managers.ChildrenLayout.LeftToRightStack)
                 {
                     return Controls.ResizeBehavior.Columns;
                 }
-                else if(parentAsPanel.ChildrenLayout == Gum.Managers.ChildrenLayout.TopToBottomStack)
+                else if (parentAsPanel.ChildrenLayout == Gum.Managers.ChildrenLayout.TopToBottomStack)
                 {
                     return Controls.ResizeBehavior.Rows;
                 }
             }
 
-            if(Visual.WidthUnits == Gum.DataTypes.DimensionUnitType.RelativeToParent || 
+            if (Visual.WidthUnits == Gum.DataTypes.DimensionUnitType.RelativeToParent ||
                 Visual.WidthUnits == Gum.DataTypes.DimensionUnitType.PercentageOfParent)
             {
                 // it's stretched horizontally, so it is probably resizing rows:
                 return Controls.ResizeBehavior.Rows;
             }
-            if(Visual.HeightUnits == Gum.DataTypes.DimensionUnitType.RelativeToParent ||
+            if (Visual.HeightUnits == Gum.DataTypes.DimensionUnitType.RelativeToParent ||
                 Visual.HeightUnits == Gum.DataTypes.DimensionUnitType.PercentageOfParent)
             {
                 // it's stretched vertically, so it is probably resizing columns:
@@ -81,7 +81,7 @@ public class Splitter : FrameworkElement
 
     protected override void ReactToVisualChanged()
     {
-        if(Visual != null)
+        if (Visual != null)
         {
             Visual.RollOn += HandleRollOn;
             Visual.Push += HandleVisualPush;
@@ -153,74 +153,153 @@ public class Splitter : FrameworkElement
 
         var index = parent.Children.IndexOf(this.Visual);
 
-        GraphicalUiElement? visualBefore = null;
-        GraphicalUiElement? visualAfter = null;
+        GraphicalUiElement? firstVisual = null;
+        GraphicalUiElement? secondVisual = null;
 
         if (index > 0)
         {
-            visualBefore = parent.Children[index - 1] as GraphicalUiElement;
+            firstVisual = parent.Children[index - 1] as GraphicalUiElement;
         }
         if (index < parent.Children.Count - 1)
         {
-            visualAfter = parent.Children[index + 1] as GraphicalUiElement;
+            secondVisual = parent.Children[index + 1] as GraphicalUiElement;
         }
 
-        DimensionUnitType? unitsBefore;
-        DimensionUnitType? unitsAfter;
+        DimensionUnitType? firstUnits;
+        DimensionUnitType? secondUnits;
 
         var resizeBehavior = EffectiveResizeBehavior;
 
         if (resizeBehavior == Controls.ResizeBehavior.Rows)
         {
-            unitsBefore = visualBefore?.HeightUnits;
-            unitsAfter = visualAfter?.HeightUnits;
+            firstUnits = firstVisual?.HeightUnits;
+            secondUnits = secondVisual?.HeightUnits;
         }
         else
         {
-            unitsBefore = visualBefore?.WidthUnits;
-            unitsAfter = visualAfter?.WidthUnits;
+            firstUnits = firstVisual?.WidthUnits;
+            secondUnits = secondVisual?.WidthUnits;
         }
 
-        var areAllAbsolute =
-            unitsBefore != DimensionUnitType.PercentageOfParent &&
-            unitsBefore != DimensionUnitType.Ratio &&
-            unitsBefore != DimensionUnitType.PercentageOfSourceFile &&
-            unitsBefore != DimensionUnitType.PercentageOfOtherDimension &&
-            unitsBefore != DimensionUnitType.MaintainFileAspectRatio &&
+        var isFirstAbsolute =
+            firstUnits != DimensionUnitType.PercentageOfParent &&
+            firstUnits != DimensionUnitType.Ratio &&
+            firstUnits != DimensionUnitType.PercentageOfSourceFile &&
+            firstUnits != DimensionUnitType.PercentageOfOtherDimension &&
+            firstUnits != DimensionUnitType.MaintainFileAspectRatio;
 
-            unitsAfter != DimensionUnitType.PercentageOfParent &&
-            unitsAfter != DimensionUnitType.Ratio &&
-            unitsAfter != DimensionUnitType.PercentageOfSourceFile &&
-            unitsAfter != DimensionUnitType.PercentageOfOtherDimension &&
-            unitsAfter != DimensionUnitType.MaintainFileAspectRatio
-            ;
+        var isSecondAbsolute =
+            secondUnits != DimensionUnitType.PercentageOfParent &&
+            secondUnits != DimensionUnitType.Ratio &&
+            secondUnits != DimensionUnitType.PercentageOfSourceFile &&
+            secondUnits != DimensionUnitType.PercentageOfOtherDimension &&
+            secondUnits != DimensionUnitType.MaintainFileAspectRatio;
 
-        if (areAllAbsolute)
+        // Ratios have to be handled together
+        if (firstUnits == DimensionUnitType.Ratio && secondUnits == DimensionUnitType.Ratio)
         {
             if (resizeBehavior == Controls.ResizeBehavior.Rows)
             {
-                if (visualBefore != null)
+                var firstHeightInPixels = firstVisual.GetAbsoluteHeight();
+
+                var ratioToAdd = (changeInPixels / firstHeightInPixels) * firstVisual.Height;
+                firstVisual.Height += ratioToAdd;
+                secondVisual.Height -= ratioToAdd;
+            }
+            else
+            {
+                var firstWidthInPixels = firstVisual.GetAbsoluteWidth();
+
+                var ratioToAdd = (changeInPixels / firstWidthInPixels) * firstVisual.Width;
+                firstVisual.Width += ratioToAdd;
+                secondVisual.Width -= ratioToAdd;
+            }
+        }
+        else
+        {
+            if (firstUnits == DimensionUnitType.PercentageOfParent)
+            {
+                if (resizeBehavior == Controls.ResizeBehavior.Rows)
                 {
-                    visualBefore.Height += changeInPixels;
+                    var heightInPixels = firstVisual.GetAbsoluteHeight();
+                    var newAbsoluteHeight = heightInPixels + changeInPixels;
+
+                    // convert considering the parent's absolute height
+                    firstVisual.Height =
+                        (newAbsoluteHeight / parent.GetAbsoluteHeight()) * 100.0f;
+
                 }
-                if (visualAfter != null)
+                else // columns
                 {
-                    visualAfter.Height -= changeInPixels;
+                    var widthInPixels = firstVisual.GetAbsoluteWidth();
+                    var newAbsoluteWidth = widthInPixels + changeInPixels;
+
+                    // convert considering the parent's absolute width
+                    firstVisual.Width =
+                        (newAbsoluteWidth / parent.GetAbsoluteWidth()) * 100.0f;
                 }
             }
-            else // columns
+            else if (isFirstAbsolute)
             {
-                if (visualBefore != null)
+                if (resizeBehavior == Controls.ResizeBehavior.Rows)
                 {
-                    visualBefore.Width += changeInPixels;
+                    firstVisual.Height += changeInPixels;
                 }
-                if (visualAfter != null)
+                else // columns
                 {
-                    visualAfter.Width -= changeInPixels;
+                    firstVisual.Width += changeInPixels;
                 }
+            }
+            else if(firstUnits == DimensionUnitType.Ratio)
+            {
+                var firstHeightInPixels = firstVisual.GetAbsoluteHeight();
+
+                var ratioToAdd = (changeInPixels / firstHeightInPixels) * firstVisual.Height;
+                firstVisual.Height += ratioToAdd;
+            }
+
+
+            if (secondUnits == DimensionUnitType.PercentageOfParent)
+            {
+                if (resizeBehavior == Controls.ResizeBehavior.Rows)
+                {
+                    var heightInPixels = secondVisual.GetAbsoluteHeight();
+                    var newAbsoluteHeight = heightInPixels - changeInPixels;
+                    // convert considering the parent's absolute height
+                    secondVisual.Height =
+                        (newAbsoluteHeight / parent.GetAbsoluteHeight()) * 100.0f;
+                }
+                else // columns
+                {
+                    var widthInPixels = secondVisual.GetAbsoluteWidth();
+                    var newAbsoluteWidth = widthInPixels - changeInPixels;
+                    // convert considering the parent's absolute width
+                    secondVisual.Width =
+                        (newAbsoluteWidth / parent.GetAbsoluteWidth()) * 100.0f;
+                }
+            }
+            else if (isSecondAbsolute)
+            {
+                if (resizeBehavior == Controls.ResizeBehavior.Rows)
+                {
+                    secondVisual.Height -= changeInPixels;
+                }
+                else // columns
+                {
+                    secondVisual.Width -= changeInPixels;
+                }
+            }
+            else if(secondUnits == DimensionUnitType.Ratio)
+            {
+                var secondHeightInPixels = secondVisual.GetAbsoluteHeight();
+
+                var ratioToAdd = (changeInPixels / secondHeightInPixels) * secondVisual.Height;
+                secondVisual.Height -= ratioToAdd;
             }
         }
 
-        if(unitsBefore == DimensionUnitType.Ratio && unitsAfter == DimensionUnitType.Ratio
+
+
+        //if(unitsBefore == DimensionUnitType.Ratio && unitsAfter == DimensionUnitType.Ratio
     }
 }

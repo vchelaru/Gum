@@ -12,23 +12,23 @@ public class SplitterTests
 {
     StackPanel _parentPanel;
     Splitter _splitter;
-    Panel _panelBefore;
-    Panel _panelAfter;
+    Panel _firstPanel;
+    Panel _secondPanel;
 
     [Fact]
     public void ApplyResizeChangeInPixels_ShouldResize_IfSiblingsAreAbsolute()
     {
         SetupVerticalStack();
 
-        _panelBefore.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-        _panelBefore.Height = 100;
-        _panelAfter.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
-        _panelAfter.Height = 100;
+        _firstPanel.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        _firstPanel.Height = 100;
+        _secondPanel.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+        _secondPanel.Height = 100;
 
         _splitter.ApplyResizeChangeInPixels(12);
 
-        _panelBefore.Height.ShouldBe(112);
-        _panelAfter.Height.ShouldBe(88);
+        _firstPanel.Height.ShouldBe(112);
+        _secondPanel.Height.ShouldBe(88);
     }
 
     [Fact]
@@ -36,57 +36,132 @@ public class SplitterTests
     {
         SetupVerticalStack();
 
-        _panelBefore.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        _panelBefore.Height = 100;
-        _panelAfter.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        _panelAfter.Height = 100;
+        _firstPanel.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        _firstPanel.Height = 100;
+        _secondPanel.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        _secondPanel.Height = 100;
 
-        var originalAbsoluteHeightBefore = _panelBefore.Visual.GetAbsoluteHeight();
-        var originalAbsoluteHeightAfter = _panelAfter.Visual.GetAbsoluteHeight();
+        var originalAbsoluteHeightBefore = _firstPanel.Visual.GetAbsoluteHeight();
+        var originalAbsoluteHeightAfter = _secondPanel.Visual.GetAbsoluteHeight();
 
         _splitter.ApplyResizeChangeInPixels(12);
 
-        _panelBefore.Visual.GetAbsoluteHeight().ShouldBe(originalAbsoluteHeightBefore + 12);
-        _panelAfter.Visual.GetAbsoluteHeight().ShouldBe(originalAbsoluteHeightAfter - 12);
+        _firstPanel.Visual.GetAbsoluteHeight().ShouldBe(originalAbsoluteHeightBefore + 12);
+        _secondPanel.Visual.GetAbsoluteHeight().ShouldBe(originalAbsoluteHeightAfter - 12);
     }
+
+    [Fact]
+    public void ApplyResizeChangeInPixels_ShouldResize_IfSiblingsArePercentOfParent()
+    {
+        SetupVerticalStack();
+
+        _parentPanel.Height = 300;
+        _parentPanel.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+
+        _firstPanel.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfParent;
+        _firstPanel.Height = 30;
+        _secondPanel.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfParent;
+        _secondPanel.Height = 30;
+
+        var originalAbsoluteHeightBefore = _firstPanel.Visual.GetAbsoluteHeight();
+        var originalAbsoluteHeightAfter = _secondPanel.Visual.GetAbsoluteHeight();
+
+        _splitter.ApplyResizeChangeInPixels(12);
+
+        _firstPanel.Visual.GetAbsoluteHeight().ShouldBe(originalAbsoluteHeightBefore + 12);
+        _secondPanel.Visual.GetAbsoluteHeight().ShouldBe(originalAbsoluteHeightAfter - 12);
+    }
+
 
     [Fact]
     public void ApplyResizeChangeInPixels_ShouldResize_IfSiblingsAreRatio()
     {
         SetupVerticalStack();
 
-        _panelBefore.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.Ratio;
-        _panelBefore.Height = 1;
-        _panelAfter.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.Ratio;
-        _panelAfter.Height = 1;
+        _firstPanel.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.Ratio;
+        _firstPanel.Height = 1;
+        _secondPanel.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.Ratio;
+        _secondPanel.Height = 1;
 
         // Since this is ratio, the parent must have a fixed height:
         _parentPanel.Height = 300;
         _parentPanel.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
 
-        var originalAbsoluteHeightBefore = _panelBefore.Visual.GetAbsoluteHeight();
-        var originalAbsoluteHeightAfter = _panelAfter.Visual.GetAbsoluteHeight();
+        var originalAbsoluteHeightBefore = _firstPanel.Visual.GetAbsoluteHeight();
+        var originalAbsoluteHeightAfter = _secondPanel.Visual.GetAbsoluteHeight();
 
         _splitter.ApplyResizeChangeInPixels(12);
-        // this is still failing....
-        _panelBefore.Visual.GetAbsoluteHeight().ShouldBe(originalAbsoluteHeightBefore + 12);
-        _panelAfter.Visual.GetAbsoluteHeight().ShouldBe(originalAbsoluteHeightAfter - 12);
+
+        _firstPanel.Visual.GetAbsoluteHeight().ShouldBe(originalAbsoluteHeightBefore + 12);
+        _secondPanel.Visual.GetAbsoluteHeight().ShouldBe(originalAbsoluteHeightAfter - 12);
     }
 
+    [Fact]
+    public void ApplyResizeChangeInPixels_ShouldResize_IfSiblingsAreAsymmetricRatio()
+    {
+        SetupVerticalStack();
+
+        _firstPanel.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.Ratio;
+        _firstPanel.Height = 2;
+        _secondPanel.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.Ratio;
+        _secondPanel.Height = 1;
+
+        // Since this is ratio, the parent must have a fixed height:
+        _parentPanel.Height = 300;
+        _parentPanel.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+
+        var originalAbsoluteHeightBefore = _firstPanel.Visual.GetAbsoluteHeight();
+        var originalAbsoluteHeightAfter = _secondPanel.Visual.GetAbsoluteHeight();
+
+        _splitter.ApplyResizeChangeInPixels(12);
+
+        _firstPanel.Visual.GetAbsoluteHeight().ShouldBe(originalAbsoluteHeightBefore + 12, .01f);
+        _secondPanel.Visual.GetAbsoluteHeight().ShouldBe(originalAbsoluteHeightAfter - 12, .01f);
+    }
+
+    [Fact]
+    public void ApplyResizeChangeInPixels_ShouldResize_IfMultipleRatioObjectsAreInParent()
+    {
+        SetupVerticalStack();
+
+        _firstPanel.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.Ratio;
+        _firstPanel.Height = 2;
+        _secondPanel.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.Ratio;
+        _secondPanel.Height = 1;
+
+        var additionalSibling = new StackPanel();
+        additionalSibling.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.Ratio;
+        additionalSibling.Height = 4;
+        _parentPanel.AddChild(additionalSibling);
+
+        // Since this is ratio, the parent must have a fixed height:
+        _parentPanel.Height = 300;
+        _parentPanel.Visual.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+
+        var originalAbsoluteHeightBefore = _firstPanel.Visual.GetAbsoluteHeight();
+        var originalAbsoluteHeightAfter = _secondPanel.Visual.GetAbsoluteHeight();
+        var additionalAbsoluteHeight = additionalSibling.Visual.GetAbsoluteHeight();
+
+        _splitter.ApplyResizeChangeInPixels(12);
+
+        _firstPanel.Visual.GetAbsoluteHeight().ShouldBe(originalAbsoluteHeightBefore + 12, .01f);
+        _secondPanel.Visual.GetAbsoluteHeight().ShouldBe(originalAbsoluteHeightAfter - 12, .01f);
+        additionalSibling.Visual.GetAbsoluteHeight().ShouldBe(additionalAbsoluteHeight, .01f);
+    }
 
     void SetupVerticalStack()
     {
         _parentPanel = new();
-        _panelBefore = new Panel();
-        _parentPanel.AddChild(_panelBefore);
+        _firstPanel = new Panel();
+        _parentPanel.AddChild(_firstPanel);
 
         _splitter = new Splitter();
         _splitter.Dock(Gum.Wireframe.Dock.FillHorizontally);
         _parentPanel.AddChild(_splitter);
 
 
-        _panelAfter = new Panel();
-        _parentPanel.AddChild(_panelAfter);
+        _secondPanel = new Panel();
+        _parentPanel.AddChild(_secondPanel);
     }
 
 

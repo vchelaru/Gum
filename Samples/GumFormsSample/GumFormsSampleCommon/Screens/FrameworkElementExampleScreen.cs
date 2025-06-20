@@ -302,18 +302,18 @@ namespace GumFormsSample.Screens
 
             var button = new Button();
             button.Width = 200;
-            button.Height = 150;
+            button.Height = 200;
             panelWithSplitter.AddChild(button);
             button.Text = "Button above splitter";
 
             var splitter = new Splitter();
             panelWithSplitter.AddChild(splitter);
             splitter.Dock(Gum.Wireframe.Dock.FillHorizontally);
-            splitter.Height = 6;
+            splitter.Height = 40;
 
             var button2 = new Button();
             button2.Width = 200;
-            button2.Height = 150;
+            button2.Height = 200;
             panelWithSplitter.AddChild(button2);
             button2.Text = "Button below splitter";
         }

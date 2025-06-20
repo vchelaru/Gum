@@ -1320,7 +1320,7 @@ public class FrameworkElement : INotifyPropertyChanged
             // cursor got its input from a touch screen then the cursor really isn't
             // over anything. Therefore, we only show the highlighted state if the cursor
             // is a physical on-screen cursor
-            else if (!isTouchScreen)
+            else if (!isTouchScreen && (cursor.WindowPushed == null || cursor.WindowPushed == visual))
             {
                 return HighlightedStateName;
             }
