@@ -148,7 +148,11 @@ namespace Gum.Managers
                 maxLettersToShowVariable.PropertiesToSetOnDisplayer["NullCheckboxText"] = "All";
 
                 stateSave.Variables.Add(maxLettersToShowVariable);
-                //stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "int?", Value = null, Name = "MaxNumberOfLines", Category = "Text" });
+
+                var maxNumberOfLinesVariable = new VariableSave { SetsValue = true, Type = "int?", Value = null, Name = "MaxNumberOfLines", Category = "Text" };
+                maxNumberOfLinesVariable.PropertiesToSetOnDisplayer["NullCheckboxText"] = "All";
+                stateSave.Variables.Add(maxNumberOfLinesVariable);
+
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = nameof(TextOverflowVerticalMode), Value = TextOverflowVerticalMode.SpillOver, Name = nameof(TextOverflowVerticalMode), Category = "Text" });
                 stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = nameof(TextOverflowHorizontalMode), Value = TextOverflowHorizontalMode.TruncateWord, Name = nameof(TextOverflowHorizontalMode), Category = "Text" });
 

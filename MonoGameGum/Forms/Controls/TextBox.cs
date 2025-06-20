@@ -38,6 +38,18 @@ public class TextBox : TextBoxBase
         }
     }
 
+    public int? MaxNumberOfLines
+    {
+        get => coreTextObject.MaxNumberOfLines;
+        set
+        {
+            if (value != MaxNumberOfLines)
+            {
+                coreTextObject.MaxNumberOfLines = value;
+            }
+        }
+    }
+
     protected override string CategoryName => "TextBoxCategoryState";
 
     /// <summary>
