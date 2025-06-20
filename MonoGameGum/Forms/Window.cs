@@ -290,8 +290,6 @@ public class Window : FrameworkElement
         captionGrabbedInXOffset = null;
         captionGrabbedInYOffset = null;
 
-
-
         var cursorX = FrameworkElement.MainCursor.XRespectingGumZoomAndBounds();
         var cursorY = FrameworkElement.MainCursor.YRespectingGumZoomAndBounds();
 

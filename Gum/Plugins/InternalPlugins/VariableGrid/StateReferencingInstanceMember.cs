@@ -538,9 +538,8 @@ namespace Gum.PropertyGridHelpers
 
         private void HandleExposeVariableClick(object sender, System.Windows.RoutedEventArgs e)
         {
-            var variableToExpose = this.VariableSave;
             _exposeVariableService.HandleExposeVariableClick(_selectedState.SelectedInstance,
-                variableToExpose, this.RootVariableName);
+                this.RootVariableName);
         }
 
 

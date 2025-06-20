@@ -22,7 +22,7 @@ namespace Gum.Services;
 
 internal interface IExposeVariableService
 {
-    void HandleExposeVariableClick(InstanceSave instanceSave, VariableSave variableSave, string rootVariableName);
+    void HandleExposeVariableClick(InstanceSave instanceSave, string rootVariableName);
     void HandleUnexposeVariableClick(VariableSave variableSave, ElementSave elementSave);
 }
 
@@ -47,13 +47,13 @@ internal class ExposeVariableService : IExposeVariableService
         _nameVerifier = Locator.GetRequiredService<NameVerifier>();
     }
 
-    public void HandleExposeVariableClick(InstanceSave instanceSave, VariableSave variableSave, string rootVariableName)
+    public void HandleExposeVariableClick(InstanceSave instanceSave, string rootVariableName)
     {
-        // This variable may not exist yet if it hasn't been assigned.
-        //if (variableSave == null)
-        //{
-        //    throw new ArgumentNullException(nameof(variableSave));
-        //}
+        // find the variable if it exists:
+        var parentElement = instanceSave.ParentContainer;
+        var variableSave = parentElement?.DefaultState.GetVariableSave(
+            $"{instanceSave.Name}.{rootVariableName}");
+
         var canExpose = GetIfCanExpose(instanceSave, variableSave, rootVariableName);
 
         if(canExpose.Succeeded == false)

@@ -30,6 +30,7 @@ namespace Gum.Managers
             _projectCommands = ProjectCommands.Self;
             _selectedState = Locator.GetRequiredService<ISelectedState>();
             _undoManager = Locator.GetRequiredService<UndoManager>();
+            _elementCommands = Locator.GetRequiredService<ElementCommands>();
         }
 
 
